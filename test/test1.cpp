@@ -38,7 +38,6 @@ int main()
 
 
 
-        input->Reset();
     }
 
     return 0;

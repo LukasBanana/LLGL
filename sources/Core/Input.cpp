@@ -13,12 +13,40 @@ namespace LLGL
 {
 
 
+#define KEY_IDX(k) static_cast<unsigned char>(k)
+
 Input::Input()
 {
     std::fill(keyStates_.begin(), keyStates_.end(), false);
 }
 
-#define KEY_IDX(k) static_cast<unsigned char>(k)
+bool Input::KeyPressed(Key keyCode) const
+{
+    return keyStates_[KEY_IDX(keyCode)];
+}
+
+void Input::GetMousePosition(int& x, int& y) const
+{
+    x = mouseX_;
+    y = mouseY_;
+}
+
+void Input::GetMouseMotion(int& dx, int& dy) const
+{
+    dx = mouseDX_;
+    dy = mouseDY_;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void Input::OnReset()
+{
+    mouseDX_ = 0;
+    mouseDY_ = 0;
+}
 
 void Input::OnKeyDown(Key keyCode)
 {
@@ -42,30 +70,7 @@ void Input::OnGlobalMotion(int dx, int dy)
     mouseDY_ = dy;
 }
 
-void Input::Reset()
-{
-    mouseDX_ = 0;
-    mouseDY_ = 0;
-}
-
-bool Input::KeyPressed(Key keyCode) const
-{
-    return keyStates_[KEY_IDX(keyCode)];
-}
-
 #undef KEY_IDX
-
-void Input::GetMousePosition(int& x, int& y) const
-{
-    x = mouseX_;
-    y = mouseY_;
-}
-
-void Input::GetMouseMotion(int& dx, int& dy) const
-{
-    dx = mouseDX_;
-    dy = mouseDY_;
-}
 
 
 } // /namespace LLGL

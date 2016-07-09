@@ -24,25 +24,20 @@ class LLGL_EXPORT Input : public Window::Listener
 
         Input();
 
-        void OnKeyDown(Key keyCode) override;
-        void OnKeyUp(Key keyCode) override;
-
-        void OnLocalMotion(int x, int y) override;
-        void OnGlobalMotion(int dx, int dy) override;
-
-        /**
-        \brief Restes the internal input states.
-        \remarks This should be called just before the respective "Window::ProcessEvents" function is called.
-        \see Window::ProcessEvents
-        */
-        void Reset();
-
         bool KeyPressed(Key keyCode) const;
 
         void GetMousePosition(int& x, int& y) const;
         void GetMouseMotion(int& dx, int& dy) const;
 
     private:
+
+        void OnKeyDown(Key keyCode) override;
+        void OnKeyUp(Key keyCode) override;
+
+        void OnLocalMotion(int x, int y) override;
+        void OnGlobalMotion(int dx, int dy) override;
+
+        void OnReset() override;
 
         std::array<bool, 256> keyStates_;
 

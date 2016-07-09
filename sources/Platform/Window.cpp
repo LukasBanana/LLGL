@@ -13,8 +13,16 @@ namespace LLGL
 {
 
 
+#define FOREACH_LISTENER(i) \
+    for (const auto& i : listeners_)
+
 Window::Listener::~Listener()
 {
+}
+
+void Window::Listener::OnReset()
+{
+    // dummy
 }
 
 void Window::Listener::OnKeyDown(Key keyCode)
@@ -54,14 +62,15 @@ Window::~Window()
 
 bool Window::ProcessEvents()
 {
+    FOREACH_LISTENER(lst)
+        lst->OnReset();
+
     ProcessSystemEvents();
+
     return (!quit_);
 }
 
 /* --- Event handling --- */
-
-#define FOREACH_LISTENER(i) \
-    for (const auto& i : listeners_)
 
 void Window::AddListener(const std::shared_ptr<Listener>& listener)
 {

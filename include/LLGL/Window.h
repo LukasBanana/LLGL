@@ -53,6 +53,12 @@ class LLGL_EXPORT Window
 
                 virtual ~Listener();
 
+            protected:
+
+                friend class Window;
+
+                virtual void OnReset();
+
                 virtual void OnKeyDown(Key keyCode);
                 virtual void OnKeyUp(Key keyCode);
                 
