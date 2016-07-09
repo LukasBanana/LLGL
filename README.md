@@ -1,10 +1,10 @@
-Low Level Graphics Library (LLGL) - A unified wrapper for OpenGL 4 and Direct3D 11
-==================================================================================
+Low Level Graphics Library (LLGL) - Easy start with OpenGL, Direct3D, Vulkan ...
+================================================================================
 
 License
 -------
 
-[3-Clause BSD License](https://github.com/LukasBanana/GravitasDynamics/blob/master/LICENSE.txt)
+[3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
 
 Status
 ------
