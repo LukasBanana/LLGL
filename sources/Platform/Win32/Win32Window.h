@@ -39,12 +39,10 @@ class Win32Window : public Window
 
         const void* GetNativeHandle() const override;
 
-        bool ProcessEvents() override;
-
-        void PostQuit();
-
     private:
         
+        void ProcessSystemEvents() override;
+
         HWND CreateWindowHandle(const WindowDesc& desc);
 
         void SetUserData(void* userData);
@@ -53,8 +51,6 @@ class Win32Window : public Window
 
         HWND        wnd_;
         HDC         dc_;
-
-        bool        quit_ = false;
 
 };
 

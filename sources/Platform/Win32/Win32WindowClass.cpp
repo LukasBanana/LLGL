@@ -7,6 +7,7 @@
 
 #include "Win32WindowClass.h"
 #include "Win32WindowCallback.h"
+#include "../../Core/Helper.h"
 
 #include <string>
 #include <exception>
@@ -20,7 +21,7 @@ Win32WindowClass::Win32WindowClass()
 {
     /* Setup window class information */
     WNDCLASS wc;
-    memset(&wc, 0, sizeof(wc));
+    InitMemory(wc);
 
     wc.style            = (CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS);
     wc.hInstance        = GetModuleHandle(nullptr);

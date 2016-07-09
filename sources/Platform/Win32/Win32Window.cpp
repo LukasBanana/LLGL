@@ -138,7 +138,7 @@ const void* Win32Window::GetNativeHandle() const
     return (&wnd_);
 }
 
-bool Win32Window::ProcessEvents()
+void Win32Window::ProcessSystemEvents()
 {
     /* Peek all queued messages */
     MSG message;
@@ -148,13 +148,6 @@ bool Win32Window::ProcessEvents()
         TranslateMessage(&message);
         DispatchMessage(&message);
     }
-
-    return (!quit_);
-}
-
-void Win32Window::PostQuit()
-{
-    quit_ = true;
 }
 
 
@@ -180,7 +173,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDesc& desc)
     if (desc.centered)
     {
         x = GetSystemMetrics(SM_CXSCREEN)/2 - desc.width/2;
-        y = GetSystemMetrics(SM_CYSCREEN)/2 - desc.width/2;
+        y = GetSystemMetrics(SM_CYSCREEN)/2 - desc.height/2;
     }
 
     /* Create frame window object */

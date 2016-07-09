@@ -11,7 +11,9 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 #include <LLGL/API.h>
+#include <LLGL/Key.h>
 
 
 namespace LLGL
@@ -37,10 +39,33 @@ struct WindowDesc
 };
 
 
+// Interface for a Window class (also named Canvas)
 class LLGL_EXPORT Window
 {
 
     public:
+
+        // Interface for all window listeners
+        class LLGL_EXPORT Listener
+        {
+
+            public:
+
+                virtual ~Listener();
+
+                virtual void OnKeyDown(Key keyCode);
+                virtual void OnKeyUp(Key keyCode);
+                
+                virtual void OnChar(wchar_t chr);
+
+                virtual void OnWheelMotion(int motion);
+
+                virtual void OnLocalMotion(int x, int y);
+                virtual void OnGlobalMotion(int dx, int dy);
+
+        };
+
+        /* --- Common --- */
 
         virtual ~Window();
 
@@ -60,7 +85,34 @@ class LLGL_EXPORT Window
 
         virtual const void* GetNativeHandle() const = 0;
 
-        virtual bool ProcessEvents() = 0;
+        bool ProcessEvents();
+
+        /* --- Event handling --- */
+
+        void AddListener(const std::shared_ptr<Listener>& listener);
+        void RemoveListener(const Listener* listener);
+
+        void PostKeyDown(Key keyCode);
+        void PostKeyUp(Key keyCode);
+        
+        void PostChar(wchar_t chr);
+        
+        void PostWheelMotion(int motion);
+        
+        void PostLocalMotion(int x, int y);
+        void PostGlobalMotion(int dx, int dy);
+
+        void PostQuit();
+
+    protected:
+
+        virtual void ProcessSystemEvents() = 0;
+
+    private:
+
+        std::vector<std::shared_ptr<Listener>> listeners_;
+
+        bool quit_ = false;
 
 };
 

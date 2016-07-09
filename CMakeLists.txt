@@ -28,6 +28,10 @@ if(WIN32)
 	add_define(_SCL_SECURE_NO_WARNINGS)
 	add_define(UNICODE)
 	add_define(NOMINMAX)
+	if(MSVC)
+		# Disable some warnings for MSVC compiler
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250 /wd4251 /wd4290 /wd4103")
+	endif(MSVC)
 endif(WIN32)
 
 
@@ -53,7 +57,7 @@ set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/test1.cpp)
 # --- Dyancmis ---
 
 source_group("Include" FILES ${FilesInclude})
-source_group("Sources\\Core" FILES ${FilesCommon})
+source_group("Sources\\Core" FILES ${FilesCore})
 source_group("Sources\\Platform" FILES ${FilesPlatformBase} ${FilesPlatform})
 
 

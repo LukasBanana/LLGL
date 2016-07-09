@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <memory>
 
 
 
@@ -22,10 +23,17 @@ int main()
 
     auto window = LLGL::Window::Create(windowDesc);
 
-    while (window->ProcessEvents())
+    auto input = std::make_shared<LLGL::Input>();
+    window->AddListener(input);
+
+
+    while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
     {
 
 
+
+
+        input->Reset();
     }
 
     return 0;
