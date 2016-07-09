@@ -10,7 +10,7 @@
 
 
 #include <string>
-#include <details/API.h>
+#include <LLGL/API.h>
 
 
 namespace LLGL
@@ -20,8 +20,6 @@ namespace LLGL
 enum class Error
 {
     None,
-    TextureCreationFailed,
-    FramebufferCreationFailed,
     //...
 };
 

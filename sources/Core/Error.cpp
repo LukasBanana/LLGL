@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <details/Error.h>
+#include <LLGL/Error.h>
 
 
 namespace LLGL
@@ -18,10 +18,6 @@ LLGL_EXPORT LLGL_API std::string ToString(Error value)
     {
         case Error::None:
             return "None";
-        case Error::TextureCreationFailed:
-            return "Texture Creation Failed";
-        case Error::FramebufferCreationFailed:
-            return "Framebuffer Creation Failed";
     }
     return "";
 }
