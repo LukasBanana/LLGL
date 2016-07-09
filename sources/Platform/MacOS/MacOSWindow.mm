@@ -39,7 +39,6 @@
     return (_quit);
 }
 
-
 @end
 
 
@@ -135,71 +134,71 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
     return wnd;
 }
 
-    void MacOSWindow::ProcessSystemEvents()
-    {
-        NSEvent* event = nil;
-        
-        while (true)
-        {
-            event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES];
-            
-            if (event != nil)
-            {
-                switch ([event type])
-                {
-                    case NSKeyDown:
-                        ProcessKeyEvent(event, true);
-                        break;
-                        
-                    case NSKeyUp:
-                        ProcessKeyEvent(event, false);
-                        break;
-                        
-                    case NSMouseMoved:
-                        //todo...
-                        break;
-                        
-                    default:
-                        [NSApp sendEvent:event];
-                        break;
-                }
-                
-                [event release];
-            }
-            else
-                break;
-        }
-        
-        if ([[NSApp delegate] isQuit])
-            PostQuit();
-    }
+void MacOSWindow::ProcessSystemEvents()
+{
+    NSEvent* event = nil;
     
-    void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
+    while (true)
     {
-        // Post character event
-        if (down)
+        event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES];
+        
+        if (event != nil)
         {
-            NSString* str = [event characters];
-            
-            if (str != nil && [str length] > 0)
+            switch ([event type])
             {
-                unsigned int chr = [str characterAtIndex:0];
-                PostChar(static_cast<wchar_t>(chr));
+                case NSKeyDown:
+                    ProcessKeyEvent(event, true);
+                    break;
+                    
+                case NSKeyUp:
+                    ProcessKeyEvent(event, false);
+                    break;
+                    
+                case NSMouseMoved:
+                    //todo...
+                    break;
+                    
+                default:
+                    [NSApp sendEvent:event];
+                    break;
             }
-        
-            [str release];
+            
+            [event release];
         }
-        
-        // Post key up/down event
-        unsigned short keyCode = [event keyCode];
-        Key key = MapKey(keyCode);
-        
-        if (down)
-            PostKeyDown(key);
         else
-            PostKeyDown(key);
+            break;
     }
     
+    if ([[NSApp delegate] isQuit])
+        PostQuit();
+}
+
+void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
+{
+    // Post character event
+    if (down)
+    {
+        NSString* str = [event characters];
+        
+        if (str != nil && [str length] > 0)
+        {
+            unsigned int chr = [str characterAtIndex:0];
+            PostChar(static_cast<wchar_t>(chr));
+        }
+        
+        [str release];
+    }
+    
+    // Post key up/down event
+    unsigned short keyCode = [event keyCode];
+    Key key = MapKey(keyCode);
+    
+    if (down)
+        PostKeyDown(key);
+    else
+        PostKeyDown(key);
+}
+
 
 } // /namespace LLGL
 
