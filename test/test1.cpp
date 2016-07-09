@@ -29,6 +29,9 @@ int main()
     
     auto timer = LLGL::Timer::Create();
     
+    int x = 100, y = 100;
+    window->SetPosition(x, y);
+    
     
     while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
     {
@@ -36,13 +39,35 @@ int main()
         
         //std::cout << 1.0 / timer->GetDeltaTime() << std::endl;
         
-        if (input->KeyPressed(LLGL::Key::A))
-            std::cout << "A" << std::endl;
-        if (input->KeyPressed(LLGL::Key::B))
-            std::cout << "B" << std::endl;
-        if (input->KeyPressed(LLGL::Key::C))
-            std::cout << "C" << std::endl;
+        if (input->KeyPressed(LLGL::Key::Num1))
+            window->Show(false);
+        if (input->KeyPressed(LLGL::Key::Num2))
+            window->Show(true);
+        if (input->KeyPressed(LLGL::Key::Num3))
+            window->SetTitle(L"FOO BAR");
+        if (input->KeyPressed(LLGL::Key::Num4))
+            window->SetTitle(L"LLGL Test 1");
         
+        if (input->KeyPressed(LLGL::Key::Right))
+        {
+            ++x;
+            window->SetPosition(x, y);
+        }
+        if (input->KeyPressed(LLGL::Key::Left))
+        {
+            --x;
+            window->SetPosition(x, y);
+        }
+        if (input->KeyPressed(LLGL::Key::Up))
+        {
+            --y;
+            window->SetPosition(x, y);
+        }
+        if (input->KeyPressed(LLGL::Key::Down))
+        {
+            ++y;
+            window->SetPosition(x, y);
+        }
         
     }
 

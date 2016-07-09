@@ -46,6 +46,15 @@ namespace LLGL
 {
 
 
+static NSString* ToNSString(const wchar_t* s)
+{
+    return [[NSString alloc]
+        initWithBytes: s
+        length: sizeof(*s)*wcslen(s)
+        encoding:NSUTF32LittleEndianStringEncoding
+    ];
+}
+    
 std::unique_ptr<Window> Window::Create(const WindowDesc& desc)
 {
     return std::unique_ptr<Window>(new MacOSWindow(desc));
@@ -63,6 +72,15 @@ MacOSWindow::~MacOSWindow()
 
 void MacOSWindow::SetPosition(int x, int y)
 {
+    NSScreen* screen = [NSScreen mainScreen];
+    CGSize frameSize = [screen frame].size;
+    NSRect visibleFrame = [screen visibleFrame];
+    
+    CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
+    
+    [wnd_ setFrameTopLeftPoint:NSMakePoint((CGFloat)x, frameSize.height - menuBarHeight - (CGFloat)y)];
+    
+    [screen release];
 }
 
 void MacOSWindow::GetPosition(int& x, int& y) const
@@ -79,6 +97,7 @@ void MacOSWindow::GetSize(int& width, int& height, bool useClientArea) const
 
 void MacOSWindow::SetTitle(const std::wstring& title)
 {
+    [wnd_ setTitle:ToNSString(title.c_str())];
 }
 
 std::wstring MacOSWindow::GetTitle() const
@@ -118,7 +137,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
     /* Create NSWindow object */
     NSWindow* wnd = [[NSWindow alloc]
         initWithContentRect:NSMakeRect(0, 0, (CGFloat)desc.width, (CGFloat)desc.height)
-        styleMask:(NSTitledWindowMask + NSClosableWindowMask)
+        styleMask:(NSTitledWindowMask + NSClosableWindowMask + NSMiniaturizableWindowMask)
         backing:NSBackingStoreBuffered
         defer:FALSE
     ];
@@ -130,6 +149,8 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
     
     if (desc.visible)
         [wnd setIsVisible:TRUE];
+    
+    [wnd setTitle:ToNSString(desc.title.c_str())];
     
     return wnd;
 }
@@ -196,7 +217,7 @@ void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
     if (down)
         PostKeyDown(key);
     else
-        PostKeyDown(key);
+        PostKeyUp(key);
 }
 
 

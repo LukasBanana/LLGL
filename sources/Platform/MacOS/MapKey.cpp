@@ -47,7 +47,7 @@ static Key macOSKeyCodeMap[256] =
     KEY(X                   ), // 0x07
     KEY(C                   ), // 0x08
     KEY(V                   ), // 0x09
-    KEY(ISO_Section         ), // 0x0a
+    DUMMY,//KEY(ISO_Section         ), // 0x0a
     KEY(B                   ), // 0x0b
     KEY(Q                   ), // 0x0c
     KEY(W                   ), // 0x0d
@@ -61,65 +61,64 @@ static Key macOSKeyCodeMap[256] =
     KEY(Num4                ), // 0x15
     KEY(Num6                ), // 0x16
     KEY(Num5                ), // 0x17
-    KEY(Equal               ), // 0x18
+    DUMMY,//KEY(Equal               ), // 0x18
     KEY(Num9                ), // 0x19
     KEY(Num7                ), // 0x1a
     KEY(Minus               ), // 0x1b
     KEY(Num8                ), // 0x1c
     KEY(Num0                ), // 0x1d
-    KEY(RightBracket        ), // 0x1e
+    DUMMY,//KEY(RightBracket        ), // 0x1e
     KEY(O                   ), // 0x1f
     KEY(U                   ), // 0x20
-    KEY(LeftBracket         ), // 0x21
+    DUMMY,//KEY(LeftBracket         ), // 0x21
     KEY(I                   ), // 0x22
     KEY(P                   ), // 0x23
     KEY(Return              ), // 0x24
     KEY(L                   ), // 0x25
     KEY(J                   ), // 0x26
-    KEY(Quote               ), // 0x27
+    DUMMY,//KEY(Quote               ), // 0x27
     KEY(K                   ), // 0x28
-    KEY(Semicolon           ), // 0x29
-    KEY(Backslash           ), // 0x2a
+    DUMMY,//KEY(Semicolon           ), // 0x29
+    DUMMY,//KEY(Backslash           ), // 0x2a
     KEY(Comma               ), // 0x2b
-    KEY(Slash               ), // 0x2c
+    DUMMY,//KEY(Slash               ), // 0x2c
     KEY(N                   ), // 0x2d
     KEY(M                   ), // 0x2e
     KEY(Period              ), // 0x2f
     KEY(Tab                 ), // 0x30
     KEY(Space               ), // 0x31
-    KEY(Grave               ), // 0x32
+    DUMMY,//KEY(Grave               ), // 0x32
     KEY(Back                ), // 0x33
     DUMMY                    , // 0x34
     KEY(Escape              ), // 0x35
     DUMMY                    , // 0x36
-    KEY(Command             ), // 0x37
+    DUMMY,//KEY(Command             ), // 0x37
     KEY(Shift               ), // 0x38
-    KEY(CapsLock            ), // 0x39
-    KEY(Option              ), // 0x3a
+    DUMMY,//KEY(CapsLock            ), // 0x39
+    DUMMY,//KEY(Option              ), // 0x3a
     KEY(Control             ), // 0x3b
-    KEY(RightShift          ), // 0x3c
-    KEY(RightOption         ), // 0x3d
-    KEY(RightControl        ), // 0x3e
-    KEY(Function            ), // 0x3f
+    DUMMY,//KEY(RightShift          ), // 0x3c
+    DUMMY,//KEY(RightOption         ), // 0x3d
+    DUMMY,//KEY(RightControl        ), // 0x3e
+    DUMMY,//KEY(Function            ), // 0x3f
     KEY(F17                 ), // 0x40
     KEY(Decimal             ), // 0x41
-    DUMMY                    , // 0x41
     DUMMY                    , // 0x42
     KEY(Multiply            ), // 0x43
     DUMMY                    , // 0x44
     KEY(Plus                ), // 0x45
     DUMMY                    , // 0x46
-    KEY(KeypadClear         ), // 0x47
+    DUMMY,//KEY(KeypadClear         ), // 0x47
     KEY(VolumeUp            ), // 0x48
     KEY(VolumeDown          ), // 0x49
-    KEY(Mute                ), // 0x4a
+    DUMMY,//KEY(Mute                ), // 0x4a
     KEY(Divide              ), // 0x4b
     KEY(Return              ), // 0x4c
     DUMMY                    , // 0x4d
     KEY(Minus               ), // 0x4e
     KEY(F18                 ), // 0x4f
     KEY(F19                 ), // 0x50
-    KEY(KeypadEquals        ), // 0x51
+    DUMMY,//KEY(KeypadEquals        ), // 0x51
     KEY(NumPad0             ), // 0x52
     KEY(NumPad1             ), // 0x53
     KEY(NumPad2             ), // 0x54
@@ -131,18 +130,18 @@ static Key macOSKeyCodeMap[256] =
     KEY(F20                 ), // 0x5a
     KEY(NumPad8             ), // 0x5b
     KEY(NumPad9             ), // 0x5c
-    KEY(JIS_Yen             ), // 0x5d
-    KEY(JIS_Underscore      ), // 0x5e
-    KEY(JIS_KeypadComma     ), // 0x5f
+    DUMMY,//KEY(JIS_Yen             ), // 0x5d
+    DUMMY,//KEY(JIS_Underscore      ), // 0x5e
+    DUMMY,//KEY(JIS_KeypadComma     ), // 0x5f
     KEY(F5                  ), // 0x60
     KEY(F6                  ), // 0x61
     KEY(F7                  ), // 0x62
     KEY(F3                  ), // 0x63
     KEY(F8                  ), // 0x64
     KEY(F9                  ), // 0x65
-    KEY(JIS_Eisu            ), // 0x66
+    DUMMY,//KEY(JIS_Eisu            ), // 0x66
     KEY(F11                 ), // 0x67
-    KEY(JIS_Kana            ), // 0x68
+    DUMMY,//KEY(JIS_Kana            ), // 0x68
     KEY(F13                 ), // 0x69
     KEY(F16                 ), // 0x6a
     KEY(F14                 ), // 0x6b
