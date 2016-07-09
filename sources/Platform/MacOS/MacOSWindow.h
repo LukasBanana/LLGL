@@ -1,29 +1,29 @@
 /*
- * Win32Window.h
+ * MacOSWindow
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_WIN32_WINDOW_H__
-#define __LLGL_WIN32_WINDOW_H__
+#ifndef __LLGL_MACOS_WINDOW_H__
+#define __LLGL_MACOS_WINDOW_H__
 
 
+#include <Cocoa/Cocoa.h>
 #include <LLGL/Window.h>
-#include <Windows.h>
 
 
 namespace LLGL
 {
 
 
-class Win32Window : public Window
+class MacOSWindow : public Window
 {
 
     public:
 
-        Win32Window(const WindowDesc& desc);
-        ~Win32Window();
+        MacOSWindow(const WindowDesc& desc);
+        ~MacOSWindow();
 
         void SetPosition(int x, int y) override;
         void GetPosition(int& x, int& y) const override;
@@ -42,15 +42,13 @@ class Win32Window : public Window
     private:
         
         void ProcessSystemEvents() override;
-
-        HWND CreateWindowHandle(const WindowDesc& desc);
-
-        void SetUserData(void* userData);
+        void ProcessKeyEvent(NSEvent* event);
+    
+        NSWindow* CreateNSWindow(const WindowDesc& desc);
 
         WindowDesc  desc_;
-
-        HWND        wnd_;
-        HDC         dc_;
+    
+        NSWindow*   wnd_;
 
 };
 

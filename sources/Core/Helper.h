@@ -18,12 +18,12 @@
 namespace LLGL
 {
 
-
+    
 template <class T>
 void InitMemory(T& data)
 {
-    static_assert(!std::is_pointer<T>::value, "\"" __FUNCTION__ "\" does not allow pointer types");
-    static_assert(std::is_pod<T>::value, "\"" __FUNCTION__ "\" does only allow plain-old-data (POD)");
+    static_assert(!std::is_pointer<T>::value, "'InitMemory' does not allow pointer types");
+    static_assert(std::is_pod<T>::value, "'InitMemory' does only allow plain-old-data (POD)");
     memset(&data, 0, sizeof(T));
 }
 
@@ -47,7 +47,7 @@ template <class Container, class T>
 void RemoveAllFromList(Container& cont, const T& entry)
 {
     cont.erase(
-        std::remove(std::begin(cont), std::end(cont), value),
+        std::remove(std::begin(cont), std::end(cont), entry),
         cont.end()
     );
 }

@@ -44,6 +44,7 @@ file(GLOB FilesPlatformBase	${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
 if(WIN32)
 	file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
 elseif(APPLE)
+	set(CMAKE_MACOSX_RPATH 1)
 	file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/sources/Platform/MacOS/*.*)
 elseif(UNIX)
 	file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/*.*)
@@ -77,10 +78,23 @@ set(
 )
 
 add_library(LLGL SHARED ${FilesAll})
-set_target_properties("LLGL" PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 
-add_executable(test1 ${FilesTest1})
+if(APPLE)
+	find_library(COCOA_LIBRARY Cocoa)
+	target_link_libraries(LLGL ${COCOA_LIBRARY})
+endif()
+
+set_target_properties("LLGL" PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+target_compile_features(LLGL PRIVATE cxx_range_for)
+
+if(APPLE)
+	add_executable(test1 MACOSX_BUNDLE ${FilesTest1})
+else()
+	add_executable(test1 ${FilesTest1})
+endif()
+
 target_link_libraries(test1 LLGL)
 set_target_properties("test1" PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+target_compile_features(test1 PRIVATE cxx_range_for)
 
 
