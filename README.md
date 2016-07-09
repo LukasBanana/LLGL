@@ -1,5 +1,5 @@
-Low Level Graphics Library (LLGL) - Easy start with OpenGL, Direct3D, Vulkan ...
-================================================================================
+Low Level Graphics Library (LLGL)
+=================================
 
 License
 -------
@@ -10,5 +10,7 @@ Status
 ------
 
 **Alpha**
+
+
 
 
