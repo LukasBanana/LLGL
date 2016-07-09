@@ -11,6 +11,7 @@
 
 #include "Window.h"
 #include "Input.h"
+#include "Timer.h"
 
 
 #endif
