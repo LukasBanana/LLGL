@@ -42,7 +42,7 @@ class MacOSWindow : public Window
     private:
         
         void ProcessSystemEvents() override;
-        void ProcessKeyEvent(NSEvent* event);
+        void ProcessKeyEvent(NSEvent* event, bool down);
     
         NSWindow* CreateNSWindow(const WindowDesc& desc);
 

@@ -6,8 +6,10 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import <Carbon/Carbon.h>
 
 #include "MacOSWindow.h"
+#include "MapKey.h"
 
 
 @interface AppDelegate : NSObject
@@ -146,7 +148,15 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
                 switch ([event type])
                 {
                     case NSKeyDown:
-                        ProcessKeyEvent(event);
+                        ProcessKeyEvent(event, true);
+                        break;
+                        
+                    case NSKeyUp:
+                        ProcessKeyEvent(event, false);
+                        break;
+                        
+                    case NSMouseMoved:
+                        //todo...
                         break;
                         
                     default:
@@ -164,22 +174,30 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
             PostQuit();
     }
     
-    //!TODO!
-    void MacOSWindow::ProcessKeyEvent(NSEvent* event)
+    void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
     {
-        NSString* s = [event characters];
-        
-        if (s != nil && [s length] > 0)
+        // Post character event
+        if (down)
         {
-            unsigned int c = [s characterAtIndex:0];
+            NSString* str = [event characters];
             
-            PostChar(static_cast<wchar_t>(c));
-            
-            if (c == 27) // ESC
-                PostKeyDown(Key::Escape);
+            if (str != nil && [str length] > 0)
+            {
+                unsigned int chr = [str characterAtIndex:0];
+                PostChar(static_cast<wchar_t>(chr));
+            }
+        
+            [str release];
         }
         
-        [s release];
+        // Post key up/down event
+        unsigned short keyCode = [event keyCode];
+        Key key = MapKey(keyCode);
+        
+        if (down)
+            PostKeyDown(key);
+        else
+            PostKeyDown(key);
     }
     
 

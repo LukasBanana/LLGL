@@ -36,6 +36,12 @@ int main()
         
         //std::cout << 1.0 / timer->GetDeltaTime() << std::endl;
         
+        if (input->KeyPressed(LLGL::Key::A))
+            std::cout << "A" << std::endl;
+        if (input->KeyPressed(LLGL::Key::B))
+            std::cout << "B" << std::endl;
+        if (input->KeyPressed(LLGL::Key::C))
+            std::cout << "C" << std::endl;
         
         
     }
