@@ -1,18 +1,23 @@
 /*
- * LLGL.h
+ * Window.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_INCLUDE_H__
-#define __LLGL_INCLUDE_H__
+#include <LLGL/Window.h>
 
 
-#include "Window.h"
+namespace LLGL
+{
 
 
-#endif
+Window::~Window()
+{
+}
+
+
+} // /namespace LLGL
 
 
 

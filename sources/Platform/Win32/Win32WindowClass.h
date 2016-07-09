@@ -1,0 +1,47 @@
+/*
+ * Win32WindowClass.h
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#ifndef __LLGL_WIN32_WINDOW_CLASS_H__
+#define __LLGL_WIN32_WINDOW_CLASS_H__
+
+
+#include <Windows.h>
+
+
+namespace LLGL
+{
+
+
+class Win32WindowClass
+{
+
+    public:
+
+        Win32WindowClass(const Win32WindowClass&) = delete;
+        Win32WindowClass& operator = (const Win32WindowClass&) = delete;
+
+        ~Win32WindowClass();
+
+        static Win32WindowClass* Instance();
+
+        const wchar_t* GetName() const;
+
+    private:
+        
+        Win32WindowClass();
+
+};
+
+
+} // /namespace LLGL
+
+
+#endif
+
+
+
+// ================================================================================
