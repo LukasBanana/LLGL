@@ -220,7 +220,8 @@ void MacOSWindow::ProcessSystemEvents()
                 break;
         }
         
-        [NSApp sendEvent:event];
+        if ([event type] != NSKeyDown && [event type] != NSKeyUp)
+            [NSApp sendEvent:event];
         
         [event release];
     }
