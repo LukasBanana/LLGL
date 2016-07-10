@@ -54,10 +54,12 @@ int main()
             if (input->KeyPressed(LLGL::Key::Num5))
                 window->SetSize({ 300, 300 });
 
+            #ifdef __APPLE__
             auto mousePos = input->GetMousePosition();
             std::wstringstream s;
             s << "X = " << mousePos.x << ", Y = " << mousePos.y;
             window->SetTitle(s.str());
+            #endif
 
             if (input->KeyPressed(LLGL::Key::Right))
             {
