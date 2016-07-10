@@ -88,6 +88,12 @@ class LLGL_EXPORT Window
         virtual void Show(bool show = true) = 0;
         virtual bool IsShown() const = 0;
 
+        /**
+        Returns the native window handle.
+        For Windows, cast this to 'const HWND*'
+        For MacOS, cast this to 'const NSWindow**'
+        For Linux, cast this to 'const ::Window*'
+        */
         virtual const void* GetNativeHandle() const = 0;
 
         bool ProcessEvents();

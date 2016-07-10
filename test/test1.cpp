@@ -8,7 +8,8 @@
 #include <LLGL/LLGL.h>
 #include <memory>
 #include <iostream>
-
+#include <string>
+#include <sstream>
 
 
 int main()
@@ -16,10 +17,11 @@ int main()
     // Create window
     LLGL::WindowDesc windowDesc;
     
-    windowDesc.title    = L"LLGL Test 1";
-    windowDesc.visible  = true;
-    windowDesc.centered = true;
-    windowDesc.size     = { 640, 480 };
+    windowDesc.title        = L"LLGL Test 1";
+    windowDesc.visible      = true;
+    windowDesc.centered     = true;
+    windowDesc.resizable    = true;
+    windowDesc.size         = { 640, 480 };
     
     auto window = LLGL::Window::Create(windowDesc);
     
@@ -30,6 +32,7 @@ int main()
     
     int x = 100, y = 100;
     window->SetPosition({ x, y });
+    
     
     
     while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
@@ -46,6 +49,13 @@ int main()
             window->SetTitle(L"FOO BAR");
         if (input->KeyPressed(LLGL::Key::Num4))
             window->SetTitle(L"LLGL Test 1");
+        if (input->KeyPressed(LLGL::Key::Num5))
+            window->SetSize({ 300, 300 });
+        
+        auto mousePos = input->GetMousePosition();
+        std::wstringstream s;
+        s << "X = " << mousePos.x << ", Y = " << mousePos.y;
+        window->SetTitle(s.str());
         
         if (input->KeyPressed(LLGL::Key::Right))
         {

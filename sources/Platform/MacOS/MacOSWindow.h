@@ -43,6 +43,8 @@ class MacOSWindow : public Window
         
         void ProcessSystemEvents() override;
         void ProcessKeyEvent(NSEvent* event, bool down);
+        void ProcessMouseKeyEvent(Key key, bool down);
+        void ProcessMouseMoveEvent(NSEvent* event);
     
         NSWindow* CreateNSWindow(const WindowDesc& desc);
 

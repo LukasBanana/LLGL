@@ -72,12 +72,16 @@ MacOSWindow::~MacOSWindow()
 
 void MacOSWindow::SetPosition(const Point& position)
 {
+    desc_.position = position;
+    
+    // Get visible screen size (without dock and menu bar)
     NSScreen* screen = [NSScreen mainScreen];
     CGSize frameSize = [screen frame].size;
     NSRect visibleFrame = [screen visibleFrame];
     
     CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
     
+    // Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS)
     [wnd_ setFrameTopLeftPoint:NSMakePoint((CGFloat)position.x, frameSize.height - menuBarHeight - (CGFloat)position.y)];
     
     [screen release];
@@ -85,27 +89,32 @@ void MacOSWindow::SetPosition(const Point& position)
 
 Point MacOSWindow::GetPosition() const
 {
-    return { 0, 0 };//todo...
+    return desc_.position;
 }
 
 void MacOSWindow::SetSize(const Size& size, bool useClientArea)
 {
-    //todo...
+    desc_.size = size;
+    [wnd_ setContentSize:NSMakeSize((CGFloat)size.x, (CGFloat)size.y)];
+    
+    // Update position due to different coordinate space between Windows and MacOS
+    SetPosition(GetPosition());
 }
 
 Size MacOSWindow::GetSize(bool useClientArea) const
 {
-    return { 0, 0 };//todo...
+    return desc_.size;
 }
 
 void MacOSWindow::SetTitle(const std::wstring& title)
 {
+    desc_.title = title;
     [wnd_ setTitle:ToNSString(title.c_str())];
 }
 
 std::wstring MacOSWindow::GetTitle() const
 {
-    return L"";
+    return desc_.title;
 }
 
 void MacOSWindow::Show(bool show)
@@ -128,6 +137,19 @@ const void* MacOSWindow::GetNativeHandle() const
  * ======= Private: =======
  */
 
+static NSUInteger GetWindowStyleMask(const WindowDesc& desc)
+{
+    if (desc.borderless)
+        return NSBorderlessWindowMask;
+    
+    NSUInteger mask = (NSTitledWindowMask + NSClosableWindowMask + NSMiniaturizableWindowMask);
+    
+    if (desc.resizable)
+        mask += NSResizableWindowMask;
+    
+    return mask;
+}
+
 NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
 {
     /* Initialize Cocoa framework */
@@ -140,7 +162,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
     /* Create NSWindow object */
     NSWindow* wnd = [[NSWindow alloc]
         initWithContentRect:NSMakeRect(0, 0, (CGFloat)desc.size.x, (CGFloat)desc.size.y)
-        styleMask:(NSTitledWindowMask + NSClosableWindowMask + NSMiniaturizableWindowMask)
+        styleMask:GetWindowStyleMask(desc)
         backing:NSBackingStoreBuffered
         defer:FALSE
     ];
@@ -162,35 +184,45 @@ void MacOSWindow::ProcessSystemEvents()
 {
     NSEvent* event = nil;
     
-    while (true)
+    while ( ( event = [wnd_ nextEventMatchingMask:NSAnyEventMask untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES] ) != nil )
     {
-        event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES];
-        
-        if (event != nil)
+        switch ([event type])
         {
-            switch ([event type])
-            {
-                case NSKeyDown:
-                    ProcessKeyEvent(event, true);
-                    break;
-                    
-                case NSKeyUp:
-                    ProcessKeyEvent(event, false);
-                    break;
-                    
-                case NSMouseMoved:
-                    //todo...
-                    break;
-                    
-                default:
-                    [NSApp sendEvent:event];
-                    break;
-            }
-            
-            [event release];
+            case NSKeyDown:
+                ProcessKeyEvent(event, true);
+                break;
+                
+            case NSKeyUp:
+                ProcessKeyEvent(event, false);
+                break;
+                
+            case NSMouseMoved:
+                ProcessMouseMoveEvent(event);
+                break;
+                
+            case NSLeftMouseDown:
+                ProcessMouseKeyEvent(Key::LButton, true);
+                break;
+                
+            case NSLeftMouseUp:
+                ProcessMouseKeyEvent(Key::LButton, false);
+                break;
+                
+            case NSRightMouseDown:
+                ProcessMouseKeyEvent(Key::RButton, true);
+                break;
+                
+            case NSRightMouseUp:
+                ProcessMouseKeyEvent(Key::RButton, false);
+                break;
+                
+            default:
+                break;
         }
-        else
-            break;
+        
+        [NSApp sendEvent:event];
+        
+        [event release];
     }
     
     if ([[NSApp delegate] isQuit])
@@ -221,6 +253,21 @@ void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
         PostKeyDown(key);
     else
         PostKeyUp(key);
+}
+    
+void MacOSWindow::ProcessMouseKeyEvent(Key key, bool down)
+{
+    if (down)
+        PostKeyDown(key);
+    else
+        PostKeyUp(key);
+}
+
+void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
+{
+    NSPoint pos = [event locationInWindow];
+    
+    PostLocalMotion({ static_cast<int>(pos.x), desc_.size.y - static_cast<int>(pos.y) });
 }
 
 
