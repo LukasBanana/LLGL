@@ -25,16 +25,14 @@ bool Input::KeyPressed(Key keyCode) const
     return keyStates_[KEY_IDX(keyCode)];
 }
 
-void Input::GetMousePosition(int& x, int& y) const
+Point Input::GetMousePosition() const
 {
-    x = mouseX_;
-    y = mouseY_;
+    return mousePosition_;
 }
 
-void Input::GetMouseMotion(int& dx, int& dy) const
+Point Input::GetMouseMotion() const
 {
-    dx = mouseDX_;
-    dy = mouseDY_;
+    return mouseMotion_;
 }
 
 
@@ -44,8 +42,7 @@ void Input::GetMouseMotion(int& dx, int& dy) const
 
 void Input::OnReset()
 {
-    mouseDX_ = 0;
-    mouseDY_ = 0;
+    mouseMotion_ = { 0, 0 };
 }
 
 void Input::OnKeyDown(Key keyCode)
@@ -58,16 +55,14 @@ void Input::OnKeyUp(Key keyCode)
     keyStates_[KEY_IDX(keyCode)] = false;
 }
 
-void Input::OnLocalMotion(int x, int y)
+void Input::OnLocalMotion(const Point& position)
 {
-    mouseX_ = x;
-    mouseY_ = y;
+    mousePosition_ = position;
 }
 
-void Input::OnGlobalMotion(int dx, int dy)
+void Input::OnGlobalMotion(const Point& motion)
 {
-    mouseDX_ = dx;
-    mouseDY_ = dy;
+    mouseMotion_ = motion;
 }
 
 #undef KEY_IDX

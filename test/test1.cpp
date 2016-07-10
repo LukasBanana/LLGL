@@ -19,8 +19,7 @@ int main()
     windowDesc.title    = L"LLGL Test 1";
     windowDesc.visible  = true;
     windowDesc.centered = true;
-    windowDesc.width    = 640;
-    windowDesc.height   = 480;
+    windowDesc.size     = { 640, 480 };
     
     auto window = LLGL::Window::Create(windowDesc);
     
@@ -30,7 +29,7 @@ int main()
     auto timer = LLGL::Timer::Create();
     
     int x = 100, y = 100;
-    window->SetPosition(x, y);
+    window->SetPosition({ x, y });
     
     
     while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
@@ -51,22 +50,22 @@ int main()
         if (input->KeyPressed(LLGL::Key::Right))
         {
             ++x;
-            window->SetPosition(x, y);
+            window->SetPosition({ x, y });
         }
         if (input->KeyPressed(LLGL::Key::Left))
         {
             --x;
-            window->SetPosition(x, y);
+            window->SetPosition({ x, y });
         }
         if (input->KeyPressed(LLGL::Key::Up))
         {
             --y;
-            window->SetPosition(x, y);
+            window->SetPosition({ x, y });
         }
         if (input->KeyPressed(LLGL::Key::Down))
         {
             ++y;
-            window->SetPosition(x, y);
+            window->SetPosition({ x, y });
         }
         
     }

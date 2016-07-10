@@ -69,45 +69,42 @@ Win32Window::~Win32Window()
         DestroyWindow(wnd_);
 }
 
-void Win32Window::SetPosition(int x, int y)
+void Win32Window::SetPosition(const Point& position)
 {
-    SetWindowPos(wnd_, HWND_TOP, x, y, 0, 0, (SWP_NOSIZE | SWP_NOZORDER));
+    SetWindowPos(wnd_, HWND_TOP, position.x, position.y, 0, 0, (SWP_NOSIZE | SWP_NOZORDER));
 }
 
-void Win32Window::GetPosition(int& x, int& y) const
+Point Win32Window::GetPosition() const
 {
     RECT rc;
     GetWindowRect(wnd_, &rc);
-    x = rc.left;
-    y = rc.top;
+    return { rc.left, rc.top };
 }
 
-void Win32Window::SetSize(int width, int height, bool useClientArea)
+void Win32Window::SetSize(const Size& size, bool useClientArea)
 {
     if (useClientArea)
     {
-        auto rc = GetClientArea(width, height, GetWindowStyle(desc_));
-        SetSize(rc.right - rc.left, rc.bottom - rc.top, false);
+        auto rc = GetClientArea(size.x, size.y, GetWindowStyle(desc_));
+        SetSize({ rc.right - rc.left, rc.bottom - rc.top }, false);
     }
     else
-        SetWindowPos(wnd_, HWND_TOP, 0, 0, width, height, (SWP_NOMOVE | SWP_NOZORDER));
+        SetWindowPos(wnd_, HWND_TOP, 0, 0, size.x, size.y, (SWP_NOMOVE | SWP_NOZORDER));
 }
 
-void Win32Window::GetSize(int& width, int& height, bool useClientArea) const
+Size Win32Window::GetSize(bool useClientArea) const
 {
     if (useClientArea)
     {
         RECT rc;
         GetClientRect(wnd_, &rc);
-        width = rc.right - rc.left;
-        height = rc.bottom - rc.top;
+        return { rc.right - rc.left, rc.bottom - rc.top };
     }
     else
     {
         RECT rc;
         GetWindowRect(wnd_, &rc);
-        width = rc.right - rc.left;
-        height = rc.bottom - rc.top;
+        return { rc.right - rc.left, rc.bottom - rc.top };
     }
 }
 
@@ -168,12 +165,12 @@ HWND Win32Window::CreateWindowHandle(const WindowDesc& desc)
     int wOffset = rc.right - rc.left;
     int hOffset = rc.bottom - rc.top;
 
-    int x = desc.x, y = desc.y;
+    auto position = desc.position;
 
     if (desc.centered)
     {
-        x = GetSystemMetrics(SM_CXSCREEN)/2 - desc.width/2;
-        y = GetSystemMetrics(SM_CYSCREEN)/2 - desc.height/2;
+        position.x = GetSystemMetrics(SM_CXSCREEN)/2 - desc.size.x/2;
+        position.y = GetSystemMetrics(SM_CYSCREEN)/2 - desc.size.y/2;
     }
 
     /* Create frame window object */
@@ -181,10 +178,10 @@ HWND Win32Window::CreateWindowHandle(const WindowDesc& desc)
         windowClass->GetName(),
         desc.title.c_str(),
         style,
-        x - xOffset,
-        y - yOffset,
-        desc.width + wOffset,
-        desc.height + hOffset,
+        position.x - xOffset,
+        position.y - yOffset,
+        desc.size.x + wOffset,
+        desc.size.y + hOffset,
         HWND_DESKTOP,
         nullptr,
         GetModuleHandle(nullptr),

@@ -70,7 +70,7 @@ MacOSWindow::~MacOSWindow()
 {
 }
 
-void MacOSWindow::SetPosition(int x, int y)
+void MacOSWindow::SetPosition(const Point& position)
 {
     NSScreen* screen = [NSScreen mainScreen];
     CGSize frameSize = [screen frame].size;
@@ -78,21 +78,24 @@ void MacOSWindow::SetPosition(int x, int y)
     
     CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
     
-    [wnd_ setFrameTopLeftPoint:NSMakePoint((CGFloat)x, frameSize.height - menuBarHeight - (CGFloat)y)];
+    [wnd_ setFrameTopLeftPoint:NSMakePoint((CGFloat)position.x, frameSize.height - menuBarHeight - (CGFloat)position.y)];
     
     [screen release];
 }
 
-void MacOSWindow::GetPosition(int& x, int& y) const
+Point MacOSWindow::GetPosition() const
 {
+    return { 0, 0 };//todo...
 }
 
-void MacOSWindow::SetSize(int width, int height, bool useClientArea)
+void MacOSWindow::SetSize(const Size& size, bool useClientArea)
 {
+    //todo...
 }
 
-void MacOSWindow::GetSize(int& width, int& height, bool useClientArea) const
+Size MacOSWindow::GetSize(bool useClientArea) const
 {
+    return { 0, 0 };//todo...
 }
 
 void MacOSWindow::SetTitle(const std::wstring& title)
@@ -136,7 +139,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
     
     /* Create NSWindow object */
     NSWindow* wnd = [[NSWindow alloc]
-        initWithContentRect:NSMakeRect(0, 0, (CGFloat)desc.width, (CGFloat)desc.height)
+        initWithContentRect:NSMakeRect(0, 0, (CGFloat)desc.size.x, (CGFloat)desc.size.y)
         styleMask:(NSTitledWindowMask + NSClosableWindowMask + NSMiniaturizableWindowMask)
         backing:NSBackingStoreBuffered
         defer:FALSE

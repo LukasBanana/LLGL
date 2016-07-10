@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Window.h>
+#include <LLGL/Types.h>
 #include <array>
 
 
@@ -26,28 +27,24 @@ class LLGL_EXPORT Input : public Window::Listener
 
         bool KeyPressed(Key keyCode) const;
 
-        void GetMousePosition(int& x, int& y) const;
-        void GetMouseMotion(int& dx, int& dy) const;
+        Point GetMousePosition() const;
+        Point GetMouseMotion() const;
 
     private:
 
         void OnKeyDown(Key keyCode) override;
         void OnKeyUp(Key keyCode) override;
 
-        void OnLocalMotion(int x, int y) override;
-        void OnGlobalMotion(int dx, int dy) override;
+        void OnLocalMotion(const Point& position) override;
+        void OnGlobalMotion(const Point& motion) override;
 
         void OnReset() override;
 
         std::array<bool, 256> keyStates_;
 
-        int mouseX_ = 0,
-            mouseY_ = 0,
-            mouseDX_ = 0,
-            mouseDY_ = 0;
+        Point mousePosition_, mouseMotion_;
 
 };
-
 
 
 } // /namespace LLGL

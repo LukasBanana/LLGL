@@ -133,7 +133,7 @@ static void PostLocalMouseMotion(HWND wnd, LPARAM lParam)
         int y = GET_Y_LPARAM(lParam);
 
         /* Post local mouse motion event */
-        window->PostLocalMotion(x, y);
+        window->PostLocalMotion({ x, y });
     }
 }
 
@@ -161,7 +161,7 @@ static void PostGlobalMouseMotion(HWND wnd, LPARAM lParam)
                 int dx = mouse.lLastX;
                 int dy = mouse.lLastY;
 
-                window->PostGlobalMotion(dx, dy);
+                window->PostGlobalMotion({ dx, dy });
             }
         }
     }

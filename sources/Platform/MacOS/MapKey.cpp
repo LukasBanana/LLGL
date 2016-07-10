@@ -1,5 +1,5 @@
 /*
- * MapKey.cpp
+ * MapKey.cpp (MacOS)
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -11,26 +11,6 @@
 namespace LLGL
 {
 
-#if 0
-/*
- *  Summary:
- *    Virtual keycodes
- *
- *  Discussion:
- *    These constants are the virtual keycodes defined originally in
- *    Inside Mac Volume V, pg. V-191. They identify physical keys on a
- *    keyboard. Those constants with "ANSI" in the name are labeled
- *    according to the key position on an ANSI-standard US keyboard.
- *    For example, KEY(A indicates the virtual keycode for the key
- *    with the letter 'A' in the US keyboard layout. Other keyboard
- *    layouts may have the 'A' key label on a different physical key;
- *    in this case, pressing 'A' will generate a different virtual
- *    keycode.
- */
-enum {
-};
-
-#endif
 
 #define KEY(c) Key::c
 #define DUMMY KEY(Pause) // <-- any key, a dummy will never be used

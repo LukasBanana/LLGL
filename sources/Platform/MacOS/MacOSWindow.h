@@ -1,5 +1,5 @@
 /*
- * MacOSWindow
+ * MacOSWindow.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -25,11 +25,11 @@ class MacOSWindow : public Window
         MacOSWindow(const WindowDesc& desc);
         ~MacOSWindow();
 
-        void SetPosition(int x, int y) override;
-        void GetPosition(int& x, int& y) const override;
+        void SetPosition(const Point& position) override;
+        Point GetPosition() const override;
 
-        void SetSize(int width, int height, bool useClientArea = true) override;
-        void GetSize(int& width, int& height, bool useClientArea = true) const override;
+        void SetSize(const Size& size, bool useClientArea = true) override;
+        Size GetSize(bool useClientArea = true) const override;
 
         void SetTitle(const std::wstring& title) override;
         std::wstring GetTitle() const override;

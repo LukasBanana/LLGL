@@ -45,12 +45,12 @@ void Window::Listener::OnWheelMotion(int motion)
     // dummy
 }
 
-void Window::Listener::OnLocalMotion(int x, int y)
+void Window::Listener::OnLocalMotion(const Point& position)
 {
     // dummy
 }
 
-void Window::Listener::OnGlobalMotion(int dx, int dy)
+void Window::Listener::OnGlobalMotion(const Point& motion)
 {
     // dummy
 }
@@ -106,16 +106,16 @@ void Window::PostWheelMotion(int motion)
         lst->OnWheelMotion(motion);
 }
 
-void Window::PostLocalMotion(int x, int y)
+void Window::PostLocalMotion(const Point& position)
 {
     FOREACH_LISTENER(lst)
-        lst->OnLocalMotion(x, y);
+        lst->OnLocalMotion(position);
 }
 
-void Window::PostGlobalMotion(int dx, int dy)
+void Window::PostGlobalMotion(const Point& motion)
 {
     FOREACH_LISTENER(lst)
-        lst->OnGlobalMotion(dx, dy);
+        lst->OnGlobalMotion(motion);
 }
 
 void Window::PostQuit()

@@ -14,6 +14,7 @@
 #include <vector>
 #include <LLGL/API.h>
 #include <LLGL/Key.h>
+#include <LLGL/Types.h>
 
 
 namespace LLGL
@@ -23,10 +24,8 @@ namespace LLGL
 struct WindowDesc
 {
     std::wstring    title;
-    int             x                   = 0; // X position of the client area
-    int             y                   = 0; // Y position of the client area
-    int             width               = 0; // Width of the client area
-    int             height              = 0; // Height of the client area
+    Point           position;   // position (relative to the client area)
+    Size            size;       // client area size
 
     bool            visible             = false;
     bool            borderless          = false;
@@ -66,8 +65,8 @@ class LLGL_EXPORT Window
 
                 virtual void OnWheelMotion(int motion);
 
-                virtual void OnLocalMotion(int x, int y);
-                virtual void OnGlobalMotion(int dx, int dy);
+                virtual void OnLocalMotion(const Point& position);
+                virtual void OnGlobalMotion(const Point& motion);
 
         };
 
@@ -77,11 +76,11 @@ class LLGL_EXPORT Window
 
         static std::unique_ptr<Window> Create(const WindowDesc& desc);
 
-        virtual void SetPosition(int x, int y) = 0;
-        virtual void GetPosition(int& x, int& y) const = 0;
+        virtual void SetPosition(const Point& position) = 0;
+        virtual Point GetPosition() const = 0;
 
-        virtual void SetSize(int width, int height, bool useClientArea = true) = 0;
-        virtual void GetSize(int& width, int& height, bool useClientArea = true) const = 0;
+        virtual void SetSize(const Size& size, bool useClientArea = true) = 0;
+        virtual Size GetSize(bool useClientArea = true) const = 0;
 
         virtual void SetTitle(const std::wstring& title) = 0;
         virtual std::wstring GetTitle() const = 0;
@@ -105,8 +104,8 @@ class LLGL_EXPORT Window
         
         void PostWheelMotion(int motion);
         
-        void PostLocalMotion(int x, int y);
-        void PostGlobalMotion(int dx, int dy);
+        void PostLocalMotion(const Point& position);
+        void PostGlobalMotion(const Point& motion);
 
         void PostQuit();
 
