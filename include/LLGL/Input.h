@@ -25,12 +25,31 @@ class LLGL_EXPORT Input : public Window::Listener
 
         Input();
 
+        //! Returns true if the specified key is currently being pressed down.
         bool KeyPressed(Key keyCode) const;
+        //! Returns true if the specified key was hit in the previous event processing.
+        bool KeyHit(Key keyCode) const;
+        //! Returns true if the specified key was released in the previous event processing.
+        bool KeyReleased(Key keyCode) const;
 
         Point GetMousePosition() const;
         Point GetMouseMotion() const;
 
     private:
+
+        using KeyStateArray = std::array<bool, 256>;
+
+        struct KeyTracker
+        {
+            static const size_t         maxCount    = 10;
+            std::array<Key, maxCount>   keys;
+            size_t                      resetCount  = 0;
+
+            void Add(Key keyCode);
+            void Reset(KeyStateArray& keyStates);
+        };
+
+        void InitArray(KeyStateArray& keyStates);
 
         void OnKeyDown(Key keyCode) override;
         void OnKeyUp(Key keyCode) override;
@@ -40,9 +59,15 @@ class LLGL_EXPORT Input : public Window::Listener
 
         void OnReset() override;
 
-        std::array<bool, 256> keyStates_;
+        KeyStateArray           keyPressed_;
+        KeyStateArray           keyHit_;
+        KeyStateArray           keyReleased_;
 
-        Point mousePosition_, mouseMotion_;
+        Point                   mousePosition_;
+        Point                   mouseMotion_;
+
+        KeyTracker              keyHitTracker_;
+        KeyTracker              keyReleasedTracker_;
 
 };
 
