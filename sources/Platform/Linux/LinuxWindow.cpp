@@ -32,6 +32,10 @@ LinuxWindow::~LinuxWindow()
 
 void LinuxWindow::SetPosition(const Point& position)
 {
+    XWindowChanges attribs;
+    attribs.x = position.x;
+    attribs.y = position.y;
+    XConfigureWindow(display_, wnd_, (CWX | CWY), &attribs);
 }
 
 Point LinuxWindow::GetPosition() const
@@ -41,6 +45,10 @@ Point LinuxWindow::GetPosition() const
 
 void LinuxWindow::SetSize(const Size& size, bool useClientArea)
 {
+    XWindowChanges attribs;
+    attribs.width = size.x;
+    attribs.height = size.y;
+    XConfigureWindow(display_, wnd_, (CWWidth | CWHeight), &attribs);
 }
 
 Size LinuxWindow::GetSize(bool useClientArea) const
@@ -50,6 +58,14 @@ Size LinuxWindow::GetSize(bool useClientArea) const
 
 void LinuxWindow::SetTitle(const std::wstring& title)
 {
+    /* Convert UTF16 to UTF8 string (X11 limitation) */
+    std::string titleUTF8;
+    titleUTF8.resize(title.size());
+    for (std::size_t i = 0; i < title.size(); ++i)
+        titleUTF8[i] = static_cast<char>(title[i]);
+
+    /* Set windwo title */
+    XStoreName(display_, wnd_, titleUTF8.c_str());
 }
 
 std::wstring LinuxWindow::GetTitle() const
@@ -59,6 +75,10 @@ std::wstring LinuxWindow::GetTitle() const
 
 void LinuxWindow::Show(bool show)
 {
+    if (show)
+        XMapWindow(display_, wnd_);
+    else
+        XUnmapWindow(display_, wnd_);
 }
 
 bool LinuxWindow::IsShown() const
@@ -68,11 +88,39 @@ bool LinuxWindow::IsShown() const
 
 const void* LinuxWindow::GetNativeHandle() const
 {
-    return nullptr;
+    return (&wnd_);
 }
 
 void LinuxWindow::ProcessSystemEvents()
 {
+    XEvent event;
+
+    while (XPending(display_) > 0)
+    {
+        XNextEvent(display_, &event);
+
+        switch (event.type)
+        {
+            case KeyPress:
+            {
+                //PostKeyDown();
+                //todo...
+            }
+            break;
+
+            case KeyRelease:
+            {
+                //todo...
+            }
+            break;
+
+            case DestroyNotify:
+            {
+                PostQuit();
+            }
+            break;
+        }
+    }
 }
 
 
@@ -90,25 +138,38 @@ void LinuxWindow::SetupDisplay()
 
 void LinuxWindow::SetupWindow()
 {
-    //todo...
+    /* Setup window parameters */
+    ::Window    rootWnd     = DefaultRootWindow(display_);
+    int         screen      = DefaultScreen(display_);
+    int         borderSize  = 5;
+    Visual*     visual      = DefaultVisual(display_, screen);
+    int         depth       = DefaultDepth(display_, screen);
+
+    XSetWindowAttributes attribs;
+    attribs.background_pixel = WhitePixel(display_, screen);
 
     /* Create X11 window */
-    /*wnd_ = XCreateWindow(
+    wnd_ = XCreateWindow(
         display_,
-        DefaultRootWindow(display_),
+        rootWnd,
         desc_.position.x,
         desc_.position.y,
         desc_.size.x,
         desc_.size.y,
-        0,
-        visual->depth,
-        io,
-        visual->visual,
-        (CWColormap | CWEventMask | CWOverrideRedirect),
+        borderSize,
+        depth,
+        InputOutput,
+        visual,
+        //(CWColormap | CWEventMask | CWOverrideRedirect),
+        CWBackPixel,
         (&attribs)
-    );*/
+    );
 
+    /* Set title and show window (if enabled) */
+    SetTitle(desc_.title);
 
+    if (desc_.visible)
+        Show();
 }
 
 
