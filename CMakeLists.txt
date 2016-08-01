@@ -15,7 +15,7 @@ set(PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
 # === Preprocessor definitions ===
 
-macro(add_define IDENT)
+macro(ADD_DEFINE IDENT)
 	if(MSVC)
 		add_definitions(/D${IDENT})
 	else(MSVC)
@@ -24,14 +24,17 @@ macro(add_define IDENT)
 endmacro()
 
 if(WIN32)
-	add_define(_CRT_SECURE_NO_WARNINGS)
-	add_define(_SCL_SECURE_NO_WARNINGS)
-	add_define(UNICODE)
-	add_define(NOMINMAX)
+	ADD_DEFINE(_CRT_SECURE_NO_WARNINGS)
+	ADD_DEFINE(_SCL_SECURE_NO_WARNINGS)
+	ADD_DEFINE(UNICODE)
+	ADD_DEFINE(NOMINMAX)
 	if(MSVC)
 		# Disable some warnings for MSVC compiler
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250 /wd4251 /wd4290 /wd4103")
 	endif(MSVC)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DLLGL_DEBUG")
+else()
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLLGL_DEBUG")
 endif(WIN32)
 
 

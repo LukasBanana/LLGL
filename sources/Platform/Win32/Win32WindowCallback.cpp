@@ -114,8 +114,8 @@ static void ReleaseMouseButton(HWND wnd, Key keyCode)
     
         if (mouseCaptureCounter < 0)
         {
-            #ifdef _DEBUG
-            //Log::Warning();
+            #ifdef LLGL_DEBUG
+            //warning!!!
             #endif
             mouseCaptureCounter = 0;
         }

@@ -189,7 +189,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDesc& desc)
     );
 
     if (!wnd)
-        throw std::runtime_error("creating Win32 window failed");
+        throw std::runtime_error("failed to create window");
 
     /* Set additional flags */
     if (desc.acceptDropFiles)

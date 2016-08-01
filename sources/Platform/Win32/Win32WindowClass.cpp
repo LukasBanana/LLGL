@@ -36,7 +36,7 @@ Win32WindowClass::Win32WindowClass()
 
     /* Register window class */
     if (!RegisterClass(&wc))
-        throw std::runtime_error("registering window class failed");
+        throw std::runtime_error("failed to register window class");
 }
 
 Win32WindowClass::~Win32WindowClass()
