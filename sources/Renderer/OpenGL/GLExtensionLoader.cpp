@@ -1,26 +1,19 @@
 /*
- * OpenGL extension loader file
+ * GLModuleInterface.cpp
  * 
- * This file is part of the "ForkENGINE" (Copyright (c) 2014 by Lukas Hermanns)
+ * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
+#if 0
+
 #include "GLExtensionLoader.h"
 #include "GLExtensions.h"
-#include "Platform/Core/OS.h"
-#include "IO/Core/Log.h"
-#include "Core/StringModifier.h"
 
 #include <functional>
 
 
-namespace Fork
-{
-
-namespace Video
-{
-
-namespace GLExtensionLoader
+namespace LLGL
 {
 
 
@@ -32,7 +25,7 @@ template <typename T> bool LoadGLProc(T& procAddr, const char* procName)
     Load OpenGL procedure address
     -> Make an exception with platform dependent code here, because we use a template function.
     */
-    #if defined(FORK_WINDOWS_PLATFORM)
+    #if defined(_WIN32)
     procAddr = reinterpret_cast<T>(wglGetProcAddress(procName));
     #elif defined(FORK_POSIX_PLATFORM)
     procAddr = reinterpret_cast<T>(glXGetProcAddress(reinterpret_cast<const GLubyte*>(procName)));
@@ -456,12 +449,10 @@ bool LoadDebugProcs()
 #undef LoadVerbatimGLProc
 
 
-} // /namespace GLExtensionLoader
+} // /namespace LLGL
 
-} // /namespace Video
-
-} // /namespace Fork
+#endif
 
 
 
-// ========================
+// ================================================================================

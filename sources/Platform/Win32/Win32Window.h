@@ -22,7 +22,7 @@ class Win32Window : public Window
 
     public:
 
-        Win32Window(const WindowDesc& desc);
+        Win32Window(const WindowDescriptor& desc);
         ~Win32Window();
 
         void SetPosition(const Point& position) override;
@@ -43,14 +43,14 @@ class Win32Window : public Window
         
         void ProcessSystemEvents() override;
 
-        HWND CreateWindowHandle(const WindowDesc& desc);
+        HWND CreateWindowHandle(const WindowDescriptor& desc);
 
         void SetUserData(void* userData);
 
-        WindowDesc  desc_;
+        WindowDescriptor    desc_;
 
-        HWND        wnd_;
-        HDC         dc_;
+        HWND                wnd_;
+        HDC                 dc_;
 
 };
 

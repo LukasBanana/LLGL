@@ -22,7 +22,7 @@ class LinuxWindow : public Window
 
     public:
 
-        LinuxWindow(const WindowDesc& desc);
+        LinuxWindow(const WindowDescriptor& desc);
         ~LinuxWindow();
 
         void SetPosition(const Point& position) override;
@@ -46,14 +46,14 @@ class LinuxWindow : public Window
         void SetupDisplay();
         void SetupWindow();
 
-        WindowDesc  desc_;
+        WindowDescriptor    desc_;
 
-        ::Display*  display_    = nullptr;
-        ::Colormap  colorMap_;
-        ::Window    wnd_;
-        ::Cursor    cursor_;
+        ::Display*          display_    = nullptr;
+        ::Colormap          colorMap_;
+        ::Window            wnd_;
+        ::Cursor            cursor_;
 
-        XEvent      event_;
+        XEvent              event_;
 
 };
 

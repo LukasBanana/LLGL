@@ -9,8 +9,8 @@
 #define __LLGL_ERROR_H__
 
 
+#include "Export.h"
 #include <string>
-#include <LLGL/API.h>
 
 
 namespace LLGL
@@ -24,7 +24,7 @@ enum class Error
 };
 
 
-LLGL_EXPORT LLGL_API std::string ToString(Error value);
+LLGL_EXPORT std::string ToString(Error value);
 
 
 } // /namespace LLGL

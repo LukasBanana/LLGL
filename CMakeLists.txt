@@ -40,9 +40,13 @@ endif(WIN32)
 
 # === Global files ===
 
-file(GLOB FilesInclude		${PROJECT_INCLUDE_DIR}/LLGL/*.*)
-file(GLOB FilesCore			${PROJECT_SOURCE_DIR}/sources/Core/*.*)
-file(GLOB FilesPlatformBase	${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
+file(GLOB FilesInclude				${PROJECT_INCLUDE_DIR}/LLGL/*.*)
+file(GLOB FilesCore					${PROJECT_SOURCE_DIR}/sources/Core/*.*)
+file(GLOB FilesPlatformBase			${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
+file(GLOB FilesRenderer				${PROJECT_SOURCE_DIR}/sources/Renderer/*.*)
+file(GLOB FilesRendererOpenGL		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
+file(GLOB FilesRendererDirect3D12	${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
+file(GLOB FilesRendererVulkan		${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
 
 if(WIN32)
 	file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
@@ -63,6 +67,7 @@ set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/test1.cpp)
 source_group("Include" FILES ${FilesInclude})
 source_group("Sources\\Core" FILES ${FilesCore})
 source_group("Sources\\Platform" FILES ${FilesPlatformBase} ${FilesPlatform})
+source_group("Sources\\Renderer" FILES ${FilesRenderer} ${FilesRendererOpenGL} ${FilesRendererDirect3D12} ${FilesRendererVulkan})
 
 
 # === Include directories ===
@@ -73,17 +78,19 @@ find_path(GaussianLib_INCLUDE_DIR NAMES Gauss/Gauss.h)
 include_directories(${GaussianLib_INCLUDE_DIR})
 
 
-# === Binaries ===
+# === Projects ===
 
 set(
-	FilesAll
+	FilesLLGL
 	${FilesInclude}
 	${FilesCore}
 	${FilesPlatformBase}
 	${FilesPlatform}
+	${FilesRenderer}
 )
 
-add_library(LLGL SHARED ${FilesAll})
+# Base project
+add_library(LLGL SHARED ${FilesLLGL})
 
 if(APPLE)
 	find_library(COCOA_LIBRARY Cocoa)
@@ -92,9 +99,22 @@ elseif(UNIX)
 	target_link_libraries(LLGL X11)
 endif()
 
-set_target_properties("LLGL" PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 target_compile_features(LLGL PRIVATE cxx_range_for)
 
+# OpenGL Renderer
+find_package(OpenGL)
+if(OpenGL_FOUND)
+	include_directories(${OPENGL_INCLUDE_DIR})
+	add_library(LLGL_OpenGL SHARED ${FilesRendererOpenGL})
+	set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+	target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
+	target_compile_features(LLGL_OpenGL PRIVATE cxx_range_for)
+else()
+	message("Missing OpenGL -> LLGL_OpenGL renderer will be excluded from project")
+endif()
+
+# Test Projects
 if(APPLE)
 	add_executable(test1 MACOSX_BUNDLE ${FilesTest1})
 else()
@@ -102,7 +122,7 @@ else()
 endif()
 
 target_link_libraries(test1 LLGL)
-set_target_properties("test1" PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+set_target_properties(test1 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 target_compile_features(test1 PRIVATE cxx_range_for)
 
 

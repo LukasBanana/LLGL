@@ -17,7 +17,7 @@ int main()
     try
     {
         // Create window
-        LLGL::WindowDesc windowDesc;
+        LLGL::WindowDescriptor windowDesc;
 
         windowDesc.title        = L"LLGL Test 1";
         windowDesc.visible      = true;
@@ -33,6 +33,12 @@ int main()
         auto timer = LLGL::Timer::Create();
 
         auto pos = window->GetPosition();
+
+        auto renderer = LLGL::RenderSystem::Load("OpenGL");
+
+        window->SetTitle(
+            windowDesc.title + L" ( " + std::wstring(renderer->GetName().begin(), renderer->GetName().end()) + L" )"
+        );
 
 
         while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))

@@ -14,12 +14,12 @@ namespace LLGL
 {
 
 
-std::unique_ptr<Window> Window::Create(const WindowDesc& desc)
+std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
     return std::unique_ptr<Window>(new LinuxWindow(desc));
 }
 
-LinuxWindow::LinuxWindow(const WindowDesc& desc) :
+LinuxWindow::LinuxWindow(const WindowDescriptor& desc) :
     desc_( desc )
 {
     SetupDisplay();

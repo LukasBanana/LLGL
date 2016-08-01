@@ -12,6 +12,7 @@
 #include "Window.h"
 #include "Input.h"
 #include "Timer.h"
+#include "RenderSystem.h"
 
 
 #endif

@@ -1,30 +1,26 @@
 /*
- * OpenGL extension loader header
+ * GLExtensionLoader.h
  * 
- * This file is part of the "ForkENGINE" (Copyright (c) 2014 by Lukas Hermanns)
+ * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __FORK_GL_EXTENSION_LOADER_H__
-#define __FORK_GL_EXTENSION_LOADER_H__
+#if 0
+
+#ifndef __LLGL_GL_EXTENSION_LOADER_H__
+#define __LLGL_GL_EXTENSION_LOADER_H__
 
 
 #include <string>
 #include <map>
 
 
-namespace Fork
-{
-
-namespace Video
-{
-
-namespace GLExtensionLoader
+namespace LLGL
 {
 
 
 //! OpenGL extension map type.
-typedef std::map<std::string, bool> ExtMapType;
+using ExtMapType = std::map<std::string, bool>;
 
 /* --- Common extension loading functions --- */
 
@@ -92,15 +88,13 @@ bool LoadStencilSeparateProcs();
 bool LoadDebugProcs();
 
 
-} // /namespace GLExtensionLoader
+} // /namespace LLGL
 
-} // /namespace Video
 
-} // /namespace Fork
-
+#endif
 
 #endif
 
 
 
-// ========================
+// ================================================================================

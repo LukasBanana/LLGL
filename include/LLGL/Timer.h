@@ -9,7 +9,7 @@
 #define __LLGL_TIMER_H__
 
 
-#include <LLGL/API.h>
+#include <LLGL/Export.h>
 #include <memory>
 
 

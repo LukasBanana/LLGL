@@ -12,7 +12,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <LLGL/API.h>
+#include <LLGL/Export.h>
 #include <LLGL/Key.h>
 #include <LLGL/Types.h>
 
@@ -21,11 +21,12 @@ namespace LLGL
 {
 
 
-struct WindowDesc
+//! Window descriptor structure.
+struct WindowDescriptor
 {
     std::wstring    title;
-    Point           position;   // position (relative to the client area)
-    Size            size;       // client area size
+    Point           position;                       //!< Window position (relative to the client area).
+    Size            size;                           //!< Client area size.
 
     bool            visible             = false;
     bool            borderless          = false;
@@ -77,7 +78,7 @@ class LLGL_EXPORT Window
 
         virtual ~Window();
 
-        static std::unique_ptr<Window> Create(const WindowDesc& desc);
+        static std::unique_ptr<Window> Create(const WindowDescriptor& desc);
 
         virtual void SetPosition(const Point& position) = 0;
         virtual Point GetPosition() const = 0;

@@ -1,27 +1,30 @@
 /*
- * Error.cpp
+ * GLRenderSystem.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/Error.h>
+#include "GLRenderSystem.h"
 
 
 namespace LLGL
 {
 
 
-LLGL_EXPORT std::string ToString(Error value)
+GLRenderSystem::GLRenderSystem()
 {
-    switch (value)
-    {
-        case Error::None:
-            return "None";
-    }
-    return "";
 }
 
+GLRenderSystem::~GLRenderSystem()
+{
+}
+
+std::string GLRenderSystem::GetVersion() const
+{
+    //todo...
+    return "";
+}
 
 
 } // /namespace LLGL

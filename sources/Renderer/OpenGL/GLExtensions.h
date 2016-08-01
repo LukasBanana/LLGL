@@ -9,18 +9,7 @@
 #define __LLGL_GL_EXTENSIONS_H__
 
 
-#include <GL/gl.h>
-#include <GL/glext.h>
-
-#if defined(WIN32)
-#   include <Windows.h>
-#   include <GL/wglext.h>
-#elif defined(__linux__)
-#   include <sys/utsname.h>
-#   include <GL/glx.h>
-#elif defined(__APPLE__)
-#   include <OpenGL/gl.h>
-#endif
+#include "OpenGL.h"
 
 
 namespace LLGL
@@ -32,16 +21,16 @@ struct GLExtensions
 
     /* --- Platform specific GL extensions --- */
 
-    #if defined(FORK_WINDOWS_PLATFORM)
+    #if defined(_WIN32)
 
-    PFNWGLSWAPINTERVALEXTPROC                    WGLSwapIntervalEXT;
-    PFNWGLCHOOSEPIXELFORMATARBPROC               WGLChoosePixelFormatARB;
-    PFNWGLCREATECONTEXTATTRIBSARBPROC            WGLCreateContextAttribsARB;
-    PFNWGLGETEXTENSIONSSTRINGARBPROC             WGLGetExtensionsStringARB;
+    PFNWGLSWAPINTERVALEXTPROC                           WGLSwapIntervalEXT;
+    PFNWGLCHOOSEPIXELFORMATARBPROC                      WGLChoosePixelFormatARB;
+    PFNWGLCREATECONTEXTATTRIBSARBPROC                   WGLCreateContextAttribsARB;
+    PFNWGLGETEXTENSIONSSTRINGARBPROC                    WGLGetExtensionsStringARB;
 
-    #elif defined(FORK_POSIX)
+    #elif defined(__linux__)
 
-    PFNGLXSWAPINTERVALSGIPROC                    GLXSwapIntervalSGI;
+    PFNGLXSWAPINTERVALSGIPROC                           GLXSwapIntervalSGI;
 
     #endif
 

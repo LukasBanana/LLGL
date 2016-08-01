@@ -22,7 +22,7 @@ class MacOSWindow : public Window
 
     public:
 
-        MacOSWindow(const WindowDesc& desc);
+        MacOSWindow(const WindowDescriptor& desc);
         ~MacOSWindow();
 
         void SetPosition(const Point& position) override;
@@ -46,11 +46,11 @@ class MacOSWindow : public Window
         void ProcessMouseKeyEvent(Key key, bool down);
         void ProcessMouseMoveEvent(NSEvent* event);
     
-        NSWindow* CreateNSWindow(const WindowDesc& desc);
+        NSWindow* CreateNSWindow(const WindowDescriptor& desc);
 
-        WindowDesc  desc_;
+        WindowDescriptor    desc_;
     
-        NSWindow*   wnd_;
+        NSWindow*           wnd_;
 
 };
 

@@ -55,12 +55,12 @@ static NSString* ToNSString(const wchar_t* s)
     ];
 }
     
-std::unique_ptr<Window> Window::Create(const WindowDesc& desc)
+std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
     return std::unique_ptr<Window>(new MacOSWindow(desc));
 }
 
-MacOSWindow::MacOSWindow(const WindowDesc& desc) :
+MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
     desc_   ( desc                 ),
     wnd_    ( CreateNSWindow(desc) )
 {
@@ -137,7 +137,7 @@ const void* MacOSWindow::GetNativeHandle() const
  * ======= Private: =======
  */
 
-static NSUInteger GetWindowStyleMask(const WindowDesc& desc)
+static NSUInteger GetWindowStyleMask(const WindowDescriptor& desc)
 {
     if (desc.borderless)
         return NSBorderlessWindowMask;
@@ -150,7 +150,7 @@ static NSUInteger GetWindowStyleMask(const WindowDesc& desc)
     return mask;
 }
 
-NSWindow* MacOSWindow::CreateNSWindow(const WindowDesc& desc)
+NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 {
     /* Initialize Cocoa framework */
     [[NSAutoreleasePool alloc] init];

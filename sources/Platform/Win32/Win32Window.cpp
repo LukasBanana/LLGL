@@ -27,7 +27,7 @@ static RECT GetClientArea(LONG width, LONG height, DWORD style)
     return rc;
 }
 
-static DWORD GetWindowStyle(const WindowDesc& desc)
+static DWORD GetWindowStyle(const WindowDescriptor& desc)
 {
     DWORD style = (WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
     
@@ -50,12 +50,12 @@ static DWORD GetWindowStyle(const WindowDesc& desc)
     return style;
 }
 
-std::unique_ptr<Window> Window::Create(const WindowDesc& desc)
+std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
     return std::unique_ptr<Window>(new Win32Window(desc));
 }
 
-Win32Window::Win32Window(const WindowDesc& desc) :
+Win32Window::Win32Window(const WindowDescriptor& desc) :
     desc_   ( desc                     ),
     wnd_    ( CreateWindowHandle(desc) ),
     dc_     ( GetDC(wnd_)              )
@@ -152,7 +152,7 @@ void Win32Window::ProcessSystemEvents()
  * ======= Private: =======
  */
 
-HWND Win32Window::CreateWindowHandle(const WindowDesc& desc)
+HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
 {
     auto windowClass = Win32WindowClass::Instance();
 

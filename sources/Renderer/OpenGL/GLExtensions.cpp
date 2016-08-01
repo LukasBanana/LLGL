@@ -14,14 +14,14 @@ namespace LLGL
 
 /* --- Platform specific GL extensions --- */
 
-#if defined(FORK_WINDOWS_PLATFORM)
+#if defined(_WIN32)
 
 PFNWGLSWAPINTERVALEXTPROC                               wglSwapIntervalEXT                              = nullptr;
 PFNWGLCHOOSEPIXELFORMATARBPROC                          wglChoosePixelFormatARB                         = nullptr;
 PFNWGLCREATECONTEXTATTRIBSARBPROC                       wglCreateContextAttribsARB                      = nullptr;
 PFNWGLGETEXTENSIONSSTRINGARBPROC                        wglGetExtensionsStringARB                       = nullptr;
 
-#elif defined(FORK_POSIX_PLATFORM)
+#elif defined(__linux__)
 
 PFNGLXSWAPINTERVALSGIPROC                               glXSwapIntervalSGI                              = nullptr;
 
