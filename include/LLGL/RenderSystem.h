@@ -10,6 +10,8 @@
 
 
 #include "Export.h"
+#include "RenderContext.h"
+#include "Window.h"
 
 #include <string>
 #include <memory>
@@ -64,8 +66,8 @@ class LLGL_EXPORT RenderSystem
             return name_;
         }
 
-        //! Returns a descriptive version string of this render system (e.g. "OpenGL 4.5").
-        virtual std::string GetVersion() const = 0;
+        //! Creates a new render context.
+        virtual std::shared_ptr<RenderContext> CreateRenderContext(const RenderContextDescriptor& desc, Window& window) = 0;
 
     protected:
 

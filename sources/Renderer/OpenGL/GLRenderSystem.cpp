@@ -20,10 +20,10 @@ GLRenderSystem::~GLRenderSystem()
 {
 }
 
-std::string GLRenderSystem::GetVersion() const
+std::shared_ptr<RenderContext> GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, Window& window)
 {
     //todo...
-    return "";
+    return nullptr;
 }
 
 

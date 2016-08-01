@@ -29,7 +29,7 @@ class GLRenderSystem : public RenderSystem
         GLRenderSystem();
         ~GLRenderSystem();
 
-        std::string GetVersion() const override;
+        std::shared_ptr<RenderContext> CreateRenderContext(const RenderContextDescriptor& desc, Window& window) override;
 
     private:
 
