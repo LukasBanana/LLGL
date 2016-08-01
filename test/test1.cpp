@@ -28,13 +28,11 @@ int main()
         auto window = LLGL::Window::Create(windowDesc);
 
         auto input = std::make_shared<LLGL::Input>();
-        window->AddListener(input);
+        window->AddEventListener(input);
 
         auto timer = LLGL::Timer::Create();
 
-        int x = 100, y = 100;
-        window->SetPosition({ x, y });
-
+        auto pos = window->GetPosition();
 
 
         while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
@@ -43,15 +41,15 @@ int main()
 
             //std::cout << 1.0 / timer->GetDeltaTime() << std::endl;
 
-            if (input->KeyPressed(LLGL::Key::Num1))
+            if (input->KeyDown(LLGL::Key::Num1))
                 window->Show(false);
-            if (input->KeyPressed(LLGL::Key::Num2))
+            if (input->KeyDown(LLGL::Key::Num2))
                 window->Show(true);
-            if (input->KeyPressed(LLGL::Key::Num3))
+            if (input->KeyDown(LLGL::Key::Num3))
                 window->SetTitle(L"FOO BAR");
-            if (input->KeyPressed(LLGL::Key::Num4))
+            if (input->KeyDown(LLGL::Key::Num4))
                 window->SetTitle(L"LLGL Test 1");
-            if (input->KeyPressed(LLGL::Key::Num5))
+            if (input->KeyDown(LLGL::Key::Num5))
                 window->SetSize({ 300, 300 });
 
             #ifdef __APPLE__
@@ -63,23 +61,23 @@ int main()
 
             if (input->KeyPressed(LLGL::Key::Right))
             {
-                ++x;
-                window->SetPosition({ x, y });
+                ++pos.x;
+                window->SetPosition(pos);
             }
             if (input->KeyPressed(LLGL::Key::Left))
             {
-                --x;
-                window->SetPosition({ x, y });
+                --pos.x;
+                window->SetPosition(pos);
             }
             if (input->KeyPressed(LLGL::Key::Up))
             {
-                --y;
-                window->SetPosition({ x, y });
+                --pos.y;
+                window->SetPosition(pos);
             }
             if (input->KeyPressed(LLGL::Key::Down))
             {
-                ++y;
-                window->SetPosition({ x, y });
+                ++pos.y;
+                window->SetPosition(pos);
             }
 
         }

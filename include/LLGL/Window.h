@@ -45,28 +45,31 @@ class LLGL_EXPORT Window
     public:
 
         // Interface for all window listeners
-        class LLGL_EXPORT Listener
+        class LLGL_EXPORT EventListener
         {
 
             public:
 
-                virtual ~Listener();
+                virtual ~EventListener();
 
             protected:
 
                 friend class Window;
 
-                virtual void OnReset();
+                virtual void OnReset(Window& sender);
 
-                virtual void OnKeyDown(Key keyCode);
-                virtual void OnKeyUp(Key keyCode);
+                virtual void OnKeyDown(Window& sender, Key keyCode);
+                virtual void OnKeyUp(Window& sender, Key keyCode);
                 
-                virtual void OnChar(wchar_t chr);
+                virtual void OnChar(Window& sender, wchar_t chr);
 
-                virtual void OnWheelMotion(int motion);
+                virtual void OnWheelMotion(Window& sender, int motion);
 
-                virtual void OnLocalMotion(const Point& position);
-                virtual void OnGlobalMotion(const Point& motion);
+                virtual void OnLocalMotion(Window& sender, const Point& position);
+                virtual void OnGlobalMotion(Window& sender, const Point& motion);
+
+                //! Returns true if the specified window can quit, i.e. "ProcessEvents" returns false from now on.
+                virtual bool OnQuit(Window& sender);
 
         };
 
@@ -100,8 +103,8 @@ class LLGL_EXPORT Window
 
         /* --- Event handling --- */
 
-        void AddListener(const std::shared_ptr<Listener>& listener);
-        void RemoveListener(const Listener* listener);
+        void AddEventListener(const std::shared_ptr<EventListener>& eventListener);
+        void RemoveEventListener(const EventListener* eventListener);
 
         void PostKeyDown(Key keyCode);
         void PostKeyUp(Key keyCode);
@@ -113,6 +116,11 @@ class LLGL_EXPORT Window
         void PostLocalMotion(const Point& position);
         void PostGlobalMotion(const Point& motion);
 
+        /**
+        \brief Posts the 'OnQuit' event to all event listeners.
+        \remarks If at least one event listener returns false within the "OnQuit" callback, the window will not quit.
+        If all event listener return true within the "OnQuit" callback, "ProcessEvents" will returns false from now on.
+        */
         void PostQuit();
 
     protected:
@@ -121,7 +129,7 @@ class LLGL_EXPORT Window
 
     private:
 
-        std::vector<std::shared_ptr<Listener>> listeners_;
+        std::vector<std::shared_ptr<EventListener>> eventListeners_;
 
         bool quit_ = false;
 

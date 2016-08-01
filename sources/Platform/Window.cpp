@@ -13,46 +13,51 @@ namespace LLGL
 {
 
 
-#define FOREACH_LISTENER(i) \
-    for (const auto& i : listeners_)
+#define FOREACH_LISTENER(ITER) \
+    for (const auto& ITER : eventListeners_)
 
-Window::Listener::~Listener()
+Window::EventListener::~EventListener()
 {
 }
 
-void Window::Listener::OnReset()
+void Window::EventListener::OnReset(Window& sender)
 {
     // dummy
 }
 
-void Window::Listener::OnKeyDown(Key keyCode)
+void Window::EventListener::OnKeyDown(Window& sender, Key keyCode)
 {
     // dummy
 }
 
-void Window::Listener::OnKeyUp(Key keyCode)
-{
-    // dummy
-}
-                
-void Window::Listener::OnChar(wchar_t chr)
+void Window::EventListener::OnKeyUp(Window& sender, Key keyCode)
 {
     // dummy
 }
 
-void Window::Listener::OnWheelMotion(int motion)
+void Window::EventListener::OnChar(Window& sender, wchar_t chr)
 {
     // dummy
 }
 
-void Window::Listener::OnLocalMotion(const Point& position)
+void Window::EventListener::OnWheelMotion(Window& sender, int motion)
 {
     // dummy
 }
 
-void Window::Listener::OnGlobalMotion(const Point& motion)
+void Window::EventListener::OnLocalMotion(Window& sender, const Point& position)
 {
     // dummy
+}
+
+void Window::EventListener::OnGlobalMotion(Window& sender, const Point& motion)
+{
+    // dummy
+}
+
+bool Window::EventListener::OnQuit(Window& sender)
+{
+    return true; // dummy
 }
 
 
@@ -63,7 +68,7 @@ Window::~Window()
 bool Window::ProcessEvents()
 {
     FOREACH_LISTENER(lst)
-        lst->OnReset();
+        lst->OnReset(*this);
 
     ProcessSystemEvents();
 
@@ -72,54 +77,59 @@ bool Window::ProcessEvents()
 
 /* --- Event handling --- */
 
-void Window::AddListener(const std::shared_ptr<Listener>& listener)
+void Window::AddEventListener(const std::shared_ptr<EventListener>& eventListener)
 {
-    AddListenerGlob(listeners_, listener);
+    AddListenerGlob(eventListeners_, eventListener);
 }
 
-void Window::RemoveListener(const Listener* listener)
+void Window::RemoveEventListener(const EventListener* eventListener)
 {
-    RemoveListenerGlob(listeners_, listener);
+    RemoveListenerGlob(eventListeners_, eventListener);
 }
 
 void Window::PostKeyDown(Key keyCode)
 {
     FOREACH_LISTENER(lst)
-        lst->OnKeyDown(keyCode);
+        lst->OnKeyDown(*this, keyCode);
 }
 
 void Window::PostKeyUp(Key keyCode)
 {
     FOREACH_LISTENER(lst)
-        lst->OnKeyUp(keyCode);
+        lst->OnKeyUp(*this, keyCode);
 }
 
 void Window::PostChar(wchar_t chr)
 {
     FOREACH_LISTENER(lst)
-        lst->OnChar(chr);
+        lst->OnChar(*this, chr);
 }
 
 void Window::PostWheelMotion(int motion)
 {
     FOREACH_LISTENER(lst)
-        lst->OnWheelMotion(motion);
+        lst->OnWheelMotion(*this, motion);
 }
 
 void Window::PostLocalMotion(const Point& position)
 {
     FOREACH_LISTENER(lst)
-        lst->OnLocalMotion(position);
+        lst->OnLocalMotion(*this, position);
 }
 
 void Window::PostGlobalMotion(const Point& motion)
 {
     FOREACH_LISTENER(lst)
-        lst->OnGlobalMotion(motion);
+        lst->OnGlobalMotion(*this, motion);
 }
 
 void Window::PostQuit()
 {
+    FOREACH_LISTENER(lst)
+    {
+        if (!lst->OnQuit(*this))
+            return;
+    }
     quit_ = true;
 }
 

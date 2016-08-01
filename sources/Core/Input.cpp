@@ -18,8 +18,8 @@ namespace LLGL
 Input::Input()
 {
     InitArray(keyPressed_);
-    InitArray(keyHit_);
-    InitArray(keyReleased_);
+    InitArray(keyDown_);
+    InitArray(keyUp_);
 }
 
 bool Input::KeyPressed(Key keyCode) const
@@ -27,14 +27,14 @@ bool Input::KeyPressed(Key keyCode) const
     return keyPressed_[KEY_IDX(keyCode)];
 }
 
-bool Input::KeyHit(Key keyCode) const
+bool Input::KeyDown(Key keyCode) const
 {
-    return keyHit_[KEY_IDX(keyCode)];
+    return keyDown_[KEY_IDX(keyCode)];
 }
 
-bool Input::KeyReleased(Key keyCode) const
+bool Input::KeyUp(Key keyCode) const
 {
-    return keyReleased_[KEY_IDX(keyCode)];
+    return keyUp_[KEY_IDX(keyCode)];
 }
 
 Point Input::GetMousePosition() const
@@ -57,46 +57,46 @@ void Input::InitArray(KeyStateArray& keyStates)
     std::fill(keyStates.begin(), keyStates.end(), false);
 }
 
-void Input::OnReset()
+void Input::OnReset(Window& sender)
 {
     mouseMotion_ = { 0, 0 };
-    keyHitTracker_.Reset(keyHit_);
-    keyReleasedTracker_.Reset(keyReleased_);
+    keyDownTracker_.Reset(keyDown_);
+    keyUpTracker_.Reset(keyUp_);
 }
 
-void Input::OnKeyDown(Key keyCode)
+void Input::OnKeyDown(Window& sender, Key keyCode)
 {
     auto idx = KEY_IDX(keyCode);
 
     /* Store key hit state */
     if (!keyPressed_[idx])
     {
-        keyHit_[idx] = true;
-        keyHitTracker_.Add(keyCode);
+        keyDown_[idx] = true;
+        keyDownTracker_.Add(keyCode);
     }
 
     /* Store key pressed state */
     keyPressed_[idx] = true;
 }
 
-void Input::OnKeyUp(Key keyCode)
+void Input::OnKeyUp(Window& sender, Key keyCode)
 {
     auto idx = KEY_IDX(keyCode);
 
     /* Store key released state */
-    keyReleased_[idx] = true;
-    keyReleasedTracker_.Add(keyCode);
+    keyUp_[idx] = true;
+    keyUpTracker_.Add(keyCode);
 
     /* Reset key pressed state */
     keyPressed_[idx] = false;
 }
 
-void Input::OnLocalMotion(const Point& position)
+void Input::OnLocalMotion(Window& sender, const Point& position)
 {
     mousePosition_ = position;
 }
 
-void Input::OnGlobalMotion(const Point& motion)
+void Input::OnGlobalMotion(Window& sender, const Point& motion)
 {
     mouseMotion_ = motion;
 }

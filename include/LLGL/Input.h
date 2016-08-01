@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class LLGL_EXPORT Input : public Window::Listener
+class LLGL_EXPORT Input : public Window::EventListener
 {
 
     public:
@@ -27,10 +27,12 @@ class LLGL_EXPORT Input : public Window::Listener
 
         //! Returns true if the specified key is currently being pressed down.
         bool KeyPressed(Key keyCode) const;
-        //! Returns true if the specified key was hit in the previous event processing.
-        bool KeyHit(Key keyCode) const;
+
+        //! Returns true if the specified key was pressed down in the previous event processing.
+        bool KeyDown(Key keyCode) const;
+
         //! Returns true if the specified key was released in the previous event processing.
-        bool KeyReleased(Key keyCode) const;
+        bool KeyUp(Key keyCode) const;
 
         Point GetMousePosition() const;
         Point GetMouseMotion() const;
@@ -51,23 +53,23 @@ class LLGL_EXPORT Input : public Window::Listener
 
         void InitArray(KeyStateArray& keyStates);
 
-        void OnKeyDown(Key keyCode) override;
-        void OnKeyUp(Key keyCode) override;
+        void OnReset(Window& sender) override;
 
-        void OnLocalMotion(const Point& position) override;
-        void OnGlobalMotion(const Point& motion) override;
+        void OnKeyDown(Window& sender, Key keyCode) override;
+        void OnKeyUp(Window& sender, Key keyCode) override;
 
-        void OnReset() override;
+        void OnLocalMotion(Window& sender, const Point& position) override;
+        void OnGlobalMotion(Window& sender, const Point& motion) override;
 
         KeyStateArray           keyPressed_;
-        KeyStateArray           keyHit_;
-        KeyStateArray           keyReleased_;
+        KeyStateArray           keyDown_;
+        KeyStateArray           keyUp_;
 
         Point                   mousePosition_;
         Point                   mouseMotion_;
 
-        KeyTracker              keyHitTracker_;
-        KeyTracker              keyReleasedTracker_;
+        KeyTracker              keyDownTracker_;
+        KeyTracker              keyUpTracker_;
 
 };
 
