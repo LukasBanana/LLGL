@@ -5,8 +5,6 @@
  * See "LICENSE.txt" for license information.
  */
 
-#if 0
-
 #ifndef __LLGL_GL_EXTENSION_LOADER_H__
 #define __LLGL_GL_EXTENSION_LOADER_H__
 
@@ -90,8 +88,6 @@ bool LoadDebugProcs();
 
 } // /namespace LLGL
 
-
-#endif
 
 #endif
 

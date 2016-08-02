@@ -19,11 +19,13 @@ namespace LLGL
 
 struct GLPlatformContext
 {
-    int                 pixelFormat     = 0;    //!< Standard pixel format.
-    std::vector<int>    msPixelFormats;         //!< Multi-sampled pixel formats.
+    static const UINT   maxNumPixelFormatsMS    = 8;
 
-    HDC                 hDC             = 0;    //!< Device context handle.
-    HGLRC               hGLRC           = 0;    //!< OpenGL render context handle.
+    int                 pixelFormat             = 0;    //!< Standard pixel format.
+    std::vector<int>    pixelFormatsMS;                 //!< Multi-sampled pixel formats.
+
+    HDC                 hDC                     = 0;    //!< Device context handle.
+    HGLRC               hGLRC                   = 0;    //!< OpenGL render context handle.
 };
 
 

@@ -40,9 +40,35 @@ class GLRenderContext : public RenderContext
         void CreateContext(GLRenderContext* sharedRenderContext);
         void DeleteContext();
 
+        void QueryGLVerion(GLint& major, GLint& minor);
+
+        #if defined(_WIN32)
+
+        void DeleteGLContext(HGLRC& renderContext);
+
+        HGLRC CreateGLContext(bool useExtProfile, GLRenderContext* sharedRenderContextGL = nullptr);
+        HGLRC CreateStdContextProfile();
+        HGLRC CreateExtContextProfile(HGLRC sharedGLRC = nullptr);
+
+        void SetupDeviceContextAndPixelFormat();
+
+        void SelectPixelFormat();
+        bool SetupAntiAliasing();
+        void CopyPixelFormat(GLRenderContext& sourceContext);
+
+        bool SetupVSyncInterval();
+
+        void ReCreateFrameAndUpdatePixelFormat();
+
+        #endif
+
         RenderContextDescriptor desc_;
         std::shared_ptr<Window> window_;
+
         GLPlatformContext       context_;
+
+        //! Specifies whether this context uses a shared GL render context (true) or has its own hardware context (false).
+        bool                    hasSharedContext_   = false;
 
 };
 

@@ -11,7 +11,6 @@
 
 #include "Export.h"
 #include "RenderContext.h"
-#include "Window.h"
 
 #include <string>
 #include <memory>
@@ -70,7 +69,7 @@ class LLGL_EXPORT RenderSystem
         \brief Creates a new render context and returns the raw pointer.
         \remarks Rhe render system takes the ownership of this object. All render contexts are deleted in the destructor of this render system.
         */
-        virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window) = 0;
+        virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) = 0;
 
     protected:
 

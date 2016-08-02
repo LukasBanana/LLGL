@@ -5,11 +5,9 @@
  * See "LICENSE.txt" for license information.
  */
 
-#if 0
-
 #include "GLExtensionLoader.h"
 #include "GLExtensions.h"
-
+#include <LLGL/Log.h>
 #include <functional>
 
 
@@ -19,7 +17,8 @@ namespace LLGL
 
 /* --- Internal functions --- */
 
-template <typename T> bool LoadGLProc(T& procAddr, const char* procName)
+template <typename T>
+bool LoadGLProc(T& procAddr, const char* procName)
 {
     /*
     Load OpenGL procedure address
@@ -27,17 +26,17 @@ template <typename T> bool LoadGLProc(T& procAddr, const char* procName)
     */
     #if defined(_WIN32)
     procAddr = reinterpret_cast<T>(wglGetProcAddress(procName));
-    #elif defined(FORK_POSIX_PLATFORM)
+    #elif defined(__linux__)
     procAddr = reinterpret_cast<T>(glXGetProcAddress(reinterpret_cast<const GLubyte*>(procName)));
     #else
-    IO::Log::Error("OS not supported for loading OpenGL extensions");
+    Log::StdErr() << "OS not supported for loading OpenGL extensions" << std::endl;
     return false;
     #endif
     
     /* Check for errors */
     if (!procAddr)
     {
-        IO::Log::Error("Loading OpenGL procedure \"" + ToStr(procName) + "\" failed");
+        Log::StdErr() << "failed to load OpenGL procedure: " << procName << std::endl;
         return false;
     }
     
@@ -60,14 +59,14 @@ static void ExtractExtensionsFromString(std::map<std::string, bool>& extMap, con
 
 /* --- Common extension loading functions --- */
 
-ExtMapType QueryExtensions(bool useGLCoreProfile)
+ExtMapType QueryExtensions(bool coreProfile)
 {
     ExtMapType extMap;
 
     const char* extString = nullptr;
     
     /* Filter standard GL extensions */
-    if (useGLCoreProfile)
+    if (coreProfile)
     {
         #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
         
@@ -96,7 +95,7 @@ ExtMapType QueryExtensions(bool useGLCoreProfile)
             ExtractExtensionsFromString(extMap, extString);
     }
 
-    #if defined(FORK_WINDOWS_PLATFORM) && defined(WGL_ARB_extensions_string)
+    #if defined(_WIN32) && defined(WGL_ARB_extensions_string)
 
     /* Filter Win32 related extensions */
     if (wglGetExtensionsStringARB || LoadGLProc(wglGetExtensionsStringARB, "wglGetExtensionsStringARB"))
@@ -125,7 +124,7 @@ void LoadAllExtensions(ExtMapType& extMap)
         auto it = extMap.find(extName);
         if (it != extMap.end() && !extLoadingProc())
         {
-            IO::Log::Error("Loading OpenGL extension \"" + extName + "\" failed");
+            Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
             it->second = false;
         }
     };
@@ -168,16 +167,16 @@ void LoadAllExtensions(ExtMapType& extMap)
     extAlreadyLoaded = true;
 }
 
-#define LoadVerbatimGLProc(n) LoadGLProc(n, #n)
+#define LOAD_VERBATIM_GLPROC(NAME) LoadGLProc(NAME, #NAME)
 
 /* --- Common GL extensions --- */
 
 bool LoadSwapIntervalProcs()
 {
-    #if defined(FORK_WINDOWS_PLATFORM)
-    return LoadVerbatimGLProc(wglSwapIntervalEXT);
-    #elif defined(FORK_POSIX_PLATFORM)
-    return LoadVerbatimGLProc(glXSwapIntervalSGI);
+    #if defined(_WIN32)
+    return LOAD_VERBATIM_GLPROC(wglSwapIntervalEXT);
+    #elif defined(__linux__)
+    return LOAD_VERBATIM_GLPROC(glXSwapIntervalSGI);
     #else
     return false;
     #endif
@@ -185,8 +184,8 @@ bool LoadSwapIntervalProcs()
 
 bool LoadPixelFormatProcs()
 {
-    #if defined(FORK_WINDOWS_PLATFORM)
-    return LoadVerbatimGLProc(wglChoosePixelFormatARB);
+    #if defined(_WIN32)
+    return LOAD_VERBATIM_GLPROC(wglChoosePixelFormatARB);
     #else
     return false;
     #endif
@@ -194,8 +193,8 @@ bool LoadPixelFormatProcs()
 
 bool LoadCreateContextProcs()
 {
-    #if defined(FORK_WINDOWS_PLATFORM)
-    return LoadVerbatimGLProc(wglCreateContextAttribsARB);
+    #if defined(_WIN32)
+    return LOAD_VERBATIM_GLPROC(wglCreateContextAttribsARB);
     #else
     return false;
     #endif
@@ -206,91 +205,91 @@ bool LoadCreateContextProcs()
 bool LoadVBOProcs()
 {
     return
-        LoadVerbatimGLProc( glGenBuffers    ) &&
-        LoadVerbatimGLProc( glDeleteBuffers ) &&
-        LoadVerbatimGLProc( glBindBuffer    ) &&
-        LoadVerbatimGLProc( glBufferData    ) &&
-        LoadVerbatimGLProc( glBufferSubData ) &&
-        LoadVerbatimGLProc( glMapBuffer     ) &&
-        LoadVerbatimGLProc( glUnmapBuffer   );
+        LOAD_VERBATIM_GLPROC( glGenBuffers    ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteBuffers ) &&
+        LOAD_VERBATIM_GLPROC( glBindBuffer    ) &&
+        LOAD_VERBATIM_GLPROC( glBufferData    ) &&
+        LOAD_VERBATIM_GLPROC( glBufferSubData ) &&
+        LOAD_VERBATIM_GLPROC( glMapBuffer     ) &&
+        LOAD_VERBATIM_GLPROC( glUnmapBuffer   );
 }
 
 bool LoadVAOProcs()
 {
     return
-        LoadVerbatimGLProc( glGenVertexArrays    ) &&
-        LoadVerbatimGLProc( glDeleteVertexArrays ) &&
-        LoadVerbatimGLProc( glBindVertexArray    );
+        LOAD_VERBATIM_GLPROC( glGenVertexArrays    ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteVertexArrays ) &&
+        LOAD_VERBATIM_GLPROC( glBindVertexArray    );
 }
 
 bool LoadFBOProcs()
 {
     return
-        LoadVerbatimGLProc( glGenRenderbuffers                    ) &&
-        LoadVerbatimGLProc( glDeleteRenderbuffers                 ) &&
-        LoadVerbatimGLProc( glBindRenderbuffer                    ) &&
-        LoadVerbatimGLProc( glRenderbufferStorage                 ) &&
-        LoadVerbatimGLProc( glRenderbufferStorageMultisample      ) &&
+        LOAD_VERBATIM_GLPROC( glGenRenderbuffers                    ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteRenderbuffers                 ) &&
+        LOAD_VERBATIM_GLPROC( glBindRenderbuffer                    ) &&
+        LOAD_VERBATIM_GLPROC( glRenderbufferStorage                 ) &&
+        LOAD_VERBATIM_GLPROC( glRenderbufferStorageMultisample      ) &&
 
-        LoadVerbatimGLProc( glGenFramebuffers                     ) &&
-        LoadVerbatimGLProc( glDeleteFramebuffers                  ) &&
-        LoadVerbatimGLProc( glBindFramebuffer                     ) &&
-        LoadVerbatimGLProc( glCheckFramebufferStatus              ) &&
+        LOAD_VERBATIM_GLPROC( glGenFramebuffers                     ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteFramebuffers                  ) &&
+        LOAD_VERBATIM_GLPROC( glBindFramebuffer                     ) &&
+        LOAD_VERBATIM_GLPROC( glCheckFramebufferStatus              ) &&
 
-        LoadVerbatimGLProc( glFramebufferTexture                  ) &&
-        LoadVerbatimGLProc( glFramebufferTexture1D                ) &&
-        LoadVerbatimGLProc( glFramebufferTexture2D                ) &&
-        LoadVerbatimGLProc( glFramebufferTexture3D                ) &&
-        LoadVerbatimGLProc( glFramebufferTextureLayer             ) &&
-        LoadVerbatimGLProc( glFramebufferRenderbuffer             ) &&
-        LoadVerbatimGLProc( glGetFramebufferAttachmentParameteriv ) &&
-        LoadVerbatimGLProc( glBlitFramebuffer                     ) &&
+        LOAD_VERBATIM_GLPROC( glFramebufferTexture                  ) &&
+        LOAD_VERBATIM_GLPROC( glFramebufferTexture1D                ) &&
+        LOAD_VERBATIM_GLPROC( glFramebufferTexture2D                ) &&
+        LOAD_VERBATIM_GLPROC( glFramebufferTexture3D                ) &&
+        LOAD_VERBATIM_GLPROC( glFramebufferTextureLayer             ) &&
+        LOAD_VERBATIM_GLPROC( glFramebufferRenderbuffer             ) &&
+        LOAD_VERBATIM_GLPROC( glGetFramebufferAttachmentParameteriv ) &&
+        LOAD_VERBATIM_GLPROC( glBlitFramebuffer                     ) &&
 
-        LoadVerbatimGLProc( glGenerateMipmap                      );
+        LOAD_VERBATIM_GLPROC( glGenerateMipmap                      );
 }
 
 bool LoadUBOProcs()
 {
     return
-        LoadVerbatimGLProc( glGetUniformBlockIndex      ) &&
-        LoadVerbatimGLProc( glGetActiveUniformBlockiv   ) &&
-        LoadVerbatimGLProc( glGetActiveUniformBlockName ) &&
-        LoadVerbatimGLProc( glUniformBlockBinding       ) &&
-        LoadVerbatimGLProc( glBindBufferBase            );
+        LOAD_VERBATIM_GLPROC( glGetUniformBlockIndex      ) &&
+        LOAD_VERBATIM_GLPROC( glGetActiveUniformBlockiv   ) &&
+        LOAD_VERBATIM_GLPROC( glGetActiveUniformBlockName ) &&
+        LOAD_VERBATIM_GLPROC( glUniformBlockBinding       ) &&
+        LOAD_VERBATIM_GLPROC( glBindBufferBase            );
 }
 
 bool LoadSSBOProcs()
 {
-    return LoadVerbatimGLProc(glShaderStorageBlockBinding);
+    return LOAD_VERBATIM_GLPROC(glShaderStorageBlockBinding);
 }
 
 /* --- Drawing extensions --- */
 
 bool LoadDrawBuffersProcs()
 {
-    return LoadVerbatimGLProc(glDrawBuffers);
+    return LOAD_VERBATIM_GLPROC(glDrawBuffers);
 }
 
 bool LoadInstancedProcs()
 {
     return
-        LoadVerbatimGLProc( glDrawArraysInstanced   ) &&
-        LoadVerbatimGLProc( glDrawElementsInstanced );
+        LOAD_VERBATIM_GLPROC( glDrawArraysInstanced   ) &&
+        LOAD_VERBATIM_GLPROC( glDrawElementsInstanced );
 }
 
 bool LoadInstancedOffsetProcs()
 {
     return
-        LoadVerbatimGLProc( glDrawArraysInstancedBaseInstance             ) &&
-        LoadVerbatimGLProc( glDrawElementsInstancedBaseInstance           ) &&
-        LoadVerbatimGLProc( glDrawElementsInstancedBaseVertexBaseInstance );
+        LOAD_VERBATIM_GLPROC( glDrawArraysInstancedBaseInstance             ) &&
+        LOAD_VERBATIM_GLPROC( glDrawElementsInstancedBaseInstance           ) &&
+        LOAD_VERBATIM_GLPROC( glDrawElementsInstancedBaseVertexBaseInstance );
 }
 
 bool LoadBaseVertexProcs()
 {
     return
-        LoadVerbatimGLProc( glDrawElementsBaseVertex          ) &&
-        LoadVerbatimGLProc( glDrawElementsInstancedBaseVertex );
+        LOAD_VERBATIM_GLPROC( glDrawElementsBaseVertex          ) &&
+        LOAD_VERBATIM_GLPROC( glDrawElementsInstancedBaseVertex );
 }
 
 /* --- Shader extensions --- */
@@ -298,100 +297,100 @@ bool LoadBaseVertexProcs()
 bool LoadShaderProcs()
 {
     return
-        LoadVerbatimGLProc( glCreateShader      ) &&
-        LoadVerbatimGLProc( glShaderSource      ) &&
-        LoadVerbatimGLProc( glCompileShader     ) &&
-        LoadVerbatimGLProc( glGetShaderiv       ) &&
-        LoadVerbatimGLProc( glGetShaderInfoLog  ) &&
-        LoadVerbatimGLProc( glDeleteShader      ) &&
+        LOAD_VERBATIM_GLPROC( glCreateShader      ) &&
+        LOAD_VERBATIM_GLPROC( glShaderSource      ) &&
+        LOAD_VERBATIM_GLPROC( glCompileShader     ) &&
+        LOAD_VERBATIM_GLPROC( glGetShaderiv       ) &&
+        LOAD_VERBATIM_GLPROC( glGetShaderInfoLog  ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteShader      ) &&
 
-        LoadVerbatimGLProc( glCreateProgram     ) &&
-        LoadVerbatimGLProc( glDeleteProgram     ) &&
-        LoadVerbatimGLProc( glAttachShader      ) &&
-        LoadVerbatimGLProc( glDetachShader      ) &&
-        LoadVerbatimGLProc( glLinkProgram       ) &&
-        LoadVerbatimGLProc( glValidateProgram   ) &&
-        LoadVerbatimGLProc( glGetProgramiv      ) &&
-        LoadVerbatimGLProc( glGetProgramInfoLog ) &&
-        LoadVerbatimGLProc( glUseProgram        ) &&
+        LOAD_VERBATIM_GLPROC( glCreateProgram     ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteProgram     ) &&
+        LOAD_VERBATIM_GLPROC( glAttachShader      ) &&
+        LOAD_VERBATIM_GLPROC( glDetachShader      ) &&
+        LOAD_VERBATIM_GLPROC( glLinkProgram       ) &&
+        LOAD_VERBATIM_GLPROC( glValidateProgram   ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramiv      ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramInfoLog ) &&
+        LOAD_VERBATIM_GLPROC( glUseProgram        ) &&
 
-        LoadVerbatimGLProc( glGetActiveAttrib   ) &&
-        LoadVerbatimGLProc( glGetAttribLocation );
+        LOAD_VERBATIM_GLPROC( glGetActiveAttrib   ) &&
+        LOAD_VERBATIM_GLPROC( glGetAttribLocation );
 }
 
 bool LoadVertexAttribProcs()
 {
     return
-        LoadVerbatimGLProc( glEnableVertexAttribArray  ) &&
-        LoadVerbatimGLProc( glDisableVertexAttribArray ) &&
-        LoadVerbatimGLProc( glVertexAttribPointer      ) &&
-        LoadVerbatimGLProc( glBindAttribLocation       );
+        LOAD_VERBATIM_GLPROC( glEnableVertexAttribArray  ) &&
+        LOAD_VERBATIM_GLPROC( glDisableVertexAttribArray ) &&
+        LOAD_VERBATIM_GLPROC( glVertexAttribPointer      ) &&
+        LOAD_VERBATIM_GLPROC( glBindAttribLocation       );
 }
 
 bool LoadTessellationShaderProcs()
 {
     return
-        LoadVerbatimGLProc( glPatchParameteri  ) &&
-        LoadVerbatimGLProc( glPatchParameterfv );
+        LOAD_VERBATIM_GLPROC( glPatchParameteri  ) &&
+        LOAD_VERBATIM_GLPROC( glPatchParameterfv );
 }
 
 bool LoadComputeShaderProcs()
 {
     return
-        LoadVerbatimGLProc( glDispatchCompute         ) &&
-        LoadVerbatimGLProc( glDispatchComputeIndirect );
+        LOAD_VERBATIM_GLPROC( glDispatchCompute         ) &&
+        LOAD_VERBATIM_GLPROC( glDispatchComputeIndirect );
 }
 
 bool LoadProgramBinaryProcs()
 {
     return
-        LoadVerbatimGLProc( glGetProgramBinary  ) &&
-        LoadVerbatimGLProc( glProgramBinary     ) &&
-        LoadVerbatimGLProc( glProgramParameteri );
+        LOAD_VERBATIM_GLPROC( glGetProgramBinary  ) &&
+        LOAD_VERBATIM_GLPROC( glProgramBinary     ) &&
+        LOAD_VERBATIM_GLPROC( glProgramParameteri );
 }
 
 bool LoadProgramInterfaceQueryProcs()
 {
     return
-        LoadVerbatimGLProc( glGetProgramInterfaceiv           ) &&
-        LoadVerbatimGLProc( glGetProgramResourceIndex         ) &&
-        LoadVerbatimGLProc( glGetProgramResourceName          ) &&
-        LoadVerbatimGLProc( glGetProgramResourceiv            ) &&
-        LoadVerbatimGLProc( glGetProgramResourceLocation      ) &&
-        LoadVerbatimGLProc( glGetProgramResourceLocationIndex );
+        LOAD_VERBATIM_GLPROC( glGetProgramInterfaceiv           ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramResourceIndex         ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramResourceName          ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramResourceiv            ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramResourceLocation      ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramResourceLocationIndex );
 }
 
 /* --- Texture extensions --- */
 
 bool LoadMultiTextureProcs()
 {
-    return LoadVerbatimGLProc(glActiveTexture);
+    return LOAD_VERBATIM_GLPROC(glActiveTexture);
 }
 
 bool Load3DTextureProcs()
 {
     return
-        LoadVerbatimGLProc( glTexImage3D    ) &&
-        LoadVerbatimGLProc( glTexSubImage3D );
+        LOAD_VERBATIM_GLPROC( glTexImage3D    ) &&
+        LOAD_VERBATIM_GLPROC( glTexSubImage3D );
 }
 
 bool LoadClearTextureProcs()
 {
     return
-        LoadVerbatimGLProc( glClearTexImage    ) &&
-        LoadVerbatimGLProc( glClearTexSubImage );
+        LOAD_VERBATIM_GLPROC( glClearTexImage    ) &&
+        LOAD_VERBATIM_GLPROC( glClearTexSubImage );
 }
 
 bool LoadSamplerProcs()
 {
     return
-        LoadVerbatimGLProc( glGenSamplers        ) &&
-        LoadVerbatimGLProc( glDeleteSamplers     ) &&
-        LoadVerbatimGLProc( glBindSampler        ) &&
-        LoadVerbatimGLProc( glSamplerParameteri  ) &&
-        LoadVerbatimGLProc( glSamplerParameterf  ) &&
-        LoadVerbatimGLProc( glSamplerParameteriv ) &&
-        LoadVerbatimGLProc( glSamplerParameterfv );
+        LOAD_VERBATIM_GLPROC( glGenSamplers        ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteSamplers     ) &&
+        LOAD_VERBATIM_GLPROC( glBindSampler        ) &&
+        LOAD_VERBATIM_GLPROC( glSamplerParameteri  ) &&
+        LOAD_VERBATIM_GLPROC( glSamplerParameterf  ) &&
+        LOAD_VERBATIM_GLPROC( glSamplerParameteriv ) &&
+        LOAD_VERBATIM_GLPROC( glSamplerParameterfv );
 }
 
 /* --- Other extensions --- */
@@ -399,59 +398,57 @@ bool LoadSamplerProcs()
 bool LoadQueryObjectProcs()
 {
     return
-        LoadVerbatimGLProc( glGenQueries        ) &&
-        LoadVerbatimGLProc( glDeleteQueries     ) &&
-        LoadVerbatimGLProc( glBeginQuery        ) &&
-        LoadVerbatimGLProc( glEndQuery          ) &&
-        LoadVerbatimGLProc( glGetQueryObjectiv  ) &&
-        LoadVerbatimGLProc( glGetQueryObjectuiv );
+        LOAD_VERBATIM_GLPROC( glGenQueries        ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteQueries     ) &&
+        LOAD_VERBATIM_GLPROC( glBeginQuery        ) &&
+        LOAD_VERBATIM_GLPROC( glEndQuery          ) &&
+        LOAD_VERBATIM_GLPROC( glGetQueryObjectiv  ) &&
+        LOAD_VERBATIM_GLPROC( glGetQueryObjectuiv );
 }
 
 bool LoadViewportArrayProcs()
 {
     return
-        LoadVerbatimGLProc( glViewportArrayv   ) &&
-        LoadVerbatimGLProc( glScissorArrayv    ) &&
-        LoadVerbatimGLProc( glDepthRangeArrayv );
+        LOAD_VERBATIM_GLPROC( glViewportArrayv   ) &&
+        LOAD_VERBATIM_GLPROC( glScissorArrayv    ) &&
+        LOAD_VERBATIM_GLPROC( glDepthRangeArrayv );
 }
 
 bool LoadDrawBuffersBlendProcs()
 {
     return
-        LoadVerbatimGLProc( glBlendFuncSeparate  ) &&
-        LoadVerbatimGLProc( glBlendFuncSeparatei );
+        LOAD_VERBATIM_GLPROC( glBlendFuncSeparate  ) &&
+        LOAD_VERBATIM_GLPROC( glBlendFuncSeparatei );
 }
 
 bool LoadMultiBindProcs()
 {
     return
-        LoadVerbatimGLProc( glBindBuffersBase   ) &&
-        LoadVerbatimGLProc( glBindBuffersRange  ) &&
-        LoadVerbatimGLProc( glBindTextures      ) &&
-        LoadVerbatimGLProc( glBindSamplers      ) &&
-        LoadVerbatimGLProc( glBindImageTextures ) &&
-        LoadVerbatimGLProc( glBindVertexBuffers );
+        LOAD_VERBATIM_GLPROC( glBindBuffersBase   ) &&
+        LOAD_VERBATIM_GLPROC( glBindBuffersRange  ) &&
+        LOAD_VERBATIM_GLPROC( glBindTextures      ) &&
+        LOAD_VERBATIM_GLPROC( glBindSamplers      ) &&
+        LOAD_VERBATIM_GLPROC( glBindImageTextures ) &&
+        LOAD_VERBATIM_GLPROC( glBindVertexBuffers );
 }
 
 bool LoadStencilSeparateProcs()
 {
     return
-        LoadVerbatimGLProc( glStencilFuncSeparate ) &&
-        LoadVerbatimGLProc( glStencilMaskSeparate ) &&
-        LoadVerbatimGLProc( glStencilOpSeparate   );
+        LOAD_VERBATIM_GLPROC( glStencilFuncSeparate ) &&
+        LOAD_VERBATIM_GLPROC( glStencilMaskSeparate ) &&
+        LOAD_VERBATIM_GLPROC( glStencilOpSeparate   );
 }
 
 bool LoadDebugProcs()
 {
-    return LoadVerbatimGLProc(glDebugMessageCallback);
+    return LOAD_VERBATIM_GLPROC(glDebugMessageCallback);
 }
 
-#undef LoadVerbatimGLProc
+#undef LOAD_VERBATIM_GLPROC
 
 
 } // /namespace LLGL
-
-#endif
 
 
 

@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "Window.h"
 #include <string>
 
 
@@ -40,25 +41,25 @@ struct VideoModeDescriptor
 
 enum class OpenGLVersion
 {
-    OpenGL_1_0,     //!< OpenGL 1.0, released in Jan, 1992.
-    OpenGL_1_1,     //!< OpenGL 1.1, released in Mar, 1997.
-    OpenGL_1_2,     //!< OpenGL 1.2, released in Mar, 1998.
-    OpenGL_1_3,     //!< OpenGL 1.3, released in Aug, 2001.
-    OpenGL_1_4,     //!< OpenGL 1.4, released in Jul, 2002.
-    OpenGL_1_5,     //!< OpenGL 1.5, released in Jul, 2003.
-    OpenGL_2_0,     //!< OpenGL 2.0, released in Sep, 2004.
-    OpenGL_2_1,     //!< OpenGL 2.1, released in Jul, 2006.
-    OpenGL_3_0,     //!< OpenGL 3.0, released in Aug, 2008 (known as "Longs Peak").
-    OpenGL_3_1,     //!< OpenGL 3.1, released in Mar, 2009 (known as "Longs Peak Reloaded").
-    OpenGL_3_2,     //!< OpenGL 3.2, released in Aug, 2009.
-    OpenGL_3_3,     //!< OpenGL 3.3, released in Mar, 2010.
-    OpenGL_4_0,     //!< OpenGL 4.0, released in Mar, 2010 (alongside with OpenGL 3.3).
-    OpenGL_4_1,     //!< OpenGL 4.1, released in Jul, 2010.
-    OpenGL_4_2,     //!< OpenGL 4.2, released in Aug, 2011.
-    OpenGL_4_3,     //!< OpenGL 4.3, released in Aug, 2012.
-    OpenGL_4_4,     //!< OpenGL 4.4, released in Jul, 2013.
-    OpenGL_4_5,     //!< OpenGL 4.5, released in Aug, 2014.
-    OpenGL_Latest,  //!< Latest available OpenGL version (on the host platform).
+    OpenGL_Latest   =   0, //!< Latest available OpenGL version (on the host platform).
+    OpenGL_1_0      = 100, //!< OpenGL 1.0, released in Jan, 1992.
+    OpenGL_1_1      = 110, //!< OpenGL 1.1, released in Mar, 1997.
+    OpenGL_1_2      = 120, //!< OpenGL 1.2, released in Mar, 1998.
+    OpenGL_1_3      = 130, //!< OpenGL 1.3, released in Aug, 2001.
+    OpenGL_1_4      = 140, //!< OpenGL 1.4, released in Jul, 2002.
+    OpenGL_1_5      = 150, //!< OpenGL 1.5, released in Jul, 2003.
+    OpenGL_2_0      = 200, //!< OpenGL 2.0, released in Sep, 2004.
+    OpenGL_2_1      = 210, //!< OpenGL 2.1, released in Jul, 2006.
+    OpenGL_3_0      = 300, //!< OpenGL 3.0, released in Aug, 2008 (known as "Longs Peak").
+    OpenGL_3_1      = 310, //!< OpenGL 3.1, released in Mar, 2009 (known as "Longs Peak Reloaded").
+    OpenGL_3_2      = 320, //!< OpenGL 3.2, released in Aug, 2009.
+    OpenGL_3_3      = 330, //!< OpenGL 3.3, released in Mar, 2010.
+    OpenGL_4_0      = 400, //!< OpenGL 4.0, released in Mar, 2010 (alongside with OpenGL 3.3).
+    OpenGL_4_1      = 410, //!< OpenGL 4.1, released in Jul, 2010.
+    OpenGL_4_2      = 420, //!< OpenGL 4.2, released in Aug, 2011.
+    OpenGL_4_3      = 430, //!< OpenGL 4.3, released in Aug, 2012.
+    OpenGL_4_4      = 440, //!< OpenGL 4.4, released in Jul, 2013.
+    OpenGL_4_5      = 450, //!< OpenGL 4.5, released in Aug, 2014.
 };
 
 struct ProfileOpenGLDescriptor
@@ -112,7 +113,16 @@ class LLGL_EXPORT RenderContext
 
     protected:
 
-        RenderContext() = default;
+        RenderContext(const std::shared_ptr<Window>& window, const VideoModeDescriptor& videoModeDesc);
+
+        inline Window& GetWindow() const
+        {
+            return *window_;
+        }
+
+    private:
+
+        std::shared_ptr<Window> window_;
 
 };
 

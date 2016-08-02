@@ -13,8 +13,8 @@ namespace LLGL
 
 
 GLRenderContext::GLRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
-    desc_   ( desc   ),
-    window_ ( window )
+    RenderContext   ( window, desc.videoMode ),
+    desc_           ( desc                   )
 {
     CreateContext(sharedRenderContext);
 }
@@ -27,6 +27,17 @@ GLRenderContext::~GLRenderContext()
 std::string GLRenderContext::GetVersion() const
 {
     return ""; //todo...
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLRenderContext::QueryGLVerion(GLint& major, GLint& minor)
+{
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
 }
 
 
