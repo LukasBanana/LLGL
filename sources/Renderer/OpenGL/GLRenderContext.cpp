@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-GLRenderContext::GLRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
+GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
     RenderContext   ( window, desc.videoMode ),
     desc_           ( desc                   )
 {

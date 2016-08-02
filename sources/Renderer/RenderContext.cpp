@@ -21,20 +21,21 @@ RenderContext::~RenderContext()
  * ======= Protected: =======
  */
 
-RenderContext::RenderContext(const std::shared_ptr<Window>& window, const VideoModeDescriptor& videoModeDesc) :
+RenderContext::RenderContext(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc) :
     window_( window )
 {
     if (!window_)
     {
         WindowDescriptor windowDesc;
         {
-            windowDesc.size.x       = videoModeDesc.screenWidth;
-            windowDesc.size.y       = videoModeDesc.screenHeight;
+            windowDesc.size         = videoModeDesc.resolution;
             windowDesc.borderless   = videoModeDesc.fullscreen;
             windowDesc.centered     = !videoModeDesc.fullscreen;
         }
         window_ = Window::Create(windowDesc);
     }
+    else
+        videoModeDesc.resolution = window_->GetSize();
 }
 
 

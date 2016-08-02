@@ -7,6 +7,7 @@
 
 #include "GLRenderSystem.h"
 #include "../CheckedCast.h"
+#include <LLGL/Desktop.h>
 
 
 namespace LLGL
@@ -19,14 +20,13 @@ GLRenderSystem::GLRenderSystem()
 
 GLRenderSystem::~GLRenderSystem()
 {
+    Desktop::ResetVideoMode();
 }
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    /* Create new render context, take ownership, and return the raw pointer */
-    auto renderContext = std::unique_ptr<GLRenderContext>(
-        new GLRenderContext(desc, window, nullptr)
-    );
+    /* Create new render context */
+    auto renderContext = std::unique_ptr<GLRenderContext>(new GLRenderContext(desc, window, nullptr));
 
     /*
     If render context created it's own window then show it after creation,
@@ -35,6 +35,11 @@ RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor
     if (!window)
         renderContext->GetWindow().Show();
 
+    /* Switch to fullscreen mode (if enabled) */
+    if (desc.videoMode.fullscreen)
+        Desktop::ChangeVideoMode(desc.videoMode);
+
+    /* Take ownership and return raw pointer */
     renderContexts_.emplace_back(std::move(renderContext));
 
     return renderContexts_.back().get();

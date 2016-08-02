@@ -30,7 +30,7 @@ class GLRenderContext : public RenderContext
 
         /* ----- Common ----- */
 
-        GLRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext);
+        GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext);
         ~GLRenderContext();
 
         std::map<RendererInfo, std::string> QueryRendererInfo() const override;

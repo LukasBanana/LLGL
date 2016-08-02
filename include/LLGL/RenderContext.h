@@ -70,7 +70,7 @@ class LLGL_EXPORT RenderContext
 
     protected:
 
-        RenderContext(const std::shared_ptr<Window>& window, const VideoModeDescriptor& videoModeDesc);
+        RenderContext(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc);
 
     private:
 

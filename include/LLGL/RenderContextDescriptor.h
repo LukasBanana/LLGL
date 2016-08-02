@@ -56,8 +56,7 @@ struct AntiAliasingDescriptor
 
 struct VideoModeDescriptor
 {
-    unsigned int    screenWidth     = 0;        //!< Screen width. By default the window's width is used.
-    unsigned int    screenHeight    = 0;        //!< Screen height. By default the window's height is used.
+    Size            resolution;                 //!< Screen resolution.
     int             colorDepth      = 32;       //!< Color bit depth. Should be 24 or 32. By default 32.
     bool            fullscreen      = false;    //!< Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
 };

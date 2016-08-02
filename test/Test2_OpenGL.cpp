@@ -29,9 +29,8 @@ int main()
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
 
-        contextDesc.videoMode.screenWidth   = 800;
-        contextDesc.videoMode.screenHeight  = 600;
-        contextDesc.videoMode.fullscreen    = true;
+        contextDesc.videoMode.resolution    = { 800, 600 };
+        //contextDesc.videoMode.fullscreen    = true;
 
         contextDesc.antiAliasing.enabled    = true;
         contextDesc.antiAliasing.samples    = 8;
@@ -68,8 +67,8 @@ int main()
             #ifdef _WIN32
             
             auto proj = Gs::ProjectionMatrix4f::Planar(
-                static_cast<Gs::Real>(contextDesc.videoMode.screenWidth),
-                static_cast<Gs::Real>(contextDesc.videoMode.screenHeight)
+                static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
+                static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
             );
 
             glMatrixMode(GL_PROJECTION);

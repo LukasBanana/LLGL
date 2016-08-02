@@ -48,8 +48,8 @@ LLGL_EXPORT bool ChangeVideoMode(const VideoModeDescriptor& videoMode)
         memset(&config, 0, sizeof(DEVMODE));
         {
             config.dmSize       = sizeof(DEVMODE);
-            config.dmPelsWidth  = videoMode.screenWidth;
-            config.dmPelsHeight = videoMode.screenHeight;
+            config.dmPelsWidth  = static_cast<DWORD>(videoMode.resolution.x);
+            config.dmPelsHeight = static_cast<DWORD>(videoMode.resolution.y);
             config.dmBitsPerPel = videoMode.colorDepth;
             config.dmFields     = (DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT);
         }
