@@ -11,6 +11,12 @@
 
 #include "Export.h"
 #include "RenderContext.h"
+#include "RenderSystemFlags.h"
+
+#include "VertexBuffer.h"
+#include "VertexFormat.h"
+#include "IndexBuffer.h"
+#include "IndexFormat.h"
 
 #include <string>
 #include <memory>
@@ -27,7 +33,7 @@ class LLGL_EXPORT RenderSystem
 
     public:
 
-        /* ----- Render system ----- */
+        /* ----- Common ----- */
 
         RenderSystem(const RenderSystem&) = delete;
         RenderSystem& operator = (const RenderSystem&) = delete;
@@ -65,6 +71,8 @@ class LLGL_EXPORT RenderSystem
             return name_;
         }
 
+        /* ----- Render context ----- */
+
         /**
         \brief Creates a new render context and returns the raw pointer.
         \remarks Rhe render system takes the ownership of this object. All render contexts are deleted in the destructor of this render system.
@@ -83,6 +91,29 @@ class LLGL_EXPORT RenderSystem
         {
             return currentContext_;
         }
+
+        /* ----- Hardware buffers ------ */
+
+        virtual VertexBuffer* CreateVertexBuffer() = 0;
+        virtual IndexBuffer* CreateIndexBuffer() = 0;
+        /*virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc) = 0;
+        virtual StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc) = 0;*/
+
+        virtual void WriteVertexBuffer(
+            VertexBuffer& vertexBuffer,
+            const void* data,
+            std::size_t dataSize,
+            const BufferUsage usage,
+            const VertexFormat& vertexFormat
+        ) = 0;
+
+        virtual void WriteIndexBuffer(
+            VertexBuffer& vertexBuffer,
+            const void* data,
+            std::size_t dataSize,
+            const BufferUsage usage,
+            const IndexFormat& indexFormat
+        ) = 0;
 
     protected:
 

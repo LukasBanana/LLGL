@@ -32,6 +32,27 @@ class GLRenderSystem : public RenderSystem
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
 
+        /* ----- Hardware buffers ------ */
+
+        VertexBuffer* CreateVertexBuffer() override;
+        IndexBuffer* CreateIndexBuffer() override;
+
+        void WriteVertexBuffer(
+            VertexBuffer& vertexBuffer,
+            const void* data,
+            std::size_t dataSize,
+            const BufferUsage usage,
+            const VertexFormat& vertexFormat
+        ) override;
+
+        void WriteIndexBuffer(
+            VertexBuffer& vertexBuffer,
+            const void* data,
+            std::size_t dataSize,
+            const BufferUsage usage,
+            const IndexFormat& indexFormat
+        ) override;
+
     private:
 
         void OnMakeCurrent(RenderContext* renderContext) override;

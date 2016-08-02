@@ -45,6 +45,36 @@ RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor
     return renderContexts_.back().get();
 }
 
+/* ----- Hardware buffers ------ */
+
+VertexBuffer* GLRenderSystem::CreateVertexBuffer()
+{
+    return nullptr;
+}
+
+IndexBuffer* GLRenderSystem::CreateIndexBuffer()
+{
+    return nullptr;
+}
+
+void GLRenderSystem::WriteVertexBuffer(
+    VertexBuffer& vertexBuffer,
+    const void* data,
+    std::size_t dataSize,
+    const BufferUsage usage,
+    const VertexFormat& vertexFormat)
+{
+}
+
+void GLRenderSystem::WriteIndexBuffer(
+    VertexBuffer& vertexBuffer,
+    const void* data,
+    std::size_t dataSize,
+    const BufferUsage usage,
+    const IndexFormat& indexFormat)
+{
+}
+
 
 /*
  * ======= Private: =======
