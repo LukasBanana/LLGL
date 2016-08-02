@@ -16,6 +16,8 @@
 
 #if defined(_WIN32)
 #   include "Win32/Win32GLPlatformContext.h"
+#elif defined(__linux__)
+#   include "Linux/LinuxGLPlatformContext.h"
 #endif
 
 

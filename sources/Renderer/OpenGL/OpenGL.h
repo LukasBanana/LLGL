@@ -15,6 +15,7 @@
 #   include <GL/glext.h>
 #   include <GL/wglext.h>
 #elif defined(__linux__)
+#   include <GL/gl.h>
 #   include <GL/glext.h>
 #   include <GL/glx.h>
 #elif defined(__APPLE__)

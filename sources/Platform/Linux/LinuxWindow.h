@@ -37,6 +37,10 @@ class LinuxWindow : public Window
         void Show(bool show = true) override;
         bool IsShown() const override;
 
+        WindowDescriptor QueryDesc() const override;
+
+        void Recreate(const WindowDescriptor& desc) override;
+        
         const void* GetNativeHandle() const override;
 
     private:

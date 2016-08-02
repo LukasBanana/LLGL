@@ -86,6 +86,16 @@ bool LinuxWindow::IsShown() const
     return false;
 }
 
+WindowDescriptor LinuxWindow::QueryDesc() const
+{
+    return desc_; //todo...
+}
+
+void LinuxWindow::Recreate(const WindowDescriptor& desc)
+{
+    //todo...
+}
+
 const void* LinuxWindow::GetNativeHandle() const
 {
     return (&wnd_);

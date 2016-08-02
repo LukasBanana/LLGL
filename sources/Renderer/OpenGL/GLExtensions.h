@@ -27,7 +27,7 @@ extern PFNWGLGETEXTENSIONSSTRINGARBPROC                     wglGetExtensionsStri
 
 #elif defined(__linux__)
 
-extern PFNGLXSWAPINTERVALSGIPROC                            glGLXSwapIntervalSGI;
+extern PFNGLXSWAPINTERVALSGIPROC                            glXSwapIntervalSGI;
 
 #endif
 

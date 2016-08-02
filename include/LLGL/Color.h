@@ -21,6 +21,25 @@ namespace LLGL
 
 
 
+/* --- Global functions --- */
+
+//! Returns the maximal color value for the data type T. By default 1.
+template <typename T>
+inline T MaxColorValue()
+{
+    return T(1);
+}
+
+//! Specialized version. For unsigned 8-bit integers, the return value is 255.
+template <>
+inline unsigned char MaxColorValue<unsigned char>()
+{
+    return 255;
+}
+
+
+/* --- Color class --- */
+
 /**
 \brief Base color class with N components.
 \tparam T Specifies the data type of the vector components.
@@ -132,7 +151,7 @@ class Color
         template <typename C>
         Color<C, N> Cast() const
         {
-            Color<C, N> result(UninitializeTag{});
+            Color<C, N> result(Gs::UninitializeTag{});
 
             for (std::size_t i = 0; i < N; ++i)
                 result[i] = static_cast<C>(v_[i]);
@@ -215,23 +234,6 @@ Color<T, N> operator / (const Color<T, N>& lhs, const T& rhs)
     auto result = lhs;
     result /= rhs;
     return result;
-}
-
-
-/* --- Global functions --- */
-
-//! Returns the maximal color value for the data type T. By default 1.
-template <typename T>
-inline T MaxColorValue()
-{
-    return T(1);
-}
-
-//! Specialized version. For unsigned 8-bit integers, the return value is 255.
-template <>
-inline unsigned char MaxColorValue<unsigned char>()
-{
-    return 255;
 }
 
 
