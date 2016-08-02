@@ -21,6 +21,17 @@ void GLRenderContext::Present()
     SwapBuffers(context_.hDC);
 }
 
+bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
+{
+    if (renderContext)
+    {
+        const auto& ctx = renderContext->context_;
+        return (wglMakeCurrent(ctx.hDC, ctx.hGLRC) == TRUE);
+    }
+    else
+        return (wglMakeCurrent(0, 0) == TRUE);
+}
+
 
 /*
  * ======= Private: =======
@@ -450,7 +461,7 @@ bool GLRenderContext::SetupVSyncInterval()
 void GLRenderContext::RecreateWindow()
 {
     /* Recreate window with current descriptor, then update device context and pixel format */
-    window_->Recreate(window_->QueryDesc());
+    GetWindow().Recreate(GetWindow().QueryDesc());
     SetupDeviceContextAndPixelFormat();
 }
 

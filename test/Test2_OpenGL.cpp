@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/LLGL.h>
+#include <Gauss/Gauss.h>
 #include <memory>
 #include <iostream>
 #include <string>
@@ -23,22 +24,25 @@ int main()
     try
     {
         // Load render system module
-        auto renderSystem = LLGL::RenderSystem::Load("OpenGL");
+        auto renderer = LLGL::RenderSystem::Load("OpenGL");
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
 
-        /*contextDesc.profileOpenGL.extProfile    = true;
-        contextDesc.profileOpenGL.coreProfile   = true;
-        contextDesc.profileOpenGL.version       = LLGL::OpenGLVersion::OpenGL_3_0;*/
-
         contextDesc.videoMode.screenWidth   = 800;
         contextDesc.videoMode.screenHeight  = 600;
 
-        auto renderContext = renderSystem->CreateRenderContext(contextDesc);
+        contextDesc.antiAliasing.enabled    = true;
+        contextDesc.antiAliasing.samples    = 8;
+
+        contextDesc.vsync.enabled           = true;
+
+        auto context = renderer->CreateRenderContext(contextDesc);
+
+        context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
 
         // Show renderer info
-        auto info = renderContext->QueryRendererInfo();
+        auto info = context->QueryRendererInfo();
 
         std::cout << "Renderer:         " << info[LLGL::RendererInfo::Version] << std::endl;
         std::cout << "Vendor:           " << info[LLGL::RendererInfo::Vendor] << std::endl;
@@ -46,9 +50,9 @@ int main()
         std::cout << "Shading Language: " << info[LLGL::RendererInfo::ShadingLanguageVersion] << std::endl;
 
         // Setup window title
-        auto& window = renderContext->GetWindow();
+        auto& window = context->GetWindow();
 
-        auto title = "LLGL Test 2 ( " + renderSystem->GetName() + " )";
+        auto title = "LLGL Test 2 ( " + renderer->GetName() + " )";
         window.SetTitle(std::wstring(title.begin(), title.end()));
 
         // Setup input controller
@@ -58,13 +62,31 @@ int main()
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
         {
+            context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             #ifdef _WIN32
-            glClearColor(0, 1, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT);
+            
+            auto proj = Gs::ProjectionMatrix4f::Planar(
+                static_cast<Gs::Real>(contextDesc.videoMode.screenWidth),
+                static_cast<Gs::Real>(contextDesc.videoMode.screenHeight)
+            );
+
+            glMatrixMode(GL_PROJECTION);
+            glLoadMatrixf(proj.Ptr());
+
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+
+            glBegin(GL_LINES);
+            {
+                glVertex2i(200, 100);
+                glVertex2i(400, 200);
+            }
+            glEnd();
+
             #endif
 
-            renderContext->Present();
+            context->Present();
         }
     }
     catch (const std::exception& e)

@@ -30,7 +30,6 @@ RenderContext::RenderContext(const std::shared_ptr<Window>& window, const VideoM
         {
             windowDesc.size.x       = videoModeDesc.screenWidth;
             windowDesc.size.y       = videoModeDesc.screenHeight;
-            windowDesc.visible      = true;
             windowDesc.borderless   = videoModeDesc.fullscreen;
             windowDesc.centered     = !videoModeDesc.fullscreen;
         }

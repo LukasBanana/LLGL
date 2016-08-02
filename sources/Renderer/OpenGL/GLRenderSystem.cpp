@@ -6,6 +6,7 @@
  */
 
 #include "GLRenderSystem.h"
+#include "../CheckedCast.h"
 
 
 namespace LLGL
@@ -27,9 +28,32 @@ RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor
         new GLRenderContext(desc, window, nullptr)
     );
 
+    /*
+    If render context created it's own window then show it after creation,
+    since anti-aliasing may force the window to be recreated several times
+    */
+    if (!window)
+        renderContext->GetWindow().Show();
+
     renderContexts_.emplace_back(std::move(renderContext));
-    
+
     return renderContexts_.back().get();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLRenderSystem::OnMakeCurrent(RenderContext* renderContext)
+{
+    if (renderContext)
+    {
+        auto renderContextGL = LLGL_CAST(GLRenderContext*, renderContext);
+        GLRenderContext::GLMakeCurrent(renderContextGL);
+    }
+    else
+        GLRenderContext::GLMakeCurrent(nullptr);
 }
 
 

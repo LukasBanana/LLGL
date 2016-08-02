@@ -34,6 +34,8 @@ class GLRenderSystem : public RenderSystem
 
     private:
 
+        void OnMakeCurrent(RenderContext* renderContext) override;
+
         std::vector<std::unique_ptr<GLRenderContext>> renderContexts_;
 
 };

@@ -84,6 +84,25 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(const std::string& moduleName)
     return renderSystem;
 }
 
+void RenderSystem::MakeCurrent(RenderContext* renderContext)
+{
+    if (currentContext_ != renderContext)
+    {
+        OnMakeCurrent(renderContext);
+        currentContext_ = renderContext;
+    }
+}
+
+
+/*
+ * ======= Protected: =======
+ */
+
+void RenderSystem::OnMakeCurrent(RenderContext* renderContext)
+{
+    // dummy
+}
+
 
 } // /namespace LLGL
 

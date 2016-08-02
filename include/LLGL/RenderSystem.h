@@ -71,13 +71,34 @@ class LLGL_EXPORT RenderSystem
         */
         virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) = 0;
 
+        /**
+        \brief Makes the specified render context to the current one.
+        \param[in] renderContext Specifies the new current render context. If this is null, no render context is active.
+        \remarks Never draw anything, while no render context is active!
+        */
+        void MakeCurrent(RenderContext* renderContext);
+
+        //! Returns the current render context. This may also be null.
+        inline RenderContext* GetCurrentContext() const
+        {
+            return currentContext_;
+        }
+
     protected:
 
         RenderSystem() = default;
 
+        /**
+        \brief Callback when a new render context is about to be made the current one.
+        \remarks At this point, "GetCurrentContext" returns still the previous render context.
+        */
+        virtual void OnMakeCurrent(RenderContext* renderContext);
+
     private:
 
-        std::string name_;
+        std::string     name_;
+
+        RenderContext*  currentContext_ = nullptr;
 
 };
 
