@@ -50,17 +50,20 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
     return style;
 }
 
+static Point GetScreenCenteredPosition(const Size& size)
+{
+    return { GetSystemMetrics(SM_CXSCREEN)/2 - size.x/2,
+             GetSystemMetrics(SM_CYSCREEN)/2 - size.y/2 };
+}
+
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
     return std::unique_ptr<Window>(new Win32Window(desc));
 }
 
 Win32Window::Win32Window(const WindowDescriptor& desc) :
-    desc_   ( desc                     ),
-    wnd_    ( CreateWindowHandle(desc) ),
-    dc_     ( GetDC(wnd_)              )
+    wnd_( CreateWindowHandle(desc) )
 {
-    SetUserData(this);
 }
 
 Win32Window::~Win32Window()
@@ -85,7 +88,7 @@ void Win32Window::SetSize(const Size& size, bool useClientArea)
 {
     if (useClientArea)
     {
-        auto rc = GetClientArea(size.x, size.y, GetWindowStyle(desc_));
+        auto rc = GetClientArea(size.x, size.y, GetWindowLong(wnd_, GWL_STYLE));
         SetSize({ rc.right - rc.left, rc.bottom - rc.top }, false);
     }
     else
@@ -130,6 +133,39 @@ bool Win32Window::IsShown() const
     return (IsWindowVisible(wnd_) ? true : false);
 }
 
+WindowDescriptor Win32Window::QueryDesc() const
+{
+    /* Get window flags and other information for comparision */
+    auto windowFlags    = GetWindowLong(wnd_, GWL_STYLE);
+    auto windowSize     = GetSize();
+    auto centerPoint    = GetScreenCenteredPosition(windowSize);
+
+    /* Setup window descriptor */
+    WindowDescriptor desc;
+
+    desc.title                  = GetTitle();
+    desc.position               = GetPosition();
+    desc.size                   = windowSize;
+
+    desc.visible                = ((windowFlags & WS_VISIBLE  ) != 0);
+    desc.borderless             = ((windowFlags & WS_CAPTION  ) == 0);
+    desc.resizable              = ((windowFlags & WS_SIZEBOX  ) != 0);
+    desc.acceptDropFiles        = ((windowFlags & WM_DROPFILES) != 0);
+    desc.preventForPowerSafe    = false; //todo...
+    desc.centered               = (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y);
+
+    desc.parentWindow           = nullptr; //todo...
+
+    return desc;
+}
+
+void Win32Window::Recreate(const WindowDescriptor& desc)
+{
+    /* Destroy previous window handle and create a new one */
+    DestroyWindow(wnd_);
+    wnd_ = CreateWindowHandle(desc);
+}
+
 const void* Win32Window::GetNativeHandle() const
 {
     return (&wnd_);
@@ -168,10 +204,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     auto position = desc.position;
 
     if (desc.centered)
-    {
-        position.x = GetSystemMetrics(SM_CXSCREEN)/2 - desc.size.x/2;
-        position.y = GetSystemMetrics(SM_CYSCREEN)/2 - desc.size.y/2;
-    }
+        position = GetScreenCenteredPosition(desc.size);
 
     /* Create frame window object */
     HWND wnd = CreateWindow(
@@ -195,12 +228,10 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     if (desc.acceptDropFiles)
         DragAcceptFiles(wnd, TRUE);
 
-    return wnd;
-}
+    /* Set reference of this object to the window user-data */
+    SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
-void Win32Window::SetUserData(void* userData)
-{
-    SetWindowLongPtr(wnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(userData));
+    return wnd;
 }
 
 

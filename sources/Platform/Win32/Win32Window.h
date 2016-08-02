@@ -37,6 +37,10 @@ class Win32Window : public Window
         void Show(bool show = true) override;
         bool IsShown() const override;
 
+        WindowDescriptor QueryDesc() const override;
+
+        void Recreate(const WindowDescriptor& desc) override;
+
         const void* GetNativeHandle() const override;
 
     private:
@@ -45,12 +49,9 @@ class Win32Window : public Window
 
         HWND CreateWindowHandle(const WindowDescriptor& desc);
 
-        void SetUserData(void* userData);
-
         WindowDescriptor    desc_;
 
         HWND                wnd_;
-        HDC                 dc_;
 
 };
 

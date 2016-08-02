@@ -40,8 +40,6 @@ int main()
             windowDesc.title + L" ( " + std::wstring(renderer->GetName().begin(), renderer->GetName().end()) + L" )"
         );
 
-
-
         while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
         {
             timer->MeasureTime();

@@ -92,14 +92,29 @@ class LLGL_EXPORT Window
         virtual void Show(bool show = true) = 0;
         virtual bool IsShown() const = 0;
 
+        //! Query a window descriptor, which describes the current state of this window.
+        virtual WindowDescriptor QueryDesc() const = 0;
+
         /**
-        Returns the native window handle.
-        For Windows, cast this to 'const HWND*'
-        For MacOS, cast this to 'const NSWindow**'
-        For Linux, cast this to 'const ::Window*'
+        \brief Recreates the internal window object. This may invalidate the native handle previously returned by "GetNativeHandle".
+        \see GetNativeHandle
+        */
+        virtual void Recreate(const WindowDescriptor& desc) = 0;
+
+        /**
+        \brief Returns the native window handle.
+        \remarks This must be casted to a type which is platform dependent:
+        - Windows: cast this to 'const HWND*'
+        - MacOS: cast this to 'const NSWindow**'
+        - Linux: cast this to 'const ::Window*'
         */
         virtual const void* GetNativeHandle() const = 0;
 
+        /**
+        \brief Processes the events for this window (i.e. mouse movement, key presses etc.).
+        \return Once the "PostQuit" function was called on this window object, this function returns false.
+        This will happend, when the user clicks on the close button.
+        */
         bool ProcessEvents();
 
         /* --- Event handling --- */
