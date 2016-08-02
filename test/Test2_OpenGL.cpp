@@ -31,6 +31,7 @@ int main()
 
         contextDesc.videoMode.screenWidth   = 800;
         contextDesc.videoMode.screenHeight  = 600;
+        contextDesc.videoMode.fullscreen    = true;
 
         contextDesc.antiAliasing.enabled    = true;
         contextDesc.antiAliasing.samples    = 8;
