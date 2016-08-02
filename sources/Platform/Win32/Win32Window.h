@@ -51,7 +51,7 @@ class Win32Window : public Window
 
         WindowDescriptor    desc_;
 
-        HWND                wnd_;
+        HWND                wnd_    = nullptr;
 
 };
 

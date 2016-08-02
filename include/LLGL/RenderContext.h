@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "Window.h"
 #include <string>
+#include <map>
 
 
 namespace LLGL
@@ -91,6 +92,18 @@ struct RenderContextDescriptor
     ProfileOpenGLDescriptor profileOpenGL;
 };
 
+/**
+\brief Enumeration of all renderer info entries.
+\see RenderContext::QueryRendererInfo
+*/
+enum class RendererInfo
+{
+    Version,
+    Vendor,
+    Hardware,
+    ShadingLanguageVersion,
+};
+
 
 //! Render context interface.
 class LLGL_EXPORT RenderContext
@@ -105,20 +118,20 @@ class LLGL_EXPORT RenderContext
 
         virtual ~RenderContext();
 
-        //! Returns a descriptive version string of this render context (e.g. "OpenGL 4.5").
-        virtual std::string GetVersion() const = 0;
+        //! Returns all available renderer information.
+        virtual std::map<RendererInfo, std::string> QueryRendererInfo() const = 0;
 
         //! Presents the current frame on the screen.
         virtual void Present() = 0;
-
-    protected:
-
-        RenderContext(const std::shared_ptr<Window>& window, const VideoModeDescriptor& videoModeDesc);
 
         inline Window& GetWindow() const
         {
             return *window_;
         }
+
+    protected:
+
+        RenderContext(const std::shared_ptr<Window>& window, const VideoModeDescriptor& videoModeDesc);
 
     private:
 

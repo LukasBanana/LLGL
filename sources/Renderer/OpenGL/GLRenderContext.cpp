@@ -24,9 +24,26 @@ GLRenderContext::~GLRenderContext()
     DeleteContext();
 }
 
-std::string GLRenderContext::GetVersion() const
+std::map<RendererInfo, std::string> GLRenderContext::QueryRendererInfo() const
 {
-    return ""; //todo...
+    std::map<RendererInfo, std::string> info;
+
+    std::vector<std::pair<RendererInfo, GLenum>> entries
+    {{
+        { RendererInfo::Version,                GL_VERSION                  },
+        { RendererInfo::Vendor,                 GL_VENDOR                   },
+        { RendererInfo::Hardware,               GL_RENDERER                 },
+        { RendererInfo::ShadingLanguageVersion, GL_SHADING_LANGUAGE_VERSION },
+    }};
+
+    for (const auto& entry : entries)
+    {
+        auto bytes = glGetString(entry.second);
+        if (bytes)
+            info[entry.first] = std::string(reinterpret_cast<const char*>(bytes));
+    }
+
+    return info;
 }
 
 

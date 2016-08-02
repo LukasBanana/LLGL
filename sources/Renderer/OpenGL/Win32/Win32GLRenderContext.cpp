@@ -31,18 +31,6 @@ static void ErrAntiAliasingNotSupported()
     Log::StdErr() << "multi-sample anti-aliasing is not supported" << std::endl;
 }
 
-#if 0
-
-void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)
-{
-}
-
-void GLRenderContext::DeleteContext()
-{
-}
-
-#else
-
 /*
 TODO:
 - When anti-aliasing and extended-profile-selection is enabled,
@@ -72,7 +60,12 @@ void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)
             /* Delete old standard render context */
             DeleteGLContext(stdRenderContext);
 
-            ReCreateFrameAndUpdatePixelFormat();
+            /*
+            For anti-aliasing we must recreate the window,
+            because a pixel format can be choosen only once for a Win32 window,
+            then update device context and pixel format
+            */
+            RecreateWindow();
 
             /* Create a new render context -> now with anti-aliasing pixel format */
             stdRenderContext = CreateGLContext(false, sharedRenderContext);
@@ -181,7 +174,7 @@ HGLRC GLRenderContext::CreateGLContext(bool useExtProfile, GLRenderContext* shar
         if (useExtProfile)
         {
             renderContext = CreateExtContextProfile(
-                sharedRenderContext != nullptr ? sharedRenderContext->context_.hGLRC : nullptr
+                (sharedRenderContext != nullptr ? sharedRenderContext->context_.hGLRC : nullptr)
             );
         }
         else
@@ -222,14 +215,14 @@ static void ConvertGLVersion(const OpenGLVersion version, GLint& major, GLint& m
 {
     if (version == OpenGLVersion::OpenGL_Latest)
     {
-        auto ver = static_cast<int>(version);
-        major = ver / 100;
-        minor = (ver % 100) / 10;
+        major = 4;
+        minor = 5;
     }
     else
     {
-        major = 4;
-        minor = 5;
+        auto ver = static_cast<int>(version);
+        major = ver / 100;
+        minor = (ver % 100) / 10;
     }
 }
 
@@ -454,19 +447,12 @@ bool GLRenderContext::SetupVSyncInterval()
     return false;
 }
 
-void GLRenderContext::ReCreateFrameAndUpdatePixelFormat()
+void GLRenderContext::RecreateWindow()
 {
-    /*
-    For anti-aliasing we must recreate the window,
-    because a pixel format can be choosen only once for a Win32 window.
-    Then re-setup device context and pixel format
-    */
-    //window_->
-
+    /* Recreate window with current descriptor, then update device context and pixel format */
+    window_->Recreate(window_->QueryDesc());
     SetupDeviceContextAndPixelFormat();
 }
-
-#endif
 
 
 } // /namespace LLGL

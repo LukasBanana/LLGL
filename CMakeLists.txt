@@ -23,6 +23,18 @@ macro(ADD_DEFINE IDENT)
 	endif(MSVC)
 endmacro()
 
+macro(ADD_TEST_PROJECT TEST_NAME TEST_FILES)
+	if(APPLE)
+		add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
+	else()
+		add_executable(${TEST_NAME} ${TEST_FILES})
+	endif()
+
+	target_link_libraries(${TEST_NAME} LLGL)
+	set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+	target_compile_features(${TEST_NAME} PRIVATE cxx_range_for)
+endmacro()
+
 if(WIN32)
 	ADD_DEFINE(_CRT_SECURE_NO_WARNINGS)
 	ADD_DEFINE(_SCL_SECURE_NO_WARNINGS)
@@ -60,7 +72,8 @@ elseif(UNIX)
 	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Linux/*.*)
 endif()
 
-set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/test1.cpp)
+set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/Test1_Window.cpp)
+set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
 
 
 # === Source group folders ===
@@ -130,14 +143,7 @@ else()
 endif()
 
 # Test Projects
-if(APPLE)
-	add_executable(test1 MACOSX_BUNDLE ${FilesTest1})
-else()
-	add_executable(test1 ${FilesTest1})
-endif()
-
-target_link_libraries(test1 LLGL)
-set_target_properties(test1 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-target_compile_features(test1 PRIVATE cxx_range_for)
+ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
+ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
 
 

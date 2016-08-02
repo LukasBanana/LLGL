@@ -31,7 +31,7 @@ class GLRenderContext : public RenderContext
 
         ~GLRenderContext();
 
-        std::string GetVersion() const override;
+        std::map<RendererInfo, std::string> QueryRendererInfo() const override;
 
         void Present() override;
 
@@ -58,7 +58,7 @@ class GLRenderContext : public RenderContext
 
         bool SetupVSyncInterval();
 
-        void ReCreateFrameAndUpdatePixelFormat();
+        void RecreateWindow();
 
         #endif
 
