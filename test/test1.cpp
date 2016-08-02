@@ -41,6 +41,7 @@ int main()
         );
 
 
+
         while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
         {
             timer->MeasureTime();

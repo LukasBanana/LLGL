@@ -30,7 +30,7 @@ class GLRenderSystem : public RenderSystem
         GLRenderSystem();
         ~GLRenderSystem();
 
-        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, Window& window) override;
+        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window) override;
 
     private:
 

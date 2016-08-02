@@ -12,10 +12,11 @@ namespace LLGL
 {
 
 
-GLRenderContext::GLRenderContext(const RenderContextDescriptor& desc, Window& window, GLRenderContext* sharedRenderContext) :
-    desc_( desc )
+GLRenderContext::GLRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
+    desc_   ( desc   ),
+    window_ ( window )
 {
-    CreateContext(window, sharedRenderContext);
+    CreateContext(sharedRenderContext);
 }
 
 GLRenderContext::~GLRenderContext()

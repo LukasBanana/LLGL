@@ -27,18 +27,21 @@ class GLRenderContext : public RenderContext
 
     public:
 
-        GLRenderContext(const RenderContextDescriptor& desc, Window& window, GLRenderContext* sharedRenderContext);
+        GLRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext);
 
         ~GLRenderContext();
 
         std::string GetVersion() const override;
 
+        void Present() override;
+
     private:
 
-        void CreateContext(Window& window, GLRenderContext* sharedRenderContext);
+        void CreateContext(GLRenderContext* sharedRenderContext);
         void DeleteContext();
 
         RenderContextDescriptor desc_;
+        std::shared_ptr<Window> window_;
         GLPlatformContext       context_;
 
 };

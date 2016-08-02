@@ -107,6 +107,9 @@ class LLGL_EXPORT RenderContext
         //! Returns a descriptive version string of this render context (e.g. "OpenGL 4.5").
         virtual std::string GetVersion() const = 0;
 
+        //! Presents the current frame on the screen.
+        virtual void Present() = 0;
+
     protected:
 
         RenderContext() = default;
