@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderSystem.h>
+#include "GLRenderContext.h"
 #include <string>
 #include <memory>
 #include <vector>
@@ -29,11 +30,11 @@ class GLRenderSystem : public RenderSystem
         GLRenderSystem();
         ~GLRenderSystem();
 
-        std::shared_ptr<RenderContext> CreateRenderContext(const RenderContextDescriptor& desc, Window& window) override;
+        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, Window& window) override;
 
     private:
 
-        //...
+        std::vector<std::unique_ptr<GLRenderContext>> renderContexts_;
 
 };
 

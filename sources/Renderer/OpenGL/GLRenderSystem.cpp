@@ -20,10 +20,16 @@ GLRenderSystem::~GLRenderSystem()
 {
 }
 
-std::shared_ptr<RenderContext> GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, Window& window)
+RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, Window& window)
 {
-    //todo...
-    return nullptr;
+    /* Create new render context, take ownership, and return the raw pointer */
+    auto renderContext = std::unique_ptr<GLRenderContext>(
+        new GLRenderContext(desc, window, nullptr)
+    );
+
+    renderContexts_.emplace_back(std::move(renderContext));
+    
+    return renderContexts_.back().get();
 }
 
 

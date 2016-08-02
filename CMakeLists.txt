@@ -49,12 +49,15 @@ file(GLOB FilesRendererDirect3D12	${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3
 file(GLOB FilesRendererVulkan		${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
 
 if(WIN32)
-	file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
+	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
+	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Win32/*.*)
 elseif(APPLE)
 	set(CMAKE_MACOSX_RPATH 1)
-	file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/sources/Platform/MacOS/*.*)
+	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/MacOS/*.*)
+	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/MacOS/*.*)
 elseif(UNIX)
-	file(GLOB FilesPlatform ${PROJECT_SOURCE_DIR}/sources/Platform/Linux/*.*)
+	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/Linux/*.*)
+	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Linux/*.*)
 endif()
 
 set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/test1.cpp)
@@ -66,8 +69,20 @@ set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/test1.cpp)
 
 source_group("Include" FILES ${FilesInclude})
 source_group("Sources\\Core" FILES ${FilesCore})
-source_group("Sources\\Platform" FILES ${FilesPlatformBase} ${FilesPlatform})
-source_group("Sources\\Renderer" FILES ${FilesRenderer} ${FilesRendererOpenGL} ${FilesRendererDirect3D12} ${FilesRendererVulkan})
+
+source_group(
+	"Sources\\Platform" FILES
+	${FilesPlatformBase} ${FilesPlatform}
+)
+
+source_group(
+	"Sources\\Renderer" FILES
+	${FilesRenderer}
+	${FilesRendererOpenGL}
+	${FilesRendererOpenGLPlatform}
+	${FilesRendererDirect3D12}
+	${FilesRendererVulkan}
+)
 
 
 # === Include directories ===
@@ -106,7 +121,7 @@ target_compile_features(LLGL PRIVATE cxx_range_for)
 find_package(OpenGL)
 if(OpenGL_FOUND)
 	include_directories(${OPENGL_INCLUDE_DIR})
-	add_library(LLGL_OpenGL SHARED ${FilesRendererOpenGL})
+	add_library(LLGL_OpenGL SHARED ${FilesRendererOpenGL} ${FilesRendererOpenGLPlatform})
 	set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 	target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
 	target_compile_features(LLGL_OpenGL PRIVATE cxx_range_for)

@@ -66,8 +66,11 @@ class LLGL_EXPORT RenderSystem
             return name_;
         }
 
-        //! Creates a new render context.
-        virtual std::shared_ptr<RenderContext> CreateRenderContext(const RenderContextDescriptor& desc, Window& window) = 0;
+        /**
+        \brief Creates a new render context and returns the raw pointer.
+        \remarks Rhe render system takes the ownership of this object. All render contexts are deleted in the destructor of this render system.
+        */
+        virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, Window& window) = 0;
 
     protected:
 
