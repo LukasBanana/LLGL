@@ -6,9 +6,8 @@
  */
 
 #include "LinuxWindow.h"
-
+#include "MapKey.h"
 #include <exception>
-#include <iostream>//!!!
 
 
 namespace LLGL
@@ -188,6 +187,11 @@ void LinuxWindow::SetupWindow()
 
 void LinuxWindow::ProcessKeyEvent(XEvent& event, bool down)
 {
+    auto key = MapKey(event.xkey);
+    if (down)
+        PostKeyDown(key);
+    else
+        PostKeyUp(key);
 }
 
 void LinuxWindow::ProcessMouseKeyEvent(XEvent& event, bool down)
