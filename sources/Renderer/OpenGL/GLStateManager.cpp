@@ -6,6 +6,7 @@
  */
 
 #include "GLStateManager.h"
+#include "GLExtensions.h"
 
 
 namespace LLGL
@@ -43,11 +44,48 @@ static const GLenum stateCapsMap[] =
     GL_PROGRAM_POINT_SIZE,
 };
 
+static const GLenum bufferTargetsMap[] =
+{
+    GL_ARRAY_BUFFER,
+    GL_ATOMIC_COUNTER_BUFFER,
+    GL_COPY_READ_BUFFER,
+    GL_COPY_WRITE_BUFFER,
+    GL_DISPATCH_INDIRECT_BUFFER,
+    GL_DRAW_INDIRECT_BUFFER,
+    GL_ELEMENT_ARRAY_BUFFER,
+    GL_PIXEL_PACK_BUFFER,
+    GL_PIXEL_UNPACK_BUFFER,
+    GL_QUERY_BUFFER,
+    GL_SHADER_STORAGE_BUFFER,
+    GL_TEXTURE_BUFFER,
+    GL_TRANSFORM_FEEDBACK_BUFFER,
+    GL_UNIFORM_BUFFER,
+};
+
+static const GLenum textureTargetsMap[] =
+{
+    GL_TEXTURE_1D,
+    GL_TEXTURE_2D,
+    GL_TEXTURE_3D,
+    GL_TEXTURE_1D_ARRAY,
+    GL_TEXTURE_2D_ARRAY,
+    GL_TEXTURE_RECTANGLE,
+    GL_TEXTURE_CUBE_MAP,
+    GL_TEXTURE_CUBE_MAP_ARRAY,
+    GL_TEXTURE_BUFFER,
+    GL_TEXTURE_2D_MULTISAMPLE,
+    GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+};
+
 
 GLStateManager::GLStateManager()
 {
     std::fill(states_.begin(), states_.end(), false);
+    std::fill(boundBuffers_.begin(), boundBuffers_.end(), 0);
+    std::fill(boundTextures_.begin(), boundTextures_.end(), 0);
 }
+
+/* ----- Common states ----- */
 
 void GLStateManager::Reset()
 {
@@ -89,6 +127,11 @@ void GLStateManager::Disable(GLState state)
     }
 }
 
+bool GLStateManager::IsEnabled(GLState state) const
+{
+    return states_[static_cast<std::size_t>(state)];
+}
+
 void GLStateManager::Push(GLState state)
 {
     stateStack_.push({ state, states_[static_cast<std::size_t>(state)] });
@@ -105,6 +148,48 @@ void GLStateManager::Pop(std::size_t count)
 {
     while (count-- > 0)
         Pop();
+}
+
+/* ----- Buffer binding ----- */
+
+void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
+{
+    /* Only bind buffer if the buffer changed */
+    auto targetIdx = static_cast<std::size_t>(target);
+    if (boundBuffers_[targetIdx] != buffer)
+    {
+        boundBuffers_[targetIdx] = buffer;
+        glBindBuffer(bufferTargetsMap[targetIdx], buffer);
+    }
+}
+
+void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer)
+{
+    /* Always bind buffer with a base index */
+    auto targetIdx = static_cast<std::size_t>(target);
+    boundBuffers_[targetIdx] = buffer;
+    glBindBufferBase(bufferTargetsMap[targetIdx], index, buffer);
+}
+
+void GLStateManager::BindVertexArray(GLuint buffer)
+{
+    /* Always bind vertex array */
+    glBindVertexArray(buffer);
+    boundBuffers_[static_cast<std::size_t>(GLBufferTarget::ARRAY_BUFFER)] = 0;
+    boundBuffers_[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
+}
+
+/* ----- Texture binding ----- */
+
+void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
+{
+    /* Only bind texutre if the texutre changed */
+    auto targetIdx = static_cast<std::size_t>(target);
+    if (boundTextures_[targetIdx] != texture)
+    {
+        boundTextures_[targetIdx] = texture;
+        glBindTexture(textureTargetsMap[targetIdx], texture);
+    }
 }
 
 
