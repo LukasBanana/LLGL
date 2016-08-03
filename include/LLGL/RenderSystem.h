@@ -18,6 +18,8 @@
 #include "IndexBuffer.h"
 #include "IndexFormat.h"
 
+#include "ShaderProgram.h"
+
 #include <string>
 #include <memory>
 #include <vector>
@@ -118,14 +120,14 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Shader ----- */
 
-        /*virtual VertexShader* CreateVertexShader() = 0;
+        virtual VertexShader* CreateVertexShader() = 0;
         virtual FragmentShader* CreateFragmentShader() = 0;
         virtual GeometryShader* CreateGeometryShader() = 0;
         virtual TessControlShader* CreateTessControlShader() = 0;
         virtual TessEvaluationShader* CreateTessEvaluationShader() = 0;
         virtual ComputeShader* CreateComputeShader() = 0;
 
-        virtual ShaderProgram* CreateShaderProgram() = 0;*/
+        virtual ShaderProgram* CreateShaderProgram() = 0;
 
     protected:
 

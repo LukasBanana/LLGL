@@ -15,6 +15,7 @@
 #include "RenderContextFlags.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "ShaderProgram.h"
 #include "ColorRGBA.h"
 #include <Gauss/Vector3.h>
 #include <string>
@@ -97,10 +98,10 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Shader ----- */
 
-        //virtual void BindShaderProgram(ShaderProgram& shaderProgram) = 0;
-        //virtual void UnbindShaderProgram() = 0;
+        virtual void BindShaderProgram(ShaderProgram& shaderProgram) = 0;
+        virtual void UnbindShaderProgram() = 0;
 
-        //virtual void DispatchCompute(const Gs::Vector3ui& threadGroupSize) = 0;
+        virtual void DispatchCompute(const Gs::Vector3ui& threadGroupSize) = 0;
 
     protected:
 

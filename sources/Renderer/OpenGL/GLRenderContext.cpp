@@ -10,6 +10,14 @@
 #include "GLExtensions.h"
 #include "../CheckedCast.h"
 
+#include "GLVertexShader.h"
+#include "GLFragmentShader.h"
+#include "GLGeometryShader.h"
+#include "GLTessControlShader.h"
+#include "GLTessEvaluationShader.h"
+#include "GLComputeShader.h"
+#include "GLShaderProgram.h"
+
 
 namespace LLGL
 {
@@ -209,6 +217,23 @@ void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned in
         indexOffset,
         instanceOffset
     );
+}
+
+/* ----- Shader ----- */
+
+void GLRenderContext::BindShaderProgram(ShaderProgram& shaderProgram)
+{
+    //todo...
+}
+
+void GLRenderContext::UnbindShaderProgram()
+{
+    //todo...
+}
+
+void GLRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
+{
+    glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
 }
 
 

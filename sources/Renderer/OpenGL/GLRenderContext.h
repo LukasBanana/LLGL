@@ -71,6 +71,13 @@ class GLRenderContext : public RenderContext
         void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset) override;
         void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset) override;
 
+        /* ----- Shader ----- */
+
+        void BindShaderProgram(ShaderProgram& shaderProgram) override;
+        void UnbindShaderProgram() override;
+
+        void DispatchCompute(const Gs::Vector3ui& threadGroupSize) override;
+
         /* ----- GLRenderContext specific functions ----- */
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);

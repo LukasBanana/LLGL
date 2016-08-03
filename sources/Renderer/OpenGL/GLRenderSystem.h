@@ -10,10 +10,20 @@
 
 
 #include <LLGL/RenderSystem.h>
+#include "GLExtensionLoader.h"
 #include "GLRenderContext.h"
+
 #include "GLVertexBuffer.h"
 #include "GLIndexBuffer.h"
-#include "GLExtensionLoader.h"
+
+#include "GLVertexShader.h"
+#include "GLFragmentShader.h"
+#include "GLGeometryShader.h"
+#include "GLTessControlShader.h"
+#include "GLTessEvaluationShader.h"
+#include "GLComputeShader.h"
+#include "GLShaderProgram.h"
+
 #include <string>
 #include <memory>
 #include <vector>
@@ -57,17 +67,45 @@ class GLRenderSystem : public RenderSystem
             const IndexFormat& indexFormat
         ) override;
 
+        /* ----- Shader ----- */
+
+        VertexShader* CreateVertexShader() override;
+        FragmentShader* CreateFragmentShader() override;
+        GeometryShader* CreateGeometryShader() override;
+        TessControlShader* CreateTessControlShader() override;
+        TessEvaluationShader* CreateTessEvaluationShader() override;
+        ComputeShader* CreateComputeShader() override;
+
+        ShaderProgram* CreateShaderProgram() override;
+
     private:
+
+        template <typename T>
+        using HWObjectContainer = std::set<std::unique_ptr<T>>;
 
         bool OnMakeCurrent(RenderContext* renderContext) override;
 
         void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
 
-        std::set<std::unique_ptr<GLRenderContext>>  renderContexts_;
-        std::set<std::unique_ptr<GLVertexBuffer>>   vertexBuffers_;
-        std::set<std::unique_ptr<GLIndexBuffer>>    indexBuffers_;
+        /* ----- Common GL render system objects ----- */
 
         OpenGLExtensionMap                          extensionMap_;
+
+        /* ----- Hardware object containers ----- */
+
+        HWObjectContainer<GLRenderContext>          renderContexts_;
+        
+        HWObjectContainer<GLVertexBuffer>           vertexBuffers_;
+        HWObjectContainer<GLIndexBuffer>            indexBuffers_;
+
+        HWObjectContainer<GLVertexShader>           vertexShaders_;
+        HWObjectContainer<GLFragmentShader>         fragmentShaders_;
+        HWObjectContainer<GLGeometryShader>         geometryShaders_;
+        HWObjectContainer<GLTessControlShader>      tessControlShaders_;
+        HWObjectContainer<GLTessEvaluationShader>   tessEvaluationShaders_;
+        HWObjectContainer<GLComputeShader>          computeShaders_;
+
+        HWObjectContainer<GLShaderProgram>          shaderPrograms_;
 
 };
 
