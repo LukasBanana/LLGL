@@ -46,10 +46,12 @@ int main()
 
             //std::cout << 1.0 / timer->GetDeltaTime() << std::endl;
 
+            #ifdef __APPLE__
             if (input->KeyDown(LLGL::Key::Num1))
                 window->Show(false);
             if (input->KeyDown(LLGL::Key::Num2))
                 window->Show(true);
+            #endif
             if (input->KeyDown(LLGL::Key::Num3))
                 window->SetTitle(L"FOO BAR");
             if (input->KeyDown(LLGL::Key::Num4))
@@ -71,6 +73,7 @@ int main()
             window->SetTitle(s.str());
             #endif
 
+            #ifndef __linux__
             if (input->KeyPressed(LLGL::Key::Right) && pos.x < 1920)
             {
                 ++pos.x;
@@ -91,6 +94,7 @@ int main()
                 ++pos.y;
                 window->SetPosition(pos);
             }
+            #endif
 
         }
     }
