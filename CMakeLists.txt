@@ -52,26 +52,40 @@ endif(WIN32)
 
 # === Global files ===
 
-file(GLOB FilesInclude				${PROJECT_INCLUDE_DIR}/LLGL/*.*)
-file(GLOB FilesCore					${PROJECT_SOURCE_DIR}/sources/Core/*.*)
-file(GLOB FilesPlatformBase			${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
-file(GLOB FilesRenderer				${PROJECT_SOURCE_DIR}/sources/Renderer/*.*)
-file(GLOB FilesRendererOpenGL		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
-file(GLOB FilesRendererDirect3D12	${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
-file(GLOB FilesRendererVulkan		${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
+# Common files
+file(GLOB FilesInclude						${PROJECT_INCLUDE_DIR}/LLGL/*.*)
+file(GLOB FilesCore							${PROJECT_SOURCE_DIR}/sources/Core/*.*)
+file(GLOB FilesPlatformBase					${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
+file(GLOB FilesRenderer						${PROJECT_SOURCE_DIR}/sources/Renderer/*.*)
 
 if(WIN32)
 	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
-	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Win32/*.*)
 elseif(APPLE)
 	set(CMAKE_MACOSX_RPATH 1)
 	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/MacOS/*.*)
-	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/MacOS/*.*)
 elseif(UNIX)
 	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/Linux/*.*)
-	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Linux/*.*)
 endif()
 
+# OpenGL renderer files
+file(GLOB FilesRendererOpenGL				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
+file(GLOB FilesRendererOpenGLShader			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
+
+if(WIN32)
+	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
+elseif(APPLE)
+	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/MacOS/*.*)
+elseif(UNIX)
+	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Linux/*.*)
+endif()
+
+# Direct3D12 renderer files
+file(GLOB FilesRendererDirect3D12			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
+
+# Vulkan renderer files
+file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
+
+# Test files
 set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/Test1_Window.cpp)
 set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
 
@@ -92,9 +106,18 @@ source_group(
 	"Sources\\Renderer" FILES
 	${FilesRenderer}
 	${FilesRendererOpenGL}
-	${FilesRendererOpenGLPlatform}
 	${FilesRendererDirect3D12}
 	${FilesRendererVulkan}
+)
+
+source_group(
+	"Sources\\Renderer\\Platform" FILES
+	${FilesRendererOpenGLPlatform}
+)
+
+source_group(
+	"Sources\\Renderer\\Shader" FILES
+	${FilesRendererOpenGLShader}
 )
 
 
@@ -134,7 +157,7 @@ target_compile_features(LLGL PRIVATE cxx_range_for)
 find_package(OpenGL)
 if(OpenGL_FOUND)
 	include_directories(${OPENGL_INCLUDE_DIR})
-	add_library(LLGL_OpenGL SHARED ${FilesRendererOpenGL} ${FilesRendererOpenGLPlatform})
+	add_library(LLGL_OpenGL SHARED ${FilesRendererOpenGL} ${FilesRendererOpenGLPlatform} ${FilesRendererOpenGLShader})
 	set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 	target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
 	target_compile_features(LLGL_OpenGL PRIVATE cxx_range_for)

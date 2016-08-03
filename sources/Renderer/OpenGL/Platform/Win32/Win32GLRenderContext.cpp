@@ -5,9 +5,9 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../GLRenderContext.h"
-#include "../GLExtensions.h"
-#include "../GLExtensionLoader.h"
+#include "../../GLRenderContext.h"
+#include "../../GLExtensions.h"
+#include "../../GLExtensionLoader.h"
 #include <LLGL/Log.h>
 #include <algorithm>
 

@@ -9,7 +9,7 @@
 #define __LLGL_GL_HARDWARE_SHADER_H__
 
 
-#include "OpenGL.h"
+#include "../OpenGL.h"
 #include <string>
 
 

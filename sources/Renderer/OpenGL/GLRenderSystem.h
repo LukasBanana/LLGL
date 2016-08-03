@@ -16,13 +16,13 @@
 #include "GLVertexBuffer.h"
 #include "GLIndexBuffer.h"
 
-#include "GLVertexShader.h"
-#include "GLFragmentShader.h"
-#include "GLGeometryShader.h"
-#include "GLTessControlShader.h"
-#include "GLTessEvaluationShader.h"
-#include "GLComputeShader.h"
-#include "GLShaderProgram.h"
+#include "Shader/GLVertexShader.h"
+#include "Shader/GLFragmentShader.h"
+#include "Shader/GLGeometryShader.h"
+#include "Shader/GLTessControlShader.h"
+#include "Shader/GLTessEvaluationShader.h"
+#include "Shader/GLComputeShader.h"
+#include "Shader/GLShaderProgram.h"
 
 #include <string>
 #include <memory>

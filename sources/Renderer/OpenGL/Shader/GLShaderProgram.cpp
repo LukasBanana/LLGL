@@ -12,8 +12,8 @@
 #include "GLTessControlShader.h"
 #include "GLTessEvaluationShader.h"
 #include "GLComputeShader.h"
-#include "GLExtensions.h"
-#include "../CheckedCast.h"
+#include "../GLExtensions.h"
+#include "../../CheckedCast.h"
 #include <vector>
 
 
