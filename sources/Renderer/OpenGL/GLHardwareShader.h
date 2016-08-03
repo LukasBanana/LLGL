@@ -10,6 +10,7 @@
 
 
 #include "OpenGL.h"
+#include <string>
 
 
 namespace LLGL
@@ -26,6 +27,10 @@ class GLHardwareShader
 
         GLHardwareShader(GLenum shaderType);
         ~GLHardwareShader();
+
+        bool Compile(const std::string& shaderSource);
+
+        std::string QueryInfoLog();
 
         //! Returns the hardware shader ID.
         inline GLuint GetID() const

@@ -22,10 +22,11 @@ class GLTessControlShader : public TessControlShader
 
     public:
 
-        GLTessControlShader() :
-            hwShader(GL_TESS_CONTROL_SHADER)
-        {
-        }
+        GLTessControlShader();
+
+        bool Compile(const std::string& shaderSource) override;
+
+        std::string QueryInfoLog() override;
 
         GLHardwareShader hwShader;
 

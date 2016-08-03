@@ -9,7 +9,7 @@
 #define __LLGL_COMPUTE_SHADER_H__
 
 
-#include "Export.h"
+#include "Shader.h"
 
 
 namespace LLGL
@@ -17,15 +17,8 @@ namespace LLGL
 
 
 //! Compute shader interface.
-class LLGL_EXPORT ComputeShader
+class LLGL_EXPORT ComputeShader : public Shader
 {
-
-    public:
-
-        virtual ~ComputeShader()
-        {
-        }
-
 };
 
 

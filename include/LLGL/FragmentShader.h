@@ -9,7 +9,7 @@
 #define __LLGL_FRAGMENT_SHADER_H__
 
 
-#include "Export.h"
+#include "Shader.h"
 
 
 namespace LLGL
@@ -17,15 +17,8 @@ namespace LLGL
 
 
 //! Fragment shader (also "Pixel Shader") interface.
-class LLGL_EXPORT FragmentShader
+class LLGL_EXPORT FragmentShader : public Shader
 {
-
-    public:
-
-        virtual ~FragmentShader()
-        {
-        }
-
 };
 
 

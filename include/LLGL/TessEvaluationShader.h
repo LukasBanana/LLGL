@@ -9,7 +9,7 @@
 #define __LLGL_TESS_EVALUATION_SHADER_H__
 
 
-#include "Export.h"
+#include "Shader.h"
 
 
 namespace LLGL
@@ -17,15 +17,8 @@ namespace LLGL
 
 
 //! Tessellation-evaluation shader (also "Domain Shader") interface.
-class LLGL_EXPORT TessEvaluationShader
+class LLGL_EXPORT TessEvaluationShader : public Shader
 {
-
-    public:
-
-        virtual ~TessEvaluationShader()
-        {
-        }
-
 };
 
 

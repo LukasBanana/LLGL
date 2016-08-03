@@ -22,10 +22,11 @@ class GLFragmentShader : public FragmentShader
 
     public:
 
-        GLFragmentShader() :
-            hwShader(GL_FRAGMENT_SHADER)
-        {
-        }
+        GLFragmentShader();
+
+        bool Compile(const std::string& shaderSource) override;
+
+        std::string QueryInfoLog() override;
 
         GLHardwareShader hwShader;
 

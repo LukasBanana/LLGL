@@ -42,10 +42,13 @@ class LLGL_EXPORT ShaderProgram
 
         /**
         \brief Links all attached shaders to the final shader program.
+        \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
         \remarks Each attached shader must be compiled first!
+        \see QueryInfoLog
         */
         virtual bool LinkShaders() = 0;
 
+        //! Returns the information log after the shader linkage.
         virtual std::string QueryInfoLog() = 0;
 
 };

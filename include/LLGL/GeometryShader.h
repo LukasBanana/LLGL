@@ -9,7 +9,7 @@
 #define __LLGL_GEOMETRY_SHADER_H__
 
 
-#include "Export.h"
+#include "Shader.h"
 
 
 namespace LLGL
@@ -17,15 +17,8 @@ namespace LLGL
 
 
 //! Geometry shader interface.
-class LLGL_EXPORT GeometryShader
+class LLGL_EXPORT GeometryShader : public Shader
 {
-
-    public:
-
-        virtual ~GeometryShader()
-        {
-        }
-
 };
 
 

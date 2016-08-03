@@ -9,7 +9,7 @@
 #define __LLGL_VERTEX_SHADER_H__
 
 
-#include "Export.h"
+#include "Shader.h"
 
 
 namespace LLGL
@@ -17,15 +17,8 @@ namespace LLGL
 
 
 //! Vertex shader interface.
-class LLGL_EXPORT VertexShader
+class LLGL_EXPORT VertexShader : public Shader
 {
-
-    public:
-
-        virtual ~VertexShader()
-        {
-        }
-
 };
 
 

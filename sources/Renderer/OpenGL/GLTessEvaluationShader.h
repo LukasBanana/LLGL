@@ -22,10 +22,11 @@ class GLTessEvaluationShader : public TessEvaluationShader
 
     public:
 
-        GLTessEvaluationShader() :
-            hwShader(GL_TESS_EVALUATION_SHADER)
-        {
-        }
+        GLTessEvaluationShader();
+
+        bool Compile(const std::string& shaderSource) override;
+
+        std::string QueryInfoLog() override;
 
         GLHardwareShader hwShader;
 

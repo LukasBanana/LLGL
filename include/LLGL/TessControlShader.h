@@ -9,7 +9,7 @@
 #define __LLGL_TESS_CONTROL_SHADER_H__
 
 
-#include "Export.h"
+#include "Shader.h"
 
 
 namespace LLGL
@@ -17,15 +17,8 @@ namespace LLGL
 
 
 //! Tessellation-control shader (also "Hull Shader") interface.
-class LLGL_EXPORT TessControlShader
+class LLGL_EXPORT TessControlShader : public Shader
 {
-
-    public:
-
-        virtual ~TessControlShader()
-        {
-        }
-
 };
 
 

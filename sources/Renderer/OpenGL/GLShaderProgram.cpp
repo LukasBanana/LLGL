@@ -83,7 +83,7 @@ std::string GLShaderProgram::QueryInfoLog()
     {
         /* Store info log in byte buffer (because GL writes it's own null-terminator character!) */
         std::vector<char> infoLog;
-        infoLog.resize(infoLogLength);
+        infoLog.resize(infoLogLength, '\0');
 
         /* Query info log output */
         GLsizei charsWritten = 0;

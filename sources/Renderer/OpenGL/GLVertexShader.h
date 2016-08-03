@@ -22,10 +22,11 @@ class GLVertexShader : public VertexShader
 
     public:
 
-        GLVertexShader() :
-            hwShader(GL_VERTEX_SHADER)
-        {
-        }
+        GLVertexShader();
+
+        bool Compile(const std::string& shaderSource) override;
+
+        std::string QueryInfoLog() override;
 
         GLHardwareShader hwShader;
 

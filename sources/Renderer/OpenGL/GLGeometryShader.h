@@ -22,10 +22,11 @@ class GLGeometryShader : public GeometryShader
 
     public:
 
-        GLGeometryShader() :
-            hwShader(GL_GEOMETRY_SHADER)
-        {
-        }
+        GLGeometryShader();
+
+        bool Compile(const std::string& shaderSource) override;
+
+        std::string QueryInfoLog() override;
 
         GLHardwareShader hwShader;
 

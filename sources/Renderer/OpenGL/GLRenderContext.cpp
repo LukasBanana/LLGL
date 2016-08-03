@@ -223,7 +223,10 @@ void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned in
 
 void GLRenderContext::BindShaderProgram(ShaderProgram& shaderProgram)
 {
-    //todo...
+    /* Bind index buffer */
+    auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
+    //GLStateManager::active->BindShaderProgram(shaderProgramGL);
+    //glUseProgram(shaderProgramGL.GetID());
 }
 
 void GLRenderContext::UnbindShaderProgram()

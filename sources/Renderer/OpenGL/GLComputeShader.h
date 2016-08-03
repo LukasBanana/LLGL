@@ -22,10 +22,11 @@ class GLComputeShader : public ComputeShader
 
     public:
 
-        GLComputeShader() :
-            hwShader(GL_COMPUTE_SHADER)
-        {
-        }
+        GLComputeShader();
+
+        bool Compile(const std::string& shaderSource) override;
+
+        std::string QueryInfoLog() override;
 
         GLHardwareShader hwShader;
 
