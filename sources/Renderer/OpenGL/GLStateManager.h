@@ -105,36 +105,83 @@ class GLStateManager
 
         bool IsEnabled(GLState state) const;
 
-        void Push(GLState state);
-        void Pop();
-        void Pop(std::size_t count);
+        void PushState(GLState state);
+        void PopState();
+        void PopStates(std::size_t count);
 
         /* ----- Buffer binding ----- */
 
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
         void BindVertexArray(GLuint buffer);
+        
+        void PushBoundBuffer(GLBufferTarget target);
+        void PopBoundBuffer();
 
         /* ----- Texture binding ----- */
 
+        void ActiveTexture(unsigned int layer);
+
         void BindTexture(GLTextureTarget target, GLuint texture);
+        
+        void PushBoundTexture(unsigned int layer, GLTextureTarget target);
+        void PopBoundTexture();
 
     private:
 
+        static const std::size_t numTextureLayers   = 32;
+        static const std::size_t numStates          = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);
+        static const std::size_t numBufferTargets   = (static_cast<std::size_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
+        static const std::size_t numTextureTargets  = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+
         struct GLRenderState
         {
-            GLState state;
-            bool    enabled;
+            struct StackEntry
+            {
+                GLState state;
+                bool    enabled;
+            };
+
+            std::array<bool, numStates> values;
+            std::stack<StackEntry>      valueStack;
         };
 
-        static const std::size_t        numStates           = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);
-        static const std::size_t        numBufferTargets    = (static_cast<std::size_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
-        static const std::size_t        numTextureTargets   = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+        struct GLBufferState
+        {
+            struct StackEntry
+            {
+                GLBufferTarget  target;
+                GLuint          buffer;
+            };
 
-        std::array<bool, numStates>             states_;
-        std::array<GLuint, numBufferTargets>    boundBuffers_;
-        std::array<GLuint, numTextureTargets>   boundTextures_;
-        std::stack<GLRenderState>               stateStack_;
+            std::array<GLuint, numBufferTargets>    boundBuffers;
+            std::stack<StackEntry>                  boundBufferStack;
+        };
+
+        struct GLTextureLayer
+        {
+            std::array<GLuint, numTextureTargets>   boundTextures;
+        };
+
+        struct GLTextureState
+        {
+            struct StackEntry
+            {
+                unsigned int    layer;
+                GLTextureTarget target;
+                GLuint          texture;
+            };
+
+            unsigned int                                    activeTexture = 0;
+            std::array<GLTextureLayer, numTextureLayers>    layers;
+            std::stack<StackEntry>                          boundTextureStack;
+        };
+
+        GLRenderState               renderState_;
+        GLBufferState               bufferState_;
+        GLTextureState              textureState_;
+
+        GLTextureLayer*             activeTextureLayer_ = nullptr;
 
 };
 

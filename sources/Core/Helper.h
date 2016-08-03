@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <memory>
 #include <vector>
+#include <algorithm>
 #include <set>
 
 
@@ -32,6 +33,12 @@ void InitMemory(T& data)
     static_assert(!std::is_pointer<T>::value, "'InitMemory' does not allow pointer types");
     static_assert(std::is_pod<T>::value, "'InitMemory' does only allow plain-old-data (POD)");
     memset(&data, 0, sizeof(T));
+}
+
+template <typename Container, typename Value>
+void Fill(Container& container, Value&& value)
+{
+    std::fill(container.begin(), container.end(), value);
 }
 
 template <class Container, class T>
