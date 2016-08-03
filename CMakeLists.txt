@@ -92,8 +92,6 @@ set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
 
 # === Source group folders ===
 
-# --- Dyancmis ---
-
 source_group("Include" FILES ${FilesInclude})
 source_group("Sources\\Core" FILES ${FilesCore})
 

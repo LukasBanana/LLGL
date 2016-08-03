@@ -17,7 +17,7 @@ Getting Started
 int main()
 {
 	// Create a window to render into
-	LLGL::WindowDesc windowDesc;
+	LLGL::WindowDescriptor windowDesc;
 
 	windowDesc.title    = L"LLGL Example";
 	windowDesc.visible  = true;
@@ -29,7 +29,7 @@ int main()
 
 	// Add keyboard/mouse event listener
 	auto input = std::make_shared<LLGL::Input>();
-	window->AddListener(input);
+	window->AddEventListener(input);
 
 	//TO BE CONTINUED ...
 
