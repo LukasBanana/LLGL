@@ -225,13 +225,12 @@ void GLRenderContext::BindShaderProgram(ShaderProgram& shaderProgram)
 {
     /* Bind index buffer */
     auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
-    //GLStateManager::active->BindShaderProgram(shaderProgramGL);
-    //glUseProgram(shaderProgramGL.GetID());
+    GLStateManager::active->BindShaderProgram(shaderProgramGL.GetID());
 }
 
 void GLRenderContext::UnbindShaderProgram()
 {
-    //todo...
+    GLStateManager::active->BindShaderProgram(0);
 }
 
 void GLRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)

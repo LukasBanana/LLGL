@@ -138,6 +138,10 @@ class GLStateManager
         void PushBoundTexture(unsigned int layer, GLTextureTarget target);
         void PopBoundTexture();
 
+        /* ----- Shader binding ----- */
+
+        void BindShaderProgram(GLuint program);
+
     private:
 
         static const std::size_t numTextureLayers   = 32;
@@ -188,9 +192,15 @@ class GLStateManager
             std::stack<StackEntry>                          boundTextureStack;
         };
 
+        struct GLShaderState
+        {
+            GLuint boundProgram = 0;
+        };
+
         GLRenderState               renderState_;
         GLBufferState               bufferState_;
         GLTextureState              textureState_;
+        GLShaderState               shaderState_;
 
         GLTextureLayer*             activeTextureLayer_ = nullptr;
 

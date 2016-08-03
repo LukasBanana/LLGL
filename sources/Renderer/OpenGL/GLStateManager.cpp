@@ -294,6 +294,17 @@ void GLStateManager::PopBoundTexture()
     textureState_.boundTextureStack.pop();
 }
 
+/* ----- Shader binding ----- */
+
+void GLStateManager::BindShaderProgram(GLuint program)
+{
+    if (shaderState_.boundProgram != program)
+    {
+        shaderState_.boundProgram = program;
+        glUseProgram(program);
+    }
+}
+
 
 } // /namespace LLGL
 
