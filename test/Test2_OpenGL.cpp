@@ -60,19 +60,13 @@ int main()
         window.AddEventListener(input);
 
         // Create vertex buffer
-        auto vertexBuffer = renderer->CreateVertexBuffer();
+        auto& vertexBuffer = *renderer->CreateVertexBuffer();
 
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
 
-        Gs::Vector2f vertices[] =
-        {
-            Gs::Vector2f(-1, -1),
-            Gs::Vector2f(-1,  1),
-            Gs::Vector2f( 1,  1),
-            Gs::Vector2f( 1, -1),
-        };
-        renderer->WriteVertexBuffer(*vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
+        const Gs::Vector2f vertices[] = { { 100, 100 }, { 200, 100 }, { 200, 200 }, { 100, 200 } };
+        renderer->WriteVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
@@ -80,7 +74,7 @@ int main()
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
-            context->BindVertexBuffer(*vertexBuffer);
+            context->BindVertexBuffer(vertexBuffer);
             context->Draw(4, 0);
 
             #ifdef _WIN32
