@@ -52,6 +52,7 @@ class LinuxWindow : public Window
 
         void ProcessKeyEvent(XEvent& event, bool down);
         void ProcessMouseKeyEvent(XEvent& event, bool down);
+        void PostMouseKeyEvent(Key key, bool down);
 
         WindowDescriptor    desc_;
 

@@ -57,6 +57,13 @@ int main()
             if (input->KeyDown(LLGL::Key::Num5))
                 window->SetSize({ 300, 300 });
 
+            if (input->KeyDown(LLGL::Key::LButton))
+                window->SetTitle(L"LButton Down");
+            if (input->KeyDown(LLGL::Key::RButton))
+                window->SetTitle(L"RButton Down");
+            if (input->KeyDown(LLGL::Key::MButton))
+                window->SetTitle(L"MButton Down");
+            
             #ifdef __APPLE__
             auto mousePos = input->GetMousePosition();
             std::wstringstream s;

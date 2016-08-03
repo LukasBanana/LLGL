@@ -19,7 +19,7 @@ std::string Module::GetModuleFilename(std::string moduleName)
     #ifdef AC_DEBUG
     moduleName += "D";
     #endif
-    return "LLGL_" + moduleName + ".so";
+    return "libLLGL_" + moduleName + ".so";
 }
 
 bool Module::IsAvailable(const std::string& moduleFilename)

@@ -8,6 +8,7 @@
 #include "LinuxWindow.h"
 
 #include <exception>
+#include <iostream>//!!!
 
 
 namespace LLGL
@@ -28,6 +29,8 @@ LinuxWindow::LinuxWindow(const WindowDescriptor& desc) :
 
 LinuxWindow::~LinuxWindow()
 {
+    XDestroyWindow(display_, wnd_);
+    XCloseDisplay(display_);
 }
 
 void LinuxWindow::SetPosition(const Point& position)
@@ -144,7 +147,7 @@ void LinuxWindow::SetupDisplay()
     /* Open X11 display */
     display_ = XOpenDisplay(nullptr);
     if (!display_)
-        throw std::runtime_error("opening X11 display failed");
+        throw std::runtime_error("failed to open X11 display");
 }
 
 void LinuxWindow::SetupWindow()
@@ -157,7 +160,8 @@ void LinuxWindow::SetupWindow()
     int         depth       = DefaultDepth(display_, screen);
 
     XSetWindowAttributes attribs;
-    attribs.background_pixel = WhitePixel(display_, screen);
+    attribs.background_pixel    = WhitePixel(display_, screen);
+    attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
 
     /* Create X11 window */
     wnd_ = XCreateWindow(
@@ -171,8 +175,7 @@ void LinuxWindow::SetupWindow()
         depth,
         InputOutput,
         visual,
-        //(CWColormap | CWEventMask | CWOverrideRedirect),
-        CWBackPixel,
+        (CWBackPixel | CWEventMask), //(CWColormap | CWEventMask | CWOverrideRedirect),
         (&attribs)
     );
 
@@ -189,6 +192,32 @@ void LinuxWindow::ProcessKeyEvent(XEvent& event, bool down)
 
 void LinuxWindow::ProcessMouseKeyEvent(XEvent& event, bool down)
 {
+    switch (event.xbutton.button)
+    {
+        case Button1:
+            PostMouseKeyEvent(Key::LButton, down);
+            break;
+        case Button2:
+            PostMouseKeyEvent(Key::MButton, down);
+            break;
+        case Button3:
+            PostMouseKeyEvent(Key::RButton, down);
+            break;
+        case Button4:
+            PostWheelMotion(1);
+            break;
+        case Button5:
+            PostWheelMotion(-1);
+            break;
+    }
+}
+
+void LinuxWindow::PostMouseKeyEvent(Key key, bool down)
+{
+    if (down)
+        PostKeyDown(key);
+    else
+        PostKeyUp(key);
 }
 
 
