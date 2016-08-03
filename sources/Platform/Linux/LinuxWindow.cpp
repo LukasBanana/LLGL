@@ -112,23 +112,24 @@ void LinuxWindow::ProcessSystemEvents()
         switch (event.type)
         {
             case KeyPress:
-            {
-                //PostKeyDown();
-                //todo...
-            }
-            break;
+                ProcessKeyEvent(event, true);
+                break;
 
             case KeyRelease:
-            {
-                //todo...
-            }
-            break;
+                ProcessKeyEvent(event, false);
+                break;
+
+            case ButtonPress:
+                ProcessMouseKeyEvent(event, true);
+                break;
+
+            case ButtonRelease:
+                ProcessMouseKeyEvent(event, false);
+                break;
 
             case DestroyNotify:
-            {
                 PostQuit();
-            }
-            break;
+                break;
         }
     }
 }
@@ -180,6 +181,14 @@ void LinuxWindow::SetupWindow()
 
     if (desc_.visible)
         Show();
+}
+
+void LinuxWindow::ProcessKeyEvent(XEvent& event, bool down)
+{
+}
+
+void LinuxWindow::ProcessMouseKeyEvent(XEvent& event, bool down)
+{
 }
 
 

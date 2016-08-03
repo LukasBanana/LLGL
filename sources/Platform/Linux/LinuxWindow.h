@@ -50,14 +50,15 @@ class LinuxWindow : public Window
         void SetupDisplay();
         void SetupWindow();
 
+        void ProcessKeyEvent(XEvent& event, bool down);
+        void ProcessMouseKeyEvent(XEvent& event, bool down);
+
         WindowDescriptor    desc_;
 
         ::Display*          display_    = nullptr;
         ::Colormap          colorMap_;
         ::Window            wnd_;
         ::Cursor            cursor_;
-
-        XEvent              event_;
 
 };
 
