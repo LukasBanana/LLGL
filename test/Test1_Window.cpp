@@ -71,22 +71,22 @@ int main()
             window->SetTitle(s.str());
             #endif
 
-            if (input->KeyPressed(LLGL::Key::Right))
+            if (input->KeyPressed(LLGL::Key::Right) && pos.x < 1920)
             {
                 ++pos.x;
                 window->SetPosition(pos);
             }
-            if (input->KeyPressed(LLGL::Key::Left))
+            if (input->KeyPressed(LLGL::Key::Left) && pos.x > 0)
             {
                 --pos.x;
                 window->SetPosition(pos);
             }
-            if (input->KeyPressed(LLGL::Key::Up))
+            if (input->KeyPressed(LLGL::Key::Up) && pos.y > 0)
             {
                 --pos.y;
                 window->SetPosition(pos);
             }
-            if (input->KeyPressed(LLGL::Key::Down))
+            if (input->KeyPressed(LLGL::Key::Down) && pos.y < 768)
             {
                 ++pos.y;
                 window->SetPosition(pos);

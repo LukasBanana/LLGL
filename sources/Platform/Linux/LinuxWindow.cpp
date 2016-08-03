@@ -34,10 +34,7 @@ LinuxWindow::~LinuxWindow()
 
 void LinuxWindow::SetPosition(const Point& position)
 {
-    XWindowChanges attribs;
-    attribs.x = position.x;
-    attribs.y = position.y;
-    XConfigureWindow(display_, wnd_, (CWX | CWY), &attribs);
+    XMoveWindow(display_, wnd_, position.x, position.y);
 }
 
 Point LinuxWindow::GetPosition() const
@@ -47,10 +44,7 @@ Point LinuxWindow::GetPosition() const
 
 void LinuxWindow::SetSize(const Size& size, bool useClientArea)
 {
-    XWindowChanges attribs;
-    attribs.width = size.x;
-    attribs.height = size.y;
-    XConfigureWindow(display_, wnd_, (CWWidth | CWHeight), &attribs);
+    XResizeWindow(display_, wnd_, static_cast<unsigned int>(size.x), static_cast<unsigned int>(size.y));
 }
 
 Size LinuxWindow::GetSize(bool useClientArea) const
