@@ -6,13 +6,17 @@
  */
 
 #include "MapKey.h"
+#include <map>
+//#include <X11/X.h>
+//#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 
 namespace LLGL
 {
 
 
-#define KEYPAIR(KEYSYM, KEY) { KEYSYM, Key::##KEY }
+#define KEYPAIR(KEYSYM, KEY) { KEYSYM, Key::KEY }
 
 static std::map<KeySym, Key> GenerateLinuxKeyCodeMap()
 {
@@ -24,7 +28,7 @@ static std::map<KeySym, Key> GenerateLinuxKeyCodeMap()
         KEYPAIR( XK_Return      , Return    ),
         KEYPAIR( XK_Menu        , Menu      ),
         KEYPAIR( XK_Pause       , Pause     ),
-        KEYPAIR( XK_Caps_Lock   , CapsLock  ),
+        KEYPAIR( XK_Caps_Lock   , Capital   ),
     
         KEYPAIR( XK_Escape      , Escape    ),
         KEYPAIR( XK_space       , Space     ),
