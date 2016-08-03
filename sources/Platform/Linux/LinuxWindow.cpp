@@ -54,14 +54,9 @@ Size LinuxWindow::GetSize(bool useClientArea) const
 
 void LinuxWindow::SetTitle(const std::wstring& title)
 {
-    /* Convert UTF16 to UTF8 string (X11 limitation) */
-    std::string titleUTF8;
-    titleUTF8.resize(title.size());
-    for (std::size_t i = 0; i < title.size(); ++i)
-        titleUTF8[i] = static_cast<char>(title[i]);
-
-    /* Set windwo title */
-    XStoreName(display_, wnd_, titleUTF8.c_str());
+    /* Convert UTF16 to UTF8 string (X11 limitation) and set window title */
+    std::string s(title.begin(), title.end());
+    XStoreName(display_, wnd_, s.c_str());
 }
 
 std::wstring LinuxWindow::GetTitle() const
