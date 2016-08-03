@@ -13,6 +13,7 @@
 #include "GLRenderContext.h"
 #include "GLVertexBuffer.h"
 #include "GLIndexBuffer.h"
+#include "GLExtensionLoader.h"
 #include <string>
 #include <memory>
 #include <vector>
@@ -60,9 +61,13 @@ class GLRenderSystem : public RenderSystem
 
         bool OnMakeCurrent(RenderContext* renderContext) override;
 
+        void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
+
         std::set<std::unique_ptr<GLRenderContext>>  renderContexts_;
         std::set<std::unique_ptr<GLVertexBuffer>>   vertexBuffers_;
         std::set<std::unique_ptr<GLIndexBuffer>>    indexBuffers_;
+
+        OpenGLExtensionMap                          extensionMap_;
 
 };
 

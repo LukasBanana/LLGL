@@ -52,6 +52,26 @@ GLenum Map(const DataType dataType)
     return 0;
 }
 
+GLenum Map(const DrawMode drawMode)
+{
+    switch (drawMode)
+    {
+        case DrawMode::Points:                  return GL_POINTS;
+        case DrawMode::Lines:                   return GL_LINES;
+        case DrawMode::LineStrip:               return GL_LINE_STRIP;
+        case DrawMode::LineLoop:                return GL_LINE_LOOP;
+        case DrawMode::LinesAdjacency:          return GL_LINES_ADJACENCY;
+        case DrawMode::LineStripAdjacency:      return GL_LINE_STRIP_ADJACENCY;
+        case DrawMode::Triangles:               return GL_TRIANGLES;
+        case DrawMode::TriangleStrip:           return GL_TRIANGLE_STRIP;
+        case DrawMode::TriangleFan:             return GL_TRIANGLE_FAN;
+        case DrawMode::TrianglesAdjacency:      return GL_TRIANGLES_ADJACENCY;
+        case DrawMode::TriangleStripAdjacency:  return GL_TRIANGLE_STRIP_ADJACENCY;
+        case DrawMode::Patches:                 return GL_PATCHES;
+    }
+    return 0;
+}
+
 
 } // /namespace GLTypeConversion
 

@@ -6,6 +6,9 @@
  */
 
 #include "GLRenderContext.h"
+#include "GLTypeConversion.h"
+#include "GLExtensions.h"
+#include "../CheckedCast.h"
 
 
 namespace LLGL
@@ -54,7 +57,7 @@ std::map<RendererInfo, std::string> GLRenderContext::QueryRendererInfo() const
     return info;
 }
 
-/* ----- Rendering ----- */
+/* ----- Configuration ----- */
 
 void GLRenderContext::SetClearColor(const ColorRGBAf& color)
 {
@@ -83,6 +86,129 @@ void GLRenderContext::ClearBuffers(long flags)
         mask |= GL_STENCIL_BUFFER_BIT;
 
     glClear(mask);
+}
+
+void GLRenderContext::SetDrawMode(const DrawMode drawMode)
+{
+    renderState_.drawMode = GLTypeConversion::Map(drawMode);
+}
+
+/* ----- Hardware buffers ------ */
+
+void GLRenderContext::BindVertexBuffer(VertexBuffer& vertexBuffer)
+{
+    /* Bind vertex buffer */
+    auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
+    GLStateManager::active->BindVertexArray(vertexBufferGL.GetVaoID());
+}
+
+void GLRenderContext::UnbindVertexBuffer()
+{
+    GLStateManager::active->BindVertexArray(0);
+}
+
+void GLRenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
+{
+    /* Bind index buffer */
+    auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, indexBuffer);
+    GLStateManager::active->BindBuffer(indexBufferGL);
+
+    /* Store new index buffer data in global render state */
+    renderState_.indexBufferDataType = GLTypeConversion::Map(indexBuffer.GetIndexFormat().GetDataType());
+}
+
+void GLRenderContext::UnbindIndexBuffer()
+{
+    GLStateManager::active->BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, 0);
+}
+
+/* --- Drawing --- */
+
+void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
+{
+    glDrawArrays(
+        renderState_.drawMode,
+        static_cast<GLint>(firstVertex),
+        static_cast<GLsizei>(numVertices)
+    );
+}
+
+void GLRenderContext::DrawIndexed(unsigned int numVertices)
+{
+    glDrawElements(
+        renderState_.drawMode,
+        static_cast<GLsizei>(numVertices),
+        renderState_.indexBufferDataType,
+        nullptr
+    );
+}
+
+void GLRenderContext::DrawIndexed(unsigned int numVertices, int indexOffset)
+{
+    glDrawElementsBaseVertex(
+        renderState_.drawMode,
+        static_cast<GLsizei>(numVertices),
+        renderState_.indexBufferDataType,
+        nullptr,
+        indexOffset
+    );
+}
+
+void GLRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
+{
+    glDrawArraysInstanced(
+        renderState_.drawMode,
+        static_cast<GLint>(firstVertex),
+        static_cast<GLsizei>(numVertices),
+        static_cast<GLsizei>(numInstances)
+    );
+}
+
+void GLRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
+{
+    glDrawArraysInstancedBaseInstance(
+        renderState_.drawMode,
+        static_cast<GLint>(firstVertex),
+        static_cast<GLsizei>(numVertices),
+        static_cast<GLsizei>(numInstances),
+        instanceOffset
+    );
+}
+
+void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances)
+{
+    glDrawElementsInstanced(
+        renderState_.drawMode,
+        static_cast<GLsizei>(numVertices),
+        renderState_.indexBufferDataType,
+        nullptr,
+        static_cast<GLsizei>(numInstances)
+    );
+}
+
+void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset)
+{
+    glDrawElementsInstancedBaseVertex(
+        renderState_.drawMode,
+        static_cast<GLsizei>(numVertices),
+        renderState_.indexBufferDataType,
+        nullptr,
+        static_cast<GLsizei>(numInstances),
+        indexOffset
+    );
+}
+
+void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset)
+{
+    glDrawElementsInstancedBaseVertexBaseInstance(
+        renderState_.drawMode,
+        static_cast<GLsizei>(numVertices),
+        renderState_.indexBufferDataType,
+        nullptr,
+        static_cast<GLsizei>(numInstances),
+        indexOffset,
+        instanceOffset
+    );
 }
 
 

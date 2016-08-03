@@ -21,18 +21,38 @@ namespace LLGL
 #ifdef LLGL_DEBUG
 
 template <typename To, typename From>
-To CheckedCast(From obj)
+To& CheckedCast(From& obj)
 {
-    return dynamic_cast<To>(obj);
+    try
+    {
+        return dynamic_cast<To&>(obj);
+    }
+    catch (const std::bad_cast& e)
+    {
+        #ifdef _WIN32
+        DebugBreak();
+        #endif
+        throw e;
+    }
 }
 
 template <typename To, typename From>
 To CheckedCast(From* obj)
 {
-    To casted = dynamic_cast<To>(obj);
-    if (!casted)
-        throw std::bad_cast();
-    return casted;
+    try
+    {
+        To casted = dynamic_cast<To>(obj);
+        if (!casted)
+            throw std::bad_cast();
+        return casted;
+    }
+    catch (const std::bad_cast& e)
+    {
+        #ifdef _WIN32
+        DebugBreak();
+        #endif
+        throw e;
+    }
 }
 
 #define LLGL_CAST(TYPE, OBJ) CheckedCast<TYPE>(OBJ)

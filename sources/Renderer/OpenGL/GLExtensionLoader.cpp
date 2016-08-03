@@ -59,9 +59,9 @@ static void ExtractExtensionsFromString(std::map<std::string, bool>& extMap, con
 
 /* --- Common extension loading functions --- */
 
-ExtMapType QueryExtensions(bool coreProfile)
+OpenGLExtensionMap QueryExtensions(bool coreProfile)
 {
-    ExtMapType extMap;
+    OpenGLExtensionMap extMap;
 
     const char* extString = nullptr;
     
@@ -110,7 +110,7 @@ ExtMapType QueryExtensions(bool coreProfile)
     return extMap;
 }
 
-void LoadAllExtensions(ExtMapType& extMap)
+void LoadAllExtensions(OpenGLExtensionMap& extMap)
 {
     /* Only load GL extensions once */
     static bool extAlreadyLoaded;

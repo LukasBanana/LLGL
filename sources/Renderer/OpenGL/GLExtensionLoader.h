@@ -18,16 +18,16 @@ namespace LLGL
 
 
 //! OpenGL extension map type.
-using ExtMapType = std::map<std::string, bool>;
+using OpenGLExtensionMap = std::map<std::string, bool>;
 
 /* --- Common extension loading functions --- */
 
 /**
 Returns a hash-map with all supported OpenGL extensions.
 The hash-map can be used for faster single-extension queries.
-\param[in] useGLCoreProfile Specifies whether the extension are to be loaded via GL core profile or not.
+\param[in] coreProfile Specifies whether the extension are to be loaded via GL core profile or not.
 */
-ExtMapType QueryExtensions(bool useGLCoreProfile);
+OpenGLExtensionMap QueryExtensions(bool coreProfile);
 
 /**
 Loads all available extensions and prints errors if an extension is available,
@@ -37,7 +37,7 @@ If an extension is available but some of their respective functions could not be
 the respective entry in the map will be invalidated (set to 'false').
 \see QueryExtensions
 */
-void LoadAllExtensions(ExtMapType& extMap);
+void LoadAllExtensions(OpenGLExtensionMap& extMap);
 
 /* --- Common GL extensions --- */
 

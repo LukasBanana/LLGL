@@ -42,6 +42,10 @@ RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor
     if (desc.videoMode.fullscreen)
         Desktop::ChangeVideoMode(desc.videoMode);
 
+    /* Load all OpenGL extensions for the first time */
+    if (renderContexts_.empty())
+        LoadGLExtensions(desc.profileOpenGL);
+
     /* Take ownership and return raw pointer */
     return TakeOwnership(renderContexts_, std::move(renderContext));
 }
@@ -108,6 +112,19 @@ bool GLRenderSystem::OnMakeCurrent(RenderContext* renderContext)
     }
     else
         return GLRenderContext::GLMakeCurrent(nullptr);
+}
+
+void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc)
+{
+    /* Load OpenGL extensions if not already done */
+    if (extensionMap_.empty())
+    {
+        auto coreProfile = (profileDesc.extProfile && profileDesc.coreProfile);
+
+        /* Query extensions and load all of them */
+        extensionMap_ = QueryExtensions(coreProfile);
+        LoadAllExtensions(extensionMap_);
+    }
 }
 
 

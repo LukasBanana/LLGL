@@ -39,7 +39,7 @@ class GLRenderContext : public RenderContext
 
         void Present() override;
 
-        /* ----- Rendering ----- */
+        /* ----- Configuration ----- */
 
         void SetClearColor(const ColorRGBAf& color) override;
         void SetClearDepth(float depth) override;
@@ -47,11 +47,41 @@ class GLRenderContext : public RenderContext
 
         void ClearBuffers(long flags) override;
 
+        void SetDrawMode(const DrawMode drawMode) override;
+
+        /* ----- Hardware buffers ------ */
+
+        void BindVertexBuffer(VertexBuffer& vertexBuffer) override;
+        void UnbindVertexBuffer() override;
+
+        void BindIndexBuffer(IndexBuffer& indexBuffer) override;
+        void UnbindIndexBuffer() override;
+
+        /* --- Drawing --- */
+
+        void Draw(unsigned int numVertices, unsigned int firstVertex) override;
+
+        void DrawIndexed(unsigned int numVertices) override;
+        void DrawIndexed(unsigned int numVertices, int indexOffset) override;
+
+        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) override;
+        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) override;
+
+        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances) override;
+        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset) override;
+        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset) override;
+
         /* ----- GLRenderContext specific functions ----- */
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);
 
     private:
+
+        struct RenderState
+        {
+            GLenum drawMode             = GL_TRIANGLES;
+            GLenum indexBufferDataType  = GL_UNSIGNED_INT;
+        };
 
         void CreateContext(GLRenderContext* sharedRenderContext);
         void DeleteContext();
@@ -89,6 +119,7 @@ class GLRenderContext : public RenderContext
         bool                            hasSharedContext_   = false;
 
         std::shared_ptr<GLStateManager> stateMngr_;
+        RenderState                     renderState_;
 
 };
 

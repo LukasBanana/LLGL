@@ -59,10 +59,29 @@ int main()
         auto input = std::make_shared<LLGL::Input>();
         window.AddEventListener(input);
 
+        // Create vertex buffer
+        auto vertexBuffer = renderer->CreateVertexBuffer();
+
+        LLGL::VertexFormat vertexFormat;
+        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
+
+        Gs::Vector2f vertices[] =
+        {
+            Gs::Vector2f(-1, -1),
+            Gs::Vector2f(-1,  1),
+            Gs::Vector2f( 1,  1),
+            Gs::Vector2f( 1, -1),
+        };
+        renderer->WriteVertexBuffer(*vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
+
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
         {
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+
+            context->SetDrawMode(LLGL::DrawMode::TriangleFan);
+            context->BindVertexBuffer(*vertexBuffer);
+            context->Draw(4, 0);
 
             #ifdef _WIN32
             
@@ -92,6 +111,9 @@ int main()
     catch (const std::exception& e)
     {
         std::cerr << e.what() << std::endl;
+        #ifdef _WIN32
+        system("pause");
+        #endif
     }
 
     return 0;
