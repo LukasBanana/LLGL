@@ -84,13 +84,15 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(const std::string& moduleName)
     return renderSystem;
 }
 
-void RenderSystem::MakeCurrent(RenderContext* renderContext)
+bool RenderSystem::MakeCurrent(RenderContext* renderContext)
 {
     if (currentContext_ != renderContext)
     {
-        OnMakeCurrent(renderContext);
+        auto result = OnMakeCurrent(renderContext);
         currentContext_ = renderContext;
+        return result;
     }
+    return true;
 }
 
 
@@ -98,9 +100,9 @@ void RenderSystem::MakeCurrent(RenderContext* renderContext)
  * ======= Protected: =======
  */
 
-void RenderSystem::OnMakeCurrent(RenderContext* renderContext)
+bool RenderSystem::OnMakeCurrent(RenderContext* renderContext)
 {
-    // dummy
+    return true; // dummy
 }
 
 

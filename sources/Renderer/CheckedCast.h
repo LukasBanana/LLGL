@@ -23,6 +23,12 @@ namespace LLGL
 template <typename To, typename From>
 To CheckedCast(From obj)
 {
+    return dynamic_cast<To>(obj);
+}
+
+template <typename To, typename From>
+To CheckedCast(From* obj)
+{
     To casted = dynamic_cast<To>(obj);
     if (!casted)
         throw std::bad_cast();

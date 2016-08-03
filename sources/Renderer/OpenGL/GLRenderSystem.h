@@ -11,9 +11,12 @@
 
 #include <LLGL/RenderSystem.h>
 #include "GLRenderContext.h"
+#include "GLVertexBuffer.h"
+#include "GLIndexBuffer.h"
 #include <string>
 #include <memory>
 #include <vector>
+#include <set>
 
 
 namespace LLGL
@@ -55,9 +58,11 @@ class GLRenderSystem : public RenderSystem
 
     private:
 
-        void OnMakeCurrent(RenderContext* renderContext) override;
+        bool OnMakeCurrent(RenderContext* renderContext) override;
 
-        std::vector<std::unique_ptr<GLRenderContext>> renderContexts_;
+        std::set<std::unique_ptr<GLRenderContext>>  renderContexts_;
+        std::set<std::unique_ptr<GLVertexBuffer>>   vertexBuffers_;
+        std::set<std::unique_ptr<GLIndexBuffer>>    indexBuffers_;
 
 };
 

@@ -13,11 +13,18 @@
 #include <type_traits>
 #include <memory>
 #include <vector>
+#include <set>
 
 
 namespace LLGL
 {
 
+
+template <typename T, typename... Args>
+std::unique_ptr<T> MakeUnique(Args&&... args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
     
 template <class T>
 void InitMemory(T& data)
@@ -81,6 +88,22 @@ void RemoveListenerGlob(std::vector<std::shared_ptr<T>>& container, const T* lis
             }
         );
     }
+}
+
+template <typename T>
+T* TakeOwnership(std::set<std::unique_ptr<T>>& objectSet, std::unique_ptr<T>&& object)
+{
+    auto ref = object.get();
+    objectSet.emplace(std::move(object));
+    return ref;
+}
+
+template <typename T>
+T* TakeOwnership(std::vector<std::unique_ptr<T>>& objectSet, std::unique_ptr<T>&& object)
+{
+    auto ref = object.get();
+    objectSet.emplace_back(std::move(object));
+    return ref;
 }
 
 

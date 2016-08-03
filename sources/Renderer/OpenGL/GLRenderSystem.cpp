@@ -7,6 +7,7 @@
 
 #include "GLRenderSystem.h"
 #include "../CheckedCast.h"
+#include "../../Core/Helper.h"
 #include <LLGL/Desktop.h>
 
 
@@ -40,21 +41,19 @@ RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor
         Desktop::ChangeVideoMode(desc.videoMode);
 
     /* Take ownership and return raw pointer */
-    renderContexts_.emplace_back(std::move(renderContext));
-
-    return renderContexts_.back().get();
+    return TakeOwnership(renderContexts_, std::move(renderContext));
 }
 
 /* ----- Hardware buffers ------ */
 
 VertexBuffer* GLRenderSystem::CreateVertexBuffer()
 {
-    return nullptr;
+    return TakeOwnership(vertexBuffers_, MakeUnique<GLVertexBuffer>());
 }
 
 IndexBuffer* GLRenderSystem::CreateIndexBuffer()
 {
-    return nullptr;
+    return TakeOwnership(indexBuffers_, MakeUnique<GLIndexBuffer>());
 }
 
 void GLRenderSystem::WriteVertexBuffer(
@@ -64,6 +63,8 @@ void GLRenderSystem::WriteVertexBuffer(
     const BufferUsage usage,
     const VertexFormat& vertexFormat)
 {
+    auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
+
 }
 
 void GLRenderSystem::WriteIndexBuffer(
@@ -80,15 +81,15 @@ void GLRenderSystem::WriteIndexBuffer(
  * ======= Private: =======
  */
 
-void GLRenderSystem::OnMakeCurrent(RenderContext* renderContext)
+bool GLRenderSystem::OnMakeCurrent(RenderContext* renderContext)
 {
     if (renderContext)
     {
         auto renderContextGL = LLGL_CAST(GLRenderContext*, renderContext);
-        GLRenderContext::GLMakeCurrent(renderContextGL);
+        return GLRenderContext::GLMakeCurrent(renderContextGL);
     }
     else
-        GLRenderContext::GLMakeCurrent(nullptr);
+        return GLRenderContext::GLMakeCurrent(nullptr);
 }
 
 

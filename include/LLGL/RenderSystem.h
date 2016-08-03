@@ -82,9 +82,10 @@ class LLGL_EXPORT RenderSystem
         /**
         \brief Makes the specified render context to the current one.
         \param[in] renderContext Specifies the new current render context. If this is null, no render context is active.
+        \return True on success, otherwise false.
         \remarks Never draw anything, while no render context is active!
         */
-        void MakeCurrent(RenderContext* renderContext);
+        bool MakeCurrent(RenderContext* renderContext);
 
         //! Returns the current render context. This may also be null.
         inline RenderContext* GetCurrentContext() const
@@ -123,7 +124,7 @@ class LLGL_EXPORT RenderSystem
         \brief Callback when a new render context is about to be made the current one.
         \remarks At this point, "GetCurrentContext" returns still the previous render context.
         */
-        virtual void OnMakeCurrent(RenderContext* renderContext);
+        virtual bool OnMakeCurrent(RenderContext* renderContext);
 
     private:
 
