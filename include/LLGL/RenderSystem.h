@@ -109,7 +109,7 @@ class LLGL_EXPORT RenderSystem
         ) = 0;
 
         virtual void WriteIndexBuffer(
-            VertexBuffer& vertexBuffer,
+            IndexBuffer& indexBuffer,
             const void* data,
             std::size_t dataSize,
             const BufferUsage usage,

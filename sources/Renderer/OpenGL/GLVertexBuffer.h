@@ -23,8 +23,21 @@ class GLVertexBuffer : public VertexBuffer
     public:
 
         GLVertexBuffer();
+        ~GLVertexBuffer();
+
+        void UpdateVertexFormat(const VertexFormat& vertexFormat);
+
+        //! Returns the ID of the vertex-array-object (VAO)
+        inline GLuint GetVaoID() const
+        {
+            return vaoID_;
+        }
 
         GLHardwareBuffer hwBuffer;
+
+    private:
+
+        GLuint vaoID_ = 0; //!< Vertex array object ID.
 
 };
 

@@ -24,6 +24,16 @@ GLHardwareBuffer::~GLHardwareBuffer()
     glDeleteBuffers(1, &id_);
 }
 
+void GLHardwareBuffer::BufferData(const void* data, const GLsizeiptr size, const GLenum usage)
+{
+    glBufferData(target_, size, data, usage);
+}
+
+void GLHardwareBuffer::BufferSubData(const void* data, const GLsizeiptr size, const GLintptr offset)
+{
+    glBufferSubData(target_, offset, size, data);
+}
+
 
 } // /namespace LLGL
 

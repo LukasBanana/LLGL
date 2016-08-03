@@ -27,6 +27,22 @@ class LLGL_EXPORT VertexBuffer
         {
         }
 
+        inline const VertexFormat& GetVertexFormat() const
+        {
+            return vertexFormat_;
+        }
+
+    protected:
+
+        inline void SetVertexFormat(const VertexFormat& vertexFormat)
+        {
+            vertexFormat_ = vertexFormat;
+        }
+
+    private:
+
+        VertexFormat vertexFormat_;
+
 };
 
 

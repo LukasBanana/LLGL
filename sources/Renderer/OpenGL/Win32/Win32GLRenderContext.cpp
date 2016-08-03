@@ -25,6 +25,10 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 {
     if (renderContext)
     {
+        /* Update new active state manager */
+        GLStateManager::active = renderContext->stateMngr_.get();
+
+        /* Make this OpenGL context to the current one */
         const auto& ctx = renderContext->context_;
         return (wglMakeCurrent(ctx.hDC, ctx.hGLRC) == TRUE);
     }

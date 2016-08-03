@@ -91,6 +91,10 @@ static const GLenum textureLayersMap[] =
 };
 
 
+/* ----- Common ----- */
+
+GLStateManager* GLStateManager::active = nullptr;
+
 GLStateManager::GLStateManager()
 {
     /* Initialize all states with zero */
@@ -101,9 +105,12 @@ GLStateManager::GLStateManager()
         Fill(layer.boundTextures, 0);
 
     activeTextureLayer_ = &(textureState_.layers[0]);
+
+    /* Make this to the active state manager */
+    GLStateManager::active = this;
 }
 
-/* ----- Common states ----- */
+/* ----- Boolean states ----- */
 
 void GLStateManager::Reset()
 {
@@ -202,6 +209,24 @@ void GLStateManager::BindVertexArray(GLuint buffer)
     glBindVertexArray(buffer);
     bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ARRAY_BUFFER)] = 0;
     bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
+}
+
+void GLStateManager::BindBuffer(const GLVertexBuffer& vertexBuffer)
+{
+    BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBuffer.hwBuffer.GetID());
+}
+
+void GLStateManager::BindBuffer(const GLIndexBuffer& vertexBuffer)
+{
+    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, vertexBuffer.hwBuffer.GetID());
+}
+
+void GLStateManager::ForcedBindBuffer(GLBufferTarget target, GLuint buffer)
+{
+    /* Always bind buffer with a forced binding */
+    auto targetIdx = static_cast<std::size_t>(target);
+    bufferState_.boundBuffers[targetIdx] = buffer;
+    glBindBuffer(bufferTargetsMap[targetIdx], buffer);
 }
 
 void GLStateManager::PushBoundBuffer(GLBufferTarget target)

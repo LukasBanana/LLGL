@@ -17,6 +17,11 @@ GLIndexBuffer::GLIndexBuffer() :
 {
 }
 
+void GLIndexBuffer::UpdateIndexFormat(const IndexFormat& indexFormat)
+{
+    SetIndexFormat(indexFormat);
+}
+
 
 } // /namespace LLGL
 

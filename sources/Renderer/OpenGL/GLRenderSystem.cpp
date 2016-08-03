@@ -9,6 +9,8 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include <LLGL/Desktop.h>
+#include "GLStateManager.h"
+#include "GLTypeConversion.h"
 
 
 namespace LLGL
@@ -63,17 +65,33 @@ void GLRenderSystem::WriteVertexBuffer(
     const BufferUsage usage,
     const VertexFormat& vertexFormat)
 {
+    /* Bind vertex buffer */
     auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
+    GLStateManager::active->BindBuffer(vertexBufferGL);
 
+    /* Update buffer data */
+    vertexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
+
+    /* Setup new vertex format */
+    vertexBufferGL.UpdateVertexFormat(vertexFormat);
 }
 
 void GLRenderSystem::WriteIndexBuffer(
-    VertexBuffer& vertexBuffer,
+    IndexBuffer& indexBuffer,
     const void* data,
     std::size_t dataSize,
     const BufferUsage usage,
     const IndexFormat& indexFormat)
 {
+    /* Bind vertex buffer */
+    auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, indexBuffer);
+    GLStateManager::active->BindBuffer(indexBufferGL);
+
+    /* Update buffer data */
+    indexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
+
+    /* Setup new index format */
+    indexBufferGL.UpdateIndexFormat(indexFormat);
 }
 
 

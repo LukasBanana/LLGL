@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "IndexFormat.h"
 
 
 namespace LLGL
@@ -25,6 +26,22 @@ class LLGL_EXPORT IndexBuffer
         virtual ~IndexBuffer()
         {
         }
+
+        inline const IndexFormat& GetIndexFormat() const
+        {
+            return indexFormat_;
+        }
+
+    protected:
+
+        inline void SetIndexFormat(const IndexFormat& indexFormat)
+        {
+            indexFormat_ = indexFormat;
+        }
+
+    private:
+
+        IndexFormat indexFormat_ = IndexFormat(DataType::UInt);
 
 };
 

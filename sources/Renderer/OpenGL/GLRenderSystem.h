@@ -49,7 +49,7 @@ class GLRenderSystem : public RenderSystem
         ) override;
 
         void WriteIndexBuffer(
-            VertexBuffer& vertexBuffer,
+            IndexBuffer& indexBuffer,
             const void* data,
             std::size_t dataSize,
             const BufferUsage usage,

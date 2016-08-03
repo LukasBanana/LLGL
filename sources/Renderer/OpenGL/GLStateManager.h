@@ -10,6 +10,8 @@
 
 
 #include "OpenGL.h"
+#include "GLVertexBuffer.h"
+#include "GLIndexBuffer.h"
 #include <array>
 #include <stack>
 
@@ -92,9 +94,13 @@ class GLStateManager
 
     public:
 
+        /* ----- Common ----- */
+
         GLStateManager();
 
-        /* ----- Common states ----- */
+        static GLStateManager* active;
+
+        /* ----- Boolean states ----- */
 
         //! Resets all internal states by querying the values from OpenGL.
         void Reset();
@@ -115,6 +121,11 @@ class GLStateManager
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
         void BindVertexArray(GLuint buffer);
         
+        void BindBuffer(const GLVertexBuffer& vertexBuffer);
+        void BindBuffer(const GLIndexBuffer& vertexBuffer);
+
+        void ForcedBindBuffer(GLBufferTarget target, GLuint buffer);
+
         void PushBoundBuffer(GLBufferTarget target);
         void PopBoundBuffer();
 

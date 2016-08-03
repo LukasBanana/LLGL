@@ -24,7 +24,6 @@ enum class BufferUsage
     Dynamic,    //!< The hardware buffer will change often by the client.
 };
 
-#if 0
 /**
 Hardware buffer CPU acccess enumeration.
 \see RenderSystem::MapBuffer
@@ -35,7 +34,6 @@ enum class BufferCPUAccess
     WriteOnly,  //!< CPU write access only.
     ReadWrite,  //!< CPU read and write access.
 };
-#endif
 
 //! Renderer data types enumeration.
 enum class DataType

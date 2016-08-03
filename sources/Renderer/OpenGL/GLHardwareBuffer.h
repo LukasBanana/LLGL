@@ -27,8 +27,17 @@ class GLHardwareBuffer
         GLHardwareBuffer(GLenum target);
         ~GLHardwareBuffer();
 
+        void BufferData(const void* data, const GLsizeiptr size, const GLenum usage);
+        void BufferSubData(const void* data, const GLsizeiptr size, const GLintptr offset);
+
+        //! Returns the buffer target.
+        inline GLenum GetTarget() const
+        {
+            return target_;
+        }
+
         //! Returns the hardware buffer ID.
-        inline GLuint Get() const
+        inline GLuint GetID() const
         {
             return id_;
         }

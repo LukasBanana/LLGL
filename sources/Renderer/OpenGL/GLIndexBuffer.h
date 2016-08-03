@@ -24,6 +24,8 @@ class GLIndexBuffer : public IndexBuffer
 
         GLIndexBuffer();
 
+        void UpdateIndexFormat(const IndexFormat& indexFormat);
+
         GLHardwareBuffer hwBuffer;
 
 };
