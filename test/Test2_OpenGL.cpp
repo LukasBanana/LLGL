@@ -149,28 +149,6 @@ int main()
 
             context->UnbindShaderProgram();
 
-            #if defined(_WIN32) && 0
-            
-            auto proj = Gs::ProjectionMatrix4f::Planar(
-                static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
-                static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
-            );
-
-            glMatrixMode(GL_PROJECTION);
-            glLoadMatrixf(proj.Ptr());
-
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-
-            glBegin(GL_LINES);
-            {
-                glVertex2i(200, 100);
-                glVertex2i(400, 200);
-            }
-            glEnd();
-
-            #endif
-
             context->Present();
         }
     }
