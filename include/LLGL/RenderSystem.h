@@ -77,7 +77,7 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new render context and returns the raw pointer.
-        \remarks Rhe render system takes the ownership of this object. All render contexts are deleted in the destructor of this render system.
+        \remarks The render system takes the ownership of this object. All render contexts are deleted in the destructor of this render system.
         */
         virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) = 0;
 
@@ -101,6 +101,9 @@ class LLGL_EXPORT RenderSystem
         virtual IndexBuffer* CreateIndexBuffer() = 0;
         /*virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc) = 0;
         virtual StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc) = 0;*/
+
+        //virtual void Release(VertexBuffer& vertexBuffer) = 0;
+        //virtual void Release(IndexBuffer& indexBuffer) = 0;
 
         virtual void WriteVertexBuffer(
             VertexBuffer& vertexBuffer,

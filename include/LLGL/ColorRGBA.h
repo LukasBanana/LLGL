@@ -16,7 +16,12 @@ namespace LLGL
 {
 
 
-//! RGBA color class with components: r, g, b, and a.
+/**
+\brief RGBA color class with components: r, g, b, and a.
+\remarks Color components are default initialized with their maximal value,
+i.e. for floating-points, the initial value is 1.0, because this its maximal color value,
+but for unsigned-bytes, the initial value is 255.
+*/
 template <typename T>
 class Color<T, 4u>
 {
