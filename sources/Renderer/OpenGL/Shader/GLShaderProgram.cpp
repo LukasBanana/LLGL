@@ -143,7 +143,7 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
     return descList;
 }
 
-void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
+void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs, bool ignoreUnusedAttributes)
 {
     if (!linkStatus_)
         throw std::runtime_error("failed to bind vertex attributes, because shaders have not been linked successfully yet");
@@ -159,13 +159,12 @@ void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& v
     /* Bind all vertex attribute locations */
     for (const auto& attrib : vertexAttribs)
     {
-        /* Get attribute location and verify validity */
+        /* Get and bind attribute location */
         GLint index = glGetAttribLocation(id_, attrib.name.c_str());
-        if (index == -1)
+        if (index != -1)
+            glBindAttribLocation(id_, static_cast<GLuint>(index), attrib.name.c_str());
+        else if (!ignoreUnusedAttributes)
             throw std::invalid_argument("failed to bind vertex attribute '" + std::string(attrib.name) + "'");
-
-        /* Bind attribute location */
-        glBindAttribLocation(id_, static_cast<GLuint>(index), attrib.name.c_str());
     }
 }
 

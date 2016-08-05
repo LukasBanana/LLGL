@@ -38,7 +38,7 @@ class GLShaderProgram : public ShaderProgram
 
         std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const override;
 
-        void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) override;
+        void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs, bool ignoreUnusedAttributes = false) override;
 
         void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) override;
 
