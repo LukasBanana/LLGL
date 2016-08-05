@@ -17,6 +17,7 @@
 #include "TessEvaluationShader.h"
 #include "ComputeShader.h"
 #include "VertexAttribute.h"
+#include "ConstantBuffer.h"
 #include <string>
 #include <vector>
 
@@ -31,9 +32,7 @@ class LLGL_EXPORT ShaderProgram
 
     public:
 
-        virtual ~ShaderProgram()
-        {
-        }
+        virtual ~ShaderProgram();
 
         virtual void AttachShader( VertexShader&         vertexShader         ) = 0;
         virtual void AttachShader( FragmentShader&       fragmentShader       ) = 0;
@@ -53,6 +52,9 @@ class LLGL_EXPORT ShaderProgram
         //! Returns the information log after the shader linkage.
         virtual std::string QueryInfoLog() = 0;
 
+        //! Returns a list of constant buffer descriptors, which describe all constant buffers (also "Uniform Buffer Object") within this shader program.
+        virtual std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const = 0;
+
         /**
         \brief Binds the specified vertex attributes to this shader program.
         \remarks This is only required for a shader program, which has an attached vertex shader,
@@ -63,6 +65,23 @@ class LLGL_EXPORT ShaderProgram
         \throws std::runtime_error If this function is called before the shaders have been successfully linked.
         */
         virtual void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) = 0;
+
+        /**
+        \brief Binds the specified constant buffer to this shader.
+        \param[in] name Specifies the name of the constant buffer within this shader.
+        \param[in] bindingIndex Specifies the binding index. This index must match the index which will be used for "RenderContext::BindConstantBuffer".
+        \see QueryConstantBuffers
+        \see RenderContext::BindConstantBuffer
+        */
+        virtual void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) = 0;
+
+        /**
+        \brief Binds all constant buffers which are used within this shader program
+        \remarks This is a comfort function, which binds each constant buffer, returned by "QueryConstantBuffers".
+        \see QueryConstantBuffers
+        \see BindConstantBuffer
+        */
+        void BindAllConstantBuffers();
 
 };
 

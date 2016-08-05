@@ -216,9 +216,14 @@ void GLStateManager::BindBuffer(const GLVertexBuffer& vertexBuffer)
     BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBuffer.hwBuffer.GetID());
 }
 
-void GLStateManager::BindBuffer(const GLIndexBuffer& vertexBuffer)
+void GLStateManager::BindBuffer(const GLIndexBuffer& indexBuffer)
 {
-    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, vertexBuffer.hwBuffer.GetID());
+    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, indexBuffer.hwBuffer.GetID());
+}
+
+void GLStateManager::BindBuffer(const GLConstantBuffer& constantBuffer)
+{
+    BindBuffer(GLBufferTarget::UNIFORM_BUFFER, constantBuffer.hwBuffer.GetID());
 }
 
 void GLStateManager::ForcedBindBuffer(GLBufferTarget target, GLuint buffer)

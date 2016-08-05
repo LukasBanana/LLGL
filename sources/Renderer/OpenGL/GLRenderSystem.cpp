@@ -62,6 +62,11 @@ IndexBuffer* GLRenderSystem::CreateIndexBuffer()
     return TakeOwnership(indexBuffers_, MakeUnique<GLIndexBuffer>());
 }
 
+ConstantBuffer* GLRenderSystem::CreateConstantBuffer(const ConstantBufferDescriptor& desc)
+{
+    return TakeOwnership(constantBuffers_, MakeUnique<GLConstantBuffer>());
+}
+
 void GLRenderSystem::WriteVertexBuffer(
     VertexBuffer& vertexBuffer,
     const void* data,
@@ -73,10 +78,8 @@ void GLRenderSystem::WriteVertexBuffer(
     auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
     GLStateManager::active->BindBuffer(vertexBufferGL);
 
-    /* Update buffer data */
+    /* Update buffer data and update new vertex format */
     vertexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
-
-    /* Setup new vertex format */
     vertexBufferGL.UpdateVertexFormat(vertexFormat);
 }
 
@@ -87,15 +90,27 @@ void GLRenderSystem::WriteIndexBuffer(
     const BufferUsage usage,
     const IndexFormat& indexFormat)
 {
-    /* Bind vertex buffer */
+    /* Bind index buffer */
     auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, indexBuffer);
     GLStateManager::active->BindBuffer(indexBufferGL);
 
-    /* Update buffer data */
+    /* Update buffer data and update new index format */
     indexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
-
-    /* Setup new index format */
     indexBufferGL.UpdateIndexFormat(indexFormat);
+}
+
+void GLRenderSystem::WriteConstantBuffer(
+    ConstantBuffer& constantBuffer,
+    const void* data,
+    std::size_t dataSize,
+    const BufferUsage usage)
+{
+    /* Bind constant buffer */
+    auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
+    GLStateManager::active->BindBuffer(constantBufferGL);
+
+    /* Update buffer data */
+    constantBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
 }
 
 /* ----- Shader ----- */

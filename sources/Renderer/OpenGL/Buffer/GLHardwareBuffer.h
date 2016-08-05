@@ -9,7 +9,7 @@
 #define __LLGL_GL_HARDWARE_BUFFER_H__
 
 
-#include "OpenGL.h"
+#include "../OpenGL.h"
 
 
 namespace LLGL

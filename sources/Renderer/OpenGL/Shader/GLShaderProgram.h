@@ -36,7 +36,11 @@ class GLShaderProgram : public ShaderProgram
 
         std::string QueryInfoLog() override;
 
+        std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const override;
+
         void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) override;
+
+        void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) override;
 
         //! Returns the shader program ID.
         inline GLuint GetID() const

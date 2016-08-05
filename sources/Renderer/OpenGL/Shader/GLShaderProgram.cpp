@@ -99,6 +99,50 @@ std::string GLShaderProgram::QueryInfoLog()
     return "";
 }
 
+std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() const
+{
+    std::vector<ConstantBufferDescriptor> descList;
+
+    /* Query number of uniform blocks */
+    GLint numUniformBlocks = 0;
+    glGetProgramiv(id_, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
+
+    if (numUniformBlocks <= 0)
+        return descList;
+
+    /* Query maximal uniform block name length */
+    GLint maxNameLength = 0;
+    glGetProgramiv(id_, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &maxNameLength);
+
+    if (maxNameLength <= 0)
+        return descList;
+
+    std::vector<char> blockName;
+    blockName.resize(maxNameLength);
+
+    /* Iterate over all uniform blocks */
+    for (GLuint i = 0; i < static_cast<GLuint>(numUniformBlocks); ++i)
+    {
+        ConstantBufferDescriptor desc;
+        desc.index = i;
+
+        /* Query uniform block name */
+        GLsizei nameLength = 0;
+        glGetActiveUniformBlockName(id_, i, maxNameLength, &nameLength, blockName.data());
+        desc.name = std::string(blockName.data());
+
+        /* Query uniform block size */
+        GLint blockSize = 0;
+        glGetActiveUniformBlockiv(id_, i, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
+        desc.size = blockSize;
+
+        /* Insert uniform block into list */
+        descList.push_back(desc);
+    }
+
+    return descList;
+}
+
 void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
 {
     if (!linkStatus_)
@@ -123,6 +167,16 @@ void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& v
         /* Bind attribute location */
         glBindAttribLocation(id_, static_cast<GLuint>(index), attrib.name.c_str());
     }
+}
+
+void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
+{
+    /* Query uniform block index and bind it to the specified binding index */
+    GLint blockIndex = glGetUniformBlockIndex(id_, name.c_str());
+    if (blockIndex != GL_INVALID_INDEX)
+        glUniformBlockBinding(id_, blockIndex, bindingIndex);
+    else
+        throw std::invalid_argument("failed to bind constant buffer, because uniform block name is invalid");
 }
 
 

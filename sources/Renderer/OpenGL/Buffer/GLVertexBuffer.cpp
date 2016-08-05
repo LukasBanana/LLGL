@@ -6,9 +6,9 @@
  */
 
 #include "GLVertexBuffer.h"
-#include "GLExtensions.h"
-#include "GLTypeConversion.h"
-#include "GLStateManager.h"
+#include "../GLExtensions.h"
+#include "../GLTypeConversion.h"
+#include "../GLStateManager.h"
 
 
 namespace LLGL

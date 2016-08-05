@@ -10,8 +10,9 @@
 
 
 #include "OpenGL.h"
-#include "GLVertexBuffer.h"
-#include "GLIndexBuffer.h"
+#include "Buffer/GLVertexBuffer.h"
+#include "Buffer/GLIndexBuffer.h"
+#include "Buffer/GLConstantBuffer.h"
 #include <array>
 #include <stack>
 
@@ -122,7 +123,8 @@ class GLStateManager
         void BindVertexArray(GLuint buffer);
         
         void BindBuffer(const GLVertexBuffer& vertexBuffer);
-        void BindBuffer(const GLIndexBuffer& vertexBuffer);
+        void BindBuffer(const GLIndexBuffer& indexBuffer);
+        void BindBuffer(const GLConstantBuffer& constantBuffer);
 
         void ForcedBindBuffer(GLBufferTarget target, GLuint buffer);
 

@@ -13,8 +13,9 @@
 #include "GLExtensionLoader.h"
 #include "GLRenderContext.h"
 
-#include "GLVertexBuffer.h"
-#include "GLIndexBuffer.h"
+#include "Buffer/GLVertexBuffer.h"
+#include "Buffer/GLIndexBuffer.h"
+#include "Buffer/GLConstantBuffer.h"
 
 #include "Shader/GLVertexShader.h"
 #include "Shader/GLFragmentShader.h"
@@ -50,6 +51,7 @@ class GLRenderSystem : public RenderSystem
 
         VertexBuffer* CreateVertexBuffer() override;
         IndexBuffer* CreateIndexBuffer() override;
+        ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc) override;
 
         void WriteVertexBuffer(
             VertexBuffer& vertexBuffer,
@@ -65,6 +67,13 @@ class GLRenderSystem : public RenderSystem
             std::size_t dataSize,
             const BufferUsage usage,
             const IndexFormat& indexFormat
+        ) override;
+
+        void WriteConstantBuffer(
+            ConstantBuffer& constantBuffer,
+            const void* data,
+            std::size_t dataSize,
+            const BufferUsage usage
         ) override;
 
         /* ----- Shader ----- */
@@ -97,6 +106,7 @@ class GLRenderSystem : public RenderSystem
         
         HWObjectContainer<GLVertexBuffer>           vertexBuffers_;
         HWObjectContainer<GLIndexBuffer>            indexBuffers_;
+        HWObjectContainer<GLConstantBuffer>         constantBuffers_;
 
         HWObjectContainer<GLVertexShader>           vertexShaders_;
         HWObjectContainer<GLFragmentShader>         fragmentShaders_;

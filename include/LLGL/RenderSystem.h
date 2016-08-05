@@ -17,6 +17,7 @@
 #include "VertexFormat.h"
 #include "IndexBuffer.h"
 #include "IndexFormat.h"
+#include "ConstantBuffer.h"
 
 #include "ShaderProgram.h"
 
@@ -99,8 +100,8 @@ class LLGL_EXPORT RenderSystem
 
         virtual VertexBuffer* CreateVertexBuffer() = 0;
         virtual IndexBuffer* CreateIndexBuffer() = 0;
-        /*virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc) = 0;
-        virtual StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc) = 0;*/
+        virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc) = 0;
+        //virtual StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc) = 0;
 
         //virtual void Release(VertexBuffer& vertexBuffer) = 0;
         //virtual void Release(IndexBuffer& indexBuffer) = 0;
@@ -119,6 +120,13 @@ class LLGL_EXPORT RenderSystem
             std::size_t dataSize,
             const BufferUsage usage,
             const IndexFormat& indexFormat
+        ) = 0;
+
+        virtual void WriteConstantBuffer(
+            ConstantBuffer& constantBuffer,
+            const void* data,
+            std::size_t dataSize,
+            const BufferUsage usage
         ) = 0;
 
         /* ----- Shader ----- */

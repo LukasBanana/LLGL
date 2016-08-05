@@ -76,8 +76,11 @@ int main()
             "#version 400\n"
             "layout(location=0) in vec2 position;\n"
             "out vec2 vertexPos;\n"
+            "uniform Matrices {\n"
+            "    mat4 projection;\n"
+            "} matrices;\n"
             "void main() {\n"
-            "    gl_Position = vec4(position, 0.0, 1.0);\n"
+            "    gl_Position = matrices.projection * vec4(position, 0.0, 1.0);\n"
             "    vertexPos = (position + vec2(1, 1))*vec2(1, 0.5);\n"
             "}\n"
         );
@@ -111,6 +114,9 @@ int main()
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;
 
         shaderProgram.BindVertexAttributes(vertexFormat.GetAttributes());
+
+        // Create constant buffer
+        shaderProgram.BindAllConstantBuffers();
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))

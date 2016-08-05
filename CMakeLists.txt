@@ -70,6 +70,7 @@ endif()
 # OpenGL renderer files
 file(GLOB FilesRendererOpenGL				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
 file(GLOB FilesRendererOpenGLShader			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
+file(GLOB FilesRendererOpenGLBuffer			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/*.*)
 
 if(WIN32)
 	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
@@ -118,6 +119,11 @@ source_group(
 	${FilesRendererOpenGLShader}
 )
 
+source_group(
+	"Sources\\Renderer\\Buffer" FILES
+	${FilesRendererOpenGLBuffer}
+)
+
 
 # === Include directories ===
 
@@ -138,6 +144,14 @@ set(
 	${FilesRenderer}
 )
 
+set(
+	FilesOpenGL
+	${FilesRendererOpenGL}
+	${FilesRendererOpenGLPlatform}
+	${FilesRendererOpenGLShader}
+	${FilesRendererOpenGLBuffer}
+)
+
 # Base project
 add_library(LLGL SHARED ${FilesLLGL})
 
@@ -155,7 +169,7 @@ target_compile_features(LLGL PRIVATE cxx_range_for)
 find_package(OpenGL)
 if(OpenGL_FOUND)
 	include_directories(${OPENGL_INCLUDE_DIR})
-	add_library(LLGL_OpenGL SHARED ${FilesRendererOpenGL} ${FilesRendererOpenGLPlatform} ${FilesRendererOpenGLShader})
+	add_library(LLGL_OpenGL SHARED ${FilesOpenGL})
 	set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 	target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
 	target_compile_features(LLGL_OpenGL PRIVATE cxx_range_for)
