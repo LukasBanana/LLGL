@@ -100,8 +100,8 @@ class LLGL_EXPORT RenderSystem
 
         virtual VertexBuffer* CreateVertexBuffer() = 0;
         virtual IndexBuffer* CreateIndexBuffer() = 0;
-        virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc) = 0;
-        //virtual StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc) = 0;
+        virtual ConstantBuffer* CreateConstantBuffer() = 0;
+        //virtual StorageBuffer* CreateStorageBuffer() = 0;
 
         //virtual void Release(VertexBuffer& vertexBuffer) = 0;
         //virtual void Release(IndexBuffer& indexBuffer) = 0;

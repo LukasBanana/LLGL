@@ -32,7 +32,9 @@ class LLGL_EXPORT ShaderProgram
 
     public:
 
-        virtual ~ShaderProgram();
+        virtual ~ShaderProgram()
+        {
+        }
 
         virtual void AttachShader( VertexShader&         vertexShader         ) = 0;
         virtual void AttachShader( FragmentShader&       fragmentShader       ) = 0;
@@ -74,14 +76,6 @@ class LLGL_EXPORT ShaderProgram
         \see RenderContext::BindConstantBuffer
         */
         virtual void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) = 0;
-
-        /**
-        \brief Binds all constant buffers which are used within this shader program
-        \remarks This is a comfort function, which binds each constant buffer, returned by "QueryConstantBuffers".
-        \see QueryConstantBuffers
-        \see BindConstantBuffer
-        */
-        void BindAllConstantBuffers();
 
 };
 

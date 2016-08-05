@@ -15,6 +15,7 @@
 #include "RenderContextFlags.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "ConstantBuffer.h"
 #include "ShaderProgram.h"
 #include "ColorRGBA.h"
 #include <Gauss/Vector3.h>
@@ -81,6 +82,9 @@ class LLGL_EXPORT RenderContext
 
         virtual void BindIndexBuffer(IndexBuffer& indexBuffer) = 0;
         virtual void UnbindIndexBuffer() = 0;
+
+        virtual void BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) = 0;
+        virtual void UnbindConstantBuffer(unsigned int index) = 0;
 
         /* --- Drawing --- */
 

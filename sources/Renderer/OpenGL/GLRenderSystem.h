@@ -51,7 +51,7 @@ class GLRenderSystem : public RenderSystem
 
         VertexBuffer* CreateVertexBuffer() override;
         IndexBuffer* CreateIndexBuffer() override;
-        ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc) override;
+        ConstantBuffer* CreateConstantBuffer() override;
 
         void WriteVertexBuffer(
             VertexBuffer& vertexBuffer,

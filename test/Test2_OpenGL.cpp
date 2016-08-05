@@ -65,7 +65,7 @@ int main()
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
 
-        const Gs::Vector2f vertices[] = { { -1, 1 }, { 0, 1 }, { 0, -1 }, { -1, -1 } };
+        const Gs::Vector2f vertices[] = { { 100, 100 }, { 200, 100 }, { 200, 200 }, { 100, 200 } };
         renderer->WriteVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
 
         // Create vertex shader
@@ -73,10 +73,10 @@ int main()
 
         std::string shaderSource =
         (
-            "#version 400\n"
+            "#version 440\n"
             "layout(location=0) in vec2 position;\n"
             "out vec2 vertexPos;\n"
-            "uniform Matrices {\n"
+            "layout(binding=2) uniform Matrices {\n"
             "    mat4 projection;\n"
             "} matrices;\n"
             "void main() {\n"
@@ -116,7 +116,24 @@ int main()
         shaderProgram.BindVertexAttributes(vertexFormat.GetAttributes());
 
         // Create constant buffer
-        shaderProgram.BindAllConstantBuffers();
+        for (const auto& desc : shaderProgram.QueryConstantBuffers())
+        {
+            if (desc.name == "Matrices")
+            {
+                auto& constBuffer = *renderer->CreateConstantBuffer();
+
+                auto projection = Gs::ProjectionMatrix4f::Planar(
+                    static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
+                    static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
+                );
+
+                renderer->WriteConstantBuffer(constBuffer, &projection, sizeof(projection), LLGL::BufferUsage::Static);
+
+                unsigned int bindingIndex = 2; // the 2 is just for testing
+                shaderProgram.BindConstantBuffer(desc.name, bindingIndex);
+                context->BindConstantBuffer(constBuffer, bindingIndex);
+            }
+        }
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
@@ -124,6 +141,7 @@ int main()
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
+
             context->BindShaderProgram(shaderProgram);
             context->BindVertexBuffer(vertexBuffer);
 

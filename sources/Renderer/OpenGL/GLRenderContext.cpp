@@ -130,6 +130,18 @@ void GLRenderContext::UnbindIndexBuffer()
     GLStateManager::active->BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, 0);
 }
 
+void GLRenderContext::BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
+{
+    /* Bind constant buffer */
+    auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
+    GLStateManager::active->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, constantBufferGL.hwBuffer.GetID());
+}
+
+void GLRenderContext::UnbindConstantBuffer(unsigned int index)
+{
+    //todo...
+}
+
 /* --- Drawing --- */
 
 void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)

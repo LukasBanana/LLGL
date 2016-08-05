@@ -62,7 +62,7 @@ IndexBuffer* GLRenderSystem::CreateIndexBuffer()
     return TakeOwnership(indexBuffers_, MakeUnique<GLIndexBuffer>());
 }
 
-ConstantBuffer* GLRenderSystem::CreateConstantBuffer(const ConstantBufferDescriptor& desc)
+ConstantBuffer* GLRenderSystem::CreateConstantBuffer()
 {
     return TakeOwnership(constantBuffers_, MakeUnique<GLConstantBuffer>());
 }

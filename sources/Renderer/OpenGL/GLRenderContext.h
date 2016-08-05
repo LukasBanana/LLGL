@@ -57,6 +57,9 @@ class GLRenderContext : public RenderContext
         void BindIndexBuffer(IndexBuffer& indexBuffer) override;
         void UnbindIndexBuffer() override;
 
+        void BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) override;
+        void UnbindConstantBuffer(unsigned int index) override;
+
         /* --- Drawing --- */
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
