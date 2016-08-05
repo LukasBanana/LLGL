@@ -54,6 +54,9 @@ class LLGL_EXPORT ShaderProgram
         //! Returns the information log after the shader linkage.
         virtual std::string QueryInfoLog() = 0;
 
+        //! Returns a list of vertex attributes, which describe all vertex attributes within this shader program.
+        virtual std::vector<VertexAttribute> QueryVertexAttributes() const = 0;
+
         //! Returns a list of constant buffer descriptors, which describe all constant buffers (also "Uniform Buffer Object") within this shader program.
         virtual std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const = 0;
 

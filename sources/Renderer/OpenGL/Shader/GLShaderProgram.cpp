@@ -14,6 +14,7 @@
 #include "GLComputeShader.h"
 #include "../GLExtensions.h"
 #include "../../CheckedCast.h"
+#include <LLGL/VertexFormat.h>
 #include <vector>
 #include <stdexcept>
 
@@ -99,6 +100,100 @@ std::string GLShaderProgram::QueryInfoLog()
     return "";
 }
 
+static void UnmapAttribType(GLenum type, DataType& dataType, unsigned int& rows, unsigned int& cols)
+{
+    auto Set = [&](DataType t, unsigned int r, unsigned int c)
+    {
+        dataType    = t;
+        rows        = r;
+        cols        = c;
+    };
+
+    switch (type)
+    {
+        case GL_FLOAT:              Set(DataType::Float,  1, 1); break;
+        case GL_FLOAT_VEC2:         Set(DataType::Float,  2, 1); break;
+        case GL_FLOAT_VEC3:         Set(DataType::Float,  3, 1); break;
+        case GL_FLOAT_VEC4:         Set(DataType::Float,  4, 1); break;
+        case GL_FLOAT_MAT2:         Set(DataType::Float,  2, 2); break;
+        case GL_FLOAT_MAT3:         Set(DataType::Float,  3, 3); break;
+        case GL_FLOAT_MAT4:         Set(DataType::Float,  4, 4); break;
+        case GL_FLOAT_MAT2x3:       Set(DataType::Float,  2, 3); break;
+        case GL_FLOAT_MAT2x4:       Set(DataType::Float,  2, 4); break;
+        case GL_FLOAT_MAT3x2:       Set(DataType::Float,  3, 2); break;
+        case GL_FLOAT_MAT3x4:       Set(DataType::Float,  3, 4); break;
+        case GL_FLOAT_MAT4x2:       Set(DataType::Float,  4, 2); break;
+        case GL_FLOAT_MAT4x3:       Set(DataType::Float,  4, 3); break;
+        case GL_INT:                Set(DataType::Int,    1, 1); break;
+        case GL_INT_VEC2:           Set(DataType::Int,    2, 1); break;
+        case GL_INT_VEC3:           Set(DataType::Int,    3, 1); break;
+        case GL_INT_VEC4:           Set(DataType::Int,    4, 1); break;
+        case GL_UNSIGNED_INT:       Set(DataType::UInt,   1, 1); break;
+        case GL_UNSIGNED_INT_VEC2:  Set(DataType::UInt,   2, 1); break;
+        case GL_UNSIGNED_INT_VEC3:  Set(DataType::UInt,   3, 1); break;
+        case GL_UNSIGNED_INT_VEC4:  Set(DataType::UInt,   4, 1); break;
+        case GL_DOUBLE:             Set(DataType::Double, 1, 1); break;
+        case GL_DOUBLE_VEC2:        Set(DataType::Double, 2, 1); break;
+        case GL_DOUBLE_VEC3:        Set(DataType::Double, 3, 1); break;
+        case GL_DOUBLE_VEC4:        Set(DataType::Double, 4, 1); break;
+        case GL_DOUBLE_MAT2:        Set(DataType::Double, 2, 2); break;
+        case GL_DOUBLE_MAT3:        Set(DataType::Double, 3, 3); break;
+        case GL_DOUBLE_MAT4:        Set(DataType::Double, 4, 4); break;
+        case GL_DOUBLE_MAT2x3:      Set(DataType::Double, 2, 3); break;
+        case GL_DOUBLE_MAT2x4:      Set(DataType::Double, 2, 4); break;
+        case GL_DOUBLE_MAT3x2:      Set(DataType::Double, 3, 2); break;
+        case GL_DOUBLE_MAT3x4:      Set(DataType::Double, 3, 4); break;
+        case GL_DOUBLE_MAT4x2:      Set(DataType::Double, 4, 2); break;
+        case GL_DOUBLE_MAT4x3:      Set(DataType::Double, 4, 3); break;
+    }
+}
+
+std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
+{
+    VertexFormat vertexFormat;
+
+    /* Query number of vertex attributes */
+    GLint numVertexAttribs = 0;
+    glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &numVertexAttribs);
+
+    if (numVertexAttribs <= 0)
+        return vertexFormat.GetAttributes();
+
+    /* Query maximal name length of all vertex attributes */
+    GLint maxNameLength = 0;
+    glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxNameLength);
+
+    if (maxNameLength <= 0)
+        return vertexFormat.GetAttributes();
+
+    std::vector<char> attribName;
+    attribName.resize(maxNameLength);
+
+    /* Iterate over all vertex attributes */
+    for (GLuint i = 0; i < static_cast<GLuint>(numVertexAttribs); ++i)
+    {
+        /* Query attribute information */
+        GLint   size        = 0;
+        GLenum  type        = 0;
+        GLsizei nameLength  = 0;
+
+        glGetActiveAttrib(id_, i, maxNameLength, &nameLength, &size, &type, attribName.data());
+
+        /* Convert attribute information */
+        auto name       = std::string(attribName.data());
+        auto dataType   = DataType::Byte;
+
+        unsigned rows = 0, cols = 0;
+        UnmapAttribType(type, dataType, rows, cols);
+        auto components = rows*cols;
+
+        /* Insert uniform block into list */
+        vertexFormat.AddAttribute(name, dataType, components);
+    }
+
+    return vertexFormat.GetAttributes();
+}
+
 std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() const
 {
     std::vector<ConstantBufferDescriptor> descList;
@@ -110,7 +205,7 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
     if (numUniformBlocks <= 0)
         return descList;
 
-    /* Query maximal uniform block name length */
+    /* Query maximal name length of all uniform blocks */
     GLint maxNameLength = 0;
     glGetProgramiv(id_, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &maxNameLength);
 
