@@ -30,6 +30,7 @@ void VertexFormat::AddAttribute(const std::string& name, const DataType dataType
         attrib.dataType     = dataType;
         attrib.components   = components;
         attrib.offset       = formatSize_;
+        attrib.name         = name;
     }
     attributes_.push_back(attrib);
 

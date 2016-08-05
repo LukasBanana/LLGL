@@ -36,6 +36,8 @@ class GLShaderProgram : public ShaderProgram
 
         std::string QueryInfoLog() override;
 
+        void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) override;
+
         //! Returns the shader program ID.
         inline GLuint GetID() const
         {
@@ -47,7 +49,8 @@ class GLShaderProgram : public ShaderProgram
         template <typename GLShaderType, typename ShaderType>
         void AttachHWShader(const ShaderType& shader);
 
-        GLuint id_ = 0;
+        GLuint  id_         = 0;
+        bool    linkStatus_ = false;
 
 };
 

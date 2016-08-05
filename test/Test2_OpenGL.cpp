@@ -65,8 +65,52 @@ int main()
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
 
-        const Gs::Vector2f vertices[] = { { 100, 100 }, { 200, 100 }, { 200, 200 }, { 100, 200 } };
+        const Gs::Vector2f vertices[] = { { -1, 1 }, { 0, 1 }, { 0, -1 }, { -1, -1 } };
         renderer->WriteVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
+
+        // Create vertex shader
+        auto& vertShader = *renderer->CreateVertexShader();
+
+        std::string shaderSource =
+        (
+            "#version 400\n"
+            "layout(location=0) in vec2 position;\n"
+            "out vec2 vertexPos;\n"
+            "void main() {\n"
+            "    gl_Position = vec4(position, 0.0, 1.0);\n"
+            "    vertexPos = (position + vec2(1, 1))*vec2(1, 0.5);\n"
+            "}\n"
+        );
+
+        if (!vertShader.Compile(shaderSource))
+            std::cerr << vertShader.QueryInfoLog() << std::endl;
+
+        // Create fragment shader
+        auto& fragShader = *renderer->CreateFragmentShader();
+
+        shaderSource =
+        (
+            "#version 400\n"
+            "layout(location=0) out vec4 fragColor;\n"
+            "in vec2 vertexPos;\n"
+            "void main() {\n"
+            "    fragColor = vec4(vertexPos, 0, 1);\n"
+            "}\n"
+        );
+
+        if (!fragShader.Compile(shaderSource))
+            std::cerr << fragShader.QueryInfoLog() << std::endl;
+
+        // Create shader program
+        auto& shaderProgram = *renderer->CreateShaderProgram();
+
+        shaderProgram.AttachShader(vertShader);
+        shaderProgram.AttachShader(fragShader);
+
+        if (!shaderProgram.LinkShaders())
+            std::cerr << shaderProgram.QueryInfoLog() << std::endl;
+
+        shaderProgram.BindVertexAttributes(vertexFormat.GetAttributes());
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
@@ -74,10 +118,14 @@ int main()
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
+            context->BindShaderProgram(shaderProgram);
             context->BindVertexBuffer(vertexBuffer);
+
             context->Draw(4, 0);
 
-            #ifdef _WIN32
+            context->UnbindShaderProgram();
+
+            #if defined(_WIN32) && 0
             
             auto proj = Gs::ProjectionMatrix4f::Planar(
                 static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),

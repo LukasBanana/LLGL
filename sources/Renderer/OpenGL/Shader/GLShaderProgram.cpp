@@ -15,6 +15,7 @@
 #include "../GLExtensions.h"
 #include "../../CheckedCast.h"
 #include <vector>
+#include <stdexcept>
 
 
 namespace LLGL
@@ -70,7 +71,9 @@ bool GLShaderProgram::LinkShaders()
     GLint linkStatus = 0;
     glGetProgramiv(id_, GL_LINK_STATUS, &linkStatus);
 
-    return (linkStatus != GL_FALSE);
+    linkStatus_ = (linkStatus != GL_FALSE);
+
+    return linkStatus_;
 }
 
 std::string GLShaderProgram::QueryInfoLog()
@@ -94,6 +97,32 @@ std::string GLShaderProgram::QueryInfoLog()
     }
 
     return "";
+}
+
+void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
+{
+    if (!linkStatus_)
+        throw std::runtime_error("failed to bind vertex attributes, because shaders have not been linked successfully yet");
+    
+    if (vertexAttribs.size() > GL_MAX_VERTEX_ATTRIBS)
+    {
+        throw std::invalid_argument(
+            "failed to bind vertex attributes, because too many attributes are specified (maximum is " +
+            std::to_string(GL_MAX_VERTEX_ATTRIBS) + ")"
+        );
+    }
+
+    /* Bind all vertex attribute locations */
+    for (const auto& attrib : vertexAttribs)
+    {
+        /* Get attribute location and verify validity */
+        GLint index = glGetAttribLocation(id_, attrib.name.c_str());
+        if (index == -1)
+            throw std::invalid_argument("failed to bind vertex attribute '" + std::string(attrib.name) + "'");
+
+        /* Bind attribute location */
+        glBindAttribLocation(id_, static_cast<GLuint>(index), attrib.name.c_str());
+    }
 }
 
 

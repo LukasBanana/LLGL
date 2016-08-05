@@ -16,7 +16,9 @@
 #include "TessControlShader.h"
 #include "TessEvaluationShader.h"
 #include "ComputeShader.h"
+#include "VertexAttribute.h"
 #include <string>
+#include <vector>
 
 
 namespace LLGL
@@ -50,6 +52,17 @@ class LLGL_EXPORT ShaderProgram
 
         //! Returns the information log after the shader linkage.
         virtual std::string QueryInfoLog() = 0;
+
+        /**
+        \brief Binds the specified vertex attributes to this shader program.
+        \remarks This is only required for a shader program, which has an attached vertex shader,
+        and it can only be used after the shaders have already been linked.
+        \see AttachShader(VertexShader&)
+        \see LinkShaders
+        \throws std::invalid_argument If the name of an vertex attribute is invalid or the maximal number of available vertex attributes is exceeded.
+        \throws std::runtime_error If this function is called before the shaders have been successfully linked.
+        */
+        virtual void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) = 0;
 
 };
 
