@@ -68,11 +68,7 @@ ConstantBuffer* GLRenderSystem::CreateConstantBuffer()
 }
 
 void GLRenderSystem::WriteVertexBuffer(
-    VertexBuffer& vertexBuffer,
-    const void* data,
-    std::size_t dataSize,
-    const BufferUsage usage,
-    const VertexFormat& vertexFormat)
+    VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
 {
     /* Bind vertex buffer */
     auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
@@ -84,11 +80,7 @@ void GLRenderSystem::WriteVertexBuffer(
 }
 
 void GLRenderSystem::WriteIndexBuffer(
-    IndexBuffer& indexBuffer,
-    const void* data,
-    std::size_t dataSize,
-    const BufferUsage usage,
-    const IndexFormat& indexFormat)
+    IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
 {
     /* Bind index buffer */
     auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, indexBuffer);
@@ -100,10 +92,7 @@ void GLRenderSystem::WriteIndexBuffer(
 }
 
 void GLRenderSystem::WriteConstantBuffer(
-    ConstantBuffer& constantBuffer,
-    const void* data,
-    std::size_t dataSize,
-    const BufferUsage usage)
+    ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
     /* Bind constant buffer */
     auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
@@ -111,6 +100,30 @@ void GLRenderSystem::WriteConstantBuffer(
 
     /* Update buffer data */
     constantBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
+}
+
+void GLRenderSystem::WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    /* Bind and update vertex buffer */
+    auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
+    GLStateManager::active->BindBuffer(vertexBufferGL);
+    vertexBufferGL.hwBuffer.BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
+}
+
+void GLRenderSystem::WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    /* Bind index buffer */
+    auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, indexBuffer);
+    GLStateManager::active->BindBuffer(indexBufferGL);
+    indexBufferGL.hwBuffer.BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
+}
+
+void GLRenderSystem::WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    /* Bind constant buffer */
+    auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
+    GLStateManager::active->BindBuffer(constantBufferGL);
+    constantBufferGL.hwBuffer.BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
 /* ----- Shader ----- */

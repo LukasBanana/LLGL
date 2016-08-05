@@ -106,28 +106,13 @@ class LLGL_EXPORT RenderSystem
         //virtual void Release(VertexBuffer& vertexBuffer) = 0;
         //virtual void Release(IndexBuffer& indexBuffer) = 0;
 
-        virtual void WriteVertexBuffer(
-            VertexBuffer& vertexBuffer,
-            const void* data,
-            std::size_t dataSize,
-            const BufferUsage usage,
-            const VertexFormat& vertexFormat
-        ) = 0;
+        virtual void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) = 0;
+        virtual void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) = 0;
+        virtual void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
 
-        virtual void WriteIndexBuffer(
-            IndexBuffer& indexBuffer,
-            const void* data,
-            std::size_t dataSize,
-            const BufferUsage usage,
-            const IndexFormat& indexFormat
-        ) = 0;
-
-        virtual void WriteConstantBuffer(
-            ConstantBuffer& constantBuffer,
-            const void* data,
-            std::size_t dataSize,
-            const BufferUsage usage
-        ) = 0;
+        virtual void WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        virtual void WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        virtual void WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
 
         /* ----- Shader ----- */
 
