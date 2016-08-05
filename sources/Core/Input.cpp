@@ -98,7 +98,7 @@ void Input::OnLocalMotion(Window& sender, const Point& position)
 
 void Input::OnGlobalMotion(Window& sender, const Point& motion)
 {
-    mouseMotion_ = motion;
+    mouseMotion_ += motion;
 }
 
 void Input::KeyTracker::Add(Key keyCode)
