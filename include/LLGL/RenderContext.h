@@ -13,11 +13,14 @@
 #include "Window.h"
 #include "RenderContextDescriptor.h"
 #include "RenderContextFlags.h"
+#include "ColorRGBA.h"
+
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "ConstantBuffer.h"
 #include "ShaderProgram.h"
-#include "ColorRGBA.h"
+#include "Texture.h"
+
 #include <Gauss/Vector3.h>
 #include <string>
 #include <map>
@@ -86,7 +89,12 @@ class LLGL_EXPORT RenderContext
         virtual void BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) = 0;
         virtual void UnbindConstantBuffer(unsigned int index) = 0;
 
-        /* --- Drawing --- */
+        /* ----- Textures ----- */
+
+        virtual void BindTexture(Texture& texture, unsigned int layer) = 0;
+        virtual void UnbindTexture(unsigned int layer) = 0;
+
+        /* ----- Drawing ----- */
 
         virtual void Draw(unsigned int numVertices, unsigned int firstVertex) = 0;
 

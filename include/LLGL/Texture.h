@@ -48,7 +48,7 @@ class LLGL_EXPORT Texture
 
     private:
 
-        TextureType type_ = TextureType::Texture1D;
+        TextureType type_ = TextureType::Undefined;
 
 };
 

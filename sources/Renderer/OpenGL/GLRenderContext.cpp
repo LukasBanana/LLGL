@@ -135,7 +135,19 @@ void GLRenderContext::UnbindConstantBuffer(unsigned int index)
     //todo...
 }
 
-/* --- Drawing --- */
+/* ----- Textures ----- */
+
+void GLRenderContext::BindTexture(Texture& texture, unsigned int layer)
+{
+    //todo...
+}
+
+void GLRenderContext::UnbindTexture(unsigned int layer)
+{
+    //todo...
+}
+
+/* ----- Drawing ----- */
 
 void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {

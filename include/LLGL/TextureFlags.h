@@ -9,6 +9,9 @@
 #define __LLGL_TEXTURE_FLAGS_H__
 
 
+#include "RenderSystemFlags.h"
+
+
 namespace LLGL
 {
 
@@ -16,13 +19,14 @@ namespace LLGL
 //! Texture type enumeration.
 enum class TextureType
 {
-    Texture1D,
-    Texture2D,
-    Texture3D,
-    TextureCube,
-    Texture1DArray,
-    Texture2DArray,
-    TextureCubeArray,
+    Undefined,          //!< Initial value of a Texture object.
+    Texture1D,          //!< 1-Dimensional texture.
+    Texture2D,          //!< 2-Dimensional texture.
+    Texture3D,          //!< 3-Dimensional texture.
+    TextureCube,        //!< Cube texture.
+    Texture1DArray,     //!< 1-Dimensional array texture.
+    Texture2DArray,     //!< 2-Dimensional array texture.
+    TextureCubeArray,   //!< Cube array texture.
 };
 
 //! Hardware texture format enumeration.
@@ -80,6 +84,35 @@ enum class TextureFormat
     RGBA32UInt,     //!< Sized internal format: red, green, blue, alpha 32-bit unsigned interger components.
     RGBA32SInt,     //!< Sized internal format: red, green, blue, alpha 32-bit signed interger components.
     RGBA32Float,    //!< Sized internal format: red, green, blue, alpha 32-bit floating point components.
+};
+
+//! Color format used to write texture data.
+enum class ColorFormat
+{
+    Gray,           //!< Single color component: Gray or rather brightness.
+    GrayAlpha,      //!< Two color components: Gray, Alpha.
+    RGB,            //!< Three color components: Red, Green, Blue.
+    BGR,            //!< Three color components: Blue, Green, Red.
+    RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
+    BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
+    Depth,          //!< Single color component used as depth component.
+    DepthStencil,   //!< Pair of depth and stencil component.
+};
+
+
+//! Texture data descriptor structure.
+struct LLGL_EXPORT TextureDataDescriptor
+{
+    TextureDataDescriptor(const void* data, ColorFormat dataFormat, DataType dataType) :
+        data        ( data       ),
+        dataFormat  ( dataFormat ),
+        dataType    ( dataType   )
+    {
+    }
+
+    const void* data;
+    ColorFormat dataFormat;
+    DataType    dataType;
 };
 
 

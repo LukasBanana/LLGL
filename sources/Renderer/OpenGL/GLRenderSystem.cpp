@@ -108,6 +108,72 @@ void GLRenderSystem::WriteConstantBufferSub(ConstantBuffer& constantBuffer, cons
     constantBufferGL.hwBuffer.BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
+/* ----- Textures ----- */
+
+Texture* GLRenderSystem::CreateTexture()
+{
+    return TakeOwnership(textures_, MakeUnique<GLTexture>());
+}
+
+void GLRenderSystem::WriteTexture1D(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor* textureData)
+{
+    /* Bind texture */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    //...
+}
+
+void GLRenderSystem::WriteTexture2D(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor* textureData)
+{
+}
+
+void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format, int width, int height, int depth, const TextureDataDescriptor* textureData)
+{
+}
+
+void GLRenderSystem::WriteTextureCube(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor* textureData)
+{
+}
+
+void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat format, int width, unsigned int layers, const TextureDataDescriptor* textureData)
+{
+}
+
+void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor* textureData)
+{
+}
+
+void GLRenderSystem::WriteTextureCubeArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor* textureData)
+{
+}
+        
+void GLRenderSystem::WriteTexture1DSub(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor& textureData)
+{
+}
+
+void GLRenderSystem::WriteTexture2DSub(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor& textureData)
+{
+}
+
+void GLRenderSystem::WriteTexture3DSub(Texture& texture, const TextureFormat format, int width, int height, int depth, const TextureDataDescriptor& textureData)
+{
+}
+
+void GLRenderSystem::WriteTextureCubeSub(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor& textureData)
+{
+}
+
+void GLRenderSystem::WriteTexture1DArraySub(Texture& texture, const TextureFormat format, int width, unsigned int layers, const TextureDataDescriptor& textureData)
+{
+}
+
+void GLRenderSystem::WriteTexture2DArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData)
+{
+}
+
+void GLRenderSystem::WriteTextureCubeArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData)
+{
+}
+
 /* ----- Shader ----- */
 
 Shader* GLRenderSystem::CreateShader(const ShaderType type)

@@ -60,7 +60,12 @@ class GLRenderContext : public RenderContext
         void BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) override;
         void UnbindConstantBuffer(unsigned int index) override;
 
-        /* --- Drawing --- */
+        /* ----- Textures ----- */
+
+        void BindTexture(Texture& texture, unsigned int layer) override;
+        void UnbindTexture(unsigned int layer) override;
+
+        /* ----- Drawing ----- */
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
 

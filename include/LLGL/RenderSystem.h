@@ -119,15 +119,24 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Textures ----- */
 
-        /*virtual Texture* CreateTexture() = 0;
+        virtual Texture* CreateTexture() = 0;
+        //virtual void Release(Texture& texture) = 0;
 
-        virtual void WriteTexture1D(Texture& texture, const TextureFormat format, int width) = 0;
-        virtual void WriteTexture2D(Texture& texture, const TextureFormat format, int width, int height) = 0;
-        virtual void WriteTexture3D(Texture& texture, const TextureFormat format, int width, int height, int depth) = 0;
-        virtual void WriteTextureCube(Texture& texture, const TextureFormat format, int width, int height) = 0;
-        virtual void WriteTexture1DArray(Texture& texture, const TextureFormat format, int width, unsigned int layers) = 0;
-        virtual void WriteTexture2DArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers) = 0;
-        virtual void WriteTextureCubeArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers) = 0;*/
+        virtual void WriteTexture1D(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor* textureData = nullptr) = 0;
+        virtual void WriteTexture2D(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor* textureData = nullptr) = 0;
+        virtual void WriteTexture3D(Texture& texture, const TextureFormat format, int width, int height, int depth, const TextureDataDescriptor* textureData = nullptr) = 0;
+        virtual void WriteTextureCube(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor* textureData = nullptr) = 0;
+        virtual void WriteTexture1DArray(Texture& texture, const TextureFormat format, int width, unsigned int layers, const TextureDataDescriptor* textureData = nullptr) = 0;
+        virtual void WriteTexture2DArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor* textureData = nullptr) = 0;
+        virtual void WriteTextureCubeArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor* textureData = nullptr) = 0;
+        
+        virtual void WriteTexture1DSub(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor& textureData) = 0;
+        virtual void WriteTexture2DSub(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor& textureData) = 0;
+        virtual void WriteTexture3DSub(Texture& texture, const TextureFormat format, int width, int height, int depth, const TextureDataDescriptor& textureData) = 0;
+        virtual void WriteTextureCubeSub(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor& textureData) = 0;
+        virtual void WriteTexture1DArraySub(Texture& texture, const TextureFormat format, int width, unsigned int layers, const TextureDataDescriptor& textureData) = 0;
+        virtual void WriteTexture2DArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData) = 0;
+        virtual void WriteTextureCubeArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData) = 0;
 
         /* ----- Shader ----- */
 
