@@ -65,7 +65,7 @@ int main()
         renderer->WriteVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
 
         // Create vertex shader
-        auto& vertShader = *renderer->CreateVertexShader();
+        auto& vertShader = *renderer->CreateShader(LLGL::ShaderType::Vertex);
 
         std::string shaderSource =
         (
@@ -85,7 +85,7 @@ int main()
             std::cerr << vertShader.QueryInfoLog() << std::endl;
 
         // Create fragment shader
-        auto& fragShader = *renderer->CreateFragmentShader();
+        auto& fragShader = *renderer->CreateShader(LLGL::ShaderType::Fragment);
 
         shaderSource =
         (

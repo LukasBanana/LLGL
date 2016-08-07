@@ -131,13 +131,7 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Shader ----- */
 
-        virtual VertexShader* CreateVertexShader() = 0;
-        virtual FragmentShader* CreateFragmentShader() = 0;
-        virtual GeometryShader* CreateGeometryShader() = 0;
-        virtual TessControlShader* CreateTessControlShader() = 0;
-        virtual TessEvaluationShader* CreateTessEvaluationShader() = 0;
-        virtual ComputeShader* CreateComputeShader() = 0;
-
+        virtual Shader* CreateShader(const ShaderType type) = 0;
         virtual ShaderProgram* CreateShaderProgram() = 0;
 
     protected:

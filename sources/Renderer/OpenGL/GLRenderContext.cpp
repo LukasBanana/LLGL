@@ -9,13 +9,6 @@
 #include "GLTypeConversion.h"
 #include "GLExtensions.h"
 #include "../CheckedCast.h"
-
-#include "Shader/GLVertexShader.h"
-#include "Shader/GLFragmentShader.h"
-#include "Shader/GLGeometryShader.h"
-#include "Shader/GLTessControlShader.h"
-#include "Shader/GLTessEvaluationShader.h"
-#include "Shader/GLComputeShader.h"
 #include "Shader/GLShaderProgram.h"
 
 

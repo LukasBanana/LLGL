@@ -16,13 +16,7 @@
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
 #include "Buffer/GLConstantBuffer.h"
-
-#include "Shader/GLVertexShader.h"
-#include "Shader/GLFragmentShader.h"
-#include "Shader/GLGeometryShader.h"
-#include "Shader/GLTessControlShader.h"
-#include "Shader/GLTessEvaluationShader.h"
-#include "Shader/GLComputeShader.h"
+#include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
 
 #include <string>
@@ -63,13 +57,7 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Shader ----- */
 
-        VertexShader* CreateVertexShader() override;
-        FragmentShader* CreateFragmentShader() override;
-        GeometryShader* CreateGeometryShader() override;
-        TessControlShader* CreateTessControlShader() override;
-        TessEvaluationShader* CreateTessEvaluationShader() override;
-        ComputeShader* CreateComputeShader() override;
-
+        Shader* CreateShader(const ShaderType type) override;
         ShaderProgram* CreateShaderProgram() override;
 
     protected:
@@ -101,13 +89,7 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLIndexBuffer>            indexBuffers_;
         HWObjectContainer<GLConstantBuffer>         constantBuffers_;
 
-        HWObjectContainer<GLVertexShader>           vertexShaders_;
-        HWObjectContainer<GLFragmentShader>         fragmentShaders_;
-        HWObjectContainer<GLGeometryShader>         geometryShaders_;
-        HWObjectContainer<GLTessControlShader>      tessControlShaders_;
-        HWObjectContainer<GLTessEvaluationShader>   tessEvaluationShaders_;
-        HWObjectContainer<GLComputeShader>          computeShaders_;
-
+        HWObjectContainer<GLShader>                 shaders_;
         HWObjectContainer<GLShaderProgram>          shaderPrograms_;
 
 };

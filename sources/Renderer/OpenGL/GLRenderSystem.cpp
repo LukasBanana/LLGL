@@ -110,34 +110,9 @@ void GLRenderSystem::WriteConstantBufferSub(ConstantBuffer& constantBuffer, cons
 
 /* ----- Shader ----- */
 
-VertexShader* GLRenderSystem::CreateVertexShader()
+Shader* GLRenderSystem::CreateShader(const ShaderType type)
 {
-    return TakeOwnership(vertexShaders_, MakeUnique<GLVertexShader>());
-}
-
-FragmentShader* GLRenderSystem::CreateFragmentShader()
-{
-    return TakeOwnership(fragmentShaders_, MakeUnique<GLFragmentShader>());
-}
-
-GeometryShader* GLRenderSystem::CreateGeometryShader()
-{
-    return TakeOwnership(geometryShaders_, MakeUnique<GLGeometryShader>());
-}
-
-TessControlShader* GLRenderSystem::CreateTessControlShader()
-{
-    return TakeOwnership(tessControlShaders_, MakeUnique<GLTessControlShader>());
-}
-
-TessEvaluationShader* GLRenderSystem::CreateTessEvaluationShader()
-{
-    return TakeOwnership(tessEvaluationShaders_, MakeUnique<GLTessEvaluationShader>());
-}
-
-ComputeShader* GLRenderSystem::CreateComputeShader()
-{
-    return TakeOwnership(computeShaders_, MakeUnique<GLComputeShader>());
+    return TakeOwnership(shaders_, MakeUnique<GLShader>(type));
 }
 
 ShaderProgram* GLRenderSystem::CreateShaderProgram()

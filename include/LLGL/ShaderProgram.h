@@ -10,12 +10,7 @@
 
 
 #include "Export.h"
-#include "VertexShader.h"
-#include "FragmentShader.h"
-#include "GeometryShader.h"
-#include "TessControlShader.h"
-#include "TessEvaluationShader.h"
-#include "ComputeShader.h"
+#include "Shader.h"
 #include "VertexAttribute.h"
 #include "ConstantBuffer.h"
 #include <string>
@@ -32,16 +27,18 @@ class LLGL_EXPORT ShaderProgram
 
     public:
 
-        virtual ~ShaderProgram()
-        {
-        }
+        virtual ~ShaderProgram();
 
-        virtual void AttachShader( VertexShader&         vertexShader         ) = 0;
-        virtual void AttachShader( FragmentShader&       fragmentShader       ) = 0;
-        virtual void AttachShader( GeometryShader&       geometryShader       ) = 0;
-        virtual void AttachShader( TessControlShader&    tessControlShader    ) = 0;
-        virtual void AttachShader( TessEvaluationShader& tessEvaluationShader ) = 0;
-        virtual void AttachShader( ComputeShader&        computeShader        ) = 0;
+        /**
+        \brief Attaches the specified shader to this shader program.
+        \param[in] shader Specifies the shader which is to be attached to this shader program.
+        Each shader type can only be added once for each shader program.
+        \remarks This must be called, before "LinkShaders" is called.
+        \throws std::invalid_argument If a shader is attached to this shader program, which is not allow in the current state.
+        This will happend if a different shader of the same type has already been attached to this shader program.
+        \see Shader::GetType
+        */
+        virtual void AttachShader(Shader& shader) = 0;
 
         /**
         \brief Links all attached shaders to the final shader program.
@@ -83,6 +80,14 @@ class LLGL_EXPORT ShaderProgram
         \see RenderContext::BindConstantBuffer
         */
         virtual void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) = 0;
+
+    protected:
+
+        void ValidateShaderAttachment(Shader& shader);
+
+    private:
+
+        std::vector<Shader*> attachedShaders_;
 
 };
 

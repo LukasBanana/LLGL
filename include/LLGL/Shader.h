@@ -17,6 +17,18 @@ namespace LLGL
 {
 
 
+//! Shader type enumeration.
+enum class ShaderType
+{
+    Vertex,         //!< Vertex shader type.
+    Geometry,       //!< Geometry shader type.
+    TessControl,    //!< Tessellation control shader type (also "Hull Shader").
+    TessEvaluation, //!< Tessellation evaluation shader type (also "Domain Shader").
+    Fragment,       //!< Fragment shader type (also "Pixel Shader").
+    Compute,        //!< Compute shader type.
+};
+
+
 //! Shader base interface.
 class LLGL_EXPORT Shader
 {
@@ -37,6 +49,23 @@ class LLGL_EXPORT Shader
 
         //! Returns the information log after the shader compilation.
         virtual std::string QueryInfoLog() = 0;
+
+        //! Returns the type of this shader.
+        inline ShaderType GetType() const
+        {
+            return type_;
+        }
+
+    protected:
+
+        Shader(const ShaderType type) :
+            type_( type )
+        {
+        }
+
+    private:
+
+        ShaderType type_;
 
 };
 

@@ -6,12 +6,7 @@
  */
 
 #include "GLShaderProgram.h"
-#include "GLVertexShader.h"
-#include "GLFragmentShader.h"
-#include "GLGeometryShader.h"
-#include "GLTessControlShader.h"
-#include "GLTessEvaluationShader.h"
-#include "GLComputeShader.h"
+#include "GLShader.h"
 #include "../GLExtensions.h"
 #include "../../CheckedCast.h"
 #include <LLGL/VertexFormat.h>
@@ -33,34 +28,11 @@ GLShaderProgram::~GLShaderProgram()
     glDeleteProgram(id_);
 }
 
-void GLShaderProgram::AttachShader(VertexShader& vertexShader)
+void GLShaderProgram::AttachShader(Shader& shader)
 {
-    AttachHWShader<GLVertexShader>(vertexShader);
-}
-
-void GLShaderProgram::AttachShader(FragmentShader& fragmentShader)
-{
-    AttachHWShader<GLFragmentShader>(fragmentShader);
-}
-
-void GLShaderProgram::AttachShader(GeometryShader& geometryShader)
-{
-    AttachHWShader<GLGeometryShader>(geometryShader);
-}
-
-void GLShaderProgram::AttachShader(TessControlShader& tessControlShader)
-{
-    AttachHWShader<GLTessControlShader>(tessControlShader);
-}
-
-void GLShaderProgram::AttachShader(TessEvaluationShader& tessEvaluationShader)
-{
-    AttachHWShader<GLTessEvaluationShader>(tessEvaluationShader);
-}
-
-void GLShaderProgram::AttachShader(ComputeShader& computeShader)
-{
-    AttachHWShader<GLComputeShader>(computeShader);
+    ValidateShaderAttachment(shader);
+    const auto& shaderGL = LLGL_CAST(GLShader&, shader);
+    glAttachShader(id_, shaderGL.GetID());
 }
 
 bool GLShaderProgram::LinkShaders()
@@ -271,18 +243,6 @@ void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int b
         glUniformBlockBinding(id_, blockIndex, bindingIndex);
     else
         throw std::invalid_argument("failed to bind constant buffer, because uniform block name is invalid");
-}
-
-
-/*
- * ======= Private: ========
- */
-
-template <typename GLShaderType, typename ShaderType>
-void GLShaderProgram::AttachHWShader(const ShaderType& shader)
-{
-    const auto& shaderGL = LLGL_CAST(const GLShaderType&, shader);
-    glAttachShader(id_, shaderGL.hwShader.GetID());
 }
 
 

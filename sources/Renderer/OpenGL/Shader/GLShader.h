@@ -1,36 +1,37 @@
 /*
- * GLHardwareShader.h
+ * GLShader.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_HARDWARE_SHADER_H__
-#define __LLGL_GL_HARDWARE_SHADER_H__
+#ifndef __LLGL_GL_SHADER_H__
+#define __LLGL_GL_SHADER_H__
 
 
-#include "../OpenGL.h"
+#include <LLGL/Shader.h>
 #include <string>
+#include "../OpenGL.h"
 
 
 namespace LLGL
 {
 
 
-class GLHardwareShader
+class GLShader : public Shader
 {
 
     public:
 
-        GLHardwareShader(const GLHardwareShader&) = delete;
-        GLHardwareShader& operator = (const GLHardwareShader&) = delete;
+        GLShader(const GLShader&) = delete;
+        GLShader& operator = (const GLShader&) = delete;
 
-        GLHardwareShader(GLenum shaderType);
-        ~GLHardwareShader();
+        GLShader(const ShaderType type);
+        ~GLShader();
 
-        bool Compile(const std::string& shaderSource);
+        bool Compile(const std::string& shaderSource) override;
 
-        std::string QueryInfoLog();
+        std::string QueryInfoLog() override;
 
         //! Returns the hardware shader ID.
         inline GLuint GetID() const

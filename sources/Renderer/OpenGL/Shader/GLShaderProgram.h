@@ -25,12 +25,7 @@ class GLShaderProgram : public ShaderProgram
         GLShaderProgram();
         ~GLShaderProgram();
 
-        void AttachShader( VertexShader&         vertexShader         ) override;
-        void AttachShader( FragmentShader&       fragmentShader       ) override;
-        void AttachShader( GeometryShader&       geometryShader       ) override;
-        void AttachShader( TessControlShader&    tessControlShader    ) override;
-        void AttachShader( TessEvaluationShader& tessEvaluationShader ) override;
-        void AttachShader( ComputeShader&        computeShader        ) override;
+        void AttachShader(Shader& shader) override;
 
         bool LinkShaders() override;
 
@@ -49,9 +44,6 @@ class GLShaderProgram : public ShaderProgram
         }
 
     private:
-
-        template <typename GLShaderType, typename ShaderType>
-        void AttachHWShader(const ShaderType& shader);
 
         GLuint  id_         = 0;
         bool    linkStatus_ = false;
