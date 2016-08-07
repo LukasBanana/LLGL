@@ -117,44 +117,45 @@ struct LLGL_EXPORT TextureDataDescriptor
     const void* data        = nullptr;
 };
 
-//! Texture descriptor structure.
-struct TextureDescriptor
+//! Texture descriptor union.
+union TextureDescriptor
 {
     TextureType type;
 
-    union
+    struct Texture1DDescriptor
     {
-        struct Texture1DDescriptor
-        {
-            int             width;
-            unsigned int    layers;
-        }
-        texture1DDesc;
+        TextureType     type;
+        int             width;
+        unsigned int    layers;
+    }
+    texture1DDesc;
 
-        struct Texture2DDescriptor
-        {
-            int             width;
-            int             height;
-            unsigned int    layers;
-        }
-        texture2DDesc;
+    struct Texture2DDescriptor
+    {
+        TextureType     type;
+        int             width;
+        int             height;
+        unsigned int    layers;
+    }
+    texture2DDesc;
 
-        struct Texture3DDescriptor
-        {
-            int             width;
-            int             height;
-            int             depth;
-        }
-        texture3DDesc;
+    struct Texture3DDescriptor
+    {
+        TextureType     type;
+        int             width;
+        int             height;
+        int             depth;
+    }
+    texture3DDesc;
 
-        struct TextureCubeDescriptor
-        {
-            int             width;
-            int             height;
-            unsigned int    layers;
-        }
-        textureCubeDesc;
-    };
+    struct TextureCubeDescriptor
+    {
+        TextureType     type;
+        int             width;
+        int             height;
+        unsigned int    layers;
+    }
+    textureCubeDesc;
 };
 
 
