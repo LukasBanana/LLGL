@@ -60,6 +60,8 @@ class GLRenderSystem : public RenderSystem
 
         Texture* CreateTexture() override;
 
+        TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
+
         void WriteTexture1D(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor* textureData = nullptr) override;
         void WriteTexture2D(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor* textureData = nullptr) override;
         void WriteTexture3D(Texture& texture, const TextureFormat format, int width, int height, int depth, const TextureDataDescriptor* textureData = nullptr) override;
@@ -75,6 +77,8 @@ class GLRenderSystem : public RenderSystem
         void WriteTexture1DArraySub(Texture& texture, const TextureFormat format, int width, unsigned int layers, const TextureDataDescriptor& textureData) override;
         void WriteTexture2DArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData) override;
         void WriteTextureCubeArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData) override;
+
+        void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) override;
 
         /* ----- Shader ----- */
 

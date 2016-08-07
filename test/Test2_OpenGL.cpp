@@ -145,13 +145,15 @@ int main()
 
         LLGL::TextureDataDescriptor textureData;
         {
-            textureData.data        = image;
             textureData.dataFormat  = LLGL::ColorFormat::RGB;
             textureData.dataType    = LLGL::DataType::UByte;
+            textureData.data        = image;
         }
         renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, 2, 2, &textureData);
 
         context->BindTexture(texture, 0);
+
+        auto textureDesc = renderer->QueryTextureDescriptor(texture);
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))

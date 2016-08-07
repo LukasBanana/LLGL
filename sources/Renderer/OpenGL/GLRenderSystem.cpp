@@ -141,6 +141,28 @@ Texture* GLRenderSystem::CreateTexture()
     return TakeOwnership(textures_, MakeUnique<GLTexture>());
 }
 
+TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
+{
+    /* Bind texture */
+    auto& textureGL = CheckedCast<const GLTexture&>(texture);
+    GLStateManager::active->BindTexture(textureGL);
+
+    /* Setup texture descriptor */
+    TextureDescriptor desc;
+    InitMemory(desc);
+
+    desc.type = texture.GetType();
+
+    /* Query texture size */
+    auto target = GLTypeConversion::Map(texture.GetType());
+
+    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &desc.texture3DDesc.width);
+    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &desc.texture3DDesc.height);
+    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH, &desc.texture3DDesc.depth);
+
+    return desc;
+}
+
 void GLRenderSystem::WriteTexture1D(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor* textureData)
 {
     /* Bind texture and set type */
@@ -308,6 +330,22 @@ void GLRenderSystem::WriteTexture2DArraySub(Texture& texture, const TextureForma
 
 void GLRenderSystem::WriteTextureCubeArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData)
 {
+}
+
+void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
+{
+    /* Bind texture */
+    auto& textureGL = LLGL_CAST(const GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+
+    /* Read image data from texture */
+    glGetTexImage(
+        GLTypeConversion::Map(textureGL.GetType()),
+        mipLevel,
+        GLTypeConversion::Map(dataFormat),
+        GLTypeConversion::Map(dataType),
+        data
+    );
 }
 
 /* ----- Shader ----- */

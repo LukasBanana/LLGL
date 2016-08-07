@@ -132,6 +132,8 @@ class LLGL_EXPORT RenderSystem
         virtual Texture* CreateTexture() = 0;
         //virtual void Release(Texture& texture) = 0;
 
+        virtual TextureDescriptor QueryTextureDescriptor(const Texture& texture) = 0;
+
         virtual void WriteTexture1D(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor* textureData = nullptr) = 0;
         virtual void WriteTexture2D(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor* textureData = nullptr) = 0;
         virtual void WriteTexture3D(Texture& texture, const TextureFormat format, int width, int height, int depth, const TextureDataDescriptor* textureData = nullptr) = 0;
@@ -147,6 +149,23 @@ class LLGL_EXPORT RenderSystem
         virtual void WriteTexture1DArraySub(Texture& texture, const TextureFormat format, int width, unsigned int layers, const TextureDataDescriptor& textureData) = 0;
         virtual void WriteTexture2DArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData) = 0;
         virtual void WriteTextureCubeArraySub(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor& textureData) = 0;
+
+        /**
+        \brief Reads the image data from the specified texture.
+        \param[in] texture Specifies the texture object to read from.
+        \param[in] mipLevel Specifies the MIP-level from which to read the image data.
+        \param[in] dataFormat Specifies the output data format.
+        \param[in] dataType Specifies the output data type.
+        \param[out] data Specifies the output image data. This must be a pointer to a memory block, which is large enough to fit all the image data.
+        \remarks Depending on the data format, data type, and texture size, the output image container must be allocated with enough memory size.
+        The "QueryTextureDescriptor" function can be used to determine the texture dimensions.
+        \code
+        std::vector<LLGL::ColorRGBAub> image(textureWidth*textureHeight);
+        renderSystem->ReadTexture(texture, 0, LLGL::ColorFormat::RGBA, LLGL::DataType::UByte, image.data());
+        \endcode
+        \see QueryTextureDescriptor
+        */
+        virtual void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) = 0;
 
         /* ----- Shader ----- */
 
