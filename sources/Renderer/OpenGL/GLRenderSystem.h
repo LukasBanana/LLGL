@@ -72,6 +72,14 @@ class GLRenderSystem : public RenderSystem
 
         ShaderProgram* CreateShaderProgram() override;
 
+    protected:
+
+        RenderContext* AddRenderContext(
+            std::unique_ptr<GLRenderContext>&& renderContext,
+            const RenderContextDescriptor& desc,
+            const std::shared_ptr<Window>& window
+        );
+
     private:
 
         template <typename T>

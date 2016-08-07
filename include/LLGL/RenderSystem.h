@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "RenderContext.h"
 #include "RenderSystemFlags.h"
+#include "RenderingProfiler.h"
 
 #include "VertexBuffer.h"
 #include "VertexFormat.h"
@@ -57,6 +58,7 @@ class LLGL_EXPORT RenderSystem
         Moreover, the platform dependent file extension is always added automatically
         as well as the prefix "LLGL_", i.e. a module name "OpenGL" will be
         translated to "LLGL_OpenGLD.dll", if compiled on Windows in Debug mode.
+        \param[in] profiler Optional pointer to a rendering profiler. If this is used, the counters of the profiler must be reset manually.
         \remarks Usually the return type is a std::unique_ptr, but LLGL needs to keep track
         of the existance of this render system because only a single instance can be loaded at a time.
         So a std::weak_ptr is stored internally to check if it has been expired
@@ -66,7 +68,7 @@ class LLGL_EXPORT RenderSystem
         \throws std::runtime_exception If there is already a loaded instance of a render system
         (make sure there are no more shared pointer references to the previous render system!)
         */
-        static std::shared_ptr<RenderSystem> Load(const std::string& moduleName);
+        static std::shared_ptr<RenderSystem> Load(const std::string& moduleName, RenderingProfiler* profiler = nullptr);
 
         //! Returns the name of this render system.
         inline const std::string& GetName() const

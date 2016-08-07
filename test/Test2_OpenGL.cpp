@@ -12,19 +12,15 @@
 #include <string>
 #include <sstream>
 
-#ifdef _WIN32
-#include <Windows.h>
-#include <gl/GL.h>
-#pragma comment(lib, "opengl32.lib")
-#endif
-
 
 int main()
 {
     try
     {
         // Load render system module
-        auto renderer = LLGL::RenderSystem::Load("OpenGL");
+        std::shared_ptr<LLGL::RenderingProfiler> profiler;// = std::make_shared<LLGL::RenderingProfiler>();
+
+        auto renderer = LLGL::RenderSystem::Load("OpenGL", profiler.get());
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
@@ -138,6 +134,9 @@ int main()
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
         {
+            if (profiler)
+                profiler->ResetCounters();
+
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);

@@ -40,16 +40,16 @@ std::vector<std::string> RenderSystem::FindModules()
     return modules;
 }
     
-static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename)
+static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename, RenderingProfiler* profiler)
 {
     /* Load "LLGL_RenderSystem_Alloc" procedure */
-    LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (void));
+    LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (void*));
 
     auto RenderSystem_Alloc = reinterpret_cast<PFN_RENDERSYSTEM_ALLOC>(module.LoadProcedure("LLGL_RenderSystem_Alloc"));
     if (!RenderSystem_Alloc)
         throw std::runtime_error("failed to load \"LLGL_RenderSystem_Alloc\" procedure from module \"" + moduleFilename + "\"");
 
-    return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc());
+    return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc(profiler));
 }
 
 static std::string LoadRenderSystemName(Module& module)
@@ -64,7 +64,7 @@ static std::string LoadRenderSystemName(Module& module)
     return "";
 }
 
-std::shared_ptr<RenderSystem> RenderSystem::Load(const std::string& moduleName)
+std::shared_ptr<RenderSystem> RenderSystem::Load(const std::string& moduleName, RenderingProfiler* profiler)
 {
     /* Check if previous module can be safely released (i.e. the previous render system has been deleted) */
     if (!g_renderSystemRef.expired())
@@ -73,7 +73,7 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(const std::string& moduleName)
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(moduleName);
     auto module = Module::Load(moduleFilename);
-    auto renderSystem = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
+    auto renderSystem = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename, profiler));
     renderSystem->name_ = LoadRenderSystemName(*module);
 
     /* Store new module globally */

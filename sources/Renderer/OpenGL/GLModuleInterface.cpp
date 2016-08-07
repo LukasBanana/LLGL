@@ -7,14 +7,18 @@
 
 #include "../ModuleInterface.h"
 #include "GLRenderSystem.h"
+#include "GLRenderSystemProfiler.h"
 
 
 extern "C"
 {
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(void* profiler)
 {
-    return new LLGL::GLRenderSystem();
+    if (profiler)
+        return new LLGL::GLRenderSystemProfiler(*reinterpret_cast<LLGL::RenderingProfiler*>(profiler));
+    else
+        return new LLGL::GLRenderSystem();
 }
 
 LLGL_EXPORT const char* LLGL_RenderSystem_Name()

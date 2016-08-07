@@ -29,25 +29,7 @@ GLRenderSystem::~GLRenderSystem()
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
     /* Create new render context */
-    auto renderContext = std::unique_ptr<GLRenderContext>(new GLRenderContext(desc, window, nullptr));
-
-    /*
-    If render context created it's own window then show it after creation,
-    since anti-aliasing may force the window to be recreated several times
-    */
-    if (!window)
-        renderContext->GetWindow().Show();
-
-    /* Switch to fullscreen mode (if enabled) */
-    if (desc.videoMode.fullscreen)
-        Desktop::ChangeVideoMode(desc.videoMode);
-
-    /* Load all OpenGL extensions for the first time */
-    if (renderContexts_.empty())
-        LoadGLExtensions(desc.profileOpenGL);
-
-    /* Take ownership and return raw pointer */
-    return TakeOwnership(renderContexts_, std::move(renderContext));
+    return AddRenderContext(MakeUnique<GLRenderContext>(desc, window, nullptr), desc, window);
 }
 
 /* ----- Hardware buffers ------ */
@@ -161,6 +143,33 @@ ComputeShader* GLRenderSystem::CreateComputeShader()
 ShaderProgram* GLRenderSystem::CreateShaderProgram()
 {
     return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>());
+}
+
+
+/*
+ * ======= Protected: =======
+ */
+
+RenderContext* GLRenderSystem::AddRenderContext(
+    std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
+{
+    /*
+    If render context created it's own window then show it after creation,
+    since anti-aliasing may force the window to be recreated several times
+    */
+    if (!window)
+        renderContext->GetWindow().Show();
+
+    /* Switch to fullscreen mode (if enabled) */
+    if (desc.videoMode.fullscreen)
+        Desktop::ChangeVideoMode(desc.videoMode);
+
+    /* Load all OpenGL extensions for the first time */
+    if (renderContexts_.empty())
+        LoadGLExtensions(desc.profileOpenGL);
+
+    /* Take ownership and return raw pointer */
+    return TakeOwnership(renderContexts_, std::move(renderContext));
 }
 
 

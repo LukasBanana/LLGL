@@ -283,6 +283,10 @@ void GLRenderContext::InitRenderStates()
 
     /* Initialize state manager */
     stateMngr_->Reset();
+
+    #if 0 // !!! TESTING !!!
+    glEnable(GL_DEPTH_TEST);
+    #endif
 }
 
 void GLRenderContext::QueryGLVerion(GLint& major, GLint& minor)
