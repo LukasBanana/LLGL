@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../GLRenderContext.h"
+#include "../../GLRenderContext.h"
 
 
 namespace LLGL

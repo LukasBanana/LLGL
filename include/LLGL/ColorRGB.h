@@ -35,7 +35,7 @@ class Color<T, 3u>
         Color() :
             r( MaxColorValue<T>() ),
             g( MaxColorValue<T>() ),
-            b( MaxColorValue<T>() ),
+            b( MaxColorValue<T>() )
         {
         }
         #else
@@ -158,13 +158,11 @@ class Color<T, 3u>
                 auto newR = static_cast<double>(r) * newRange / oldRange;
                 auto newG = static_cast<double>(g) * newRange / oldRange;
                 auto newB = static_cast<double>(b) * newRange / oldRange;
-                auto newA = static_cast<double>(a) * newRange / oldRange;
 
                 return Color<C, 3>(
                     static_cast<C>(newR),
                     static_cast<C>(newG),
-                    static_cast<C>(newB),
-                    static_cast<C>(newA)
+                    static_cast<C>(newB)
                 );
             }
             else
@@ -173,8 +171,7 @@ class Color<T, 3u>
                 return Color<C, 3>(
                     static_cast<C>(r),
                     static_cast<C>(g),
-                    static_cast<C>(b),
-                    static_cast<C>(a)
+                    static_cast<C>(b)
                 );
             }
         }

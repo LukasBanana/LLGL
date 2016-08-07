@@ -144,7 +144,7 @@ Texture* GLRenderSystem::CreateTexture()
 TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
 {
     /* Bind texture */
-    auto& textureGL = CheckedCast<const GLTexture&>(texture);
+    auto& textureGL = LLGL_CAST(const GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
 
     /* Setup texture descriptor */

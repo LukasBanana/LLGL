@@ -9,7 +9,7 @@
 #define __LLGL_LINUX_GL_PLATFORM_CONTEXT_H__
 
 
-#include "../OpenGL.h"
+#include "../../OpenGL.h"
 
 
 namespace LLGL

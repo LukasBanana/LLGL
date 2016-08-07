@@ -15,6 +15,7 @@
 #include <vector>
 #include <algorithm>
 #include <set>
+#include <cstring>
 
 
 namespace LLGL
