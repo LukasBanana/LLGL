@@ -88,6 +88,20 @@ void GLRenderContextProfiler::UnbindConstantBuffer(unsigned int index)
     profiler_.bindConstantBuffer.Inc();
 }
 
+/* ----- Textures ----- */
+
+void GLRenderContextProfiler::BindTexture(Texture& texture, unsigned int layer)
+{
+    GLRenderContext::BindTexture(texture, layer);
+    profiler_.bindTexture.Inc();
+}
+
+void GLRenderContextProfiler::UnbindTexture(unsigned int layer)
+{
+    GLRenderContext::UnbindTexture(layer);
+    profiler_.bindTexture.Inc();
+}
+
 /* --- Drawing --- */
 
 void GLRenderContextProfiler::Draw(unsigned int numVertices, unsigned int firstVertex)

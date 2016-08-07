@@ -28,11 +28,20 @@ class GLTexture : public Texture
         GLTexture();
         ~GLTexture();
 
+        //! Recreates the internal texture object. This will invalidate the previous texture ID.
+        void Recreate();
+
         //! Returns the hardware texture ID.
         inline GLuint GetID() const
         {
             return id_;
         }
+
+    protected:
+
+        friend class GLRenderSystem;
+
+        void SetType(const TextureType type);
 
     private:
 

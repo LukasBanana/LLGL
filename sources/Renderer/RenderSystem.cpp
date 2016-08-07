@@ -105,6 +105,11 @@ bool RenderSystem::OnMakeCurrent(RenderContext* renderContext)
     return true; // dummy
 }
 
+std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixels) const
+{
+    return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), config.defaultTextureImageColor);
+}
+
 
 } // /namespace LLGL
 

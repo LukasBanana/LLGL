@@ -10,6 +10,7 @@
 #include "GLExtensions.h"
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
+#include "Texture/GLTexture.h"
 
 
 namespace LLGL
@@ -139,7 +140,10 @@ void GLRenderContext::UnbindConstantBuffer(unsigned int index)
 
 void GLRenderContext::BindTexture(Texture& texture, unsigned int layer)
 {
-    //todo...
+    /* Bind texture to layer */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->ActiveTexture(layer);
+    GLStateManager::active->BindTexture(textureGL);
 }
 
 void GLRenderContext::UnbindTexture(unsigned int layer)

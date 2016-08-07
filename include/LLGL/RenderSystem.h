@@ -38,6 +38,16 @@ class LLGL_EXPORT RenderSystem
 
     public:
 
+        //! Render system configuration structure.
+        struct Configuration
+        {
+            /**
+            \brief Default color for an uninitialized texture. The default value is white (255, 255, 255, 255).
+            \remarks This will be used for each "WriteTexture..." function, when no initial image data is specified.
+            */
+            ColorRGBAub defaultTextureImageColor;
+        };
+
         /* ----- Common ----- */
 
         RenderSystem(const RenderSystem&) = delete;
@@ -143,6 +153,14 @@ class LLGL_EXPORT RenderSystem
         virtual Shader* CreateShader(const ShaderType type) = 0;
         virtual ShaderProgram* CreateShaderProgram() = 0;
 
+        /* === Members === */
+
+        /**
+        \brief Render system basic configuration.
+        \remarks This can be used to change the behavior of default initializion of textures for instance.
+        */
+        Configuration config;
+
     protected:
 
         RenderSystem() = default;
@@ -152,6 +170,9 @@ class LLGL_EXPORT RenderSystem
         \remarks At this point, "GetCurrentContext" returns still the previous render context.
         */
         virtual bool OnMakeCurrent(RenderContext* renderContext);
+
+        //! Creates an RGBA unsigned-byte image buffer for the specified number of pixels.
+        std::vector<ColorRGBAub> GetDefaultTextureImageRGBAub(int numPixels) const;
 
     private:
 

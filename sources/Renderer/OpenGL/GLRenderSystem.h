@@ -98,6 +98,8 @@ class GLRenderSystem : public RenderSystem
 
         void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
 
+        void BindTextureAndSetType(GLTexture& textureGL, const TextureType type);
+
         /* ----- Common GL render system objects ----- */
 
         OpenGLExtensionMap                          extensionMap_;

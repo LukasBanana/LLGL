@@ -13,6 +13,7 @@
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
 #include "Buffer/GLConstantBuffer.h"
+#include "Texture/GLTexture.h"
 #include <array>
 #include <stack>
 
@@ -121,24 +122,28 @@ class GLStateManager
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
         void BindVertexArray(GLuint buffer);
-        
-        void BindBuffer(const GLVertexBuffer& vertexBuffer);
-        void BindBuffer(const GLIndexBuffer& indexBuffer);
-        void BindBuffer(const GLConstantBuffer& constantBuffer);
 
         void ForcedBindBuffer(GLBufferTarget target, GLuint buffer);
 
         void PushBoundBuffer(GLBufferTarget target);
         void PopBoundBuffer();
+        
+        void BindBuffer(const GLVertexBuffer& vertexBuffer);
+        void BindBuffer(const GLIndexBuffer& indexBuffer);
+        void BindBuffer(const GLConstantBuffer& constantBuffer);
 
         /* ----- Texture binding ----- */
 
         void ActiveTexture(unsigned int layer);
 
         void BindTexture(GLTextureTarget target, GLuint texture);
+        void ForcedBindTexture(GLTextureTarget target, GLuint texture);
         
         void PushBoundTexture(unsigned int layer, GLTextureTarget target);
         void PopBoundTexture();
+
+        void BindTexture(const GLTexture& texture);
+        void ForcedBindTexture(const GLTexture& texture);
 
         /* ----- Shader binding ----- */
 

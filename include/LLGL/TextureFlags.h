@@ -9,6 +9,7 @@
 #define __LLGL_TEXTURE_FLAGS_H__
 
 
+#include "Export.h"
 #include "RenderSystemFlags.h"
 
 

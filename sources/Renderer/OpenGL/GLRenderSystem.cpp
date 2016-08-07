@@ -11,6 +11,7 @@
 #include <LLGL/Desktop.h>
 #include "GLStateManager.h"
 #include "GLTypeConversion.h"
+#include "GLExtensions.h"
 
 
 namespace LLGL
@@ -110,6 +111,31 @@ void GLRenderSystem::WriteConstantBufferSub(ConstantBuffer& constantBuffer, cons
 
 /* ----- Textures ----- */
 
+static void GLTexImage1D(GLenum internalFormat, int width, GLenum format, GLenum type, const void* data)
+{
+    glTexImage1D(GL_TEXTURE_1D, 0, internalFormat, width, 0, format, type, data);
+}
+
+static void GLTexImage2D(GLenum internalFormat, int width, int height, GLenum format, GLenum type, const void* data)
+{
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, data);
+}
+
+static void GLTexImage3D(GLenum internalFormat, int width, int height, int depth, GLenum format, GLenum type, const void* data)
+{
+    glTexImage3D(GL_TEXTURE_3D, 0, internalFormat, width, height, depth, 0, format, type, data);
+}
+
+static void GLTexImage1DArray(GLenum internalFormat, int width, unsigned int layers, GLenum format, GLenum type, const void* data)
+{
+    glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalFormat, width, static_cast<GLsizei>(layers), 0, format, type, data);
+}
+
+static void GLTexImage2DArray(GLenum internalFormat, int width, int height, unsigned int layers, GLenum format, GLenum type, const void* data)
+{
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalFormat, width, height, static_cast<GLsizei>(layers), 0, format, type, data);
+}
+
 Texture* GLRenderSystem::CreateTexture()
 {
     return TakeOwnership(textures_, MakeUnique<GLTexture>());
@@ -117,33 +143,143 @@ Texture* GLRenderSystem::CreateTexture()
 
 void GLRenderSystem::WriteTexture1D(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor* textureData)
 {
-    /* Bind texture */
+    /* Bind texture and set type */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    //...
+    BindTextureAndSetType(textureGL, TextureType::Texture1D);
+
+    if (textureData)
+    {
+        /* Setup texture image from descriptor */
+        GLTexImage1D(
+            GLTypeConversion::Map(format),
+            width,
+            GLTypeConversion::Map(textureData->dataFormat),
+            GLTypeConversion::Map(textureData->dataType),
+            textureData->data
+        );
+    }
+    else
+    {
+        /* Initialize texture image with default color */
+        auto image = GetDefaultTextureImageRGBAub(width);
+        GLTexImage1D(GLTypeConversion::Map(format), width, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    }
 }
 
 void GLRenderSystem::WriteTexture2D(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor* textureData)
 {
+    /* Bind texture and set type */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    BindTextureAndSetType(textureGL, TextureType::Texture2D);
+
+    if (textureData)
+    {
+        /* Setup texture image from descriptor */
+        GLTexImage2D(
+            GLTypeConversion::Map(format),
+            width,
+            height,
+            GLTypeConversion::Map(textureData->dataFormat),
+            GLTypeConversion::Map(textureData->dataType),
+            textureData->data
+        );
+    }
+    else
+    {
+        /* Initialize texture image with default color */
+        auto image = GetDefaultTextureImageRGBAub(width*height);
+        GLTexImage2D(GLTypeConversion::Map(format), width, height, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    }
 }
 
 void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format, int width, int height, int depth, const TextureDataDescriptor* textureData)
 {
+    /* Bind texture and set type */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    BindTextureAndSetType(textureGL, TextureType::Texture3D);
+
+    if (textureData)
+    {
+        /* Setup texture image from descriptor */
+        GLTexImage3D(
+            GLTypeConversion::Map(format),
+            width,
+            height,
+            depth,
+            GLTypeConversion::Map(textureData->dataFormat),
+            GLTypeConversion::Map(textureData->dataType),
+            textureData->data
+        );
+    }
+    else
+    {
+        /* Initialize texture image with default color */
+        auto image = GetDefaultTextureImageRGBAub(width*height*depth);
+        GLTexImage3D(GLTypeConversion::Map(format), width, height, depth, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    }
 }
 
 void GLRenderSystem::WriteTextureCube(Texture& texture, const TextureFormat format, int width, int height, const TextureDataDescriptor* textureData)
 {
+    //todo...
 }
 
 void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat format, int width, unsigned int layers, const TextureDataDescriptor* textureData)
 {
+    /* Bind texture and set type */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    BindTextureAndSetType(textureGL, TextureType::Texture1DArray);
+
+    if (textureData)
+    {
+        /* Setup texture image from descriptor */
+        GLTexImage1DArray(
+            GLTypeConversion::Map(format),
+            width,
+            layers,
+            GLTypeConversion::Map(textureData->dataFormat),
+            GLTypeConversion::Map(textureData->dataType),
+            textureData->data
+        );
+    }
+    else
+    {
+        /* Initialize texture image with default color */
+        auto image = GetDefaultTextureImageRGBAub(width*static_cast<int>(layers));
+        GLTexImage1DArray(GLTypeConversion::Map(format), width, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    }
 }
 
 void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor* textureData)
 {
+    /* Bind texture and set type */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    BindTextureAndSetType(textureGL, TextureType::Texture2DArray);
+
+    if (textureData)
+    {
+        /* Setup texture image from descriptor */
+        GLTexImage2DArray(
+            GLTypeConversion::Map(format),
+            width,
+            height,
+            layers,
+            GLTypeConversion::Map(textureData->dataFormat),
+            GLTypeConversion::Map(textureData->dataType),
+            textureData->data
+        );
+    }
+    else
+    {
+        /* Initialize texture image with default color */
+        auto image = GetDefaultTextureImageRGBAub(width*height*static_cast<int>(layers));
+        GLTexImage2DArray(GLTypeConversion::Map(format), width, height, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    }
 }
 
 void GLRenderSystem::WriteTextureCubeArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers, const TextureDataDescriptor* textureData)
 {
+    //todo...
 }
         
 void GLRenderSystem::WriteTexture1DSub(Texture& texture, const TextureFormat format, int width, const TextureDataDescriptor& textureData)
@@ -239,6 +375,27 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
         /* Query extensions and load all of them */
         extensionMap_ = QueryExtensions(coreProfile);
         LoadAllExtensions(extensionMap_);
+    }
+}
+
+void GLRenderSystem::BindTextureAndSetType(GLTexture& textureGL, const TextureType type)
+{
+    if (textureGL.GetType() == TextureType::Undefined)
+    {
+        /* Set type of the specified texture for the first time */
+        textureGL.SetType(type);
+        GLStateManager::active->ForcedBindTexture(textureGL);
+    }
+    else if (textureGL.GetType() != type)
+    {
+        /* Type change requires the texture to be recreated */
+        textureGL.Recreate();
+        GLStateManager::active->ForcedBindTexture(textureGL);
+    }
+    else
+    {
+        /* Type already set -> just bind texture */
+        GLStateManager::active->BindTexture(textureGL);
     }
 }
 

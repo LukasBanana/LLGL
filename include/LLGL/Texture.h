@@ -41,7 +41,7 @@ class LLGL_EXPORT Texture
 
     protected:
 
-        inline void SetType(TextureType type)
+        inline void SetType(const TextureType type)
         {
             type_ = type;
         }

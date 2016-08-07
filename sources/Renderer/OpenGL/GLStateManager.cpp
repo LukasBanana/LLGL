@@ -211,21 +211,6 @@ void GLStateManager::BindVertexArray(GLuint buffer)
     bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
 }
 
-void GLStateManager::BindBuffer(const GLVertexBuffer& vertexBuffer)
-{
-    BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBuffer.hwBuffer.GetID());
-}
-
-void GLStateManager::BindBuffer(const GLIndexBuffer& indexBuffer)
-{
-    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, indexBuffer.hwBuffer.GetID());
-}
-
-void GLStateManager::BindBuffer(const GLConstantBuffer& constantBuffer)
-{
-    BindBuffer(GLBufferTarget::UNIFORM_BUFFER, constantBuffer.hwBuffer.GetID());
-}
-
 void GLStateManager::ForcedBindBuffer(GLBufferTarget target, GLuint buffer)
 {
     /* Always bind buffer with a forced binding */
@@ -253,6 +238,21 @@ void GLStateManager::PopBoundBuffer()
     bufferState_.boundBufferStack.pop();
 }
 
+void GLStateManager::BindBuffer(const GLVertexBuffer& vertexBuffer)
+{
+    BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBuffer.hwBuffer.GetID());
+}
+
+void GLStateManager::BindBuffer(const GLIndexBuffer& indexBuffer)
+{
+    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, indexBuffer.hwBuffer.GetID());
+}
+
+void GLStateManager::BindBuffer(const GLConstantBuffer& constantBuffer)
+{
+    BindBuffer(GLBufferTarget::UNIFORM_BUFFER, constantBuffer.hwBuffer.GetID());
+}
+
 /* ----- Texture binding ----- */
 
 void GLStateManager::ActiveTexture(unsigned int layer)
@@ -278,6 +278,14 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
     }
 }
 
+void GLStateManager::ForcedBindTexture(GLTextureTarget target, GLuint texture)
+{
+    /* Always bind texutre with a forced binding */
+    auto targetIdx = static_cast<std::size_t>(target);
+    activeTextureLayer_->boundTextures[targetIdx] = texture;
+    glBindTexture(textureTargetsMap[targetIdx], texture);
+}
+
 void GLStateManager::PushBoundTexture(unsigned int layer, GLTextureTarget target)
 {
     textureState_.boundTextureStack.push(
@@ -297,6 +305,31 @@ void GLStateManager::PopBoundTexture()
         BindTexture(state.target, state.texture);
     }
     textureState_.boundTextureStack.pop();
+}
+
+static GLTextureTarget GetTextureTarget(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:        return GLTextureTarget::TEXTURE_1D;
+        case TextureType::Texture2D:        return GLTextureTarget::TEXTURE_2D;
+        case TextureType::Texture3D:        return GLTextureTarget::TEXTURE_3D;
+        case TextureType::TextureCube:      return GLTextureTarget::TEXTURE_CUBE_MAP;
+        case TextureType::Texture1DArray:   return GLTextureTarget::TEXTURE_1D_ARRAY;
+        case TextureType::Texture2DArray:   return GLTextureTarget::TEXTURE_2D_ARRAY;
+        case TextureType::TextureCubeArray: return GLTextureTarget::TEXTURE_CUBE_MAP_ARRAY;
+    }
+    throw std::invalid_argument("failed to convert texture type to OpenGL texture target");
+}
+
+void GLStateManager::BindTexture(const GLTexture& texture)
+{
+    BindTexture(GetTextureTarget(texture.GetType()), texture.GetID());
+}
+
+void GLStateManager::ForcedBindTexture(const GLTexture& texture)
+{
+    ForcedBindTexture(GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
 /* ----- Shader binding ----- */
