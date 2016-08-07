@@ -20,6 +20,7 @@
 #include "IndexFormat.h"
 #include "ConstantBuffer.h"
 
+#include "Texture.h"
 #include "ShaderProgram.h"
 
 #include <string>
@@ -115,6 +116,18 @@ class LLGL_EXPORT RenderSystem
         virtual void WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
         virtual void WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
         virtual void WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+
+        /* ----- Textures ----- */
+
+        /*virtual Texture* CreateTexture() = 0;
+
+        virtual void WriteTexture1D(Texture& texture, const TextureFormat format, int width) = 0;
+        virtual void WriteTexture2D(Texture& texture, const TextureFormat format, int width, int height) = 0;
+        virtual void WriteTexture3D(Texture& texture, const TextureFormat format, int width, int height, int depth) = 0;
+        virtual void WriteTextureCube(Texture& texture, const TextureFormat format, int width, int height) = 0;
+        virtual void WriteTexture1DArray(Texture& texture, const TextureFormat format, int width, unsigned int layers) = 0;
+        virtual void WriteTexture2DArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers) = 0;
+        virtual void WriteTextureCubeArray(Texture& texture, const TextureFormat format, int width, int height, unsigned int layers) = 0;*/
 
         /* ----- Shader ----- */
 
