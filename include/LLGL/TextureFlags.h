@@ -104,6 +104,7 @@ enum class ColorFormat
 //! Texture data descriptor structure.
 struct LLGL_EXPORT TextureDataDescriptor
 {
+    TextureDataDescriptor() = default;
     TextureDataDescriptor(const void* data, ColorFormat dataFormat, DataType dataType) :
         data        ( data       ),
         dataFormat  ( dataFormat ),
@@ -111,9 +112,9 @@ struct LLGL_EXPORT TextureDataDescriptor
     {
     }
 
-    const void* data;
-    ColorFormat dataFormat;
-    DataType    dataType;
+    const void* data        = nullptr;
+    ColorFormat dataFormat  = ColorFormat::Gray;
+    DataType    dataType    = DataType::UByte;
 };
 
 

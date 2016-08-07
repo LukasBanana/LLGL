@@ -13,6 +13,8 @@
 #include "Input.h"
 #include "Timer.h"
 #include "RenderSystem.h"
+#include "ColorRGB.h"
+#include "ColorRGBA.h"
 
 
 #endif

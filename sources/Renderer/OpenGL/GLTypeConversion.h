@@ -26,6 +26,7 @@ GLenum Map( const BufferUsage       bufferUsage   );
 GLenum Map( const BufferCPUAccess   cpuAccess     );
 GLenum Map( const DataType          dataType      );
 GLenum Map( const DrawMode          drawMode      );
+GLenum Map( const TextureType       textureType   );
 GLenum Map( const TextureFormat     textureFormat );
 GLenum Map( const ColorFormat       colorFormat   );
 

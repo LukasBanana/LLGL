@@ -77,7 +77,7 @@ int main()
             "} matrices;\n"
             "void main() {\n"
             "    gl_Position = matrices.projection * vec4(position, 0.0, 1.0);\n"
-            "    vertexPos = (position + vec2(1, 1))*vec2(1, 0.5);\n"
+            "    vertexPos = (position - vec2(100, 100))*vec2(0.01, 0.01);\n"
             "}\n"
         );
 
@@ -91,9 +91,10 @@ int main()
         (
             "#version 400\n"
             "layout(location=0) out vec4 fragColor;\n"
+            "uniform sampler2D tex;\n"
             "in vec2 vertexPos;\n"
             "void main() {\n"
-            "    fragColor = vec4(vertexPos, 0, 1);\n"
+            "    fragColor = texture2D(tex, vertexPos);\n"
             "}\n"
         );
 
@@ -130,6 +131,27 @@ int main()
                 context->BindConstantBuffer(constBuffer, bindingIndex);
             }
         }
+
+        // Create texture
+        auto& texture = *renderer->CreateTexture();
+
+        LLGL::ColorRGBub image[4] =
+        {
+            { 255, 0, 0 },
+            { 0, 255, 0 },
+            { 0, 0, 255 },
+            { 255, 0, 255 }
+        };
+
+        LLGL::TextureDataDescriptor textureData;
+        {
+            textureData.data        = image;
+            textureData.dataFormat  = LLGL::ColorFormat::RGB;
+            textureData.dataType    = LLGL::DataType::UByte;
+        }
+        renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, 2, 2, &textureData);
+
+        context->BindTexture(texture, 0);
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))

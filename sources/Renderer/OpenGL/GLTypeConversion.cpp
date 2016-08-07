@@ -79,6 +79,21 @@ GLenum Map(const DrawMode drawMode)
     MapFailed("DrawMode");
 }
 
+GLenum Map(const TextureType textureType)
+{
+    switch (textureType)
+    {
+        case TextureType::Texture1D:        return GL_TEXTURE_1D;
+        case TextureType::Texture2D:        return GL_TEXTURE_2D;
+        case TextureType::Texture3D:        return GL_TEXTURE_3D;
+        case TextureType::TextureCube:      return GL_TEXTURE_CUBE_MAP;
+        case TextureType::Texture1DArray:   return GL_TEXTURE_1D_ARRAY;
+        case TextureType::Texture2DArray:   return GL_TEXTURE_2D_ARRAY;
+        case TextureType::TextureCubeArray: return GL_TEXTURE_CUBE_MAP_ARRAY;
+    }
+    MapFailed("TextureType");
+}
+
 GLenum Map(const TextureFormat textureFormat)
 {
     switch (textureFormat)

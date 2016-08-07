@@ -385,6 +385,11 @@ void GLRenderSystem::BindTextureAndSetType(GLTexture& textureGL, const TextureTy
         /* Set type of the specified texture for the first time */
         textureGL.SetType(type);
         GLStateManager::active->ForcedBindTexture(textureGL);
+
+        /* Setup texture parameters for the first time */
+        auto target = GLTypeConversion::Map(type);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
     else if (textureGL.GetType() != type)
     {
