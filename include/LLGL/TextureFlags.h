@@ -105,12 +105,12 @@ enum class ColorFormat
 //! Axis direction (also used for texture cube face).
 enum class AxisDirection
 {
-    XPositive = 0,
-    XNegative,
-    YPositive,
-    YNegative,
-    ZPositive,
-    ZNegative,
+    PlusX = 0,
+    MinusX,
+    PlusY,
+    MinusY,
+    PlusZ,
+    MinusZ,
 };
 
 
