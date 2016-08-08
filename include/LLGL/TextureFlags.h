@@ -17,6 +17,8 @@ namespace LLGL
 {
 
 
+/* ----- Enumerations ----- */
+
 //! Texture type enumeration.
 enum class TextureType
 {
@@ -100,12 +102,25 @@ enum class ColorFormat
     DepthStencil,   //!< Pair of depth and stencil component.
 };
 
+//! Axis direction (also used for texture cube face).
+enum class AxisDirection
+{
+    XPositive = 0,
+    XNegative,
+    YPositive,
+    YNegative,
+    ZPositive,
+    ZNegative,
+};
+
+
+/* ----- Structures ----- */
 
 //! Texture data descriptor structure.
-struct LLGL_EXPORT TextureDataDescriptor
+struct LLGL_EXPORT ImageDataDescriptor
 {
-    TextureDataDescriptor() = default;
-    TextureDataDescriptor(ColorFormat dataFormat, DataType dataType, const void* data) :
+    ImageDataDescriptor() = default;
+    ImageDataDescriptor(ColorFormat dataFormat, DataType dataType, const void* data) :
         dataFormat  ( dataFormat ),
         dataType    ( dataType   ),
         data        ( data       )
