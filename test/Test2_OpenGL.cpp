@@ -96,10 +96,10 @@ int main()
         (
             "#version 400\n"
             "layout(location=0) out vec4 fragColor;\n"
-            "uniform sampler2D tex;\n"
+            "uniform sampler1D tex;\n"
             "in vec2 vertexPos;\n"
             "void main() {\n"
-            "    fragColor = texture2D(tex, vertexPos);\n"
+            "    fragColor = texture(tex, vertexPos.x);\n"
             "}\n"
         );
 
@@ -155,6 +155,7 @@ int main()
             textureData.data        = image;
         }
         renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, 2, 2, &textureData);
+        renderer->WriteTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData);
 
         context->BindTexture(texture, 0);
 
