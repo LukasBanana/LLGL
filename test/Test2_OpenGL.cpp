@@ -154,8 +154,8 @@ int main()
             textureData.dataType    = LLGL::DataType::UByte;
             textureData.data        = image;
         }
-        renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData);
-        renderer->WriteTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData);
+        renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture
+        renderer->WriteTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture
 
         context->BindTexture(texture, 0);
 
