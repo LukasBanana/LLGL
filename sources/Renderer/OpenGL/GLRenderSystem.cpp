@@ -12,6 +12,8 @@
 #include "GLStateManager.h"
 #include "GLTypeConversion.h"
 #include "GLExtensions.h"
+#include "GLCore.h"
+#include <sstream>
 
 
 namespace LLGL
@@ -381,7 +383,10 @@ RenderContext* GLRenderSystem::AddRenderContext(
 
     /* Load all OpenGL extensions for the first time */
     if (renderContexts_.empty())
+    {
         LoadGLExtensions(desc.profileOpenGL);
+        SetDebugCallback(desc.debugCallback);
+    }
 
     /* Take ownership and return raw pointer */
     return TakeOwnership(renderContexts_, std::move(renderContext));
@@ -414,6 +419,47 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
         extensionMap_ = QueryExtensions(coreProfile);
         LoadAllExtensions(extensionMap_);
     }
+}
+
+#ifdef LLGL_DEBUG
+
+void APIENTRY GLDebugCallback(
+    GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+{
+    /* Generate output stream */
+    std::stringstream typeStr;
+
+    typeStr
+        << "OpenGL debug callback ("
+        << GLDebugSourceToStr(source) << ", "
+        << GLDebugTypeToStr(type) << ", "
+        << GLDebugSeverityToStr(severity) << ")";
+
+    /* Call debug callback */
+    auto& debugCallback = *reinterpret_cast<const DebugCallback*>(userParam);
+    debugCallback(typeStr.str(), message);
+}
+
+#endif
+
+void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
+{
+    #ifdef LLGL_DEBUG
+
+    if (debugCallback)
+    {
+        GLStateManager::active->Enable(GLState::DEBUG_OUTPUT);
+        GLStateManager::active->Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(GLDebugCallback, &debugCallback);
+    }
+    else
+    {
+        GLStateManager::active->Disable(GLState::DEBUG_OUTPUT);
+        GLStateManager::active->Disable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(nullptr, nullptr);
+    }
+
+    #endif
 }
 
 void GLRenderSystem::BindTextureAndSetType(GLTexture& textureGL, const TextureType type)

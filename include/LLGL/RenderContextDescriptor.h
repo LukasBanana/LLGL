@@ -9,8 +9,22 @@
 #define __LLGL_RENDER_CONTEXT_DESCRIPTOR_H__
 
 
+#include <functional>
+
+
 namespace LLGL
 {
+
+
+/* ----- Types ----- */
+
+/**
+\brief Debug callback function interface.
+\param[in] type Descriptive type of the message.
+\param[in] message Specifies the debug output message.
+\remarks This output is renderer dependent.
+*/
+using DebugCallback = std::function<void(const std::string& type, const std::string& message)>;
 
 
 /* ----- Enumerations ----- */
@@ -88,6 +102,7 @@ struct RenderContextDescriptor
     AntiAliasingDescriptor  antiAliasing;
     VideoModeDescriptor     videoMode;
     ProfileOpenGLDescriptor profileOpenGL;
+    DebugCallback           debugCallback;
 };
 
 

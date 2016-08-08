@@ -33,6 +33,11 @@ int main()
 
         contextDesc.vsync.enabled           = true;
 
+        contextDesc.debugCallback = [](const std::string& type, const std::string& message)
+        {
+            std::cout << type << ':' << std::endl << "  " << message << std::endl;
+        };
+
         auto context = renderer->CreateRenderContext(contextDesc);
 
         context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));

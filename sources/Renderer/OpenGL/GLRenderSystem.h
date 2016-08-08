@@ -101,6 +101,7 @@ class GLRenderSystem : public RenderSystem
         bool OnMakeCurrent(RenderContext* renderContext) override;
 
         void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
+        void SetDebugCallback(const DebugCallback& debugCallback);
 
         void BindTextureAndSetType(GLTexture& textureGL, const TextureType type);
 
