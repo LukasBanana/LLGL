@@ -80,7 +80,7 @@ int main()
         (
             #ifdef _WIN32
             
-            "#version 400\n"
+            "#version 420\n"
             "layout(location=0) in vec2 position;\n"
             "out vec2 vertexPos;\n"
             "layout(binding=2) uniform Matrices {\n"
@@ -114,7 +114,7 @@ int main()
         (
             #ifdef _WIN32
             
-            "#version 400\n"
+            "#version 420\n"
             "layout(location=0) out vec4 fragColor;\n"
             "uniform sampler1D tex;\n"
             "in vec2 vertexPos;\n"
