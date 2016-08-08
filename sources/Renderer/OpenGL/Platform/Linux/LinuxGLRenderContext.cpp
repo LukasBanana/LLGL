@@ -6,6 +6,10 @@
  */
 
 #include "../../GLRenderContext.h"
+#include "../../../../Platform/Linux/LinuxWindow.h"
+#include <LLGL/Log.h>
+
+#include <iostream>//!!!
 
 
 namespace LLGL
@@ -14,18 +18,18 @@ namespace LLGL
 
 void GLRenderContext::Present()
 {
-    //glXSwapBuffers();
+    glXSwapBuffers(context_.display, context_.wnd);
 }
 
 bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 {
-    /*if (renderContext)
+    if (renderContext)
     {
         const auto& ctx = renderContext->context_;
-        return glXMakeCurrent(ctx.hDC, ctx.hGLRC);
+        return glXMakeCurrent(ctx.display, ctx.wnd, ctx.glc);
     }
     else
-        return glXMakeCurrent(0, 0));*/
+        return glXMakeCurrent(nullptr, 0, 0);
     return false;
 }
 
@@ -36,10 +40,26 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 
 void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)
 {
+    GLXContext glcShared = (sharedRenderContext != nullptr ? sharedRenderContext->context_.glc : nullptr);
+    
+    /* Get X11 display, window, and visual information */
+    auto& window = static_cast<const LinuxWindow&>(GetWindow());
+    
+    context_.display    = window.GetDisplay();
+    context_.wnd        = window.GetHandle();
+    context_.visual     = window.GetVisual();
+    
+    /* Create OpenGL context with X11 lib */
+    context_.glc        = glXCreateContext(context_.display, context_.visual, glcShared, GL_TRUE);
+    
+    /* Make new OpenGL context current */
+    if (glXMakeCurrent(context_.display, context_.wnd, context_.glc) != True)
+        Log::StdErr() << "failed to make OpenGL render context current (glXMakeCurrent)" << std::endl;
 }
 
 void GLRenderContext::DeleteContext()
 {
+    glXDestroyContext(context_.display, context_.glc);
 }
 
 

@@ -12,6 +12,11 @@
 #include <LLGL/Window.h>
 #include <X11/Xlib.h>
 
+#if 1//!!!
+#   include <GL/gl.h>
+#   include <GL/glx.h>
+#endif
+
 
 namespace LLGL
 {
@@ -42,6 +47,23 @@ class LinuxWindow : public Window
         void Recreate(const WindowDescriptor& desc) override;
         
         const void* GetNativeHandle() const override;
+        
+        /* ----- Extended functions ----- */
+        
+        inline ::Display* GetDisplay() const
+        {
+            return display_;
+        }
+        
+        inline ::Window GetHandle() const
+        {
+            return wnd_;
+        }
+        
+        inline XVisualInfo* GetVisual() const
+        {
+            return visual_;
+        }
 
     private:
 
@@ -59,7 +81,8 @@ class LinuxWindow : public Window
         ::Display*          display_    = nullptr;
         ::Colormap          colorMap_;
         ::Window            wnd_;
-        ::Cursor            cursor_;
+        //::Cursor            cursor_;
+        XVisualInfo*        visual_     = nullptr;
 
 };
 

@@ -209,7 +209,7 @@ HGLRC GLRenderContext::CreateGLContext(bool useExtProfile, GLRenderContext* shar
     if (wglMakeCurrent(context_.hDC, renderContext) != TRUE)
     {
         /* Print error and delete unusable render context */
-        Log::StdErr() << "failed to active OpenGL render context" << std::endl;
+        Log::StdErr() << "failed to active OpenGL render context (wglMakeCurrent)" << std::endl;
         DeleteGLContext(renderContext);
         return 0;
     }

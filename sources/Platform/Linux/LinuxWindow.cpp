@@ -5,6 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
+#include <LLGL/Desktop.h>
 #include "LinuxWindow.h"
 #include "MapKey.h"
 #include <exception>
@@ -13,6 +14,11 @@
 namespace LLGL
 {
 
+
+static Point GetScreenCenteredPosition(const Size& size)
+{
+    return (Desktop::GetResolution()/2 - size/2);
+}
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
@@ -144,26 +150,41 @@ void LinuxWindow::SetupWindow()
     ::Window    rootWnd     = DefaultRootWindow(display_);
     int         screen      = DefaultScreen(display_);
     int         borderSize  = 5;
-    Visual*     visual      = DefaultVisual(display_, screen);
+    ::Visual*   visual      = DefaultVisual(display_, screen);
     int         depth       = DefaultDepth(display_, screen);
-
+    
     XSetWindowAttributes attribs;
     attribs.background_pixel    = WhitePixel(display_, screen);
     attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
+    
+    #if 1//!!!
+    
+    int visualAttribs[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
+    visual_ = glXChooseVisual(display_, screen, visualAttribs);
+    attribs.colormap = XCreateColormap(display_, rootWnd, visual_->visual, AllocNone);
+    
+    #endif
+    
+    /* Get final window position */
+    auto position = desc_.position;
 
+    if (desc_.centered)
+        position = GetScreenCenteredPosition(desc_.size);
+        
     /* Create X11 window */
     wnd_ = XCreateWindow(
         display_,
         rootWnd,
-        desc_.position.x,
-        desc_.position.y,
+        position.x,
+        position.y,
         desc_.size.x,
         desc_.size.y,
         borderSize,
-        depth,
+        visual_->depth,//depth,
         InputOutput,
-        visual,
-        (CWBackPixel | CWEventMask), //(CWColormap | CWEventMask | CWOverrideRedirect),
+        visual_->visual,//visual,
+        //(CWBackPixel | CWEventMask), //(CWColormap | CWEventMask | CWOverrideRedirect),
+        (CWColormap | CWEventMask),
         (&attribs)
     );
 

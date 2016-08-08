@@ -10,6 +10,7 @@
 
 
 #include "../../OpenGL.h"
+#include <X11/Xlib.h>
 
 
 namespace LLGL
@@ -18,7 +19,10 @@ namespace LLGL
 
 struct GLPlatformContext
 {
-    int unused = 0; //todo...
+    ::Display*      display;
+    ::Window        wnd;
+    XVisualInfo*    visual;
+    GLXContext      glc;
 };
 
 

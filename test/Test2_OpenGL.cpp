@@ -66,7 +66,11 @@ int main()
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
 
+        #ifdef _WIN32
         const Gs::Vector2f vertices[] = { { 100, 100 }, { 200, 100 }, { 200, 200 }, { 100, 200 } };
+        #else
+        const Gs::Vector2f vertices[] = { { -1, 1 }, { 1, 1 }, { 1, -1 }, { -1, -1 } };
+        #endif
         renderer->WriteVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
 
         // Create vertex shader
@@ -74,7 +78,9 @@ int main()
 
         std::string shaderSource =
         (
-            "#version 440\n"
+            #ifdef _WIN32
+            
+            "#version 400\n"
             "layout(location=0) in vec2 position;\n"
             "out vec2 vertexPos;\n"
             "layout(binding=2) uniform Matrices {\n"
@@ -84,6 +90,18 @@ int main()
             "    gl_Position = matrices.projection * vec4(position, 0.0, 1.0);\n"
             "    vertexPos = (position - vec2(100, 100))*vec2(0.01, 0.01);\n"
             "}\n"
+            
+            #else
+            
+            "#version 130\n"
+            "in vec2 position;\n"
+            "out vec2 vertexPos;\n"
+            "void main() {\n"
+            "    gl_Position = vec4(position, 0.0, 1.0);\n"
+            "    vertexPos = (position - vec2(1))*vec2(0.5);\n"
+            "}\n"
+            
+            #endif
         );
 
         if (!vertShader.Compile(shaderSource))
@@ -94,6 +112,8 @@ int main()
 
         shaderSource =
         (
+            #ifdef _WIN32
+            
             "#version 400\n"
             "layout(location=0) out vec4 fragColor;\n"
             "uniform sampler1D tex;\n"
@@ -101,6 +121,18 @@ int main()
             "void main() {\n"
             "    fragColor = texture(tex, vertexPos.x);\n"
             "}\n"
+            
+            #else
+            
+            "#version 130\n"
+            "out vec4 fragColor;\n"
+            "uniform sampler1D tex;\n"
+            "in vec2 vertexPos;\n"
+            "void main() {\n"
+            "    fragColor = texture(tex, vertexPos.x);\n"
+            "}\n"
+            
+            #endif
         );
 
         if (!fragShader.Compile(shaderSource))
