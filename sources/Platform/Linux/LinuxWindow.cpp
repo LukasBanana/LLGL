@@ -146,26 +146,27 @@ void LinuxWindow::OpenWindow()
     if (nativeHandle)
     {
         /* Get X11 display from context handle */
-        display_ = nativeHandle->display;
-        visual_ = nativeHandle->visual;
+        display_    = nativeHandle->display;
+        visual_     = nativeHandle->visual;
     }
     else
     {
         /* Open X11 display */
-        display_ = XOpenDisplay(nullptr);
-        visual_ = nullptr;
+        display_    = XOpenDisplay(nullptr);
+        visual_     = nullptr;
     }
 
     if (!display_)
         throw std::runtime_error("failed to open X11 display");
         
-    /* Setup window parameters */
+    /* Setup common parameters for window creation */
     ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->parentWindow : DefaultRootWindow(display_));
     int         screen      = (nativeHandle != nullptr ? nativeHandle->screen : DefaultScreen(display_));
     int         borderSize  = 5;
     ::Visual*   visual      = (nativeHandle != nullptr ? nativeHandle->visual->visual : DefaultVisual(display_, screen));
     int         depth       = (nativeHandle != nullptr ? nativeHandle->visual->depth : DefaultDepth(display_, screen));
     
+    /* Setup window attributes */
     XSetWindowAttributes attribs;
     attribs.background_pixel    = WhitePixel(display_, screen);
     attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
