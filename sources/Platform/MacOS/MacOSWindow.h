@@ -37,7 +37,11 @@ class MacOSWindow : public Window
         void Show(bool show = true) override;
         bool IsShown() const override;
 
-        const void* GetNativeHandle() const override;
+        WindowDescriptor QueryDesc() const override;
+
+        void Recreate(const WindowDescriptor& desc) override;
+
+        void GetNativeHandle(void* nativeHandle) const override;
 
     private:
         

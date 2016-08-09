@@ -10,6 +10,7 @@
 
 #include "MacOSWindow.h"
 #include "MapKey.h"
+#include <LLGL/Platform/NativeHandle.h>
 
 
 @interface AppDelegate : NSObject
@@ -127,9 +128,22 @@ bool MacOSWindow::IsShown() const
     return ([wnd_ isVisible] != FALSE);
 }
 
-const void* MacOSWindow::GetNativeHandle() const
+WindowDescriptor MacOSWindow::QueryDesc() const
 {
-    return (&wnd_);
+    WindowDescriptor desc;
+    //todo...
+    return desc;
+}
+    
+void MacOSWindow::Recreate(const WindowDescriptor& desc)
+{
+    //todo...
+}
+
+void MacOSWindow::GetNativeHandle(void* nativeHandle) const
+{
+    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+    handle.window = wnd_;
 }
 
 

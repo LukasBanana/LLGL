@@ -11,6 +11,8 @@
 namespace LLGL
 {
 
+    
+#ifndef __APPLE__
 
 /* --- Platform specific GL extensions --- */
 
@@ -220,6 +222,8 @@ PFNGLSTENCILOPSEPARATEPROC                              glStencilOpSeparate     
 /* --- Debug context (GL_KHR_debug) --- */
 
 PFNGLDEBUGMESSAGECALLBACKPROC                           glDebugMessageCallback                          = nullptr;
+    
+#endif // /ifndef(__APPLE__)
 
 
 } // /namespace LLGL

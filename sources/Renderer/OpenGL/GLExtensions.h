@@ -30,6 +30,12 @@ extern PFNWGLGETEXTENSIONSSTRINGARBPROC                     wglGetExtensionsStri
 extern PFNGLXSWAPINTERVALSGIPROC                            glXSwapIntervalSGI;
 
 #endif
+    
+#ifdef __APPLE__
+    
+//...
+    
+#else
 
 #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
 
@@ -224,6 +230,8 @@ extern PFNGLSTENCILOPSEPARATEPROC                           glStencilOpSeparate;
 /* --- Debug context (GL_KHR_debug) --- */
 
 extern PFNGLDEBUGMESSAGECALLBACKPROC                        glDebugMessageCallback;
+    
+#endif
 
 
 } // /namespace LLGL

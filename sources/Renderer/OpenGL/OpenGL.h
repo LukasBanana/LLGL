@@ -19,7 +19,8 @@
 #   include <GL/glext.h>
 #   include <GL/glx.h>
 #elif defined(__APPLE__)
-#   include <OpenGL/gl.h>
+#   include <OpenGL/gl3.h>
+#   include <OpenGL/glext.h>
 #endif
 
 

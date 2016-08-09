@@ -112,6 +112,8 @@ OpenGLExtensionMap QueryExtensions(bool coreProfile)
 
 void LoadAllExtensions(OpenGLExtensionMap& extMap)
 {
+    #ifndef __APPLE__
+    
     /* Only load GL extensions once */
     static bool extAlreadyLoaded;
 
@@ -165,7 +167,11 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     LoadExtension( "GL_KHR_debug",                        LoadDebugProcs                 );
 
     extAlreadyLoaded = true;
+    
+    #endif
 }
+    
+#ifndef __APPLE__
 
 #define LOAD_VERBATIM_GLPROC(NAME) LoadGLProc(NAME, #NAME)
 
@@ -446,6 +452,8 @@ bool LoadDebugProcs()
 }
 
 #undef LOAD_VERBATIM_GLPROC
+    
+#endif
 
 
 } // /namespace LLGL

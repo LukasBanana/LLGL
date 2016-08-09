@@ -25,8 +25,10 @@ std::string GLErrorToStr(const GLenum errorCode)
         CASE_TO_STR(GL_INVALID_OPERATION);
         CASE_TO_STR(GL_INVALID_FRAMEBUFFER_OPERATION);
         CASE_TO_STR(GL_OUT_OF_MEMORY);
+        #ifndef __APPLE__
         CASE_TO_STR(GL_STACK_OVERFLOW);
         CASE_TO_STR(GL_STACK_UNDERFLOW);
+        #endif
         CASE_TO_STR(GL_FRAMEBUFFER_UNDEFINED);
         CASE_TO_STR(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
         CASE_TO_STR(GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
@@ -41,6 +43,7 @@ std::string GLErrorToStr(const GLenum errorCode)
 
 std::string GLDebugSourceToStr(const GLenum source)
 {
+    #ifndef __APPLE__
     switch (source)
     {
         CASE_TO_STR(GL_DEBUG_SOURCE_API);
@@ -50,11 +53,13 @@ std::string GLDebugSourceToStr(const GLenum source)
         CASE_TO_STR(GL_DEBUG_SOURCE_APPLICATION);
         CASE_TO_STR(GL_DEBUG_SOURCE_OTHER);
     }
+    #endif
     return "";
 }
 
 std::string GLDebugTypeToStr(const GLenum type)
 {
+    #ifndef __APPLE__
     switch (type)
     {
         CASE_TO_STR(GL_DEBUG_TYPE_ERROR);
@@ -67,11 +72,13 @@ std::string GLDebugTypeToStr(const GLenum type)
         CASE_TO_STR(GL_DEBUG_TYPE_POP_GROUP);
         CASE_TO_STR(GL_DEBUG_TYPE_OTHER);
     }
+    #endif
     return "";
 }
 
 std::string GLDebugSeverityToStr(const GLenum severity)
 {
+    #ifndef __APPLE__
     switch (severity)
     {
         CASE_TO_STR(GL_DEBUG_SEVERITY_HIGH);
@@ -79,6 +86,7 @@ std::string GLDebugSeverityToStr(const GLenum severity)
         CASE_TO_STR(GL_DEBUG_SEVERITY_LOW);
         CASE_TO_STR(GL_DEBUG_SEVERITY_NOTIFICATION);
     }
+    #endif
     return "";
 }
 
