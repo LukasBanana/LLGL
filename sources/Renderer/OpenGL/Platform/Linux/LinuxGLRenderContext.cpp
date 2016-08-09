@@ -44,14 +44,14 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
     if (!windowContext.display)
         throw std::runtime_error("failed to open X11 display");
 
-    windowContext.parentWindow  = DefaultRootWindow(display);
-    windowContext.screen        = DefaultScreen(display);
+    windowContext.parentWindow  = DefaultRootWindow(windowContext.display);
+    windowContext.screen        = DefaultScreen(windowContext.display);
 
     /* Create XVisualInfo and Colormap structures */
     int visualAttribs[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
 
     windowContext.visual    = glXChooseVisual(windowContext.display, windowContext.screen, visualAttribs);
-    windowContext.colorMap  = XCreateColormap(windowContext.display, windowContext.parentWindow, visual, AllocNone);
+    windowContext.colorMap  = XCreateColormap(windowContext.display, windowContext.parentWindow, windowContext.visual->visual, AllocNone);
 }
 
 void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)
@@ -60,10 +60,15 @@ void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)
     
     /* Get X11 display, window, and visual information */
     auto& window = static_cast<const LinuxWindow&>(GetWindow());
+    NativeHandle nativeHandle;
+    window.GetNativeHandle(&nativeHandle);
     
-    context_.display    = window.GetDisplay();
-    context_.wnd        = window.GetHandle();
-    context_.visual     = window.GetVisual();
+    context_.display    = nativeHandle.display;
+    context_.wnd        = nativeHandle.window;
+    context_.visual     = nativeHandle.visual;
+    
+    if (!context_.display || !context_.wnd || !context_.visual)
+        throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
     
     /* Create OpenGL context with X11 lib */
     context_.glc        = glXCreateContext(context_.display, context_.visual, glcShared, GL_TRUE);

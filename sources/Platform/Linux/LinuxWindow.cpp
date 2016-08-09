@@ -147,15 +147,18 @@ void LinuxWindow::OpenWindow()
     {
         /* Get X11 display from context handle */
         display_ = nativeHandle->display;
+        visual_ = nativeHandle->visual;
     }
     else
     {
         /* Open X11 display */
         display_ = XOpenDisplay(nullptr);
-        if (!display_)
-            throw std::runtime_error("failed to open X11 display");
+        visual_ = nullptr;
     }
 
+    if (!display_)
+        throw std::runtime_error("failed to open X11 display");
+        
     /* Setup window parameters */
     ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->parentWindow : DefaultRootWindow(display_));
     int         screen      = (nativeHandle != nullptr ? nativeHandle->screen : DefaultScreen(display_));
@@ -170,7 +173,10 @@ void LinuxWindow::OpenWindow()
     unsigned long valueMask     = CWEventMask;//(CWColormap | CWEventMask | CWOverrideRedirect)
 
     if (nativeHandle)
+    {
         valueMask |= CWColormap;
+        attribs.colormap = nativeHandle->colorMap;
+    }
     else
         valueMask |= CWBackPixel;
 
