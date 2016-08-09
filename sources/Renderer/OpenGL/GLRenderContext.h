@@ -33,10 +33,17 @@ class GLRenderContext : public RenderContext
 
         /* ----- Common ----- */
 
-        GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext);
+        GLRenderContext(
+            GLRenderSystem& renderSystem,
+            RenderContextDescriptor desc,
+            const std::shared_ptr<Window>& window,
+            GLRenderContext* sharedRenderContext
+        );
         ~GLRenderContext();
 
         std::map<RendererInfo, std::string> QueryRendererInfo() const override;
+
+        RenderingCaps QueryRenderingCaps() const override;
 
         void Present() override;
 
@@ -109,6 +116,8 @@ class GLRenderContext : public RenderContext
 
         void QueryGLVerion(GLint& major, GLint& minor);
 
+        bool HasExtension(const std::string& name) const;
+
         #if defined(_WIN32)
 
         void DeleteGLContext(HGLRC& renderContext);
@@ -129,6 +138,7 @@ class GLRenderContext : public RenderContext
 
         #endif
 
+        GLRenderSystem&                 renderSystem_;  // reference to its render system
         RenderContextDescriptor         desc_;
 
         GLPlatformContext               context_;

@@ -25,6 +25,7 @@ class GLRenderContextProfiler : public GLRenderContext
         /* ----- Common ----- */
 
         GLRenderContextProfiler(
+            GLRenderSystem& renderSystem,
             const RenderContextDescriptor& desc,
             const std::shared_ptr<Window>& window,
             GLRenderContext* sharedRenderContext,

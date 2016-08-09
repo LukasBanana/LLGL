@@ -6,6 +6,7 @@
  */
 
 #include "GLRenderContext.h"
+#include "GLRenderSystem.h"
 #include "GLTypeConversion.h"
 #include "GLExtensions.h"
 #include "../CheckedCast.h"
@@ -18,8 +19,13 @@ namespace LLGL
 {
 
 
-GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
-    desc_( desc )
+GLRenderContext::GLRenderContext(
+    GLRenderSystem& renderSystem,
+    RenderContextDescriptor desc,
+    const std::shared_ptr<Window>& window,
+    GLRenderContext* sharedRenderContext) :
+        renderSystem_   ( renderSystem ),
+        desc_           ( desc         )
 {
     /* Setup window for the render context */
     NativeContextHandle windowContext;
@@ -62,6 +68,98 @@ std::map<RendererInfo, std::string> GLRenderContext::QueryRendererInfo() const
     }
 
     return info;
+}
+
+RenderingCaps GLRenderContext::QueryRenderingCaps() const
+{
+    RenderingCaps caps;
+
+    /* Query all boolean capabilies by their respective OpenGL extension */
+    caps.hasRenderTargets       = HasExtension("GL_ARB_framebuffer_object");
+    caps.has3DTextures          = HasExtension("GL_EXT_texture3D");
+    caps.hasCubeTextures        = HasExtension("GL_ARB_texture_cube_map");
+    caps.hasTextureArrays       = HasExtension("GL_EXT_texture_array");
+    caps.hasCubeTextureArrays   = HasExtension("GL_ARB_texture_cube_map_array");
+    caps.hasConstantBuffers     = HasExtension("GL_ARB_uniform_buffer_object");
+    caps.hasStorageBuffers      = HasExtension("GL_ARB_shader_storage_buffer_object");
+    caps.hasUniforms            = HasExtension("GL_ARB_shader_objects");
+    caps.hasGeometryShaders     = HasExtension("GL_ARB_geometry_shader4");
+    caps.hasTessellationShaders = HasExtension("GL_ARB_tessellation_shader");
+    caps.hasComputeShaders      = HasExtension("GL_ARB_compute_shader");
+    caps.hasInstancing          = HasExtension("GL_ARB_draw_instanced");
+    caps.hasOffsetInstancing    = HasExtension("GL_ARB_base_instance");
+    caps.hasViewportArrays      = HasExtension("GL_ARB_viewport_array");
+
+    /* Query integral attributes */
+    auto GetUInt = [](GLenum param)
+    {
+        GLint attr = 0;
+        glGetIntegerv(param, &attr);
+        return static_cast<unsigned int>(attr);
+    };
+
+    caps.maxNumTextureArrayLayers       = GetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
+    caps.maxNumRenderTargetAttachments  = GetUInt(GL_MAX_DRAW_BUFFERS);
+    caps.maxConstantBufferSize          = GetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
+
+    /* Query maximum texture dimensions */
+    GLint querySizeBase = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &querySizeBase);
+
+    /* Generate proxy texture */
+    GLuint proxyTex = 0;
+    glGenTextures(1, &proxyTex);
+
+    /* --- Query 1D texture max size --- */
+    auto querySize = querySizeBase;
+
+    while (caps.max1DTextureSize == 0 && querySize > 0)
+    {
+        glTexImage1D(GL_PROXY_TEXTURE_1D, 0, GL_RGBA, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_1D, 0, GL_TEXTURE_WIDTH, &(caps.max1DTextureSize));
+        querySize /= 2;
+    }
+
+    /* Query 2D texture max size */
+    querySize = querySizeBase;
+
+    while (caps.max2DTextureSize == 0 && querySize > 0)
+    {
+        glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &(caps.max2DTextureSize));
+        querySize /= 2;
+    }
+
+    /* Query 3D texture max size */
+    if (caps.has3DTextures)
+    {
+        querySize = querySizeBase;
+
+        while (caps.max3DTextureSize == 0 && querySize > 0)
+        {
+            glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, querySize, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &(caps.max3DTextureSize));
+            querySize /= 2;
+        }
+    }
+
+    /* Query cube texture max size */
+    if (caps.hasCubeTextures)
+    {
+        querySize = querySizeBase;
+
+        while (caps.maxCubeTextureSize == 0 && querySize > 0)
+        {
+            glTexImage2D(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_TEXTURE_WIDTH, &(caps.maxCubeTextureSize));
+            querySize /= 2;
+        }
+    }
+
+    /* Delete temporary proxy texture */
+    glDeleteTextures(1, &proxyTex);
+
+    return caps;
 }
 
 /* ----- Configuration ----- */
@@ -307,6 +405,11 @@ void GLRenderContext::QueryGLVerion(GLint& major, GLint& minor)
 {
     glGetIntegerv(GL_MAJOR_VERSION, &major);
     glGetIntegerv(GL_MINOR_VERSION, &minor);
+}
+
+bool GLRenderContext::HasExtension(const std::string& name) const
+{
+    return renderSystem_.HasExtension(name);
 }
 
 

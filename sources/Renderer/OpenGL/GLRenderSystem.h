@@ -85,6 +85,10 @@ class GLRenderSystem : public RenderSystem
         Shader* CreateShader(const ShaderType type) override;
         ShaderProgram* CreateShaderProgram() override;
 
+        /* ----- Extended internal functions ----- */
+
+        bool HasExtension(const std::string& name) const;
+
     protected:
 
         RenderContext* AddRenderContext(

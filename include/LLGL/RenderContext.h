@@ -59,6 +59,9 @@ class LLGL_EXPORT RenderContext
         //! Returns all available renderer information.
         virtual std::map<RendererInfo, std::string> QueryRendererInfo() const = 0;
 
+        //! Returns the rendering capabilities.
+        virtual RenderingCaps QueryRenderingCaps() const = 0;
+
         //! Presents the current frame on the screen.
         virtual void Present() = 0;
 

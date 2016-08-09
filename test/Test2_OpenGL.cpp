@@ -40,6 +40,8 @@ int main()
 
         auto context = renderer->CreateRenderContext(contextDesc);
 
+        auto renderCaps = context->QueryRenderingCaps();
+
         context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
 
         // Show renderer info

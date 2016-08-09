@@ -32,7 +32,7 @@ GLRenderSystem::~GLRenderSystem()
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
     /* Create new render context */
-    return AddRenderContext(MakeUnique<GLRenderContext>(desc, window, nullptr), desc, window);
+    return AddRenderContext(MakeUnique<GLRenderContext>(*this, desc, window, nullptr), desc, window);
 }
 
 /* ----- Hardware buffers ------ */
@@ -363,6 +363,13 @@ Shader* GLRenderSystem::CreateShader(const ShaderType type)
 ShaderProgram* GLRenderSystem::CreateShaderProgram()
 {
     return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>());
+}
+
+/* ----- Extended internal functions ----- */
+
+bool GLRenderSystem::HasExtension(const std::string& name) const
+{
+    return (extensionMap_.find(name) != extensionMap_.end());
 }
 
 

@@ -22,7 +22,7 @@ GLRenderSystemProfiler::GLRenderSystemProfiler(RenderingProfiler& profiler) :
 RenderContext* GLRenderSystemProfiler::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
     /* Create new render context */
-    return AddRenderContext(MakeUnique<GLRenderContextProfiler>(desc, window, nullptr, profiler_), desc, window);
+    return AddRenderContext(MakeUnique<GLRenderContextProfiler>(*this, desc, window, nullptr, profiler_), desc, window);
 }
 
 /* ----- Hardware buffers ------ */

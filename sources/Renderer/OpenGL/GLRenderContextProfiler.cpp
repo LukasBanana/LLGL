@@ -13,11 +13,12 @@ namespace LLGL
 
 
 GLRenderContextProfiler::GLRenderContextProfiler(
+    GLRenderSystem& renderSystem,
     const RenderContextDescriptor& desc,
     const std::shared_ptr<Window>& window,
     GLRenderContext* sharedRenderContext,
     RenderingProfiler& profiler) :
-        GLRenderContext( desc, window, sharedRenderContext ),
+        GLRenderContext( renderSystem, desc, window, sharedRenderContext ),
         profiler_( profiler )
 {
 }
