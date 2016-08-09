@@ -49,7 +49,7 @@ static void ErrAntiAliasingNotSupported()
 
 void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
 {
-    // do nothing for Win32
+    windowContext.parentWindow = 0;
 }
 
 /*
