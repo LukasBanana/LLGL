@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/Desktop.h>
+#include <LLGL/Platform/NativeHandle.h>
 #include "LinuxWindow.h"
 #include "MapKey.h"
 #include <exception>
@@ -28,8 +29,7 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 LinuxWindow::LinuxWindow(const WindowDescriptor& desc) :
     desc_( desc )
 {
-    SetupDisplay();
-    SetupWindow();
+    OpenWindow();
 }
 
 LinuxWindow::~LinuxWindow()
@@ -93,9 +93,12 @@ void LinuxWindow::Recreate(const WindowDescriptor& desc)
     //todo...
 }
 
-const void* LinuxWindow::GetNativeHandle() const
+void LinuxWindow::GetNativeHandle(void* nativeHandle) const
 {
-    return (&wnd_);
+    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+    handle.display  = display_;
+    handle.window   = wnd_;
+    handle.visual   = visual_;
 }
 
 void LinuxWindow::ProcessSystemEvents()
@@ -136,35 +139,41 @@ void LinuxWindow::ProcessSystemEvents()
  * ======= Private: =======
  */
 
-void LinuxWindow::SetupDisplay()
+void LinuxWindow::OpenWindow()
 {
-    /* Open X11 display */
-    display_ = XOpenDisplay(nullptr);
-    if (!display_)
-        throw std::runtime_error("failed to open X11 display");
-}
+    /* Get native context handle */
+    auto nativeHandle = reinterpret_cast<const NativeContextHandle*>(desc_.windowContext);
+    if (nativeHandle)
+    {
+        /* Get X11 display from context handle */
+        display_ = nativeHandle->display;
+    }
+    else
+    {
+        /* Open X11 display */
+        display_ = XOpenDisplay(nullptr);
+        if (!display_)
+            throw std::runtime_error("failed to open X11 display");
+    }
 
-void LinuxWindow::SetupWindow()
-{
     /* Setup window parameters */
-    ::Window    rootWnd     = DefaultRootWindow(display_);
-    int         screen      = DefaultScreen(display_);
+    ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->parentWindow : DefaultRootWindow(display_));
+    int         screen      = (nativeHandle != nullptr ? nativeHandle->screen : DefaultScreen(display_));
     int         borderSize  = 5;
-    ::Visual*   visual      = DefaultVisual(display_, screen);
-    int         depth       = DefaultDepth(display_, screen);
+    ::Visual*   visual      = (nativeHandle != nullptr ? nativeHandle->visual->visual : DefaultVisual(display_, screen));
+    int         depth       = (nativeHandle != nullptr ? nativeHandle->visual->depth : DefaultDepth(display_, screen));
     
     XSetWindowAttributes attribs;
     attribs.background_pixel    = WhitePixel(display_, screen);
     attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
     
-    #if 1//!!!
-    
-    int visualAttribs[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-    visual_ = glXChooseVisual(display_, screen, visualAttribs);
-    attribs.colormap = XCreateColormap(display_, rootWnd, visual_->visual, AllocNone);
-    
-    #endif
-    
+    unsigned long valueMask     = CWEventMask;//(CWColormap | CWEventMask | CWOverrideRedirect)
+
+    if (nativeHandle)
+        valueMask |= CWColormap;
+    else
+        valueMask |= CWBackPixel;
+
     /* Get final window position */
     auto position = desc_.position;
 
@@ -180,11 +189,10 @@ void LinuxWindow::SetupWindow()
         desc_.size.x,
         desc_.size.y,
         borderSize,
-        visual_->depth,//depth,
+        depth,
         InputOutput,
-        visual_->visual,//visual,
-        //(CWBackPixel | CWEventMask), //(CWColormap | CWEventMask | CWOverrideRedirect),
-        (CWColormap | CWEventMask),
+        visual,
+        valueMask,
         (&attribs)
     );
 

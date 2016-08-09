@@ -11,6 +11,7 @@
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
+#include <LLGL/Platform/NativeHandle.h>
 
 
 namespace LLGL
@@ -18,9 +19,13 @@ namespace LLGL
 
 
 GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
-    RenderContext   ( window, desc.videoMode ),
-    desc_           ( desc                   )
+    desc_( desc )
 {
+    /* Setup window for the render context */
+    NativeContextHandle windowContext;
+    GetNativeContextHandle(windowContext);
+    SetWindow(window, desc.videoMode, &windowContext);
+
     /* Acquire state manager to efficiently change render states */
     AcquireStateManager(sharedRenderContext);
 

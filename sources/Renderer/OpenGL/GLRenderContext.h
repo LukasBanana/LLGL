@@ -11,6 +11,7 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
+#include <LLGL/Platform/NativeHandle.h>
 #include "OpenGL.h"
 #include "GLStateManager.h"
 
@@ -97,6 +98,8 @@ class GLRenderContext : public RenderContext
             GLenum drawMode             = GL_TRIANGLES;
             GLenum indexBufferDataType  = GL_UNSIGNED_INT;
         };
+
+        void GetNativeContextHandle(NativeContextHandle& windowContext);
 
         void CreateContext(GLRenderContext* sharedRenderContext);
         void DeleteContext();

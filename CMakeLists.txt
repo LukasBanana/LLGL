@@ -54,6 +54,7 @@ endif(WIN32)
 
 # Common files
 file(GLOB FilesInclude						${PROJECT_INCLUDE_DIR}/LLGL/*.*)
+file(GLOB FilesIncludePlatformBase			${PROJECT_INCLUDE_DIR}/LLGL/Platform/*.*)
 file(GLOB FilesCore							${PROJECT_SOURCE_DIR}/sources/Core/*.*)
 file(GLOB FilesPlatformBase					${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
 file(GLOB FilesRenderer						${PROJECT_SOURCE_DIR}/sources/Renderer/*.*)
@@ -75,10 +76,13 @@ file(GLOB FilesRendererOpenGLTexture		${PROJECT_SOURCE_DIR}/sources/Renderer/Ope
 
 if(WIN32)
 	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
+	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/Win32/*.*)
 elseif(APPLE)
 	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/MacOS/*.*)
+	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/MacOS/*.*)
 elseif(UNIX)
 	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Linux/*.*)
+	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/Linux/*.*)
 endif()
 
 # Direct3D12 renderer files
@@ -95,6 +99,7 @@ set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
 # === Source group folders ===
 
 source_group("Include" FILES ${FilesInclude})
+source_group("Include\\Platform" FILES ${FilesIncludePlatformBase} ${FilesIncludePlatform})
 source_group("Sources\\Core" FILES ${FilesCore})
 
 source_group(
@@ -144,6 +149,8 @@ include_directories(${GaussianLib_INCLUDE_DIR})
 set(
 	FilesLLGL
 	${FilesInclude}
+	${FilesIncludePlatformBase}
+	${FilesIncludePlatform}
 	${FilesCore}
 	${FilesPlatformBase}
 	${FilesPlatform}

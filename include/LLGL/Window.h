@@ -35,7 +35,18 @@ struct WindowDescriptor
     bool            preventForPowerSafe = false;
     bool            centered            = false;
 
-    void*           parentWindow        = nullptr;
+    /**
+    \brief Window context handle.
+    \remarks If used, this must be casted from a platform specific structure:
+    \code
+    #include <LLGL/Platform/NativeHandle.h>
+    //...
+    LLGL::NativeContextHandle handle;
+    //handle.parentWindow = ...
+    windowDesc.windowContext = reinterpret_cast<const void*>(&handle);
+    \endcode
+    */
+    const void*     windowContext       = nullptr;
 };
 
 
@@ -103,12 +114,15 @@ class LLGL_EXPORT Window
 
         /**
         \brief Returns the native window handle.
-        \remarks This must be casted to a type which is platform dependent:
-        - Windows: cast this to 'const HWND*'
-        - MacOS: cast this to 'const NSWindow**'
-        - Linux: cast this to 'const ::Window*'
+        \remarks This must be casted to a platform specific structure:
+        \code
+        #include <LLGL/Platform/NativeHandle.h>
+        //...
+        LLGL::NativeHandle handle;
+        window.GetNativeHandle(&handle);
+        \endcode
         */
-        virtual const void* GetNativeHandle() const = 0;
+        virtual void GetNativeHandle(void* nativeHandle) const = 0;
 
         /**
         \brief Processes the events for this window (i.e. mouse movement, key presses etc.).

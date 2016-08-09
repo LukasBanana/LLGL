@@ -7,9 +7,8 @@
 
 #include "../../GLRenderContext.h"
 #include "../../../../Platform/Linux/LinuxWindow.h"
+#include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
-
-#include <iostream>//!!!
 
 
 namespace LLGL
@@ -37,6 +36,23 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 /*
  * ======= Private: =======
  */
+
+void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
+{
+    /* Open X11 display */
+    windowContext.display = XOpenDisplay(nullptr);
+    if (!windowContext.display)
+        throw std::runtime_error("failed to open X11 display");
+
+    windowContext.parentWindow  = DefaultRootWindow(display);
+    windowContext.screen        = DefaultScreen(display);
+
+    /* Create XVisualInfo and Colormap structures */
+    int visualAttribs[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
+
+    windowContext.visual    = glXChooseVisual(windowContext.display, windowContext.screen, visualAttribs);
+    windowContext.colorMap  = XCreateColormap(windowContext.display, windowContext.parentWindow, visual, AllocNone);
+}
 
 void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)
 {

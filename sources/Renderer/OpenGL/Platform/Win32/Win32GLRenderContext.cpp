@@ -8,6 +8,7 @@
 #include "../../GLRenderContext.h"
 #include "../../GLExtensions.h"
 #include "../../GLExtensionLoader.h"
+#include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>
 
@@ -44,6 +45,11 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 static void ErrAntiAliasingNotSupported()
 {
     Log::StdErr() << "multi-sample anti-aliasing is not supported" << std::endl;
+}
+
+void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
+{
+    // do nothing for Win32
 }
 
 /*
@@ -280,8 +286,9 @@ HGLRC GLRenderContext::CreateExtContextProfile(HGLRC sharedGLRC)
 void GLRenderContext::SetupDeviceContextAndPixelFormat()
 {
     /* Get device context from window */
-    HWND wnd = *reinterpret_cast<const HWND*>(GetWindow().GetNativeHandle());
-    context_.hDC = GetDC(wnd);
+    NativeHandle nativeHandle;
+    GetWindow().GetNativeHandle(&nativeHandle);
+    context_.hDC = GetDC(nativeHandle.window);
 
     /* Select suitable pixel format */
     SelectPixelFormat();

@@ -7,6 +7,7 @@
 
 #include "Win32Window.h"
 #include "Win32WindowClass.h"
+#include <LLGL/Platform/NativeHandle.h>
 
 
 namespace LLGL
@@ -154,7 +155,7 @@ WindowDescriptor Win32Window::QueryDesc() const
     desc.preventForPowerSafe    = false; //todo...
     desc.centered               = (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y);
 
-    desc.parentWindow           = nullptr; //todo...
+    desc.windowContext          = nullptr; //todo...
 
     return desc;
 }
@@ -166,9 +167,10 @@ void Win32Window::Recreate(const WindowDescriptor& desc)
     wnd_ = CreateWindowHandle(desc);
 }
 
-const void* Win32Window::GetNativeHandle() const
+void Win32Window::GetNativeHandle(void* nativeHandle) const
 {
-    return (&wnd_);
+    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+    handle.window = wnd_;
 }
 
 void Win32Window::ProcessSystemEvents()
@@ -206,6 +208,15 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     if (desc.centered)
         position = GetScreenCenteredPosition(desc.size);
 
+    /* Get parent window */
+    HWND parentWnd = HWND_DESKTOP;
+
+    if (desc.windowContext)
+    {
+        auto& nativeContext = *reinterpret_cast<const NativeContextHandle*>(desc.windowContext);
+        parentWnd = nativeContext.parentWindow;
+    }
+
     /* Create frame window object */
     HWND wnd = CreateWindow(
         windowClass->GetName(),
@@ -215,7 +226,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
         position.y - yOffset,
         desc.size.x + wOffset,
         desc.size.y + hOffset,
-        HWND_DESKTOP,
+        parentWnd,
         nullptr,
         GetModuleHandle(nullptr),
         nullptr
