@@ -166,6 +166,8 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     LoadExtension( "GL_EXT_stencil_two_side",             LoadStencilSeparateProcs       ); // <--- correct extension ???
     LoadExtension( "GL_KHR_debug",                        LoadDebugProcs                 );
 
+    //todo... load "glGetIntegeri_v"
+
     extAlreadyLoaded = true;
     
     #endif

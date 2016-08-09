@@ -121,7 +121,7 @@ int main()
             "uniform sampler1D tex;\n"
             "in vec2 vertexPos;\n"
             "void main() {\n"
-            "    fragColor = texture(tex, vertexPos.x);\n"
+            "    fragColor = texture(tex, vertexPos.x, 1.0);\n"
             "}\n"
             
             #else
@@ -191,6 +191,8 @@ int main()
         renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture
         renderer->WriteTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture
 
+        context->GenerateMips(texture);
+
         context->BindTexture(texture, 0);
 
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
@@ -209,8 +211,6 @@ int main()
             context->BindVertexBuffer(vertexBuffer);
 
             context->Draw(4, 0);
-
-            context->UnbindShaderProgram();
 
             context->Present();
         }

@@ -34,6 +34,7 @@ PFNGLXSWAPINTERVALSGIPROC                               glXSwapIntervalSGI      
 /* --- GL 3.0 extensions (for Core Profile) --- */
 
 PFNGLGETSTRINGIPROC                                     glGetStringi                                    = nullptr;
+PFNGLGETINTEGERI_VPROC                                  glGetIntegeri_v                                 = nullptr;
 
 #endif
 

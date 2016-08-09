@@ -97,6 +97,12 @@ class LLGL_EXPORT RenderContext
         virtual void BindTexture(Texture& texture, unsigned int layer) = 0;
         virtual void UnbindTexture(unsigned int layer) = 0;
 
+        /**
+        \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.
+        \see https://developer.valvesoftware.com/wiki/MIP_Mapping
+        */
+        virtual void GenerateMips(Texture& texture) = 0;
+
         /* ----- Drawing ----- */
 
         virtual void Draw(unsigned int numVertices, unsigned int firstVertex) = 0;

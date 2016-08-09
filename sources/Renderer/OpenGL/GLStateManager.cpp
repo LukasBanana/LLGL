@@ -262,7 +262,6 @@ void GLStateManager::ActiveTexture(unsigned int layer)
         /* Active specified texture layer and store reference to bound textures array */
         textureState_.activeTexture = layer;
         activeTextureLayer_ = &(textureState_.layers[textureState_.activeTexture]);
-
         glActiveTexture(textureLayersMap[layer]);
     }
 }

@@ -254,6 +254,23 @@ void GLRenderContext::UnbindTexture(unsigned int layer)
     //todo...
 }
 
+void GLRenderContext::GenerateMips(Texture& texture)
+{
+    /* Bind texture to active layer */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+
+    /* Generate MIP-maps and update minification filter */
+    auto target = GLTypeConversion::Map(textureGL.GetType());
+
+    glGenerateMipmap(target);
+    /*glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);*/
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+}
+
 /* ----- Drawing ----- */
 
 void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)

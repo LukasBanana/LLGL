@@ -42,6 +42,7 @@ extern PFNGLXSWAPINTERVALSGIPROC                            glXSwapIntervalSGI;
 /* --- GL 3.0 extensions (for Core Profile) --- */
 
 extern PFNGLGETSTRINGIPROC                                  glGetStringi;
+extern PFNGLGETINTEGERI_VPROC                               glGetIntegeri_v;
 
 #endif
 

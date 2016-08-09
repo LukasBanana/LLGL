@@ -119,7 +119,7 @@ struct RenderingCaps
     int             maxAnisotropy                   = 0;
 
     //! Specifies maximum number of work groups in a compute shader.
-    Gs::Vector3ui   maxNumComputeShaderWorkGroup;
+    Gs::Vector3ui   maxNumComputeShaderWorkGroups;
     
     //! Specifies maximum work group size in a compute shader.
     Gs::Vector3ui   maxComputeShaderWorkGroupSize;
