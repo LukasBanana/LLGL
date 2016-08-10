@@ -7,6 +7,7 @@
 
 #include "GLTypeConversion.h"
 #include <stdexcept>
+#include <string>
 
 
 namespace LLGL
