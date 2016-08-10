@@ -404,6 +404,11 @@ void GLRenderContext::InitRenderStates()
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // D3D10+ has this per default
     glFrontFace(GL_CW);                     // D3D10+ uses clock-wise vertex winding per default
 
+    #if 1//!!!TESTING!!!
+    glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    #endif
+
     /*
     Set pixel storage to byte-alignment (default is word-alignment).
     This is required so that texture formats like RGB (which is not word-aligned) can be used.
