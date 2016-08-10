@@ -26,6 +26,8 @@ namespace LLGL
 {
 
 
+class GLRenderSystem;
+
 class GLRenderContext : public RenderContext
 {
 
