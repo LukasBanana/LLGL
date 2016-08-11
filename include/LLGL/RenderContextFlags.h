@@ -35,6 +35,31 @@ enum class DrawMode
     Patches,                //!< Patches (main type for tessellation).
 };
 
+//! Shading language version enumation.
+enum ShadingLanguage
+{
+    GLSL_110,   //!< GLSL 1.10 (since OpenGL 2.0).
+    GLSL_120,   //!< GLSL 1.20 (since OpenGL 2.1).
+    GLSL_130,   //!< GLSL 1.30 (since OpenGL 3.0).
+    GLSL_140,   //!< GLSL 1.40 (since OpenGL 3.1).
+    GLSL_150,   //!< GLSL 1.50 (since OpenGL 3.2).
+    GLSL_330,   //!< GLSL 3.30 (since OpenGL 3.3).
+    GLSL_400,   //!< GLSL 4.00 (since OpenGL 4.0).
+    GLSL_410,   //!< GLSL 4.10 (since OpenGL 4.1).
+    GLSL_420,   //!< GLSL 4.20 (since OpenGL 4.2).
+    GLSL_430,   //!< GLSL 4.30 (since OpenGL 4.3).
+    GLSL_440,   //!< GLSL 4.40 (since OpenGL 4.4).
+    GLSL_450,   //!< GLSL 4.50 (since OpenGL 4.5).
+
+    HLSL_2_0,   //!< HLSL 2.0 (since Direct3D 9).
+    HLSL_2_0a,  //!< HLSL 2.0a (since Direct3D 9a).
+    HLSL_2_0b,  //!< HLSL 2.0b (since Direct3D 9b).
+    HLSL_3_0,   //!< HLSL 3.0 (since Direct3D 9c).
+    HLSL_4_0,   //!< HLSL 4.0 (since Direct3D 10).
+    HLSL_4_1,   //!< HLSL 4.1 (since Direct3D 10.1).
+    HLSL_5_0,   //!< HLSL 5.0 (since Direct3D 11).
+};
+
 
 /* ----- Structures ----- */
 

@@ -42,6 +42,8 @@ int main()
 
         auto renderCaps = context->QueryRenderingCaps();
 
+        auto shadingLang = context->QueryShadingLanguage();
+
         context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
 
         // Show renderer info

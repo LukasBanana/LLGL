@@ -47,6 +47,8 @@ class GLRenderContext : public RenderContext
 
         RenderingCaps QueryRenderingCaps() const override;
 
+        ShadingLanguage QueryShadingLanguage() const override;
+
         void Present() override;
 
         /* ----- Configuration ----- */
@@ -118,7 +120,7 @@ class GLRenderContext : public RenderContext
         void AcquireStateManager(GLRenderContext* sharedRenderContext);
         void InitRenderStates();
 
-        void QueryGLVerion(GLint& major, GLint& minor);
+        void QueryGLVerion(GLint& major, GLint& minor) const;
 
         bool HasExtension(const std::string& name) const;
 

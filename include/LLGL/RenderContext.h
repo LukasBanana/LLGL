@@ -62,6 +62,9 @@ class LLGL_EXPORT RenderContext
         //! Returns the rendering capabilities.
         virtual RenderingCaps QueryRenderingCaps() const = 0;
 
+        //! Returns the highest version of the supported shading language.
+        virtual ShadingLanguage QueryShadingLanguage() const = 0;
+
         //! Presents the current frame on the screen.
         virtual void Present() = 0;
 

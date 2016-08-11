@@ -59,7 +59,7 @@ std::map<RendererInfo, std::string> GLRenderContext::QueryRendererInfo() const
         { RendererInfo::Hardware,               GL_RENDERER                 },
         { RendererInfo::ShadingLanguageVersion, GL_SHADING_LANGUAGE_VERSION },
     }};
-
+    
     for (const auto& entry : entries)
     {
         auto bytes = glGetString(entry.second);
@@ -160,6 +160,33 @@ RenderingCaps GLRenderContext::QueryRenderingCaps() const
     glDeleteTextures(1, &proxyTex);
 
     return caps;
+}
+
+ShadingLanguage GLRenderContext::QueryShadingLanguage() const
+{
+    /* Derive shading language version by OpenGL version */
+    GLint major = 0, minor = 0;
+    QueryGLVerion(major, minor);
+
+    auto IsVer = [major, minor](int maj, int min)
+    {
+        return (major == maj && minor == min);
+    };
+
+    if (IsVer(2, 0)) return ShadingLanguage::GLSL_110;
+    if (IsVer(2, 1)) return ShadingLanguage::GLSL_120;
+    if (IsVer(3, 0)) return ShadingLanguage::GLSL_130;
+    if (IsVer(3, 1)) return ShadingLanguage::GLSL_140;
+    if (IsVer(3, 2)) return ShadingLanguage::GLSL_150;
+    if (IsVer(3, 3)) return ShadingLanguage::GLSL_330;
+    if (IsVer(4, 0)) return ShadingLanguage::GLSL_400;
+    if (IsVer(4, 1)) return ShadingLanguage::GLSL_410;
+    if (IsVer(4, 2)) return ShadingLanguage::GLSL_420;
+    if (IsVer(4, 3)) return ShadingLanguage::GLSL_430;
+    if (IsVer(4, 4)) return ShadingLanguage::GLSL_440;
+    if (IsVer(4, 5)) return ShadingLanguage::GLSL_450;
+
+    return ShadingLanguage::GLSL_110;
 }
 
 /* ----- Configuration ----- */
@@ -404,7 +431,7 @@ void GLRenderContext::InitRenderStates()
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // D3D10+ has this per default
     glFrontFace(GL_CW);                     // D3D10+ uses clock-wise vertex winding per default
 
-    #if 1//!!!TESTING!!!
+    #if 0//!!!TESTING!!!
     glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
     #endif
@@ -417,13 +444,9 @@ void GLRenderContext::InitRenderStates()
 
     /* Initialize state manager */
     stateMngr_->Reset();
-
-    #if 0 // !!! TESTING !!!
-    glEnable(GL_DEPTH_TEST);
-    #endif
 }
 
-void GLRenderContext::QueryGLVerion(GLint& major, GLint& minor)
+void GLRenderContext::QueryGLVerion(GLint& major, GLint& minor) const
 {
     glGetIntegerv(GL_MAJOR_VERSION, &major);
     glGetIntegerv(GL_MINOR_VERSION, &minor);
