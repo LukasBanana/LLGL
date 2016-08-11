@@ -431,9 +431,11 @@ void GLRenderContext::InitRenderStates()
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // D3D10+ has this per default
     glFrontFace(GL_CW);                     // D3D10+ uses clock-wise vertex winding per default
 
-    #if 0//!!!TESTING!!!
-    glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
+    #if 1//!!!TESTING!!!
+    //glCullFace(GL_BACK);
+    //glEnable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
     #endif
 
     /*
