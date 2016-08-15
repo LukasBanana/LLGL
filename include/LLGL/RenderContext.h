@@ -106,6 +106,15 @@ class LLGL_EXPORT RenderContext
         */
         virtual void GenerateMips(Texture& texture) = 0;
 
+        /* ----- Shader ----- */
+
+        virtual void BindShaderProgram(ShaderProgram& shaderProgram) = 0;
+        virtual void UnbindShaderProgram() = 0;
+
+        /* ----- Render states ----- */
+
+        //virtual void BindPipelineState(PipelineState& pipelineState) = 0;
+
         /* ----- Drawing ----- */
 
         virtual void Draw(unsigned int numVertices, unsigned int firstVertex) = 0;
@@ -119,11 +128,6 @@ class LLGL_EXPORT RenderContext
         virtual void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances) = 0;
         virtual void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset) = 0;
         virtual void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset) = 0;
-
-        /* ----- Shader ----- */
-
-        virtual void BindShaderProgram(ShaderProgram& shaderProgram) = 0;
-        virtual void UnbindShaderProgram() = 0;
 
         virtual void DispatchCompute(const Gs::Vector3ui& threadGroupSize) = 0;
 

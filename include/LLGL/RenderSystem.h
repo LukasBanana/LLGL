@@ -172,6 +172,10 @@ class LLGL_EXPORT RenderSystem
         virtual Shader* CreateShader(const ShaderType type) = 0;
         virtual ShaderProgram* CreateShaderProgram() = 0;
 
+        /* ----- Render States ----- */
+
+        //virtual PipelineState* CreatePipelineState(const PipelineStateDescriptor& desc) = 0;
+
         /* === Members === */
 
         /**
