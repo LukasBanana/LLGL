@@ -111,9 +111,10 @@ class LLGL_EXPORT RenderContext
         virtual void BindShaderProgram(ShaderProgram& shaderProgram) = 0;
         virtual void UnbindShaderProgram() = 0;
 
-        /* ----- Render states ----- */
+        /* ----- Pipeline states ----- */
 
-        //virtual void BindPipelineState(PipelineState& pipelineState) = 0;
+        //virtual void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
+        //virtual void BindComputePipeline(ComputePipeline& computePipeline) = 0;
 
         /* ----- Drawing ----- */
 

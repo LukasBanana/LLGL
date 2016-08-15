@@ -21,9 +21,9 @@ namespace LLGL
 enum class ShaderType
 {
     Vertex,         //!< Vertex shader type.
-    Geometry,       //!< Geometry shader type.
     TessControl,    //!< Tessellation control shader type (also "Hull Shader").
     TessEvaluation, //!< Tessellation evaluation shader type (also "Domain Shader").
+    Geometry,       //!< Geometry shader type.
     Fragment,       //!< Fragment shader type (also "Pixel Shader").
     Compute,        //!< Compute shader type.
 };
