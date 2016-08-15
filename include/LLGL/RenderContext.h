@@ -20,6 +20,7 @@
 #include "ConstantBuffer.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
+#include "GraphicsPipeline.h"
 
 #include <Gauss/Vector3.h>
 #include <string>
@@ -111,9 +112,11 @@ class LLGL_EXPORT RenderContext
         virtual void BindShaderProgram(ShaderProgram& shaderProgram) = 0;
         virtual void UnbindShaderProgram() = 0;
 
+        virtual void DispatchCompute(const Gs::Vector3ui& threadGroupSize) = 0;
+
         /* ----- Pipeline states ----- */
 
-        //virtual void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
+        virtual void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
         //virtual void BindComputePipeline(ComputePipeline& computePipeline) = 0;
 
         /* ----- Drawing ----- */
@@ -129,8 +132,6 @@ class LLGL_EXPORT RenderContext
         virtual void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances) = 0;
         virtual void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset) = 0;
         virtual void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset) = 0;
-
-        virtual void DispatchCompute(const Gs::Vector3ui& threadGroupSize) = 0;
 
     protected:
 

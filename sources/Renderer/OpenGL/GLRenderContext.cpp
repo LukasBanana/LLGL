@@ -12,6 +12,7 @@
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
+#include "Pipeline/GLGraphicsPipeline.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -315,6 +316,14 @@ void GLRenderContext::UnbindShaderProgram()
 void GLRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
 {
     glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
+}
+
+/* ----- Pipeline states ----- */
+
+void GLRenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+{
+    auto& graphicsPipelineGL = LLGL_CAST(GLGraphicsPipeline&, graphicsPipeline);
+    graphicsPipelineGL.Bind(*GLStateManager::active);
 }
 
 /* ----- Drawing ----- */

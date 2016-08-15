@@ -86,6 +86,10 @@ class GLRenderContext : public RenderContext
 
         void DispatchCompute(const Gs::Vector3ui& threadGroupSize) override;
 
+        /* ----- Pipeline states ----- */
+
+        void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
+
         /* ----- Drawing ----- */
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;

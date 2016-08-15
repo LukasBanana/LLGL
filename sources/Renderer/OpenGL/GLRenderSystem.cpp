@@ -365,6 +365,13 @@ ShaderProgram* GLRenderSystem::CreateShaderProgram()
     return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>());
 }
 
+/* ----- Pipeline states ----- */
+
+GraphicsPipeline* GLRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+{
+    return TakeOwnership(graphicsPipelines_, MakeUnique<GLGraphicsPipeline>(desc));
+}
+
 /* ----- Extended internal functions ----- */
 
 bool GLRenderSystem::HasExtension(const std::string& name) const

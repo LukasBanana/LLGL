@@ -19,6 +19,7 @@
 #include "IndexBuffer.h"
 #include "IndexFormat.h"
 #include "ConstantBuffer.h"
+#include "GraphicsPipeline.h"
 
 #include "Texture.h"
 #include "ShaderProgram.h"
@@ -174,7 +175,7 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Pipeline states ----- */
 
-        //virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) = 0;
+        virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) = 0;
         //virtual ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) = 0;
 
         /* === Members === */

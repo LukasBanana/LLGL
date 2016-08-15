@@ -73,6 +73,7 @@ file(GLOB FilesRendererOpenGL				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*
 file(GLOB FilesRendererOpenGLShader			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
 file(GLOB FilesRendererOpenGLBuffer			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/*.*)
 file(GLOB FilesRendererOpenGLTexture		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/*.*)
+file(GLOB FilesRendererOpenGLPipeline		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Pipeline/*.*)
 
 if(WIN32)
 	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
@@ -135,6 +136,11 @@ source_group(
 	${FilesRendererOpenGLTexture}
 )
 
+source_group(
+	"Sources\\Renderer\\Pipeline" FILES
+	${FilesRendererOpenGLPipeline}
+)
+
 
 # === Include directories ===
 
@@ -164,6 +170,7 @@ set(
 	${FilesRendererOpenGLShader}
 	${FilesRendererOpenGLBuffer}
 	${FilesRendererOpenGLTexture}
+	${FilesRendererOpenGLPipeline}
 )
 
 # Base project

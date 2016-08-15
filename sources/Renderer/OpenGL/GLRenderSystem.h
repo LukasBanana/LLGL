@@ -19,6 +19,7 @@
 #include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
+#include "Pipeline/GLGraphicsPipeline.h"
 
 #include <string>
 #include <memory>
@@ -85,6 +86,11 @@ class GLRenderSystem : public RenderSystem
         Shader* CreateShader(const ShaderType type) override;
         ShaderProgram* CreateShaderProgram() override;
 
+        /* ----- Pipeline states ----- */
+
+        GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
+        //ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
+
         /* ----- Extended internal functions ----- */
 
         bool HasExtension(const std::string& name) const;
@@ -125,6 +131,8 @@ class GLRenderSystem : public RenderSystem
 
         HWObjectContainer<GLShader>                 shaders_;
         HWObjectContainer<GLShaderProgram>          shaderPrograms_;
+
+        HWObjectContainer<GLGraphicsPipeline>       graphicsPipelines_;
 
 };
 
