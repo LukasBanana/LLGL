@@ -37,16 +37,6 @@ bool Input::KeyUp(Key keyCode) const
     return keyUp_[KEY_IDX(keyCode)];
 }
 
-Point Input::GetMousePosition() const
-{
-    return mousePosition_;
-}
-
-Point Input::GetMouseMotion() const
-{
-    return mouseMotion_;
-}
-
 
 /*
  * ======= Private: =======
@@ -59,9 +49,13 @@ void Input::InitArray(KeyStateArray& keyStates)
 
 void Input::OnReset(Window& sender)
 {
+    wheelMotion_ = 0;
     mouseMotion_ = { 0, 0 };
+
     keyDownTracker_.Reset(keyDown_);
     keyUpTracker_.Reset(keyUp_);
+
+    chars_.clear();
 }
 
 void Input::OnKeyDown(Window& sender, Key keyCode)
@@ -89,6 +83,16 @@ void Input::OnKeyUp(Window& sender, Key keyCode)
 
     /* Reset key pressed state */
     keyPressed_[idx] = false;
+}
+
+void Input::OnChar(Window& sender, wchar_t chr)
+{
+    chars_+= chr;
+}
+
+void Input::OnWheelMotion(Window& sender, int motion)
+{
+    wheelMotion_ += motion;
 }
 
 void Input::OnLocalMotion(Window& sender, const Point& position)

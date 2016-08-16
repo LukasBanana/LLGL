@@ -12,6 +12,7 @@
 #include <LLGL/Window.h>
 #include <LLGL/Types.h>
 #include <array>
+#include <string>
 
 
 namespace LLGL
@@ -34,8 +35,29 @@ class LLGL_EXPORT Input : public Window::EventListener
         //! Returns true if the specified key was released in the previous event processing.
         bool KeyUp(Key keyCode) const;
 
-        Point GetMousePosition() const;
-        Point GetMouseMotion() const;
+        //! Returns the local mouse position.
+        inline const Point& GetMousePosition() const
+        {
+            return mousePosition_;
+        }
+
+        //! Returns the global mouse motion.
+        inline const Point& GetMouseMotion() const
+        {
+            return mouseMotion_;
+        }
+
+        //! Returns the mouse wheel motion.
+        inline int GetWheelMotion() const
+        {
+            return wheelMotion_;
+        }
+
+        //! Returns the entered characters.
+        inline const std::wstring& GetEnteredChars() const
+        {
+            return chars_;
+        }
 
     private:
 
@@ -58,6 +80,10 @@ class LLGL_EXPORT Input : public Window::EventListener
         void OnKeyDown(Window& sender, Key keyCode) override;
         void OnKeyUp(Window& sender, Key keyCode) override;
 
+        void OnChar(Window& sender, wchar_t chr) override;
+
+        void OnWheelMotion(Window& sender, int motion) override;
+
         void OnLocalMotion(Window& sender, const Point& position) override;
         void OnGlobalMotion(Window& sender, const Point& motion) override;
 
@@ -68,8 +94,12 @@ class LLGL_EXPORT Input : public Window::EventListener
         Point                   mousePosition_;
         Point                   mouseMotion_;
 
+        int                     wheelMotion_    = 0;
+
         KeyTracker              keyDownTracker_;
         KeyTracker              keyUpTracker_;
+
+        std::wstring            chars_;
 
 };
 
