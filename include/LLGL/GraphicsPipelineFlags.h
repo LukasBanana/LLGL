@@ -131,8 +131,6 @@ struct GraphicsPipelineDescriptor
     BlendDescriptor         blend;
 
     ShaderProgram*          shaderProgram   = nullptr;
-    VertexBuffer*           vertexBuffer    = nullptr;
-    IndexBuffer*            indexBuffer     = nullptr;
 };
 
 
