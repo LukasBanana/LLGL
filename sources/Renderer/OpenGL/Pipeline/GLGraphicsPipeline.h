@@ -11,10 +11,45 @@
 
 #include "../OpenGL.h"
 #include <LLGL/GraphicsPipeline.h>
+#include <vector>
 
 
 namespace LLGL
 {
+
+
+struct GLViewport
+{
+    GLfloat x;
+    GLfloat y;
+    GLfloat width;
+    GLfloat height;
+};
+
+struct GLDepthRange
+{
+    GLdouble minDepth;
+    GLdouble maxDepth;
+};
+
+struct GLScissor
+{
+    GLint x;
+    GLint y;
+    GLint width;
+    GLint height;
+};
+
+struct GLStencilState
+{
+    GLenum  func;
+    GLenum  sfail;
+    GLenum  dpfail;
+    GLenum  dppass;
+    GLint   ref;
+    GLuint  mask;
+    GLuint  writeMask;
+};
 
 
 class GLStateManager;
@@ -30,12 +65,20 @@ class GLGraphicsPipeline : public GraphicsPipeline
 
     private:
 
-        std::vector<Viewport>   viewports_;
-        std::vector<Scissor>    scissors_;
+        void BindStencilFace(GLenum face, const GLStencilState& state);
 
-        bool                    depthTestEnabled_   = false;    // glEnable(GL_DEPTH_TEST)
-        bool                    depthWriteEnabled_  = false;    // glDepthMask(GL_TRUE)
-        bool                    depthRangeEnabled_  = false;    // glEnable(GL_DEPTH_CLAMP)
+        std::vector<GLViewport>     viewports_;
+        std::vector<GLDepthRange>   depthRanges_;
+        std::vector<GLScissor>      scissors_;
+
+        bool                        depthTestEnabled_   = false;    // glEnable(GL_DEPTH_TEST)
+        bool                        depthWriteEnabled_  = false;    // glDepthMask(GL_TRUE)
+        bool                        depthRangeEnabled_  = false;    // glEnable(GL_DEPTH_CLAMP)
+
+        bool                        stencilTestEnabled_ = false;
+        GLStencilState              stencilFront_;
+        GLStencilState              stencilBack_;
+
 
 };
 

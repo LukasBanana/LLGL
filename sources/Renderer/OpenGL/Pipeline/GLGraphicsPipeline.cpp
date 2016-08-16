@@ -7,26 +7,138 @@
 
 #include "GLGraphicsPipeline.h"
 #include "../GLStateManager.h"
+#include "../GLExtensions.h"
 
 
 namespace LLGL
 {
 
 
+static GLViewport ConvertViewport(const Viewport& viewport)
+{
+    return
+    {
+        static_cast<GLfloat>(viewport.x),
+        static_cast<GLfloat>(viewport.y),
+        static_cast<GLfloat>(viewport.width),
+        static_cast<GLfloat>(viewport.height)
+    };
+}
+
+static GLDepthRange ConvertDepthRange(const Viewport& viewport)
+{
+    return
+    {
+        static_cast<GLdouble>(viewport.minDepth),
+        static_cast<GLdouble>(viewport.maxDepth)
+    };
+}
+
+static GLScissor ConvertScissor(const Scissor& scissor)
+{
+    return
+    {
+        static_cast<GLint>(scissor.x),
+        static_cast<GLint>(scissor.y),
+        static_cast<GLsizei>(scissor.width),
+        static_cast<GLsizei>(scissor.height)
+    };
+}
+
+template <typename To, typename From, typename Func>
+std::vector<To> Convert(Func func, const std::vector<From>& from)
+{
+    std::vector<To> to;
+    to.reserve(from.size());
+    for (const auto& entry : from)
+        to.push_back(func(entry));
+    return to;
+}
+
 GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc) :
-    viewports_          ( desc.viewports          ),
-    scissors_           ( desc.scissors           ),
-    depthTestEnabled_   ( desc.depth.testEnabled  ),
-    depthWriteEnabled_  ( desc.depth.writeEnabled ),
-    depthRangeEnabled_  ( desc.depth.rangeEnabled )
+    viewports_          ( Convert<GLViewport>(ConvertViewport, desc.viewports)     ),
+    depthRanges_        ( Convert<GLDepthRange>(ConvertDepthRange, desc.viewports) ),
+    scissors_           ( Convert<GLScissor>(ConvertScissor, desc.scissors)        ),
+    depthTestEnabled_   ( desc.depth.testEnabled                                   ),
+    depthWriteEnabled_  ( desc.depth.writeEnabled                                  ),
+    depthRangeEnabled_  ( desc.depth.rangeEnabled                                  )
 {
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 {
+    /* Setup viewports */
+    if (viewports_.size() == 1)
+    {
+        const auto& v = viewports_.front();
+        glViewport(
+            static_cast<GLint>(v.x),
+            static_cast<GLint>(v.y),
+            static_cast<GLsizei>(v.width),
+            static_cast<GLsizei>(v.height)
+        );
+    }
+    else if (viewports_.size() > 1 && glViewportArrayv)
+    {
+        glViewportArrayv(
+            0,
+            static_cast<GLsizei>(viewports_.size()),
+            reinterpret_cast<const GLfloat*>(viewports_.data())
+        );
+    }
+
+    /* Setup depth ranges */
+    if (depthRanges_.size() == 1)
+    {
+        const auto& dr = depthRanges_.front();
+        glDepthRange(dr.minDepth, dr.maxDepth);
+    }
+    else if (depthRanges_.size() > 1 && glDepthRangeArrayv)
+    {
+        glDepthRangeArrayv(
+            0,
+            static_cast<GLsizei>(depthRanges_.size()),
+            reinterpret_cast<const GLdouble*>(depthRanges_.data())
+        );
+    }
+
+    /* Setup scissors */
+    if (scissors_.size() == 1)
+    {
+        const auto& s = scissors_.front();
+        glScissor(s.x, s.y, s.width, s.height);
+    }
+    else if (scissors_.size() > 1 && glScissorArrayv)
+    {
+        glScissorArrayv(
+            0,
+            static_cast<GLsizei>(scissors_.size()),
+            reinterpret_cast<const GLint*>(scissors_.data())
+        );
+    }
+
+    /* Setup depth test */
     stateMngr.Set(GLState::DEPTH_TEST, depthTestEnabled_);
     stateMngr.Set(GLState::DEPTH_CLAMP, depthRangeEnabled_);
-    //todo...
+
+    /* Setup stencil test */
+    if (stencilTestEnabled_)
+    {
+        BindStencilFace(GL_FRONT, stencilFront_);
+        BindStencilFace(GL_BACK, stencilBack_);
+    }
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLGraphicsPipeline::BindStencilFace(GLenum face, const GLStencilState& state)
+{
+    glStencilFuncSeparate(face, state.func, state.ref, state.mask);
+    glStencilMaskSeparate(face, state.writeMask);
+    glStencilOpSeparate(face, state.sfail, state.dpfail, state.dppass);
 }
 
 

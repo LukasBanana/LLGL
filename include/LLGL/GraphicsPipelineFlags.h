@@ -29,14 +29,14 @@ class IndexBuffer;
 */
 enum class CompareOp
 {
-    Never,
-    Less,
-    Equal,
-    LessEqual,
-    Greater,
-    NotEqual,
-    GreaterEqual,
-    Ever,
+    Never,          //!< Compare test never succeeds.
+    Less,           //!< Compare test succeeds if the left-hand-side is less than the right-hand-side.
+    Equal,          //!< Compare test succeeds if the left-hand-side is euqal to the right-hand-side.
+    LessEqual,      //!< Compare test succeeds if the left-hand-side is less than or equal to the right-hand-side.
+    Greater,        //!< Compare test succeeds if the left-hand-side is greater than the right-hand-side.
+    NotEqual,       //!< Compare test succeeds if the left-hand-side is not equal to the right-hand-side.
+    GreaterEqual,   //!< Compare test succeeds if the left-hand-side is greater than or equal to the right-hand-side.
+    Ever,           //!< Compare test always succeeds. (Can not be called "Always" due to conflict with X11 lib on Linux).
 };
 
 //! Stencil operations enumeration.
@@ -59,6 +59,27 @@ enum class StencilOp
 */
 struct Viewport
 {
+    Viewport() = default;
+    Viewport(const Viewport&) = default;
+    
+    Viewport(int x, int y, unsigned int width, unsigned int height) :
+        x       ( x      ),
+        y       ( y      ),
+        width   ( width  ),
+        height  ( height )
+    {
+    }
+    
+    Viewport(int x, int y, unsigned int width, unsigned int height, float minDepth, float maxDepth) :
+        x       ( x        ),
+        y       ( y        ),
+        width   ( width    ),
+        height  ( height   ),
+        minDepth( minDepth ),
+        maxDepth( maxDepth )
+    {
+    }
+
     int             x           = 0;    //!< Left-top X coordinate.
     int             y           = 0;    //!< Left-top Y coordinate.
     unsigned int    width       = 0;    //!< Right-bottom width.
@@ -89,13 +110,13 @@ struct DepthDescriptor
 
 struct StencilStateDescriptor
 {
-    StencilOp       failOp      = StencilOp::Keep;
-    StencilOp       passOp      = StencilOp::Keep;
-    StencilOp       depthFailOp = StencilOp::Keep;
-    CompareOp       compareOp   = CompareOp::Less;
-    std::uint32_t   compareMask = 0;
-    std::uint32_t   writeMask   = 0;
-    std::uint32_t   reference   = 0;
+    StencilOp       stencilFailOp   = StencilOp::Keep;  //!< Specifies the operation to take when the stencil test fails.
+    StencilOp       depthFailOp     = StencilOp::Keep;  //!< Specifies the operation to take when the stencil test passes but the depth test fails.
+    StencilOp       depthPassOp     = StencilOp::Keep;  //!< Specifies the operation to take when both the stencil test and the depth test pass.
+    CompareOp       compareOp       = CompareOp::Less;  //!< Specifies the stencil compare operation.
+    std::uint32_t   compareMask     = 0;
+    std::uint32_t   writeMask       = 0;
+    std::uint32_t   reference       = 0;
 };
 
 struct StencilDescriptor
