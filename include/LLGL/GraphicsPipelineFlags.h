@@ -36,7 +36,7 @@ enum class CompareOp
     Greater,
     NotEqual,
     GreaterEqual,
-    Always,
+    Ever,
 };
 
 //! Stencil operations enumeration.
