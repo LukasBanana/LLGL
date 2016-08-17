@@ -115,7 +115,7 @@ struct DepthDescriptor
 {
     bool        testEnabled     = false;
     bool        writeEnabled    = false;
-    bool        rangeEnabled    = false;
+    bool        clampEnabled    = false;
     CompareOp   compareOp       = CompareOp::Less;
 };
 

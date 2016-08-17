@@ -68,7 +68,7 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 
     depthTestEnabled_   = desc.depth.testEnabled;
     depthWriteEnabled_  = desc.depth.writeEnabled;
-    depthRangeEnabled_  = desc.depth.rangeEnabled;
+    depthClampEnabled_  = desc.depth.clampEnabled;
     depthFunc_          = GLTypes::Map(desc.depth.compareOp);
 
     stencilTestEnabled_ = desc.stencil.testEnabled;
@@ -87,7 +87,7 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     if (depthTestEnabled_)
     {
         stateMngr.Enable(GLState::DEPTH_TEST);
-        stateMngr.Set(GLState::DEPTH_CLAMP, depthRangeEnabled_);
+        stateMngr.Set(GLState::DEPTH_CLAMP, depthClampEnabled_);
         stateMngr.SetDepthFunc(depthFunc_);
     }
     else
