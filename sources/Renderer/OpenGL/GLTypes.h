@@ -13,6 +13,7 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/TextureFlags.h>
+#include <LLGL/GraphicsPipelineFlags.h>
 
 
 namespace LLGL
@@ -29,6 +30,8 @@ GLenum Map( const DrawMode          drawMode      );
 GLenum Map( const TextureType       textureType   );
 GLenum Map( const TextureFormat     textureFormat );
 GLenum Map( const ColorFormat       colorFormat   );
+GLenum Map( const CompareOp         compareOp     );
+GLenum Map( const StencilOp         stencilOp     );
 
 
 } // /namespace GLTypeConversion

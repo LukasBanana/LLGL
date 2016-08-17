@@ -8,11 +8,14 @@
 #include "GLGraphicsPipeline.h"
 #include "../GLStateManager.h"
 #include "../GLExtensions.h"
+#include "../GLTypes.h"
 
 
 namespace LLGL
 {
 
+
+/* ----- Internal functions ----- */
 
 static GLViewport ConvertViewport(const Viewport& viewport)
 {
@@ -46,23 +49,41 @@ static GLScissor ConvertScissor(const Scissor& scissor)
 }
 
 template <typename To, typename From, typename Func>
-std::vector<To> Convert(Func func, const std::vector<From>& from)
+void Convert(std::vector<To>& to, const std::vector<From>& from, Func func)
 {
-    std::vector<To> to;
     to.reserve(from.size());
     for (const auto& entry : from)
         to.push_back(func(entry));
-    return to;
 }
 
-GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc) :
-    viewports_          ( Convert<GLViewport>(ConvertViewport, desc.viewports)     ),
-    depthRanges_        ( Convert<GLDepthRange>(ConvertDepthRange, desc.viewports) ),
-    scissors_           ( Convert<GLScissor>(ConvertScissor, desc.scissors)        ),
-    depthTestEnabled_   ( desc.depth.testEnabled                                   ),
-    depthWriteEnabled_  ( desc.depth.writeEnabled                                  ),
-    depthRangeEnabled_  ( desc.depth.rangeEnabled                                  )
+static void Convert(GLStencilState& to, const StencilStateDescriptor& from)
 {
+    to.func         = GLTypes::Map(from.compareOp);
+    to.sfail        = GLTypes::Map(from.stencilFailOp);
+    to.dpfail       = GLTypes::Map(from.depthFailOp);
+    to.dppass       = GLTypes::Map(from.depthPassOp);
+    to.ref          = static_cast<GLint>(from.reference);
+    to.mask         = from.compareMask;
+    to.writeMask    = from.writeMask;
+}
+
+
+/* ----- GLGraphicsPipeline class ----- */
+
+GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+{
+    Convert(viewports_, desc.viewports, ConvertViewport);
+    Convert(depthRanges_, desc.viewports, ConvertDepthRange);
+    Convert(scissors_, desc.scissors, ConvertScissor);
+
+    depthTestEnabled_   = desc.depth.testEnabled;
+    depthWriteEnabled_  = desc.depth.writeEnabled;
+    depthRangeEnabled_  = desc.depth.rangeEnabled;
+    depthCompareOp_     = GLTypes::Map(desc.depth.compareOp);
+
+    stencilTestEnabled_ = desc.stencil.testEnabled;
+    Convert(stencilFront_, desc.stencil.front);
+    Convert(stencilBack_, desc.stencil.back);
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)

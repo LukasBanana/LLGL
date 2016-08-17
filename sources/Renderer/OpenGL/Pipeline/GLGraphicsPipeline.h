@@ -74,6 +74,7 @@ class GLGraphicsPipeline : public GraphicsPipeline
         bool                        depthTestEnabled_   = false;    // glEnable(GL_DEPTH_TEST)
         bool                        depthWriteEnabled_  = false;    // glDepthMask(GL_TRUE)
         bool                        depthRangeEnabled_  = false;    // glEnable(GL_DEPTH_CLAMP)
+        GLenum                      depthCompareOp_     = GL_LESS;
 
         bool                        stencilTestEnabled_ = false;
         GLStencilState              stencilFront_;

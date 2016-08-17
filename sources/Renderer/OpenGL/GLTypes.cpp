@@ -101,95 +101,57 @@ GLenum Map(const TextureFormat textureFormat)
     switch (textureFormat)
     {
         /* --- Base internal formats --- */
-        case TextureFormat::DepthComponent:
-            return GL_DEPTH_COMPONENT;
-        case TextureFormat::DepthStencil:
-            return GL_DEPTH_STENCIL;
-        case TextureFormat::R:
-            return GL_RED;
-        case TextureFormat::RG:
-            return GL_RG;
-        case TextureFormat::RGB:
-            return GL_RGB;
-        case TextureFormat::RGBA:
-            return GL_RGBA;
+        case TextureFormat::DepthComponent: return GL_DEPTH_COMPONENT;
+        case TextureFormat::DepthStencil:   return GL_DEPTH_STENCIL;
+        case TextureFormat::R:              return GL_RED;
+        case TextureFormat::RG:             return GL_RG;
+        case TextureFormat::RGB:            return GL_RGB;
+        case TextureFormat::RGBA:           return GL_RGBA;
 
         /* --- Sized internal formats --- */
-        case TextureFormat::R8UInt:
-            return GL_R8UI;
-        case TextureFormat::R8SInt:
-            return GL_R8I;
+        case TextureFormat::R8UInt:         return GL_R8UI;
+        case TextureFormat::R8SInt:         return GL_R8I;
 
-        case TextureFormat::R16UInt:
-            return GL_R16UI;
-        case TextureFormat::R16SInt:
-            return GL_R16I;
-        case TextureFormat::R16Float:
-            return GL_R16F;
+        case TextureFormat::R16UInt:        return GL_R16UI;
+        case TextureFormat::R16SInt:        return GL_R16I;
+        case TextureFormat::R16Float:       return GL_R16F;
 
-        case TextureFormat::R32UInt:
-            return GL_R32UI;
-        case TextureFormat::R32SInt:
-            return GL_R32I;
-        case TextureFormat::R32Float:
-            return GL_R32F;
+        case TextureFormat::R32UInt:        return GL_R32UI;
+        case TextureFormat::R32SInt:        return GL_R32I;
+        case TextureFormat::R32Float:       return GL_R32F;
 
-        case TextureFormat::RG8UInt:
-            return GL_RG8UI;
-        case TextureFormat::RG8SInt:
-            return GL_RG8I;
+        case TextureFormat::RG8UInt:        return GL_RG8UI;
+        case TextureFormat::RG8SInt:        return GL_RG8I;
 
-        case TextureFormat::RG16UInt:
-            return GL_RG16UI;
-        case TextureFormat::RG16SInt:
-            return GL_RG16I;
-        case TextureFormat::RG16Float:
-            return GL_RG16F;
+        case TextureFormat::RG16UInt:       return GL_RG16UI;
+        case TextureFormat::RG16SInt:       return GL_RG16I;
+        case TextureFormat::RG16Float:      return GL_RG16F;
 
-        case TextureFormat::RG32UInt:
-            return GL_RG32UI;
-        case TextureFormat::RG32SInt:
-            return GL_RG32I;
-        case TextureFormat::RG32Float:
-            return GL_RG32F;
+        case TextureFormat::RG32UInt:       return GL_RG32UI;
+        case TextureFormat::RG32SInt:       return GL_RG32I;
+        case TextureFormat::RG32Float:      return GL_RG32F;
 
-        case TextureFormat::RGB8UInt:
-            return GL_RGB8UI;
-        case TextureFormat::RGB8SInt:
-            return GL_RGB8I;
+        case TextureFormat::RGB8UInt:       return GL_RGB8UI;
+        case TextureFormat::RGB8SInt:       return GL_RGB8I;
 
-        case TextureFormat::RGB16UInt:
-            return GL_RGB16UI;
-        case TextureFormat::RGB16SInt:
-            return GL_RGB16I;
-        case TextureFormat::RGB16Float:
-            return GL_RGB16F;
+        case TextureFormat::RGB16UInt:      return GL_RGB16UI;
+        case TextureFormat::RGB16SInt:      return GL_RGB16I;
+        case TextureFormat::RGB16Float:     return GL_RGB16F;
 
-        case TextureFormat::RGB32UInt:
-            return GL_RGB32UI;
-        case TextureFormat::RGB32SInt:
-            return GL_RGB32I;
-        case TextureFormat::RGB32Float:
-            return GL_RGB32F;
+        case TextureFormat::RGB32UInt:      return GL_RGB32UI;
+        case TextureFormat::RGB32SInt:      return GL_RGB32I;
+        case TextureFormat::RGB32Float:     return GL_RGB32F;
 
-        case TextureFormat::RGBA8UInt:
-            return GL_RGBA8UI;
-        case TextureFormat::RGBA8SInt:
-            return GL_RGBA8I;
+        case TextureFormat::RGBA8UInt:      return GL_RGBA8UI;
+        case TextureFormat::RGBA8SInt:      return GL_RGBA8I;
 
-        case TextureFormat::RGBA16UInt:
-            return GL_RGBA16UI;
-        case TextureFormat::RGBA16SInt:
-            return GL_RGBA16I;
-        case TextureFormat::RGBA16Float:
-            return GL_RGBA16F;
+        case TextureFormat::RGBA16UInt:     return GL_RGBA16UI;
+        case TextureFormat::RGBA16SInt:     return GL_RGBA16I;
+        case TextureFormat::RGBA16Float:    return GL_RGBA16F;
 
-        case TextureFormat::RGBA32UInt:
-            return GL_RGBA32UI;
-        case TextureFormat::RGBA32SInt:
-            return GL_RGBA32I;
-        case TextureFormat::RGBA32Float:
-            return GL_RGBA32F;
+        case TextureFormat::RGBA32UInt:     return GL_RGBA32UI;
+        case TextureFormat::RGBA32SInt:     return GL_RGBA32I;
+        case TextureFormat::RGBA32Float:    return GL_RGBA32F;
     }
     MapFailed("TextureFormat");
 }
@@ -198,24 +160,48 @@ GLenum Map(const ColorFormat colorFormat)
 {
     switch (colorFormat)
     {
-        case ColorFormat::Gray:
-            return GL_RED;
-        case ColorFormat::GrayAlpha:
-            return GL_RG;
-        case ColorFormat::RGB:
-            return GL_RGB;
-        case ColorFormat::BGR:
-            return GL_BGR;
-        case ColorFormat::RGBA:
-            return GL_RGBA;
-        case ColorFormat::BGRA:
-            return GL_BGRA;
-        case ColorFormat::Depth:
-            return GL_DEPTH_COMPONENT;
-        case ColorFormat::DepthStencil:
-            return GL_DEPTH_STENCIL;
+        case ColorFormat::Gray:         return GL_RED;
+        case ColorFormat::GrayAlpha:    return GL_RG;
+        case ColorFormat::RGB:          return GL_RGB;
+        case ColorFormat::BGR:          return GL_BGR;
+        case ColorFormat::RGBA:         return GL_RGBA;
+        case ColorFormat::BGRA:         return GL_BGRA;
+        case ColorFormat::Depth:        return GL_DEPTH_COMPONENT;  
+        case ColorFormat::DepthStencil: return GL_DEPTH_STENCIL;
     }
     MapFailed("ColorFormat");
+}
+
+GLenum Map(const CompareOp compareOp)
+{
+    switch (compareOp)
+    {
+        case CompareOp::Never:          return GL_NEVER;
+        case CompareOp::Less:           return GL_LESS;
+        case CompareOp::Equal:          return GL_EQUAL;
+        case CompareOp::LessEqual:      return GL_LEQUAL;
+        case CompareOp::Greater:        return GL_GREATER;
+        case CompareOp::NotEqual:       return GL_NOTEQUAL;
+        case CompareOp::GreaterEqual:   return GL_GEQUAL;
+        case CompareOp::Ever:           return GL_ALWAYS;
+    }
+    MapFailed("CompareOp");
+}
+
+GLenum Map(const StencilOp stencilOp)
+{
+    switch (stencilOp)
+    {
+        case StencilOp::Keep:       return GL_KEEP;
+        case StencilOp::Zero:       return GL_ZERO;
+        case StencilOp::Replace:    return GL_REPLACE;
+        case StencilOp::IncClamp:   return GL_INCR;
+        case StencilOp::DecClamp:   return GL_DECR;
+        case StencilOp::Invert:     return GL_INVERT;
+        case StencilOp::IncWrap:    return GL_INCR_WRAP;
+        case StencilOp::DecWrap:    return GL_DECR_WRAP;
+    }
+    MapFailed("StencilOp");
 }
 
 
