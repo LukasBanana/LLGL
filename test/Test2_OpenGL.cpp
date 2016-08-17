@@ -162,7 +162,8 @@ int main()
 
                 auto projection = Gs::ProjectionMatrix4f::Planar(
                     static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
-                    static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
+                    static_cast<Gs::Real>(contextDesc.videoMode.resolution.y),
+                    Gs::PlanarProjectionOrigin::LeftBottom
                 );
 
                 renderer->WriteConstantBuffer(constBuffer, &projection, sizeof(projection), LLGL::BufferUsage::Static);
@@ -202,7 +203,8 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            //pipelineDesc.viewports.push_back(LLGL::Viewport(50, 50, 100, 100));
+            //pipelineDesc.viewports.push_back(LLGL::Viewport(0, 0, 300, 300));
+            //pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, 200, 150));
             pipelineDesc.shaderProgram = &shaderProgram;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);

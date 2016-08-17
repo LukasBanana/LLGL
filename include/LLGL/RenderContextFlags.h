@@ -60,6 +60,20 @@ enum class ShadingLanguage
     HLSL_5_0,   //!< HLSL 5.0 (since Direct3D 11).
 };
 
+//! Screen coordinate system origin enumeration.
+enum class ScreenOrigin
+{
+    LowerLeft, //!< Screen origin is in the lower-left (default in OpenGL).
+    UpperLeft, //!< Screen origin is in the upper-left (default in Direct3D).
+};
+
+//! Clipping depth range enumeration.
+enum class ClippingRange
+{
+    MinusOneToOne,  //!< Clipping depth is in the range [-1, 1] (default in OpenGL).
+    ZeroToOne,      //!< Clipping depth is in the range [0, 1] (default in Direct3D).
+};
+
 
 /* ----- Structures ----- */
 
@@ -77,6 +91,15 @@ struct ClearBuffersFlags
 //! Rendering capabilities structure.
 struct RenderingCaps
 {
+    /**
+    \brief Screen coordinate system origin.
+    \remarks This determines the coordinate space of viewports, scissors, and framebuffers.
+    */
+    ScreenOrigin    screenOrigin                    = ScreenOrigin::LowerLeft;
+
+    //! Clipping depth range.
+    ClippingRange   clippingRange                   = ClippingRange::MinusOneToOne;
+
     //! Specifies whether render targets (also "frame buffer objects") are supported.
     bool            hasRenderTargets                = false;
 

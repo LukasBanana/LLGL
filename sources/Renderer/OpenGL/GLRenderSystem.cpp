@@ -405,6 +405,9 @@ RenderContext* GLRenderSystem::AddRenderContext(
         SetDebugCallback(desc.debugCallback);
     }
 
+    /* Use uniform clipping space */
+    //GLStateManager::active->SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
+
     /* Take ownership and return raw pointer */
     return TakeOwnership(renderContexts_, std::move(renderContext));
 }

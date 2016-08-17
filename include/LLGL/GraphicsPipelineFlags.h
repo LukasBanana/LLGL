@@ -94,6 +94,17 @@ struct Viewport
 */
 struct Scissor
 {
+    Scissor() = default;
+    Scissor(const Scissor&) = default;
+
+    Scissor(int x, int y, int width, int height) :
+        x       ( x      ),
+        y       ( y      ),
+        width   ( width  ),
+        height  ( height )
+    {
+    }
+
     int x       = 0;
     int y       = 0;
     int width   = 0;

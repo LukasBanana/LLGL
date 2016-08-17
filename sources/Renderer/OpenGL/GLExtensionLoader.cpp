@@ -165,6 +165,7 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     LoadExtension( "GL_ARB_multi_bind",                   LoadMultiBindProcs             );
     LoadExtension( "GL_EXT_stencil_two_side",             LoadStencilSeparateProcs       ); // <--- correct extension ???
     LoadExtension( "GL_KHR_debug",                        LoadDebugProcs                 );
+    LoadExtension( "GL_ARB_clip_control",                 LoadClipControlProcs           );
 
     //todo... load "glGetIntegeri_v"
 
@@ -451,6 +452,11 @@ bool LoadStencilSeparateProcs()
 bool LoadDebugProcs()
 {
     return LOAD_VERBATIM_GLPROC(glDebugMessageCallback);
+}
+
+bool LoadClipControlProcs()
+{
+    return LOAD_VERBATIM_GLPROC(glClipControl);
 }
 
 #undef LOAD_VERBATIM_GLPROC

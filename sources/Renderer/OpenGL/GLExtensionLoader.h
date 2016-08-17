@@ -84,6 +84,7 @@ bool LoadDrawBuffersBlendProcs();
 bool LoadMultiBindProcs();
 bool LoadStencilSeparateProcs();
 bool LoadDebugProcs();
+bool LoadClipControlProcs();
 
 
 } // /namespace LLGL

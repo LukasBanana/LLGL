@@ -51,6 +51,7 @@ class GLStateManager
 
         /* ----- Common states ----- */
 
+        void SetClipControl(GLenum origin, GLenum depth);
         void SetDepthFunc(GLenum func);
         void SetStencilFunc(GLenum face, const GLStencil& state);
         void SetViewports(const std::vector<GLViewport>& viewports);

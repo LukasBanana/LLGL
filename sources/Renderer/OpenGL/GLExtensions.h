@@ -231,6 +231,10 @@ extern PFNGLSTENCILOPSEPARATEPROC                           glStencilOpSeparate;
 /* --- Debug context (GL_KHR_debug) --- */
 
 extern PFNGLDEBUGMESSAGECALLBACKPROC                        glDebugMessageCallback;
+
+/* --- Clipping control (GL_ARB_clip_control) --- */
+
+extern PFNGLCLIPCONTROLPROC                                 glClipControl;
     
 #endif
 

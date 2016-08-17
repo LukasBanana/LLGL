@@ -184,6 +184,14 @@ void GLStateManager::PopStates(std::size_t count)
 
 /* ----- Common states ----- */
 
+void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
+{
+    if (glClipControl)
+        glClipControl(origin, depth);
+    /*else
+        emulateClipControl_ = true;*/
+}
+
 void GLStateManager::SetDepthFunc(GLenum func)
 {
     if (commonState_.depthFunc != func)

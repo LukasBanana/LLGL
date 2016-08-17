@@ -223,6 +223,10 @@ PFNGLSTENCILOPSEPARATEPROC                              glStencilOpSeparate     
 /* --- Debug context (GL_KHR_debug) --- */
 
 PFNGLDEBUGMESSAGECALLBACKPROC                           glDebugMessageCallback                          = nullptr;
+
+/* --- Clipping control (GL_ARB_clip_control) --- */
+
+PFNGLCLIPCONTROLPROC                                    glClipControl                                   = nullptr;
     
 #endif // /ifndef(__APPLE__)
 
