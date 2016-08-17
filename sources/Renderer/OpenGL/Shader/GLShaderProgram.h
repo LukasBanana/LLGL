@@ -10,6 +10,7 @@
 
 
 #include <LLGL/ShaderProgram.h>
+#include "GLShaderUniform.h"
 #include "../OpenGL.h"
 
 
@@ -33,9 +34,13 @@ class GLShaderProgram : public ShaderProgram
 
         std::vector<VertexAttribute> QueryVertexAttributes() const override;
         std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const override;
+        std::vector<UniformDescriptor> QueryUniforms() const override;
 
         void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs, bool ignoreUnusedAttributes = false) override;
         void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) override;
+
+        ShaderUniform* LockUniformSetter() override;
+        void UnlockShaderUniform() override;
 
         //! Returns the shader program ID.
         inline GLuint GetID() const
@@ -45,8 +50,10 @@ class GLShaderProgram : public ShaderProgram
 
     private:
 
-        GLuint  id_         = 0;
-        bool    linkStatus_ = false;
+        GLuint          id_         = 0;
+        bool            linkStatus_ = false;
+
+        GLShaderUniform uniform_;
 
 };
 

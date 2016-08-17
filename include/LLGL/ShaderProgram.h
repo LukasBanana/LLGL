@@ -13,6 +13,7 @@
 #include "Shader.h"
 #include "VertexAttribute.h"
 #include "ConstantBuffer.h"
+#include "ShaderUniform.h"
 #include <string>
 #include <vector>
 
@@ -58,6 +59,12 @@ class LLGL_EXPORT ShaderProgram
         virtual std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const = 0;
 
         /**
+        \brief Returns a list of uniform descriptors, which describe all uniforms within this shader program.
+        \remarks Shader uniforms are only supported in OpenGL 2.0+.
+        */
+        virtual std::vector<UniformDescriptor> QueryUniforms() const = 0;
+
+        /**
         \brief Binds the specified vertex attributes to this shader program.
         \param[in] vertexAttribs Specifies the vertex attributes.
         \param[in] ignoreUnusedAttributes Specifies whether to ignore unused vertex attributes.
@@ -80,6 +87,27 @@ class LLGL_EXPORT ShaderProgram
         \see RenderContext::BindConstantBuffer
         */
         virtual void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) = 0;
+
+        /**
+        \brief Locks the shader uniform setting.
+        \return Pointer to the shader uniform handler or null if the render system does not support individual shader uniforms.
+        \remarks This must be called to set individual shader uniforms.
+        \code
+        auto uniform = shaderProgram->LockShaderUniform();
+        uniform->SetUniform("mySampler1", 0);
+        uniform->SetUniform("mySampler2", 1);
+        uniform->SetUniform("projection", myProjectionMatrix);
+        shaderProgram->UnlockShaderUniform();
+        \endcode
+        \note Only a shader program from an OpenGL render system will return a non-null pointer!
+        */
+        virtual ShaderUniform* LockUniformSetter() = 0;
+
+        /**
+        \brief Unlocks the shader uniform setting.
+        \see LockShaderUniform
+        */
+        virtual void UnlockShaderUniform() = 0;
 
     protected:
 

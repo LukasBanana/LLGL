@@ -170,6 +170,20 @@ extern PFNGLUSEPROGRAMPROC                                  glUseProgram;
 extern PFNGLGETACTIVEATTRIBPROC                             glGetActiveAttrib;
 extern PFNGLGETATTRIBLOCATIONPROC                           glGetAttribLocation;
 
+extern PFNGLGETACTIVEUNIFORMARBPROC                         glGetActiveUniform;
+extern PFNGLGETUNIFORMLOCATIONPROC                          glGetUniformLocation;
+extern PFNGLUNIFORM1FVPROC                                  glUniform1fv;
+extern PFNGLUNIFORM2FVPROC                                  glUniform2fv;
+extern PFNGLUNIFORM3FVPROC                                  glUniform3fv;
+extern PFNGLUNIFORM4FVPROC                                  glUniform4fv;
+extern PFNGLUNIFORM1IVPROC                                  glUniform1iv;
+extern PFNGLUNIFORM2IVPROC                                  glUniform2iv;
+extern PFNGLUNIFORM3IVPROC                                  glUniform3iv;
+extern PFNGLUNIFORM4IVPROC                                  glUniform4iv;
+extern PFNGLUNIFORMMATRIX2FVPROC                            glUniformMatrix2fv;
+extern PFNGLUNIFORMMATRIX3FVPROC                            glUniformMatrix3fv;
+extern PFNGLUNIFORMMATRIX4FVPROC                            glUniformMatrix4fv;
+
 /* --- Tessellation shader (GL_ARB_tessellation_shader) --- */
 
 extern PFNGLPATCHPARAMETERIPROC                             glPatchParameteri;

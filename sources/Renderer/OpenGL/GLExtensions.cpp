@@ -162,6 +162,20 @@ PFNGLUSEPROGRAMPROC                                     glUseProgram            
 PFNGLGETACTIVEATTRIBPROC                                glGetActiveAttrib                               = nullptr;
 PFNGLGETATTRIBLOCATIONPROC                              glGetAttribLocation                             = nullptr;
 
+PFNGLGETACTIVEUNIFORMARBPROC                            glGetActiveUniform;
+PFNGLGETUNIFORMLOCATIONPROC                             glGetUniformLocation;
+PFNGLUNIFORM1FVPROC                                     glUniform1fv;
+PFNGLUNIFORM2FVPROC                                     glUniform2fv;
+PFNGLUNIFORM3FVPROC                                     glUniform3fv;
+PFNGLUNIFORM4FVPROC                                     glUniform4fv;
+PFNGLUNIFORM1IVPROC                                     glUniform1iv;
+PFNGLUNIFORM2IVPROC                                     glUniform2iv;
+PFNGLUNIFORM3IVPROC                                     glUniform3iv;
+PFNGLUNIFORM4IVPROC                                     glUniform4iv;
+PFNGLUNIFORMMATRIX2FVPROC                               glUniformMatrix2fv;
+PFNGLUNIFORMMATRIX3FVPROC                               glUniformMatrix3fv;
+PFNGLUNIFORMMATRIX4FVPROC                               glUniformMatrix4fv;
+
 /* --- Tessellation shader (GL_ARB_tessellation_shader) --- */
 
 PFNGLPATCHPARAMETERIPROC                                glPatchParameteri                               = nullptr;

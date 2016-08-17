@@ -306,25 +306,39 @@ bool LoadBaseVertexProcs()
 bool LoadShaderProcs()
 {
     return
-        LOAD_VERBATIM_GLPROC( glCreateShader      ) &&
-        LOAD_VERBATIM_GLPROC( glShaderSource      ) &&
-        LOAD_VERBATIM_GLPROC( glCompileShader     ) &&
-        LOAD_VERBATIM_GLPROC( glGetShaderiv       ) &&
-        LOAD_VERBATIM_GLPROC( glGetShaderInfoLog  ) &&
-        LOAD_VERBATIM_GLPROC( glDeleteShader      ) &&
+        LOAD_VERBATIM_GLPROC( glCreateShader       ) &&
+        LOAD_VERBATIM_GLPROC( glShaderSource       ) &&
+        LOAD_VERBATIM_GLPROC( glCompileShader      ) &&
+        LOAD_VERBATIM_GLPROC( glGetShaderiv        ) &&
+        LOAD_VERBATIM_GLPROC( glGetShaderInfoLog   ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteShader       ) &&
 
-        LOAD_VERBATIM_GLPROC( glCreateProgram     ) &&
-        LOAD_VERBATIM_GLPROC( glDeleteProgram     ) &&
-        LOAD_VERBATIM_GLPROC( glAttachShader      ) &&
-        LOAD_VERBATIM_GLPROC( glDetachShader      ) &&
-        LOAD_VERBATIM_GLPROC( glLinkProgram       ) &&
-        LOAD_VERBATIM_GLPROC( glValidateProgram   ) &&
-        LOAD_VERBATIM_GLPROC( glGetProgramiv      ) &&
-        LOAD_VERBATIM_GLPROC( glGetProgramInfoLog ) &&
-        LOAD_VERBATIM_GLPROC( glUseProgram        ) &&
+        LOAD_VERBATIM_GLPROC( glCreateProgram      ) &&
+        LOAD_VERBATIM_GLPROC( glDeleteProgram      ) &&
+        LOAD_VERBATIM_GLPROC( glAttachShader       ) &&
+        LOAD_VERBATIM_GLPROC( glDetachShader       ) &&
+        LOAD_VERBATIM_GLPROC( glLinkProgram        ) &&
+        LOAD_VERBATIM_GLPROC( glValidateProgram    ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramiv       ) &&
+        LOAD_VERBATIM_GLPROC( glGetProgramInfoLog  ) &&
+        LOAD_VERBATIM_GLPROC( glUseProgram         ) &&
 
-        LOAD_VERBATIM_GLPROC( glGetActiveAttrib   ) &&
-        LOAD_VERBATIM_GLPROC( glGetAttribLocation );
+        LOAD_VERBATIM_GLPROC( glGetActiveAttrib    ) &&
+        LOAD_VERBATIM_GLPROC( glGetAttribLocation  ) &&
+        
+        LOAD_VERBATIM_GLPROC( glGetActiveUniform   ) &&
+        LOAD_VERBATIM_GLPROC( glGetUniformLocation ) &&
+        LOAD_VERBATIM_GLPROC( glUniform1fv         ) &&
+        LOAD_VERBATIM_GLPROC( glUniform2fv         ) &&
+        LOAD_VERBATIM_GLPROC( glUniform3fv         ) &&
+        LOAD_VERBATIM_GLPROC( glUniform4fv         ) &&
+        LOAD_VERBATIM_GLPROC( glUniform1iv         ) &&
+        LOAD_VERBATIM_GLPROC( glUniform2iv         ) &&
+        LOAD_VERBATIM_GLPROC( glUniform3iv         ) &&
+        LOAD_VERBATIM_GLPROC( glUniform4iv         ) &&
+        LOAD_VERBATIM_GLPROC( glUniformMatrix2fv   ) &&
+        LOAD_VERBATIM_GLPROC( glUniformMatrix3fv   ) &&
+        LOAD_VERBATIM_GLPROC( glUniformMatrix4fv   );
 }
 
 bool LoadVertexAttribProcs()

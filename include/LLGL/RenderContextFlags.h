@@ -121,7 +121,7 @@ struct RenderingCaps
     //! Specifies whether storage buffers (also "read/write buffers") are supported.
     bool            hasStorageBuffers               = false;
 
-    //! Specifies whether shader uniforms are supported.
+    //! Specifies whether individual shader uniforms are supported (typically only for OpenGL 2.0+).
     bool            hasUniforms                     = false;
 
     //! Specifies whether geometry shaders are supported.

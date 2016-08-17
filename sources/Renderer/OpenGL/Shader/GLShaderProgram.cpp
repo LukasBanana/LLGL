@@ -9,6 +9,7 @@
 #include "GLShader.h"
 #include "../GLExtensions.h"
 #include "../../CheckedCast.h"
+#include "../RenderState/GLStateManager.h"
 #include <LLGL/VertexFormat.h>
 #include <vector>
 #include <stdexcept>
@@ -18,9 +19,10 @@ namespace LLGL
 {
 
 
-GLShaderProgram::GLShaderProgram()
+GLShaderProgram::GLShaderProgram() :
+    id_     ( glCreateProgram() ),
+    uniform_( id_               )
 {
-    id_ = glCreateProgram();
 }
 
 GLShaderProgram::~GLShaderProgram()
@@ -127,14 +129,12 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
     /* Query number of vertex attributes */
     GLint numVertexAttribs = 0;
     glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &numVertexAttribs);
-
     if (numVertexAttribs <= 0)
         return vertexFormat.GetAttributes();
 
     /* Query maximal name length of all vertex attributes */
     GLint maxNameLength = 0;
     glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxNameLength);
-
     if (maxNameLength <= 0)
         return vertexFormat.GetAttributes();
 
@@ -173,14 +173,12 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
     /* Query number of uniform blocks */
     GLint numUniformBlocks = 0;
     glGetProgramiv(id_, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
-
     if (numUniformBlocks <= 0)
         return descList;
 
     /* Query maximal name length of all uniform blocks */
     GLint maxNameLength = 0;
     glGetProgramiv(id_, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &maxNameLength);
-
     if (maxNameLength <= 0)
         return descList;
 
@@ -202,6 +200,47 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
         GLint blockSize = 0;
         glGetActiveUniformBlockiv(id_, i, GL_UNIFORM_BLOCK_DATA_SIZE, &blockSize);
         desc.size = blockSize;
+
+        /* Insert uniform block into list */
+        descList.push_back(desc);
+    }
+
+    return descList;
+}
+
+std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
+{
+    std::vector<UniformDescriptor> descList;
+
+    /* Query number of uniforms */
+    GLint numUniforms = 0;
+    glGetProgramiv(id_, GL_ACTIVE_UNIFORMS, &numUniforms);
+    if (numUniforms <= 0)
+        return descList;
+
+    /* Query maximal name length of all uniforms */
+    GLint maxNameLength = 0;
+    glGetProgramiv(id_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLength);
+    if (maxNameLength <= 0)
+        return descList;
+
+    std::vector<char> blockName;
+    blockName.resize(maxNameLength);
+
+    /* Iterate over all uniform blocks */
+    for (GLuint i = 0; i < static_cast<GLuint>(numUniforms); ++i)
+    {
+        UniformDescriptor desc;
+        desc.index = i;
+
+        /* Query uniform block name */
+        GLsizei nameLength  = 0;
+        GLint   size        = 0;
+        GLenum  type        = 0;
+        
+        glGetActiveUniform(id_, i, maxNameLength, &nameLength, &size, &type, blockName.data());
+
+        desc.name = std::string(blockName.data());
 
         /* Insert uniform block into list */
         descList.push_back(desc);
@@ -243,6 +282,15 @@ void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int b
         glUniformBlockBinding(id_, blockIndex, bindingIndex);
     else
         throw std::invalid_argument("failed to bind constant buffer, because uniform block name is invalid");
+}
+
+ShaderUniform* GLShaderProgram::LockUniformSetter()
+{
+    return nullptr;
+}
+
+void GLShaderProgram::UnlockShaderUniform()
+{
 }
 
 

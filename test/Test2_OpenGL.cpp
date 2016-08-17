@@ -162,8 +162,7 @@ int main()
 
                 auto projection = Gs::ProjectionMatrix4f::Planar(
                     static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
-                    static_cast<Gs::Real>(contextDesc.videoMode.resolution.y),
-                    Gs::PlanarProjectionOrigin::LeftBottom
+                    static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
                 );
 
                 renderer->WriteConstantBuffer(constBuffer, &projection, sizeof(projection), LLGL::BufferUsage::Static);

@@ -22,7 +22,7 @@ struct ConstantBufferDescriptor
 {
     std::string     name;           //!< Constant buffer name.
     unsigned int    index   = 0;    //!< Index of the constant buffer within the respective shader.
-    std::size_t     size    = 0;    //!< Buffer size (in bytes).
+    unsigned int    size    = 0;    //!< Buffer size (in bytes).
 };
 
 //! Constant buffer (also "Uniform Buffer Object") interface.
