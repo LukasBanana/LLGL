@@ -12,7 +12,7 @@
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
-#include "Pipeline/GLGraphicsPipeline.h"
+#include "RenderState/GLGraphicsPipeline.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 

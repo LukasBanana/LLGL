@@ -9,7 +9,7 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include <LLGL/Desktop.h>
-#include "GLStateManager.h"
+#include "RenderState/GLStateManager.h"
 #include "GLTypes.h"
 #include "GLExtensions.h"
 #include "GLCore.h"

@@ -62,7 +62,7 @@ struct Viewport
     Viewport() = default;
     Viewport(const Viewport&) = default;
     
-    Viewport(int x, int y, unsigned int width, unsigned int height) :
+    Viewport(float x, float y, float width, float height) :
         x       ( x      ),
         y       ( y      ),
         width   ( width  ),
@@ -70,7 +70,7 @@ struct Viewport
     {
     }
     
-    Viewport(int x, int y, unsigned int width, unsigned int height, float minDepth, float maxDepth) :
+    Viewport(float x, float y, float width, float height, float minDepth, float maxDepth) :
         x       ( x        ),
         y       ( y        ),
         width   ( width    ),
@@ -80,12 +80,12 @@ struct Viewport
     {
     }
 
-    int             x           = 0;    //!< Left-top X coordinate.
-    int             y           = 0;    //!< Left-top Y coordinate.
-    unsigned int    width       = 0;    //!< Right-bottom width.
-    unsigned int    height      = 0;    //!< Right-bottom height.
-    float           minDepth    = 0.0f; //!< Minimal depth range.
-    float           maxDepth    = 1.0f; //!< Maximal depth range.
+    float x         = 0.0f; //!< Left-top X coordinate.
+    float y         = 0.0f; //!< Left-top Y coordinate.
+    float width     = 0.0f; //!< Right-bottom width.
+    float height    = 0.0f; //!< Right-bottom height.
+    float minDepth  = 0.0f; //!< Minimal depth range.
+    float maxDepth  = 1.0f; //!< Maximal depth range.
 };
 
 /**
@@ -94,10 +94,10 @@ struct Viewport
 */
 struct Scissor
 {
-    int             x       = 0;
-    int             y       = 0;
-    unsigned int    width   = 0;
-    unsigned int    height  = 0;
+    int x       = 0;
+    int y       = 0;
+    int width   = 0;
+    int height  = 0;
 };
 
 struct DepthDescriptor

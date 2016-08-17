@@ -13,7 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include <LLGL/Platform/NativeHandle.h>
 #include "OpenGL.h"
-#include "GLStateManager.h"
+#include "RenderState/GLStateManager.h"
 
 #if defined(_WIN32)
 #   include "Platform/Win32/Win32GLPlatformContext.h"

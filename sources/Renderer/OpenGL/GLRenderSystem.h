@@ -19,7 +19,7 @@
 #include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
-#include "Pipeline/GLGraphicsPipeline.h"
+#include "RenderState/GLGraphicsPipeline.h"
 
 #include <string>
 #include <memory>

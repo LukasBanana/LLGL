@@ -6,8 +6,8 @@
  */
 
 #include "GLStateManager.h"
-#include "GLExtensions.h"
-#include "../../Core/Helper.h"
+#include "../GLExtensions.h"
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
@@ -180,6 +180,59 @@ void GLStateManager::PopStates(std::size_t count)
 {
     while (count-- > 0)
         PopState();
+}
+
+/* ----- Common states ----- */
+
+void GLStateManager::SetDepthFunc(GLenum func)
+{
+    if (commonState_.depthFunc != func)
+    {
+        commonState_.depthFunc = func;
+        glDepthFunc(func);
+    }
+}
+
+void GLStateManager::SetStencilFunc(GLenum face, const GLStencil& state)
+{
+    switch (face)
+    {
+        case GL_FRONT:
+            SetStencilFunc(GL_FRONT, commonState_.stencil[0], state);
+            break;
+        case GL_BACK:
+            SetStencilFunc(GL_BACK, commonState_.stencil[1], state);
+            break;
+        case GL_FRONT_AND_BACK:
+            SetStencilFunc(GL_FRONT, commonState_.stencil[0], state);
+            SetStencilFunc(GL_BACK, commonState_.stencil[1], state);
+            break;
+    }
+}
+
+void GLStateManager::SetStencilFunc(GLenum face, GLStencil& to, const GLStencil& from)
+{
+    if (to.sfail != from.sfail || to.dpfail != from.dpfail || to.dppass != from.dppass)
+    {
+        to.sfail    = from.sfail;
+        to.dpfail   = from.dpfail;
+        to.dppass   = from.dppass;
+        glStencilOpSeparate(face, to.sfail, to.dpfail, to.dppass);
+    }
+
+    if (to.func != from.func || to.ref != from.ref || to.mask != from.mask)
+    {
+        to.func = from.func;
+        to.ref  = from.ref;
+        to.mask = from.mask;
+        glStencilFuncSeparate(face, to.func, to.ref, to.mask);
+    }
+
+    if (to.writeMask != from.writeMask)
+    {
+        to.writeMask = from.writeMask;
+        glStencilMaskSeparate(face, to.writeMask);
+    }
 }
 
 /* ----- Buffer binding ----- */

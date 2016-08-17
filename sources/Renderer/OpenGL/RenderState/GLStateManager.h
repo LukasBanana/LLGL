@@ -9,86 +9,17 @@
 #define __LLGL_GL_STATE_MANAGER_H__
 
 
-#include "OpenGL.h"
-#include "Buffer/GLVertexBuffer.h"
-#include "Buffer/GLIndexBuffer.h"
-#include "Buffer/GLConstantBuffer.h"
-#include "Texture/GLTexture.h"
+#include "GLState.h"
+#include "../Buffer/GLVertexBuffer.h"
+#include "../Buffer/GLIndexBuffer.h"
+#include "../Buffer/GLConstantBuffer.h"
+#include "../Texture/GLTexture.h"
 #include <array>
 #include <stack>
 
 
 namespace LLGL
 {
-
-
-/**
-\brief OpenGL boolean state enumeration.
-\remarks Similar naming convention is used as in OpenGL API for simplicity.
-*/
-enum class GLState
-{
-    BLEND = 0,
-    COLOR_LOGIC_OP,
-    CULL_FACE,
-    DEBUG_OUTPUT,
-    DEBUG_OUTPUT_SYNCHRONOUS,
-    DEPTH_CLAMP,
-    DEPTH_TEST,
-    DITHER,
-    FRAMEBUFFER_SRGB,
-    LINE_SMOOTH,
-    MULTISAMPLE,
-    POLYGON_OFFSET_FILL,
-    POLYGON_OFFSET_LINE,
-    POLYGON_OFFSET_POINT,
-    POLYGON_SMOOTH,
-    PRIMITIVE_RESTART,
-    PRIMITIVE_RESTART_FIXED_INDEX,
-    RASTERIZER_DISCARD,
-    SAMPLE_ALPHA_TO_COVERAGE,
-    SAMPLE_ALPHA_TO_ONE,
-    SAMPLE_COVERAGE,
-    SAMPLE_SHADING,
-    SAMPLE_MASK,
-    SCISSOR_TEST,
-    STENCIL_TEST,
-    TEXTURE_CUBE_MAP_SEAMLESS,
-    PROGRAM_POINT_SIZE,
-};
-
-enum class GLBufferTarget
-{
-    ARRAY_BUFFER = 0,
-    ATOMIC_COUNTER_BUFFER,
-    COPY_READ_BUFFER,
-    COPY_WRITE_BUFFER,
-    DISPATCH_INDIRECT_BUFFER,
-    DRAW_INDIRECT_BUFFER,
-    ELEMENT_ARRAY_BUFFER,
-    PIXEL_PACK_BUFFER,
-    PIXEL_UNPACK_BUFFER,
-    QUERY_BUFFER,
-    SHADER_STORAGE_BUFFER,
-    TEXTURE_BUFFER,
-    TRANSFORM_FEEDBACK_BUFFER,
-    UNIFORM_BUFFER,
-};
-
-enum class GLTextureTarget
-{
-    TEXTURE_1D = 0,
-    TEXTURE_2D,
-    TEXTURE_3D,
-    TEXTURE_1D_ARRAY,
-    TEXTURE_2D_ARRAY,
-    TEXTURE_RECTANGLE,
-    TEXTURE_CUBE_MAP,
-    TEXTURE_CUBE_MAP_ARRAY,
-    TEXTURE_BUFFER,
-    TEXTURE_2D_MULTISAMPLE,
-    TEXTURE_2D_MULTISAMPLE_ARRAY,
-};
 
 
 class GLStateManager
@@ -116,6 +47,11 @@ class GLStateManager
         void PushState(GLState state);
         void PopState();
         void PopStates(std::size_t count);
+
+        /* ----- Common states ----- */
+
+        void SetDepthFunc(GLenum func);
+        void SetStencilFunc(GLenum face, const GLStencil& state);
 
         /* ----- Buffer binding ----- */
 
@@ -151,10 +87,18 @@ class GLStateManager
 
     private:
 
+        void SetStencilFunc(GLenum face, GLStencil& to, const GLStencil& from);
+
         static const std::size_t numTextureLayers   = 32;
         static const std::size_t numStates          = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);
         static const std::size_t numBufferTargets   = (static_cast<std::size_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
         static const std::size_t numTextureTargets  = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+
+        struct GLCommonState
+        {
+            GLenum      depthFunc    = GL_LESS;
+            GLStencil   stencil[2];
+        };
 
         struct GLRenderState
         {
@@ -204,6 +148,7 @@ class GLStateManager
             GLuint boundProgram = 0;
         };
 
+        GLCommonState               commonState_;
         GLRenderState               renderState_;
         GLBufferState               bufferState_;
         GLTextureState              textureState_;

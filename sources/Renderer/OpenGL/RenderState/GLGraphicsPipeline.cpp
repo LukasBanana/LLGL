@@ -6,7 +6,6 @@
  */
 
 #include "GLGraphicsPipeline.h"
-#include "../GLStateManager.h"
 #include "../GLExtensions.h"
 #include "../GLTypes.h"
 
@@ -17,46 +16,37 @@ namespace LLGL
 
 /* ----- Internal functions ----- */
 
-static GLViewport ConvertViewport(const Viewport& viewport)
+static void Convert(GLViewport& to, const Viewport& from)
 {
-    return
-    {
-        static_cast<GLfloat>(viewport.x),
-        static_cast<GLfloat>(viewport.y),
-        static_cast<GLfloat>(viewport.width),
-        static_cast<GLfloat>(viewport.height)
-    };
+    to.x        = from.x;
+    to.y        = from.y;
+    to.width    = from.width;
+    to.height   = from.height;
 }
 
-static GLDepthRange ConvertDepthRange(const Viewport& viewport)
+static void Convert(GLDepthRange& to, const Viewport& from)
 {
-    return
-    {
-        static_cast<GLdouble>(viewport.minDepth),
-        static_cast<GLdouble>(viewport.maxDepth)
-    };
+    to.minDepth = static_cast<GLdouble>(from.minDepth);
+    to.maxDepth = static_cast<GLdouble>(from.maxDepth);
 }
 
-static GLScissor ConvertScissor(const Scissor& scissor)
+static void Convert(GLScissor& to, const Scissor& from)
 {
-    return
-    {
-        static_cast<GLint>(scissor.x),
-        static_cast<GLint>(scissor.y),
-        static_cast<GLsizei>(scissor.width),
-        static_cast<GLsizei>(scissor.height)
-    };
+    to.x        = from.x;
+    to.y        = from.y;
+    to.width    = from.width;
+    to.height   = from.height;
 }
 
-template <typename To, typename From, typename Func>
-void Convert(std::vector<To>& to, const std::vector<From>& from, Func func)
+template <typename To, typename From>
+void Convert(std::vector<To>& to, const std::vector<From>& from)
 {
-    to.reserve(from.size());
-    for (const auto& entry : from)
-        to.push_back(func(entry));
+    to.resize(from.size());
+    for (std::size_t i = 0, n = from.size(); i < n; ++i)
+        Convert(to[i], from[i]);
 }
 
-static void Convert(GLStencilState& to, const StencilStateDescriptor& from)
+static void Convert(GLStencil& to, const StencilStateDescriptor& from)
 {
     to.func         = GLTypes::Map(from.compareOp);
     to.sfail        = GLTypes::Map(from.stencilFailOp);
@@ -72,14 +62,14 @@ static void Convert(GLStencilState& to, const StencilStateDescriptor& from)
 
 GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    Convert(viewports_, desc.viewports, ConvertViewport);
-    Convert(depthRanges_, desc.viewports, ConvertDepthRange);
-    Convert(scissors_, desc.scissors, ConvertScissor);
+    Convert(viewports_, desc.viewports);
+    Convert(depthRanges_, desc.viewports);
+    Convert(scissors_, desc.scissors);
 
     depthTestEnabled_   = desc.depth.testEnabled;
     depthWriteEnabled_  = desc.depth.writeEnabled;
     depthRangeEnabled_  = desc.depth.rangeEnabled;
-    depthCompareOp_     = GLTypes::Map(desc.depth.compareOp);
+    depthFunc_          = GLTypes::Map(desc.depth.compareOp);
 
     stencilTestEnabled_ = desc.stencil.testEnabled;
     Convert(stencilFront_, desc.stencil.front);
@@ -139,27 +129,24 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     }
 
     /* Setup depth test */
-    stateMngr.Set(GLState::DEPTH_TEST, depthTestEnabled_);
-    stateMngr.Set(GLState::DEPTH_CLAMP, depthRangeEnabled_);
+    if (depthTestEnabled_)
+    {
+        stateMngr.Enable(GLState::DEPTH_TEST);
+        stateMngr.Set(GLState::DEPTH_CLAMP, depthRangeEnabled_);
+        stateMngr.SetDepthFunc(depthFunc_);
+    }
+    else
+        stateMngr.Disable(GLState::DEPTH_TEST);
 
     /* Setup stencil test */
     if (stencilTestEnabled_)
     {
-        BindStencilFace(GL_FRONT, stencilFront_);
-        BindStencilFace(GL_BACK, stencilBack_);
+        stateMngr.Enable(GLState::STENCIL_TEST);
+        stateMngr.SetStencilFunc(GL_FRONT, stencilFront_);
+        stateMngr.SetStencilFunc(GL_BACK, stencilBack_);
     }
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void GLGraphicsPipeline::BindStencilFace(GLenum face, const GLStencilState& state)
-{
-    glStencilFuncSeparate(face, state.func, state.ref, state.mask);
-    glStencilMaskSeparate(face, state.writeMask);
-    glStencilOpSeparate(face, state.sfail, state.dpfail, state.dppass);
+    else
+        stateMngr.Disable(GLState::STENCIL_TEST);
 }
 
 
