@@ -78,55 +78,10 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 {
-    /* Setup viewports */
-    if (viewports_.size() == 1)
-    {
-        const auto& v = viewports_.front();
-        glViewport(
-            static_cast<GLint>(v.x),
-            static_cast<GLint>(v.y),
-            static_cast<GLsizei>(v.width),
-            static_cast<GLsizei>(v.height)
-        );
-    }
-    else if (viewports_.size() > 1 && glViewportArrayv)
-    {
-        glViewportArrayv(
-            0,
-            static_cast<GLsizei>(viewports_.size()),
-            reinterpret_cast<const GLfloat*>(viewports_.data())
-        );
-    }
-
-    /* Setup depth ranges */
-    if (depthRanges_.size() == 1)
-    {
-        const auto& dr = depthRanges_.front();
-        glDepthRange(dr.minDepth, dr.maxDepth);
-    }
-    else if (depthRanges_.size() > 1 && glDepthRangeArrayv)
-    {
-        glDepthRangeArrayv(
-            0,
-            static_cast<GLsizei>(depthRanges_.size()),
-            reinterpret_cast<const GLdouble*>(depthRanges_.data())
-        );
-    }
-
-    /* Setup scissors */
-    if (scissors_.size() == 1)
-    {
-        const auto& s = scissors_.front();
-        glScissor(s.x, s.y, s.width, s.height);
-    }
-    else if (scissors_.size() > 1 && glScissorArrayv)
-    {
-        glScissorArrayv(
-            0,
-            static_cast<GLsizei>(scissors_.size()),
-            reinterpret_cast<const GLint*>(scissors_.data())
-        );
-    }
+    /* Setup viewports, depth-ranges, and scissors */
+    stateMngr.SetViewports(viewports_);
+    stateMngr.SetDepthRanges(depthRanges_);
+    stateMngr.SetScissors(scissors_);
 
     /* Setup depth test */
     if (depthTestEnabled_)

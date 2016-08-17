@@ -15,6 +15,7 @@
 #include "../Buffer/GLConstantBuffer.h"
 #include "../Texture/GLTexture.h"
 #include <array>
+#include <vector>
 #include <stack>
 
 
@@ -52,6 +53,9 @@ class GLStateManager
 
         void SetDepthFunc(GLenum func);
         void SetStencilFunc(GLenum face, const GLStencil& state);
+        void SetViewports(const std::vector<GLViewport>& viewports);
+        void SetDepthRanges(const std::vector<GLDepthRange>& depthRanges);
+        void SetScissors(const std::vector<GLScissor>& scissors);
 
         /* ----- Buffer binding ----- */
 
@@ -96,8 +100,11 @@ class GLStateManager
 
         struct GLCommonState
         {
-            GLenum      depthFunc    = GL_LESS;
-            GLStencil   stencil[2];
+            GLenum                      depthFunc    = GL_LESS;
+            GLStencil                   stencil[2];
+            //std::vector<GLViewport>     viewports;
+            //std::vector<GLDepthRange>   depthRanges;
+            //std::vector<GLScissor>      scissors;
         };
 
         struct GLRenderState

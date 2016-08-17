@@ -235,6 +235,68 @@ void GLStateManager::SetStencilFunc(GLenum face, GLStencil& to, const GLStencil&
     }
 }
 
+void GLStateManager::SetViewports(const std::vector<GLViewport>& viewports)
+{
+    if (viewports.size() == 1)
+    {
+        const auto& v = viewports.front();
+        glViewport(
+            static_cast<GLint>(v.x),
+            static_cast<GLint>(v.y),
+            static_cast<GLsizei>(v.width),
+            static_cast<GLsizei>(v.height)
+        );
+    }
+    else if (viewports.size() > 1 && glViewportArrayv)
+    {
+        glViewportArrayv(
+            0,
+            static_cast<GLsizei>(viewports.size()),
+            reinterpret_cast<const GLfloat*>(viewports.data())
+        );
+    }
+}
+
+void GLStateManager::SetDepthRanges(const std::vector<GLDepthRange>& depthRanges)
+{
+    if (depthRanges.size() == 1)
+    {
+        const auto& dr = depthRanges.front();
+        glDepthRange(dr.minDepth, dr.maxDepth);
+    }
+    else if (depthRanges.size() > 1 && glDepthRangeArrayv)
+    {
+        glDepthRangeArrayv(
+            0,
+            static_cast<GLsizei>(depthRanges.size()),
+            reinterpret_cast<const GLdouble*>(depthRanges.data())
+        );
+    }
+}
+
+void GLStateManager::SetScissors(const std::vector<GLScissor>& scissors)
+{
+    if (!scissors.empty())
+    {
+        Enable(GLState::SCISSOR_TEST);
+        if (scissors.size() == 1)
+        {
+            const auto& s = scissors.front();
+            glScissor(s.x, s.y, s.width, s.height);
+        }
+        else if (scissors.size() > 1 && glScissorArrayv)
+        {
+            glScissorArrayv(
+                0,
+                static_cast<GLsizei>(scissors.size()),
+                reinterpret_cast<const GLint*>(scissors.data())
+            );
+        }
+    }
+    else
+        Disable(GLState::SCISSOR_TEST);
+}
+
 /* ----- Buffer binding ----- */
 
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
