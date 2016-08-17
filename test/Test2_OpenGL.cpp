@@ -33,10 +33,12 @@ int main()
 
         contextDesc.vsync.enabled           = true;
 
+        #if 0
         contextDesc.debugCallback = [](const std::string& type, const std::string& message)
         {
             std::cout << type << ':' << std::endl << "  " << message << std::endl;
         };
+        #endif
 
         auto context = renderer->CreateRenderContext(contextDesc);
 
@@ -121,9 +123,10 @@ int main()
             "#version 420\n"
             "layout(location=0) out vec4 fragColor;\n"
             "uniform sampler1D tex;\n"
+            "uniform vec4 color;\n"
             "in vec2 vertexPos;\n"
             "void main() {\n"
-            "    fragColor = texture(tex, vertexPos.x, 1.0);\n"
+            "    fragColor = texture(tex, vertexPos.x, 1.0) * color;\n"
             "}\n"
             
             #else
@@ -153,6 +156,12 @@ int main()
 
         shaderProgram.BindVertexAttributes(vertexFormat.GetAttributes());
 
+        // Set shader uniforms
+        auto uniformSetter = shaderProgram.LockUniformSetter();
+        if (uniformSetter)
+            uniformSetter->SetUniform("color", Gs::Vector4f(1, 0, 0, 1));
+        shaderProgram.UnlockShaderUniform();
+
         // Create constant buffer
         for (const auto& desc : shaderProgram.QueryConstantBuffers())
         {
@@ -171,6 +180,11 @@ int main()
                 shaderProgram.BindConstantBuffer(desc.name, bindingIndex);
                 context->BindConstantBuffer(constBuffer, bindingIndex);
             }
+        }
+
+        for (const auto& desc : shaderProgram.QueryUniforms())
+        {
+            std::cout << "uniform: name = \"" << desc.name << "\", location = " << desc.location << ", size = " << desc.size << std::endl;
         }
 
         // Create texture

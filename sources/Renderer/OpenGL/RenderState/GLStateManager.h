@@ -90,6 +90,9 @@ class GLStateManager
 
         void BindShaderProgram(GLuint program);
 
+        void PushShaderProgram();
+        void PopShaderProgram();
+
     private:
 
         void SetStencilFunc(GLenum face, GLStencil& to, const GLStencil& from);
@@ -153,7 +156,8 @@ class GLStateManager
 
         struct GLShaderState
         {
-            GLuint boundProgram = 0;
+            GLuint              boundProgram = 0;
+            std::stack<GLuint>  boundProgramStack;
         };
 
         GLCommonState               commonState_;

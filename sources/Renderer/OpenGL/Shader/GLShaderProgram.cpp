@@ -10,6 +10,8 @@
 #include "../GLExtensions.h"
 #include "../../CheckedCast.h"
 #include "../RenderState/GLStateManager.h"
+#include "../GLTypes.h"
+#include <LLGL/Log.h>
 #include <LLGL/VertexFormat.h>
 #include <vector>
 #include <stdexcept>
@@ -230,20 +232,30 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
     /* Iterate over all uniform blocks */
     for (GLuint i = 0; i < static_cast<GLuint>(numUniforms); ++i)
     {
-        UniformDescriptor desc;
-        desc.index = i;
+        try
+        {
+            UniformDescriptor desc;
 
-        /* Query uniform block name */
-        GLsizei nameLength  = 0;
-        GLint   size        = 0;
-        GLenum  type        = 0;
+            /* Query uniform block name */
+            GLsizei nameLength  = 0;
+            GLint   size        = 0;
+            GLenum  type        = 0;
         
-        glGetActiveUniform(id_, i, maxNameLength, &nameLength, &size, &type, blockName.data());
+            glGetActiveUniform(id_, i, maxNameLength, &nameLength, &size, &type, blockName.data());
 
-        desc.name = std::string(blockName.data());
+            desc.name       = std::string(blockName.data());
+            desc.location   = glGetUniformLocation(id_, blockName.data());
+            desc.size       = static_cast<unsigned int>(size);
 
-        /* Insert uniform block into list */
-        descList.push_back(desc);
+            GLTypes::Unmap(desc.type, type);
+
+            /* Insert uniform block into list */
+            descList.push_back(desc);
+        }
+        catch (const std::exception& e)
+        {
+            Log::StdOut() << e.what() << std::endl;
+        }
     }
 
     return descList;
@@ -286,11 +298,14 @@ void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int b
 
 ShaderUniform* GLShaderProgram::LockUniformSetter()
 {
-    return nullptr;
+    GLStateManager::active->PushShaderProgram();
+    GLStateManager::active->BindShaderProgram(id_);
+    return (&uniform_);
 }
 
 void GLShaderProgram::UnlockShaderUniform()
 {
+    GLStateManager::active->PopShaderProgram();
 }
 
 

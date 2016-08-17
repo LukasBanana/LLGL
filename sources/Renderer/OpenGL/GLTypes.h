@@ -14,6 +14,7 @@
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/ShaderUniform.h>
 
 
 namespace LLGL
@@ -32,6 +33,8 @@ GLenum Map( const TextureFormat     textureFormat );
 GLenum Map( const ColorFormat       colorFormat   );
 GLenum Map( const CompareOp         compareOp     );
 GLenum Map( const StencilOp         stencilOp     );
+
+void Unmap( UniformType& result, const GLenum uniformType );
 
 
 } // /namespace GLTypeConversion
