@@ -36,7 +36,7 @@ enum class DrawMode
 };
 
 //! Shading language version enumation.
-enum ShadingLanguage
+enum class ShadingLanguage
 {
     GLSL_110,   //!< GLSL 1.10 (since OpenGL 2.0).
     GLSL_120,   //!< GLSL 1.20 (since OpenGL 2.1).
