@@ -7,7 +7,7 @@
 
 #include "GLVertexBuffer.h"
 #include "../GLExtensions.h"
-#include "../GLTypeConversion.h"
+#include "../GLTypes.h"
 #include "../GLStateManager.h"
 
 
@@ -42,7 +42,7 @@ void GLVertexBuffer::UpdateVertexFormat(const VertexFormat& vertexFormat)
         glVertexAttribPointer(
             index,
             attrib.components,
-            GLTypeConversion::Map(attrib.dataType),
+            GLTypes::Map(attrib.dataType),
             GL_FALSE,
             vertexFormat.GetFormatSize(),
             reinterpret_cast<const char*>(0) + attrib.offset

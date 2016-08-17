@@ -10,7 +10,7 @@
 #include "../../Core/Helper.h"
 #include <LLGL/Desktop.h>
 #include "GLStateManager.h"
-#include "GLTypeConversion.h"
+#include "GLTypes.h"
 #include "GLExtensions.h"
 #include "GLCore.h"
 #include <sstream>
@@ -60,7 +60,7 @@ void GLRenderSystem::WriteVertexBuffer(
     GLStateManager::active->BindBuffer(vertexBufferGL);
 
     /* Update buffer data and update new vertex format */
-    vertexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
+    vertexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypes::Map(usage));
     vertexBufferGL.UpdateVertexFormat(vertexFormat);
 }
 
@@ -72,7 +72,7 @@ void GLRenderSystem::WriteIndexBuffer(
     GLStateManager::active->BindBuffer(indexBufferGL);
 
     /* Update buffer data and update new index format */
-    indexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
+    indexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypes::Map(usage));
     indexBufferGL.UpdateIndexFormat(indexFormat);
 }
 
@@ -84,7 +84,7 @@ void GLRenderSystem::WriteConstantBuffer(
     GLStateManager::active->BindBuffer(constantBufferGL);
 
     /* Update buffer data */
-    constantBufferGL.hwBuffer.BufferData(data, dataSize, GLTypeConversion::Map(usage));
+    constantBufferGL.hwBuffer.BufferData(data, dataSize, GLTypes::Map(usage));
 }
 
 void GLRenderSystem::WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
@@ -156,7 +156,7 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
     desc.type = texture.GetType();
 
     /* Query texture size */
-    auto target = GLTypeConversion::Map(texture.GetType());
+    auto target = GLTypes::Map(texture.GetType());
 
     glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &desc.texture3DDesc.width);
     glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &desc.texture3DDesc.height);
@@ -175,10 +175,10 @@ void GLRenderSystem::WriteTexture1D(Texture& texture, const TextureFormat format
     {
         /* Setup texture image from descriptor */
         GLTexImage1D(
-            GLTypeConversion::Map(format),
+            GLTypes::Map(format),
             size,
-            GLTypeConversion::Map(imageDesc->dataFormat),
-            GLTypeConversion::Map(imageDesc->dataType),
+            GLTypes::Map(imageDesc->dataFormat),
+            GLTypes::Map(imageDesc->dataType),
             imageDesc->data
         );
     }
@@ -186,7 +186,7 @@ void GLRenderSystem::WriteTexture1D(Texture& texture, const TextureFormat format
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size);
-        GLTexImage1D(GLTypeConversion::Map(format), size, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage1D(GLTypes::Map(format), size, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -200,10 +200,10 @@ void GLRenderSystem::WriteTexture2D(Texture& texture, const TextureFormat format
     {
         /* Setup texture image from descriptor */
         GLTexImage2D(
-            GLTypeConversion::Map(format),
+            GLTypes::Map(format),
             size.x, size.y,
-            GLTypeConversion::Map(imageDesc->dataFormat),
-            GLTypeConversion::Map(imageDesc->dataType),
+            GLTypes::Map(imageDesc->dataFormat),
+            GLTypes::Map(imageDesc->dataType),
             imageDesc->data
         );
     }
@@ -211,7 +211,7 @@ void GLRenderSystem::WriteTexture2D(Texture& texture, const TextureFormat format
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size.x*size.y);
-        GLTexImage2D(GLTypeConversion::Map(format), size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage2D(GLTypes::Map(format), size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -225,10 +225,10 @@ void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format
     {
         /* Setup texture image from descriptor */
         GLTexImage3D(
-            GLTypeConversion::Map(format),
+            GLTypes::Map(format),
             size.x, size.y, size.z,
-            GLTypeConversion::Map(imageDesc->dataFormat),
-            GLTypeConversion::Map(imageDesc->dataType),
+            GLTypes::Map(imageDesc->dataFormat),
+            GLTypes::Map(imageDesc->dataType),
             imageDesc->data
         );
     }
@@ -236,7 +236,7 @@ void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size.x*size.y*size.z);
-        GLTexImage3D(GLTypeConversion::Map(format), size.x, size.y, size.z, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage3D(GLTypes::Map(format), size.x, size.y, size.z, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -255,11 +255,11 @@ void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat f
     {
         /* Setup texture image from descriptor */
         GLTexImage1DArray(
-            GLTypeConversion::Map(format),
+            GLTypes::Map(format),
             size,
             layers,
-            GLTypeConversion::Map(imageDesc->dataFormat),
-            GLTypeConversion::Map(imageDesc->dataType),
+            GLTypes::Map(imageDesc->dataFormat),
+            GLTypes::Map(imageDesc->dataType),
             imageDesc->data
         );
     }
@@ -267,7 +267,7 @@ void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat f
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size*static_cast<int>(layers));
-        GLTexImage1DArray(GLTypeConversion::Map(format), size, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage1DArray(GLTypes::Map(format), size, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -281,11 +281,11 @@ void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat f
     {
         /* Setup texture image from descriptor */
         GLTexImage2DArray(
-            GLTypeConversion::Map(format),
+            GLTypes::Map(format),
             size.x, size.y,
             layers,
-            GLTypeConversion::Map(imageDesc->dataFormat),
-            GLTypeConversion::Map(imageDesc->dataType),
+            GLTypes::Map(imageDesc->dataFormat),
+            GLTypes::Map(imageDesc->dataType),
             imageDesc->data
         );
     }
@@ -293,7 +293,7 @@ void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat f
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size.x*size.y*static_cast<int>(layers));
-        GLTexImage2DArray(GLTypeConversion::Map(format), size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage2DArray(GLTypes::Map(format), size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -345,10 +345,10 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorForm
 
     /* Read image data from texture */
     glGetTexImage(
-        GLTypeConversion::Map(textureGL.GetType()),
+        GLTypes::Map(textureGL.GetType()),
         mipLevel,
-        GLTypeConversion::Map(dataFormat),
-        GLTypeConversion::Map(dataType),
+        GLTypes::Map(dataFormat),
+        GLTypes::Map(dataType),
         data
     );
 }
@@ -497,7 +497,7 @@ void GLRenderSystem::BindTextureAndSetType(GLTexture& textureGL, const TextureTy
         GLStateManager::active->ForcedBindTexture(textureGL);
 
         /* Setup texture parameters for the first time */
-        auto target = GLTypeConversion::Map(type);
+        auto target = GLTypes::Map(type);
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }

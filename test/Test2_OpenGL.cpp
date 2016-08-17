@@ -200,6 +200,7 @@ int main()
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
 
         // Create graphics pipeline
+        #if 0
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.viewports.push_back(LLGL::Viewport(50, 50, 100, 100));
@@ -207,6 +208,7 @@ int main()
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         context->BindGraphicsPipeline(*pipeline);
+        #endif
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))

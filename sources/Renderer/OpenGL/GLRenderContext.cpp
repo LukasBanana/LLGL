@@ -7,7 +7,7 @@
 
 #include "GLRenderContext.h"
 #include "GLRenderSystem.h"
-#include "GLTypeConversion.h"
+#include "GLTypes.h"
 #include "GLExtensions.h"
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
@@ -223,7 +223,7 @@ void GLRenderContext::ClearBuffers(long flags)
 
 void GLRenderContext::SetDrawMode(const DrawMode drawMode)
 {
-    renderState_.drawMode = GLTypeConversion::Map(drawMode);
+    renderState_.drawMode = GLTypes::Map(drawMode);
 }
 
 /* ----- Hardware buffers ------ */
@@ -247,7 +247,7 @@ void GLRenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
     GLStateManager::active->BindBuffer(indexBufferGL);
 
     /* Store new index buffer data in global render state */
-    renderState_.indexBufferDataType = GLTypeConversion::Map(indexBuffer.GetIndexFormat().GetDataType());
+    renderState_.indexBufferDataType = GLTypes::Map(indexBuffer.GetIndexFormat().GetDataType());
 }
 
 void GLRenderContext::UnbindIndexBuffer()
@@ -289,7 +289,7 @@ void GLRenderContext::GenerateMips(Texture& texture)
     GLStateManager::active->BindTexture(textureGL);
 
     /* Generate MIP-maps and update minification filter */
-    auto target = GLTypeConversion::Map(textureGL.GetType());
+    auto target = GLTypes::Map(textureGL.GetType());
 
     glGenerateMipmap(target);
     /*glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
