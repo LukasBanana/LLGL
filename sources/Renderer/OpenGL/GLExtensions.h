@@ -42,7 +42,6 @@ extern PFNGLXSWAPINTERVALSGIPROC                            glXSwapIntervalSGI;
 /* --- GL 3.0 extensions (for Core Profile) --- */
 
 extern PFNGLGETSTRINGIPROC                                  glGetStringi;
-extern PFNGLGETINTEGERI_VPROC                               glGetIntegeri_v;
 
 #endif
 
@@ -50,7 +49,15 @@ extern PFNGLGETINTEGERI_VPROC                               glGetIntegeri_v;
 
 extern PFNGLBLENDFUNCSEPARATEPROC                           glBlendFuncSeparate;
 extern PFNGLBLENDFUNCSEPARATEIPROC                          glBlendFuncSeparatei;
-extern PFNGLCOLORMASKIPROC                                  glColorMaski; // <--- correct extension ???
+
+/* --- Indexed (GL_EXT_draw_buffers2) --- */
+
+extern PFNGLCOLORMASKIPROC                                  glColorMaski;
+extern PFNGLGETBOOLEANI_VPROC                               glGetBooleani_v;
+extern PFNGLGETINTEGERI_VPROC                               glGetIntegeri_v;
+extern PFNGLENABLEIPROC                                     glEnablei;
+extern PFNGLDISABLEIPROC                                    glDisablei;
+extern PFNGLISENABLEDIPROC                                  glIsEnabledi;
 
 /* --- Multi Texture (GL_ARB_multitexture) --- */
 

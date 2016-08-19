@@ -34,7 +34,6 @@ PFNGLXSWAPINTERVALSGIPROC                               glXSwapIntervalSGI      
 /* --- GL 3.0 extensions (for Core Profile) --- */
 
 PFNGLGETSTRINGIPROC                                     glGetStringi                                    = nullptr;
-PFNGLGETINTEGERI_VPROC                                  glGetIntegeri_v                                 = nullptr;
 
 #endif
 
@@ -42,7 +41,15 @@ PFNGLGETINTEGERI_VPROC                                  glGetIntegeri_v         
 
 PFNGLBLENDFUNCSEPARATEPROC                              glBlendFuncSeparate                             = nullptr;
 PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
+
+/* --- Indexed (GL_EXT_draw_buffers2) --- */
+
 PFNGLCOLORMASKIPROC                                     glColorMaski                                    = nullptr;
+PFNGLGETBOOLEANI_VPROC                                  glGetBooleani_v                                 = nullptr;
+PFNGLGETINTEGERI_VPROC                                  glGetIntegeri_v                                 = nullptr;
+PFNGLENABLEIPROC                                        glEnablei                                       = nullptr;
+PFNGLDISABLEIPROC                                       glDisablei                                      = nullptr;
+PFNGLISENABLEDIPROC                                     glIsEnabledi                                    = nullptr;
 
 /* --- Multi Texture (GL_ARB_multitexture) --- */
 

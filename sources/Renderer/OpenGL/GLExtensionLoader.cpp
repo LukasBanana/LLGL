@@ -166,8 +166,7 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     LoadExtension( "GL_EXT_stencil_two_side",             LoadStencilSeparateProcs       ); // <--- correct extension ???
     LoadExtension( "GL_KHR_debug",                        LoadDebugProcs                 );
     LoadExtension( "GL_ARB_clip_control",                 LoadClipControlProcs           );
-
-    //todo... load "glGetIntegeri_v"
+    LoadExtension( "GL_EXT_draw_buffers2",                LoadIndexedProcs               );
 
     extAlreadyLoaded = true;
     
@@ -441,8 +440,7 @@ bool LoadDrawBuffersBlendProcs()
 {
     return
         LOAD_VERBATIM_GLPROC( glBlendFuncSeparate  ) &&
-        LOAD_VERBATIM_GLPROC( glBlendFuncSeparatei ) &&
-        LOAD_VERBATIM_GLPROC( glColorMaski         );
+        LOAD_VERBATIM_GLPROC( glBlendFuncSeparatei );
 }
 
 bool LoadMultiBindProcs()
@@ -472,6 +470,17 @@ bool LoadDebugProcs()
 bool LoadClipControlProcs()
 {
     return LOAD_VERBATIM_GLPROC(glClipControl);
+}
+
+bool LoadIndexedProcs()
+{
+    return
+        LOAD_VERBATIM_GLPROC( glColorMaski    ) &&
+        LOAD_VERBATIM_GLPROC( glGetBooleani_v ) &&
+        LOAD_VERBATIM_GLPROC( glGetIntegeri_v ) &&
+        LOAD_VERBATIM_GLPROC( glEnablei       ) &&
+        LOAD_VERBATIM_GLPROC( glDisablei      ) &&
+        LOAD_VERBATIM_GLPROC( glIsEnabledi    );
 }
 
 #undef LOAD_VERBATIM_GLPROC
