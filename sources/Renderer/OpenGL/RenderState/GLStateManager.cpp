@@ -240,21 +240,41 @@ void GLStateManager::SetScissors(const std::vector<GLScissor>& scissors)
     }
 }
 
-void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates)
+void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled)
 {
     if (blendStates.size() == 1)
     {
-        const auto& blend = blendStates.front();
-        glBlendFuncSeparate(blend.srcColor, blend.destColor, blend.srcAlpha, blend.destAlpha);
-        glColorMask(blend.colorMask.r, blend.colorMask.g, blend.colorMask.b, blend.colorMask.a);
+        /* Set blend state only for the single draw buffer */
+        const auto& state = blendStates.front();
+        glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
+        if (blendEnabled)
+            glBlendFuncSeparate(state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
     }
-    /*else if (blendStates.size() > 1)
+    else if (blendStates.size() > 1)
     {
-        for (const auto& state : blendStates)
-        {
+        GLenum drawBuffer = GL_COLOR_ATTACHMENT0;
 
-        }
-    }*/
+        /* Set respective blend state for each draw buffer */
+        for (const auto& state : blendStates)
+            SetBlendState(drawBuffer++, state, blendEnabled);
+    }
+}
+
+void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled)
+{
+    if (glBlendFuncSeparatei != nullptr && glColorMaski != nullptr)
+    {
+        glColorMaski(drawBuffer, state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
+        if (blendEnabled)
+            glBlendFuncSeparatei(drawBuffer, state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
+    }
+    else
+    {
+        glDrawBuffer(drawBuffer);
+        glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
+        if (blendEnabled)
+            glBlendFuncSeparate(state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
+    }
 }
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)

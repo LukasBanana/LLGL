@@ -54,7 +54,7 @@ class GLStateManager
         void SetViewports(const std::vector<GLViewport>& viewports);
         void SetDepthRanges(const std::vector<GLDepthRange>& depthRanges);
         void SetScissors(const std::vector<GLScissor>& scissors);
-        void SetBlendStates(const std::vector<GLBlend>& blendStates);
+        void SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled);
 
         void SetClipControl(GLenum origin, GLenum depth);
         void SetDepthFunc(GLenum func);
@@ -102,6 +102,7 @@ class GLStateManager
     private:
 
         void SetStencilState(GLenum face, GLStencil& to, const GLStencil& from);
+        void SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled);
 
         static const std::size_t numTextureLayers   = 32;
         static const std::size_t numStates          = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);

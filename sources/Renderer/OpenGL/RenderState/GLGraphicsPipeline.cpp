@@ -148,7 +148,7 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 
     /* Setup blend state */
     stateMngr.Set(GLState::BLEND, blendEnabled_);
-    stateMngr.SetBlendStates(blendStates_);
+    stateMngr.SetBlendStates(blendStates_, blendEnabled_);
 
     /* Setup shader state */
     stateMngr.BindShaderProgram(shaderProgram_->GetID());
