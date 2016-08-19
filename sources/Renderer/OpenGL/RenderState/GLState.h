@@ -92,24 +92,24 @@ enum class GLTextureTarget
 
 struct GLViewport
 {
-    GLfloat x       = 0.0f;
-    GLfloat y       = 0.0f;
-    GLfloat width   = 0.0f; // default is context width
-    GLfloat height  = 0.0f; // default is context height
+    GLfloat x;
+    GLfloat y;
+    GLfloat width;  // default is context width
+    GLfloat height; // default is context height
 };
 
 struct GLDepthRange
 {
-    GLdouble minDepth = 0.0;
-    GLdouble maxDepth = 1.0;
+    GLdouble minDepth;
+    GLdouble maxDepth;
 };
 
 struct GLScissor
 {
-    GLint   x       = 0;
-    GLint   y       = 0;
-    GLsizei width   = 0; // default is context width
-    GLsizei height  = 0; // default is context height
+    GLint   x;
+    GLint   y;
+    GLsizei width;  // default is context width
+    GLsizei height; // default is context height
 };
 
 struct GLStencil

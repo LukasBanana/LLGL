@@ -53,6 +53,9 @@ class GLRenderContext : public RenderContext
 
         /* ----- Configuration ----- */
 
+        void SetViewports(const std::vector<Viewport>& viewports) override;
+        void SetScissors(const std::vector<Scissor>& scissors) override;
+
         void SetClearColor(const ColorRGBAf& color) override;
         void SetClearDepth(float depth) override;
         void SetClearStencil(int stencil) override;
@@ -106,6 +109,11 @@ class GLRenderContext : public RenderContext
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);
 
+        inline GLint GetContextHeight() const
+        {
+            return contextHeight_;
+        }
+
     private:
 
         struct RenderState
@@ -156,6 +164,8 @@ class GLRenderContext : public RenderContext
 
         std::shared_ptr<GLStateManager> stateMngr_;
         RenderState                     renderState_;
+
+        GLint                           contextHeight_      = 0;
 
 };
 

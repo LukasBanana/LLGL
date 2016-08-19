@@ -14,6 +14,7 @@
 #include "../Buffer/GLIndexBuffer.h"
 #include "../Buffer/GLConstantBuffer.h"
 #include "../Texture/GLTexture.h"
+#include <LLGL/RenderContextFlags.h>
 #include <array>
 #include <vector>
 #include <stack>
@@ -22,6 +23,8 @@
 namespace LLGL
 {
 
+
+class GLRenderContext;
 
 class GLStateManager
 {
@@ -33,6 +36,8 @@ class GLStateManager
         GLStateManager();
 
         static GLStateManager* active;
+
+        void MakeCurrentInfo(const GLRenderContext& renderContext);
 
         /* ----- Boolean states ----- */
 
@@ -51,9 +56,10 @@ class GLStateManager
 
         /* ----- Common states ----- */
 
-        void SetViewports(const std::vector<GLViewport>& viewports);
-        void SetDepthRanges(const std::vector<GLDepthRange>& depthRanges);
-        void SetScissors(const std::vector<GLScissor>& scissors);
+        void SetViewports(std::vector<GLViewport>& viewports);
+        void SetDepthRanges(std::vector<GLDepthRange>& depthRanges);
+        void SetScissors(std::vector<GLScissor>& scissors);
+
         void SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled);
 
         void SetClipControl(GLenum origin, GLenum depth);
@@ -101,13 +107,21 @@ class GLStateManager
 
     private:
 
+        /* ----- Functions ----- */
+
         void SetStencilState(GLenum face, GLStencil& to, const GLStencil& from);
         void SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled);
+        void AdjustViewport(GLViewport& viewport);
+        void AdjustScissor(GLScissor& scissor);
+
+        /* ----- Constants ----- */
 
         static const std::size_t numTextureLayers   = 32;
         static const std::size_t numStates          = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);
         static const std::size_t numBufferTargets   = (static_cast<std::size_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
         static const std::size_t numTextureTargets  = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+
+        /* ----- Structure ----- */
 
         struct GLCommonState
         {
@@ -172,13 +186,18 @@ class GLStateManager
             std::stack<GLuint>  boundProgramStack;
         };
 
-        GLCommonState               commonState_;
-        GLRenderState               renderState_;
-        GLBufferState               bufferState_;
-        GLTextureState              textureState_;
-        GLShaderState               shaderState_;
+        /* ----- Members ----- */
 
-        GLTextureLayer*             activeTextureLayer_ = nullptr;
+        GLCommonState   commonState_;
+        GLRenderState   renderState_;
+        GLBufferState   bufferState_;
+        GLTextureState  textureState_;
+        GLShaderState   shaderState_;
+
+        GLTextureLayer* activeTextureLayer_     = nullptr;
+
+        bool            emulateClipControl_     = false;
+        GLint           currentContextHeight_   = 0;
 
 };
 

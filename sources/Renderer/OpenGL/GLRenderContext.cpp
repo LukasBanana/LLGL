@@ -25,8 +25,9 @@ GLRenderContext::GLRenderContext(
     RenderContextDescriptor desc,
     const std::shared_ptr<Window>& window,
     GLRenderContext* sharedRenderContext) :
-        renderSystem_   ( renderSystem ),
-        desc_           ( desc         )
+        renderSystem_   ( renderSystem                ),
+        desc_           ( desc                        ),
+        contextHeight_  ( desc.videoMode.resolution.y )
 {
     /* Setup window for the render context */
     NativeContextHandle windowContext;
@@ -192,6 +193,39 @@ ShadingLanguage GLRenderContext::QueryShadingLanguage() const
 
 /* ----- Configuration ----- */
 
+void GLRenderContext::SetViewports(const std::vector<Viewport>& viewports)
+{
+    /* Setup GL viewports and depth-ranges */
+    std::vector<GLViewport> viewportsGL;
+    viewportsGL.reserve(viewports.size());
+
+    std::vector<GLDepthRange> depthRangesGL;
+    depthRangesGL.reserve(viewports.size());
+
+    for (const auto& vp : viewports)
+    {
+        viewportsGL.push_back({ vp.x, vp.y, vp.width, vp.height });
+        depthRangesGL.push_back({ static_cast<GLdouble>(vp.minDepth), static_cast<GLdouble>(vp.maxDepth) });
+    }
+
+    /* Set final state */
+    stateMngr_->SetViewports(viewportsGL);
+    stateMngr_->SetDepthRanges(depthRangesGL);
+}
+
+void GLRenderContext::SetScissors(const std::vector<Scissor>& scissors)
+{
+    /* Setup GL viewports and depth-ranges */
+    std::vector<GLScissor> scissorsGL;
+    scissorsGL.reserve(scissors.size());
+
+    for (const auto& sc : scissors)
+        scissorsGL.push_back({ sc.x, sc.y, sc.width, sc.height });
+
+    /* Set final state */
+    stateMngr_->SetScissors(scissorsGL);
+}
+
 void GLRenderContext::SetClearColor(const ColorRGBAf& color)
 {
     glClearColor(color.r, color.g, color.b, color.a);
@@ -232,19 +266,19 @@ void GLRenderContext::BindVertexBuffer(VertexBuffer& vertexBuffer)
 {
     /* Bind vertex buffer */
     auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
-    GLStateManager::active->BindVertexArray(vertexBufferGL.GetVaoID());
+    stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
 }
 
 void GLRenderContext::UnbindVertexBuffer()
 {
-    GLStateManager::active->BindVertexArray(0);
+    stateMngr_->BindVertexArray(0);
 }
 
 void GLRenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
 {
     /* Bind index buffer */
     auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, indexBuffer);
-    GLStateManager::active->BindBuffer(indexBufferGL);
+    stateMngr_->BindBuffer(indexBufferGL);
 
     /* Store new index buffer data in global render state */
     renderState_.indexBufferDataType = GLTypes::Map(indexBuffer.GetIndexFormat().GetDataType());
@@ -252,14 +286,14 @@ void GLRenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
 
 void GLRenderContext::UnbindIndexBuffer()
 {
-    GLStateManager::active->BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, 0);
+    stateMngr_->BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void GLRenderContext::BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
 {
     /* Bind constant buffer */
     auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
-    GLStateManager::active->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, constantBufferGL.hwBuffer.GetID());
+    stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, constantBufferGL.hwBuffer.GetID());
 }
 
 void GLRenderContext::UnbindConstantBuffer(unsigned int index)
@@ -273,8 +307,8 @@ void GLRenderContext::BindTexture(Texture& texture, unsigned int layer)
 {
     /* Bind texture to layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->ActiveTexture(layer);
-    GLStateManager::active->BindTexture(textureGL);
+    stateMngr_->ActiveTexture(layer);
+    stateMngr_->BindTexture(textureGL);
 }
 
 void GLRenderContext::UnbindTexture(unsigned int layer)
@@ -286,7 +320,7 @@ void GLRenderContext::GenerateMips(Texture& texture)
 {
     /* Bind texture to active layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
+    stateMngr_->BindTexture(textureGL);
 
     /* Generate MIP-maps and update minification filter */
     auto target = GLTypes::Map(textureGL.GetType());
@@ -304,7 +338,7 @@ void GLRenderContext::GenerateMips(Texture& texture)
 void GLRenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineGL = LLGL_CAST(GLGraphicsPipeline&, graphicsPipeline);
-    graphicsPipelineGL.Bind(*GLStateManager::active);
+    graphicsPipelineGL.Bind(*stateMngr_);
 }
 
 /* ----- Drawing ----- */
@@ -420,6 +454,9 @@ void GLRenderContext::AcquireStateManager(GLRenderContext* sharedRenderContext)
         /* Create a new shared state manager */
         stateMngr_ = std::make_shared<GLStateManager>();
     }
+
+    /* Notify state manager about the current render context */
+    stateMngr_->MakeCurrentInfo(*this);
 }
 
 void GLRenderContext::InitRenderStates()

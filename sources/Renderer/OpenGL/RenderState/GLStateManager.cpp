@@ -6,6 +6,7 @@
  */
 
 #include "GLStateManager.h"
+#include "../GLRenderContext.h"
 #include "../GLExtensions.h"
 #include "../../../Core/Helper.h"
 
@@ -110,6 +111,11 @@ GLStateManager::GLStateManager()
     GLStateManager::active = this;
 }
 
+void GLStateManager::MakeCurrentInfo(const GLRenderContext& renderContext)
+{
+    currentContextHeight_ = renderContext.GetContextHeight();
+}
+
 /* ----- Boolean states ----- */
 
 void GLStateManager::Reset()
@@ -184,20 +190,36 @@ void GLStateManager::PopStates(std::size_t count)
 
 /* ----- Common states ----- */
 
-void GLStateManager::SetViewports(const std::vector<GLViewport>& viewports)
+//private
+void GLStateManager::AdjustViewport(GLViewport& viewport)
+{
+    viewport.y = static_cast<GLfloat>(currentContextHeight_) - viewport.height - viewport.y;
+}
+
+void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
 {
     if (viewports.size() == 1)
     {
-        const auto& v = viewports.front();
+        auto& vp = viewports.front();
+
+        if (emulateClipControl_)
+            AdjustViewport(vp);
+
         glViewport(
-            static_cast<GLint>(v.x),
-            static_cast<GLint>(v.y),
-            static_cast<GLsizei>(v.width),
-            static_cast<GLsizei>(v.height)
+            static_cast<GLint>(vp.x),
+            static_cast<GLint>(vp.y),
+            static_cast<GLsizei>(vp.width),
+            static_cast<GLsizei>(vp.height)
         );
     }
     else if (viewports.size() > 1 && glViewportArrayv)
     {
+        if (emulateClipControl_)
+        {
+            for (auto& vp : viewports)
+                AdjustViewport(vp);
+        }
+
         glViewportArrayv(
             0,
             static_cast<GLsizei>(viewports.size()),
@@ -206,7 +228,7 @@ void GLStateManager::SetViewports(const std::vector<GLViewport>& viewports)
     }
 }
 
-void GLStateManager::SetDepthRanges(const std::vector<GLDepthRange>& depthRanges)
+void GLStateManager::SetDepthRanges(std::vector<GLDepthRange>& depthRanges)
 {
     if (depthRanges.size() == 1)
     {
@@ -223,15 +245,31 @@ void GLStateManager::SetDepthRanges(const std::vector<GLDepthRange>& depthRanges
     }
 }
 
-void GLStateManager::SetScissors(const std::vector<GLScissor>& scissors)
+//private
+void GLStateManager::AdjustScissor(GLScissor& scissor)
+{
+    scissor.y = currentContextHeight_ - scissor.height - scissor.y;
+}
+
+void GLStateManager::SetScissors(std::vector<GLScissor>& scissors)
 {
     if (scissors.size() == 1)
     {
-        const auto& s = scissors.front();
-        glScissor(s.x, s.y, s.width, s.height);
+        auto& sc = scissors.front();
+
+        if (emulateClipControl_)
+            AdjustScissor(sc);
+
+        glScissor(sc.x, sc.y, sc.width, sc.height);
     }
     else if (scissors.size() > 1 && glScissorArrayv)
     {
+        if (emulateClipControl_)
+        {
+            for (auto& sc : scissors)
+                AdjustScissor(sc);
+        }
+
         glScissorArrayv(
             0,
             static_cast<GLsizei>(scissors.size()),
@@ -285,10 +323,10 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
-    if (glClipControl)
+    /*if (glClipControl)
         glClipControl(origin, depth);
-    /*else
-        emulateClipControl_ = true;*/
+    else*/
+        emulateClipControl_ = (origin == GL_UPPER_LEFT);
 }
 
 void GLStateManager::SetDepthFunc(GLenum func)

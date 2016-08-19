@@ -173,6 +173,64 @@ struct RenderingCaps
     Gs::Vector3ui   maxComputeShaderWorkGroupSize;
 };
 
+/**
+\brief Viewport dimensions.
+\remarks A viewport is in screen coordinates where the origin is in the left-top corner.
+*/
+struct Viewport
+{
+    Viewport() = default;
+    Viewport(const Viewport&) = default;
+    
+    Viewport(float x, float y, float width, float height) :
+        x       ( x      ),
+        y       ( y      ),
+        width   ( width  ),
+        height  ( height )
+    {
+    }
+    
+    Viewport(float x, float y, float width, float height, float minDepth, float maxDepth) :
+        x       ( x        ),
+        y       ( y        ),
+        width   ( width    ),
+        height  ( height   ),
+        minDepth( minDepth ),
+        maxDepth( maxDepth )
+    {
+    }
+
+    float x         = 0.0f; //!< Left-top X coordinate.
+    float y         = 0.0f; //!< Left-top Y coordinate.
+    float width     = 0.0f; //!< Right-bottom width.
+    float height    = 0.0f; //!< Right-bottom height.
+    float minDepth  = 0.0f; //!< Minimal depth range.
+    float maxDepth  = 1.0f; //!< Maximal depth range.
+};
+
+/**
+\brief Scissor dimensions.
+\remarks A scissor is in screen coordinates where the origin is in the left-top corner.
+*/
+struct Scissor
+{
+    Scissor() = default;
+    Scissor(const Scissor&) = default;
+
+    Scissor(int x, int y, int width, int height) :
+        x       ( x      ),
+        y       ( y      ),
+        width   ( width  ),
+        height  ( height )
+    {
+    }
+
+    int x       = 0;
+    int y       = 0;
+    int width   = 0;
+    int height  = 0;
+};
+
 
 } // /namespace LLGL
 

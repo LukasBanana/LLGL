@@ -216,8 +216,6 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            //pipelineDesc.viewports.push_back(LLGL::Viewport(0, 0, 300, 300));
-            //pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, 200, 150));
             pipelineDesc.shaderProgram = &shaderProgram;
 
             LLGL::BlendTargetDescriptor blendDesc;
@@ -227,6 +225,8 @@ int main()
             pipelineDesc.blend.targets.push_back(blendDesc);
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
 
         // Main loop
         while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
@@ -239,7 +239,6 @@ int main()
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
 
             context->BindGraphicsPipeline(*pipeline);
-            //context->BindShaderProgram(shaderProgram);
             context->BindVertexBuffer(vertexBuffer);
 
             context->Draw(4, 0);

@@ -77,6 +77,9 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Configuration ----- */
 
+        virtual void SetViewports(const std::vector<Viewport>& viewports) = 0;
+        virtual void SetScissors(const std::vector<Scissor>& scissors) = 0;
+
         virtual void SetClearColor(const ColorRGBAf& color) = 0;
         virtual void SetClearDepth(float depth) = 0;
         virtual void SetClearStencil(int stencil) = 0;
