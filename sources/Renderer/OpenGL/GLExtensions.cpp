@@ -42,6 +42,7 @@ PFNGLGETINTEGERI_VPROC                                  glGetIntegeri_v         
 
 PFNGLBLENDFUNCSEPARATEPROC                              glBlendFuncSeparate                             = nullptr;
 PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
+PFNGLCOLORMASKIPROC                                     glColorMaski                                    = nullptr;
 
 /* --- Multi Texture (GL_ARB_multitexture) --- */
 

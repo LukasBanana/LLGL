@@ -10,6 +10,7 @@
 
 
 #include "../OpenGL.h"
+#include <LLGL/ColorRGBA.h>
 
 
 namespace LLGL
@@ -120,6 +121,15 @@ struct GLStencil
     GLint   ref         = 0;
     GLuint  mask        = ~0;
     GLuint  writeMask   = ~0;
+};
+
+struct GLBlend
+{
+    GLenum                  srcColor    = GL_ONE;
+    GLenum                  destColor   = GL_ZERO;
+    GLenum                  srcAlpha    = GL_ONE;
+    GLenum                  destAlpha   = GL_ZERO;
+    ColorRGBAT<GLboolean>   colorMask   = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
 };
 
 

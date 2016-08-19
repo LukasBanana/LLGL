@@ -30,19 +30,28 @@ class GLGraphicsPipeline : public GraphicsPipeline
 
     private:
 
-        std::vector<GLViewport>     viewports_;
-        std::vector<GLDepthRange>   depthRanges_;
-        std::vector<GLScissor>      scissors_;
+        // depth state
+        bool                    depthTestEnabled_   = false;    // glEnable(GL_DEPTH_TEST)
+        GLboolean               depthMask_          = false;    // glDepthMask(GL_TRUE)
+        GLenum                  depthFunc_          = GL_LESS;
 
-        bool                        depthTestEnabled_   = false;    // glEnable(GL_DEPTH_TEST)
-        bool                        depthWriteEnabled_  = false;    // glDepthMask(GL_TRUE)
-        bool                        depthClampEnabled_  = false;    // glEnable(GL_DEPTH_CLAMP)
-        GLenum                      depthFunc_          = GL_LESS;
+        // stencil state
+        bool                    stencilTestEnabled_ = false;    // glEnable(GL_STENCIL_TEST)
+        GLStencil               stencilFront_;
+        GLStencil               stencilBack_;
 
-        bool                        stencilTestEnabled_ = false;
-        GLStencil                   stencilFront_;
-        GLStencil                   stencilBack_;
+        // rasterizer state
+        GLenum                  polygonMode_        = GL_FILL;
+        GLenum                  cullFace_           = 0;
+        GLenum                  frontFace_          = GL_CCW;
+        bool                    scissorTestEnabled_ = false;    // glEnable(GL_SCISSOR_TEST)
+        bool                    depthClampEnabled_  = false;    // glEnable(GL_DEPTH_CLAMP)
+        bool                    multiSampleEnabled_ = false;    // glEnable(GL_MULTISAMPLE)
+        bool                    lineSmoothEnabled_  = false;    // glEnable(GL_LINE_SMOOTH)
 
+        // blend state
+        bool                    blendEnabled_       = false;
+        std::vector<GLBlend>    blendStates_;
 
 };
 

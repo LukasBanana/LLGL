@@ -29,6 +29,9 @@ std::string GLDebugTypeToStr(const GLenum type);
 //! Converts the GL debug severity into a string.
 std::string GLDebugSeverityToStr(const GLenum severity);
 
+//! Converts the boolean value into a GLboolean value.
+GLboolean GLBoolean(bool value);
+
 
 } // /namespace LLGL
 

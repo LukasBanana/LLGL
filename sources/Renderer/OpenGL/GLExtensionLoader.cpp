@@ -441,7 +441,8 @@ bool LoadDrawBuffersBlendProcs()
 {
     return
         LOAD_VERBATIM_GLPROC( glBlendFuncSeparate  ) &&
-        LOAD_VERBATIM_GLPROC( glBlendFuncSeparatei );
+        LOAD_VERBATIM_GLPROC( glBlendFuncSeparatei ) &&
+        LOAD_VERBATIM_GLPROC( glColorMaski         );
 }
 
 bool LoadMultiBindProcs()

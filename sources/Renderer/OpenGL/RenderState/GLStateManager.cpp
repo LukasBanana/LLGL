@@ -184,65 +184,6 @@ void GLStateManager::PopStates(std::size_t count)
 
 /* ----- Common states ----- */
 
-void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
-{
-    if (glClipControl)
-        glClipControl(origin, depth);
-    /*else
-        emulateClipControl_ = true;*/
-}
-
-void GLStateManager::SetDepthFunc(GLenum func)
-{
-    if (commonState_.depthFunc != func)
-    {
-        commonState_.depthFunc = func;
-        glDepthFunc(func);
-    }
-}
-
-void GLStateManager::SetStencilFunc(GLenum face, const GLStencil& state)
-{
-    switch (face)
-    {
-        case GL_FRONT:
-            SetStencilFunc(GL_FRONT, commonState_.stencil[0], state);
-            break;
-        case GL_BACK:
-            SetStencilFunc(GL_BACK, commonState_.stencil[1], state);
-            break;
-        case GL_FRONT_AND_BACK:
-            SetStencilFunc(GL_FRONT, commonState_.stencil[0], state);
-            SetStencilFunc(GL_BACK, commonState_.stencil[1], state);
-            break;
-    }
-}
-
-void GLStateManager::SetStencilFunc(GLenum face, GLStencil& to, const GLStencil& from)
-{
-    if (to.sfail != from.sfail || to.dpfail != from.dpfail || to.dppass != from.dppass)
-    {
-        to.sfail    = from.sfail;
-        to.dpfail   = from.dpfail;
-        to.dppass   = from.dppass;
-        glStencilOpSeparate(face, to.sfail, to.dpfail, to.dppass);
-    }
-
-    if (to.func != from.func || to.ref != from.ref || to.mask != from.mask)
-    {
-        to.func = from.func;
-        to.ref  = from.ref;
-        to.mask = from.mask;
-        glStencilFuncSeparate(face, to.func, to.ref, to.mask);
-    }
-
-    if (to.writeMask != from.writeMask)
-    {
-        to.writeMask = from.writeMask;
-        glStencilMaskSeparate(face, to.writeMask);
-    }
-}
-
 void GLStateManager::SetViewports(const std::vector<GLViewport>& viewports)
 {
     if (viewports.size() == 1)
@@ -284,25 +225,131 @@ void GLStateManager::SetDepthRanges(const std::vector<GLDepthRange>& depthRanges
 
 void GLStateManager::SetScissors(const std::vector<GLScissor>& scissors)
 {
-    if (!scissors.empty())
+    if (scissors.size() == 1)
     {
-        Enable(GLState::SCISSOR_TEST);
-        if (scissors.size() == 1)
-        {
-            const auto& s = scissors.front();
-            glScissor(s.x, s.y, s.width, s.height);
-        }
-        else if (scissors.size() > 1 && glScissorArrayv)
-        {
-            glScissorArrayv(
-                0,
-                static_cast<GLsizei>(scissors.size()),
-                reinterpret_cast<const GLint*>(scissors.data())
-            );
-        }
+        const auto& s = scissors.front();
+        glScissor(s.x, s.y, s.width, s.height);
     }
-    else
-        Disable(GLState::SCISSOR_TEST);
+    else if (scissors.size() > 1 && glScissorArrayv)
+    {
+        glScissorArrayv(
+            0,
+            static_cast<GLsizei>(scissors.size()),
+            reinterpret_cast<const GLint*>(scissors.data())
+        );
+    }
+}
+
+void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates)
+{
+    if (blendStates.size() == 1)
+    {
+        const auto& blend = blendStates.front();
+        glBlendFuncSeparate(blend.srcColor, blend.destColor, blend.srcAlpha, blend.destAlpha);
+        glColorMask(blend.colorMask.r, blend.colorMask.g, blend.colorMask.b, blend.colorMask.a);
+    }
+    /*else if (blendStates.size() > 1)
+    {
+        for (const auto& state : blendStates)
+        {
+
+        }
+    }*/
+}
+
+void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
+{
+    if (glClipControl)
+        glClipControl(origin, depth);
+    /*else
+        emulateClipControl_ = true;*/
+}
+
+void GLStateManager::SetDepthFunc(GLenum func)
+{
+    if (commonState_.depthFunc != func)
+    {
+        commonState_.depthFunc = func;
+        glDepthFunc(func);
+    }
+}
+
+void GLStateManager::SetStencilState(GLenum face, const GLStencil& state)
+{
+    switch (face)
+    {
+        case GL_FRONT:
+            SetStencilState(GL_FRONT, commonState_.stencil[0], state);
+            break;
+        case GL_BACK:
+            SetStencilState(GL_BACK, commonState_.stencil[1], state);
+            break;
+        case GL_FRONT_AND_BACK:
+            SetStencilState(GL_FRONT, commonState_.stencil[0], state);
+            SetStencilState(GL_BACK, commonState_.stencil[1], state);
+            break;
+    }
+}
+
+void GLStateManager::SetStencilState(GLenum face, GLStencil& to, const GLStencil& from)
+{
+    if (to.sfail != from.sfail || to.dpfail != from.dpfail || to.dppass != from.dppass)
+    {
+        to.sfail    = from.sfail;
+        to.dpfail   = from.dpfail;
+        to.dppass   = from.dppass;
+        glStencilOpSeparate(face, to.sfail, to.dpfail, to.dppass);
+    }
+
+    if (to.func != from.func || to.ref != from.ref || to.mask != from.mask)
+    {
+        to.func = from.func;
+        to.ref  = from.ref;
+        to.mask = from.mask;
+        glStencilFuncSeparate(face, to.func, to.ref, to.mask);
+    }
+
+    if (to.writeMask != from.writeMask)
+    {
+        to.writeMask = from.writeMask;
+        glStencilMaskSeparate(face, to.writeMask);
+    }
+}
+
+void GLStateManager::SetPolygonMode(GLenum mode)
+{
+    if (commonState_.polygonMode != mode)
+    {
+        commonState_.polygonMode = mode;
+        glPolygonMode(GL_FRONT_AND_BACK, mode);
+    }
+}
+
+void GLStateManager::SetCullFace(GLenum face)
+{
+    if (commonState_.cullFace != face)
+    {
+        commonState_.cullFace = face;
+        glCullFace(face);
+    }
+}
+
+void GLStateManager::SetFrontFace(GLenum mode)
+{
+    if (commonState_.frontFace != mode)
+    {
+        commonState_.frontFace = mode;
+        glFrontFace(mode);
+    }
+}
+
+void GLStateManager::SetDepthMask(GLboolean flag)
+{
+    if (commonState_.depthMask != flag)
+    {
+        commonState_.depthMask = flag;
+        glDepthMask(flag);
+    }
 }
 
 /* ----- Buffer binding ----- */

@@ -51,12 +51,18 @@ class GLStateManager
 
         /* ----- Common states ----- */
 
-        void SetClipControl(GLenum origin, GLenum depth);
-        void SetDepthFunc(GLenum func);
-        void SetStencilFunc(GLenum face, const GLStencil& state);
         void SetViewports(const std::vector<GLViewport>& viewports);
         void SetDepthRanges(const std::vector<GLDepthRange>& depthRanges);
         void SetScissors(const std::vector<GLScissor>& scissors);
+        void SetBlendStates(const std::vector<GLBlend>& blendStates);
+
+        void SetClipControl(GLenum origin, GLenum depth);
+        void SetDepthFunc(GLenum func);
+        void SetStencilState(GLenum face, const GLStencil& state);
+        void SetPolygonMode(GLenum mode);
+        void SetCullFace(GLenum face);
+        void SetFrontFace(GLenum mode);
+        void SetDepthMask(GLboolean flag);
 
         /* ----- Buffer binding ----- */
 
@@ -95,7 +101,7 @@ class GLStateManager
 
     private:
 
-        void SetStencilFunc(GLenum face, GLStencil& to, const GLStencil& from);
+        void SetStencilState(GLenum face, GLStencil& to, const GLStencil& from);
 
         static const std::size_t numTextureLayers   = 32;
         static const std::size_t numStates          = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);
@@ -104,8 +110,12 @@ class GLStateManager
 
         struct GLCommonState
         {
-            GLenum                      depthFunc    = GL_LESS;
+            GLenum                      depthFunc   = GL_LESS;
             GLStencil                   stencil[2];
+            GLenum                      polygonMode = GL_FILL;
+            GLenum                      cullFace    = GL_BACK;
+            GLenum                      frontFace   = GL_CCW;
+            GLboolean                   depthMask   = GL_FALSE;
             //std::vector<GLViewport>     viewports;
             //std::vector<GLDepthRange>   depthRanges;
             //std::vector<GLScissor>      scissors;

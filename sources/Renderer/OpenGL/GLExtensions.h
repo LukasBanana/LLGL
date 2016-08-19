@@ -50,6 +50,7 @@ extern PFNGLGETINTEGERI_VPROC                               glGetIntegeri_v;
 
 extern PFNGLBLENDFUNCSEPARATEPROC                           glBlendFuncSeparate;
 extern PFNGLBLENDFUNCSEPARATEIPROC                          glBlendFuncSeparatei;
+extern PFNGLCOLORMASKIPROC                                  glColorMaski; // <--- correct extension ???
 
 /* --- Multi Texture (GL_ARB_multitexture) --- */
 

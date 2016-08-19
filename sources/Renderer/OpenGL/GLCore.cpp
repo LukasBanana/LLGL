@@ -90,6 +90,11 @@ std::string GLDebugSeverityToStr(const GLenum severity)
     return "";
 }
 
+GLboolean GLBoolean(bool value)
+{
+    return (value ? GL_TRUE : GL_FALSE);
+}
+
 #undef CASE_TO_STR
 
 

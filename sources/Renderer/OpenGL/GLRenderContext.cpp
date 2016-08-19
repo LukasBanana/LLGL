@@ -436,25 +436,18 @@ void GLRenderContext::AcquireStateManager(GLRenderContext* sharedRenderContext)
 
 void GLRenderContext::InitRenderStates()
 {
-    /* Setup default render states to be uniform between render systems */
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS); // D3D10+ has this per default
-    glFrontFace(GL_CW);                     // D3D10+ uses clock-wise vertex winding per default
+    /* Initialize state manager */
+    stateMngr_->Reset();
 
-    #if 1//!!!TESTING!!!
-    //glCullFace(GL_BACK);
-    //glEnable(GL_DEPTH_TEST);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-    #endif
+    /* Setup default render states to be uniform between render systems */
+    stateMngr_->Enable(GLState::TEXTURE_CUBE_MAP_SEAMLESS); // D3D10+ has this per default
+    stateMngr_->SetFrontFace(GL_CW);                        // D3D10+ uses clock-wise vertex winding per default
 
     /*
     Set pixel storage to byte-alignment (default is word-alignment).
     This is required so that texture formats like RGB (which is not word-aligned) can be used.
     */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    /* Initialize state manager */
-    stateMngr_->Reset();
 }
 
 void GLRenderContext::QueryGLVerion(GLint& major, GLint& minor) const

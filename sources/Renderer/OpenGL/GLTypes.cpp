@@ -210,6 +210,46 @@ GLenum Map(const StencilOp stencilOp)
     MapFailed("StencilOp");
 }
 
+GLenum Map(const BlendOp blendOp)
+{
+    switch (blendOp)
+    {
+        case BlendOp::Zero:         return GL_ZERO;
+        case BlendOp::One:          return GL_ONE;
+        case BlendOp::SrcColor:     return GL_SRC_COLOR;
+        case BlendOp::InvSrcColor:  return GL_ONE_MINUS_SRC_COLOR;
+        case BlendOp::SrcAlpha:     return GL_SRC_ALPHA;
+        case BlendOp::InvSrcAlpha:  return GL_ONE_MINUS_SRC_ALPHA;
+        case BlendOp::DestColor:    return GL_DST_COLOR;
+        case BlendOp::InvDestColor: return GL_ONE_MINUS_DST_COLOR;
+        case BlendOp::DestAlpha:    return GL_DST_ALPHA;
+        case BlendOp::InvDestAlpha: return GL_ONE_MINUS_DST_ALPHA;
+    }
+    MapFailed("BlendOp");
+}
+
+GLenum Map(const PolygonMode polygonMode)
+{
+    switch (polygonMode)
+    {
+        case PolygonMode::Fill:         return GL_FILL;
+        case PolygonMode::Wireframe:    return GL_LINE;
+        case PolygonMode::Points:       return GL_POINT;
+    }
+    MapFailed("PolygonMode");
+}
+
+GLenum Map(const CullMode cullMode)
+{
+    switch (cullMode)
+    {
+        case CullMode::None:    return 0;
+        case CullMode::Front:   return GL_FRONT;
+        case CullMode::Back:    return GL_BACK;
+    }
+    MapFailed("CullMode");
+}
+
 void Unmap(UniformType& result, const GLenum uniformType)
 {
     switch (uniformType)

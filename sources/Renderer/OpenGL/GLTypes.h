@@ -33,6 +33,9 @@ GLenum Map( const TextureFormat     textureFormat );
 GLenum Map( const ColorFormat       colorFormat   );
 GLenum Map( const CompareOp         compareOp     );
 GLenum Map( const StencilOp         stencilOp     );
+GLenum Map( const BlendOp           blendOp       );
+GLenum Map( const PolygonMode       polygonMode   );
+GLenum Map( const CullMode          cullMode      );
 
 void Unmap( UniformType& result, const GLenum uniformType );
 

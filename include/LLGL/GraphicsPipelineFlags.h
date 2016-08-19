@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "ColorRGBA.h"
 #include <vector>
 #include <cstdint>
 
@@ -22,6 +23,8 @@ class ShaderProgram;
 class VertexBuffer;
 class IndexBuffer;
 
+
+/* ----- Enumerations ----- */
 
 /**
 \brief Compare operations enumeration.
@@ -52,6 +55,41 @@ enum class StencilOp
     DecWrap,
 };
 
+//! Blending operations enumeration.
+enum class BlendOp
+{
+    Zero,
+    One,
+
+    SrcColor,
+    InvSrcColor,
+    SrcAlpha,
+    InvSrcAlpha,
+
+    DestColor,
+    InvDestColor,
+    DestAlpha,
+    InvDestAlpha,
+};
+
+//! Polygon filling modes enumeration.
+enum class PolygonMode
+{
+    Fill,
+    Wireframe,
+    Points,
+};
+
+//! Polygon culling modes enumeration.
+enum class CullMode
+{
+    None,   //!< No culling.
+    Front,  //!< Front face culling.
+    Back,   //!< Back face culling.
+};
+
+
+/* ----- Structures ----- */
 
 /**
 \brief Viewport dimensions.
@@ -115,7 +153,6 @@ struct DepthDescriptor
 {
     bool        testEnabled     = false;
     bool        writeEnabled    = false;
-    bool        clampEnabled    = false;
     CompareOp   compareOp       = CompareOp::Less;
 };
 
@@ -139,12 +176,31 @@ struct StencilDescriptor
 
 struct RasterizerDescriptor
 {
-    //todo...
+    PolygonMode polygonMode             = PolygonMode::Fill;
+    CullMode    cullMode                = CullMode::None;
+    int         depthBias               = 0;
+    float       depthBiasClamp          = 0.0f;
+    float       slopeScaledDepthBias    = 0.0f;
+    bool        frontCCW                = false;
+    bool        depthClampEnabled       = false;
+    bool        scissorTestEnabled      = false;
+    bool        multiSampleEnabled      = false;
+    bool        antiAliasedLineEnabled  = false;
+};
+
+struct BlendTargetDescriptor
+{
+    BlendOp     srcColor    = BlendOp::SrcAlpha;
+    BlendOp     destColor   = BlendOp::InvSrcAlpha;
+    BlendOp     srcAlpha    = BlendOp::SrcAlpha;
+    BlendOp     destAlpha   = BlendOp::InvSrcAlpha;
+    ColorRGBAb  colorMask;
 };
 
 struct BlendDescriptor
 {
-    //todo...
+    bool                                blendEnabled    = false;
+    std::vector<BlendTargetDescriptor>  targets;
 };
 
 /**
@@ -154,9 +210,6 @@ viewports, depth-/ stencil-/ rasterizer-/ blend states, shader stages etc.
 */
 struct GraphicsPipelineDescriptor
 {
-    std::vector<Viewport>   viewports;
-    std::vector<Scissor>    scissors;
-
     DepthDescriptor         depth;
     StencilDescriptor       stencil;
     RasterizerDescriptor    rasterizer;
