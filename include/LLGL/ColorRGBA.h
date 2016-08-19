@@ -220,6 +220,7 @@ template <typename T>
 using ColorRGBAT = Color<T, 4>;
 
 using ColorRGBA   = ColorRGBAT<Gs::Real>;
+using ColorRGBAb  = ColorRGBAT<bool>;
 using ColorRGBAf  = ColorRGBAT<float>;
 using ColorRGBAd  = ColorRGBAT<double>;
 using ColorRGBAub = ColorRGBAT<unsigned char>;

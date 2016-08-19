@@ -199,6 +199,7 @@ template <typename T>
 using ColorRGBT = Color<T, 3>;
 
 using ColorRGB      = ColorRGBT<Gs::Real>;
+using ColorRGBb     = ColorRGBT<bool>;
 using ColorRGBf     = ColorRGBT<float>;
 using ColorRGBd     = ColorRGBT<double>;
 using ColorRGBub    = ColorRGBT<unsigned char>;

@@ -37,6 +37,13 @@ inline unsigned char MaxColorValue<unsigned char>()
     return 255;
 }
 
+//! Specialized version. For booleans, the return value is true.
+template <>
+inline bool MaxColorValue<bool>()
+{
+    return true;
+}
+
 
 /* --- Color class --- */
 
