@@ -58,6 +58,11 @@ class GLRenderContextProfiler : public GLRenderContext
         void BindTexture(Texture& texture, unsigned int layer) override;
         void UnbindTexture(unsigned int layer) override;
 
+        /* ----- Pipeline states ----- */
+
+        void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
+        //void BindComputePipeline(ComputePipeline& computePipeline) override;
+
         /* --- Drawing --- */
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
@@ -72,10 +77,7 @@ class GLRenderContextProfiler : public GLRenderContext
         void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset) override;
         void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset) override;
 
-        /* ----- Shader ----- */
-
-        void BindShaderProgram(ShaderProgram& shaderProgram) override;
-        void UnbindShaderProgram() override;
+        /* ----- Compute ----- */
 
         void DispatchCompute(const Gs::Vector3ui& threadGroupSize) override;
 

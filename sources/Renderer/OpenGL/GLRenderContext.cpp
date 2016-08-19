@@ -299,25 +299,6 @@ void GLRenderContext::GenerateMips(Texture& texture)
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 }
 
-/* ----- Shader ----- */
-
-void GLRenderContext::BindShaderProgram(ShaderProgram& shaderProgram)
-{
-    /* Bind index buffer */
-    auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
-    GLStateManager::active->BindShaderProgram(shaderProgramGL.GetID());
-}
-
-void GLRenderContext::UnbindShaderProgram()
-{
-    GLStateManager::active->BindShaderProgram(0);
-}
-
-void GLRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
-{
-    glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
-}
-
 /* ----- Pipeline states ----- */
 
 void GLRenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
@@ -413,6 +394,13 @@ void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned in
         indexOffset,
         instanceOffset
     );
+}
+
+/* ----- Compute ----- */
+
+void GLRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
+{
+    glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
 }
 
 

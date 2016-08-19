@@ -25,7 +25,7 @@ void RenderingProfiler::ResetCounters()
     bindVertexBuffer.Reset();
     bindIndexBuffer.Reset();
     bindConstantBuffer.Reset();
-    bindShaderProgram.Reset();
+    bindGraphicsPipeline.Reset();
     bindTexture.Reset();
 
     drawCalls.Reset();

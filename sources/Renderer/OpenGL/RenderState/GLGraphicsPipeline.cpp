@@ -9,6 +9,7 @@
 #include "../GLExtensions.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"
+#include "../../CheckedCast.h"
 
 
 namespace LLGL
@@ -97,6 +98,12 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
     /* Convert blend state */
     blendEnabled_       = desc.blend.blendEnabled;
     Convert(blendStates_, desc.blend.targets);
+
+    /* Convert shader state */
+    shaderProgram_      = LLGL_CAST(GLShaderProgram*, desc.shaderProgram);
+
+    if (!shaderProgram_)
+        throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
@@ -140,13 +147,11 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     stateMngr.Set(GLState::LINE_SMOOTH, lineSmoothEnabled_);
 
     /* Setup blend state */
-    if (blendEnabled_)
-    {
-        stateMngr.Enable(GLState::BLEND);
-        stateMngr.SetBlendStates(blendStates_);
-    }
-    else
-        stateMngr.Disable(GLState::BLEND);
+    stateMngr.Set(GLState::BLEND, blendEnabled_);
+    stateMngr.SetBlendStates(blendStates_);
+
+    /* Setup shader state */
+    stateMngr.BindShaderProgram(shaderProgram_->GetID());
 }
 
 

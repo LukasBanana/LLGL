@@ -103,6 +103,18 @@ void GLRenderContextProfiler::UnbindTexture(unsigned int layer)
     profiler_.bindTexture.Inc();
 }
 
+/* ----- Pipeline states ----- */
+
+void GLRenderContextProfiler::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+{
+    GLRenderContext::BindGraphicsPipeline(graphicsPipeline);
+    profiler_.bindGraphicsPipeline.Inc();
+}
+
+/*void GLRenderContextProfiler::BindComputePipeline(ComputePipeline& computePipeline)
+{
+}*/
+
 /* --- Drawing --- */
 
 void GLRenderContextProfiler::Draw(unsigned int numVertices, unsigned int firstVertex)
@@ -153,19 +165,7 @@ void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, uns
     profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
 }
 
-/* ----- Shader ----- */
-
-void GLRenderContextProfiler::BindShaderProgram(ShaderProgram& shaderProgram)
-{
-    GLRenderContext::BindShaderProgram(shaderProgram);
-    profiler_.bindShaderProgram.Inc();
-}
-
-void GLRenderContextProfiler::UnbindShaderProgram()
-{
-    GLRenderContext::UnbindShaderProgram();
-    profiler_.bindShaderProgram.Inc();
-}
+/* ----- Compute ----- */
 
 void GLRenderContextProfiler::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
 {

@@ -11,6 +11,7 @@
 
 #include "../OpenGL.h"
 #include "GLStateManager.h"
+#include "../Shader/GLShaderProgram.h"
 #include <LLGL/GraphicsPipeline.h>
 #include <vector>
 
@@ -52,6 +53,9 @@ class GLGraphicsPipeline : public GraphicsPipeline
         // blend state
         bool                    blendEnabled_       = false;
         std::vector<GLBlend>    blendStates_;
+
+        // shader state
+        GLShaderProgram*        shaderProgram_      = nullptr;
 
 };
 

@@ -84,7 +84,7 @@ class LLGL_EXPORT RenderingProfiler
         Counter bindVertexBuffer;
         Counter bindIndexBuffer;
         Counter bindConstantBuffer;
-        Counter bindShaderProgram;
+        Counter bindGraphicsPipeline;
         Counter bindTexture;
 
         Counter drawCalls;

@@ -79,16 +79,10 @@ class GLRenderContext : public RenderContext
 
         void GenerateMips(Texture& texture) override;
 
-        /* ----- Shader ----- */
-
-        void BindShaderProgram(ShaderProgram& shaderProgram) override;
-        void UnbindShaderProgram() override;
-
-        void DispatchCompute(const Gs::Vector3ui& threadGroupSize) override;
-
         /* ----- Pipeline states ----- */
 
         void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
+        //void BindComputePipeline(ComputePipeline& computePipeline) override;
 
         /* ----- Drawing ----- */
 
@@ -103,6 +97,10 @@ class GLRenderContext : public RenderContext
         void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances) override;
         void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset) override;
         void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset) override;
+
+        /* ----- Compute ----- */
+
+        void DispatchCompute(const Gs::Vector3ui& threadGroupSize) override;
 
         /* ----- GLRenderContext specific functions ----- */
 
