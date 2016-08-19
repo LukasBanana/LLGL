@@ -246,7 +246,13 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
     {
         /* Set blend state only for the single draw buffer */
         const auto& state = blendStates.front();
-        glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
+
+        if (commonState_.colorMask != state.colorMask)
+        {
+            commonState_.colorMask = state.colorMask;
+            glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
+        }
+
         if (blendEnabled)
             glBlendFuncSeparate(state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
     }

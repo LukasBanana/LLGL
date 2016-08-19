@@ -116,7 +116,8 @@ class GLStateManager
             GLenum                      polygonMode = GL_FILL;
             GLenum                      cullFace    = GL_BACK;
             GLenum                      frontFace   = GL_CCW;
-            GLboolean                   depthMask   = GL_FALSE;
+            GLboolean                   depthMask   = GL_TRUE;
+            ColorRGBAT<GLboolean>       colorMask   = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
             //std::vector<GLViewport>     viewports;
             //std::vector<GLDepthRange>   depthRanges;
             //std::vector<GLScissor>      scissors;

@@ -12,6 +12,7 @@
 #include <Gauss/Real.h>
 #include <Gauss/Assert.h>
 #include <Gauss/Tags.h>
+#include <Gauss/Equals.h>
 
 #include <algorithm>
 
@@ -241,6 +242,23 @@ Color<T, N> operator / (const Color<T, N>& lhs, const T& rhs)
     auto result = lhs;
     result /= rhs;
     return result;
+}
+
+template <typename T, std::size_t N>
+bool operator == (const Color<T, N>& lhs, const Color<T, N>& rhs)
+{
+    for (std::size_t i = 0; i < N; ++i)
+    {
+        if (!Gs::Equals(lhs[i], rhs[i]))
+            return false;
+    }
+    return true;
+}
+
+template <typename T, std::size_t N>
+bool operator != (const Color<T, N>& lhs, const Color<T, N>& rhs)
+{
+    return !(lhs == rhs);
 }
 
 
