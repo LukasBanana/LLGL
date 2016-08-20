@@ -23,6 +23,9 @@ struct VertexAttribute
     //! Data type of the vertex attribute components. By default DataType::Float.
     DataType        dataType    = DataType::Float;
 
+    //! Specifies whether non-floating-point data types are to be converted to floating-points. By default false.
+    bool            conversion  = false;
+
     //! Number of components: 1, 2, 3, or 4. By default 4.
     unsigned int    components  = 4;
 

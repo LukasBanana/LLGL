@@ -39,8 +39,11 @@ void GLVertexBuffer::UpdateVertexFormat(const VertexFormat& vertexFormat)
     {
         glEnableVertexAttribArray(index);
 
-        if (attrib.dataType == DataType::Int || attrib.dataType == DataType::UInt)
+        if (!attrib.conversion && attrib.dataType != DataType::Float && attrib.dataType != DataType::Double)
         {
+            if (!glVertexAttribIPointer)
+                throw std::runtime_error("integral vertex attributes not supported by renderer");
+
             glVertexAttribIPointer(
                 index,
                 attrib.components,
