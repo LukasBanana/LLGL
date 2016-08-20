@@ -12,6 +12,7 @@
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
+#include "Texture/GLRenderTarget.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include <LLGL/Platform/NativeHandle.h>
 
@@ -331,6 +332,19 @@ void GLRenderContext::GenerateMips(Texture& texture)
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);*/
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+}
+
+/* ----- Render Targets ----- */
+
+void GLRenderContext::BindRenderTarget(RenderTarget& renderTarget)
+{
+    auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
+    stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFrameBuffer().GetID());
+}
+
+void GLRenderContext::UnbindRenderTarget()
+{
+    stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);
 }
 
 /* ----- Pipeline States ----- */

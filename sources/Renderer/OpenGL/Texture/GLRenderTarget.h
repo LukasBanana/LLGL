@@ -33,6 +33,11 @@ class GLRenderTarget : public RenderTarget
 
         void DetachTextures() override;
 
+        inline const GLFrameBuffer& GetFrameBuffer() const
+        {
+            return frameBuffer_;
+        }
+
     private:
 
         GLenum NextColorAttachment();

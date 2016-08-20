@@ -20,6 +20,7 @@
 #include "ConstantBuffer.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
+#include "RenderTarget.h"
 #include "GraphicsPipeline.h"
 
 #include <Gauss/Vector3.h>
@@ -109,6 +110,11 @@ class LLGL_EXPORT RenderContext
         \see https://developer.valvesoftware.com/wiki/MIP_Mapping
         */
         virtual void GenerateMips(Texture& texture) = 0;
+
+        /* ----- Render Targets ----- */
+
+        virtual void BindRenderTarget(RenderTarget& renderTarget) = 0;
+        virtual void UnbindRenderTarget() = 0;
 
         /* ----- Pipeline States ----- */
 

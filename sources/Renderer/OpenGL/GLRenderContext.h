@@ -82,6 +82,11 @@ class GLRenderContext : public RenderContext
 
         void GenerateMips(Texture& texture) override;
 
+        /* ----- Render Targets ----- */
+
+        void BindRenderTarget(RenderTarget& renderTarget) override;
+        void UnbindRenderTarget() override;
+
         /* ----- Pipeline States ----- */
 
         void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;

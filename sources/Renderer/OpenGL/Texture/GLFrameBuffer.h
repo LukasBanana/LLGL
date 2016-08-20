@@ -28,8 +28,8 @@ class GLFrameBuffer
         GLFrameBuffer();
         ~GLFrameBuffer();
 
-        void Bind();
-        void Unbind();
+        void Bind() const;
+        void Unbind() const;
 
         //! Recreates the internal framebuffer object. This will invalidate the previous buffer ID.
         void Recreate();

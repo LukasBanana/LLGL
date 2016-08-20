@@ -24,12 +24,12 @@ GLFrameBuffer::~GLFrameBuffer()
     glDeleteFramebuffers(1, &id_);
 }
 
-void GLFrameBuffer::Bind()
+void GLFrameBuffer::Bind() const
 {
     GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, id_);
 }
 
-void GLFrameBuffer::Unbind()
+void GLFrameBuffer::Unbind() const
 {
     GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);
 }
