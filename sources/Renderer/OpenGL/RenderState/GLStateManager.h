@@ -80,10 +80,17 @@ class GLStateManager
 
         void PushBoundBuffer(GLBufferTarget target);
         void PopBoundBuffer();
-        
+
         void BindBuffer(const GLVertexBuffer& vertexBuffer);
         void BindBuffer(const GLIndexBuffer& indexBuffer);
         void BindBuffer(const GLConstantBuffer& constantBuffer);
+        
+        /* ----- Framebuffer binding ----- */
+
+        void BindFrameBuffer(GLFrameBufferTarget target, GLuint framebuffer);
+
+        void PushBoundFrameBuffer(GLFrameBufferTarget target);
+        void PopBoundFrameBuffer();
 
         /* ----- Texture binding ----- */
 
@@ -116,10 +123,11 @@ class GLStateManager
 
         /* ----- Constants ----- */
 
-        static const std::size_t numTextureLayers   = 32;
-        static const std::size_t numStates          = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);
-        static const std::size_t numBufferTargets   = (static_cast<std::size_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
-        static const std::size_t numTextureTargets  = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+        static const std::size_t numTextureLayers       = 32;
+        static const std::size_t numStates              = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);
+        static const std::size_t numBufferTargets       = (static_cast<std::size_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
+        static const std::size_t numFrameBufferTargets  = (static_cast<std::size_t>(GLFrameBufferTarget::READ_FRAMEBUFFER) + 1);
+        static const std::size_t numTextureTargets      = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
 
         /* ----- Structure ----- */
 
@@ -161,6 +169,18 @@ class GLStateManager
             std::stack<StackEntry>                  boundBufferStack;
         };
 
+        struct GLFrameBufferState
+        {
+            struct StackEntry
+            {
+                GLFrameBufferTarget target;
+                GLuint              buffer;
+            };
+
+            std::array<GLuint, numFrameBufferTargets>   boundFrameBuffers;
+            std::stack<StackEntry>                      boundFrameBufferStack;
+        };
+
         struct GLTextureLayer
         {
             std::array<GLuint, numTextureTargets>   boundTextures;
@@ -188,16 +208,17 @@ class GLStateManager
 
         /* ----- Members ----- */
 
-        GLCommonState   commonState_;
-        GLRenderState   renderState_;
-        GLBufferState   bufferState_;
-        GLTextureState  textureState_;
-        GLShaderState   shaderState_;
+        GLCommonState       commonState_;
+        GLRenderState       renderState_;
+        GLBufferState       bufferState_;
+        GLFrameBufferState  frameBufferState_;
+        GLTextureState      textureState_;
+        GLShaderState       shaderState_;
 
-        GLTextureLayer* activeTextureLayer_     = nullptr;
+        GLTextureLayer*     activeTextureLayer_     = nullptr;
 
-        bool            emulateClipControl_     = false;
-        GLint           currentContextHeight_   = 0;
+        bool                emulateClipControl_     = false;
+        GLint               currentContextHeight_   = 0;
 
 };
 

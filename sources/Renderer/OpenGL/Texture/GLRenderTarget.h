@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderTarget.h>
+#include "GLFrameBuffer.h"
 #include "GLTexture.h"
 
 
@@ -34,7 +35,11 @@ class GLRenderTarget : public RenderTarget
 
     private:
 
+        GLenum NextColorAttachment();
 
+        GLFrameBuffer   frameBuffer_;
+
+        int             attachments_    = 0;
 
 };
 

@@ -6,6 +6,8 @@
  */
 
 #include "GLRenderTarget.h"
+#include "../../CheckedCast.h"
+#include "../GLTypes.h"
 
 
 namespace LLGL
@@ -14,34 +16,66 @@ namespace LLGL
 
 void GLRenderTarget::AttachTexture1D(Texture& texture, int mipLevel)
 {
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    frameBuffer_.Bind();
+    frameBuffer_.AttachTexture1D(NextColorAttachment(), textureGL, GL_TEXTURE_1D, mipLevel);
 }
 
 void GLRenderTarget::AttachTexture2D(Texture& texture, int mipLevel)
 {
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    frameBuffer_.Bind();
+    frameBuffer_.AttachTexture2D(NextColorAttachment(), textureGL, GL_TEXTURE_2D, mipLevel);
 }
 
 void GLRenderTarget::AttachTexture3D(Texture& texture, int layer, int mipLevel)
 {
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    frameBuffer_.Bind();
+    frameBuffer_.AttachTexture3D(NextColorAttachment(), textureGL, GL_TEXTURE_3D, mipLevel, layer);
 }
 
 void GLRenderTarget::AttachTextureCube(Texture& texture, const AxisDirection cubeFace, int mipLevel)
 {
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    frameBuffer_.Bind();
+    frameBuffer_.AttachTexture2D(NextColorAttachment(), textureGL, GLTypes::Map(cubeFace), mipLevel);
 }
 
 void GLRenderTarget::AttachTexture1DArray(Texture& texture, int layer, int mipLevel)
 {
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    frameBuffer_.Bind();
+    frameBuffer_.AttachTextureLayer(NextColorAttachment(), textureGL, mipLevel, layer);
 }
 
 void GLRenderTarget::AttachTexture2DArray(Texture& texture, int layer, int mipLevel)
 {
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    frameBuffer_.Bind();
+    frameBuffer_.AttachTextureLayer(NextColorAttachment(), textureGL, mipLevel, layer);
 }
 
 void GLRenderTarget::AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel)
 {
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    frameBuffer_.Bind();
+    frameBuffer_.AttachTextureLayer(NextColorAttachment(), textureGL, mipLevel, layer * 6 + static_cast<int>(cubeFace));
 }
 
 void GLRenderTarget::DetachTextures()
 {
+    //todo...
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+GLenum GLRenderTarget::NextColorAttachment()
+{
+    return (GL_COLOR_ATTACHMENT0 + (attachments_++));
 }
 
 

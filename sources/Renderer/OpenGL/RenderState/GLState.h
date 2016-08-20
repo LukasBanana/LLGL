@@ -72,6 +72,13 @@ enum class GLBufferTarget
     UNIFORM_BUFFER,
 };
 
+enum class GLFrameBufferTarget
+{
+    FRAMEBUFFER         = 0,
+    DRAW_FRAMEBUFFER    = 0,
+    READ_FRAMEBUFFER    = 1,
+};
+
 enum class GLTextureTarget
 {
     TEXTURE_1D = 0,

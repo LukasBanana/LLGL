@@ -64,6 +64,12 @@ static const GLenum bufferTargetsMap[] =
     GL_UNIFORM_BUFFER,
 };
 
+static const GLenum framebufferTargetsMap[] =
+{
+    GL_DRAW_FRAMEBUFFER,
+    GL_READ_FRAMEBUFFER,
+};
+
 static const GLenum textureTargetsMap[] =
 {
     GL_TEXTURE_1D,
@@ -101,6 +107,7 @@ GLStateManager::GLStateManager()
     /* Initialize all states with zero */
     Fill(renderState_.values, false);
     Fill(bufferState_.boundBuffers, 0);
+    Fill(frameBufferState_.boundFrameBuffers, 0);
 
     for (auto& layer : textureState_.layers)
         Fill(layer.boundTextures, 0);
@@ -420,7 +427,7 @@ void GLStateManager::SetDepthMask(GLboolean flag)
 
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 {
-    /* Only bind buffer if the buffer changed */
+    /* Only bind buffer if the buffer has changed */
     auto targetIdx = static_cast<std::size_t>(target);
     if (bufferState_.boundBuffers[targetIdx] != buffer)
     {
@@ -487,6 +494,38 @@ void GLStateManager::BindBuffer(const GLConstantBuffer& constantBuffer)
     BindBuffer(GLBufferTarget::UNIFORM_BUFFER, constantBuffer.hwBuffer.GetID());
 }
 
+/* ----- Framebuffer binding ----- */
+
+void GLStateManager::BindFrameBuffer(GLFrameBufferTarget target, GLuint framebuffer)
+{
+    /* Only bind framebuffer if the framebuffer has changed */
+    auto targetIdx = static_cast<std::size_t>(target);
+    if (frameBufferState_.boundFrameBuffers[targetIdx] != framebuffer)
+    {
+        frameBufferState_.boundFrameBuffers[targetIdx] = framebuffer;
+        glBindFramebuffer(framebufferTargetsMap[targetIdx], framebuffer);
+    }
+}
+
+void GLStateManager::PushBoundFrameBuffer(GLFrameBufferTarget target)
+{
+    frameBufferState_.boundFrameBufferStack.push(
+        {
+            target,
+            frameBufferState_.boundFrameBuffers[static_cast<std::size_t>(target)]
+        }
+    );
+}
+
+void GLStateManager::PopBoundFrameBuffer()
+{
+    const auto& state = frameBufferState_.boundFrameBufferStack.top();
+    {
+        BindFrameBuffer(state.target, state.buffer);
+    }
+    frameBufferState_.boundFrameBufferStack.pop();
+}
+
 /* ----- Texture binding ----- */
 
 void GLStateManager::ActiveTexture(unsigned int layer)
@@ -502,7 +541,7 @@ void GLStateManager::ActiveTexture(unsigned int layer)
 
 void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
 {
-    /* Only bind texutre if the texutre changed */
+    /* Only bind texutre if the texture has changed */
     auto targetIdx = static_cast<std::size_t>(target);
     if (activeTextureLayer_->boundTextures[targetIdx] != texture)
     {

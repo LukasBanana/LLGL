@@ -130,7 +130,7 @@ extern PFNGLDELETEFRAMEBUFFERSPROC                          glDeleteFramebuffers
 extern PFNGLBINDFRAMEBUFFERPROC                             glBindFramebuffer;
 extern PFNGLCHECKFRAMEBUFFERSTATUSPROC                      glCheckFramebufferStatus;
 
-extern PFNGLFRAMEBUFFERTEXTUREPROC                          glFramebufferTexture;
+extern PFNGLFRAMEBUFFERTEXTUREPROC                          glFramebufferTexture; // <--- other extension!
 extern PFNGLFRAMEBUFFERTEXTURE1DPROC                        glFramebufferTexture1D;
 extern PFNGLFRAMEBUFFERTEXTURE2DPROC                        glFramebufferTexture2D;
 extern PFNGLFRAMEBUFFERTEXTURE3DPROC                        glFramebufferTexture3D;
