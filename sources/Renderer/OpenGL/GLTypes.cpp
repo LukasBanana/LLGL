@@ -243,9 +243,9 @@ GLenum Map(const CullMode cullMode)
 {
     switch (cullMode)
     {
-        case CullMode::None:    return 0;
-        case CullMode::Front:   return GL_FRONT;
-        case CullMode::Back:    return GL_BACK;
+        case CullMode::Disabled:    return 0;
+        case CullMode::Front:       return GL_FRONT;
+        case CullMode::Back:        return GL_BACK;
     }
     MapFailed("CullMode");
 }

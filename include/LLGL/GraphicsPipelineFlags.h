@@ -83,9 +83,9 @@ enum class PolygonMode
 //! Polygon culling modes enumeration.
 enum class CullMode
 {
-    None,   //!< No culling.
-    Front,  //!< Front face culling.
-    Back,   //!< Back face culling.
+    Disabled,   //!< No culling.
+    Front,      //!< Front face culling.
+    Back,       //!< Back face culling.
 };
 
 
@@ -119,7 +119,7 @@ struct StencilDescriptor
 struct RasterizerDescriptor
 {
     PolygonMode polygonMode             = PolygonMode::Fill;
-    CullMode    cullMode                = CullMode::None;
+    CullMode    cullMode                = CullMode::Disabled;
     int         depthBias               = 0;
     float       depthBiasClamp          = 0.0f;
     float       slopeScaledDepthBias    = 0.0f;
