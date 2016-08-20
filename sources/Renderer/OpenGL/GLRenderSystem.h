@@ -19,6 +19,7 @@
 #include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
+#include "Texture/GLRenderTarget.h"
 #include "RenderState/GLGraphicsPipeline.h"
 
 #include <string>
@@ -83,7 +84,7 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Render Targets ----- */
 
-        //RenderTarget* CreateRenderTarget() override;
+        RenderTarget* CreateRenderTarget() override;
 
         /* ----- Shader ----- */
 
@@ -132,6 +133,7 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLConstantBuffer>         constantBuffers_;
 
         HWObjectContainer<GLTexture>                textures_;
+        HWObjectContainer<GLRenderTarget>           renderTargets_;
 
         HWObjectContainer<GLShader>                 shaders_;
         HWObjectContainer<GLShaderProgram>          shaderPrograms_;

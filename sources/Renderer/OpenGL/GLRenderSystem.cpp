@@ -337,6 +337,12 @@ void GLRenderSystem::WriteTextureCubeArraySub(
 {
 }
 
+#define LLGL_ASSERT_PTR(PTR) \
+    if (!PTR) \
+    { \
+        throw std::invalid_argument(__FUNCTION__ ": null pointer exception of parameter \"" #PTR "\""); \
+    }
+
 void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
 {
     /* Bind texture */
@@ -351,6 +357,13 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorForm
         GLTypes::Map(dataType),
         data
     );
+}
+
+/* ----- Render Targets ----- */
+
+RenderTarget* GLRenderSystem::CreateRenderTarget()
+{
+    return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>());
 }
 
 /* ----- Shader ----- */
