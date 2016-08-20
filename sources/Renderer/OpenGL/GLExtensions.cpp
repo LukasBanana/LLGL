@@ -96,6 +96,7 @@ PFNGLUNMAPBUFFERPROC                                    glUnmapBuffer           
 PFNGLENABLEVERTEXATTRIBARRAYPROC                        glEnableVertexAttribArray                       = nullptr;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC                       glDisableVertexAttribArray                      = nullptr;
 PFNGLVERTEXATTRIBPOINTERPROC                            glVertexAttribPointer                           = nullptr;
+PFNGLVERTEXATTRIBIPOINTERPROC                           glVertexAttribIPointer                          = nullptr;
 PFNGLBINDATTRIBLOCATIONPROC                             glBindAttribLocation                            = nullptr;
 
 /* --- Draw buffers (GL_ARB_draw_buffers) --- */

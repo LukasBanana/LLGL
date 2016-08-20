@@ -104,6 +104,7 @@ extern PFNGLUNMAPBUFFERPROC                                 glUnmapBuffer;
 extern PFNGLENABLEVERTEXATTRIBARRAYPROC                     glEnableVertexAttribArray;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC                    glDisableVertexAttribArray;
 extern PFNGLVERTEXATTRIBPOINTERPROC                         glVertexAttribPointer;
+extern PFNGLVERTEXATTRIBIPOINTERPROC                        glVertexAttribIPointer;
 extern PFNGLBINDATTRIBLOCATIONPROC                          glBindAttribLocation;
 
 /* --- Draw buffers (GL_ARB_draw_buffers) --- */

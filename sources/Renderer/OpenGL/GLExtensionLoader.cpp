@@ -346,6 +346,7 @@ bool LoadVertexAttribProcs()
         LOAD_VERBATIM_GLPROC( glEnableVertexAttribArray  ) &&
         LOAD_VERBATIM_GLPROC( glDisableVertexAttribArray ) &&
         LOAD_VERBATIM_GLPROC( glVertexAttribPointer      ) &&
+        LOAD_VERBATIM_GLPROC( glVertexAttribIPointer     ) &&
         LOAD_VERBATIM_GLPROC( glBindAttribLocation       );
 }
 

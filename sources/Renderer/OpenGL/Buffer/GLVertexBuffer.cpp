@@ -39,14 +39,27 @@ void GLVertexBuffer::UpdateVertexFormat(const VertexFormat& vertexFormat)
     {
         glEnableVertexAttribArray(index);
 
-        glVertexAttribPointer(
-            index,
-            attrib.components,
-            GLTypes::Map(attrib.dataType),
-            GL_FALSE,
-            vertexFormat.GetFormatSize(),
-            reinterpret_cast<const char*>(0) + attrib.offset
-        );
+        if (attrib.dataType == DataType::Int || attrib.dataType == DataType::UInt)
+        {
+            glVertexAttribIPointer(
+                index,
+                attrib.components,
+                GLTypes::Map(attrib.dataType),
+                vertexFormat.GetFormatSize(),
+                reinterpret_cast<const char*>(0) + attrib.offset
+            );
+        }
+        else
+        {
+            glVertexAttribPointer(
+                index,
+                attrib.components,
+                GLTypes::Map(attrib.dataType),
+                GL_FALSE,
+                vertexFormat.GetFormatSize(),
+                reinterpret_cast<const char*>(0) + attrib.offset
+            );
+        }
 
         ++index;
     }
