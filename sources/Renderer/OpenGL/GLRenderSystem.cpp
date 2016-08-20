@@ -35,7 +35,7 @@ RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor
     return AddRenderContext(MakeUnique<GLRenderContext>(*this, desc, window, nullptr), desc, window);
 }
 
-/* ----- Hardware buffers ------ */
+/* ----- Hardware Buffers ------ */
 
 VertexBuffer* GLRenderSystem::CreateVertexBuffer()
 {
@@ -365,14 +365,14 @@ ShaderProgram* GLRenderSystem::CreateShaderProgram()
     return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>());
 }
 
-/* ----- Pipeline states ----- */
+/* ----- Pipeline States ----- */
 
 GraphicsPipeline* GLRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
     return TakeOwnership(graphicsPipelines_, MakeUnique<GLGraphicsPipeline>(desc));
 }
 
-/* ----- Extended internal functions ----- */
+/* ----- Extended Internal Functions ----- */
 
 bool GLRenderSystem::HasExtension(const std::string& name) const
 {

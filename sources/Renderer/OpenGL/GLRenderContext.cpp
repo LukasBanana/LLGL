@@ -260,7 +260,7 @@ void GLRenderContext::SetDrawMode(const DrawMode drawMode)
     renderState_.drawMode = GLTypes::Map(drawMode);
 }
 
-/* ----- Hardware buffers ------ */
+/* ----- Hardware Buffers ------ */
 
 void GLRenderContext::BindVertexBuffer(VertexBuffer& vertexBuffer)
 {
@@ -333,7 +333,7 @@ void GLRenderContext::GenerateMips(Texture& texture)
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 }
 
-/* ----- Pipeline states ----- */
+/* ----- Pipeline States ----- */
 
 void GLRenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {

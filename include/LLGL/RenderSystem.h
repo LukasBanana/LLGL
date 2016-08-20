@@ -22,6 +22,7 @@
 #include "GraphicsPipeline.h"
 
 #include "Texture.h"
+#include "RenderTarget.h"
 #include "ShaderProgram.h"
 
 #include <string>
@@ -88,7 +89,7 @@ class LLGL_EXPORT RenderSystem
             return name_;
         }
 
-        /* ----- Render context ----- */
+        /* ----- Render Context ----- */
 
         /**
         \brief Creates a new render context and returns the raw pointer.
@@ -110,7 +111,7 @@ class LLGL_EXPORT RenderSystem
             return currentContext_;
         }
 
-        /* ----- Hardware buffers ------ */
+        /* ----- Hardware Buffers ------ */
 
         virtual VertexBuffer* CreateVertexBuffer() = 0;
         virtual IndexBuffer* CreateIndexBuffer() = 0;
@@ -168,12 +169,16 @@ class LLGL_EXPORT RenderSystem
         */
         virtual void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) = 0;
 
+        /* ----- Render Targets ----- */
+
+        //virtual RenderTarget* CreateRenderTarget() = 0;
+
         /* ----- Shader ----- */
 
         virtual Shader* CreateShader(const ShaderType type) = 0;
         virtual ShaderProgram* CreateShaderProgram() = 0;
 
-        /* ----- Pipeline states ----- */
+        /* ----- Pipeline States ----- */
 
         virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) = 0;
         //virtual ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) = 0;

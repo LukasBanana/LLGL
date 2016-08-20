@@ -36,14 +36,14 @@ class GLRenderSystem : public RenderSystem
 
     public:
 
-        /* ----- Render system ----- */
+        /* ----- Render System ----- */
 
         GLRenderSystem();
         ~GLRenderSystem();
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
 
-        /* ----- Hardware buffers ------ */
+        /* ----- Hardware Buffers ------ */
 
         VertexBuffer* CreateVertexBuffer() override;
         IndexBuffer* CreateIndexBuffer() override;
@@ -81,17 +81,21 @@ class GLRenderSystem : public RenderSystem
 
         void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) override;
 
+        /* ----- Render Targets ----- */
+
+        //RenderTarget* CreateRenderTarget() override;
+
         /* ----- Shader ----- */
 
         Shader* CreateShader(const ShaderType type) override;
         ShaderProgram* CreateShaderProgram() override;
 
-        /* ----- Pipeline states ----- */
+        /* ----- Pipeline States ----- */
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
         //ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
 
-        /* ----- Extended internal functions ----- */
+        /* ----- Extended Internal Functions ----- */
 
         bool HasExtension(const std::string& name) const;
 

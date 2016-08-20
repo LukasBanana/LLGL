@@ -88,7 +88,7 @@ class LLGL_EXPORT RenderContext
 
         virtual void SetDrawMode(const DrawMode drawMode) = 0;
 
-        /* ----- Hardware buffers ------ */
+        /* ----- Hardware Buffers ------ */
 
         virtual void BindVertexBuffer(VertexBuffer& vertexBuffer) = 0;
         virtual void UnbindVertexBuffer() = 0;
@@ -110,7 +110,7 @@ class LLGL_EXPORT RenderContext
         */
         virtual void GenerateMips(Texture& texture) = 0;
 
-        /* ----- Pipeline states ----- */
+        /* ----- Pipeline States ----- */
 
         virtual void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
         //virtual void BindComputePipeline(ComputePipeline& computePipeline) = 0;

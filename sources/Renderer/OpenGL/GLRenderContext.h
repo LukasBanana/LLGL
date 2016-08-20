@@ -64,7 +64,7 @@ class GLRenderContext : public RenderContext
 
         void SetDrawMode(const DrawMode drawMode) override;
 
-        /* ----- Hardware buffers ------ */
+        /* ----- Hardware Buffers ------ */
 
         void BindVertexBuffer(VertexBuffer& vertexBuffer) override;
         void UnbindVertexBuffer() override;
@@ -82,7 +82,7 @@ class GLRenderContext : public RenderContext
 
         void GenerateMips(Texture& texture) override;
 
-        /* ----- Pipeline states ----- */
+        /* ----- Pipeline States ----- */
 
         void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
         //void BindComputePipeline(ComputePipeline& computePipeline) override;
