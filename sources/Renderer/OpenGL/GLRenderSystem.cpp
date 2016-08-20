@@ -7,6 +7,7 @@
 
 #include "GLRenderSystem.h"
 #include "../CheckedCast.h"
+#include "../Assertion.h"
 #include "../../Core/Helper.h"
 #include <LLGL/Desktop.h>
 #include "RenderState/GLStateManager.h"
@@ -337,14 +338,10 @@ void GLRenderSystem::WriteTextureCubeArraySub(
 {
 }
 
-#define LLGL_ASSERT_PTR(PTR) \
-    if (!PTR) \
-    { \
-        throw std::invalid_argument(__FUNCTION__ ": null pointer exception of parameter \"" #PTR "\""); \
-    }
-
 void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
 {
+    LLGL_ASSERT_PTR(data);
+
     /* Bind texture */
     auto& textureGL = LLGL_CAST(const GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
