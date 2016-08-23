@@ -86,14 +86,17 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
 
 static int mouseCaptureCounter = 0;
 
-static void CaptureMouseButton(HWND wnd, Key keyCode)
+static void CaptureMouseButton(HWND wnd, Key keyCode, bool doubleClick = false)
 {
     /* Get window object from window handle */
     auto window = GetWindowFromUserData(wnd);
     if (window)
     {
-        /* Post key event and capture mouse */
+        /* Post key events and capture mouse */
         window->PostKeyDown(keyCode);
+
+        if (doubleClick)
+            window->PostDoubleClick(keyCode);
 
         if (++mouseCaptureCounter == 1)
             SetCapture(wnd);
@@ -266,8 +269,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_LBUTTONDBLCLK:
         {
-            CaptureMouseButton(wnd, Key::LButton);
-            //PostDoubleClick event ...
+            CaptureMouseButton(wnd, Key::LButton, true);
         }
         return 0;
 
@@ -287,8 +289,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_RBUTTONDBLCLK:
         {
-            CaptureMouseButton(wnd, Key::RButton);
-            //PostDoubleClick event ...
+            CaptureMouseButton(wnd, Key::RButton, true);
         }
         return 0;
 
@@ -308,8 +309,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_MBUTTONDBLCLK:
         {
-            CaptureMouseButton(wnd, Key::MButton);
-            //PostDoubleClick event ...
+            CaptureMouseButton(wnd, Key::MButton, true);
         }
         return 0;
 

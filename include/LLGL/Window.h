@@ -72,6 +72,8 @@ class LLGL_EXPORT Window
 
                 virtual void OnKeyDown(Window& sender, Key keyCode);
                 virtual void OnKeyUp(Window& sender, Key keyCode);
+
+                virtual void OnDoubleClick(Window& sender, Key keyCode);
                 
                 virtual void OnChar(Window& sender, wchar_t chr);
 
@@ -138,6 +140,8 @@ class LLGL_EXPORT Window
 
         void PostKeyDown(Key keyCode);
         void PostKeyUp(Key keyCode);
+
+        void PostDoubleClick(Key keyCode);
         
         void PostChar(wchar_t chr);
         

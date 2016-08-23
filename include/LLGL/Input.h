@@ -35,6 +35,12 @@ class LLGL_EXPORT Input : public Window::EventListener
         //! Returns true if the specified key was released in the previous event processing.
         bool KeyUp(Key keyCode) const;
 
+        /**
+        \brief Returns true if the specified key was double clicked.
+        \remarks This can only be true for the key codes: Key::LButton, Key::RButton, and Key::MButton.
+        */
+        bool KeyDoubleClick(Key keyCode) const;
+
         //! Returns the local mouse position.
         inline const Point& GetMousePosition() const
         {
@@ -80,6 +86,8 @@ class LLGL_EXPORT Input : public Window::EventListener
         void OnKeyDown(Window& sender, Key keyCode) override;
         void OnKeyUp(Window& sender, Key keyCode) override;
 
+        void OnDoubleClick(Window& sender, Key keyCode) override;
+
         void OnChar(Window& sender, wchar_t chr) override;
 
         void OnWheelMotion(Window& sender, int motion) override;
@@ -98,6 +106,8 @@ class LLGL_EXPORT Input : public Window::EventListener
 
         KeyTracker              keyDownTracker_;
         KeyTracker              keyUpTracker_;
+
+        std::array<bool, 3>     doubleClick_;
 
         std::wstring            chars_;
 

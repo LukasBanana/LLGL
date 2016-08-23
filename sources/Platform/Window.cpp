@@ -35,6 +35,11 @@ void Window::EventListener::OnKeyUp(Window& sender, Key keyCode)
     // dummy
 }
 
+void Window::EventListener::OnDoubleClick(Window& sender, Key keyCode)
+{
+    // dummy
+}
+
 void Window::EventListener::OnChar(Window& sender, wchar_t chr)
 {
     // dummy
@@ -97,6 +102,12 @@ void Window::PostKeyUp(Key keyCode)
 {
     FOREACH_LISTENER(lst)
         lst->OnKeyUp(*this, keyCode);
+}
+
+void Window::PostDoubleClick(Key keyCode)
+{
+    FOREACH_LISTENER(lst)
+        lst->OnDoubleClick(*this, keyCode);
 }
 
 void Window::PostChar(wchar_t chr)
