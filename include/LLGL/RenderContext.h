@@ -125,8 +125,8 @@ class LLGL_EXPORT RenderContext
 
         virtual void Draw(unsigned int numVertices, unsigned int firstVertex) = 0;
 
-        virtual void DrawIndexed(unsigned int numVertices) = 0;
-        virtual void DrawIndexed(unsigned int numVertices, int indexOffset) = 0;
+        virtual void DrawIndexed(unsigned int numVertices, unsigned int firstIndex) = 0;
+        virtual void DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset) = 0;
 
         virtual void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) = 0;
         virtual void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) = 0;

@@ -282,7 +282,8 @@ void GLRenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
     stateMngr_->BindBuffer(indexBufferGL);
 
     /* Store new index buffer data in global render state */
-    renderState_.indexBufferDataType = GLTypes::Map(indexBuffer.GetIndexFormat().GetDataType());
+    renderState_.indexBufferDataType    = GLTypes::Map(indexBuffer.GetIndexFormat().GetDataType());
+    renderState_.indexBufferStride      = indexBuffer.GetIndexFormat().GetFormatSize();
 }
 
 void GLRenderContext::UnbindIndexBuffer()
@@ -366,24 +367,24 @@ void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
     );
 }
 
-void GLRenderContext::DrawIndexed(unsigned int numVertices)
+void GLRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
     glDrawElements(
         renderState_.drawMode,
         static_cast<GLsizei>(numVertices),
         renderState_.indexBufferDataType,
-        nullptr
+        (reinterpret_cast<const GLvoid*>(firstIndex * renderState_.indexBufferStride))
     );
 }
 
-void GLRenderContext::DrawIndexed(unsigned int numVertices, int indexOffset)
+void GLRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
     glDrawElementsBaseVertex(
         renderState_.drawMode,
         static_cast<GLsizei>(numVertices),
         renderState_.indexBufferDataType,
-        nullptr,
-        indexOffset
+        (reinterpret_cast<const GLvoid*>(firstIndex * renderState_.indexBufferStride)),
+        vertexOffset
     );
 }
 
@@ -419,7 +420,7 @@ void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned in
     );
 }
 
-void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset)
+void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int vertexOffset)
 {
     glDrawElementsInstancedBaseVertex(
         renderState_.drawMode,
@@ -427,11 +428,11 @@ void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned in
         renderState_.indexBufferDataType,
         nullptr,
         static_cast<GLsizei>(numInstances),
-        indexOffset
+        vertexOffset
     );
 }
 
-void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset)
+void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int vertexOffset, unsigned int instanceOffset)
 {
     glDrawElementsInstancedBaseVertexBaseInstance(
         renderState_.drawMode,
@@ -439,7 +440,7 @@ void GLRenderContext::DrawInstancedIndexed(unsigned int numVertices, unsigned in
         renderState_.indexBufferDataType,
         nullptr,
         static_cast<GLsizei>(numInstances),
-        indexOffset,
+        vertexOffset,
         instanceOffset
     );
 }

@@ -123,15 +123,15 @@ void GLRenderContextProfiler::Draw(unsigned int numVertices, unsigned int firstV
     profiler_.RecordDrawCall(drawMode_, numVertices);
 }
 
-void GLRenderContextProfiler::DrawIndexed(unsigned int numVertices)
+void GLRenderContextProfiler::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-    GLRenderContext::DrawIndexed(numVertices);
+    GLRenderContext::DrawIndexed(numVertices, firstIndex);
     profiler_.RecordDrawCall(drawMode_, numVertices);
 }
 
-void GLRenderContextProfiler::DrawIndexed(unsigned int numVertices, int indexOffset)
+void GLRenderContextProfiler::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
-    GLRenderContext::DrawIndexed(numVertices, indexOffset);
+    GLRenderContext::DrawIndexed(numVertices, firstIndex, vertexOffset);
     profiler_.RecordDrawCall(drawMode_, numVertices);
 }
 
@@ -153,15 +153,15 @@ void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, uns
     profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
 }
 
-void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset)
+void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int vertexOffset)
 {
-    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, indexOffset);
+    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, vertexOffset);
     profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
 }
 
-void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset)
+void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int vertexOffset, unsigned int instanceOffset)
 {
-    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, indexOffset, instanceOffset);
+    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, vertexOffset, instanceOffset);
     profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
 }
 

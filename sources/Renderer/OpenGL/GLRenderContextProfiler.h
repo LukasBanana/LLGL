@@ -67,15 +67,15 @@ class GLRenderContextProfiler : public GLRenderContext
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
 
-        void DrawIndexed(unsigned int numVertices) override;
-        void DrawIndexed(unsigned int numVertices, int indexOffset) override;
+        void DrawIndexed(unsigned int numVertices, unsigned int firstIndex) override;
+        void DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset) override;
 
         void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) override;
         void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) override;
 
         void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances) override;
-        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset) override;
-        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int indexOffset, unsigned int instanceOffset) override;
+        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int vertexOffset) override;
+        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int vertexOffset, unsigned int instanceOffset) override;
 
         /* ----- Compute ----- */
 
