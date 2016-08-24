@@ -147,21 +147,21 @@ void GLRenderContextProfiler::DrawInstanced(unsigned int numVertices, unsigned i
     profiler_.RecordDrawCall(drawMode_, numVertices);
 }
 
-void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances)
+void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
-    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances);
+    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, firstIndex);
     profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
 }
 
-void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int vertexOffset)
+void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
-    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, vertexOffset);
+    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, firstIndex, vertexOffset);
     profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
 }
 
-void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, int vertexOffset, unsigned int instanceOffset)
+void GLRenderContextProfiler::DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
-    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, vertexOffset, instanceOffset);
+    GLRenderContext::DrawInstancedIndexed(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
     profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
 }
 
