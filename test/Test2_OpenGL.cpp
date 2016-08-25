@@ -40,7 +40,18 @@ int main()
         };
         #endif
 
-        auto context = renderer->CreateRenderContext(contextDesc);
+        LLGL::WindowDescriptor windowDesc;
+        {
+            windowDesc.size             = contextDesc.videoMode.resolution;
+            windowDesc.borderless       = contextDesc.videoMode.fullscreen;
+            windowDesc.centered         = !contextDesc.videoMode.fullscreen;
+            windowDesc.resizable        = true;
+        }
+        auto window = std::shared_ptr<LLGL::Window>(LLGL::Window::Create(windowDesc));
+
+        auto context = renderer->CreateRenderContext(contextDesc, window);
+
+        window->Show();
 
         auto renderCaps = context->QueryRenderingCaps();
 
@@ -57,14 +68,12 @@ int main()
         std::cout << "Shading Language: " << info[LLGL::RendererInfo::ShadingLanguageVersion] << std::endl;
 
         // Setup window title
-        auto& window = context->GetWindow();
-
         auto title = "LLGL Test 2 ( " + renderer->GetName() + " )";
-        window.SetTitle(std::wstring(title.begin(), title.end()));
+        window->SetTitle(std::wstring(title.begin(), title.end()));
 
         // Setup input controller
         auto input = std::make_shared<LLGL::Input>();
-        window.AddEventListener(input);
+        window->AddEventListener(input);
 
         // Create vertex buffer
         auto& vertexBuffer = *renderer->CreateVertexBuffer();
@@ -229,7 +238,7 @@ int main()
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
 
         // Main loop
-        while (window.ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
+        while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
         {
             if (profiler)
                 profiler->ResetCounters();
