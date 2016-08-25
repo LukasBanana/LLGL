@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "RenderSystemFlags.h"
+#include <cstddef>
 
 
 namespace LLGL
@@ -105,12 +106,12 @@ enum class ColorFormat
 //! Axis direction (also used for texture cube face).
 enum class AxisDirection
 {
-    PlusX = 0,
-    MinusX,
-    PlusY,
-    MinusY,
-    PlusZ,
-    MinusZ,
+    XPos = 0,   //!< X+ direction.
+    XNeg,       //!< X- direction.
+    YPos,       //!< Y+ direction.
+    YNeg,       //!< Y- direction.
+    ZPos,       //!< Z+ direction.
+    ZNeg,       //!< Z- direction.
 };
 
 
@@ -172,6 +173,12 @@ union TextureDescriptor
     }
     textureCubeDesc;
 };
+
+
+/* ----- Functions ----- */
+
+//! Returns the size (in number of components) of the specified color format.
+LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat);
 
 
 } // /namespace LLGL

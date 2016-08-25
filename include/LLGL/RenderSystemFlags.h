@@ -9,9 +9,15 @@
 #define __LLGL_RENDER_SYSTEM_FLAGS_H__
 
 
+#include "Export.h"
+#include <cstddef>
+
+
 namespace LLGL
 {
 
+
+/* ----- Enumerations ----- */
 
 /**
 \brief Hardware buffer usage enumeration.
@@ -50,6 +56,12 @@ enum class DataType
     Int,    //!< 32-bit signed integer.
     UInt,   //!< 32-bit unsigned integer.
 };
+
+
+/* ----- Functions ----- */
+
+//! Returns the size (in bytes) of the specified data type.
+LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType);
 
 
 } // /namespace LLGL

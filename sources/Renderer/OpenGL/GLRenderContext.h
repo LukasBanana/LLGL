@@ -102,9 +102,9 @@ class GLRenderContext : public RenderContext
         void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) override;
         void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) override;
 
-        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex) override;
-        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset) override;
-        void DrawInstancedIndexed(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset) override;
+        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex) override;
+        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset) override;
+        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset) override;
 
         /* ----- Compute ----- */
 

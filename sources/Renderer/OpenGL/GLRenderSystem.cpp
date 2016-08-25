@@ -129,6 +129,11 @@ static void GLTexImage3D(GLenum internalFormat, int width, int height, int depth
     glTexImage3D(GL_TEXTURE_3D, 0, internalFormat, width, height, depth, 0, format, type, data);
 }
 
+static void GLTexImageCube(GLenum internalFormat, int width, int height, AxisDirection cubeFace, GLenum format, GLenum type, const void* data)
+{
+    glTexImage2D(GLTypes::Map(cubeFace), 0, internalFormat, width, height, 0, format, type, data);
+}
+
 static void GLTexImage1DArray(GLenum internalFormat, int width, unsigned int layers, GLenum format, GLenum type, const void* data)
 {
     glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalFormat, width, static_cast<GLsizei>(layers), 0, format, type, data);
@@ -137,6 +142,11 @@ static void GLTexImage1DArray(GLenum internalFormat, int width, unsigned int lay
 static void GLTexImage2DArray(GLenum internalFormat, int width, int height, unsigned int layers, GLenum format, GLenum type, const void* data)
 {
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalFormat, width, height, static_cast<GLsizei>(layers), 0, format, type, data);
+}
+
+static void GLTexImageCubeArray(GLenum internalFormat, int width, int height, unsigned int layers, GLenum format, GLenum type, const void* data)
+{
+    glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, internalFormat, width, height, static_cast<GLsizei>(layers)*6, 0, format, type, data);
 }
 
 Texture* GLRenderSystem::CreateTexture()
@@ -243,7 +253,43 @@ void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format
 
 void GLRenderSystem::WriteTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
 {
-    //todo...
+    const std::array<AxisDirection, 6> cubeFaces
+    {
+        AxisDirection::XPos,
+        AxisDirection::XNeg,
+        AxisDirection::YPos,
+        AxisDirection::YNeg,
+        AxisDirection::ZPos,
+        AxisDirection::ZNeg
+    };
+
+    if (imageDesc)
+    {
+        /* Setup texture image cube-faces from descriptor */
+        auto imageFace          = reinterpret_cast<const char*>(imageDesc->data);
+        auto imageFaceStride    = size.x * size.y * ColorFormatSize(imageDesc->dataFormat) * DataTypeSize(imageDesc->dataType);
+
+        for (auto face : cubeFaces)
+        {
+            GLTexImageCube(
+                GLTypes::Map(format),
+                size.x, size.y,
+                face,
+                GLTypes::Map(imageDesc->dataFormat),
+                GLTypes::Map(imageDesc->dataType),
+                imageFace
+            );
+
+            imageFace += imageFaceStride;
+        }
+    }
+    else
+    {
+        /* Initialize texture image cube-faces with default color */
+        auto image = GetDefaultTextureImageRGBAub(size.x*size.y);
+        for (auto face : cubeFaces)
+            GLTexImageCube(GLTypes::Map(format), size.x, size.y, face, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    }
 }
 
 void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc)
@@ -300,7 +346,23 @@ void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat f
 
 void GLRenderSystem::WriteTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
-    //todo...
+    if (imageDesc)
+    {
+        /* Setup texture image cube-faces from descriptor */
+        GLTexImageCubeArray(
+            GLTypes::Map(format),
+            size.x, size.y, layers,
+            GLTypes::Map(imageDesc->dataFormat),
+            GLTypes::Map(imageDesc->dataType),
+            imageDesc->data
+        );
+    }
+    else
+    {
+        /* Initialize texture image cube-faces with default color */
+        auto image = GetDefaultTextureImageRGBAub(size.x*size.y*static_cast<int>(layers*6));
+        GLTexImageCubeArray(GLTypes::Map(format), size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    }
 }
 
 void GLRenderSystem::WriteTexture1DSub(

@@ -254,12 +254,12 @@ GLenum Map(const AxisDirection cubeFace)
 {
     switch (cubeFace)
     {
-        case AxisDirection::PlusX:  return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-        case AxisDirection::MinusX: return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
-        case AxisDirection::PlusY:  return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
-        case AxisDirection::MinusY: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
-        case AxisDirection::PlusZ:  return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
-        case AxisDirection::MinusZ: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+        case AxisDirection::XPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        case AxisDirection::XNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+        case AxisDirection::YPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+        case AxisDirection::YNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+        case AxisDirection::ZPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+        case AxisDirection::ZNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
     }
     MapFailed("AxisDirection");
 }
