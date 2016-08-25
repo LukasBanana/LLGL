@@ -9,6 +9,8 @@
 #define __LLGL_RENDER_CONTEXT_DESCRIPTOR_H__
 
 
+#include "Export.h"
+#include "Types.h"
 #include <functional>
 
 
@@ -104,6 +106,12 @@ struct RenderContextDescriptor
     ProfileOpenGLDescriptor profileOpenGL;
     DebugCallback           debugCallback;
 };
+
+
+/* ----- Operators ----- */
+
+LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
+LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
 
 
 } // /namespace LLGL

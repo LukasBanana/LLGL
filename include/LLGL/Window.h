@@ -82,6 +82,8 @@ class LLGL_EXPORT Window
                 virtual void OnLocalMotion(Window& sender, const Point& position);
                 virtual void OnGlobalMotion(Window& sender, const Point& motion);
 
+                virtual void OnResize(Window& sender, const Size& clientAreaSize);
+
                 //! Returns true if the specified window can quit, i.e. "ProcessEvents" returns false from now on.
                 virtual bool OnQuit(Window& sender);
 
@@ -149,6 +151,8 @@ class LLGL_EXPORT Window
         
         void PostLocalMotion(const Point& position);
         void PostGlobalMotion(const Point& motion);
+
+        void PostResize(const Size& clientAreaSize);
 
         /**
         \brief Posts the 'OnQuit' event to all event listeners.

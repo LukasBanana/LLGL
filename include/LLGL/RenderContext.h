@@ -78,6 +78,15 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Configuration ----- */
 
+        //! Sets the new video mode for this render context.
+        virtual void SetVideoMode(const VideoModeDescriptor& videoModeDesc);
+
+        //! Returns the video mode for this render context.
+        inline const VideoModeDescriptor& GetVideoMode() const
+        {
+            return videoModeDesc_;
+        }
+
         virtual void SetViewports(const std::vector<Viewport>& viewports) = 0;
         virtual void SetScissors(const std::vector<Scissor>& scissors) = 0;
 
@@ -148,6 +157,7 @@ class LLGL_EXPORT RenderContext
     private:
 
         std::shared_ptr<Window> window_;
+        VideoModeDescriptor     videoModeDesc_;
 
 };
 

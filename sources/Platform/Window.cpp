@@ -60,6 +60,11 @@ void Window::EventListener::OnGlobalMotion(Window& sender, const Point& motion)
     // dummy
 }
 
+void Window::EventListener::OnResize(Window& sender, const Size& clientAreaSize)
+{
+    // dummy
+}
+
 bool Window::EventListener::OnQuit(Window& sender)
 {
     return true; // dummy
@@ -132,6 +137,12 @@ void Window::PostGlobalMotion(const Point& motion)
 {
     FOREACH_LISTENER(lst)
         lst->OnGlobalMotion(*this, motion);
+}
+
+void Window::PostResize(const Size& clientAreaSize)
+{
+    FOREACH_LISTENER(lst)
+        lst->OnResize(*this, clientAreaSize);
 }
 
 void Window::PostQuit()

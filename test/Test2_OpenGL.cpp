@@ -75,6 +75,34 @@ int main()
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
 
+        class ResizeEventHandler : public LLGL::Window::EventListener
+        {
+        public:
+            ResizeEventHandler(LLGL::RenderContext* context) :
+                context_( context )
+            {
+            }
+            void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override
+            {
+                auto videoMode = context_->GetVideoMode();
+                videoMode.resolution = clientAreaSize;
+
+                context_->SetVideoMode(videoMode);
+
+                LLGL::Viewport viewport;
+                {
+                    viewport.width  = static_cast<float>(videoMode.resolution.x);
+                    viewport.height = static_cast<float>(videoMode.resolution.y);
+                }
+                context_->SetViewports({ viewport });
+            }
+        private:
+            LLGL::RenderContext* context_;
+        };
+
+        auto resizeEventHandler = std::make_shared<ResizeEventHandler>(context);
+        window->AddEventListener(resizeEventHandler);
+
         // Create vertex buffer
         auto& vertexBuffer = *renderer->CreateVertexBuffer();
 
@@ -172,22 +200,24 @@ int main()
         shaderProgram.UnlockShaderUniform();
 
         // Create constant buffer
+        LLGL::ConstantBuffer* projectionBuffer = nullptr;
+
         for (const auto& desc : shaderProgram.QueryConstantBuffers())
         {
             if (desc.name == "Matrices")
             {
-                auto& constBuffer = *renderer->CreateConstantBuffer();
+                projectionBuffer = renderer->CreateConstantBuffer();
 
                 auto projection = Gs::ProjectionMatrix4f::Planar(
                     static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
                     static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
                 );
 
-                renderer->WriteConstantBuffer(constBuffer, &projection, sizeof(projection), LLGL::BufferUsage::Static);
+                renderer->WriteConstantBuffer(*projectionBuffer, &projection, sizeof(projection), LLGL::BufferUsage::Static);
 
                 unsigned int bindingIndex = 2; // the 2 is just for testing
                 shaderProgram.BindConstantBuffer(desc.name, bindingIndex);
-                context->BindConstantBuffer(constBuffer, bindingIndex);
+                context->BindConstantBuffer(*projectionBuffer, bindingIndex);
             }
         }
 
@@ -246,6 +276,15 @@ int main()
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
+
+            if (projectionBuffer)
+            {
+                auto projection = Gs::ProjectionMatrix4f::Planar(
+                    static_cast<Gs::Real>(context->GetVideoMode().resolution.x),
+                    static_cast<Gs::Real>(context->GetVideoMode().resolution.y)
+                );
+                renderer->WriteConstantBufferSub(*projectionBuffer, &projection, sizeof(projection), 0);
+            }
 
             context->BindGraphicsPipeline(*pipeline);
             context->BindVertexBuffer(vertexBuffer);

@@ -16,6 +16,15 @@ RenderContext::~RenderContext()
 {
 }
 
+void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
+{
+    if (videoModeDesc_ != videoModeDesc)
+    {
+        videoModeDesc_ = videoModeDesc;
+        //TODO -> window_->SetPisition/Size...
+    }
+}
+
 
 /*
  * ======= Protected: =======
@@ -38,6 +47,8 @@ void RenderContext::SetWindow(const std::shared_ptr<Window>& window, VideoModeDe
     }
     else
         videoModeDesc.resolution = window_->GetSize();
+
+    videoModeDesc_ = videoModeDesc;
 }
 
 

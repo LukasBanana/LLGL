@@ -53,6 +53,8 @@ class GLRenderContext : public RenderContext
 
         /* ----- Configuration ----- */
 
+        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+
         void SetViewports(const std::vector<Viewport>& viewports) override;
         void SetScissors(const std::vector<Scissor>& scissors) override;
 

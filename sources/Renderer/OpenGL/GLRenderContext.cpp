@@ -194,6 +194,16 @@ ShadingLanguage GLRenderContext::QueryShadingLanguage() const
 
 /* ----- Configuration ----- */
 
+void GLRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
+{
+    if (GetVideoMode() != videoModeDesc)
+    {
+        contextHeight_ = videoModeDesc.resolution.y;
+        stateMngr_->MakeCurrentInfo(*this);
+        RenderContext::SetVideoMode(videoModeDesc);
+    }
+}
+
 void GLRenderContext::SetViewports(const std::vector<Viewport>& viewports)
 {
     /* Setup GL viewports and depth-ranges */

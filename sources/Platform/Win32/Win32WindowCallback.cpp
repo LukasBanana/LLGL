@@ -193,6 +193,19 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         }
         break;
 
+        case WM_SIZE:
+        {
+            /* Post resize event to window */
+            auto window = GetWindowFromUserData(wnd);
+            if (window)
+            {
+                WORD width = LOWORD(lParam);
+                WORD height = HIWORD(lParam);
+                window->PostResize(Size(width, height));
+            }
+        }
+        break;
+
         case WM_CLOSE:
         {
             /* Post close event to window */
