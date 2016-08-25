@@ -263,6 +263,10 @@ void GLRenderSystem::WriteTextureCube(Texture& texture, const TextureFormat form
         AxisDirection::ZNeg
     };
 
+    /* Bind texture and set type */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    BindTextureAndSetType(textureGL, TextureType::TextureCube);
+
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
@@ -346,6 +350,10 @@ void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat f
 
 void GLRenderSystem::WriteTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
+    /* Bind texture and set type */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    BindTextureAndSetType(textureGL, TextureType::TextureCubeArray);
+
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
