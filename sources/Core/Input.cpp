@@ -59,7 +59,7 @@ void Input::InitArray(KeyStateArray& keyStates)
     std::fill(keyStates.begin(), keyStates.end(), false);
 }
 
-void Input::OnReset(Window& sender)
+void Input::OnProcessEvents(Window& sender)
 {
     wheelMotion_ = 0;
     mouseMotion_ = { 0, 0 };

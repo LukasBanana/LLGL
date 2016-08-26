@@ -81,7 +81,7 @@ class LLGL_EXPORT Input : public Window::EventListener
 
         void InitArray(KeyStateArray& keyStates);
 
-        void OnReset(Window& sender) override;
+        void OnProcessEvents(Window& sender) override;
 
         void OnKeyDown(Window& sender, Key keyCode) override;
         void OnKeyUp(Window& sender, Key keyCode) override;

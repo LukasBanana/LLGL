@@ -68,7 +68,7 @@ class LLGL_EXPORT Window
 
                 friend class Window;
 
-                virtual void OnReset(Window& sender);
+                virtual void OnProcessEvents(Window& sender);
 
                 virtual void OnKeyDown(Window& sender, Key keyCode);
                 virtual void OnKeyUp(Window& sender, Key keyCode);

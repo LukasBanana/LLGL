@@ -13,14 +13,13 @@ namespace LLGL
 {
 
 
-#define FOREACH_LISTENER(ITER) \
-    for (const auto& ITER : eventListeners_)
+/* ----- Window EventListener class ----- */
 
 Window::EventListener::~EventListener()
 {
 }
 
-void Window::EventListener::OnReset(Window& sender)
+void Window::EventListener::OnProcessEvents(Window& sender)
 {
     // dummy
 }
@@ -71,14 +70,18 @@ bool Window::EventListener::OnQuit(Window& sender)
 }
 
 
+/* ----- Window class ----- */
+
+#define FOREACH_LISTENER_CALL(FUNC) \
+    for (const auto& lst : eventListeners_) { lst->FUNC; }
+
 Window::~Window()
 {
 }
 
 bool Window::ProcessEvents()
 {
-    FOREACH_LISTENER(lst)
-        lst->OnReset(*this);
+    FOREACH_LISTENER_CALL( OnProcessEvents(*this) );
 
     ProcessSystemEvents();
 
@@ -99,55 +102,47 @@ void Window::RemoveEventListener(const EventListener* eventListener)
 
 void Window::PostKeyDown(Key keyCode)
 {
-    FOREACH_LISTENER(lst)
-        lst->OnKeyDown(*this, keyCode);
+    FOREACH_LISTENER_CALL( OnKeyDown(*this, keyCode) );
 }
 
 void Window::PostKeyUp(Key keyCode)
 {
-    FOREACH_LISTENER(lst)
-        lst->OnKeyUp(*this, keyCode);
+    FOREACH_LISTENER_CALL( OnKeyUp(*this, keyCode) );
 }
 
 void Window::PostDoubleClick(Key keyCode)
 {
-    FOREACH_LISTENER(lst)
-        lst->OnDoubleClick(*this, keyCode);
+    FOREACH_LISTENER_CALL( OnDoubleClick(*this, keyCode) );
 }
 
 void Window::PostChar(wchar_t chr)
 {
-    FOREACH_LISTENER(lst)
-        lst->OnChar(*this, chr);
+    FOREACH_LISTENER_CALL( OnChar(*this, chr) );
 }
 
 void Window::PostWheelMotion(int motion)
 {
-    FOREACH_LISTENER(lst)
-        lst->OnWheelMotion(*this, motion);
+    FOREACH_LISTENER_CALL( OnWheelMotion(*this, motion) );
 }
 
 void Window::PostLocalMotion(const Point& position)
 {
-    FOREACH_LISTENER(lst)
-        lst->OnLocalMotion(*this, position);
+    FOREACH_LISTENER_CALL( OnLocalMotion(*this, position) );
 }
 
 void Window::PostGlobalMotion(const Point& motion)
 {
-    FOREACH_LISTENER(lst)
-        lst->OnGlobalMotion(*this, motion);
+    FOREACH_LISTENER_CALL( OnGlobalMotion(*this, motion) );
 }
 
 void Window::PostResize(const Size& clientAreaSize)
 {
-    FOREACH_LISTENER(lst)
-        lst->OnResize(*this, clientAreaSize);
+    FOREACH_LISTENER_CALL( OnResize(*this, clientAreaSize) );
 }
 
 void Window::PostQuit()
 {
-    FOREACH_LISTENER(lst)
+    for (const auto& lst : eventListeners_)
     {
         if (!lst->OnQuit(*this))
             return;
@@ -155,7 +150,7 @@ void Window::PostQuit()
     quit_ = true;
 }
 
-#undef FOREACH_LISTENER
+#undef FOREACH_LISTENER_CALL
 
 
 } // /namespace LLGL
