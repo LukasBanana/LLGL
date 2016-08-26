@@ -86,7 +86,13 @@ void GLRenderTarget::AttachTextureCubeArray(Texture& texture, int layer, const A
 
 void GLRenderTarget::DetachTextures()
 {
-    //todo...
+    /*
+    Just recreate framebuffer and renderbuffer,
+    since some graphics drivers have problems to resize a framebuffer
+    */
+    frameBuffer_.Recreate();
+    renderBuffer_.Recreate();
+    attachments_ = 0;
 }
 
 

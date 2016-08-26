@@ -526,6 +526,28 @@ void GLStateManager::PopBoundFrameBuffer()
     frameBufferState_.boundFrameBufferStack.pop();
 }
 
+/* ----- Renderbuffer binding ----- */
+
+void GLStateManager::BindRenderBuffer(GLuint renderbuffer)
+{
+    if (renderBufferState_.boundRenderBuffer != renderbuffer)
+    {
+        renderBufferState_.boundRenderBuffer = renderbuffer;
+        glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+    }
+}
+
+void GLStateManager::PushBoundRenderBuffer()
+{
+    renderBufferState_.boundRenderBufferStack.push(renderBufferState_.boundRenderBuffer);
+}
+
+void GLStateManager::PopBoundRenderBuffer()
+{
+    BindRenderBuffer(renderBufferState_.boundRenderBufferStack.top());
+    renderBufferState_.boundRenderBufferStack.pop();
+}
+
 /* ----- Texture binding ----- */
 
 void GLStateManager::ActiveTexture(unsigned int layer)

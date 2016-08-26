@@ -11,6 +11,7 @@
 
 #include <LLGL/RenderTarget.h>
 #include "GLFrameBuffer.h"
+#include "GLRenderBuffer.h"
 #include "GLTexture.h"
 
 
@@ -38,11 +39,17 @@ class GLRenderTarget : public RenderTarget
             return frameBuffer_;
         }
 
+        inline const GLRenderBuffer& GetRenderBuffer() const
+        {
+            return renderBuffer_;
+        }
+
     private:
 
         GLenum NextColorAttachment();
 
         GLFrameBuffer   frameBuffer_;
+        GLRenderBuffer  renderBuffer_;
 
         int             attachments_    = 0;
 

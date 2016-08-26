@@ -9,7 +9,6 @@
 #define __LLGL_GL_FRAME_BUFFER_H__
 
 
-#include <LLGL/RenderTarget.h>
 #include "GLTexture.h"
 
 
