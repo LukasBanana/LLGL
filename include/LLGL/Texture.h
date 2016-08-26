@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "TextureFlags.h"
+#include <Gauss/Vector3.h>
 
 
 namespace LLGL
@@ -38,6 +39,14 @@ class LLGL_EXPORT Texture
         {
             return type_;
         }
+
+        /**
+        \brief Returns the texture size for the specified MIP-level.
+        \param[in] mipLevel Specifies the MIP-map level to querey from. The first and largest MIP-map is level zero.
+        If this level is greater than or equal to the number of MIP-maps this texture has, the return value is undefined (i.e. depends on the render system).
+        \see RenderContext::GenerateMips
+        */
+        virtual Gs::Vector3i QueryMipLevelSize(int mipLevel) const = 0;
 
     protected:
 

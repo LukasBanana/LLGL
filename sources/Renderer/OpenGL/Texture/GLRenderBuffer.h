@@ -10,6 +10,7 @@
 
 
 #include "GLTexture.h"
+#include <Gauss/Vector2.h>
 
 
 namespace LLGL
@@ -33,7 +34,7 @@ class GLRenderBuffer
         //! Recreates the internal renderbuffer object. This will invalidate the previous buffer ID.
         void Recreate();
 
-        void Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples);
+        void Storage(GLenum internalFormat, const Gs::Vector2i& size, GLsizei samples);
 
         //! Returns the hardware buffer ID.
         inline GLuint GetID() const

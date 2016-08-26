@@ -6,6 +6,8 @@
  */
 
 #include "GLTexture.h"
+#include "../RenderState/GLStateManager.h"
+#include "../GLTypes.h"
 
 
 namespace LLGL
@@ -20,6 +22,22 @@ GLTexture::GLTexture()
 GLTexture::~GLTexture()
 {
     glDeleteTextures(1, &id_);
+}
+
+Gs::Vector3i GLTexture::QueryMipLevelSize(int mipLevel) const
+{
+    Gs::Vector3i size;
+
+    GLStateManager::active->PushBoundTexture(0, GLStateManager::GetTextureTarget(GetType()));
+    {
+        auto target = GLTypes::Map(GetType());
+        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_WIDTH, &size.x);
+        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_HEIGHT, &size.y);
+        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_DEPTH, &size.z);
+    }
+    GLStateManager::active->PopBoundTexture();
+
+    return size;
 }
 
 void GLTexture::Recreate()

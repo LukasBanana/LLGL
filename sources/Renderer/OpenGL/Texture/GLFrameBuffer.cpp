@@ -6,6 +6,7 @@
  */
 
 #include "GLFrameBuffer.h"
+#include "GLRenderBuffer.h"
 #include "../GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 
@@ -24,14 +25,14 @@ GLFrameBuffer::~GLFrameBuffer()
     glDeleteFramebuffers(1, &id_);
 }
 
-void GLFrameBuffer::Bind() const
+void GLFrameBuffer::Bind(const GLFrameBufferTarget target) const
 {
-    GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, id_);
+    GLStateManager::active->BindFrameBuffer(target, id_);
 }
 
-void GLFrameBuffer::Unbind() const
+void GLFrameBuffer::Unbind(const GLFrameBufferTarget target) const
 {
-    GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);
+    GLStateManager::active->BindFrameBuffer(target, 0);
 }
 
 void GLFrameBuffer::Recreate()
@@ -59,6 +60,11 @@ void GLFrameBuffer::AttachTexture3D(GLenum attachment, GLTexture& texture, GLenu
 void GLFrameBuffer::AttachTextureLayer(GLenum attachment, GLTexture& texture, GLint mipLevel, GLint layer)
 {
     glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, attachment, texture.GetID(), mipLevel, layer);
+}
+
+void GLFrameBuffer::AttachRenderBuffer(GLenum attachment, GLRenderBuffer& renderBuffer)
+{
+    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderBuffer.GetID());
 }
 
 

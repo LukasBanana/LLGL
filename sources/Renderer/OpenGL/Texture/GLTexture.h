@@ -28,6 +28,8 @@ class GLTexture : public Texture
         GLTexture();
         ~GLTexture();
 
+        Gs::Vector3i QueryMipLevelSize(int mipLevel) const override;
+
         //! Recreates the internal texture object. This will invalidate the previous texture ID.
         void Recreate();
 

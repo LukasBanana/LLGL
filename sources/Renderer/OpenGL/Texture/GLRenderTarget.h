@@ -24,6 +24,9 @@ class GLRenderTarget : public RenderTarget
 
     public:
 
+        void AttachDepthBuffer(const Gs::Vector2i& size) override;
+        void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
+
         void AttachTexture1D(Texture& texture, int mipLevel = 0) override;
         void AttachTexture2D(Texture& texture, int mipLevel = 0) override;
         void AttachTexture3D(Texture& texture, int layer, int mipLevel = 0) override;
@@ -46,12 +49,18 @@ class GLRenderTarget : public RenderTarget
 
     private:
 
+        void ApplyMipResolution(Texture& texture, int mipLevel);
+
+        void AttachRenderBuffer(const Gs::Vector2i& size, GLenum internalFormat, GLenum attachment);
+
         GLenum NextColorAttachment();
 
         GLFrameBuffer   frameBuffer_;
         GLRenderBuffer  renderBuffer_;
 
-        int             attachments_    = 0;
+        int             attachments_            = 0;
+
+        bool            renderBufferAttached_   = false;
 
 };
 

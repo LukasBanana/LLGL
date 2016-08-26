@@ -101,6 +101,8 @@ class GLStateManager
 
         /* ----- Texture binding ----- */
 
+        static GLTextureTarget GetTextureTarget(const TextureType type);
+
         void ActiveTexture(unsigned int layer);
 
         void BindTexture(GLTextureTarget target, GLuint texture);

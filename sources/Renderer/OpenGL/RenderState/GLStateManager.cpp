@@ -550,6 +550,22 @@ void GLStateManager::PopBoundRenderBuffer()
 
 /* ----- Texture binding ----- */
 
+GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:        return GLTextureTarget::TEXTURE_1D;
+        case TextureType::Texture2D:        return GLTextureTarget::TEXTURE_2D;
+        case TextureType::Texture3D:        return GLTextureTarget::TEXTURE_3D;
+        case TextureType::TextureCube:      return GLTextureTarget::TEXTURE_CUBE_MAP;
+        case TextureType::Texture1DArray:   return GLTextureTarget::TEXTURE_1D_ARRAY;
+        case TextureType::Texture2DArray:   return GLTextureTarget::TEXTURE_2D_ARRAY;
+        case TextureType::TextureCubeArray: return GLTextureTarget::TEXTURE_CUBE_MAP_ARRAY;
+        default:                            break;
+    }
+    throw std::invalid_argument("failed to convert texture type to OpenGL texture target");
+}
+
 void GLStateManager::ActiveTexture(unsigned int layer)
 {
     if (textureState_.activeTexture != layer)
@@ -601,30 +617,14 @@ void GLStateManager::PopBoundTexture()
     textureState_.boundTextureStack.pop();
 }
 
-static GLTextureTarget GetTextureTarget(const TextureType type)
-{
-    switch (type)
-    {
-        case TextureType::Texture1D:        return GLTextureTarget::TEXTURE_1D;
-        case TextureType::Texture2D:        return GLTextureTarget::TEXTURE_2D;
-        case TextureType::Texture3D:        return GLTextureTarget::TEXTURE_3D;
-        case TextureType::TextureCube:      return GLTextureTarget::TEXTURE_CUBE_MAP;
-        case TextureType::Texture1DArray:   return GLTextureTarget::TEXTURE_1D_ARRAY;
-        case TextureType::Texture2DArray:   return GLTextureTarget::TEXTURE_2D_ARRAY;
-        case TextureType::TextureCubeArray: return GLTextureTarget::TEXTURE_CUBE_MAP_ARRAY;
-        default:                            break;
-    }
-    throw std::invalid_argument("failed to convert texture type to OpenGL texture target");
-}
-
 void GLStateManager::BindTexture(const GLTexture& texture)
 {
-    BindTexture(GetTextureTarget(texture.GetType()), texture.GetID());
+    BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
 void GLStateManager::ForcedBindTexture(const GLTexture& texture)
 {
-    ForcedBindTexture(GetTextureTarget(texture.GetType()), texture.GetID());
+    ForcedBindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
 /* ----- Shader binding ----- */

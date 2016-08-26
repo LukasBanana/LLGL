@@ -41,12 +41,12 @@ void GLRenderBuffer::Recreate()
     glGenRenderbuffers(1, &id_);
 }
 
-void GLRenderBuffer::Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
+void GLRenderBuffer::Storage(GLenum internalFormat, const Gs::Vector2i& size, GLsizei samples)
 {
     if (samples > 0)
-        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, internalFormat, width, height);
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, internalFormat, size.x, size.y);
     else
-        glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
+        glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, size.x, size.y);
 }
 
 

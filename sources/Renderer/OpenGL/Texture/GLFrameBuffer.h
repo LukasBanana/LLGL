@@ -10,11 +10,14 @@
 
 
 #include "GLTexture.h"
+#include "../RenderState/GLState.h"
 
 
 namespace LLGL
 {
 
+
+class GLRenderBuffer;
 
 class GLFrameBuffer
 {
@@ -27,8 +30,8 @@ class GLFrameBuffer
         GLFrameBuffer();
         ~GLFrameBuffer();
 
-        void Bind() const;
-        void Unbind() const;
+        void Bind(const GLFrameBufferTarget target) const;
+        void Unbind(const GLFrameBufferTarget target) const;
 
         //! Recreates the internal framebuffer object. This will invalidate the previous buffer ID.
         void Recreate();
@@ -37,6 +40,8 @@ class GLFrameBuffer
         void AttachTexture2D(GLenum attachment, GLTexture& texture, GLenum textureTarget, GLint mipLevel);
         void AttachTexture3D(GLenum attachment, GLTexture& texture, GLenum textureTarget, GLint mipLevel, GLint zOffset);
         void AttachTextureLayer(GLenum attachment, GLTexture& texture, GLint mipLevel, GLint layer);
+        
+        void AttachRenderBuffer(GLenum attachment, GLRenderBuffer& renderBuffer);
 
         //! Returns the hardware buffer ID.
         inline GLuint GetID() const
