@@ -67,17 +67,14 @@ class LLGL_EXPORT ShaderProgram
         /**
         \brief Binds the specified vertex attributes to this shader program.
         \param[in] vertexAttribs Specifies the vertex attributes.
-        \param[in] ignoreUnusedAttributes Specifies whether to ignore unused vertex attributes.
-        If this is true, no exception is thrown if a vertex attribute could not be found.
-        This option might be useful, when a shader removes vertex attributes for optimization. By default false.
-        \remarks This is only required for a shader program, which has an attached vertex shader,
-        and it can only be used after the shaders have already been linked.
+        \remarks This is only required for a shader program, which has an attached vertex shader.
+        Moreover, this can only be called after shader compilation but before shader program linking!
         \see AttachShader(VertexShader&)
+        \see Shader::Compile
         \see LinkShaders
         \throws std::invalid_argument If the name of an vertex attribute is invalid or the maximal number of available vertex attributes is exceeded.
-        \throws std::runtime_error If this function is called before the shaders have been successfully linked.
         */
-        virtual void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs, bool ignoreUnusedAttributes = false) = 0;
+        virtual void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) = 0;
 
         /**
         \brief Binds the specified constant buffer to this shader.

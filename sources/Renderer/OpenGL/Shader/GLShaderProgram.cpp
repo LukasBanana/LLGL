@@ -48,9 +48,7 @@ bool GLShaderProgram::LinkShaders()
     GLint linkStatus = 0;
     glGetProgramiv(id_, GL_LINK_STATUS, &linkStatus);
 
-    linkStatus_ = (linkStatus != GL_FALSE);
-
-    return linkStatus_;
+    return (linkStatus != GL_FALSE);
 }
 
 std::string GLShaderProgram::QueryInfoLog()
@@ -261,11 +259,8 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
     return descList;
 }
 
-void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs, bool ignoreUnusedAttributes)
+void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
 {
-    if (!linkStatus_)
-        throw std::runtime_error("failed to bind vertex attributes, because shaders have not been linked successfully yet");
-    
     if (vertexAttribs.size() > GL_MAX_VERTEX_ATTRIBS)
     {
         throw std::invalid_argument(
@@ -275,21 +270,20 @@ void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& v
     }
 
     /* Bind all vertex attribute locations */
+    GLuint index = 0;
+
     for (const auto& attrib : vertexAttribs)
     {
-        /* Get and bind attribute location */
-        GLint index = glGetAttribLocation(id_, attrib.name.c_str());
-        if (index != -1)
-            glBindAttribLocation(id_, static_cast<GLuint>(index), attrib.name.c_str());
-        else if (!ignoreUnusedAttributes)
-            throw std::invalid_argument("failed to bind vertex attribute '" + std::string(attrib.name) + "'");
+        /* Bind attribute location */
+        glBindAttribLocation(id_, index, attrib.name.c_str());
+        ++index;
     }
 }
 
 void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
 {
     /* Query uniform block index and bind it to the specified binding index */
-    GLint blockIndex = glGetUniformBlockIndex(id_, name.c_str());
+    auto blockIndex = glGetUniformBlockIndex(id_, name.c_str());
     if (blockIndex != GL_INVALID_INDEX)
         glUniformBlockBinding(id_, blockIndex, bindingIndex);
     else

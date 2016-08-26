@@ -36,7 +36,7 @@ class GLShaderProgram : public ShaderProgram
         std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
 
-        void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs, bool ignoreUnusedAttributes = false) override;
+        void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) override;
         void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) override;
 
         ShaderUniform* LockUniformSetter() override;
@@ -50,8 +50,7 @@ class GLShaderProgram : public ShaderProgram
 
     private:
 
-        GLuint          id_         = 0;
-        bool            linkStatus_ = false;
+        GLuint          id_ = 0;
 
         GLShaderUniform uniform_;
 

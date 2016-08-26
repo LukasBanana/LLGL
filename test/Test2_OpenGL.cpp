@@ -107,10 +107,17 @@ int main()
         auto& vertexBuffer = *renderer->CreateVertexBuffer();
 
         LLGL::VertexFormat vertexFormat;
+        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
 
         #ifdef _WIN32
-        const Gs::Vector2f vertices[] = { { 100, 100 }, { 200, 100 }, { 200, 200 }, { 100, 200 } };
+        const Gs::Vector2f vertices[] =
+        {
+            { 0, 0 }, { 100, 100 },
+            { 0, 0 }, { 200, 100 },
+            { 0, 0 }, { 200, 200 },
+            { 0, 0 }, { 100, 200 },
+        };
         #else
         const Gs::Vector2f vertices[] = { { -1, 1 }, { 1, 1 }, { 1, -1 }, { -1, -1 } };
         #endif
@@ -124,7 +131,7 @@ int main()
             #ifdef _WIN32
             
             "#version 420\n"
-            "layout(location=0) in vec2 position;\n"
+            "in vec2 position;\n"
             "out vec2 vertexPos;\n"
             "layout(binding=2) uniform Matrices {\n"
             "    mat4 projection;\n"
@@ -188,10 +195,12 @@ int main()
         shaderProgram.AttachShader(vertShader);
         shaderProgram.AttachShader(fragShader);
 
+        shaderProgram.BindVertexAttributes(vertexFormat.GetAttributes());
+
         if (!shaderProgram.LinkShaders())
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;
 
-        shaderProgram.BindVertexAttributes(vertexFormat.GetAttributes());
+        auto vertAttribs = shaderProgram.QueryVertexAttributes();
 
         // Set shader uniforms
         auto uniformSetter = shaderProgram.LockUniformSetter();
