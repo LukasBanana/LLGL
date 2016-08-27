@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/TextureFlags.h>
+#include <cmath>
 
 
 namespace LLGL
@@ -26,6 +27,13 @@ LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat)
         case ColorFormat::DepthStencil: return 2;
     }
     return 0;
+}
+
+LLGL_EXPORT int NumMipLevels(const Gs::Vector3i& textureSize)
+{
+    auto maxSize = std::max(textureSize.x, std::max(textureSize.y, textureSize.z));
+    auto log2Size = static_cast<int>(std::log2(maxSize));
+    return (1 + log2Size);
 }
 
 

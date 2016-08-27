@@ -28,8 +28,10 @@ Gs::Vector3i GLTexture::QueryMipLevelSize(int mipLevel) const
 {
     Gs::Vector3i size;
 
-    GLStateManager::active->PushBoundTexture(0, GLStateManager::GetTextureTarget(GetType()));
+    GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
     {
+        GLStateManager::active->BindTexture(*this);
+
         auto target = GLTypes::Map(GetType());
         glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_WIDTH, &size.x);
         glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_HEIGHT, &size.y);

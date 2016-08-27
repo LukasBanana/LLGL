@@ -607,6 +607,11 @@ void GLStateManager::PushBoundTexture(unsigned int layer, GLTextureTarget target
     );
 }
 
+void GLStateManager::PushBoundTexture(GLTextureTarget target)
+{
+    PushBoundTexture(textureState_.activeTexture, target);
+}
+
 void GLStateManager::PopBoundTexture()
 {
     const auto& state = textureState_.boundTextureStack.top();

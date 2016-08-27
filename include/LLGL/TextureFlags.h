@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "RenderSystemFlags.h"
+#include <Gauss/Vector3.h>
 #include <cstddef>
 
 
@@ -33,7 +34,10 @@ enum class TextureType
     TextureCubeArray,   //!< Cube array texture.
 };
 
-//! Hardware texture format enumeration.
+/**
+\brief Hardware texture format enumeration.
+\note All integral 32-bit formats are un-normalized!
+*/
 enum class TextureFormat
 {
     /* --- Base formats --- */
@@ -45,48 +49,48 @@ enum class TextureFormat
     RGBA,           //!< Base internal format: red, green, blue and alpha components.
 
     /* --- Sized formats --- */
-    R8UInt,         //!< Sized internal format: red 8-bit unsigned integer component.
-    R8SInt,         //!< Sized internal format: red 8-bit signed integer component.
+    R8,             //!< Sized internal format: red 8-bit normalized unsigned integer component.
+    R8Sgn,          //!< Sized internal format: red 8-bit normalized signed integer component.
 
-    R16UInt,        //!< Sized internal format: red 16-bit unsigned interger component.
-    R16SInt,        //!< Sized internal format: red 16-bit signed interger component.
+    R16,            //!< Sized internal format: red 16-bit normalized unsigned interger component.
+    R16Sgn,         //!< Sized internal format: red 16-bit normalized signed interger component.
     R16Float,       //!< Sized internal format: red 16-bit floating point component.
 
-    R32UInt,        //!< Sized internal format: red 32-bit unsigned interger component.
-    R32SInt,        //!< Sized internal format: red 32-bit signed interger component.
+    R32UInt,        //!< Sized internal format: red 32-bit un-normalized unsigned interger component.
+    R32SInt,        //!< Sized internal format: red 32-bit un-normalized signed interger component.
     R32Float,       //!< Sized internal format: red 32-bit floating point component.
 
-    RG8UInt,        //!< Sized internal format: red, green 8-bit unsigned integer components.
-    RG8SInt,        //!< Sized internal format: red, green 8-bit signed integer components.
+    RG8,            //!< Sized internal format: red, green 8-bit normalized unsigned integer components.
+    RG8Sgn,         //!< Sized internal format: red, green 8-bit normalized signed integer components.
 
-    RG16UInt,       //!< Sized internal format: red, green 16-bit unsigned interger components.
-    RG16SInt,       //!< Sized internal format: red, green 16-bit signed interger components.
+    RG16,           //!< Sized internal format: red, green 16-bit normalized unsigned interger components.
+    RG16Sgn,        //!< Sized internal format: red, green 16-bit normalized signed interger components.
     RG16Float,      //!< Sized internal format: red, green 16-bit floating point components.
 
-    RG32UInt,       //!< Sized internal format: red, green 32-bit unsigned interger components.
-    RG32SInt,       //!< Sized internal format: red, green 32-bit signed interger components.
+    RG32UInt,       //!< Sized internal format: red, green 32-bit un-normalized unsigned interger components.
+    RG32SInt,       //!< Sized internal format: red, green 32-bit un-normalized signed interger components.
     RG32Float,      //!< Sized internal format: red, green 32-bit floating point components.
 
-    RGB8UInt,       //!< Sized internal format: red, green, blue 8-bit unsigned integer components.
-    RGB8SInt,       //!< Sized internal format: red, green, blue 8-bit signed integer components.
+    RGB8,           //!< Sized internal format: red, green, blue 8-bit normalized unsigned integer components.
+    RGB8Sgn,        //!< Sized internal format: red, green, blue 8-bit normalized signed integer components.
 
-    RGB16UInt,      //!< Sized internal format: red, green, blue 16-bit unsigned interger components.
-    RGB16SInt,      //!< Sized internal format: red, green, blue 16-bit signed interger components.
+    RGB16,          //!< Sized internal format: red, green, blue 16-bit normalized unsigned interger components.
+    RGB16Sgn,       //!< Sized internal format: red, green, blue 16-bit normalized signed interger components.
     RGB16Float,     //!< Sized internal format: red, green, blue 16-bit floating point components.
 
-    RGB32UInt,      //!< Sized internal format: red, green, blue 32-bit unsigned interger components.
-    RGB32SInt,      //!< Sized internal format: red, green, blue 32-bit signed interger components.
+    RGB32UInt,      //!< Sized internal format: red, green, blue 32-bit un-normalized unsigned interger components.
+    RGB32SInt,      //!< Sized internal format: red, green, blue 32-bit un-normalized signed interger components.
     RGB32Float,     //!< Sized internal format: red, green, blue 32-bit floating point components.
 
-    RGBA8UInt,      //!< Sized internal format: red, green, blue, alpha 8-bit unsigned integer components.
-    RGBA8SInt,      //!< Sized internal format: red, green, blue, alpha 8-bit signed integer components.
+    RGBA8,          //!< Sized internal format: red, green, blue, alpha 8-bit normalized unsigned integer components.
+    RGBA8Sgn,       //!< Sized internal format: red, green, blue, alpha 8-bit normalized signed integer components.
 
-    RGBA16UInt,     //!< Sized internal format: red, green, blue, alpha 16-bit unsigned interger components.
-    RGBA16SInt,     //!< Sized internal format: red, green, blue, alpha 16-bit signed interger components.
+    RGBA16,         //!< Sized internal format: red, green, blue, alpha 16-bit normalized unsigned interger components.
+    RGBA16Sgn,      //!< Sized internal format: red, green, blue, alpha 16-bit normalized signed interger components.
     RGBA16Float,    //!< Sized internal format: red, green, blue, alpha 16-bit floating point components.
 
-    RGBA32UInt,     //!< Sized internal format: red, green, blue, alpha 32-bit unsigned interger components.
-    RGBA32SInt,     //!< Sized internal format: red, green, blue, alpha 32-bit signed interger components.
+    RGBA32UInt,     //!< Sized internal format: red, green, blue, alpha 32-bit un-normalized unsigned interger components.
+    RGBA32SInt,     //!< Sized internal format: red, green, blue, alpha 32-bit un-normalized signed interger components.
     RGBA32Float,    //!< Sized internal format: red, green, blue, alpha 32-bit floating point components.
 };
 
@@ -179,6 +183,12 @@ union TextureDescriptor
 
 //! Returns the size (in number of components) of the specified color format.
 LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat);
+
+/**
+\brief Returns the number of MIP-map levels for a texture with the specified size.
+\return 1 + floor(log2(max{ x, y, z })).
+*/
+LLGL_EXPORT int NumMipLevels(const Gs::Vector3i& textureSize);
 
 
 } // /namespace LLGL

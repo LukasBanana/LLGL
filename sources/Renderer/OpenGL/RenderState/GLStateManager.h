@@ -109,6 +109,7 @@ class GLStateManager
         void ForcedBindTexture(GLTextureTarget target, GLuint texture);
         
         void PushBoundTexture(unsigned int layer, GLTextureTarget target);
+        void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
 
         void BindTexture(const GLTexture& texture);

@@ -166,11 +166,11 @@ int main()
             
             "#version 420\n"
             "layout(location=0) out vec4 fragColor;\n"
-            "uniform sampler1D tex;\n"
+            "uniform sampler2D tex;\n"
             "uniform vec4 color;\n"
             "in vec2 vertexPos;\n"
             "void main() {\n"
-            "    fragColor = texture(tex, vertexPos.x, 1.0) * color;\n"
+            "    fragColor = texture(tex, vertexPos) * color;\n"
             "}\n"
             
             #else
@@ -205,7 +205,7 @@ int main()
         // Set shader uniforms
         auto uniformSetter = shaderProgram.LockUniformSetter();
         if (uniformSetter)
-            uniformSetter->SetUniform("color", Gs::Vector4f(1, 0, 0, 1));
+            uniformSetter->SetUniform("color", Gs::Vector4f(1, 1, 1, 1));
         shaderProgram.UnlockShaderUniform();
 
         // Create constant buffer
@@ -253,13 +253,25 @@ int main()
             textureData.data        = image;
         }
         renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture
-        renderer->WriteTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture
+        //renderer->WriteTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture
 
         context->GenerateMips(texture);
 
         context->BindTexture(texture, 0);
 
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
+
+        // Create render target
+        auto& renderTarget = *renderer->CreateRenderTarget();
+        auto renderTargetSize = contextDesc.videoMode.resolution;
+
+        auto& renderTargetTex = *renderer->CreateTexture();
+        renderer->WriteTexture2D(renderTargetTex, LLGL::TextureFormat::RGBA8, renderTargetSize);
+
+        //auto numMips = LLGL::NumMipLevels({ renderTargetSize.x, renderTargetSize.y, 1 });
+
+        renderTarget.AttachDepthBuffer(renderTargetSize);
+        renderTarget.AttachTexture2D(renderTargetTex);
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -295,10 +307,14 @@ int main()
                 renderer->WriteConstantBufferSub(*projectionBuffer, &projection, sizeof(projection), 0);
             }
 
+            context->BindRenderTarget(renderTarget);
+
             context->BindGraphicsPipeline(*pipeline);
             context->BindVertexBuffer(vertexBuffer);
 
             context->Draw(4, 0);
+
+            context->UnbindRenderTarget();
 
             context->Present();
         }
