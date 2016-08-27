@@ -113,7 +113,7 @@ int main()
         #ifdef _WIN32
         const Gs::Vector2f vertices[] =
         {
-            { 0, 0 }, { 100, 100 },
+            { 0, 0 }, { 110, 100 },
             { 0, 0 }, { 200, 100 },
             { 0, 0 }, { 200, 200 },
             { 0, 0 }, { 100, 200 },
@@ -260,7 +260,7 @@ int main()
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
 
         // Create render target
-        auto& renderTarget = *renderer->CreateRenderTarget();
+        auto& renderTarget = *renderer->CreateRenderTarget(8);
         auto renderTargetSize = contextDesc.videoMode.resolution;
 
         auto& renderTargetTex = *renderer->CreateTexture();
@@ -292,7 +292,7 @@ int main()
             if (profiler)
                 profiler->ResetCounters();
 
-            context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+            context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
 
@@ -307,7 +307,7 @@ int main()
 
             context->BindRenderTarget(renderTarget);
             {
-                context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+                context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
                 context->BindTexture(texture, 0);
 

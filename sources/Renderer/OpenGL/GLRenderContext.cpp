@@ -360,13 +360,25 @@ void GLRenderContext::GenerateMips(Texture& texture)
 
 void GLRenderContext::BindRenderTarget(RenderTarget& renderTarget)
 {
+    /* Bind framebuffer object */
     auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
     stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFrameBuffer().GetID());
+
+    /* Store current render target */
+    boundRenderTarget_ = &renderTargetGL;
 }
 
 void GLRenderContext::UnbindRenderTarget()
 {
+    /* Blit previously bound render target (in case mutli-sampling is used) */
+    if (boundRenderTarget_)
+        boundRenderTarget_->BlitMultiSampleFrameBuffers();
+
+    /* Unbind framebuffer object */
     stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);
+
+    /* Reset reference to render target */
+    boundRenderTarget_ = nullptr;
 }
 
 /* ----- Pipeline States ----- */

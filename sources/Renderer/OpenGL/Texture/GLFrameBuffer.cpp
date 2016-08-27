@@ -15,13 +15,7 @@ namespace LLGL
 {
 
 
-static GLFrameBufferTarget GetFrameBufferTarget(GLenum target)
-{
-    return (target == GL_READ_FRAMEBUFFER ? GLFrameBufferTarget::READ_FRAMEBUFFER : GLFrameBufferTarget::DRAW_FRAMEBUFFER);
-}
-
-GLFrameBuffer::GLFrameBuffer(GLenum target) :
-    target_( target )
+GLFrameBuffer::GLFrameBuffer()
 {
     glGenFramebuffers(1, &id_);
 }
@@ -31,14 +25,14 @@ GLFrameBuffer::~GLFrameBuffer()
     glDeleteFramebuffers(1, &id_);
 }
 
-void GLFrameBuffer::Bind() const
+void GLFrameBuffer::Bind(const GLFrameBufferTarget target) const
 {
-    GLStateManager::active->BindFrameBuffer(GetFrameBufferTarget(target_), id_);
+    GLStateManager::active->BindFrameBuffer(target, id_);
 }
 
-void GLFrameBuffer::Unbind() const
+void GLFrameBuffer::Unbind(const GLFrameBufferTarget target) const
 {
-    GLStateManager::active->BindFrameBuffer(GetFrameBufferTarget(target_), 0);
+    GLStateManager::active->BindFrameBuffer(target, 0);
 }
 
 void GLFrameBuffer::Recreate()
@@ -50,35 +44,35 @@ void GLFrameBuffer::Recreate()
 
 void GLFrameBuffer::AttachTexture1D(GLenum attachment, GLTexture& texture, GLenum textureTarget, GLint mipLevel)
 {
-    glFramebufferTexture1D(target_, attachment, textureTarget, texture.GetID(), mipLevel);
+    glFramebufferTexture1D(GL_DRAW_FRAMEBUFFER, attachment, textureTarget, texture.GetID(), mipLevel);
 }
 
 void GLFrameBuffer::AttachTexture2D(GLenum attachment, GLTexture& texture, GLenum textureTarget, GLint mipLevel)
 {
-    glFramebufferTexture2D(target_, attachment, textureTarget, texture.GetID(), mipLevel);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachment, textureTarget, texture.GetID(), mipLevel);
 }
 
 void GLFrameBuffer::AttachTexture3D(GLenum attachment, GLTexture& texture, GLenum textureTarget, GLint mipLevel, GLint zOffset)
 {
-    glFramebufferTexture3D(target_, attachment, textureTarget, texture.GetID(), mipLevel, zOffset);
+    glFramebufferTexture3D(GL_DRAW_FRAMEBUFFER, attachment, textureTarget, texture.GetID(), mipLevel, zOffset);
 }
 
 void GLFrameBuffer::AttachTextureLayer(GLenum attachment, GLTexture& texture, GLint mipLevel, GLint layer)
 {
-    glFramebufferTextureLayer(target_, attachment, texture.GetID(), mipLevel, layer);
+    glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, attachment, texture.GetID(), mipLevel, layer);
 }
 
 void GLFrameBuffer::AttachRenderBuffer(GLenum attachment, GLRenderBuffer& renderBuffer)
 {
-    glFramebufferRenderbuffer(target_, attachment, GL_RENDERBUFFER, renderBuffer.GetID());
+    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderBuffer.GetID());
 }
 
-void GLFrameBuffer::Blit(const Gs::Vector2i& size, GLenum mask, GLenum filter)
+void GLFrameBuffer::Blit(const Gs::Vector2i& size, GLenum mask)
 {
     glBlitFramebuffer(
         0, 0, size.x, size.y,
         0, 0, size.x, size.y,
-        mask, filter
+        mask, GL_NEAREST
     );
 }
 
@@ -92,11 +86,6 @@ void GLFrameBuffer::Blit(
         destPos0.x, destPos0.y, destPos1.x, destPos1.y,
         mask, filter
     );
-}
-
-GLenum GLFrameBuffer::CheckStatus() const
-{
-    return glCheckFramebufferStatus(target_);
 }
 
 

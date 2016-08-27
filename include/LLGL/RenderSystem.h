@@ -171,7 +171,7 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Render Targets ----- */
 
-        virtual RenderTarget* CreateRenderTarget() = 0;
+        virtual RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) = 0;
 
         /* ----- Shader ----- */
 

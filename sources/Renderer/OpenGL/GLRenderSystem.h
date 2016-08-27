@@ -84,7 +84,7 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Render Targets ----- */
 
-        RenderTarget* CreateRenderTarget() override;
+        RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) override;
 
         /* ----- Shader ----- */
 

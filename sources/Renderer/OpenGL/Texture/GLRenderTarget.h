@@ -14,6 +14,8 @@
 #include "GLRenderBuffer.h"
 #include "GLTexture.h"
 #include <functional>
+#include <vector>
+#include <memory>
 
 
 namespace LLGL
@@ -25,7 +27,7 @@ class GLRenderTarget : public RenderTarget
 
     public:
 
-        GLRenderTarget();
+        GLRenderTarget(unsigned int multiSamples);
 
         void AttachDepthBuffer(const Gs::Vector2i& size) override;
         void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
@@ -40,33 +42,54 @@ class GLRenderTarget : public RenderTarget
 
         void DetachTextures() override;
 
-        inline const GLFrameBuffer& GetFrameBuffer() const
-        {
-            return frameBuffer_;
-        }
+        /* ----- Extended Internal Functions ----- */
 
-        inline const GLRenderBuffer& GetRenderBuffer() const
+        void BlitMultiSampleFrameBuffers();
+
+        const GLFrameBuffer& GetFrameBuffer() const;
+
+        /*inline const GLRenderBuffer& GetRenderBuffer() const
         {
             return renderBuffer_;
-        }
+        }*/
 
     private:
+
+        using AttachTextureCallback = std::function<void(GLenum attachment, GLTexture& textureGL)>;
 
         void ApplyMipResolution(Texture& texture, int mipLevel);
 
         void AttachRenderBuffer(const Gs::Vector2i& size, GLenum internalFormat, GLenum attachment);
-        void AttachTexture(Texture& texture, int mipLevel, const std::function<void(GLTexture& textureGL)>& attachmentProc);
+        void AttachTexture(Texture& texture, int mipLevel, const AttachTextureCallback& attachmentProc);
 
-        GLenum NextColorAttachment();
+        GLenum MakeColorAttachment();
 
-        void CheckFrameBufferStatus(GLenum status);
+        //! Sets the draw buffers for the currently bound FBO.
+        void SetDrawBuffers();
 
-        GLFrameBuffer   frameBuffer_;
-        GLRenderBuffer  renderBuffer_;
+        void CheckFrameBufferStatus(GLenum status, const std::string& info);
 
-        int             attachments_            = 0;
+        GLFrameBuffer                                   frameBuffer_;
+        GLRenderBuffer                                  renderBuffer_;
 
-        bool            renderBufferAttached_   = false;
+        /**
+        Multi-sampled frame buffer; required since we cannot
+        directly draw into a texture when using multi-sampling.
+        */
+        std::unique_ptr<GLFrameBuffer>                  frameBufferMS_;
+
+        /**
+        For multi-sampled render targets we also need a render buffer for each attached texture.
+        Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
+        which is only available since OpenGL 3.2+, but render buffers are available since OpenGL 3.0+.
+        */
+        std::vector<std::unique_ptr<GLRenderBuffer>>    renderBuffersMS_;
+
+        std::vector<GLenum>                             colorAttachments_;
+
+        bool                                            renderBufferAttached_   = false;
+        GLsizei                                         multiSamples_           = 0;
+        GLbitfield                                      blitMask_               = 0;
 
 };
 

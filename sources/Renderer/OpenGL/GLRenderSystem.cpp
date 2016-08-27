@@ -428,9 +428,9 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorForm
 
 /* ----- Render Targets ----- */
 
-RenderTarget* GLRenderSystem::CreateRenderTarget()
+RenderTarget* GLRenderSystem::CreateRenderTarget(unsigned int multiSamples)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>());
+    return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(multiSamples));
 }
 
 /* ----- Shader ----- */
