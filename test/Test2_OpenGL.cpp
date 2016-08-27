@@ -257,8 +257,6 @@ int main()
 
         context->GenerateMips(texture);
 
-        context->BindTexture(texture, 0);
-
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
 
         // Create render target
@@ -308,12 +306,16 @@ int main()
             }
 
             context->BindRenderTarget(renderTarget);
+            {
+                context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
-            context->BindGraphicsPipeline(*pipeline);
-            context->BindVertexBuffer(vertexBuffer);
+                context->BindTexture(texture, 0);
 
-            context->Draw(4, 0);
+                context->BindGraphicsPipeline(*pipeline);
+                context->BindVertexBuffer(vertexBuffer);
 
+                context->Draw(4, 0);
+            }
             context->UnbindRenderTarget();
 
             context->Present();
