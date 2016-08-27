@@ -11,6 +11,7 @@
 
 #include "GLTexture.h"
 #include "../RenderState/GLState.h"
+#include <Gauss/Vector2.h>
 
 
 namespace LLGL
@@ -27,11 +28,11 @@ class GLFrameBuffer
         GLFrameBuffer(const GLFrameBuffer&) = delete;
         GLFrameBuffer& operator = (const GLFrameBuffer&) = delete;
 
-        GLFrameBuffer();
+        GLFrameBuffer(GLenum target);
         ~GLFrameBuffer();
 
-        void Bind(const GLFrameBufferTarget target) const;
-        void Unbind(const GLFrameBufferTarget target) const;
+        void Bind() const;
+        void Unbind() const;
 
         //! Recreates the internal framebuffer object. This will invalidate the previous buffer ID.
         void Recreate();
@@ -43,6 +44,22 @@ class GLFrameBuffer
         
         void AttachRenderBuffer(GLenum attachment, GLRenderBuffer& renderBuffer);
 
+        void Blit(const Gs::Vector2i& size, GLenum mask, GLenum filter);
+        
+        void Blit(
+            const Gs::Vector2i& srcPos0, const Gs::Vector2i& srcPos1,
+            const Gs::Vector2i& destPos0, const Gs::Vector2i& destPos1,
+            GLenum mask, GLenum filter
+        );
+
+        GLenum CheckStatus() const;
+
+        //! Returns the framebuffer target.
+        inline GLenum GetTarget() const
+        {
+            return target_;
+        }
+
         //! Returns the hardware buffer ID.
         inline GLuint GetID() const
         {
@@ -51,7 +68,8 @@ class GLFrameBuffer
 
     private:
 
-        GLuint id_ = 0;
+        GLenum target_  = GL_DRAW_FRAMEBUFFER;
+        GLuint id_      = 0;
 
 };
 
