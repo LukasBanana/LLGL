@@ -13,6 +13,7 @@
 #include "GLFrameBuffer.h"
 #include "GLRenderBuffer.h"
 #include "GLTexture.h"
+#include <functional>
 
 
 namespace LLGL
@@ -23,6 +24,8 @@ class GLRenderTarget : public RenderTarget
 {
 
     public:
+
+        GLRenderTarget();
 
         void AttachDepthBuffer(const Gs::Vector2i& size) override;
         void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
@@ -52,8 +55,11 @@ class GLRenderTarget : public RenderTarget
         void ApplyMipResolution(Texture& texture, int mipLevel);
 
         void AttachRenderBuffer(const Gs::Vector2i& size, GLenum internalFormat, GLenum attachment);
+        void AttachTexture(Texture& texture, int mipLevel, const std::function<void(GLTexture& textureGL)>& attachmentProc);
 
         GLenum NextColorAttachment();
+
+        void CheckFrameBufferStatus(GLenum status);
 
         GLFrameBuffer   frameBuffer_;
         GLRenderBuffer  renderBuffer_;
