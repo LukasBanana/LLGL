@@ -13,6 +13,9 @@
 #include <sstream>
 
 
+#define TEST_RENDER_TARGET
+
+
 int main()
 {
     try
@@ -56,8 +59,6 @@ int main()
         auto renderCaps = context->QueryRenderingCaps();
 
         auto shadingLang = context->QueryShadingLanguage();
-
-        context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
 
         // Show renderer info
         auto info = context->QueryRendererInfo();
@@ -260,16 +261,24 @@ int main()
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
 
         // Create render target
+        LLGL::RenderTarget* renderTarget = nullptr;
+        LLGL::Texture* renderTargetTex = nullptr;
+
+        #ifdef TEST_RENDER_TARGET
+        
+        renderTarget = renderer->CreateRenderTarget(8);
+
         auto renderTargetSize = contextDesc.videoMode.resolution;
 
-        auto& renderTargetTex = *renderer->CreateTexture();
-        renderer->WriteTexture2D(renderTargetTex, LLGL::TextureFormat::RGBA8, renderTargetSize);
+        renderTargetTex = renderer->CreateTexture();
+        renderer->WriteTexture2D(*renderTargetTex, LLGL::TextureFormat::RGBA8, renderTargetSize);
 
         //auto numMips = LLGL::NumMipLevels({ renderTargetSize.x, renderTargetSize.y, 1 });
 
-        auto& renderTarget = *renderer->CreateRenderTarget(8);
-        //renderTarget.AttachDepthBuffer(renderTargetSize);
-        renderTarget.AttachTexture2D(renderTargetTex);
+        //renderTarget->AttachDepthBuffer(renderTargetSize);
+        renderTarget->AttachTexture2D(*renderTargetTex);
+
+        #endif
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -294,6 +303,7 @@ int main()
             if (profiler)
                 profiler->ResetCounters();
 
+            context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
@@ -307,18 +317,25 @@ int main()
                 renderer->WriteConstantBufferSub(*projectionBuffer, &projection, sizeof(projection), 0);
             }
 
-            context->BindRenderTarget(renderTarget);
+            context->BindGraphicsPipeline(pipeline);
+            context->BindVertexBuffer(vertexBuffer);
+
+            if (renderTarget && renderTargetTex)
             {
+                context->BindRenderTarget(*renderTarget);
+                context->SetClearColor({ 1, 1, 1, 1 });
                 context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+            }
 
-                context->BindTexture(texture, 0);
-
-                context->BindGraphicsPipeline(pipeline);
-                context->BindVertexBuffer(vertexBuffer);
-
+            context->BindTexture(texture, 0);
+            context->Draw(4, 0);
+            
+            if (renderTarget && renderTargetTex)
+            {
+                context->UnbindRenderTarget();
+                context->BindTexture(*renderTargetTex, 0);
                 context->Draw(4, 0);
             }
-            context->UnbindRenderTarget();
 
             context->Present();
         }

@@ -51,12 +51,14 @@ class GLRenderTarget : public RenderTarget
         //! Blits the specified color attachment from the frame buffer onto the screen.
         void BlitOntoScreen(std::size_t colorAttachmentIndex);
 
+        //! Returns the active frame buffer (i.e. either the default frame buffer or the multi-sample frame buffer).
         const GLFrameBuffer& GetFrameBuffer() const;
 
-        /*inline const GLRenderBuffer& GetRenderBuffer() const
+        //! Returns the number of color attachments.
+        inline std::size_t GetNumColorAttachments() const
         {
-            return renderBuffer_;
-        }*/
+            return colorAttachments_.size();
+        }
 
     private:
 

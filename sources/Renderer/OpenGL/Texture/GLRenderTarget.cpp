@@ -151,7 +151,7 @@ void GLRenderTarget::BlitOntoFrameBuffer()
         {
             /*
             Blit (or rather copy) each attachment from the
-            multi-sample frame buffer into the main frame buffer
+            multi-sample frame buffer (read) into the main frame buffer (draw)
             */
             glReadBuffer(attachment);
             glDrawBuffer(attachment);
@@ -168,10 +168,8 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
 {
     if (colorAttachmentIndex < colorAttachments_.size())
     {
-        const auto& frameBuffer = GetFrameBuffer();
-
         GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);
-        GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::READ_FRAMEBUFFER, frameBuffer.GetID());
+        GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::READ_FRAMEBUFFER, GetFrameBuffer().GetID());
         {
             glReadBuffer(colorAttachments_[colorAttachmentIndex]);
             glDrawBuffer(GL_BACK);
