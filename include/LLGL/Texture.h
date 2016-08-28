@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-//! Texture base interface.
+//! Texture interface.
 class LLGL_EXPORT Texture
 {
 
