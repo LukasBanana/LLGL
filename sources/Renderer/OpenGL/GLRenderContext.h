@@ -54,6 +54,8 @@ class GLRenderContext : public RenderContext
 
         /* ----- Configuration ----- */
 
+        void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
+
         void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         void SetVsync(const VsyncDescriptor& vsyncDesc) override;
 

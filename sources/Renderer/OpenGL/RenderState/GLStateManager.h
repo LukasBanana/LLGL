@@ -39,6 +39,8 @@ class GLStateManager
 
         void MakeCurrentInfo(const GLRenderContext& renderContext);
 
+        void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state);
+
         /* ----- Boolean states ----- */
 
         //! Resets all internal states by querying the values from OpenGL.
@@ -224,18 +226,20 @@ class GLStateManager
 
         /* ----- Members ----- */
 
-        GLCommonState       commonState_;
-        GLRenderState       renderState_;
-        GLBufferState       bufferState_;
-        GLFrameBufferState  frameBufferState_;
-        GLRenderBufferState renderBufferState_;
-        GLTextureState      textureState_;
-        GLShaderState       shaderState_;
+        GraphicsAPIDependentStateDescriptor gfxDependentState_;
 
-        GLTextureLayer*     activeTextureLayer_     = nullptr;
+        GLCommonState                       commonState_;
+        GLRenderState                       renderState_;
+        GLBufferState                       bufferState_;
+        GLFrameBufferState                  frameBufferState_;
+        GLRenderBufferState                 renderBufferState_;
+        GLTextureState                      textureState_;
+        GLShaderState                       shaderState_;
 
-        bool                emulateClipControl_     = false;
-        GLint               currentContextHeight_   = 0;
+        GLTextureLayer*                     activeTextureLayer_     = nullptr;
+
+        bool                                emulateClipControl_     = false;
+        GLint                               currentContextHeight_   = 0;
 
 };
 

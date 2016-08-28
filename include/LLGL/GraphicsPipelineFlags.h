@@ -123,7 +123,10 @@ struct RasterizerDescriptor
     int         depthBias               = 0;
     float       depthBiasClamp          = 0.0f;
     float       slopeScaledDepthBias    = 0.0f;
+
+    //! If true, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding.
     bool        frontCCW                = false;
+
     bool        depthClampEnabled       = false;
     bool        scissorTestEnabled      = false;
     bool        multiSampleEnabled      = false;

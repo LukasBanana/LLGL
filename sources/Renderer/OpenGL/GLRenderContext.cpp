@@ -194,6 +194,11 @@ ShadingLanguage GLRenderContext::QueryShadingLanguage() const
 
 /* ----- Configuration ----- */
 
+void GLRenderContext::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+{
+    stateMngr_->SetGraphicsAPIDependentState(state);
+}
+
 void GLRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     if (GetVideoMode() != videoModeDesc)

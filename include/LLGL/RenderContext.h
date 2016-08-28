@@ -78,6 +78,13 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Configuration ----- */
 
+        /**
+        \briefs Sets a few low-level graphics API dependent states.
+        \remarks This is mainly used to work around uniform render target behavior between different
+        low-level graphics APIs such as OpenGL and Direct3D.
+        */
+        virtual void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) = 0;
+
         //! Sets the new video mode for this render context.
         virtual void SetVideoMode(const VideoModeDescriptor& videoModeDesc);
 

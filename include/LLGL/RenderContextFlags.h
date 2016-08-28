@@ -231,6 +231,22 @@ struct Scissor
     int height  = 0;
 };
 
+/**
+\brief Low-level graphics API dependent state descriptor structure.
+\see RenderContext::SetGraphicsAPIDependentState
+*/
+struct GraphicsAPIDependentStateDescriptor
+{
+    /**
+    \briefs Specifies whether to invert the front face setting in the graphics pipeline state.
+    \remarks If this is true, the front facing will be inverted everytime "BindGraphicsPipeline" is called.
+    \note Only available for OpenGL.
+    \see RasterizerDescriptor::frontCCW
+    \see RenderContext::BindGraphicsPipeline
+    */
+    bool invertFrontFace = false;
+};
+
 
 } // /namespace LLGL
 

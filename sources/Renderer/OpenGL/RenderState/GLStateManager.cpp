@@ -124,6 +124,16 @@ void GLStateManager::MakeCurrentInfo(const GLRenderContext& renderContext)
     currentContextHeight_ = renderContext.GetContextHeight();
 }
 
+void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+{
+    /* Update front face */
+    if (gfxDependentState_.invertFrontFace != state.invertFrontFace)
+        SetFrontFace(commonState_.frontFace);
+
+    /* Store new graphics API dependent state */
+    gfxDependentState_ = state;
+}
+
 /* ----- Boolean states ----- */
 
 void GLStateManager::Reset()
@@ -408,6 +418,21 @@ void GLStateManager::SetCullFace(GLenum face)
 
 void GLStateManager::SetFrontFace(GLenum mode)
 {
+    /* Check if mode must be inverted */
+    if (gfxDependentState_.invertFrontFace)
+    {
+        switch (mode)
+        {
+            case GL_CW:
+                mode = GL_CCW;
+                break;
+            case GL_CCW:
+                mode = GL_CW;
+                break;
+        }
+    }
+
+    /* Set front face */
     if (commonState_.frontFace != mode)
     {
         commonState_.frontFace = mode;
