@@ -37,7 +37,7 @@ class GLStateManager
 
         static GLStateManager* active;
 
-        void MakeCurrentInfo(const GLRenderContext& renderContext);
+        void NotifyRenderTargetHeight(GLint height);
 
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state);
 
@@ -236,10 +236,10 @@ class GLStateManager
         GLTextureState                      textureState_;
         GLShaderState                       shaderState_;
 
-        GLTextureLayer*                     activeTextureLayer_     = nullptr;
+        GLTextureLayer*                     activeTextureLayer_ = nullptr;
 
-        bool                                emulateClipControl_     = false;
-        GLint                               currentContextHeight_   = 0;
+        bool                                emulateClipControl_ = false;
+        GLint                               renderTargetHeight_ = 0;
 
 };
 

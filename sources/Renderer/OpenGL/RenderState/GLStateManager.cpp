@@ -119,9 +119,9 @@ GLStateManager::GLStateManager()
     GLStateManager::active = this;
 }
 
-void GLStateManager::MakeCurrentInfo(const GLRenderContext& renderContext)
+void GLStateManager::NotifyRenderTargetHeight(GLint height)
 {
-    currentContextHeight_ = renderContext.GetContextHeight();
+    renderTargetHeight_ = height;
 }
 
 void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
@@ -212,7 +212,7 @@ void GLStateManager::PopStates(std::size_t count)
 //private
 void GLStateManager::AdjustViewport(GLViewport& viewport)
 {
-    viewport.y = static_cast<GLfloat>(currentContextHeight_) - viewport.height - viewport.y;
+    viewport.y = static_cast<GLfloat>(renderTargetHeight_) - viewport.height - viewport.y;
 }
 
 void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
@@ -221,7 +221,7 @@ void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
     {
         auto& vp = viewports.front();
 
-        if (emulateClipControl_)
+        if (emulateClipControl_ && !gfxDependentState_.invertFrontFace)
             AdjustViewport(vp);
 
         glViewport(
@@ -233,7 +233,7 @@ void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
     }
     else if (viewports.size() > 1 && glViewportArrayv)
     {
-        if (emulateClipControl_)
+        if (emulateClipControl_ && !gfxDependentState_.invertFrontFace)
         {
             for (auto& vp : viewports)
                 AdjustViewport(vp);
@@ -267,7 +267,7 @@ void GLStateManager::SetDepthRanges(std::vector<GLDepthRange>& depthRanges)
 //private
 void GLStateManager::AdjustScissor(GLScissor& scissor)
 {
-    scissor.y = currentContextHeight_ - scissor.height - scissor.y;
+    scissor.y = renderTargetHeight_ - scissor.height - scissor.y;
 }
 
 void GLStateManager::SetScissors(std::vector<GLScissor>& scissors)

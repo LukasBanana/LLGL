@@ -28,7 +28,7 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
     {
         /* Update new active state manager */
         GLStateManager::active = renderContext->stateMngr_.get();
-        GLStateManager::active->MakeCurrentInfo(*renderContext);
+        GLStateManager::active->NotifyRenderTargetHeight(renderContext->contextHeight_);
 
         /* Make this OpenGL context to the current one */
         const auto& ctx = renderContext->context_;

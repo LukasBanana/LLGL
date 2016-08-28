@@ -120,11 +120,6 @@ class GLRenderContext : public RenderContext
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);
 
-        inline GLint GetContextHeight() const
-        {
-            return contextHeight_;
-        }
-
     private:
 
         struct RenderState

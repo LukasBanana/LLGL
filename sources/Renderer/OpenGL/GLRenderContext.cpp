@@ -208,7 +208,7 @@ void GLRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
     if (GetVideoMode() != videoModeDesc)
     {
         contextHeight_ = videoModeDesc.resolution.y;
-        stateMngr_->MakeCurrentInfo(*this);
+        stateMngr_->NotifyRenderTargetHeight(contextHeight_);
         RenderContext::SetVideoMode(videoModeDesc);
     }
 }
@@ -382,6 +382,9 @@ void GLRenderContext::BindRenderTarget(RenderTarget& renderTarget)
     auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
     stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFrameBuffer().GetID());
 
+    /* Notify state manager about new render target height */
+    stateMngr_->NotifyRenderTargetHeight(renderTarget.GetResolution().y);
+
     /* Store current render target */
     boundRenderTarget_ = &renderTargetGL;
 }
@@ -395,6 +398,9 @@ void GLRenderContext::UnbindRenderTarget()
 
     /* Unbind framebuffer object */
     stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);
+
+    /* Notify state manager about new render target (the default frame buffer) height */
+    stateMngr_->NotifyRenderTargetHeight(contextHeight_);
 
     /* Reset reference to render target */
     boundRenderTarget_ = nullptr;
@@ -523,7 +529,7 @@ void GLRenderContext::AcquireStateManager(GLRenderContext* sharedRenderContext)
     }
 
     /* Notify state manager about the current render context */
-    stateMngr_->MakeCurrentInfo(*this);
+    stateMngr_->NotifyRenderTargetHeight(contextHeight_);
 }
 
 void GLRenderContext::InitRenderStates()
