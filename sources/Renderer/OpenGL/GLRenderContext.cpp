@@ -77,6 +77,10 @@ RenderingCaps GLRenderContext::QueryRenderingCaps() const
 {
     RenderingCaps caps;
 
+    /* Set fixed states for this renderer */
+    caps.screenOrigin           = ScreenOrigin::LowerLeft;
+    caps.clippingRange          = ClippingRange::MinusOneToOne;
+
     /* Query all boolean capabilies by their respective OpenGL extension */
     caps.hasRenderTargets       = HasExtension("GL_ARB_framebuffer_object");
     caps.has3DTextures          = HasExtension("GL_EXT_texture3D");

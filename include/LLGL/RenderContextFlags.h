@@ -95,10 +95,10 @@ struct RenderingCaps
     \brief Screen coordinate system origin.
     \remarks This determines the coordinate space of viewports, scissors, and framebuffers.
     */
-    ScreenOrigin    screenOrigin                    = ScreenOrigin::LowerLeft;
+    ScreenOrigin    screenOrigin                    = ScreenOrigin::UpperLeft;
 
     //! Clipping depth range.
-    ClippingRange   clippingRange                   = ClippingRange::MinusOneToOne;
+    ClippingRange   clippingRange                   = ClippingRange::ZeroToOne;
 
     //! Specifies whether render targets (also "frame buffer objects") are supported.
     bool            hasRenderTargets                = false;
