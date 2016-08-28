@@ -126,12 +126,13 @@ void GLStateManager::MakeCurrentInfo(const GLRenderContext& renderContext)
 
 void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
 {
-    /* Update front face */
-    if (gfxDependentState_.invertFrontFace != state.invertFrontFace)
-        SetFrontFace(commonState_.frontFace);
-
-    /* Store new graphics API dependent state */
+    /* Store previous and new graphics API dependent state */
+    auto prevState = gfxDependentState_;
     gfxDependentState_ = state;
+
+    /* Update front face */
+    if (prevState.invertFrontFace != state.invertFrontFace)
+        SetFrontFace(commonState_.frontFace);
 }
 
 /* ----- Boolean states ----- */
