@@ -12,13 +12,26 @@ namespace LLGL
 {
 
 
+LLGL_EXPORT bool operator == (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs)
+{
+    return
+        lhs.enabled     == rhs.enabled      &&
+        lhs.refreshRate == rhs.refreshRate  &&
+        lhs.interval    == rhs.interval;
+}
+
+LLGL_EXPORT bool operator != (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs)
+{
+    return !(lhs == rhs);
+}
+
 LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs)
 {
     return
-        lhs.resolution.x == rhs.resolution.x &&
-        lhs.resolution.y == rhs.resolution.y &&
-        lhs.colorDepth == rhs.colorDepth &&
-        lhs.fullscreen == rhs.fullscreen;
+        lhs.resolution.x    == rhs.resolution.x &&
+        lhs.resolution.y    == rhs.resolution.y &&
+        lhs.colorDepth      == rhs.colorDepth   &&
+        lhs.fullscreen      == rhs.fullscreen;
 }
 
 LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs)

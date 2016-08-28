@@ -165,7 +165,7 @@ void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)
     //QueryGLVersion();
 
     /* Setup v-sync interval */
-    SetupVSyncInterval();
+    SetupVsyncInterval();
 }
 
 void GLRenderContext::DeleteContext()
@@ -461,7 +461,7 @@ void GLRenderContext::CopyPixelFormat(GLRenderContext& sourceContext)
     context_.pixelFormatsMS = sourceContext.context_.pixelFormatsMS;
 }
 
-bool GLRenderContext::SetupVSyncInterval()
+bool GLRenderContext::SetupVsyncInterval()
 {
     /* Load GL extension "wglSwapIntervalEXT" to set v-sync interval */
     if (wglSwapIntervalEXT || LoadSwapIntervalProcs())

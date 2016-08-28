@@ -81,6 +81,9 @@ class LLGL_EXPORT RenderContext
         //! Sets the new video mode for this render context.
         virtual void SetVideoMode(const VideoModeDescriptor& videoModeDesc);
 
+        //! Sets the new vertical-sychronization (Vsync) configuration for this render context.
+        virtual void SetVsync(const VsyncDescriptor& vsyncDesc) = 0;
+
         //! Returns the video mode for this render context.
         inline const VideoModeDescriptor& GetVideoMode() const
         {

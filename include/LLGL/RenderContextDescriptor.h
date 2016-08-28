@@ -67,7 +67,7 @@ struct VsyncDescriptor
 struct AntiAliasingDescriptor
 {
     bool            enabled     = false;    //!< Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    unsigned int    samples     = 4;        //!< Number of samples used for multi-sampling. By default 4.
+    unsigned int    samples     = 0;        //!< Number of samples used for multi-sampling. By default 0.
 };
 
 struct VideoModeDescriptor
@@ -100,15 +100,18 @@ struct ProfileOpenGLDescriptor
 
 struct RenderContextDescriptor
 {
-    VsyncDescriptor         vsync;
-    AntiAliasingDescriptor  antiAliasing;
-    VideoModeDescriptor     videoMode;
-    ProfileOpenGLDescriptor profileOpenGL;
-    DebugCallback           debugCallback;
+    VsyncDescriptor         vsync;          //!< Vertical-synchronization (Vsync) descriptor.
+    AntiAliasingDescriptor  antiAliasing;   //!< Multi-sample anti-aliasing descriptor.
+    VideoModeDescriptor     videoMode;      //!< Video mode descriptor.
+    ProfileOpenGLDescriptor profileOpenGL;  //!< OpenGL profile descriptor (to switch between compatability or core profile).
+    DebugCallback           debugCallback;  //!< Debuging callback descriptor.
 };
 
 
 /* ----- Operators ----- */
+
+LLGL_EXPORT bool operator == (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs);
+LLGL_EXPORT bool operator != (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs);
 
 LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
 LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);

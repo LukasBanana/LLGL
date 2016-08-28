@@ -55,6 +55,7 @@ class GLRenderContext : public RenderContext
         /* ----- Configuration ----- */
 
         void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void SetViewports(const std::vector<Viewport>& viewports) override;
         void SetScissors(const std::vector<Scissor>& scissors) override;
@@ -143,6 +144,8 @@ class GLRenderContext : public RenderContext
 
         bool HasExtension(const std::string& name) const;
 
+        bool SetupVsyncInterval();
+
         #if defined(_WIN32)
 
         void DeleteGLContext(HGLRC& renderContext);
@@ -156,8 +159,6 @@ class GLRenderContext : public RenderContext
         void SelectPixelFormat();
         bool SetupAntiAliasing();
         void CopyPixelFormat(GLRenderContext& sourceContext);
-
-        bool SetupVSyncInterval();
 
         void RecreateWindow();
 

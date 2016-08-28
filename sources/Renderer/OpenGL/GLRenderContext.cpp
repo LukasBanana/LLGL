@@ -204,6 +204,15 @@ void GLRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
     }
 }
 
+void GLRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
+{
+    if (desc_.vsync != vsyncDesc)
+    {
+        desc_.vsync = vsyncDesc;
+        SetupVsyncInterval();
+    }
+}
+
 void GLRenderContext::SetViewports(const std::vector<Viewport>& viewports)
 {
     /* Setup GL viewports and depth-ranges */
