@@ -372,7 +372,8 @@ void GLRenderContext::UnbindRenderTarget()
 {
     /* Blit previously bound render target (in case mutli-sampling is used) */
     if (boundRenderTarget_)
-        boundRenderTarget_->BlitMultiSampleFrameBuffers();
+        //boundRenderTarget_->BlitOntoFrameBuffer();
+        boundRenderTarget_->BlitOntoScreen(0);//!!!
 
     /* Unbind framebuffer object */
     stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);

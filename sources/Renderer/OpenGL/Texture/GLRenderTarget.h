@@ -30,6 +30,7 @@ class GLRenderTarget : public RenderTarget
         GLRenderTarget(unsigned int multiSamples);
 
         void AttachDepthBuffer(const Gs::Vector2i& size) override;
+        void AttachStencilBuffer(const Gs::Vector2i& size) override;
         void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
 
         void AttachTexture1D(Texture& texture, int mipLevel = 0) override;
@@ -44,7 +45,11 @@ class GLRenderTarget : public RenderTarget
 
         /* ----- Extended Internal Functions ----- */
 
-        void BlitMultiSampleFrameBuffers();
+        //! Blits the multi-sample frame buffer onto the default frame buffer.
+        void BlitOntoFrameBuffer();
+
+        //! Blits the specified color attachment from the frame buffer onto the screen.
+        void BlitOntoScreen(std::size_t colorAttachmentIndex);
 
         const GLFrameBuffer& GetFrameBuffer() const;
 
@@ -59,6 +64,9 @@ class GLRenderTarget : public RenderTarget
 
         void ApplyMipResolution(Texture& texture, int mipLevel);
 
+        void InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat);
+        GLenum AttachDefaultRenderBuffer(GLFrameBuffer& frameBuffer, GLenum attachment);
+
         void AttachRenderBuffer(const Gs::Vector2i& size, GLenum internalFormat, GLenum attachment);
         void AttachTexture(Texture& texture, int mipLevel, const AttachTextureCallback& attachmentProc);
 
@@ -70,7 +78,8 @@ class GLRenderTarget : public RenderTarget
         void CheckFrameBufferStatus(GLenum status, const std::string& info);
 
         GLFrameBuffer                                   frameBuffer_;
-        GLRenderBuffer                                  renderBuffer_;
+
+        std::unique_ptr<GLRenderBuffer>                 renderBuffer_;
 
         /**
         Multi-sampled frame buffer; required since we cannot
@@ -87,7 +96,6 @@ class GLRenderTarget : public RenderTarget
 
         std::vector<GLenum>                             colorAttachments_;
 
-        bool                                            renderBufferAttached_   = false;
         GLsizei                                         multiSamples_           = 0;
         GLbitfield                                      blitMask_               = 0;
 

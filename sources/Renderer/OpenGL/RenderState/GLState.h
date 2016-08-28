@@ -74,9 +74,9 @@ enum class GLBufferTarget
 
 enum class GLFrameBufferTarget
 {
-    FRAMEBUFFER         = 0,
-    DRAW_FRAMEBUFFER    = 0,
-    READ_FRAMEBUFFER    = 1,
+    FRAMEBUFFER = 0,
+    DRAW_FRAMEBUFFER,
+    READ_FRAMEBUFFER,
 };
 
 enum class GLTextureTarget

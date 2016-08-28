@@ -260,7 +260,6 @@ int main()
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
 
         // Create render target
-        auto& renderTarget = *renderer->CreateRenderTarget(8);
         auto renderTargetSize = contextDesc.videoMode.resolution;
 
         auto& renderTargetTex = *renderer->CreateTexture();
@@ -268,12 +267,15 @@ int main()
 
         //auto numMips = LLGL::NumMipLevels({ renderTargetSize.x, renderTargetSize.y, 1 });
 
-        renderTarget.AttachDepthBuffer(renderTargetSize);
+        auto& renderTarget = *renderer->CreateRenderTarget(8);
+        //renderTarget.AttachDepthBuffer(renderTargetSize);
         renderTarget.AttachTexture2D(renderTargetTex);
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
+            pipelineDesc.rasterizer.multiSampleEnabled = true;
+
             pipelineDesc.shaderProgram = &shaderProgram;
 
             LLGL::BlendTargetDescriptor blendDesc;
@@ -282,7 +284,7 @@ int main()
             }
             pipelineDesc.blend.targets.push_back(blendDesc);
         }
-        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        auto& pipeline = *renderer->CreateGraphicsPipeline(pipelineDesc);
 
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
 
@@ -292,7 +294,7 @@ int main()
             if (profiler)
                 profiler->ResetCounters();
 
-            context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+            context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
 
@@ -307,11 +309,11 @@ int main()
 
             context->BindRenderTarget(renderTarget);
             {
-                context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+                context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
                 context->BindTexture(texture, 0);
 
-                context->BindGraphicsPipeline(*pipeline);
+                context->BindGraphicsPipeline(pipeline);
                 context->BindVertexBuffer(vertexBuffer);
 
                 context->Draw(4, 0);

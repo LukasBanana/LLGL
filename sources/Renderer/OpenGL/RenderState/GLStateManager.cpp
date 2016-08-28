@@ -66,6 +66,7 @@ static const GLenum bufferTargetsMap[] =
 
 static const GLenum framebufferTargetsMap[] =
 {
+    GL_FRAMEBUFFER,
     GL_DRAW_FRAMEBUFFER,
     GL_READ_FRAMEBUFFER,
 };

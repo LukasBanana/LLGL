@@ -31,14 +31,21 @@ class LLGL_EXPORT RenderTarget
         /**
         \brief Attaches an internal depth buffer to this render target.
         \param[in] size Specifies the size of the depth buffer. This must be the same as for all other attachemnts.
-        \remarks Only a single depth buffer or depth-stencil buffer can be attached.
+        \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthStencilBuffer
         */
         virtual void AttachDepthBuffer(const Gs::Vector2i& size) = 0;
 
         /**
+        \brief Attaches an internal stencil buffer to this render target.
+        \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
+        \see AttachDepthBuffer
+        */
+        virtual void AttachStencilBuffer(const Gs::Vector2i& size) = 0;
+
+        /**
         \brief Attaches an internal depth-stencil buffer to this render target.
-        \remarks Only a single depth buffer or depth-stencil buffer can be attached.
+        \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthBuffer
         */
         virtual void AttachDepthStencilBuffer(const Gs::Vector2i& size) = 0;
