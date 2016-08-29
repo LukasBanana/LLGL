@@ -32,8 +32,12 @@ GLRenderSystem::~GLRenderSystem()
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    /* Create new render context */
     return AddRenderContext(MakeUnique<GLRenderContext>(*this, desc, window, nullptr), desc, window);
+}
+
+void GLRenderSystem::Release(RenderContext& renderContext)
+{
+
 }
 
 /* ----- Hardware Buffers ------ */

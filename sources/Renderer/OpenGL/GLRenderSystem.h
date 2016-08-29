@@ -44,6 +44,8 @@ class GLRenderSystem : public RenderSystem
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
 
+        void Release(RenderContext& renderContext) override;
+
         /* ----- Hardware Buffers ------ */
 
         VertexBuffer* CreateVertexBuffer() override;

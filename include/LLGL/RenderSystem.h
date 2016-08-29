@@ -111,6 +111,9 @@ class LLGL_EXPORT RenderSystem
             return currentContext_;
         }
 
+        //! Releases the specified render context. This will all release all resources, that are associated with this render context.
+        virtual void Release(RenderContext& renderContext) = 0;
+
         /* ----- Hardware Buffers ------ */
 
         virtual VertexBuffer* CreateVertexBuffer() = 0;
