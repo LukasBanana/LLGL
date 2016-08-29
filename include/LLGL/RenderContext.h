@@ -122,7 +122,7 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Textures ----- */
 
-        virtual void BindTexture(Texture& texture, unsigned int layer) = 0;
+        virtual void BindTexture(unsigned int layer, Texture& texture) = 0;
         virtual void UnbindTexture(unsigned int layer) = 0;
 
         /**

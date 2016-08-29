@@ -26,7 +26,10 @@ void RenderingProfiler::ResetCounters()
     bindIndexBuffer.Reset();
     bindConstantBuffer.Reset();
     bindGraphicsPipeline.Reset();
+    bindComputePipeline.Reset();
     bindTexture.Reset();
+    bindSampler.Reset();
+    bindRenderTarget.Reset();
 
     drawCalls.Reset();
     dispatchComputeCalls.Reset();

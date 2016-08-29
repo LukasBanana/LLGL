@@ -338,7 +338,7 @@ void GLRenderContext::UnbindConstantBuffer(unsigned int index)
 
 /* ----- Textures ----- */
 
-void GLRenderContext::BindTexture(Texture& texture, unsigned int layer)
+void GLRenderContext::BindTexture(unsigned int layer, Texture& texture)
 {
     /* Bind texture to layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);

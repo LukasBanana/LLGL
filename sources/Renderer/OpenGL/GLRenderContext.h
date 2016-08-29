@@ -83,7 +83,7 @@ class GLRenderContext : public RenderContext
 
         /* ----- Textures ----- */
 
-        void BindTexture(Texture& texture, unsigned int layer) override;
+        void BindTexture(unsigned int layer, Texture& texture) override;
         void UnbindTexture(unsigned int layer) override;
 
         void GenerateMips(Texture& texture) override;

@@ -91,9 +91,9 @@ void GLRenderContextProfiler::UnbindConstantBuffer(unsigned int index)
 
 /* ----- Textures ----- */
 
-void GLRenderContextProfiler::BindTexture(Texture& texture, unsigned int layer)
+void GLRenderContextProfiler::BindTexture(unsigned int layer, Texture& texture)
 {
-    GLRenderContext::BindTexture(texture, layer);
+    GLRenderContext::BindTexture(layer, texture);
     profiler_.bindTexture.Inc();
 }
 
@@ -101,6 +101,34 @@ void GLRenderContextProfiler::UnbindTexture(unsigned int layer)
 {
     GLRenderContext::UnbindTexture(layer);
     profiler_.bindTexture.Inc();
+}
+
+/* ----- Sampler States ----- */
+
+void GLRenderContextProfiler::BindSampler(unsigned int layer, Sampler& sampler)
+{
+    GLRenderContext::BindSampler(layer, sampler);
+    profiler_.bindSampler.Inc();
+}
+
+void GLRenderContextProfiler::UnbindSampler(unsigned int layer)
+{
+    GLRenderContext::UnbindSampler(layer);
+    profiler_.bindSampler.Inc();
+}
+
+/* ----- Render Targets ----- */
+
+void GLRenderContextProfiler::BindRenderTarget(RenderTarget& renderTarget)
+{
+    GLRenderContext::BindRenderTarget(renderTarget);
+    profiler_.bindRenderTarget.Inc();
+}
+
+void GLRenderContextProfiler::UnbindRenderTarget()
+{
+    GLRenderContext::UnbindRenderTarget();
+    profiler_.bindRenderTarget.Inc();
 }
 
 /* ----- Pipeline states ----- */

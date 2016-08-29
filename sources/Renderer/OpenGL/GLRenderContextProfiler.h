@@ -55,8 +55,18 @@ class GLRenderContextProfiler : public GLRenderContext
 
         /* ----- Textures ----- */
 
-        void BindTexture(Texture& texture, unsigned int layer) override;
+        void BindTexture(unsigned int layer, Texture& texture) override;
         void UnbindTexture(unsigned int layer) override;
+
+        /* ----- Sampler States ----- */
+
+        void BindSampler(unsigned int layer, Sampler& sampler) override;
+        void UnbindSampler(unsigned int layer) override;
+
+        /* ----- Render Targets ----- */
+
+        void BindRenderTarget(RenderTarget& renderTarget) override;
+        void UnbindRenderTarget() override;
 
         /* ----- Pipeline states ----- */
 

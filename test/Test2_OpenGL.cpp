@@ -327,13 +327,13 @@ int main()
                 context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
             }
 
-            context->BindTexture(texture, 0);
+            context->BindTexture(0, texture);
             context->Draw(4, 0);
             
             if (renderTarget && renderTargetTex)
             {
                 context->UnbindRenderTarget();
-                context->BindTexture(*renderTargetTex, 0);
+                context->BindTexture(0, *renderTargetTex);
                 context->Draw(4, 0);
             }
 
