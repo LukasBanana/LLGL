@@ -113,11 +113,7 @@ RenderingCaps GLRenderContext::QueryRenderingCaps() const
     GLint querySizeBase = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &querySizeBase);
 
-    /* Generate proxy texture */
-    GLuint proxyTex = 0;
-    glGenTextures(1, &proxyTex);
-
-    /* --- Query 1D texture max size --- */
+    /* Query 1D texture max size */
     auto querySize = querySizeBase;
 
     while (caps.max1DTextureSize == 0 && querySize > 0)
@@ -162,9 +158,6 @@ RenderingCaps GLRenderContext::QueryRenderingCaps() const
             querySize /= 2;
         }
     }
-
-    /* Delete temporary proxy texture */
-    glDeleteTextures(1, &proxyTex);
 
     return caps;
 }
