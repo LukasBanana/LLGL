@@ -264,6 +264,52 @@ GLenum Map(const AxisDirection cubeFace)
     MapFailed("AxisDirection");
 }
 
+GLenum Map(const TextureWrap textureWrap)
+{
+    switch (textureWrap)
+    {
+        case TextureWrap::Repeat:       return GL_REPEAT;
+        case TextureWrap::Mirror:       return GL_MIRRORED_REPEAT;
+        case TextureWrap::Clamp:        return GL_CLAMP_TO_EDGE;
+        case TextureWrap::Border:       return GL_CLAMP_TO_BORDER;
+        case TextureWrap::MirrorOnce:   return GL_MIRROR_CLAMP_TO_EDGE;
+    }
+    MapFailed("TextureWrap");
+}
+
+GLenum Map(const TextureFilter textureFilter)
+{
+    switch (textureFilter)
+    {
+        case TextureFilter::Nearest:    return GL_NEAREST;
+        case TextureFilter::Linear:     return GL_LINEAR;
+    }
+    MapFailed("TextureFilter");
+}
+
+GLenum Map(const TextureFilter textureMinFilter, const TextureFilter textureMipMapFilter)
+{
+    switch (textureMinFilter)
+    {
+        case TextureFilter::Nearest:
+            switch (textureMipMapFilter)
+            {
+                case TextureFilter::Nearest:    return GL_NEAREST_MIPMAP_NEAREST;
+                case TextureFilter::Linear:     return GL_NEAREST_MIPMAP_LINEAR;
+            }
+            break;
+
+        case TextureFilter::Linear:
+            switch (textureMipMapFilter)
+            {
+                case TextureFilter::Nearest:    return GL_LINEAR_MIPMAP_NEAREST;
+                case TextureFilter::Linear:     return GL_LINEAR_MIPMAP_LINEAR;
+            }
+            break;
+    }
+    MapFailed("Min/MipMap TextureFilter");
+}
+
 void Unmap(UniformType& result, const GLenum uniformType)
 {
     switch (uniformType)
