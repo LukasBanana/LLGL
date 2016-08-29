@@ -1,31 +1,31 @@
 /*
- * GLSamplerState.h
+ * GLSampler.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_SAMPLER_STATE_H__
-#define __LLGL_GL_SAMPLER_STATE_H__
+#ifndef __LLGL_GL_SAMPLER_H__
+#define __LLGL_GL_SAMPLER_H__
 
 
 #include "../OpenGL.h"
-#include <LLGL/SamplerState.h>
+#include <LLGL/Sampler.h>
 
 
 namespace LLGL
 {
 
 
-class GLSamplerState : public SamplerState
+class GLSampler : public Sampler
 {
 
     public:
 
-        GLSamplerState();
-        ~GLSamplerState();
+        GLSampler();
+        ~GLSampler();
 
-        void SetDesc(const SamplerStateDescriptor& desc);
+        void SetDesc(const SamplerDescriptor& desc);
 
         //! Returns the hardware sampler ID.
         inline GLuint GetID() const

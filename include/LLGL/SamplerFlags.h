@@ -1,12 +1,12 @@
 /*
- * SamplerStateFlags.h
+ * SamplerFlags.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_SAMPLER_STATE_FLAGS_H__
-#define __LLGL_SAMPLER_STATE_FLAGS_H__
+#ifndef __LLGL_SAMPLER_FLAGS_H__
+#define __LLGL_SAMPLER_FLAGS_H__
 
 
 #include "Export.h"
@@ -41,8 +41,8 @@ enum class TextureFilter
 
 /* ----- Structures ----- */
 
-//! Texture data descriptor structure.
-struct LLGL_EXPORT SamplerStateDescriptor
+//! Texture sampler descriptor structure.
+struct LLGL_EXPORT SamplerDescriptor
 {
     TextureWrap     textureWrapU    = TextureWrap::Repeat;          //!< Texture coordinate wrap mode in U direction. By default TextureWrap::Repeat.
     TextureWrap     textureWrapV    = TextureWrap::Repeat;          //!< Texture coordinate wrap mode in V direction. By default TextureWrap::Repeat.

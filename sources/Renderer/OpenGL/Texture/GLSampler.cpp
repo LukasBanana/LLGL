@@ -1,11 +1,11 @@
 /*
- * GLSamplerState.cpp
+ * GLSampler.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLSamplerState.h"
+#include "GLSampler.h"
 #include "../GLExtensions.h"
 #include "../GLTypes.h"
 
@@ -14,19 +14,19 @@ namespace LLGL
 {
 
 
-GLSamplerState::GLSamplerState()
+GLSampler::GLSampler()
 {
     glGenSamplers(1, &id_);
 }
 
-GLSamplerState::~GLSamplerState()
+GLSampler::~GLSampler()
 {
     glDeleteSamplers(1, &id_);
 }
 
 using namespace GLTypes;
 
-void GLSamplerState::SetDesc(const SamplerStateDescriptor& desc)
+void GLSampler::SetDesc(const SamplerDescriptor& desc)
 {
     /* Set texture coordinate wrap modes */
     glSamplerParameteri(id_, GL_TEXTURE_WRAP_S, Map(desc.textureWrapU));

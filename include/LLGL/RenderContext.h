@@ -22,6 +22,7 @@
 #include "Texture.h"
 #include "RenderTarget.h"
 #include "GraphicsPipeline.h"
+#include "Sampler.h"
 
 #include <Gauss/Vector3.h>
 #include <string>
@@ -129,6 +130,11 @@ class LLGL_EXPORT RenderContext
         \see https://developer.valvesoftware.com/wiki/MIP_Mapping
         */
         virtual void GenerateMips(Texture& texture) = 0;
+
+        /* ----- Samplers ----- */
+
+        virtual void BindSampler(unsigned int layer, Sampler& sampler) = 0;
+        virtual void UnbindSampler(unsigned int layer) = 0;
 
         /* ----- Render Targets ----- */
 

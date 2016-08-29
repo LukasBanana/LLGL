@@ -459,6 +459,20 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorForm
     );
 }
 
+/* ----- Sampler States ---- */
+
+Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
+{
+    auto sampler = MakeUnique<GLSampler>();
+    sampler->SetDesc(desc);
+    return TakeOwnership(samplers_, std::move(sampler));
+}
+
+void GLRenderSystem::Release(Sampler& sampler)
+{
+    RemoveFromUniqueSet(samplers_, &sampler);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* GLRenderSystem::CreateRenderTarget(unsigned int multiSamples)

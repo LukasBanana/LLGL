@@ -19,11 +19,11 @@
 #include "IndexBuffer.h"
 #include "IndexFormat.h"
 #include "ConstantBuffer.h"
-#include "GraphicsPipeline.h"
-
 #include "Texture.h"
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
+#include "GraphicsPipeline.h"
+#include "Sampler.h"
 
 #include <string>
 #include <memory>
@@ -174,6 +174,12 @@ class LLGL_EXPORT RenderSystem
         \see QueryTextureDescriptor
         */
         virtual void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) = 0;
+
+        /* ----- Samplers ---- */
+
+        virtual Sampler* CreateSampler(const SamplerDescriptor& desc) = 0;
+
+        virtual void Release(Sampler& sampler) = 0;
 
         /* ----- Render Targets ----- */
 

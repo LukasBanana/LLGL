@@ -20,6 +20,7 @@
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
 #include "Texture/GLRenderTarget.h"
+#include "Texture/GLSampler.h"
 #include "RenderState/GLGraphicsPipeline.h"
 
 #include <string>
@@ -90,6 +91,12 @@ class GLRenderSystem : public RenderSystem
 
         void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) override;
 
+        /* ----- Sampler States ---- */
+
+        Sampler* CreateSampler(const SamplerDescriptor& desc) override;
+
+        void Release(Sampler& sampler) override;
+
         /* ----- Render Targets ----- */
 
         RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) override;
@@ -137,23 +144,24 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Common GL render system objects ----- */
 
-        OpenGLExtensionMap                          extensionMap_;
+        OpenGLExtensionMap                      extensionMap_;
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<GLRenderContext>          renderContexts_;
+        HWObjectContainer<GLRenderContext>      renderContexts_;
         
-        HWObjectContainer<GLVertexBuffer>           vertexBuffers_;
-        HWObjectContainer<GLIndexBuffer>            indexBuffers_;
-        HWObjectContainer<GLConstantBuffer>         constantBuffers_;
+        HWObjectContainer<GLVertexBuffer>       vertexBuffers_;
+        HWObjectContainer<GLIndexBuffer>        indexBuffers_;
+        HWObjectContainer<GLConstantBuffer>     constantBuffers_;
 
-        HWObjectContainer<GLTexture>                textures_;
-        HWObjectContainer<GLRenderTarget>           renderTargets_;
+        HWObjectContainer<GLTexture>            textures_;
+        HWObjectContainer<GLRenderTarget>       renderTargets_;
 
-        HWObjectContainer<GLShader>                 shaders_;
-        HWObjectContainer<GLShaderProgram>          shaderPrograms_;
+        HWObjectContainer<GLShader>             shaders_;
+        HWObjectContainer<GLShaderProgram>      shaderPrograms_;
 
-        HWObjectContainer<GLGraphicsPipeline>       graphicsPipelines_;
+        HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
+        HWObjectContainer<GLSampler>            samplers_;
 
 };
 

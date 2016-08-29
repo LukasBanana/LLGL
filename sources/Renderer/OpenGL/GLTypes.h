@@ -14,7 +14,7 @@
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
-#include <LLGL/SamplerStateFlags.h>
+#include <LLGL/SamplerFlags.h>
 #include <LLGL/ShaderUniform.h>
 
 

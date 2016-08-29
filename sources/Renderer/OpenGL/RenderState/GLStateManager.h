@@ -117,6 +117,10 @@ class GLStateManager
         void BindTexture(const GLTexture& texture);
         void ForcedBindTexture(const GLTexture& texture);
 
+        /* ----- Sampler binding ----- */
+
+        void BindSampler(unsigned int layer, GLuint sampler);
+
         /* ----- Shader binding ----- */
 
         void BindShaderProgram(GLuint program);
@@ -224,6 +228,11 @@ class GLStateManager
             std::stack<GLuint>  boundProgramStack;
         };
 
+        /*struct GLSamplerObjectState
+        {
+            std::array<GLuint, numTextureLayers> boundSamplers;
+        };*/
+
         /* ----- Members ----- */
 
         GraphicsAPIDependentStateDescriptor gfxDependentState_;
@@ -235,6 +244,7 @@ class GLStateManager
         GLRenderBufferState                 renderBufferState_;
         GLTextureState                      textureState_;
         GLShaderState                       shaderState_;
+        //GLSamplerObjectState                samplerObjectState_;
 
         GLTextureLayer*                     activeTextureLayer_ = nullptr;
 

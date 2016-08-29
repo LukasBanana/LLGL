@@ -88,6 +88,11 @@ class GLRenderContext : public RenderContext
 
         void GenerateMips(Texture& texture) override;
 
+        /* ----- Sampler States ----- */
+
+        void BindSampler(unsigned int layer, Sampler& sampler) override;
+        void UnbindSampler(unsigned int layer) override;
+
         /* ----- Render Targets ----- */
 
         void BindRenderTarget(RenderTarget& renderTarget) override;

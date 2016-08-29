@@ -13,6 +13,7 @@
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
 #include "Texture/GLRenderTarget.h"
+#include "Texture/GLSampler.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include <LLGL/Platform/NativeHandle.h>
 
@@ -367,6 +368,19 @@ void GLRenderContext::GenerateMips(Texture& texture)
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);*/
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+}
+
+/* ----- Sampler States ----- */
+
+void GLRenderContext::BindSampler(unsigned int layer, Sampler& sampler)
+{
+    auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
+    //...
+}
+
+void GLRenderContext::UnbindSampler(unsigned int layer)
+{
+
 }
 
 /* ----- Render Targets ----- */
