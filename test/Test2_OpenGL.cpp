@@ -298,7 +298,7 @@ int main()
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
 
         // Main loop
-        while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
+        while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             if (profiler)
                 profiler->ResetCounters();
