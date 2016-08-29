@@ -52,6 +52,10 @@ class GLRenderSystem : public RenderSystem
         IndexBuffer* CreateIndexBuffer() override;
         ConstantBuffer* CreateConstantBuffer() override;
 
+        void Release(VertexBuffer& vertexBuffer) override;
+        void Release(IndexBuffer& indexBuffer) override;
+        void Release(ConstantBuffer& constantBuffer) override;
+
         void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) override;
         void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) override;
         void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) override;
@@ -63,6 +67,8 @@ class GLRenderSystem : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture() override;
+
+        void Release(Texture& texture) override;
 
         TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
 
@@ -88,15 +94,22 @@ class GLRenderSystem : public RenderSystem
 
         RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) override;
 
+        void Release(RenderTarget& renderTarget) override;
+
         /* ----- Shader ----- */
 
         Shader* CreateShader(const ShaderType type) override;
         ShaderProgram* CreateShaderProgram() override;
 
+        void Release(Shader& shader) override;
+        void Release(ShaderProgram& shaderProgram) override;
+
         /* ----- Pipeline States ----- */
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
         //ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
+        
+        void Release(GraphicsPipeline& graphicsPipeline) override;
 
         /* ----- Extended Internal Functions ----- */
 

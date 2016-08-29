@@ -59,6 +59,21 @@ ConstantBuffer* GLRenderSystem::CreateConstantBuffer()
     return TakeOwnership(constantBuffers_, MakeUnique<GLConstantBuffer>());
 }
 
+void GLRenderSystem::Release(VertexBuffer& vertexBuffer)
+{
+    RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
+}
+
+void GLRenderSystem::Release(IndexBuffer& indexBuffer)
+{
+    RemoveFromUniqueSet(indexBuffers_, &indexBuffer);
+}
+
+void GLRenderSystem::Release(ConstantBuffer& constantBuffer)
+{
+    RemoveFromUniqueSet(constantBuffers_, &constantBuffer);
+}
+
 void GLRenderSystem::WriteVertexBuffer(
     VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
 {
@@ -158,6 +173,11 @@ static void GLTexImageCubeArray(GLenum internalFormat, int width, int height, un
 Texture* GLRenderSystem::CreateTexture()
 {
     return TakeOwnership(textures_, MakeUnique<GLTexture>());
+}
+
+void GLRenderSystem::Release(Texture& texture)
+{
+    RemoveFromUniqueSet(textures_, &texture);
 }
 
 TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
@@ -382,36 +402,43 @@ void GLRenderSystem::WriteTextureCubeArray(Texture& texture, const TextureFormat
 void GLRenderSystem::WriteTexture1DSub(
     Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc)
 {
+    //todo...
 }
 
 void GLRenderSystem::WriteTexture2DSub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
+    //todo...
 }
 
 void GLRenderSystem::WriteTexture3DSub(
     Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc)
 {
+    //todo...
 }
 
 void GLRenderSystem::WriteTextureCubeSub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
+    //todo...
 }
 
 void GLRenderSystem::WriteTexture1DArraySub(
     Texture& texture, int mipLevel, int position, unsigned int layers, int size, const ImageDataDescriptor& imageDesc)
 {
+    //todo...
 }
 
 void GLRenderSystem::WriteTexture2DArraySub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layers, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
+    //todo...
 }
 
 void GLRenderSystem::WriteTextureCubeArraySub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layers, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
+    //todo...
 }
 
 void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
@@ -439,6 +466,11 @@ RenderTarget* GLRenderSystem::CreateRenderTarget(unsigned int multiSamples)
     return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(multiSamples));
 }
 
+void GLRenderSystem::Release(RenderTarget& renderTarget)
+{
+    RemoveFromUniqueSet(renderTargets_, &renderTarget);
+}
+
 /* ----- Shader ----- */
 
 Shader* GLRenderSystem::CreateShader(const ShaderType type)
@@ -451,11 +483,26 @@ ShaderProgram* GLRenderSystem::CreateShaderProgram()
     return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>());
 }
 
+void GLRenderSystem::Release(Shader& shader)
+{
+    RemoveFromUniqueSet(shaders_, &shader);
+}
+
+void GLRenderSystem::Release(ShaderProgram& shaderProgram)
+{
+    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
+}
+
 /* ----- Pipeline States ----- */
 
 GraphicsPipeline* GLRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
     return TakeOwnership(graphicsPipelines_, MakeUnique<GLGraphicsPipeline>(desc));
+}
+
+void GLRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
+{
+    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
 }
 
 /* ----- Extended Internal Functions ----- */

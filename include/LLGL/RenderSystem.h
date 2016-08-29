@@ -45,7 +45,7 @@ class LLGL_EXPORT RenderSystem
         {
             /**
             \brief Default color for an uninitialized texture. The default value is white (255, 255, 255, 255).
-            \remarks This will be used for each "WriteTexture..." function, when no initial image data is specified.
+            \remarks This will be used for each "WriteTexture..." function (not the "Sub" versions), when no initial image data is specified.
             */
             ColorRGBAub defaultTextureImageColor;
         };
@@ -97,6 +97,9 @@ class LLGL_EXPORT RenderSystem
         */
         virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) = 0;
 
+        //! Releases the specified render context. This will all release all resources, that are associated with this render context.
+        virtual void Release(RenderContext& renderContext) = 0;
+
         /**
         \brief Makes the specified render context to the current one.
         \param[in] renderContext Specifies the new current render context. If this is null, no render context is active.
@@ -111,9 +114,6 @@ class LLGL_EXPORT RenderSystem
             return currentContext_;
         }
 
-        //! Releases the specified render context. This will all release all resources, that are associated with this render context.
-        virtual void Release(RenderContext& renderContext) = 0;
-
         /* ----- Hardware Buffers ------ */
 
         virtual VertexBuffer* CreateVertexBuffer() = 0;
@@ -121,8 +121,10 @@ class LLGL_EXPORT RenderSystem
         virtual ConstantBuffer* CreateConstantBuffer() = 0;
         //virtual StorageBuffer* CreateStorageBuffer() = 0;
 
-        //virtual void Release(VertexBuffer& vertexBuffer) = 0;
-        //virtual void Release(IndexBuffer& indexBuffer) = 0;
+        virtual void Release(VertexBuffer& vertexBuffer) = 0;
+        virtual void Release(IndexBuffer& indexBuffer) = 0;
+        virtual void Release(ConstantBuffer& constantBuffer) = 0;
+        //virtual void Release(StorageBuffer& storageBuffer) = 0;
 
         virtual void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) = 0;
         virtual void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) = 0;
@@ -135,7 +137,8 @@ class LLGL_EXPORT RenderSystem
         /* ----- Textures ----- */
 
         virtual Texture* CreateTexture() = 0;
-        //virtual void Release(Texture& texture) = 0;
+
+        virtual void Release(Texture& texture) = 0;
 
         virtual TextureDescriptor QueryTextureDescriptor(const Texture& texture) = 0;
 
@@ -176,15 +179,23 @@ class LLGL_EXPORT RenderSystem
 
         virtual RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) = 0;
 
+        virtual void Release(RenderTarget& renderTarget) = 0;
+
         /* ----- Shader ----- */
 
         virtual Shader* CreateShader(const ShaderType type) = 0;
         virtual ShaderProgram* CreateShaderProgram() = 0;
 
+        virtual void Release(Shader& shader) = 0;
+        virtual void Release(ShaderProgram& shaderProgram) = 0;
+
         /* ----- Pipeline States ----- */
 
         virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) = 0;
         //virtual ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) = 0;
+
+        virtual void Release(GraphicsPipeline& graphicsPipeline) = 0;
+        //virtual void Release(ComputePipeline& computePipeline) = 0;
 
         /* === Members === */
 
