@@ -348,6 +348,8 @@ void GLRenderContext::BindTexture(Texture& texture, unsigned int layer)
 void GLRenderContext::UnbindTexture(unsigned int layer)
 {
     //todo...
+    //stateMngr_->ActiveTexture(layer);
+    //stateMngr_->BindTexture(<which target?, 0);
 }
 
 void GLRenderContext::GenerateMips(Texture& texture)
