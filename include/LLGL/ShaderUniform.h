@@ -59,7 +59,10 @@ struct UniformDescriptor
 };
 
 
-//! Shader uniform setter interface.
+/**
+\brief Shader uniform setter interface.
+\remarks This is only used by the OpenGL render system.
+*/
 class LLGL_EXPORT ShaderUniform
 {
 
