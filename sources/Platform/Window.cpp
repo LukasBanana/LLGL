@@ -92,12 +92,12 @@ bool Window::ProcessEvents()
 
 void Window::AddEventListener(const std::shared_ptr<EventListener>& eventListener)
 {
-    AddListenerGlob(eventListeners_, eventListener);
+    AddOnceToSharedList(eventListeners_, eventListener);
 }
 
 void Window::RemoveEventListener(const EventListener* eventListener)
 {
-    RemoveListenerGlob(eventListeners_, eventListener);
+    RemoveFromSharedList(eventListeners_, eventListener);
 }
 
 void Window::PostKeyDown(Key keyCode)

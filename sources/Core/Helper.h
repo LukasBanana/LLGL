@@ -77,22 +77,22 @@ void RemoveAllFromListIf(Container& cont, UnaryPredicate pred)
 }
 
 template <typename T>
-void AddListenerGlob(std::vector<std::shared_ptr<T>>& container, const std::shared_ptr<T>& listener)
+void AddOnceToSharedList(std::vector<std::shared_ptr<T>>& container, const std::shared_ptr<T>& entry)
 {
-    if (listener && std::find(container.begin(), container.end(), listener) == container.end())
-        container.push_back(listener);
+    if (entry && std::find(container.begin(), container.end(), entry) == container.end())
+        container.push_back(entry);
 }
 
 template <typename T>
-void RemoveListenerGlob(std::vector<std::shared_ptr<T>>& container, const T* listener)
+void RemoveFromSharedList(std::vector<std::shared_ptr<T>>& container, const T* entry)
 {
-    if (listener)
+    if (entry)
     {
         RemoveFromListIf(
             container,
-            [listener](const std::shared_ptr<T>& lst)
+            [entry](const std::shared_ptr<T>& e)
             {
-                return lst.get() == listener;
+                return (e.get() == entry);
             }
         );
     }
