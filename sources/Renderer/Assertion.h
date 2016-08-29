@@ -33,6 +33,15 @@ namespace LLGL
         );                                                                  \
     }
 
+#define LLGL_ASSERT_RANGE(VALUE, UPPER_END)                                     \
+    if ((VALUE) >= (UPPER_END))                                                 \
+    {                                                                           \
+        throw std::out_of_range(                                                \
+            std::string(__FUNCTION__) + ": parameter '" + std::string(#VALUE) + \
+            "' out of range (upper end is " + std::to_string(UPPER_END) + ")"   \
+        );                                                                      \
+    }
+
 
 } // /namespace LLGL
 

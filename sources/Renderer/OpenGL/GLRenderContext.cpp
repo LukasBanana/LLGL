@@ -375,12 +375,12 @@ void GLRenderContext::GenerateMips(Texture& texture)
 void GLRenderContext::BindSampler(unsigned int layer, Sampler& sampler)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
-    //...
+    stateMngr_->BindSampler(layer, samplerGL.GetID());
 }
 
 void GLRenderContext::UnbindSampler(unsigned int layer)
 {
-
+    stateMngr_->BindSampler(layer, 0);
 }
 
 /* ----- Render Targets ----- */

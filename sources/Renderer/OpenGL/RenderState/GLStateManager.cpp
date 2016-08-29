@@ -9,11 +9,14 @@
 #include "../GLRenderContext.h"
 #include "../GLExtensions.h"
 #include "../../../Core/Helper.h"
+#include "../../Assertion.h"
 
 
 namespace LLGL
 {
 
+
+/* ----- Internal constants ---- */
 
 static const GLenum stateCapsMap[] =
 {
@@ -109,6 +112,7 @@ GLStateManager::GLStateManager()
     Fill(renderState_.values, false);
     Fill(bufferState_.boundBuffers, 0);
     Fill(frameBufferState_.boundFrameBuffers, 0);
+    Fill(samplerState_.boundSamplers, 0);
 
     for (auto& layer : textureState_.layers)
         Fill(layer.boundTextures, 0);
@@ -595,6 +599,10 @@ GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
 
 void GLStateManager::ActiveTexture(unsigned int layer)
 {
+    #ifdef LLGL_DEBUG
+    LLGL_ASSERT_RANGE(layer, numTextureLayers);
+    #endif
+
     if (textureState_.activeTexture != layer)
     {
         /* Active specified texture layer and store reference to bound textures array */
@@ -625,6 +633,10 @@ void GLStateManager::ForcedBindTexture(GLTextureTarget target, GLuint texture)
 
 void GLStateManager::PushBoundTexture(unsigned int layer, GLTextureTarget target)
 {
+    #ifdef LLGL_DEBUG
+    LLGL_ASSERT_RANGE(layer, numTextureLayers);
+    #endif
+
     textureState_.boundTextureStack.push(
         {
             layer,
@@ -657,6 +669,21 @@ void GLStateManager::BindTexture(const GLTexture& texture)
 void GLStateManager::ForcedBindTexture(const GLTexture& texture)
 {
     ForcedBindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
+}
+
+/* ----- Sampler binding ----- */
+
+void GLStateManager::BindSampler(unsigned int layer, GLuint sampler)
+{
+    #ifdef LLGL_DEBUG
+    LLGL_ASSERT_RANGE(layer, numTextureLayers);
+    #endif
+
+    if (samplerState_.boundSamplers[layer] != sampler)
+    {
+        samplerState_.boundSamplers[layer] = sampler;
+        glBindSampler(layer, sampler);
+    }
 }
 
 /* ----- Shader binding ----- */

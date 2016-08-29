@@ -228,10 +228,10 @@ class GLStateManager
             std::stack<GLuint>  boundProgramStack;
         };
 
-        /*struct GLSamplerObjectState
+        struct GLSamplerState
         {
             std::array<GLuint, numTextureLayers> boundSamplers;
-        };*/
+        };
 
         /* ----- Members ----- */
 
@@ -244,7 +244,7 @@ class GLStateManager
         GLRenderBufferState                 renderBufferState_;
         GLTextureState                      textureState_;
         GLShaderState                       shaderState_;
-        //GLSamplerObjectState                samplerObjectState_;
+        GLSamplerState                      samplerState_;
 
         GLTextureLayer*                     activeTextureLayer_ = nullptr;
 
