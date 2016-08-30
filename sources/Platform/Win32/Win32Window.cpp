@@ -14,6 +14,18 @@ namespace LLGL
 {
 
 
+/* ----- Internal structures ----- */
+
+struct WindowAppearance
+{
+    DWORD   style   = 0;
+    Point   position;
+    Size    size;
+};
+
+
+/* ----- Internal functions ----- */
+
 // Queries window rectangular area by the specified client area size and window style.
 static RECT GetClientArea(LONG width, LONG height, DWORD style)
 {
@@ -56,6 +68,33 @@ static Point GetScreenCenteredPosition(const Size& size)
     return { GetSystemMetrics(SM_CXSCREEN)/2 - size.x/2,
              GetSystemMetrics(SM_CYSCREEN)/2 - size.y/2 };
 }
+
+static WindowAppearance GetWindowAppearance(const WindowDescriptor& desc)
+{
+    WindowAppearance appearance;
+
+    /* Get window style and client area */
+    appearance.style = GetWindowStyle(desc);
+    auto rc = GetClientArea(desc.size.x, desc.size.y, appearance.style);
+
+    /* Setup window size */
+    appearance.size.x = rc.right - rc.left;
+    appearance.size.y = rc.bottom - rc.top;
+
+    /* Setup window position */
+    appearance.position = (desc.centered ? GetScreenCenteredPosition(desc.size) : desc.position);
+
+    if (desc.centered)
+    {
+        appearance.position.x += rc.left;
+        appearance.position.y += rc.top;
+    }
+
+    return appearance;
+}
+
+
+/* ----- Win32Window class ----- */
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
@@ -160,6 +199,31 @@ WindowDescriptor Win32Window::QueryDesc() const
     return desc;
 }
 
+void Win32Window::SetDesc(const WindowDescriptor& desc)
+{
+    ShowWindow(wnd_, SW_HIDE);
+    
+    /* Set new window style */
+    SetWindowLongPtr(wnd_, GWL_STYLE, GetWindowStyle(desc));
+
+    /* Set new position and size */
+    auto appearance = GetWindowAppearance(desc);
+
+    UINT flags = (SWP_FRAMECHANGED | SWP_NOZORDER);
+    if (desc.visible)
+        flags |= SWP_SHOWWINDOW;
+
+    SetWindowPos(
+        wnd_,
+        0,
+        appearance.position.x,
+        appearance.position.y,
+        appearance.size.x,
+        appearance.size.y,
+        flags
+    );
+}
+
 void Win32Window::Recreate(const WindowDescriptor& desc)
 {
     /* Destroy previous window handle and create a new one */
@@ -195,18 +259,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     auto windowClass = Win32WindowClass::Instance();
 
     /* Get final window size */
-    auto style = GetWindowStyle(desc);
-    auto rc = GetClientArea(0, 0, style);
-
-    int xOffset = -rc.left;
-    int yOffset = -rc.top;
-    int wOffset = rc.right - rc.left;
-    int hOffset = rc.bottom - rc.top;
-
-    auto position = desc.position;
-
-    if (desc.centered)
-        position = GetScreenCenteredPosition(desc.size);
+    auto appearance = GetWindowAppearance(desc);
 
     /* Get parent window */
     HWND parentWnd = HWND_DESKTOP;
@@ -221,11 +274,11 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     HWND wnd = CreateWindow(
         windowClass->GetName(),
         desc.title.c_str(),
-        style,
-        position.x - xOffset,
-        position.y - yOffset,
-        desc.size.x + wOffset,
-        desc.size.y + hOffset,
+        appearance.style,
+        appearance.position.x,
+        appearance.position.y,
+        appearance.size.x,
+        appearance.size.y,
         parentWnd,
         nullptr,
         GetModuleHandle(nullptr),

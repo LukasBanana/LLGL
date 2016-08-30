@@ -110,6 +110,9 @@ class LLGL_EXPORT Window
         //! Query a window descriptor, which describes the current state of this window.
         virtual WindowDescriptor QueryDesc() const = 0;
 
+        //! Sets the new window descriptor.
+        virtual void SetDesc(const WindowDescriptor& desc) = 0;
+
         /**
         \brief Recreates the internal window object. This may invalidate the native handle previously returned by "GetNativeHandle".
         \see GetNativeHandle

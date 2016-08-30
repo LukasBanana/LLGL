@@ -340,6 +340,14 @@ int main()
                 context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
             }
 
+            if (input->KeyDown(LLGL::Key::Return))
+            {
+                windowDesc.borderless = !windowDesc.borderless;
+                windowDesc.position = { 0, 0 };
+                windowDesc.visible = true;
+                window->SetDesc(windowDesc);
+            }
+
             context->BindTexture(0, texture);
             context->Draw(4, 0);
             
