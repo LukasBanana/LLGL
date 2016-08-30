@@ -340,12 +340,29 @@ int main()
                 context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
             }
 
+            // Switch fullscreen mode
             if (input->KeyDown(LLGL::Key::Return))
             {
                 windowDesc.borderless = !windowDesc.borderless;
+
+                /*auto videoMode = contextDesc.videoMode;
+                videoMode.fullscreen = windowDesc.borderless;
+                LLGL::Desktop::SetVideoMode(videoMode);*/
+
+                windowDesc.centered = true;//!windowDesc.borderless;
                 windowDesc.position = { 0, 0 };
+                windowDesc.resizable = true;
                 windowDesc.visible = true;
                 window->SetDesc(windowDesc);
+
+                context->SetVideoMode(contextDesc.videoMode);
+
+                LLGL::Viewport viewport;
+                {
+                    viewport.width  = static_cast<float>(contextDesc.videoMode.resolution.x);
+                    viewport.height = static_cast<float>(contextDesc.videoMode.resolution.y);
+                }
+                context->SetViewports({ viewport });
             }
 
             context->BindTexture(0, texture);

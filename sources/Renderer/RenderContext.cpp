@@ -20,8 +20,26 @@ void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     if (videoModeDesc_ != videoModeDesc)
     {
+        /* Update window appearance */
+        auto windowDesc = GetWindow().QueryDesc();
+
+        windowDesc.size = videoModeDesc.resolution;
+
+        if (videoModeDesc.fullscreen)
+        {
+            windowDesc.borderless   = true;
+            windowDesc.position     = { 0, 0 };
+        }
+        else
+        {
+            windowDesc.borderless   = false;
+            windowDesc.centered     = true;
+        }
+
+        GetWindow().SetDesc(windowDesc);
+
+        /* Store new video mode */
         videoModeDesc_ = videoModeDesc;
-        //TODO -> window_->SetPisition/Size...
     }
 }
 

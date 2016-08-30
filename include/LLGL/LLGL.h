@@ -15,6 +15,7 @@
 #include "RenderSystem.h"
 #include "ColorRGB.h"
 #include "ColorRGBA.h"
+#include "Desktop.h"
 
 
 #endif

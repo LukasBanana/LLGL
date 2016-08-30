@@ -201,8 +201,11 @@ void GLRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     if (GetVideoMode() != videoModeDesc)
     {
+        /* Update context height */
         contextHeight_ = videoModeDesc.resolution.y;
         stateMngr_->NotifyRenderTargetHeight(contextHeight_);
+
+        /* Update window appearance and store new video mode in base function */
         RenderContext::SetVideoMode(videoModeDesc);
     }
 }

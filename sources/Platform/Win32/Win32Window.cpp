@@ -8,6 +8,7 @@
 #include "Win32Window.h"
 #include "Win32WindowClass.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <Gauss/Equals.h>
 
 
 namespace LLGL
@@ -25,6 +26,11 @@ struct WindowAppearance
 
 
 /* ----- Internal functions ----- */
+
+static void SetUserData(HWND wnd, void* userData)
+{
+    SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(userData));
+}
 
 // Queries window rectangular area by the specified client area size and window style.
 static RECT GetClientArea(LONG width, LONG height, DWORD style)
@@ -47,18 +53,17 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
     if (desc.borderless)
         style |= WS_POPUP;
     else
+    {
         style |= (WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION);
+        if (desc.resizable)
+            style |= (WS_SIZEBOX | WS_MAXIMIZEBOX);
+    }
 
     if (desc.visible)
         style |= WS_VISIBLE;
 
-    if (!desc.borderless)
-    {
-        if (desc.acceptDropFiles)
-            style |= WM_DROPFILES;
-        if (desc.resizable)
-            style |= (WS_SIZEBOX | WS_MAXIMIZEBOX);
-    }
+    if (desc.acceptDropFiles)
+        style |= WM_DROPFILES;
 
     return style;
 }
@@ -201,27 +206,76 @@ WindowDescriptor Win32Window::QueryDesc() const
 
 void Win32Window::SetDesc(const WindowDescriptor& desc)
 {
-    ShowWindow(wnd_, SW_HIDE);
-    
-    /* Set new window style */
-    SetWindowLongPtr(wnd_, GWL_STYLE, GetWindowStyle(desc));
+    /* Get current window flags */
+    auto windowFlags = GetWindowLong(wnd_, GWL_STYLE);
 
-    /* Set new position and size */
-    auto appearance = GetWindowAppearance(desc);
+    auto borderless = ((windowFlags & WS_CAPTION) == 0);
+    auto resizable  = ((windowFlags & WS_SIZEBOX) != 0);
 
-    UINT flags = (SWP_FRAMECHANGED | SWP_NOZORDER);
-    if (desc.visible)
-        flags |= SWP_SHOWWINDOW;
+    /* Setup new window flags */
+    auto newWindowFlags = GetWindowStyle(desc);
 
-    SetWindowPos(
-        wnd_,
-        0,
-        appearance.position.x,
-        appearance.position.y,
-        appearance.size.x,
-        appearance.size.y,
-        flags
-    );
+    if ((windowFlags & WS_MAXIMIZE) != 0)
+        newWindowFlags |= WS_MAXIMIZE;
+    if ((windowFlags & WS_MINIMIZE) != 0)
+        newWindowFlags |= WS_MINIMIZE;
+
+    auto flagsChanged = (windowFlags != newWindowFlags);
+
+    /* Check if anything changed */
+    auto position           = GetPosition();
+    auto size               = GetSize();
+
+    auto positionChanged    = !Gs::Equals(desc.position, position);
+    auto sizeChanged        = !Gs::Equals(desc.size, size);
+
+    if (flagsChanged || positionChanged || sizeChanged)
+    {
+        /* Temporary reset user data to avoid recursive resize events */
+        SetUserData(wnd_, nullptr);
+
+        UINT flags = SWP_NOZORDER;
+
+        if (flagsChanged)
+        {
+            /* Hide temporarily to avoid strange effects during frame change (if frame has changed) */
+            ShowWindow(wnd_, SW_HIDE);
+
+            /* Set new window style */
+            SetWindowLongPtr(wnd_, GWL_STYLE, newWindowFlags);
+            flags |= SWP_FRAMECHANGED;
+        }
+
+        /* Set new position and size */
+        auto appearance = GetWindowAppearance(desc);
+
+        if (desc.visible)
+            flags |= SWP_SHOWWINDOW;
+
+        if ((newWindowFlags & WS_MAXIMIZE) != 0)
+            flags |= (SWP_NOSIZE | SWP_NOMOVE);
+ 
+        if (borderless == desc.borderless && resizable == desc.resizable)
+        {
+            if (!positionChanged)
+                flags |= SWP_NOMOVE;
+            if (!sizeChanged)
+                flags |= SWP_NOSIZE;
+        }
+
+        SetWindowPos(
+            wnd_,
+            0, // ignore, due to SWP_NOZORDER flag
+            appearance.position.x,
+            appearance.position.y,
+            appearance.size.x,
+            appearance.size.y,
+            flags
+        );
+
+        /* Reset user data */
+        SetUserData(wnd_, this);
+    }
 }
 
 void Win32Window::Recreate(const WindowDescriptor& desc)
@@ -293,7 +347,7 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
         DragAcceptFiles(wnd, TRUE);
 
     /* Set reference of this object to the window user-data */
-    SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+    SetUserData(wnd, this);
 
     return wnd;
 }
