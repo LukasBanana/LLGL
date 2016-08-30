@@ -28,7 +28,7 @@ LLGL_EXPORT Size GetResolution();
 LLGL_EXPORT int GetColorDepth();
 
 //! Sets the new specified video mode for the desktop (resolution and fullscreen mode).
-LLGL_EXPORT bool ChangeVideoMode(const VideoModeDescriptor& videoMode);
+LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode);
 
 //! Restes the standard video mode for the desktop.
 LLGL_EXPORT bool ResetVideoMode();

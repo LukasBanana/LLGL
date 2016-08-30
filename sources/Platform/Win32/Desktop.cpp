@@ -36,7 +36,7 @@ LLGL_EXPORT int GetColorDepth()
     return bpp;
 }
 
-LLGL_EXPORT bool ChangeVideoMode(const VideoModeDescriptor& videoMode)
+LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode)
 {
     static bool prevFullscreen = false;
 
