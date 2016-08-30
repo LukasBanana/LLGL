@@ -13,7 +13,7 @@
 #include <sstream>
 
 
-#define TEST_RENDER_TARGET
+//#define TEST_RENDER_TARGET
 
 
 int main()
@@ -139,7 +139,7 @@ int main()
             "} matrices;\n"
             "void main() {\n"
             "    gl_Position = matrices.projection * vec4(position, 0.0, 1.0);\n"
-            "    vertexPos = (position - vec2(100, 100))*vec2(0.01, 0.01);\n"
+            "    vertexPos = (position - vec2(125, 125))*vec2(0.02);\n"
             "}\n"
             
             #else
@@ -294,6 +294,19 @@ int main()
             pipelineDesc.blend.targets.push_back(blendDesc);
         }
         auto& pipeline = *renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        // Create sampler
+        LLGL::SamplerDescriptor samplerDesc;
+        {
+            samplerDesc.magFilter = LLGL::TextureFilter::Nearest;
+            samplerDesc.minFilter = LLGL::TextureFilter::Linear;
+            samplerDesc.textureWrapU = LLGL::TextureWrap::Border;
+            samplerDesc.textureWrapV = LLGL::TextureWrap::Border;
+            samplerDesc.borderColor = LLGL::ColorRGBAf(0, 0.7f, 0.5f, 1);
+        }
+        auto& sampler = *renderer->CreateSampler(samplerDesc);
+
+        context->BindSampler(0, sampler);
 
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
 
