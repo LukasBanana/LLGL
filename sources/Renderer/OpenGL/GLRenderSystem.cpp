@@ -543,7 +543,7 @@ RenderContext* GLRenderSystem::AddRenderContext(
 
     /* Switch to fullscreen mode (if enabled) */
     if (desc.videoMode.fullscreen)
-        Desktop::ChangeVideoMode(desc.videoMode);
+        Desktop::SetVideoMode(desc.videoMode);
 
     /* Load all OpenGL extensions for the first time */
     if (renderContexts_.empty())
