@@ -18,13 +18,16 @@ namespace LLGL
 
 #if defined(_WIN32)
 
+// WGL_EXT_swap_control
 PFNWGLSWAPINTERVALEXTPROC                               wglSwapIntervalEXT                              = nullptr;
+
 PFNWGLCHOOSEPIXELFORMATARBPROC                          wglChoosePixelFormatARB                         = nullptr;
 PFNWGLCREATECONTEXTATTRIBSARBPROC                       wglCreateContextAttribsARB                      = nullptr;
 PFNWGLGETEXTENSIONSSTRINGARBPROC                        wglGetExtensionsStringARB                       = nullptr;
 
 #elif defined(__linux__)
 
+// GLX_SGI_swap_control
 PFNGLXSWAPINTERVALSGIPROC                               glXSwapIntervalSGI                              = nullptr;
 
 #endif

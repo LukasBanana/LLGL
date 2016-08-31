@@ -468,8 +468,7 @@ bool GLRenderContext::SetupVsyncInterval()
     {
         /* Setup v-sync interval */
         int interval = (desc_.vsync.enabled ? static_cast<int>(desc_.vsync.interval) : 0);
-        wglSwapIntervalEXT(interval);
-        return true;
+        return (wglSwapIntervalEXT(interval) == TRUE);
     }
     return false;
 }
