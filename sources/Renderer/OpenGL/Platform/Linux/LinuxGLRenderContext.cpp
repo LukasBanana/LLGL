@@ -54,6 +54,9 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
 
     windowContext.visual    = glXChooseVisual(windowContext.display, windowContext.screen, visualAttribs);
     windowContext.colorMap  = XCreateColormap(windowContext.display, windowContext.parentWindow, windowContext.visual->visual, AllocNone);
+    
+    if (!windowContext.visual)
+        throw std::runtime_error("failed to choose X11 visual for OpenGL");
 }
 
 void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)

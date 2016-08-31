@@ -121,7 +121,6 @@ int main()
         vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
 
-        #ifdef _WIN32
         const Gs::Vector2f vertices[] =
         {
             { 0, 0 }, { 110, 100 },
@@ -129,9 +128,7 @@ int main()
             { 0, 0 }, { 200, 200 },
             { 0, 0 }, { 100, 200 },
         };
-        #else
-        const Gs::Vector2f vertices[] = { { -1, 1 }, { 1, 1 }, { 1, -1 }, { -1, -1 } };
-        #endif
+        
         renderer->WriteVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
 
         // Create vertex shader
@@ -139,30 +136,14 @@ int main()
 
         std::string shaderSource =
         (
-            #ifdef _WIN32
-            
-            "#version 420\n"
+            "#version 130\n"
+            "uniform mat4 projection;\n"
             "in vec2 position;\n"
             "out vec2 vertexPos;\n"
-            "layout(binding=2) uniform Matrices {\n"
-            "    mat4 projection;\n"
-            "} matrices;\n"
             "void main() {\n"
-            "    gl_Position = matrices.projection * vec4(position, 0.0, 1.0);\n"
+            "    gl_Position = projection * vec4(position, 0.0, 1.0);\n"
             "    vertexPos = (position - vec2(125, 125))*vec2(0.02);\n"
             "}\n"
-            
-            #else
-            
-            "#version 130\n"
-            "in vec2 position;\n"
-            "out vec2 vertexPos;\n"
-            "void main() {\n"
-            "    gl_Position = vec4(position, 0.0, 1.0);\n"
-            "    vertexPos = (position - vec2(1))*vec2(0.5);\n"
-            "}\n"
-            
-            #endif
         );
 
         if (!vertShader.Compile(shaderSource))
@@ -173,28 +154,14 @@ int main()
 
         shaderSource =
         (
-            #ifdef _WIN32
-            
-            "#version 420\n"
-            "layout(location=0) out vec4 fragColor;\n"
+            "#version 130\n"
+            "out vec4 fragColor;\n"
             "uniform sampler2D tex;\n"
             "uniform vec4 color;\n"
             "in vec2 vertexPos;\n"
             "void main() {\n"
             "    fragColor = texture(tex, vertexPos) * color;\n"
             "}\n"
-            
-            #else
-            
-            "#version 130\n"
-            "out vec4 fragColor;\n"
-            "uniform sampler1D tex;\n"
-            "in vec2 vertexPos;\n"
-            "void main() {\n"
-            "    fragColor = texture(tex, vertexPos.x);\n"
-            "}\n"
-            
-            #endif
         );
 
         if (!fragShader.Compile(shaderSource))
@@ -214,11 +181,20 @@ int main()
         auto vertAttribs = shaderProgram.QueryVertexAttributes();
 
         // Set shader uniforms
+        auto projection = Gs::ProjectionMatrix4f::Planar(
+            static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
+            static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
+        );
+
         auto uniformSetter = shaderProgram.LockUniformSetter();
         if (uniformSetter)
+        {
+            uniformSetter->SetUniform("projection", projection);
             uniformSetter->SetUniform("color", Gs::Vector4f(1, 1, 1, 1));
+        }
         shaderProgram.UnlockShaderUniform();
 
+        #if 0
         // Create constant buffer
         LLGL::ConstantBuffer* projectionBuffer = nullptr;
 
@@ -228,11 +204,6 @@ int main()
             {
                 projectionBuffer = renderer->CreateConstantBuffer();
 
-                auto projection = Gs::ProjectionMatrix4f::Planar(
-                    static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
-                    static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
-                );
-
                 renderer->WriteConstantBuffer(*projectionBuffer, &projection, sizeof(projection), LLGL::BufferUsage::Static);
 
                 unsigned int bindingIndex = 2; // the 2 is just for testing
@@ -240,6 +211,7 @@ int main()
                 context->BindConstantBuffer(*projectionBuffer, bindingIndex);
             }
         }
+        #endif
 
         for (const auto& desc : shaderProgram.QueryUniforms())
         {
@@ -266,7 +238,9 @@ int main()
         renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture
         //renderer->WriteTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture
 
+        #ifndef __linux__
         context->GenerateMips(texture);
+        #endif
 
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
 
@@ -316,7 +290,9 @@ int main()
         }
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 
+        #ifndef __linux__
         context->BindSampler(0, sampler);
+        #endif
 
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
 
@@ -331,14 +307,16 @@ int main()
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
 
-            if (projectionBuffer)
+            auto uniformSetter = shaderProgram.LockUniformSetter();
+            if (uniformSetter)
             {
                 auto projection = Gs::ProjectionMatrix4f::Planar(
                     static_cast<Gs::Real>(context->GetVideoMode().resolution.x),
                     static_cast<Gs::Real>(context->GetVideoMode().resolution.y)
                 );
-                renderer->WriteConstantBufferSub(*projectionBuffer, &projection, sizeof(projection), 0);
+                uniformSetter->SetUniform("projection", projection);
             }
+            shaderProgram.UnlockShaderUniform();
             
             context->BindGraphicsPipeline(pipeline);
             context->BindVertexBuffer(vertexBuffer);
