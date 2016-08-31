@@ -264,10 +264,6 @@ GLenum Map(const AxisDirection cubeFace)
     MapFailed("AxisDirection");
 }
     
-#ifdef __APPLE__
-#   define GL_MIRROR_CLAMP_TO_EDGE 0
-#endif
-
 GLenum Map(const TextureWrap textureWrap)
 {
     switch (textureWrap)

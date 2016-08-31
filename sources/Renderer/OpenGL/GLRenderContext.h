@@ -11,13 +11,14 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
-#include <LLGL/Platform/NativeHandle.h>
 #include "OpenGL.h"
 #include "RenderState/GLStateManager.h"
 
 #if defined(_WIN32)
+#   include <LLGL/Platform/NativeHandle.h>
 #   include "Platform/Win32/Win32GLPlatformContext.h"
 #elif defined(__linux__)
+#   include <LLGL/Platform/NativeHandle.h>
 #   include "Platform/Linux/LinuxGLPlatformContext.h"
 #endif
 
@@ -134,7 +135,9 @@ class GLRenderContext : public RenderContext
             GLintptr    indexBufferStride   = 4;
         };
 
+        #ifndef __APPLE__
         void GetNativeContextHandle(NativeContextHandle& windowContext);
+        #endif
 
         void CreateContext(GLRenderContext* sharedRenderContext);
         void DeleteContext();
@@ -169,7 +172,9 @@ class GLRenderContext : public RenderContext
         GLRenderSystem&                 renderSystem_;  // reference to its render system
         RenderContextDescriptor         desc_;
 
+        #ifndef __APPLE__
         GLPlatformContext               context_;
+        #endif
 
         //! Specifies whether this context uses a shared GL render context (true) or has its own hardware context (false).
         bool                            hasSharedContext_   = false;

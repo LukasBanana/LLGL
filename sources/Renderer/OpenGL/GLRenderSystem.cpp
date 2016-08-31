@@ -611,7 +611,7 @@ void APIENTRY GLDebugCallback(
 
 void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
 {
-    #ifdef LLGL_DEBUG
+    #if defined(LLGL_DEBUG) && !defined(__APPLE__)
 
     if (debugCallback)
     {

@@ -21,14 +21,7 @@
 #elif defined(__APPLE__)
 #   include <OpenGL/gl3.h>
 #   include <OpenGL/glext.h>
-#   define GL_DEBUG_OUTPUT                  0
-#   define GL_DEBUG_OUTPUT_SYNCHRONOUS      0
-#   define GL_PRIMITIVE_RESTART_FIXED_INDEX 0
-#   define GL_ATOMIC_COUNTER_BUFFER         0
-#   define GL_DISPATCH_INDIRECT_BUFFER      0
-#   define GL_QUERY_BUFFER                  0
-#   define GL_SHADER_STORAGE_BUFFER         0
-#   define GL_COMPUTE_SHADER                0
+#   include "Platform/MacOS/MacOSGLExt.h"
 #endif
 
 

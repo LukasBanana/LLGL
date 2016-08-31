@@ -34,11 +34,18 @@ int main()
 
         auto pos = window->GetPosition();
 
-        auto renderer = LLGL::RenderSystem::Load("OpenGL");
-
-        window->SetTitle(
-            windowDesc.title + L" ( " + std::wstring(renderer->GetName().begin(), renderer->GetName().end()) + L" )"
-        );
+        try
+        {
+            auto renderer = LLGL::RenderSystem::Load("OpenGL");
+            
+            window->SetTitle(
+                windowDesc.title + L" ( " + std::wstring(renderer->GetName().begin(), renderer->GetName().end()) + L" )"
+            );
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
 
         while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
         {
