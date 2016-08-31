@@ -263,6 +263,10 @@ GLenum Map(const AxisDirection cubeFace)
     }
     MapFailed("AxisDirection");
 }
+    
+#ifdef __APPLE__
+#   define GL_MIRROR_CLAMP_TO_EDGE 0
+#endif
 
 GLenum Map(const TextureWrap textureWrap)
 {
@@ -364,6 +368,7 @@ void Unmap(UniformType& result, const GLenum uniformType)
         case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_INT_SAMPLER_BUFFER:
         case GL_INT_SAMPLER_2D_RECT:
+        #ifndef __APPLE__
         case GL_IMAGE_1D:
         case GL_IMAGE_2D:
         case GL_IMAGE_3D:
@@ -384,6 +389,7 @@ void Unmap(UniformType& result, const GLenum uniformType)
         case GL_INT_IMAGE_2D_ARRAY:
         case GL_INT_IMAGE_2D_MULTISAMPLE:
         case GL_INT_IMAGE_2D_MULTISAMPLE_ARRAY:
+        #endif
         case GL_UNSIGNED_INT_SAMPLER_1D:
         case GL_UNSIGNED_INT_SAMPLER_2D:
         case GL_UNSIGNED_INT_SAMPLER_3D:
@@ -394,6 +400,7 @@ void Unmap(UniformType& result, const GLenum uniformType)
         case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_BUFFER:
         case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+        #ifndef __APPLE__
         case GL_UNSIGNED_INT_IMAGE_1D:
         case GL_UNSIGNED_INT_IMAGE_2D:
         case GL_UNSIGNED_INT_IMAGE_3D:
@@ -405,6 +412,7 @@ void Unmap(UniformType& result, const GLenum uniformType)
         case GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE:
         case GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY:
         case GL_UNSIGNED_INT_ATOMIC_COUNTER:
+        #endif
         case GL_INT:
             result = UniformType::Int;
             return;

@@ -18,7 +18,7 @@ namespace LLGL
 
 /* ----- Internal functions ----- */
 
-static void Convert(GLViewport& to, const Viewport& from)
+/*static void Convert(GLViewport& to, const Viewport& from)
 {
     to.x        = from.x;
     to.y        = from.y;
@@ -38,7 +38,7 @@ static void Convert(GLScissor& to, const Scissor& from)
     to.y        = from.y;
     to.width    = from.width;
     to.height   = from.height;
-}
+}*/
 
 static void Convert(GLStencil& to, const StencilStateDescriptor& from)
 {

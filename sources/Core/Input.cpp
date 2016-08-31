@@ -45,8 +45,9 @@ bool Input::KeyDoubleClick(Key keyCode) const
         case Key::LButton: return doubleClick_[0];
         case Key::RButton: return doubleClick_[1];
         case Key::MButton: return doubleClick_[2];
+        default:           return false;
     }
-    return true;
+    return false;
 }
 
 
@@ -106,6 +107,7 @@ void Input::OnDoubleClick(Window& sender, Key keyCode)
         case Key::LButton: doubleClick_[0] = true; break;
         case Key::RButton: doubleClick_[1] = true; break;
         case Key::MButton: doubleClick_[2] = true; break;
+        default:                                   break;
     }
 }
 

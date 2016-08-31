@@ -134,7 +134,12 @@ WindowDescriptor MacOSWindow::QueryDesc() const
     //todo...
     return desc;
 }
-    
+
+void MacOSWindow::SetDesc(const WindowDescriptor& desc)
+{
+    //todo...
+}
+
 void MacOSWindow::Recreate(const WindowDescriptor& desc)
 {
     //todo...
