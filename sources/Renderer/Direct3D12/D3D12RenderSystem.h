@@ -1,48 +1,35 @@
 /*
- * GLRenderSystem.h
+ * D3D12RenderSystem.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_RENDER_SYSTEM_H__
-#define __LLGL_GL_RENDER_SYSTEM_H__
+#ifndef __LLGL_D3D12_RENDER_SYSTEM_H__
+#define __LLGL_D3D12_RENDER_SYSTEM_H__
 
 
 #include <LLGL/RenderSystem.h>
-#include "GLExtensionLoader.h"
-#include "GLRenderContext.h"
-
-#include "Buffer/GLVertexBuffer.h"
-#include "Buffer/GLIndexBuffer.h"
-#include "Buffer/GLConstantBuffer.h"
-#include "Shader/GLShader.h"
-#include "Shader/GLShaderProgram.h"
-#include "Texture/GLTexture.h"
-#include "Texture/GLRenderTarget.h"
-#include "Texture/GLSampler.h"
-#include "RenderState/GLGraphicsPipeline.h"
+#include <LLGL/VideoAdapter.h>
+#include "D3D12RenderContext.h"
 #include "../ContainerTypes.h"
-
-#include <string>
-#include <memory>
-#include <vector>
-#include <set>
+#include <d3d12.h>
+#include <dxgi1_4.h>
 
 
 namespace LLGL
 {
 
 
-class GLRenderSystem : public RenderSystem
+class D3D12RenderSystem : public RenderSystem
 {
 
     public:
 
         /* ----- Render System ----- */
 
-        GLRenderSystem();
-        ~GLRenderSystem();
+        D3D12RenderSystem();
+        ~D3D12RenderSystem();
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
 
@@ -119,47 +106,43 @@ class GLRenderSystem : public RenderSystem
         
         void Release(GraphicsPipeline& graphicsPipeline) override;
 
-        /* ----- Extended Internal Functions ----- */
+        /* ----- Extended internal functions ----- */
 
-        bool HasExtension(const std::string& name) const;
-
-    protected:
-
-        RenderContext* AddRenderContext(
-            std::unique_ptr<GLRenderContext>&& renderContext,
-            const RenderContextDescriptor& desc,
-            const std::shared_ptr<Window>& window
-        );
+        ID3D12Fence* CreateFence(UINT64 initialValue);
 
     private:
 
-        bool OnMakeCurrent(RenderContext* renderContext) override;
+        void CreateFactory();
+        void QueryVideoAdapters();
+        void CreateDevice();
+        bool CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
 
-        void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
-        void SetDebugCallback(const DebugCallback& debugCallback);
+        /* ----- Common D3D objects ----- */
 
-        void BindTextureAndSetType(GLTexture& textureGL, const TextureType type);
-
-        /* ----- Common GL render system objects ----- */
-
-        OpenGLExtensionMap                      extensionMap_;
+        IDXGIFactory4*                              factory_        = nullptr;
+        ID3D12Device*                               device_         = nullptr;
+        ID3D12DescriptorHeap*                       descHeap_       = nullptr;
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<GLRenderContext>      renderContexts_;
+        HWObjectContainer<D3D12RenderContext>       renderContexts_;
         
-        HWObjectContainer<GLVertexBuffer>       vertexBuffers_;
-        HWObjectContainer<GLIndexBuffer>        indexBuffers_;
-        HWObjectContainer<GLConstantBuffer>     constantBuffers_;
+        /*HWObjectContainer<D3D12VertexBuffer>        vertexBuffers_;
+        HWObjectContainer<D3D12IndexBuffer>         indexBuffers_;
+        HWObjectContainer<D3D12ConstantBuffer>      constantBuffers_;
 
-        HWObjectContainer<GLTexture>            textures_;
-        HWObjectContainer<GLRenderTarget>       renderTargets_;
+        HWObjectContainer<D3D12Texture>             textures_;
+        HWObjectContainer<D3D12RenderTarget>        renderTargets_;
 
-        HWObjectContainer<GLShader>             shaders_;
-        HWObjectContainer<GLShaderProgram>      shaderPrograms_;
+        HWObjectContainer<D3D12Shader>              shaders_;
+        HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
 
-        HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
-        HWObjectContainer<GLSampler>            samplers_;
+        HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
+        HWObjectContainer<D3D12Sampler>             samplers_;*/
+
+        /* ----- Other members ----- */
+
+        std::vector<VideoAdapterDescriptor>         videoAdatperDescs_;
 
 };
 

@@ -95,6 +95,7 @@ file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*
 # Test files
 set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/Test1_Window.cpp)
 set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
+set(FilesTest3 ${PROJECT_SOURCE_DIR}/test/Test3_Direct3D12.cpp)
 
 
 # === Source group folders ===
@@ -173,6 +174,11 @@ set(
 	${FilesRendererOpenGLRenderState}
 )
 
+set(
+	FilesDirect3D12
+	${FilesRendererDirect3D12}
+)
+
 # Base project
 add_library(LLGL SHARED ${FilesLLGL})
 
@@ -198,8 +204,16 @@ else()
 	message("Missing OpenGL -> LLGL_OpenGL renderer will be excluded from project")
 endif()
 
+if(WIN32)
+	add_library(LLGL_Direct3D12 SHARED ${FilesDirect3D12})
+	set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+	target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi)
+	target_compile_features(LLGL_Direct3D12 PRIVATE cxx_range_for)
+endif()
+
 # Test Projects
 ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
 ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
+ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
 
 
