@@ -39,7 +39,7 @@ class GLShaderProgram : public ShaderProgram
         void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) override;
         void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) override;
 
-        ShaderUniform* LockUniformSetter() override;
+        ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
         //! Returns the shader program ID.

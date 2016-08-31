@@ -186,7 +186,7 @@ int main()
             static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
         );
 
-        auto uniformSetter = shaderProgram.LockUniformSetter();
+        auto uniformSetter = shaderProgram.LockShaderUniform();
         if (uniformSetter)
         {
             uniformSetter->SetUniform("projection", projection);
@@ -307,7 +307,7 @@ int main()
 
             context->SetDrawMode(LLGL::DrawMode::TriangleFan);
 
-            auto uniformSetter = shaderProgram.LockUniformSetter();
+            auto uniformSetter = shaderProgram.LockShaderUniform();
             if (uniformSetter)
             {
                 auto projection = Gs::ProjectionMatrix4f::Planar(

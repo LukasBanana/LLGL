@@ -290,7 +290,7 @@ void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int b
         throw std::invalid_argument("failed to bind constant buffer, because uniform block name is invalid");
 }
 
-ShaderUniform* GLShaderProgram::LockUniformSetter()
+ShaderUniform* GLShaderProgram::LockShaderUniform()
 {
     GLStateManager::active->PushShaderProgram();
     GLStateManager::active->BindShaderProgram(id_);

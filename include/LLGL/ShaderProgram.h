@@ -86,22 +86,25 @@ class LLGL_EXPORT ShaderProgram
         virtual void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) = 0;
 
         /**
-        \brief Locks the shader uniform setting.
+        \brief Locks the shader uniform handler.
         \return Pointer to the shader uniform handler or null if the render system does not support individual shader uniforms.
         \remarks This must be called to set individual shader uniforms.
         \code
         auto uniform = shaderProgram->LockShaderUniform();
-        uniform->SetUniform("mySampler1", 0);
-        uniform->SetUniform("mySampler2", 1);
-        uniform->SetUniform("projection", myProjectionMatrix);
+        if (uniform)
+        {
+            uniform->SetUniform("mySampler1", 0);
+            uniform->SetUniform("mySampler2", 1);
+            uniform->SetUniform("projection", myProjectionMatrix);
+        }
         shaderProgram->UnlockShaderUniform();
         \endcode
         \note Only a shader program from an OpenGL render system will return a non-null pointer!
         */
-        virtual ShaderUniform* LockUniformSetter() = 0;
+        virtual ShaderUniform* LockShaderUniform() = 0;
 
         /**
-        \brief Unlocks the shader uniform setting.
+        \brief Unlocks the shader uniform handler.
         \see LockShaderUniform
         */
         virtual void UnlockShaderUniform() = 0;
