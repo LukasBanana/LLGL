@@ -88,6 +88,11 @@ WindowDescriptor LinuxWindow::QueryDesc() const
     return desc_; //todo...
 }
 
+void LinuxWindow::SetDesc(const WindowDescriptor& desc)
+{
+    //todo...
+}
+
 void LinuxWindow::Recreate(const WindowDescriptor& desc)
 {
     //todo...

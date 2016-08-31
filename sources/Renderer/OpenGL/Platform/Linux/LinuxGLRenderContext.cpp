@@ -9,6 +9,8 @@
 #include "../../../../Platform/Linux/LinuxWindow.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
+#include "../../GLExtensions.h"
+#include "../../GLExtensionLoader.h"
 
 
 namespace LLGL
@@ -81,6 +83,18 @@ void GLRenderContext::CreateContext(GLRenderContext* sharedRenderContext)
 void GLRenderContext::DeleteContext()
 {
     glXDestroyContext(context_.display, context_.glc);
+}
+
+bool GLRenderContext::SetupVsyncInterval()
+{
+    /* Load GL extension "glXSwapIntervalSGI" to set v-sync interval */
+    if (glXSwapIntervalSGI || LoadSwapIntervalProcs())
+    {
+        /* Setup v-sync interval */
+        int interval = (desc_.vsync.enabled ? static_cast<int>(desc_.vsync.interval) : 0);
+        return (glXSwapIntervalSGI(interval) == 0);
+    }
+    return false;
 }
 
 

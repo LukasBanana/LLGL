@@ -43,6 +43,14 @@ int main()
         };
         #endif
 
+        #ifdef __linux__
+        
+        auto context = renderer->CreateRenderContext(contextDesc);
+        
+        auto window = &(context->GetWindow());
+
+        #else
+        
         LLGL::WindowDescriptor windowDesc;
         {
             windowDesc.size             = contextDesc.videoMode.resolution;
@@ -53,6 +61,8 @@ int main()
         auto window = std::shared_ptr<LLGL::Window>(LLGL::Window::Create(windowDesc));
 
         auto context = renderer->CreateRenderContext(contextDesc, window);
+        
+        #endif
 
         window->Show();
 
@@ -279,7 +289,7 @@ int main()
         renderTarget->AttachTexture2D(*renderTargetTex);
 
         #endif
-
+        
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
@@ -329,7 +339,7 @@ int main()
                 );
                 renderer->WriteConstantBufferSub(*projectionBuffer, &projection, sizeof(projection), 0);
             }
-
+            
             context->BindGraphicsPipeline(pipeline);
             context->BindVertexBuffer(vertexBuffer);
 
@@ -340,6 +350,8 @@ int main()
                 context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
             }
 
+            #ifndef __linux__
+            
             // Switch fullscreen mode
             if (input->KeyDown(LLGL::Key::Return))
             {
@@ -364,6 +376,8 @@ int main()
                 }
                 context->SetViewports({ viewport });
             }
+            
+            #endif
 
             context->BindTexture(0, texture);
             context->Draw(4, 0);
