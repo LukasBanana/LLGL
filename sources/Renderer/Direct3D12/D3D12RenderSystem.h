@@ -108,6 +108,8 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
+        ID3D12CommandQueue* CreateCommandQueue();
+        ID3D12CommandAllocator* CreateCommandAllocator();
         ID3D12Fence* CreateFence(UINT64 initialValue);
 
     private:
@@ -121,6 +123,7 @@ class D3D12RenderSystem : public RenderSystem
 
         IDXGIFactory4*                              factory_        = nullptr;
         ID3D12Device*                               device_         = nullptr;
+        ID3D12CommandQueue*                         cmdQueue_       = nullptr;
         ID3D12DescriptorHeap*                       descHeap_       = nullptr;
 
         /* ----- Hardware object containers ----- */

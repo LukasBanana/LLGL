@@ -20,13 +20,18 @@ namespace LLGL
 
 D3D12RenderSystem::D3D12RenderSystem()
 {
+    /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
     CreateFactory();
     QueryVideoAdapters();
     CreateDevice();
+
+    /* Create main command queue */
+    cmdQueue_ = CreateCommandQueue();
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
 {
+    SafeRelease(cmdQueue_);
     SafeRelease(device_);
     SafeRelease(factory_);
 }
@@ -273,12 +278,40 @@ void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 
 /* ----- Extended internal functions ----- */
 
+ID3D12CommandQueue* D3D12RenderSystem::CreateCommandQueue()
+{
+    ID3D12CommandQueue* cmdQueue = nullptr;
+
+    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+    {
+        queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        queueDesc.Type  = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    }
+    auto hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&cmdQueue));
+    DXThrowIfFailed(hr, "failed to create D3D12 command queue");
+
+    return cmdQueue;
+}
+
+ID3D12CommandAllocator* D3D12RenderSystem::CreateCommandAllocator()
+{
+    ID3D12CommandAllocator* cmdAlloc = nullptr;
+
+    auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAlloc));
+    DXThrowIfFailed(hr, "failed to create D3D12 command allocator");
+
+    return cmdAlloc;
+}
+
 ID3D12Fence* D3D12RenderSystem::CreateFence(UINT64 initialValue)
 {
     ID3D12Fence* fence = nullptr;
+
     auto hr = device_->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
     DXThrowIfFailed(hr, "failed to create D3D12 fence");
+    
     //CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+
     return fence;
 }
 
