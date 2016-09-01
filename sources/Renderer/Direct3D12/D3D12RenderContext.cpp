@@ -9,6 +9,7 @@
 #include "D3D12RenderSystem.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include "../../Core/Helper.h"
 
 
 namespace LLGL
@@ -22,6 +23,9 @@ D3D12RenderContext::D3D12RenderContext(
         renderSystem_   ( renderSystem ),
         desc_           ( desc         )
 {
+    /* Setup window for the render context */
+    SetWindow(window, desc_.videoMode, nullptr);
+    CreateWindowSizeDependentResources();
 }
 
 D3D12RenderContext::~D3D12RenderContext()
@@ -252,7 +256,61 @@ void D3D12RenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
  * ======= Private: =======
  */
 
-//todo
+void D3D12RenderContext::SyncGPU()
+{
+    renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
+}
+
+void D3D12RenderContext::CreateWindowSizeDependentResources()
+{
+    /* Wait until all previous GPU work is complete */
+    SyncGPU();
+
+    /* Setup swap chain meta data */
+    numFrames_ = static_cast<UINT>(desc_.videoMode.swapChainMode);
+
+    /* Create swap chain for window handle */
+    NativeHandle wndHandle;
+    GetWindow().GetNativeHandle(&wndHandle);
+
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
+    InitMemory(swapChainDesc);
+    {
+        swapChainDesc.Width                 = static_cast<UINT>(desc_.videoMode.resolution.x);
+        swapChainDesc.Height                = static_cast<UINT>(desc_.videoMode.resolution.y);
+        swapChainDesc.Format                = DXGI_FORMAT_B8G8R8A8_UNORM;
+        swapChainDesc.Stereo                = false;
+        swapChainDesc.SampleDesc.Count      = (desc_.antiAliasing.enabled ? desc_.antiAliasing.samples : 1);
+        swapChainDesc.SampleDesc.Quality    = 0;
+        swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        swapChainDesc.BufferCount           = numFrames_;
+        swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc.Flags                 = 0;
+        swapChainDesc.Scaling               = DXGI_SCALING_NONE;
+        swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
+    }
+    renderSystem_.CreateSwapChain(swapChainDesc, wndHandle.window);
+
+    /* Create descriptor heap */
+    D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
+    InitMemory(descHeapDesc);
+    {
+        descHeapDesc.NumDescriptors = numFrames_;
+        descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+        descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    }
+    descHeap_ = renderSystem_.CreateDescriptorHeap(descHeapDesc);
+    descHeap_->SetName(L"Render Target View Descriptor Heap");
+
+    /* Update tracked fence values */
+    for (UINT i = 0; i < numFrames_; ++i)
+        fenceValues_[i] = fenceValues_[currentFrame_];
+
+    /* Create render targets */
+    //todo...
+
+
+}
 
 
 } // /namespace LLGL

@@ -22,27 +22,39 @@ int main()
         contextDesc.videoMode.resolution    = { 800, 600 };
         //contextDesc.videoMode.fullscreen    = true;
 
-        contextDesc.antiAliasing.enabled    = true;
-        contextDesc.antiAliasing.samples    = 8;
+        //contextDesc.antiAliasing.enabled    = true;
+        //contextDesc.antiAliasing.samples    = 8;
 
         contextDesc.vsync.enabled           = true;
 
-        /*auto context = renderer->CreateRenderContext(contextDesc);
+        auto context = renderer->CreateRenderContext(contextDesc);
         
-        auto& window = context->GetWindow();
+        auto window = &(context->GetWindow());
+
+        auto title = "LLGL Test 3 ( " + renderer->GetName() + " )";
+        window->SetTitle(std::wstring(title.begin(), title.end()));
 
         auto renderCaps = context->QueryRenderingCaps();
+        auto shadingLang = context->QueryShadingLanguage();
 
-        auto shadingLang = context->QueryShadingLanguage();*/
+        // Setup input controller
+        auto input = std::make_shared<LLGL::Input>();
+        window->AddEventListener(input);
 
 
+        // Main loop
+        while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        {
+
+
+
+        }
     }
     catch (const std::exception& e)
     {
         std::cerr << e.what() << std::endl;
+        system("pause");
     }
-
-    system("pause");
 
     return 0;
 }

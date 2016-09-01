@@ -24,6 +24,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateFactory();
     QueryVideoAdapters();
     CreateDevice();
+    CreateGPUSynchObjects();
 
     /* Create main command queue */
     cmdQueue_ = CreateCommandQueue();
@@ -38,7 +39,16 @@ D3D12RenderSystem::~D3D12RenderSystem()
 
 RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    return nullptr;//todo
+    auto renderContext = MakeUnique<D3D12RenderContext>(*this, desc, window);
+
+    /*
+    If render context created it's own window then show it after creation,
+    since anti-aliasing may force the window to be recreated several times
+    */
+    if (!window)
+        renderContext->GetWindow().Show();
+
+    return TakeOwnership(renderContexts_, std::move(renderContext));
 }
 
 void D3D12RenderSystem::Release(RenderContext& renderContext)
@@ -303,16 +313,41 @@ ID3D12CommandAllocator* D3D12RenderSystem::CreateCommandAllocator()
     return cmdAlloc;
 }
 
-ID3D12Fence* D3D12RenderSystem::CreateFence(UINT64 initialValue)
+ID3D12DescriptorHeap* D3D12RenderSystem::CreateDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc)
 {
-    ID3D12Fence* fence = nullptr;
+    ID3D12DescriptorHeap* descHeap = nullptr;
 
-    auto hr = device_->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-    DXThrowIfFailed(hr, "failed to create D3D12 fence");
-    
-    //CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+    auto hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descHeap));
+    DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap");
 
-    return fence;
+    return descHeap;
+}
+
+IDXGISwapChain1* D3D12RenderSystem::CreateSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd)
+{
+    IDXGISwapChain1* swapChain = nullptr;
+
+    auto hr = factory_->CreateSwapChainForHwnd(cmdQueue_, wnd, &desc, nullptr, nullptr, &swapChain);
+    DXThrowIfFailed(hr, "failed to create D3D12 swap chain");
+
+    return swapChain;
+}
+
+void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
+{
+    HRESULT hr = 0;
+
+    /* Schedule signal command into the qeue */
+    hr = cmdQueue_->Signal(fence_, fenceValue);
+    DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
+
+    /* Wait until the fence has been crossed */
+    hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
+    DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
+    WaitForSingleObjectEx(fenceEvent_, INFINITE, FALSE);
+
+    /* Increment fence value */
+    ++fenceValue;
 }
 
 
@@ -440,6 +475,17 @@ bool D3D12RenderSystem::CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const s
             return true;
     }
     return false;
+}
+
+void D3D12RenderSystem::CreateGPUSynchObjects()
+{
+    /* Create D3D12 fence */
+    UINT64 initialFenceValue = 0;
+    auto hr = device_->CreateFence(initialFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
+    DXThrowIfFailed(hr, "failed to create D3D12 fence");
+    
+    /* Create Win32 event */
+    fenceEvent_ = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 }
 
 

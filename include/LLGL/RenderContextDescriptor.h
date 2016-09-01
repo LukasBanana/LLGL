@@ -54,6 +54,14 @@ enum class OpenGLVersion
     OpenGL_4_5      = 450, //!< OpenGL 4.5, released in Aug, 2014.
 };
 
+//! Swap chain mode enumeration.
+enum class SwapChainMode
+{
+    SingleBuffering = 1,    //!< Single buffering. This is almost no longer used.
+    DoubleBuffering,        //!< Double buffering. This is the default for most renderers.
+    TripleBuffering,        //!< Triple buffering. Triple buffering can only be used for Direct3D renderers.
+};
+
 
 /* ----- Structures ----- */
 
@@ -72,9 +80,10 @@ struct AntiAliasingDescriptor
 
 struct VideoModeDescriptor
 {
-    Size            resolution;                 //!< Screen resolution.
-    int             colorDepth      = 32;       //!< Color bit depth. Should be 24 or 32. By default 32.
-    bool            fullscreen      = false;    //!< Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
+    Size            resolution;                                         //!< Screen resolution.
+    int             colorDepth      = 32;                               //!< Color bit depth. Should be 24 or 32. By default 32.
+    bool            fullscreen      = false;                            //!< Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
+    SwapChainMode   swapChainMode   = SwapChainMode::DoubleBuffering;   //!< Swap chain buffering mode.
 };
 
 struct ProfileOpenGLDescriptor

@@ -110,7 +110,12 @@ class D3D12RenderSystem : public RenderSystem
 
         ID3D12CommandQueue* CreateCommandQueue();
         ID3D12CommandAllocator* CreateCommandAllocator();
-        ID3D12Fence* CreateFence(UINT64 initialValue);
+        ID3D12DescriptorHeap* CreateDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
+
+        IDXGISwapChain1* CreateSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
+
+        //! Waits until the GPU has done all previous work.
+        void SyncGPU(UINT64& fenceValue);
 
     private:
 
@@ -118,13 +123,16 @@ class D3D12RenderSystem : public RenderSystem
         void QueryVideoAdapters();
         void CreateDevice();
         bool CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
+        void CreateGPUSynchObjects();
 
         /* ----- Common D3D objects ----- */
 
         IDXGIFactory4*                              factory_        = nullptr;
         ID3D12Device*                               device_         = nullptr;
         ID3D12CommandQueue*                         cmdQueue_       = nullptr;
-        ID3D12DescriptorHeap*                       descHeap_       = nullptr;
+
+        ID3D12Fence*                                fence_          = nullptr;
+        HANDLE                                      fenceEvent_     = 0;
 
         /* ----- Hardware object containers ----- */
 

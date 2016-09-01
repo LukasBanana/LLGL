@@ -11,7 +11,7 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
-#include <array>
+#include <cstddef>
 
 //#include "RenderState/D3D12StateManager.h"
 
@@ -118,21 +118,25 @@ class D3D12RenderContext : public RenderContext
 
     private:
 
-        static const std::size_t maxNumBuffers = 3;
+        static const UINT maxNumBuffers = 3;
+
+        void SyncGPU();
+        void CreateWindowSizeDependentResources();
 
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
         RenderContextDescriptor             desc_;
 
         //std::shared_ptr<D3D12StateManager>  stateMngr_;
 
-        IDXGISwapChain3*                                    swapChain_      = nullptr;
+        IDXGISwapChain1*                    swapChain_                      = nullptr;
+        ID3D12DescriptorHeap*               descHeap_                       = nullptr;
 
-        std::array<ID3D12CommandAllocator*, maxNumBuffers>  cmdAllocs_;
-        std::array<ID3D12Resource*, maxNumBuffers>          renderTargets_;
-        std::array<UINT64, maxNumBuffers>                   fenceValues_;
+        ID3D12CommandAllocator*             cmdAllocs_[maxNumBuffers]       = { nullptr };
+        ID3D12Resource*                     renderTargets_[maxNumBuffers]   = { nullptr };
+        UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
 
-        std::size_t                                         numFrames_      = 0;
-        std::size_t                                         currentFrame_   = 0;
+        UINT                                numFrames_                      = 0;
+        UINT                                currentFrame_                   = 0;
 
 };
 
