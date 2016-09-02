@@ -27,7 +27,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateGPUSynchObjects();
 
     /* Create main command queue */
-    cmdQueue_ = CreateCommandQueue();
+    cmdQueue_ = CreateDXCommandQueue();
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -288,7 +288,7 @@ void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 
 /* ----- Extended internal functions ----- */
 
-ID3D12CommandQueue* D3D12RenderSystem::CreateCommandQueue()
+ID3D12CommandQueue* D3D12RenderSystem::CreateDXCommandQueue()
 {
     ID3D12CommandQueue* cmdQueue = nullptr;
 
@@ -303,7 +303,7 @@ ID3D12CommandQueue* D3D12RenderSystem::CreateCommandQueue()
     return cmdQueue;
 }
 
-ID3D12CommandAllocator* D3D12RenderSystem::CreateCommandAllocator()
+ID3D12CommandAllocator* D3D12RenderSystem::CreateDXCommandAllocator()
 {
     ID3D12CommandAllocator* cmdAlloc = nullptr;
 
@@ -313,7 +313,7 @@ ID3D12CommandAllocator* D3D12RenderSystem::CreateCommandAllocator()
     return cmdAlloc;
 }
 
-ID3D12DescriptorHeap* D3D12RenderSystem::CreateDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc)
+ID3D12DescriptorHeap* D3D12RenderSystem::CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc)
 {
     ID3D12DescriptorHeap* descHeap = nullptr;
 
@@ -323,7 +323,7 @@ ID3D12DescriptorHeap* D3D12RenderSystem::CreateDescriptorHeap(const D3D12_DESCRI
     return descHeap;
 }
 
-IDXGISwapChain1* D3D12RenderSystem::CreateSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd)
+IDXGISwapChain1* D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd)
 {
     IDXGISwapChain1* swapChain = nullptr;
 

@@ -108,11 +108,10 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
-        ID3D12CommandQueue* CreateCommandQueue();
-        ID3D12CommandAllocator* CreateCommandAllocator();
-        ID3D12DescriptorHeap* CreateDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
-
-        IDXGISwapChain1* CreateSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
+        ID3D12CommandQueue* CreateDXCommandQueue();
+        ID3D12CommandAllocator* CreateDXCommandAllocator();
+        ID3D12DescriptorHeap* CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
+        IDXGISwapChain1* CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
 
         //! Waits until the GPU has done all previous work.
         void SyncGPU(UINT64& fenceValue);

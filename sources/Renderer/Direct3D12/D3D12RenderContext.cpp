@@ -32,14 +32,14 @@ D3D12RenderContext::D3D12RenderContext(
 
 D3D12RenderContext::~D3D12RenderContext()
 {
-	/* Release D3D12 objects */
-	for (UINT i = 0; i < maxNumBuffers; ++i)
-	{
-		SafeRelease(renderTargets_[i]);
-		SafeRelease(cmdAllocs_[i]);
-	}
-	SafeRelease(descHeap_);
-	SafeRelease(swapChain_);
+    /* Release D3D12 objects */
+    for (UINT i = 0; i < maxNumBuffers; ++i)
+    {
+        SafeRelease(renderTargets_[i]);
+        SafeRelease(cmdAllocs_[i]);
+    }
+    SafeRelease(descHeap_);
+    SafeRelease(swapChain_);
 }
 
 std::map<RendererInfo, std::string> D3D12RenderContext::QueryRendererInfo() const
@@ -67,9 +67,9 @@ ShadingLanguage D3D12RenderContext::QueryShadingLanguage() const
 
 void D3D12RenderContext::Present()
 {
-	/* Present swap-chain with vsync interval */
+    /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
-	DXThrowIfFailed(hr, "failed to present D3D12 swap-chain");
+    DXThrowIfFailed(hr, "failed to present D3D12 swap-chain");
 }
 
 /* ----- Configuration ----- */
@@ -301,7 +301,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         swapChainDesc.Scaling               = DXGI_SCALING_NONE;
         swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
     }
-    swapChain_ = renderSystem_.CreateSwapChain(swapChainDesc, wndHandle.window);
+    swapChain_ = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
 
     /* Create descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
@@ -311,7 +311,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     }
-    descHeap_ = renderSystem_.CreateDescriptorHeap(descHeapDesc);
+    descHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
     descHeap_->SetName(L"Render Target View Descriptor Heap");
 
     /* Update tracked fence values */
@@ -326,7 +326,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
 
 void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
 {
-	swapChainInterval_ = (desc.enabled ? std::max(1u, std::min(desc.interval, 4u)) : 0);
+    swapChainInterval_ = (desc.enabled ? std::max(1u, std::min(desc.interval, 4u)) : 0);
 }
 
 

@@ -18,7 +18,7 @@ std::string DXErrorToStr(const HRESULT errorCode)
 {
     switch (errorCode)
     {
-		// see https://msdn.microsoft.com/en-us/library/windows/desktop/aa378137(v=vs.85).aspx
+        // see https://msdn.microsoft.com/en-us/library/windows/desktop/aa378137(v=vs.85).aspx
         LLGL_CASE_TO_STR( S_OK );
         LLGL_CASE_TO_STR( E_ABORT );
         LLGL_CASE_TO_STR( E_ACCESSDENIED );
@@ -31,7 +31,7 @@ std::string DXErrorToStr(const HRESULT errorCode)
         LLGL_CASE_TO_STR( E_POINTER );
         LLGL_CASE_TO_STR( E_UNEXPECTED );
 
-		// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb509553(v=vs.85).aspx
+        // see https://msdn.microsoft.com/en-us/library/windows/desktop/bb509553(v=vs.85).aspx
         LLGL_CASE_TO_STR( DXGI_ERROR_DEVICE_HUNG );
         LLGL_CASE_TO_STR( DXGI_ERROR_DEVICE_REMOVED );
         LLGL_CASE_TO_STR( DXGI_ERROR_DEVICE_RESET );

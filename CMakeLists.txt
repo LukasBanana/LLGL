@@ -69,25 +69,29 @@ elseif(UNIX)
 endif()
 
 # OpenGL renderer files
-file(GLOB FilesRendererOpenGL				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
-file(GLOB FilesRendererOpenGLShader			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
-file(GLOB FilesRendererOpenGLBuffer			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/*.*)
-file(GLOB FilesRendererOpenGLTexture		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/*.*)
-file(GLOB FilesRendererOpenGLRenderState	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/RenderState/*.*)
+file(GLOB FilesRendererGL					${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
+file(GLOB FilesRendererGLShader				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
+file(GLOB FilesRendererGLBuffer				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/*.*)
+file(GLOB FilesRendererGLTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/*.*)
+file(GLOB FilesRendererGLRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/RenderState/*.*)
 
 if(WIN32)
-	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
+	file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
 	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/Win32/*.*)
 elseif(APPLE)
-	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/MacOS/*.*)
+	file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/MacOS/*.*)
 	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/MacOS/*.*)
 elseif(UNIX)
-	file(GLOB FilesRendererOpenGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Linux/*.*)
+	file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Linux/*.*)
 	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/Linux/*.*)
 endif()
 
 # Direct3D12 renderer files
-file(GLOB FilesRendererDirect3D12			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
+file(GLOB FilesRendererD3D12				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
+#file(GLOB FilesRendererD3D12Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/*.*)
+#file(GLOB FilesRendererD3D12Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Buffer/*.*)
+#file(GLOB FilesRendererD3D12Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Texture/*.*)
+file(GLOB FilesRendererD3D12RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/RenderState/*.*)
 
 # Vulkan renderer files
 file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
@@ -112,34 +116,38 @@ source_group(
 source_group(
 	"Sources\\Renderer" FILES
 	${FilesRenderer}
-	${FilesRendererOpenGL}
-	${FilesRendererDirect3D12}
+	${FilesRendererGL}
+	${FilesRendererD3D12}
 	${FilesRendererVulkan}
 )
 
 source_group(
 	"Sources\\Renderer\\Platform" FILES
-	${FilesRendererOpenGLPlatform}
+	${FilesRendererGLPlatform}
 )
 
 source_group(
 	"Sources\\Renderer\\Shader" FILES
-	${FilesRendererOpenGLShader}
+	${FilesRendererGLShader}
+#	${FilesRendererD3D12Shader}
 )
 
 source_group(
 	"Sources\\Renderer\\Buffer" FILES
-	${FilesRendererOpenGLBuffer}
+	${FilesRendererGLBuffer}
+#	${FilesRendererD3D12Buffer}
 )
 
 source_group(
 	"Sources\\Renderer\\Texture" FILES
-	${FilesRendererOpenGLTexture}
+	${FilesRendererGLTexture}
+#	${FilesRendererD3D12Texture}
 )
 
 source_group(
 	"Sources\\Renderer\\RenderState" FILES
-	${FilesRendererOpenGLRenderState}
+	${FilesRendererGLRenderState}
+	${FilesRendererD3D12RenderState}
 )
 
 
@@ -165,18 +173,22 @@ set(
 )
 
 set(
-	FilesOpenGL
-	${FilesRendererOpenGL}
-	${FilesRendererOpenGLPlatform}
-	${FilesRendererOpenGLShader}
-	${FilesRendererOpenGLBuffer}
-	${FilesRendererOpenGLTexture}
-	${FilesRendererOpenGLRenderState}
+	FilesGL
+	${FilesRendererGL}
+	${FilesRendererGLPlatform}
+	${FilesRendererGLShader}
+	${FilesRendererGLBuffer}
+	${FilesRendererGLTexture}
+	${FilesRendererGLRenderState}
 )
 
 set(
-	FilesDirect3D12
-	${FilesRendererDirect3D12}
+	FilesD3D12
+	${FilesRendererD3D12}
+#	${FilesRendererD3D12Shader}
+#	${FilesRendererD3D12Buffer}
+#	${FilesRendererD3D12Texture}
+	${FilesRendererD3D12RenderState}
 )
 
 # Base project
@@ -196,7 +208,7 @@ target_compile_features(LLGL PRIVATE cxx_range_for)
 find_package(OpenGL)
 if(OpenGL_FOUND)
 	include_directories(${OPENGL_INCLUDE_DIR})
-	add_library(LLGL_OpenGL SHARED ${FilesOpenGL})
+	add_library(LLGL_OpenGL SHARED ${FilesGL})
 	set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 	target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
 	target_compile_features(LLGL_OpenGL PRIVATE cxx_range_for)
@@ -205,7 +217,7 @@ else()
 endif()
 
 if(WIN32)
-	add_library(LLGL_Direct3D12 SHARED ${FilesDirect3D12})
+	add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
 	set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 	target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi)
 	target_compile_features(LLGL_Direct3D12 PRIVATE cxx_range_for)
