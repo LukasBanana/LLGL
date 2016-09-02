@@ -11,6 +11,7 @@
 #include "../../CheckedCast.h"
 #include <LLGL/Log.h>
 #include <LLGL/VertexFormat.h>
+#include <algorithm>
 #include <stdexcept>
 
 
@@ -24,12 +25,14 @@ D3D12ShaderProgram::D3D12ShaderProgram()
 
 void D3D12ShaderProgram::AttachShader(Shader& shader)
 {
+    /* Store D3D12 shader */
     auto shaderD3D = LLGL_CAST(D3D12Shader*, &shader);
 
     switch (shader.GetType())
     {
         case ShaderType::Vertex:
             vs_ = shaderD3D;
+            vertexAttributes_ = vs_->GetVertexAttributes();
             break;
         case ShaderType::Fragment:
             ps_ = shaderD3D;
@@ -46,6 +49,20 @@ void D3D12ShaderProgram::AttachShader(Shader& shader)
         case ShaderType::Compute:
             cs_ = shaderD3D;
             break;
+    }
+
+    /* Add constant buffer descriptors */
+    for (const auto& desc : shaderD3D->GetConstantBufferDescs())
+    {
+        auto it = std::find_if(
+            constantBufferDescs_.begin(), constantBufferDescs_.end(), 
+            [desc](const ConstantBufferDescriptor& entry)
+            {
+                return (entry.index == desc.index);
+            }
+        );
+        if (it == constantBufferDescs_.end())
+            constantBufferDescs_.push_back(desc);
     }
 }
 
@@ -92,29 +109,17 @@ std::string D3D12ShaderProgram::QueryInfoLog()
 
 std::vector<VertexAttribute> D3D12ShaderProgram::QueryVertexAttributes() const
 {
-    VertexFormat vertexFormat;
-
-    //todo...
-
-    return vertexFormat.GetAttributes();
+    return vertexAttributes_;
 }
 
 std::vector<ConstantBufferDescriptor> D3D12ShaderProgram::QueryConstantBuffers() const
 {
-    std::vector<ConstantBufferDescriptor> descList;
-
-    //todo...
-
-    return descList;
+    return constantBufferDescs_;
 }
 
 std::vector<UniformDescriptor> D3D12ShaderProgram::QueryUniforms() const
 {
-    std::vector<UniformDescriptor> descList;
-
-    //todo...
-
-    return descList;
+    return {}; // dummy
 }
 
 static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)

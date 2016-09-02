@@ -29,7 +29,7 @@ class GLShader : public Shader
         ~GLShader();
 
         bool Compile(const std::string& shaderSource) override;
-        bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target) override;
+        bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags = 0) override;
 
         std::string QueryInfoLog() override;
 

@@ -10,6 +10,8 @@
 
 
 #include <LLGL/Shader.h>
+#include <LLGL/VertexAttribute.h>
+#include <LLGL/ConstantBuffer.h>
 #include <vector>
 #include <d3d12.h>
 
@@ -30,16 +32,33 @@ class D3D12Shader : public Shader
         ~D3D12Shader();
 
         bool Compile(const std::string& shaderSource) override;
-        bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target) override;
+        bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags = 0) override;
+
+        std::string Disassemble(int flags = 0) override;
 
         std::string QueryInfoLog() override;
 
+        /* ----- Extended internal functions ---- */
+
         D3D12_SHADER_BYTECODE GetByteCode() const;
+
+        inline const std::vector<VertexAttribute>& GetVertexAttributes() const
+        {
+            return vertexAttributes_;
+        }
+
+        inline const std::vector<ConstantBufferDescriptor>& GetConstantBufferDescs() const
+        {
+            return constantBufferDescs_;
+        }
 
     private:
 
-        std::vector<char>   byteCode_;
-        ID3DBlob*           errors_     = nullptr;
+        std::vector<char>                       byteCode_;
+        ID3DBlob*                               errors_             = nullptr;
+
+        std::vector<VertexAttribute>            vertexAttributes_;
+        std::vector<ConstantBufferDescriptor>   constantBufferDescs_;
 
 };
 

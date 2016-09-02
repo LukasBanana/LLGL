@@ -28,6 +28,34 @@ enum class ShaderType
     Compute,        //!< Compute shader type.
 };
 
+/**
+\brief Shader compilation flags enumeration.
+\remarks These flags can only be used with Direct3D.
+*/
+struct ShaderCompileFlags
+{
+    enum
+    {
+        Debug       = (1 << 0), //!< Insert debug information.
+        O1          = (1 << 1), //!< Optimization level 1.
+        O2          = (1 << 2), //!< Optimization level 2.
+        O3          = (1 << 3), //!< Optimization level 3.
+        WarnError   = (1 << 4), //!< Warnings are treated as errors.
+    };
+};
+
+/**
+\brief Shader disassemble flags enumeration.
+\remarks These flags can only be used with Direct3D.
+*/
+struct ShaderDisassembleFlags
+{
+    enum
+    {
+        InstructionOnly = (1 << 0), //!< Show only instructions in disassembly output.
+    };
+};
+
 
 //! Shader base interface.
 class LLGL_EXPORT Shader
@@ -35,9 +63,7 @@ class LLGL_EXPORT Shader
 
     public:
 
-        virtual ~Shader()
-        {
-        }
+        virtual ~Shader();
 
         /**
         \brief Compiles the specified shader source.
@@ -54,10 +80,20 @@ class LLGL_EXPORT Shader
         \param[in] shaderSource Specifies the shader source code.
         \param[in] entryPoint Specifies the shader entry point.
         \param[in] target Specifies the shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
+        \param[in] flags Specifies optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries. By default 0.
         \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
         \remarks This function should be used for HLSL.
+        \see ShaderCompileFlags
         */
-        virtual bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target) = 0;
+        virtual bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags = 0) = 0;
+
+        /**
+        \brief Disassembles the previously compiled shader byte code.
+        \param[in] flags Specifies optional disassemble flags. This can be a bitwise OR combination of the 'ShaderDisassembleFlags' enumeration entries. By default 0.
+        \return Disassembled assembler code or an empty string if disassembling was not possible.
+        \remarks This can only be used with HLSL.
+        */
+        virtual std::string Disassemble(int flags = 0);
 
         //! Returns the information log after the shader compilation.
         virtual std::string QueryInfoLog() = 0;
@@ -70,10 +106,7 @@ class LLGL_EXPORT Shader
 
     protected:
 
-        Shader(const ShaderType type) :
-            type_( type )
-        {
-        }
+        Shader(const ShaderType type);
 
     private:
 

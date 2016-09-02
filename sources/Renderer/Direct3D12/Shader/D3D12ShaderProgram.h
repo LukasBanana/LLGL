@@ -63,6 +63,9 @@ class D3D12ShaderProgram : public ShaderProgram
         D3D12Shader*                            gs_             = nullptr;
         D3D12Shader*                            cs_             = nullptr;
 
+        std::vector<VertexAttribute>            vertexAttributes_;
+        std::vector<ConstantBufferDescriptor>   constantBufferDescs_;
+
 };
 
 

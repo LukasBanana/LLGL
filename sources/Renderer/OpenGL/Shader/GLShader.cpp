@@ -67,7 +67,7 @@ bool GLShader::Compile(const std::string& shaderSource)
     return (compileStatus != GL_FALSE);
 }
 
-bool GLShader::Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target)
+bool GLShader::Compile(const std::string&, const std::string&, const std::string&, int)
 {
     throw std::runtime_error("invalid 'Shader::Compile' function for GLSL");
 }
