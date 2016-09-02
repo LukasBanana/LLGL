@@ -6,7 +6,7 @@
  */
 
 #include "D3D12GraphicsPipeline.h"
-#include "../D3D12Core.h"
+#include "../DXCore.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h""
 

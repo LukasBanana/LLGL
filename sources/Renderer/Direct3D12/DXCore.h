@@ -1,12 +1,12 @@
 /*
- * D3D12Core.h
+ * DXCore.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D12_CORE_H__
-#define __LLGL_D3D12_CORE_H__
+#ifndef __LLGL_DX_CORE_H__
+#define __LLGL_DX_CORE_H__
 
 
 #include <string>

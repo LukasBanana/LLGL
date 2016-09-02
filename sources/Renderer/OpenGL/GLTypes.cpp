@@ -464,7 +464,7 @@ void Unmap(UniformType& result, const GLenum uniformType)
 }
 
 
-} // /namespace GLTypeConversion
+} // /namespace GLTypes
 
 } // /namespace LLGL
 

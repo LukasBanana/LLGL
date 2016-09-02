@@ -1,11 +1,11 @@
 /*
- * D3D12Core.cpp
+ * DXCore.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D12Core.h"
+#include "DXCore.h"
 #include "../../Core/HelperMacros.h"
 #include <stdexcept>
 

@@ -45,7 +45,7 @@ GLenum Map( const TextureFilter     textureMinFilter, const TextureFilter textur
 void Unmap( UniformType& result, const GLenum uniformType );
 
 
-} // /namespace GLTypeConversion
+} // /namespace GLTypes
 
 } // /namespace LLGL
 

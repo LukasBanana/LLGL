@@ -10,6 +10,7 @@
 
 
 #include <LLGL/ShaderProgram.h>
+#include <vector>
 #include <d3d12.h>
 
 
@@ -42,6 +43,12 @@ class D3D12ShaderProgram : public ShaderProgram
 
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
+
+        D3D12_INPUT_LAYOUT_DESC GetInputLayoutDesc() const;
+
+    private:
+
+        std::vector<D3D12_INPUT_ELEMENT_DESC> inputElements_;
 
 };
 

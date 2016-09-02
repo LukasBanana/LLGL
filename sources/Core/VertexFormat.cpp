@@ -15,7 +15,14 @@ namespace LLGL
 {
 
 
-void VertexFormat::AddAttribute(const std::string& name, const DataType dataType, unsigned int components)
+void VertexFormat::AddAttribute(
+    const std::string& name, const DataType dataType, unsigned int components, bool conversion)
+{
+    AddAttribute(name, 0, dataType, components, conversion);
+}
+
+void VertexFormat::AddAttribute(
+    const std::string& semanticName, unsigned int semanticIndex, const DataType dataType, unsigned int components, bool conversion)
 {
     if (components < 1 || components > 4)
     {
@@ -27,10 +34,12 @@ void VertexFormat::AddAttribute(const std::string& name, const DataType dataType
     /* Setup new vertex attribute */
     VertexAttribute attrib;
     {
-        attrib.dataType     = dataType;
-        attrib.components   = components;
-        attrib.offset       = formatSize_;
-        attrib.name         = name;
+        attrib.dataType         = dataType;
+        attrib.conversion       = conversion;
+        attrib.components       = components;
+        attrib.offset           = formatSize_;
+        attrib.name             = semanticName;
+        attrib.semanticIndex    = semanticIndex;
     }
     attributes_.push_back(attrib);
 
