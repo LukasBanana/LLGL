@@ -7,6 +7,7 @@
 
 #include "D3D12RenderContext.h"
 #include "D3D12RenderSystem.h"
+#include "D3D12Core.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
@@ -30,6 +31,14 @@ D3D12RenderContext::D3D12RenderContext(
 
 D3D12RenderContext::~D3D12RenderContext()
 {
+	/* Release D3D12 objects */
+	for (UINT i = 0; i < maxNumBuffers; ++i)
+	{
+		SafeRelease(renderTargets_[i]);
+		SafeRelease(cmdAllocs_[i]);
+	}
+	SafeRelease(descHeap_);
+	SafeRelease(swapChain_);
 }
 
 std::map<RendererInfo, std::string> D3D12RenderContext::QueryRendererInfo() const
@@ -289,7 +298,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         swapChainDesc.Scaling               = DXGI_SCALING_NONE;
         swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
     }
-    renderSystem_.CreateSwapChain(swapChainDesc, wndHandle.window);
+    swapChain_ = renderSystem_.CreateSwapChain(swapChainDesc, wndHandle.window);
 
     /* Create descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
