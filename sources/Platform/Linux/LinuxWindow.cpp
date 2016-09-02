@@ -117,19 +117,23 @@ void LinuxWindow::ProcessSystemEvents()
         switch (event.type)
         {
             case KeyPress:
-                ProcessKeyEvent(event, true);
+                ProcessKeyEvent(event.xkey, true);
                 break;
 
             case KeyRelease:
-                ProcessKeyEvent(event, false);
+                ProcessKeyEvent(event.xkey, false);
                 break;
 
             case ButtonPress:
-                ProcessMouseKeyEvent(event, true);
+                ProcessMouseKeyEvent(event.xbutton, true);
                 break;
 
             case ButtonRelease:
-                ProcessMouseKeyEvent(event, false);
+                ProcessMouseKeyEvent(event.xbutton, false);
+                break;
+                
+            case ResizeRequest:
+                ProcessResizeRequestEvent(event.xresizerequest);
                 break;
 
             case DestroyNotify:
@@ -174,7 +178,7 @@ void LinuxWindow::OpenWindow()
     /* Setup window attributes */
     XSetWindowAttributes attribs;
     attribs.background_pixel    = WhitePixel(display_, screen);
-    attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
+    attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ResizeRedirectMask);
     
     unsigned long valueMask     = CWEventMask;//(CWColormap | CWEventMask | CWOverrideRedirect)
 
@@ -185,6 +189,12 @@ void LinuxWindow::OpenWindow()
     }
     else
         valueMask |= CWBackPixel;
+        
+    /*if (desc_.borderless) //WARNING -> input no longer works
+    {
+        valueMask |= CWOverrideRedirect;
+        attribs.override_redirect = true;
+    }*/
 
     /* Get final window position */
     auto position = desc_.position;
@@ -207,6 +217,14 @@ void LinuxWindow::OpenWindow()
         valueMask,
         (&attribs)
     );
+    
+    /* Prepare borderless window */
+    /*if (desc_.borderless)
+    {
+        XSetInputFocus(display_, wnd_, RevertToParent, CurrentTime);
+        XGrabKeyboard(display_, wnd_, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+        XGrabPointer(display_, wnd_, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, wnd_, None, CurrentTime);
+    }*/
 
     /* Set title and show window (if enabled) */
     SetTitle(desc_.title);
@@ -215,18 +233,18 @@ void LinuxWindow::OpenWindow()
         Show();
 }
 
-void LinuxWindow::ProcessKeyEvent(XEvent& event, bool down)
+void LinuxWindow::ProcessKeyEvent(XKeyEvent& event, bool down)
 {
-    auto key = MapKey(event.xkey);
+    auto key = MapKey(event);
     if (down)
         PostKeyDown(key);
     else
         PostKeyUp(key);
 }
 
-void LinuxWindow::ProcessMouseKeyEvent(XEvent& event, bool down)
+void LinuxWindow::ProcessMouseKeyEvent(XButtonEvent& event, bool down)
 {
-    switch (event.xbutton.button)
+    switch (event.button)
     {
         case Button1:
             PostMouseKeyEvent(Key::LButton, down);
@@ -244,6 +262,11 @@ void LinuxWindow::ProcessMouseKeyEvent(XEvent& event, bool down)
             PostWheelMotion(-1);
             break;
     }
+}
+
+void LinuxWindow::ProcessResizeRequestEvent(XResizeRequestEvent& event)
+{
+    PostResize({ event.width, event.height });
 }
 
 void LinuxWindow::PostMouseKeyEvent(Key key, bool down)
