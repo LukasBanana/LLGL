@@ -21,6 +21,7 @@ std::string DXErrorToStr(const HRESULT errorCode)
     {
         // see https://msdn.microsoft.com/en-us/library/windows/desktop/aa378137(v=vs.85).aspx
         LLGL_CASE_TO_STR( S_OK );
+        LLGL_CASE_TO_STR( S_FALSE );
         LLGL_CASE_TO_STR( E_ABORT );
         LLGL_CASE_TO_STR( E_ACCESSDENIED );
         LLGL_CASE_TO_STR( E_FAIL );
@@ -56,6 +57,16 @@ std::string DXErrorToStr(const HRESULT errorCode)
         LLGL_CASE_TO_STR( DXGI_ERROR_ACCESS_DENIED );
         LLGL_CASE_TO_STR( DXGI_ERROR_NAME_ALREADY_EXISTS );
         LLGL_CASE_TO_STR( DXGI_ERROR_SDK_COMPONENT_MISSING );
+
+        // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476174(v=vs.85).aspx
+        LLGL_CASE_TO_STR( D3D10_ERROR_FILE_NOT_FOUND );
+        LLGL_CASE_TO_STR( D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS );
+        LLGL_CASE_TO_STR( D3D11_ERROR_FILE_NOT_FOUND );
+        LLGL_CASE_TO_STR( D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS );
+        LLGL_CASE_TO_STR( D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS );
+        LLGL_CASE_TO_STR( D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD );
+        LLGL_CASE_TO_STR( D3D12_ERROR_ADAPTER_NOT_FOUND );
+        LLGL_CASE_TO_STR( D3D12_ERROR_DRIVER_VERSION_MISMATCH );
     }
     return "";
 }

@@ -59,15 +59,17 @@ int main()
         auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
         auto fragShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
 
+        std::cout << "VERTEX OUTPUT:" << std::endl;
         if (!vertShader->Compile(shaderSource, "VS", "vs_5_0"))
             std::cerr << vertShader->QueryInfoLog() << std::endl;
         else
-            std::cout << "VERTEX ASSEMBLY:" << std::endl << vertShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
+            std::cout << vertShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
 
+        std::cout << "PIXEL OUTPUT:" << std::endl;
         if (!fragShader->Compile(shaderSource, "PS", "ps_5_0"))
             std::cerr << fragShader->QueryInfoLog() << std::endl;
         else
-            std::cout << "PIXEL ASSEMBLY:" << std::endl << fragShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
+            std::cout << fragShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
 
         // Create shader program
         auto shaderProgram = renderer->CreateShaderProgram();
