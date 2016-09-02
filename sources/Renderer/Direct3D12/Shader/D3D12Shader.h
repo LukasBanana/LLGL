@@ -1,46 +1,42 @@
 /*
- * GLShader.h
+ * D3D12Shader.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_SHADER_H__
-#define __LLGL_GL_SHADER_H__
+#ifndef __LLGL_D3D12_SHADER_H__
+#define __LLGL_D3D12_SHADER_H__
 
 
 #include <LLGL/Shader.h>
-#include "../OpenGL.h"
+#include <vector>
+#include <d3d12.h>
 
 
 namespace LLGL
 {
 
 
-class GLShader : public Shader
+class D3D12Shader : public Shader
 {
 
     public:
 
-        GLShader(const GLShader&) = delete;
-        GLShader& operator = (const GLShader&) = delete;
+        D3D12Shader(const D3D12Shader&) = delete;
+        D3D12Shader& operator = (const D3D12Shader&) = delete;
 
-        GLShader(const ShaderType type);
-        ~GLShader();
+        D3D12Shader(const ShaderType type);
 
         bool Compile(const std::string& shaderSource) override;
 
         std::string QueryInfoLog() override;
 
-        //! Returns the hardware shader ID.
-        inline GLuint GetID() const
-        {
-            return id_;
-        }
+        D3D12_SHADER_BYTECODE GetByteCode() const;
 
     private:
 
-        GLuint id_ = 0;
+        std::vector<char> byteCode_;
 
 };
 

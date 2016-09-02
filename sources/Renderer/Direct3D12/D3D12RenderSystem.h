@@ -14,6 +14,8 @@
 #include "D3D12RenderContext.h"
 
 #include "RenderState/D3D12GraphicsPipeline.h"
+#include "Shader/D3D12Shader.h"
+#include "Shader/D3D12ShaderProgram.h"
 
 #include "../ContainerTypes.h"
 #include <d3d12.h>
@@ -145,10 +147,10 @@ class D3D12RenderSystem : public RenderSystem
         HWObjectContainer<D3D12ConstantBuffer>      constantBuffers_;
 
         HWObjectContainer<D3D12Texture>             textures_;
-        HWObjectContainer<D3D12RenderTarget>        renderTargets_;
+        HWObjectContainer<D3D12RenderTarget>        renderTargets_;*/
 
         HWObjectContainer<D3D12Shader>              shaders_;
-        HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;*/
+        HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
 
         HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
         //HWObjectContainer<D3D12Sampler>             samplers_;

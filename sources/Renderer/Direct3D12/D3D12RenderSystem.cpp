@@ -256,22 +256,22 @@ void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* D3D12RenderSystem::CreateShader(const ShaderType type)
 {
-    return nullptr;//TakeOwnership(shaders_, MakeUnique<D3D12Shader>(type));
+    return TakeOwnership(shaders_, MakeUnique<D3D12Shader>(type));
 }
 
 ShaderProgram* D3D12RenderSystem::CreateShaderProgram()
 {
-    return nullptr;//TakeOwnership(shaderPrograms_, MakeUnique<D3D12ShaderProgram>());
+    return TakeOwnership(shaderPrograms_, MakeUnique<D3D12ShaderProgram>());
 }
 
 void D3D12RenderSystem::Release(Shader& shader)
 {
-    //RemoveFromUniqueSet(shaders_, &shader);
+    RemoveFromUniqueSet(shaders_, &shader);
 }
 
 void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    //RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
+    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
 /* ----- Pipeline States ----- */

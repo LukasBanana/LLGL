@@ -15,7 +15,6 @@ namespace LLGL
 {
 
 
-
 D3D12GraphicsPipeline::D3D12GraphicsPipeline(ID3D12Device* device, ID3D12CommandAllocator* commandAlloc, const GraphicsPipelineDescriptor& desc)
 {
     HRESULT hr = 0;
