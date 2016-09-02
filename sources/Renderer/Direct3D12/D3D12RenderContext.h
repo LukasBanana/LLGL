@@ -122,6 +122,8 @@ class D3D12RenderContext : public RenderContext
 
         void SyncGPU();
         void CreateWindowSizeDependentResources();
+		
+		void SetupSwapChainInterval(const VsyncDescriptor& desc);
 
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
         RenderContextDescriptor             desc_;
@@ -129,6 +131,8 @@ class D3D12RenderContext : public RenderContext
         //std::shared_ptr<D3D12StateManager>  stateMngr_;
 
         IDXGISwapChain1*                    swapChain_                      = nullptr;
+		UINT								swapChainInterval_				= 0;
+
         ID3D12DescriptorHeap*               descHeap_                       = nullptr;
 
         ID3D12CommandAllocator*             cmdAllocs_[maxNumBuffers]       = { nullptr };

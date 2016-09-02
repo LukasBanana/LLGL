@@ -11,6 +11,7 @@
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -66,7 +67,9 @@ ShadingLanguage D3D12RenderContext::QueryShadingLanguage() const
 
 void D3D12RenderContext::Present()
 {
-    //todo
+	/* Present swap-chain with vsync interval */
+    auto hr = swapChain_->Present(swapChainInterval_, 0);
+	DXThrowIfFailed(hr, "failed to present D3D12 swap-chain");
 }
 
 /* ----- Configuration ----- */
@@ -319,6 +322,11 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     //todo...
 
 
+}
+
+void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
+{
+	swapChainInterval_ = (desc.enabled ? std::max(1u, std::min(desc.interval, 4u)) : 0);
 }
 
 

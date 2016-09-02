@@ -47,7 +47,7 @@ int main()
         {
 
 
-
+			context->Present();
         }
     }
     catch (const std::exception& e)
