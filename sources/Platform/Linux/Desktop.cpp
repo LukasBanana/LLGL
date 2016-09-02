@@ -25,7 +25,7 @@ LLGL_EXPORT int GetColorDepth()
     return 24;//!!!
 }
 
-LLGL_EXPORT bool ChangeVideoMode(const VideoModeDescriptor& videoMode)
+LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode)
 {
     return false;
 }

@@ -76,6 +76,9 @@ void LinuxWindow::Show(bool show)
         XMapWindow(display_, wnd_);
     else
         XUnmapWindow(display_, wnd_);
+        
+    if (desc_.borderless)
+        XSetInputFocus(display_, (show ? wnd_ : None), RevertToParent, CurrentTime);
 }
 
 bool LinuxWindow::IsShown() const
@@ -171,9 +174,9 @@ void LinuxWindow::OpenWindow()
     /* Setup common parameters for window creation */
     ::Window    rootWnd     = (nativeHandle != nullptr ? nativeHandle->parentWindow : DefaultRootWindow(display_));
     int         screen      = (nativeHandle != nullptr ? nativeHandle->screen : DefaultScreen(display_));
-    int         borderSize  = 5;
     ::Visual*   visual      = (nativeHandle != nullptr ? nativeHandle->visual->visual : DefaultVisual(display_, screen));
     int         depth       = (nativeHandle != nullptr ? nativeHandle->visual->depth : DefaultDepth(display_, screen));
+    int         borderSize  = 0;
     
     /* Setup window attributes */
     XSetWindowAttributes attribs;
@@ -190,11 +193,11 @@ void LinuxWindow::OpenWindow()
     else
         valueMask |= CWBackPixel;
         
-    /*if (desc_.borderless) //WARNING -> input no longer works
+    if (desc_.borderless) //WARNING -> input no longer works
     {
         valueMask |= CWOverrideRedirect;
         attribs.override_redirect = true;
-    }*/
+    }
 
     /* Get final window position */
     auto position = desc_.position;
@@ -217,20 +220,20 @@ void LinuxWindow::OpenWindow()
         valueMask,
         (&attribs)
     );
-    
-    /* Prepare borderless window */
-    /*if (desc_.borderless)
-    {
-        XSetInputFocus(display_, wnd_, RevertToParent, CurrentTime);
-        XGrabKeyboard(display_, wnd_, True, GrabModeAsync, GrabModeAsync, CurrentTime);
-        XGrabPointer(display_, wnd_, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, wnd_, None, CurrentTime);
-    }*/
 
     /* Set title and show window (if enabled) */
     SetTitle(desc_.title);
 
+    /* Show window */
     if (desc_.visible)
         Show();
+    
+    /* Prepare borderless window */
+    if (desc_.borderless)
+    {
+        XGrabKeyboard(display_, wnd_, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+        XGrabPointer(display_, wnd_, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, wnd_, None, CurrentTime);
+    }
 }
 
 void LinuxWindow::ProcessKeyEvent(XKeyEvent& event, bool down)

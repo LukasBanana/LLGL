@@ -29,7 +29,7 @@ int main()
         LLGL::RenderContextDescriptor contextDesc;
 
         contextDesc.videoMode.resolution    = { 800, 600 };
-        contextDesc.videoMode.fullscreen    = true;
+        //contextDesc.videoMode.fullscreen    = true;
 
         contextDesc.antiAliasing.enabled    = true;
         contextDesc.antiAliasing.samples    = 8;
