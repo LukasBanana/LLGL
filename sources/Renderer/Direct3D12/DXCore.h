@@ -10,7 +10,9 @@
 
 
 #include <string>
+#include <vector>
 #include <Windows.h>
+#include <d3dcommon.h>
 
 
 namespace LLGL
@@ -34,6 +36,12 @@ std::string DXErrorToStr(const HRESULT errorCode);
 
 //! Throws an std::runtime_error exception of 'errorCode' is not S_OK.
 void DXThrowIfFailed(const HRESULT errorCode, const std::string& info);
+
+//! Returns the blob data as string.
+std::string DXGetBlobString(ID3DBlob* blob);
+
+//! Returns the blob data as char vector.
+std::vector<char> DXGetBlobData(ID3DBlob* blob);
 
 
 } // /namespace LLGL

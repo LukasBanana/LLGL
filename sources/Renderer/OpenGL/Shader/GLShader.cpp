@@ -9,6 +9,7 @@
 #include "../GLExtensions.h"
 #include <vector>
 #include <sstream>
+#include <stdexcept>
 
 
 namespace LLGL
@@ -64,6 +65,11 @@ bool GLShader::Compile(const std::string& shaderSource)
     glGetShaderiv(id_, GL_COMPILE_STATUS, &compileStatus);
 
     return (compileStatus != GL_FALSE);
+}
+
+bool GLShader::Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target)
+{
+    throw std::runtime_error("invalid 'Shader::Compile' function for GLSL");
 }
 
 std::string GLShader::QueryInfoLog()

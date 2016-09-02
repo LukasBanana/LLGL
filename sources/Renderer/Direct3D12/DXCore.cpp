@@ -8,6 +8,7 @@
 #include "DXCore.h"
 #include "../../Core/HelperMacros.h"
 #include <stdexcept>
+#include <algorithm>
 
 
 namespace LLGL
@@ -63,6 +64,30 @@ void DXThrowIfFailed(const HRESULT errorCode, const std::string& info)
 {
     if (FAILED(errorCode))
         throw std::runtime_error(info + " (error code = " + DXErrorToStr(errorCode) + ")");
+}
+
+template <typename Cont>
+Cont GetBlobDataTmpl(ID3DBlob* blob)
+{
+    auto data = reinterpret_cast<const char*>(blob->GetBufferPointer());
+    auto size = static_cast<std::size_t>(blob->GetBufferSize());
+
+    Cont container;
+    {
+        container.resize(size);
+        std::copy(data, data + size, &container[0]);
+    }
+    return container;
+}
+
+std::string DXGetBlobString(ID3DBlob* blob)
+{
+    return GetBlobDataTmpl<std::string>(blob);
+}
+
+std::vector<char> DXGetBlobData(ID3DBlob* blob)
+{
+    return GetBlobDataTmpl<std::vector<char>>(blob);
 }
 
 

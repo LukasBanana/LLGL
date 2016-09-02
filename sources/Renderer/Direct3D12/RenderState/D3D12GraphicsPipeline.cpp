@@ -6,9 +6,10 @@
  */
 
 #include "D3D12GraphicsPipeline.h"
+#include "../Shader/D3D12ShaderProgram.h"
 #include "../DXCore.h"
 #include "../../CheckedCast.h"
-#include "../../../Core/Helper.h""
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
@@ -19,6 +20,8 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(ID3D12Device* device, ID3D12Command
 {
     HRESULT hr = 0;
 
+    auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
+
     /* Setup D3D12 graphics pipeline descriptor */
     D3D12_GRAPHICS_PIPELINE_STATE_DESC stateDesc;
     InitMemory(stateDesc);
@@ -26,6 +29,8 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(ID3D12Device* device, ID3D12Command
     stateDesc.NumRenderTargets = 8;
     for (UINT i = 0; i < stateDesc.NumRenderTargets; ++i)
         stateDesc.RTVFormats[i] = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+    stateDesc.InputLayout = shaderProgramD3D->GetInputLayoutDesc();
 
     /* Create D3D12 graphics pipeline sate */
     hr = device->CreateGraphicsPipelineState(&stateDesc, IID_PPV_ARGS(&pipelineState_));

@@ -219,7 +219,7 @@ endif()
 if(WIN32)
 	add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
 	set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-	target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi)
+	target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi D3DCompiler)
 	target_compile_features(LLGL_Direct3D12 PRIVATE cxx_range_for)
 endif()
 

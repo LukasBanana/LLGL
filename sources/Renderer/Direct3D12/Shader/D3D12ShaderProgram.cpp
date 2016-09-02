@@ -22,21 +22,71 @@ D3D12ShaderProgram::D3D12ShaderProgram()
 {
 }
 
-D3D12ShaderProgram::~D3D12ShaderProgram()
-{
-}
-
 void D3D12ShaderProgram::AttachShader(Shader& shader)
 {
+    auto shaderD3D = LLGL_CAST(D3D12Shader*, &shader);
+
+    switch (shader.GetType())
+    {
+        case ShaderType::Vertex:
+            vs_ = shaderD3D;
+            break;
+        case ShaderType::Fragment:
+            ps_ = shaderD3D;
+            break;
+        case ShaderType::TessControl:
+            ds_ = shaderD3D;
+            break;
+        case ShaderType::TessEvaluation:
+            hs_ = shaderD3D;
+            break;
+        case ShaderType::Geometry:
+            gs_ = shaderD3D;
+            break;
+        case ShaderType::Compute:
+            cs_ = shaderD3D;
+            break;
+    }
 }
 
 bool D3D12ShaderProgram::LinkShaders()
 {
-    return false;
+    enum ShaderTypeMask
+    {
+        MaskVS = (1 << 0),
+        MaskPS = (1 << 1),
+        MaskDS = (1 << 2),
+        MaskHS = (1 << 3),
+        MaskGS = (1 << 4),
+        MaskCS = (1 << 5),
+    };
+
+    /* Validate shader composition */
+    int flags = 0;
+
+    if (vs_) { flags |= MaskVS; }
+    if (ps_) { flags |= MaskPS; }
+    if (ds_) { flags |= MaskDS; }
+    if (hs_) { flags |= MaskHS; }
+    if (gs_) { flags |= MaskGS; }
+    if (cs_) { flags |= MaskCS; }
+
+    switch (flags)
+    {
+        case (MaskVS | MaskPS):
+        case (MaskVS | MaskPS | MaskGS):
+        case (MaskVS | MaskPS | MaskDS | MaskHS):
+        case (MaskVS | MaskPS | MaskDS | MaskHS | MaskGS):
+        case (MaskCS):
+            return true;
+        default:
+            return false;
+    }
 }
 
 std::string D3D12ShaderProgram::QueryInfoLog()
 {
+    //todo...
     return "";
 }
 
@@ -82,6 +132,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 void D3D12ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
 {
     inputElements_.clear();
+    inputElements_.reserve(vertexAttribs.size());
 
     for (const auto& attrib : vertexAttribs)
     {
@@ -101,6 +152,7 @@ void D3D12ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>
 
 void D3D12ShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
 {
+    //todo...
 }
 
 ShaderUniform* D3D12ShaderProgram::LockShaderUniform()
