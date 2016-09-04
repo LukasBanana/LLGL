@@ -26,6 +26,9 @@ struct VertexAttribute
     //! Specifies whether non-floating-point data types are to be converted to floating-points. By default false.
     bool            conversion      = false;
 
+    //! Specifies whether this is a per-instance data. If false, this is a per-vertex data.
+    bool            perInstance     = false;
+
     //! Number of components: 1, 2, 3, or 4. By default 4.
     unsigned int    components      = 4;
 

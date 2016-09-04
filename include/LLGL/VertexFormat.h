@@ -29,26 +29,30 @@ class LLGL_EXPORT VertexFormat
         \param[in] dataType Specifies the data type of the attribute components.
         \param[in] components Specifies the number of attribute components. This must be 1, 2, 3, or 4.
         \param[in] conversion Specifies whether to convert integral vertex attributes to normalized floating-point types. By default false.
+        \param[in] perInstance Specifies whether this is per-instance data. If false, this is per-vertex data. By default false.
         \remarks This is equivalent to:
         \code
         AddAttribute(name, 0, dataType, components, conversion);
         \endcode
         \throws std::invalid_argument If 'components' is neither 1, 2, 3, nor 4.
-        \see AddAttribute(const std::string&, unsigned int, const DataType, unsigned int, bool)
+        \see AddAttribute(const std::string&, unsigned int, const DataType, unsigned int, bool, bool)
         */
         void AddAttribute(
             const std::string& name,
             const DataType dataType,
             unsigned int components,
-            bool conversion = false
+            bool conversion = false,
+            bool perInstance = false
         );
 
         /**
         \brief Adds a new vertex attribute to this vertex format with a specified semantic (used for HLSL).
-        \param[in] name Specifies the attribute name.
+        \param[in] semanticName Specifies the semantic name (For Direct3D).
+        \param[in] semanticIndex Specifies the semantic index (For Direct3D).
         \param[in] dataType Specifies the data type of the attribute components.
         \param[in] components Specifies the number of attribute components. This must be 1, 2, 3, or 4.
         \param[in] conversion Specifies whether to convert integral vertex attributes to normalized floating-point types. By default false.
+        \param[in] perInstance Specifies whether this is per-instance data. If false, this is per-vertex data. By default false.
         \throws std::invalid_argument If 'components' is neither 1, 2, 3, nor 4.
         */
         void AddAttribute(
@@ -56,7 +60,8 @@ class LLGL_EXPORT VertexFormat
             unsigned int semanticIndex,
             const DataType dataType,
             unsigned int components,
-            bool conversion = false
+            bool conversion = false,
+            bool perInstance = false
         );
 
         /**
