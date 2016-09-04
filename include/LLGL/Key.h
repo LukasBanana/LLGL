@@ -143,12 +143,12 @@ enum class Key
     NumLock,
     Scroll,
 
-    LShift,
-    RShift,
-    LControl,
-    RControl,
-    LMenu,
-    RMenu,
+    LShift,             //!< Left shift key.
+    RShift,             //!< Right shift key.
+    LControl,           //!< Left control (CTRL) key.
+    RControl,           //!< Right control (CTRL) key.
+    LMenu,              //!< Left menu key.
+    RMenu,              //!< Right menu key.
 
     BrowserBack,
     BrowserForward,
