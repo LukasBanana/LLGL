@@ -25,6 +25,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     QueryVideoAdapters();
     CreateDevice();
     CreateGPUSynchObjects();
+    CreateRootSignature();
 
     /* Create main command queue */
     cmdQueue_ = CreateDXCommandQueue();
@@ -278,7 +279,7 @@ void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(device_, nullptr, nullptr/*<--!!!*/, desc));
+    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(device_, rootSignature_, nullptr/*<--!!!*/, desc));
 }
 
 void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
@@ -486,6 +487,68 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
     
     /* Create Win32 event */
     fenceEvent_ = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+}
+
+//TODO -> this must be configurable!!!
+void D3D12RenderSystem::CreateRootSignature()
+{
+    /* Setup descritpor structures for root signature */
+    D3D12_DESCRIPTOR_RANGE signatureDescRange;
+    {
+        signatureDescRange.RangeType                            = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        signatureDescRange.NumDescriptors                       = 1;
+        signatureDescRange.BaseShaderRegister                   = 0;
+        signatureDescRange.RegisterSpace                        = 0;
+        signatureDescRange.OffsetInDescriptorsFromTableStart    = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    }
+
+    D3D12_ROOT_PARAMETER signatureParams;
+    {
+        signatureParams.ParameterType       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        signatureParams.DescriptorTable.NumDescriptorRanges = 1;
+        signatureParams.DescriptorTable.pDescriptorRanges   = &signatureDescRange;
+        signatureParams.ShaderVisibility    = D3D12_SHADER_VISIBILITY_ALL;
+    }
+
+    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
+    (
+        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS
+    );
+
+    D3D12_ROOT_SIGNATURE_DESC signatureDesc;
+    {
+        signatureDesc.NumParameters     = 1;
+        signatureDesc.pParameters       = &signatureParams;
+        signatureDesc.NumStaticSamplers = 0;
+        signatureDesc.pStaticSamplers   = nullptr;
+        signatureDesc.Flags             = signatureFlags;
+    }
+
+    /* Create serialized root signature */
+    HRESULT     hr          = 0;
+    ID3DBlob*   signature   = nullptr;
+    ID3DBlob*   error       = nullptr;
+
+    hr = D3D12SerializeRootSignature(&signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+    
+    if (FAILED(hr) && error)
+    {
+        auto errorStr = DXGetBlobString(error);
+        error->Release();
+        throw std::runtime_error("failed to serialize D3D12 root signature: " + errorStr);
+    }
+
+    DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
+
+    /* Create actual root signature */
+    hr = device_->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature_));
+    DXThrowIfFailed(hr, "failed to create D3D12 root signature");
+
+    SafeRelease(signature);
 }
 
 

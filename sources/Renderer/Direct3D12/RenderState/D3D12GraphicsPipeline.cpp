@@ -58,7 +58,7 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     ID3D12Device* device, ID3D12RootSignature* rootSignature, ID3D12CommandAllocator* commandAlloc, const GraphicsPipelineDescriptor& desc)
 {
     /* Validate pointers */
-    //LLGL_ASSERT_PTR(rootSignature);
+    LLGL_ASSERT_PTR(rootSignature);
     //LLGL_ASSERT_PTR(commandAlloc);
     LLGL_ASSERT_PTR(desc.shaderProgram);
 

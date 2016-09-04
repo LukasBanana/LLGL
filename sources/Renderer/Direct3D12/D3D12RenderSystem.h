@@ -128,12 +128,14 @@ class D3D12RenderSystem : public RenderSystem
         void CreateDevice();
         bool CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
         void CreateGPUSynchObjects();
+        void CreateRootSignature();
 
         /* ----- Common D3D objects ----- */
 
         IDXGIFactory4*                              factory_        = nullptr;
         ID3D12Device*                               device_         = nullptr;
         ID3D12CommandQueue*                         cmdQueue_       = nullptr;
+        ID3D12RootSignature*                        rootSignature_  = nullptr;
 
         ID3D12Fence*                                fence_          = nullptr;
         HANDLE                                      fenceEvent_     = 0;
