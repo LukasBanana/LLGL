@@ -27,7 +27,13 @@ RenderSystem::~RenderSystem()
 std::vector<std::string> RenderSystem::FindModules()
 {
     /* Iterate over all known modules and return those that are availale on the current platform */
-    const std::array<std::string, 3> knownModules {{ "OpenGL", "Direct3D12", "Vulkan" }};
+    const std::vector<std::string> knownModules
+    {
+        #ifdef _WIN32
+        "Direct3D12", "Direct3D11",
+        #endif
+        "Vulkan", "OpenGL"
+    };
     
     std::vector<std::string> modules;
     
