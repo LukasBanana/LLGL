@@ -72,12 +72,25 @@ enum class BlendOp
     InvDestAlpha,
 };
 
+/**
+\brief Blending arithmetic operations enumeration.
+\remarks This is only available with Direct3D.
+*/
+enum class BlendArithmetic
+{
+    Add,            //!< Add source 1 and source 2. This is the default for all renderers.
+    Subtract,       //!< Subtract source 1 from source 2.
+    RevSubtract,    //!< Subtract source 2 from source 1.
+    Min,            //!< Find the minimum of source 1 and source 2.
+    Max,            //!< Find the maximum of source 1 and source 2.
+};
+
 //! Polygon filling modes enumeration.
 enum class PolygonMode
 {
-    Fill,
-    Wireframe,
-    Points,
+    Fill,       //!< Draw filled polygon.
+    Wireframe,  //!< Draw triangle edges only.
+    Points,     //!< Draw vertex points only. This can only be used with OpenGL.
 };
 
 //! Polygon culling modes enumeration.
@@ -91,13 +104,15 @@ enum class CullMode
 
 /* ----- Structures ----- */
 
+//! Depth state descriptor structure.
 struct DepthDescriptor
 {
-    bool        testEnabled     = false;
-    bool        writeEnabled    = false;
-    CompareOp   compareOp       = CompareOp::Less;
+    bool        testEnabled     = false;            //!< Specifies whether the depth test is enabled or disabled. By default disabled.
+    bool        writeEnabled    = false;            //!< Specifies whether writing to the depth buffer is enabled or disabled. By default disabled.
+    CompareOp   compareOp       = CompareOp::Less;  //!< Specifies the depth test comparison function. By default CompareOp::Less.
 };
 
+//! Stencil face descriptor structure.
 struct StencilStateDescriptor
 {
     StencilOp       stencilFailOp   = StencilOp::Keep;  //!< Specifies the operation to take when the stencil test fails.
@@ -109,6 +124,7 @@ struct StencilStateDescriptor
     std::uint32_t   reference       = 0;
 };
 
+//! Stencil state descriptor structure.
 struct StencilDescriptor
 {
     bool                    testEnabled  = false;
@@ -118,28 +134,39 @@ struct StencilDescriptor
 
 struct RasterizerDescriptor
 {
-    PolygonMode polygonMode             = PolygonMode::Fill;
-    CullMode    cullMode                = CullMode::Disabled;
-    int         depthBias               = 0;
-    float       depthBiasClamp          = 0.0f;
-    float       slopeScaledDepthBias    = 0.0f;
+    PolygonMode     polygonMode                 = PolygonMode::Fill;
+    CullMode        cullMode                    = CullMode::Disabled;
+    int             depthBias                   = 0;
+    float           depthBiasClamp              = 0.0f;
+    float           slopeScaledDepthBias        = 0.0f;
+
+    /**
+    \brief Number of sample. This is only used for Direct3D when multi-sampling is enabled.
+    \see multiSampleEnabled
+    */
+    unsigned int    samples                     = 1;
 
     //! If true, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding.
-    bool        frontCCW                = false;
+    bool            frontCCW                    = false;
 
-    bool        depthClampEnabled       = false;
-    bool        scissorTestEnabled      = false;
-    bool        multiSampleEnabled      = false;
-    bool        antiAliasedLineEnabled  = false;
+    bool            depthClampEnabled           = false;
+    bool            scissorTestEnabled          = false;
+    bool            multiSampleEnabled          = false;
+    bool            antiAliasedLineEnabled      = false;
+
+    //! If ture, conservative rasterization is enabled. This is only available with Direct3D 12.
+    bool            conservativeRasterization   = false;
 };
 
 struct BlendTargetDescriptor
 {
-    BlendOp     srcColor    = BlendOp::SrcAlpha;
-    BlendOp     destColor   = BlendOp::InvSrcAlpha;
-    BlendOp     srcAlpha    = BlendOp::SrcAlpha;
-    BlendOp     destAlpha   = BlendOp::InvSrcAlpha;
-    ColorRGBAb  colorMask;
+    BlendOp         srcColor        = BlendOp::SrcAlpha;    //!< Source color blending operation.
+    BlendOp         destColor       = BlendOp::InvSrcAlpha; //!< Destination color blending operation.
+    BlendArithmetic colorArithmetic = BlendArithmetic::Add; //!< Color blending arithmetic. Only available with Direct3D.
+    BlendOp         srcAlpha        = BlendOp::SrcAlpha;    //!< Source alpha blending operation.
+    BlendOp         destAlpha       = BlendOp::InvSrcAlpha; //!< Destination alpha blending operation.
+    BlendArithmetic alphaArithmetic = BlendArithmetic::Add; //!< Alpha blending arithmetic. Only available with Direct3D.
+    ColorRGBAb      colorMask;
 };
 
 struct BlendDescriptor

@@ -18,34 +18,12 @@ namespace LLGL
 
 /* ----- Internal functions ----- */
 
-/*static void Convert(GLViewport& to, const Viewport& from)
-{
-    to.x        = from.x;
-    to.y        = from.y;
-    to.width    = from.width;
-    to.height   = from.height;
-}
-
-static void Convert(GLDepthRange& to, const Viewport& from)
-{
-    to.minDepth = static_cast<GLdouble>(from.minDepth);
-    to.maxDepth = static_cast<GLdouble>(from.maxDepth);
-}
-
-static void Convert(GLScissor& to, const Scissor& from)
-{
-    to.x        = from.x;
-    to.y        = from.y;
-    to.width    = from.width;
-    to.height   = from.height;
-}*/
-
 static void Convert(GLStencil& to, const StencilStateDescriptor& from)
 {
-    to.func         = GLTypes::Map(from.compareOp);
     to.sfail        = GLTypes::Map(from.stencilFailOp);
     to.dpfail       = GLTypes::Map(from.depthFailOp);
     to.dppass       = GLTypes::Map(from.depthPassOp);
+    to.func         = GLTypes::Map(from.compareOp);
     to.ref          = static_cast<GLint>(from.reference);
     to.mask         = from.compareMask;
     to.writeMask    = from.writeMask;

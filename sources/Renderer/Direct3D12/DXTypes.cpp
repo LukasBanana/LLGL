@@ -150,6 +150,99 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
     MapFailed("VertexAttribute", "DXGI_FORMAT");
 }
 
+D3D12_FILL_MODE Map(const PolygonMode polygonMode)
+{
+    switch (polygonMode)
+    {
+        case PolygonMode::Fill:         return D3D12_FILL_MODE_SOLID;
+        case PolygonMode::Wireframe:    return D3D12_FILL_MODE_WIREFRAME;
+        case PolygonMode::Points:       throw std::invalid_argument("'PolygonMode::Points' can not be mapped to 'D3D12_FILL_MODE'");
+    }
+    MapFailed("PolygonMode", "D3D12_FILL_MODE");
+}
+
+D3D12_CULL_MODE Map(const CullMode cullMode)
+{
+    switch (cullMode)
+    {
+        case CullMode::Disabled:    return D3D12_CULL_MODE_NONE;
+        case CullMode::Front:       return D3D12_CULL_MODE_FRONT;
+        case CullMode::Back:        return D3D12_CULL_MODE_BACK;
+    }
+    MapFailed("CullMode", "D3D12_CULL_MODE");
+}
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770338(v=vs.85).aspx
+D3D12_BLEND Map(const BlendOp blendOp)
+{
+    switch (blendOp)
+    {
+        case BlendOp::Zero:         return D3D12_BLEND_ZERO;
+        case BlendOp::One:          return D3D12_BLEND_ONE;
+        case BlendOp::SrcColor:     return D3D12_BLEND_SRC_COLOR;
+        case BlendOp::InvSrcColor:  return D3D12_BLEND_INV_SRC_COLOR;
+        case BlendOp::SrcAlpha:     return D3D12_BLEND_SRC_ALPHA;
+        case BlendOp::InvSrcAlpha:  return D3D12_BLEND_INV_SRC_ALPHA;
+        case BlendOp::DestColor:    return D3D12_BLEND_DEST_COLOR;
+        case BlendOp::InvDestColor: return D3D12_BLEND_INV_DEST_COLOR;
+        case BlendOp::DestAlpha:    return D3D12_BLEND_DEST_ALPHA;
+        case BlendOp::InvDestAlpha: return D3D12_BLEND_INV_DEST_ALPHA;
+                                    /*return D3D12_BLEND_SRC_ALPHA_SAT;
+                                    return D3D12_BLEND_BLEND_FACTOR;
+                                    return D3D12_BLEND_INV_BLEND_FACTOR;
+                                    return D3D12_BLEND_SRC1_COLOR;
+                                    return D3D12_BLEND_INV_SRC1_COLOR;
+                                    return D3D12_BLEND_SRC1_ALPHA;
+                                    return D3D12_BLEND_INV_SRC1_ALPHA;*/
+    }
+    MapFailed("BlendOp", "D3D12_BLEND");
+}
+
+D3D12_BLEND_OP Map(const BlendArithmetic blendArithmetic)
+{
+    switch (blendArithmetic)
+    {
+        case BlendArithmetic::Add:          return D3D12_BLEND_OP_ADD;
+        case BlendArithmetic::Subtract:     return D3D12_BLEND_OP_SUBTRACT;
+        case BlendArithmetic::RevSubtract:  return D3D12_BLEND_OP_REV_SUBTRACT;
+        case BlendArithmetic::Min:          return D3D12_BLEND_OP_MIN;
+        case BlendArithmetic::Max:          return D3D12_BLEND_OP_MAX;
+    }
+    MapFailed("BlendArithmetic", "D3D12_BLEND_OP");
+}
+
+D3D12_COMPARISON_FUNC Map(const CompareOp compareOp)
+{
+    switch (compareOp)
+    {
+        case CompareOp::Never:          return D3D12_COMPARISON_FUNC_NEVER;
+        case CompareOp::Less:           return D3D12_COMPARISON_FUNC_LESS;
+        case CompareOp::Equal:          return D3D12_COMPARISON_FUNC_EQUAL;
+        case CompareOp::LessEqual:      return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+        case CompareOp::Greater:        return D3D12_COMPARISON_FUNC_GREATER;
+        case CompareOp::NotEqual:       return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+        case CompareOp::GreaterEqual:   return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+        case CompareOp::Ever:           return D3D12_COMPARISON_FUNC_ALWAYS;
+    }
+    MapFailed("CompareOp", "D3D12_COMPARISON_FUNC");
+}
+
+D3D12_STENCIL_OP Map(const StencilOp stencilOp)
+{
+    switch (stencilOp)
+    {
+        case StencilOp::Keep:       return D3D12_STENCIL_OP_KEEP;
+        case StencilOp::Zero:       return D3D12_STENCIL_OP_ZERO;
+        case StencilOp::Replace:    return D3D12_STENCIL_OP_REPLACE;
+        case StencilOp::IncClamp:   return D3D12_STENCIL_OP_INCR_SAT;
+        case StencilOp::DecClamp:   return D3D12_STENCIL_OP_DECR_SAT;
+        case StencilOp::Invert:     return D3D12_STENCIL_OP_INVERT;
+        case StencilOp::IncWrap:    return D3D12_STENCIL_OP_INCR;
+        case StencilOp::DecWrap:    return D3D12_STENCIL_OP_DECR;
+    }
+    MapFailed("StencilOp", "D3D12_STENCIL_OP");
+}
+
 
 } // /namespace DXTypes
 

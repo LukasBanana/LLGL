@@ -82,6 +82,16 @@ int main()
         else
             std::cout << "Constant Buffers: " << shaderProgram->QueryConstantBuffers().size() << std::endl;
 
+        // Create graphics pipeline
+        LLGL::GraphicsPipelineDescriptor pipelineDesc;
+        {
+            pipelineDesc.depth.testEnabled  = true;
+            pipelineDesc.depth.writeEnabled = true;
+            pipelineDesc.depth.compareOp    = LLGL::CompareOp::Less;
+
+            pipelineDesc.shaderProgram      = shaderProgram;
+        }
+        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
 
         // Main loop

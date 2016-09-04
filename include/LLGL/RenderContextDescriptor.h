@@ -75,7 +75,7 @@ struct VsyncDescriptor
 struct AntiAliasingDescriptor
 {
     bool            enabled     = false;    //!< Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    unsigned int    samples     = 0;        //!< Number of samples used for multi-sampling. By default 0.
+    unsigned int    samples     = 1;        //!< Number of samples used for multi-sampling. By default 1.
 };
 
 struct VideoModeDescriptor

@@ -278,12 +278,12 @@ void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(device_, nullptr/*<--!!!*/, desc));
+    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(device_, nullptr, nullptr/*<--!!!*/, desc));
 }
 
 void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 {
-    //RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
+    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
 }
 
 /* ----- Extended internal functions ----- */

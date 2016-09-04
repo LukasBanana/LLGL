@@ -24,7 +24,12 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
 
     public:
 
-        D3D12GraphicsPipeline(ID3D12Device* device, ID3D12CommandAllocator* commandAlloc, const GraphicsPipelineDescriptor& desc);
+        D3D12GraphicsPipeline(
+            ID3D12Device* device,
+            ID3D12RootSignature* rootSignature,
+            ID3D12CommandAllocator* commandAlloc,
+            const GraphicsPipelineDescriptor& desc
+        );
         ~D3D12GraphicsPipeline();
 
         //void Bind(D3D12StateManager& stateMngr);
