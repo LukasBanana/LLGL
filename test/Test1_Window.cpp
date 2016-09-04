@@ -54,16 +54,16 @@ int main()
             //std::cout << 1.0 / timer->GetDeltaTime() << std::endl;
 
             #ifdef __APPLE__
-            if (input->KeyDown(LLGL::Key::Num1))
+            if (input->KeyDown(LLGL::Key::D1))
                 window->Show(false);
-            if (input->KeyDown(LLGL::Key::Num2))
+            if (input->KeyDown(LLGL::Key::D2))
                 window->Show(true);
             #endif
-            if (input->KeyDown(LLGL::Key::Num3))
+            if (input->KeyDown(LLGL::Key::D3))
                 window->SetTitle(L"FOO BAR");
-            if (input->KeyDown(LLGL::Key::Num4))
+            if (input->KeyDown(LLGL::Key::D4))
                 window->SetTitle(L"LLGL Test 1");
-            if (input->KeyDown(LLGL::Key::Num5))
+            if (input->KeyDown(LLGL::Key::D5))
                 window->SetSize({ 300, 300 });
 
             if (input->KeyDown(LLGL::Key::LButton))

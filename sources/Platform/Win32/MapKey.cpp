@@ -66,16 +66,16 @@ static Key win32KeyCodeMap[256] =
     KEY(Delete              ), // 0x2e
     KEY(Help                ), // 0x2f
     
-    KEY(Num0                ), // 0x30
-    KEY(Num1                ), // 0x31
-    KEY(Num2                ), // 0x32
-    KEY(Num3                ), // 0x33
-    KEY(Num4                ), // 0x34
-    KEY(Num5                ), // 0x35
-    KEY(Num6                ), // 0x36
-    KEY(Num7                ), // 0x37
-    KEY(Num8                ), // 0x38
-    KEY(Num9                ), // 0x39
+    KEY(D0                  ), // 0x30
+    KEY(D1                  ), // 0x31
+    KEY(D2                  ), // 0x32
+    KEY(D3                  ), // 0x33
+    KEY(D4                  ), // 0x34
+    KEY(D5                  ), // 0x35
+    KEY(D6                  ), // 0x36
+    KEY(D7                  ), // 0x37
+    KEY(D8                  ), // 0x38
+    KEY(D9                  ), // 0x39
     
     DUMMY,                     // 0x3a
     DUMMY,                     // 0x3b
@@ -112,29 +112,29 @@ static Key win32KeyCodeMap[256] =
     KEY(Y                   ), // 0x59
     KEY(Z                   ), // 0x5a
     
-    KEY(WinLeft             ), // 0x5b
-    KEY(WinRight            ), // 0x5c
+    KEY(LWin                ), // 0x5b
+    KEY(RWin                ), // 0x5c
     KEY(Apps                ), // 0x5d
     DUMMY,                     // 0x5e
     KEY(Sleep               ), // 0x5f
 
-    KEY(NumPad0             ), // 0x60
-    KEY(NumPad1             ), // 0x61
-    KEY(NumPad2             ), // 0x62
-    KEY(NumPad3             ), // 0x63
-    KEY(NumPad4             ), // 0x64
-    KEY(NumPad5             ), // 0x65
-    KEY(NumPad6             ), // 0x66
-    KEY(NumPad7             ), // 0x67
-    KEY(NumPad8             ), // 0x68
-    KEY(NumPad9             ), // 0x69
+    KEY(Keypad0             ), // 0x60
+    KEY(Keypad1             ), // 0x61
+    KEY(Keypad2             ), // 0x62
+    KEY(Keypad3             ), // 0x63
+    KEY(Keypad4             ), // 0x64
+    KEY(Keypad5             ), // 0x65
+    KEY(Keypad6             ), // 0x66
+    KEY(Keypad7             ), // 0x67
+    KEY(Keypad8             ), // 0x68
+    KEY(Keypad9             ), // 0x69
     
-    KEY(Multiply            ), // 0x6a
-    KEY(Add                 ), // 0x6b
-    KEY(Separator           ), // 0x6c
-    KEY(Subtract            ), // 0x6d
-    KEY(Decimal             ), // 0x6e
-    KEY(Divide              ), // 0x6f
+    KEY(KeypadMultiply      ), // 0x6a
+    KEY(KeypadPlus          ), // 0x6b
+    KEY(KeypadSeparator     ), // 0x6c
+    KEY(KeypadMinus         ), // 0x6d
+    KEY(KeypadDecimal       ), // 0x6e
+    KEY(KeypadDivide        ), // 0x6f
     
     KEY(F1                  ), // 0x70
     KEY(F2                  ), // 0x71
@@ -171,7 +171,7 @@ static Key win32KeyCodeMap[256] =
     DUMMY,                     // 0x8f
 
     KEY(NumLock             ), // 0x90
-    KEY(Scroll              ), // 0x91
+    KEY(ScrollLock          ), // 0x91
     
     DUMMY,                     // 0x92
     DUMMY,                     // 0x93

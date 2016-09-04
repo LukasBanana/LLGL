@@ -35,18 +35,18 @@ static Key macOSKeyCodeMap[256] =
     KEY(R                   ), // 0x0f
     KEY(Y                   ), // 0x10
     KEY(T                   ), // 0x11
-    KEY(Num1                ), // 0x12
-    KEY(Num2                ), // 0x13
-    KEY(Num3                ), // 0x14
-    KEY(Num4                ), // 0x15
-    KEY(Num6                ), // 0x16
-    KEY(Num5                ), // 0x17
+    KEY(D1                  ), // 0x12
+    KEY(D2                  ), // 0x13
+    KEY(D3                  ), // 0x14
+    KEY(D4                  ), // 0x15
+    KEY(D6                  ), // 0x16
+    KEY(D5                  ), // 0x17
     DUMMY,//KEY(Equal               ), // 0x18
-    KEY(Num9                ), // 0x19
-    KEY(Num7                ), // 0x1a
+    KEY(D9                  ), // 0x19
+    KEY(D7                  ), // 0x1a
     KEY(Minus               ), // 0x1b
-    KEY(Num8                ), // 0x1c
-    KEY(Num0                ), // 0x1d
+    KEY(D8                  ), // 0x1c
+    KEY(D0                  ), // 0x1d
     DUMMY,//KEY(RightBracket        ), // 0x1e
     KEY(O                   ), // 0x1f
     KEY(U                   ), // 0x20
@@ -77,9 +77,9 @@ static Key macOSKeyCodeMap[256] =
     DUMMY,//KEY(CapsLock            ), // 0x39
     DUMMY,//KEY(Option              ), // 0x3a
     KEY(Control             ), // 0x3b
-    DUMMY,//KEY(RightShift          ), // 0x3c
-    DUMMY,//KEY(RightOption         ), // 0x3d
-    DUMMY,//KEY(RightControl        ), // 0x3e
+    DUMMY,//KEY(RShift              ), // 0x3c
+    DUMMY,//KEY(ROption             ), // 0x3d
+    DUMMY,//KEY(RControl            ), // 0x3e
     DUMMY,//KEY(Function            ), // 0x3f
     KEY(F17                 ), // 0x40
     KEY(Decimal             ), // 0x41
@@ -99,17 +99,17 @@ static Key macOSKeyCodeMap[256] =
     KEY(F18                 ), // 0x4f
     KEY(F19                 ), // 0x50
     DUMMY,//KEY(KeypadEquals        ), // 0x51
-    KEY(NumPad0             ), // 0x52
-    KEY(NumPad1             ), // 0x53
-    KEY(NumPad2             ), // 0x54
-    KEY(NumPad3             ), // 0x55
-    KEY(NumPad4             ), // 0x56
-    KEY(NumPad5             ), // 0x57
-    KEY(NumPad6             ), // 0x58
-    KEY(NumPad7             ), // 0x59
+    KEY(Keypad0             ), // 0x52
+    KEY(Keypad1             ), // 0x53
+    KEY(Keypad2             ), // 0x54
+    KEY(Keypad3             ), // 0x55
+    KEY(Keypad4             ), // 0x56
+    KEY(Keypad5             ), // 0x57
+    KEY(Keypad6             ), // 0x58
+    KEY(Keypad7             ), // 0x59
     KEY(F20                 ), // 0x5a
-    KEY(NumPad8             ), // 0x5b
-    KEY(NumPad9             ), // 0x5c
+    KEY(Keypad8             ), // 0x5b
+    KEY(Keypad9             ), // 0x5c
     DUMMY,//KEY(JIS_Yen             ), // 0x5d
     DUMMY,//KEY(JIS_Underscore      ), // 0x5e
     DUMMY,//KEY(JIS_KeypadComma     ), // 0x5f
