@@ -83,8 +83,8 @@ static std::map<KeySym, Key> GenerateLinuxKeyCodeMap()
         KEYPAIR( XK_y           , Y               ),
         KEYPAIR( XK_z           , Z               ),
     
-        KEYPAIR( XK_Meta_L      , WinLeft         ),
-        KEYPAIR( XK_Meta_R      , WinRight        ),
+        KEYPAIR( XK_Meta_L      , LWin            ),
+        KEYPAIR( XK_Meta_R      , RWin            ),
     
         KEYPAIR( 65438          , Keypad0         ),
         KEYPAIR( 65436          , Keypad1         ),
@@ -100,7 +100,7 @@ static std::map<KeySym, Key> GenerateLinuxKeyCodeMap()
         KEYPAIR( XK_KP_Multiply , KeypadMultiply  ),
         KEYPAIR( XK_KP_Add      , KeypadPlus      ),
         KEYPAIR( XK_KP_Separator, KeypadSeparator ),
-        KEYPAIR( XK_KP_Subtract , KeypadSubtract  ),
+        KEYPAIR( XK_KP_Subtract , KeypadMinus     ),
         KEYPAIR( XK_KP_Decimal  , KeypadDecimal   ),
         KEYPAIR( XK_KP_Divide   , KeypadDivide    ),
     
@@ -129,7 +129,7 @@ static std::map<KeySym, Key> GenerateLinuxKeyCodeMap()
         KEYPAIR( XK_F23         , F23             ),
         KEYPAIR( XK_F24         , F24             ),
     
-        KEYPAIR( XK_Scroll_Lock , Scroll          ),
+        KEYPAIR( XK_Scroll_Lock , ScrollLock      ),
     
         KEYPAIR( XK_Shift_L     , LShift          ),
         KEYPAIR( XK_Shift_R     , RShift          ),
