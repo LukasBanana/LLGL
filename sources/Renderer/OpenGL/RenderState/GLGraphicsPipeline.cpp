@@ -18,7 +18,7 @@ namespace LLGL
 
 /* ----- Internal functions ----- */
 
-static void Convert(GLStencil& to, const StencilStateDescriptor& from)
+static void Convert(GLStencil& to, const StencilFaceDescriptor& from)
 {
     to.sfail        = GLTypes::Map(from.stencilFailOp);
     to.dpfail       = GLTypes::Map(from.depthFailOp);

@@ -45,7 +45,7 @@ static UINT8 GetColorWriteMask(const ColorRGBAb& color)
     return mask;
 }
 
-static void Convert(D3D12_DEPTH_STENCILOP_DESC& to, const StencilStateDescriptor& from)
+static void Convert(D3D12_DEPTH_STENCILOP_DESC& to, const StencilFaceDescriptor& from)
 {
     to.StencilFailOp        = DXTypes::Map(from.stencilFailOp);
     to.StencilDepthFailOp   = DXTypes::Map(from.depthFailOp);

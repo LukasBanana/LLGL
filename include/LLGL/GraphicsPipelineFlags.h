@@ -113,7 +113,7 @@ struct DepthDescriptor
 };
 
 //! Stencil face descriptor structure.
-struct StencilStateDescriptor
+struct StencilFaceDescriptor
 {
     StencilOp       stencilFailOp   = StencilOp::Keep;  //!< Specifies the operation to take when the stencil test fails.
     StencilOp       depthFailOp     = StencilOp::Keep;  //!< Specifies the operation to take when the stencil test passes but the depth test fails.
@@ -128,8 +128,8 @@ struct StencilStateDescriptor
 struct StencilDescriptor
 {
     bool                    testEnabled  = false;
-    StencilStateDescriptor  front;
-    StencilStateDescriptor  back;
+    StencilFaceDescriptor   front;
+    StencilFaceDescriptor   back;
 };
 
 struct RasterizerDescriptor
