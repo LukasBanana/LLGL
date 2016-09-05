@@ -399,46 +399,130 @@ void GLRenderSystem::WriteTextureCubeArray(Texture& texture, const TextureFormat
     }
 }
 
+static void GLTexSubImage1D(int mipLevel, int x, int width, const ImageDataDescriptor& imageDesc)
+{
+    glTexSubImage1D(
+        GL_TEXTURE_1D, mipLevel, x, width,
+        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    );
+}
+
+static void GLTexSubImage2D(int mipLevel, int x, int y, int width, int height, const ImageDataDescriptor& imageDesc)
+{
+    glTexSubImage2D(
+        GL_TEXTURE_2D, mipLevel, x, y, width, height,
+        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    );
+}
+
+static void GLTexSubImage3D(int mipLevel, int x, int y, int z, int width, int height, int depth, const ImageDataDescriptor& imageDesc)
+{
+    glTexSubImage3D(
+        GL_TEXTURE_3D, mipLevel, x, y, z, width, height, depth,
+        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    );
+}
+
+static void GLTexSubImageCube(int mipLevel, int x, int y, int width, int height, AxisDirection cubeFace, const ImageDataDescriptor& imageDesc)
+{
+    glTexSubImage2D(
+        GLTypes::Map(cubeFace), mipLevel, x, y, width, height,
+        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    );
+}
+
+static void GLTexSubImage1DArray(int mipLevel, int x, unsigned int layerOffset, int width, unsigned int layers, const ImageDataDescriptor& imageDesc)
+{
+    glTexSubImage2D(
+        GL_TEXTURE_1D_ARRAY, mipLevel, x, static_cast<GLsizei>(layerOffset), width, static_cast<GLsizei>(layers),
+        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    );
+}
+
+static void GLTexSubImage2DArray(
+    int mipLevel, int x, int y, unsigned int layerOffset, int width, int height, unsigned int layers, const ImageDataDescriptor& imageDesc)
+{
+    glTexSubImage3D(
+        GL_TEXTURE_2D_ARRAY, mipLevel, x, y, static_cast<GLsizei>(layerOffset), width, height, static_cast<GLsizei>(layers),
+        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    );
+}
+
+static void GLTexSubImageCubeArray(
+    int mipLevel, int x, int y, unsigned int layerOffset, AxisDirection cubeFaceOffset,
+    int width, int height, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc)
+{
+    glTexSubImage3D(
+        GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel,
+        x, y, static_cast<GLsizei>(layerOffset + static_cast<int>(cubeFaceOffset))*6, width, height, static_cast<GLsizei>(cubeFaces),
+        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    );
+}
+
 void GLRenderSystem::WriteTexture1DSub(
     Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc)
 {
-    //todo...
+    /* Bind texture and write texture sub data */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+    GLTexSubImage1D(mipLevel, position, size, imageDesc);
 }
 
 void GLRenderSystem::WriteTexture2DSub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
-    //todo...
+    /* Bind texture and write texture sub data */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+    GLTexSubImage2D(mipLevel, position.x, position.y, size.x, size.y, imageDesc);
 }
 
 void GLRenderSystem::WriteTexture3DSub(
     Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc)
 {
-    //todo...
+    /* Bind texture and write texture sub data */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+    GLTexSubImage3D(mipLevel, position.x, position.y, position.z, size.x, size.y, size.z, imageDesc);
 }
 
 void GLRenderSystem::WriteTextureCubeSub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
-    //todo...
+    /* Bind texture and write texture sub data */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+    GLTexSubImageCube(mipLevel, position.x, position.y, size.x, size.y, cubeFace, imageDesc);
 }
 
 void GLRenderSystem::WriteTexture1DArraySub(
-    Texture& texture, int mipLevel, int position, unsigned int layers, int size, const ImageDataDescriptor& imageDesc)
+    Texture& texture, int mipLevel, int position, unsigned int layerOffset,
+    int size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
-    //todo...
+    /* Bind texture and write texture sub data */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+    GLTexSubImage1DArray(mipLevel, position, layerOffset, size, layers, imageDesc);
 }
 
 void GLRenderSystem::WriteTexture2DArraySub(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layers, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
+    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
+    const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
-    //todo...
+    /* Bind texture and write texture sub data */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+    GLTexSubImage2DArray(mipLevel, position.x, position.y, layerOffset, size.x, size.y, layers, imageDesc);
 }
 
 void GLRenderSystem::WriteTextureCubeArraySub(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layers, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
+    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
+    const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc)
 {
-    //todo...
+    /* Bind texture and write texture sub data */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+    GLTexSubImageCubeArray(mipLevel, position.x, position.y, layerOffset, cubeFaceOffset, size.x, size.y, cubeFaces, imageDesc);
 }
 
 void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)

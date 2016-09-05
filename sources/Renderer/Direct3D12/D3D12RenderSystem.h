@@ -77,10 +77,26 @@ class D3D12RenderSystem : public RenderSystem
         void WriteTexture1DSub(Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc) override;
         void WriteTexture2DSub(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) override;
         void WriteTexture3DSub(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc) override;
-        void WriteTextureCubeSub(Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) override;
-        void WriteTexture1DArraySub(Texture& texture, int mipLevel, int position, unsigned int layers, int size, const ImageDataDescriptor& imageDesc) override;
-        void WriteTexture2DArraySub(Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layers, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) override;
-        void WriteTextureCubeArraySub(Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layers, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) override;
+
+        void WriteTextureCubeSub(
+            Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace,
+            const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc
+        ) override;
+        
+        void WriteTexture1DArraySub(
+            Texture& texture, int mipLevel, int position, unsigned int layerOffset,
+            int size, unsigned int layers, const ImageDataDescriptor& imageDesc
+        ) override;
+        
+        void WriteTexture2DArraySub(
+            Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
+            const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc
+        ) override;
+
+        void WriteTextureCubeArraySub(
+            Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
+            const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc
+        ) override;
 
         void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) override;
 

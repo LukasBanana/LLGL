@@ -205,19 +205,22 @@ void D3D12RenderSystem::WriteTextureCubeSub(
 }
 
 void D3D12RenderSystem::WriteTexture1DArraySub(
-    Texture& texture, int mipLevel, int position, unsigned int layers, int size, const ImageDataDescriptor& imageDesc)
+    Texture& texture, int mipLevel, int position, unsigned int layerOffset,
+    int size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
 
 void D3D12RenderSystem::WriteTexture2DArraySub(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layers, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
+    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
+    const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
 
 void D3D12RenderSystem::WriteTextureCubeArraySub(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layers, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
+    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
+    const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
