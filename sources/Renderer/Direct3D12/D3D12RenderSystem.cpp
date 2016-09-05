@@ -471,9 +471,14 @@ bool D3D12RenderSystem::CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const s
 {
     for (auto level : featureLevels)
     {
+        /* Try to create D3D12 device with current feature level */
         hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(&device_));
         if (!FAILED(hr))
+        {
+            /* Store final feature level */
+            featureLevel_ = level;
             return true;
+        }
     }
     return false;
 }

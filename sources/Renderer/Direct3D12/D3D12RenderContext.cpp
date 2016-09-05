@@ -51,38 +51,64 @@ std::map<RendererInfo, std::string> D3D12RenderContext::QueryRendererInfo() cons
     return info;
 }
 
-//TODO -> incomplete!!!
+static int GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
+    else                                        return 2048;
+}
+
+static int GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
+    else                                        return 512;
+}
+
+static unsigned int GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4;
+    else                                        return 1;
+}
+
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
 RenderingCaps D3D12RenderContext::QueryRenderingCaps() const
 {
     RenderingCaps caps;
+
+    auto            featureLevel        = renderSystem_.GetFeatureLevel();
+    unsigned int    maxThreadGroups     = D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
 
     caps.screenOrigin                   = ScreenOrigin::UpperLeft;
     caps.clippingRange                  = ClippingRange::ZeroToOne;
     caps.hasRenderTargets               = true;
     caps.has3DTextures                  = true;
     caps.hasCubeTextures                = true;
-    caps.hasTextureArrays               = true;
-    caps.hasCubeTextureArrays           = true;
-    caps.hasSamplers                    = true;
+    caps.hasTextureArrays               = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasCubeTextureArrays           = (featureLevel >= D3D_FEATURE_LEVEL_10_1);
+    caps.hasSamplers                    = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.hasConstantBuffers             = true;
     caps.hasStorageBuffers              = true;
-    caps.hasUniforms                    = true;
-    caps.hasGeometryShaders             = true;
-    caps.hasTessellationShaders         = true;
-    caps.hasComputeShaders              = true;
-    caps.hasInstancing                  = true;
-    caps.hasOffsetInstancing            = true;
+    caps.hasUniforms                    = false;
+    caps.hasGeometryShaders             = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasTessellationShaders         = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
+    caps.hasComputeShaders              = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasInstancing                  = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
+    caps.hasOffsetInstancing            = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.hasViewportArrays              = true;
-    caps.maxNumTextureArrayLayers       = 2048;
-    caps.maxNumRenderTargetAttachments  = 8;
+    caps.hasConservativeRasterization   = (featureLevel >= D3D_FEATURE_LEVEL_11_1);
+    caps.maxNumTextureArrayLayers       = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
+    caps.maxNumRenderTargetAttachments  = GetMaxRenderTargets(featureLevel);
     caps.maxConstantBufferSize          = 16384;
-    caps.max1DTextureSize               = 16384;
-    caps.max2DTextureSize               = 16384;
-    caps.max3DTextureSize               = 2048;
-    caps.maxCubeTextureSize             = 16384;
-    caps.maxAnisotropy                  = 16;
-    caps.maxNumComputeShaderWorkGroups  = { 1024, 1024, 1024 };
+    caps.max1DTextureSize               = GetMaxTextureDimension(featureLevel);
+    caps.max2DTextureSize               = GetMaxTextureDimension(featureLevel);
+    caps.max3DTextureSize               = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
+    caps.maxCubeTextureSize             = GetMaxCubeTextureDimension(featureLevel);
+    caps.maxAnisotropy                  = (featureLevel >= D3D_FEATURE_LEVEL_9_2 ? 16 : 2);
+    caps.maxNumComputeShaderWorkGroups  = { maxThreadGroups, maxThreadGroups, (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u) };
     caps.maxComputeShaderWorkGroupSize  = { 1024, 1024, 1024 };
 
     return caps;

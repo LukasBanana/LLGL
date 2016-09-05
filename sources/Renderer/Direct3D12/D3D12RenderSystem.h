@@ -121,6 +121,11 @@ class D3D12RenderSystem : public RenderSystem
         //! Waits until the GPU has done all previous work.
         void SyncGPU(UINT64& fenceValue);
 
+        inline D3D_FEATURE_LEVEL GetFeatureLevel() const
+        {
+            return featureLevel_;
+        }
+
     private:
 
         void CreateFactory();
@@ -139,6 +144,8 @@ class D3D12RenderSystem : public RenderSystem
 
         ID3D12Fence*                                fence_          = nullptr;
         HANDLE                                      fenceEvent_     = 0;
+
+        D3D_FEATURE_LEVEL                           featureLevel_   = D3D_FEATURE_LEVEL_9_1;
 
         /* ----- Hardware object containers ----- */
 

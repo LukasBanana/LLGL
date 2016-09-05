@@ -108,9 +108,26 @@ RenderingCaps GLRenderContext::QueryRenderingCaps() const
         return static_cast<unsigned int>(attr);
     };
 
-    caps.maxNumTextureArrayLayers       = GetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
-    caps.maxNumRenderTargetAttachments  = GetUInt(GL_MAX_DRAW_BUFFERS);
-    caps.maxConstantBufferSize          = GetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
+    auto GetUIntIdx = [](GLenum param, GLuint index)
+    {
+        GLint attr = 0;
+        if (glGetIntegeri_v)
+            glGetIntegeri_v(param, index, &attr);
+        return static_cast<unsigned int>(attr);
+    };
+
+    caps.maxNumTextureArrayLayers           = GetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
+    caps.maxNumRenderTargetAttachments      = GetUInt(GL_MAX_DRAW_BUFFERS);
+    caps.maxConstantBufferSize              = GetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
+    caps.maxAnisotropy                      = 16;
+    
+    caps.maxNumComputeShaderWorkGroups.x    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
+    caps.maxNumComputeShaderWorkGroups.y    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
+    caps.maxNumComputeShaderWorkGroups.z    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
+
+    caps.maxComputeShaderWorkGroupSize.x    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
+    caps.maxComputeShaderWorkGroupSize.y    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
+    caps.maxComputeShaderWorkGroupSize.z    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
 
     /* Query maximum texture dimensions */
     GLint querySizeBase = 0;
