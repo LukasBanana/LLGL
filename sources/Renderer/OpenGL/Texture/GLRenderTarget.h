@@ -92,7 +92,7 @@ class GLRenderTarget : public RenderTarget
         /**
         For multi-sampled render targets we also need a render buffer for each attached texture.
         Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
-        which is only available since OpenGL 3.2+, but render buffers are available since OpenGL 3.0+.
+        which is only supported since OpenGL 3.2+, but render buffers are supported since OpenGL 3.0+.
         */
         std::vector<std::unique_ptr<GLRenderBuffer>>    renderBuffersMS_;
 

@@ -72,10 +72,7 @@ enum class BlendOp
     InvDestAlpha,
 };
 
-/**
-\brief Blending arithmetic operations enumeration.
-\remarks This is only available with Direct3D.
-*/
+//! Blending arithmetic operations enumeration.
 enum class BlendArithmetic
 {
     Add,            //!< Add source 1 and source 2. This is the default for all renderers.
@@ -127,11 +124,12 @@ struct StencilFaceDescriptor
 //! Stencil state descriptor structure.
 struct StencilDescriptor
 {
-    bool                    testEnabled  = false;
-    StencilFaceDescriptor   front;
-    StencilFaceDescriptor   back;
+    bool                    testEnabled  = false;   //!< Specifies whether the stencil test is enabled or disabled.
+    StencilFaceDescriptor   front;                  //!< Specifies the front face settings for the stencil test.
+    StencilFaceDescriptor   back;                   //!< Specifies the back face settings for the stencil test.
 };
 
+//! Rasterizer state descriptor structure.
 struct RasterizerDescriptor
 {
     PolygonMode     polygonMode                 = PolygonMode::Fill;
@@ -154,24 +152,51 @@ struct RasterizerDescriptor
     bool            multiSampleEnabled          = false;
     bool            antiAliasedLineEnabled      = false;
 
-    //! If ture, conservative rasterization is enabled. This is only available with Direct3D 12.
+    /**
+    \brief If ture, conservative rasterization is enabled.
+    \note Only supported with: Direct3D 12.
+    */
     bool            conservativeRasterization   = false;
 };
 
+//! Blend target state descriptor structure.
 struct BlendTargetDescriptor
 {
-    BlendOp         srcColor        = BlendOp::SrcAlpha;    //!< Source color blending operation.
-    BlendOp         destColor       = BlendOp::InvSrcAlpha; //!< Destination color blending operation.
-    BlendArithmetic colorArithmetic = BlendArithmetic::Add; //!< Color blending arithmetic. Only available with Direct3D.
-    BlendOp         srcAlpha        = BlendOp::SrcAlpha;    //!< Source alpha blending operation.
-    BlendOp         destAlpha       = BlendOp::InvSrcAlpha; //!< Destination alpha blending operation.
-    BlendArithmetic alphaArithmetic = BlendArithmetic::Add; //!< Alpha blending arithmetic. Only available with Direct3D.
+    //! Source color blending operation.
+    BlendOp         srcColor        = BlendOp::SrcAlpha;
+
+    //! Destination color blending operation.
+    BlendOp         destColor       = BlendOp::InvSrcAlpha;
+    
+    /**
+    \brief Color blending arithmetic.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    */
+    BlendArithmetic colorArithmetic = BlendArithmetic::Add;
+    
+    //! Source alpha blending operation.
+    BlendOp         srcAlpha        = BlendOp::SrcAlpha;
+
+    //! Destination alpha blending operation.
+    BlendOp         destAlpha       = BlendOp::InvSrcAlpha;
+
+    /**
+    \brief Alpha blending arithmetic.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    */
+    BlendArithmetic alphaArithmetic = BlendArithmetic::Add;
+
+    //! Specifies which color components are enabled for writing. By default (true, true, true, true).
     ColorRGBAb      colorMask;
 };
 
+//! Blending state descriptor structure.
 struct BlendDescriptor
 {
+    //! Specifies whether blending is enabled or disabled. This applies to all blending targets.
     bool                                blendEnabled    = false;
+
+    //! Render-target blend states. A maximum of 8 targets is supported. Further targets will be ignored.
     std::vector<BlendTargetDescriptor>  targets;
 };
 
@@ -182,11 +207,17 @@ viewports, depth-/ stencil-/ rasterizer-/ blend states, shader stages etc.
 */
 struct GraphicsPipelineDescriptor
 {
-    DepthDescriptor         depth;
-    StencilDescriptor       stencil;
-    RasterizerDescriptor    rasterizer;
-    BlendDescriptor         blend;
+    DepthDescriptor         depth;          //!< Specifies the depth state descriptor.
+    StencilDescriptor       stencil;        //!< Specifies the stencil state descriptor.
+    RasterizerDescriptor    rasterizer;     //!< Specifies the rasterizer state descriptor.
+    BlendDescriptor         blend;          //!< Specifies the blending state descriptor.
 
+    /**
+    \brief Pointer to the shader program for the graphics pipeline.
+    \remarks This must never be null when "RenderSystem::CreateGraphicsPipeline" is called with this structure.
+    \see RenderSystem::CreateGraphicsPipeline
+    \see RenderSystem::CreateShaderProgram
+    */
     ShaderProgram*          shaderProgram   = nullptr;
 };
 

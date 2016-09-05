@@ -240,7 +240,7 @@ struct GraphicsAPIDependentStateDescriptor
     /**
     \briefs Specifies whether to invert the front face setting in the graphics pipeline state.
     \remarks If this is true, the front facing will be inverted everytime "BindGraphicsPipeline" is called.
-    \note Only available for OpenGL.
+    \note Only supported with: OpenGL.
     \see RasterizerDescriptor::frontCCW
     \see RenderContext::BindGraphicsPipeline
     */
