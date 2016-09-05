@@ -145,6 +145,9 @@ struct RenderingCaps
     //! Specifies whether multiple viewports, depth-ranges, and scissors are supported at once.
     bool            hasViewportArrays               = false;
 
+    //! Specifies whether conservative rasterization is supported.
+    bool            hasConservativeRasterization    = false;
+
     //! Specifies maximum number of texture array layers (for 1D-, 2D-, and cube textures).
     unsigned int    maxNumTextureArrayLayers        = 0;
 

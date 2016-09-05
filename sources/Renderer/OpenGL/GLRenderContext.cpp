@@ -79,25 +79,26 @@ RenderingCaps GLRenderContext::QueryRenderingCaps() const
     RenderingCaps caps;
 
     /* Set fixed states for this renderer */
-    caps.screenOrigin           = ScreenOrigin::LowerLeft;
-    caps.clippingRange          = ClippingRange::MinusOneToOne;
+    caps.screenOrigin                   = ScreenOrigin::LowerLeft;
+    caps.clippingRange                  = ClippingRange::MinusOneToOne;
 
     /* Query all boolean capabilies by their respective OpenGL extension */
-    caps.hasRenderTargets       = HasExtension("GL_ARB_framebuffer_object");
-    caps.has3DTextures          = HasExtension("GL_EXT_texture3D");
-    caps.hasCubeTextures        = HasExtension("GL_ARB_texture_cube_map");
-    caps.hasTextureArrays       = HasExtension("GL_EXT_texture_array");
-    caps.hasCubeTextureArrays   = HasExtension("GL_ARB_texture_cube_map_array");
-    caps.hasSamplers            = HasExtension("GL_ARB_sampler_objects");
-    caps.hasConstantBuffers     = HasExtension("GL_ARB_uniform_buffer_object");
-    caps.hasStorageBuffers      = HasExtension("GL_ARB_shader_storage_buffer_object");
-    caps.hasUniforms            = HasExtension("GL_ARB_shader_objects");
-    caps.hasGeometryShaders     = HasExtension("GL_ARB_geometry_shader4");
-    caps.hasTessellationShaders = HasExtension("GL_ARB_tessellation_shader");
-    caps.hasComputeShaders      = HasExtension("GL_ARB_compute_shader");
-    caps.hasInstancing          = HasExtension("GL_ARB_draw_instanced");
-    caps.hasOffsetInstancing    = HasExtension("GL_ARB_base_instance");
-    caps.hasViewportArrays      = HasExtension("GL_ARB_viewport_array");
+    caps.hasRenderTargets               = HasExtension("GL_ARB_framebuffer_object");
+    caps.has3DTextures                  = HasExtension("GL_EXT_texture3D");
+    caps.hasCubeTextures                = HasExtension("GL_ARB_texture_cube_map");
+    caps.hasTextureArrays               = HasExtension("GL_EXT_texture_array");
+    caps.hasCubeTextureArrays           = HasExtension("GL_ARB_texture_cube_map_array");
+    caps.hasSamplers                    = HasExtension("GL_ARB_sampler_objects");
+    caps.hasConstantBuffers             = HasExtension("GL_ARB_uniform_buffer_object");
+    caps.hasStorageBuffers              = HasExtension("GL_ARB_shader_storage_buffer_object");
+    caps.hasUniforms                    = HasExtension("GL_ARB_shader_objects");
+    caps.hasGeometryShaders             = HasExtension("GL_ARB_geometry_shader4");
+    caps.hasTessellationShaders         = HasExtension("GL_ARB_tessellation_shader");
+    caps.hasComputeShaders              = HasExtension("GL_ARB_compute_shader");
+    caps.hasInstancing                  = HasExtension("GL_ARB_draw_instanced");
+    caps.hasOffsetInstancing            = HasExtension("GL_ARB_base_instance");
+    caps.hasViewportArrays              = HasExtension("GL_ARB_viewport_array");
+    caps.hasConservativeRasterization   = (HasExtension("GL_NV_conservative_raster") || HasExtension("GL_INTEL_conservative_raster"));
 
     /* Query integral attributes */
     auto GetUInt = [](GLenum param)
