@@ -115,6 +115,9 @@ struct RenderingCaps
     //! Specifies whether cube array textures are supported.
     bool            hasCubeTextureArrays            = false;
     
+    //! Specifies whether samplers are supported.
+    bool            hasSamplers                     = false;
+
     //! Specifies whether constant buffers (also "uniform buffer objects") are supported.
     bool            hasConstantBuffers              = false;
 

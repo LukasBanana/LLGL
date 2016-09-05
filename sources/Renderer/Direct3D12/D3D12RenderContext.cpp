@@ -51,11 +51,39 @@ std::map<RendererInfo, std::string> D3D12RenderContext::QueryRendererInfo() cons
     return info;
 }
 
+//TODO -> incomplete!!!
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
 RenderingCaps D3D12RenderContext::QueryRenderingCaps() const
 {
     RenderingCaps caps;
 
-    //todo
+    caps.screenOrigin                   = ScreenOrigin::UpperLeft;
+    caps.clippingRange                  = ClippingRange::ZeroToOne;
+    caps.hasRenderTargets               = true;
+    caps.has3DTextures                  = true;
+    caps.hasCubeTextures                = true;
+    caps.hasTextureArrays               = true;
+    caps.hasCubeTextureArrays           = true;
+    caps.hasSamplers                    = true;
+    caps.hasConstantBuffers             = true;
+    caps.hasStorageBuffers              = true;
+    caps.hasUniforms                    = true;
+    caps.hasGeometryShaders             = true;
+    caps.hasTessellationShaders         = true;
+    caps.hasComputeShaders              = true;
+    caps.hasInstancing                  = true;
+    caps.hasOffsetInstancing            = true;
+    caps.hasViewportArrays              = true;
+    caps.maxNumTextureArrayLayers       = 2048;
+    caps.maxNumRenderTargetAttachments  = 8;
+    caps.maxConstantBufferSize          = 16384;
+    caps.max1DTextureSize               = 16384;
+    caps.max2DTextureSize               = 16384;
+    caps.max3DTextureSize               = 2048;
+    caps.maxCubeTextureSize             = 16384;
+    caps.maxAnisotropy                  = 16;
+    caps.maxNumComputeShaderWorkGroups  = { 1024, 1024, 1024 };
+    caps.maxComputeShaderWorkGroupSize  = { 1024, 1024, 1024 };
 
     return caps;
 }

@@ -88,6 +88,7 @@ RenderingCaps GLRenderContext::QueryRenderingCaps() const
     caps.hasCubeTextures        = HasExtension("GL_ARB_texture_cube_map");
     caps.hasTextureArrays       = HasExtension("GL_EXT_texture_array");
     caps.hasCubeTextureArrays   = HasExtension("GL_ARB_texture_cube_map_array");
+    caps.hasSamplers            = HasExtension("GL_ARB_sampler_objects");
     caps.hasConstantBuffers     = HasExtension("GL_ARB_uniform_buffer_object");
     caps.hasStorageBuffers      = HasExtension("GL_ARB_shader_storage_buffer_object");
     caps.hasUniforms            = HasExtension("GL_ARB_shader_objects");

@@ -177,14 +177,27 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Samplers ---- */
 
+        /**
+        \brief Creates a new Sampler object.
+        \note If the renderer does not support Sampler objects
+        (e.g. if OpenGL 3.1 or lower is used) the return value is null.
+        \see RenderContext::QueryRenderingCaps
+        */
         virtual Sampler* CreateSampler(const SamplerDescriptor& desc) = 0;
 
+        //! Releases the specified Sampler object. After this call, the specified object must no longer be used.
         virtual void Release(Sampler& sampler) = 0;
 
         /* ----- Render Targets ----- */
 
+        /**
+        \brief Creates a new RenderTarget object with the specified number of samples.
+        \note If the renderer does not support RenderTarget objects
+        (e.g. if OpenGL 2.1 or lower is used) the return value is null.
+        */
         virtual RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) = 0;
 
+        //! Releases the specified RenderTarget object. After this call, the specified object must no longer be used.
         virtual void Release(RenderTarget& renderTarget) = 0;
 
         /* ----- Shader ----- */
