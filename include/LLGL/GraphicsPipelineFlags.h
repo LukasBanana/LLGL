@@ -154,7 +154,8 @@ struct RasterizerDescriptor
 
     /**
     \brief If ture, conservative rasterization is enabled.
-    \note Only supported with: Direct3D 12.
+    \note Only supported with: Direct3D 12 (or OpenGL if the "GL_NV_conservative_raster" extension is supported).
+    \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     */
     bool            conservativeRasterization   = false;
 };

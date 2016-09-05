@@ -50,6 +50,10 @@ class GLGraphicsPipeline : public GraphicsPipeline
         bool                    multiSampleEnabled_ = false;    // glEnable(GL_MULTISAMPLE)
         bool                    lineSmoothEnabled_  = false;    // glEnable(GL_LINE_SMOOTH)
 
+        #ifdef LLGL_GL_ENABLE_EXT
+        bool                    conservativeRaster_ = false;    // glEnable(GL_CONSERVATIVE_RASTERIZATION_NV/INTEL)
+        #endif
+
         // blend state
         bool                    blendEnabled_       = false;
         std::vector<GLBlend>    blendStates_;

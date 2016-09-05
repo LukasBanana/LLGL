@@ -73,6 +73,10 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
     multiSampleEnabled_ = desc.rasterizer.multiSampleEnabled;
     lineSmoothEnabled_  = desc.rasterizer.antiAliasedLineEnabled;
 
+    #ifdef LLGL_GL_ENABLE_EXT
+    conservativeRaster_ = desc.rasterizer.conservativeRasterization;
+    #endif
+
     /* Convert blend state */
     blendEnabled_       = desc.blend.blendEnabled;
     Convert(blendStates_, desc.blend.targets);
@@ -123,6 +127,10 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     stateMngr.Set(GLState::DEPTH_CLAMP, depthClampEnabled_);
     stateMngr.Set(GLState::MULTISAMPLE, multiSampleEnabled_);
     stateMngr.Set(GLState::LINE_SMOOTH, lineSmoothEnabled_);
+
+    #ifdef LLGL_GL_ENABLE_EXT
+    stateMngr.Set(GLStateExt::CONSERVATIVE_RASTERIZATION, conservativeRaster_);
+    #endif
 
     /* Setup blend state */
     stateMngr.Set(GLState::BLEND, blendEnabled_);

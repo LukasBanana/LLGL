@@ -49,6 +49,21 @@ static const GLenum stateCapsMap[] =
     GL_PROGRAM_POINT_SIZE,
 };
 
+#ifdef LLGL_GL_ENABLE_EXT
+
+static const GLenum stateExtCapsMap[] =
+{
+    #if defined(GL_NV_conservative_raster)
+    GL_CONSERVATIVE_RASTERIZATION_NV,
+    #elif defined(GL_INTEL_conservative_rasterization)
+    GL_CONSERVATIVE_RASTERIZATION_INTEL,
+    #else
+    0,
+    #endif
+};
+
+#endif
+
 static const GLenum bufferTargetsMap[] =
 {
     GL_ARRAY_BUFFER,
@@ -119,6 +134,13 @@ GLStateManager::GLStateManager()
 
     activeTextureLayer_ = &(textureState_.layers[0]);
 
+    #ifdef LLGL_GL_ENABLE_EXT
+
+    /* Initialize extenstion states */
+    //...
+
+    #endif
+
     /* Make this to the active state manager */
     GLStateManager::active = this;
 }
@@ -150,7 +172,7 @@ void GLStateManager::Reset()
 
 void GLStateManager::Set(GLState state, bool value)
 {
-    auto cap = static_cast<GLenum>(state);
+    auto cap = static_cast<std::size_t>(state);
     if (renderState_.values[cap] != value)
     {
         renderState_.values[cap] = value;
@@ -163,7 +185,7 @@ void GLStateManager::Set(GLState state, bool value)
 
 void GLStateManager::Enable(GLState state)
 {
-    auto cap = static_cast<GLenum>(state);
+    auto cap = static_cast<std::size_t>(state);
     if (!renderState_.values[cap])
     {
         renderState_.values[cap] = true;
@@ -173,7 +195,7 @@ void GLStateManager::Enable(GLState state)
 
 void GLStateManager::Disable(GLState state)
 {
-    auto cap = static_cast<GLenum>(state);
+    auto cap = static_cast<std::size_t>(state);
     if (renderState_.values[cap])
     {
         renderState_.values[cap] = false;
@@ -210,6 +232,53 @@ void GLStateManager::PopStates(std::size_t count)
     while (count-- > 0)
         PopState();
 }
+
+#ifdef LLGL_GL_ENABLE_EXT
+
+void GLStateManager::Set(GLStateExt state, bool value)
+{
+    auto cap = static_cast<std::size_t>(state);
+    auto& value = renderStateExt_.values[cap];
+    if (value.supported && value.enabled != value)
+    {
+        value.enabled = value;
+        if (value)
+            glEnable(stateExtCapsMap[cap]);
+        else
+            glDisable(stateExtCapsMap[cap]);
+    }
+}
+
+void GLStateManager::Enable(GLStateExt state)
+{
+    auto cap = static_cast<std::size_t>(state);
+    auto& value = renderStateExt_.values[cap];
+    if (value.supported && !value.enabled)
+    {
+        value.enabled = true;
+        glEnable(stateExtCapsMap[cap]);
+    }
+}
+
+void GLStateManager::Disable(GLStateExt state)
+{
+    auto cap = static_cast<std::size_t>(state);
+    auto& value = renderStateExt_.values[cap];
+    if (value.supported && value.enabled)
+    {
+        value.enabled = false;
+        glDisable(stateExtCapsMap[cap]);
+    }
+}
+
+bool GLStateManager::IsEnabled(GLStateExt state) const
+{
+    auto cap = static_cast<std::size_t>(state);
+    return renderStateExt_.values[cap].enabled;
+}
+
+#endif
+
 
 /* ----- Common states ----- */
 

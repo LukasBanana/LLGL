@@ -54,6 +54,15 @@ enum class GLState
     PROGRAM_POINT_SIZE,
 };
 
+#ifdef LLGL_GL_ENABLE_EXT
+
+enum class GLStateExt
+{
+    CONSERVATIVE_RASTERIZATION = 0, // either NV or INTEL extension
+};
+
+#endif
+
 enum class GLBufferTarget
 {
     ARRAY_BUFFER = 0,

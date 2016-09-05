@@ -56,6 +56,16 @@ class GLStateManager
         void PopState();
         void PopStates(std::size_t count);
 
+        #ifdef LLGL_GL_ENABLE_EXT
+
+        void Set(GLStateExt state, bool value);
+        void Enable(GLStateExt state);
+        void Disable(GLStateExt state);
+
+        bool IsEnabled(GLStateExt state) const;
+
+        #endif
+
         /* ----- Common states ----- */
 
         void SetViewports(std::vector<GLViewport>& viewports);
@@ -145,6 +155,10 @@ class GLStateManager
         static const std::size_t numFrameBufferTargets  = (static_cast<std::size_t>(GLFrameBufferTarget::READ_FRAMEBUFFER) + 1);
         static const std::size_t numTextureTargets      = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
 
+        #ifdef LLGL_GL_ENABLE_EXT
+        static const std::size_t numStatesExt           = (static_cast<std::size_t>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
+        #endif
+
         /* ----- Structure ----- */
 
         struct GLCommonState
@@ -172,6 +186,21 @@ class GLStateManager
             std::array<bool, numStates> values;
             std::stack<StackEntry>      valueStack;
         };
+
+        #ifdef LLGL_GL_ENABLE_EXT
+
+        struct GLRenderStateExt
+        {
+            struct ValueEntry
+            {
+                bool supported  = false;
+                bool enabled    = false;
+            };
+
+            std::array<ValueEntry, numStatesExt> values;
+        };
+
+        #endif
 
         struct GLBufferState
         {
@@ -245,6 +274,10 @@ class GLStateManager
         GLTextureState                      textureState_;
         GLShaderState                       shaderState_;
         GLSamplerState                      samplerState_;
+
+        #ifdef LLGL_GL_ENABLE_EXT
+        GLRenderStateExt                    renderStateExt_;
+        #endif
 
         GLTextureLayer*                     activeTextureLayer_ = nullptr;
 
