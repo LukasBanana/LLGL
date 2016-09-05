@@ -24,7 +24,7 @@ namespace LLGL
 {
 
 
-class GLRenderContext;
+class GLRenderSystem;
 
 class GLStateManager
 {
@@ -33,7 +33,7 @@ class GLStateManager
 
         /* ----- Common ----- */
 
-        GLStateManager();
+        GLStateManager(GLRenderSystem& renderSystem);
 
         static GLStateManager* active;
 
@@ -193,8 +193,8 @@ class GLStateManager
         {
             struct ValueEntry
             {
-                bool supported  = false;
-                bool enabled    = false;
+                GLenum  cap     = 0;
+                bool    enabled = false;
             };
 
             std::array<ValueEntry, numStatesExt> values;

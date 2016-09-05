@@ -7,6 +7,7 @@
 
 #include "GLStateManager.h"
 #include "../GLRenderContext.h"
+#include "../GLRenderSystem.h"
 #include "../GLExtensions.h"
 #include "../../../Core/Helper.h"
 #include "../../Assertion.h"
@@ -48,21 +49,6 @@ static const GLenum stateCapsMap[] =
     GL_TEXTURE_CUBE_MAP_SEAMLESS,
     GL_PROGRAM_POINT_SIZE,
 };
-
-#ifdef LLGL_GL_ENABLE_EXT
-
-static const GLenum stateExtCapsMap[] =
-{
-    #if defined(GL_NV_conservative_raster)
-    GL_CONSERVATIVE_RASTERIZATION_NV,
-    #elif defined(GL_INTEL_conservative_rasterization)
-    GL_CONSERVATIVE_RASTERIZATION_INTEL,
-    #else
-    0,
-    #endif
-};
-
-#endif
 
 static const GLenum bufferTargetsMap[] =
 {
@@ -121,7 +107,7 @@ static const GLenum textureLayersMap[] =
 
 GLStateManager* GLStateManager::active = nullptr;
 
-GLStateManager::GLStateManager()
+GLStateManager::GLStateManager(GLRenderSystem& renderSystem)
 {
     /* Initialize all states with zero */
     Fill(renderState_.values, false);
@@ -137,7 +123,26 @@ GLStateManager::GLStateManager()
     #ifdef LLGL_GL_ENABLE_EXT
 
     /* Initialize extenstion states */
-    //...
+    auto InitStateExt = [&](GLStateExt state, const std::string& extensionName, GLenum cap)
+    {
+        auto idx = static_cast<std::size_t>(state);
+        auto& val = renderStateExt_.values[idx];
+        if (val.cap == 0 && renderSystem.HasExtension(extensionName))
+        {
+            val.cap     = cap;
+            val.enabled = (glIsEnabled(cap) != GL_FALSE);
+        }
+    };
+
+    #ifdef GL_NV_conservative_raster
+    // see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
+    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, "GL_NV_conservative_raster", GL_CONSERVATIVE_RASTERIZATION_NV);
+    #endif
+
+    #ifdef GL_INTEL_conservative_rasterization
+    // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
+    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, "GL_INTEL_conservative_raster", GL_CONSERVATIVE_RASTERIZATION_INTEL);
+    #endif
 
     #endif
 
@@ -172,40 +177,41 @@ void GLStateManager::Reset()
 
 void GLStateManager::Set(GLState state, bool value)
 {
-    auto cap = static_cast<std::size_t>(state);
-    if (renderState_.values[cap] != value)
+    auto idx = static_cast<std::size_t>(state);
+    if (renderState_.values[idx] != value)
     {
-        renderState_.values[cap] = value;
+        renderState_.values[idx] = value;
         if (value)
-            glEnable(stateCapsMap[cap]);
+            glEnable(stateCapsMap[idx]);
         else
-            glDisable(stateCapsMap[cap]);
+            glDisable(stateCapsMap[idx]);
     }
 }
 
 void GLStateManager::Enable(GLState state)
 {
-    auto cap = static_cast<std::size_t>(state);
-    if (!renderState_.values[cap])
+    auto idx = static_cast<std::size_t>(state);
+    if (!renderState_.values[idx])
     {
-        renderState_.values[cap] = true;
-        glEnable(stateCapsMap[cap]);
+        renderState_.values[idx] = true;
+        glEnable(stateCapsMap[idx]);
     }
 }
 
 void GLStateManager::Disable(GLState state)
 {
-    auto cap = static_cast<std::size_t>(state);
-    if (renderState_.values[cap])
+    auto idx = static_cast<std::size_t>(state);
+    if (renderState_.values[idx])
     {
-        renderState_.values[cap] = false;
-        glDisable(stateCapsMap[cap]);
+        renderState_.values[idx] = false;
+        glDisable(stateCapsMap[idx]);
     }
 }
 
 bool GLStateManager::IsEnabled(GLState state) const
 {
-    return renderState_.values[static_cast<std::size_t>(state)];
+    auto idx = static_cast<std::size_t>(state);
+    return renderState_.values[idx];
 }
 
 void GLStateManager::PushState(GLState state)
@@ -237,44 +243,44 @@ void GLStateManager::PopStates(std::size_t count)
 
 void GLStateManager::Set(GLStateExt state, bool value)
 {
-    auto cap = static_cast<std::size_t>(state);
-    auto& value = renderStateExt_.values[cap];
-    if (value.supported && value.enabled != value)
+    auto idx = static_cast<std::size_t>(state);
+    auto& val = renderStateExt_.values[idx];
+    if (val.cap != 0 && val.enabled != value)
     {
-        value.enabled = value;
+        val.enabled = value;
         if (value)
-            glEnable(stateExtCapsMap[cap]);
+            glEnable(val.cap);
         else
-            glDisable(stateExtCapsMap[cap]);
+            glDisable(val.cap);
     }
 }
 
 void GLStateManager::Enable(GLStateExt state)
 {
-    auto cap = static_cast<std::size_t>(state);
-    auto& value = renderStateExt_.values[cap];
-    if (value.supported && !value.enabled)
+    auto idx = static_cast<std::size_t>(state);
+    auto& val = renderStateExt_.values[idx];
+    if (val.cap != 0 && !val.enabled)
     {
-        value.enabled = true;
-        glEnable(stateExtCapsMap[cap]);
+        val.enabled = true;
+        glEnable(val.cap);
     }
 }
 
 void GLStateManager::Disable(GLStateExt state)
 {
-    auto cap = static_cast<std::size_t>(state);
-    auto& value = renderStateExt_.values[cap];
-    if (value.supported && value.enabled)
+    auto idx = static_cast<std::size_t>(state);
+    auto& val = renderStateExt_.values[idx];
+    if (val.cap != 0 && val.enabled)
     {
-        value.enabled = false;
-        glDisable(stateExtCapsMap[cap]);
+        val.enabled = false;
+        glDisable(val.cap);
     }
 }
 
 bool GLStateManager::IsEnabled(GLStateExt state) const
 {
-    auto cap = static_cast<std::size_t>(state);
-    return renderStateExt_.values[cap].enabled;
+    auto idx = static_cast<std::size_t>(state);
+    return renderStateExt_.values[idx].enabled;
 }
 
 #endif

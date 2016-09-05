@@ -538,7 +538,7 @@ void GLRenderContext::AcquireStateManager(GLRenderContext* sharedRenderContext)
     else
     {
         /* Create a new shared state manager */
-        stateMngr_ = std::make_shared<GLStateManager>();
+        stateMngr_ = std::make_shared<GLStateManager>(renderSystem_);
     }
 
     /* Notify state manager about the current render context */

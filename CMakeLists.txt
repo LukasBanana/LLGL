@@ -50,6 +50,15 @@ else()
 endif(WIN32)
 
 
+# === Options ===
+
+option(LLGL_GL_ENABLE_EXT "Enable Vendor Specific OpenGL Extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
+
+if(LLGL_GL_ENABLE_EXT)
+	ADD_DEFINE(LLGL_GL_ENABLE_EXT)
+endif()
+
+
 # === Global files ===
 
 # Common files
