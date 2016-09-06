@@ -31,10 +31,18 @@ class D3D12RenderSystem : public RenderSystem
 
     public:
 
-        /* ----- Render System ----- */
+        /* ----- Common ----- */
 
         D3D12RenderSystem();
         ~D3D12RenderSystem();
+
+        std::map<RendererInfo, std::string> QueryRendererInfo() const override;
+
+        RenderingCaps QueryRenderingCaps() const override;
+
+        ShadingLanguage QueryShadingLanguage() const override;
+
+        /* ----- Render Context ------ */
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
 
@@ -151,7 +159,7 @@ class D3D12RenderSystem : public RenderSystem
         void CreateGPUSynchObjects();
         void CreateRootSignature();
 
-        /* ----- Common D3D objects ----- */
+        /* ----- Common objects ----- */
 
         IDXGIFactory4*                              factory_        = nullptr;
         ID3D12Device*                               device_         = nullptr;

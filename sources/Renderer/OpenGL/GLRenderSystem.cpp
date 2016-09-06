@@ -21,6 +21,28 @@ namespace LLGL
 {
 
 
+/* ----- Internal Functions ----- */
+
+static void AssertCap(bool supported, const std::string& memberName)
+{
+    if (!supported)
+    {
+        /* Remove "has" from name */
+        auto feature = memberName;
+        if (feature.size() > 3 && feature.substr(0, 3) == "has")
+            feature = feature.substr(3);
+
+        /* Throw descriptive error */
+        throw std::runtime_error(feature + " are not supported by the OpenGL renderer");
+    }
+}
+
+#define LLGL_ASSERT_CAP(FEATURE) \
+    AssertCap(renderingCaps_.FEATURE, #FEATURE)
+
+
+/* ----- Render System ----- */
+
 GLRenderSystem::GLRenderSystem()
 {
 }
@@ -29,6 +51,63 @@ GLRenderSystem::~GLRenderSystem()
 {
     Desktop::ResetVideoMode();
 }
+
+std::map<RendererInfo, std::string> GLRenderSystem::QueryRendererInfo() const
+{
+    std::map<RendererInfo, std::string> info;
+
+    std::vector<std::pair<RendererInfo, GLenum>> entries
+    {{
+        { RendererInfo::Version,                GL_VERSION                  },
+        { RendererInfo::Vendor,                 GL_VENDOR                   },
+        { RendererInfo::Hardware,               GL_RENDERER                 },
+        { RendererInfo::ShadingLanguageVersion, GL_SHADING_LANGUAGE_VERSION },
+    }};
+    
+    for (const auto& entry : entries)
+    {
+        auto bytes = glGetString(entry.second);
+        if (bytes)
+            info[entry.first] = std::string(reinterpret_cast<const char*>(bytes));
+    }
+
+    return info;
+}
+
+RenderingCaps GLRenderSystem::QueryRenderingCaps() const
+{
+    return renderingCaps_;
+}
+
+ShadingLanguage GLRenderSystem::QueryShadingLanguage() const
+{
+    /* Derive shading language version by OpenGL version */
+    GLint major = 0, minor = 0;
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+    auto IsVer = [major, minor](int maj, int min)
+    {
+        return (major == maj && minor == min);
+    };
+
+    if (IsVer(2, 0)) return ShadingLanguage::GLSL_110;
+    if (IsVer(2, 1)) return ShadingLanguage::GLSL_120;
+    if (IsVer(3, 0)) return ShadingLanguage::GLSL_130;
+    if (IsVer(3, 1)) return ShadingLanguage::GLSL_140;
+    if (IsVer(3, 2)) return ShadingLanguage::GLSL_150;
+    if (IsVer(3, 3)) return ShadingLanguage::GLSL_330;
+    if (IsVer(4, 0)) return ShadingLanguage::GLSL_400;
+    if (IsVer(4, 1)) return ShadingLanguage::GLSL_410;
+    if (IsVer(4, 2)) return ShadingLanguage::GLSL_420;
+    if (IsVer(4, 3)) return ShadingLanguage::GLSL_430;
+    if (IsVer(4, 4)) return ShadingLanguage::GLSL_440;
+    if (IsVer(4, 5)) return ShadingLanguage::GLSL_450;
+
+    return ShadingLanguage::GLSL_110;
+}
+
+/* ----- Render Context ----- */
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
@@ -56,6 +135,7 @@ IndexBuffer* GLRenderSystem::CreateIndexBuffer()
 
 ConstantBuffer* GLRenderSystem::CreateConstantBuffer()
 {
+    LLGL_ASSERT_CAP(hasConstantBuffers);
     return TakeOwnership(constantBuffers_, MakeUnique<GLConstantBuffer>());
 }
 
@@ -254,6 +334,8 @@ void GLRenderSystem::WriteTexture2D(Texture& texture, const TextureFormat format
 
 void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDataDescriptor* imageDesc)
 {
+    LLGL_ASSERT_CAP(has3DTextures);
+
     /* Bind texture and set type */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     BindTextureAndSetType(textureGL, TextureType::Texture3D);
@@ -279,6 +361,8 @@ void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format
 
 void GLRenderSystem::WriteTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
 {
+    LLGL_ASSERT_CAP(hasCubeTextures);
+
     const std::array<AxisDirection, 6> cubeFaces
     {
         AxisDirection::XPos,
@@ -324,6 +408,8 @@ void GLRenderSystem::WriteTextureCube(Texture& texture, const TextureFormat form
 
 void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
+    LLGL_ASSERT_CAP(hasTextureArrays);
+
     /* Bind texture and set type */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     BindTextureAndSetType(textureGL, TextureType::Texture1DArray);
@@ -350,6 +436,8 @@ void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat f
 
 void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
+    LLGL_ASSERT_CAP(hasTextureArrays);
+
     /* Bind texture and set type */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     BindTextureAndSetType(textureGL, TextureType::Texture2DArray);
@@ -376,6 +464,8 @@ void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat f
 
 void GLRenderSystem::WriteTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
+    LLGL_ASSERT_CAP(hasCubeTextureArrays);
+
     /* Bind texture and set type */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     BindTextureAndSetType(textureGL, TextureType::TextureCubeArray);
@@ -480,18 +570,24 @@ void GLRenderSystem::WriteTexture2DSub(
 void GLRenderSystem::WriteTexture3DSub(
     Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc)
 {
+    LLGL_ASSERT_CAP(has3DTextures);
+
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
+
     GLTexSubImage3D(mipLevel, position.x, position.y, position.z, size.x, size.y, size.z, imageDesc);
 }
 
 void GLRenderSystem::WriteTextureCubeSub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
+    LLGL_ASSERT_CAP(hasCubeTextures);
+
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
+
     GLTexSubImageCube(mipLevel, position.x, position.y, size.x, size.y, cubeFace, imageDesc);
 }
 
@@ -499,9 +595,12 @@ void GLRenderSystem::WriteTexture1DArraySub(
     Texture& texture, int mipLevel, int position, unsigned int layerOffset,
     int size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
+    LLGL_ASSERT_CAP(hasTextureArrays);
+
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
+
     GLTexSubImage1DArray(mipLevel, position, layerOffset, size, layers, imageDesc);
 }
 
@@ -509,9 +608,12 @@ void GLRenderSystem::WriteTexture2DArraySub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
     const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
+    LLGL_ASSERT_CAP(hasTextureArrays);
+
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
+
     GLTexSubImage2DArray(mipLevel, position.x, position.y, layerOffset, size.x, size.y, layers, imageDesc);
 }
 
@@ -519,9 +621,12 @@ void GLRenderSystem::WriteTextureCubeArraySub(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
     const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc)
 {
+    LLGL_ASSERT_CAP(hasCubeTextureArrays);
+
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
+
     GLTexSubImageCubeArray(mipLevel, position.x, position.y, layerOffset, cubeFaceOffset, size.x, size.y, cubeFaces, imageDesc);
 }
 
@@ -547,6 +652,7 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorForm
 
 Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 {
+    LLGL_ASSERT_CAP(hasSamplers);
     auto sampler = MakeUnique<GLSampler>();
     sampler->SetDesc(desc);
     return TakeOwnership(samplers_, std::move(sampler));
@@ -561,6 +667,7 @@ void GLRenderSystem::Release(Sampler& sampler)
 
 RenderTarget* GLRenderSystem::CreateRenderTarget(unsigned int multiSamples)
 {
+    LLGL_ASSERT_CAP(hasRenderTargets);
     return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(multiSamples));
 }
 
@@ -573,6 +680,22 @@ void GLRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* GLRenderSystem::CreateShader(const ShaderType type)
 {
+    /* Validate rendering capabilities for required shader type */
+    switch (type)
+    {
+        case ShaderType::Geometry:
+            LLGL_ASSERT_CAP(hasGeometryShaders);
+            break;
+        case ShaderType::TessControl:
+        case ShaderType::TessEvaluation:
+            LLGL_ASSERT_CAP(hasTessellationShaders);
+            break;
+        case ShaderType::Compute:
+            LLGL_ASSERT_CAP(hasComputeShaders);
+            break;
+    }
+
+    /* Make and return shader object */
     return TakeOwnership(shaders_, MakeUnique<GLShader>(type));
 }
 
@@ -669,6 +792,9 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
         /* Query extensions and load all of them */
         extensionMap_ = QueryExtensions(coreProfile);
         LoadAllExtensions(extensionMap_);
+
+        /* Query and store all rendering capabilities */
+        StoreRenderingCaps();
     }
 }
 
@@ -736,6 +862,115 @@ void GLRenderSystem::BindTextureAndSetType(GLTexture& textureGL, const TextureTy
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 }
+
+void GLRenderSystem::StoreRenderingCaps()
+{
+    auto& caps = renderingCaps_;
+
+    /* Set fixed states for this renderer */
+    caps.screenOrigin                   = ScreenOrigin::LowerLeft;
+    caps.clippingRange                  = ClippingRange::MinusOneToOne;
+
+    /* Query all boolean capabilies by their respective OpenGL extension */
+    caps.hasRenderTargets               = HasExtension("GL_ARB_framebuffer_object");
+    caps.has3DTextures                  = HasExtension("GL_EXT_texture3D");
+    caps.hasCubeTextures                = HasExtension("GL_ARB_texture_cube_map");
+    caps.hasTextureArrays               = HasExtension("GL_EXT_texture_array");
+    caps.hasCubeTextureArrays           = HasExtension("GL_ARB_texture_cube_map_array");
+    caps.hasSamplers                    = HasExtension("GL_ARB_sampler_objects");
+    caps.hasConstantBuffers             = HasExtension("GL_ARB_uniform_buffer_object");
+    caps.hasStorageBuffers              = HasExtension("GL_ARB_shader_storage_buffer_object");
+    caps.hasUniforms                    = HasExtension("GL_ARB_shader_objects");
+    caps.hasGeometryShaders             = HasExtension("GL_ARB_geometry_shader4");
+    caps.hasTessellationShaders         = HasExtension("GL_ARB_tessellation_shader");
+    caps.hasComputeShaders              = HasExtension("GL_ARB_compute_shader");
+    caps.hasInstancing                  = HasExtension("GL_ARB_draw_instanced");
+    caps.hasOffsetInstancing            = HasExtension("GL_ARB_base_instance");
+    caps.hasViewportArrays              = HasExtension("GL_ARB_viewport_array");
+    caps.hasConservativeRasterization   = (HasExtension("GL_NV_conservative_raster") || HasExtension("GL_INTEL_conservative_raster"));
+
+    /* Query integral attributes */
+    auto GetUInt = [](GLenum param)
+    {
+        GLint attr = 0;
+        glGetIntegerv(param, &attr);
+        return static_cast<unsigned int>(attr);
+    };
+
+    auto GetUIntIdx = [](GLenum param, GLuint index)
+    {
+        GLint attr = 0;
+        if (glGetIntegeri_v)
+            glGetIntegeri_v(param, index, &attr);
+        return static_cast<unsigned int>(attr);
+    };
+
+    caps.maxNumTextureArrayLayers           = GetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
+    caps.maxNumRenderTargetAttachments      = GetUInt(GL_MAX_DRAW_BUFFERS);
+    caps.maxConstantBufferSize              = GetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
+    caps.maxAnisotropy                      = 16;
+    
+    caps.maxNumComputeShaderWorkGroups.x    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
+    caps.maxNumComputeShaderWorkGroups.y    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
+    caps.maxNumComputeShaderWorkGroups.z    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
+
+    caps.maxComputeShaderWorkGroupSize.x    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
+    caps.maxComputeShaderWorkGroupSize.y    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
+    caps.maxComputeShaderWorkGroupSize.z    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
+
+    /* Query maximum texture dimensions */
+    GLint querySizeBase = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &querySizeBase);
+
+    /* Query 1D texture max size */
+    auto querySize = querySizeBase;
+
+    while (caps.max1DTextureSize == 0 && querySize > 0)
+    {
+        glTexImage1D(GL_PROXY_TEXTURE_1D, 0, GL_RGBA, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_1D, 0, GL_TEXTURE_WIDTH, &(caps.max1DTextureSize));
+        querySize /= 2;
+    }
+
+    /* Query 2D texture max size */
+    querySize = querySizeBase;
+
+    while (caps.max2DTextureSize == 0 && querySize > 0)
+    {
+        glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &(caps.max2DTextureSize));
+        querySize /= 2;
+    }
+
+    /* Query 3D texture max size */
+    if (caps.has3DTextures)
+    {
+        querySize = querySizeBase;
+
+        while (caps.max3DTextureSize == 0 && querySize > 0)
+        {
+            glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, querySize, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &(caps.max3DTextureSize));
+            querySize /= 2;
+        }
+    }
+
+    /* Query cube texture max size */
+    if (caps.hasCubeTextures)
+    {
+        querySize = querySizeBase;
+
+        while (caps.maxCubeTextureSize == 0 && querySize > 0)
+        {
+            glTexImage2D(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_TEXTURE_WIDTH, &(caps.maxCubeTextureSize));
+            querySize /= 2;
+        }
+    }
+}
+
+
+#undef LLGL_ASSERT_CAP
 
 
 } // /namespace LLGL

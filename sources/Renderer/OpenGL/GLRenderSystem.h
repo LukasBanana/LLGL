@@ -39,10 +39,18 @@ class GLRenderSystem : public RenderSystem
 
     public:
 
-        /* ----- Render System ----- */
+        /* ----- Common ----- */
 
         GLRenderSystem();
         ~GLRenderSystem();
+
+        std::map<RendererInfo, std::string> QueryRendererInfo() const override;
+
+        RenderingCaps QueryRenderingCaps() const override;
+
+        ShadingLanguage QueryShadingLanguage() const override;
+
+        /* ----- Render Context ----- */
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
 
@@ -156,9 +164,13 @@ class GLRenderSystem : public RenderSystem
 
         void BindTextureAndSetType(GLTexture& textureGL, const TextureType type);
 
-        /* ----- Common GL render system objects ----- */
+        void StoreRenderingCaps();
+
+        /* ----- Common objects ----- */
 
         OpenGLExtensionMap                      extensionMap_;
+
+        RenderingCaps                           renderingCaps_;
 
         /* ----- Hardware object containers ----- */
 

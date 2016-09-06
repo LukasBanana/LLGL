@@ -38,6 +38,92 @@ D3D12RenderSystem::~D3D12RenderSystem()
     SafeRelease(factory_);
 }
 
+std::map<RendererInfo, std::string> D3D12RenderSystem::QueryRendererInfo() const
+{
+    std::map<RendererInfo, std::string> info;
+
+    //todo
+
+    return info;
+}
+
+static int GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
+    else                                        return 2048;
+}
+
+static int GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
+    else                                        return 512;
+}
+
+static unsigned int GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4;
+    else                                        return 1;
+}
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
+RenderingCaps D3D12RenderSystem::QueryRenderingCaps() const
+{
+    RenderingCaps caps;
+
+    auto            level               = GetFeatureLevel();
+    unsigned int    maxThreadGroups     = D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
+
+    caps.screenOrigin                   = ScreenOrigin::UpperLeft;
+    caps.clippingRange                  = ClippingRange::ZeroToOne;
+    caps.hasRenderTargets               = true;
+    caps.has3DTextures                  = true;
+    caps.hasCubeTextures                = true;
+    caps.hasTextureArrays               = (level >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasCubeTextureArrays           = (level >= D3D_FEATURE_LEVEL_10_1);
+    caps.hasSamplers                    = (level >= D3D_FEATURE_LEVEL_9_3);
+    caps.hasConstantBuffers             = true;
+    caps.hasStorageBuffers              = true;
+    caps.hasUniforms                    = false;
+    caps.hasGeometryShaders             = (level >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasTessellationShaders         = (level >= D3D_FEATURE_LEVEL_11_0);
+    caps.hasComputeShaders              = (level >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasInstancing                  = (level >= D3D_FEATURE_LEVEL_9_3);
+    caps.hasOffsetInstancing            = (level >= D3D_FEATURE_LEVEL_9_3);
+    caps.hasViewportArrays              = true;
+    caps.hasConservativeRasterization   = (level >= D3D_FEATURE_LEVEL_11_1);
+    caps.maxNumTextureArrayLayers       = (level >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
+    caps.maxNumRenderTargetAttachments  = GetMaxRenderTargets(level);
+    caps.maxConstantBufferSize          = 16384;
+    caps.max1DTextureSize               = GetMaxTextureDimension(level);
+    caps.max2DTextureSize               = GetMaxTextureDimension(level);
+    caps.max3DTextureSize               = (level >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
+    caps.maxCubeTextureSize             = GetMaxCubeTextureDimension(level);
+    caps.maxAnisotropy                  = (level >= D3D_FEATURE_LEVEL_9_2 ? 16 : 2);
+    caps.maxNumComputeShaderWorkGroups  = { maxThreadGroups, maxThreadGroups, (level >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u) };
+    caps.maxComputeShaderWorkGroupSize  = { 1024, 1024, 1024 };
+
+    return caps;
+}
+
+ShadingLanguage D3D12RenderSystem::QueryShadingLanguage() const
+{
+    auto featureLevel = GetFeatureLevel();
+
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return ShadingLanguage::HLSL_5_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) return ShadingLanguage::HLSL_4_1;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return ShadingLanguage::HLSL_4_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return ShadingLanguage::HLSL_3_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) return ShadingLanguage::HLSL_2_0b;
+    else                                        return ShadingLanguage::HLSL_2_0a;
+}
+
+/* ----- Render Context ----- */
+
 RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
     auto renderContext = MakeUnique<D3D12RenderContext>(*this, desc, window);

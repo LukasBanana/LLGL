@@ -39,12 +39,6 @@ class D3D12RenderContext : public RenderContext
         );
         ~D3D12RenderContext();
 
-        std::map<RendererInfo, std::string> QueryRendererInfo() const override;
-
-        RenderingCaps QueryRenderingCaps() const override;
-
-        ShadingLanguage QueryShadingLanguage() const override;
-
         void Present() override;
 
         /* ----- Configuration ----- */

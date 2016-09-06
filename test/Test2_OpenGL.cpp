@@ -66,12 +66,12 @@ int main()
 
         window->Show();
 
-        auto renderCaps = context->QueryRenderingCaps();
+        auto renderCaps = renderer->QueryRenderingCaps();
 
-        auto shadingLang = context->QueryShadingLanguage();
+        auto shadingLang = renderer->QueryShadingLanguage();
 
         // Show renderer info
-        auto info = context->QueryRendererInfo();
+        auto info = renderer->QueryRendererInfo();
 
         std::cout << "Renderer:         " << info[LLGL::RendererInfo::Version] << std::endl;
         std::cout << "Vendor:           " << info[LLGL::RendererInfo::Vendor] << std::endl;

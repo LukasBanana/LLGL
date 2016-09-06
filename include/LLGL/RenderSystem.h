@@ -77,8 +77,8 @@ class LLGL_EXPORT RenderSystem
         So a std::weak_ptr is stored internally to check if it has been expired
         (see http://en.cppreference.com/w/cpp/memory/weak_ptr/expired),
         and this type can only refer to a std::shared_ptr.
-        \throws std::runtime_exception If loading the render system from the specified module failed.
-        \throws std::runtime_exception If there is already a loaded instance of a render system
+        \throws std::runtime_error If loading the render system from the specified module failed.
+        \throws std::runtime_error If there is already a loaded instance of a render system
         (make sure there are no more shared pointer references to the previous render system!)
         */
         static std::shared_ptr<RenderSystem> Load(const std::string& moduleName, RenderingProfiler* profiler = nullptr);
@@ -88,6 +88,15 @@ class LLGL_EXPORT RenderSystem
         {
             return name_;
         }
+
+        //! Returns all available renderer information.
+        virtual std::map<RendererInfo, std::string> QueryRendererInfo() const = 0;
+
+        //! Returns the rendering capabilities.
+        virtual RenderingCaps QueryRenderingCaps() const = 0;
+
+        //! Returns the highest version of the supported shading language.
+        virtual ShadingLanguage QueryShadingLanguage() const = 0;
 
         /* ----- Render Context ----- */
 
@@ -195,8 +204,7 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new Sampler object.
-        \note If the renderer does not support Sampler objects
-        (e.g. if OpenGL 3.1 or lower is used) the return value is null.
+        \throws std::runtime_error If the renderer does not support Sampler objects (e.g. if OpenGL 3.1 or lower is used).
         \see RenderContext::QueryRenderingCaps
         */
         virtual Sampler* CreateSampler(const SamplerDescriptor& desc) = 0;
@@ -208,8 +216,7 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new RenderTarget object with the specified number of samples.
-        \note If the renderer does not support RenderTarget objects
-        (e.g. if OpenGL 2.1 or lower is used) the return value is null.
+        \throws std::runtime_error If the renderer does not support RenderTarget objects (e.g. if OpenGL 2.1 or lower is used).
         */
         virtual RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) = 0;
 
