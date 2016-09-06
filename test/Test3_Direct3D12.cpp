@@ -9,6 +9,8 @@
 #include <Gauss/Gauss.h>
 #include <fstream>
 
+//#define TEST_PRINT_SHADER_INFO
+
 static std::string ReadFileContent(const std::string& filename)
 {
     std::ifstream file(filename);
@@ -59,17 +61,27 @@ int main()
         auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
         auto fragShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
 
+        #ifdef TEST_PRINT_SHADER_INFO
         std::cout << "VERTEX OUTPUT:" << std::endl;
+        #endif
+
         if (!vertShader->Compile(shaderSource, "VS", "vs_5_0"))
             std::cerr << vertShader->QueryInfoLog() << std::endl;
+        #ifdef TEST_PRINT_SHADER_INFO
         else
             std::cout << vertShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
+        #endif
 
+        #ifdef TEST_PRINT_SHADER_INFO
         std::cout << "PIXEL OUTPUT:" << std::endl;
+        #endif
+
         if (!fragShader->Compile(shaderSource, "PS", "ps_5_0"))
             std::cerr << fragShader->QueryInfoLog() << std::endl;
+        #ifdef TEST_PRINT_SHADER_INFO
         else
             std::cout << fragShader->Disassemble(LLGL::ShaderDisassembleFlags::InstructionOnly) << std::endl << std::endl;
+        #endif
 
         // Create shader program
         auto shaderProgram = renderer->CreateShaderProgram();
@@ -79,8 +91,10 @@ int main()
 
         if (!shaderProgram->LinkShaders())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
+        #ifdef TEST_PRINT_SHADER_INFO
         else
             std::cout << "Constant Buffers: " << shaderProgram->QueryConstantBuffers().size() << std::endl;
+        #endif
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
