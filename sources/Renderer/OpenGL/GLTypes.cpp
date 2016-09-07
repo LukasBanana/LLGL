@@ -310,6 +310,34 @@ GLenum Map(const TextureFilter textureMinFilter, const TextureFilter textureMipM
     MapFailed("Min/MipMap TextureFilter");
 }
 
+GLenum Map(const ShaderType shaderType)
+{
+    switch (shaderType)
+    {
+        case ShaderType::Vertex:            return GL_VERTEX_SHADER;
+        case ShaderType::Geometry:          return GL_GEOMETRY_SHADER;
+        case ShaderType::TessControl:       return GL_TESS_CONTROL_SHADER;
+        case ShaderType::TessEvaluation:    return GL_TESS_EVALUATION_SHADER;
+        case ShaderType::Fragment:          return GL_FRAGMENT_SHADER;
+        case ShaderType::Compute:           return GL_COMPUTE_SHADER;
+    }
+    MapFailed("ShaderType");
+}
+
+GLenum Map(const QueryType queryType)
+{
+    switch (queryType)
+    {
+        case QueryType::SamplesPassed:                      return GL_SAMPLES_PASSED;
+        case QueryType::AnySamplesPassed:                   return GL_ANY_SAMPLES_PASSED;
+        case QueryType::AnySamplesPassedConservative:       return GL_ANY_SAMPLES_PASSED_CONSERVATIVE;
+        case QueryType::PrimitivesGenerated:                return GL_PRIMITIVES_GENERATED;
+        case QueryType::TransformFeedbackPrimitivesWritten: return GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN;
+        case QueryType::TimeElapsed:                        return GL_TIME_ELAPSED;
+    }
+    MapFailed("QueryType");
+}
+
 void Unmap(UniformType& result, const GLenum uniformType)
 {
     switch (uniformType)

@@ -7,6 +7,7 @@
 
 #include "GLShader.h"
 #include "../GLExtensions.h"
+#include "../GLTypes.h"
 #include <vector>
 #include <sstream>
 #include <stdexcept>
@@ -16,34 +17,10 @@ namespace LLGL
 {
 
 
-static GLenum GetGLShaderType(const ShaderType type)
-{
-    switch (type)
-    {
-        case ShaderType::Vertex:
-            return GL_VERTEX_SHADER;
-        case ShaderType::Geometry:
-            return GL_GEOMETRY_SHADER;
-        case ShaderType::TessControl:
-            return GL_TESS_CONTROL_SHADER;
-        case ShaderType::TessEvaluation:
-            return GL_TESS_EVALUATION_SHADER;
-        case ShaderType::Fragment:
-            return GL_FRAGMENT_SHADER;
-        case ShaderType::Compute:
-            return GL_COMPUTE_SHADER;
-    }
-
-    /* Invalid type -> throw error */
-    std::stringstream err;
-    err << "invalid shader type (0x" << std::hex << static_cast<int>(type) << ")";
-    throw std::invalid_argument(err.str());
-}
-
 GLShader::GLShader(const ShaderType type) :
     Shader( type )
 {
-    id_ = glCreateShader(GetGLShaderType(type));
+    id_ = glCreateShader(GLTypes::Map(type));
 }
 
 GLShader::~GLShader()

@@ -16,6 +16,8 @@
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/ShaderUniform.h>
+#include <LLGL/Shader.h>
+#include <LLGL/Query.h>
 
 
 namespace LLGL
@@ -41,6 +43,8 @@ GLenum Map( const AxisDirection     cubeFace      ); // GL_TEXTURE_CUBE_MAP_...
 GLenum Map( const TextureWrap       textureWrap   ); // GL_REPEAT, ...
 GLenum Map( const TextureFilter     textureFilter ); // GL_NEAREST, GL_LINEAR
 GLenum Map( const TextureFilter     textureMinFilter, const TextureFilter textureMipMapFilter );
+GLenum Map( const ShaderType        shaderType    );
+GLenum Map( const QueryType         queryType     );
 
 void Unmap( UniformType& result, const GLenum uniformType );
 
