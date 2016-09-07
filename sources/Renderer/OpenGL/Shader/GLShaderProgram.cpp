@@ -138,8 +138,7 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
     if (maxNameLength <= 0)
         return vertexFormat.GetAttributes();
 
-    std::vector<char> attribName;
-    attribName.resize(maxNameLength);
+    std::vector<char> attribName(maxNameLength, 0);
 
     /* Iterate over all vertex attributes */
     for (GLuint i = 0; i < static_cast<GLuint>(numVertexAttribs); ++i)
@@ -182,8 +181,7 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
     if (maxNameLength <= 0)
         return descList;
 
-    std::vector<char> blockName;
-    blockName.resize(maxNameLength);
+    std::vector<char> blockName(maxNameLength, 0);
 
     /* Iterate over all uniform blocks */
     for (GLuint i = 0; i < static_cast<GLuint>(numUniformBlocks); ++i)
@@ -211,8 +209,37 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
 std::vector<StorageBufferDescriptor> GLShaderProgram::QueryStorageBuffers() const
 {
     std::vector<StorageBufferDescriptor> descList;
+    GLenum properties[3] = { 0 };
 
-    //todo...
+    /* Query number of shader storage blocks */
+    properties[0] = GL_NUM_ACTIVE_VARIABLES;
+    GLint numStorageBlocks = 0;
+    glGetProgramResourceiv(id_, GL_SHADER_STORAGE_BLOCK, 0, 1, properties, 1, nullptr, &numStorageBlocks);
+    if (numStorageBlocks <= 0)
+        return descList;
+
+    /* Query maximal name length of all shader storage blocks */
+    GLint maxNameLength = 0;
+    glGetProgramInterfaceiv(id_, GL_SHADER_STORAGE_BLOCK, GL_MAX_NAME_LENGTH, &maxNameLength);
+    if (maxNameLength <= 0)
+        return descList;
+
+    std::vector<char> blockName(maxNameLength, 0);
+
+    /* Iterate over all shader storage blocks */
+    for (GLuint i = 0; i < static_cast<GLuint>(numStorageBlocks); ++i)
+    {
+        StorageBufferDescriptor desc;
+        desc.index = i;
+
+        /* Query shader storage block name */
+        GLsizei nameLength = 0;
+        glGetProgramResourceName(id_, GL_SHADER_STORAGE_BLOCK, i, maxNameLength, &nameLength, blockName.data());
+        desc.name = std::string(blockName.data());
+
+        /* Insert shader storage block into list */
+        descList.push_back(desc);
+    }
 
     return descList;
 }

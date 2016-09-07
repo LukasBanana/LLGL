@@ -322,6 +322,8 @@ int main()
         shaderProgram.BindStorageBuffer("outputBuffer", 0);
         context->BindStorageBuffer(0, *storage);
 
+        auto storeBufferDescs = shaderProgram.QueryStorageBuffers();
+
         #endif
 
         // Main loop
