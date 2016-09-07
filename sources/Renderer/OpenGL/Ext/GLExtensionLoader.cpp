@@ -7,6 +7,7 @@
 
 #include "GLExtensionLoader.h"
 #include "GLExtensions.h"
+#include "GLExtensionsNull.h"
 #include <LLGL/Log.h>
 #include <functional>
 
@@ -60,7 +61,14 @@ static void ExtractExtensionsFromString(std::map<std::string, bool>& extMap, con
 
 #ifndef __APPLE__
 
-#define LOAD_VERBATIM_GLPROC(NAME) LoadGLProc(NAME, #NAME)
+#define LOAD_VERBATIM_GLPROC(NAME) \
+    LoadGLProc(NAME, #NAME)
+
+#define LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER(NAME)   \
+    if (usePlaceHolder)                             \
+        NAME = Dummy_##NAME;                        \
+    else if (!LoadGLProc(NAME, #NAME))              \
+        return false
 
 /* --- Common GL extensions --- */
 
@@ -95,19 +103,19 @@ bool LoadCreateContextProcs()
 
 /* --- Hardware buffer extensions --- */
 
-static bool LoadVBOProcs()
+static bool LoadVBOProcs(bool usePlaceHolder)
 {
-    return
-        LOAD_VERBATIM_GLPROC( glGenBuffers    ) &&
-        LOAD_VERBATIM_GLPROC( glDeleteBuffers ) &&
-        LOAD_VERBATIM_GLPROC( glBindBuffer    ) &&
-        LOAD_VERBATIM_GLPROC( glBufferData    ) &&
-        LOAD_VERBATIM_GLPROC( glBufferSubData ) &&
-        LOAD_VERBATIM_GLPROC( glMapBuffer     ) &&
-        LOAD_VERBATIM_GLPROC( glUnmapBuffer   );
+    LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER( glGenBuffers    );
+    LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER( glDeleteBuffers );
+    LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER( glBindBuffer    );
+    LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER( glBufferData    );
+    LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER( glBufferSubData );
+    LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER( glMapBuffer     );
+    LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER( glUnmapBuffer   );
+    return true;
 }
 
-static bool LoadVAOProcs()
+static bool LoadVAOProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glGenVertexArrays    ) &&
@@ -115,7 +123,7 @@ static bool LoadVAOProcs()
         LOAD_VERBATIM_GLPROC( glBindVertexArray    );
 }
 
-static bool LoadFBOProcs()
+static bool LoadFBOProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glGenRenderbuffers                    ) &&
@@ -141,7 +149,7 @@ static bool LoadFBOProcs()
         LOAD_VERBATIM_GLPROC( glGenerateMipmap                      );
 }
 
-static bool LoadUBOProcs()
+static bool LoadUBOProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glGetUniformBlockIndex      ) &&
@@ -151,26 +159,26 @@ static bool LoadUBOProcs()
         LOAD_VERBATIM_GLPROC( glBindBufferBase            );
 }
 
-static bool LoadSSBOProcs()
+static bool LoadSSBOProcs(bool usePlaceHolder)
 {
     return LOAD_VERBATIM_GLPROC(glShaderStorageBlockBinding);
 }
 
 /* --- Drawing extensions --- */
 
-static bool LoadDrawBuffersProcs()
+static bool LoadDrawBuffersProcs(bool usePlaceHolder)
 {
     return LOAD_VERBATIM_GLPROC(glDrawBuffers);
 }
 
-static bool LoadInstancedProcs()
+static bool LoadInstancedProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glDrawArraysInstanced   ) &&
         LOAD_VERBATIM_GLPROC( glDrawElementsInstanced );
 }
 
-static bool LoadInstancedOffsetProcs()
+static bool LoadInstancedOffsetProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glDrawArraysInstancedBaseInstance             ) &&
@@ -178,7 +186,7 @@ static bool LoadInstancedOffsetProcs()
         LOAD_VERBATIM_GLPROC( glDrawElementsInstancedBaseVertexBaseInstance );
 }
 
-static bool LoadBaseVertexProcs()
+static bool LoadBaseVertexProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glDrawElementsBaseVertex          ) &&
@@ -187,7 +195,7 @@ static bool LoadBaseVertexProcs()
 
 /* --- Shader extensions --- */
 
-static bool LoadShaderProcs()
+static bool LoadShaderProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glCreateShader       ) &&
@@ -225,7 +233,7 @@ static bool LoadShaderProcs()
         LOAD_VERBATIM_GLPROC( glUniformMatrix4fv   );
 }
 
-static bool LoadVertexAttribProcs()
+static bool LoadVertexAttribProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glEnableVertexAttribArray  ) &&
@@ -235,21 +243,21 @@ static bool LoadVertexAttribProcs()
         LOAD_VERBATIM_GLPROC( glBindAttribLocation       );
 }
 
-static bool LoadTessellationShaderProcs()
+static bool LoadTessellationShaderProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glPatchParameteri  ) &&
         LOAD_VERBATIM_GLPROC( glPatchParameterfv );
 }
 
-static bool LoadComputeShaderProcs()
+static bool LoadComputeShaderProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glDispatchCompute         ) &&
         LOAD_VERBATIM_GLPROC( glDispatchComputeIndirect );
 }
 
-static bool LoadProgramBinaryProcs()
+static bool LoadProgramBinaryProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glGetProgramBinary  ) &&
@@ -257,7 +265,7 @@ static bool LoadProgramBinaryProcs()
         LOAD_VERBATIM_GLPROC( glProgramParameteri );
 }
 
-static bool LoadProgramInterfaceQueryProcs()
+static bool LoadProgramInterfaceQueryProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glGetProgramInterfaceiv           ) &&
@@ -270,26 +278,26 @@ static bool LoadProgramInterfaceQueryProcs()
 
 /* --- Texture extensions --- */
 
-static bool LoadMultiTextureProcs()
+static bool LoadMultiTextureProcs(bool usePlaceHolder)
 {
     return LOAD_VERBATIM_GLPROC(glActiveTexture);
 }
 
-static bool Load3DTextureProcs()
+static bool Load3DTextureProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glTexImage3D    ) &&
         LOAD_VERBATIM_GLPROC( glTexSubImage3D );
 }
 
-static bool LoadClearTextureProcs()
+static bool LoadClearTextureProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glClearTexImage    ) &&
         LOAD_VERBATIM_GLPROC( glClearTexSubImage );
 }
 
-static bool LoadSamplerProcs()
+static bool LoadSamplerProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glGenSamplers        ) &&
@@ -303,7 +311,7 @@ static bool LoadSamplerProcs()
 
 /* --- Other extensions --- */
 
-static bool LoadQueryObjectProcs()
+static bool LoadQueryObjectProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glGenQueries        ) &&
@@ -314,7 +322,7 @@ static bool LoadQueryObjectProcs()
         LOAD_VERBATIM_GLPROC( glGetQueryObjectuiv );
 }
 
-static bool LoadTimerQueryObjectProcs()
+static bool LoadTimerQueryObjectProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glQueryCounter        ) &&
@@ -322,7 +330,7 @@ static bool LoadTimerQueryObjectProcs()
         LOAD_VERBATIM_GLPROC( glGetQueryObjectui64v );
 }
 
-static bool LoadViewportArrayProcs()
+static bool LoadViewportArrayProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glViewportArrayv   ) &&
@@ -330,14 +338,14 @@ static bool LoadViewportArrayProcs()
         LOAD_VERBATIM_GLPROC( glDepthRangeArrayv );
 }
 
-static bool LoadDrawBuffersBlendProcs()
+static bool LoadDrawBuffersBlendProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glBlendFuncSeparate  ) &&
         LOAD_VERBATIM_GLPROC( glBlendFuncSeparatei );
 }
 
-static bool LoadMultiBindProcs()
+static bool LoadMultiBindProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glBindBuffersBase   ) &&
@@ -348,7 +356,7 @@ static bool LoadMultiBindProcs()
         LOAD_VERBATIM_GLPROC( glBindVertexBuffers );
 }
 
-static bool LoadStencilSeparateProcs()
+static bool LoadStencilSeparateProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glStencilFuncSeparate ) &&
@@ -356,17 +364,17 @@ static bool LoadStencilSeparateProcs()
         LOAD_VERBATIM_GLPROC( glStencilOpSeparate   );
 }
 
-static bool LoadDebugProcs()
+static bool LoadDebugProcs(bool usePlaceHolder)
 {
     return LOAD_VERBATIM_GLPROC(glDebugMessageCallback);
 }
 
-static bool LoadClipControlProcs()
+static bool LoadClipControlProcs(bool usePlaceHolder)
 {
     return LOAD_VERBATIM_GLPROC(glClipControl);
 }
 
-static bool LoadIndexedProcs()
+static bool LoadIndexedProcs(bool usePlaceHolder)
 {
     return
         LOAD_VERBATIM_GLPROC( glColorMaski    ) &&
@@ -378,6 +386,7 @@ static bool LoadIndexedProcs()
 }
 
 #undef LOAD_VERBATIM_GLPROC
+#undef LOAD_VERBATIM_GLPROC_OR_PLACEHOLDER
     
 #endif
 
@@ -446,13 +455,19 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
         return;
 
     /* Internal extension loading lambda function */
-    auto LoadExtension = [&](const std::string& extName, const std::function<bool(void)>& extLoadingProc) -> void
+    auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc) -> void
     {
+        /* Try to load OpenGL extension */
         auto it = extMap.find(extName);
-        if (it != extMap.end() && !extLoadingProc())
+        if (it != extMap.end() && !extLoadingProc(false))
         {
             Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
             it->second = false;
+        }
+        else if (it == extMap.end())
+        {
+            /* If failed, use dummy procedures to detect illegal use of OpenGL extension */
+            extLoadingProc(true);
         }
     };
 
