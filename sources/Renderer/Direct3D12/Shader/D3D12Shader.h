@@ -60,6 +60,8 @@ class D3D12Shader : public Shader
 
     private:
 
+        void ReflectShader();
+
         std::vector<char>                       byteCode_;
         ID3DBlob*                               errors_             = nullptr;
 

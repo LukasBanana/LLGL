@@ -96,6 +96,9 @@ int main()
             std::cout << "Constant Buffers: " << shaderProgram->QueryConstantBuffers().size() << std::endl;
         #endif
 
+        auto constBufferDescs = shaderProgram->QueryConstantBuffers();
+        auto storeBufferDescs = shaderProgram->QueryStorageBuffers();
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {

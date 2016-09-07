@@ -57,13 +57,12 @@ static UINT GetDXCompileFlags(int flags)
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
 bool D3D12Shader::Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags)
 {
-    HRESULT hr = 0;
     SafeRelease(errors_);
     
     /* Compile shader code */
     ID3DBlob* code = nullptr;
 
-    hr = D3DCompile(
+    auto hr = D3DCompile(
         shaderSource.data(),
         shaderSource.size(),
         nullptr,                                                // LPCSTR               pSourceName
@@ -86,7 +85,62 @@ bool D3D12Shader::Compile(const std::string& shaderSource, const std::string& en
 
     if (FAILED(hr))
         return false;
-    
+
+    /* Get shader reflection */
+    ReflectShader();
+
+    return true;
+}
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607326(v=vs.85).aspx
+static UINT GetDXDisassembleFlags(int flags)
+{
+    UINT dxFlags = 0;
+
+    if ((flags & ShaderDisassembleFlags::InstructionOnly) != 0)
+        dxFlags |= D3D_DISASM_INSTRUCTION_ONLY;
+
+    return dxFlags;
+}
+
+std::string D3D12Shader::Disassemble(int flags)
+{
+    if (!byteCode_.empty())
+    {
+        ID3DBlob* disasm = nullptr;
+
+        auto hr = D3DDisassemble(byteCode_.data(), byteCode_.size(), GetDXDisassembleFlags(flags), nullptr, &disasm);
+        DXThrowIfFailed(hr, "failed to disassemble D3D12 shader byte code");
+
+        return DXGetBlobString(disasm);
+    }
+    return "";
+}
+
+std::string D3D12Shader::QueryInfoLog()
+{
+    return (errors_ != nullptr ? DXGetBlobString(errors_) : "");
+}
+
+D3D12_SHADER_BYTECODE D3D12Shader::GetByteCode() const
+{
+    D3D12_SHADER_BYTECODE byteCode;
+
+    byteCode.pShaderBytecode    = byteCode_.data();
+    byteCode.BytecodeLength     = static_cast<SIZE_T>(byteCode_.size());
+
+    return byteCode;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void D3D12Shader::ReflectShader()
+{
+    HRESULT hr = 0;
+
     /* Get shader reflection */
     ID3D12ShaderReflection* reflection = nullptr;
     hr = D3DReflect(byteCode_.data(), byteCode_.size(), IID_PPV_ARGS(&reflection));
@@ -167,48 +221,6 @@ bool D3D12Shader::Compile(const std::string& shaderSource, const std::string& en
 
     /* Release shader reflection */
     reflection->Release();
-
-    return true;
-}
-
-// see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607326(v=vs.85).aspx
-static UINT GetDXDisassembleFlags(int flags)
-{
-    UINT dxFlags = 0;
-
-    if ((flags & ShaderDisassembleFlags::InstructionOnly) != 0)
-        dxFlags |= D3D_DISASM_INSTRUCTION_ONLY;
-
-    return dxFlags;
-}
-
-std::string D3D12Shader::Disassemble(int flags)
-{
-    if (!byteCode_.empty())
-    {
-        ID3DBlob* disasm = nullptr;
-
-        auto hr = D3DDisassemble(byteCode_.data(), byteCode_.size(), GetDXDisassembleFlags(flags), nullptr, &disasm);
-        DXThrowIfFailed(hr, "failed to disassemble D3D12 shader byte code");
-
-        return DXGetBlobString(disasm);
-    }
-    return "";
-}
-
-std::string D3D12Shader::QueryInfoLog()
-{
-    return (errors_ != nullptr ? DXGetBlobString(errors_) : "");
-}
-
-D3D12_SHADER_BYTECODE D3D12Shader::GetByteCode() const
-{
-    D3D12_SHADER_BYTECODE byteCode;
-
-    byteCode.pShaderBytecode    = byteCode_.data();
-    byteCode.BytecodeLength     = static_cast<SIZE_T>(byteCode_.size());
-
-    return byteCode;
 }
 
 

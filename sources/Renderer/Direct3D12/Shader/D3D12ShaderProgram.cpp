@@ -23,6 +23,23 @@ D3D12ShaderProgram::D3D12ShaderProgram()
 {
 }
 
+template <typename T>
+void InsertBufferDesc(std::vector<T>& container, const std::vector<T>& entries)
+{
+    for (const auto& desc : entries)
+    {
+        auto it = std::find_if(
+            container.begin(), container.end(), 
+            [&desc](const T& entry)
+            {
+                return (entry.index == desc.index);
+            }
+        );
+        if (it == container.end())
+            container.push_back(desc);
+    }
+}
+
 void D3D12ShaderProgram::AttachShader(Shader& shader)
 {
     /* Store D3D12 shader */
@@ -51,33 +68,9 @@ void D3D12ShaderProgram::AttachShader(Shader& shader)
             break;
     }
 
-    /* Add constant buffer descriptors */
-    for (const auto& desc : shaderD3D->GetConstantBufferDescs())
-    {
-        auto it = std::find_if(
-            constantBufferDescs_.begin(), constantBufferDescs_.end(), 
-            [&desc](const ConstantBufferDescriptor& entry)
-            {
-                return (entry.index == desc.index);
-            }
-        );
-        if (it == constantBufferDescs_.end())
-            constantBufferDescs_.push_back(desc);
-    }
-
-    /* Add storage buffer descriptors */
-    for (const auto& desc : shaderD3D->GetStorageBufferDescs())
-    {
-        auto it = std::find_if(
-            storageBufferDescs_.begin(), storageBufferDescs_.end(),
-            [&desc](const StorageBufferDescriptor& entry)
-            {
-                return (entry.index == desc.index);
-            }
-        );
-        if (it == storageBufferDescs_.end())
-            storageBufferDescs_.push_back(desc);
-    }
+    /* Add constant- and storage buffer descriptors */
+    InsertBufferDesc(constantBufferDescs_, shaderD3D->GetConstantBufferDescs());
+    InsertBufferDesc(storageBufferDescs_, shaderD3D->GetStorageBufferDescs());
 }
 
 bool D3D12ShaderProgram::LinkShaders()
