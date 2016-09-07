@@ -24,14 +24,24 @@ GLHardwareBuffer::~GLHardwareBuffer()
     glDeleteBuffers(1, &id_);
 }
 
-void GLHardwareBuffer::BufferData(const void* data, const GLsizeiptr size, const GLenum usage)
+void GLHardwareBuffer::BufferData(const void* data, GLsizeiptr size, GLenum usage)
 {
     glBufferData(target_, size, data, usage);
 }
 
-void GLHardwareBuffer::BufferSubData(const void* data, const GLsizeiptr size, const GLintptr offset)
+void GLHardwareBuffer::BufferSubData(const void* data, GLsizeiptr size, GLintptr offset)
 {
     glBufferSubData(target_, offset, size, data);
+}
+
+void* GLHardwareBuffer::MapBuffer(GLenum access)
+{
+    return glMapBuffer(target_, access);
+}
+
+GLboolean GLHardwareBuffer::UnmapBuffer()
+{
+    return glUnmapBuffer(target_);
 }
 
 
