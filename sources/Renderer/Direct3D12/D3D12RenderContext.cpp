@@ -257,15 +257,17 @@ void D3D12RenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
     //todo
 }
 
-
-/*
- * ======= Private: =======
- */
+/* ----- Misc ----- */
 
 void D3D12RenderContext::SyncGPU()
 {
     renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
 }
+
+
+/*
+ * ======= Private: =======
+ */
 
 void D3D12RenderContext::CreateWindowSizeDependentResources()
 {

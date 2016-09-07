@@ -123,6 +123,10 @@ class GLRenderContext : public RenderContext
 
         void DispatchCompute(const Gs::Vector3ui& threadGroupSize) override;
 
+        /* ----- Misc ----- */
+
+        void SyncGPU() override;
+
         /* ----- GLRenderContext specific functions ----- */
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);

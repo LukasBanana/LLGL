@@ -156,6 +156,11 @@ class LLGL_EXPORT RenderContext
 
         virtual void DispatchCompute(const Gs::Vector3ui& threadGroupSize) = 0;
 
+        /* ----- Misc ----- */
+
+        //! Synchronizes the GPU, i.e. waits until the GPU has completed all pending commands.
+        virtual void SyncGPU() = 0;
+
     protected:
 
         RenderContext() = default;

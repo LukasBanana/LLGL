@@ -117,11 +117,14 @@ class D3D12RenderContext : public RenderContext
 
         void DispatchCompute(const Gs::Vector3ui& threadGroupSize) override;
 
+        /* ----- Misc ----- */
+
+        void SyncGPU() override;
+
     private:
 
         static const UINT maxNumBuffers = 3;
 
-        void SyncGPU();
         void CreateWindowSizeDependentResources();
         
         void SetupSwapChainInterval(const VsyncDescriptor& desc);

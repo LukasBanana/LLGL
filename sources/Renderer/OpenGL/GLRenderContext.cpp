@@ -425,6 +425,13 @@ void GLRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
     glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
 }
 
+/* ----- Misc ----- */
+
+void GLRenderContext::SyncGPU()
+{
+    glFinish();
+}
+
 
 /*
  * ======= Private: =======
