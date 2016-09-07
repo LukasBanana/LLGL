@@ -20,7 +20,6 @@ namespace LLGL
 
 // WGL_EXT_swap_control
 PFNWGLSWAPINTERVALEXTPROC                               wglSwapIntervalEXT                              = nullptr;
-
 PFNWGLCHOOSEPIXELFORMATARBPROC                          wglChoosePixelFormatARB                         = nullptr;
 PFNWGLCREATECONTEXTATTRIBSARBPROC                       wglCreateContextAttribsARB                      = nullptr;
 PFNWGLGETEXTENSIONSSTRINGARBPROC                        wglGetExtensionsStringARB                       = nullptr;
