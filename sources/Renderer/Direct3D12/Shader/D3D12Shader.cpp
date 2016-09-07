@@ -143,6 +143,29 @@ bool D3D12Shader::Compile(const std::string& shaderSource, const std::string& en
         }
     }
 
+    /* Get storage buffer descriptors */
+    bufferIdx = 0;
+    for (UINT i = 0; i < shaderDesc.BoundResources; ++i)
+    {
+        /* Get shader input resource descriptor */
+        D3D12_SHADER_INPUT_BIND_DESC inputBindDesc;
+        hr = reflection->GetResourceBindingDesc(i, &inputBindDesc);
+        DXThrowIfFailed(hr, "failed to retrieve D3D12 shader input binding descriptor");
+
+        if ( inputBindDesc.Type >= D3D_SIT_UAV_RWTYPED &&
+             inputBindDesc.Type <= D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER )
+        {
+            /* Add storage buffer descriptor to output list */
+            StorageBufferDescriptor storeBufferDesc;
+            {
+                storeBufferDesc.name    = std::string(inputBindDesc.Name);
+                storeBufferDesc.index   = bufferIdx++;
+            }
+            storageBufferDescs_.push_back(storeBufferDesc);
+        }
+    }
+
+    /* Release shader reflection */
     reflection->Release();
 
     return true;

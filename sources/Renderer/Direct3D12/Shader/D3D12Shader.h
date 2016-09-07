@@ -12,6 +12,7 @@
 #include <LLGL/Shader.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/ConstantBuffer.h>
+#include <LLGL/StorageBuffer.h>
 #include <vector>
 #include <d3d12.h>
 
@@ -52,6 +53,11 @@ class D3D12Shader : public Shader
             return constantBufferDescs_;
         }
 
+        inline const std::vector<StorageBufferDescriptor>& GetStorageBufferDescs() const
+        {
+            return storageBufferDescs_;
+        }
+
     private:
 
         std::vector<char>                       byteCode_;
@@ -59,6 +65,7 @@ class D3D12Shader : public Shader
 
         std::vector<VertexAttribute>            vertexAttributes_;
         std::vector<ConstantBufferDescriptor>   constantBufferDescs_;
+        std::vector<StorageBufferDescriptor>    storageBufferDescs_;
 
 };
 

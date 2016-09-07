@@ -59,6 +59,9 @@ class LLGL_EXPORT ShaderProgram
         //! Returns a list of constant buffer descriptors, which describe all constant buffers (also "Uniform Buffer Object") within this shader program.
         virtual std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const = 0;
 
+        //! Returns a list of storage buffer descriptors, which describe all storage buffers (also "Shader Storage Buffer Object" or "Read/Write Buffer") within this shader program.
+        virtual std::vector<StorageBufferDescriptor> QueryStorageBuffers() const = 0;
+
         /**
         \brief Returns a list of uniform descriptors, which describe all uniforms within this shader program.
         \remarks Shader uniforms are only supported in OpenGL 2.0+.

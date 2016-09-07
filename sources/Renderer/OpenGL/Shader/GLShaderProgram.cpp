@@ -208,6 +208,15 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
     return descList;
 }
 
+std::vector<StorageBufferDescriptor> GLShaderProgram::QueryStorageBuffers() const
+{
+    std::vector<StorageBufferDescriptor> descList;
+
+    //todo...
+
+    return descList;
+}
+
 std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
 {
     std::vector<UniformDescriptor> descList;

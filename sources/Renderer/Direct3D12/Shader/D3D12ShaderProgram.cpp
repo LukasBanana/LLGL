@@ -56,13 +56,27 @@ void D3D12ShaderProgram::AttachShader(Shader& shader)
     {
         auto it = std::find_if(
             constantBufferDescs_.begin(), constantBufferDescs_.end(), 
-            [desc](const ConstantBufferDescriptor& entry)
+            [&desc](const ConstantBufferDescriptor& entry)
             {
                 return (entry.index == desc.index);
             }
         );
         if (it == constantBufferDescs_.end())
             constantBufferDescs_.push_back(desc);
+    }
+
+    /* Add storage buffer descriptors */
+    for (const auto& desc : shaderD3D->GetStorageBufferDescs())
+    {
+        auto it = std::find_if(
+            storageBufferDescs_.begin(), storageBufferDescs_.end(),
+            [&desc](const StorageBufferDescriptor& entry)
+            {
+                return (entry.index == desc.index);
+            }
+        );
+        if (it == storageBufferDescs_.end())
+            storageBufferDescs_.push_back(desc);
     }
 }
 
@@ -115,6 +129,11 @@ std::vector<VertexAttribute> D3D12ShaderProgram::QueryVertexAttributes() const
 std::vector<ConstantBufferDescriptor> D3D12ShaderProgram::QueryConstantBuffers() const
 {
     return constantBufferDescs_;
+}
+
+std::vector<StorageBufferDescriptor> D3D12ShaderProgram::QueryStorageBuffers() const
+{
+    return storageBufferDescs_;
 }
 
 std::vector<UniformDescriptor> D3D12ShaderProgram::QueryUniforms() const
