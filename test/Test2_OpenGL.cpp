@@ -131,7 +131,7 @@ int main()
             { 0, 0 }, { 100, 200 },
         };
         
-        renderer->WriteVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
+        renderer->SetupVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
 
         // Create vertex shader
         auto& vertShader = *renderer->CreateShader(LLGL::ShaderType::Vertex);
@@ -318,7 +318,7 @@ int main()
         #ifdef TEST_STORAGE_BUFFER
         
         auto storage = renderer->CreateStorageBuffer();
-        renderer->WriteStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
+        renderer->SetupStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
         //shaderProgram.BindStorageBuffer("outputBuffer", 0);
         context->BindStorageBuffer(0, *storage);
 

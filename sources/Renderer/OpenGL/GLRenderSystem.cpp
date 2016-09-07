@@ -173,7 +173,7 @@ void GLRenderSystem::Release(StorageBuffer& storageBuffer)
     RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
 }
 
-void GLRenderSystem::WriteVertexBuffer(
+void GLRenderSystem::SetupVertexBuffer(
     VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
 {
     /* Bind vertex buffer */
@@ -185,7 +185,7 @@ void GLRenderSystem::WriteVertexBuffer(
     vertexBufferGL.UpdateVertexFormat(vertexFormat);
 }
 
-void GLRenderSystem::WriteIndexBuffer(
+void GLRenderSystem::SetupIndexBuffer(
     IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
 {
     /* Bind index buffer */
@@ -197,32 +197,32 @@ void GLRenderSystem::WriteIndexBuffer(
     indexBufferGL.UpdateIndexFormat(indexFormat);
 }
 
-void GLRenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
+void GLRenderSystem::SetupConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
     BindAndGetHWBuffer<GLConstantBuffer>(constantBuffer).BufferData(data, dataSize, GLTypes::Map(usage));
 }
 
-void GLRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
+void GLRenderSystem::SetupStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
     BindAndGetHWBuffer<GLStorageBuffer>(storageBuffer).BufferData(data, dataSize, GLTypes::Map(usage));
 }
 
-void GLRenderSystem::WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::UpdateVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     BindAndGetHWBuffer<GLVertexBuffer>(vertexBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
-void GLRenderSystem::WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::UpdateIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     BindAndGetHWBuffer<GLIndexBuffer>(indexBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
-void GLRenderSystem::WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::UpdateConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     BindAndGetHWBuffer<GLConstantBuffer>(constantBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
-void GLRenderSystem::WriteStorageBufferSub(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::UpdateStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     BindAndGetHWBuffer<GLStorageBuffer>(storageBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }

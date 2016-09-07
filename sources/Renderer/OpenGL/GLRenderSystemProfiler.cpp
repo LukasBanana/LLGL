@@ -28,27 +28,27 @@ RenderContext* GLRenderSystemProfiler::CreateRenderContext(const RenderContextDe
 /* ----- Hardware buffers ------ */
 
 
-void GLRenderSystemProfiler::WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystemProfiler::UpdateVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    GLRenderSystem::WriteVertexBufferSub(vertexBuffer, data, dataSize, offset);
+    GLRenderSystem::UpdateVertexBuffer(vertexBuffer, data, dataSize, offset);
     profiler_.updateVertexBuffer.Inc();
 }
 
-void GLRenderSystemProfiler::WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystemProfiler::UpdateIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    GLRenderSystem::WriteIndexBufferSub(indexBuffer, data, dataSize, offset);
+    GLRenderSystem::UpdateIndexBuffer(indexBuffer, data, dataSize, offset);
     profiler_.updateIndexBuffer.Inc();
 }
 
-void GLRenderSystemProfiler::WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystemProfiler::UpdateConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    GLRenderSystem::WriteConstantBufferSub(constantBuffer, data, dataSize, offset);
+    GLRenderSystem::UpdateConstantBuffer(constantBuffer, data, dataSize, offset);
     profiler_.updateConstantBuffer.Inc();
 }
 
-void GLRenderSystemProfiler::WriteStorageBufferSub(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystemProfiler::UpdateStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    GLRenderSystem::WriteStorageBufferSub(storageBuffer, data, dataSize, offset);
+    GLRenderSystem::UpdateStorageBuffer(storageBuffer, data, dataSize, offset);
     profiler_.updateStorageBuffer.Inc();
 }
 

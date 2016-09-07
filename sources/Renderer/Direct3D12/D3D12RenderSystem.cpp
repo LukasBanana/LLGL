@@ -185,46 +185,46 @@ void D3D12RenderSystem::Release(StorageBuffer& storageBuffer)
     //RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
 }
 
-void D3D12RenderSystem::WriteVertexBuffer(
+void D3D12RenderSystem::SetupVertexBuffer(
     VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
 {
     //todo
 }
 
-void D3D12RenderSystem::WriteIndexBuffer(
+void D3D12RenderSystem::SetupIndexBuffer(
     IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
 {
     //todo
 }
 
-void D3D12RenderSystem::WriteConstantBuffer(
+void D3D12RenderSystem::SetupConstantBuffer(
     ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
     //todo
 }
 
-void D3D12RenderSystem::WriteStorageBuffer(
+void D3D12RenderSystem::SetupStorageBuffer(
     StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
     //todo
 }
 
-void D3D12RenderSystem::WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D12RenderSystem::UpdateVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }
 
-void D3D12RenderSystem::WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D12RenderSystem::UpdateIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }
 
-void D3D12RenderSystem::WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D12RenderSystem::UpdateConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }
 
-void D3D12RenderSystem::WriteStorageBufferSub(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D12RenderSystem::UpdateStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }
