@@ -212,42 +212,42 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
-    //todo
+    gfxCommandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-    //todo
+    gfxCommandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
-    //todo
+    gfxCommandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
-    //todo
+    gfxCommandList_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
-    //todo
+    gfxCommandList_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
-    //todo
+    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
-    //todo
+    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
-    //todo
+    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
