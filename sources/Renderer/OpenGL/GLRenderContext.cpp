@@ -9,6 +9,7 @@
 #include "GLRenderSystem.h"
 #include "GLTypes.h"
 #include "Ext/GLExtensions.h"
+#include "../Assertion.h"
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
@@ -211,6 +212,33 @@ void GLRenderContext::BindStorageBuffer(StorageBuffer& storageBuffer, unsigned i
 void GLRenderContext::UnbindStorageBuffer(unsigned int index)
 {
     stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, index, 0);
+}
+
+void* GLRenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
+{
+    if (!renderState_.mappedStorageBuffer)
+    {
+        /* Get and store storage buffer */
+        auto& storageBufferGL = LLGL_CAST(GLStorageBuffer&, storageBuffer);
+        renderState_.mappedStorageBuffer = &storageBufferGL;
+
+        /* Bind and map storage buffer */
+        stateMngr_->BindBuffer(storageBufferGL);
+        return storageBufferGL.hwBuffer.MapBuffer(GLTypes::Map(access));
+    }
+    else
+        throw std::runtime_error(LLGL_ASSERT_INFO("failed to map storage buffer, due to pending previouly mapped storage buffer"));
+}
+
+void GLRenderContext::UnmapStorageBuffer()
+{
+    if (renderState_.mappedStorageBuffer)
+    {
+        renderState_.mappedStorageBuffer->hwBuffer.UnmapBuffer();
+        renderState_.mappedStorageBuffer = nullptr;
+    }
+    else
+        throw std::runtime_error(LLGL_ASSERT_INFO("no storage buffer set to unmap"));
 }
 
 /* ----- Textures ----- */

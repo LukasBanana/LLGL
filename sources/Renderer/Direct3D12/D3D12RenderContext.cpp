@@ -153,6 +153,16 @@ void D3D12RenderContext::UnbindStorageBuffer(unsigned int index)
     //todo
 }
 
+void* D3D12RenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
+{
+    return nullptr;//todo
+}
+
+void D3D12RenderContext::UnmapStorageBuffer()
+{
+    //todo
+}
+
 /* ----- Textures ----- */
 
 void D3D12RenderContext::BindTexture(unsigned int layer, Texture& texture)

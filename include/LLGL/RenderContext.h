@@ -13,6 +13,7 @@
 #include "Window.h"
 #include "RenderContextDescriptor.h"
 #include "RenderContextFlags.h"
+#include "RenderSystemFlags.h"
 #include "ColorRGBA.h"
 
 #include "VertexBuffer.h"
@@ -102,6 +103,22 @@ class LLGL_EXPORT RenderContext
 
         virtual void BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) = 0;
         virtual void UnbindStorageBuffer(unsigned int index) = 0;
+
+        /**
+        \brief Maps the specified storage buffer from GPU to CPU memory space.
+        \param[in] storageBuffer Specifies the storage buffer which is to be mapped.
+        \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
+        \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
+        \throws std::runtime_error If a storage buffer is already being mapped.
+        \see UnmapStorageBuffer
+        */
+        virtual void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) = 0;
+
+        /**
+        \brief Unmaps the previously mapped storage buffer.
+        \see MapStorageBuffer
+        */
+        virtual void UnmapStorageBuffer() = 0;
 
         /* ----- Textures ----- */
 

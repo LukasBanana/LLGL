@@ -79,6 +79,9 @@ class GLRenderContext : public RenderContext
         void BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) override;
         void UnbindStorageBuffer(unsigned int index) override;
 
+        void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
+        void UnmapStorageBuffer() override;
+
         /* ----- Textures ----- */
 
         void BindTexture(unsigned int layer, Texture& texture) override;
@@ -138,9 +141,10 @@ class GLRenderContext : public RenderContext
 
         struct RenderState
         {
-            GLenum      drawMode            = GL_TRIANGLES;
-            GLenum      indexBufferDataType = GL_UNSIGNED_INT;
-            GLintptr    indexBufferStride   = 4;
+            GLenum              drawMode            = GL_TRIANGLES;
+            GLenum              indexBufferDataType = GL_UNSIGNED_INT;
+            GLintptr            indexBufferStride   = 4;
+            GLStorageBuffer*    mappedStorageBuffer = nullptr;
         };
 
         #ifndef __APPLE__

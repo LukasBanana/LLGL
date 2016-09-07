@@ -73,6 +73,9 @@ class D3D12RenderContext : public RenderContext
         void BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) override;
         void UnbindStorageBuffer(unsigned int index) override;
 
+        void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
+        void UnmapStorageBuffer() override;
+
         /* ----- Textures ----- */
 
         void BindTexture(unsigned int layer, Texture& texture) override;
