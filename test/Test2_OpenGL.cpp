@@ -14,7 +14,8 @@
 
 
 //#define TEST_RENDER_TARGET
-#define TEST_QUERY
+//#define TEST_QUERY
+#define TEST_STORAGE_BUFFER
 
 
 int main()
@@ -137,13 +138,25 @@ int main()
 
         std::string shaderSource =
         (
+            #ifdef TEST_STORAGE_BUFFER
+            "#version 430\n"
+            #else
             "#version 130\n"
+            #endif
             "uniform mat4 projection;\n"
+            #ifdef TEST_STORAGE_BUFFER
+            "layout(std430, binding=0) buffer outputBuffer {\n"
+            "    float v[4];\n"
+            "} outputData;\n"
+            #endif
             "in vec2 position;\n"
             "out vec2 vertexPos;\n"
             "void main() {\n"
             "    gl_Position = projection * vec4(position, 0.0, 1.0);\n"
             "    vertexPos = (position - vec2(125, 125))*vec2(0.02);\n"
+            #ifdef TEST_STORAGE_BUFFER
+            "    outputData.v[gl_VertexID] = vertexPos.x;\n"
+            #endif
             "}\n"
         );
 
@@ -302,6 +315,15 @@ int main()
         bool hasQueryResult = false;
         #endif
 
+        #ifdef TEST_STORAGE_BUFFER
+        
+        auto storage = renderer->CreateStorageBuffer();
+        renderer->WriteStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
+        //shaderProgram.BindStorageBuffer("outputBuffer", 0);
+        context->BindStorageBuffer(*storage, 0);
+
+        #endif
+
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
@@ -373,6 +395,22 @@ int main()
             context->BindTexture(0, texture);
             context->Draw(4, 0);
             
+            #ifdef TEST_STORAGE_BUFFER
+            
+            static bool outputShown;
+            if (!outputShown)
+            {
+                outputShown = true;
+                auto outputData = context->MapStorageBuffer(*storage, LLGL::BufferCPUAccess::ReadOnly);
+                {
+                    auto v = reinterpret_cast<Gs::Vector4f*>(outputData);
+                    std::cout << "storage buffer output: " << *v << std::endl;
+                }
+                context->UnmapStorageBuffer();
+            }
+
+            #endif
+
             #ifdef TEST_QUERY
 
             if (!hasQueryResult)
