@@ -301,8 +301,12 @@ void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int b
 
 void GLShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
 {
-    GLuint blockIndex = bindingIndex;//TODO -> replace this by 'name to index' conversion!!!
-    glShaderStorageBlockBinding(id_, blockIndex, bindingIndex);
+    /* Query shader storage block index and bind it to the specified binding index */
+    auto blockIndex = glGetProgramResourceIndex(id_, GL_SHADER_STORAGE_BLOCK, name.c_str());
+    if (blockIndex != GL_INVALID_INDEX)
+        glShaderStorageBlockBinding(id_, blockIndex, bindingIndex);
+    else
+        throw std::invalid_argument("failed to bind storage buffer, because storage block name is invalid");
 }
 
 ShaderUniform* GLShaderProgram::LockShaderUniform()

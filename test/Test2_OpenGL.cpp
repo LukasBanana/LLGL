@@ -145,7 +145,7 @@ int main()
             #endif
             "uniform mat4 projection;\n"
             #ifdef TEST_STORAGE_BUFFER
-            "layout(std430, binding=0) buffer outputBuffer {\n"
+            "layout(std430) buffer outputBuffer {\n"
             "    float v[4];\n"
             "} outputData;\n"
             #endif
@@ -319,7 +319,7 @@ int main()
         
         auto storage = renderer->CreateStorageBuffer();
         renderer->SetupStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
-        //shaderProgram.BindStorageBuffer("outputBuffer", 0);
+        shaderProgram.BindStorageBuffer("outputBuffer", 0);
         context->BindStorageBuffer(0, *storage);
 
         #endif
