@@ -27,55 +27,29 @@ RenderContext* GLRenderSystemProfiler::CreateRenderContext(const RenderContextDe
 
 /* ----- Hardware buffers ------ */
 
-void GLRenderSystemProfiler::WriteVertexBuffer(
-    VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
-{
-    GLRenderSystem::WriteVertexBuffer(vertexBuffer, data, dataSize, usage, vertexFormat);
-    profiler_.writeVertexBuffer.Inc();
-}
-
-void GLRenderSystemProfiler::WriteIndexBuffer(
-    IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
-{
-    GLRenderSystem::WriteIndexBuffer(indexBuffer, data, dataSize, usage, indexFormat);
-    profiler_.writeIndexBuffer.Inc();
-}
-
-void GLRenderSystemProfiler::WriteConstantBuffer(
-    ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    GLRenderSystem::WriteConstantBuffer(constantBuffer, data, dataSize, usage);
-    profiler_.writeConstantBuffer.Inc();
-}
-
-void GLRenderSystemProfiler::WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    GLRenderSystem::WriteStorageBuffer(storageBuffer, data, dataSize, usage);
-    profiler_.writeStorageBuffer.Inc();
-}
 
 void GLRenderSystemProfiler::WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     GLRenderSystem::WriteVertexBufferSub(vertexBuffer, data, dataSize, offset);
-    profiler_.writeVertexBufferSub.Inc();
+    profiler_.updateVertexBuffer.Inc();
 }
 
 void GLRenderSystemProfiler::WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     GLRenderSystem::WriteIndexBufferSub(indexBuffer, data, dataSize, offset);
-    profiler_.writeIndexBufferSub.Inc();
+    profiler_.updateIndexBuffer.Inc();
 }
 
 void GLRenderSystemProfiler::WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     GLRenderSystem::WriteConstantBufferSub(constantBuffer, data, dataSize, offset);
-    profiler_.writeConstantBufferSub.Inc();
+    profiler_.updateConstantBuffer.Inc();
 }
 
 void GLRenderSystemProfiler::WriteStorageBufferSub(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     GLRenderSystem::WriteStorageBufferSub(storageBuffer, data, dataSize, offset);
-    profiler_.writeStorageBufferSub.Inc();
+    profiler_.updateStorageBuffer.Inc();
 }
 
 

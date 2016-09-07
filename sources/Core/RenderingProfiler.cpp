@@ -14,15 +14,10 @@ namespace LLGL
 
 void RenderingProfiler::ResetCounters()
 {
-    writeVertexBuffer.Reset();
-    writeIndexBuffer.Reset();
-    writeConstantBuffer.Reset();
-    writeStorageBuffer.Reset();
-
-    writeVertexBufferSub.Reset();
-    writeIndexBufferSub.Reset();
-    writeConstantBufferSub.Reset();
-    writeStorageBufferSub.Reset();
+    updateVertexBuffer.Reset();
+    updateIndexBuffer.Reset();
+    updateConstantBuffer.Reset();
+    updateStorageBuffer.Reset();
 
     mapConstantBuffer.Reset();
     mapStorageBuffer.Reset();

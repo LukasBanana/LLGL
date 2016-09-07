@@ -73,15 +73,10 @@ class LLGL_EXPORT RenderingProfiler
         void RecordDrawCall(DrawMode drawMode, Counter::ValueType numVertices);
         void RecordDrawCall(DrawMode drawMode, Counter::ValueType numVertices, Counter::ValueType numInstances);
 
-        Counter writeVertexBuffer;
-        Counter writeIndexBuffer;
-        Counter writeConstantBuffer;
-        Counter writeStorageBuffer;
-
-        Counter writeVertexBufferSub;
-        Counter writeIndexBufferSub;
-        Counter writeConstantBufferSub;
-        Counter writeStorageBufferSub;
+        Counter updateVertexBuffer;
+        Counter updateIndexBuffer;
+        Counter updateConstantBuffer;
+        Counter updateStorageBuffer;
 
         Counter mapConstantBuffer;
         Counter mapStorageBuffer;
