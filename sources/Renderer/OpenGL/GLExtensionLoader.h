@@ -79,6 +79,7 @@ bool LoadSamplerProcs();
 /* --- Other extensions --- */
 
 bool LoadQueryObjectProcs();
+bool LoadTimerQueryObjectProcs();
 bool LoadViewportArrayProcs();
 bool LoadDrawBuffersBlendProcs();
 bool LoadMultiBindProcs();

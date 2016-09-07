@@ -239,6 +239,12 @@ extern PFNGLENDQUERYPROC                                    glEndQuery;
 extern PFNGLGETQUERYOBJECTIVPROC                            glGetQueryObjectiv;
 extern PFNGLGETQUERYOBJECTUIVPROC                           glGetQueryObjectuiv;
 
+/* --- Timer query objects (GL_ARB_timer_query) --- */
+
+extern PFNGLQUERYCOUNTERPROC                                glQueryCounter;
+extern PFNGLGETQUERYOBJECTI64VPROC                          glGetQueryObjecti64v;
+extern PFNGLGETQUERYOBJECTUI64VPROC                         glGetQueryObjectui64v;
+
 /* --- Viewport array (GL_ARB_viewport_array) --- */
 
 extern PFNGLVIEWPORTARRAYVPROC                              glViewportArrayv;

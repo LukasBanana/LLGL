@@ -162,6 +162,7 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     LoadExtension( "GL_ARB_viewport_array",               LoadViewportArrayProcs         );
     LoadExtension( "GL_ARB_draw_buffers_blend",           LoadDrawBuffersBlendProcs      );
     LoadExtension( "GL_ARB_occlusion_query",              LoadQueryObjectProcs           );
+    LoadExtension( "GL_ARB_timer_query",                  LoadTimerQueryObjectProcs      );
     LoadExtension( "GL_ARB_multi_bind",                   LoadMultiBindProcs             );
     LoadExtension( "GL_EXT_stencil_two_side",             LoadStencilSeparateProcs       ); // <--- correct extension ???
     LoadExtension( "GL_KHR_debug",                        LoadDebugProcs                 );
@@ -427,6 +428,14 @@ bool LoadQueryObjectProcs()
         LOAD_VERBATIM_GLPROC( glEndQuery          ) &&
         LOAD_VERBATIM_GLPROC( glGetQueryObjectiv  ) &&
         LOAD_VERBATIM_GLPROC( glGetQueryObjectuiv );
+}
+
+bool LoadTimerQueryObjectProcs()
+{
+    return
+        LOAD_VERBATIM_GLPROC( glQueryCounter        ) &&
+        LOAD_VERBATIM_GLPROC( glGetQueryObjecti64v  ) &&
+        LOAD_VERBATIM_GLPROC( glGetQueryObjectui64v );
 }
 
 bool LoadViewportArrayProcs()

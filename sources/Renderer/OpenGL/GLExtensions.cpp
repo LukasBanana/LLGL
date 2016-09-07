@@ -234,6 +234,12 @@ PFNGLENDQUERYPROC                                       glEndQuery              
 PFNGLGETQUERYOBJECTIVPROC                               glGetQueryObjectiv                              = nullptr;
 PFNGLGETQUERYOBJECTUIVPROC                              glGetQueryObjectuiv                             = nullptr;
 
+/* --- Timer query objects (GL_ARB_timer_query) --- */
+
+PFNGLQUERYCOUNTERPROC                                   glQueryCounter                                  = nullptr;
+PFNGLGETQUERYOBJECTI64VPROC                             glGetQueryObjecti64v                            = nullptr;
+PFNGLGETQUERYOBJECTUI64VPROC                            glGetQueryObjectui64v                           = nullptr;
+
 /* --- Viewport array (GL_ARB_viewport_array) --- */
 
 PFNGLVIEWPORTARRAYVPROC                                 glViewportArrayv                                = nullptr;
