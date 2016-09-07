@@ -296,7 +296,7 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
     return desc;
 }
 
-void GLRenderSystem::WriteTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDataDescriptor* imageDesc)
+void GLRenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDataDescriptor* imageDesc)
 {
     /* Bind texture and set type */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -321,7 +321,7 @@ void GLRenderSystem::WriteTexture1D(Texture& texture, const TextureFormat format
     }
 }
 
-void GLRenderSystem::WriteTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
+void GLRenderSystem::SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
 {
     /* Bind texture and set type */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -346,7 +346,7 @@ void GLRenderSystem::WriteTexture2D(Texture& texture, const TextureFormat format
     }
 }
 
-void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDataDescriptor* imageDesc)
+void GLRenderSystem::SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDataDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(has3DTextures);
 
@@ -373,7 +373,7 @@ void GLRenderSystem::WriteTexture3D(Texture& texture, const TextureFormat format
     }
 }
 
-void GLRenderSystem::WriteTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
+void GLRenderSystem::SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(hasCubeTextures);
 
@@ -420,7 +420,7 @@ void GLRenderSystem::WriteTextureCube(Texture& texture, const TextureFormat form
     }
 }
 
-void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc)
+void GLRenderSystem::SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(hasTextureArrays);
 
@@ -448,7 +448,7 @@ void GLRenderSystem::WriteTexture1DArray(Texture& texture, const TextureFormat f
     }
 }
 
-void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
+void GLRenderSystem::SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(hasTextureArrays);
 
@@ -476,7 +476,7 @@ void GLRenderSystem::WriteTexture2DArray(Texture& texture, const TextureFormat f
     }
 }
 
-void GLRenderSystem::WriteTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
+void GLRenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(hasCubeTextureArrays);
 

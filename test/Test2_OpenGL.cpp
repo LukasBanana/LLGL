@@ -249,8 +249,8 @@ int main()
             textureData.dataType    = LLGL::DataType::UByte;
             textureData.data        = image;
         }
-        renderer->WriteTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture
-        //renderer->WriteTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture
+        renderer->SetupTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture
+        //renderer->SetupTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture
 
         #ifndef __linux__
         context->GenerateMips(texture);
@@ -269,7 +269,7 @@ int main()
         auto renderTargetSize = contextDesc.videoMode.resolution;
 
         renderTargetTex = renderer->CreateTexture();
-        renderer->WriteTexture2D(*renderTargetTex, LLGL::TextureFormat::RGBA8, renderTargetSize);
+        renderer->SetupTexture2D(*renderTargetTex, LLGL::TextureFormat::RGBA8, renderTargetSize);
 
         //auto numMips = LLGL::NumMipLevels({ renderTargetSize.x, renderTargetSize.y, 1 });
 
