@@ -198,7 +198,7 @@ void D3D12RenderContext::BeginQuery(Query& query)
     //todo
 }
 
-void D3D12RenderContext::EndQuery()
+void D3D12RenderContext::EndQuery(Query& query)
 {
     //todo
 }

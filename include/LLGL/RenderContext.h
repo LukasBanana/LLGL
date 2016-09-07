@@ -128,7 +128,7 @@ class LLGL_EXPORT RenderContext
         /* ----- Queries ----- */
 
         virtual void BeginQuery(Query& query) = 0;
-        virtual void EndQuery() = 0;
+        virtual void EndQuery(Query& query) = 0;
 
         /**
         \brief Queries the result of the specified Query object.

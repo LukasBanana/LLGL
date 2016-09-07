@@ -292,17 +292,41 @@ void GLRenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
 void GLRenderContext::BeginQuery(Query& query)
 {
-    //todo
+    /* Begin query with internal target */
+    auto& queryGL = LLGL_CAST(GLQuery&, query);
+    glBeginQuery(queryGL.GetTarget(), queryGL.GetID());
 }
 
-void GLRenderContext::EndQuery()
+void GLRenderContext::EndQuery(Query& query)
 {
-    //todo
+    /* Begin query with internal target */
+    auto& queryGL = LLGL_CAST(GLQuery&, query);
+    glEndQuery(queryGL.GetTarget());
 }
 
 bool GLRenderContext::QueryResult(Query& query, std::uint64_t& result)
 {
-    return false;//todo
+    auto& queryGL = LLGL_CAST(GLQuery&, query);
+
+    /* Check if query result is available */
+    GLint available = 0;
+    glGetQueryObjectiv(queryGL.GetID(), GL_QUERY_RESULT_AVAILABLE, &available);
+
+    if (available != GL_FALSE)
+    {
+        /* Get query result either with 64-bit or 32-bit version */
+        if (glGetQueryObjectui64v)
+            glGetQueryObjectui64v(queryGL.GetID(), GL_QUERY_RESULT, &result);
+        else
+        {
+            GLuint result32;
+            glGetQueryObjectuiv(queryGL.GetID(), GL_QUERY_RESULT, &result32);
+            result = result32;
+        }
+        return true;
+    }
+
+    return false;
 }
 
 /* ----- Drawing ----- */

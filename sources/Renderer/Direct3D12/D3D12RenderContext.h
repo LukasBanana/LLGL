@@ -95,7 +95,7 @@ class D3D12RenderContext : public RenderContext
         /* ----- Queries ----- */
 
         void BeginQuery(Query& query) override;
-        void EndQuery() override;
+        void EndQuery(Query& query) override;
 
         bool QueryResult(Query& query, std::uint64_t& result) override;
 

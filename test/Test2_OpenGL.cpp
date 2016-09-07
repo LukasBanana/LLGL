@@ -14,6 +14,7 @@
 
 
 //#define TEST_RENDER_TARGET
+#define TEST_QUERY
 
 
 int main()
@@ -296,6 +297,11 @@ int main()
 
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
 
+        #ifdef TEST_QUERY
+        auto query = renderer->CreateQuery(LLGL::QueryType::SamplesPassed);
+        bool hasQueryResult = false;
+        #endif
+
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
@@ -357,9 +363,38 @@ int main()
             
             #endif
 
+            #ifdef TEST_QUERY
+            
+            if (!hasQueryResult)
+                context->BeginQuery(*query);
+
+            #endif
+
             context->BindTexture(0, texture);
             context->Draw(4, 0);
             
+            #ifdef TEST_QUERY
+
+            if (!hasQueryResult)
+            {
+                context->EndQuery(*query);
+                hasQueryResult = true;
+            }
+
+            std::uint64_t result = 0;
+            if (context->QueryResult(*query, result))
+            {
+                static std::uint64_t prevResult;
+                if (prevResult != result)
+                {
+                    prevResult = result;
+                    std::cout << "query result = " << result << std::endl;
+                }
+                hasQueryResult = false;
+            }
+
+            #endif
+
             if (renderTarget && renderTargetTex)
             {
                 context->UnbindRenderTarget();
