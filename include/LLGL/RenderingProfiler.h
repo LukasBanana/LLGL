@@ -76,14 +76,20 @@ class LLGL_EXPORT RenderingProfiler
         Counter writeVertexBuffer;
         Counter writeIndexBuffer;
         Counter writeConstantBuffer;
+        Counter writeStorageBuffer;
 
         Counter writeVertexBufferSub;
         Counter writeIndexBufferSub;
         Counter writeConstantBufferSub;
+        Counter writeStorageBufferSub;
+
+        Counter mapConstantBuffer;
+        Counter mapStorageBuffer;
 
         Counter bindVertexBuffer;
         Counter bindIndexBuffer;
         Counter bindConstantBuffer;
+        Counter bindStorageBuffer;
         Counter bindGraphicsPipeline;
         Counter bindComputePipeline;
         Counter bindTexture;

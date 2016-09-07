@@ -98,10 +98,10 @@ class LLGL_EXPORT RenderContext
         virtual void BindIndexBuffer(IndexBuffer& indexBuffer) = 0;
         virtual void UnbindIndexBuffer() = 0;
 
-        virtual void BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) = 0;
+        virtual void BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer) = 0;
         virtual void UnbindConstantBuffer(unsigned int index) = 0;
 
-        virtual void BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) = 0;
+        virtual void BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer) = 0;
         virtual void UnbindStorageBuffer(unsigned int index) = 0;
 
         /**

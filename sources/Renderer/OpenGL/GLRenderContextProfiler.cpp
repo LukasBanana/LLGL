@@ -77,9 +77,9 @@ void GLRenderContextProfiler::UnbindIndexBuffer()
     profiler_.bindIndexBuffer.Inc();
 }
 
-void GLRenderContextProfiler::BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
+void GLRenderContextProfiler::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
 {
-    GLRenderContext::BindConstantBuffer(constantBuffer, index);
+    GLRenderContext::BindConstantBuffer(index, constantBuffer);
     profiler_.bindConstantBuffer.Inc();
 }
 
@@ -87,6 +87,24 @@ void GLRenderContextProfiler::UnbindConstantBuffer(unsigned int index)
 {
     GLRenderContext::UnbindConstantBuffer(index);
     profiler_.bindConstantBuffer.Inc();
+}
+
+void GLRenderContextProfiler::BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
+{
+    GLRenderContext::BindStorageBuffer(index, storageBuffer);
+    profiler_.bindStorageBuffer.Inc();
+}
+
+void GLRenderContextProfiler::UnbindStorageBuffer(unsigned int index)
+{
+    GLRenderContext::UnbindStorageBuffer(index);
+    profiler_.bindStorageBuffer.Inc();
+}
+
+void* GLRenderContextProfiler::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
+{
+    profiler_.mapStorageBuffer.Inc();
+    return GLRenderContext::MapStorageBuffer(storageBuffer, access);
 }
 
 /* ----- Textures ----- */

@@ -190,7 +190,7 @@ void GLRenderContext::UnbindIndexBuffer()
     stateMngr_->BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void GLRenderContext::BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
+void GLRenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
 {
     /* Bind constant buffer with BindBufferBase */
     auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
@@ -202,7 +202,7 @@ void GLRenderContext::UnbindConstantBuffer(unsigned int index)
     stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, 0);
 }
 
-void GLRenderContext::BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
+void GLRenderContext::BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
 {
     /* Bind storage buffer with BindBufferBase */
     auto& storageBufferGL = LLGL_CAST(GLStorageBuffer&, storageBuffer);

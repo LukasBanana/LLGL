@@ -133,7 +133,7 @@ void D3D12RenderContext::UnbindIndexBuffer()
     //todo
 }
 
-void D3D12RenderContext::BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
+void D3D12RenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
 {
     //todo
 }
@@ -143,7 +143,7 @@ void D3D12RenderContext::UnbindConstantBuffer(unsigned int index)
     //todo
 }
 
-void D3D12RenderContext::BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
+void D3D12RenderContext::BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
 {
     //todo
 }

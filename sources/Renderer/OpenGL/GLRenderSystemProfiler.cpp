@@ -48,6 +48,12 @@ void GLRenderSystemProfiler::WriteConstantBuffer(
     profiler_.writeConstantBuffer.Inc();
 }
 
+void GLRenderSystemProfiler::WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
+{
+    GLRenderSystem::WriteStorageBuffer(storageBuffer, data, dataSize, usage);
+    profiler_.writeStorageBuffer.Inc();
+}
+
 void GLRenderSystemProfiler::WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     GLRenderSystem::WriteVertexBufferSub(vertexBuffer, data, dataSize, offset);
@@ -64,6 +70,12 @@ void GLRenderSystemProfiler::WriteConstantBufferSub(ConstantBuffer& constantBuff
 {
     GLRenderSystem::WriteConstantBufferSub(constantBuffer, data, dataSize, offset);
     profiler_.writeConstantBufferSub.Inc();
+}
+
+void GLRenderSystemProfiler::WriteStorageBufferSub(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    GLRenderSystem::WriteStorageBufferSub(storageBuffer, data, dataSize, offset);
+    profiler_.writeStorageBufferSub.Inc();
 }
 
 

@@ -320,7 +320,7 @@ int main()
         auto storage = renderer->CreateStorageBuffer();
         renderer->WriteStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
         //shaderProgram.BindStorageBuffer("outputBuffer", 0);
-        context->BindStorageBuffer(*storage, 0);
+        context->BindStorageBuffer(0, *storage);
 
         #endif
 

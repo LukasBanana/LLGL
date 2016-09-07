@@ -17,14 +17,20 @@ void RenderingProfiler::ResetCounters()
     writeVertexBuffer.Reset();
     writeIndexBuffer.Reset();
     writeConstantBuffer.Reset();
+    writeStorageBuffer.Reset();
 
     writeVertexBufferSub.Reset();
     writeIndexBufferSub.Reset();
     writeConstantBufferSub.Reset();
+    writeStorageBufferSub.Reset();
+
+    mapConstantBuffer.Reset();
+    mapStorageBuffer.Reset();
 
     bindVertexBuffer.Reset();
     bindIndexBuffer.Reset();
     bindConstantBuffer.Reset();
+    bindStorageBuffer.Reset();
     bindGraphicsPipeline.Reset();
     bindComputePipeline.Reset();
     bindTexture.Reset();

@@ -50,8 +50,13 @@ class GLRenderContextProfiler : public GLRenderContext
         void BindIndexBuffer(IndexBuffer& indexBuffer) override;
         void UnbindIndexBuffer() override;
 
-        void BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) override;
+        void BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer) override;
         void UnbindConstantBuffer(unsigned int index) override;
+
+        void BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer) override;
+        void UnbindStorageBuffer(unsigned int index) override;
+
+        void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
 
         /* ----- Textures ----- */
 
