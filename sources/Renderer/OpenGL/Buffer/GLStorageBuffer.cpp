@@ -1,19 +1,19 @@
 /*
- * GLConstantBuffer.cpp
+ * GLStorageBuffer.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLConstantBuffer.h"
+#include "GLStorageBuffer.h"
 
 
 namespace LLGL
 {
 
 
-GLConstantBuffer::GLConstantBuffer() :
-    hwBuffer( GL_UNIFORM_BUFFER )
+GLStorageBuffer::GLStorageBuffer() :
+    hwBuffer( GL_SHADER_STORAGE_BUFFER )
 {
 }
 

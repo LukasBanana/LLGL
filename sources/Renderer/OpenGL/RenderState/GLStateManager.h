@@ -13,6 +13,7 @@
 #include "../Buffer/GLVertexBuffer.h"
 #include "../Buffer/GLIndexBuffer.h"
 #include "../Buffer/GLConstantBuffer.h"
+#include "../Buffer/GLStorageBuffer.h"
 #include "../Texture/GLTexture.h"
 #include <LLGL/RenderContextFlags.h>
 #include <array>
@@ -96,6 +97,7 @@ class GLStateManager
         void BindBuffer(const GLVertexBuffer& vertexBuffer);
         void BindBuffer(const GLIndexBuffer& indexBuffer);
         void BindBuffer(const GLConstantBuffer& constantBuffer);
+        void BindBuffer(const GLStorageBuffer& storageBuffer);
         
         /* ----- Framebuffer binding ----- */
 

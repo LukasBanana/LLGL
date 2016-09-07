@@ -32,7 +32,7 @@ enum class BufferUsage
 };
 
 /**
-Hardware buffer CPU acccess enumeration.
+\brief Hardware buffer CPU acccess enumeration.
 \see RenderSystem::MapBuffer
 */
 enum class BufferCPUAccess

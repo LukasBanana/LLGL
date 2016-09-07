@@ -19,6 +19,7 @@
 #include "IndexBuffer.h"
 #include "IndexFormat.h"
 #include "ConstantBuffer.h"
+#include "StorageBuffer.h"
 #include "Texture.h"
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
@@ -129,20 +130,22 @@ class LLGL_EXPORT RenderSystem
         virtual VertexBuffer* CreateVertexBuffer() = 0;
         virtual IndexBuffer* CreateIndexBuffer() = 0;
         virtual ConstantBuffer* CreateConstantBuffer() = 0;
-        //virtual StorageBuffer* CreateStorageBuffer() = 0;
+        virtual StorageBuffer* CreateStorageBuffer() = 0;
 
         virtual void Release(VertexBuffer& vertexBuffer) = 0;
         virtual void Release(IndexBuffer& indexBuffer) = 0;
         virtual void Release(ConstantBuffer& constantBuffer) = 0;
-        //virtual void Release(StorageBuffer& storageBuffer) = 0;
+        virtual void Release(StorageBuffer& storageBuffer) = 0;
 
         virtual void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) = 0;
         virtual void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) = 0;
         virtual void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
+        virtual void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
 
         virtual void WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
         virtual void WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
         virtual void WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        virtual void WriteStorageBufferSub(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
 
         /* ----- Textures ----- */
 

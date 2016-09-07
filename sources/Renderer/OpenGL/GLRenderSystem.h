@@ -17,6 +17,7 @@
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
 #include "Buffer/GLConstantBuffer.h"
+#include "Buffer/GLStorageBuffer.h"
 
 #include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
@@ -65,18 +66,22 @@ class GLRenderSystem : public RenderSystem
         VertexBuffer* CreateVertexBuffer() override;
         IndexBuffer* CreateIndexBuffer() override;
         ConstantBuffer* CreateConstantBuffer() override;
+        StorageBuffer* CreateStorageBuffer() override;
 
         void Release(VertexBuffer& vertexBuffer) override;
         void Release(IndexBuffer& indexBuffer) override;
         void Release(ConstantBuffer& constantBuffer) override;
+        void Release(StorageBuffer& storageBuffer) override;
 
         void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) override;
         void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) override;
         void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) override;
+        void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) override;
 
         void WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
         void WriteIndexBufferSub(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
         void WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+        void WriteStorageBufferSub(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
 
         /* ----- Textures ----- */
 
@@ -189,6 +194,7 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLVertexBuffer>       vertexBuffers_;
         HWObjectContainer<GLIndexBuffer>        indexBuffers_;
         HWObjectContainer<GLConstantBuffer>     constantBuffers_;
+        HWObjectContainer<GLStorageBuffer>      storageBuffers_;
 
         HWObjectContainer<GLTexture>            textures_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;

@@ -160,6 +160,11 @@ ConstantBuffer* D3D12RenderSystem::CreateConstantBuffer()
     return nullptr;//TakeOwnership(constantBuffers_, MakeUnique<D3D12ConstantBuffer>());
 }
 
+StorageBuffer* D3D12RenderSystem::CreateStorageBuffer()
+{
+    return nullptr;//TakeOwnership(storageBuffers_, MakeUnique<D3D12StorageBuffer>());
+}
+
 void D3D12RenderSystem::Release(VertexBuffer& vertexBuffer)
 {
     //RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
@@ -173,6 +178,11 @@ void D3D12RenderSystem::Release(IndexBuffer& indexBuffer)
 void D3D12RenderSystem::Release(ConstantBuffer& constantBuffer)
 {
     //RemoveFromUniqueSet(constantBuffers_, &constantBuffer);
+}
+
+void D3D12RenderSystem::Release(StorageBuffer& storageBuffer)
+{
+    //RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
 }
 
 void D3D12RenderSystem::WriteVertexBuffer(
@@ -193,6 +203,12 @@ void D3D12RenderSystem::WriteConstantBuffer(
     //todo
 }
 
+void D3D12RenderSystem::WriteStorageBuffer(
+    StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
+{
+    //todo
+}
+
 void D3D12RenderSystem::WriteVertexBufferSub(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
@@ -204,6 +220,11 @@ void D3D12RenderSystem::WriteIndexBufferSub(IndexBuffer& indexBuffer, const void
 }
 
 void D3D12RenderSystem::WriteConstantBufferSub(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    //todo
+}
+
+void D3D12RenderSystem::WriteStorageBufferSub(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }

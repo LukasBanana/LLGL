@@ -600,6 +600,11 @@ void GLStateManager::BindBuffer(const GLConstantBuffer& constantBuffer)
     BindBuffer(GLBufferTarget::UNIFORM_BUFFER, constantBuffer.hwBuffer.GetID());
 }
 
+void GLStateManager::BindBuffer(const GLStorageBuffer& storageBuffer)
+{
+    BindBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, storageBuffer.hwBuffer.GetID());
+}
+
 /* ----- Framebuffer binding ----- */
 
 void GLStateManager::BindFrameBuffer(GLFrameBufferTarget target, GLuint framebuffer)
