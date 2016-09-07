@@ -18,6 +18,7 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "ConstantBuffer.h"
+#include "StorageBuffer.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
 #include "RenderTarget.h"
@@ -98,6 +99,9 @@ class LLGL_EXPORT RenderContext
 
         virtual void BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) = 0;
         virtual void UnbindConstantBuffer(unsigned int index) = 0;
+
+        virtual void BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) = 0;
+        virtual void UnbindStorageBuffer(unsigned int index) = 0;
 
         /* ----- Textures ----- */
 

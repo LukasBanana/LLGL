@@ -143,6 +143,16 @@ void D3D12RenderContext::UnbindConstantBuffer(unsigned int index)
     //todo
 }
 
+void D3D12RenderContext::BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
+{
+    //todo
+}
+
+void D3D12RenderContext::UnbindStorageBuffer(unsigned int index)
+{
+    //todo
+}
+
 /* ----- Textures ----- */
 
 void D3D12RenderContext::BindTexture(unsigned int layer, Texture& texture)

@@ -191,14 +191,26 @@ void GLRenderContext::UnbindIndexBuffer()
 
 void GLRenderContext::BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
 {
-    /* Bind constant buffer */
+    /* Bind constant buffer with BindBufferBase */
     auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
     stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, constantBufferGL.hwBuffer.GetID());
 }
 
 void GLRenderContext::UnbindConstantBuffer(unsigned int index)
 {
-    //todo...
+    stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, 0);
+}
+
+void GLRenderContext::BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
+{
+    /* Bind storage buffer with BindBufferBase */
+    auto& storageBufferGL = LLGL_CAST(GLStorageBuffer&, storageBuffer);
+    stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, index, storageBufferGL.hwBuffer.GetID());
+}
+
+void GLRenderContext::UnbindStorageBuffer(unsigned int index)
+{
+    stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, index, 0);
 }
 
 /* ----- Textures ----- */

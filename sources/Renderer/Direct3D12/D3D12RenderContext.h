@@ -70,6 +70,9 @@ class D3D12RenderContext : public RenderContext
         void BindConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) override;
         void UnbindConstantBuffer(unsigned int index) override;
 
+        void BindStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) override;
+        void UnbindStorageBuffer(unsigned int index) override;
+
         /* ----- Textures ----- */
 
         void BindTexture(unsigned int layer, Texture& texture) override;
