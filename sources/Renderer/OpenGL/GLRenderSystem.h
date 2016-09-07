@@ -78,10 +78,10 @@ class GLRenderSystem : public RenderSystem
         void SetupConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) override;
         void SetupStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) override;
 
-        void UpdateVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void UpdateIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void UpdateConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void UpdateStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+        void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+        void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+        void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+        void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
 
         /* ----- Textures ----- */
 
@@ -99,26 +99,26 @@ class GLRenderSystem : public RenderSystem
         void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) override;
         void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) override;
         
-        void WriteTexture1DSub(Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc) override;
-        void WriteTexture2DSub(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) override;
-        void WriteTexture3DSub(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc) override;
+        void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc) override;
+        void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) override;
+        void WriteTexture3D(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc) override;
 
-        void WriteTextureCubeSub(
+        void WriteTextureCube(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace,
             const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc
         ) override;
         
-        void WriteTexture1DArraySub(
+        void WriteTexture1DArray(
             Texture& texture, int mipLevel, int position, unsigned int layerOffset,
             int size, unsigned int layers, const ImageDataDescriptor& imageDesc
         ) override;
         
-        void WriteTexture2DArraySub(
+        void WriteTexture2DArray(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
             const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc
         ) override;
 
-        void WriteTextureCubeArraySub(
+        void WriteTextureCubeArray(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
             const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc
         ) override;

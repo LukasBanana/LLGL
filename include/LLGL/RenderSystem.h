@@ -47,7 +47,7 @@ class LLGL_EXPORT RenderSystem
         {
             /**
             \brief Default color for an uninitialized texture. The default value is white (255, 255, 255, 255).
-            \remarks This will be used for each "WriteTexture..." function (not the "Sub" versions), when no initial image data is specified.
+            \remarks This will be used for each "SetupTexture..." function (not the "WriteTexture..." functions), when no initial image data is specified.
             */
             ColorRGBAub defaultTextureImageColor;
         };
@@ -142,10 +142,10 @@ class LLGL_EXPORT RenderSystem
         virtual void SetupConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
         virtual void SetupStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
 
-        virtual void UpdateVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
-        virtual void UpdateIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
-        virtual void UpdateConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
-        virtual void UpdateStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        virtual void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        virtual void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        virtual void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        virtual void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
 
         /* ----- Textures ----- */
 
@@ -163,26 +163,26 @@ class LLGL_EXPORT RenderSystem
         virtual void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) = 0;
         virtual void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) = 0;
         
-        virtual void WriteTexture1DSub(Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc) = 0;
-        virtual void WriteTexture2DSub(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) = 0;
-        virtual void WriteTexture3DSub(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc) = 0;
+        virtual void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc) = 0;
+        virtual void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) = 0;
+        virtual void WriteTexture3D(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc) = 0;
         
-        virtual void WriteTextureCubeSub(
+        virtual void WriteTextureCube(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace,
             const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc
         ) = 0;
         
-        virtual void WriteTexture1DArraySub(
+        virtual void WriteTexture1DArray(
             Texture& texture, int mipLevel, int position, unsigned int layerOffset,
             int size, unsigned int layers, const ImageDataDescriptor& imageDesc
         ) = 0;
         
-        virtual void WriteTexture2DArraySub(
+        virtual void WriteTexture2DArray(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
             const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc
         ) = 0;
 
-        virtual void WriteTextureCubeArraySub(
+        virtual void WriteTextureCubeArray(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
             const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc
         ) = 0;

@@ -209,22 +209,22 @@ void D3D12RenderSystem::SetupStorageBuffer(
     //todo
 }
 
-void D3D12RenderSystem::UpdateVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D12RenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }
 
-void D3D12RenderSystem::UpdateIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D12RenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }
 
-void D3D12RenderSystem::UpdateConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D12RenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }
 
-void D3D12RenderSystem::UpdateStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void D3D12RenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     //todo
 }
@@ -287,45 +287,45 @@ void D3D12RenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFor
     //todo
 }
 
-void D3D12RenderSystem::WriteTexture1DSub(
+void D3D12RenderSystem::WriteTexture1D(
     Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
 
-void D3D12RenderSystem::WriteTexture2DSub(
+void D3D12RenderSystem::WriteTexture2D(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
 
-void D3D12RenderSystem::WriteTexture3DSub(
+void D3D12RenderSystem::WriteTexture3D(
     Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
 
-void D3D12RenderSystem::WriteTextureCubeSub(
+void D3D12RenderSystem::WriteTextureCube(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
 
-void D3D12RenderSystem::WriteTexture1DArraySub(
+void D3D12RenderSystem::WriteTexture1DArray(
     Texture& texture, int mipLevel, int position, unsigned int layerOffset,
     int size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
 
-void D3D12RenderSystem::WriteTexture2DArraySub(
+void D3D12RenderSystem::WriteTexture2DArray(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
     const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
     //todo...
 }
 
-void D3D12RenderSystem::WriteTextureCubeArraySub(
+void D3D12RenderSystem::WriteTextureCubeArray(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
     const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc)
 {

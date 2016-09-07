@@ -207,22 +207,22 @@ void GLRenderSystem::SetupStorageBuffer(StorageBuffer& storageBuffer, const void
     BindAndGetHWBuffer<GLStorageBuffer>(storageBuffer).BufferData(data, dataSize, GLTypes::Map(usage));
 }
 
-void GLRenderSystem::UpdateVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     BindAndGetHWBuffer<GLVertexBuffer>(vertexBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
-void GLRenderSystem::UpdateIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     BindAndGetHWBuffer<GLIndexBuffer>(indexBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
-void GLRenderSystem::UpdateConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     BindAndGetHWBuffer<GLConstantBuffer>(constantBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
-void GLRenderSystem::UpdateStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
+void GLRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     BindAndGetHWBuffer<GLStorageBuffer>(storageBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
@@ -563,7 +563,7 @@ static void GLTexSubImageCubeArray(
     );
 }
 
-void GLRenderSystem::WriteTexture1DSub(
+void GLRenderSystem::WriteTexture1D(
     Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc)
 {
     /* Bind texture and write texture sub data */
@@ -572,7 +572,7 @@ void GLRenderSystem::WriteTexture1DSub(
     GLTexSubImage1D(mipLevel, position, size, imageDesc);
 }
 
-void GLRenderSystem::WriteTexture2DSub(
+void GLRenderSystem::WriteTexture2D(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
     /* Bind texture and write texture sub data */
@@ -581,7 +581,7 @@ void GLRenderSystem::WriteTexture2DSub(
     GLTexSubImage2D(mipLevel, position.x, position.y, size.x, size.y, imageDesc);
 }
 
-void GLRenderSystem::WriteTexture3DSub(
+void GLRenderSystem::WriteTexture3D(
     Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc)
 {
     LLGL_ASSERT_CAP(has3DTextures);
@@ -593,7 +593,7 @@ void GLRenderSystem::WriteTexture3DSub(
     GLTexSubImage3D(mipLevel, position.x, position.y, position.z, size.x, size.y, size.z, imageDesc);
 }
 
-void GLRenderSystem::WriteTextureCubeSub(
+void GLRenderSystem::WriteTextureCube(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
     LLGL_ASSERT_CAP(hasCubeTextures);
@@ -605,7 +605,7 @@ void GLRenderSystem::WriteTextureCubeSub(
     GLTexSubImageCube(mipLevel, position.x, position.y, size.x, size.y, cubeFace, imageDesc);
 }
 
-void GLRenderSystem::WriteTexture1DArraySub(
+void GLRenderSystem::WriteTexture1DArray(
     Texture& texture, int mipLevel, int position, unsigned int layerOffset,
     int size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
@@ -618,7 +618,7 @@ void GLRenderSystem::WriteTexture1DArraySub(
     GLTexSubImage1DArray(mipLevel, position, layerOffset, size, layers, imageDesc);
 }
 
-void GLRenderSystem::WriteTexture2DArraySub(
+void GLRenderSystem::WriteTexture2DArray(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
     const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
@@ -631,7 +631,7 @@ void GLRenderSystem::WriteTexture2DArraySub(
     GLTexSubImage2DArray(mipLevel, position.x, position.y, layerOffset, size.x, size.y, layers, imageDesc);
 }
 
-void GLRenderSystem::WriteTextureCubeArraySub(
+void GLRenderSystem::WriteTextureCubeArray(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
     const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc)
 {
