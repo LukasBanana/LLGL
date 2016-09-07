@@ -23,6 +23,7 @@
 #include "RenderTarget.h"
 #include "GraphicsPipeline.h"
 #include "Sampler.h"
+#include "Query.h"
 
 #include <Gauss/Vector3.h>
 #include <string>
@@ -31,19 +32,6 @@
 
 namespace LLGL
 {
-
-
-/**
-\brief Enumeration of all renderer info entries.
-\see RenderContext::QueryRendererInfo
-*/
-enum class RendererInfo
-{
-    Version,
-    Vendor,
-    Hardware,
-    ShadingLanguageVersion,
-};
 
 
 //! Render context interface.
@@ -136,6 +124,19 @@ class LLGL_EXPORT RenderContext
 
         virtual void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
         //virtual void BindComputePipeline(ComputePipeline& computePipeline) = 0;
+
+        /* ----- Queries ----- */
+
+        virtual void BeginQuery(Query& query) = 0;
+        virtual void EndQuery() = 0;
+
+        /**
+        \brief Queries the result of the specified Query object.
+        \param[in,out] query Specifies the Query object whose result is to be queried.
+        \param[out] result Specifies the output result.
+        \return True if the result is available, otherwise false in which case 'result' is not modified.
+        */
+        virtual bool QueryResult(Query& query, std::uint64_t& result) = 0;
 
         /* ----- Drawing ----- */
 

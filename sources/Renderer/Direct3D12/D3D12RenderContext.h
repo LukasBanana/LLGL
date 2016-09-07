@@ -92,6 +92,13 @@ class D3D12RenderContext : public RenderContext
         void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
         //void BindComputePipeline(ComputePipeline& computePipeline) override;
 
+        /* ----- Queries ----- */
+
+        void BeginQuery(Query& query) override;
+        void EndQuery() override;
+
+        bool QueryResult(Query& query, std::uint64_t& result) override;
+
         /* ----- Drawing ----- */
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;

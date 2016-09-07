@@ -38,23 +38,6 @@ class LLGL_EXPORT Query
         {
         }
 
-        //! Returns the type of this query.
-        inline QueryType GetType() const
-        {
-            return type_;
-        }
-
-    protected:
-
-        Query(const QueryType type) :
-            type_( type )
-        {
-        }
-
-    private:
-
-        QueryType type_;
-
 };
 
 

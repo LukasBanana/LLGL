@@ -12,17 +12,21 @@
 #include <LLGL/RenderSystem.h>
 #include "GLExtensionLoader.h"
 #include "GLRenderContext.h"
+#include "../ContainerTypes.h"
 
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
 #include "Buffer/GLConstantBuffer.h"
+
 #include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
+
 #include "Texture/GLTexture.h"
 #include "Texture/GLRenderTarget.h"
 #include "Texture/GLSampler.h"
+
+#include "RenderState/GLQuery.h"
 #include "RenderState/GLGraphicsPipeline.h"
-#include "../ContainerTypes.h"
 
 #include <string>
 #include <memory>
@@ -194,7 +198,7 @@ class GLRenderSystem : public RenderSystem
 
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<GLSampler>            samplers_;
-        //HWObjectContainer<GLQuery>              queries_;
+        HWObjectContainer<GLQuery>              queries_;
 
 };
 

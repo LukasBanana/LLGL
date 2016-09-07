@@ -730,12 +730,12 @@ void GLRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 
 Query* GLRenderSystem::CreateQuery(const QueryType type)
 {
-    return nullptr;//todo...
+    return TakeOwnership(queries_, MakeUnique<GLQuery>(type));
 }
 
 void GLRenderSystem::Release(Query& query)
 {
-    //todo...
+    RemoveFromUniqueSet(queries_, &query);
 }
 
 /* ----- Extended Internal Functions ----- */

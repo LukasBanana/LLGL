@@ -1,0 +1,33 @@
+/*
+ * GLQuery.cpp
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#include "GLQuery.h"
+#include "../GLExtensions.h"
+#include "../GLTypes.h"
+
+
+namespace LLGL
+{
+
+
+GLQuery::GLQuery(const QueryType type) :
+    target_( GLTypes::Map(type) )
+{
+    glGenQueries(1, &id_);
+}
+
+GLQuery::~GLQuery()
+{
+    glDeleteQueries(1, &id_);
+}
+
+
+} // /namespace LLGL
+
+
+
+// ================================================================================

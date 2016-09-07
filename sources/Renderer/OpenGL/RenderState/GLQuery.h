@@ -1,0 +1,58 @@
+/*
+ * GLQuery.h
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#ifndef __LLGL_GL_QUERY_H__
+#define __LLGL_GL_QUERY_H__
+
+
+#include <LLGL/Query.h>
+#include "../OpenGL.h"
+
+
+namespace LLGL
+{
+
+
+class GLQuery : public Query
+{
+
+    public:
+
+        GLQuery(const GLQuery&) = delete;
+        GLQuery& operator = (const GLQuery&) = delete;
+
+        GLQuery(const QueryType type);
+        ~GLQuery();
+
+        //! Returns the query target.
+        inline GLenum GetTarget() const
+        {
+            return target_;
+        }
+
+        //! Returns the hardware query ID.
+        inline GLuint GetID() const
+        {
+            return id_;
+        }
+
+    private:
+
+        GLenum target_  = 0;
+        GLuint id_      = 0;
+
+};
+
+
+} // /namespace LLGL
+
+
+#endif
+
+
+
+// ================================================================================

@@ -191,6 +191,23 @@ void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline
     //todo
 }
 
+/* ----- Queries ----- */
+
+void D3D12RenderContext::BeginQuery(Query& query)
+{
+    //todo
+}
+
+void D3D12RenderContext::EndQuery()
+{
+    //todo
+}
+
+bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
+{
+    return false; //todo
+}
+
 /* ----- Drawing ----- */
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)

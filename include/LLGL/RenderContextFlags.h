@@ -32,6 +32,19 @@ enum class DrawMode
     Patches,                //!< Patches (main type for tessellation).
 };
 
+/**
+\brief Enumeration of all renderer info entries.
+\see RenderContext::QueryRendererInfo
+*/
+enum class RendererInfo
+{
+    Version,
+    Vendor,
+    Hardware,
+    ShadingLanguageVersion,
+};
+
+
 
 /* ----- Structures ----- */
 

@@ -288,6 +288,23 @@ void GLRenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     graphicsPipelineGL.Bind(*stateMngr_);
 }
 
+/* ----- Queries ----- */
+
+void GLRenderContext::BeginQuery(Query& query)
+{
+    //todo
+}
+
+void GLRenderContext::EndQuery()
+{
+    //todo
+}
+
+bool GLRenderContext::QueryResult(Query& query, std::uint64_t& result)
+{
+    return false;//todo
+}
+
 /* ----- Drawing ----- */
 
 void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
