@@ -6,7 +6,7 @@
  */
 
 #include "GLConstantBuffer.h"
-#include "../GLExtensions.h"
+#include "../Ext/GLExtensions.h"
 
 
 namespace LLGL

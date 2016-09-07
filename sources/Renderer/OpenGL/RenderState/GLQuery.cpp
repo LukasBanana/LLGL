@@ -6,7 +6,7 @@
  */
 
 #include "GLQuery.h"
-#include "../GLExtensions.h"
+#include "../Ext/GLExtensions.h"
 #include "../GLTypes.h"
 
 

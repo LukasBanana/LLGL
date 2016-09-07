@@ -7,7 +7,7 @@
 
 #include "GLRenderTarget.h"
 #include "../RenderState/GLStateManager.h"
-#include "../GLExtensions.h"
+#include "../Ext/GLExtensions.h"
 #include "../../CheckedCast.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"

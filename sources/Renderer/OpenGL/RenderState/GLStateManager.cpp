@@ -8,7 +8,7 @@
 #include "GLStateManager.h"
 #include "../GLRenderContext.h"
 #include "../GLRenderSystem.h"
-#include "../GLExtensions.h"
+#include "../Ext/GLExtensions.h"
 #include "../../../Core/Helper.h"
 #include "../../Assertion.h"
 

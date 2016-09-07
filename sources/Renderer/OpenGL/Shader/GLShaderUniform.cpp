@@ -6,7 +6,7 @@
  */
 
 #include "GLShaderUniform.h"
-#include "../GLExtensions.h"
+#include "../Ext/GLExtensions.h"
 
 
 namespace LLGL

@@ -6,8 +6,8 @@
  */
 
 #include "../../GLRenderContext.h"
-#include "../../GLExtensions.h"
-#include "../../GLExtensionLoader.h"
+#include "../../Ext/GLExtensions.h"
+#include "../../Ext/GLExtensionLoader.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>

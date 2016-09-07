@@ -12,7 +12,7 @@
 #include <LLGL/Desktop.h>
 #include "RenderState/GLStateManager.h"
 #include "GLTypes.h"
-#include "GLExtensions.h"
+#include "Ext/GLExtensions.h"
 #include "GLCore.h"
 #include <sstream>
 

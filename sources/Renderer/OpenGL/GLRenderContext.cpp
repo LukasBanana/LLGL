@@ -8,7 +8,7 @@
 #include "GLRenderContext.h"
 #include "GLRenderSystem.h"
 #include "GLTypes.h"
-#include "GLExtensions.h"
+#include "Ext/GLExtensions.h"
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"

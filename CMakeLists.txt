@@ -80,6 +80,7 @@ endif()
 # OpenGL renderer files
 file(GLOB FilesRendererGL					${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
 file(GLOB FilesRendererGLShader				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
+file(GLOB FilesRendererGLExt				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Ext/*.*)
 file(GLOB FilesRendererGLBuffer				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/*.*)
 file(GLOB FilesRendererGLTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/*.*)
 file(GLOB FilesRendererGLRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/RenderState/*.*)
@@ -136,6 +137,11 @@ source_group(
 )
 
 source_group(
+	"Sources\\Renderer\\Ext" FILES
+	${FilesRendererGLExt}
+)
+
+source_group(
 	"Sources\\Renderer\\Shader" FILES
 	${FilesRendererGLShader}
 	${FilesRendererD3D12Shader}
@@ -184,6 +190,7 @@ set(
 set(
 	FilesGL
 	${FilesRendererGL}
+	${FilesRendererGLExt}
 	${FilesRendererGLPlatform}
 	${FilesRendererGLShader}
 	${FilesRendererGLBuffer}

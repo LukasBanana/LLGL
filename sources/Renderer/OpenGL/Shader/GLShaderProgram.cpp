@@ -7,7 +7,7 @@
 
 #include "GLShaderProgram.h"
 #include "GLShader.h"
-#include "../GLExtensions.h"
+#include "../Ext/GLExtensions.h"
 #include "../../CheckedCast.h"
 #include "../RenderState/GLStateManager.h"
 #include "../GLTypes.h"

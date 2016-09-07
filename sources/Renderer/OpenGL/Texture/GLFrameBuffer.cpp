@@ -7,7 +7,7 @@
 
 #include "GLFrameBuffer.h"
 #include "GLRenderBuffer.h"
-#include "../GLExtensions.h"
+#include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 
 

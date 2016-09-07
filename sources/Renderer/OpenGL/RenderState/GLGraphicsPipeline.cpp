@@ -6,7 +6,7 @@
  */
 
 #include "GLGraphicsPipeline.h"
-#include "../GLExtensions.h"
+#include "../Ext/GLExtensions.h"
 #include "../GLTypes.h"
 #include "../GLCore.h"
 #include "../../CheckedCast.h"
