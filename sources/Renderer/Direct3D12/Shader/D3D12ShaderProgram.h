@@ -39,6 +39,7 @@ class D3D12ShaderProgram : public ShaderProgram
 
         void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) override;
         void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) override;
+        void BindStorageBuffer(const std::string& name, unsigned int bindingIndex) override;
 
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;

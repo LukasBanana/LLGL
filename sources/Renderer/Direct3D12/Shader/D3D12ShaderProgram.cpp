@@ -165,6 +165,11 @@ void D3D12ShaderProgram::BindConstantBuffer(const std::string& name, unsigned in
     //todo...
 }
 
+void D3D12ShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
+{
+    //todo...
+}
+
 ShaderUniform* D3D12ShaderProgram::LockShaderUniform()
 {
     return nullptr; // dummy

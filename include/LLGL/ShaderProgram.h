@@ -13,6 +13,7 @@
 #include "Shader.h"
 #include "VertexAttribute.h"
 #include "ConstantBuffer.h"
+#include "StorageBuffer.h"
 #include "ShaderUniform.h"
 #include <string>
 #include <vector>
@@ -84,6 +85,14 @@ class LLGL_EXPORT ShaderProgram
         \see RenderContext::BindConstantBuffer
         */
         virtual void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) = 0;
+
+        /**
+        \brief Binds the specified storage buffer to this shader.
+        \param[in] name Specifies the name of the storage buffer within this shader.
+        \param[in] bindingIndex Specifies the binding index. This index must match the index which will be used for "RenderContext::BindStorageBuffer".
+        \see RenderContext::BindStorageBuffer
+        */
+        virtual void BindStorageBuffer(const std::string& name, unsigned int bindingIndex) = 0;
 
         /**
         \brief Locks the shader uniform handler.

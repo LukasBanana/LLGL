@@ -17,6 +17,14 @@ namespace LLGL
 {
 
 
+//! Storage buffer descriptor structure.
+struct StorageBufferDescriptor
+{
+    std::string     name;           //!< Storage buffer name.
+    unsigned int    index   = 0;    //!< Index of the storage buffer within the respective shader.
+    unsigned int    size    = 0;    //!< Buffer size (in bytes).
+};
+
 //! Storage buffer (also "Shader Sotrage Object" or "Read/Write Buffer") interface.
 class LLGL_EXPORT StorageBuffer
 {
