@@ -41,52 +41,13 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap);
 
 /* --- Common GL extensions --- */
 
+#ifndef __APPLE__
+
 bool LoadSwapIntervalProcs();
 bool LoadPixelFormatProcs();
 bool LoadCreateContextProcs();
 
-/* --- Hardware buffer extensions --- */
-
-bool LoadVBOProcs();
-bool LoadVAOProcs();
-bool LoadFBOProcs();
-bool LoadUBOProcs();
-bool LoadSSBOProcs();
-
-/* --- Drawing extensions --- */
-
-bool LoadDrawBuffersProcs();
-bool LoadInstancedProcs();
-bool LoadInstancedOffsetProcs();
-bool LoadBaseVertexProcs();
-
-/* --- Shader extensions --- */
-
-bool LoadShaderProcs();
-bool LoadVertexAttribProcs();
-bool LoadTessellationShaderProcs();
-bool LoadComputeShaderProcs();
-bool LoadProgramBinaryProcs();
-bool LoadProgramInterfaceQueryProcs();
-
-/* --- Texture extensions --- */
-
-bool LoadMultiTextureProcs();
-bool Load3DTextureProcs();
-bool LoadClearTextureProcs();
-bool LoadSamplerProcs();
-
-/* --- Other extensions --- */
-
-bool LoadQueryObjectProcs();
-bool LoadTimerQueryObjectProcs();
-bool LoadViewportArrayProcs();
-bool LoadDrawBuffersBlendProcs();
-bool LoadMultiBindProcs();
-bool LoadStencilSeparateProcs();
-bool LoadDebugProcs();
-bool LoadClipControlProcs();
-bool LoadIndexedProcs();
+#endif
 
 
 } // /namespace LLGL

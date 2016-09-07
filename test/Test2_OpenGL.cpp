@@ -317,12 +317,19 @@ int main()
 
         #ifdef TEST_STORAGE_BUFFER
         
-        auto storage = renderer->CreateStorageBuffer();
-        renderer->SetupStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
-        shaderProgram.BindStorageBuffer("outputBuffer", 0);
-        context->BindStorageBuffer(0, *storage);
+        LLGL::StorageBuffer* storage = nullptr;
 
-        auto storeBufferDescs = shaderProgram.QueryStorageBuffers();
+        if (renderCaps.hasStorageBuffers)
+        {
+            storage = renderer->CreateStorageBuffer();
+            renderer->SetupStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
+            shaderProgram.BindStorageBuffer("outputBuffer", 0);
+            context->BindStorageBuffer(0, *storage);
+
+            auto storeBufferDescs = shaderProgram.QueryStorageBuffers();
+            for (const auto& desc : storeBufferDescs)
+                std::cout << "storage buffer: name = \"" << desc.name << '\"' << std::endl;
+        }
 
         #endif
 
@@ -399,16 +406,19 @@ int main()
             
             #ifdef TEST_STORAGE_BUFFER
             
-            static bool outputShown;
-            if (!outputShown)
+            if (renderCaps.hasStorageBuffers)
             {
-                outputShown = true;
-                auto outputData = context->MapStorageBuffer(*storage, LLGL::BufferCPUAccess::ReadOnly);
+                static bool outputShown;
+                if (!outputShown)
                 {
-                    auto v = reinterpret_cast<Gs::Vector4f*>(outputData);
-                    std::cout << "storage buffer output: " << *v << std::endl;
+                    outputShown = true;
+                    auto outputData = context->MapStorageBuffer(*storage, LLGL::BufferCPUAccess::ReadOnly);
+                    {
+                        auto v = reinterpret_cast<Gs::Vector4f*>(outputData);
+                        std::cout << "storage buffer output: " << *v << std::endl;
+                    }
+                    context->UnmapStorageBuffer();
                 }
-                context->UnmapStorageBuffer();
             }
 
             #endif
