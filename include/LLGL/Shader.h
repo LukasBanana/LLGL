@@ -51,7 +51,7 @@ struct ShaderDisassembleFlags
 };
 
 
-//! Shader base interface.
+//! Shader interface.
 class LLGL_EXPORT Shader
 {
 

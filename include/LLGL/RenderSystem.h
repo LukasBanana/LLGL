@@ -24,6 +24,7 @@
 #include "ShaderProgram.h"
 #include "GraphicsPipeline.h"
 #include "Sampler.h"
+#include "Query.h"
 
 #include <string>
 #include <memory>
@@ -238,6 +239,14 @@ class LLGL_EXPORT RenderSystem
 
         virtual void Release(GraphicsPipeline& graphicsPipeline) = 0;
         //virtual void Release(ComputePipeline& computePipeline) = 0;
+
+        /* ----- Queries ----- */
+
+        //! Creates a new Query object of the specified type.
+        virtual Query* CreateQuery(const QueryType type) = 0;
+
+        //! Release the specified Query object.
+        virtual void Release(Query& query) = 0;
 
         /* === Members === */
 

@@ -143,6 +143,12 @@ class GLRenderSystem : public RenderSystem
         
         void Release(GraphicsPipeline& graphicsPipeline) override;
 
+        /* ----- Queries ----- */
+
+        Query* CreateQuery(const QueryType type) override;
+
+        void Release(Query& query) override;
+
         /* ----- Extended Internal Functions ----- */
 
         bool HasExtension(const std::string& name) const;
@@ -188,6 +194,7 @@ class GLRenderSystem : public RenderSystem
 
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<GLSampler>            samplers_;
+        //HWObjectContainer<GLQuery>              queries_;
 
 };
 

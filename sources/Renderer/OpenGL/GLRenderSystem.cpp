@@ -726,6 +726,18 @@ void GLRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
     RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
 }
 
+/* ----- Queries ----- */
+
+Query* GLRenderSystem::CreateQuery(const QueryType type)
+{
+    return nullptr;//todo...
+}
+
+void GLRenderSystem::Release(Query& query)
+{
+    //todo...
+}
+
 /* ----- Extended Internal Functions ----- */
 
 bool GLRenderSystem::HasExtension(const std::string& name) const
@@ -887,7 +899,7 @@ void GLRenderSystem::StoreRenderingCaps()
     caps.hasInstancing                  = HasExtension("GL_ARB_draw_instanced");
     caps.hasOffsetInstancing            = HasExtension("GL_ARB_base_instance");
     caps.hasViewportArrays              = HasExtension("GL_ARB_viewport_array");
-    caps.hasConservativeRasterization   = (HasExtension("GL_NV_conservative_raster") || HasExtension("GL_INTEL_conservative_raster"));
+    caps.hasConservativeRasterization   = (HasExtension("GL_NV_conservative_raster") || HasExtension("GL_INTEL_conservative_rasterization"));
 
     /* Query integral attributes */
     auto GetUInt = [](GLenum param)

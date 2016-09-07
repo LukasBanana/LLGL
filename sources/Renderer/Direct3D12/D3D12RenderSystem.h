@@ -135,6 +135,12 @@ class D3D12RenderSystem : public RenderSystem
         
         void Release(GraphicsPipeline& graphicsPipeline) override;
 
+        /* ----- Queries ----- */
+
+        Query* CreateQuery(const QueryType type) override;
+
+        void Release(Query& query) override;
+
         /* ----- Extended internal functions ----- */
 
         ID3D12CommandQueue* CreateDXCommandQueue();

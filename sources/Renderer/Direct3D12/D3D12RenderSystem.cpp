@@ -376,6 +376,19 @@ void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
     RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
 }
 
+/* ----- Queries ----- */
+
+Query* D3D12RenderSystem::CreateQuery(const QueryType type)
+{
+    return nullptr;//todo...
+}
+
+void D3D12RenderSystem::Release(Query& query)
+{
+    //todo...
+}
+
+
 /* ----- Extended internal functions ----- */
 
 ID3D12CommandQueue* D3D12RenderSystem::CreateDXCommandQueue()

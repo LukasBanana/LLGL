@@ -141,7 +141,7 @@ GLStateManager::GLStateManager(GLRenderSystem& renderSystem)
 
     #ifdef GL_INTEL_conservative_rasterization
     // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
-    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, "GL_INTEL_conservative_raster", GL_CONSERVATIVE_RASTERIZATION_INTEL);
+    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, "GL_INTEL_conservative_rasterization", GL_CONSERVATIVE_RASTERIZATION_INTEL);
     #endif
 
     #endif
