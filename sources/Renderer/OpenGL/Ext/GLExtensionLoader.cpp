@@ -64,11 +64,21 @@ static void ExtractExtensionsFromString(std::map<std::string, bool>& extMap, con
 #define LOAD_GLPROC_SIMPLE(NAME) \
     LoadGLProc(NAME, #NAME)
 
-#define LOAD_GLPROC(NAME)   \
-    if (usePlaceHolder)                             \
-        NAME = Dummy_##NAME;                        \
-    else if (!LoadGLProc(NAME, #NAME))              \
+#ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
+
+#define LOAD_GLPROC(NAME)               \
+    if (usePlaceHolder)                 \
+        NAME = Dummy_##NAME;            \
+    else if (!LoadGLProc(NAME, #NAME))  \
         return false
+
+#else
+
+#define LOAD_GLPROC(NAME)           \
+    if (!LoadGLProc(NAME, #NAME))   \
+        return false
+
+#endif
 
 /* --- Common GL extensions --- */
 
@@ -469,11 +479,13 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
             Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
             it->second = false;
         }
+        #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
         else if (it == extMap.end())
         {
             /* If failed, use dummy procedures to detect illegal use of OpenGL extension */
             extLoadingProc(true);
         }
+        #endif
     };
 
     /* Load hardware buffer extensions */

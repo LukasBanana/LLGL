@@ -5,6 +5,9 @@
  * See "LICENSE.txt" for license information.
  */
 
+#ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
+
+
 // THIS FILE MUST NOT HAVE A HEADER GUARD
 
 /*
@@ -295,6 +298,9 @@ DECL_GLPROC(void, glClipControl, (GLenum, GLenum));
 
 
 } // /namespace LLGL
+
+
+#endif
 
 
 
