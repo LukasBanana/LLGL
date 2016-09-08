@@ -55,6 +55,13 @@ int main()
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
 
+        // Create vertex buffer
+        LLGL::VertexFormat vertexFormat;
+        vertexFormat.AddAttribute("TEXCOORD", LLGL::DataType::Float, 2);
+        vertexFormat.AddAttribute("POSITION", LLGL::DataType::Float, 2);
+
+        //...
+
         // Load shader
         auto shaderSource = ReadFileContent("TestShader.hlsl");
 
@@ -88,6 +95,8 @@ int main()
 
         shaderProgram->AttachShader(*vertShader);
         shaderProgram->AttachShader(*fragShader);
+
+        shaderProgram->BindVertexAttributes(vertexFormat.GetAttributes());
 
         if (!shaderProgram->LinkShaders())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;

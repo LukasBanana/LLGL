@@ -78,24 +78,41 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     stateDesc.GS = GetShaderByteCode(shaderProgramD3D->GetGS());
 
     /* Convert blend state */
-  //stateDesc.BlendState.AlphaToCoverageEnable      = FALSE;
-    stateDesc.BlendState.IndependentBlendEnable     = (desc.blend.targets.size() > 1 ? TRUE : FALSE);
+    stateDesc.BlendState.AlphaToCoverageEnable  = FALSE;
+    stateDesc.BlendState.IndependentBlendEnable = (desc.blend.targets.size() > 1 ? TRUE : FALSE);
 
-    for (UINT i = 0, n = std::min(8u, static_cast<UINT>(desc.blend.targets.size())); i < n; ++i)
+    for (UINT i = 0, n = static_cast<UINT>(desc.blend.targets.size()); i < 8u; ++i)
     {
-        const auto& targetDesc = desc.blend.targets[i];
         auto& targetState = stateDesc.BlendState.RenderTarget[i];
 
-        targetState.BlendEnable             = desc.blend.blendEnabled;
-        targetState.LogicOpEnable           = FALSE;
-        targetState.SrcBlend                = DXTypes::Map(targetDesc.srcColor);
-        targetState.DestBlend               = DXTypes::Map(targetDesc.destColor);
-        targetState.BlendOp                 = DXTypes::Map(targetDesc.colorArithmetic);
-        targetState.SrcBlendAlpha           = DXTypes::Map(targetDesc.srcAlpha);
-        targetState.DestBlendAlpha          = DXTypes::Map(targetDesc.destAlpha);
-        targetState.BlendOpAlpha            = DXTypes::Map(targetDesc.alphaArithmetic);
-        targetState.LogicOp                 = D3D12_LOGIC_OP_NOOP;
-        targetState.RenderTargetWriteMask   = GetColorWriteMask(targetDesc.colorMask);
+        if (i < n)
+        {
+            const auto& targetDesc = desc.blend.targets[i];
+
+            targetState.BlendEnable             = desc.blend.blendEnabled;
+            targetState.LogicOpEnable           = FALSE;
+            targetState.SrcBlend                = DXTypes::Map(targetDesc.srcColor);
+            targetState.DestBlend               = DXTypes::Map(targetDesc.destColor);
+            targetState.BlendOp                 = DXTypes::Map(targetDesc.colorArithmetic);
+            targetState.SrcBlendAlpha           = DXTypes::Map(targetDesc.srcAlpha);
+            targetState.DestBlendAlpha          = DXTypes::Map(targetDesc.destAlpha);
+            targetState.BlendOpAlpha            = DXTypes::Map(targetDesc.alphaArithmetic);
+            targetState.LogicOp                 = D3D12_LOGIC_OP_NOOP;
+            targetState.RenderTargetWriteMask   = GetColorWriteMask(targetDesc.colorMask);
+        }
+        else
+        {
+            targetState.BlendEnable             = FALSE;
+            targetState.LogicOpEnable           = FALSE;
+            targetState.SrcBlend                = D3D12_BLEND_ONE;
+            targetState.DestBlend               = D3D12_BLEND_ZERO;
+            targetState.BlendOp                 = D3D12_BLEND_OP_ADD;
+            targetState.SrcBlendAlpha           = D3D12_BLEND_ONE;
+            targetState.DestBlendAlpha          = D3D12_BLEND_ZERO;
+            targetState.BlendOpAlpha            = D3D12_BLEND_OP_ADD;
+            targetState.LogicOp                 = D3D12_LOGIC_OP_NOOP;
+            targetState.RenderTargetWriteMask   = D3D12_COLOR_WRITE_ENABLE_ALL;
+        }
     }
 
     /* Convert rasterizer state */
@@ -127,10 +144,10 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
   //stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     stateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     stateDesc.SampleMask            = UINT_MAX;
-    stateDesc.NumRenderTargets      = 8;
+    stateDesc.NumRenderTargets      = 1;//8;
     stateDesc.SampleDesc.Count      = desc.rasterizer.samples;
 
-    for (UINT i = 0; i < stateDesc.NumRenderTargets; ++i)
+    for (UINT i = 0; i < 8u; ++i)
         stateDesc.RTVFormats[i] = DXGI_FORMAT_B8G8R8A8_UNORM;
 
     /* Create D3D12 graphics pipeline sate */

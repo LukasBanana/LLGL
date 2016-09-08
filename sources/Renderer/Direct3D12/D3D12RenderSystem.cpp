@@ -632,10 +632,10 @@ void D3D12RenderSystem::CreateRootSignature()
 
     D3D12_ROOT_PARAMETER signatureParams;
     {
-        signatureParams.ParameterType       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        signatureParams.ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         signatureParams.DescriptorTable.NumDescriptorRanges = 1;
         signatureParams.DescriptorTable.pDescriptorRanges   = &signatureDescRange;
-        signatureParams.ShaderVisibility    = D3D12_SHADER_VISIBILITY_ALL;
+        signatureParams.ShaderVisibility                    = D3D12_SHADER_VISIBILITY_ALL;
     }
 
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
@@ -677,6 +677,7 @@ void D3D12RenderSystem::CreateRootSignature()
     DXThrowIfFailed(hr, "failed to create D3D12 root signature");
 
     SafeRelease(signature);
+    SafeRelease(error);
 }
 
 
