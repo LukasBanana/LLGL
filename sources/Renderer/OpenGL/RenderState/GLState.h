@@ -54,7 +54,7 @@ enum class GLState
     PROGRAM_POINT_SIZE,
 };
 
-#ifdef LLGL_GL_ENABLE_EXT
+#ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
 enum class GLStateExt
 {

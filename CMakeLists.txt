@@ -52,11 +52,11 @@ endif(WIN32)
 
 # === Options ===
 
-option(LLGL_GL_ENABLE_EXT "Enable Vendor Specific OpenGL Extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
+option(LLGL_GL_ENABLE_VENDOR_EXT "Enable Vendor Specific OpenGL Extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL Extension Placeholders" ON)
 
-if(LLGL_GL_ENABLE_EXT)
-	ADD_DEFINE(LLGL_GL_ENABLE_EXT)
+if(LLGL_GL_ENABLE_VENDOR_EXT)
+	ADD_DEFINE(LLGL_GL_ENABLE_VENDOR_EXT)
 endif()
 
 if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)

@@ -120,7 +120,7 @@ GLStateManager::GLStateManager(GLRenderSystem& renderSystem)
 
     activeTextureLayer_ = &(textureState_.layers[0]);
 
-    #ifdef LLGL_GL_ENABLE_EXT
+    #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
     /* Initialize extenstion states */
     auto InitStateExt = [&](GLStateExt state, const std::string& extensionName, GLenum cap)
@@ -239,7 +239,7 @@ void GLStateManager::PopStates(std::size_t count)
         PopState();
 }
 
-#ifdef LLGL_GL_ENABLE_EXT
+#ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
 void GLStateManager::Set(GLStateExt state, bool value)
 {

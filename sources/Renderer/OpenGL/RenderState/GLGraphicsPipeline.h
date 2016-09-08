@@ -50,7 +50,7 @@ class GLGraphicsPipeline : public GraphicsPipeline
         bool                    multiSampleEnabled_ = false;    // glEnable(GL_MULTISAMPLE)
         bool                    lineSmoothEnabled_  = false;    // glEnable(GL_LINE_SMOOTH)
 
-        #ifdef LLGL_GL_ENABLE_EXT
+        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
         bool                    conservativeRaster_ = false;    // glEnable(GL_CONSERVATIVE_RASTERIZATION_NV/INTEL)
         #endif
 

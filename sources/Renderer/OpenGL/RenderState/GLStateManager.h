@@ -57,7 +57,7 @@ class GLStateManager
         void PopState();
         void PopStates(std::size_t count);
 
-        #ifdef LLGL_GL_ENABLE_EXT
+        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
         void Set(GLStateExt state, bool value);
         void Enable(GLStateExt state);
@@ -157,7 +157,7 @@ class GLStateManager
         static const std::size_t numFrameBufferTargets  = (static_cast<std::size_t>(GLFrameBufferTarget::READ_FRAMEBUFFER) + 1);
         static const std::size_t numTextureTargets      = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
 
-        #ifdef LLGL_GL_ENABLE_EXT
+        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
         static const std::size_t numStatesExt           = (static_cast<std::size_t>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
         #endif
 
@@ -189,7 +189,7 @@ class GLStateManager
             std::stack<StackEntry>      valueStack;
         };
 
-        #ifdef LLGL_GL_ENABLE_EXT
+        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
         struct GLRenderStateExt
         {
@@ -277,7 +277,7 @@ class GLStateManager
         GLShaderState                       shaderState_;
         GLSamplerState                      samplerState_;
 
-        #ifdef LLGL_GL_ENABLE_EXT
+        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
         GLRenderStateExt                    renderStateExt_;
         #endif
 
