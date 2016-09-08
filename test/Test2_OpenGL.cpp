@@ -15,7 +15,7 @@
 
 //#define TEST_RENDER_TARGET
 //#define TEST_QUERY
-#define TEST_STORAGE_BUFFER
+//#define TEST_STORAGE_BUFFER
 
 
 int main()
@@ -304,10 +304,10 @@ int main()
         }
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 
-        #ifndef __linux__
+        //#ifndef __linux__
         context->BindSampler(0, sampler);
-        #endif
-
+        //#endif
+        
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
 
         #ifdef TEST_QUERY
