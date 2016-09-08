@@ -7,6 +7,15 @@
 
 // THIS FILE MUST NOT HAVE A HEADER GUARD
 
+/*
+All OpenGL extension placeholder procedures are defined here.
+In case that an GL extension is not supported, the respective
+function pointers are set to their respective dummy functions.
+These functions always throw an 'std::runtime_error' exception,
+to notify the client programmer about an illegal use of an
+unsupported GL extension.
+*/
+
 
 #include <stdexcept>
 #include "../OpenGL.h"
