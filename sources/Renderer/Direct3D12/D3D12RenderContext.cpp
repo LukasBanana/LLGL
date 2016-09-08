@@ -32,14 +32,6 @@ D3D12RenderContext::D3D12RenderContext(
 
 D3D12RenderContext::~D3D12RenderContext()
 {
-    /* Release D3D12 objects */
-    for (UINT i = 0; i < maxNumBuffers; ++i)
-    {
-        SafeRelease(renderTargets_[i]);
-        SafeRelease(cmdAllocs_[i]);
-    }
-    SafeRelease(descHeap_);
-    SafeRelease(swapChain_);
 }
 
 void D3D12RenderContext::Present()

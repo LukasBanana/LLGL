@@ -23,7 +23,6 @@ D3D12Shader::D3D12Shader(const ShaderType type) :
 
 D3D12Shader::~D3D12Shader()
 {
-    SafeRelease(errors_);
 }
 
 bool D3D12Shader::Compile(const std::string& shaderSource)
@@ -57,10 +56,8 @@ static UINT GetDXCompileFlags(int flags)
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
 bool D3D12Shader::Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags)
 {
-    SafeRelease(errors_);
-    
     /* Compile shader code */
-    ID3DBlob* code = nullptr;
+    ComPtr<ID3DBlob> code;
 
     auto hr = D3DCompile(
         shaderSource.data(),
@@ -78,10 +75,7 @@ bool D3D12Shader::Compile(const std::string& shaderSource, const std::string& en
 
     /* Get byte code from blob */
     if (code)
-    {
-        byteCode_ = DXGetBlobData(code);
-        code->Release();
-    }
+        byteCode_ = DXGetBlobData(code.Get());
 
     if (FAILED(hr))
         return false;
@@ -107,19 +101,19 @@ std::string D3D12Shader::Disassemble(int flags)
 {
     if (!byteCode_.empty())
     {
-        ID3DBlob* disasm = nullptr;
+        ComPtr<ID3DBlob> disasm;
 
         auto hr = D3DDisassemble(byteCode_.data(), byteCode_.size(), GetDXDisassembleFlags(flags), nullptr, &disasm);
         DXThrowIfFailed(hr, "failed to disassemble D3D12 shader byte code");
 
-        return DXGetBlobString(disasm);
+        return DXGetBlobString(disasm.Get());
     }
     return "";
 }
 
 std::string D3D12Shader::QueryInfoLog()
 {
-    return (errors_ != nullptr ? DXGetBlobString(errors_) : "");
+    return (errors_.Get() != nullptr ? DXGetBlobString(errors_.Get()) : "");
 }
 
 D3D12_SHADER_BYTECODE D3D12Shader::GetByteCode() const
@@ -142,7 +136,7 @@ void D3D12Shader::ReflectShader()
     HRESULT hr = 0;
 
     /* Get shader reflection */
-    ID3D12ShaderReflection* reflection = nullptr;
+    ComPtr<ID3D12ShaderReflection> reflection;
     hr = D3DReflect(byteCode_.data(), byteCode_.size(), IID_PPV_ARGS(&reflection));
     DXThrowIfFailed(hr, "failed to retrieve D3D12 shader reflection");
 
@@ -218,9 +212,6 @@ void D3D12Shader::ReflectShader()
             storageBufferDescs_.push_back(storeBufferDesc);
         }
     }
-
-    /* Release shader reflection */
-    reflection->Release();
 }
 
 

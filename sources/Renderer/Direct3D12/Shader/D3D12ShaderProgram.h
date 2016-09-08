@@ -10,6 +10,7 @@
 
 
 #include <LLGL/ShaderProgram.h>
+#include "../../ComPtr.h"
 #include <vector>
 #include <d3d12.h>
 

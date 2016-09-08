@@ -13,6 +13,7 @@
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/ConstantBuffer.h>
 #include <LLGL/StorageBuffer.h>
+#include "../../ComPtr.h"
 #include <vector>
 #include <d3d12.h>
 
@@ -63,7 +64,7 @@ class D3D12Shader : public Shader
         void ReflectShader();
 
         std::vector<char>                       byteCode_;
-        ID3DBlob*                               errors_             = nullptr;
+        ComPtr<ID3DBlob>                        errors_;
 
         std::vector<VertexAttribute>            vertexAttributes_;
         std::vector<ConstantBufferDescriptor>   constantBufferDescs_;

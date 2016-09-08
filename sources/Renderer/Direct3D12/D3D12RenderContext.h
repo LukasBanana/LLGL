@@ -12,6 +12,7 @@
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
 #include <cstddef>
+#include "../ComPtr.h"
 
 //#include "RenderState/D3D12StateManager.h"
 
@@ -140,14 +141,14 @@ class D3D12RenderContext : public RenderContext
 
         //std::shared_ptr<D3D12StateManager>  stateMngr_;
 
-        IDXGISwapChain1*                    swapChain_                      = nullptr;
+        ComPtr<IDXGISwapChain1>             swapChain_;
         UINT                                swapChainInterval_              = 0;
 
-        ID3D12DescriptorHeap*               descHeap_                       = nullptr;
-        ID3D12GraphicsCommandList*          gfxCommandList_                 = nullptr;
+        ComPtr<ID3D12DescriptorHeap>        descHeap_;
+        ComPtr<ID3D12GraphicsCommandList>   gfxCommandList_;
 
-        ID3D12CommandAllocator*             cmdAllocs_[maxNumBuffers]       = { nullptr };
-        ID3D12Resource*                     renderTargets_[maxNumBuffers]   = { nullptr };
+        ComPtr<ID3D12CommandAllocator>      cmdAllocs_[maxNumBuffers];
+        ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];
         UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
 
         UINT                                numFrames_                      = 0;

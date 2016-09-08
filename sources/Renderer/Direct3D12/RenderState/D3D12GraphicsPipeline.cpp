@@ -161,8 +161,6 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
 
 D3D12GraphicsPipeline::~D3D12GraphicsPipeline()
 {
-    SafeRelease(pipelineState_);
-    SafeRelease(commandList_);
 }
 
 /*void D3D12GraphicsPipeline::Bind(D3D12StateManager& stateMngr)

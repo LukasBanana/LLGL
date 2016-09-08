@@ -33,9 +33,6 @@ D3D12RenderSystem::D3D12RenderSystem()
 
 D3D12RenderSystem::~D3D12RenderSystem()
 {
-    SafeRelease(cmdQueue_);
-    SafeRelease(device_);
-    SafeRelease(factory_);
 }
 
 std::map<RendererInfo, std::string> D3D12RenderSystem::QueryRendererInfo() const
@@ -389,7 +386,7 @@ void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(device_, rootSignature_, nullptr/*<--!!!*/, desc));
+    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(device_.Get(), rootSignature_.Get(), nullptr/*<--!!!*/, desc));
 }
 
 void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
@@ -412,9 +409,9 @@ void D3D12RenderSystem::Release(Query& query)
 
 /* ----- Extended internal functions ----- */
 
-ID3D12CommandQueue* D3D12RenderSystem::CreateDXCommandQueue()
+ComPtr<ID3D12CommandQueue> D3D12RenderSystem::CreateDXCommandQueue()
 {
-    ID3D12CommandQueue* cmdQueue = nullptr;
+    ComPtr<ID3D12CommandQueue> cmdQueue;
 
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     {
@@ -427,9 +424,9 @@ ID3D12CommandQueue* D3D12RenderSystem::CreateDXCommandQueue()
     return cmdQueue;
 }
 
-ID3D12CommandAllocator* D3D12RenderSystem::CreateDXCommandAllocator()
+ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator()
 {
-    ID3D12CommandAllocator* cmdAlloc = nullptr;
+    ComPtr<ID3D12CommandAllocator> cmdAlloc;
 
     auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAlloc));
     DXThrowIfFailed(hr, "failed to create D3D12 command allocator");
@@ -437,9 +434,9 @@ ID3D12CommandAllocator* D3D12RenderSystem::CreateDXCommandAllocator()
     return cmdAlloc;
 }
 
-ID3D12DescriptorHeap* D3D12RenderSystem::CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc)
+ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc)
 {
-    ID3D12DescriptorHeap* descHeap = nullptr;
+    ComPtr<ID3D12DescriptorHeap> descHeap;
 
     auto hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descHeap));
     DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap");
@@ -447,11 +444,11 @@ ID3D12DescriptorHeap* D3D12RenderSystem::CreateDXDescriptorHeap(const D3D12_DESC
     return descHeap;
 }
 
-IDXGISwapChain1* D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd)
+ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd)
 {
-    IDXGISwapChain1* swapChain = nullptr;
+    ComPtr<IDXGISwapChain1> swapChain;
 
-    auto hr = factory_->CreateSwapChainForHwnd(cmdQueue_, wnd, &desc, nullptr, nullptr, &swapChain);
+    auto hr = factory_->CreateSwapChainForHwnd(cmdQueue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
     DXThrowIfFailed(hr, "failed to create D3D12 swap chain");
 
     return swapChain;
@@ -462,7 +459,7 @@ void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
     HRESULT hr = 0;
 
     /* Schedule signal command into the qeue */
-    hr = cmdQueue_->Signal(fence_, fenceValue);
+    hr = cmdQueue_->Signal(fence_.Get(), fenceValue);
     DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
 
     /* Wait until the fence has been crossed */
@@ -489,8 +486,8 @@ void D3D12RenderSystem::CreateFactory()
 void D3D12RenderSystem::QueryVideoAdapters()
 {
     /* Enumerate over all video adapters */
-    IDXGIAdapter* adapter = nullptr;
-    IDXGIOutput* output = nullptr;
+    ComPtr<IDXGIAdapter> adapter;
+    ComPtr<IDXGIOutput> output;
 
     for (UINT i = 0; factory_->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i)
     {
@@ -547,13 +544,13 @@ void D3D12RenderSystem::QueryVideoAdapters()
             /* Add output to the list and release handle */
             videoAdapterDesc.outputs.push_back(videoOutput);
 
-            output->Release();
+            output.Reset();
         }
 
         /* Add adapter to the list and release handle */
         videoAdatperDescs_.push_back(videoAdapterDesc);
 
-        adapter->Release();
+        adapter.Reset();
     }
 }
 
@@ -657,16 +654,15 @@ void D3D12RenderSystem::CreateRootSignature()
     }
 
     /* Create serialized root signature */
-    HRESULT     hr          = 0;
-    ID3DBlob*   signature   = nullptr;
-    ID3DBlob*   error       = nullptr;
+    HRESULT             hr          = 0;
+    ComPtr<ID3DBlob>    signature;
+    ComPtr<ID3DBlob>    error;
 
     hr = D3D12SerializeRootSignature(&signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
     
     if (FAILED(hr) && error)
     {
-        auto errorStr = DXGetBlobString(error);
-        error->Release();
+        auto errorStr = DXGetBlobString(error.Get());
         throw std::runtime_error("failed to serialize D3D12 root signature: " + errorStr);
     }
 
@@ -675,9 +671,6 @@ void D3D12RenderSystem::CreateRootSignature()
     /* Create actual root signature */
     hr = device_->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature_));
     DXThrowIfFailed(hr, "failed to create D3D12 root signature");
-
-    SafeRelease(signature);
-    SafeRelease(error);
 }
 
 

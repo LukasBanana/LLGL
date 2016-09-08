@@ -18,6 +18,7 @@
 #include "Shader/D3D12ShaderProgram.h"
 
 #include "../ContainerTypes.h"
+#include "../ComPtr.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>
 
@@ -147,10 +148,10 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
-        ID3D12CommandQueue* CreateDXCommandQueue();
-        ID3D12CommandAllocator* CreateDXCommandAllocator();
-        ID3D12DescriptorHeap* CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
-        IDXGISwapChain1* CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
+        ComPtr<ID3D12CommandQueue> CreateDXCommandQueue();
+        ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator();
+        ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
+        ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
 
         //! Waits until the GPU has done all previous work.
         void SyncGPU(UINT64& fenceValue);
@@ -171,12 +172,12 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        IDXGIFactory4*                              factory_        = nullptr;
-        ID3D12Device*                               device_         = nullptr;
-        ID3D12CommandQueue*                         cmdQueue_       = nullptr;
-        ID3D12RootSignature*                        rootSignature_  = nullptr;
+        ComPtr<IDXGIFactory4>                       factory_;
+        ComPtr<ID3D12Device>                        device_;
+        ComPtr<ID3D12CommandQueue>                  cmdQueue_;
+        ComPtr<ID3D12RootSignature>                 rootSignature_;
 
-        ID3D12Fence*                                fence_          = nullptr;
+        ComPtr<ID3D12Fence>                         fence_;
         HANDLE                                      fenceEvent_     = 0;
 
         D3D_FEATURE_LEVEL                           featureLevel_   = D3D_FEATURE_LEVEL_9_1;
