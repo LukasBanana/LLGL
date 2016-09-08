@@ -46,7 +46,7 @@ static UINT GetDXCompileFlags(int flags)
     else if ((flags & ShaderCompileFlags::O3) != 0)
         dxFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
     else
-        dxFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL0;
+        dxFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;//D3DCOMPILE_OPTIMIZATION_LEVEL0;
 
     if ((flags & ShaderCompileFlags::WarnError) != 0)
         dxFlags |= D3DCOMPILE_WARNINGS_ARE_ERRORS;
