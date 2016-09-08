@@ -48,7 +48,7 @@ DECL_GLPROC(const char*, wglGetExtensionsStringARB, (HDC));
 #elif defined(__linux__)
 
 // GLX_SGI_swap_control
-//PFNGLXSWAPINTERVALSGIPROC                               glXSwapIntervalSGI                              = nullptr;
+DECL_GLPROC(int, glXSwapIntervalSGI, (int));
 
 #endif
 
@@ -56,56 +56,53 @@ DECL_GLPROC(const char*, wglGetExtensionsStringARB, (HDC));
 
 /* --- GL 3.0 extensions (for Core Profile) --- */
 
-//PFNGLGETSTRINGIPROC                                     glGetStringi                                    = nullptr;
+DECL_GLPROC(const GLubyte*, glGetStringi, (GLenum GLuint));
 
 #endif
-
-#if 0
 
 /* --- Blending (GL_ARB_draw_buffers_blend) --- */
 
-PFNGLBLENDFUNCSEPARATEPROC                              glBlendFuncSeparate                             = nullptr;
-PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
+DECL_GLPROC(void, glBlendFuncSeparate, (GLenum, GLenum, GLenum, GLenum));
+DECL_GLPROC(void, glBlendFuncSeparatei, (GLuint, GLenum, GLenum, GLenum, GLenum));
 
 /* --- Indexed (GL_EXT_draw_buffers2) --- */
 
-PFNGLCOLORMASKIPROC                                     glColorMaski                                    = nullptr;
-PFNGLGETBOOLEANI_VPROC                                  glGetBooleani_v                                 = nullptr;
-PFNGLGETINTEGERI_VPROC                                  glGetIntegeri_v                                 = nullptr;
-PFNGLENABLEIPROC                                        glEnablei                                       = nullptr;
-PFNGLDISABLEIPROC                                       glDisablei                                      = nullptr;
-PFNGLISENABLEDIPROC                                     glIsEnabledi                                    = nullptr;
+DECL_GLPROC(void, glColorMaski, (GLuint, GLboolean, GLboolean, GLboolean, GLboolean));
+DECL_GLPROC(void, glGetBooleani_v, (GLenum, GLuint, GLboolean*));
+DECL_GLPROC(void, glGetIntegeri_v, (GLenum, GLuint, GLint*));
+DECL_GLPROC(void, glEnablei, (GLenum, GLuint));
+DECL_GLPROC(void, glDisablei, (GLenum, GLuint));
+DECL_GLPROC(GLboolean, glIsEnabledi, (GLenum, GLuint));
 
 /* --- Multi Texture (GL_ARB_multitexture) --- */
 
-PFNGLACTIVETEXTUREPROC                                  glActiveTexture                                 = nullptr;
-PFNGLTEXIMAGE3DPROC                                     glTexImage3D                                    = nullptr;
-PFNGLTEXSUBIMAGE3DPROC                                  glTexSubImage3D                                 = nullptr;
+DECL_GLPROC(void, glActiveTexture, (GLenum));
+DECL_GLPROC(void, glTexImage3D, (GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*));
+DECL_GLPROC(void, glTexSubImage3D, (GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const void*));
 
 /* --- Clear Texture (GL_ARB_clear_texture) --- */
 
-PFNGLCLEARTEXIMAGEPROC                                  glClearTexImage                                 = nullptr;
-PFNGLCLEARTEXSUBIMAGEPROC                               glClearTexSubImage                              = nullptr;
+DECL_GLPROC(void, glClearTexImage, (GLuint, GLint, GLenum, GLenum, const void*));
+DECL_GLPROC(void, glClearTexSubImage, (GLuint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const void*));
 
 /* --- Sampler objects (GL_ARB_sampler_objects) --- */
 
-PFNGLGENSAMPLERSPROC                                    glGenSamplers                                   = nullptr;
-PFNGLDELETESAMPLERSPROC                                 glDeleteSamplers                                = nullptr;
-PFNGLBINDSAMPLERPROC                                    glBindSampler                                   = nullptr;
-PFNGLSAMPLERPARAMETERIPROC                              glSamplerParameteri                             = nullptr;
-PFNGLSAMPLERPARAMETERFPROC                              glSamplerParameterf                             = nullptr;
-PFNGLSAMPLERPARAMETERIVPROC                             glSamplerParameteriv                            = nullptr;
-PFNGLSAMPLERPARAMETERFVPROC                             glSamplerParameterfv                            = nullptr;
+DECL_GLPROC(void, glGenSamplers, (GLsizei, GLuint*));
+DECL_GLPROC(void, glDeleteSamplers, (GLsizei, const GLuint*));
+DECL_GLPROC(void, glBindSampler, (GLuint, GLuint));
+DECL_GLPROC(void, glSamplerParameteri, (GLuint, GLenum, GLint));
+DECL_GLPROC(void, glSamplerParameterf, (GLuint, GLenum, GLfloat));
+DECL_GLPROC(void, glSamplerParameteriv, (GLuint, GLenum, const GLint*));
+DECL_GLPROC(void, glSamplerParameterfv, (GLuint, GLenum, const GLfloat*));
 
 /* --- Multi bind (GL_ARB_multi_bind) --- */
 
-PFNGLBINDBUFFERSBASEPROC                                glBindBuffersBase                               = nullptr;
-PFNGLBINDBUFFERSRANGEPROC                               glBindBuffersRange                              = nullptr;
-PFNGLBINDTEXTURESPROC                                   glBindTextures                                  = nullptr;
-PFNGLBINDSAMPLERSPROC                                   glBindSamplers                                  = nullptr;
-PFNGLBINDIMAGETEXTURESPROC                              glBindImageTextures                             = nullptr;
-PFNGLBINDVERTEXBUFFERSPROC                              glBindVertexBuffers                             = nullptr;
-#endif
+DECL_GLPROC(void, glBindBuffersBase, (GLenum, GLuint, GLsizei, const GLuint*));
+DECL_GLPROC(void, glBindBuffersRange, (GLenum, GLuint, GLsizei, const GLuint*, const GLintptr*, const GLsizeiptr*));
+DECL_GLPROC(void, glBindTextures, (GLuint, GLsizei, const GLuint*));
+DECL_GLPROC(void, glBindSamplers, (GLuint, GLsizei, const GLuint*));
+DECL_GLPROC(void, glBindImageTextures, (GLuint, GLsizei, const GLuint*));
+DECL_GLPROC(void, glBindVertexBuffers, (GLuint, GLsizei, const GLuint*, const GLintptr*, const GLsizei*));
 
 /* --- Vertex buffer object (GL_ARB_vertex_buffer_object) --- */
 
@@ -117,174 +114,171 @@ DECL_GLPROC(void, glBufferSubData, (GLenum, GLintptr, GLsizeiptr, const void*));
 DECL_GLPROC(void*, glMapBuffer, (GLenum, GLenum));
 DECL_GLPROC(GLboolean, glUnmapBuffer, (GLenum));
 
-#if 0
 /* --- Vertex attributes (GL_ARB_vertex_buffer_object???) --- */
 
-PFNGLENABLEVERTEXATTRIBARRAYPROC                        glEnableVertexAttribArray                       = nullptr;
-PFNGLDISABLEVERTEXATTRIBARRAYPROC                       glDisableVertexAttribArray                      = nullptr;
-PFNGLVERTEXATTRIBPOINTERPROC                            glVertexAttribPointer                           = nullptr;
-PFNGLVERTEXATTRIBIPOINTERPROC                           glVertexAttribIPointer                          = nullptr;
-PFNGLBINDATTRIBLOCATIONPROC                             glBindAttribLocation                            = nullptr;
+DECL_GLPROC(void, glEnableVertexAttribArray, (GLuint));
+DECL_GLPROC(void, glDisableVertexAttribArray, (GLuint));
+DECL_GLPROC(void, glVertexAttribPointer, (GLuint, GLint, GLenum, GLboolean, GLsizei, const void*));
+DECL_GLPROC(void, glVertexAttribIPointer, (GLuint, GLint, GLenum, GLsizei, const void*));
+DECL_GLPROC(void, glBindAttribLocation, (GLuint, GLuint, const GLchar*));
 
 /* --- Draw buffers (GL_ARB_draw_buffers) --- */
 
-PFNGLDRAWBUFFERSPROC                                    glDrawBuffers                                   = nullptr;
+DECL_GLPROC(void, glDrawBuffers, (GLsizei, const GLenum*));
 
 /* --- Vertex array objects (GL_ARB_vertex_array_object) --- */
 
-PFNGLGENVERTEXARRAYSPROC                                glGenVertexArrays                               = nullptr;
-PFNGLDELETEVERTEXARRAYSPROC                             glDeleteVertexArrays                            = nullptr;
-PFNGLBINDVERTEXARRAYPROC                                glBindVertexArray                               = nullptr;
+DECL_GLPROC(void, glGenVertexArrays, (GLsizei, GLuint*));
+DECL_GLPROC(void, glDeleteVertexArrays, (GLsizei, const GLuint*));
+DECL_GLPROC(void, glBindVertexArray, (GLuint));
 
 /* --- Frame buffer objects (GL_ARB_framebuffer_object) --- */
 
-PFNGLGENRENDERBUFFERSPROC                               glGenRenderbuffers                              = nullptr;
-PFNGLDELETERENDERBUFFERSPROC                            glDeleteRenderbuffers                           = nullptr;
-PFNGLBINDRENDERBUFFERPROC                               glBindRenderbuffer                              = nullptr;
-PFNGLRENDERBUFFERSTORAGEPROC                            glRenderbufferStorage                           = nullptr;
-PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC                 glRenderbufferStorageMultisample                = nullptr;
+DECL_GLPROC(void, glGenRenderbuffers, (GLsizei n, GLuint *));
+DECL_GLPROC(void, glDeleteRenderbuffers, (GLsizei, const GLuint*));
+DECL_GLPROC(void, glBindRenderbuffer, (GLenum, GLuint));
+DECL_GLPROC(void, glRenderbufferStorage, (GLenum, GLenum, GLsizei, GLsizei));
+DECL_GLPROC(void, glRenderbufferStorageMultisample, (GLenum, GLsizei, GLenum, GLsizei, GLsizei));
 
-PFNGLGENFRAMEBUFFERSPROC                                glGenFramebuffers                               = nullptr;
-PFNGLDELETEFRAMEBUFFERSPROC                             glDeleteFramebuffers                            = nullptr;
-PFNGLBINDFRAMEBUFFERPROC                                glBindFramebuffer                               = nullptr;
-PFNGLCHECKFRAMEBUFFERSTATUSPROC                         glCheckFramebufferStatus                        = nullptr;
+DECL_GLPROC(void, glGenFramebuffers, (GLsizei, GLuint*));
+DECL_GLPROC(void, glDeleteFramebuffers, (GLsizei, const GLuint*));
+DECL_GLPROC(void, glBindFramebuffer, (GLenum, GLuint));
+DECL_GLPROC(GLenum, glCheckFramebufferStatus, (GLenum));
 
-PFNGLFRAMEBUFFERTEXTUREPROC                             glFramebufferTexture                            = nullptr;
-PFNGLFRAMEBUFFERTEXTURE1DPROC                           glFramebufferTexture1D                          = nullptr;
-PFNGLFRAMEBUFFERTEXTURE2DPROC                           glFramebufferTexture2D                          = nullptr;
-PFNGLFRAMEBUFFERTEXTURE3DPROC                           glFramebufferTexture3D                          = nullptr;
-PFNGLFRAMEBUFFERTEXTURELAYERPROC                        glFramebufferTextureLayer                       = nullptr;
-PFNGLFRAMEBUFFERRENDERBUFFERPROC                        glFramebufferRenderbuffer                       = nullptr;
-PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC            glGetFramebufferAttachmentParameteriv           = nullptr;
-PFNGLBLITFRAMEBUFFERPROC                                glBlitFramebuffer                               = nullptr;
+DECL_GLPROC(void, glFramebufferTexture, (GLenum, GLenum, GLuint, GLint));
+DECL_GLPROC(void, glFramebufferTexture1D, (GLenum, GLenum, GLenum, GLuint, GLint));
+DECL_GLPROC(void, glFramebufferTexture2D, (GLenum, GLenum, GLenum, GLuint, GLint));
+DECL_GLPROC(void, glFramebufferTexture3D, (GLenum, GLenum, GLenum, GLuint, GLint, GLint));
+DECL_GLPROC(void, glFramebufferTextureLayer, (GLenum, GLenum, GLuint, GLint, GLint));
+DECL_GLPROC(void, glFramebufferRenderbuffer, (GLenum, GLenum, GLenum, GLuint));
+DECL_GLPROC(void, glGetFramebufferAttachmentParameteriv, (GLenum, GLenum, GLenum, GLint*));
+DECL_GLPROC(void, glBlitFramebuffer, (GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum));
 
-PFNGLGENERATEMIPMAPPROC                                 glGenerateMipmap                                = nullptr;
+DECL_GLPROC(void, glGenerateMipmap, (GLenum));
 
 /* --- Instanced drawing (GL_ARB_draw_instanced) --- */
 
-PFNGLDRAWARRAYSINSTANCEDPROC                            glDrawArraysInstanced                           = nullptr;
-PFNGLDRAWELEMENTSINSTANCEDPROC                          glDrawElementsInstanced                         = nullptr;
+DECL_GLPROC(void, glDrawArraysInstanced, (GLenum, GLint, GLsizei, GLsizei));
+DECL_GLPROC(void, glDrawElementsInstanced, (GLenum, GLsizei, GLenum, const void*, GLsizei));
 
 /* --- Base vertex drawing (GL_ARB_draw_elements_base_vertex) --- */
 
-PFNGLDRAWELEMENTSBASEVERTEXPROC                         glDrawElementsBaseVertex                        = nullptr;
-PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXPROC                glDrawElementsInstancedBaseVertex               = nullptr;
+DECL_GLPROC(void, glDrawElementsBaseVertex, (GLenum, GLsizei, GLenum, const void*, GLint));
+DECL_GLPROC(void, glDrawElementsInstancedBaseVertex, (GLenum, GLsizei, GLenum, const void*, GLsizei, GLint));
 
 /* --- Instanced offset drawing (GL_ARB_base_instance) --- */
 
-PFNGLDRAWARRAYSINSTANCEDBASEINSTANCEPROC                glDrawArraysInstancedBaseInstance               = nullptr;
-PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC              glDrawElementsInstancedBaseInstance             = nullptr;
-PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXBASEINSTANCEPROC    glDrawElementsInstancedBaseVertexBaseInstance   = nullptr;
+DECL_GLPROC(void, glDrawArraysInstancedBaseInstance, (GLenum, GLint, GLsizei, GLsizei, GLuint));
+DECL_GLPROC(void, glDrawElementsInstancedBaseInstance, (GLenum, GLsizei, GLenum, const void*, GLsizei, GLuint));
+DECL_GLPROC(void, glDrawElementsInstancedBaseVertexBaseInstance, (GLenum, GLsizei, GLenum, const void*, GLsizei, GLint, GLuint));
 
 /* --- OpenGL shader extension (GL_ARB_shader_objects) --- */
 
-PFNGLCREATESHADERPROC                                   glCreateShader                                  = nullptr;
-PFNGLSHADERSOURCEPROC                                   glShaderSource                                  = nullptr;
-PFNGLCOMPILESHADERPROC                                  glCompileShader                                 = nullptr;
-PFNGLGETSHADERIVPROC                                    glGetShaderiv                                   = nullptr;
-PFNGLGETSHADERINFOLOGPROC                               glGetShaderInfoLog                              = nullptr;
-PFNGLDELETESHADERPROC                                   glDeleteShader                                  = nullptr;
+DECL_GLPROC(GLuint, glCreateShader, (GLenum));
+DECL_GLPROC(void, glShaderSource, (GLuint, GLsizei, const GLchar* const*, const GLint*));
+DECL_GLPROC(void, glCompileShader, (GLuint));
+DECL_GLPROC(void, glGetShaderiv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetShaderInfoLog, (GLuint, GLsizei, GLsizei*, GLchar*));
+DECL_GLPROC(void, glDeleteShader, (GLuint));
 
-PFNGLCREATEPROGRAMPROC                                  glCreateProgram                                 = nullptr;
-PFNGLDELETEPROGRAMPROC                                  glDeleteProgram                                 = nullptr;
-PFNGLATTACHSHADERPROC                                   glAttachShader                                  = nullptr;
-PFNGLDETACHSHADERPROC                                   glDetachShader                                  = nullptr;
-PFNGLLINKPROGRAMPROC                                    glLinkProgram                                   = nullptr;
-PFNGLVALIDATEPROGRAMPROC                                glValidateProgram                               = nullptr;
-PFNGLGETPROGRAMIVPROC                                   glGetProgramiv                                  = nullptr;
-PFNGLGETPROGRAMINFOLOGPROC                              glGetProgramInfoLog                             = nullptr;
-PFNGLUSEPROGRAMPROC                                     glUseProgram                                    = nullptr;
+DECL_GLPROC(GLuint, glCreateProgram, (void));
+DECL_GLPROC(void, glDeleteProgram, (GLuint));
+DECL_GLPROC(void, glAttachShader, (GLuint, GLuint));
+DECL_GLPROC(void, glDetachShader, (GLuint, GLuint));
+DECL_GLPROC(void, glLinkProgram, (GLuint));
+DECL_GLPROC(void, glValidateProgram, (GLuint));
+DECL_GLPROC(void, glGetProgramiv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetProgramInfoLog, (GLuint, GLsizei, GLsizei*, GLchar*));
+DECL_GLPROC(void, glUseProgram, (GLuint));
 
-PFNGLGETACTIVEATTRIBPROC                                glGetActiveAttrib                               = nullptr;
-PFNGLGETATTRIBLOCATIONPROC                              glGetAttribLocation                             = nullptr;
+DECL_GLPROC(void, glGetActiveAttrib, (GLuint, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLchar*));
+DECL_GLPROC(GLint, glGetAttribLocation, (GLuint, const GLchar*));
 
-PFNGLGETACTIVEUNIFORMARBPROC                            glGetActiveUniform;
-PFNGLGETUNIFORMLOCATIONPROC                             glGetUniformLocation;
-PFNGLUNIFORM1FVPROC                                     glUniform1fv;
-PFNGLUNIFORM2FVPROC                                     glUniform2fv;
-PFNGLUNIFORM3FVPROC                                     glUniform3fv;
-PFNGLUNIFORM4FVPROC                                     glUniform4fv;
-PFNGLUNIFORM1IVPROC                                     glUniform1iv;
-PFNGLUNIFORM2IVPROC                                     glUniform2iv;
-PFNGLUNIFORM3IVPROC                                     glUniform3iv;
-PFNGLUNIFORM4IVPROC                                     glUniform4iv;
-PFNGLUNIFORMMATRIX2FVPROC                               glUniformMatrix2fv;
-PFNGLUNIFORMMATRIX3FVPROC                               glUniformMatrix3fv;
-PFNGLUNIFORMMATRIX4FVPROC                               glUniformMatrix4fv;
+DECL_GLPROC(void, glGetActiveUniform, (GLhandleARB, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLcharARB*));
+DECL_GLPROC(GLint, glGetUniformLocation, (GLuint, const GLchar*));
+DECL_GLPROC(void, glUniform1fv, (GLint, GLsizei, const GLfloat*));
+DECL_GLPROC(void, glUniform2fv, (GLint, GLsizei, const GLfloat*));
+DECL_GLPROC(void, glUniform3fv, (GLint, GLsizei, const GLfloat*));
+DECL_GLPROC(void, glUniform4fv, (GLint, GLsizei, const GLfloat*));
+DECL_GLPROC(void, glUniform1iv, (GLint, GLsizei, const GLint*));
+DECL_GLPROC(void, glUniform2iv, (GLint, GLsizei, const GLint*));
+DECL_GLPROC(void, glUniform3iv, (GLint, GLsizei, const GLint*));
+DECL_GLPROC(void, glUniform4iv, (GLint, GLsizei, const GLint*));
+DECL_GLPROC(void, glUniformMatrix2fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(void, glUniformMatrix3fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(void, glUniformMatrix4fv, (GLint, GLsizei, GLboolean, const GLfloat*));
 
 /* --- Tessellation shader (GL_ARB_tessellation_shader) --- */
 
-PFNGLPATCHPARAMETERIPROC                                glPatchParameteri                               = nullptr;
-PFNGLPATCHPARAMETERFVPROC                               glPatchParameterfv                              = nullptr;
+DECL_GLPROC(void, glPatchParameteri, (GLenum, GLint));
+DECL_GLPROC(void, glPatchParameterfv, (GLenum, const GLfloat*));
 
 /* --- Compute shader (GL_ARB_compute_shader) --- */
 
-PFNGLDISPATCHCOMPUTEPROC                                glDispatchCompute                               = nullptr;
-PFNGLDISPATCHCOMPUTEINDIRECTPROC                        glDispatchComputeIndirect                       = nullptr;
+DECL_GLPROC(void, glDispatchCompute, (GLuint, GLuint, GLuint));
+DECL_GLPROC(void, glDispatchComputeIndirect, (GLintptr));
 
 /* --- Binary program (GL_ARB_get_program_binary) --- */
 
-PFNGLGETPROGRAMBINARYPROC                               glGetProgramBinary                              = nullptr;
-PFNGLPROGRAMBINARYPROC                                  glProgramBinary                                 = nullptr;
-PFNGLPROGRAMPARAMETERIPROC                              glProgramParameteri                             = nullptr;
+DECL_GLPROC(void, glGetProgramBinary, (GLuint, GLsizei, GLsizei*, GLenum*, void*));
+DECL_GLPROC(void, glProgramBinary, (GLuint, GLenum, const void*, GLsizei));
+DECL_GLPROC(void, glProgramParameteri, (GLuint, GLenum, GLint));
 
 /* --- Program interface query (GL_ARB_program_interface_query) --- */
 
-PFNGLGETPROGRAMINTERFACEIVPROC                          glGetProgramInterfaceiv                         = nullptr;
-PFNGLGETPROGRAMRESOURCEINDEXPROC                        glGetProgramResourceIndex                       = nullptr;
-PFNGLGETPROGRAMRESOURCENAMEPROC                         glGetProgramResourceName                        = nullptr;
-PFNGLGETPROGRAMRESOURCEIVPROC                           glGetProgramResourceiv                          = nullptr;
-PFNGLGETPROGRAMRESOURCELOCATIONPROC                     glGetProgramResourceLocation                    = nullptr;
-PFNGLGETPROGRAMRESOURCELOCATIONINDEXPROC                glGetProgramResourceLocationIndex               = nullptr;
+DECL_GLPROC(void, glGetProgramInterfaceiv, (GLuint, GLenum, GLenum, GLint*));
+DECL_GLPROC(GLuint, glGetProgramResourceIndex, (GLuint, GLenum, const GLchar*));
+DECL_GLPROC(void, glGetProgramResourceName, (GLuint, GLenum, GLuint, GLsizei, GLsizei*, GLchar*));
+DECL_GLPROC(void, glGetProgramResourceiv, (GLuint, GLenum, GLuint, GLsizei, const GLenum*, GLsizei, GLsizei*, GLint*));
+DECL_GLPROC(GLint, glGetProgramResourceLocation, (GLuint, GLenum, const GLchar*));
+DECL_GLPROC(GLint, glGetProgramResourceLocationIndex, (GLuint, GLenum, const GLchar*));
 
 /* --- Uniform buffer objects (GL_ARB_uniform_buffer_objects) --- */
 
-PFNGLGETUNIFORMBLOCKINDEXPROC                           glGetUniformBlockIndex                          = nullptr;
-PFNGLGETACTIVEUNIFORMBLOCKIVPROC                        glGetActiveUniformBlockiv                       = nullptr;
-PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC                      glGetActiveUniformBlockName                     = nullptr;
-PFNGLUNIFORMBLOCKBINDINGPROC                            glUniformBlockBinding                           = nullptr;
-PFNGLBINDBUFFERBASEPROC                                 glBindBufferBase                                = nullptr;
+DECL_GLPROC(GLuint, glGetUniformBlockIndex, (GLuint, const GLchar*));
+DECL_GLPROC(void, glGetActiveUniformBlockiv, (GLuint, GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetActiveUniformBlockName, (GLuint, GLuint, GLsizei, GLsizei*, GLchar*));
+DECL_GLPROC(void, glUniformBlockBinding, (GLuint, GLuint, GLuint));
+DECL_GLPROC(void, glBindBufferBase, (GLenum, GLuint, GLuint));
 
 /* --- Shader storage buffer objects (GL_ARB_shader_storage_buffer_object) --- */
 
-PFNGLSHADERSTORAGEBLOCKBINDINGPROC                      glShaderStorageBlockBinding                     = nullptr;
+DECL_GLPROC(void, glShaderStorageBlockBinding, (GLuint, GLuint, GLuint));
 
 /* --- Query objects (GL_ARB_occlusion_query) --- */
 
-PFNGLGENQUERIESPROC                                     glGenQueries                                    = nullptr;
-PFNGLDELETEQUERIESPROC                                  glDeleteQueries                                 = nullptr;
-PFNGLBEGINQUERYPROC                                     glBeginQuery                                    = nullptr;
-PFNGLENDQUERYPROC                                       glEndQuery                                      = nullptr;
-PFNGLGETQUERYOBJECTIVPROC                               glGetQueryObjectiv                              = nullptr;
-PFNGLGETQUERYOBJECTUIVPROC                              glGetQueryObjectuiv                             = nullptr;
+DECL_GLPROC(void, glGenQueries, (GLsizei, GLuint*));
+DECL_GLPROC(void, glDeleteQueries, (GLsizei, const GLuint*));
+DECL_GLPROC(void, glBeginQuery, (GLenum, GLuint));
+DECL_GLPROC(void, glEndQuery, (GLenum));
+DECL_GLPROC(void, glGetQueryObjectiv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetQueryObjectuiv, (GLuint, GLenum, GLuint*));
 
 /* --- Timer query objects (GL_ARB_timer_query) --- */
 
-PFNGLQUERYCOUNTERPROC                                   glQueryCounter                                  = nullptr;
-PFNGLGETQUERYOBJECTI64VPROC                             glGetQueryObjecti64v                            = nullptr;
-PFNGLGETQUERYOBJECTUI64VPROC                            glGetQueryObjectui64v                           = nullptr;
+DECL_GLPROC(void, glQueryCounter, (GLuint, GLenum));
+DECL_GLPROC(void, glGetQueryObjecti64v, (GLuint, GLenum, GLint64*));
+DECL_GLPROC(void, glGetQueryObjectui64v, (GLuint, GLenum, GLuint64*));
 
 /* --- Viewport array (GL_ARB_viewport_array) --- */
 
-PFNGLVIEWPORTARRAYVPROC                                 glViewportArrayv                                = nullptr;
-PFNGLSCISSORARRAYVPROC                                  glScissorArrayv                                 = nullptr;
-PFNGLDEPTHRANGEARRAYVPROC                               glDepthRangeArrayv                              = nullptr;
+DECL_GLPROC(void, glViewportArrayv, (GLuint, GLsizei, const GLfloat*));
+DECL_GLPROC(void, glScissorArrayv, (GLuint, GLsizei, const GLint*));
+DECL_GLPROC(void, glDepthRangeArrayv, (GLuint, GLsizei, const GLdouble*));
 
 /* --- ??? --- */
 
-PFNGLSTENCILFUNCSEPARATEPROC                            glStencilFuncSeparate                           = nullptr;
-PFNGLSTENCILMASKSEPARATEPROC                            glStencilMaskSeparate                           = nullptr;
-PFNGLSTENCILOPSEPARATEPROC                              glStencilOpSeparate                             = nullptr;
+DECL_GLPROC(void, glStencilFuncSeparate, (GLenum, GLenum, GLint, GLuint));
+DECL_GLPROC(void, glStencilMaskSeparate, (GLenum, GLuint));
+DECL_GLPROC(void, glStencilOpSeparate, (GLenum, GLenum, GLenum, GLenum));
 
 /* --- Debug context (GL_KHR_debug) --- */
 
-PFNGLDEBUGMESSAGECALLBACKPROC                           glDebugMessageCallback                          = nullptr;
+DECL_GLPROC(void, glDebugMessageCallback, (GLDEBUGPROC, const void*));
 
 /* --- Clipping control (GL_ARB_clip_control) --- */
 
-PFNGLCLIPCONTROLPROC                                    glClipControl                                   = nullptr;
-    
-#endif
+DECL_GLPROC(void, glClipControl, (GLenum, GLenum));
 
 #endif // /ifndef(__APPLE__)
 

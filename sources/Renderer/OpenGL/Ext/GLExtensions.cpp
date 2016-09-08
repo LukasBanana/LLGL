@@ -173,19 +173,19 @@ PFNGLUSEPROGRAMPROC                                     glUseProgram            
 PFNGLGETACTIVEATTRIBPROC                                glGetActiveAttrib                               = nullptr;
 PFNGLGETATTRIBLOCATIONPROC                              glGetAttribLocation                             = nullptr;
 
-PFNGLGETACTIVEUNIFORMARBPROC                            glGetActiveUniform;
-PFNGLGETUNIFORMLOCATIONPROC                             glGetUniformLocation;
-PFNGLUNIFORM1FVPROC                                     glUniform1fv;
-PFNGLUNIFORM2FVPROC                                     glUniform2fv;
-PFNGLUNIFORM3FVPROC                                     glUniform3fv;
-PFNGLUNIFORM4FVPROC                                     glUniform4fv;
-PFNGLUNIFORM1IVPROC                                     glUniform1iv;
-PFNGLUNIFORM2IVPROC                                     glUniform2iv;
-PFNGLUNIFORM3IVPROC                                     glUniform3iv;
-PFNGLUNIFORM4IVPROC                                     glUniform4iv;
-PFNGLUNIFORMMATRIX2FVPROC                               glUniformMatrix2fv;
-PFNGLUNIFORMMATRIX3FVPROC                               glUniformMatrix3fv;
-PFNGLUNIFORMMATRIX4FVPROC                               glUniformMatrix4fv;
+PFNGLGETACTIVEUNIFORMARBPROC                            glGetActiveUniform                              = nullptr;
+PFNGLGETUNIFORMLOCATIONPROC                             glGetUniformLocation                            = nullptr;
+PFNGLUNIFORM1FVPROC                                     glUniform1fv                                    = nullptr;
+PFNGLUNIFORM2FVPROC                                     glUniform2fv                                    = nullptr;
+PFNGLUNIFORM3FVPROC                                     glUniform3fv                                    = nullptr;
+PFNGLUNIFORM4FVPROC                                     glUniform4fv                                    = nullptr;
+PFNGLUNIFORM1IVPROC                                     glUniform1iv                                    = nullptr;
+PFNGLUNIFORM2IVPROC                                     glUniform2iv                                    = nullptr;
+PFNGLUNIFORM3IVPROC                                     glUniform3iv                                    = nullptr;
+PFNGLUNIFORM4IVPROC                                     glUniform4iv                                    = nullptr;
+PFNGLUNIFORMMATRIX2FVPROC                               glUniformMatrix2fv                              = nullptr;
+PFNGLUNIFORMMATRIX3FVPROC                               glUniformMatrix3fv                              = nullptr;
+PFNGLUNIFORMMATRIX4FVPROC                               glUniformMatrix4fv                              = nullptr;
 
 /* --- Tessellation shader (GL_ARB_tessellation_shader) --- */
 
