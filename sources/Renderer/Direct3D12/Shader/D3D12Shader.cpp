@@ -21,10 +21,6 @@ D3D12Shader::D3D12Shader(const ShaderType type) :
 {
 }
 
-D3D12Shader::~D3D12Shader()
-{
-}
-
 bool D3D12Shader::Compile(const std::string& shaderSource)
 {
     throw std::runtime_error("invalid 'Shader::Compile' function for HLSL");

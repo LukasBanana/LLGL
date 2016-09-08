@@ -31,7 +31,6 @@ class D3D12Shader : public Shader
         D3D12Shader& operator = (const D3D12Shader&) = delete;
 
         D3D12Shader(const ShaderType type);
-        ~D3D12Shader();
 
         bool Compile(const std::string& shaderSource) override;
         bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags = 0) override;

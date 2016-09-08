@@ -159,10 +159,6 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     //DXThrowIfFailed(hr, "failed to create D3D12 command list");
 }
 
-D3D12GraphicsPipeline::~D3D12GraphicsPipeline()
-{
-}
-
 /*void D3D12GraphicsPipeline::Bind(D3D12StateManager& stateMngr)
 {
 }*/

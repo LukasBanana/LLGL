@@ -30,10 +30,6 @@ D3D12RenderContext::D3D12RenderContext(
     CreateWindowSizeDependentResources();
 }
 
-D3D12RenderContext::~D3D12RenderContext()
-{
-}
-
 void D3D12RenderContext::Present()
 {
     /* Present swap-chain with vsync interval */

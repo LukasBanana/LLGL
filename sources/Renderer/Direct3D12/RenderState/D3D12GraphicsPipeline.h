@@ -31,18 +31,17 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
             ID3D12CommandAllocator* commandAlloc,
             const GraphicsPipelineDescriptor& desc
         );
-        ~D3D12GraphicsPipeline();
 
         //void Bind(D3D12StateManager& stateMngr);
 
-        inline const ComPtr<ID3D12PipelineState>& GetPipelineState() const
+        inline ID3D12PipelineState* GetPipelineState() const
         {
-            return pipelineState_;
+            return pipelineState_.Get();
         }
 
-        inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandList() const
+        inline ID3D12GraphicsCommandList* GetCommandList() const
         {
-            return commandList_;
+            return commandList_.Get();
         }
 
     private:

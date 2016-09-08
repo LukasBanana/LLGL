@@ -38,7 +38,6 @@ class D3D12RenderContext : public RenderContext
             RenderContextDescriptor desc,
             const std::shared_ptr<Window>& window
         );
-        ~D3D12RenderContext();
 
         void Present() override;
 
