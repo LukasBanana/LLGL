@@ -142,7 +142,7 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     stateDesc.SampleMask            = UINT_MAX;
     stateDesc.NumRenderTargets      = 1;//8;
     stateDesc.SampleDesc.Count      = desc.rasterizer.samples;
-
+    
     for (UINT i = 0; i < 8u; ++i)
         stateDesc.RTVFormats[i] = (i < stateDesc.NumRenderTargets ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_UNKNOWN);
 

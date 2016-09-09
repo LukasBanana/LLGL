@@ -619,11 +619,12 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
 void D3D12RenderSystem::CreateRootSignature()
 {
     /* Setup descritpor structures for root signature */
-    CD3DX12_DESCRIPTOR_RANGE signatureRange;
+    CD3DX12_DESCRIPTOR_RANGE signatureRange[2];
     CD3DX12_ROOT_PARAMETER signatureParam;
 
-    signatureRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-    signatureParam.InitAsDescriptorTable(1, &signatureRange, D3D12_SHADER_VISIBILITY_ALL);
+    signatureRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+    signatureRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+    signatureParam.InitAsDescriptorTable(1, signatureRange, D3D12_SHADER_VISIBILITY_ALL);
 
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
     (
