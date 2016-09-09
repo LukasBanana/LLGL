@@ -25,11 +25,13 @@ class D3D12HardwareBuffer
         D3D12HardwareBuffer(const D3D12HardwareBuffer&) = delete;
         D3D12HardwareBuffer& operator = (const D3D12HardwareBuffer&) = delete;
 
+        D3D12HardwareBuffer() = default;
+
         void CreateResource(ID3D12Device* device, UINT bufferSize);
 
         void UpdateSubResource(
             ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
-            const void* data, UINT bufferSize, UINT64 offset = 0
+            const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadStates
         );
 
         //! Returns the ID3D12Resource object.

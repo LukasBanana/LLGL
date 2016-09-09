@@ -145,48 +145,56 @@ void D3D12RenderSystem::Release(RenderContext& renderContext)
 
 VertexBuffer* D3D12RenderSystem::CreateVertexBuffer()
 {
-    return nullptr;//TakeOwnership(vertexBuffers_, MakeUnique<D3D12VertexBuffer>());
+    return TakeOwnership(vertexBuffers_, MakeUnique<D3D12VertexBuffer>());
 }
 
 IndexBuffer* D3D12RenderSystem::CreateIndexBuffer()
 {
-    return nullptr;//TakeOwnership(indexBuffers_, MakeUnique<D3D12IndexBuffer>());
+    return TakeOwnership(indexBuffers_, MakeUnique<D3D12IndexBuffer>());
 }
 
 ConstantBuffer* D3D12RenderSystem::CreateConstantBuffer()
 {
-    return nullptr;//TakeOwnership(constantBuffers_, MakeUnique<D3D12ConstantBuffer>());
+    return TakeOwnership(constantBuffers_, MakeUnique<D3D12ConstantBuffer>());
 }
 
 StorageBuffer* D3D12RenderSystem::CreateStorageBuffer()
 {
-    return nullptr;//TakeOwnership(storageBuffers_, MakeUnique<D3D12StorageBuffer>());
+    return TakeOwnership(storageBuffers_, MakeUnique<D3D12StorageBuffer>());
 }
 
 void D3D12RenderSystem::Release(VertexBuffer& vertexBuffer)
 {
-    //RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
+    RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
 }
 
 void D3D12RenderSystem::Release(IndexBuffer& indexBuffer)
 {
-    //RemoveFromUniqueSet(indexBuffers_, &indexBuffer);
+    RemoveFromUniqueSet(indexBuffers_, &indexBuffer);
 }
 
 void D3D12RenderSystem::Release(ConstantBuffer& constantBuffer)
 {
-    //RemoveFromUniqueSet(constantBuffers_, &constantBuffer);
+    RemoveFromUniqueSet(constantBuffers_, &constantBuffer);
 }
 
 void D3D12RenderSystem::Release(StorageBuffer& storageBuffer)
 {
-    //RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
+    RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
 }
 
 void D3D12RenderSystem::SetupVertexBuffer(
     VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
 {
-    //todo
+    /* Create hardware buffer resource */
+    auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, vertexBuffer);
+    vertexBufferD3D.hwBuffer.CreateResource(device_.Get(), dataSize);
+
+    /* Upload vertex buffer data */
+    ComPtr<ID3D12Resource> bufferUpload;
+    vertexBufferD3D.UpdateSubResource(device_.Get(), gfxCommandList_.Get(), bufferUpload, data, dataSize);
+
+    SyncGPU();
 }
 
 void D3D12RenderSystem::SetupIndexBuffer(
@@ -410,6 +418,16 @@ void D3D12RenderSystem::Release(Query& query)
 
 /* ----- Extended internal functions ----- */
 
+ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd)
+{
+    ComPtr<IDXGISwapChain1> swapChain;
+
+    auto hr = factory_->CreateSwapChainForHwnd(cmdQueue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
+    DXThrowIfFailed(hr, "failed to create D3D12 swap chain");
+
+    return swapChain;
+}
+
 ComPtr<ID3D12CommandQueue> D3D12RenderSystem::CreateDXCommandQueue()
 {
     ComPtr<ID3D12CommandQueue> cmdQueue;
@@ -445,16 +463,6 @@ ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D
     return descHeap;
 }
 
-ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd)
-{
-    ComPtr<IDXGISwapChain1> swapChain;
-
-    auto hr = factory_->CreateSwapChainForHwnd(cmdQueue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
-    DXThrowIfFailed(hr, "failed to create D3D12 swap chain");
-
-    return swapChain;
-}
-
 void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 {
     HRESULT hr = 0;
@@ -470,6 +478,12 @@ void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 
     /* Increment fence value */
     ++fenceValue;
+}
+
+void D3D12RenderSystem::SyncGPU()
+{
+    UINT64 fenceValue = 0;
+    SyncGPU(fenceValue);
 }
 
 

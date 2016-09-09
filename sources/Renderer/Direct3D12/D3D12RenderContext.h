@@ -144,7 +144,7 @@ class D3D12RenderContext : public RenderContext
         UINT                                swapChainInterval_              = 0;
 
         ComPtr<ID3D12DescriptorHeap>        descHeap_;
-        ComPtr<ID3D12GraphicsCommandList>   gfxCommandList_;
+        ID3D12GraphicsCommandList*          gfxCommandList_                 = nullptr; // graphics command list of the current graphics pipeline
 
         ComPtr<ID3D12CommandAllocator>      cmdAllocs_[maxNumBuffers];
         ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];

@@ -7,6 +7,7 @@
 
 #include "D3D12RenderContext.h"
 #include "D3D12RenderSystem.h"
+#include "D3D12Assert.h"
 #include "DXCore.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
@@ -220,42 +221,42 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
-    gfxCommandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_)->DrawInstanced(numVertices, 1, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
-    gfxCommandList_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_)->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
-    gfxCommandList_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
+    LLGL_D3D_ASSERT(gfxCommandList_)->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
@@ -321,6 +322,10 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     /* Update tracked fence values */
     for (UINT i = 0; i < numFrames_; ++i)
         fenceValues_[i] = fenceValues_[currentFrame_];
+
+    /* Create command allocators */
+    for (UINT i = 0; i < numFrames_; ++i)
+        cmdAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
 
     /* Create render targets */
     //todo...

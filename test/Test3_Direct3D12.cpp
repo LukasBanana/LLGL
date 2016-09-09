@@ -60,7 +60,16 @@ int main()
         vertexFormat.AddAttribute("TEXCOORD", LLGL::DataType::Float, 2);
         vertexFormat.AddAttribute("POSITION", LLGL::DataType::Float, 2);
 
-        //...
+        Gs::Vector2f vertices[] =
+        {
+            { 0, 0 }, { 110, 100 },
+            { 0, 0 }, { 200, 100 },
+            { 0, 0 }, { 200, 200 },
+            { 0, 0 }, { 100, 200 },
+        };
+
+        auto vertexBuffer = renderer->CreateVertexBuffer();
+        renderer->SetupVertexBuffer(*vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
 
         // Load shader
         auto shaderSource = ReadFileContent("TestShader.hlsl");
@@ -118,6 +127,8 @@ int main()
             pipelineDesc.shaderProgram      = shaderProgram;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+
 
 
         // Main loop

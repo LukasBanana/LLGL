@@ -13,7 +13,13 @@
 #include <LLGL/VideoAdapter.h>
 #include "D3D12RenderContext.h"
 
+#include "Buffer/D3D12VertexBuffer.h"
+#include "Buffer/D3D12IndexBuffer.h"
+#include "Buffer/D3D12ConstantBuffer.h"
+#include "Buffer/D3D12StorageBuffer.h"
+
 #include "RenderState/D3D12GraphicsPipeline.h"
+
 #include "Shader/D3D12Shader.h"
 #include "Shader/D3D12ShaderProgram.h"
 
@@ -148,13 +154,14 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
+        ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
         ComPtr<ID3D12CommandQueue> CreateDXCommandQueue();
         ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator();
         ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
-        ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
 
         //! Waits until the GPU has done all previous work.
         void SyncGPU(UINT64& fenceValue);
+        void SyncGPU();
 
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
         {
@@ -176,6 +183,7 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<ID3D12Device>                        device_;
         ComPtr<ID3D12CommandQueue>                  cmdQueue_;
         ComPtr<ID3D12RootSignature>                 rootSignature_;
+        ComPtr<ID3D12GraphicsCommandList>           gfxCommandList_; // current graphics command list from the current render context
 
         ComPtr<ID3D12Fence>                         fence_;
         HANDLE                                      fenceEvent_     = 0;
@@ -186,11 +194,12 @@ class D3D12RenderSystem : public RenderSystem
 
         HWObjectContainer<D3D12RenderContext>       renderContexts_;
         
-        /*HWObjectContainer<D3D12VertexBuffer>        vertexBuffers_;
+        HWObjectContainer<D3D12VertexBuffer>        vertexBuffers_;
         HWObjectContainer<D3D12IndexBuffer>         indexBuffers_;
         HWObjectContainer<D3D12ConstantBuffer>      constantBuffers_;
+        HWObjectContainer<D3D12StorageBuffer>       storageBuffers_;
 
-        HWObjectContainer<D3D12Texture>             textures_;
+        /*HWObjectContainer<D3D12Texture>             textures_;
         HWObjectContainer<D3D12RenderTarget>        renderTargets_;*/
 
         HWObjectContainer<D3D12Shader>              shaders_;
