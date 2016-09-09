@@ -11,6 +11,7 @@
 #include "../Assertion.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
+#include "D3DX12/d3dx12.h"
 //#include "RenderState/D3D12StateManager.h"
 
 
@@ -618,22 +619,11 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
 void D3D12RenderSystem::CreateRootSignature()
 {
     /* Setup descritpor structures for root signature */
-    D3D12_DESCRIPTOR_RANGE signatureDescRange;
-    {
-        signatureDescRange.RangeType                            = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        signatureDescRange.NumDescriptors                       = 1;
-        signatureDescRange.BaseShaderRegister                   = 0;
-        signatureDescRange.RegisterSpace                        = 0;
-        signatureDescRange.OffsetInDescriptorsFromTableStart    = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-    }
+    CD3DX12_DESCRIPTOR_RANGE signatureRange;
+    CD3DX12_ROOT_PARAMETER signatureParam;
 
-    D3D12_ROOT_PARAMETER signatureParams;
-    {
-        signatureParams.ParameterType                       = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-        signatureParams.DescriptorTable.NumDescriptorRanges = 1;
-        signatureParams.DescriptorTable.pDescriptorRanges   = &signatureDescRange;
-        signatureParams.ShaderVisibility                    = D3D12_SHADER_VISIBILITY_ALL;
-    }
+    signatureRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+    signatureParam.InitAsDescriptorTable(1, &signatureRange, D3D12_SHADER_VISIBILITY_ALL);
 
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
     (
@@ -644,14 +634,8 @@ void D3D12RenderSystem::CreateRootSignature()
         D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS
     );
 
-    D3D12_ROOT_SIGNATURE_DESC signatureDesc;
-    {
-        signatureDesc.NumParameters     = 1;
-        signatureDesc.pParameters       = &signatureParams;
-        signatureDesc.NumStaticSamplers = 0;
-        signatureDesc.pStaticSamplers   = nullptr;
-        signatureDesc.Flags             = signatureFlags;
-    }
+    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
+    signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
 
     /* Create serialized root signature */
     HRESULT             hr          = 0;
