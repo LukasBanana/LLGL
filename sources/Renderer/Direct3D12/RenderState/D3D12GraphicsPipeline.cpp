@@ -33,14 +33,10 @@ static UINT8 GetColorWriteMask(const ColorRGBAb& color)
 {
     UINT8 mask = 0;
 
-    if (color.r)
-        mask |= D3D12_COLOR_WRITE_ENABLE_RED;
-    if (color.g)
-        mask |= D3D12_COLOR_WRITE_ENABLE_GREEN;
-    if (color.b)
-        mask |= D3D12_COLOR_WRITE_ENABLE_BLUE;
-    if (color.a)
-        mask |= D3D12_COLOR_WRITE_ENABLE_ALPHA;
+    if (color.r) { mask |= D3D12_COLOR_WRITE_ENABLE_RED;   }
+    if (color.g) { mask |= D3D12_COLOR_WRITE_ENABLE_GREEN; }
+    if (color.b) { mask |= D3D12_COLOR_WRITE_ENABLE_BLUE;  }
+    if (color.a) { mask |= D3D12_COLOR_WRITE_ENABLE_ALPHA; }
 
     return mask;
 }
@@ -141,14 +137,14 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
 
     /* Convert other states */
     stateDesc.InputLayout           = shaderProgramD3D->GetInputLayoutDesc();
-  //stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+    stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     stateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     stateDesc.SampleMask            = UINT_MAX;
     stateDesc.NumRenderTargets      = 1;//8;
     stateDesc.SampleDesc.Count      = desc.rasterizer.samples;
 
     for (UINT i = 0; i < 8u; ++i)
-        stateDesc.RTVFormats[i] = DXGI_FORMAT_B8G8R8A8_UNORM;
+        stateDesc.RTVFormats[i] = (i < stateDesc.NumRenderTargets ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_UNKNOWN);
 
     /* Create D3D12 graphics pipeline sate */
     auto hr = device->CreateGraphicsPipelineState(&stateDesc, IID_PPV_ARGS(&pipelineState_));
