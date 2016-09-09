@@ -41,7 +41,7 @@ int main()
         }
 
         auto computeBuffer = renderer->CreateStorageBuffer();
-        renderer->SetupStorageBuffer(*computeBuffer, vec.data(), sizeof(Gs::Vector3f)*vecSize, LLGL::BufferUsage::Static);
+        renderer->SetupStorageBuffer(*computeBuffer, vec.data(), sizeof(Gs::Vector4f)*vecSize, LLGL::BufferUsage::Static);
 
         // Load shader
         auto computeShader = renderer->CreateShader(LLGL::ShaderType::Compute);

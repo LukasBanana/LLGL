@@ -16,7 +16,7 @@ layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
 	uint id = gl_LocalInvocationID.x;
-	uint idx = id*2;
+	uint x = id*2;
 	
 	int size = VEC_SIZE;
 	int offset = 1;
@@ -25,8 +25,9 @@ void main()
 	{
 		if (id % offset == 0)
 		{
-			vec[idx] = (vec[idx] + vec[idx + offset]);
-			//vec[idx] = (vec[idx]*0.5 + vec[idx + offset]*0.5);
+			// Read sum or average from vector and write the result back
+			//vec[x] = (vec[x] + vec[x + offset]);
+			vec[x] = (vec[x]*0.5 + vec[x + offset]*0.5);
 		}
 		offset *= 2;
 		memoryBarrierBuffer();
