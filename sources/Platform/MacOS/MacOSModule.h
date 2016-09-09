@@ -22,7 +22,7 @@ class MacOSModule : public Module
     public:
 
         MacOSModule(const std::string& moduleFilename);
-        MacOSModule();
+        ~MacOSModule();
 
         MacOSModule(const MacOSModule&) = delete;
         MacOSModule& operator = (const MacOSModule&) = delete;

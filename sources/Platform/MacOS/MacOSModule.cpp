@@ -49,7 +49,7 @@ MacOSModule::MacOSModule(const std::string& moduleFilename)
         throw std::runtime_error("failed to load dynamic library (DYLIB) \"" + moduleFilename + "\"");
 }
 
-MacOSModule::MacOSModule()
+MacOSModule::~MacOSModule()
 {
     dlclose(handle_);
 }
