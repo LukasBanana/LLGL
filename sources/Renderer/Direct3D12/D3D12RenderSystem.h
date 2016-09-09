@@ -159,6 +159,8 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator();
         ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
 
+        void CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList);
+
         //! Waits until the GPU has done all previous work.
         void SyncGPU(UINT64& fenceValue);
         void SyncGPU();
@@ -181,7 +183,7 @@ class D3D12RenderSystem : public RenderSystem
 
         ComPtr<IDXGIFactory4>                       factory_;
         ComPtr<ID3D12Device>                        device_;
-        ComPtr<ID3D12CommandQueue>                  cmdQueue_;
+        ComPtr<ID3D12CommandQueue>                  commandQueue_;
         ComPtr<ID3D12RootSignature>                 rootSignature_;
         ComPtr<ID3D12GraphicsCommandList>           gfxCommandList_; // current graphics command list from the current render context
 

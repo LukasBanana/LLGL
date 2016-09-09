@@ -29,7 +29,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateRootSignature();
 
     /* Create main command queue */
-    cmdQueue_ = CreateDXCommandQueue();
+    commandQueue_ = CreateDXCommandQueue();
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -422,7 +422,7 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
 {
     ComPtr<IDXGISwapChain1> swapChain;
 
-    auto hr = factory_->CreateSwapChainForHwnd(cmdQueue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
+    auto hr = factory_->CreateSwapChainForHwnd(commandQueue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
     DXThrowIfFailed(hr, "failed to create D3D12 swap chain");
 
     return swapChain;
@@ -463,12 +463,19 @@ ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D
     return descHeap;
 }
 
+void D3D12RenderSystem::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList)
+{
+    commandList->Close();
+    ID3D12CommandList* cmdLists[1] = { commandList };
+    commandQueue_->ExecuteCommandLists(1, cmdLists);
+}
+
 void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 {
     HRESULT hr = 0;
 
     /* Schedule signal command into the qeue */
-    hr = cmdQueue_->Signal(fence_.Get(), fenceValue);
+    hr = commandQueue_->Signal(fence_.Get(), fenceValue);
     DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
 
     /* Wait until the fence has been crossed */

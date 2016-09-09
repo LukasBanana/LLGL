@@ -40,6 +40,12 @@ class D3D12HardwareBuffer
             return resource_.Get();
         }
 
+        //! Returns the size (in bytes) of the hardware buffer.
+        inline UINT GetBufferSize() const
+        {
+            return bufferSize_;
+        }
+
     private:
 
         ComPtr<ID3D12Resource>  resource_;

@@ -151,8 +151,8 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     DXThrowIfFailed(hr, "failed to create D3D12 graphics pipeline state");
 
     /* Create command list */
-    //hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc, pipelineState_, IID_PPV_ARGS(&commandList_));
-    //DXThrowIfFailed(hr, "failed to create D3D12 command list");
+    hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc, pipelineState_.Get(), IID_PPV_ARGS(&commandList_));
+    DXThrowIfFailed(hr, "failed to create D3D12 command list");
 }
 
 /*void D3D12GraphicsPipeline::Bind(D3D12StateManager& stateMngr)
