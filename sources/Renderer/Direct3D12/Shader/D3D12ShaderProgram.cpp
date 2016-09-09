@@ -86,14 +86,26 @@ bool D3D12ShaderProgram::LinkShaders()
     };
 
     /* Validate shader composition */
+    linkError_ = LinkError::NoError;
+
     int flags = 0;
 
-    if (vs_) { flags |= MaskVS; }
-    if (ps_) { flags |= MaskPS; }
-    if (ds_) { flags |= MaskDS; }
-    if (hs_) { flags |= MaskHS; }
-    if (gs_) { flags |= MaskGS; }
-    if (cs_) { flags |= MaskCS; }
+    auto MarkShader = [&](D3D12Shader* shader, ShaderTypeMask mask)
+    {
+        if (shader)
+        {
+            if (shader->GetByteCode().BytecodeLength == 0)
+                linkError_ = LinkError::ByteCode;
+            flags |= mask;
+        }
+    };
+
+    MarkShader(vs_, MaskVS);
+    MarkShader(ps_, MaskPS);
+    MarkShader(ds_, MaskDS);
+    MarkShader(hs_, MaskHS);
+    MarkShader(gs_, MaskGS);
+    MarkShader(cs_, MaskCS);
 
     switch (flags)
     {
@@ -102,15 +114,26 @@ bool D3D12ShaderProgram::LinkShaders()
         case (MaskVS | MaskPS | MaskDS | MaskHS):
         case (MaskVS | MaskPS | MaskDS | MaskHS | MaskGS):
         case (MaskCS):
-            return true;
+            break;
         default:
-            return false;
+            linkError_ = LinkError::Composition;
+            break;
     }
+
+    return (linkError_ == LinkError::NoError);
 }
 
 std::string D3D12ShaderProgram::QueryInfoLog()
 {
-    //todo...
+    switch (linkError_)
+    {
+        case LinkError::Composition:
+            return "invalid composition of attached shaders";
+        case LinkError::ByteCode:
+            return "invalid shader byte code";
+        default:
+            break;
+    }
     return "";
 }
 
