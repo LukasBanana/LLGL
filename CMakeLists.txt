@@ -115,6 +115,7 @@ file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*
 set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/Test1_Window.cpp)
 set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
 set(FilesTest3 ${PROJECT_SOURCE_DIR}/test/Test3_Direct3D12.cpp)
+set(FilesTest4 ${PROJECT_SOURCE_DIR}/test/Test4_Compute.cpp)
 
 
 # === Source group folders ===
@@ -248,5 +249,6 @@ endif()
 ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
 ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
 ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
+ADD_TEST_PROJECT(Test4_Compute ${FilesTest4})
 
 
