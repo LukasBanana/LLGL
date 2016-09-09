@@ -102,7 +102,7 @@ class GLRenderContext : public RenderContext
         /* ----- Pipeline States ----- */
 
         void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
-        //void BindComputePipeline(ComputePipeline& computePipeline) override;
+        void BindComputePipeline(ComputePipeline& computePipeline) override;
 
         /* ----- Queries ----- */
 

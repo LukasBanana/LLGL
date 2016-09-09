@@ -28,6 +28,7 @@
 
 #include "RenderState/GLQuery.h"
 #include "RenderState/GLGraphicsPipeline.h"
+#include "RenderState/GLComputePipeline.h"
 
 #include <string>
 #include <memory>
@@ -148,9 +149,10 @@ class GLRenderSystem : public RenderSystem
         /* ----- Pipeline States ----- */
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
-        //ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
+        ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
         
         void Release(GraphicsPipeline& graphicsPipeline) override;
+        void Release(ComputePipeline& computePipeline) override;
 
         /* ----- Queries ----- */
 
@@ -203,6 +205,7 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLShaderProgram>      shaderPrograms_;
 
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
+        HWObjectContainer<GLComputePipeline>    computePipelines_;
         HWObjectContainer<GLSampler>            samplers_;
         HWObjectContainer<GLQuery>              queries_;
 

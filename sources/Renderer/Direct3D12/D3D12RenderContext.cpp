@@ -200,6 +200,11 @@ void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline
     //todo
 }
 
+void D3D12RenderContext::BindComputePipeline(ComputePipeline& computePipeline)
+{
+    //todo
+}
+
 /* ----- Queries ----- */
 
 void D3D12RenderContext::BeginQuery(Query& query)

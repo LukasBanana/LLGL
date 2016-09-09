@@ -735,9 +735,19 @@ GraphicsPipeline* GLRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
     return TakeOwnership(graphicsPipelines_, MakeUnique<GLGraphicsPipeline>(desc));
 }
 
+ComputePipeline* GLRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
+{
+    return TakeOwnership(computePipelines_, MakeUnique<GLComputePipeline>(desc));
+}
+
 void GLRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 {
     RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
+}
+
+void GLRenderSystem::Release(ComputePipeline& computePipeline)
+{
+    RemoveFromUniqueSet(computePipelines_, &computePipeline);
 }
 
 /* ----- Queries ----- */

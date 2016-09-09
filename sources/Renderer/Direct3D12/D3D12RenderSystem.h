@@ -142,9 +142,10 @@ class D3D12RenderSystem : public RenderSystem
         /* ----- Pipeline States ----- */
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
-        //ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
+        ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
         
         void Release(GraphicsPipeline& graphicsPipeline) override;
+        void Release(ComputePipeline& computePipeline) override;
 
         /* ----- Queries ----- */
 

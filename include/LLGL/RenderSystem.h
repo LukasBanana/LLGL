@@ -24,6 +24,7 @@
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
 #include "GraphicsPipeline.h"
+#include "ComputePipeline.h"
 #include "Sampler.h"
 #include "Query.h"
 
@@ -238,10 +239,10 @@ class LLGL_EXPORT RenderSystem
         /* ----- Pipeline States ----- */
 
         virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) = 0;
-        //virtual ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) = 0;
+        virtual ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) = 0;
 
         virtual void Release(GraphicsPipeline& graphicsPipeline) = 0;
-        //virtual void Release(ComputePipeline& computePipeline) = 0;
+        virtual void Release(ComputePipeline& computePipeline) = 0;
 
         /* ----- Queries ----- */
 

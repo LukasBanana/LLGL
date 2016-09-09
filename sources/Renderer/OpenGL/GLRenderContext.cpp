@@ -328,6 +328,12 @@ void GLRenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     graphicsPipelineGL.Bind(*stateMngr_);
 }
 
+void GLRenderContext::BindComputePipeline(ComputePipeline& computePipeline)
+{
+    auto& computePipelineGL = LLGL_CAST(GLComputePipeline&, computePipeline);
+    computePipelineGL.Bind(*stateMngr_);
+}
+
 /* ----- Queries ----- */
 
 void GLRenderContext::BeginQuery(Query& query)

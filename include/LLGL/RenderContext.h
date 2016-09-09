@@ -24,6 +24,7 @@
 #include "Texture.h"
 #include "RenderTarget.h"
 #include "GraphicsPipeline.h"
+#include "ComputePipeline.h"
 #include "Sampler.h"
 #include "Query.h"
 
@@ -144,7 +145,7 @@ class LLGL_EXPORT RenderContext
         /* ----- Pipeline States ----- */
 
         virtual void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
-        //virtual void BindComputePipeline(ComputePipeline& computePipeline) = 0;
+        virtual void BindComputePipeline(ComputePipeline& computePipeline) = 0;
 
         /* ----- Queries ----- */
 

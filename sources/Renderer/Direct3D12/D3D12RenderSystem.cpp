@@ -398,9 +398,19 @@ GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipeli
     return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(device_.Get(), rootSignature_.Get(), nullptr/*<--!!!*/, desc));
 }
 
+ComputePipeline* D3D12RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
+{
+    return nullptr;//todo...
+}
+
 void D3D12RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 {
     RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
+}
+
+void D3D12RenderSystem::Release(ComputePipeline& computePipeline)
+{
+    //RemoveFromUniqueSet(computePipelines_, &computePipeline);
 }
 
 /* ----- Queries ----- */
