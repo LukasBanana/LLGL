@@ -46,13 +46,13 @@ enum class Key
     Right,              //!< Right arrow key.
     Down,               //!< Down arrow key.
 
-    Select,
+    Select,             //!< Select key.
     Print,              //!< Print key.
     Exe,                //!< Execute key.
-    Snapshot,
-    Insert,
-    Delete,
-    Help,
+    Snapshot,           //!< Snapshot key.
+    Insert,             //!< Insert key.
+    Delete,             //!< Delete key.
+    Help,               //!< Help key.
 
     D0,                 //!< Digit 0.
     D1,                 //!< Digit 1.
@@ -65,37 +65,37 @@ enum class Key
     D8,                 //!< Digit 8.
     D9,                 //!< Digit 9.
 
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H,
-    I,
-    J,
-    K,
-    L,
-    M,
-    N,
-    O,
-    P,
-    Q,
-    R,
-    S,
-    T,
-    U,
-    V,
-    W,
-    X,
-    Y,
-    Z,
+    A,                  //!< Letter A.
+    B,                  //!< Letter B.
+    C,                  //!< Letter C.
+    D,                  //!< Letter D.
+    E,                  //!< Letter E.
+    F,                  //!< Letter F.
+    G,                  //!< Letter G.
+    H,                  //!< Letter H.
+    I,                  //!< Letter I.
+    J,                  //!< Letter J.
+    K,                  //!< Letter K.
+    L,                  //!< Letter L.
+    M,                  //!< Letter M.
+    N,                  //!< Letter N.
+    O,                  //!< Letter O.
+    P,                  //!< Letter P.
+    Q,                  //!< Letter Q.
+    R,                  //!< Letter R.
+    S,                  //!< Letter S.
+    T,                  //!< Letter T.
+    U,                  //!< Letter U.
+    V,                  //!< Letter V.
+    W,                  //!< Letter W.
+    X,                  //!< Letter X.
+    Y,                  //!< Letter Y.
+    Z,                  //!< Letter Z.
 
     LWin,               //!< Left Windows key.
     RWin,               //!< Rigth Windows key.
-    Apps,
-    Sleep,
+    Apps,               //!< Application key.
+    Sleep,              //!< Sleep key.
 
     Keypad0,            //!< Keypad 0 key.
     Keypad1,            //!< Keypad 1 key.
