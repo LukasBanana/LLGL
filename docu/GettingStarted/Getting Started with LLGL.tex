@@ -132,18 +132,18 @@ when you compile the project:
 %	API OVERVIEW
 %----------------------------------------------------------------------------------------
 
-\newpage
+%\newpage
 
-\section*{API Overview}
+%\section*{API Overview}
 
-LLGL has a very simple and unified API design.
+%LLGL has a very simple and unified API design.
 
-\begin{lstlisting}
-class RenderSystem
-{
-	static shared_ptr<RenderSystem> Load(string moduleName);
-}
-\end{lstlisting}
+%\begin{lstlisting}
+%class RenderSystem
+%{
+%	static shared_ptr<RenderSystem> Load(string moduleName);
+%}
+%\end{lstlisting}
 
 
 %----------------------------------------------------------------------------------------
@@ -154,22 +154,96 @@ class RenderSystem
 
 \section*{Hello Triangle}
 
-After we have set up the library, we can start rendering some geometry.
+After we have set up and build the library, we can start rendering some geometry.
+Our example will consist of a single C++ source file (e.g. ``\texttt{main.cpp}'') and two shader files
+(e.g. ``\texttt{vertex.glsl}'' and ``\texttt{fragment.glsl}'').
+The include path for a project, that uses \LLGL, must be set to \texttt{\textit{<your-LLGL-repository>}/include/},
+and the \LLGL library file must be added to the linker (for Windows this is ``\texttt{LLGL.lib}''
+when compiling in Release mode and ``\texttt{LLGLD.lib}'' when compiling in Debug mode).
+All the other library files don't need to be added to the linker (e.g. ``\texttt{LLGL\_OpenGL.lib}''),
+since the respective renderer module is loaded at runtime.
 
+Now let's start with a small example. At first we need to include the header files.
+The main header we need is \texttt{LLGL/LLGL.h} where the entire \LLGL interface is declared.
+For our example we also need basic I/O classes from \texttt{iostream} for standard output and \texttt{fstream}
+to read the shader files:
 \begin{lstlisting}
 #include <LLGL/LLGL.h>
+#include <iostream>
+#include <fstream>
 \end{lstlisting}
+
+Next we define the C++ main function and wrap the entire example code into a large \texttt{try-catch} block,
+to quit the application with a meaningful error message if any failure happens:
+\begin{lstlisting}
+int main() {
+    try {
+        /* example code here ... */
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+    }
+    return 0;
+}
+\end{lstlisting}
+
+To create an \LLGL renderer instance in our main function, we load a renderer module
+(a \textit{module} here denotes a dynamic shared library)
+from the static \texttt{Load} function of the \texttt{RenderSystem} interface:
+\begin{lstlisting}
+std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("OpenGL");
+\end{lstlisting}
+Here we could actually use the C++11 keyword \texttt{auto} to simplify the code,
+but for explanation purposes we keep the types explicit.
+Most creation or load functions return a new instance wrapped in a \texttt{std::unique\_ptr},
+but in this case \LLGL needs to keep track of the instance to check if it has already been expired,
+which is only feasible with an \texttt{std::shared\_ptr}.
+
+Moreover, most functions use enumerations instead of strings to specify some type, but in this case
+a module can be loaded dynamically at runtime and further modules can be added or removed independently.
+Therefore the renderer module is specified by a string (here ``OpenGL''). Other modules are
+named ``Direct3D11'', ``Direct3D12'', and ``Vulkan''.
+Whenver you load a new renderer, there must not remain any references to this shared object,
+because only a single renderer can be loaded at a time.
+When this shared object expires, all objects allocated by this renderer will be deleted automatically.
+
+If loading the renderer failed, an \texttt{std::runtime\_error} exception will be thrown,
+which can be cached to show an erorr message and/or load another renderer module instead.
+This can be very handy if a specific Direct3D version is not installed on the host Windows platform,
+so another Direct3D version or OpenGL renderer can be loaded as fallback
+without disturbing the user with akward error messages and program crashes.
+
+After we created the renderer we need a graphics context to draw into.
+This is done by the \texttt{CreateRenderContext} function which takes a descriptor structure:
+\begin{lstlisting}
+LLGL::RenderContextDescriptor contextDesc;
+{
+    contextDesc.videoMode.resolution = { 800, 600 };
+}
+LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
+\end{lstlisting}
+This is a minimal example for the render context descriptor. There are much more attributes
+to specify anti-aliasing, vertical-synchronisation, etc.
+See the API documentation for more information about these attributes.
+
+This render context will create its own window, but we could also specifiy our own one.
+However, in this example we keep it simple. To access this window and change the title,
+we use the \texttt{GetWindow} function of the \texttt{RenderContext} interface
+which returns a constant reference to its window:
+\begin{lstlisting}
+context->GetWindow().SetTitle(L"Hello Triangle with LLGL");
+\end{lstlisting}
+Since some platforms (such as Win32) support Unicode window titles, our string literal starts with the `L' token.
 
 
 %----------------------------------------------------------------------------------------
 %	APPENDIX
 %----------------------------------------------------------------------------------------
 
-\newpage
+%\newpage
 
-\section*{Appendix}
+%\section*{Appendix}
 
-Foo bar ...
+%Foo bar ...
 
 
 
