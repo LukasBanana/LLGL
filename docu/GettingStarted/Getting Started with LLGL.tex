@@ -56,9 +56,42 @@ need a modern C++ compiler, i.e. at least \textbf{VisualC++ 2013} for Windows,
 
 
 %----------------------------------------------------------------------------------------
+%	PROGRESS
+%----------------------------------------------------------------------------------------
+
+\section*{Progress}
+
+This project is still in its early steps. Here is a short overview of its progress:
+\begin{itemize}
+	\item \textbf{Windows support} \\
+	Windows 10 is the main development environment of the author, so this platform has the best support.
+	
+	\item \textbf{Linux support} \\
+	Kubuntu Linux 16 is used inside a virtual machine by the author to develop the linux port.
+	This platform is partially supported (i.e. anti-aliasing or other features are not complete on this platform).
+	
+	\item \textbf{MacOS support} \\
+	MacOS is currently not supported, but it's part of the plan ;-)
+	
+	\item \textbf{OpenGL renderer} \\
+	OpenGL renderer is \textasciitilde 90\% complete
+	
+	\item \textbf{Direct3D12 renderer} \\
+	Direct3D 12 renderer is \textasciitilde 5\% complete
+	
+	\item \textbf{Direct3D11 renderer} \\
+	Direct3D 11 renderer is not supported yet.
+	
+	\item \textbf{Vulkan renderer} \\
+	Vulkan renderer is not supported yet.
+\end{itemize}
+
+
+%----------------------------------------------------------------------------------------
 %	BUILD PROCESS
 %----------------------------------------------------------------------------------------
 
+\newpage
 \section*{Build Process}
 
 \subsection*{Dependencies}
@@ -233,6 +266,166 @@ which returns a constant reference to its window:
 context->GetWindow().SetTitle(L"Hello Triangle with LLGL");
 \end{lstlisting}
 Since some platforms (such as Win32) support Unicode window titles, our string literal starts with the `L' token.
+
+\newpage
+\noindent
+Next we create a vertex buffer to store our geometry. For this example we give up an index buffer,
+since we only draw a single triangle and no complex models:
+\begin{lstlisting}
+LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer();
+\end{lstlisting}
+Now we have an empty and unspecified vertex buffer. Next we define our vertex data and the vertex format,
+which is required to tell the rendering API how the vertex attributes are located within the vertex buffer:
+\begin{lstlisting}
+// Vertex data structure
+struct Vertex {
+    Gs::Vector2f    position;
+    LLGL::ColorRGBf color;
+};
+
+// Vertex data (3 vertices for our triangle)
+Vertex vertices[] = {
+    { {  0,  1 }, { 1, 0, 0 } }, // 1st vertex: center-top, red
+    { {  1, -1 }, { 0, 1, 0 } }, // 2nd vertex: right-bottom, green
+    { { -1, -1 }, { 0, 0, 1 } }, // 3rd vertex: left-bottom, blue
+};
+
+// Vertex format
+LLGL::VertexFormat vertexFormat;
+vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2); // position has 2 float components
+vertexFormat.AddAttribute("color",    LLGL::DataType::Float, 3); // color has 3 float components
+\end{lstlisting}
+The \texttt{AddAttribute} function adds the attributes to the vertex format.
+The order of these function calls determines the location in the vertex data, so they must match
+the order of the member fields in the vertex data structure (here ``\texttt{struct Vertex}'').
+
+The final step for our vertex buffer generation is to upload the data to the GPU.
+For all hardware buffers and textures, this is done with the respective ``\texttt{Setup\dots}'' function
+of the \texttt{RenderSystem} interface:
+\begin{lstlisting}
+renderer->SetupVertexBuffer(
+    *vertexBuffer,             // Pass the vertex buffer as reference
+    vertices,                  // Pointer to the vertex data
+    sizeof(vertices),          // Size (in bytes) of the vertex buffer
+    LLGL::BufferUsage::Static, // Buffer usage is static since we won't change it frequently
+    vertexFormat               // Vertex format
+);
+\end{lstlisting}
+To update an entire hardware buffer or texture (or only a portion of it) there is a respective
+``\texttt{Write...}'' function.
+
+Now we have the vertex buffer complete and we can cross over to shader creation.
+In \LLGL the shaders (Vertex, Tessellation-Control, Tessellation-Evaluation, Geometry, Fragment, and Compute shaders)
+are created independently, and then attached and linked together with a shader program.
+For our example we only need a Vertex- and Fragment (also called ``Pixel'') shader:
+\begin{lstlisting}
+LLGL::Shader* vertexShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
+LLGL::Shader* fragmentShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
+\end{lstlisting}
+Now we have two empty shaders. Next we load the shader code from file with
+our custom ``\texttt{ReadFileContent}'' lambda function:
+\begin{lstlisting}
+// Define the lambda function to read an entire text file
+auto ReadFileContent = [](const std::string& filename) {
+    std::ifstream file(filename);
+    return std::string( ( std::istreambuf_iterator<char>(file) ),
+                        ( std::istreambuf_iterator<char>(    ) ) );
+};
+
+// Load vertex- and fragment shader code from file
+std::string vertexShaderCode = ReadFileContext("vertex.glsl");
+std::string fragmentShaderCode = ReadFileContext("fragment.glsl");
+\end{lstlisting}
+
+\newpage
+\noindent
+After reading the shader code into strings we can compile the shaders:
+\begin{lstlisting}
+auto CompileShader = [](LLGL::Shader* shader, const std::string& code) {
+    // Compile shader
+    shader->Compile(code);
+    
+    // Print info log (warnings and errors)
+    std::string log = shader->QueryInfoLog();
+    if (!log.empty())
+        std::cerr << log << std::endl;
+};
+
+CompileShader(vertexShader, vertexShaderCode);
+CompileShader(fragmentShader, fragmentShaderCode);
+\end{lstlisting}
+Shader compilation works a little different between GLSL (for OpenGL) and HLSL (for Direct3D).
+For HLSL shader compilation there is a second overloaded ``\texttt{Compile}'' function with more parameters,
+to specifiy the entry point and shader version target.
+
+Having the shaders compiled, we can now create a shader program, attach all shaders to it,
+bind the vertex attribute layout, and finally link the shader program:
+\begin{lstlisting}
+// Create shader program which is used as composite
+LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
+
+// Attach vertex- and fragment shader to the shader program
+shaderProgram->AttachShader(*vertexShader);
+shaderProgram->AttachShader(*fragmentShader);
+
+// From now on we only use the shader program, so the shaders can be released
+renderer->Release(*vertexShader);
+renderer->Release(*fragmentShader);
+
+// Bind vertex attribute layout (this is not required for a compute shader program)
+shaderProgram->BindVertexAttributes(vertexFormat.GetAttributes());
+
+// Link shader program and check for errors
+if (!shaderProgram->LinkShaders())
+    throw std::runtime_error(shaderProgram->QueryInfoLog());
+\end{lstlisting}
+The ``\texttt{BindVertexAttributes}'' function binds the vertex layout to the shader program.
+This must be called after shader attachment but before shader linking (except a compute shader program is used).
+
+Before we continue with the C++ code, we first take a look at the shaders:
+\begin{lstlisting}[title={\texttt{vertex.glsl}}]
+// GLSL shader version 1.30 (for OpenGL 3.1)
+#version 130
+
+// 4x4 projection matrix as single uniform
+uniform mat4 projection;
+
+// Vertex attributes (these names must match out vertex format attributes)
+in vec2 position;
+in vec3 color;
+
+// Vertex output to the fragment shader
+out vec3 vertexColor;
+
+// Vertex shader main function
+void main() {
+    gl_Position = projection * vec4(position, 0, 1);
+    vertexColor = color;
+}
+\end{lstlisting}
+This simple vertex shader only transforms the vertex position by the current projection matrix
+and passes the vertex color (with default interpolation) to the fragment shader.
+In this example we use a single uniform to pass the vertex parameters (here ``\texttt{projection}'' only),
+but there is also support for uniform buffer objects (in \LLGL they are called constant buffers).
+
+\newpage
+\noindent
+And here is the fragment shader:
+\begin{lstlisting}[title={\texttt{fragment.glsl}}]
+// GLSL shader version 1.30 (for OpenGL 3.1)
+#version 130
+
+// Fragment input from the vertex shader
+in vec3 vertexColor;
+
+// Fragment output color
+out vec4 fragColor;
+
+// Fragment shader main function
+void main() {
+    fragColor = vertexColor;
+}
+\end{lstlisting}
 
 
 %----------------------------------------------------------------------------------------
