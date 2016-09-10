@@ -7,6 +7,20 @@
 
 #include "Helper.h"
 
+// Fill an array list of 4D-vectors for testing purposes
+static std::vector<Gs::Vector4f> GetTestVector(std::size_t size)
+{
+    std::vector<Gs::Vector4f> vec(size);
+
+    for (unsigned int i = 0; i < size; ++i)
+    {
+        auto f = static_cast<float>(i + 1);
+        vec[i] = Gs::Vector4f(1, f, 1.0f / f, 0.1f * f);
+    }
+
+    return vec;
+}
+
 int main()
 {
     try
@@ -20,28 +34,21 @@ int main()
 
         auto context = renderer->CreateRenderContext(contextDesc);
         
-        auto window = &(context->GetWindow());
-
+        // Change window title
         auto title = "LLGL Test 4: Compute ( " + renderer->GetName() + " )";
-        window->SetTitle(std::wstring(title.begin(), title.end()));
+        context->GetWindow().SetTitle(std::wstring(title.begin(), title.end()));
 
+        // Quit if compute shaders are not supported
         auto renderCaps = renderer->QueryRenderingCaps();
-
         if (!renderCaps.hasComputeShaders)
             throw std::runtime_error("compute shaders are not supported by renderer");
 
-        // Create compute buffer
+        // Create storage buffer
         static const unsigned int vecSize = 128;
-        std::vector<Gs::Vector4f> vec(vecSize);
+        auto vec = GetTestVector(vecSize);
 
-        for (unsigned int i = 0; i < vecSize; ++i)
-        {
-            auto f = static_cast<float>(i + 1);
-            vec[i] = Gs::Vector4f(1, f, 1.0f / f, 0.1f * f);
-        }
-
-        auto computeBuffer = renderer->CreateStorageBuffer();
-        renderer->SetupStorageBuffer(*computeBuffer, vec.data(), sizeof(Gs::Vector4f)*vecSize, LLGL::BufferUsage::Static);
+        auto storageBuffer = renderer->CreateStorageBuffer();
+        renderer->SetupStorageBuffer(*storageBuffer, vec.data(), sizeof(Gs::Vector4f)*vecSize, LLGL::BufferUsage::Static);
 
         // Load shader
         auto computeShader = renderer->CreateShader(LLGL::ShaderType::Compute);
@@ -57,30 +64,37 @@ int main()
         if (!shaderProgram->LinkShaders())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
 
-        auto constBufferDescs = shaderProgram->QueryConstantBuffers();
-        auto storeBufferDescs = shaderProgram->QueryStorageBuffers();
+        // Create timer query
+        auto timerQuery = renderer->CreateQuery(LLGL::QueryType::TimeElapsed);
 
         // Create graphics pipeline
-        LLGL::ComputePipelineDescriptor pipelineDesc;
-        {
-            pipelineDesc.shaderProgram = shaderProgram;
-        }
-        auto pipeline = renderer->CreateComputePipeline(pipelineDesc);
+        auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
 
         // Bind resources
-        context->BindStorageBuffer(0, *computeBuffer);
+        context->BindStorageBuffer(0, *storageBuffer);
         context->BindComputePipeline(*pipeline);
 
-        // Dispatch compute shader
-        context->DispatchCompute({ 1, 1, 1 });
+        // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query
+        context->BeginQuery(*timerQuery);
+        {
+            context->DispatchCompute({ 1, 1, 1 });
+        }
+        context->EndQuery(*timerQuery);
 
-        // Evaluate compute shader
+        // Wait until the GPU has completed all work, to be sure we can evaluate the storage buffer
         context->SyncGPU();
 
-        auto mappedBuffer = context->MapStorageBuffer(*computeBuffer, LLGL::BufferCPUAccess::ReadOnly);
+        // Evaluate compute shader
+        auto mappedBuffer = context->MapStorageBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
         {
+            // Show result
             auto vecBuffer = reinterpret_cast<const Gs::Vector4f*>(mappedBuffer);
             std::cout << "compute shader output: average vector = " << vecBuffer[0] << std::endl;
+
+            // Show elapsed time from timer query
+            std::uint64_t result = 0;
+            while (!context->QueryResult(*timerQuery, result)) { /* wait until the result is available */ }
+            std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
         context->UnmapStorageBuffer();
 
