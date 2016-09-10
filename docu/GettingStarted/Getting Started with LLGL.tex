@@ -198,10 +198,11 @@ since the respective renderer module is loaded at runtime.
 
 Now let's start with a small example. At first we need to include the header files.
 The main header we need is \texttt{LLGL/LLGL.h} where the entire \LLGL interface is declared.
-For our example we also need basic I/O classes from \texttt{iostream} for standard output and \texttt{fstream}
-to read the shader files:
+For our example we also need basic I/O classes from \texttt{iostream} for standard output, \texttt{fstream}
+to read the shader files, and \texttt{Gauss/Gauss.h} for some matrix classes:
 \begin{lstlisting}
 #include <LLGL/LLGL.h>
+#include <Gauss/Gauss.h>
 #include <iostream>
 #include <fstream>
 \end{lstlisting}
@@ -263,7 +264,7 @@ However, in this example we keep it simple. To access this window and change the
 we use the \texttt{GetWindow} function of the \texttt{RenderContext} interface
 which returns a constant reference to its window:
 \begin{lstlisting}
-context->GetWindow().SetTitle(L"Hello Triangle with LLGL");
+context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
 \end{lstlisting}
 Since some platforms (such as Win32) support Unicode window titles, our string literal starts with the `L' token.
 
@@ -333,8 +334,8 @@ auto ReadFileContent = [](const std::string& filename) {
 };
 
 // Load vertex- and fragment shader code from file
-std::string vertexShaderCode = ReadFileContext("vertex.glsl");
-std::string fragmentShaderCode = ReadFileContext("fragment.glsl");
+std::string vertexShaderCode = ReadFileContent("vertex.glsl");
+std::string fragmentShaderCode = ReadFileContent("fragment.glsl");
 \end{lstlisting}
 
 \newpage
@@ -347,8 +348,9 @@ auto CompileShader = [](LLGL::Shader* shader, const std::string& code) {
     
     // Print info log (warnings and errors)
     std::string log = shader->QueryInfoLog();
-    if (!log.empty())
+    if (!log.empty()) {
         std::cerr << log << std::endl;
+    }
 };
 
 CompileShader(vertexShader, vertexShaderCode);
@@ -376,19 +378,17 @@ renderer->Release(*fragmentShader);
 shaderProgram->BindVertexAttributes(vertexFormat.GetAttributes());
 
 // Link shader program and check for errors
-if (!shaderProgram->LinkShaders())
+if (!shaderProgram->LinkShaders()) {
     throw std::runtime_error(shaderProgram->QueryInfoLog());
+}
 \end{lstlisting}
 The ``\texttt{BindVertexAttributes}'' function binds the vertex layout to the shader program.
 This must be called after shader attachment but before shader linking (except a compute shader program is used).
 
-Before we continue with the C++ code, we first take a look at the shaders:
+Before we continue with the C++ code, we first take a look at the shader code:
 \begin{lstlisting}[title={\texttt{vertex.glsl}}]
 // GLSL shader version 1.30 (for OpenGL 3.1)
 #version 130
-
-// 4x4 projection matrix as single uniform
-uniform mat4 projection;
 
 // Vertex attributes (these names must match out vertex format attributes)
 in vec2 position;
@@ -399,14 +399,11 @@ out vec3 vertexColor;
 
 // Vertex shader main function
 void main() {
-    gl_Position = projection * vec4(position, 0, 1);
+    gl_Position = vec4(position, 0, 1);
     vertexColor = color;
 }
 \end{lstlisting}
-This simple vertex shader only transforms the vertex position by the current projection matrix
-and passes the vertex color (with default interpolation) to the fragment shader.
-In this example we use a single uniform to pass the vertex parameters (here ``\texttt{projection}'' only),
-but there is also support for uniform buffer objects (in \LLGL they are called constant buffers).
+This simple vertex shader only passes the vertex position and color (with default interpolation) to the fragment shader.
 
 \newpage
 \noindent
@@ -423,9 +420,65 @@ out vec4 fragColor;
 
 // Fragment shader main function
 void main() {
-    fragColor = vertexColor;
+    fragColor = vec4(vertexColor, 1);
 }
 \end{lstlisting}
+
+Now we are finally done with the setting up the shader. Next we need to create a graphics pipeline.
+This concept is derived from modern graphics APIs such as Direct3D 12 and Vulkan.
+The major pipeline state is stored inside this pipeline state object.
+For older graphics APIs (such as OpenGL) \LLGL will set the respective render states by its internal state manager,
+to reduce state changes.
+
+The graphics pipeline specifies the depth-, stencil-, rasterizer-, blending-,
+and shader states and is created as follows:
+\begin{lstlisting}
+LLGL::GraphicsPipelineDescriptor pipelineDesc;
+{
+    pipelineDesc.shaderProgram = shaderProgram;
+}
+LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+\end{lstlisting}
+In our example we can use all default settings of the graphics pipeline descriptor except the shader program,
+which must always be set by the client programmer.
+
+We now have all render objects, so we can start with the main loop:
+\begin{lstlisting}
+// Run main loop until the main window is closed
+while (context->GetWindow().ProcessEvents()) {
+    /* render code here ... */
+}
+\end{lstlisting}
+This main loop will run until the user clicks the close button on the window of the render context.
+The rest of the code is pretty simple, since the most work is done during initialization.
+What we need to do is to clear the color buffer of the previous frame,
+bind the graphics pipeline and the vertex buffer, draw the primitives, and present the result on the frame buffer:
+\begin{lstlisting}
+// Clear color buffer
+context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+
+// Bind graphics pipeline
+context->BindGraphicsPipeline(*pipeline);
+
+// Bind vertex buffer
+context->BindVertexBuffer(*vertexBuffer);
+
+// Draw triangle with 3 vertices
+context->Draw(3, 0);
+
+// Present the result on the screen
+context->Present();
+\end{lstlisting}
+When you have done everything right, you should see something like shown in figure \ref{fig:tut01_mask1} after compilation
+and program start.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8 \textwidth]{tut01_mask1}
+	\caption{Output of the ``Tutorial01: HelloTriangle'' running on Windows 10.}
+	\label{fig:tut01_mask1}
+\end{figure}
+
+
 
 
 %----------------------------------------------------------------------------------------
