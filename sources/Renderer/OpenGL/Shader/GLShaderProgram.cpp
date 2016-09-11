@@ -34,7 +34,6 @@ GLShaderProgram::~GLShaderProgram()
 
 void GLShaderProgram::AttachShader(Shader& shader)
 {
-    ValidateShaderAttachment(shader);
     const auto& shaderGL = LLGL_CAST(GLShader&, shader);
     glAttachShader(id_, shaderGL.GetID());
 }

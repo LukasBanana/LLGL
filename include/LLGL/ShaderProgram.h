@@ -29,7 +29,9 @@ class LLGL_EXPORT ShaderProgram
 
     public:
 
-        virtual ~ShaderProgram();
+        virtual ~ShaderProgram()
+        {
+        }
 
         /**
         \brief Attaches the specified shader to this shader program.
@@ -120,14 +122,6 @@ class LLGL_EXPORT ShaderProgram
         \see LockShaderUniform
         */
         virtual void UnlockShaderUniform() = 0;
-
-    protected:
-
-        void ValidateShaderAttachment(Shader& shader);
-
-    private:
-
-        std::vector<Shader*> attachedShaders_;
 
 };
 

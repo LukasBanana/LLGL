@@ -127,8 +127,9 @@ protected:
         };
     }
 
-    // Generates 36 indices for a unit cube of eight vertices.
-    std::vector<std::uint32_t> GenerateCubeIndices()
+    // Generates 36 indices for a unit cube of eight vertices
+    // (36 = 3 indices per triangle * 2 triangles per cube face * 6 faces).
+    std::vector<std::uint32_t> GenerateCubeTriangelIndices()
     {
         return
         {
@@ -138,6 +139,21 @@ protected:
             1, 5, 6, 1, 6, 2, // top
             4, 0, 3, 4, 3, 7, // bottom
             7, 6, 5, 7, 5, 4, // back
+        };
+    }
+
+    // Generates 24 indices for a unit cube of eight vertices.
+    // (24 = 4 indices per quad * 1 quad per cube face * 6 faces)
+    std::vector<std::uint32_t> GenerateCubeQuadlIndices()
+    {
+        return
+        {
+            0, 1, 2, 3, // front
+            3, 2, 6, 7, // right
+            4, 5, 1, 0, // left
+            1, 5, 6, 2, // top
+            4, 0, 3, 7, // bottom
+            7, 6, 5, 4, // back
         };
     }
 

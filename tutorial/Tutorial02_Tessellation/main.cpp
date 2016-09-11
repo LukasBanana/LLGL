@@ -24,9 +24,12 @@ class Tutorial02 : public Tutorial
 
     struct Matrices
     {
-        Gs::Matrix4f projectionMatrix;
-        Gs::Matrix4f viewMatrix;
-        Gs::Matrix4f worldMatrix;
+        Gs::Matrix4f    projectionMatrix;
+        Gs::Matrix4f    viewMatrix;
+        Gs::Matrix4f    worldMatrix;
+        float           tessLevelInner  = 1.0f;
+        float           tessLevelOuter  = 1.0f;
+        float           _pad0[2];
     }
     matrices;
 
@@ -44,11 +47,13 @@ public:
         // Load shader program
         shaderProgram = LoadShaderProgram(
             { { LLGL::ShaderType::Vertex, "vertex.glsl" },
+              { LLGL::ShaderType::TessControl, "tesscontrol.glsl" },
+              { LLGL::ShaderType::TessEvaluation, "tesseval.glsl" },
               { LLGL::ShaderType::Fragment, "fragment.glsl" } }
         );
 
         // Bind constant buffer location to the index we use later with the render context
-        shaderProgram->BindConstantBuffer("Matrices", constantBufferIndex);
+        shaderProgram->BindConstantBuffer("Settings", constantBufferIndex);
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -65,6 +70,7 @@ public:
             pipelineDesc.depth.writeEnabled             = true;
 
             // Enable back-face culling
+            pipelineDesc.rasterizer.polygonMode         = LLGL::PolygonMode::Wireframe;
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
             pipelineDesc.rasterizer.frontCCW            = true;
         }
@@ -76,7 +82,7 @@ public:
 
         // Create vertex- and index buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateCubeIndices(), LLGL::DataType::UInt);
+        indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt);
 
         // Create constant buffer
         constantBuffer = renderer->CreateConstantBuffer();
@@ -120,8 +126,8 @@ private:
         context->BindGraphicsPipeline(*pipeline);
 
         // Draw indexed mesh
-        context->SetDrawMode(LLGL::DrawMode::Triangles);
-        context->DrawIndexed(12*3, 0);
+        context->SetDrawMode(LLGL::DrawMode::Patches);
+        context->DrawIndexed(24, 0);
 
         // Present result on the screen
         context->Present();
