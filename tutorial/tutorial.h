@@ -21,6 +21,10 @@ class Tutorial
 
     public:
 
+        virtual ~Tutorial()
+        {
+        }
+
         void Run()
         {
             while (context->GetWindow().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
