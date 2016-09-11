@@ -35,6 +35,12 @@ public:
     Tutorial02() :
         Tutorial( "OpenGL", L"LLGL Tutorial 02: Tessellation" )
     {
+        // Check if constant buffers are supported
+        auto renderCaps = renderer->QueryRenderingCaps();
+
+        if (!renderCaps.hasConstantBuffers)
+            throw std::runtime_error("constant buffers are not supported by this renderer");
+
         // Load shader program
         shaderProgram = LoadShaderProgram(
             { { LLGL::ShaderType::Vertex, "vertex.glsl" },
