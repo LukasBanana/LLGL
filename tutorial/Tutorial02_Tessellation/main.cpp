@@ -118,7 +118,7 @@ public:
 
 private:
 
-    void OnDrawFrame() override
+    void UpdateUserInput()
     {
         // Tessellation level-of-detail limits
         static const float tessLevelMin = 1.0f, tessLevelMax = 64.0f;
@@ -154,7 +154,10 @@ private:
         rotation += 0.0025f;
         Gs::RotateFree(settings.worldMatrix, Gs::Vector3f(1, 1, 1).Normalized(), rotation);
         #endif
-        
+    }
+
+    void DrawScene()
+    {
         // Clear color- and depth buffers
         context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
@@ -175,6 +178,12 @@ private:
 
         // Present result on the screen
         context->Present();
+    }
+
+    void OnDrawFrame() override
+    {
+        UpdateUserInput();
+        DrawScene();
     }
 
 };
