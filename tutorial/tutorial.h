@@ -19,103 +19,143 @@
 class Tutorial
 {
 
-    public:
+public:
 
-        virtual ~Tutorial()
+    virtual ~Tutorial()
+    {
+    }
+
+    void Run()
+    {
+        while (context->GetWindow().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            OnDrawFrame();
         }
+    }
 
-        void Run()
+protected:
+
+    std::shared_ptr<LLGL::RenderSystem> renderer;
+    LLGL::RenderContext*                context     = nullptr;
+    std::shared_ptr<LLGL::Input>        input;
+
+    virtual void OnDrawFrame() = 0;
+
+    Tutorial(
+        const std::string& rendererModule,
+        const std::wstring& title,
+        const LLGL::Size& resolution = { 800, 600 },
+        unsigned int multiSampling = 8)
+    {
+        // Create render system
+        renderer = LLGL::RenderSystem::Load(rendererModule);
+
+        // Create render context
+        LLGL::RenderContextDescriptor contextDesc;
         {
-            while (context->GetWindow().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
-            {
-                OnDraw();
-            }
+            contextDesc.videoMode.resolution    = resolution;
+            contextDesc.vsync.enabled           = true;
+            contextDesc.antiAliasing.enabled    = (multiSampling > 1);
+            contextDesc.antiAliasing.samples    = multiSampling;
         }
-
-    protected:
-
-        std::shared_ptr<LLGL::RenderSystem> renderer;
-        LLGL::RenderContext*                context     = nullptr;
-        std::shared_ptr<LLGL::Input>        input;
-
-        virtual void OnDraw() = 0;
-
-        Tutorial(
-            const std::string& rendererModule,
-            const std::wstring& title,
-            const LLGL::Size& resolution = { 640, 480 },
-            unsigned int multiSampling = 8)
-        {
-            // Create render system
-            renderer = LLGL::RenderSystem::Load(rendererModule);
-
-            // Create render context
-            LLGL::RenderContextDescriptor contextDesc;
-            {
-                contextDesc.videoMode.resolution    = resolution;
-                contextDesc.vsync.enabled           = true;
-                contextDesc.antiAliasing.enabled    = (multiSampling > 1);
-                contextDesc.antiAliasing.samples    = multiSampling;
-            }
-            context = renderer->CreateRenderContext(contextDesc);
+        context = renderer->CreateRenderContext(contextDesc);
             
-            // Set window title
-            context->GetWindow().SetTitle(title);
+        // Set window title
+        context->GetWindow().SetTitle(title);
             
-            // Add input event listener to window
-            input = std::make_shared<LLGL::Input>();
-            context->GetWindow().AddEventListener(input);
+        // Add input event listener to window
+        input = std::make_shared<LLGL::Input>();
+        context->GetWindow().AddEventListener(input);
+    }
+
+    struct TutorialShaderDescriptor
+    {
+        LLGL::ShaderType    type;
+        std::string         filename;
+    };
+
+    LLGL::ShaderProgram* LoadShaderProgram(
+        const std::vector<TutorialShaderDescriptor>& shaderDescs,
+        const std::vector<LLGL::VertexAttribute>& vertexAttribs = {})
+    {
+        // Create shader program
+        LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
+
+        for (const auto& desc : shaderDescs)
+        {
+            // Read shader file
+            std::ifstream file(desc.filename);
+            std::string shaderCode(
+                ( std::istreambuf_iterator<char>(file) ),
+                ( std::istreambuf_iterator<char>() )
+            );
+
+            // Create shader and compile shader
+            auto shader = renderer->CreateShader(desc.type);
+            shader->Compile(shaderCode);
+
+            // Print info log (warnings and errors)
+            std::string log = shader->QueryInfoLog();
+            if (!log.empty())
+                std::cerr << log << std::endl;
+
+            // Attach vertex- and fragment shader to the shader program
+            shaderProgram->AttachShader(*shader);
+
+            // From now on we only use the shader program, so the shader can be released
+            renderer->Release(*shader);
         }
 
-        struct TutorialShaderDescriptor
-        {
-            LLGL::ShaderType    type;
-            std::string         filename;
-        };
-
-        LLGL::ShaderProgram* LoadShaderProgram(
-            const std::vector<TutorialShaderDescriptor>& shaderDescs,
-            const std::vector<LLGL::VertexAttribute>& vertexAttribs = {})
-        {
-            // Create shader program
-            LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
-
-            for (const auto& desc : shaderDescs)
-            {
-                // Read shader file
-                std::ifstream file(desc.filename);
-                std::string shaderCode(
-                    ( std::istreambuf_iterator<char>(file) ),
-                    ( std::istreambuf_iterator<char>() )
-                );
-
-                // Create shader and compile shader
-                auto shader = renderer->CreateShader(desc.type);
-                shader->Compile(shaderCode);
-
-                // Print info log (warnings and errors)
-                std::string log = shader->QueryInfoLog();
-                if (!log.empty())
-                    std::cerr << log << std::endl;
-
-                // Attach vertex- and fragment shader to the shader program
-                shaderProgram->AttachShader(*shader);
-
-                // From now on we only use the shader program, so the shader can be released
-                renderer->Release(*shader);
-            }
-
-            // Bind vertex attribute layout (this is not required for a compute shader program)
-            if (!vertexAttribs.empty())
-                shaderProgram->BindVertexAttributes(vertexAttribs);
+        // Bind vertex attribute layout (this is not required for a compute shader program)
+        if (!vertexAttribs.empty())
+            shaderProgram->BindVertexAttributes(vertexAttribs);
         
-            // Link shader program and check for errors
-            if (!shaderProgram->LinkShaders())
-                throw std::runtime_error(shaderProgram->QueryInfoLog());
+        // Link shader program and check for errors
+        if (!shaderProgram->LinkShaders())
+            throw std::runtime_error(shaderProgram->QueryInfoLog());
 
-            return shaderProgram;
-        }
+        return shaderProgram;
+    }
+
+    // Generates eight vertices for a unit cube.
+    std::vector<Gs::Vector3f> GenerateCubeVertices()
+    {
+        return
+        {
+            { -1, -1, -1 }, { -1,  1, -1 }, {  1,  1, -1 }, {  1, -1, -1 },
+            { -1, -1,  1 }, { -1,  1,  1 }, {  1,  1,  1 }, {  1, -1,  1 },
+        };
+    }
+
+    // Generates 36 indices for a unit cube of eight vertices.
+    std::vector<std::uint32_t> GenerateCubeIndices()
+    {
+        return
+        {
+            0, 1, 2, 0, 2, 3, // front
+            3, 2, 6, 3, 6, 7, // right
+            4, 5, 1, 4, 1, 0, // left
+            1, 5, 6, 1, 6, 2, // top
+            4, 0, 3, 4, 3, 7, // bottom
+            7, 6, 5, 7, 5, 4, // back
+        };
+    }
+
+    template <typename VertexType>
+    LLGL::VertexBuffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
+    {
+        auto vertexBuffer = renderer->CreateVertexBuffer();
+        renderer->SetupVertexBuffer(*vertexBuffer, vertices.data(), vertices.size() * sizeof(VertexType), LLGL::BufferUsage::Static, vertexFormat);
+        return vertexBuffer;
+    }
+
+    template <typename IndexType>
+    LLGL::IndexBuffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::IndexFormat& indexFormat)
+    {
+        auto indexBuffer = renderer->CreateIndexBuffer();
+        renderer->SetupIndexBuffer(*indexBuffer, indices.data(), indices.size() * sizeof(IndexType), LLGL::BufferUsage::Static, indexFormat);
+        return indexBuffer;
+    }
 
 };
 
