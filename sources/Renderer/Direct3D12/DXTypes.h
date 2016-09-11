@@ -11,6 +11,7 @@
 
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/RenderContextFlags.h>
 #include <d3d12.h>
 
 
@@ -22,6 +23,7 @@ namespace DXTypes
 
 
 DXGI_FORMAT             Map( const VertexAttribute& attrib          );
+D3D_PRIMITIVE_TOPOLOGY  Map( const DrawMode         drawMode        );
 D3D12_FILL_MODE         Map( const PolygonMode      polygonMode     );
 D3D12_CULL_MODE         Map( const CullMode         cullMode        );
 D3D12_BLEND             Map( const BlendOp          blendOp         );

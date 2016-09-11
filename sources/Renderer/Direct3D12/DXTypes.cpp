@@ -150,13 +150,64 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
     MapFailed("VertexAttribute", "DXGI_FORMAT");
 }
 
+D3D_PRIMITIVE_TOPOLOGY Map(const DrawMode drawMode)
+{
+    switch (drawMode)
+    {
+        case DrawMode::Points:                  return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+        case DrawMode::Lines:                   return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+        case DrawMode::LineStrip:               return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+        case DrawMode::LineLoop:                break;
+        case DrawMode::LinesAdjacency:          return D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;
+        case DrawMode::LineStripAdjacency:      return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ;
+        case DrawMode::Triangles:               return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        case DrawMode::TriangleStrip:           return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+        case DrawMode::TriangleFan:             break;
+        case DrawMode::TrianglesAdjacency:      return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;
+        case DrawMode::TriangleStripAdjacency:  return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ;
+        case DrawMode::Patches1:                return D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches2:                return D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches3:                return D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches4:                return D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches5:                return D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches6:                return D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches7:                return D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches8:                return D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches9:                return D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches10:               return D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches11:               return D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches12:               return D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches13:               return D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches14:               return D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches15:               return D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches16:               return D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches17:               return D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches18:               return D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches19:               return D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches20:               return D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches21:               return D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches22:               return D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches23:               return D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches24:               return D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches25:               return D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches26:               return D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches27:               return D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches28:               return D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches29:               return D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches30:               return D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches31:               return D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST;
+        case DrawMode::Patches32:               return D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST;
+    }
+    MapFailed("DrawMode", "D3D_PRIMITIVE_TOPOLOGY");
+}
+
 D3D12_FILL_MODE Map(const PolygonMode polygonMode)
 {
     switch (polygonMode)
     {
         case PolygonMode::Fill:         return D3D12_FILL_MODE_SOLID;
         case PolygonMode::Wireframe:    return D3D12_FILL_MODE_WIREFRAME;
-        case PolygonMode::Points:       throw std::invalid_argument("'PolygonMode::Points' can not be mapped to 'D3D12_FILL_MODE'");
+        case PolygonMode::Points:       break;
     }
     MapFailed("PolygonMode", "D3D12_FILL_MODE");
 }

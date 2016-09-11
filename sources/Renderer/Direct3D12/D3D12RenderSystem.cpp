@@ -97,6 +97,7 @@ RenderingCaps D3D12RenderSystem::QueryRenderingCaps() const
     caps.maxNumTextureArrayLayers       = (level >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
     caps.maxNumRenderTargetAttachments  = GetMaxRenderTargets(level);
     caps.maxConstantBufferSize          = 16384;
+    caps.maxPatchVertices               = 32;
     caps.max1DTextureSize               = GetMaxTextureDimension(level);
     caps.max2DTextureSize               = GetMaxTextureDimension(level);
     caps.max3DTextureSize               = (level >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
