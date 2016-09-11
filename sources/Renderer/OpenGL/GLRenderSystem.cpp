@@ -76,7 +76,7 @@ std::map<RendererInfo, std::string> GLRenderSystem::QueryRendererInfo() const
 
 RenderingCaps GLRenderSystem::QueryRenderingCaps() const
 {
-    return renderingCaps_;
+    return GetRenderingCaps();
 }
 
 ShadingLanguage GLRenderSystem::QueryShadingLanguage() const
@@ -926,11 +926,16 @@ void GLRenderSystem::StoreRenderingCaps()
     caps.hasConservativeRasterization   = (HasExtension("GL_NV_conservative_raster") || HasExtension("GL_INTEL_conservative_rasterization"));
 
     /* Query integral attributes */
-    auto GetUInt = [](GLenum param)
+    auto GetInt = [](GLenum param)
     {
         GLint attr = 0;
         glGetIntegerv(param, &attr);
-        return static_cast<unsigned int>(attr);
+        return attr;
+    };
+
+    auto GetUInt = [&](GLenum param)
+    {
+        return static_cast<unsigned int>(GetInt(param));
     };
 
     auto GetUIntIdx = [](GLenum param, GLuint index)
@@ -944,6 +949,7 @@ void GLRenderSystem::StoreRenderingCaps()
     caps.maxNumTextureArrayLayers           = GetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
     caps.maxNumRenderTargetAttachments      = GetUInt(GL_MAX_DRAW_BUFFERS);
     caps.maxConstantBufferSize              = GetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
+    caps.maxPatchVertices                   = GetInt(GL_MAX_PATCH_VERTICES);
     caps.maxAnisotropy                      = 16;
     
     caps.maxNumComputeShaderWorkGroups.x    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);

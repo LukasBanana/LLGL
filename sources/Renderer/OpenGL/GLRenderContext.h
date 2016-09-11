@@ -156,7 +156,6 @@ class GLRenderContext : public RenderContext
 
         void AcquireStateManager(GLRenderContext* sharedRenderContext);
         void InitRenderStates();
-        void QueryLimits();
 
         bool SetupVsyncInterval();
 
@@ -194,7 +193,6 @@ class GLRenderContext : public RenderContext
         GLRenderTarget*                 boundRenderTarget_  = nullptr;
 
         GLint                           contextHeight_      = 0;
-        GLint                           maxPatchVertices_   = 0;
 
 };
 

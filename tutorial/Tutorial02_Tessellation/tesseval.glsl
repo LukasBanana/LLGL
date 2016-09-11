@@ -2,7 +2,7 @@
 #version 400
 
 // Tessellation evaluation input configuration
-layout(quads, fractional_odd_spacing, ccw) in;
+layout(quads, fractional_odd_spacing, cw) in;
 
 // Uniform buffer object (also named "Constant Buffer")
 layout(std140) uniform Settings
@@ -32,21 +32,21 @@ void main()
 	
 	vec3 position = mix(a, b, v);
 	
-	// Apply twist rotation matrix
+	// Apply twist rotation matrix (rotate around Y axis)
 	float twistFactor = (position.y + 1.0) * 0.5;
 	
 	float s = sin(twist * twistFactor);
 	float c = cos(twist * twistFactor);
 	
 	mat3 rotation = mat3(
-		c, 0, -s,
-		0, 1, 0,
-		s, 0, c
+		 c, 0, s,
+		 0, 1, 0,
+		-s, 0, c
 	);
 	
 	position = rotation * position;
 	
 	// Transform vertex by the world-view-projection matrix chain
 	gl_Position = projectionMatrix * viewMatrix * worldMatrix * vec4(position, 1);
-	teColor = (position + 1.0) * 0.5;
+	teColor = (1.0 - position) * 0.5;
 }

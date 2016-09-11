@@ -169,6 +169,9 @@ struct RenderingCaps
     //! Specifies maximum size (in bytes) of each constant buffer.
     unsigned int    maxConstantBufferSize           = 0;
 
+    //! Specifies maximum number of patch control points.
+    int             maxPatchVertices                = 0;
+
     //! Specifies maximum size of each 1D texture.
     int             max1DTextureSize                = 0;
 
@@ -181,7 +184,7 @@ struct RenderingCaps
     //! Specifies maximum size of each cube texture (for width and height).
     int             maxCubeTextureSize              = 0;
 
-    //! Specifies maxmimum anisotropy texture filter.
+    //! Specifies maximum anisotropy texture filter.
     int             maxAnisotropy                   = 0;
 
     //! Specifies maximum number of work groups in a compute shader.

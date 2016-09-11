@@ -49,6 +49,8 @@ public:
 
         if (!renderCaps.hasConstantBuffers)
             throw std::runtime_error("constant buffers are not supported by this renderer");
+        if (!renderCaps.hasTessellationShaders)
+            throw std::runtime_error("tessellation shaders are not supported by this renderer");
 
         // Load shader program
         shaderProgram = LoadShaderProgram(
@@ -105,9 +107,14 @@ public:
             (resolution.x / resolution.y),  // aspect ratio
             0.1f,                           // near clipping plane
             100.0f,                         // far clipping plane
-            Gs::Deg2Rad(45.0f),             // field-of-view from degree to radians
-            Gs::ProjectionFlags::OpenGLPreset
+            Gs::Deg2Rad(45.0f)              // field-of-view from degree to radians
         ).ToMatrix4();
+
+        // Show info to user
+        std::cout << "press left mouse button and move mouse on X axis to increase/decrease inner tessellation" << std::endl;
+        std::cout << "press right mouse button and move mouse on X axis to increase/decrease outer tessellation" << std::endl;
+        std::cout << "press middle mouse button and move mouse on X axis to increase/decrease twist" << std::endl;
+        ShowTessLevel();
     }
 
     void ShowTessLevel()
@@ -147,7 +154,7 @@ private:
 
         // Update matrices
         settings.worldMatrix.LoadIdentity();
-        Gs::Translate(settings.worldMatrix, Gs::Vector3f(0, 0, -5));
+        Gs::Translate(settings.worldMatrix, Gs::Vector3f(0, 0, 5));
 
         #ifdef AUTO_ROTATE
         static float rotation;

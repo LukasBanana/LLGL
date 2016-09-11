@@ -164,6 +164,11 @@ class GLRenderSystem : public RenderSystem
 
         bool HasExtension(const std::string& name) const;
 
+        inline const RenderingCaps& GetRenderingCaps() const
+        {
+            return renderingCaps_;
+        }
+
     protected:
 
         RenderContext* AddRenderContext(

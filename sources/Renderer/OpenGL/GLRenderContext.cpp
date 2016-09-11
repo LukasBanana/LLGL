@@ -46,9 +46,6 @@ GLRenderContext::GLRenderContext(
     /* Initialize render states for the first time */
     if (!sharedRenderContext)
         InitRenderStates();
-
-    /* Query special renderer limits (e.g. max patch vertices) */
-    QueryLimits();
 }
 
 GLRenderContext::~GLRenderContext()
@@ -167,11 +164,13 @@ void GLRenderContext::SetDrawMode(const DrawMode drawMode)
 
         /* Set patch vertices (if supported) */
         GLint patchVertices = static_cast<GLint>(drawMode) - static_cast<GLint>(DrawMode::Patches1) + 1;
-        if (patchVertices > maxPatchVertices_)
+        GLint maxPatchVertices = renderSystem_.GetRenderingCaps().maxPatchVertices;
+
+        if (patchVertices > maxPatchVertices)
         {
             throw std::runtime_error(
                 "renderer does not support " + std::to_string(patchVertices) +
-                " control points for patches (limit is " + std::to_string(maxPatchVertices_) + ")"
+                " control points for patches (limit is " + std::to_string(maxPatchVertices) + ")"
             );
         }
         else
@@ -538,12 +537,6 @@ void GLRenderContext::InitRenderStates()
     This is required so that texture formats like RGB (which is not word-aligned) can be used.
     */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-}
-
-void GLRenderContext::QueryLimits()
-{
-    /* Query maximal patch vertices */
-    glGetIntegerv(GL_MAX_PATCH_VERTICES, &maxPatchVertices_);
 }
 
 

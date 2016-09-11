@@ -87,7 +87,11 @@ enum class PolygonMode
 {
     Fill,       //!< Draw filled polygon.
     Wireframe,  //!< Draw triangle edges only.
-    Points,     //!< Draw vertex points only. This can only be used with OpenGL.
+    /**
+    \brief Draw vertex points only.
+    \note Only supported with: OpenGL.
+    */
+    Points,
 };
 
 //! Polygon culling modes enumeration.
@@ -132,6 +136,7 @@ struct StencilDescriptor
 //! Rasterizer state descriptor structure.
 struct RasterizerDescriptor
 {
+    //! Polygon render mode. By default PolygonMode::Fill.
     PolygonMode     polygonMode                 = PolygonMode::Fill;
     CullMode        cullMode                    = CullMode::Disabled;
     int             depthBias                   = 0;
@@ -139,8 +144,9 @@ struct RasterizerDescriptor
     float           slopeScaledDepthBias        = 0.0f;
 
     /**
-    \brief Number of sample. This is only used for Direct3D when multi-sampling is enabled.
+    \brief Number of samples for multi-sample anti-aliasing (MSAA).
     \see multiSampleEnabled
+    \note Only supported with: Direct3D 11, Direct3D 12.
     */
     unsigned int    samples                     = 1;
 
