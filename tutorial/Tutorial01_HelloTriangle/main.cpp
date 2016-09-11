@@ -40,9 +40,9 @@ int main()
         // Vertex data (3 vertices for our triangle)
         Vertex vertices[] =
         {
-            { {  0,  1 }, { 1, 0, 0 } }, // 1st vertex: center -top, red
-            { {  1, -1 }, { 0, 1, 0 } }, // 2nd vertex: right -bottom , green
-            { { -1, -1 }, { 0, 0, 1 } }, // 3rd vertex: left -bottom , blue
+            { {  0,  1 }, { 1, 0, 0 } }, // 1st vertex: center-top, red
+            { {  1, -1 }, { 0, 1, 0 } }, // 2nd vertex: right-bottom, green
+            { { -1, -1 }, { 0, 0, 1 } }, // 3rd vertex: left-bottom, blue
         };
 
         // Vertex format
@@ -81,6 +81,7 @@ int main()
         {
             // Compile shader
             shader->Compile(code);
+
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
             if (!log.empty())
@@ -97,7 +98,7 @@ int main()
         shaderProgram->AttachShader(*vertexShader);
         shaderProgram->AttachShader(*fragmentShader);
 
-        // From now on we only use the shader program , so the shaders can be released
+        // From now on we only use the shader program, so the shaders can be released
         renderer->Release(*vertexShader);
         renderer->Release(*fragmentShader);
 
