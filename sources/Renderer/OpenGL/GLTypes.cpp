@@ -81,7 +81,10 @@ GLenum Map(const DrawMode drawMode)
         case DrawMode::TriangleFan:             return GL_TRIANGLE_FAN;
         case DrawMode::TrianglesAdjacency:      return GL_TRIANGLES_ADJACENCY;
         case DrawMode::TriangleStripAdjacency:  return GL_TRIANGLE_STRIP_ADJACENCY;
-        case DrawMode::Patches:                 return GL_PATCHES;
+        default:
+            if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+                return GL_PATCHES;
+            break;
     }
     MapFailed("DrawMode");
 }

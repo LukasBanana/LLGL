@@ -46,6 +46,9 @@ GLRenderContext::GLRenderContext(
     /* Initialize render states for the first time */
     if (!sharedRenderContext)
         InitRenderStates();
+
+    /* Query special renderer limits (e.g. max patch vertices) */
+    QueryLimits();
 }
 
 GLRenderContext::~GLRenderContext()
@@ -157,7 +160,28 @@ void GLRenderContext::ClearBuffers(long flags)
 
 void GLRenderContext::SetDrawMode(const DrawMode drawMode)
 {
-    renderState_.drawMode = GLTypes::Map(drawMode);
+    if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+    {
+        /* Set draw mode to patches for tessellation */
+        renderState_.drawMode = GL_PATCHES;
+
+        /* Set patch vertices (if supported) */
+        GLint patchVertices = static_cast<GLint>(drawMode) - static_cast<GLint>(DrawMode::Patches1) + 1;
+        if (patchVertices > maxPatchVertices_)
+        {
+            throw std::runtime_error(
+                "renderer does not support " + std::to_string(patchVertices) +
+                " control points for patches (limit is " + std::to_string(maxPatchVertices_) + ")"
+            );
+        }
+        else
+            glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
+    }
+    else
+    {
+        /* Set standard draw mode */
+        renderState_.drawMode = GLTypes::Map(drawMode);
+    }
 }
 
 /* ----- Hardware Buffers ------ */
@@ -514,6 +538,12 @@ void GLRenderContext::InitRenderStates()
     This is required so that texture formats like RGB (which is not word-aligned) can be used.
     */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+}
+
+void GLRenderContext::QueryLimits()
+{
+    /* Query maximal patch vertices */
+    glGetIntegerv(GL_MAX_PATCH_VERTICES, &maxPatchVertices_);
 }
 
 

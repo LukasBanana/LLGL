@@ -92,8 +92,7 @@ void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType num
             //???
             break;
 
-        case DrawMode::Patches:
-            //???
+        default:
             break;
     }
 }
@@ -150,8 +149,7 @@ void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType num
             //???
             break;
 
-        case DrawMode::Patches:
-            //???
+        default:
             break;
     }
 }

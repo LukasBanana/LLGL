@@ -8,7 +8,12 @@
 #include "../tutorial.h"
 
 
-// TODO: TESSELLATION SHADER NOT YET CREATED !!!
+// Show scene in wireframe polygon mode
+#define SHOW_WIREFRAME
+
+// Automatically rotate the model
+//#define AUTO_ROTATE
+
 
 class Tutorial02 : public Tutorial
 {
@@ -22,16 +27,17 @@ class Tutorial02 : public Tutorial
 
     unsigned int            constantBufferIndex = 0;
 
-    struct Matrices
+    struct Settings
     {
         Gs::Matrix4f    projectionMatrix;
         Gs::Matrix4f    viewMatrix;
         Gs::Matrix4f    worldMatrix;
-        float           tessLevelInner  = 1.0f;
-        float           tessLevelOuter  = 1.0f;
-        float           _pad0[2];
+        float           tessLevelInner  = 5.0f;
+        float           tessLevelOuter  = 5.0f;
+        float           twist           = 0.0f;
+        float           _pad0;
     }
-    matrices;
+    settings;
 
 public:
 
@@ -69,8 +75,12 @@ public:
             pipelineDesc.depth.testEnabled              = true;
             pipelineDesc.depth.writeEnabled             = true;
 
-            // Enable back-face culling
+            // Set polygon mode to wireframe (if macro is enabled)
+            #ifdef SHOW_WIREFRAME
             pipelineDesc.rasterizer.polygonMode         = LLGL::PolygonMode::Wireframe;
+            #endif
+
+            // Enable back-face culling
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
             pipelineDesc.rasterizer.frontCCW            = true;
         }
@@ -86,12 +96,12 @@ public:
 
         // Create constant buffer
         constantBuffer = renderer->CreateConstantBuffer();
-        renderer->SetupConstantBuffer(*constantBuffer, nullptr, sizeof(Matrices), LLGL::BufferUsage::Dynamic);
+        renderer->SetupConstantBuffer(*constantBuffer, nullptr, sizeof(Settings), LLGL::BufferUsage::Dynamic);
 
         // Set initial matrices
         auto resolution = context->GetVideoMode().resolution.Cast<float>();
 
-        matrices.projectionMatrix = Gs::ProjectionMatrix4f::Perspective(
+        settings.projectionMatrix = Gs::ProjectionMatrix4f::Perspective(
             (resolution.x / resolution.y),  // aspect ratio
             0.1f,                           // near clipping plane
             100.0f,                         // far clipping plane
@@ -100,22 +110,56 @@ public:
         ).ToMatrix4();
     }
 
+    void ShowTessLevel()
+    {
+        std::cout << "tessellation level (inner = " << settings.tessLevelInner << ", outer = " << settings.tessLevelOuter << ")      \r";
+        std::flush(std::cout);
+    }
+
 private:
 
     void OnDrawFrame() override
     {
-        // Update matrices
-        static float rotation;
-        rotation += 0.01f;
-        matrices.worldMatrix.LoadIdentity();
-        Gs::Translate(matrices.worldMatrix, Gs::Vector3f(0, 0, -5));
-        Gs::RotateFree(matrices.worldMatrix, Gs::Vector3f(1, 1, 1).Normalized(), rotation);
+        // Tessellation level-of-detail limits
+        static const float tessLevelMin = 1.0f, tessLevelMax = 64.0f;
 
+        // Update tessellation levels by user input
+        auto motion = input->GetMouseMotion().x;
+        auto motionScaled = static_cast<float>(motion)*0.1f;
+
+        if (input->KeyPressed(LLGL::Key::LButton))
+        {
+            settings.tessLevelInner += motionScaled;
+            settings.tessLevelInner = Gs::Clamp(settings.tessLevelInner, tessLevelMin, tessLevelMax);
+        }
+
+        if (input->KeyPressed(LLGL::Key::RButton))
+        {
+            settings.tessLevelOuter += motionScaled;
+            settings.tessLevelOuter = Gs::Clamp(settings.tessLevelOuter, tessLevelMin, tessLevelMax);
+        }
+
+        if ( motion != 0 && ( input->KeyPressed(LLGL::Key::LButton) || input->KeyPressed(LLGL::Key::RButton) ) )
+            ShowTessLevel();
+
+        if (input->KeyPressed(LLGL::Key::MButton))
+            settings.twist += Gs::Deg2Rad(motionScaled);
+
+        // Update matrices
+        settings.worldMatrix.LoadIdentity();
+        Gs::Translate(settings.worldMatrix, Gs::Vector3f(0, 0, -5));
+
+        #ifdef AUTO_ROTATE
+        static float rotation;
+        rotation += 0.0025f;
+        Gs::RotateFree(settings.worldMatrix, Gs::Vector3f(1, 1, 1).Normalized(), rotation);
+        #endif
+        
         // Clear color- and depth buffers
         context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
         // Update constant buffer
-        renderer->WriteConstantBuffer(*constantBuffer, &matrices, sizeof(matrices), 0);
+        renderer->WriteConstantBuffer(*constantBuffer, &settings, sizeof(settings), 0);
 
         // Bind hardware buffers to draw the model
         context->BindVertexBuffer(*vertexBuffer);
@@ -125,8 +169,8 @@ private:
         // Bind graphics pipeline with the shader
         context->BindGraphicsPipeline(*pipeline);
 
-        // Draw indexed mesh
-        context->SetDrawMode(LLGL::DrawMode::Patches);
+        // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
+        context->SetDrawMode(LLGL::DrawMode::Patches4);
         context->DrawIndexed(24, 0);
 
         // Present result on the screen

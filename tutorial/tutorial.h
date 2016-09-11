@@ -148,12 +148,12 @@ protected:
     {
         return
         {
-            0, 1, 2, 3, // front
-            3, 2, 6, 7, // right
-            4, 5, 1, 0, // left
-            1, 5, 6, 2, // top
-            4, 0, 3, 7, // bottom
-            7, 6, 5, 4, // back
+            0, 1, 3, 2, // front
+            3, 2, 7, 6, // right
+            4, 5, 0, 1, // left
+            1, 5, 2, 6, // top
+            4, 0, 7, 3, // bottom
+            7, 6, 4, 5, // back
         };
     }
 
