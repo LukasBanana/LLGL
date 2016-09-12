@@ -14,6 +14,7 @@
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
 #include <algorithm>
+#include "D3DX12/d3dx12.h"
 
 
 namespace LLGL
@@ -34,14 +35,28 @@ D3D12RenderContext::D3D12RenderContext(
 
 void D3D12RenderContext::Present()
 {
-    //auto presentResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-    //gfxCommandList_->ResourceBarrier(1, &presentResourceBarrier);
+    /* Indicate that the render target will now be used to present when the command list is done executing */
+    auto presentResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        renderTargets_[currentFrame_].Get(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PRESENT
+    );
+
+    gfxCommandList_->ResourceBarrier(1, &presentResourceBarrier);
 
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
     DXThrowIfFailed(hr, "failed to present D3D12 swap-chain");
 
+    /* Advance frame counter */
     MoveToNextFrame();
+
+    /* Reset command allocator */
+    hr = commandAllocs_[0]->Reset();
+    DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
+
+    hr = gfxCommandList_->Reset(commandAllocs_[0].Get(), nullptr);
+    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 }
 
 /* ----- Configuration ----- */
@@ -250,6 +265,7 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
     gfxCommandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
+    ExecuteGfxCommandList();
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
@@ -370,6 +386,9 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         /* Create render target view (RTV) */
         renderSystem_.GetDevice()->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDesc);
     }
+
+    /* Set initial render target view */
+    gfxCommandList_->OMSetRenderTargets(1, &rtvDesc, FALSE, nullptr);
 }
 
 void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
@@ -381,6 +400,17 @@ void D3D12RenderContext::MoveToNextFrame()
 {
     SyncGPU();
     currentFrame_ = (currentFrame_ + 1) % numFrames_;
+}
+
+void D3D12RenderContext::ExecuteGfxCommandList()
+{
+    /* Close graphics command list */
+    auto hr = gfxCommandList_->Close();
+    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+
+    /* Execute command list */
+    ID3D12CommandList* commandList[] = { gfxCommandList_.Get() };
+    renderSystem_.GetCommandQueue()->ExecuteCommandLists(1, commandList);
 }
 
 

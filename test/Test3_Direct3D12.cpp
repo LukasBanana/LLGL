@@ -143,6 +143,7 @@ int main()
             context->BindVertexBuffer(*vertexBuffer);
             context->BindGraphicsPipeline(*pipeline);
 
+            context->SetDrawMode(LLGL::DrawMode::Triangles);
             context->Draw(3, 0);
 
 			context->Present();

@@ -15,7 +15,10 @@
 #include <vector>
 #include <algorithm>
 #include <set>
+#include <string>
 #include <cstring>
+#include <sstream>
+#include <iomanip>
 
 
 namespace LLGL
@@ -127,6 +130,14 @@ T* TakeOwnership(std::vector<std::unique_ptr<T>>& objectSet, std::unique_ptr<T>&
     auto ref = object.get();
     objectSet.emplace_back(std::move(object));
     return ref;
+}
+
+template <typename T>
+std::string ToHex(T value)
+{
+    std::stringstream s;
+    s << std::setfill('0') << std::setw(sizeof(T)*2) << std::hex << std::uppercase << value;
+    return s.str();
 }
 
 

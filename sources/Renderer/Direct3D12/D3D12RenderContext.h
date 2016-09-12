@@ -136,6 +136,7 @@ class D3D12RenderContext : public RenderContext
         void SetupSwapChainInterval(const VsyncDescriptor& desc);
 
         void MoveToNextFrame();
+        void ExecuteGfxCommandList();
 
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
         RenderContextDescriptor             desc_;

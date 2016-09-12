@@ -6,6 +6,7 @@
  */
 
 #include "DXCore.h"
+#include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
 #include <stdexcept>
 #include <algorithm>
@@ -68,7 +69,7 @@ std::string DXErrorToStr(const HRESULT errorCode)
         LLGL_CASE_TO_STR( D3D12_ERROR_ADAPTER_NOT_FOUND );
         LLGL_CASE_TO_STR( D3D12_ERROR_DRIVER_VERSION_MISMATCH );
     }
-    return "";
+    return ToHex(errorCode);
 }
 
 void DXThrowIfFailed(const HRESULT errorCode, const std::string& info)
