@@ -162,7 +162,7 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
     gfxDependentState_ = state;
 
     /* Update front face */
-    if (prevState.invertFrontFace != state.invertFrontFace)
+    if (prevState.stateOpenGL.flipViewportVertical != state.stateOpenGL.flipViewportVertical)
         SetFrontFace(commonState_.frontFace);
 }
 
@@ -300,7 +300,7 @@ void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
     {
         auto& vp = viewports.front();
 
-        if (emulateClipControl_ && !gfxDependentState_.invertFrontFace)
+        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.flipViewportVertical)
             AdjustViewport(vp);
 
         glViewport(
@@ -312,7 +312,7 @@ void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
     }
     else if (viewports.size() > 1 && glViewportArrayv)
     {
-        if (emulateClipControl_ && !gfxDependentState_.invertFrontFace)
+        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.flipViewportVertical)
         {
             for (auto& vp : viewports)
                 AdjustViewport(vp);
@@ -499,18 +499,8 @@ void GLStateManager::SetCullFace(GLenum face)
 void GLStateManager::SetFrontFace(GLenum mode)
 {
     /* Check if mode must be inverted */
-    if (gfxDependentState_.invertFrontFace)
-    {
-        switch (mode)
-        {
-            case GL_CW:
-                mode = GL_CCW;
-                break;
-            case GL_CCW:
-                mode = GL_CW;
-                break;
-        }
-    }
+    if (gfxDependentState_.stateOpenGL.flipViewportVertical)
+        mode = (mode == GL_CW ? GL_CCW : GL_CW);
 
     /* Set front face */
     if (commonState_.frontFace != mode)

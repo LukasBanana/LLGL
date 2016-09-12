@@ -149,19 +149,29 @@ struct Scissor
 };
 
 /**
-\brief Low-level graphics API dependent state descriptor structure.
+\brief Low-level graphics API dependent state descriptor union.
 \see RenderContext::SetGraphicsAPIDependentState
 */
-struct GraphicsAPIDependentStateDescriptor
+union GraphicsAPIDependentStateDescriptor
 {
-    /**
-    \briefs Specifies whether to invert the front face setting in the graphics pipeline state.
-    \remarks If this is true, the front facing will be inverted everytime "BindGraphicsPipeline" is called.
-    \note Only supported with: OpenGL.
-    \see RasterizerDescriptor::frontCCW
-    \see RenderContext::BindGraphicsPipeline
-    */
-    bool invertFrontFace = false;
+    GraphicsAPIDependentStateDescriptor()
+    {
+        stateOpenGL.flipViewportVertical = false;
+    }
+
+    struct StateOpenGLDescriptor
+    {
+        /**
+        \briefs Specifies whether to flip the viewport setttings vertical. By default false.
+        \remarks If this is true, the front facing will be inverted everytime "BindGraphicsPipeline" is called,
+        and everytime the viewports and scissors are set, their origin will be lower-left instead of upper-left.
+        This can be used for compatability with other renderers such as Direct3D when a render target is bound.
+        \see RasterizerDescriptor::frontCCW
+        \see RenderContext::BindGraphicsPipeline
+        */
+        bool flipViewportVertical;
+    }
+    stateOpenGL;
 };
 
 
