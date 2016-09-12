@@ -38,6 +38,7 @@ void RenderingProfiler::ResetCounters()
     renderedPoints.Reset();
     renderedLines.Reset();
     renderedTriangles.Reset();
+    renderedPatches.Reset();
 }
 
 void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType numVertices)
@@ -67,11 +68,12 @@ void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType num
             break;
 
         case DrawMode::LinesAdjacency:
-            //???
+            renderedPoints.Inc(numVertices / 2);
             break;
 
         case DrawMode::LineStripAdjacency:
-            //???
+            if (numVertices >= 2)
+                renderedPoints.Inc(numVertices - 1);
             break;
 
         case DrawMode::Triangles:
@@ -85,14 +87,20 @@ void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType num
             break;
 
         case DrawMode::TrianglesAdjacency:
-            //???
+            renderedTriangles.Inc(numVertices / 3);
             break;
 
         case DrawMode::TriangleStripAdjacency:
-            //???
+            if (numVertices >= 3)
+                renderedTriangles.Inc(numVertices - 2);
             break;
 
         default:
+            if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+            {
+                auto numPatchVertices = static_cast<unsigned int>(drawMode) - static_cast<unsigned int>(DrawMode::Patches1) + 1;
+                renderedPatches.Inc(numVertices / numPatchVertices);
+            }
             break;
     }
 }
@@ -124,11 +132,12 @@ void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType num
             break;
 
         case DrawMode::LinesAdjacency:
-            //???
+            renderedPoints.Inc((numVertices / 2) * numInstances);
             break;
 
         case DrawMode::LineStripAdjacency:
-            //???
+            if (numVertices >= 2)
+                renderedPoints.Inc((numVertices - 1) * numInstances);
             break;
 
         case DrawMode::Triangles:
@@ -142,14 +151,20 @@ void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType num
             break;
 
         case DrawMode::TrianglesAdjacency:
-            //???
+            renderedTriangles.Inc((numVertices / 3) * numInstances);
             break;
 
         case DrawMode::TriangleStripAdjacency:
-            //???
+            if (numVertices >= 3)
+                renderedTriangles.Inc((numVertices - 2) * numInstances);
             break;
 
         default:
+            if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+            {
+                auto numPatchVertices = static_cast<unsigned int>(drawMode) - static_cast<unsigned int>(DrawMode::Patches1) + 1;
+                renderedPatches.Inc((numVertices / numPatchVertices) * numInstances);
+            }
             break;
     }
 }

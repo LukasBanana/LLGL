@@ -97,6 +97,7 @@ class LLGL_EXPORT RenderingProfiler
         Counter renderedPoints;
         Counter renderedLines;
         Counter renderedTriangles;
+        Counter renderedPatches;
 
 };
 
