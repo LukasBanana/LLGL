@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 
+
 int main()
 {
     try
@@ -25,7 +26,7 @@ int main()
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
 
         // Set window title
-        context ->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
+        context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
 
         // Create vertex buffer
         LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer();
@@ -124,7 +125,7 @@ int main()
         {
             pipelineDesc.shaderProgram = shaderProgram;
         }
-        LLGL::GraphicsPipeline* pipeline = renderer ->CreateGraphicsPipeline(pipelineDesc);
+        LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Enter main loop
         while (context->GetWindow().ProcessEvents())
