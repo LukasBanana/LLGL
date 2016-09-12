@@ -57,15 +57,19 @@ int main()
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("TEXCOORD", LLGL::DataType::Float, 2);
         vertexFormat.AddAttribute("POSITION", LLGL::DataType::Float, 2);
+        vertexFormat.AddAttribute("COLOR", LLGL::DataType::Float, 3);
 
-        Gs::Vector2f vertices[] =
+        struct Vertex
         {
-            { 0, 0 }, { 110, 100 },
-            { 0, 0 }, { 200, 100 },
-            { 0, 0 }, { 200, 200 },
-            { 0, 0 }, { 100, 200 },
+            Gs::Vector2f    position;
+            LLGL::ColorRGBf color;
+        }
+        vertices[] =
+        {
+            { {  0,  1 }, { 1, 0, 0 } },
+            { {  1, -1 }, { 0, 1, 0 } },
+            { { -1, -1 }, { 0, 0, 1 } },
         };
 
         auto vertexBuffer = renderer->CreateVertexBuffer();
@@ -134,7 +138,12 @@ int main()
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
+            context->BindVertexBuffer(*vertexBuffer);
+            context->BindGraphicsPipeline(*pipeline);
+
+            context->Draw(3, 0);
 
 			context->Present();
         }

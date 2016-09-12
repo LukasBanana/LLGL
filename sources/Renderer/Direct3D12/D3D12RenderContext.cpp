@@ -197,7 +197,8 @@ void D3D12RenderContext::UnbindRenderTarget()
 
 void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    //todo
+    auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
 }
 
 void D3D12RenderContext::BindComputePipeline(ComputePipeline& computePipeline)
@@ -226,42 +227,42 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_)->DrawInstanced(numVertices, 1, firstVertex, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawInstanced(numVertices, 1, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_)->DrawInstanced(numVertices, numInstances, firstVertex, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_)->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
@@ -330,7 +331,10 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
 
     /* Create command allocators */
     for (UINT i = 0; i < numFrames_; ++i)
-        cmdAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
+        commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
+
+    /* Create graphics command list */
+    gfxCommandList_ = renderSystem_.CreateDXGfxCommandList(commandAllocs_[0].Get());
 
     /* Create render targets */
     //todo...

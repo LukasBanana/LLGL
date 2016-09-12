@@ -148,7 +148,6 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
 
     /* Create graphics pipeline state and graphics command list */
     pipelineState_ = renderSystem.CreateDXGfxPipelineState(stateDesc);
-    commandList_ = renderSystem.CreateDXGfxCommandList(nullptr, pipelineState_.Get());
 }
 
 /*void D3D12GraphicsPipeline::Bind(D3D12StateManager& stateMngr)

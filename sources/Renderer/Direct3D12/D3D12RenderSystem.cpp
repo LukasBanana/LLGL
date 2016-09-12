@@ -466,18 +466,11 @@ ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator()
     return commandAlloc;
 }
 
-ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXGfxCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState)
+ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXGfxCommandList(ID3D12CommandAllocator* commandAlloc)
 {
     ComPtr<ID3D12GraphicsCommandList> commandList;
 
-    auto hr = device_->CreateCommandList(
-        0,
-        D3D12_COMMAND_LIST_TYPE_DIRECT,
-        (commandAlloc != nullptr ? commandAlloc : commandAlloc_.Get()),
-        pipelineState,
-        IID_PPV_ARGS(&commandList)
-    );
-
+    auto hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc, nullptr, IID_PPV_ARGS(&commandList));
     DXThrowIfFailed(hr, "failed to create D3D12 graphics command list");
 
     return commandList;

@@ -40,15 +40,9 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
             return pipelineState_.Get();
         }
 
-        inline ID3D12GraphicsCommandList* GetCommandList() const
-        {
-            return commandList_.Get();
-        }
-
     private:
 
-        ComPtr<ID3D12PipelineState>         pipelineState_;
-        ComPtr<ID3D12GraphicsCommandList>   commandList_;
+        ComPtr<ID3D12PipelineState> pipelineState_;
 
 };
 
