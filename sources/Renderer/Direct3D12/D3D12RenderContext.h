@@ -135,6 +135,8 @@ class D3D12RenderContext : public RenderContext
         
         void SetupSwapChainInterval(const VsyncDescriptor& desc);
 
+        void MoveToNextFrame();
+
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
         RenderContextDescriptor             desc_;
 
@@ -143,7 +145,7 @@ class D3D12RenderContext : public RenderContext
         ComPtr<IDXGISwapChain1>             swapChain_;
         UINT                                swapChainInterval_              = 0;
 
-        ComPtr<ID3D12DescriptorHeap>        descHeap_;
+        ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;
         ComPtr<ID3D12GraphicsCommandList>   gfxCommandList_;
 
         ComPtr<ID3D12CommandAllocator>      commandAllocs_[maxNumBuffers];
@@ -152,6 +154,10 @@ class D3D12RenderContext : public RenderContext
 
         UINT                                numFrames_                      = 0;
         UINT                                currentFrame_                   = 0;
+
+        FLOAT                               clearColor_[4]                  = { 1.0f, 1.0f, 1.0f, 1.0f };
+        FLOAT                               clearDepth_                     = 0.0f;
+        INT                                 clearStencil_                   = 0;
 
 };
 

@@ -9,6 +9,7 @@
 #include "D3D12RenderSystem.h"
 #include "D3D12Assert.h"
 #include "DXCore.h"
+#include "DXTypes.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
@@ -33,9 +34,14 @@ D3D12RenderContext::D3D12RenderContext(
 
 void D3D12RenderContext::Present()
 {
+    //auto presentResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_deviceResources->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    //gfxCommandList_->ResourceBarrier(1, &presentResourceBarrier);
+
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
     DXThrowIfFailed(hr, "failed to present D3D12 swap-chain");
+
+    MoveToNextFrame();
 }
 
 /* ----- Configuration ----- */
@@ -61,13 +67,13 @@ void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     if (desc_.vsync != vsyncDesc)
     {
         desc_.vsync = vsyncDesc;
-        //SetupVsyncInterval();
+        swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
     }
 }
 
 void D3D12RenderContext::SetViewports(const std::vector<Viewport>& viewports)
 {
-    //todo
+    gfxCommandList_->RSSetViewports(viewports.size(), reinterpret_cast<const D3D12_VIEWPORT*>(viewports.data()));
 }
 
 void D3D12RenderContext::SetScissors(const std::vector<Scissor>& scissors)
@@ -77,34 +83,50 @@ void D3D12RenderContext::SetScissors(const std::vector<Scissor>& scissors)
 
 void D3D12RenderContext::SetClearColor(const ColorRGBAf& color)
 {
-    //todo
+    clearColor_[0] = color.r;
+    clearColor_[1] = color.g;
+    clearColor_[2] = color.b;
+    clearColor_[3] = color.a;
 }
 
 void D3D12RenderContext::SetClearDepth(float depth)
 {
-    //todo
+    clearDepth_ = depth;
 }
 
 void D3D12RenderContext::SetClearStencil(int stencil)
 {
-    //todo
+    clearStencil_ = stencil;
 }
 
 void D3D12RenderContext::ClearBuffers(long flags)
 {
-    //todo
+    if ((flags & ClearBuffersFlags::Color) != 0)
+    {
+        gfxCommandList_->ClearRenderTargetView(
+            rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), clearColor_, 0, nullptr
+        );
+    }
+    
+    /*if ((flags & ClearBuffersFlags::Depth) != 0)
+    {
+        gfxCommandList_->ClearDepthStencilView(
+            rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), clearColor_, 0, nullptr
+        );
+    }*/
 }
 
 void D3D12RenderContext::SetDrawMode(const DrawMode drawMode)
 {
-    //todo
+    gfxCommandList_->IASetPrimitiveTopology(DXTypes::Map(drawMode));
 }
 
 /* ----- Hardware Buffers ------ */
 
 void D3D12RenderContext::BindVertexBuffer(VertexBuffer& vertexBuffer)
 {
-    //todo
+    auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, vertexBuffer);
+    gfxCommandList_->IASetVertexBuffers(0, 1, &(vertexBufferD3D.GetView()));
 }
 
 void D3D12RenderContext::UnbindVertexBuffer()
@@ -198,7 +220,7 @@ void D3D12RenderContext::UnbindRenderTarget()
 void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
+    gfxCommandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
 }
 
 void D3D12RenderContext::BindComputePipeline(ComputePipeline& computePipeline)
@@ -227,42 +249,42 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawInstanced(numVertices, 1, firstVertex, 0);
+    gfxCommandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
+    gfxCommandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
+    gfxCommandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawInstanced(numVertices, numInstances, firstVertex, 0);
+    gfxCommandList_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
+    gfxCommandList_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
+    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
+    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
-    LLGL_D3D_ASSERT(gfxCommandList_.Get())->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
@@ -314,7 +336,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     }
     swapChain_ = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
 
-    /* Create descriptor heap */
+    /* Create RTV descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
     InitMemory(descHeapDesc);
     {
@@ -322,8 +344,8 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     }
-    descHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
-    descHeap_->SetName(L"Render Target View Descriptor Heap");
+    rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
+    rtvDescHeap_->SetName(L"render target view descriptor heap");
 
     /* Update tracked fence values */
     for (UINT i = 0; i < numFrames_; ++i)
@@ -337,14 +359,28 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     gfxCommandList_ = renderSystem_.CreateDXGfxCommandList(commandAllocs_[0].Get());
 
     /* Create render targets */
-    //todo...
+    auto rtvDesc = rtvDescHeap_->GetCPUDescriptorHandleForHeapStart();
 
+    for (UINT i = 0; i < numFrames_; ++i)
+    {
+        /* Get render target resource from swap-chain buffer */
+        auto hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(&renderTargets_[i]));
+        DXThrowIfFailed(hr, "failed to get D3D12 render target view " + std::to_string(i) + "/" + std::to_string(numFrames_) + " from swap chain");
 
+        /* Create render target view (RTV) */
+        renderSystem_.GetDevice()->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDesc);
+    }
 }
 
 void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
 {
     swapChainInterval_ = (desc.enabled ? std::max(1u, std::min(desc.interval, 4u)) : 0);
+}
+
+void D3D12RenderContext::MoveToNextFrame()
+{
+    SyncGPU();
+    currentFrame_ = (currentFrame_ + 1) % numFrames_;
 }
 
 

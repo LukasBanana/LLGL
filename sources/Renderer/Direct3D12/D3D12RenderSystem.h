@@ -173,6 +173,16 @@ class D3D12RenderSystem : public RenderSystem
             return featureLevel_;
         }
 
+        inline ID3D12Device* GetDevice() const
+        {
+            return device_.Get();
+        }
+
+        inline ID3D12CommandQueue* GetCommandQueue() const
+        {
+            return commandQueue_.Get();
+        }
+
     private:
 
         void CreateFactory();
