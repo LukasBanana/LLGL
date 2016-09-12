@@ -82,9 +82,9 @@ static Key macOSKeyCodeMap[256] =
     DUMMY,//KEY(RControl            ), // 0x3e
     DUMMY,//KEY(Function            ), // 0x3f
     KEY(F17                 ), // 0x40
-    KEY(Decimal             ), // 0x41
+    KEY(KeypadDecimal       ), // 0x41
     DUMMY                    , // 0x42
-    KEY(Multiply            ), // 0x43
+    KEY(KeypadMultiply      ), // 0x43
     DUMMY                    , // 0x44
     KEY(Plus                ), // 0x45
     DUMMY                    , // 0x46
@@ -92,7 +92,7 @@ static Key macOSKeyCodeMap[256] =
     KEY(VolumeUp            ), // 0x48
     KEY(VolumeDown          ), // 0x49
     DUMMY,//KEY(Mute                ), // 0x4a
-    KEY(Divide              ), // 0x4b
+    KEY(KeypadDivide        ), // 0x4b
     KEY(Return              ), // 0x4c
     DUMMY                    , // 0x4d
     KEY(Minus               ), // 0x4e
