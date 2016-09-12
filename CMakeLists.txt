@@ -252,7 +252,11 @@ endif()
 # Test Projects
 ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
 ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
-ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
+
+if(WIN32)
+	ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
+endif()
+
 ADD_TEST_PROJECT(Test4_Compute ${FilesTest4})
 ADD_TEST_PROJECT(Tutorial01_HelloTriangle ${FilesTutorial01})
 ADD_TEST_PROJECT(Tutorial02_Tessellation ${FilesTutorial02})
