@@ -378,14 +378,14 @@ void GLRenderSystem::SetupTextureCube(Texture& texture, const TextureFormat form
     LLGL_ASSERT_CAP(hasCubeTextures);
 
     const std::array<AxisDirection, 6> cubeFaces
-    {
+    {{
         AxisDirection::XPos,
         AxisDirection::XNeg,
         AxisDirection::YPos,
         AxisDirection::YNeg,
         AxisDirection::ZPos,
         AxisDirection::ZNeg
-    };
+    }};
 
     /* Bind texture and set type */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -706,6 +706,8 @@ Shader* GLRenderSystem::CreateShader(const ShaderType type)
             break;
         case ShaderType::Compute:
             LLGL_ASSERT_CAP(hasComputeShaders);
+            break;
+        default:
             break;
     }
 

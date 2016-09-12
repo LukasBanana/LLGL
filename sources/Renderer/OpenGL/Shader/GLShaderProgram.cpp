@@ -208,9 +208,11 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
 std::vector<StorageBufferDescriptor> GLShaderProgram::QueryStorageBuffers() const
 {
     std::vector<StorageBufferDescriptor> descList;
-    GLenum properties[3] = { 0 };
 
+    #ifndef __APPLE__
+    
     /* Query number of shader storage blocks */
+    GLenum properties[3] = { 0 };
     properties[0] = GL_NUM_ACTIVE_VARIABLES;
     GLint numStorageBlocks = 0;
     glGetProgramResourceiv(id_, GL_SHADER_STORAGE_BLOCK, 0, 1, properties, 1, nullptr, &numStorageBlocks);
@@ -239,6 +241,8 @@ std::vector<StorageBufferDescriptor> GLShaderProgram::QueryStorageBuffers() cons
         /* Insert shader storage block into list */
         descList.push_back(desc);
     }
+    
+    #endif
 
     return descList;
 }
@@ -327,12 +331,16 @@ void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int b
 
 void GLShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
 {
+    #ifndef __APPLE__
     /* Query shader storage block index and bind it to the specified binding index */
     auto blockIndex = glGetProgramResourceIndex(id_, GL_SHADER_STORAGE_BLOCK, name.c_str());
     if (blockIndex != GL_INVALID_INDEX)
         glShaderStorageBlockBinding(id_, blockIndex, bindingIndex);
     else
         throw std::invalid_argument("failed to bind storage buffer, because storage block name is invalid");
+    #else
+    throw std::runtime_error("storage buffers not supported on this platform");
+    #endif
 }
 
 ShaderUniform* GLShaderProgram::LockShaderUniform()
