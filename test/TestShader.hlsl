@@ -7,7 +7,7 @@ cbuffer Settings : register(b0)
 	float4x4 wvpMatrix;
 };
 
-RWBuffer<float4> outputBuffer;
+//RWBuffer<float4> outputBuffer;
 
 struct VertexIn
 {
@@ -28,7 +28,7 @@ VertexOut VS(VertexIn inp)
 	outp.position = mul(wvpMatrix, float4(inp.position, 1));
 	outp.texCoord = inp.texCoord;
 	
-	outputBuffer[0] = outp.position;
+	//outputBuffer[0] = outp.position;
 	
 	return outp;
 }

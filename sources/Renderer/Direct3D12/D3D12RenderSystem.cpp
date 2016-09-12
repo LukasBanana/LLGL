@@ -28,8 +28,10 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateGPUSynchObjects();
     CreateRootSignature();
 
-    /* Create main command queue */
+    /* Create command queue, command allocator, and graphics command list */
     commandQueue_ = CreateDXCommandQueue();
+    commandAlloc_ = CreateDXCommandAllocator();
+    gfxCommandList_ = CreateDXGfxCommandList(commandAlloc_.Get());
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -396,7 +398,7 @@ void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(device_.Get(), rootSignature_.Get(), nullptr/*<--!!!*/, desc));
+    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(*this, rootSignature_.Get(), desc));
 }
 
 ComputePipeline* D3D12RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -456,12 +458,39 @@ ComPtr<ID3D12CommandQueue> D3D12RenderSystem::CreateDXCommandQueue()
 
 ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator()
 {
-    ComPtr<ID3D12CommandAllocator> cmdAlloc;
+    ComPtr<ID3D12CommandAllocator> commandAlloc;
 
-    auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAlloc));
+    auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAlloc));
     DXThrowIfFailed(hr, "failed to create D3D12 command allocator");
 
-    return cmdAlloc;
+    return commandAlloc;
+}
+
+ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXGfxCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState)
+{
+    ComPtr<ID3D12GraphicsCommandList> commandList;
+
+    auto hr = device_->CreateCommandList(
+        0,
+        D3D12_COMMAND_LIST_TYPE_DIRECT,
+        (commandAlloc != nullptr ? commandAlloc : commandAlloc_.Get()),
+        pipelineState,
+        IID_PPV_ARGS(&commandList)
+    );
+
+    DXThrowIfFailed(hr, "failed to create D3D12 graphics command list");
+
+    return commandList;
+}
+
+ComPtr<ID3D12PipelineState> D3D12RenderSystem::CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc)
+{
+    ComPtr<ID3D12PipelineState> pipelineState;
+
+    auto hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState));
+    DXThrowIfFailed(hr, "failed to create D3D12 graphics pipeline state");
+
+    return pipelineState;
 }
 
 ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc)

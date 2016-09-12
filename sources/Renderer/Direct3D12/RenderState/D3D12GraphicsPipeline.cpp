@@ -6,6 +6,7 @@
  */
 
 #include "D3D12GraphicsPipeline.h"
+#include "../D3D12RenderSystem.h"
 #include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
 #include "../DXCore.h"
@@ -51,11 +52,10 @@ static void Convert(D3D12_DEPTH_STENCILOP_DESC& to, const StencilFaceDescriptor&
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770370(v=vs.85).aspx
 D3D12GraphicsPipeline::D3D12GraphicsPipeline(
-    ID3D12Device* device, ID3D12RootSignature* rootSignature, ID3D12CommandAllocator* commandAlloc, const GraphicsPipelineDescriptor& desc)
+    D3D12RenderSystem& renderSystem, ID3D12RootSignature* rootSignature, const GraphicsPipelineDescriptor& desc)
 {
     /* Validate pointers */
     LLGL_ASSERT_PTR(rootSignature);
-    //LLGL_ASSERT_PTR(commandAlloc);
     LLGL_ASSERT_PTR(desc.shaderProgram);
 
     auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
@@ -146,13 +146,9 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     for (UINT i = 0; i < 8u; ++i)
         stateDesc.RTVFormats[i] = (i < stateDesc.NumRenderTargets ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_UNKNOWN);
 
-    /* Create D3D12 graphics pipeline sate */
-    auto hr = device->CreateGraphicsPipelineState(&stateDesc, IID_PPV_ARGS(&pipelineState_));
-    DXThrowIfFailed(hr, "failed to create D3D12 graphics pipeline state");
-
-    /* Create command list */
-    hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc, pipelineState_.Get(), IID_PPV_ARGS(&commandList_));
-    DXThrowIfFailed(hr, "failed to create D3D12 command list");
+    /* Create graphics pipeline state and graphics command list */
+    pipelineState_ = renderSystem.CreateDXGfxPipelineState(stateDesc);
+    commandList_ = renderSystem.CreateDXGfxCommandList(nullptr, pipelineState_.Get());
 }
 
 /*void D3D12GraphicsPipeline::Bind(D3D12StateManager& stateMngr)

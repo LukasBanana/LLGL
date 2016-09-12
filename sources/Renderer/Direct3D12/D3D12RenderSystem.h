@@ -158,6 +158,8 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
         ComPtr<ID3D12CommandQueue> CreateDXCommandQueue();
         ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator();
+        ComPtr<ID3D12GraphicsCommandList> CreateDXGfxCommandList(ID3D12CommandAllocator* commandAlloc = nullptr, ID3D12PipelineState* pipelineState = nullptr);
+        ComPtr<ID3D12PipelineState> CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
         ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
 
         void CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList);
@@ -186,6 +188,7 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<ID3D12Device>                        device_;
         ComPtr<ID3D12CommandQueue>                  commandQueue_;
         ComPtr<ID3D12RootSignature>                 rootSignature_;
+        ComPtr<ID3D12CommandAllocator>              commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>           gfxCommandList_; // current graphics command list from the current render context
 
         ComPtr<ID3D12Fence>                         fence_;
