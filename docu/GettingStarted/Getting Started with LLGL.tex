@@ -50,9 +50,39 @@
 \section*{Introduction}
 
 \LLGL (Low Level Graphics Library) is a thin abstraction layer for graphics APIs such as
-OpenGL, Direct3D, and Vulkan. The library is written entirely in C++11, so you'll
+OpenGL, Direct3D, and Vulkan. It is meant to abstract these rendering technologies to one uniform interface.
+The library is written entirely in C++11, so you'll
 need a modern C++ compiler, i.e. at least \textbf{VisualC++ 2013} for Windows,
 \textbf{g++ 4.8} for Linux, or \textbf{Clang 3.1} for MacOS.
+
+
+%----------------------------------------------------------------------------------------
+%	PREREQUISITES
+%----------------------------------------------------------------------------------------
+
+\section*{Prerequisites}
+
+To use this library you should be familiar with these subjects:
+\begin{itemize}
+	\item \textbf{Basic C++11 Programming} \\
+	Since the library is written in C++11, you should know something about \emph{smart pointers},
+	\emph{raw pointers}, and basic \emph{object-oriented programming} (OOP) in C++.
+	
+	\item \textbf{Basic Linear Algebra} \\
+	You should be familiar with at least \emph{Vectors} and \emph{Matrices}.
+	
+	\item \textbf{Fundamentals in Graphics Programming} \\
+	You should be familiar with the fundamentals of graphics programming, since this is only a low-level graphics library.
+	You should also be familiar with at least one of the major graphics APIs,
+	i.e. \emph{OpenGL}, \emph{Direct3D}, \emph{Vulkan}, \emph{Mantle}, or \emph{Metal},
+	because \LLGL does only little to no higher abstractions.
+	
+	\item \textbf{Shading Languages} \\
+	\LLGL forces you to always write your own shaders, so you should be familiar with
+	\href{https://www.opengl.org/documentation/glsl/}{GLSL},
+	\href{https://msdn.microsoft.com/de-de/library/windows/desktop/bb509561(v=vs.85).aspx}{HLSL},
+	or \href{https://developer.nvidia.com/cg-toolkit}{Cg}.
+\end{itemize}
 
 
 %----------------------------------------------------------------------------------------
@@ -390,7 +420,7 @@ Before we continue with the C++ code, we first take a look at the shader code:
 // GLSL shader version 1.30 (for OpenGL 3.1)
 #version 130
 
-// Vertex attributes (these names must match out vertex format attributes)
+// Vertex attributes (these names must match our vertex format attributes)
 in vec2 position;
 in vec3 color;
 
@@ -424,7 +454,7 @@ void main() {
 }
 \end{lstlisting}
 
-Now we are finally done with the setting up the shader. Next we need to create a graphics pipeline.
+Now we are finally done with setting up the shader. Next we need to create a graphics pipeline.
 This concept is derived from modern graphics APIs such as Direct3D 12 and Vulkan.
 The major pipeline state is stored inside this pipeline state object.
 For older graphics APIs (such as OpenGL) \LLGL will set the respective render states by its internal state manager,
