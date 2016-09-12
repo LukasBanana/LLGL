@@ -16,7 +16,10 @@
 #include "Texture/GLRenderTarget.h"
 #include "Texture/GLSampler.h"
 #include "RenderState/GLGraphicsPipeline.h"
+
+#ifndef __APPLE__
 #include <LLGL/Platform/NativeHandle.h>
+#endif
 
 
 namespace LLGL
@@ -32,10 +35,12 @@ GLRenderContext::GLRenderContext(
         desc_           ( desc                        ),
         contextHeight_  ( desc.videoMode.resolution.y )
 {
+    #ifndef __APPLE__
     /* Setup window for the render context */
     NativeContextHandle windowContext;
     GetNativeContextHandle(windowContext);
     SetWindow(window, desc.videoMode, &windowContext);
+    #endif
 
     /* Acquire state manager to efficiently change render states */
     AcquireStateManager(sharedRenderContext);
@@ -442,6 +447,7 @@ void GLRenderContext::DrawInstanced(unsigned int numVertices, unsigned int first
 
 void GLRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
+    #ifndef __APPLE__
     glDrawArraysInstancedBaseInstance(
         renderState_.drawMode,
         static_cast<GLint>(firstVertex),
@@ -449,6 +455,7 @@ void GLRenderContext::DrawInstanced(unsigned int numVertices, unsigned int first
         static_cast<GLsizei>(numInstances),
         instanceOffset
     );
+    #endif
 }
 
 void GLRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
@@ -476,6 +483,7 @@ void GLRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned in
 
 void GLRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
+    #ifndef __APPLE__
     glDrawElementsInstancedBaseVertexBaseInstance(
         renderState_.drawMode,
         static_cast<GLsizei>(numVertices),
@@ -485,13 +493,16 @@ void GLRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned in
         vertexOffset,
         instanceOffset
     );
+    #endif
 }
 
 /* ----- Compute ----- */
 
 void GLRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
 {
+    #ifndef __APPLE__
     glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
+    #endif
 }
 
 /* ----- Misc ----- */

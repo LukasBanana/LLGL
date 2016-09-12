@@ -404,12 +404,15 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
 
 void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled)
 {
+    #ifndef __APPLE__
     if (glBlendFuncSeparatei != nullptr && glColorMaski != nullptr)
+    #endif
     {
         glColorMaski(drawBuffer, state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
         if (blendEnabled)
             glBlendFuncSeparatei(drawBuffer, state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
     }
+    #ifndef __APPLE__
     else
     {
         glDrawBuffer(drawBuffer);
@@ -417,6 +420,7 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
         if (blendEnabled)
             glBlendFuncSeparate(state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
     }
+    #endif
 }
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
