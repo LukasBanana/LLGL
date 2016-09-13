@@ -57,9 +57,9 @@ enum class OpenGLVersion
 //! Swap chain mode enumeration.
 enum class SwapChainMode
 {
-    SingleBuffering = 1,    //!< Single buffering. This is almost no longer used.
-    DoubleBuffering,        //!< Double buffering. This is the default for most renderers.
-    TripleBuffering,        //!< Triple buffering. Triple buffering can only be used for Direct3D renderers.
+    SingleBuffering = 1, //!< Single buffering. This is almost no longer used.
+    DoubleBuffering = 2, //!< Double buffering. This is the default for most renderers.
+    TripleBuffering = 3, //!< Triple buffering. Triple buffering can only be used for Direct3D renderers.
 };
 
 

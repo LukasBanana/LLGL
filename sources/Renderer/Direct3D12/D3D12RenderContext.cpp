@@ -35,6 +35,8 @@ D3D12RenderContext::D3D12RenderContext(
 
 void D3D12RenderContext::Present()
 {
+    ExecuteGfxCommandList();
+
     /* Indicate that the render target will now be used to present when the command list is done executing */
     auto presentResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTargets_[currentFrame_].Get(),
@@ -52,10 +54,10 @@ void D3D12RenderContext::Present()
     MoveToNextFrame();
 
     /* Reset command allocator */
-    hr = commandAllocs_[0]->Reset();
+    hr = commandAlloc_->Reset();
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
-    hr = gfxCommandList_->Reset(commandAllocs_[0].Get(), nullptr);
+    hr = gfxCommandList_->Reset(commandAlloc_.Get(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 }
 
@@ -116,19 +118,29 @@ void D3D12RenderContext::SetClearStencil(int stencil)
 
 void D3D12RenderContext::ClearBuffers(long flags)
 {
+    /* Get RTV descriptor handle for current frame */
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
+        rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), currentFrame_, rtvDescSize_
+    );
+
+    /* Clear color buffer */
     if ((flags & ClearBuffersFlags::Color) != 0)
-    {
-        gfxCommandList_->ClearRenderTargetView(
-            rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), clearColor_, 0, nullptr
-        );
-    }
+        gfxCommandList_->ClearRenderTargetView(rtvHandle, clearColor_, 0, nullptr);
     
-    /*if ((flags & ClearBuffersFlags::Depth) != 0)
+    /* Clear depth-stencil buffer */
+    int rtvClearFlags = 0;
+
+    if ((flags & ClearBuffersFlags::Depth) != 0)
+        rtvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
+    if ((flags & ClearBuffersFlags::Stencil) != 0)
+        rtvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
+        
+    if (rtvClearFlags)
     {
         gfxCommandList_->ClearDepthStencilView(
-            rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), clearColor_, 0, nullptr
+            rtvHandle, static_cast<D3D12_CLEAR_FLAGS>(rtvClearFlags), clearDepth_, clearStencil_, 0, nullptr
         );
-    }*/
+    }
 }
 
 void D3D12RenderContext::SetDrawMode(const DrawMode drawMode)
@@ -265,7 +277,6 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
     gfxCommandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
-    ExecuteGfxCommandList();
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
@@ -363,19 +374,10 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
     rtvDescHeap_->SetName(L"render target view descriptor heap");
 
-    /* Update tracked fence values */
-    for (UINT i = 0; i < numFrames_; ++i)
-        fenceValues_[i] = fenceValues_[currentFrame_];
-
-    /* Create command allocators */
-    for (UINT i = 0; i < numFrames_; ++i)
-        commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
-
-    /* Create graphics command list */
-    gfxCommandList_ = renderSystem_.CreateDXGfxCommandList(commandAllocs_[0].Get());
+    rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     /* Create render targets */
-    auto rtvDesc = rtvDescHeap_->GetCPUDescriptorHandleForHeapStart();
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDesc(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
 
     for (UINT i = 0; i < numFrames_; ++i)
     {
@@ -385,10 +387,21 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
 
         /* Create render target view (RTV) */
         renderSystem_.GetDevice()->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDesc);
+
+        rtvDesc.Offset(1, rtvDescSize_);
     }
 
+    /* Update tracked fence values */
+    for (UINT i = 0; i < numFrames_; ++i)
+        fenceValues_[i] = fenceValues_[currentFrame_];
+
+    /* Create command allocator and graphics command list */
+    commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
+    gfxCommandList_ = renderSystem_.CreateDXGfxCommandList(commandAlloc_.Get());
+
     /* Set initial render target view */
-    gfxCommandList_->OMSetRenderTargets(1, &rtvDesc, FALSE, nullptr);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescInit(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
+    gfxCommandList_->OMSetRenderTargets(1, &rtvDescInit, FALSE, nullptr);
 }
 
 void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)

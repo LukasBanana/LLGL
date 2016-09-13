@@ -21,9 +21,17 @@ namespace LLGL
 
 D3D12RenderSystem::D3D12RenderSystem()
 {
+    #ifdef LLGL_DEBUG
+    {
+        ComPtr<ID3D12Debug> debugController;
+        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+            debugController->EnableDebugLayer();
+    }
+    #endif
+
     /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
     CreateFactory();
-    QueryVideoAdapters();
+    //QueryVideoAdapters();
     CreateDevice();
     CreateGPUSynchObjects();
     CreateRootSignature();
@@ -648,7 +656,7 @@ bool D3D12RenderSystem::CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const s
     {
         /* Try to create D3D12 device with current feature level */
         hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(&device_));
-        if (!FAILED(hr))
+        if (SUCCEEDED(hr))
         {
             /* Store final feature level */
             featureLevel_ = level;

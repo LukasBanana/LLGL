@@ -147,18 +147,20 @@ class D3D12RenderContext : public RenderContext
         UINT                                swapChainInterval_              = 0;
 
         ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;
-        ComPtr<ID3D12GraphicsCommandList>   gfxCommandList_;
+        UINT                                rtvDescSize_                    = 0;
 
-        ComPtr<ID3D12CommandAllocator>      commandAllocs_[maxNumBuffers];
         ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];
         UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
+
+        ComPtr<ID3D12CommandAllocator>      commandAlloc_;
+        ComPtr<ID3D12GraphicsCommandList>   gfxCommandList_;
 
         UINT                                numFrames_                      = 0;
         UINT                                currentFrame_                   = 0;
 
         FLOAT                               clearColor_[4]                  = { 1.0f, 1.0f, 1.0f, 1.0f };
         FLOAT                               clearDepth_                     = 0.0f;
-        INT                                 clearStencil_                   = 0;
+        UINT8                               clearStencil_                   = 0;
 
 };
 

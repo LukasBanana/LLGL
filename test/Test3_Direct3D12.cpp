@@ -132,7 +132,8 @@ int main()
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
-
+        
+        context->SetClearColor({ 0.2f, 0.2f, 0.7f });
 
 
         // Main loop
