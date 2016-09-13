@@ -183,6 +183,11 @@ class D3D12RenderSystem : public RenderSystem
             return commandQueue_.Get();
         }
 
+        inline ID3D12RootSignature* GetRootSignature() const
+        {
+            return rootSignature_.Get();
+        }
+
     private:
 
         void CreateFactory();

@@ -136,6 +136,10 @@ class D3D12RenderContext : public RenderContext
         void SetupSwapChainInterval(const VsyncDescriptor& desc);
 
         void MoveToNextFrame();
+        
+        //! Sets the current back buffer as render target view.
+        void SetBackBufferRTV();
+
         void ExecuteGfxCommandList();
 
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
@@ -143,7 +147,7 @@ class D3D12RenderContext : public RenderContext
 
         //std::shared_ptr<D3D12StateManager>  stateMngr_;
 
-        ComPtr<IDXGISwapChain1>             swapChain_;
+        ComPtr<IDXGISwapChain3>             swapChain_;
         UINT                                swapChainInterval_              = 0;
 
         ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;

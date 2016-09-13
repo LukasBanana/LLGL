@@ -44,6 +44,7 @@ D3D12RenderSystem::D3D12RenderSystem()
 
 D3D12RenderSystem::~D3D12RenderSystem()
 {
+    CloseHandle(fenceEvent_);
 }
 
 std::map<RendererInfo, std::string> D3D12RenderSystem::QueryRendererInfo() const
@@ -200,6 +201,7 @@ void D3D12RenderSystem::SetupVertexBuffer(
     /* Create hardware buffer resource */
     auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, vertexBuffer);
     vertexBufferD3D.hwBuffer.CreateResource(device_.Get(), dataSize);
+    vertexBufferD3D.PutView(vertexFormat.GetFormatSize());
 
     /* Upload vertex buffer data */
     ComPtr<ID3D12Resource> bufferUpload;
@@ -680,6 +682,7 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
 //TODO -> this must be configurable!!!
 void D3D12RenderSystem::CreateRootSignature()
 {
+    #if 0
     /* Setup descritpor structures for root signature */
     CD3DX12_DESCRIPTOR_RANGE signatureRange[2];
     CD3DX12_ROOT_PARAMETER signatureParam;
@@ -690,15 +693,17 @@ void D3D12RenderSystem::CreateRootSignature()
 
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
     (
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT/* |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS*/
     );
+    #endif
 
     CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
-    signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
+    //signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
+    signatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
     /* Create serialized root signature */
     HRESULT             hr          = 0;

@@ -9,6 +9,7 @@
 #define __LLGL_COM_PTR_H__
 
 
+#include <Windows.h>
 #include <algorithm>
 
 
@@ -142,6 +143,12 @@ class ComPtr
             return &ptr_;
         }
 
+        T** ReleaseAndGetAddressOf() throw()
+        {
+            Release();
+            return &ptr_;
+        }
+
         //! Detaches the internal pointer from this smart COM pointer and returns this internal pointer.
         T* Detach() throw()
         {
@@ -163,6 +170,12 @@ class ComPtr
         void Swap(ComPtr& rhs) throw()
         {
             std::swap(ptr_, rhs.ptr_);
+        }
+
+        template <typename U>
+        HRESULT As(ComPtr<U>& ptr) const throw()
+        {
+            return ptr_->QueryInterface(__uuidof(U), reinterpret_cast<void**>(ptr.ReleaseAndGetAddressOf()));
         }
 
     private:

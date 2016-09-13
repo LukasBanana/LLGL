@@ -38,13 +38,13 @@ void D3D12RenderContext::Present()
     ExecuteGfxCommandList();
 
     /* Indicate that the render target will now be used to present when the command list is done executing */
-    auto presentResourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTargets_[currentFrame_].Get(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PRESENT
     );
 
-    gfxCommandList_->ResourceBarrier(1, &presentResourceBarrier);
+    gfxCommandList_->ResourceBarrier(1, &resourceBarrier);
 
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
@@ -59,6 +59,9 @@ void D3D12RenderContext::Present()
 
     hr = gfxCommandList_->Reset(commandAlloc_.Get(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+
+    /* Set current back buffer as new render target view */
+    SetBackBufferRTV();
 }
 
 /* ----- Configuration ----- */
@@ -90,12 +93,28 @@ void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 
 void D3D12RenderContext::SetViewports(const std::vector<Viewport>& viewports)
 {
-    gfxCommandList_->RSSetViewports(viewports.size(), reinterpret_cast<const D3D12_VIEWPORT*>(viewports.data()));
+    gfxCommandList_->RSSetViewports(
+        static_cast<UINT>(viewports.size()),
+        reinterpret_cast<const D3D12_VIEWPORT*>(viewports.data())
+    );
 }
 
 void D3D12RenderContext::SetScissors(const std::vector<Scissor>& scissors)
 {
-    //todo
+    std::vector<D3D12_RECT> rects(scissors.size());
+
+    for (std::size_t i = 0; i < scissors.size(); ++i)
+    {
+        rects[i].left   = scissors[i].x;
+        rects[i].top    = scissors[i].y;
+        rects[i].right  = scissors[i].x + scissors[i].width;
+        rects[i].bottom = scissors[i].y + scissors[i].height;
+    }
+
+    gfxCommandList_->RSSetScissorRects(
+        static_cast<UINT>(rects.size()),
+        rects.data()
+    );
 }
 
 void D3D12RenderContext::SetClearColor(const ColorRGBAf& color)
@@ -248,6 +267,8 @@ void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline
 {
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
     gfxCommandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
+
+    gfxCommandList_->SetGraphicsRootSignature(renderSystem_.GetRootSignature());
 }
 
 void D3D12RenderContext::BindComputePipeline(ComputePipeline& computePipeline)
@@ -361,7 +382,9 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         swapChainDesc.Scaling               = DXGI_SCALING_NONE;
         swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
     }
-    swapChain_ = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
+    auto swapChain = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
+
+    swapChain.As(swapChain_);
 
     /* Create RTV descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
@@ -412,7 +435,15 @@ void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
 void D3D12RenderContext::MoveToNextFrame()
 {
     SyncGPU();
-    currentFrame_ = (currentFrame_ + 1) % numFrames_;
+    //currentFrame_ = (currentFrame_ + 1) % numFrames_;
+    currentFrame_ = swapChain_->GetCurrentBackBufferIndex();
+}
+
+void D3D12RenderContext::SetBackBufferRTV()
+{
+    /* Set current back buffer as RTV */
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDesc(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), currentFrame_, rtvDescSize_);
+    gfxCommandList_->OMSetRenderTargets(1, &rtvDesc, FALSE, nullptr);
 }
 
 void D3D12RenderContext::ExecuteGfxCommandList()

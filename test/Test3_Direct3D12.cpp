@@ -132,9 +132,8 @@ int main()
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
-        
-        context->SetClearColor({ 0.2f, 0.2f, 0.7f });
-
+        //context->SetClearColor({ 0.2f, 0.2f, 0.7f });
+        context->SetClearColor({ 0, 0, 0 });
 
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
@@ -143,6 +142,9 @@ int main()
 
             context->BindVertexBuffer(*vertexBuffer);
             context->BindGraphicsPipeline(*pipeline);
+
+            context->SetViewports({ LLGL::Viewport(0, 0, 800, 600) });
+            context->SetScissors({ LLGL::Scissor(0, 0, 800, 600) });
 
             context->SetDrawMode(LLGL::DrawMode::Triangles);
             context->Draw(3, 0);
