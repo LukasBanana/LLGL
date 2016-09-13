@@ -45,7 +45,8 @@ VertexOut VS(VertexIn inp, uint id : SV_VertexID)
 	}
 	
 	outp.position = float4(p, 0, 1);
-	outp.color = float4(c, 1);
+	//outp.color = float4(c, 1);
+	outp.color = float4(inp.color, 1);
 	
 	#endif
 	

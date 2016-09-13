@@ -183,11 +183,6 @@ class D3D12RenderSystem : public RenderSystem
             return commandQueue_.Get();
         }
 
-        inline ID3D12RootSignature* GetRootSignature() const
-        {
-            return rootSignature_.Get();
-        }
-
     private:
 
         void CreateFactory();
@@ -195,7 +190,6 @@ class D3D12RenderSystem : public RenderSystem
         void CreateDevice();
         bool CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
         void CreateGPUSynchObjects();
-        void CreateRootSignature();
 
         /* ----- Common objects ----- */
 
@@ -206,8 +200,6 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<ID3D12CommandQueue>                  commandQueue_;
         ComPtr<ID3D12CommandAllocator>              commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>           gfxCommandList_; // graphics command list to upload data to the GPU
-
-        ComPtr<ID3D12RootSignature>                 rootSignature_;
 
         ComPtr<ID3D12Fence>                         fence_;
         HANDLE                                      fenceEvent_     = 0;

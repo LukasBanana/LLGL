@@ -266,9 +266,9 @@ void D3D12RenderContext::UnbindRenderTarget()
 void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
-    gfxCommandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
 
-    gfxCommandList_->SetGraphicsRootSignature(renderSystem_.GetRootSignature());
+    gfxCommandList_->SetGraphicsRootSignature(graphicsPipelineD3D.GetRootSignature());
+    gfxCommandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
 }
 
 void D3D12RenderContext::BindComputePipeline(ComputePipeline& computePipeline)

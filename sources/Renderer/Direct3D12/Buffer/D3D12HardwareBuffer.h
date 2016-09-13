@@ -31,7 +31,7 @@ class D3D12HardwareBuffer
 
         void UpdateSubResource(
             ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
-            const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadStates
+            const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState
         );
 
         //! Returns the ID3D12Resource object.

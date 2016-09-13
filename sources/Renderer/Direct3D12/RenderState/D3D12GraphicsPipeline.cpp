@@ -9,6 +9,7 @@
 #include "../D3D12RenderSystem.h"
 #include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
+#include "../D3DX12/d3dx12.h"
 #include "../DXCore.h"
 #include "../DXTypes.h"
 #include "../../CheckedCast.h"
@@ -19,6 +20,76 @@
 namespace LLGL
 {
 
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770370(v=vs.85).aspx
+D3D12GraphicsPipeline::D3D12GraphicsPipeline(
+    D3D12RenderSystem& renderSystem, const GraphicsPipelineDescriptor& desc)
+{
+    /* Validate pointers and get D3D shader program */
+    LLGL_ASSERT_PTR(desc.shaderProgram);
+
+    auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
+
+    /* Create root signature and graphics pipeline state  */
+    CreateRootSignature(renderSystem, *shaderProgramD3D, desc);
+    CreatePipelineState(renderSystem, *shaderProgramD3D, desc);
+}
+
+/*void D3D12GraphicsPipeline::Bind(D3D12StateManager& stateMngr)
+{
+}*/
+
+void D3D12GraphicsPipeline::CreateRootSignature(
+    D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc)
+{
+    #if 0
+
+    /* Setup descritpor structures for root signature */
+    CD3DX12_DESCRIPTOR_RANGE signatureRange[2];
+    CD3DX12_ROOT_PARAMETER signatureParam;
+
+    signatureRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+    signatureRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+    signatureParam.InitAsDescriptorTable(1, signatureRange, D3D12_SHADER_VISIBILITY_ALL);
+
+    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
+    (
+        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT/* |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS*/
+    );
+
+    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
+    signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
+
+    #else
+
+    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
+    signatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+    #endif
+
+    /* Create serialized root signature */
+    HRESULT             hr          = 0;
+    ComPtr<ID3DBlob>    signature;
+    ComPtr<ID3DBlob>    error;
+
+    hr = D3D12SerializeRootSignature(&signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+    
+    if (FAILED(hr) && error)
+    {
+        auto errorStr = DXGetBlobString(error.Get());
+        throw std::runtime_error("failed to serialize D3D12 root signature: " + errorStr);
+    }
+
+    DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
+
+    /* Create actual root signature */
+    hr = renderSystem.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature_));
+    DXThrowIfFailed(hr, "failed to create D3D12 root signature");
+}
 
 static D3D12_CONSERVATIVE_RASTERIZATION_MODE GetConservativeRaster(bool enabled)
 {
@@ -50,28 +121,21 @@ static void Convert(D3D12_DEPTH_STENCILOP_DESC& to, const StencilFaceDescriptor&
     to.StencilFunc          = DXTypes::Map(from.compareOp);
 }
 
-// see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770370(v=vs.85).aspx
-D3D12GraphicsPipeline::D3D12GraphicsPipeline(
-    D3D12RenderSystem& renderSystem, ID3D12RootSignature* rootSignature, const GraphicsPipelineDescriptor& desc)
+void D3D12GraphicsPipeline::CreatePipelineState(
+    D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc)
 {
-    /* Validate pointers */
-    LLGL_ASSERT_PTR(rootSignature);
-    LLGL_ASSERT_PTR(desc.shaderProgram);
-
-    auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
-
     /* Setup D3D12 graphics pipeline descriptor */
     D3D12_GRAPHICS_PIPELINE_STATE_DESC stateDesc;
     InitMemory(stateDesc);
 
-    stateDesc.pRootSignature = rootSignature;
+    stateDesc.pRootSignature = rootSignature_.Get();
 
     /* Get shader byte codes */
-    stateDesc.VS = GetShaderByteCode(shaderProgramD3D->GetVS());
-    stateDesc.PS = GetShaderByteCode(shaderProgramD3D->GetPS());
-    stateDesc.DS = GetShaderByteCode(shaderProgramD3D->GetDS());
-    stateDesc.HS = GetShaderByteCode(shaderProgramD3D->GetHS());
-    stateDesc.GS = GetShaderByteCode(shaderProgramD3D->GetGS());
+    stateDesc.VS = GetShaderByteCode(shaderProgram.GetVS());
+    stateDesc.PS = GetShaderByteCode(shaderProgram.GetPS());
+    stateDesc.DS = GetShaderByteCode(shaderProgram.GetDS());
+    stateDesc.HS = GetShaderByteCode(shaderProgram.GetHS());
+    stateDesc.GS = GetShaderByteCode(shaderProgram.GetGS());
 
     /* Convert blend state */
     stateDesc.BlendState.AlphaToCoverageEnable  = FALSE;
@@ -136,7 +200,7 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     Convert(stateDesc.DepthStencilState.BackFace, desc.stencil.back);
 
     /* Convert other states */
-    stateDesc.InputLayout           = shaderProgramD3D->GetInputLayoutDesc();
+    stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
     stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     stateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     stateDesc.SampleMask            = UINT_MAX;
@@ -149,10 +213,6 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     /* Create graphics pipeline state and graphics command list */
     pipelineState_ = renderSystem.CreateDXGfxPipelineState(stateDesc);
 }
-
-/*void D3D12GraphicsPipeline::Bind(D3D12StateManager& stateMngr)
-{
-}*/
 
 
 } // /namespace LLGL

@@ -132,8 +132,8 @@ int main()
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
-        //context->SetClearColor({ 0.2f, 0.2f, 0.7f });
-        context->SetClearColor({ 0, 0, 0 });
+        context->SetClearColor({ 0.2f, 0.2f, 0.7f });
+        //context->SetClearColor({ 0, 0, 0 });
 
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))

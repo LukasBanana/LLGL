@@ -34,7 +34,6 @@ D3D12RenderSystem::D3D12RenderSystem()
     //QueryVideoAdapters();
     CreateDevice();
     CreateGPUSynchObjects();
-    CreateRootSignature();
 
     /* Create command queue, command allocator, and graphics command list */
     commandQueue_ = CreateDXCommandQueue();
@@ -198,8 +197,9 @@ void D3D12RenderSystem::Release(StorageBuffer& storageBuffer)
 void D3D12RenderSystem::SetupVertexBuffer(
     VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
 {
-    /* Create hardware buffer resource */
     auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, vertexBuffer);
+
+    /* Create hardware buffer resource */
     vertexBufferD3D.hwBuffer.CreateResource(device_.Get(), dataSize);
     vertexBufferD3D.PutView(vertexFormat.GetFormatSize());
 
@@ -408,7 +408,7 @@ void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* D3D12RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(*this, rootSignature_.Get(), desc));
+    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D12GraphicsPipeline>(*this, desc));
 }
 
 ComputePipeline* D3D12RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -677,52 +677,6 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
     
     /* Create Win32 event */
     fenceEvent_ = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-}
-
-//TODO -> this must be configurable!!!
-void D3D12RenderSystem::CreateRootSignature()
-{
-    #if 0
-    /* Setup descritpor structures for root signature */
-    CD3DX12_DESCRIPTOR_RANGE signatureRange[2];
-    CD3DX12_ROOT_PARAMETER signatureParam;
-
-    signatureRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-    signatureRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-    signatureParam.InitAsDescriptorTable(1, signatureRange, D3D12_SHADER_VISIBILITY_ALL);
-
-    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
-    (
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT/* |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS*/
-    );
-    #endif
-
-    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
-    //signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
-    signatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-    /* Create serialized root signature */
-    HRESULT             hr          = 0;
-    ComPtr<ID3DBlob>    signature;
-    ComPtr<ID3DBlob>    error;
-
-    hr = D3D12SerializeRootSignature(&signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
-    
-    if (FAILED(hr) && error)
-    {
-        auto errorStr = DXGetBlobString(error.Get());
-        throw std::runtime_error("failed to serialize D3D12 root signature: " + errorStr);
-    }
-
-    DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
-
-    /* Create actual root signature */
-    hr = device_->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature_));
-    DXThrowIfFailed(hr, "failed to create D3D12 root signature");
 }
 
 

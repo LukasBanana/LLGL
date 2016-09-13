@@ -38,7 +38,7 @@ void D3D12HardwareBuffer::CreateResource(ID3D12Device* device, UINT bufferSize)
 
 void D3D12HardwareBuffer::UpdateSubResource(
     ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
-    const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadStates)
+    const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState)
 {
     if (offset + bufferSize > bufferSize_)
         throw std::out_of_range(LLGL_ASSERT_INFO("'bufferSize' and/or 'offset' are out of range"));
@@ -72,7 +72,7 @@ void D3D12HardwareBuffer::UpdateSubResource(
     CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         resource_.Get(),
         D3D12_RESOURCE_STATE_COPY_DEST,
-        uploadStates
+        uploadState
     );
 
     gfxCommandList->ResourceBarrier(1, &resourceBarrier);
