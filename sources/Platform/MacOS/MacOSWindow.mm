@@ -235,6 +235,10 @@ void MacOSWindow::ProcessSystemEvents()
                 ProcessMouseKeyEvent(Key::RButton, false);
                 break;
                 
+            case NSScrollWheel:
+                ProcessMouseWheelEvent(event);
+                break;
+                
             default:
                 break;
         }
@@ -288,6 +292,12 @@ void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
     NSPoint pos = [event locationInWindow];
     
     PostLocalMotion({ static_cast<int>(pos.x), desc_.size.y - static_cast<int>(pos.y) });
+}
+
+void MacOSWindow::ProcessMouseWheelEvent(NSEvent* event)
+{
+    CGFloat motion = [event deltaY];
+    PostWheelMotion(static_cast<int>(motion * 5.0f));
 }
 
 

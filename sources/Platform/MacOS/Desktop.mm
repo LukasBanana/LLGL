@@ -5,6 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
+#import <Cocoa/Cocoa.h>
+
 #include <LLGL/Desktop.h>
 
 
@@ -17,16 +19,25 @@ namespace Desktop
 
 LLGL_EXPORT Size GetResolution()
 {
-    return { 1920, 1080 };//!!!
+    /* Get pixel size from main display */
+    CGDirectDisplayID display = CGMainDisplayID();
+    return Size(
+        static_cast<int>(CGDisplayPixelsWide(display)),
+        static_cast<int>(CGDisplayPixelsHigh(display))
+    );
 }
 
 LLGL_EXPORT int GetColorDepth()
 {
-    return 24;//!!!
+    return 24;
 }
 
 LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode)
 {
+    /*if (videoMode.fullscreen)
+        [[NSApplication sharedApplication] setPresentationOptions:NSFullScreenWindowMask];
+    else
+        ;*/
     return false;
 }
 

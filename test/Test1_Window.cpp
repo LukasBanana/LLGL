@@ -41,6 +41,14 @@ int main()
             window->SetTitle(
                 windowDesc.title + L" ( " + std::wstring(renderer->GetName().begin(), renderer->GetName().end()) + L" )"
             );
+            
+            /*#ifdef __APPLE__
+            LLGL::VideoModeDescriptor videoMode;
+            {
+                videoMode.fullscreen = true;
+            }
+            LLGL::Desktop::SetVideoMode(videoMode);
+            #endif*/
         }
         catch (const std::exception& e)
         {
@@ -74,10 +82,23 @@ int main()
                 window->SetTitle(L"MButton Down");
             
             #ifdef __APPLE__
+            
             auto mousePos = input->GetMousePosition();
             std::wstringstream s;
             s << "X = " << mousePos.x << ", Y = " << mousePos.y;
+            //window->SetTitle(s.str());
+            
+            auto desktopSize = LLGL::Desktop::GetResolution();
+            s << ", Screen Width = " << desktopSize.x << ", Screen Height = " << desktopSize.y;
             window->SetTitle(s.str());
+            
+            /*auto wheel = input->GetWheelMotion();
+            if (wheel != 0)
+            {
+                pos.y += wheel;
+                window->SetPosition(pos);
+            }*/
+            
             #endif
 
             #ifndef __linux__
