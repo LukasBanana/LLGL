@@ -196,15 +196,16 @@ class D3D12RenderSystem : public RenderSystem
 
         ComPtr<IDXGIFactory4>                       factory_;
         ComPtr<ID3D12Device>                        device_;
+        D3D_FEATURE_LEVEL                           featureLevel_   = D3D_FEATURE_LEVEL_9_1;
+
         ComPtr<ID3D12CommandQueue>                  commandQueue_;
-        ComPtr<ID3D12RootSignature>                 rootSignature_;
         ComPtr<ID3D12CommandAllocator>              commandAlloc_;
-        ComPtr<ID3D12GraphicsCommandList>           gfxCommandList_; // current graphics command list from the current render context
+        ComPtr<ID3D12GraphicsCommandList>           gfxCommandList_; // graphics command list to upload data to the GPU
+
+        ComPtr<ID3D12RootSignature>                 rootSignature_;
 
         ComPtr<ID3D12Fence>                         fence_;
         HANDLE                                      fenceEvent_     = 0;
-
-        D3D_FEATURE_LEVEL                           featureLevel_   = D3D_FEATURE_LEVEL_9_1;
 
         /* ----- Hardware object containers ----- */
 

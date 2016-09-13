@@ -18,7 +18,7 @@ struct VertexIn
 struct VertexOut
 {
 	float4 position : SV_Position;
-	float3 color : COLOR;
+	float4 color : COLOR;
 };
 
 VertexOut VS(VertexIn inp)
@@ -27,7 +27,7 @@ VertexOut VS(VertexIn inp)
 	
 	//outp.position = mul(wvpMatrix, float4(inp.position, 1));
 	outp.position = float4(inp.position, 0, 1);
-	outp.color = inp.color;
+	outp.color = float4(inp.color, 1);
 	
 	//outputBuffer[0] = outp.position;
 	
@@ -36,7 +36,7 @@ VertexOut VS(VertexIn inp)
 
 float4 PS(VertexOut inp) : SV_Target
 {
-	return float4(inp.color, 1);
+	return inp.color;
 }
 
 

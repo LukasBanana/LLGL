@@ -124,9 +124,9 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.depth.testEnabled  = true;
-            pipelineDesc.depth.writeEnabled = true;
-            pipelineDesc.depth.compareOp    = LLGL::CompareOp::Less;
+            //pipelineDesc.depth.testEnabled  = true;
+            //pipelineDesc.depth.writeEnabled = true;
+            //pipelineDesc.depth.compareOp    = LLGL::CompareOp::Less;
 
             pipelineDesc.shaderProgram      = shaderProgram;
         }
