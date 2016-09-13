@@ -32,8 +32,7 @@ class D3D12Shader : public Shader
 
         D3D12Shader(const ShaderType type);
 
-        bool Compile(const std::string& shaderSource) override;
-        bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags = 0) override;
+        bool Compile(const ShaderSource& shaderSource) override;
 
         std::string Disassemble(int flags = 0) override;
 

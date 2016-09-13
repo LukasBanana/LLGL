@@ -85,7 +85,7 @@ int main()
         std::cout << "VERTEX OUTPUT:" << std::endl;
         #endif
 
-        if (!vertShader->Compile(shaderSource, "VS", "vs_5_0"))
+        if (!vertShader->Compile({ shaderSource, "VS", "vs_5_0" }))
             std::cerr << vertShader->QueryInfoLog() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else
@@ -96,7 +96,7 @@ int main()
         std::cout << "PIXEL OUTPUT:" << std::endl;
         #endif
 
-        if (!fragShader->Compile(shaderSource, "PS", "ps_5_0"))
+        if (!fragShader->Compile({ shaderSource, "PS", "ps_5_0" }))
             std::cerr << fragShader->QueryInfoLog() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else

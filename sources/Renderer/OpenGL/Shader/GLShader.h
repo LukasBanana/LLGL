@@ -28,8 +28,7 @@ class GLShader : public Shader
         GLShader(const ShaderType type);
         ~GLShader();
 
-        bool Compile(const std::string& shaderSource) override;
-        bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags = 0) override;
+        bool Compile(const ShaderSource& shaderSource) override;
 
         std::string QueryInfoLog() override;
 

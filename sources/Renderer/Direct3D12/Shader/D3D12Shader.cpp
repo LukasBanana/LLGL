@@ -21,11 +21,6 @@ D3D12Shader::D3D12Shader(const ShaderType type) :
 {
 }
 
-bool D3D12Shader::Compile(const std::string& shaderSource)
-{
-    throw std::runtime_error("invalid 'Shader::Compile' function for HLSL");
-}
-
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/gg615083(v=vs.85).aspx
 static UINT GetDXCompileFlags(int flags)
 {
@@ -50,14 +45,20 @@ static UINT GetDXCompileFlags(int flags)
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
-bool D3D12Shader::Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags)
+bool D3D12Shader::Compile(const ShaderSource& shaderSource)
 {
+    /* Get parameter from union */
+    const auto& sourceCode  = shaderSource.sourceHLSL.sourceCode;
+    const auto& entryPoint  = shaderSource.sourceHLSL.entryPoint;
+    const auto& target      = shaderSource.sourceHLSL.target;
+    auto flags              = shaderSource.sourceHLSL.flags;
+
     /* Compile shader code */
     ComPtr<ID3DBlob> code;
 
     auto hr = D3DCompile(
-        shaderSource.data(),
-        shaderSource.size(),
+        sourceCode.data(),
+        sourceCode.size(),
         nullptr,                                                // LPCSTR               pSourceName
         nullptr,                                                // D3D_SHADER_MACRO*    pDefines
         nullptr,                                                // ID3DInclude*         pInclude

@@ -50,6 +50,54 @@ struct ShaderDisassembleFlags
     };
 };
 
+//! Shader source code union.
+union ShaderSource
+{
+    /**
+    \brief Specifies the shader source code GLSL.
+    \param[in] sourceCode Specifies the shader source code.
+    \note Only supported with: OpenGL (for GLSL).
+    */
+    ShaderSource(const std::string& sourceCode) :
+        sourceHLSL{ sourceCode, "", "", 0 }
+    {
+    }
+
+    /**
+    \brief Specifies the shader source code for HLSL.
+    \param[in] sourceCode Specifies the shader source code.
+    \param[in] entryPoint Specifies the shader entry point.
+    \param[in] target Specifies the shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
+    \param[in] flags Specifies optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries. By default 0.
+    \note Only supported with: Direct3D 11, Direct3D 12 (for HLSL).
+    */
+    ShaderSource(const std::string& sourceCode, const std::string& entryPoint, const std::string& target, int flags = 0) :
+        sourceHLSL{ sourceCode, entryPoint, target, flags }
+    {
+    }
+
+    ~ShaderSource()
+    {
+    }
+
+    //! Shader source descriptor for GLSL.
+    struct GLSL
+    {
+        const std::string& sourceCode; //!< Shader source code string.
+    }
+    sourceGLSL;
+
+    //! Shader source descriptor for HLSL.
+    struct HLSL
+    {
+        const std::string&  sourceCode; //!< Shader source code string.
+        std::string         entryPoint; //!< Shader entry point (this is the name of the shader main function).
+        std::string         target;     //!< Shdaer version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
+        int                 flags;      //!< Optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries.
+    }
+    sourceHLSL;
+};
+
 
 //! Shader interface.
 class LLGL_EXPORT Shader
@@ -63,23 +111,9 @@ class LLGL_EXPORT Shader
         \brief Compiles the specified shader source.
         \param[in] shaderSource Specifies the shader source code.
         \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
-        \note Only supported with: OpenGL (for GLSL).
         \see QueryInfoLog
-        \see Compile(const std::string&, const std::string&, const std::string&)
         */
-        virtual bool Compile(const std::string& shaderSource) = 0;
-
-        /**
-        \brief Compiles the specified shader source with the specified parameters.
-        \param[in] shaderSource Specifies the shader source code.
-        \param[in] entryPoint Specifies the shader entry point.
-        \param[in] target Specifies the shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
-        \param[in] flags Specifies optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries. By default 0.
-        \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
-        \note Only supported with: Direct3D 11, Direct3D 12 (for HLSL).
-        \see ShaderCompileFlags
-        */
-        virtual bool Compile(const std::string& shaderSource, const std::string& entryPoint, const std::string& target, int flags = 0) = 0;
+        virtual bool Compile(const ShaderSource& shaderSource) = 0;
 
         /**
         \brief Disassembles the previously compiled shader byte code.

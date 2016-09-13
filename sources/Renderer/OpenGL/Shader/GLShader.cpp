@@ -28,10 +28,10 @@ GLShader::~GLShader()
     glDeleteShader(id_);
 }
 
-bool GLShader::Compile(const std::string& shaderSource)
+bool GLShader::Compile(const ShaderSource& shaderSource)
 {
     /* Setup shader source */
-    const GLchar* strings[] = { shaderSource.c_str() };
+    const GLchar* strings[] = { shaderSource.sourceGLSL.sourceCode.c_str() };
     glShaderSource(id_, 1, strings, nullptr);
 
     /* Compile shader */
@@ -42,11 +42,6 @@ bool GLShader::Compile(const std::string& shaderSource)
     glGetShaderiv(id_, GL_COMPILE_STATUS, &compileStatus);
 
     return (compileStatus != GL_FALSE);
-}
-
-bool GLShader::Compile(const std::string&, const std::string&, const std::string&, int)
-{
-    throw std::runtime_error("invalid 'Shader::Compile' function for GLSL");
 }
 
 std::string GLShader::QueryInfoLog()
