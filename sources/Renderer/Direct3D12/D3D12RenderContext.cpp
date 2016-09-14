@@ -177,17 +177,18 @@ void D3D12RenderContext::BindVertexBuffer(VertexBuffer& vertexBuffer)
 
 void D3D12RenderContext::UnbindVertexBuffer()
 {
-    //todo
+    //gfxCommandList_->IASetVertexBuffers(0, 0, nullptr);
 }
 
 void D3D12RenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
 {
-    //todo
+    auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer&, indexBuffer);
+    gfxCommandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
 }
 
 void D3D12RenderContext::UnbindIndexBuffer()
 {
-    //todo
+    //gfxCommandList_->IASetIndexBuffer(nullptr);
 }
 
 void D3D12RenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
@@ -265,8 +266,8 @@ void D3D12RenderContext::UnbindRenderTarget()
 
 void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
+    /* Set graphics root signature and graphics pipeline state */
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
-
     gfxCommandList_->SetGraphicsRootSignature(graphicsPipelineD3D.GetRootSignature());
     gfxCommandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
 }
@@ -448,13 +449,7 @@ void D3D12RenderContext::SetBackBufferRTV()
 
 void D3D12RenderContext::ExecuteGfxCommandList()
 {
-    /* Close graphics command list */
-    auto hr = gfxCommandList_->Close();
-    DXThrowIfFailed(hr, "failed to close D3D12 command list");
-
-    /* Execute command list */
-    ID3D12CommandList* commandList[] = { gfxCommandList_.Get() };
-    renderSystem_.GetCommandQueue()->ExecuteCommandLists(1, commandList);
+    renderSystem_.CloseAndExecuteCommandList(gfxCommandList_.Get());
 }
 
 

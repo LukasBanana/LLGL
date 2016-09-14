@@ -33,7 +33,7 @@ void D3D12HardwareBuffer::CreateResource(ID3D12Device* device, UINT bufferSize)
         IID_PPV_ARGS(&resource_)
     );
 
-    DXThrowIfFailed(hr, "failed to create D3D12 comitted resource for vertex buffer");
+    DXThrowIfFailed(hr, "failed to create comitted resource for D3D12 hardware buffer");
 }
 
 void D3D12HardwareBuffer::UpdateSubResource(
@@ -43,11 +43,11 @@ void D3D12HardwareBuffer::UpdateSubResource(
     if (offset + bufferSize > bufferSize_)
         throw std::out_of_range(LLGL_ASSERT_INFO("'bufferSize' and/or 'offset' are out of range"));
 
-    #if 1
+    #if 0
 
     /* Create resource to upload memory from CPU to GPU */
     CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
-    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize_);
+    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
 
     auto hr = device->CreateCommittedResource(
         &uploadHeapProperties,
@@ -58,7 +58,7 @@ void D3D12HardwareBuffer::UpdateSubResource(
         IID_PPV_ARGS(&bufferUpload)
     );
 
-    DXThrowIfFailed(hr, "failed to create D3D12 comitted resource for hardware buffer upload");
+    DXThrowIfFailed(hr, "failed to create comitted resource for D3D12 upload buffer");
 
     /* Upload memory to GPU */
     D3D12_SUBRESOURCE_DATA resourceData;
@@ -70,24 +70,46 @@ void D3D12HardwareBuffer::UpdateSubResource(
     UpdateSubresources(gfxCommandList, resource_.Get(), bufferUpload.Get(), offset, 0, 1, &resourceData);
 
     CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        resource_.Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        uploadState
+        resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, uploadState
     );
 
     gfxCommandList->ResourceBarrier(1, &resourceBarrier);
 
     #else
 
-    UINT8* destData;
-    CD3DX12_RANGE readRange(0, 0);
+    /* Create resource to upload memory from CPU to GPU */
+    CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
 
-    auto hr = resource_->Map(0, &readRange, reinterpret_cast<void**>(&destData));
-    DXThrowIfFailed(hr, "failed to map D3D12 hardware buffer");
+    auto hr = device->CreateCommittedResource(
+        &uploadHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &bufferDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&bufferUpload)
+    );
+
+    DXThrowIfFailed(hr, "failed to create comitted resource for D3D12 upload buffer");
+
+    /* Copy data into upload buffer */
+    void* dest = nullptr;
+    
+    hr = bufferUpload->Map(0, nullptr, &dest);
+    DXThrowIfFailed(hr, "failed to map D3D12 resource");
     {
-        memcpy(destData, data, bufferSize);
+        ::memcpy(dest, data, bufferSize);
     }
-    resource_->Unmap(0, nullptr);
+    bufferUpload->Unmap(0, nullptr);
+
+    /* Upload memory to GPU */
+    gfxCommandList->CopyBufferRegion(resource_.Get(), 0, bufferUpload.Get(), 0, bufferSize);
+
+    CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, uploadState
+    );
+
+    gfxCommandList->ResourceBarrier(1, &resourceBarrier);
 
     #endif
 }

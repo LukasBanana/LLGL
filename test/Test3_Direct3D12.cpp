@@ -140,11 +140,11 @@ int main()
         {
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
-            context->BindVertexBuffer(*vertexBuffer);
-            context->BindGraphicsPipeline(*pipeline);
-
             context->SetViewports({ LLGL::Viewport(0, 0, 800, 600) });
             context->SetScissors({ LLGL::Scissor(0, 0, 800, 600) });
+
+            context->BindGraphicsPipeline(*pipeline);
+            context->BindVertexBuffer(*vertexBuffer);
 
             context->SetDrawMode(LLGL::DrawMode::Triangles);
             context->Draw(3, 0);

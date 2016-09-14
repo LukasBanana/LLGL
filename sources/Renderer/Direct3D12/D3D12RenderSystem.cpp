@@ -207,6 +207,9 @@ void D3D12RenderSystem::SetupVertexBuffer(
     ComPtr<ID3D12Resource> bufferUpload;
     vertexBufferD3D.UpdateSubResource(device_.Get(), gfxCommandList_.Get(), bufferUpload, data, dataSize);
 
+    /* Execute upload commands */
+    CloseAndExecuteCommandList(gfxCommandList_.Get());
+
     SyncGPU();
 }
 
@@ -508,8 +511,12 @@ ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D
 
 void D3D12RenderSystem::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList)
 {
-    commandList->Close();
-    ID3D12CommandList* cmdLists[1] = { commandList };
+    /* Close graphics command list */
+    auto hr = commandList->Close();
+    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+
+    /* Execute command list */
+    ID3D12CommandList* cmdLists[] = { commandList };
     commandQueue_->ExecuteCommandLists(1, cmdLists);
 }
 
