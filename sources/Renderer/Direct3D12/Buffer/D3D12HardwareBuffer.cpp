@@ -43,40 +43,6 @@ void D3D12HardwareBuffer::UpdateSubResource(
     if (offset + bufferSize > bufferSize_)
         throw std::out_of_range(LLGL_ASSERT_INFO("'bufferSize' and/or 'offset' are out of range"));
 
-    #if 0
-
-    /* Create resource to upload memory from CPU to GPU */
-    CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
-    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
-
-    auto hr = device->CreateCommittedResource(
-        &uploadHeapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &bufferDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&bufferUpload)
-    );
-
-    DXThrowIfFailed(hr, "failed to create comitted resource for D3D12 upload buffer");
-
-    /* Upload memory to GPU */
-    D3D12_SUBRESOURCE_DATA resourceData;
-    {
-        resourceData.pData      = data;
-        resourceData.RowPitch   = bufferSize;
-        resourceData.SlicePitch = resourceData.RowPitch;
-    }
-    UpdateSubresources(gfxCommandList, resource_.Get(), bufferUpload.Get(), offset, 0, 1, &resourceData);
-
-    CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, uploadState
-    );
-
-    gfxCommandList->ResourceBarrier(1, &resourceBarrier);
-
-    #else
-
     /* Create resource to upload memory from CPU to GPU */
     CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
     auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
@@ -110,8 +76,6 @@ void D3D12HardwareBuffer::UpdateSubResource(
     );
 
     gfxCommandList->ResourceBarrier(1, &resourceBarrier);
-
-    #endif
 }
 
 
