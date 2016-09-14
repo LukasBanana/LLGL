@@ -23,6 +23,7 @@ namespace DXTypes
 
 
 DXGI_FORMAT             Map( const VertexAttribute& attrib          );
+DXGI_FORMAT             Map( const DataType         dataType        );
 D3D_PRIMITIVE_TOPOLOGY  Map( const DrawMode         drawMode        );
 D3D12_FILL_MODE         Map( const PolygonMode      polygonMode     );
 D3D12_CULL_MODE         Map( const CullMode         cullMode        );

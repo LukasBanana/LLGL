@@ -203,6 +203,7 @@ class D3D12RenderSystem : public RenderSystem
 
         ComPtr<ID3D12Fence>                         fence_;
         HANDLE                                      fenceEvent_     = 0;
+        UINT64                                      fenceValue_     = 0;
 
         /* ----- Hardware object containers ----- */
 

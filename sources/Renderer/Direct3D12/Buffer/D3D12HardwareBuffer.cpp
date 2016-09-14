@@ -70,11 +70,11 @@ void D3D12HardwareBuffer::UpdateSubResource(
 
     /* Upload memory to GPU */
     gfxCommandList->CopyBufferRegion(resource_.Get(), 0, bufferUpload.Get(), 0, bufferSize);
-
+    
     CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, uploadState
     );
-
+    
     gfxCommandList->ResourceBarrier(1, &resourceBarrier);
 }
 

@@ -150,6 +150,22 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
     MapFailed("VertexAttribute", "DXGI_FORMAT");
 }
 
+DXGI_FORMAT Map(const DataType dataType)
+{
+    switch (dataType)
+    {
+        case DataType::Float:   return DXGI_FORMAT_R32_FLOAT;
+        case DataType::Double:  break;
+        case DataType::Byte:    return DXGI_FORMAT_R8_SINT;
+        case DataType::UByte:   return DXGI_FORMAT_R8_UINT;
+        case DataType::Short:   return DXGI_FORMAT_R16_SINT;
+        case DataType::UShort:  return DXGI_FORMAT_R16_UINT;
+        case DataType::Int:     return DXGI_FORMAT_R32_SINT;
+        case DataType::UInt:    return DXGI_FORMAT_R32_UINT;
+    }
+    MapFailed("DataType", "DXGI_FORMAT");
+}
+
 D3D_PRIMITIVE_TOPOLOGY Map(const DrawMode drawMode)
 {
     switch (drawMode)
