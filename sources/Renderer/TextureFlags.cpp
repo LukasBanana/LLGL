@@ -36,6 +36,11 @@ LLGL_EXPORT int NumMipLevels(const Gs::Vector3i& textureSize)
     return (1 + log2Size);
 }
 
+LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format)
+{
+    return (format >= TextureFormat::RGB_DXT1);
+}
+
 
 } // /namespace LLGL
 
