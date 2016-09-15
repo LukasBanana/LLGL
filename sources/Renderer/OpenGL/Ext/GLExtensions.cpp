@@ -53,16 +53,29 @@ PFNGLENABLEIPROC                                        glEnablei               
 PFNGLDISABLEIPROC                                       glDisablei                                      = nullptr;
 PFNGLISENABLEDIPROC                                     glIsEnabledi                                    = nullptr;
 
-/* --- Multi Texture (GL_ARB_multitexture) --- */
+/* --- Multi texture (GL_ARB_multitexture) --- */
 
 PFNGLACTIVETEXTUREPROC                                  glActiveTexture                                 = nullptr;
+
+/* --- 3D texture (GL_EXT_texture3D) --- */
+
 PFNGLTEXIMAGE3DPROC                                     glTexImage3D                                    = nullptr;
 PFNGLTEXSUBIMAGE3DPROC                                  glTexSubImage3D                                 = nullptr;
 
-/* --- Clear Texture (GL_ARB_clear_texture) --- */
+/* --- Clear texture (GL_ARB_clear_texture) --- */
 
 PFNGLCLEARTEXIMAGEPROC                                  glClearTexImage                                 = nullptr;
 PFNGLCLEARTEXSUBIMAGEPROC                               glClearTexSubImage                              = nullptr;
+
+/* --- Texture compression (GL_ARB_texture_compression) --- */
+
+PFNGLCOMPRESSEDTEXIMAGE1DPROC                           glCompressedTexImage1D                          = nullptr;
+PFNGLCOMPRESSEDTEXIMAGE2DPROC                           glCompressedTexImage2D                          = nullptr;
+PFNGLCOMPRESSEDTEXIMAGE3DPROC                           glCompressedTexImage3D                          = nullptr;
+PFNGLCOMPRESSEDTEXSUBIMAGE1DPROC                        glCompressedTexSubImage1D                       = nullptr;
+PFNGLCOMPRESSEDTEXSUBIMAGE2DPROC                        glCompressedTexSubImage2D                       = nullptr;
+PFNGLCOMPRESSEDTEXSUBIMAGE3DPROC                        glCompressedTexSubImage3D                       = nullptr;
+PFNGLGETCOMPRESSEDTEXIMAGEPROC                          glGetCompressedTexImage                         = nullptr;
 
 /* --- Sampler objects (GL_ARB_sampler_objects) --- */
 

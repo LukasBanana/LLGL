@@ -59,16 +59,29 @@ extern PFNGLENABLEIPROC                                     glEnablei;
 extern PFNGLDISABLEIPROC                                    glDisablei;
 extern PFNGLISENABLEDIPROC                                  glIsEnabledi;
 
-/* --- Multi Texture (GL_ARB_multitexture) --- */
+/* --- Multi texture (GL_ARB_multitexture) --- */
 
 extern PFNGLACTIVETEXTUREPROC                               glActiveTexture;
+
+/* --- 3D texture (GL_EXT_texture3D) --- */
+
 extern PFNGLTEXIMAGE3DPROC                                  glTexImage3D;
 extern PFNGLTEXSUBIMAGE3DPROC                               glTexSubImage3D;
 
-/* --- Clear Texture (GL_ARB_clear_texture) --- */
+/* --- Clear texture (GL_ARB_clear_texture) --- */
 
 extern PFNGLCLEARTEXIMAGEPROC                               glClearTexImage;
 extern PFNGLCLEARTEXSUBIMAGEPROC                            glClearTexSubImage;
+
+/* --- Texture compression (GL_ARB_texture_compression) --- */
+
+extern PFNGLCOMPRESSEDTEXIMAGE1DPROC                        glCompressedTexImage1D;
+extern PFNGLCOMPRESSEDTEXIMAGE2DPROC                        glCompressedTexImage2D;
+extern PFNGLCOMPRESSEDTEXIMAGE3DPROC                        glCompressedTexImage3D;
+extern PFNGLCOMPRESSEDTEXSUBIMAGE1DPROC                     glCompressedTexSubImage1D;
+extern PFNGLCOMPRESSEDTEXSUBIMAGE2DPROC                     glCompressedTexSubImage2D;
+extern PFNGLCOMPRESSEDTEXSUBIMAGE3DPROC                     glCompressedTexSubImage3D;
+extern PFNGLGETCOMPRESSEDTEXIMAGEPROC                       glGetCompressedTexImage;
 
 /* --- Sampler objects (GL_ARB_sampler_objects) --- */
 

@@ -86,16 +86,29 @@ DECL_GLPROC(void, glEnablei, (GLenum, GLuint));
 DECL_GLPROC(void, glDisablei, (GLenum, GLuint));
 DECL_GLPROC(GLboolean, glIsEnabledi, (GLenum, GLuint));
 
-/* --- Multi Texture (GL_ARB_multitexture) --- */
+/* --- Multi texture (GL_ARB_multitexture) --- */
 
 DECL_GLPROC(void, glActiveTexture, (GLenum));
+
+/* --- 3D texture (GL_EXT_texture3D) --- */
+
 DECL_GLPROC(void, glTexImage3D, (GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*));
 DECL_GLPROC(void, glTexSubImage3D, (GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const void*));
 
-/* --- Clear Texture (GL_ARB_clear_texture) --- */
+/* --- Clear texture (GL_ARB_clear_texture) --- */
 
 DECL_GLPROC(void, glClearTexImage, (GLuint, GLint, GLenum, GLenum, const void*));
 DECL_GLPROC(void, glClearTexSubImage, (GLuint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const void*));
+
+/* --- Texture compression (GL_ARB_texture_compression) --- */
+
+DECL_GLPROC(void, glCompressedTexImage1D, (GLenum, GLint, GLenum, GLsizei, GLint, GLsizei, const void*));
+DECL_GLPROC(void, glCompressedTexImage2D, (GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const void*));
+DECL_GLPROC(void, glCompressedTexImage3D, (GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLsizei, const void*));
+DECL_GLPROC(void, glCompressedTexSubImage1D, (GLenum, GLint, GLint, GLsizei, GLenum, GLsizei, const void*));
+DECL_GLPROC(void, glCompressedTexSubImage2D, (GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, const void*));
+DECL_GLPROC(void, glCompressedTexSubImage3D, (GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, const void*));
+DECL_GLPROC(void, glGetCompressedTexImage, (GLenum, GLint, void*));
 
 /* --- Sampler objects (GL_ARB_sampler_objects) --- */
 

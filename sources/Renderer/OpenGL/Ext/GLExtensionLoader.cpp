@@ -310,6 +310,18 @@ static bool LoadClearTextureProcs(bool usePlaceHolder)
     return true;
 }
 
+static bool LoadCompressedTextureProcs(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glCompressedTexImage1D    );
+    LOAD_GLPROC( glCompressedTexImage2D    );
+    LOAD_GLPROC( glCompressedTexImage3D    );
+    LOAD_GLPROC( glCompressedTexSubImage1D );
+    LOAD_GLPROC( glCompressedTexSubImage2D );
+    LOAD_GLPROC( glCompressedTexSubImage3D );
+    LOAD_GLPROC( glGetCompressedTexImage   );
+    return true;
+}
+
 static bool LoadSamplerProcs(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGenSamplers        );
@@ -513,6 +525,7 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     LoadExtension( "GL_ARB_multitexture",                 LoadMultiTextureProcs          );
     LoadExtension( "GL_EXT_texture3D",                    Load3DTextureProcs             );
     LoadExtension( "GL_ARB_clear_texture",                LoadClearTextureProcs          );
+    LoadExtension( "GL_ARB_texture_compression",          LoadCompressedTextureProcs     );
     LoadExtension( "GL_ARB_sampler_objects",              LoadSamplerProcs               );
 
     /* Load misc extensions */
