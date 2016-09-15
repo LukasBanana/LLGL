@@ -75,6 +75,19 @@ int main()
         auto vertexBuffer = renderer->CreateVertexBuffer();
         renderer->SetupVertexBuffer(*vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
 
+        // Create constant buffer
+        struct Matrices
+        {
+            Gs::Matrix4f projection;
+        }
+        matrices;
+
+        float orthoSize = 0.01f;
+        matrices.projection = Gs::ProjectionMatrix4f::Orthogonal(800.0f * orthoSize, 600.0f * orthoSize, 0.1f, 100.0f).ToMatrix4();
+
+        auto constantBuffer = renderer->CreateConstantBuffer();
+        renderer->SetupConstantBuffer(*constantBuffer, &matrices, sizeof(matrices), LLGL::BufferUsage::Static);
+
         // Load shader
         auto shaderSource = ReadFileContent("TestShader.hlsl");
 
@@ -145,6 +158,7 @@ int main()
 
             context->BindGraphicsPipeline(*pipeline);
             context->BindVertexBuffer(*vertexBuffer);
+            context->BindConstantBuffer(0, *constantBuffer);
 
             context->SetDrawMode(LLGL::DrawMode::Triangles);
             context->Draw(3, 0);

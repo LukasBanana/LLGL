@@ -39,7 +39,7 @@ class D3D12VertexBuffer : public VertexBuffer
         D3D12HardwareBuffer hwBuffer;
 
     private:
-
+        
         D3D12_VERTEX_BUFFER_VIEW view_;
 
 };

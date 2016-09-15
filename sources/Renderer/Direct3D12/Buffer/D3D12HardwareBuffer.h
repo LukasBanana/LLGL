@@ -27,12 +27,15 @@ class D3D12HardwareBuffer
 
         D3D12HardwareBuffer() = default;
 
+        void CreateResource(ID3D12Device* device, UINT bufferSize, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState);
         void CreateResource(ID3D12Device* device, UINT bufferSize);
 
-        void UpdateSubResource(
+        void UpdateStaticSubResource(
             ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
             const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState
         );
+
+        void UpdateDynamicSubResource(const void* data, UINT bufferSize, UINT64 offset);
 
         //! Returns the ID3D12Resource object.
         inline ID3D12Resource* Get() const

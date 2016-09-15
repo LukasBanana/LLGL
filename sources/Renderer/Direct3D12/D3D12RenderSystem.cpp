@@ -167,7 +167,7 @@ IndexBuffer* D3D12RenderSystem::CreateIndexBuffer()
 
 ConstantBuffer* D3D12RenderSystem::CreateConstantBuffer()
 {
-    return TakeOwnership(constantBuffers_, MakeUnique<D3D12ConstantBuffer>());
+    return TakeOwnership(constantBuffers_, MakeUnique<D3D12ConstantBuffer>(device_.Get()));
 }
 
 StorageBuffer* D3D12RenderSystem::CreateStorageBuffer()
@@ -234,7 +234,18 @@ void D3D12RenderSystem::SetupIndexBuffer(
 void D3D12RenderSystem::SetupConstantBuffer(
     ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
-    //todo
+    auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, constantBuffer);
+
+    /* Create hardware buffer resource */
+    constantBufferD3D.CreateResourceAndPutView(device_.Get(), dataSize);
+
+    /* Upload buffer data to GPU */
+    //ComPtr<ID3D12Resource> bufferUpload;
+    constantBufferD3D.UpdateSubResource(data, dataSize);
+
+    /* Execute upload commands and wait for GPU to finish execution */
+    //CloseAndExecuteCommandList(gfxCommandList_.Get());
+    //SyncGPU();
 }
 
 void D3D12RenderSystem::SetupStorageBuffer(

@@ -46,6 +46,8 @@ class D3D12ShaderProgram : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
+        /* ----- Extended internal functions ----- */
+
         D3D12_INPUT_LAYOUT_DESC GetInputLayoutDesc() const;
 
         inline D3D12Shader* GetVS() const { return vs_; }
@@ -54,6 +56,16 @@ class D3D12ShaderProgram : public ShaderProgram
         inline D3D12Shader* GetHS() const { return hs_; }
         inline D3D12Shader* GetGS() const { return gs_; }
         inline D3D12Shader* GetCS() const { return cs_; }
+
+        inline UINT GetNumConstantBuffers() const
+        {
+            return static_cast<UINT>(constantBufferDescs_.size());
+        }
+
+        inline UINT GetNumStorageBuffers() const
+        {
+            return static_cast<UINT>(storageBufferDescs_.size());
+        }
 
     private:
 

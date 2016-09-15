@@ -16,19 +16,19 @@ namespace LLGL
 {
 
 
-void D3D12HardwareBuffer::CreateResource(ID3D12Device* device, UINT bufferSize)
+void D3D12HardwareBuffer::CreateResource(ID3D12Device* device, UINT bufferSize, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState)
 {
     bufferSize_ = bufferSize;
 
     /* Create generic buffer resource */
-    CD3DX12_HEAP_PROPERTIES defaultHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    CD3DX12_HEAP_PROPERTIES heapProperties(heapType);
     auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize_);
 
     auto hr = device->CreateCommittedResource(
-        &defaultHeapProperties,
+        &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &bufferDesc,
-        D3D12_RESOURCE_STATE_COPY_DEST,
+        resourceState, // initial resource state
         nullptr,
         IID_PPV_ARGS(&resource_)
     );
@@ -36,7 +36,12 @@ void D3D12HardwareBuffer::CreateResource(ID3D12Device* device, UINT bufferSize)
     DXThrowIfFailed(hr, "failed to create comitted resource for D3D12 hardware buffer");
 }
 
-void D3D12HardwareBuffer::UpdateSubResource(
+void D3D12HardwareBuffer::CreateResource(ID3D12Device* device, UINT bufferSize)
+{
+    CreateResource(device, bufferSize, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COPY_DEST);
+}
+
+void D3D12HardwareBuffer::UpdateStaticSubResource(
     ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
     const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState)
 {
@@ -76,6 +81,18 @@ void D3D12HardwareBuffer::UpdateSubResource(
     );
     
     gfxCommandList->ResourceBarrier(1, &resourceBarrier);
+}
+
+void D3D12HardwareBuffer::UpdateDynamicSubResource(const void* data, UINT bufferSize, UINT64 offset)
+{
+    void* dest = nullptr;
+    
+    auto hr = resource_->Map(0, nullptr, &dest);
+    DXThrowIfFailed(hr, "failed to map D3D12 resource");
+    {
+        ::memcpy((reinterpret_cast<char*>(dest) + offset), data, bufferSize);
+    }
+    resource_->Unmap(0, nullptr);
 }
 
 

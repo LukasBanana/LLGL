@@ -42,34 +42,42 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
 void D3D12GraphicsPipeline::CreateRootSignature(
     D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc)
 {
-    #if 0
-
-    /* Setup descritpor structures for root signature */
-    CD3DX12_DESCRIPTOR_RANGE signatureRange[2];
-    CD3DX12_ROOT_PARAMETER signatureParam;
-
-    signatureRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-    signatureRange[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-    signatureParam.InitAsDescriptorTable(1, signatureRange, D3D12_SHADER_VISIBILITY_ALL);
-
+    /* Setup root signature flags */
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
     (
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT/* |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS*/
     );
 
+    /* Setup descritpor structures for root signature */
+    std::vector<CD3DX12_DESCRIPTOR_RANGE> signatureRange;
+
+    auto AddSignatureRange = [&](D3D12_DESCRIPTOR_RANGE_TYPE type, UINT count)
+    {
+        if (count > 0)
+        {
+            CD3DX12_DESCRIPTOR_RANGE rangeDesc;
+            rangeDesc.Init(type, count, 0);
+            signatureRange.push_back(rangeDesc);
+        }
+    };
+
+    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, shaderProgram.GetNumConstantBuffers());
+    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, shaderProgram.GetNumStorageBuffers());
+
     CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
-    signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
+    if (!signatureRange.empty())
+    {
+        CD3DX12_ROOT_PARAMETER signatureParam;
+        signatureParam.InitAsDescriptorTable(signatureRange.size(), signatureRange.data(), D3D12_SHADER_VISIBILITY_ALL);
 
-    #else
-
-    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
-    signatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-    #endif
+        signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
+    }
+    else
+        signatureDesc.Init(0, nullptr, 0, nullptr, signatureFlags);
 
     /* Create serialized root signature */
     HRESULT             hr          = 0;

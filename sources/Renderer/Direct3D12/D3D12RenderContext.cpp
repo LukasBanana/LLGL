@@ -193,7 +193,12 @@ void D3D12RenderContext::UnbindIndexBuffer()
 
 void D3D12RenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
 {
-    //todo
+    auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, constantBuffer);
+
+    /* Set CBV descriptor heap */
+    ID3D12DescriptorHeap* descHeaps[] = { constantBufferD3D.GetDescriptorHeap() };
+    gfxCommandList_->SetDescriptorHeaps(1, descHeaps);
+    gfxCommandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
 
 void D3D12RenderContext::UnbindConstantBuffer(unsigned int index)

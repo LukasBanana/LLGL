@@ -22,7 +22,22 @@ class D3D12ConstantBuffer : public ConstantBuffer
 
     public:
 
+        D3D12ConstantBuffer(ID3D12Device* device);
+
+        void CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize);
+
+        void UpdateSubResource(const void* data, UINT bufferSize, UINT64 offset = 0);
+
+        inline ID3D12DescriptorHeap* GetDescriptorHeap() const
+        {
+            return descHeap_.Get();
+        }
+
         D3D12HardwareBuffer hwBuffer;
+
+    private:
+
+        ComPtr<ID3D12DescriptorHeap> descHeap_; // descriptor heap for constant buffer views (CBV)
 
 };
 
