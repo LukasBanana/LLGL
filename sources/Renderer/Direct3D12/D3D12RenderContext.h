@@ -157,7 +157,7 @@ class D3D12RenderContext : public RenderContext
         UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
 
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
-        ComPtr<ID3D12GraphicsCommandList>   gfxCommandList_;
+        ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
         UINT                                numFrames_                      = 0;
         UINT                                currentFrame_                   = 0;

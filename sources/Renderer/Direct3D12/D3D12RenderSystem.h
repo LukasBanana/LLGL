@@ -199,7 +199,7 @@ class D3D12RenderSystem : public RenderSystem
 
         ComPtr<ID3D12CommandQueue>                  commandQueue_;
         ComPtr<ID3D12CommandAllocator>              commandAlloc_;
-        ComPtr<ID3D12GraphicsCommandList>           gfxCommandList_; // graphics command list to upload data to the GPU
+        ComPtr<ID3D12GraphicsCommandList>           commandList_; // graphics command list to upload data to the GPU
 
         ComPtr<ID3D12Fence>                         fence_;
         HANDLE                                      fenceEvent_     = 0;

@@ -44,7 +44,7 @@ void D3D12RenderContext::Present()
         D3D12_RESOURCE_STATE_PRESENT
     );
 
-    gfxCommandList_->ResourceBarrier(1, &resourceBarrier);
+    commandList_->ResourceBarrier(1, &resourceBarrier);
 
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
@@ -57,7 +57,7 @@ void D3D12RenderContext::Present()
     hr = commandAlloc_->Reset();
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
-    hr = gfxCommandList_->Reset(commandAlloc_.Get(), nullptr);
+    hr = commandList_->Reset(commandAlloc_.Get(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 
     /* Set current back buffer as new render target view */
@@ -93,7 +93,7 @@ void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 
 void D3D12RenderContext::SetViewports(const std::vector<Viewport>& viewports)
 {
-    gfxCommandList_->RSSetViewports(
+    commandList_->RSSetViewports(
         static_cast<UINT>(viewports.size()),
         reinterpret_cast<const D3D12_VIEWPORT*>(viewports.data())
     );
@@ -111,7 +111,7 @@ void D3D12RenderContext::SetScissors(const std::vector<Scissor>& scissors)
         rects[i].bottom = scissors[i].y + scissors[i].height;
     }
 
-    gfxCommandList_->RSSetScissorRects(
+    commandList_->RSSetScissorRects(
         static_cast<UINT>(rects.size()),
         rects.data()
     );
@@ -144,7 +144,7 @@ void D3D12RenderContext::ClearBuffers(long flags)
 
     /* Clear color buffer */
     if ((flags & ClearBuffersFlags::Color) != 0)
-        gfxCommandList_->ClearRenderTargetView(rtvHandle, clearColor_, 0, nullptr);
+        commandList_->ClearRenderTargetView(rtvHandle, clearColor_, 0, nullptr);
     
     /* Clear depth-stencil buffer */
     int rtvClearFlags = 0;
@@ -156,7 +156,7 @@ void D3D12RenderContext::ClearBuffers(long flags)
         
     if (rtvClearFlags)
     {
-        gfxCommandList_->ClearDepthStencilView(
+        commandList_->ClearDepthStencilView(
             rtvHandle, static_cast<D3D12_CLEAR_FLAGS>(rtvClearFlags), clearDepth_, clearStencil_, 0, nullptr
         );
     }
@@ -164,7 +164,7 @@ void D3D12RenderContext::ClearBuffers(long flags)
 
 void D3D12RenderContext::SetDrawMode(const DrawMode drawMode)
 {
-    gfxCommandList_->IASetPrimitiveTopology(DXTypes::Map(drawMode));
+    commandList_->IASetPrimitiveTopology(DXTypes::Map(drawMode));
 }
 
 /* ----- Hardware Buffers ------ */
@@ -172,23 +172,23 @@ void D3D12RenderContext::SetDrawMode(const DrawMode drawMode)
 void D3D12RenderContext::BindVertexBuffer(VertexBuffer& vertexBuffer)
 {
     auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, vertexBuffer);
-    gfxCommandList_->IASetVertexBuffers(0, 1, &(vertexBufferD3D.GetView()));
+    commandList_->IASetVertexBuffers(0, 1, &(vertexBufferD3D.GetView()));
 }
 
 void D3D12RenderContext::UnbindVertexBuffer()
 {
-    //gfxCommandList_->IASetVertexBuffers(0, 0, nullptr);
+    //commandList_->IASetVertexBuffers(0, 0, nullptr);
 }
 
 void D3D12RenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
 {
     auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer&, indexBuffer);
-    gfxCommandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
+    commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
 }
 
 void D3D12RenderContext::UnbindIndexBuffer()
 {
-    //gfxCommandList_->IASetIndexBuffer(nullptr);
+    //commandList_->IASetIndexBuffer(nullptr);
 }
 
 void D3D12RenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
@@ -197,8 +197,8 @@ void D3D12RenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& 
 
     /* Set CBV descriptor heap */
     ID3D12DescriptorHeap* descHeaps[] = { constantBufferD3D.GetDescriptorHeap() };
-    gfxCommandList_->SetDescriptorHeaps(1, descHeaps);
-    gfxCommandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
+    commandList_->SetDescriptorHeaps(1, descHeaps);
+    commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
 
 void D3D12RenderContext::UnbindConstantBuffer(unsigned int index)
@@ -273,8 +273,8 @@ void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline
 {
     /* Set graphics root signature and graphics pipeline state */
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
-    gfxCommandList_->SetGraphicsRootSignature(graphicsPipelineD3D.GetRootSignature());
-    gfxCommandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
+    commandList_->SetGraphicsRootSignature(graphicsPipelineD3D.GetRootSignature());
+    commandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
 }
 
 void D3D12RenderContext::BindComputePipeline(ComputePipeline& computePipeline)
@@ -303,42 +303,42 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
-    gfxCommandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
+    commandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
+    commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
+    commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
-    gfxCommandList_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
+    commandList_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
 void D3D12RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
-    gfxCommandList_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
+    commandList_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
+    commandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
+    commandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void D3D12RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
-    gfxCommandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    commandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
@@ -426,11 +426,11 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
 
     /* Create command allocator and graphics command list */
     commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
-    gfxCommandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
+    commandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
 
     /* Set initial render target view */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescInit(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
-    gfxCommandList_->OMSetRenderTargets(1, &rtvDescInit, FALSE, nullptr);
+    commandList_->OMSetRenderTargets(1, &rtvDescInit, FALSE, nullptr);
 }
 
 void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
@@ -449,12 +449,12 @@ void D3D12RenderContext::SetBackBufferRTV()
 {
     /* Set current back buffer as RTV */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDesc(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), currentFrame_, rtvDescSize_);
-    gfxCommandList_->OMSetRenderTargets(1, &rtvDesc, FALSE, nullptr);
+    commandList_->OMSetRenderTargets(1, &rtvDesc, FALSE, nullptr);
 }
 
 void D3D12RenderContext::ExecuteGfxCommandList()
 {
-    renderSystem_.CloseAndExecuteCommandList(gfxCommandList_.Get());
+    renderSystem_.CloseAndExecuteCommandList(commandList_.Get());
 }
 
 

@@ -37,9 +37,9 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateGPUSynchObjects();
 
     /* Create command queue, command allocator, and graphics command list */
-    commandQueue_ = CreateDXCommandQueue();
-    commandAlloc_ = CreateDXCommandAllocator();
-    gfxCommandList_ = CreateDXCommandList(commandAlloc_.Get());
+    commandQueue_   = CreateDXCommandQueue();
+    commandAlloc_   = CreateDXCommandAllocator();
+    commandList_    = CreateDXCommandList(commandAlloc_.Get());
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -206,10 +206,10 @@ void D3D12RenderSystem::SetupVertexBuffer(
 
     /* Upload buffer data to GPU */
     ComPtr<ID3D12Resource> bufferUpload;
-    vertexBufferD3D.UpdateSubResource(device_.Get(), gfxCommandList_.Get(), bufferUpload, data, dataSize);
+    vertexBufferD3D.UpdateSubResource(device_.Get(), commandList_.Get(), bufferUpload, data, dataSize);
 
     /* Execute upload commands and wait for GPU to finish execution */
-    CloseAndExecuteCommandList(gfxCommandList_.Get());
+    CloseAndExecuteCommandList(commandList_.Get());
     SyncGPU();
 }
 
@@ -224,10 +224,10 @@ void D3D12RenderSystem::SetupIndexBuffer(
 
     /* Upload buffer data to GPU */
     ComPtr<ID3D12Resource> bufferUpload;
-    indexBufferD3D.UpdateSubResource(device_.Get(), gfxCommandList_.Get(), bufferUpload, data, dataSize);
+    indexBufferD3D.UpdateSubResource(device_.Get(), commandList_.Get(), bufferUpload, data, dataSize);
 
     /* Execute upload commands and wait for GPU to finish execution */
-    CloseAndExecuteCommandList(gfxCommandList_.Get());
+    CloseAndExecuteCommandList(commandList_.Get());
     SyncGPU();
 }
 
@@ -244,7 +244,7 @@ void D3D12RenderSystem::SetupConstantBuffer(
     constantBufferD3D.UpdateSubResource(data, dataSize);
 
     /* Execute upload commands and wait for GPU to finish execution */
-    //CloseAndExecuteCommandList(gfxCommandList_.Get());
+    //CloseAndExecuteCommandList(commandList_.Get());
     //SyncGPU();
 }
 
