@@ -40,6 +40,10 @@ namespace LLGL
 {
 
 
+#define LLGL_ASSERT_CAP(FEATURE) \
+    AssertCap(renderingCaps_.FEATURE, #FEATURE)
+
+
 class GLRenderSystem : public RenderSystem
 {
 
@@ -187,6 +191,7 @@ class GLRenderSystem : public RenderSystem
         void BindTextureAndSetType(GLTexture& textureGL, const TextureType type);
 
         void StoreRenderingCaps();
+        void AssertCap(bool supported, const std::string& memberName);
 
         /* ----- Common objects ----- */
 
