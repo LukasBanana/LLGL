@@ -426,7 +426,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
 
     /* Create command allocator and graphics command list */
     commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
-    gfxCommandList_ = renderSystem_.CreateDXGfxCommandList(commandAlloc_.Get());
+    gfxCommandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
 
     /* Set initial render target view */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescInit(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());

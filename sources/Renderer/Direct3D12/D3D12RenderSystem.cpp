@@ -39,7 +39,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     /* Create command queue, command allocator, and graphics command list */
     commandQueue_ = CreateDXCommandQueue();
     commandAlloc_ = CreateDXCommandAllocator();
-    gfxCommandList_ = CreateDXGfxCommandList(commandAlloc_.Get());
+    gfxCommandList_ = CreateDXCommandList(commandAlloc_.Get());
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
@@ -502,7 +502,7 @@ ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator()
     return commandAlloc;
 }
 
-ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXGfxCommandList(ID3D12CommandAllocator* commandAlloc)
+ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXCommandList(ID3D12CommandAllocator* commandAlloc)
 {
     ComPtr<ID3D12GraphicsCommandList> commandList;
 
