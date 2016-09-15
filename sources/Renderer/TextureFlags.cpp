@@ -25,6 +25,7 @@ LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat)
         case ColorFormat::BGRA:         return 4;
         case ColorFormat::Depth:        return 1;
         case ColorFormat::DepthStencil: return 2;
+        case ColorFormat::Compressed:   return 0;
     }
     return 0;
 }

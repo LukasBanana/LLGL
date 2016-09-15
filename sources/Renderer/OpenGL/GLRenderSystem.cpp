@@ -229,41 +229,6 @@ void GLRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const void
 
 /* ----- Textures ----- */
 
-static void GLTexImage1D(GLenum internalFormat, int width, GLenum format, GLenum type, const void* data)
-{
-    glTexImage1D(GL_TEXTURE_1D, 0, internalFormat, width, 0, format, type, data);
-}
-
-static void GLTexImage2D(GLenum internalFormat, int width, int height, GLenum format, GLenum type, const void* data)
-{
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, data);
-}
-
-static void GLTexImage3D(GLenum internalFormat, int width, int height, int depth, GLenum format, GLenum type, const void* data)
-{
-    glTexImage3D(GL_TEXTURE_3D, 0, internalFormat, width, height, depth, 0, format, type, data);
-}
-
-static void GLTexImageCube(GLenum internalFormat, int width, int height, AxisDirection cubeFace, GLenum format, GLenum type, const void* data)
-{
-    glTexImage2D(GLTypes::Map(cubeFace), 0, internalFormat, width, height, 0, format, type, data);
-}
-
-static void GLTexImage1DArray(GLenum internalFormat, int width, unsigned int layers, GLenum format, GLenum type, const void* data)
-{
-    glTexImage2D(GL_TEXTURE_1D_ARRAY, 0, internalFormat, width, static_cast<GLsizei>(layers), 0, format, type, data);
-}
-
-static void GLTexImage2DArray(GLenum internalFormat, int width, int height, unsigned int layers, GLenum format, GLenum type, const void* data)
-{
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalFormat, width, height, static_cast<GLsizei>(layers), 0, format, type, data);
-}
-
-static void GLTexImageCubeArray(GLenum internalFormat, int width, int height, unsigned int layers, GLenum format, GLenum type, const void* data)
-{
-    glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, internalFormat, width, height, static_cast<GLsizei>(layers)*6, 0, format, type, data);
-}
-
 Texture* GLRenderSystem::CreateTexture()
 {
     return TakeOwnership(textures_, MakeUnique<GLTexture>());
@@ -296,6 +261,112 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
     return desc;
 }
 
+static void GLTexImage1DBase(
+    GLenum target, const TextureFormat internalFormat, int width,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize)
+{
+    if (IsCompressedFormat(internalFormat))
+        glCompressedTexImage1D(target, 0, GLTypes::Map(internalFormat), width, 0, static_cast<GLsizei>(compressedSize), data);
+    else
+        glTexImage1D(target, 0, GLTypes::Map(internalFormat), width, 0, format, type, data);
+}
+
+static void GLTexImage2DBase(
+    GLenum target, const TextureFormat internalFormat, int width, int height,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize)
+{
+    if (IsCompressedFormat(internalFormat))
+        glCompressedTexImage2D(target, 0, GLTypes::Map(internalFormat), width, height, 0, static_cast<GLsizei>(compressedSize), data);
+    else
+        glTexImage2D(target, 0, GLTypes::Map(internalFormat), width, height, 0, format, type, data);
+}
+
+static void GLTexImage3DBase(
+    GLenum target, const TextureFormat internalFormat, int width, int height, int depth,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize)
+{
+    if (IsCompressedFormat(internalFormat))
+        glCompressedTexImage3D(target, 0, GLTypes::Map(internalFormat), width, height, depth, 0, static_cast<GLsizei>(compressedSize), data);
+    else
+        glTexImage3D(target, 0, GLTypes::Map(internalFormat), width, height, depth, 0, format, type, data);
+}
+
+static void GLTexImage1D(
+    const TextureFormat internalFormat, int width,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+{
+    GLTexImage1DBase(
+        GL_TEXTURE_1D,
+        internalFormat, width,
+        format, type, data, compressedSize
+    );
+}
+
+static void GLTexImage2D(
+    const TextureFormat internalFormat, int width, int height,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+{
+    GLTexImage2DBase(
+        GL_TEXTURE_2D,
+        internalFormat, width, height,
+        format, type, data, compressedSize
+    );
+}
+
+static void GLTexImage3D(
+    const TextureFormat internalFormat, int width, int height, int depth,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+{
+    GLTexImage3DBase(
+        GL_TEXTURE_3D,
+        internalFormat, width, height, depth,
+        format, type, data, compressedSize
+    );
+}
+
+static void GLTexImageCube(
+    const TextureFormat internalFormat, int width, int height, AxisDirection cubeFace,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+{
+    GLTexImage2DBase(
+        GLTypes::Map(cubeFace),
+        internalFormat, width, height,
+        format, type, data, compressedSize
+    );
+}
+
+static void GLTexImage1DArray(
+    const TextureFormat internalFormat, int width, unsigned int layers,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+{
+    GLTexImage2DBase(
+        GL_TEXTURE_1D_ARRAY,
+        internalFormat, width, static_cast<GLsizei>(layers),
+        format, type, data, compressedSize
+    );
+}
+
+static void GLTexImage2DArray(
+    const TextureFormat internalFormat, int width, int height, unsigned int layers,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+{
+    GLTexImage3DBase(
+        GL_TEXTURE_2D_ARRAY,
+        internalFormat, width, height, static_cast<GLsizei>(layers),
+        format, type, data, compressedSize);
+}
+
+static void GLTexImageCubeArray(
+    const TextureFormat internalFormat, int width, int height, unsigned int layers,
+    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+{
+    GLTexImage3DBase(
+        GL_TEXTURE_CUBE_MAP_ARRAY,
+        internalFormat, width, height, static_cast<GLsizei>(layers)*6,
+        format, type, data, compressedSize
+    );
+}
+
 void GLRenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDataDescriptor* imageDesc)
 {
     /* Bind texture and set type */
@@ -305,19 +376,18 @@ void GLRenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage1D(
-            GLTypes::Map(format),
-            size,
-            GLTypes::Map(imageDesc->dataFormat),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data
-        );
+        GLTexImage1D(format, size, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+    }
+    else if (IsCompressedFormat(format))
+    {
+        /* Initialize compressed texture image with null pointer */
+        GLTexImage1D(format, size, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
     else
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size);
-        GLTexImage1D(GLTypes::Map(format), size, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage1D(format, size, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -330,19 +400,18 @@ void GLRenderSystem::SetupTexture2D(Texture& texture, const TextureFormat format
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage2D(
-            GLTypes::Map(format),
-            size.x, size.y,
-            GLTypes::Map(imageDesc->dataFormat),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data
-        );
+        GLTexImage2D(format, size.x, size.y, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+    }
+    else if (IsCompressedFormat(format))
+    {
+        /* Initialize compressed texture image with null pointer */
+        GLTexImage2D(format, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
     else
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size.x*size.y);
-        GLTexImage2D(GLTypes::Map(format), size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage2D(format, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -357,19 +426,18 @@ void GLRenderSystem::SetupTexture3D(Texture& texture, const TextureFormat format
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage3D(
-            GLTypes::Map(format),
-            size.x, size.y, size.z,
-            GLTypes::Map(imageDesc->dataFormat),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data
-        );
+        GLTexImage3D(format, size.x, size.y, size.z, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+    }
+    else if (IsCompressedFormat(format))
+    {
+        /* Initialize compressed texture image with null pointer */
+        GLTexImage3D(format, size.x, size.y, size.z, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
     else
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size.x*size.y*size.z);
-        GLTexImage3D(GLTypes::Map(format), size.x, size.y, size.z, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage3D(format, size.x, size.y, size.z, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -395,28 +463,32 @@ void GLRenderSystem::SetupTextureCube(Texture& texture, const TextureFormat form
     {
         /* Setup texture image cube-faces from descriptor */
         auto imageFace          = reinterpret_cast<const char*>(imageDesc->data);
-        auto imageFaceStride    = size.x * size.y * ColorFormatSize(imageDesc->dataFormat) * DataTypeSize(imageDesc->dataType);
+        auto imageFaceStride    = (size.x * size.y * ColorFormatSize(imageDesc->dataFormat) * DataTypeSize(imageDesc->dataType));
+
+        if (IsCompressedFormat(format))
+            imageFaceStride = imageDesc->compressedSize;
+
+        auto dataFormatGL       = GLTypes::Map(imageDesc->dataFormat);
+        auto dataTypeGL         = GLTypes::Map(imageDesc->dataType);
 
         for (auto face : cubeFaces)
         {
-            GLTexImageCube(
-                GLTypes::Map(format),
-                size.x, size.y,
-                face,
-                GLTypes::Map(imageDesc->dataFormat),
-                GLTypes::Map(imageDesc->dataType),
-                imageFace
-            );
-
+            GLTexImageCube(format, size.x, size.y, face, dataFormatGL, dataTypeGL, imageFace, imageDesc->compressedSize);
             imageFace += imageFaceStride;
         }
+    }
+    else if (IsCompressedFormat(format))
+    {
+        /* Initialize compressed texture image with null pointer */
+        for (auto face : cubeFaces)
+            GLTexImageCube(format, size.x, size.y, face, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
     else
     {
         /* Initialize texture image cube-faces with default color */
         auto image = GetDefaultTextureImageRGBAub(size.x*size.y);
         for (auto face : cubeFaces)
-            GLTexImageCube(GLTypes::Map(format), size.x, size.y, face, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+            GLTexImageCube(format, size.x, size.y, face, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -431,20 +503,18 @@ void GLRenderSystem::SetupTexture1DArray(Texture& texture, const TextureFormat f
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage1DArray(
-            GLTypes::Map(format),
-            size,
-            layers,
-            GLTypes::Map(imageDesc->dataFormat),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data
-        );
+        GLTexImage1DArray(format, size, layers, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+    }
+    else if (IsCompressedFormat(format))
+    {
+        /* Initialize compressed texture image with null pointer */
+        GLTexImage1DArray(format, size, layers, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
     else
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size*static_cast<int>(layers));
-        GLTexImage1DArray(GLTypes::Map(format), size, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage1DArray(format, size, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -459,20 +529,18 @@ void GLRenderSystem::SetupTexture2DArray(Texture& texture, const TextureFormat f
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage2DArray(
-            GLTypes::Map(format),
-            size.x, size.y,
-            layers,
-            GLTypes::Map(imageDesc->dataFormat),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data
-        );
+        GLTexImage2DArray(format, size.x, size.y, layers, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+    }
+    else if (IsCompressedFormat(format))
+    {
+        /* Initialize compressed texture image with null pointer */
+        GLTexImage2DArray(format, size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
     else
     {
         /* Initialize texture image with default color */
         auto image = GetDefaultTextureImageRGBAub(size.x*size.y*static_cast<int>(layers));
-        GLTexImage2DArray(GLTypes::Map(format), size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImage2DArray(format, size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 
@@ -487,19 +555,18 @@ void GLRenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
-        GLTexImageCubeArray(
-            GLTypes::Map(format),
-            size.x, size.y, layers,
-            GLTypes::Map(imageDesc->dataFormat),
-            GLTypes::Map(imageDesc->dataType),
-            imageDesc->data
-        );
+        GLTexImageCubeArray(format, size.x, size.y, layers, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+    }
+    else if (IsCompressedFormat(format))
+    {
+        /* Initialize compressed texture image with null pointer */
+        GLTexImageCubeArray(format, size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
     else
     {
         /* Initialize texture image cube-faces with default color */
         auto image = GetDefaultTextureImageRGBAub(size.x*size.y*static_cast<int>(layers*6));
-        GLTexImageCubeArray(GLTypes::Map(format), size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+        GLTexImageCubeArray(format, size.x, size.y, layers, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     }
 }
 

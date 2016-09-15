@@ -111,6 +111,7 @@ enum class ColorFormat
     BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
     Depth,          //!< Single color component used as depth component.
     DepthStencil,   //!< Pair of depth and stencil component.
+    Compressed,     //!< Generic compressed data type.
 };
 
 //! Axis direction (also used for texture cube face).
@@ -131,6 +132,8 @@ enum class AxisDirection
 struct LLGL_EXPORT ImageDataDescriptor
 {
     ImageDataDescriptor() = default;
+
+    // Constructor for uncompressed image data.
     ImageDataDescriptor(ColorFormat dataFormat, DataType dataType, const void* data) :
         dataFormat  ( dataFormat ),
         dataType    ( dataType   ),
@@ -138,9 +141,17 @@ struct LLGL_EXPORT ImageDataDescriptor
     {
     }
 
-    ColorFormat dataFormat  = ColorFormat::Gray;
-    DataType    dataType    = DataType::UByte;
-    const void* data        = nullptr;
+    //! Constructor for compressed image data.
+    ImageDataDescriptor(const void* data, unsigned int compressedSize) :
+        data            ( data           ),
+        compressedSize  ( compressedSize )
+    {
+    }
+
+    ColorFormat     dataFormat      = ColorFormat::Gray;    //!< Specifies the 
+    DataType        dataType        = DataType::UByte;
+    const void*     data            = nullptr;
+    unsigned int    compressedSize  = 0;
 };
 
 //! Texture descriptor union.
@@ -187,7 +198,12 @@ union TextureDescriptor
 
 /* ----- Functions ----- */
 
-//! Returns the size (in number of components) of the specified color format.
+/**
+\brief Returns the size (in number of components) of the specified color format.
+\param[in] colorFormat Specifies the color format.
+\return Number of components of the specified color format, or 0 if the color format is ColorFormat::Compressed.
+\see ColorFormat
+*/
 LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat);
 
 /**

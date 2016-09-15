@@ -161,6 +161,12 @@ GLenum Map(const TextureFormat textureFormat)
         case TextureFormat::RGBA32UInt:     return GL_RGBA32UI;
         case TextureFormat::RGBA32SInt:     return GL_RGBA32I;
         case TextureFormat::RGBA32Float:    return GL_RGBA32F;
+
+        /* --- Compressed formats --- */
+        case TextureFormat::RGB_DXT1:       return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+        case TextureFormat::RGBA_DXT1:      return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+        case TextureFormat::RGBA_DXT3:      return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+        case TextureFormat::RGBA_DXT5:      return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
     }
     MapFailed("TextureFormat");
 }
