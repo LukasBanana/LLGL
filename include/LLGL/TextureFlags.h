@@ -111,7 +111,8 @@ enum class ColorFormat
     BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
     Depth,          //!< Single color component used as depth component.
     DepthStencil,   //!< Pair of depth and stencil component.
-    Compressed,     //!< Generic compressed data type.
+    CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
+    CompressedRGBA, //!< Generic compressed format with four color components: Red, Green, Blue, Alpha.
 };
 
 //! Axis direction (also used for texture cube face).
@@ -142,16 +143,17 @@ struct LLGL_EXPORT ImageDataDescriptor
     }
 
     //! Constructor for compressed image data.
-    ImageDataDescriptor(const void* data, unsigned int compressedSize) :
+    ImageDataDescriptor(ColorFormat dataFormat, const void* data, unsigned int compressedSize) :
+        dataFormat      ( dataFormat     ),
         data            ( data           ),
         compressedSize  ( compressedSize )
     {
     }
 
-    ColorFormat     dataFormat      = ColorFormat::Gray;    //!< Specifies the 
-    DataType        dataType        = DataType::UByte;
-    const void*     data            = nullptr;
-    unsigned int    compressedSize  = 0;
+    ColorFormat     dataFormat      = ColorFormat::Gray;    //!< Specifies the color format.
+    DataType        dataType        = DataType::UByte;      //!< Speciifes the image data type. This must be DataType::UByte for compressed images.
+    const void*     data            = nullptr;              //!< Pointer to the image data source.
+    unsigned int    compressedSize  = 0;                    //!< Specifies the size (in bytes) of the compressed image. This must be 0 for uncompressed images.
 };
 
 //! Texture descriptor union.
@@ -201,8 +203,8 @@ union TextureDescriptor
 /**
 \brief Returns the size (in number of components) of the specified color format.
 \param[in] colorFormat Specifies the color format.
-\return Number of components of the specified color format, or 0 if the color format is ColorFormat::Compressed.
-\see ColorFormat
+\return Number of components of the specified color format, or 0 if 'colorFormat' specifies a compressed color format.
+\see IsCompressedFormat(const ColorFormat)
 */
 LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat);
 
@@ -218,6 +220,13 @@ i.e. either RGB_DXT1, RGBA_DXT1, RGBA_DXT3, or RGBA_DXT5.
 \see TextureFormat
 */
 LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format);
+
+/**
+\brief Returns true if the specified color format is a compressed format,
+i.e. either CompressedRGB, or CompressedRGBA.
+\see ColorFormat
+*/
+LLGL_EXPORT bool IsCompressedFormat(const ColorFormat format);
 
 
 } // /namespace LLGL

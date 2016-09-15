@@ -17,15 +17,16 @@ LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat)
 {
     switch (colorFormat)
     {
-        case ColorFormat::Gray:         return 1;
-        case ColorFormat::GrayAlpha:    return 2;
-        case ColorFormat::RGB:          return 3;
-        case ColorFormat::BGR:          return 3;
-        case ColorFormat::RGBA:         return 4;
-        case ColorFormat::BGRA:         return 4;
-        case ColorFormat::Depth:        return 1;
-        case ColorFormat::DepthStencil: return 2;
-        case ColorFormat::Compressed:   return 0;
+        case ColorFormat::Gray:             return 1;
+        case ColorFormat::GrayAlpha:        return 2;
+        case ColorFormat::RGB:              return 3;
+        case ColorFormat::BGR:              return 3;
+        case ColorFormat::RGBA:             return 4;
+        case ColorFormat::BGRA:             return 4;
+        case ColorFormat::Depth:            return 1;
+        case ColorFormat::DepthStencil:     return 2;
+        case ColorFormat::CompressedRGB:    return 0;
+        case ColorFormat::CompressedRGBA:   return 0;
     }
     return 0;
 }
@@ -40,6 +41,11 @@ LLGL_EXPORT int NumMipLevels(const Gs::Vector3i& textureSize)
 LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format)
 {
     return (format >= TextureFormat::RGB_DXT1);
+}
+
+LLGL_EXPORT bool IsCompressedFormat(const ColorFormat format)
+{
+    return (format >= ColorFormat::CompressedRGB);
 }
 
 

@@ -570,52 +570,96 @@ void GLRenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat
     }
 }
 
+static void GLTexSubImage1DBase(GLenum target, int mipLevel, int x, int width, const ImageDataDescriptor& imageDesc)
+{
+    if (IsCompressedFormat(imageDesc.dataFormat))
+    {
+        glCompressedTexSubImage1D(
+            target, mipLevel, x, width,
+            GLTypes::Map(imageDesc.dataFormat), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.data
+        );
+    }
+    else
+    {
+        glTexSubImage1D(
+            target, mipLevel, x, width,
+            GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+        );
+    }
+}
+
+static void GLTexSubImage2DBase(GLenum target, int mipLevel, int x, int y, int width, int height, const ImageDataDescriptor& imageDesc)
+{
+    if (IsCompressedFormat(imageDesc.dataFormat))
+    {
+        glCompressedTexSubImage2D(
+            target, mipLevel, x, y, width, height,
+            GLTypes::Map(imageDesc.dataFormat), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.data
+        );
+    }
+    else
+    {
+        glTexSubImage2D(
+            target, mipLevel, x, y, width, height,
+            GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+        );
+    }
+}
+
+static void GLTexSubImage3DBase(GLenum target, int mipLevel, int x, int y, int z, int width, int height, int depth, const ImageDataDescriptor& imageDesc)
+{
+    if (IsCompressedFormat(imageDesc.dataFormat))
+    {
+        glCompressedTexSubImage3D(
+            target, mipLevel, x, y, z, width, height, depth,
+            GLTypes::Map(imageDesc.dataFormat), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.data
+        );
+    }
+    else
+    {
+        glTexSubImage3D(
+            target, mipLevel, x, y, z, width, height, depth,
+            GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+        );
+    }
+}
+
 static void GLTexSubImage1D(int mipLevel, int x, int width, const ImageDataDescriptor& imageDesc)
 {
-    glTexSubImage1D(
-        GL_TEXTURE_1D, mipLevel, x, width,
-        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
-    );
+    GLTexSubImage1DBase(GL_TEXTURE_1D, mipLevel, x, width, imageDesc);
 }
 
 static void GLTexSubImage2D(int mipLevel, int x, int y, int width, int height, const ImageDataDescriptor& imageDesc)
 {
-    glTexSubImage2D(
-        GL_TEXTURE_2D, mipLevel, x, y, width, height,
-        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
-    );
+    GLTexSubImage2DBase(GL_TEXTURE_2D, mipLevel, x, y, width, height, imageDesc);
 }
 
 static void GLTexSubImage3D(int mipLevel, int x, int y, int z, int width, int height, int depth, const ImageDataDescriptor& imageDesc)
 {
-    glTexSubImage3D(
-        GL_TEXTURE_3D, mipLevel, x, y, z, width, height, depth,
-        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
-    );
+    GLTexSubImage3DBase(GL_TEXTURE_3D, mipLevel, x, y, z, width, height, depth, imageDesc);
 }
 
 static void GLTexSubImageCube(int mipLevel, int x, int y, int width, int height, AxisDirection cubeFace, const ImageDataDescriptor& imageDesc)
 {
-    glTexSubImage2D(
-        GLTypes::Map(cubeFace), mipLevel, x, y, width, height,
-        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
-    );
+    GLTexSubImage2DBase(GLTypes::Map(cubeFace), mipLevel, x, y, width, height, imageDesc);
 }
 
 static void GLTexSubImage1DArray(int mipLevel, int x, unsigned int layerOffset, int width, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
-    glTexSubImage2D(
-        GL_TEXTURE_1D_ARRAY, mipLevel, x, static_cast<GLsizei>(layerOffset), width, static_cast<GLsizei>(layers),
-        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    GLTexSubImage2DBase(
+        GL_TEXTURE_1D_ARRAY,
+        mipLevel, x, static_cast<GLsizei>(layerOffset),
+        width, static_cast<GLsizei>(layers), imageDesc
     );
 }
 
 static void GLTexSubImage2DArray(
     int mipLevel, int x, int y, unsigned int layerOffset, int width, int height, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
-    glTexSubImage3D(
-        GL_TEXTURE_2D_ARRAY, mipLevel, x, y, static_cast<GLsizei>(layerOffset), width, height, static_cast<GLsizei>(layers),
-        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    GLTexSubImage3DBase(
+        GL_TEXTURE_2D_ARRAY,
+        mipLevel, x, y, static_cast<GLsizei>(layerOffset),
+        width, height, static_cast<GLsizei>(layers), imageDesc
     );
 }
 
@@ -623,10 +667,10 @@ static void GLTexSubImageCubeArray(
     int mipLevel, int x, int y, unsigned int layerOffset, AxisDirection cubeFaceOffset,
     int width, int height, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc)
 {
-    glTexSubImage3D(
-        GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel,
-        x, y, static_cast<GLsizei>(layerOffset + static_cast<int>(cubeFaceOffset))*6, width, height, static_cast<GLsizei>(cubeFaces),
-        GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+    GLTexSubImage3DBase(
+        GL_TEXTURE_CUBE_MAP_ARRAY,
+        mipLevel, x, y, static_cast<GLsizei>(layerOffset + static_cast<int>(cubeFaceOffset))*6,
+        width, height, static_cast<GLsizei>(cubeFaces), imageDesc
     );
 }
 
@@ -636,6 +680,7 @@ void GLRenderSystem::WriteTexture1D(
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
+
     GLTexSubImage1D(mipLevel, position, size, imageDesc);
 }
 
@@ -645,6 +690,7 @@ void GLRenderSystem::WriteTexture2D(
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     GLStateManager::active->BindTexture(textureGL);
+
     GLTexSubImage2D(mipLevel, position.x, position.y, size.x, size.y, imageDesc);
 }
 

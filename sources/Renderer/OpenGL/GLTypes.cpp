@@ -175,14 +175,16 @@ GLenum Map(const ColorFormat colorFormat)
 {
     switch (colorFormat)
     {
-        case ColorFormat::Gray:         return GL_RED;
-        case ColorFormat::GrayAlpha:    return GL_RG;
-        case ColorFormat::RGB:          return GL_RGB;
-        case ColorFormat::BGR:          return GL_BGR;
-        case ColorFormat::RGBA:         return GL_RGBA;
-        case ColorFormat::BGRA:         return GL_BGRA;
-        case ColorFormat::Depth:        return GL_DEPTH_COMPONENT;  
-        case ColorFormat::DepthStencil: return GL_DEPTH_STENCIL;
+        case ColorFormat::Gray:             return GL_RED;
+        case ColorFormat::GrayAlpha:        return GL_RG;
+        case ColorFormat::RGB:              return GL_RGB;
+        case ColorFormat::BGR:              return GL_BGR;
+        case ColorFormat::RGBA:             return GL_RGBA;
+        case ColorFormat::BGRA:             return GL_BGRA;
+        case ColorFormat::Depth:            return GL_DEPTH_COMPONENT;  
+        case ColorFormat::DepthStencil:     return GL_DEPTH_STENCIL;
+        case ColorFormat::CompressedRGB:    return GL_COMPRESSED_RGB;
+        case ColorFormat::CompressedRGBA:   return GL_COMPRESSED_RGBA;
     }
     MapFailed("ColorFormat");
 }
