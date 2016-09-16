@@ -186,8 +186,10 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
         defer:FALSE
     ];
     
+    id appController = [NSApp delegate];
+    
     [wnd center];
-    [wnd setDelegate:[NSApp delegate]];
+    [wnd setDelegate:appController];
     [wnd setAcceptsMouseMovedEvents:TRUE];
     [wnd makeKeyAndOrderFront:nil];
     
