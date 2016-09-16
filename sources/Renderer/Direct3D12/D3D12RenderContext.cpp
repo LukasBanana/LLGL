@@ -181,7 +181,7 @@ void D3D12RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
     commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
 }
 
-void D3D12RenderContext::SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
+void D3D12RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
 {
     auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, constantBuffer);
 
@@ -191,7 +191,7 @@ void D3D12RenderContext::SetConstantBuffer(unsigned int index, ConstantBuffer& c
     commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
 
-void D3D12RenderContext::SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
+void D3D12RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
 {
     //todo
 }
@@ -208,7 +208,7 @@ void D3D12RenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void D3D12RenderContext::SetTexture(unsigned int layer, Texture& texture)
+void D3D12RenderContext::SetTexture(Texture& texture, unsigned int layer)
 {
     //todo
 }
@@ -220,7 +220,7 @@ void D3D12RenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void D3D12RenderContext::SetSampler(unsigned int layer, Sampler& sampler)
+void D3D12RenderContext::SetSampler(Sampler& sampler, unsigned int layer)
 {
     //todo
 }

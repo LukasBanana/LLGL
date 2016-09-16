@@ -208,14 +208,14 @@ void GLRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
     renderState_.indexBufferStride      = indexBuffer.GetIndexFormat().GetFormatSize();
 }
 
-void GLRenderContext::SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
+void GLRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
 {
     /* Bind constant buffer with BindBufferBase */
     auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
     stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, constantBufferGL.hwBuffer.GetID());
 }
 
-void GLRenderContext::SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
+void GLRenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
 {
     /* Bind storage buffer with BindBufferBase */
     auto& storageBufferGL = LLGL_CAST(GLStorageBuffer&, storageBuffer);
@@ -251,7 +251,7 @@ void GLRenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void GLRenderContext::SetTexture(unsigned int layer, Texture& texture)
+void GLRenderContext::SetTexture(Texture& texture, unsigned int layer)
 {
     /* Bind texture to layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -278,7 +278,7 @@ void GLRenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void GLRenderContext::SetSampler(unsigned int layer, Sampler& sampler)
+void GLRenderContext::SetSampler(Sampler& sampler, unsigned int layer)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     stateMngr_->BindSampler(layer, samplerGL.GetID());

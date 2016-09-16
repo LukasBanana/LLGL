@@ -158,7 +158,7 @@ int main()
 
             context->SetGraphicsPipeline(*pipeline);
             context->SetVertexBuffer(*vertexBuffer);
-            context->SetConstantBuffer(0, *constantBuffer);
+            context->SetConstantBuffer(*constantBuffer, 0);
 
             context->SetDrawMode(LLGL::DrawMode::Triangles);
             context->Draw(3, 0);

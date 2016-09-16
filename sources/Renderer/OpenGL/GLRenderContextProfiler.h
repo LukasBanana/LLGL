@@ -46,18 +46,18 @@ class GLRenderContextProfiler : public GLRenderContext
 
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
         void SetIndexBuffer(IndexBuffer& indexBuffer) override;
-        void SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer) override;
-        void SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer) override;
+        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) override;
+        void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) override;
 
         void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
 
         /* ----- Textures ----- */
 
-        void SetTexture(unsigned int layer, Texture& texture) override;
+        void SetTexture(Texture& texture, unsigned int layer) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(unsigned int layer, Sampler& sampler) override;
+        void SetSampler(Sampler& sampler, unsigned int layer) override;
 
         /* ----- Render Targets ----- */
 

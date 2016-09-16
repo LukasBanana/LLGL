@@ -305,7 +305,7 @@ int main()
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 
         //#ifndef __linux__
-        context->SetSampler(0, sampler);
+        context->SetSampler(sampler, 0);
         //#endif
         
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
@@ -401,7 +401,7 @@ int main()
 
             #endif
 
-            context->SetTexture(0, texture);
+            context->SetTexture(texture, 0);
             context->Draw(4, 0);
             
             #ifdef TEST_STORAGE_BUFFER
@@ -448,7 +448,7 @@ int main()
             if (renderTarget && renderTargetTex)
             {
                 context->UnsetRenderTarget();
-                context->SetTexture(0, *renderTargetTex);
+                context->SetTexture(*renderTargetTex, 0);
                 context->Draw(4, 0);
             }
 

@@ -71,7 +71,7 @@ int main()
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
 
         // Set resources
-        context->SetStorageBuffer(0, *storageBuffer);
+        context->SetStorageBuffer(*storageBuffer, 0);
         context->SetComputePipeline(*pipeline);
 
         // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query

@@ -174,7 +174,7 @@ private:
         // Set hardware buffers to draw the model
         context->SetVertexBuffer(*vertexBuffer);
         context->SetIndexBuffer(*indexBuffer);
-        context->SetConstantBuffer(constantBufferIndex, *constantBuffer);
+        context->SetConstantBuffer(*constantBuffer, constantBufferIndex);
 
         // Set graphics pipeline with the shader
         context->SetGraphicsPipeline(*pipeline);

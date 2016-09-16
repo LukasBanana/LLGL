@@ -65,15 +65,15 @@ void GLRenderContextProfiler::SetIndexBuffer(IndexBuffer& indexBuffer)
     profiler_.setIndexBuffer.Inc();
 }
 
-void GLRenderContextProfiler::SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
+void GLRenderContextProfiler::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
 {
-    GLRenderContext::SetConstantBuffer(index, constantBuffer);
+    GLRenderContext::SetConstantBuffer(constantBuffer, index);
     profiler_.setConstantBuffer.Inc();
 }
 
-void GLRenderContextProfiler::SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
+void GLRenderContextProfiler::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
 {
-    GLRenderContext::SetStorageBuffer(index, storageBuffer);
+    GLRenderContext::SetStorageBuffer(storageBuffer, index);
     profiler_.setStorageBuffer.Inc();
 }
 
@@ -85,17 +85,17 @@ void* GLRenderContextProfiler::MapStorageBuffer(StorageBuffer& storageBuffer, co
 
 /* ----- Textures ----- */
 
-void GLRenderContextProfiler::SetTexture(unsigned int layer, Texture& texture)
+void GLRenderContextProfiler::SetTexture(Texture& texture, unsigned int layer)
 {
-    GLRenderContext::SetTexture(layer, texture);
+    GLRenderContext::SetTexture(texture, layer);
     profiler_.setTexture.Inc();
 }
 
 /* ----- Sampler States ----- */
 
-void GLRenderContextProfiler::SetSampler(unsigned int layer, Sampler& sampler)
+void GLRenderContextProfiler::SetSampler(Sampler& sampler, unsigned int layer)
 {
-    GLRenderContext::SetSampler(layer, sampler);
+    GLRenderContext::SetSampler(sampler, layer);
     profiler_.setSampler.Inc();
 }
 

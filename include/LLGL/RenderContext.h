@@ -97,9 +97,9 @@ class LLGL_EXPORT RenderContext
         
         virtual void SetIndexBuffer(IndexBuffer& indexBuffer) = 0;
         
-        virtual void SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer) = 0;
+        virtual void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) = 0;
 
-        virtual void SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer) = 0;
+        virtual void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) = 0;
 
         /**
         \brief Maps the specified storage buffer from GPU to CPU memory space.
@@ -119,7 +119,7 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Textures ----- */
 
-        virtual void SetTexture(unsigned int layer, Texture& texture) = 0;
+        virtual void SetTexture(Texture& texture, unsigned int layer) = 0;
 
         /**
         \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.
@@ -129,7 +129,7 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Samplers ----- */
 
-        virtual void SetSampler(unsigned int layer, Sampler& sampler) = 0;
+        virtual void SetSampler(Sampler& sampler, unsigned int layer) = 0;
 
         /* ----- Render Targets ----- */
 
