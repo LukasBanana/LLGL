@@ -7,10 +7,11 @@ License
 [3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
 
 
-Getting Started
----------------
+Documentation
+-------------
 
-[Getting Started with LLGL.pdf](https://github.com/LukasBanana/LLGL/blob/master/docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf)
+[Getting Started with LLGL (PDF)](https://github.com/LukasBanana/LLGL/blob/master/docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf)
+[LLGL Reference Manual (PDF)](https://github.com/LukasBanana/LLGL/blob/master/docu/refman.pdf)
 
 
 Progress
