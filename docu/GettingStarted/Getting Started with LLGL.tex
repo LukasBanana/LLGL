@@ -482,21 +482,25 @@ while (context->GetWindow().ProcessEvents()) {
 This main loop will run until the user clicks the close button on the window of the render context.
 The rest of the code is pretty simple, since the most work is done during initialization.
 What we need to do is to clear the color buffer of the previous frame,
-bind the graphics pipeline and the vertex buffer, draw the primitives, and present the result on the frame buffer:
+set the graphics pipeline, set the vertex buffer, set the primitive topology,
+draw the primitives, and present the result on the frame buffer:
 \begin{lstlisting}
 // Clear color buffer
 context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
 // Bind graphics pipeline
-context->BindGraphicsPipeline(*pipeline);
+context->SetGraphicsPipeline(*pipeline);
 
 // Bind vertex buffer
-context->BindVertexBuffer(*vertexBuffer);
+context->SetVertexBuffer(*vertexBuffer);
+
+// Set primitive topology (tell the renderer what primitives to draw)
+context->SetPrimitiveTopology(LLGL::PrimitiveTopology::TriangleList);
 
 // Draw triangle with 3 vertices
 context->Draw(3, 0);
 
-// Present the result on the screen
+// Present the result on the frame buffer (or rather on the screen)
 context->Present();
 \end{lstlisting}
 When you have done everything right, you should see something like shown in figure \ref{fig:tut01_mask1} after compilation
