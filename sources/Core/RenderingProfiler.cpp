@@ -41,128 +41,128 @@ void RenderingProfiler::ResetCounters()
     renderedPatches.Reset();
 }
 
-void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType numVertices)
+void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter::ValueType numVertices)
 {
     drawCalls.Inc();
 
-    switch (drawMode)
+    switch (topology)
     {
-        case DrawMode::Points:
+        case PrimitiveTopology::Points:
             renderedPoints.Inc(numVertices);
             break;
 
-        case DrawMode::Lines:
+        case PrimitiveTopology::Lines:
             renderedPoints.Inc(numVertices / 2);
             break;
 
-        case DrawMode::LineStrip:
+        case PrimitiveTopology::LineStrip:
             if (numVertices >= 2)
                 renderedPoints.Inc(numVertices - 1);
             break;
 
-        case DrawMode::LineLoop:
+        case PrimitiveTopology::LineLoop:
             if (numVertices == 2)
                 renderedPoints.Inc(1);
             else if (numVertices >= 3)
                 renderedPoints.Inc(numVertices);
             break;
 
-        case DrawMode::LinesAdjacency:
+        case PrimitiveTopology::LinesAdjacency:
             renderedPoints.Inc(numVertices / 2);
             break;
 
-        case DrawMode::LineStripAdjacency:
+        case PrimitiveTopology::LineStripAdjacency:
             if (numVertices >= 2)
                 renderedPoints.Inc(numVertices - 1);
             break;
 
-        case DrawMode::Triangles:
+        case PrimitiveTopology::Triangles:
             renderedTriangles.Inc(numVertices / 3);
             break;
 
-        case DrawMode::TriangleStrip:
-        case DrawMode::TriangleFan:
+        case PrimitiveTopology::TriangleStrip:
+        case PrimitiveTopology::TriangleFan:
             if (numVertices >= 3)
                 renderedTriangles.Inc(numVertices - 2);
             break;
 
-        case DrawMode::TrianglesAdjacency:
+        case PrimitiveTopology::TrianglesAdjacency:
             renderedTriangles.Inc(numVertices / 3);
             break;
 
-        case DrawMode::TriangleStripAdjacency:
+        case PrimitiveTopology::TriangleStripAdjacency:
             if (numVertices >= 3)
                 renderedTriangles.Inc(numVertices - 2);
             break;
 
         default:
-            if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+            if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
             {
-                auto numPatchVertices = static_cast<unsigned int>(drawMode) - static_cast<unsigned int>(DrawMode::Patches1) + 1;
+                auto numPatchVertices = static_cast<unsigned int>(topology) - static_cast<unsigned int>(PrimitiveTopology::Patches1) + 1;
                 renderedPatches.Inc(numVertices / numPatchVertices);
             }
             break;
     }
 }
 
-void RenderingProfiler::RecordDrawCall(DrawMode drawMode, Counter::ValueType numVertices, Counter::ValueType numInstances)
+void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter::ValueType numVertices, Counter::ValueType numInstances)
 {
     drawCalls.Inc();
 
-    switch (drawMode)
+    switch (topology)
     {
-        case DrawMode::Points:
+        case PrimitiveTopology::Points:
             renderedPoints.Inc(numVertices * numInstances);
             break;
 
-        case DrawMode::Lines:
+        case PrimitiveTopology::Lines:
             renderedPoints.Inc((numVertices / 2) * numInstances);
             break;
 
-        case DrawMode::LineStrip:
+        case PrimitiveTopology::LineStrip:
             if (numVertices >= 2)
                 renderedPoints.Inc((numVertices - 1) * numInstances);
             break;
 
-        case DrawMode::LineLoop:
+        case PrimitiveTopology::LineLoop:
             if (numVertices == 2)
                 renderedPoints.Inc(numInstances);
             else if (numVertices >= 3)
                 renderedPoints.Inc(numVertices * numInstances);
             break;
 
-        case DrawMode::LinesAdjacency:
+        case PrimitiveTopology::LinesAdjacency:
             renderedPoints.Inc((numVertices / 2) * numInstances);
             break;
 
-        case DrawMode::LineStripAdjacency:
+        case PrimitiveTopology::LineStripAdjacency:
             if (numVertices >= 2)
                 renderedPoints.Inc((numVertices - 1) * numInstances);
             break;
 
-        case DrawMode::Triangles:
+        case PrimitiveTopology::Triangles:
             renderedTriangles.Inc((numVertices / 3) * numInstances);
             break;
 
-        case DrawMode::TriangleStrip:
-        case DrawMode::TriangleFan:
+        case PrimitiveTopology::TriangleStrip:
+        case PrimitiveTopology::TriangleFan:
             if (numVertices >= 3)
                 renderedTriangles.Inc((numVertices - 2) * numInstances);
             break;
 
-        case DrawMode::TrianglesAdjacency:
+        case PrimitiveTopology::TrianglesAdjacency:
             renderedTriangles.Inc((numVertices / 3) * numInstances);
             break;
 
-        case DrawMode::TriangleStripAdjacency:
+        case PrimitiveTopology::TriangleStripAdjacency:
             if (numVertices >= 3)
                 renderedTriangles.Inc((numVertices - 2) * numInstances);
             break;
 
         default:
-            if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+            if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
             {
-                auto numPatchVertices = static_cast<unsigned int>(drawMode) - static_cast<unsigned int>(DrawMode::Patches1) + 1;
+                auto numPatchVertices = static_cast<unsigned int>(topology) - static_cast<unsigned int>(PrimitiveTopology::Patches1) + 1;
                 renderedPatches.Inc((numVertices / numPatchVertices) * numInstances);
             }
             break;

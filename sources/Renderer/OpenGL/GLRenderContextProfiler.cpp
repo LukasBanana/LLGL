@@ -123,58 +123,58 @@ void GLRenderContextProfiler::SetComputePipeline(ComputePipeline& computePipelin
 
 /* --- Drawing --- */
 
-void GLRenderContextProfiler::SetDrawMode(const DrawMode drawMode)
+void GLRenderContextProfiler::SetPrimitiveTopology(const PrimitiveTopology topology)
 {
-    drawMode_ = drawMode;
-    GLRenderContext::SetDrawMode(drawMode);
+    topology_ = topology;
+    GLRenderContext::SetPrimitiveTopology(topology);
 }
 
 void GLRenderContextProfiler::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
     GLRenderContext::Draw(numVertices, firstVertex);
-    profiler_.RecordDrawCall(drawMode_, numVertices);
+    profiler_.RecordDrawCall(topology_, numVertices);
 }
 
 void GLRenderContextProfiler::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
     GLRenderContext::DrawIndexed(numVertices, firstIndex);
-    profiler_.RecordDrawCall(drawMode_, numVertices);
+    profiler_.RecordDrawCall(topology_, numVertices);
 }
 
 void GLRenderContextProfiler::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
     GLRenderContext::DrawIndexed(numVertices, firstIndex, vertexOffset);
-    profiler_.RecordDrawCall(drawMode_, numVertices);
+    profiler_.RecordDrawCall(topology_, numVertices);
 }
 
 void GLRenderContextProfiler::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
     GLRenderContext::DrawInstanced(numVertices, firstVertex, numInstances);
-    profiler_.RecordDrawCall(drawMode_, numVertices);
+    profiler_.RecordDrawCall(topology_, numVertices);
 }
 
 void GLRenderContextProfiler::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
     GLRenderContext::DrawInstanced(numVertices, firstVertex, numInstances, instanceOffset);
-    profiler_.RecordDrawCall(drawMode_, numVertices);
+    profiler_.RecordDrawCall(topology_, numVertices);
 }
 
 void GLRenderContextProfiler::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
     GLRenderContext::DrawIndexedInstanced(numVertices, numInstances, firstIndex);
-    profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
+    profiler_.RecordDrawCall(topology_, numVertices, numInstances);
 }
 
 void GLRenderContextProfiler::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
     GLRenderContext::DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset);
-    profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
+    profiler_.RecordDrawCall(topology_, numVertices, numInstances);
 }
 
 void GLRenderContextProfiler::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
     GLRenderContext::DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
-    profiler_.RecordDrawCall(drawMode_, numVertices, numInstances);
+    profiler_.RecordDrawCall(topology_, numVertices, numInstances);
 }
 
 /* ----- Compute ----- */

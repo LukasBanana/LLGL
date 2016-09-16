@@ -180,7 +180,7 @@ private:
         context->SetGraphicsPipeline(*pipeline);
 
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
-        context->SetDrawMode(LLGL::DrawMode::Patches4);
+        context->SetPrimitiveTopology(LLGL::PrimitiveTopology::Patches4);
         context->DrawIndexed(24, 0);
 
         // Present result on the screen

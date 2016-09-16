@@ -15,8 +15,8 @@ namespace LLGL
 
 /* ----- Enumerations ----- */
 
-//! Render context draw mode enumeration.
-enum class DrawMode
+//! Primitive topology enumeration.
+enum class PrimitiveTopology
 {
     Points,                 //!< Point list (by default only one pixel).
     Lines,                  //!< Line list (by default with one pixel width).

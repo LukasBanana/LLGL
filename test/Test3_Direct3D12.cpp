@@ -160,7 +160,7 @@ int main()
             context->SetVertexBuffer(*vertexBuffer);
             context->SetConstantBuffer(*constantBuffer, 0);
 
-            context->SetDrawMode(LLGL::DrawMode::Triangles);
+            context->SetPrimitiveTopology(LLGL::PrimitiveTopology::Triangles);
             context->Draw(3, 0);
 
 			context->Present();

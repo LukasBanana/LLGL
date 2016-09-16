@@ -22,15 +22,15 @@ namespace DXTypes
 {
 
 
-DXGI_FORMAT             Map( const VertexAttribute& attrib          );
-DXGI_FORMAT             Map( const DataType         dataType        );
-D3D_PRIMITIVE_TOPOLOGY  Map( const DrawMode         drawMode        );
-D3D12_FILL_MODE         Map( const PolygonMode      polygonMode     );
-D3D12_CULL_MODE         Map( const CullMode         cullMode        );
-D3D12_BLEND             Map( const BlendOp          blendOp         );
-D3D12_BLEND_OP          Map( const BlendArithmetic  blendArithmetic );
-D3D12_COMPARISON_FUNC   Map( const CompareOp        compareOp       );
-D3D12_STENCIL_OP        Map( const StencilOp        stencilOp       );
+DXGI_FORMAT             Map( const VertexAttribute&     attrib          );
+DXGI_FORMAT             Map( const DataType             dataType        );
+D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology        );
+D3D12_FILL_MODE         Map( const PolygonMode          polygonMode     );
+D3D12_CULL_MODE         Map( const CullMode             cullMode        );
+D3D12_BLEND             Map( const BlendOp              blendOp         );
+D3D12_BLEND_OP          Map( const BlendArithmetic      blendArithmetic );
+D3D12_COMPARISON_FUNC   Map( const CompareOp            compareOp       );
+D3D12_STENCIL_OP        Map( const StencilOp            stencilOp       );
 
 
 } // /namespace DXTypes

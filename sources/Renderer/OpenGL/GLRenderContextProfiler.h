@@ -69,7 +69,7 @@ class GLRenderContextProfiler : public GLRenderContext
 
         /* --- Drawing --- */
 
-        void SetDrawMode(const DrawMode drawMode) override;
+        void SetPrimitiveTopology(const PrimitiveTopology topology) override;
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
 
@@ -91,7 +91,7 @@ class GLRenderContextProfiler : public GLRenderContext
 
         RenderingProfiler&  profiler_;
 
-        DrawMode            drawMode_ = DrawMode::Triangles;
+        PrimitiveTopology   topology_ = PrimitiveTopology::Triangles;
 
 };
 

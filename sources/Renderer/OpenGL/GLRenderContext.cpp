@@ -345,15 +345,15 @@ bool GLRenderContext::QueryResult(Query& query, std::uint64_t& result)
 
 /* ----- Drawing ----- */
 
-void GLRenderContext::SetDrawMode(const DrawMode drawMode)
+void GLRenderContext::SetPrimitiveTopology(const PrimitiveTopology topology)
 {
-    if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+    if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
     {
         /* Set draw mode to patches for tessellation */
         renderState_.drawMode = GL_PATCHES;
 
         /* Set patch vertices (if supported) */
-        GLint patchVertices = static_cast<GLint>(drawMode) - static_cast<GLint>(DrawMode::Patches1) + 1;
+        GLint patchVertices = static_cast<GLint>(topology) - static_cast<GLint>(PrimitiveTopology::Patches1) + 1;
         GLint maxPatchVertices = renderSystem_.GetRenderingCaps().maxPatchVertices;
 
         if (patchVertices > maxPatchVertices)
@@ -369,7 +369,7 @@ void GLRenderContext::SetDrawMode(const DrawMode drawMode)
     else
     {
         /* Set standard draw mode */
-        renderState_.drawMode = GLTypes::Map(drawMode);
+        renderState_.drawMode = GLTypes::Map(topology);
     }
 }
 

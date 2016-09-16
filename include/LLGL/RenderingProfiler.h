@@ -70,8 +70,8 @@ class LLGL_EXPORT RenderingProfiler
         */
         void ResetCounters();
 
-        void RecordDrawCall(DrawMode drawMode, Counter::ValueType numVertices);
-        void RecordDrawCall(DrawMode drawMode, Counter::ValueType numVertices, Counter::ValueType numInstances);
+        void RecordDrawCall(const PrimitiveTopology topology, Counter::ValueType numVertices);
+        void RecordDrawCall(const PrimitiveTopology topology, Counter::ValueType numVertices, Counter::ValueType numInstances);
 
         Counter writeVertexBuffer;
         Counter writeIndexBuffer;

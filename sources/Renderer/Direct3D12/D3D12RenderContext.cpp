@@ -264,9 +264,9 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 
 /* ----- Drawing ----- */
 
-void D3D12RenderContext::SetDrawMode(const DrawMode drawMode)
+void D3D12RenderContext::SetPrimitiveTopology(const PrimitiveTopology topology)
 {
-    commandList_->IASetPrimitiveTopology(DXTypes::Map(drawMode));
+    commandList_->IASetPrimitiveTopology(DXTypes::Map(topology));
 }
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)

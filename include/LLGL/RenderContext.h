@@ -273,8 +273,11 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Drawing ----- */
 
-        virtual void SetDrawMode(const DrawMode drawMode) = 0;
-        //virtual void SetPrimitiveTopology(const PrimitiveTopology topology) = 0;
+        /**
+        \brief Sets the primitive topology for subsequent draw operations.
+        \see PrimitiveTopology
+        */
+        virtual void SetPrimitiveTopology(const PrimitiveTopology topology) = 0;
 
         /**
         \brief Draws the specified amount of primitives from the currently set vertex buffer.

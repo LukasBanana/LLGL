@@ -102,7 +102,7 @@ class GLRenderContext : public RenderContext
 
         /* ----- Drawing ----- */
 
-        void SetDrawMode(const DrawMode drawMode) override;
+        void SetPrimitiveTopology(const PrimitiveTopology topology) override;
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
 

@@ -66,27 +66,27 @@ GLenum Map(const DataType dataType)
     MapFailed("DataType");
 }
 
-GLenum Map(const DrawMode drawMode)
+GLenum Map(const PrimitiveTopology topology)
 {
-    switch (drawMode)
+    switch (topology)
     {
-        case DrawMode::Points:                  return GL_POINTS;
-        case DrawMode::Lines:                   return GL_LINES;
-        case DrawMode::LineStrip:               return GL_LINE_STRIP;
-        case DrawMode::LineLoop:                return GL_LINE_LOOP;
-        case DrawMode::LinesAdjacency:          return GL_LINES_ADJACENCY;
-        case DrawMode::LineStripAdjacency:      return GL_LINE_STRIP_ADJACENCY;
-        case DrawMode::Triangles:               return GL_TRIANGLES;
-        case DrawMode::TriangleStrip:           return GL_TRIANGLE_STRIP;
-        case DrawMode::TriangleFan:             return GL_TRIANGLE_FAN;
-        case DrawMode::TrianglesAdjacency:      return GL_TRIANGLES_ADJACENCY;
-        case DrawMode::TriangleStripAdjacency:  return GL_TRIANGLE_STRIP_ADJACENCY;
+        case PrimitiveTopology::Points:                  return GL_POINTS;
+        case PrimitiveTopology::Lines:                   return GL_LINES;
+        case PrimitiveTopology::LineStrip:               return GL_LINE_STRIP;
+        case PrimitiveTopology::LineLoop:                return GL_LINE_LOOP;
+        case PrimitiveTopology::LinesAdjacency:          return GL_LINES_ADJACENCY;
+        case PrimitiveTopology::LineStripAdjacency:      return GL_LINE_STRIP_ADJACENCY;
+        case PrimitiveTopology::Triangles:               return GL_TRIANGLES;
+        case PrimitiveTopology::TriangleStrip:           return GL_TRIANGLE_STRIP;
+        case PrimitiveTopology::TriangleFan:             return GL_TRIANGLE_FAN;
+        case PrimitiveTopology::TrianglesAdjacency:      return GL_TRIANGLES_ADJACENCY;
+        case PrimitiveTopology::TriangleStripAdjacency:  return GL_TRIANGLE_STRIP_ADJACENCY;
         default:
-            if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+            if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
                 return GL_PATCHES;
             break;
     }
-    MapFailed("DrawMode");
+    MapFailed("PrimitiveTopology");
 }
 
 GLenum Map(const TextureType textureType)

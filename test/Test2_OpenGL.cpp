@@ -342,7 +342,7 @@ int main()
             context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
-            context->SetDrawMode(LLGL::DrawMode::TriangleFan);
+            context->SetPrimitiveTopology(LLGL::PrimitiveTopology::TriangleFan);
 
             auto uniformSetter = shaderProgram.LockShaderUniform();
             if (uniformSetter)
