@@ -63,14 +63,12 @@ class GLRenderContext : public RenderContext
 
         void ClearBuffers(long flags) override;
 
-        void SetDrawMode(const DrawMode drawMode) override;
-
         /* ----- Hardware Buffers ------ */
 
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
         void SetIndexBuffer(IndexBuffer& indexBuffer) override;
-        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) override;
-        void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) override;
+        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot) override;
+        void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot) override;
 
         void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
         void UnmapStorageBuffer() override;
@@ -103,6 +101,8 @@ class GLRenderContext : public RenderContext
         bool QueryResult(Query& query, std::uint64_t& result) override;
 
         /* ----- Drawing ----- */
+
+        void SetDrawMode(const DrawMode drawMode) override;
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
 

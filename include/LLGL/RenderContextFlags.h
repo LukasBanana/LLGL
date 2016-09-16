@@ -79,7 +79,10 @@ enum class RendererInfo
 
 /* ----- Structures ----- */
 
-//! Render context clear buffer flags.
+/**
+\brief Render context clear buffer flags.
+\see RenderContext::ClearBuffers
+*/
 struct ClearBuffersFlags
 {
     enum

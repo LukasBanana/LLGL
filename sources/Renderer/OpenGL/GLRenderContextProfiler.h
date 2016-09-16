@@ -40,24 +40,22 @@ class GLRenderContextProfiler : public GLRenderContext
 
         void ClearBuffers(long flags) override;
 
-        void SetDrawMode(const DrawMode drawMode) override;
-
         /* ----- Hardware buffers ------ */
 
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
         void SetIndexBuffer(IndexBuffer& indexBuffer) override;
-        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) override;
-        void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) override;
+        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot) override;
+        void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot) override;
 
         void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
 
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, unsigned int layer) override;
+        void SetTexture(Texture& texture, unsigned int slot) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, unsigned int layer) override;
+        void SetSampler(Sampler& sampler, unsigned int slot) override;
 
         /* ----- Render Targets ----- */
 
@@ -70,6 +68,8 @@ class GLRenderContextProfiler : public GLRenderContext
         void SetComputePipeline(ComputePipeline& computePipeline) override;
 
         /* --- Drawing --- */
+
+        void SetDrawMode(const DrawMode drawMode) override;
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
 

@@ -80,26 +80,87 @@ class LLGL_EXPORT RenderContext
             return videoModeDesc_;
         }
 
+        /**
+        \brief Sets the specified viewports.
+        \param[in] viewports Specifies the list of viewports.
+        \remarks This function behaves differently on the OpenGL render system, depending on the state configured
+        with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.flipViewportVertical' is false,
+        the origin of each viewport is on the upper-left (like for all other render systems).
+        If 'stateOpenGL.flipViewportVertical' is true, the origin of each viewport
+        is on the lower-left (this is useful when a render target is set).
+        \see SetGraphicsAPIDependentState
+        */
         virtual void SetViewports(const std::vector<Viewport>& viewports) = 0;
+
+        /**
+        \brief Sets the specified scissor rectangles.
+        \param[in] scissors Specifies the list of scissor rectangles.
+        \remarks This function behaves differently on the OpenGL render system, depending on the state configured
+        with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.flipViewportVertical' is false,
+        the origin of each scissor rectangle is on the upper-left (like for all other render systems).
+        If 'stateOpenGL.flipViewportVertical' is true, the origin of each scissor rectangle
+        is on the lower-left (this is useful when a render target is set).
+        \see SetGraphicsAPIDependentState
+        */
         virtual void SetScissors(const std::vector<Scissor>& scissors) = 0;
 
+        //! Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
         virtual void SetClearColor(const ColorRGBAf& color) = 0;
+
+        //! Sets the new value to clear the depth buffer with. By default 0.0.
         virtual void SetClearDepth(float depth) = 0;
+
+        //! Sets the new value to clear the stencil buffer. By default 0.
         virtual void SetClearStencil(int stencil) = 0;
 
+        /**
+        \brief Clears the specified frame buffers.
+        \param[in] flags Specifies the clear buffer flags.
+        This can be a bitwise OR combination of the "ClearBuffersFlags" enumeration entries.
+        \remarks To specify the clear values for each buffer use the respective "SetClear..." function
+        \see ClearBuffersFlags
+        \see SetClearColor
+        \see SetClearDepth
+        \see SetClearStencil
+        */
         virtual void ClearBuffers(long flags) = 0;
-
-        virtual void SetDrawMode(const DrawMode drawMode) = 0;
 
         /* ----- Hardware Buffers ------ */
 
+        /**
+        \brief Sets the active vertex buffer for subsequent drawing operations.
+        \param[in] vertexBuffer Specifies the vertex buffer to set. This must not be an unspecified vertex buffer,
+        i.e. it must be initialized with the "RenderSystem::SetupVertexBuffer" function.
+        \see RenderSystem::SetupVertexBuffer
+        */
         virtual void SetVertexBuffer(VertexBuffer& vertexBuffer) = 0;
         
+        /**
+        \brief Sets the active index buffer for subsequent drawing operations.
+        \param[in] indexBuffer Specifies the index buffer to set. This must not be an unspecified index buffer,
+        i.e. it must be initialized with the "RenderSystem::SetupIndexBuffer" function.
+        \remarks An active index buffer is only required for any "DrawIndexed" or "DrawIndexedInstanced" draw call.
+        \see RenderSystem::SetupIndexBuffer
+        */
         virtual void SetIndexBuffer(IndexBuffer& indexBuffer) = 0;
         
-        virtual void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) = 0;
+        /**
+        \brief Sets the active constant buffer of the specified slot index for subsequent drawing and compute operations.
+        \param[in] constantBuffer Specifies the constant buffer to set. This must not be an unspecified constant buffer,
+        i.e. it must be initialized with the "RenderSystem::SetupConstantBuffer" function.
+        \param[in] slot Specifies the slot index where to put the constant buffer.
+        \see RenderSystem::SetupConstantBuffer
+        */
+        virtual void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot) = 0;
 
-        virtual void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) = 0;
+        /**
+        \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.
+        \param[in] storageBuffer Specifies the storage buffer to set. This must not be an unspecified storage buffer,
+        i.e. it must be initialized with the "RenderSystem::SetupStorageBuffer" function.
+        \param[in] slot Specifies the slot index where to put the storage buffer.
+        \see RenderSystem::SetupStorageBuffer
+        */
+        virtual void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot) = 0;
 
         /**
         \brief Maps the specified storage buffer from GPU to CPU memory space.
@@ -119,7 +180,13 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Textures ----- */
 
-        virtual void SetTexture(Texture& texture, unsigned int layer) = 0;
+        /**
+        \brief Sets the active texture of the specified slot index for subsequent drawing and compute operations.
+        \param[in] texture Specifies the texture to set. This must not be an unspecified texture,
+        i.e. it must be initialized with any of the "RenderSystem::SetupTexture..." functions.
+        \param[in] slot Specifies the slot index where to put the texture.
+        */
+        virtual void SetTexture(Texture& texture, unsigned int slot) = 0;
 
         /**
         \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.
@@ -129,21 +196,71 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Samplers ----- */
 
-        virtual void SetSampler(Sampler& sampler, unsigned int layer) = 0;
+        /**
+        \brief Sets the active sampler of the specified slot index for subsequent drawing and compute operations.
+        \param[in] sampler Specifies the sampler to set.
+        \param[in] slot Specifies the slot index where to put the sampler.
+        \see RenderSystem::CreateSampler
+        */
+        virtual void SetSampler(Sampler& sampler, unsigned int slot) = 0;
 
         /* ----- Render Targets ----- */
 
+        /**
+        \brief Sets the active render target.
+        \param[in] renderTarget Specifies the render target to set.
+        \remarks Subsequent drawing operations will be rendered into the textures that are attached to the specified render target.
+        \see UnsetRenderTarget
+        */
         virtual void SetRenderTarget(RenderTarget& renderTarget) = 0;
+
+        /**
+        \brief Unsets the previously set render target.
+        \remarks Subsequent drawing operations will be rendered into the main framebuffer, which can then be presented onto the screen.
+        \see SetRenderTarget
+        */
         virtual void UnsetRenderTarget() = 0;
 
         /* ----- Pipeline States ----- */
 
+        /**
+        \briefs Sets the active graphics pipeline state.
+        \param[in] graphicsPipeline Specifies the graphics pipeline state to set.
+        \remarks This will set all blending-, rasterizer-, depth-, stencil-, and shader states.
+        A valid graphics pipeline must always be set before any drawing operation can be performed.
+        \see RenderSystem::CreateGraphicsPipeline
+        */
         virtual void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
+
+        /**
+        \brief Sets the active compute pipeline state.
+        \param[in] computePipeline Specifies the compuite pipeline state to set.
+        \remarks This will set the compute shader states.
+        A valid compute pipeline must always be set before any dispatch compute operation can be performed.
+        \see RenderSystem::CreateComputePipeline
+        */
         virtual void SetComputePipeline(ComputePipeline& computePipeline) = 0;
 
         /* ----- Queries ----- */
 
+        /**
+        \brief Begins the specified query.
+        \param[in] query Specifies the query to begin with.
+        This must be same query object as in the subsequent "EndQuery" function call, to end the query operation.
+        \remarks The "BeginQuery" and "EndQuery" functions can be wrapped around any drawing and/or dispatch compute operation.
+        This can an occlusion query for instance, which determines how many fragments have passed the depth test.
+        \see RenderSystem::CreateQuery
+        \see EndQuery
+        \see QueryResult
+        */
         virtual void BeginQuery(Query& query) = 0;
+
+        /**
+        \brief Ends the specified query.
+        \see RenderSystem::CreateQuery
+        \see BeginQuery
+        \see QueryResult
+        */
         virtual void EndQuery(Query& query) = 0;
 
         /**
@@ -156,20 +273,63 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Drawing ----- */
 
+        virtual void SetDrawMode(const DrawMode drawMode) = 0;
+        //virtual void SetPrimitiveTopology(const PrimitiveTopology topology) = 0;
+
+        /**
+        \brief Draws the specified amount of primitives from the currently set vertex buffer.
+        \param[in] numVertices Specifies the number of vertices to generate.
+        \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.
+        */
         virtual void Draw(unsigned int numVertices, unsigned int firstVertex) = 0;
 
+        //! \see DrawIndexed(unsigned int, unsigned int, int)
         virtual void DrawIndexed(unsigned int numVertices, unsigned int firstIndex) = 0;
+
+        /**
+        \brief Draws the specified amount of primitives from the currently set vertex- and index buffers.
+        \param[in] numVertices Specifies the number of vertices to generate.
+        \param[in] firstIndex Specifies the zero-based offset of the first index from the index buffer.
+        \param[in] vertexOffset Specifies the base vertex offset (positive or negative) which is added to each index from the index buffer.
+        */
         virtual void DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset) = 0;
 
+        //! \see DrawInstanced(unsigned int, unsigned int, unsigned int, unsigned int)
         virtual void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) = 0;
+        
+        /**
+        \brief Draws the specified amount of instances of primitives from the currently set vertex buffer.
+        \param[in] numVertices Specifies the number of vertices to generate.
+        \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.
+        \param[in] numInstances Specifies the number of instances to generate.
+        \param[in] instanceOffset Specifies the zero-based instance offset which is added to each instance ID.
+        */
         virtual void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) = 0;
 
+        //! \see DrawIndexedInstanced(unsigned int, unsigned int, unsigned int, int, unsigned int)
         virtual void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex) = 0;
-        virtual void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int indexOffset) = 0;
-        virtual void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int indexOffset, unsigned int instanceOffset) = 0;
+        
+        //! \see DrawIndexedInstanced(unsigned int, unsigned int, unsigned int, int, unsigned int)
+        virtual void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset) = 0;
+        
+        /**
+        \brief Draws the specified amount of instances of primitives from the currently set vertex- and index buffers.
+        \param[in] numVertices Specifies the number of vertices to generate.
+        \param[in] numInstances Specifies the number of instances to generate.
+        \param[in] firstIndex Specifies the zero-based offset of the first index from the index buffer.
+        \param[in] vertexOffset Specifies the base vertex offset (positive or negative) which is added to each index from the index buffer.
+        \param[in] instanceOffset Specifies the zero-based instance offset which is added to each instance ID.
+        */
+        virtual void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset) = 0;
 
         /* ----- Compute ----- */
 
+        /**
+        \brief Dispachtes a compute command.
+        \param[in] threadGroupSize Specifies the number of thread groups,
+        where the number of threads per group is specified statically within the compute shader.
+        \see SetComputePipeline
+        */
         virtual void DispatchCompute(const Gs::Vector3ui& threadGroupSize) = 0;
 
         /* ----- Misc ----- */

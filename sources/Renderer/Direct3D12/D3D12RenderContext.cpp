@@ -119,10 +119,7 @@ void D3D12RenderContext::SetScissors(const std::vector<Scissor>& scissors)
 
 void D3D12RenderContext::SetClearColor(const ColorRGBAf& color)
 {
-    clearColor_[0] = color.r;
-    clearColor_[1] = color.g;
-    clearColor_[2] = color.b;
-    clearColor_[3] = color.a;
+    clearColor_ = color;
 }
 
 void D3D12RenderContext::SetClearDepth(float depth)
@@ -144,7 +141,7 @@ void D3D12RenderContext::ClearBuffers(long flags)
 
     /* Clear color buffer */
     if ((flags & ClearBuffersFlags::Color) != 0)
-        commandList_->ClearRenderTargetView(rtvHandle, clearColor_, 0, nullptr);
+        commandList_->ClearRenderTargetView(rtvHandle, clearColor_.Ptr(), 0, nullptr);
     
     /* Clear depth-stencil buffer */
     int rtvClearFlags = 0;
@@ -162,11 +159,6 @@ void D3D12RenderContext::ClearBuffers(long flags)
     }
 }
 
-void D3D12RenderContext::SetDrawMode(const DrawMode drawMode)
-{
-    commandList_->IASetPrimitiveTopology(DXTypes::Map(drawMode));
-}
-
 /* ----- Hardware Buffers ------ */
 
 void D3D12RenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
@@ -181,7 +173,8 @@ void D3D12RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
     commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
 }
 
-void D3D12RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
+//INCOMPLETE
+void D3D12RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
 {
     auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, constantBuffer);
 
@@ -191,7 +184,7 @@ void D3D12RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsig
     commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
 
-void D3D12RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
+void D3D12RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
 {
     //todo
 }
@@ -208,7 +201,7 @@ void D3D12RenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void D3D12RenderContext::SetTexture(Texture& texture, unsigned int layer)
+void D3D12RenderContext::SetTexture(Texture& texture, unsigned int slot)
 {
     //todo
 }
@@ -220,7 +213,7 @@ void D3D12RenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void D3D12RenderContext::SetSampler(Sampler& sampler, unsigned int layer)
+void D3D12RenderContext::SetSampler(Sampler& sampler, unsigned int slot)
 {
     //todo
 }
@@ -270,6 +263,11 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 }
 
 /* ----- Drawing ----- */
+
+void D3D12RenderContext::SetDrawMode(const DrawMode drawMode)
+{
+    commandList_->IASetPrimitiveTopology(DXTypes::Map(drawMode));
+}
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {

@@ -45,12 +45,6 @@ void GLRenderContextProfiler::ClearBuffers(long flags)
     GLRenderContext::ClearBuffers(flags);
 }
 
-void GLRenderContextProfiler::SetDrawMode(const DrawMode drawMode)
-{
-    drawMode_ = drawMode;
-    GLRenderContext::SetDrawMode(drawMode);
-}
-
 /* ----- Hardware buffers ------ */
 
 void GLRenderContextProfiler::SetVertexBuffer(VertexBuffer& vertexBuffer)
@@ -65,15 +59,15 @@ void GLRenderContextProfiler::SetIndexBuffer(IndexBuffer& indexBuffer)
     profiler_.setIndexBuffer.Inc();
 }
 
-void GLRenderContextProfiler::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
+void GLRenderContextProfiler::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
 {
-    GLRenderContext::SetConstantBuffer(constantBuffer, index);
+    GLRenderContext::SetConstantBuffer(constantBuffer, slot);
     profiler_.setConstantBuffer.Inc();
 }
 
-void GLRenderContextProfiler::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
+void GLRenderContextProfiler::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
 {
-    GLRenderContext::SetStorageBuffer(storageBuffer, index);
+    GLRenderContext::SetStorageBuffer(storageBuffer, slot);
     profiler_.setStorageBuffer.Inc();
 }
 
@@ -85,17 +79,17 @@ void* GLRenderContextProfiler::MapStorageBuffer(StorageBuffer& storageBuffer, co
 
 /* ----- Textures ----- */
 
-void GLRenderContextProfiler::SetTexture(Texture& texture, unsigned int layer)
+void GLRenderContextProfiler::SetTexture(Texture& texture, unsigned int slot)
 {
-    GLRenderContext::SetTexture(texture, layer);
+    GLRenderContext::SetTexture(texture, slot);
     profiler_.setTexture.Inc();
 }
 
 /* ----- Sampler States ----- */
 
-void GLRenderContextProfiler::SetSampler(Sampler& sampler, unsigned int layer)
+void GLRenderContextProfiler::SetSampler(Sampler& sampler, unsigned int slot)
 {
-    GLRenderContext::SetSampler(sampler, layer);
+    GLRenderContext::SetSampler(sampler, slot);
     profiler_.setSampler.Inc();
 }
 
@@ -128,6 +122,12 @@ void GLRenderContextProfiler::SetComputePipeline(ComputePipeline& computePipelin
 }
 
 /* --- Drawing --- */
+
+void GLRenderContextProfiler::SetDrawMode(const DrawMode drawMode)
+{
+    drawMode_ = drawMode;
+    GLRenderContext::SetDrawMode(drawMode);
+}
 
 void GLRenderContextProfiler::Draw(unsigned int numVertices, unsigned int firstVertex)
 {

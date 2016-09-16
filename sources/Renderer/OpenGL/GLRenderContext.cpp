@@ -160,34 +160,6 @@ void GLRenderContext::ClearBuffers(long flags)
     glClear(mask);
 }
 
-void GLRenderContext::SetDrawMode(const DrawMode drawMode)
-{
-    if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
-    {
-        /* Set draw mode to patches for tessellation */
-        renderState_.drawMode = GL_PATCHES;
-
-        /* Set patch vertices (if supported) */
-        GLint patchVertices = static_cast<GLint>(drawMode) - static_cast<GLint>(DrawMode::Patches1) + 1;
-        GLint maxPatchVertices = renderSystem_.GetRenderingCaps().maxPatchVertices;
-
-        if (patchVertices > maxPatchVertices)
-        {
-            throw std::runtime_error(
-                "renderer does not support " + std::to_string(patchVertices) +
-                " control points for patches (limit is " + std::to_string(maxPatchVertices) + ")"
-            );
-        }
-        else
-            glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
-    }
-    else
-    {
-        /* Set standard draw mode */
-        renderState_.drawMode = GLTypes::Map(drawMode);
-    }
-}
-
 /* ----- Hardware Buffers ------ */
 
 void GLRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
@@ -208,18 +180,18 @@ void GLRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
     renderState_.indexBufferStride      = indexBuffer.GetIndexFormat().GetFormatSize();
 }
 
-void GLRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index)
+void GLRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
 {
     /* Bind constant buffer with BindBufferBase */
     auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
-    stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, constantBufferGL.hwBuffer.GetID());
+    stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, slot, constantBufferGL.hwBuffer.GetID());
 }
 
-void GLRenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index)
+void GLRenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
 {
     /* Bind storage buffer with BindBufferBase */
     auto& storageBufferGL = LLGL_CAST(GLStorageBuffer&, storageBuffer);
-    stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, index, storageBufferGL.hwBuffer.GetID());
+    stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, slot, storageBufferGL.hwBuffer.GetID());
 }
 
 void* GLRenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
@@ -251,11 +223,11 @@ void GLRenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void GLRenderContext::SetTexture(Texture& texture, unsigned int layer)
+void GLRenderContext::SetTexture(Texture& texture, unsigned int slot)
 {
     /* Bind texture to layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    stateMngr_->ActiveTexture(layer);
+    stateMngr_->ActiveTexture(slot);
     stateMngr_->BindTexture(textureGL);
 }
 
@@ -278,10 +250,10 @@ void GLRenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void GLRenderContext::SetSampler(Sampler& sampler, unsigned int layer)
+void GLRenderContext::SetSampler(Sampler& sampler, unsigned int slot)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
-    stateMngr_->BindSampler(layer, samplerGL.GetID());
+    stateMngr_->BindSampler(slot, samplerGL.GetID());
 }
 
 /* ----- Render Targets ----- */
@@ -372,6 +344,34 @@ bool GLRenderContext::QueryResult(Query& query, std::uint64_t& result)
 }
 
 /* ----- Drawing ----- */
+
+void GLRenderContext::SetDrawMode(const DrawMode drawMode)
+{
+    if (drawMode >= DrawMode::Patches1 && drawMode <= DrawMode::Patches32)
+    {
+        /* Set draw mode to patches for tessellation */
+        renderState_.drawMode = GL_PATCHES;
+
+        /* Set patch vertices (if supported) */
+        GLint patchVertices = static_cast<GLint>(drawMode) - static_cast<GLint>(DrawMode::Patches1) + 1;
+        GLint maxPatchVertices = renderSystem_.GetRenderingCaps().maxPatchVertices;
+
+        if (patchVertices > maxPatchVertices)
+        {
+            throw std::runtime_error(
+                "renderer does not support " + std::to_string(patchVertices) +
+                " control points for patches (limit is " + std::to_string(maxPatchVertices) + ")"
+            );
+        }
+        else
+            glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
+    }
+    else
+    {
+        /* Set standard draw mode */
+        renderState_.drawMode = GLTypes::Map(drawMode);
+    }
+}
 
 void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {

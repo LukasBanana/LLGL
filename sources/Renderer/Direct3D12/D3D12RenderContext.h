@@ -57,27 +57,25 @@ class D3D12RenderContext : public RenderContext
 
         void ClearBuffers(long flags) override;
 
-        void SetDrawMode(const DrawMode drawMode) override;
-
         /* ----- Hardware Buffers ------ */
 
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
         void SetIndexBuffer(IndexBuffer& indexBuffer) override;
-        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int index) override;
-        void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int index) override;
+        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot) override;
+        void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot) override;
 
         void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
         void UnmapStorageBuffer() override;
 
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, unsigned int layer) override;
+        void SetTexture(Texture& texture, unsigned int slot) override;
 
         void GenerateMips(Texture& texture) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, unsigned int layer) override;
+        void SetSampler(Sampler& sampler, unsigned int slot) override;
 
         /* ----- Render Targets ----- */
 
@@ -97,6 +95,8 @@ class D3D12RenderContext : public RenderContext
         bool QueryResult(Query& query, std::uint64_t& result) override;
 
         /* ----- Drawing ----- */
+
+        void SetDrawMode(const DrawMode drawMode) override;
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
 
@@ -153,7 +153,7 @@ class D3D12RenderContext : public RenderContext
         UINT                                numFrames_                      = 0;
         UINT                                currentFrame_                   = 0;
 
-        FLOAT                               clearColor_[4]                  = { 1.0f, 1.0f, 1.0f, 1.0f };
+        ColorRGBAf                          clearColor_                     = { 0.0f, 0.0f, 0.0f, 0.0f };
         FLOAT                               clearDepth_                     = 0.0f;
         UINT8                               clearStencil_                   = 0;
 
