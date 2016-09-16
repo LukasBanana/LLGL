@@ -18,17 +18,32 @@ namespace LLGL
 //! Primitive topology enumeration.
 enum class PrimitiveTopology
 {
-    Points,                 //!< Point list (by default only one pixel).
-    Lines,                  //!< Line list (by default with one pixel width).
-    LineStrip,              //!< Line strip where each primitive after the first one begins with the previous vertex.
-    LineLoop,               //!< Line loop which is similiar to line strip but the last primtive ends with the first vertex (Only supported for OpenGL).
-    LinesAdjacency,         //!< Adjacency line list.
+    PointList,              //!< Point list.
+
+    LineList,               //!< Line list where each line has its own two vertices.
+    LineStrip,              //!< Line strip where each line after the first one begins with the previous vertex.
+
+    /**
+    \brief Line loop which is similiar to line strip but the last line ends with the first vertex.
+    \note This is only supported with OpenGL.
+    */
+    LineLoop,
+
+    LineListAdjacency,      //!< Adjacency line list.
     LineStripAdjacency,     //!< Adjacency line strips.
-    Triangles,              //!< Triangle list.
-    TriangleStrip,          //!< Triangle strip where each primitive after the first one begins with the previous vertex.
-    TriangleFan,            //!< Triangle fan where each primitive use the first vertex, the previous vertex and a new vertex (Only supported for OpenGL).
-    TrianglesAdjacency,     //!< Adjacency triangle list.
+
+    TriangleList,           //!< Triangle list where each triangle has its own three vertices.
+    TriangleStrip,          //!< Triangle strip where each triangle after the first one begins with the previous vertex.
+
+    /**
+    \brief Triangle fan where each triangle uses the first vertex, the previous vertex, and a new vertex.
+    \note This is only supported with OpenGL.
+    */
+    TriangleFan,
+
+    TriangleListAdjacency,  //!< Adjacency triangle list.
     TriangleStripAdjacency, //!< Adjacency triangle strips.
+
     Patches1,               //!< Patches with 1 control point.
     Patches2,               //!< Patches with 2 control points.
     Patches3,               //!< Patches with 3 control points.

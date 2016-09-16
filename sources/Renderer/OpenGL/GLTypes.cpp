@@ -70,17 +70,17 @@ GLenum Map(const PrimitiveTopology topology)
 {
     switch (topology)
     {
-        case PrimitiveTopology::Points:                  return GL_POINTS;
-        case PrimitiveTopology::Lines:                   return GL_LINES;
-        case PrimitiveTopology::LineStrip:               return GL_LINE_STRIP;
-        case PrimitiveTopology::LineLoop:                return GL_LINE_LOOP;
-        case PrimitiveTopology::LinesAdjacency:          return GL_LINES_ADJACENCY;
-        case PrimitiveTopology::LineStripAdjacency:      return GL_LINE_STRIP_ADJACENCY;
-        case PrimitiveTopology::Triangles:               return GL_TRIANGLES;
-        case PrimitiveTopology::TriangleStrip:           return GL_TRIANGLE_STRIP;
-        case PrimitiveTopology::TriangleFan:             return GL_TRIANGLE_FAN;
-        case PrimitiveTopology::TrianglesAdjacency:      return GL_TRIANGLES_ADJACENCY;
-        case PrimitiveTopology::TriangleStripAdjacency:  return GL_TRIANGLE_STRIP_ADJACENCY;
+        case PrimitiveTopology::PointList:              return GL_POINTS;
+        case PrimitiveTopology::LineList:               return GL_LINES;
+        case PrimitiveTopology::LineStrip:              return GL_LINE_STRIP;
+        case PrimitiveTopology::LineLoop:               return GL_LINE_LOOP;
+        case PrimitiveTopology::LineListAdjacency:      return GL_LINES_ADJACENCY;
+        case PrimitiveTopology::LineStripAdjacency:     return GL_LINE_STRIP_ADJACENCY;
+        case PrimitiveTopology::TriangleList:           return GL_TRIANGLES;
+        case PrimitiveTopology::TriangleStrip:          return GL_TRIANGLE_STRIP;
+        case PrimitiveTopology::TriangleFan:            return GL_TRIANGLE_FAN;
+        case PrimitiveTopology::TriangleListAdjacency:  return GL_TRIANGLES_ADJACENCY;
+        case PrimitiveTopology::TriangleStripAdjacency: return GL_TRIANGLE_STRIP_ADJACENCY;
         default:
             if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
                 return GL_PATCHES;

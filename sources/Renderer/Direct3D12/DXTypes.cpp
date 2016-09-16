@@ -170,16 +170,16 @@ D3D_PRIMITIVE_TOPOLOGY Map(const PrimitiveTopology topology)
 {
     switch (topology)
     {
-        case PrimitiveTopology::Points:                 return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
-        case PrimitiveTopology::Lines:                  return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+        case PrimitiveTopology::PointList:              return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+        case PrimitiveTopology::LineList:               return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
         case PrimitiveTopology::LineStrip:              return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
         case PrimitiveTopology::LineLoop:               break;
-        case PrimitiveTopology::LinesAdjacency:         return D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;
+        case PrimitiveTopology::LineListAdjacency:      return D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;
         case PrimitiveTopology::LineStripAdjacency:     return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ;
-        case PrimitiveTopology::Triangles:              return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        case PrimitiveTopology::TriangleList:           return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
         case PrimitiveTopology::TriangleStrip:          return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
         case PrimitiveTopology::TriangleFan:            break;
-        case PrimitiveTopology::TrianglesAdjacency:     return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;
+        case PrimitiveTopology::TriangleListAdjacency:  return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;
         case PrimitiveTopology::TriangleStripAdjacency: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ;
         case PrimitiveTopology::Patches1:               return D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST;
         case PrimitiveTopology::Patches2:               return D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST;

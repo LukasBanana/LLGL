@@ -91,7 +91,7 @@ class GLRenderContextProfiler : public GLRenderContext
 
         RenderingProfiler&  profiler_;
 
-        PrimitiveTopology   topology_ = PrimitiveTopology::Triangles;
+        PrimitiveTopology   topology_ = PrimitiveTopology::TriangleList;
 
 };
 

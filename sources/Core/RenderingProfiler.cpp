@@ -47,11 +47,11 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
 
     switch (topology)
     {
-        case PrimitiveTopology::Points:
+        case PrimitiveTopology::PointList:
             renderedPoints.Inc(numVertices);
             break;
 
-        case PrimitiveTopology::Lines:
+        case PrimitiveTopology::LineList:
             renderedPoints.Inc(numVertices / 2);
             break;
 
@@ -67,7 +67,7 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
                 renderedPoints.Inc(numVertices);
             break;
 
-        case PrimitiveTopology::LinesAdjacency:
+        case PrimitiveTopology::LineListAdjacency:
             renderedPoints.Inc(numVertices / 2);
             break;
 
@@ -76,7 +76,7 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
                 renderedPoints.Inc(numVertices - 1);
             break;
 
-        case PrimitiveTopology::Triangles:
+        case PrimitiveTopology::TriangleList:
             renderedTriangles.Inc(numVertices / 3);
             break;
 
@@ -86,7 +86,7 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
                 renderedTriangles.Inc(numVertices - 2);
             break;
 
-        case PrimitiveTopology::TrianglesAdjacency:
+        case PrimitiveTopology::TriangleListAdjacency:
             renderedTriangles.Inc(numVertices / 3);
             break;
 
@@ -111,11 +111,11 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
 
     switch (topology)
     {
-        case PrimitiveTopology::Points:
+        case PrimitiveTopology::PointList:
             renderedPoints.Inc(numVertices * numInstances);
             break;
 
-        case PrimitiveTopology::Lines:
+        case PrimitiveTopology::LineList:
             renderedPoints.Inc((numVertices / 2) * numInstances);
             break;
 
@@ -131,7 +131,7 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
                 renderedPoints.Inc(numVertices * numInstances);
             break;
 
-        case PrimitiveTopology::LinesAdjacency:
+        case PrimitiveTopology::LineListAdjacency:
             renderedPoints.Inc((numVertices / 2) * numInstances);
             break;
 
@@ -140,7 +140,7 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
                 renderedPoints.Inc((numVertices - 1) * numInstances);
             break;
 
-        case PrimitiveTopology::Triangles:
+        case PrimitiveTopology::TriangleList:
             renderedTriangles.Inc((numVertices / 3) * numInstances);
             break;
 
@@ -150,7 +150,7 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
                 renderedTriangles.Inc((numVertices - 2) * numInstances);
             break;
 
-        case PrimitiveTopology::TrianglesAdjacency:
+        case PrimitiveTopology::TriangleListAdjacency:
             renderedTriangles.Inc((numVertices / 3) * numInstances);
             break;
 
