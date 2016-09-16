@@ -156,9 +156,9 @@ int main()
             context->SetViewports({ LLGL::Viewport(0, 0, 800, 600) });
             context->SetScissors({ LLGL::Scissor(0, 0, 800, 600) });
 
-            context->BindGraphicsPipeline(*pipeline);
-            context->BindVertexBuffer(*vertexBuffer);
-            context->BindConstantBuffer(0, *constantBuffer);
+            context->SetGraphicsPipeline(*pipeline);
+            context->SetVertexBuffer(*vertexBuffer);
+            context->SetConstantBuffer(0, *constantBuffer);
 
             context->SetDrawMode(LLGL::DrawMode::Triangles);
             context->Draw(3, 0);

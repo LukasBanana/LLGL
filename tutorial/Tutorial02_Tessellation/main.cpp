@@ -171,13 +171,13 @@ private:
         // Update constant buffer
         renderer->WriteConstantBuffer(*constantBuffer, &settings, sizeof(settings), 0);
 
-        // Bind hardware buffers to draw the model
-        context->BindVertexBuffer(*vertexBuffer);
-        context->BindIndexBuffer(*indexBuffer);
-        context->BindConstantBuffer(constantBufferIndex, *constantBuffer);
+        // Set hardware buffers to draw the model
+        context->SetVertexBuffer(*vertexBuffer);
+        context->SetIndexBuffer(*indexBuffer);
+        context->SetConstantBuffer(constantBufferIndex, *constantBuffer);
 
-        // Bind graphics pipeline with the shader
-        context->BindGraphicsPipeline(*pipeline);
+        // Set graphics pipeline with the shader
+        context->SetGraphicsPipeline(*pipeline);
 
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
         context->SetDrawMode(LLGL::DrawMode::Patches4);

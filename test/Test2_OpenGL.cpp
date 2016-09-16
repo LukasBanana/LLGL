@@ -222,7 +222,7 @@ int main()
 
                 unsigned int bindingIndex = 2; // the 2 is just for testing
                 shaderProgram.BindConstantBuffer(desc.name, bindingIndex);
-                context->BindConstantBuffer(*projectionBuffer, bindingIndex);
+                context->SetConstantBuffer(*projectionBuffer, bindingIndex);
             }
         }
         #endif
@@ -305,7 +305,7 @@ int main()
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 
         //#ifndef __linux__
-        context->BindSampler(0, sampler);
+        context->SetSampler(0, sampler);
         //#endif
         
         //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
@@ -324,7 +324,7 @@ int main()
             storage = renderer->CreateStorageBuffer();
             renderer->SetupStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
             shaderProgram.BindStorageBuffer("outputBuffer", 0);
-            context->BindStorageBuffer(0, *storage);
+            context->SetStorageBuffer(0, *storage);
 
             auto storeBufferDescs = shaderProgram.QueryStorageBuffers();
             for (const auto& desc : storeBufferDescs)
@@ -355,12 +355,12 @@ int main()
             }
             shaderProgram.UnlockShaderUniform();
             
-            context->BindGraphicsPipeline(pipeline);
-            context->BindVertexBuffer(vertexBuffer);
+            context->SetGraphicsPipeline(pipeline);
+            context->SetVertexBuffer(vertexBuffer);
 
             if (renderTarget && renderTargetTex)
             {
-                context->BindRenderTarget(*renderTarget);
+                context->SetRenderTarget(*renderTarget);
                 context->SetClearColor({ 1, 1, 1, 1 });
                 context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
             }
@@ -401,7 +401,7 @@ int main()
 
             #endif
 
-            context->BindTexture(0, texture);
+            context->SetTexture(0, texture);
             context->Draw(4, 0);
             
             #ifdef TEST_STORAGE_BUFFER
@@ -447,8 +447,8 @@ int main()
 
             if (renderTarget && renderTargetTex)
             {
-                context->UnbindRenderTarget();
-                context->BindTexture(0, *renderTargetTex);
+                context->UnsetRenderTarget();
+                context->SetTexture(0, *renderTargetTex);
                 context->Draw(4, 0);
             }
 

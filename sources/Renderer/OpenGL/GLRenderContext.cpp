@@ -190,19 +190,14 @@ void GLRenderContext::SetDrawMode(const DrawMode drawMode)
 
 /* ----- Hardware Buffers ------ */
 
-void GLRenderContext::BindVertexBuffer(VertexBuffer& vertexBuffer)
+void GLRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
     /* Bind vertex buffer */
     auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
     stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
 }
 
-void GLRenderContext::UnbindVertexBuffer()
-{
-    stateMngr_->BindVertexArray(0);
-}
-
-void GLRenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
+void GLRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 {
     /* Bind index buffer */
     auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, indexBuffer);
@@ -213,33 +208,18 @@ void GLRenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
     renderState_.indexBufferStride      = indexBuffer.GetIndexFormat().GetFormatSize();
 }
 
-void GLRenderContext::UnbindIndexBuffer()
-{
-    stateMngr_->BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void GLRenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
+void GLRenderContext::SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
 {
     /* Bind constant buffer with BindBufferBase */
     auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
     stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, constantBufferGL.hwBuffer.GetID());
 }
 
-void GLRenderContext::UnbindConstantBuffer(unsigned int index)
-{
-    stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, index, 0);
-}
-
-void GLRenderContext::BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
+void GLRenderContext::SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
 {
     /* Bind storage buffer with BindBufferBase */
     auto& storageBufferGL = LLGL_CAST(GLStorageBuffer&, storageBuffer);
     stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, index, storageBufferGL.hwBuffer.GetID());
-}
-
-void GLRenderContext::UnbindStorageBuffer(unsigned int index)
-{
-    stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, index, 0);
 }
 
 void* GLRenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
@@ -271,19 +251,12 @@ void GLRenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void GLRenderContext::BindTexture(unsigned int layer, Texture& texture)
+void GLRenderContext::SetTexture(unsigned int layer, Texture& texture)
 {
     /* Bind texture to layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     stateMngr_->ActiveTexture(layer);
     stateMngr_->BindTexture(textureGL);
-}
-
-void GLRenderContext::UnbindTexture(unsigned int layer)
-{
-    //todo...
-    //stateMngr_->ActiveTexture(layer);
-    //stateMngr_->BindTexture(<which target?, 0);
 }
 
 void GLRenderContext::GenerateMips(Texture& texture)
@@ -305,20 +278,15 @@ void GLRenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void GLRenderContext::BindSampler(unsigned int layer, Sampler& sampler)
+void GLRenderContext::SetSampler(unsigned int layer, Sampler& sampler)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     stateMngr_->BindSampler(layer, samplerGL.GetID());
 }
 
-void GLRenderContext::UnbindSampler(unsigned int layer)
-{
-    stateMngr_->BindSampler(layer, 0);
-}
-
 /* ----- Render Targets ----- */
 
-void GLRenderContext::BindRenderTarget(RenderTarget& renderTarget)
+void GLRenderContext::SetRenderTarget(RenderTarget& renderTarget)
 {
     /* Bind framebuffer object */
     auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
@@ -331,7 +299,7 @@ void GLRenderContext::BindRenderTarget(RenderTarget& renderTarget)
     boundRenderTarget_ = &renderTargetGL;
 }
 
-void GLRenderContext::UnbindRenderTarget()
+void GLRenderContext::UnsetRenderTarget()
 {
     /* Blit previously bound render target (in case mutli-sampling is used) */
     if (boundRenderTarget_)
@@ -350,13 +318,13 @@ void GLRenderContext::UnbindRenderTarget()
 
 /* ----- Pipeline States ----- */
 
-void GLRenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void GLRenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineGL = LLGL_CAST(GLGraphicsPipeline&, graphicsPipeline);
     graphicsPipelineGL.Bind(*stateMngr_);
 }
 
-void GLRenderContext::BindComputePipeline(ComputePipeline& computePipeline)
+void GLRenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 {
     auto& computePipelineGL = LLGL_CAST(GLComputePipeline&, computePipeline);
     computePipelineGL.Bind(*stateMngr_);

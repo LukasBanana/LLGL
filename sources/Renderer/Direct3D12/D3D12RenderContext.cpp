@@ -169,29 +169,19 @@ void D3D12RenderContext::SetDrawMode(const DrawMode drawMode)
 
 /* ----- Hardware Buffers ------ */
 
-void D3D12RenderContext::BindVertexBuffer(VertexBuffer& vertexBuffer)
+void D3D12RenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
     auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, vertexBuffer);
     commandList_->IASetVertexBuffers(0, 1, &(vertexBufferD3D.GetView()));
 }
 
-void D3D12RenderContext::UnbindVertexBuffer()
-{
-    //commandList_->IASetVertexBuffers(0, 0, nullptr);
-}
-
-void D3D12RenderContext::BindIndexBuffer(IndexBuffer& indexBuffer)
+void D3D12RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 {
     auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer&, indexBuffer);
     commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
 }
 
-void D3D12RenderContext::UnbindIndexBuffer()
-{
-    //commandList_->IASetIndexBuffer(nullptr);
-}
-
-void D3D12RenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
+void D3D12RenderContext::SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
 {
     auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, constantBuffer);
 
@@ -201,17 +191,7 @@ void D3D12RenderContext::BindConstantBuffer(unsigned int index, ConstantBuffer& 
     commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
 
-void D3D12RenderContext::UnbindConstantBuffer(unsigned int index)
-{
-    //todo
-}
-
-void D3D12RenderContext::BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
-{
-    //todo
-}
-
-void D3D12RenderContext::UnbindStorageBuffer(unsigned int index)
+void D3D12RenderContext::SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
 {
     //todo
 }
@@ -228,12 +208,7 @@ void D3D12RenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void D3D12RenderContext::BindTexture(unsigned int layer, Texture& texture)
-{
-    //todo
-}
-
-void D3D12RenderContext::UnbindTexture(unsigned int layer)
+void D3D12RenderContext::SetTexture(unsigned int layer, Texture& texture)
 {
     //todo
 }
@@ -245,31 +220,26 @@ void D3D12RenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void D3D12RenderContext::BindSampler(unsigned int layer, Sampler& sampler)
-{
-    //todo
-}
-
-void D3D12RenderContext::UnbindSampler(unsigned int layer)
+void D3D12RenderContext::SetSampler(unsigned int layer, Sampler& sampler)
 {
     //todo
 }
 
 /* ----- Render Targets ----- */
 
-void D3D12RenderContext::BindRenderTarget(RenderTarget& renderTarget)
+void D3D12RenderContext::SetRenderTarget(RenderTarget& renderTarget)
 {
     //todo
 }
 
-void D3D12RenderContext::UnbindRenderTarget()
+void D3D12RenderContext::UnsetRenderTarget()
 {
     //todo
 }
 
 /* ----- Pipeline States ----- */
 
-void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void D3D12RenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     /* Set graphics root signature and graphics pipeline state */
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
@@ -277,7 +247,7 @@ void D3D12RenderContext::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline
     commandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
 }
 
-void D3D12RenderContext::BindComputePipeline(ComputePipeline& computePipeline)
+void D3D12RenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 {
     //todo
 }

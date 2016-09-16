@@ -53,52 +53,28 @@ void GLRenderContextProfiler::SetDrawMode(const DrawMode drawMode)
 
 /* ----- Hardware buffers ------ */
 
-void GLRenderContextProfiler::BindVertexBuffer(VertexBuffer& vertexBuffer)
+void GLRenderContextProfiler::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
-    GLRenderContext::BindVertexBuffer(vertexBuffer);
-    profiler_.bindVertexBuffer.Inc();
+    GLRenderContext::SetVertexBuffer(vertexBuffer);
+    profiler_.setVertexBuffer.Inc();
 }
 
-void GLRenderContextProfiler::UnbindVertexBuffer()
+void GLRenderContextProfiler::SetIndexBuffer(IndexBuffer& indexBuffer)
 {
-    GLRenderContext::UnbindVertexBuffer();
-    profiler_.bindVertexBuffer.Inc();
+    GLRenderContext::SetIndexBuffer(indexBuffer);
+    profiler_.setIndexBuffer.Inc();
 }
 
-void GLRenderContextProfiler::BindIndexBuffer(IndexBuffer& indexBuffer)
+void GLRenderContextProfiler::SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
 {
-    GLRenderContext::BindIndexBuffer(indexBuffer);
-    profiler_.bindIndexBuffer.Inc();
+    GLRenderContext::SetConstantBuffer(index, constantBuffer);
+    profiler_.setConstantBuffer.Inc();
 }
 
-void GLRenderContextProfiler::UnbindIndexBuffer()
+void GLRenderContextProfiler::SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
 {
-    GLRenderContext::UnbindIndexBuffer();
-    profiler_.bindIndexBuffer.Inc();
-}
-
-void GLRenderContextProfiler::BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer)
-{
-    GLRenderContext::BindConstantBuffer(index, constantBuffer);
-    profiler_.bindConstantBuffer.Inc();
-}
-
-void GLRenderContextProfiler::UnbindConstantBuffer(unsigned int index)
-{
-    GLRenderContext::UnbindConstantBuffer(index);
-    profiler_.bindConstantBuffer.Inc();
-}
-
-void GLRenderContextProfiler::BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer)
-{
-    GLRenderContext::BindStorageBuffer(index, storageBuffer);
-    profiler_.bindStorageBuffer.Inc();
-}
-
-void GLRenderContextProfiler::UnbindStorageBuffer(unsigned int index)
-{
-    GLRenderContext::UnbindStorageBuffer(index);
-    profiler_.bindStorageBuffer.Inc();
+    GLRenderContext::SetStorageBuffer(index, storageBuffer);
+    profiler_.setStorageBuffer.Inc();
 }
 
 void* GLRenderContextProfiler::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
@@ -109,57 +85,47 @@ void* GLRenderContextProfiler::MapStorageBuffer(StorageBuffer& storageBuffer, co
 
 /* ----- Textures ----- */
 
-void GLRenderContextProfiler::BindTexture(unsigned int layer, Texture& texture)
+void GLRenderContextProfiler::SetTexture(unsigned int layer, Texture& texture)
 {
-    GLRenderContext::BindTexture(layer, texture);
-    profiler_.bindTexture.Inc();
-}
-
-void GLRenderContextProfiler::UnbindTexture(unsigned int layer)
-{
-    GLRenderContext::UnbindTexture(layer);
-    profiler_.bindTexture.Inc();
+    GLRenderContext::SetTexture(layer, texture);
+    profiler_.setTexture.Inc();
 }
 
 /* ----- Sampler States ----- */
 
-void GLRenderContextProfiler::BindSampler(unsigned int layer, Sampler& sampler)
+void GLRenderContextProfiler::SetSampler(unsigned int layer, Sampler& sampler)
 {
-    GLRenderContext::BindSampler(layer, sampler);
-    profiler_.bindSampler.Inc();
-}
-
-void GLRenderContextProfiler::UnbindSampler(unsigned int layer)
-{
-    GLRenderContext::UnbindSampler(layer);
-    profiler_.bindSampler.Inc();
+    GLRenderContext::SetSampler(layer, sampler);
+    profiler_.setSampler.Inc();
 }
 
 /* ----- Render Targets ----- */
 
-void GLRenderContextProfiler::BindRenderTarget(RenderTarget& renderTarget)
+void GLRenderContextProfiler::SetRenderTarget(RenderTarget& renderTarget)
 {
-    GLRenderContext::BindRenderTarget(renderTarget);
-    profiler_.bindRenderTarget.Inc();
+    GLRenderContext::SetRenderTarget(renderTarget);
+    profiler_.setRenderTarget.Inc();
 }
 
-void GLRenderContextProfiler::UnbindRenderTarget()
+void GLRenderContextProfiler::UnsetRenderTarget()
 {
-    GLRenderContext::UnbindRenderTarget();
-    profiler_.bindRenderTarget.Inc();
+    GLRenderContext::UnsetRenderTarget();
+    profiler_.setRenderTarget.Inc();
 }
 
 /* ----- Pipeline states ----- */
 
-void GLRenderContextProfiler::BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void GLRenderContextProfiler::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    GLRenderContext::BindGraphicsPipeline(graphicsPipeline);
-    profiler_.bindGraphicsPipeline.Inc();
+    GLRenderContext::SetGraphicsPipeline(graphicsPipeline);
+    profiler_.setGraphicsPipeline.Inc();
 }
 
-/*void GLRenderContextProfiler::BindComputePipeline(ComputePipeline& computePipeline)
+void GLRenderContextProfiler::SetComputePipeline(ComputePipeline& computePipeline)
 {
-}*/
+    GLRenderContext::SetComputePipeline(computePipeline);
+    profiler_.setComputePipeline.Inc();
+}
 
 /* --- Drawing --- */
 

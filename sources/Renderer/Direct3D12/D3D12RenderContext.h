@@ -61,42 +61,33 @@ class D3D12RenderContext : public RenderContext
 
         /* ----- Hardware Buffers ------ */
 
-        void BindVertexBuffer(VertexBuffer& vertexBuffer) override;
-        void UnbindVertexBuffer() override;
-
-        void BindIndexBuffer(IndexBuffer& indexBuffer) override;
-        void UnbindIndexBuffer() override;
-
-        void BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer) override;
-        void UnbindConstantBuffer(unsigned int index) override;
-
-        void BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer) override;
-        void UnbindStorageBuffer(unsigned int index) override;
+        void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
+        void SetIndexBuffer(IndexBuffer& indexBuffer) override;
+        void SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer) override;
+        void SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer) override;
 
         void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
         void UnmapStorageBuffer() override;
 
         /* ----- Textures ----- */
 
-        void BindTexture(unsigned int layer, Texture& texture) override;
-        void UnbindTexture(unsigned int layer) override;
+        void SetTexture(unsigned int layer, Texture& texture) override;
 
         void GenerateMips(Texture& texture) override;
 
         /* ----- Sampler States ----- */
 
-        void BindSampler(unsigned int layer, Sampler& sampler) override;
-        void UnbindSampler(unsigned int layer) override;
+        void SetSampler(unsigned int layer, Sampler& sampler) override;
 
         /* ----- Render Targets ----- */
 
-        void BindRenderTarget(RenderTarget& renderTarget) override;
-        void UnbindRenderTarget() override;
+        void SetRenderTarget(RenderTarget& renderTarget) override;
+        void UnsetRenderTarget() override;
 
         /* ----- Pipeline States ----- */
 
-        void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
-        void BindComputePipeline(ComputePipeline& computePipeline) override;
+        void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
+        void SetComputePipeline(ComputePipeline& computePipeline) override;
 
         /* ----- Queries ----- */
 

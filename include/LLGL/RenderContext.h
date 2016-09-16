@@ -93,17 +93,13 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Hardware Buffers ------ */
 
-        virtual void BindVertexBuffer(VertexBuffer& vertexBuffer) = 0;
-        virtual void UnbindVertexBuffer() = 0;
+        virtual void SetVertexBuffer(VertexBuffer& vertexBuffer) = 0;
+        
+        virtual void SetIndexBuffer(IndexBuffer& indexBuffer) = 0;
+        
+        virtual void SetConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer) = 0;
 
-        virtual void BindIndexBuffer(IndexBuffer& indexBuffer) = 0;
-        virtual void UnbindIndexBuffer() = 0;
-
-        virtual void BindConstantBuffer(unsigned int index, ConstantBuffer& constantBuffer) = 0;
-        virtual void UnbindConstantBuffer(unsigned int index) = 0;
-
-        virtual void BindStorageBuffer(unsigned int index, StorageBuffer& storageBuffer) = 0;
-        virtual void UnbindStorageBuffer(unsigned int index) = 0;
+        virtual void SetStorageBuffer(unsigned int index, StorageBuffer& storageBuffer) = 0;
 
         /**
         \brief Maps the specified storage buffer from GPU to CPU memory space.
@@ -123,8 +119,7 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Textures ----- */
 
-        virtual void BindTexture(unsigned int layer, Texture& texture) = 0;
-        virtual void UnbindTexture(unsigned int layer) = 0;
+        virtual void SetTexture(unsigned int layer, Texture& texture) = 0;
 
         /**
         \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.
@@ -134,18 +129,17 @@ class LLGL_EXPORT RenderContext
 
         /* ----- Samplers ----- */
 
-        virtual void BindSampler(unsigned int layer, Sampler& sampler) = 0;
-        virtual void UnbindSampler(unsigned int layer) = 0;
+        virtual void SetSampler(unsigned int layer, Sampler& sampler) = 0;
 
         /* ----- Render Targets ----- */
 
-        virtual void BindRenderTarget(RenderTarget& renderTarget) = 0;
-        virtual void UnbindRenderTarget() = 0;
+        virtual void SetRenderTarget(RenderTarget& renderTarget) = 0;
+        virtual void UnsetRenderTarget() = 0;
 
         /* ----- Pipeline States ----- */
 
-        virtual void BindGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
-        virtual void BindComputePipeline(ComputePipeline& computePipeline) = 0;
+        virtual void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;
+        virtual void SetComputePipeline(ComputePipeline& computePipeline) = 0;
 
         /* ----- Queries ----- */
 

@@ -133,11 +133,11 @@ int main()
             // Clear color buffer
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
-            // Bind graphics pipeline
-            context->BindGraphicsPipeline(*pipeline);
+            // Set graphics pipeline
+            context->SetGraphicsPipeline(*pipeline);
 
-            // Bind vertex buffer
-            context->BindVertexBuffer(*vertexBuffer);
+            // Set vertex buffer
+            context->SetVertexBuffer(*vertexBuffer);
 
             // Draw triangle with 3 vertices
             context->Draw(3, 0);

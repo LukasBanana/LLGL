@@ -22,15 +22,15 @@ void RenderingProfiler::ResetCounters()
     mapConstantBuffer.Reset();
     mapStorageBuffer.Reset();
 
-    bindVertexBuffer.Reset();
-    bindIndexBuffer.Reset();
-    bindConstantBuffer.Reset();
-    bindStorageBuffer.Reset();
-    bindGraphicsPipeline.Reset();
-    bindComputePipeline.Reset();
-    bindTexture.Reset();
-    bindSampler.Reset();
-    bindRenderTarget.Reset();
+    setVertexBuffer.Reset();
+    setIndexBuffer.Reset();
+    setConstantBuffer.Reset();
+    setStorageBuffer.Reset();
+    setGraphicsPipeline.Reset();
+    setComputePipeline.Reset();
+    setTexture.Reset();
+    setSampler.Reset();
+    setRenderTarget.Reset();
 
     drawCalls.Reset();
     dispatchComputeCalls.Reset();
