@@ -10,8 +10,8 @@ License
 Documentation
 -------------
 
-[Getting Started with LLGL (PDF)](https://github.com/LukasBanana/LLGL/blob/master/docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf)
-[LLGL Reference Manual (PDF)](https://github.com/LukasBanana/LLGL/blob/master/docu/refman.pdf)
+- [Getting Started with LLGL](https://github.com/LukasBanana/LLGL/blob/master/docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
+- [LLGL Reference Manual](https://github.com/LukasBanana/LLGL/blob/master/docu/refman.pdf) (PDF)
 
 
 Progress
