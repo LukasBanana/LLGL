@@ -33,7 +33,7 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
 {
     switch (attrib.dataType)
     {
-        case DataType::Float:
+        case DataType::Float32:
             switch (attrib.components)
             {
                 case 1: return DXGI_FORMAT_R32_FLOAT;
@@ -43,7 +43,7 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
             }
             break;
         
-        case DataType::Byte:
+        case DataType::Int8:
             if (attrib.conversion)
             {
                 switch (attrib.components)
@@ -64,7 +64,7 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
             }
             break;
         
-        case DataType::UByte:
+        case DataType::UInt8:
             if (attrib.conversion)
             {
                 switch (attrib.components)
@@ -85,7 +85,7 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
             }
             break;
         
-        case DataType::Short:
+        case DataType::Int16:
             if (attrib.conversion)
             {
                 switch (attrib.components)
@@ -106,7 +106,7 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
             }
             break;
         
-        case DataType::UShort:
+        case DataType::UInt16:
             if (attrib.conversion)
             {
                 switch (attrib.components)
@@ -127,7 +127,7 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
             }
             break;
         
-        case DataType::Int:
+        case DataType::Int32:
             switch (attrib.components)
             {
                 case 1: return DXGI_FORMAT_R32_SINT;
@@ -137,7 +137,7 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
             }
             break;
 
-        case DataType::UInt:
+        case DataType::UInt32:
             switch (attrib.components)
             {
                 case 1: return DXGI_FORMAT_R32_UINT;
@@ -154,14 +154,14 @@ DXGI_FORMAT Map(const DataType dataType)
 {
     switch (dataType)
     {
-        case DataType::Float:   return DXGI_FORMAT_R32_FLOAT;
-        case DataType::Double:  break;
-        case DataType::Byte:    return DXGI_FORMAT_R8_SINT;
-        case DataType::UByte:   return DXGI_FORMAT_R8_UINT;
-        case DataType::Short:   return DXGI_FORMAT_R16_SINT;
-        case DataType::UShort:  return DXGI_FORMAT_R16_UINT;
-        case DataType::Int:     return DXGI_FORMAT_R32_SINT;
-        case DataType::UInt:    return DXGI_FORMAT_R32_UINT;
+        case DataType::Float32: return DXGI_FORMAT_R32_FLOAT;
+        case DataType::Float64: break;
+        case DataType::Int8:    return DXGI_FORMAT_R8_SINT;
+        case DataType::UInt8:   return DXGI_FORMAT_R8_UINT;
+        case DataType::Int16:   return DXGI_FORMAT_R16_SINT;
+        case DataType::UInt16:  return DXGI_FORMAT_R16_UINT;
+        case DataType::Int32:   return DXGI_FORMAT_R32_SINT;
+        case DataType::UInt32:  return DXGI_FORMAT_R32_UINT;
     }
     MapFailed("DataType", "DXGI_FORMAT");
 }

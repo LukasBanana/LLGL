@@ -120,8 +120,8 @@ int main()
         auto& vertexBuffer = *renderer->CreateVertexBuffer();
 
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
+        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float32, 2);
+        vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 2);
 
         const Gs::Vector2f vertices[] =
         {
@@ -246,7 +246,7 @@ int main()
         LLGL::ImageDataDescriptor textureData;
         {
             textureData.dataFormat  = LLGL::ColorFormat::RGB;
-            textureData.dataType    = LLGL::DataType::UByte;
+            textureData.dataType    = LLGL::DataType::UInt8;
             textureData.data        = image;
         }
         renderer->SetupTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture

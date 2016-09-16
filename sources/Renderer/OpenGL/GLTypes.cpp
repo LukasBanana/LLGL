@@ -54,14 +54,14 @@ GLenum Map(const DataType dataType)
 {
     switch (dataType)
     {
-        case DataType::Float:   return GL_FLOAT;
-        case DataType::Double:  return GL_DOUBLE;
-        case DataType::Byte:    return GL_BYTE;
-        case DataType::UByte:   return GL_UNSIGNED_BYTE;
-        case DataType::Short:   return GL_SHORT;
-        case DataType::UShort:  return GL_UNSIGNED_SHORT;
-        case DataType::Int:     return GL_INT;
-        case DataType::UInt:    return GL_UNSIGNED_INT;
+        case DataType::Float32: return GL_FLOAT;
+        case DataType::Float64: return GL_DOUBLE;
+        case DataType::Int8:    return GL_BYTE;
+        case DataType::UInt8:   return GL_UNSIGNED_BYTE;
+        case DataType::Int16:   return GL_SHORT;
+        case DataType::UInt16:  return GL_UNSIGNED_SHORT;
+        case DataType::Int32:   return GL_INT;
+        case DataType::UInt32:  return GL_UNSIGNED_INT;
     }
     MapFailed("DataType");
 }

@@ -84,40 +84,40 @@ static void UnmapAttribType(GLenum type, DataType& dataType, unsigned int& rows,
 
     switch (type)
     {
-        case GL_FLOAT:              Set(DataType::Float,  1, 1); break;
-        case GL_FLOAT_VEC2:         Set(DataType::Float,  2, 1); break;
-        case GL_FLOAT_VEC3:         Set(DataType::Float,  3, 1); break;
-        case GL_FLOAT_VEC4:         Set(DataType::Float,  4, 1); break;
-        case GL_FLOAT_MAT2:         Set(DataType::Float,  2, 2); break;
-        case GL_FLOAT_MAT3:         Set(DataType::Float,  3, 3); break;
-        case GL_FLOAT_MAT4:         Set(DataType::Float,  4, 4); break;
-        case GL_FLOAT_MAT2x3:       Set(DataType::Float,  2, 3); break;
-        case GL_FLOAT_MAT2x4:       Set(DataType::Float,  2, 4); break;
-        case GL_FLOAT_MAT3x2:       Set(DataType::Float,  3, 2); break;
-        case GL_FLOAT_MAT3x4:       Set(DataType::Float,  3, 4); break;
-        case GL_FLOAT_MAT4x2:       Set(DataType::Float,  4, 2); break;
-        case GL_FLOAT_MAT4x3:       Set(DataType::Float,  4, 3); break;
-        case GL_INT:                Set(DataType::Int,    1, 1); break;
-        case GL_INT_VEC2:           Set(DataType::Int,    2, 1); break;
-        case GL_INT_VEC3:           Set(DataType::Int,    3, 1); break;
-        case GL_INT_VEC4:           Set(DataType::Int,    4, 1); break;
-        case GL_UNSIGNED_INT:       Set(DataType::UInt,   1, 1); break;
-        case GL_UNSIGNED_INT_VEC2:  Set(DataType::UInt,   2, 1); break;
-        case GL_UNSIGNED_INT_VEC3:  Set(DataType::UInt,   3, 1); break;
-        case GL_UNSIGNED_INT_VEC4:  Set(DataType::UInt,   4, 1); break;
-        case GL_DOUBLE:             Set(DataType::Double, 1, 1); break;
-        case GL_DOUBLE_VEC2:        Set(DataType::Double, 2, 1); break;
-        case GL_DOUBLE_VEC3:        Set(DataType::Double, 3, 1); break;
-        case GL_DOUBLE_VEC4:        Set(DataType::Double, 4, 1); break;
-        case GL_DOUBLE_MAT2:        Set(DataType::Double, 2, 2); break;
-        case GL_DOUBLE_MAT3:        Set(DataType::Double, 3, 3); break;
-        case GL_DOUBLE_MAT4:        Set(DataType::Double, 4, 4); break;
-        case GL_DOUBLE_MAT2x3:      Set(DataType::Double, 2, 3); break;
-        case GL_DOUBLE_MAT2x4:      Set(DataType::Double, 2, 4); break;
-        case GL_DOUBLE_MAT3x2:      Set(DataType::Double, 3, 2); break;
-        case GL_DOUBLE_MAT3x4:      Set(DataType::Double, 3, 4); break;
-        case GL_DOUBLE_MAT4x2:      Set(DataType::Double, 4, 2); break;
-        case GL_DOUBLE_MAT4x3:      Set(DataType::Double, 4, 3); break;
+        case GL_FLOAT:              Set(DataType::Float32, 1, 1); break;
+        case GL_FLOAT_VEC2:         Set(DataType::Float32, 2, 1); break;
+        case GL_FLOAT_VEC3:         Set(DataType::Float32, 3, 1); break;
+        case GL_FLOAT_VEC4:         Set(DataType::Float32, 4, 1); break;
+        case GL_FLOAT_MAT2:         Set(DataType::Float32, 2, 2); break;
+        case GL_FLOAT_MAT3:         Set(DataType::Float32, 3, 3); break;
+        case GL_FLOAT_MAT4:         Set(DataType::Float32, 4, 4); break;
+        case GL_FLOAT_MAT2x3:       Set(DataType::Float32, 2, 3); break;
+        case GL_FLOAT_MAT2x4:       Set(DataType::Float32, 2, 4); break;
+        case GL_FLOAT_MAT3x2:       Set(DataType::Float32, 3, 2); break;
+        case GL_FLOAT_MAT3x4:       Set(DataType::Float32, 3, 4); break;
+        case GL_FLOAT_MAT4x2:       Set(DataType::Float32, 4, 2); break;
+        case GL_FLOAT_MAT4x3:       Set(DataType::Float32, 4, 3); break;
+        case GL_INT:                Set(DataType::Int32,   1, 1); break;
+        case GL_INT_VEC2:           Set(DataType::Int32,   2, 1); break;
+        case GL_INT_VEC3:           Set(DataType::Int32,   3, 1); break;
+        case GL_INT_VEC4:           Set(DataType::Int32,   4, 1); break;
+        case GL_UNSIGNED_INT:       Set(DataType::UInt32,  1, 1); break;
+        case GL_UNSIGNED_INT_VEC2:  Set(DataType::UInt32,  2, 1); break;
+        case GL_UNSIGNED_INT_VEC3:  Set(DataType::UInt32,  3, 1); break;
+        case GL_UNSIGNED_INT_VEC4:  Set(DataType::UInt32,  4, 1); break;
+        case GL_DOUBLE:             Set(DataType::Float64, 1, 1); break;
+        case GL_DOUBLE_VEC2:        Set(DataType::Float64, 2, 1); break;
+        case GL_DOUBLE_VEC3:        Set(DataType::Float64, 3, 1); break;
+        case GL_DOUBLE_VEC4:        Set(DataType::Float64, 4, 1); break;
+        case GL_DOUBLE_MAT2:        Set(DataType::Float64, 2, 2); break;
+        case GL_DOUBLE_MAT3:        Set(DataType::Float64, 3, 3); break;
+        case GL_DOUBLE_MAT4:        Set(DataType::Float64, 4, 4); break;
+        case GL_DOUBLE_MAT2x3:      Set(DataType::Float64, 2, 3); break;
+        case GL_DOUBLE_MAT2x4:      Set(DataType::Float64, 2, 4); break;
+        case GL_DOUBLE_MAT3x2:      Set(DataType::Float64, 3, 2); break;
+        case GL_DOUBLE_MAT3x4:      Set(DataType::Float64, 3, 4); break;
+        case GL_DOUBLE_MAT4x2:      Set(DataType::Float64, 4, 2); break;
+        case GL_DOUBLE_MAT4x3:      Set(DataType::Float64, 4, 3); break;
     }
 }
 
@@ -151,7 +151,7 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
 
         /* Convert attribute information */
         auto name       = std::string(attribName.data());
-        auto dataType   = DataType::Byte;
+        auto dataType   = DataType::Int8;
 
         unsigned rows = 0, cols = 0;
         UnmapAttribType(type, dataType, rows, cols);

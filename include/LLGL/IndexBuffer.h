@@ -41,7 +41,7 @@ class LLGL_EXPORT IndexBuffer
 
     private:
 
-        IndexFormat indexFormat_ = IndexFormat(DataType::UInt);
+        IndexFormat indexFormat_ = IndexFormat(DataType::UInt32);
 
 };
 

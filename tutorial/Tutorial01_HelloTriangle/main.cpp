@@ -48,8 +48,8 @@ int main()
 
         // Vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2); // position has 2 float components
-        vertexFormat.AddAttribute("color",    LLGL::DataType::Float, 3); // color has 3 float components
+        vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 2); // position has 2 float components
+        vertexFormat.AddAttribute("color",    LLGL::DataType::Float32, 3); // color has 3 float components
 
         // Setup vertex buffer
         renderer->SetupVertexBuffer(

@@ -16,14 +16,14 @@ LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType)
 {
     switch (dataType)
     {
-        case DataType::Float:   return 4;
-        case DataType::Double:  return 8;
-        case DataType::Byte:    return 1;
-        case DataType::UByte:   return 1;
-        case DataType::Short:   return 2;
-        case DataType::UShort:  return 2;
-        case DataType::Int:     return 4;
-        case DataType::UInt:    return 4;
+        case DataType::Float32: return 4;
+        case DataType::Float64: return 8;
+        case DataType::Int8:    return 1;
+        case DataType::UInt8:   return 1;
+        case DataType::Int16:   return 2;
+        case DataType::UInt16:  return 2;
+        case DataType::Int32:   return 4;
+        case DataType::UInt32:  return 4;
     }
     return 0;
 }

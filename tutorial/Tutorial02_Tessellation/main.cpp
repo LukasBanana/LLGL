@@ -90,11 +90,11 @@ public:
 
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 3);
+        vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 3);
 
         // Create vertex- and index buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt);
+        indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt32);
 
         // Create constant buffer
         constantBuffer = renderer->CreateConstantBuffer();

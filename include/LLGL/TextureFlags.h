@@ -151,7 +151,7 @@ struct LLGL_EXPORT ImageDataDescriptor
     }
 
     ColorFormat     dataFormat      = ColorFormat::Gray;    //!< Specifies the color format.
-    DataType        dataType        = DataType::UByte;      //!< Speciifes the image data type. This must be DataType::UByte for compressed images.
+    DataType        dataType        = DataType::UInt8;      //!< Speciifes the image data type. This must be DataType::UInt8 for compressed images.
     const void*     data            = nullptr;              //!< Pointer to the image data source.
     unsigned int    compressedSize  = 0;                    //!< Specifies the size (in bytes) of the compressed image. This must be 0 for uncompressed images.
 };

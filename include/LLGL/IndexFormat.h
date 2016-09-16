@@ -38,7 +38,7 @@ class LLGL_EXPORT IndexFormat
 
     private:
 
-        DataType        dataType_   = DataType::UInt;
+        DataType        dataType_   = DataType::UInt32;
         unsigned int    formatSize_ = 0;
 
 };
