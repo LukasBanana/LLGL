@@ -37,7 +37,10 @@ namespace LLGL
 {
 
 
-//! Render context interface.
+/**
+\brief Render context interface.
+\remarks The render context is the main interface for drawing and compute operations.
+*/
 class LLGL_EXPORT RenderContext
 {
 
@@ -236,7 +239,7 @@ class LLGL_EXPORT RenderContext
         \brief Sets the active compute pipeline state.
         \param[in] computePipeline Specifies the compuite pipeline state to set.
         \remarks This will set the compute shader states.
-        A valid compute pipeline must always be set before any dispatch compute operation can be performed.
+        A valid compute pipeline must always be set before any compute operation can be performed.
         \see RenderSystem::CreateComputePipeline
         */
         virtual void SetComputePipeline(ComputePipeline& computePipeline) = 0;
@@ -247,7 +250,7 @@ class LLGL_EXPORT RenderContext
         \brief Begins the specified query.
         \param[in] query Specifies the query to begin with.
         This must be same query object as in the subsequent "EndQuery" function call, to end the query operation.
-        \remarks The "BeginQuery" and "EndQuery" functions can be wrapped around any drawing and/or dispatch compute operation.
+        \remarks The "BeginQuery" and "EndQuery" functions can be wrapped around any drawing and/or compute operation.
         This can an occlusion query for instance, which determines how many fragments have passed the depth test.
         \see RenderSystem::CreateQuery
         \see EndQuery

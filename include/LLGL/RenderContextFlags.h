@@ -15,7 +15,7 @@ namespace LLGL
 
 /* ----- Enumerations ----- */
 
-//! Primitive topology enumeration.
+//! \brief Primitive topology enumeration.
 enum class PrimitiveTopology
 {
     PointList,              //!< Point list.
