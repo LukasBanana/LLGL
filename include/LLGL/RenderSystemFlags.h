@@ -22,13 +22,15 @@ namespace LLGL
 
 /**
 \brief Hardware buffer usage enumeration.
-\see RenderSystem::WriteVertexBuffer
-\see RenderSystem::WriteIndexBuffer
+\see RenderSystem::SetupVertexBuffer
+\see RenderSystem::SetupIndexBuffer
+\see RenderSystem::SetupConstantBuffer
+\see RenderSystem::SetupStorageBuffer
 */
 enum class BufferUsage
 {
-    Static,     //!< The hardware buffer will change rarely by the client but often used by the hardware.
-    Dynamic,    //!< The hardware buffer will change often by the client.
+    Static,     //!< The hardware buffer will be rarely changed by the client but often used by the hardware.
+    Dynamic,    //!< The hardware buffer will be often changed by the client (e.g. almost every frame).
 };
 
 /**

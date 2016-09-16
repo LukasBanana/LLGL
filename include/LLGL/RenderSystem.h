@@ -37,7 +37,25 @@ namespace LLGL
 {
 
 
-//! Render system interface.
+/**
+\brief Render system interface.
+\remarks This is the main interface for the entire renderer.
+It manages the ownership of all graphics objects and is used to create, modify, and delete all those objects.
+The main functions for most graphics objects are "Create...", "Setup...", "Write...", and "Release":
+\code
+// Create an empty and unspecified vertex buffer
+auto vertexBuffer = renderSystem->CreateVertexBuffer();
+
+// Initialize object
+renderSystem->SetupVertexBuffer(vertexBuffer, initialData, ...);
+
+// Modify data
+renderSystem->WriteVertexBuffer(vertexBuffer, modificationData, ...);
+
+// Release object
+renderSystem->Release(*vertexBuffer);
+\endcode
+*/
 class LLGL_EXPORT RenderSystem
 {
 
@@ -128,9 +146,28 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Hardware Buffers ------ */
 
+        /**
+        \brief Creates a new, empty, and unspecified vertex buffer.
+        \see SetupVertexBuffer
+        */
         virtual VertexBuffer* CreateVertexBuffer() = 0;
+
+        /**
+        \brief Creates a new, empty, and unspecified index buffer.
+        \see SetupIndexBuffer
+        */
         virtual IndexBuffer* CreateIndexBuffer() = 0;
+
+        /**
+        \brief Creates a new, empty, and unspecified constant buffer (also called "Uniform Buffer Object").
+        \see SetupConstantBuffer
+        */
         virtual ConstantBuffer* CreateConstantBuffer() = 0;
+
+        /**
+        \brief Creates a new, empty, and unspecified storage buffer (also called "Read/Write Buffer").
+        \see SetupStorageBuffer
+        */
         virtual StorageBuffer* CreateStorageBuffer() = 0;
 
         virtual void Release(VertexBuffer& vertexBuffer) = 0;
@@ -138,51 +175,218 @@ class LLGL_EXPORT RenderSystem
         virtual void Release(ConstantBuffer& constantBuffer) = 0;
         virtual void Release(StorageBuffer& storageBuffer) = 0;
 
+        /**
+        \brief Initializes the specified vertex buffer.
+        \param[in] vertexBuffer Specifies the vertex buffer which is to be initialized.
+        \param[in] data Raw pointer to the data with which the vertex buffer is to be initialized.
+        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
+        be initialized with the "WriteVertexBuffer" function before it is used for drawing operations.
+        \param[in] dataSize Specifies the size (in bytes) of the buffer.
+        \param[in] usage Specifies the buffer usage, which is typically "BufferUsage::Static" for a vertex buffer, since it is rarely changed.
+        \param[in] vertexFormat Specifies the vertex format layout, which is required to tell the renderer how the vertex attributes are stored inside the vertex buffer.
+        This must be the same vertex format which is used for the respective graphics pipeline shader program.
+        \see VertexFormat
+        \see WriteVertexBuffer
+        \see ShaderProgram
+        */
         virtual void SetupVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) = 0;
+
+        /**
+        \brief Initializes the specified index buffer.
+        \param[in] indexBuffer Specifies the index buffer which is to be initialized.
+        \param[in] data Raw pointer to the data with which the index buffer is to be initialized.
+        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
+        be initialized with the "WriteIndexBuffer" function before it is used for drawing operations.
+        \param[in] dataSize Specifies the size (in bytes) of the buffer.
+        \param[in] usage Specifies the buffer usage, which is typically "BufferUsage::Static" for an index buffer, since it is rarely changed.
+        \param[in] indexFormat Specifies the index format layout, which is basically only the data type of each index.
+        The only valid format types for an index buffer are: DataType::UByte, DataType::UShort, DataType::UInt.
+        \see IndexFormat
+        \see WriteIndexBuffer
+        */
         virtual void SetupIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) = 0;
+        
+        /**
+        \brief Initializes the specified constant buffer.
+        \param[in] constantBuffer Specifies the constant buffer which is to be initialized.
+        \param[in] data Raw pointer to the data with which the constant buffer is to be initialized.
+        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
+        be initialized with the "WriteConstantBuffer" function before it is used for drawing operations.
+        \param[in] dataSize Specifies the size (in bytes) of the buffer.
+        \param[in] usage Specifies the buffer usage.
+        \see WriteConstantBuffer
+        */
         virtual void SetupConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
+        
+        /**
+        \brief Initializes the specified storage buffer.
+        \param[in] storageBuffer Specifies the storage buffer which is to be initialized.
+        \param[in] data Raw pointer to the data with which the storage buffer is to be initialized.
+        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
+        be initialized with the "WriteStorageBuffer" function before it is used for drawing operations.
+        \param[in] dataSize Specifies the size (in bytes) of the buffer.
+        \param[in] usage Specifies the buffer usage.
+        \see WriteStorageBuffer
+        */
         virtual void SetupStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
 
+        /**
+        \brief Updates the data of the specified vertex buffer.
+        \param[in] vertexBuffer Specifies the vertex buffer whose data is to be updated.
+        \param[in] data Raw pointer to the data with which the vertex buffer is to be updated. This must not be null!
+        \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
+        This must be less then or equal to the size of the vertex buffer.
+        \param[in] offset Specifies the offset (in bytes) at which the vertex buffer is to be updated.
+        This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the vertex buffer.
+        */
         virtual void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        
+        //! \see WriteVertexBuffer
         virtual void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        
+        //! \see WriteVertexBuffer
         virtual void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        
+        //! \see WriteVertexBuffer
         virtual void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
 
         /* ----- Textures ----- */
 
+        /**
+        \brief Creates a new, empty, and unspecified texture.
+        \remarks The type and dimension size of the this texture will be determined by any of the "SetupTexture..." functions.
+        */
         virtual Texture* CreateTexture() = 0;
 
         virtual void Release(Texture& texture) = 0;
 
+        /**
+        \brief Queries a descriptor of the specified texture.
+        \remarks This can be used to query the type and dimension size of the texture.
+        \see TextureDescriptor
+        */
         virtual TextureDescriptor QueryTextureDescriptor(const Texture& texture) = 0;
 
+        /**
+        \brief Initializes the specified texture as a 1-dimensional texture.
+        \param[in] texture Specifies the texture which is to be initialized.
+        \param[in] format Specifies the hardware texture format.
+        \param[in] size Specifies the size of the texture (in texels, 'texture elements').
+        \param[in] imageDesc Optional pointer to the image data descriptor.
+        If this is null, the texture will be initialized with the currently configured default image color (see "Configuration::defaultTextureImageColor").
+        If this is non-null, is is used to initialize the texture data.
+        \see WriteTexture1D
+        \see Configuration::defaultTextureImageColor
+        */
         virtual void SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+
+        /**
+        \brief Initializes the specified texture as a 2-dimensional texture.
+        \see SetupTexture1D
+        \see WriteTexture2D
+        */
         virtual void SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+
+        /**
+        \brief Initializes the specified texture as a 3-dimensional texture.
+        \see SetupTexture1D
+        \see WriteTexture3D
+        */
         virtual void SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+
+        /**
+        \brief Initializes the specified texture as a cube texture with six faces.
+        \remarks If the image data descriptor is used, the image data must be large anough
+        to store the image data of all six cube faces (i.e. width * height * 6 texels). The order of the cube faces is:
+        AxisDirection::XPos, AxisDirection::XNeg, AxisDirection::YPos, AxisDirection::YNeg, AxisDirection::ZPos, AxisDirection::ZNeg.
+        \see SetupTexture1D
+        \see WriteTextureCube
+        \see AxisDirection
+        */
         virtual void SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        
+        /**
+        \brief Initializes the specified texture as a 1-dimensional array texture.
+        \param[in] layers Specifies the number of array layers.
+        \see SetupTexture1D
+        \see WriteTexture1DArray
+        */
         virtual void SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        
+        /**
+        \brief Initializes the specified texture as a 2-dimensional array texture.
+        \see SetupTexture1DArray
+        \see WriteTexture2DArray
+        */
         virtual void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        
+        /**
+        \brief Initializes the specified texture as a cube array texture with six faces for each layer.
+        \see SetupTexture1DArray
+        \see WriteTextureCubeArray
+        */
         virtual void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) = 0;
         
+        /**
+        \brief Updates the data of the specified texture.
+        \param[in] texture Specifies the texture whose data is to be updated.
+        \param[in] mipLevel Specifies the zero-based MIP ("Multum in Parvo") level which is to be updated.
+        \param[in] position Specifies the position offset of the portion which is to be updated.
+        \param[in] size Specifies the size of the portion which is to be updated.
+        \param[in] imageDesc Specifies the image data descriptor. Its "data" member must not be null!
+        \remarks This texture must be initialized as a 1-dimensional texture.
+        */
         virtual void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc) = 0;
+        
+        /**
+        \see WriteTexture1D
+        \remarks This texture must be initialized as a 2-dimensional texture.
+        */
         virtual void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) = 0;
+        
+        /**
+        \see WriteTexture1D
+        \remarks This texture must be initialized as a 3-dimensional texture.
+        */
         virtual void WriteTexture3D(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc) = 0;
         
+        /**
+        \param[in] cubeFace Specifies the cube face which is to be updated.
+        \see WriteTexture1D
+        \remarks This texture must be initialized as a cube texture.
+        */
         virtual void WriteTextureCube(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace,
             const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc
         ) = 0;
         
+        /**
+        \param[in] layerOffset Specifies the zero-based layer offset of the portion which is to be updated.
+        \param[in] layers Specifies the number of layers to update.
+        \see WriteTexture1D
+        \remarks This texture must be initialized as a 1-dimensional array texture.
+        */
         virtual void WriteTexture1DArray(
             Texture& texture, int mipLevel, int position, unsigned int layerOffset,
             int size, unsigned int layers, const ImageDataDescriptor& imageDesc
         ) = 0;
         
+        /**
+        \see WriteTexture1DArray
+        \remarks This texture must be initialized as a 2-dimensional array texture.
+        */
         virtual void WriteTexture2DArray(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
             const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc
         ) = 0;
 
+        /**
+        \see WriteTexture1DArray
+        \param[in] cubeFaceOffset Specifies the cube face offset of the portion which is to be updated.
+        \param[in] cubeFaces Specifies the number of cube faces to update.
+        This can be out of bounds of the six cube faces, i.e. it can exceed several layers.
+        \remarks This texture must be initialized as a cube array texture.
+        */
         virtual void WriteTextureCubeArray(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
             const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc
@@ -230,7 +434,18 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Shader ----- */
 
+        /**
+        \brief Creates a new and empty shader.
+        \param[in] type Specifies the type of the shader, i.e. if it is either a vertex or fragment shader or the like.
+        \see Shader
+        */
         virtual Shader* CreateShader(const ShaderType type) = 0;
+
+        /**
+        \brief Creates a new and empty shader program.
+        \remarks At least one shader must be attached to a shader program to be used for a graphics or compute pipeline.
+        \see ShaderProgram
+        */
         virtual ShaderProgram* CreateShaderProgram() = 0;
 
         virtual void Release(Shader& shader) = 0;
@@ -238,7 +453,21 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Pipeline States ----- */
 
+        /**
+        \brief Creates a new and initialized graphics pipeline state object.
+        \param[in] desc Specifies the graphics pipeline descriptor.
+        This will describe the entire pipeline state, i.e. the blending-, rasterizer-, depth-, stencil- and shader states.
+        The "shaderProgram" member of the descriptor must never be null!
+        \see GraphicsPipelineDescriptor
+        */
         virtual GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) = 0;
+
+        /**
+        \brief Creates a new and initialized compute pipeline state object.
+        \param[in] desc Specifies the compute pipeline descriptor. This will describe the shader states.
+        The "shaderProgram" member of the descriptor must never be null!
+        \see ComputePipelineDescriptor
+        */
         virtual ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) = 0;
 
         virtual void Release(GraphicsPipeline& graphicsPipeline) = 0;
@@ -246,10 +475,9 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Queries ----- */
 
-        //! Creates a new Query object of the specified type.
+        //! Creates a new query of the specified type.
         virtual Query* CreateQuery(const QueryType type) = 0;
 
-        //! Release the specified Query object.
         virtual void Release(Query& query) = 0;
 
         /* === Members === */
@@ -257,6 +485,7 @@ class LLGL_EXPORT RenderSystem
         /**
         \brief Render system basic configuration.
         \remarks This can be used to change the behavior of default initializion of textures for instance.
+        \see Configuration
         */
         Configuration config;
 

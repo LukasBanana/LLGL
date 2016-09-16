@@ -105,7 +105,7 @@
  * // Direct3D 12 Implementation
  * void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
  * {
- *     LLGL_D3D_ASSERT(gfxCommandList_)->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
+ *     commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
  * }
  * 
  * // Vulkan Implementation
