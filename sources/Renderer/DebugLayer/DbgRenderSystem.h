@@ -12,6 +12,9 @@
 #include <LLGL/RenderSystem.h>
 #include "DbgRenderContext.h"
 
+#include "DbgVertexBuffer.h"
+#include "DbgIndexBuffer.h"
+
 #include "../ContainerTypes.h"
 
 
@@ -143,6 +146,8 @@ class DbgRenderSystem : public RenderSystem
 
         bool OnMakeCurrent(RenderContext* renderContext) override;
 
+        void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source);
+
         /* ----- Common objects ----- */
 
         std::shared_ptr<RenderSystem>           instance_;
@@ -156,8 +161,8 @@ class DbgRenderSystem : public RenderSystem
 
         HWObjectContainer<DbgRenderContext>     renderContexts_;
         
-        //HWObjectContainer<DbgVertexBuffer>      vertexBuffers_;
-        //HWObjectContainer<DbgIndexBuffer>       indexBuffers_;
+        HWObjectContainer<DbgVertexBuffer>      vertexBuffers_;
+        HWObjectContainer<DbgIndexBuffer>       indexBuffers_;
         //HWObjectContainer<DbgConstantBuffer>    constantBuffers_;
         //HWObjectContainer<DbgStorageBuffer>     storageBuffers_;
 

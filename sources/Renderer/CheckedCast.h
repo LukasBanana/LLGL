@@ -10,7 +10,10 @@
 
 
 #ifdef LLGL_DEBUG
-#include <typeinfo>
+#   include <typeinfo>
+#   ifdef _WIN32
+#       include <Windows.h>
+#   endif
 #endif
 
 

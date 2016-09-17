@@ -13,6 +13,9 @@
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
 
+#include "DbgVertexBuffer.h"
+#include "DbgIndexBuffer.h"
+
 
 namespace LLGL
 {
@@ -29,7 +32,8 @@ class DbgRenderContext : public RenderContext
             RenderContext& instance,
             RenderingProfiler* profiler,
             RenderingDebugger* debugger,
-            const RenderingCaps& caps
+            const RenderingCaps& caps,
+            const std::string& rendererName
         );
 
         void Present() override;
@@ -113,6 +117,8 @@ class DbgRenderContext : public RenderContext
 
     private:
 
+        void DetermineRenderer(const std::string& rendererName);
+
         void DebugGraphicsPipelineSet(const std::string& source);
         void DebugVertexBufferSet(const std::string& source);
         void DebugIndexBufferSet(const std::string& source);
@@ -146,6 +152,21 @@ class DbgRenderContext : public RenderContext
         /* ----- Render states ----- */
 
         PrimitiveTopology       topology_   = PrimitiveTopology::TriangleList;
+
+        struct Renderer
+        {
+            bool isOpenGL       = false;
+            bool isDirect3D     = false;
+            bool isVulkan       = false;
+        }
+        renderer_;
+
+        struct Bindings
+        {
+            DbgVertexBuffer*    vertexBuffer   = nullptr;
+            DbgIndexBuffer*     indexBuffer    = nullptr;
+        }
+        bindings_;
 
 };
 

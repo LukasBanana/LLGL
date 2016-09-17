@@ -16,13 +16,15 @@ namespace LLGL
 
 
 DbgRenderContext::DbgRenderContext(
-    RenderContext& instance, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCaps& caps) :
+    RenderContext& instance, RenderingProfiler* profiler, RenderingDebugger* debugger,
+    const RenderingCaps& caps, const std::string& rendererName) :
         instance_   ( instance ),
         profiler_   ( profiler ),
         debugger_   ( debugger ),
         caps_       ( caps     )
 {
     ShareWindow(instance);
+    DetermineRenderer(rendererName);
 }
 
 void DbgRenderContext::Present()
@@ -81,13 +83,21 @@ void DbgRenderContext::ClearBuffers(long flags)
 
 void DbgRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
-    instance_.SetVertexBuffer(vertexBuffer);
+    auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
+    bindings_.vertexBuffer = (&vertexBufferDbg);
+
+    instance_.SetVertexBuffer(vertexBufferDbg.instance);
+
     LLGL_DBG_PROFILER_DO(setVertexBuffer.Inc());
 }
 
 void DbgRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 {
-    instance_.SetIndexBuffer(indexBuffer);
+    auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
+    bindings_.indexBuffer = (&indexBufferDbg);
+
+    instance_.SetIndexBuffer(indexBufferDbg.instance);
+
     LLGL_DBG_PROFILER_DO(setIndexBuffer.Inc());
 }
 
@@ -184,6 +194,19 @@ bool DbgRenderContext::QueryResult(Query& query, std::uint64_t& result)
 
 void DbgRenderContext::SetPrimitiveTopology(const PrimitiveTopology topology)
 {
+    if (renderer_.isDirect3D)
+    {
+        switch (topology)
+        {
+            case PrimitiveTopology::LineLoop:
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "renderer does not support primitive topology line loop", __FUNCTION__);
+                break;
+            case PrimitiveTopology::TriangleFan:
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "renderer does not support primitive topology triangle fan", __FUNCTION__);
+                break;
+        }
+    }
+
     topology_ = topology;
     instance_.SetPrimitiveTopology(topology);
 }
@@ -269,16 +292,41 @@ void DbgRenderContext::SyncGPU()
  * ======= Private: =======
  */
 
+static bool CompareSubStr(const std::string& lhs, const std::string& rhs)
+{
+    return (lhs.size() >= rhs.size() && lhs.substr(0, rhs.size()) == rhs);
+}
+
+void DbgRenderContext::DetermineRenderer(const std::string& rendererName)
+{
+    /* Determine renderer API by specified name */
+    if (CompareSubStr(rendererName, "OpenGL"))
+        renderer_.isOpenGL = true;
+    else if (CompareSubStr(rendererName, "Direct3D"))
+        renderer_.isDirect3D = true;
+    else if (CompareSubStr(rendererName, "Vulkan"))
+        renderer_.isVulkan = true;
+}
+
 void DbgRenderContext::DebugGraphicsPipelineSet(const std::string& source)
 {
+    //todo...
 }
 
 void DbgRenderContext::DebugVertexBufferSet(const std::string& source)
 {
+    if (!bindings_.vertexBuffer)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no vertex buffer is bound", source);
+    else if (!bindings_.vertexBuffer->initialized)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound", source);
 }
 
 void DbgRenderContext::DebugIndexBufferSet(const std::string& source)
 {
+    if (!bindings_.indexBuffer)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no index buffer is bound", source);
+    else if (!bindings_.indexBuffer->initialized)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized index buffer is bound", source);
 }
 
 void DbgRenderContext::DebugNumVertices(unsigned int numVertices, const std::string& source)

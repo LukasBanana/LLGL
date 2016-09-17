@@ -85,7 +85,6 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
     auto moduleFilename = Module::GetModuleFilename(moduleName);
     auto module = Module::Load(moduleFilename);
     auto renderSystem = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
-    renderSystem->name_ = LoadRenderSystemName(*module);
 
     #ifdef LLGL_ENABLE_DEBUG_LAYER
     
@@ -94,6 +93,8 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
         renderSystem = std::make_shared<DbgRenderSystem>(renderSystem, profiler, debugger);
 
     #endif
+
+    renderSystem->name_ = LoadRenderSystemName(*module);
 
     /* Store new module globally */
     g_renderSystemModule = std::move(module);

@@ -8,6 +8,7 @@
 #include "DbgRenderSystem.h"
 #include "DbgCore.h"
 #include "../../Core/Helper.h"
+#include "../CheckedCast.h"
 
 
 namespace LLGL
@@ -50,7 +51,8 @@ RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescripto
         *instance_->CreateRenderContext(desc, window),
         profiler_,
         debugger_,
-        caps_
+        caps_,
+        GetName()
     ));
 }
 
@@ -64,14 +66,12 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
 
 VertexBuffer* DbgRenderSystem::CreateVertexBuffer()
 {
-    return instance_->CreateVertexBuffer();
-    //return TakeOwnership(vertexBuffers_, MakeUnique<DbgVertexBuffer>());
+    return TakeOwnership(vertexBuffers_, MakeUnique<DbgVertexBuffer>(*instance_->CreateVertexBuffer()));
 }
 
 IndexBuffer* DbgRenderSystem::CreateIndexBuffer()
 {
-    return instance_->CreateIndexBuffer();
-    //return TakeOwnership(indexBuffers_, MakeUnique<DbgIndexBuffer>());
+    return TakeOwnership(indexBuffers_, MakeUnique<DbgIndexBuffer>(*instance_->CreateIndexBuffer()));
 }
 
 ConstantBuffer* DbgRenderSystem::CreateConstantBuffer()
@@ -88,14 +88,16 @@ StorageBuffer* DbgRenderSystem::CreateStorageBuffer()
 
 void DbgRenderSystem::Release(VertexBuffer& vertexBuffer)
 {
-    instance_->Release(vertexBuffer);
-    //RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
+    auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
+    instance_->Release(vertexBufferDbg.instance);
+    RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
 }
 
 void DbgRenderSystem::Release(IndexBuffer& indexBuffer)
 {
-    instance_->Release(indexBuffer);
-    //RemoveFromUniqueSet(indexBuffers_, &indexBuffer);
+    auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
+    instance_->Release(indexBufferDbg.instance);
+    RemoveFromUniqueSet(indexBuffers_, &indexBuffer);
 }
 
 void DbgRenderSystem::Release(ConstantBuffer& constantBuffer)
@@ -113,13 +115,21 @@ void DbgRenderSystem::Release(StorageBuffer& storageBuffer)
 void DbgRenderSystem::SetupVertexBuffer(
     VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
 {
-    instance_->SetupVertexBuffer(vertexBuffer, data, dataSize, usage, vertexFormat);
+    auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
+    instance_->SetupVertexBuffer(vertexBufferDbg.instance, data, dataSize, usage, vertexFormat);
+
+    vertexBufferDbg.size        = dataSize;
+    vertexBufferDbg.initialized = true;
 }
 
 void DbgRenderSystem::SetupIndexBuffer(
     IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
 {
-    instance_->SetupIndexBuffer(indexBuffer, data, dataSize, usage, indexFormat);
+    auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
+    instance_->SetupIndexBuffer(indexBufferDbg.instance, data, dataSize, usage, indexFormat);
+
+    indexBufferDbg.size         = dataSize;
+    indexBufferDbg.initialized  = true;
 }
 
 void DbgRenderSystem::SetupConstantBuffer(
@@ -136,14 +146,30 @@ void DbgRenderSystem::SetupStorageBuffer(
 
 void DbgRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    instance_->WriteVertexBuffer(vertexBuffer, data, dataSize, offset);
-    LLGL_DBG_PROFILER_DO(writeVertexBuffer.Inc());
+    auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
+    if (vertexBufferDbg.initialized)
+    {
+        DebugBufferSize(vertexBufferDbg.size, dataSize, offset, __FUNCTION__);
+
+        instance_->WriteVertexBuffer(vertexBufferDbg.instance, data, dataSize, offset);
+        LLGL_DBG_PROFILER_DO(writeVertexBuffer.Inc());
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized vertex buffer", __FUNCTION__);
 }
 
 void DbgRenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    instance_->WriteIndexBuffer(indexBuffer, data, dataSize, offset);
-    LLGL_DBG_PROFILER_DO(writeIndexBuffer.Inc());
+    auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
+    if (indexBufferDbg.initialized)
+    {
+        DebugBufferSize(indexBufferDbg.size, dataSize, offset, __FUNCTION__);
+
+        instance_->WriteIndexBuffer(indexBufferDbg.instance, data, dataSize, offset);
+        LLGL_DBG_PROFILER_DO(writeIndexBuffer.Inc());
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized index buffer", __FUNCTION__);
 }
 
 void DbgRenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
@@ -366,6 +392,11 @@ bool DbgRenderSystem::OnMakeCurrent(RenderContext* renderContext)
     return instance_->MakeCurrent(renderContext);
 }
 
+void DbgRenderSystem::DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source)
+{
+    if (dataSize + dataOffset > bufferSize)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds", source);
+}
 
 
 } // /namespace LLGL
