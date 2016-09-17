@@ -52,8 +52,13 @@ endif(WIN32)
 
 # === Options ===
 
+option(LLGL_ENABLE_DEBUG_LAYER "Enable Renderer Debug Layer (for both Debug and Release mode)" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable Vendor Specific OpenGL Extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL Extension Placeholders" ON)
+
+if(LLGL_ENABLE_DEBUG_LAYER)
+	ADD_DEFINE(LLGL_ENABLE_DEBUG_LAYER)
+endif()
 
 if(LLGL_GL_ENABLE_VENDOR_EXT)
 	ADD_DEFINE(LLGL_GL_ENABLE_VENDOR_EXT)
@@ -72,6 +77,10 @@ file(GLOB FilesIncludePlatformBase			${PROJECT_INCLUDE_DIR}/LLGL/Platform/*.*)
 file(GLOB FilesCore							${PROJECT_SOURCE_DIR}/sources/Core/*.*)
 file(GLOB FilesPlatformBase					${PROJECT_SOURCE_DIR}/sources/Platform/*.*)
 file(GLOB FilesRenderer						${PROJECT_SOURCE_DIR}/sources/Renderer/*.*)
+
+if(LLGL_ENABLE_DEBUG_LAYER)
+	file(GLOB FilesRendererDbg				${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/*.*)
+endif()
 
 if(WIN32)
 	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
@@ -141,6 +150,13 @@ source_group(
 	${FilesRendererVulkan}
 )
 
+if(LLGL_ENABLE_DEBUG_LAYER)
+	source_group(
+		"Sources\\Renderer\\DebugLayer" FILES
+		${FilesRendererDbg}
+	)
+endif()
+
 source_group(
 	"Sources\\Renderer\\Platform" FILES
 	${FilesRendererGLPlatform}
@@ -196,6 +212,10 @@ set(
 	${FilesPlatform}
 	${FilesRenderer}
 )
+
+if(LLGL_ENABLE_DEBUG_LAYER)
+	set(FilesLLGL ${FilesLLGL} ${FilesRendererDbg})
+endif()
 
 set(
 	FilesGL
