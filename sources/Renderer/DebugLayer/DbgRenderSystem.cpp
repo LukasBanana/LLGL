@@ -76,14 +76,12 @@ IndexBuffer* DbgRenderSystem::CreateIndexBuffer()
 
 ConstantBuffer* DbgRenderSystem::CreateConstantBuffer()
 {
-    return instance_->CreateConstantBuffer();
-    //return TakeOwnership(constantBuffers_, MakeUnique<DbgConstantBuffer>(device_.Get()));
+    return TakeOwnership(constantBuffers_, MakeUnique<DbgConstantBuffer>(*instance_->CreateConstantBuffer()));
 }
 
 StorageBuffer* DbgRenderSystem::CreateStorageBuffer()
 {
-    return instance_->CreateStorageBuffer();
-    //return TakeOwnership(storageBuffers_, MakeUnique<DbgStorageBuffer>());
+    return TakeOwnership(storageBuffers_, MakeUnique<DbgStorageBuffer>(*instance_->CreateStorageBuffer()));
 }
 
 void DbgRenderSystem::Release(VertexBuffer& vertexBuffer)
@@ -102,14 +100,16 @@ void DbgRenderSystem::Release(IndexBuffer& indexBuffer)
 
 void DbgRenderSystem::Release(ConstantBuffer& constantBuffer)
 {
-    instance_->Release(constantBuffer);
-    //RemoveFromUniqueSet(constantBuffers_, &constantBuffer);
+    auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
+    instance_->Release(constantBufferDbg.instance);
+    RemoveFromUniqueSet(constantBuffers_, &constantBufferDbg);
 }
 
 void DbgRenderSystem::Release(StorageBuffer& storageBuffer)
 {
-    instance_->Release(storageBuffer);
-    //RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
+    auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
+    instance_->Release(storageBufferDbg.instance);
+    RemoveFromUniqueSet(storageBuffers_, &storageBufferDbg);
 }
 
 void DbgRenderSystem::SetupVertexBuffer(
@@ -135,13 +135,21 @@ void DbgRenderSystem::SetupIndexBuffer(
 void DbgRenderSystem::SetupConstantBuffer(
     ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
-    instance_->SetupConstantBuffer(constantBuffer, data, dataSize, usage);
+    auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
+    instance_->SetupConstantBuffer(constantBufferDbg.instance, data, dataSize, usage);
+
+    constantBufferDbg.size          = dataSize;
+    constantBufferDbg.initialized   = true;
 }
 
 void DbgRenderSystem::SetupStorageBuffer(
     StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
-    instance_->SetupStorageBuffer(storageBuffer, data, dataSize, usage);
+    auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
+    instance_->SetupStorageBuffer(storageBufferDbg.instance, data, dataSize, usage);
+
+    storageBufferDbg.size           = dataSize;
+    storageBufferDbg.initialized    = true;
 }
 
 void DbgRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
@@ -150,12 +158,11 @@ void DbgRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* 
     if (vertexBufferDbg.initialized)
     {
         DebugBufferSize(vertexBufferDbg.size, dataSize, offset, __FUNCTION__);
-
         instance_->WriteVertexBuffer(vertexBufferDbg.instance, data, dataSize, offset);
         LLGL_DBG_PROFILER_DO(writeVertexBuffer.Inc());
     }
     else
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized vertex buffer", __FUNCTION__);
+        ErrWriteUninitializedBuffer(__FUNCTION__);
 }
 
 void DbgRenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
@@ -164,24 +171,37 @@ void DbgRenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* dat
     if (indexBufferDbg.initialized)
     {
         DebugBufferSize(indexBufferDbg.size, dataSize, offset, __FUNCTION__);
-
         instance_->WriteIndexBuffer(indexBufferDbg.instance, data, dataSize, offset);
         LLGL_DBG_PROFILER_DO(writeIndexBuffer.Inc());
     }
     else
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized index buffer", __FUNCTION__);
+        ErrWriteUninitializedBuffer(__FUNCTION__);
 }
 
 void DbgRenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    instance_->WriteConstantBuffer(constantBuffer, data, dataSize, offset);
-    LLGL_DBG_PROFILER_DO(writeConstantBuffer.Inc());
+    auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
+    if (constantBufferDbg.initialized)
+    {
+        DebugBufferSize(constantBufferDbg.size, dataSize, offset, __FUNCTION__);
+        instance_->WriteConstantBuffer(constantBufferDbg.instance, data, dataSize, offset);
+        LLGL_DBG_PROFILER_DO(writeConstantBuffer.Inc());
+    }
+    else
+        ErrWriteUninitializedBuffer(__FUNCTION__);
 }
 
 void DbgRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    instance_->WriteStorageBuffer(storageBuffer, data, dataSize, offset);
-    LLGL_DBG_PROFILER_DO(writeStorageBuffer.Inc());
+    auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
+    if (storageBufferDbg.initialized)
+    {
+        DebugBufferSize(storageBufferDbg.size, dataSize, offset, __FUNCTION__);
+        instance_->WriteStorageBuffer(storageBufferDbg.instance, data, dataSize, offset);
+        LLGL_DBG_PROFILER_DO(writeStorageBuffer.Inc());
+    }
+    else
+        ErrWriteUninitializedBuffer(__FUNCTION__);
 }
 
 /* ----- Textures ----- */
@@ -396,6 +416,11 @@ void DbgRenderSystem::DebugBufferSize(std::size_t bufferSize, std::size_t dataSi
 {
     if (dataSize + dataOffset > bufferSize)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds", source);
+}
+
+void DbgRenderSystem::ErrWriteUninitializedBuffer(const std::string& source)
+{
+    LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized buffer", source);
 }
 
 

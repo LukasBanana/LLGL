@@ -10,6 +10,9 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 
+#include "DbgConstantBuffer.h"
+#include "DbgStorageBuffer.h"
+
 
 namespace LLGL
 {
@@ -103,20 +106,29 @@ void DbgRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 
 void DbgRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
 {
-    instance_.SetConstantBuffer(constantBuffer, slot);
+    auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
+    
+    instance_.SetConstantBuffer(constantBufferDbg.instance, slot);
+
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
 void DbgRenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
 {
-    instance_.SetStorageBuffer(storageBuffer, slot);
+    auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
+    
+    instance_.SetStorageBuffer(storageBufferDbg.instance, slot);
+    
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
 
 void* DbgRenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
 {
+    auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
+    
     LLGL_DBG_PROFILER_DO(mapStorageBuffer.Inc());
-    return instance_.MapStorageBuffer(storageBuffer, access);
+
+    return instance_.MapStorageBuffer(storageBufferDbg.instance, access);
 }
 
 void DbgRenderContext::UnmapStorageBuffer()

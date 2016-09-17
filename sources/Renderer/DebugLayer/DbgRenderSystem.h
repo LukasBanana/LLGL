@@ -14,6 +14,8 @@
 
 #include "DbgVertexBuffer.h"
 #include "DbgIndexBuffer.h"
+#include "DbgConstantBuffer.h"
+#include "DbgStorageBuffer.h"
 
 #include "../ContainerTypes.h"
 
@@ -148,6 +150,8 @@ class DbgRenderSystem : public RenderSystem
 
         void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source);
 
+        void ErrWriteUninitializedBuffer(const std::string& source);
+
         /* ----- Common objects ----- */
 
         std::shared_ptr<RenderSystem>           instance_;
@@ -163,8 +167,8 @@ class DbgRenderSystem : public RenderSystem
         
         HWObjectContainer<DbgVertexBuffer>      vertexBuffers_;
         HWObjectContainer<DbgIndexBuffer>       indexBuffers_;
-        //HWObjectContainer<DbgConstantBuffer>    constantBuffers_;
-        //HWObjectContainer<DbgStorageBuffer>     storageBuffers_;
+        HWObjectContainer<DbgConstantBuffer>    constantBuffers_;
+        HWObjectContainer<DbgStorageBuffer>     storageBuffers_;
 
         //HWObjectContainer<DbgTexture>           textures_;
         //HWObjectContainer<DbgRenderTarget>      renderTargets_;
