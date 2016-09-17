@@ -132,7 +132,7 @@ class DbgRenderContext : public RenderContext
         void DebugInstancing(const std::string& source);
 
         void ErrNotSupported(const std::string& featureName, const std::string& source);
-        void WarnImproperVertices(const std::string& topologyName, const std::string& source);
+        void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);
 
         /* ----- Common objects ----- */
 

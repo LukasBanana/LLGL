@@ -293,51 +293,51 @@ void DbgRenderContext::DebugNumVertices(unsigned int numVertices, const std::str
 
         case PrimitiveTopology::LineList:
             if (numVertices % 2 != 0)
-                WarnImproperVertices("line list", source);
+                WarnImproperVertices("line list", (numVertices % 2), source);
             break;
 
         case PrimitiveTopology::LineStrip:
             if (numVertices < 2)
-                WarnImproperVertices("line strip", source);
+                WarnImproperVertices("line strip", numVertices, source);
             break;
 
         case PrimitiveTopology::LineLoop:
             if (numVertices < 2)
-                WarnImproperVertices("line loop", source);
+                WarnImproperVertices("line loop", numVertices, source);
             break;
 
         case PrimitiveTopology::LineListAdjacency:
             if (numVertices % 2 != 0)
-                WarnImproperVertices("line list adjacency", source);
+                WarnImproperVertices("line list adjacency", (numVertices % 2), source);
             break;
 
         case PrimitiveTopology::LineStripAdjacency:
             if (numVertices < 2)
-                WarnImproperVertices("line strip adjacency", source);
+                WarnImproperVertices("line strip adjacency", numVertices, source);
             break;
 
         case PrimitiveTopology::TriangleList:
             if (numVertices % 3 != 0)
-                WarnImproperVertices("triangle list", source);
+                WarnImproperVertices("triangle list", (numVertices % 3), source);
             break;
 
         case PrimitiveTopology::TriangleStrip:
             if (numVertices < 3)
-                WarnImproperVertices("triangle strip", source);
+                WarnImproperVertices("triangle strip", numVertices, source);
             break;
         case PrimitiveTopology::TriangleFan:
             if (numVertices < 3)
-                WarnImproperVertices("triangle fan", source);
+                WarnImproperVertices("triangle fan", numVertices, source);
             break;
 
         case PrimitiveTopology::TriangleListAdjacency:
             if (numVertices % 3 != 0)
-                WarnImproperVertices("triangle list adjacency", source);
+                WarnImproperVertices("triangle list adjacency", (numVertices % 3), source);
             break;
 
         case PrimitiveTopology::TriangleStripAdjacency:
             if (numVertices < 3)
-                WarnImproperVertices("triangle strip adjacency", source);
+                WarnImproperVertices("triangle strip adjacency", numVertices, source);
             break;
 
         default:
@@ -345,7 +345,7 @@ void DbgRenderContext::DebugNumVertices(unsigned int numVertices, const std::str
             {
                 auto numPatchVertices = static_cast<unsigned int>(topology_) - static_cast<unsigned int>(PrimitiveTopology::Patches1) + 1;
                 if (numVertices % numPatchVertices != 0)
-                    WarnImproperVertices("patch" + std::to_string(numPatchVertices), source);
+                    WarnImproperVertices("patches" + std::to_string(numPatchVertices), (numVertices % numPatchVertices), source);
             }
             break;
     }
@@ -389,9 +389,15 @@ void DbgRenderContext::ErrNotSupported(const std::string& featureName, const std
     LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, featureName + " is not supported", source);
 }
 
-void DbgRenderContext::WarnImproperVertices(const std::string& topologyName, const std::string& source)
+void DbgRenderContext::WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source)
 {
-    LLGL_DBG_WARN(WarningType::ImproperArgument, "improper number of vertices for " + topologyName, source);
+    std::string vertexSingularPlural = (unusedVertices > 1 ? "vertices" : "vertex");
+
+    LLGL_DBG_WARN(
+        WarningType::ImproperArgument,
+        ("improper number of vertices for " + topologyName + " (" + std::to_string(unusedVertices) + " unused " + vertexSingularPlural + ")"),
+        source
+    );
 }
 
 

@@ -5,8 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/LLGL.h>
-#include <Gauss/Gauss.h>
+#include "Helper.h"
 #include <memory>
 #include <iostream>
 #include <string>
@@ -18,32 +17,16 @@
 //#define TEST_STORAGE_BUFFER
 
 
-class Debugger : public LLGL::RenderingDebugger
-{
-    public:
-        void OnError(LLGL::ErrorType type, Message& message)
-        {
-            std::cerr << "ERROR: " << message.GetSource() << ": " << message.GetText() << std::endl;
-            message.BlockAfter(3);
-        }
-        void OnWarning(LLGL::WarningType type, Message& message)
-        {
-            std::cerr << "WARNING: " << message.GetSource() << ": " << message.GetText() << std::endl;
-            message.BlockAfter(3);
-        }
-};
-
-
 int main()
 {
     try
     {
         // Setup profiler and debugger
         std::shared_ptr<LLGL::RenderingProfiler> profiler;
-        std::shared_ptr<Debugger> debugger;
+        std::shared_ptr<LLGL::RenderingDebugger> debugger;
 
         profiler = std::make_shared<LLGL::RenderingProfiler>();
-        debugger = std::make_shared<Debugger>();
+        debugger = std::make_shared<TestDebugger>();
 
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("OpenGL", profiler.get(), debugger.get());
@@ -423,7 +406,7 @@ int main()
             #endif
 
             context->SetTexture(texture, 0);
-            context->Draw(2, 0);//4, 0);
+            context->Draw(4, 0);
             
             #ifdef TEST_STORAGE_BUFFER
             

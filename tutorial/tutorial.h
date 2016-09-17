@@ -29,16 +29,40 @@ public:
     {
         while (context->GetWindow().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            profilerObj_->ResetCounters();
             OnDrawFrame();
         }
     }
+
+private:
+
+    class Debugger : public LLGL::RenderingDebugger
+    {
+        
+        void OnError(LLGL::ErrorType type, Message& message) override
+        {
+            std::cerr << "ERROR: " << message.GetSource() << ": " << message.GetText() << std::endl;
+            message.Block();
+        }
+
+        void OnWarning(LLGL::WarningType type, Message& message) override
+        {
+            std::cerr << "WARNING: " << message.GetSource() << ": " << message.GetText() << std::endl;
+            message.Block();
+        }
+
+    };
+
+    std::unique_ptr<LLGL::RenderingProfiler>    profilerObj_;
+    std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
 
 protected:
 
     std::shared_ptr<LLGL::RenderSystem>         renderer;
     LLGL::RenderContext*                        context     = nullptr;
     std::shared_ptr<LLGL::Input>                input;
-    std::shared_ptr<LLGL::RenderingProfiler>    profiler    = std::make_shared<LLGL::RenderingProfiler>();
+
+    const LLGL::RenderingProfiler&              profiler;
 
     virtual void OnDrawFrame() = 0;
 
@@ -46,10 +70,13 @@ protected:
         const std::string& rendererModule,
         const std::wstring& title,
         const LLGL::Size& resolution = { 800, 600 },
-        unsigned int multiSampling = 8)
+        unsigned int multiSampling = 8) :
+            profilerObj_( new LLGL::RenderingProfiler() ),
+            debuggerObj_( new Debugger()                ),
+            profiler    ( *profilerObj_                 )
     {
         // Create render system
-        renderer = LLGL::RenderSystem::Load(rendererModule, profiler.get());
+        renderer = LLGL::RenderSystem::Load(rendererModule, profilerObj_.get(), debuggerObj_.get());
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
