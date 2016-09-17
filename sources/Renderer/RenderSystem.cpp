@@ -74,7 +74,8 @@ static std::string LoadRenderSystemName(Module& module)
     return "";
 }
 
-std::shared_ptr<RenderSystem> RenderSystem::Load(const std::string& moduleName, RenderingProfiler* profiler)
+std::shared_ptr<RenderSystem> RenderSystem::Load(
+    const std::string& moduleName, RenderingProfiler* profiler, RenderingDebugger* debugger)
 {
     /* Check if previous module can be safely released (i.e. the previous render system has been deleted) */
     if (!g_renderSystemRef.expired())
@@ -89,8 +90,8 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(const std::string& moduleName, 
     #ifdef LLGL_ENABLE_DEBUG_LAYER
     
     /* Create debug layer render system */
-    if (profiler)
-        renderSystem = std::make_shared<DbgRenderSystem>(renderSystem, *profiler);
+    if (profiler != nullptr || debugger != nullptr)
+        renderSystem = std::make_shared<DbgRenderSystem>(renderSystem, profiler, debugger);
 
     #endif
 

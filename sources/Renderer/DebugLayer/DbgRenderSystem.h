@@ -26,7 +26,7 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Common ----- */
 
-        DbgRenderSystem(const std::shared_ptr<RenderSystem>& instance, RenderingProfiler& profiler);
+        DbgRenderSystem(const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger);
         ~DbgRenderSystem();
 
         std::map<RendererInfo, std::string> QueryRendererInfo() const override;
@@ -147,7 +147,10 @@ class DbgRenderSystem : public RenderSystem
 
         std::shared_ptr<RenderSystem>           instance_;
 
-        RenderingProfiler&                      profiler_;
+        RenderingProfiler*                      profiler_   = nullptr;
+        RenderingDebugger*                      debugger_   = nullptr;
+
+        RenderingCaps                           caps_;
 
         /* ----- Hardware object containers ----- */
 

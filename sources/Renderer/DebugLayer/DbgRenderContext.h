@@ -11,6 +11,7 @@
 
 #include <LLGL/RenderContext.h>
 #include <LLGL/RenderingProfiler.h>
+#include <LLGL/RenderingDebugger.h>
 
 
 namespace LLGL
@@ -24,7 +25,12 @@ class DbgRenderContext : public RenderContext
 
         /* ----- Common ----- */
 
-        DbgRenderContext(RenderContext& instance, RenderingProfiler& profiler);
+        DbgRenderContext(
+            RenderContext& instance,
+            RenderingProfiler* profiler,
+            RenderingDebugger* debugger,
+            const RenderingCaps& caps
+        );
 
         void Present() override;
 
@@ -107,14 +113,39 @@ class DbgRenderContext : public RenderContext
 
     private:
 
+        void DebugGraphicsPipelineSet(const std::string& source);
+        void DebugVertexBufferSet(const std::string& source);
+        void DebugIndexBufferSet(const std::string& source);
+
+        void DebugNumVertices(unsigned int numVertices, const std::string& source);
+        void DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset, const std::string& source);
+
+        void DebugDraw(
+            unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances,
+            unsigned int instanceOffset, const std::string& source
+        );
+        void DebugDrawIndexed(
+            unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex,
+            int vertexOffset, unsigned int instanceOffset, const std::string& source
+        );
+
+        void DebugInstancing(const std::string& source);
+
+        void ErrNotSupported(const std::string& featureName, const std::string& source);
+        void WarnImproperVertices(const std::string& topologyName, const std::string& source);
+
         /* ----- Common objects ----- */
 
-        RenderContext&      instance_;
-        RenderingProfiler&  profiler_;
+        RenderContext&          instance_;
+
+        RenderingProfiler*      profiler_   = nullptr;
+        RenderingDebugger*      debugger_   = nullptr;
+
+        const RenderingCaps&    caps_;
 
         /* ----- Render states ----- */
 
-        PrimitiveTopology   topology_ = PrimitiveTopology::TriangleList;
+        PrimitiveTopology       topology_   = PrimitiveTopology::TriangleList;
 
 };
 

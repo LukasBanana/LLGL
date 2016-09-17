@@ -6,6 +6,7 @@
  */
 
 #include "DbgRenderSystem.h"
+#include "DbgCore.h"
 #include "../../Core/Helper.h"
 
 
@@ -13,10 +14,13 @@ namespace LLGL
 {
 
 
-DbgRenderSystem::DbgRenderSystem(const std::shared_ptr<RenderSystem>& instance, RenderingProfiler& profiler) :
-    instance_( instance ),
-    profiler_( profiler )
+DbgRenderSystem::DbgRenderSystem(
+    const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
+        instance_( instance ),
+        profiler_( profiler ),
+        debugger_( debugger )
 {
+    caps_ = instance_->QueryRenderingCaps();
 }
 
 DbgRenderSystem::~DbgRenderSystem()
@@ -43,7 +47,10 @@ ShadingLanguage DbgRenderSystem::QueryShadingLanguage() const
 RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
     return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(
-        *instance_->CreateRenderContext(desc, window), profiler_
+        *instance_->CreateRenderContext(desc, window),
+        profiler_,
+        debugger_,
+        caps_
     ));
 }
 
@@ -130,25 +137,25 @@ void DbgRenderSystem::SetupStorageBuffer(
 void DbgRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     instance_->WriteVertexBuffer(vertexBuffer, data, dataSize, offset);
-    profiler_.writeVertexBuffer.Inc();
+    LLGL_DBG_PROFILER_DO(writeVertexBuffer.Inc());
 }
 
 void DbgRenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     instance_->WriteIndexBuffer(indexBuffer, data, dataSize, offset);
-    profiler_.writeIndexBuffer.Inc();
+    LLGL_DBG_PROFILER_DO(writeIndexBuffer.Inc());
 }
 
 void DbgRenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     instance_->WriteConstantBuffer(constantBuffer, data, dataSize, offset);
-    profiler_.writeConstantBuffer.Inc();
+    LLGL_DBG_PROFILER_DO(writeConstantBuffer.Inc());
 }
 
 void DbgRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     instance_->WriteStorageBuffer(storageBuffer, data, dataSize, offset);
-    profiler_.writeStorageBuffer.Inc();
+    LLGL_DBG_PROFILER_DO(writeStorageBuffer.Inc());
 }
 
 /* ----- Textures ----- */
