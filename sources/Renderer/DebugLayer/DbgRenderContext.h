@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderContext.h>
+#include <LLGL/RenderingProfiler.h>
 
 
 namespace LLGL
@@ -23,7 +24,7 @@ class DbgRenderContext : public RenderContext
 
         /* ----- Common ----- */
 
-        DbgRenderContext(RenderContext& instance);
+        DbgRenderContext(RenderContext& instance, RenderingProfiler& profiler);
 
         void Present() override;
 
@@ -106,7 +107,14 @@ class DbgRenderContext : public RenderContext
 
     private:
 
-        RenderContext& instance_;
+        /* ----- Common objects ----- */
+
+        RenderContext&      instance_;
+        RenderingProfiler&  profiler_;
+
+        /* ----- Render states ----- */
+
+        PrimitiveTopology   topology_ = PrimitiveTopology::TriangleList;
 
 };
 

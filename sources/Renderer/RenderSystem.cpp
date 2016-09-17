@@ -10,6 +10,10 @@
 #include <LLGL/RenderSystem.h>
 #include <array>
 
+#ifdef LLGL_ENABLE_DEBUG_LAYER
+#   include "DebugLayer/DbgRenderSystem.h"
+#endif
+
 
 namespace LLGL
 {
@@ -46,16 +50,16 @@ std::vector<std::string> RenderSystem::FindModules()
     return modules;
 }
     
-static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename, RenderingProfiler* profiler)
+static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename)
 {
     /* Load "LLGL_RenderSystem_Alloc" procedure */
-    LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (void*));
+    LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (void));
 
     auto RenderSystem_Alloc = reinterpret_cast<PFN_RENDERSYSTEM_ALLOC>(module.LoadProcedure("LLGL_RenderSystem_Alloc"));
     if (!RenderSystem_Alloc)
         throw std::runtime_error("failed to load \"LLGL_RenderSystem_Alloc\" procedure from module \"" + moduleFilename + "\"");
 
-    return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc(profiler));
+    return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc());
 }
 
 static std::string LoadRenderSystemName(Module& module)
@@ -79,8 +83,16 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(const std::string& moduleName, 
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(moduleName);
     auto module = Module::Load(moduleFilename);
-    auto renderSystem = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename, profiler));
+    auto renderSystem = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
     renderSystem->name_ = LoadRenderSystemName(*module);
+
+    #ifdef LLGL_ENABLE_DEBUG_LAYER
+    
+    /* Create debug layer render system */
+    if (profiler)
+        renderSystem = std::make_shared<DbgRenderSystem>(renderSystem, *profiler);
+
+    #endif
 
     /* Store new module globally */
     g_renderSystemModule = std::move(module);

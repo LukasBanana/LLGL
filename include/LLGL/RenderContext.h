@@ -349,6 +349,12 @@ class LLGL_EXPORT RenderContext
 
         void SetWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext);
 
+        /**
+        \brief Share window with another render context.
+        \note This is only used by the renderer debug layer.
+        */
+        void ShareWindow(RenderContext& other);
+
     private:
 
         std::shared_ptr<Window> window_;

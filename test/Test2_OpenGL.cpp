@@ -23,7 +23,7 @@ int main()
     try
     {
         // Load render system module
-        std::shared_ptr<LLGL::RenderingProfiler> profiler;// = std::make_shared<LLGL::RenderingProfiler>();
+        std::shared_ptr<LLGL::RenderingProfiler> profiler = std::make_shared<LLGL::RenderingProfiler>();
 
         auto renderer = LLGL::RenderSystem::Load("OpenGL", profiler.get());
 
@@ -296,11 +296,11 @@ int main()
         // Create sampler
         LLGL::SamplerDescriptor samplerDesc;
         {
-            samplerDesc.magFilter = LLGL::TextureFilter::Nearest;
-            samplerDesc.minFilter = LLGL::TextureFilter::Linear;
-            samplerDesc.textureWrapU = LLGL::TextureWrap::Border;
-            samplerDesc.textureWrapV = LLGL::TextureWrap::Border;
-            samplerDesc.borderColor = LLGL::ColorRGBAf(0, 0.7f, 0.5f, 1);
+            samplerDesc.magFilter       = LLGL::TextureFilter::Nearest;
+            samplerDesc.minFilter       = LLGL::TextureFilter::Linear;
+            samplerDesc.textureWrapU    = LLGL::TextureWrap::Border;
+            samplerDesc.textureWrapV    = LLGL::TextureWrap::Border;
+            samplerDesc.borderColor     = LLGL::ColorRGBAf(0, 0.7f, 0.5f, 1);
         }
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 

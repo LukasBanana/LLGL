@@ -141,6 +141,8 @@ class DbgRenderSystem : public RenderSystem
 
     private:
 
+        bool OnMakeCurrent(RenderContext* renderContext) override;
+
         /* ----- Common objects ----- */
 
         std::shared_ptr<RenderSystem>           instance_;

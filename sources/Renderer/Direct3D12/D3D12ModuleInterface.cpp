@@ -7,18 +7,14 @@
 
 #include "../ModuleInterface.h"
 #include "D3D12RenderSystem.h"
-//#include "D3D12RenderSystemProfiler.h"
 
 
 extern "C"
 {
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc(void* profiler)
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
 {
-    /*if (profiler)
-        return new LLGL::D3D12RenderSystemProfiler(*reinterpret_cast<LLGL::RenderingProfiler*>(profiler));
-    else*/
-        return new LLGL::D3D12RenderSystem();
+    return new LLGL::D3D12RenderSystem();
 }
 
 LLGL_EXPORT const char* LLGL_RenderSystem_Name()

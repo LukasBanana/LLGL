@@ -150,7 +150,7 @@ void GLRenderContextProfiler::DrawIndexed(unsigned int numVertices, unsigned int
 void GLRenderContextProfiler::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
     GLRenderContext::DrawInstanced(numVertices, firstVertex, numInstances);
-    profiler_.RecordDrawCall(topology_, numVertices);
+    profiler_.RecordDrawCall(topology_, numVertices, numInstances);
 }
 
 void GLRenderContextProfiler::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)

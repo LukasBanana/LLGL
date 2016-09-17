@@ -35,9 +35,10 @@ public:
 
 protected:
 
-    std::shared_ptr<LLGL::RenderSystem> renderer;
-    LLGL::RenderContext*                context     = nullptr;
-    std::shared_ptr<LLGL::Input>        input;
+    std::shared_ptr<LLGL::RenderSystem>         renderer;
+    LLGL::RenderContext*                        context     = nullptr;
+    std::shared_ptr<LLGL::Input>                input;
+    std::shared_ptr<LLGL::RenderingProfiler>    profiler    = std::make_shared<LLGL::RenderingProfiler>();
 
     virtual void OnDrawFrame() = 0;
 
@@ -48,7 +49,7 @@ protected:
         unsigned int multiSampling = 8)
     {
         // Create render system
-        renderer = LLGL::RenderSystem::Load(rendererModule);
+        renderer = LLGL::RenderSystem::Load(rendererModule, profiler.get());
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
@@ -85,6 +86,10 @@ protected:
         {
             // Read shader file
             std::ifstream file(desc.filename);
+
+            if (!file.good())
+                throw std::runtime_error("failed to open file: \"" + desc.filename + "\"");
+
             std::string shaderCode(
                 ( std::istreambuf_iterator<char>(file) ),
                 ( std::istreambuf_iterator<char>() )

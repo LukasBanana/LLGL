@@ -42,7 +42,9 @@ ShadingLanguage DbgRenderSystem::QueryShadingLanguage() const
 
 RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(*instance_->CreateRenderContext(desc, window)));
+    return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(
+        *instance_->CreateRenderContext(desc, window), profiler_
+    ));
 }
 
 void DbgRenderSystem::Release(RenderContext& renderContext)
@@ -346,6 +348,17 @@ void DbgRenderSystem::Release(Query& query)
     instance_->Release(query);
     //RemoveFromUniqueSet(queries_, &query);
 }
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool DbgRenderSystem::OnMakeCurrent(RenderContext* renderContext)
+{
+    return instance_->MakeCurrent(renderContext);
+}
+
 
 
 } // /namespace LLGL

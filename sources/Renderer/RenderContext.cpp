@@ -69,6 +69,11 @@ void RenderContext::SetWindow(const std::shared_ptr<Window>& window, VideoModeDe
     videoModeDesc_ = videoModeDesc;
 }
 
+void RenderContext::ShareWindow(RenderContext& other)
+{
+    window_ = other.window_;
+}
+
 
 } // /namespace LLGL
 
