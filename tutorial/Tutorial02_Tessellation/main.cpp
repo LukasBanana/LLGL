@@ -35,7 +35,7 @@ class Tutorial02 : public Tutorial
         float           tessLevelInner  = 5.0f;
         float           tessLevelOuter  = 5.0f;
         float           twist           = 0.0f;
-        float           _pad0;
+        float           _pad0;                  // <-- padding for 16 byte pack alignment of constant buffers
     }
     settings;
 

@@ -5,30 +5,23 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/LLGL.h>
-#include <Gauss/Gauss.h>
-#include <fstream>
+#include "Helper.h"
 
 //#define TEST_PRINT_SHADER_INFO
-
-static std::string ReadFileContent(const std::string& filename)
-{
-    std::ifstream file(filename);
-
-    std::string content(
-        ( std::istreambuf_iterator<char>(file) ),
-        ( std::istreambuf_iterator<char>() )
-    );
-
-    return content;
-}
 
 int main()
 {
     try
     {
+        // Setup profiler and debugger
+        std::shared_ptr<LLGL::RenderingProfiler> profiler;
+        std::shared_ptr<LLGL::RenderingDebugger> debugger;
+
+        profiler = std::make_shared<LLGL::RenderingProfiler>();
+        debugger = std::make_shared<TestDebugger>();
+
         // Load render system module
-        auto renderer = LLGL::RenderSystem::Load("Direct3D12");
+        auto renderer = LLGL::RenderSystem::Load("Direct3D12", profiler.get(), debugger.get());
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;

@@ -21,13 +21,22 @@
     if (debugger_)                  \
         STMNT
 
-#define LLGL_DBG_ERROR(TYPE, MSG, SOURCE)               \
-    if (debugger_)                                      \
-        debugger_->PostError((TYPE), (MSG), (SOURCE))
+#define LLGL_DBG_ERROR(TYPE, MESSAGE, SOURCE)               \
+    if (debugger_)                                          \
+        debugger_->PostError((TYPE), (MESSAGE), (SOURCE))
 
-#define LLGL_DBG_WARN(TYPE, MSG, SOURCE)                \
-    if (debugger_)                                      \
-        debugger_->PostWarning((TYPE), (MSG), (SOURCE))
+#define LLGL_DBG_ERROR_HERE(TYPE, MESSAGE) \
+    LLGL_DBG_ERROR((TYPE), (MESSAGE), __FUNCTION__)
+
+#define LLGL_DBG_WARN(TYPE, MESSAGE, SOURCE)                \
+    if (debugger_)                                          \
+        debugger_->PostWarning((TYPE), (MESSAGE), (SOURCE))
+
+#define LLGL_DBG_WARN_HERE(TYPE, MESSAGE) \
+    LLGL_DBG_WARN((TYPE), (MESSAGE), __FUNCTION__)
+
+#define LLGL_DBG_ERROR_NOT_SUPPORTED(FEATURE, SOURCE) \
+    LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, std::string(FEATURE) + " is not supported", (SOURCE))
 
 
 #endif

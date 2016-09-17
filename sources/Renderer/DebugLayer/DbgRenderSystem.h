@@ -16,6 +16,7 @@
 #include "DbgIndexBuffer.h"
 #include "DbgConstantBuffer.h"
 #include "DbgStorageBuffer.h"
+#include "DbgGraphicsPipeline.h"
 
 #include "../ContainerTypes.h"
 
@@ -152,6 +153,9 @@ class DbgRenderSystem : public RenderSystem
 
         void ErrWriteUninitializedBuffer(const std::string& source);
 
+        template <typename T, typename TBase>
+        void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
+
         /* ----- Common objects ----- */
 
         std::shared_ptr<RenderSystem>           instance_;
@@ -176,7 +180,7 @@ class DbgRenderSystem : public RenderSystem
         //HWObjectContainer<DbgShader>            shaders_;
         //HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
 
-        //HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
+        HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
         //HWObjectContainer<DbgSampler>           samplers_;
 
 };

@@ -88,9 +88,9 @@ void DbgRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
     auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
     bindings_.vertexBuffer = (&vertexBufferDbg);
-
-    instance_.SetVertexBuffer(vertexBufferDbg.instance);
-
+    {
+        instance_.SetVertexBuffer(vertexBufferDbg.instance);
+    }
     LLGL_DBG_PROFILER_DO(setVertexBuffer.Inc());
 }
 
@@ -98,37 +98,39 @@ void DbgRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 {
     auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
     bindings_.indexBuffer = (&indexBufferDbg);
-
-    instance_.SetIndexBuffer(indexBufferDbg.instance);
-
+    {
+        instance_.SetIndexBuffer(indexBufferDbg.instance);
+    }
     LLGL_DBG_PROFILER_DO(setIndexBuffer.Inc());
 }
 
 void DbgRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
 {
     auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
-    
-    instance_.SetConstantBuffer(constantBufferDbg.instance, slot);
-
+    {
+        instance_.SetConstantBuffer(constantBufferDbg.instance, slot);
+    }
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
 void DbgRenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
 {
     auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
-    
-    instance_.SetStorageBuffer(storageBufferDbg.instance, slot);
-    
+    {
+        instance_.SetStorageBuffer(storageBufferDbg.instance, slot);
+    }
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
 
 void* DbgRenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
 {
+    void* result = nullptr;
     auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
-    
+    {
+        result = instance_.MapStorageBuffer(storageBufferDbg.instance, access);
+    }
     LLGL_DBG_PROFILER_DO(mapStorageBuffer.Inc());
-
-    return instance_.MapStorageBuffer(storageBufferDbg.instance, access);
+    return result;
 }
 
 void DbgRenderContext::UnmapStorageBuffer()
@@ -175,7 +177,11 @@ void DbgRenderContext::UnsetRenderTarget()
 
 void DbgRenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    instance_.SetGraphicsPipeline(graphicsPipeline);
+    auto& graphicsPipelineDbg = LLGL_CAST(DbgGraphicsPipeline&, graphicsPipeline);
+    bindings_.graphicsPipeline = (&graphicsPipelineDbg);
+    {
+        instance_.SetGraphicsPipeline(graphicsPipelineDbg.instance);
+    }
     LLGL_DBG_PROFILER_DO(setGraphicsPipeline.Inc());
 }
 
@@ -226,21 +232,27 @@ void DbgRenderContext::SetPrimitiveTopology(const PrimitiveTopology topology)
 void DbgRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
     LLGL_DBG_DEBUGGER_DO(DebugDraw(numVertices, firstVertex, 1, 0, __FUNCTION__));
-    instance_.Draw(numVertices, firstVertex);
+    {
+        instance_.Draw(numVertices, firstVertex);
+    }
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
 void DbgRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, 1, firstIndex, 0, 0, __FUNCTION__));
-    instance_.DrawIndexed(numVertices, firstIndex);
+    {
+        instance_.DrawIndexed(numVertices, firstIndex);
+    }
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
 void DbgRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, 1, firstIndex, vertexOffset, 0, __FUNCTION__));
-    instance_.DrawIndexed(numVertices, firstIndex, vertexOffset);
+    {
+        instance_.DrawIndexed(numVertices, firstIndex, vertexOffset);
+    }
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
@@ -248,7 +260,9 @@ void DbgRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firs
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDraw(numVertices, firstVertex, numInstances, 0, __FUNCTION__));
-    instance_.DrawInstanced(numVertices, firstVertex, numInstances);
+    {
+        instance_.DrawInstanced(numVertices, firstVertex, numInstances);
+    }
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
@@ -256,7 +270,9 @@ void DbgRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firs
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDraw(numVertices, firstVertex, numInstances, instanceOffset, __FUNCTION__));
-    instance_.DrawInstanced(numVertices, firstVertex, numInstances, instanceOffset);
+    {
+        instance_.DrawInstanced(numVertices, firstVertex, numInstances, instanceOffset);
+    }
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
@@ -264,7 +280,9 @@ void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned i
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, numInstances, firstIndex, 0, 0, __FUNCTION__));
-    instance_.DrawIndexedInstanced(numVertices, numInstances, firstIndex);
+    {
+        instance_.DrawIndexedInstanced(numVertices, numInstances, firstIndex);
+    }
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
@@ -272,7 +290,9 @@ void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned i
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, numInstances, firstIndex, vertexOffset, 0, __FUNCTION__));
-    instance_.DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset);
+    {
+        instance_.DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset);
+    }
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
@@ -280,7 +300,9 @@ void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned i
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset, __FUNCTION__));
-    instance_.DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    {
+        instance_.DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    }
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
@@ -321,6 +343,12 @@ void DbgRenderContext::DetermineRenderer(const std::string& rendererName)
 }
 
 void DbgRenderContext::DebugGraphicsPipelineSet(const std::string& source)
+{
+    if (!bindings_.graphicsPipeline)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound", source);
+}
+
+void DbgRenderContext::DebugComputePipelineSet(const std::string& source)
 {
     //todo...
 }
@@ -425,6 +453,12 @@ void DbgRenderContext::DebugDraw(
     DebugVertexBufferSet(source);
     DebugNumVertices(numVertices, source);
     DebugNumInstances(numInstances, instanceOffset, source);
+
+    if (bindings_.vertexBuffer)
+    {
+        if (numVertices + firstVertex > bindings_.vertexBuffer->elements)
+            ErrVertexIndexOutOfBounds(numVertices + firstVertex, bindings_.vertexBuffer->elements, source);
+    }
 }
 
 void DbgRenderContext::DebugDrawIndexed(
@@ -436,17 +470,28 @@ void DbgRenderContext::DebugDrawIndexed(
     DebugIndexBufferSet(source);
     DebugNumVertices(numVertices, source);
     DebugNumInstances(numInstances, instanceOffset, source);
+
+    if (bindings_.indexBuffer)
+    {
+        if (numVertices + firstIndex > bindings_.indexBuffer->elements)
+            ErrVertexIndexOutOfBounds(numVertices + firstIndex, bindings_.indexBuffer->elements, source);
+    }
 }
 
 void DbgRenderContext::DebugInstancing(const std::string& source)
 {
     if (!caps_.hasInstancing)
-        ErrNotSupported("instancing", source);
+        LLGL_DBG_ERROR_NOT_SUPPORTED("instancing", source);
 }
 
-void DbgRenderContext::ErrNotSupported(const std::string& featureName, const std::string& source)
+void DbgRenderContext::ErrVertexIndexOutOfBounds(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source)
 {
-    LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, featureName + " is not supported", source);
+    LLGL_DBG_ERROR(
+        ErrorType::InvalidArgument,
+        "vertex index out of bounds (" + std::to_string(vertexCount) +
+        " specified but limit is " + std::to_string(vertexLimit) + ")",
+        source
+    );
 }
 
 void DbgRenderContext::WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source)

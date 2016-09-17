@@ -15,6 +15,7 @@
 
 #include "DbgVertexBuffer.h"
 #include "DbgIndexBuffer.h"
+#include "DbgGraphicsPipeline.h"
 
 
 namespace LLGL
@@ -120,6 +121,7 @@ class DbgRenderContext : public RenderContext
         void DetermineRenderer(const std::string& rendererName);
 
         void DebugGraphicsPipelineSet(const std::string& source);
+        void DebugComputePipelineSet(const std::string& source);
         void DebugVertexBufferSet(const std::string& source);
         void DebugIndexBufferSet(const std::string& source);
 
@@ -137,7 +139,7 @@ class DbgRenderContext : public RenderContext
 
         void DebugInstancing(const std::string& source);
 
-        void ErrNotSupported(const std::string& featureName, const std::string& source);
+        void ErrVertexIndexOutOfBounds(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source);
         void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);
 
         /* ----- Common objects ----- */
@@ -163,10 +165,17 @@ class DbgRenderContext : public RenderContext
 
         struct Bindings
         {
-            DbgVertexBuffer*    vertexBuffer   = nullptr;
-            DbgIndexBuffer*     indexBuffer    = nullptr;
+            DbgVertexBuffer*        vertexBuffer        = nullptr;
+            DbgIndexBuffer*         indexBuffer         = nullptr;
+            DbgGraphicsPipeline*    graphicsPipeline    = nullptr;
         }
         bindings_;
+
+        /*struct MetaInfo
+        {
+            bool viewportVisible = true;
+        }
+        metaInfo_;*/
 
 };
 
