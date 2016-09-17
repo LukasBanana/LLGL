@@ -69,9 +69,10 @@ void RenderContext::SetWindow(const std::shared_ptr<Window>& window, VideoModeDe
     videoModeDesc_ = videoModeDesc;
 }
 
-void RenderContext::ShareWindow(RenderContext& other)
+void RenderContext::ShareWindowAndVideoMode(RenderContext& other)
 {
-    window_ = other.window_;
+    window_         = other.window_;
+    videoModeDesc_  = other.videoModeDesc_;
 }
 
 

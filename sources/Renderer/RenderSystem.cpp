@@ -36,7 +36,12 @@ std::vector<std::string> RenderSystem::FindModules()
         #ifdef _WIN32
         "Direct3D12", "Direct3D11",
         #endif
-        "Vulkan", "OpenGL"
+        #ifdef __APPLE__
+        "Metal",
+        #else
+        "Vulkan",
+        #endif
+        "OpenGL"
     };
     
     std::vector<std::string> modules;
@@ -83,8 +88,8 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
 
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(moduleName);
-    auto module = Module::Load(moduleFilename);
-    auto renderSystem = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
+    auto module         = Module::Load(moduleFilename);
+    auto renderSystem   = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
 
     #ifdef LLGL_ENABLE_DEBUG_LAYER
     
@@ -97,8 +102,8 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
     renderSystem->name_ = LoadRenderSystemName(*module);
 
     /* Store new module globally */
-    g_renderSystemModule = std::move(module);
-    g_renderSystemRef = renderSystem;
+    g_renderSystemModule    = std::move(module);
+    g_renderSystemRef       = renderSystem;
 
     /* Return new render system and unique pointer */
     return renderSystem;

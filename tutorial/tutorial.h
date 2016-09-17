@@ -87,10 +87,10 @@ protected:
             contextDesc.antiAliasing.samples    = multiSampling;
         }
         context = renderer->CreateRenderContext(contextDesc);
-            
+
         // Set window title
         context->GetWindow().SetTitle(title);
-            
+
         // Add input event listener to window
         input = std::make_shared<LLGL::Input>();
         context->GetWindow().AddEventListener(input);
@@ -141,7 +141,7 @@ protected:
         // Bind vertex attribute layout (this is not required for a compute shader program)
         if (!vertexAttribs.empty())
             shaderProgram->BindVertexAttributes(vertexAttribs);
-        
+
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())
             throw std::runtime_error(shaderProgram->QueryInfoLog());

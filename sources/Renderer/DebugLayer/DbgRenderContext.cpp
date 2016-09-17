@@ -23,7 +23,7 @@ DbgRenderContext::DbgRenderContext(
         debugger_   ( debugger ),
         caps_       ( caps     )
 {
-    ShareWindow(instance);
+    ShareWindowAndVideoMode(instance);
     DetermineRenderer(rendererName);
 }
 
