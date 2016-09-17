@@ -17,6 +17,7 @@
 #include "DbgConstantBuffer.h"
 #include "DbgStorageBuffer.h"
 #include "DbgGraphicsPipeline.h"
+#include "DbgTexture.h"
 
 #include "../ContainerTypes.h"
 
@@ -150,11 +151,14 @@ class DbgRenderSystem : public RenderSystem
         bool OnMakeCurrent(RenderContext* renderContext) override;
 
         void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source);
+        void DebugMipLevelLimit(int mipLevel, int mipLevelCount, const std::string& source);
 
-        void ErrWriteUninitializedBuffer(const std::string& source);
+        void ErrWriteUninitializedResource(const std::string& source);
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
+
+        DbgTexture& GetInitializedTexture(Texture& texture, const std::string& source);
 
         /* ----- Common objects ----- */
 
@@ -174,7 +178,7 @@ class DbgRenderSystem : public RenderSystem
         HWObjectContainer<DbgConstantBuffer>    constantBuffers_;
         HWObjectContainer<DbgStorageBuffer>     storageBuffers_;
 
-        //HWObjectContainer<DbgTexture>           textures_;
+        HWObjectContainer<DbgTexture>           textures_;
         //HWObjectContainer<DbgRenderTarget>      renderTargets_;
 
         //HWObjectContainer<DbgShader>            shaders_;

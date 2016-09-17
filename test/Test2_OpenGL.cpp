@@ -260,6 +260,8 @@ int main()
         context->GenerateMips(texture);
         #endif
 
+        renderer->WriteTexture2D(texture, 1, { 0, 1 }, { 2, 1 }, textureData); // create 2D texture
+
         auto textureDesc = renderer->QueryTextureDescriptor(texture);
 
         // Create render target

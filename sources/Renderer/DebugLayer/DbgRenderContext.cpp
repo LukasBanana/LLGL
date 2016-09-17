@@ -12,6 +12,7 @@
 
 #include "DbgConstantBuffer.h"
 #include "DbgStorageBuffer.h"
+#include "DbgTexture.h"
 
 
 namespace LLGL
@@ -142,13 +143,20 @@ void DbgRenderContext::UnmapStorageBuffer()
 
 void DbgRenderContext::SetTexture(Texture& texture, unsigned int slot)
 {
-    instance_.SetTexture(texture, slot);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_.SetTexture(textureDbg.instance, slot);
+    }
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
 void DbgRenderContext::GenerateMips(Texture& texture)
 {
-    instance_.GenerateMips(texture);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_.GenerateMips(textureDbg.instance);
+    }
+    textureDbg.mipLevels = NumMipLevels(textureDbg.size);
 }
 
 /* ----- Sampler States ----- */
@@ -455,10 +463,7 @@ void DbgRenderContext::DebugDraw(
     DebugNumInstances(numInstances, instanceOffset, source);
 
     if (bindings_.vertexBuffer)
-    {
-        if (numVertices + firstVertex > bindings_.vertexBuffer->elements)
-            ErrVertexIndexOutOfBounds(numVertices + firstVertex, bindings_.vertexBuffer->elements, source);
-    }
+        DebugVertexLimit(numVertices + firstVertex, bindings_.vertexBuffer->elements, source);
 }
 
 void DbgRenderContext::DebugDrawIndexed(
@@ -472,10 +477,7 @@ void DbgRenderContext::DebugDrawIndexed(
     DebugNumInstances(numInstances, instanceOffset, source);
 
     if (bindings_.indexBuffer)
-    {
-        if (numVertices + firstIndex > bindings_.indexBuffer->elements)
-            ErrVertexIndexOutOfBounds(numVertices + firstIndex, bindings_.indexBuffer->elements, source);
-    }
+        DebugVertexLimit(numVertices + firstIndex, bindings_.indexBuffer->elements, source);
 }
 
 void DbgRenderContext::DebugInstancing(const std::string& source)
@@ -484,14 +486,17 @@ void DbgRenderContext::DebugInstancing(const std::string& source)
         LLGL_DBG_ERROR_NOT_SUPPORTED("instancing", source);
 }
 
-void DbgRenderContext::ErrVertexIndexOutOfBounds(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source)
+void DbgRenderContext::DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source)
 {
-    LLGL_DBG_ERROR(
-        ErrorType::InvalidArgument,
-        "vertex index out of bounds (" + std::to_string(vertexCount) +
-        " specified but limit is " + std::to_string(vertexLimit) + ")",
-        source
-    );
+    if (vertexCount > vertexLimit)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "vertex index out of bounds (" + std::to_string(vertexCount) +
+            " specified but limit is " + std::to_string(vertexLimit) + ")",
+            source
+        );
+    }
 }
 
 void DbgRenderContext::WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source)

@@ -178,7 +178,7 @@ void DbgRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* 
         LLGL_DBG_PROFILER_DO(writeVertexBuffer.Inc());
     }
     else
-        ErrWriteUninitializedBuffer(__FUNCTION__);
+        ErrWriteUninitializedResource(__FUNCTION__);
 }
 
 void DbgRenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
@@ -193,7 +193,7 @@ void DbgRenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* dat
         LLGL_DBG_PROFILER_DO(writeIndexBuffer.Inc());
     }
     else
-        ErrWriteUninitializedBuffer(__FUNCTION__);
+        ErrWriteUninitializedResource(__FUNCTION__);
 }
 
 void DbgRenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)
@@ -208,7 +208,7 @@ void DbgRenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const 
         LLGL_DBG_PROFILER_DO(writeConstantBuffer.Inc());
     }
     else
-        ErrWriteUninitializedBuffer(__FUNCTION__);
+        ErrWriteUninitializedResource(__FUNCTION__);
 }
 
 void DbgRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset)
@@ -223,111 +223,186 @@ void DbgRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const voi
         LLGL_DBG_PROFILER_DO(writeStorageBuffer.Inc());
     }
     else
-        ErrWriteUninitializedBuffer(__FUNCTION__);
+        ErrWriteUninitializedResource(__FUNCTION__);
 }
 
 /* ----- Textures ----- */
 
 Texture* DbgRenderSystem::CreateTexture()
 {
-    return instance_->CreateTexture();
-    //return TakeOwnership(textures_, MakeUnique<DbgTexture>());
+    return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture()));
 }
 
 void DbgRenderSystem::Release(Texture& texture)
 {
-    instance_->Release(texture);
-    //RemoveFromUniqueSet(textures_, &texture);
+    ReleaseDbg(textures_, texture);
 }
 
 TextureDescriptor DbgRenderSystem::QueryTextureDescriptor(const Texture& texture)
 {
-    return instance_->QueryTextureDescriptor(texture);
+    auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
+    return instance_->QueryTextureDescriptor(textureDbg.instance);
 }
 
 void DbgRenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDataDescriptor* imageDesc)
 {
-    instance_->SetupTexture1D(texture, format, size, imageDesc);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_->SetupTexture1D(textureDbg.instance, format, size, imageDesc);
+    }
+    textureDbg.SetType(TextureType::Texture1D);
+    textureDbg.size         = { size, 1, 1 };
+    textureDbg.mipLevels    = 1;
 }
 
 void DbgRenderSystem::SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
 {
-    instance_->SetupTexture2D(texture, format, size, imageDesc);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_->SetupTexture2D(textureDbg.instance, format, size, imageDesc);
+    }
+    textureDbg.SetType(TextureType::Texture2D);
+    textureDbg.size         = { size.x, size.y, 1 };
+    textureDbg.mipLevels    = 1;
 }
 
 void DbgRenderSystem::SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDataDescriptor* imageDesc)
 {
-    instance_->SetupTexture3D(texture, format, size, imageDesc);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_->SetupTexture3D(textureDbg.instance, format, size, imageDesc);
+    }
+    textureDbg.SetType(TextureType::Texture3D);
+    textureDbg.size         = size;
+    textureDbg.mipLevels    = 1;
 }
 
 void DbgRenderSystem::SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
 {
-    instance_->SetupTextureCube(texture, format, size, imageDesc);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_->SetupTextureCube(textureDbg.instance, format, size, imageDesc);
+    }
+    textureDbg.SetType(TextureType::TextureCube);
+    textureDbg.size         = { size.x, size.y, 6 };
+    textureDbg.mipLevels    = 1;
 }
 
 void DbgRenderSystem::SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
-    instance_->SetupTexture1DArray(texture, format, size, layers, imageDesc);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_->SetupTexture1DArray(textureDbg.instance, format, size, layers, imageDesc);
+    }
+    textureDbg.SetType(TextureType::Texture1DArray);
+    textureDbg.size         = { size, static_cast<int>(layers), 1 };
+    textureDbg.mipLevels    = 1;
 }
 
 void DbgRenderSystem::SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
-    instance_->SetupTexture2DArray(texture, format, size, layers, imageDesc);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_->SetupTexture2DArray(textureDbg.instance, format, size, layers, imageDesc);
+    }
+    textureDbg.SetType(TextureType::Texture2DArray);
+    textureDbg.size         = { size.x, size.y, static_cast<int>(layers) };
+    textureDbg.mipLevels    = 1;
 }
 
 void DbgRenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
-    instance_->SetupTextureCubeArray(texture, format, size, layers, imageDesc);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_->SetupTextureCubeArray(textureDbg.instance, format, size, layers, imageDesc);
+    }
+    textureDbg.SetType(TextureType::TextureCubeArray);
+    textureDbg.size         = { size.x, size.y, static_cast<int>(layers)*6 };
+    textureDbg.mipLevels    = 1;
 }
 
 void DbgRenderSystem::WriteTexture1D(
     Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc)
 {
-    instance_->WriteTexture1D(texture, mipLevel, position, size, imageDesc);
+    auto& textureDbg = GetInitializedTexture(texture, __FUNCTION__);
+    DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
+    {
+        instance_->WriteTexture1D(textureDbg.instance, mipLevel, position, size, imageDesc);
+    }
 }
 
 void DbgRenderSystem::WriteTexture2D(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
-    instance_->WriteTexture2D(texture, mipLevel, position, size, imageDesc);
+    auto& textureDbg = GetInitializedTexture(texture, __FUNCTION__);
+    DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
+    {
+        instance_->WriteTexture2D(textureDbg.instance, mipLevel, position, size, imageDesc);
+    }
 }
 
 void DbgRenderSystem::WriteTexture3D(
     Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc)
 {
-    instance_->WriteTexture3D(texture, mipLevel, position, size, imageDesc);
+    auto& textureDbg = GetInitializedTexture(texture, __FUNCTION__);
+    DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
+    {
+        instance_->WriteTexture3D(textureDbg.instance, mipLevel, position, size, imageDesc);
+    }
 }
 
 void DbgRenderSystem::WriteTextureCube(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc)
 {
-    instance_->WriteTextureCube(texture, mipLevel, position, cubeFace, size, imageDesc);
+    auto& textureDbg = GetInitializedTexture(texture, __FUNCTION__);
+    DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
+    {
+        instance_->WriteTextureCube(textureDbg.instance, mipLevel, position, cubeFace, size, imageDesc);
+    }
 }
 
 void DbgRenderSystem::WriteTexture1DArray(
     Texture& texture, int mipLevel, int position, unsigned int layerOffset,
     int size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
-    instance_->WriteTexture1DArray(texture, mipLevel, position, layerOffset, size, layers, imageDesc);
+    auto& textureDbg = GetInitializedTexture(texture, __FUNCTION__);
+    DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
+    {
+        instance_->WriteTexture1DArray(textureDbg.instance, mipLevel, position, layerOffset, size, layers, imageDesc);
+    }
 }
 
 void DbgRenderSystem::WriteTexture2DArray(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
     const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc)
 {
-    instance_->WriteTexture2DArray(texture, mipLevel, position, layerOffset, size, layers, imageDesc);
+    auto& textureDbg = GetInitializedTexture(texture, __FUNCTION__);
+    DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
+    {
+        instance_->WriteTexture2DArray(textureDbg.instance, mipLevel, position, layerOffset, size, layers, imageDesc);
+    }
 }
 
 void DbgRenderSystem::WriteTextureCubeArray(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
     const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc)
 {
-    instance_->WriteTextureCubeArray(texture, mipLevel, position, layerOffset, cubeFaceOffset, size, cubeFaces, imageDesc);
+    auto& textureDbg = GetInitializedTexture(texture, __FUNCTION__);
+    DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
+    {
+        instance_->WriteTextureCubeArray(textureDbg.instance, mipLevel, position, layerOffset, cubeFaceOffset, size, cubeFaces, imageDesc);
+    }
 }
+
+#undef LLGL_GET_DBG_TEXTURE
 
 void DbgRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
 {
-    instance_->ReadTexture(texture, mipLevel, dataFormat, dataType, data);
+    auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
+    DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
+    {
+        instance_->ReadTexture(textureDbg.instance, mipLevel, dataFormat, dataType, data);
+    }
 }
 
 /* ----- Sampler States ---- */
@@ -443,9 +518,22 @@ void DbgRenderSystem::DebugBufferSize(std::size_t bufferSize, std::size_t dataSi
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds", source);
 }
 
-void DbgRenderSystem::ErrWriteUninitializedBuffer(const std::string& source)
+void DbgRenderSystem::DebugMipLevelLimit(int mipLevel, int mipLevelCount, const std::string& source)
 {
-    LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized buffer", source);
+    if (mipLevel >= mipLevelCount)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "mip level out of bounds (" + std::to_string(mipLevel) +
+            " specified but limit is " + std::to_string(mipLevelCount - 1) + ")",
+            source
+        );
+    }
+}
+
+void DbgRenderSystem::ErrWriteUninitializedResource(const std::string& source)
+{
+    LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized resource", source);
 }
 
 template <typename T, typename TBase>
@@ -454,6 +542,14 @@ void DbgRenderSystem::ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entr
     auto& entryDbg = LLGL_CAST(T&, entry);
     instance_->Release(entryDbg.instance);
     RemoveFromUniqueSet(cont, &entry);
+}
+
+DbgTexture& DbgRenderSystem::GetInitializedTexture(Texture& texture, const std::string& source)
+{
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    if (textureDbg.GetType() == TextureType::Undefined)
+        ErrWriteUninitializedResource(source);
+    return textureDbg;
 }
 
 

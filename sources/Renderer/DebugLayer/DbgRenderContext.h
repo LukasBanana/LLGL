@@ -138,8 +138,8 @@ class DbgRenderContext : public RenderContext
         );
 
         void DebugInstancing(const std::string& source);
+        void DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source);
 
-        void ErrVertexIndexOutOfBounds(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source);
         void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);
 
         /* ----- Common objects ----- */
