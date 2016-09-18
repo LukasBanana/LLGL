@@ -11,16 +11,25 @@
 
 #include <LLGL/ShaderProgram.h>
 #include <LLGL/RenderingDebugger.h>
+#include <vector>
 
 
 namespace LLGL
 {
 
 
+class DbgShader;
+
 class DbgShaderProgram : public ShaderProgram
 {
 
     public:
+
+        struct VertexLayout
+        {
+            std::vector<VertexAttribute>    attributes;
+            bool                            bound       = false;
+        };
 
         DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger);
 
@@ -41,12 +50,24 @@ class DbgShaderProgram : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
+        inline const VertexLayout& GetVertexLayout() const
+        {
+            return vertexLayout_;
+        }
+
         ShaderProgram& instance;
 
     private:
 
-        RenderingDebugger*  debugger_   = nullptr;
-        bool                linked_     = false;
+        void DebugShaderAttachment(DbgShader& shaderDbg, const std::string& source);
+        void DebugShaderComposition(const std::string& source);
+
+        RenderingDebugger*      debugger_               = nullptr;
+        bool                    linked_                 = false;
+        int                     shaderAttachmentMask_   = 0;
+
+        std::vector<DbgShader*> shaders_;
+        VertexLayout            vertexLayout_;
 
 };
 

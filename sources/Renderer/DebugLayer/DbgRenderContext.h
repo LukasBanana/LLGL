@@ -124,6 +124,7 @@ class DbgRenderContext : public RenderContext
         void DebugComputePipelineSet(const std::string& source);
         void DebugVertexBufferSet(const std::string& source);
         void DebugIndexBufferSet(const std::string& source);
+        void DebugVertexLayout(const std::string& source);
 
         void DebugNumVertices(unsigned int numVertices, const std::string& source);
         void DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset, const std::string& source);
@@ -172,6 +173,12 @@ class DbgRenderContext : public RenderContext
             ComputePipeline*        computePipeline     = nullptr;
         }
         bindings_;
+
+        struct VertexLayout
+        {
+            std::vector<LLGL::VertexAttribute> attributes;
+        }
+        vertexLayout_;
 
         /*struct MetaInfo
         {

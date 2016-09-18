@@ -13,6 +13,7 @@
 #include "DbgConstantBuffer.h"
 #include "DbgStorageBuffer.h"
 #include "DbgTexture.h"
+#include "DbgShaderProgram.h"
 
 
 namespace LLGL
@@ -89,6 +90,7 @@ void DbgRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
     auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
     bindings_.vertexBuffer = (&vertexBufferDbg);
+    vertexLayout_.attributes = vertexBufferDbg.format.GetAttributes();
     {
         instance_.SetVertexBuffer(vertexBufferDbg.instance);
     }
@@ -402,6 +404,25 @@ void DbgRenderContext::DebugIndexBufferSet(const std::string& source)
         LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized index buffer is bound", source);
 }
 
+void DbgRenderContext::DebugVertexLayout(const std::string& source)
+{
+    if (bindings_.graphicsPipeline)
+    {
+        auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, bindings_.graphicsPipeline->desc.shaderProgram);
+        const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
+
+        /* Check if vertex layout is specified in active shader program */
+        if (vertexLayout.bound)
+        {
+            /* Check if all vertex attributes are served by active vertex buffer(s) */
+            if (vertexLayout.attributes != vertexLayout_.attributes)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex layout mismatch between shader program and vertex buffer(s)", source);
+        }
+        else
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program", source);
+    }
+}
+
 void DbgRenderContext::DebugNumVertices(unsigned int numVertices, const std::string& source)
 {
     if (numVertices == 0)
@@ -484,6 +505,7 @@ void DbgRenderContext::DebugDraw(
 {
     DebugGraphicsPipelineSet(source);
     DebugVertexBufferSet(source);
+    DebugVertexLayout(source);
     DebugNumVertices(numVertices, source);
     DebugNumInstances(numInstances, instanceOffset, source);
 
@@ -498,6 +520,7 @@ void DbgRenderContext::DebugDrawIndexed(
     DebugGraphicsPipelineSet(source);
     DebugVertexBufferSet(source);
     DebugIndexBufferSet(source);
+    DebugVertexLayout(source);
     DebugNumVertices(numVertices, source);
     DebugNumInstances(numInstances, instanceOffset, source);
 

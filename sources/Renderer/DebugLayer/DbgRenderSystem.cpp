@@ -122,6 +122,7 @@ void DbgRenderSystem::SetupVertexBuffer(
     {
         instance_->SetupVertexBuffer(vertexBufferDbg.instance, data, dataSize, usage, vertexFormat);
     }
+    vertexBufferDbg.format      = vertexFormat;
     vertexBufferDbg.size        = dataSize;
     vertexBufferDbg.elements    = dataSize / vertexFormat.GetFormatSize();
     vertexBufferDbg.initialized = true;

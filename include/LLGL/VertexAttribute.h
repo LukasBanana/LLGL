@@ -43,6 +43,10 @@ struct VertexAttribute
 };
 
 
+LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute& rhs);
+LLGL_EXPORT bool operator != (const VertexAttribute& lhs, const VertexAttribute& rhs);
+
+
 } // /namespace LLGL
 
 
