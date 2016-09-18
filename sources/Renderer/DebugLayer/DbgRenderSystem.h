@@ -18,6 +18,8 @@
 #include "DbgStorageBuffer.h"
 #include "DbgGraphicsPipeline.h"
 #include "DbgTexture.h"
+#include "DbgShader.h"
+#include "DbgShaderProgram.h"
 
 #include "../ContainerTypes.h"
 
@@ -181,8 +183,8 @@ class DbgRenderSystem : public RenderSystem
         HWObjectContainer<DbgTexture>           textures_;
         //HWObjectContainer<DbgRenderTarget>      renderTargets_;
 
-        //HWObjectContainer<DbgShader>            shaders_;
-        //HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
+        HWObjectContainer<DbgShader>            shaders_;
+        HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
 
         HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
         //HWObjectContainer<DbgSampler>           samplers_;

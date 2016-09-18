@@ -195,7 +195,10 @@ void DbgRenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
 void DbgRenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 {
-    instance_.SetComputePipeline(computePipeline);
+    bindings_.computePipeline = (&computePipeline);
+    {
+        instance_.SetComputePipeline(computePipeline);
+    }
     LLGL_DBG_PROFILER_DO(setComputePipeline.Inc());
 }
 
@@ -316,9 +319,30 @@ void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned i
 
 /* ----- Compute ----- */
 
+void DbgRenderContext::DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source)
+{
+    if (size > limit)
+    {
+        LLGL_DBG_ERROR_HERE(
+            ErrorType::InvalidArgument,
+            "thread group size X is too large (" + std::to_string(size) +
+            " specified but limit is " + std::to_string(limit) + ")"
+        );
+    }
+}
+
 void DbgRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
 {
-    instance_.DispatchCompute(threadGroupSize);
+    if (threadGroupSize.x*threadGroupSize.y*threadGroupSize.z == 0)
+        LLGL_DBG_WARN_HERE(WarningType::PointlessOperation, "thread group size has volume of 0 units");
+
+    DebugComputePipelineSet(__FUNCTION__);
+    DebugThreadGroupLimit(threadGroupSize.x, caps_.maxNumComputeShaderWorkGroups.x, __FUNCTION__);
+    DebugThreadGroupLimit(threadGroupSize.y, caps_.maxNumComputeShaderWorkGroups.y, __FUNCTION__);
+    DebugThreadGroupLimit(threadGroupSize.z, caps_.maxNumComputeShaderWorkGroups.z, __FUNCTION__);
+    {
+        instance_.DispatchCompute(threadGroupSize);
+    }
     LLGL_DBG_PROFILER_DO(dispatchComputeCalls.Inc());
 }
 
@@ -358,7 +382,8 @@ void DbgRenderContext::DebugGraphicsPipelineSet(const std::string& source)
 
 void DbgRenderContext::DebugComputePipelineSet(const std::string& source)
 {
-    //todo...
+    if (!bindings_.computePipeline)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound", source);
 }
 
 void DbgRenderContext::DebugVertexBufferSet(const std::string& source)

@@ -30,7 +30,6 @@ DbgRenderSystem::DbgRenderSystem(
         profiler_( profiler ),
         debugger_( debugger )
 {
-    caps_ = instance_->QueryRenderingCaps();
 }
 
 DbgRenderSystem::~DbgRenderSystem()
@@ -56,9 +55,12 @@ ShadingLanguage DbgRenderSystem::QueryShadingLanguage() const
 
 RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
+    auto renderContextInstance = instance_->CreateRenderContext(desc, window);
+
+    caps_ = instance_->QueryRenderingCaps();
+
     return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(
-        *instance_->CreateRenderContext(desc, window),
-        profiler_, debugger_, caps_, GetName()
+        *renderContextInstance, profiler_, debugger_, caps_, GetName()
     ));
 }
 
@@ -437,26 +439,22 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* DbgRenderSystem::CreateShader(const ShaderType type)
 {
-    return instance_->CreateShader(type);
-    //return TakeOwnership(shaders_, MakeUnique<DbgShader>(type));
+    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(type), type, debugger_));
 }
 
 ShaderProgram* DbgRenderSystem::CreateShaderProgram()
 {
-    return instance_->CreateShaderProgram();
-    //return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>());
+    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(), debugger_));
 }
 
 void DbgRenderSystem::Release(Shader& shader)
 {
-    instance_->Release(shader);
-    //RemoveFromUniqueSet(shaders_, &shader);
+    ReleaseDbg(shaders_, shader);
 }
 
 void DbgRenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    instance_->Release(shaderProgram);
-    //RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
+    ReleaseDbg(shaderPrograms_, shaderProgram);
 }
 
 /* ----- Pipeline States ----- */
@@ -468,7 +466,20 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
     if (desc.blend.targets.size() > 8)
         LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "too many blend state targets (limit is 8)");
 
-    return TakeOwnership(graphicsPipelines_, MakeUnique<DbgGraphicsPipeline>(*instance_->CreateGraphicsPipeline(desc), desc));
+    if (desc.shaderProgram)
+    {
+        GraphicsPipelineDescriptor instanceDesc = desc;
+        {
+            auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, desc.shaderProgram);
+            instanceDesc.shaderProgram = &(shaderProgramDbg->instance);
+        }
+        return TakeOwnership(graphicsPipelines_, MakeUnique<DbgGraphicsPipeline>(*instance_->CreateGraphicsPipeline(instanceDesc), desc));
+    }
+    else
+    {
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "shader program must not be null");
+        return nullptr;
+    }
 }
 
 ComputePipeline* DbgRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)

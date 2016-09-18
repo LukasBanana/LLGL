@@ -139,6 +139,7 @@ class DbgRenderContext : public RenderContext
 
         void DebugInstancing(const std::string& source);
         void DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source);
+        void DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source);
 
         void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);
 
@@ -168,6 +169,7 @@ class DbgRenderContext : public RenderContext
             DbgVertexBuffer*        vertexBuffer        = nullptr;
             DbgIndexBuffer*         indexBuffer         = nullptr;
             DbgGraphicsPipeline*    graphicsPipeline    = nullptr;
+            ComputePipeline*        computePipeline     = nullptr;
         }
         bindings_;
 
