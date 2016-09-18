@@ -52,12 +52,17 @@ public:
         if (!renderCaps.hasTessellationShaders)
             throw std::runtime_error("tessellation shaders are not supported by this renderer");
 
+        // Specify vertex format
+        LLGL::VertexFormat vertexFormat;
+        vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 3);
+
         // Load shader program
         shaderProgram = LoadShaderProgram(
             { { LLGL::ShaderType::Vertex, "vertex.glsl" },
               { LLGL::ShaderType::TessControl, "tesscontrol.glsl" },
               { LLGL::ShaderType::TessEvaluation, "tesseval.glsl" },
-              { LLGL::ShaderType::Fragment, "fragment.glsl" } }
+              { LLGL::ShaderType::Fragment, "fragment.glsl" } },
+            vertexFormat.GetAttributes()
         );
 
         // Bind constant buffer location to the index we use later with the render context
@@ -87,10 +92,6 @@ public:
             pipelineDesc.rasterizer.frontCCW            = true;
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
-
-        // Specify vertex format
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 3);
 
         // Create vertex- and index buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);

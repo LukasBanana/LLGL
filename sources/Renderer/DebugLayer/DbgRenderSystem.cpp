@@ -485,8 +485,20 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
 
 ComputePipeline* DbgRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
 {
-    return instance_->CreateComputePipeline(desc);
-    //return TakeOwnership(computePipelines_, MakeUnique<DbgComputePipeline>(*this, desc));
+    if (desc.shaderProgram)
+    {
+        ComputePipelineDescriptor instanceDesc = desc;
+        {
+            auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, desc.shaderProgram);
+            instanceDesc.shaderProgram = &(shaderProgramDbg->instance);
+        }
+        return instance_->CreateComputePipeline(instanceDesc);
+    }
+    else
+    {
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "shader program must not be null");
+        return nullptr;
+    }
 }
 
 void DbgRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
