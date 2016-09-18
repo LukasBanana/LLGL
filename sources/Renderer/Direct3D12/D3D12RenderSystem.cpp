@@ -573,7 +573,12 @@ void D3D12RenderSystem::SyncGPU()
 void D3D12RenderSystem::CreateFactory()
 {
     /* Create DXGI factory 1.4 */
+    #ifdef LLGL_DEBUG
+    auto hr = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&factory_));
+    #else
     auto hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory_));
+    #endif
+
     DXThrowIfFailed(hr, "failed to create DXGI factor 1.4");
 }
 

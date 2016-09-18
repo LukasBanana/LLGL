@@ -134,6 +134,9 @@ int main()
             //pipelineDesc.depth.writeEnabled = true;
             //pipelineDesc.depth.compareOp    = LLGL::CompareOp::Less;
 
+            pipelineDesc.rasterizer.multiSampleEnabled  = true;
+            pipelineDesc.rasterizer.samples             = 8;
+
             pipelineDesc.shaderProgram      = shaderProgram;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);

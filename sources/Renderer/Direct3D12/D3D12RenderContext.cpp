@@ -374,7 +374,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     /* Create render targets */
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDesc(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
 
     for (UINT i = 0; i < numFrames_; ++i)
     {
@@ -383,9 +383,13 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         DXThrowIfFailed(hr, "failed to get D3D12 render target view " + std::to_string(i) + "/" + std::to_string(numFrames_) + " from swap chain");
 
         /* Create render target view (RTV) */
-        renderSystem_.GetDevice()->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDesc);
+        /*D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
+        rtvDesc.Format          = DXGI_FORMAT_R8G8B8A8_UNORM;
+        rtvDesc.ViewDimension   = D3D12_RTV_DIMENSION_TEXTURE2DMS;*/
 
-        rtvDesc.Offset(1, rtvDescSize_);
+        renderSystem_.GetDevice()->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDescHandle);
+
+        rtvDescHandle.Offset(1, rtvDescSize_);
     }
 
     /* Update tracked fence values */
