@@ -7,9 +7,7 @@ layout(quads, fractional_odd_spacing, cw) in;
 // Uniform buffer object (also named "Constant Buffer")
 layout(std140) uniform Settings
 {
-	mat4 projectionMatrix;
-	mat4 viewMatrix;
-	mat4 worldMatrix;
+	mat4 wvpMatrix;
 	float tessLevelInner;
 	float tessLevelOuter;
 	float twist;
@@ -47,6 +45,6 @@ void main()
 	position = rotation * position;
 	
 	// Transform vertex by the world-view-projection matrix chain
-	gl_Position = projectionMatrix * viewMatrix * worldMatrix * vec4(position, 1);
+	gl_Position = wvpMatrix * vec4(position, 1);
 	teColor = (1.0 - position) * 0.5;
 }

@@ -99,10 +99,6 @@ int main()
         shaderProgram->AttachShader(*vertexShader);
         shaderProgram->AttachShader(*fragmentShader);
 
-        // From now on we only use the shader program, so the shaders can be released
-        renderer->Release(*vertexShader);
-        renderer->Release(*fragmentShader);
-
         // Bind vertex attribute layout (this is not required for a compute shader program)
         shaderProgram->BindVertexAttributes(vertexFormat.GetAttributes());
         

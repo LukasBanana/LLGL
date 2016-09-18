@@ -7,9 +7,7 @@ layout(vertices = 4) out;
 // Uniform buffer object (also named "Constant Buffer")
 layout(std140) uniform Settings
 {
-	mat4 projectionMatrix;
-	mat4 viewMatrix;
-	mat4 worldMatrix;
+	mat4 wvpMatrix;
 	float tessLevelInner;
 	float tessLevelOuter;
 	float twist;

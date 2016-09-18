@@ -98,8 +98,26 @@ protected:
 
     struct TutorialShaderDescriptor
     {
+        TutorialShaderDescriptor(
+            LLGL::ShaderType type, const std::string& filename) :
+                type    ( type     ),
+                filename( filename )
+        {
+        }
+
+        TutorialShaderDescriptor(
+            LLGL::ShaderType type, const std::string& filename, const std::string& entryPoint, const std::string& target) :
+                type        ( type       ),
+                filename    ( filename   ),
+                entryPoint  ( entryPoint ),
+                target      ( target     )
+        {
+        }
+
         LLGL::ShaderType    type;
         std::string         filename;
+        std::string         entryPoint;
+        std::string         target;
     };
 
     LLGL::ShaderProgram* LoadShaderProgram(
@@ -124,7 +142,7 @@ protected:
 
             // Create shader and compile shader
             auto shader = renderer->CreateShader(desc.type);
-            shader->Compile(shaderCode);
+            shader->Compile(LLGL::ShaderSource(shaderCode, desc.entryPoint, desc.target));
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
@@ -133,9 +151,6 @@ protected:
 
             // Attach vertex- and fragment shader to the shader program
             shaderProgram->AttachShader(*shader);
-
-            // From now on we only use the shader program, so the shader can be released
-            renderer->Release(*shader);
         }
 
         // Bind vertex attribute layout (this is not required for a compute shader program)

@@ -38,8 +38,8 @@ class LLGL_EXPORT ShaderProgram
         \param[in] shader Specifies the shader which is to be attached to this shader program.
         Each shader type can only be added once for each shader program.
         \remarks This must be called, before "LinkShaders" is called.
-        \throws std::invalid_argument If a shader is attached to this shader program, which is not allow in the current state.
-        This will happend if a different shader of the same type has already been attached to this shader program.
+        \throws std::invalid_argument If a shader is attached to this shader program, which is not allowed in the current state.
+        This will happend if a different shader of the same type has already been attached to this shader program for instance.
         \see Shader::GetType
         */
         virtual void AttachShader(Shader& shader) = 0;

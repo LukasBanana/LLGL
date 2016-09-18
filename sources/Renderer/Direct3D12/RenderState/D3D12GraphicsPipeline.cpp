@@ -210,7 +210,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     /* Convert other states */
     stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
     stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    stateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    stateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;//D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH
     stateDesc.SampleMask            = UINT_MAX;
     stateDesc.NumRenderTargets      = 1;//8;
     stateDesc.SampleDesc.Count      = desc.rasterizer.samples;

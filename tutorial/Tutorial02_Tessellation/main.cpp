@@ -27,11 +27,11 @@ class Tutorial02 : public Tutorial
 
     unsigned int            constantBufferIndex = 0;
 
+    Gs::Matrix4f            projection;
+
     struct Settings
     {
-        Gs::Matrix4f    projectionMatrix;
-        Gs::Matrix4f    viewMatrix;
-        Gs::Matrix4f    worldMatrix;
+        Gs::Matrix4f    wvpMatrix;
         float           tessLevelInner  = 5.0f;
         float           tessLevelOuter  = 5.0f;
         float           twist           = 0.0f;
@@ -42,7 +42,7 @@ class Tutorial02 : public Tutorial
 public:
 
     Tutorial02() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 02: Tessellation" )
+        Tutorial( "OpenGL", L"LLGL Tutorial 02: Tessellation", { 800, 600 }, 8 )
     {
         // Check if constant buffers are supported
         auto renderCaps = renderer->QueryRenderingCaps();
@@ -57,13 +57,30 @@ public:
         vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 3);
 
         // Load shader program
-        shaderProgram = LoadShaderProgram(
-            { { LLGL::ShaderType::Vertex, "vertex.glsl" },
-              { LLGL::ShaderType::TessControl, "tesscontrol.glsl" },
-              { LLGL::ShaderType::TessEvaluation, "tesseval.glsl" },
-              { LLGL::ShaderType::Fragment, "fragment.glsl" } },
-            vertexFormat.GetAttributes()
-        );
+        if (renderCaps.hasHLSL)
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
+                    { LLGL::ShaderType::TessControl, "shader.hlsl", "HS", "hs_5_0" },
+                    { LLGL::ShaderType::TessEvaluation, "shader.hlsl", "DS", "ds_5_0" },
+                    { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
+                },
+                vertexFormat.GetAttributes()
+            );
+        }
+        else
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "vertex.glsl" },
+                    { LLGL::ShaderType::TessControl, "tesscontrol.glsl" },
+                    { LLGL::ShaderType::TessEvaluation, "tesseval.glsl" },
+                    { LLGL::ShaderType::Fragment, "fragment.glsl" }
+                },
+                vertexFormat.GetAttributes()
+            );
+        }
 
         // Bind constant buffer location to the index we use later with the render context
         shaderProgram->BindConstantBuffer("Settings", constantBufferIndex);
@@ -104,7 +121,7 @@ public:
         // Set initial matrices
         auto resolution = context->GetVideoMode().resolution.Cast<float>();
 
-        settings.projectionMatrix = Gs::ProjectionMatrix4f::Perspective(
+        projection = Gs::ProjectionMatrix4f::Perspective(
             (resolution.x / resolution.y),  // aspect ratio
             0.1f,                           // near clipping plane
             100.0f,                         // far clipping plane
@@ -152,10 +169,12 @@ private:
 
         if (input->KeyPressed(LLGL::Key::MButton))
             settings.twist += Gs::Deg2Rad(motionScaled);
-
+        
         // Update matrices
-        settings.worldMatrix.LoadIdentity();
-        Gs::Translate(settings.worldMatrix, Gs::Vector3f(0, 0, 5));
+        Gs::Matrix4f worldMatrix;
+        Gs::Translate(worldMatrix, Gs::Vector3f(0, 0, 5));
+
+        settings.wvpMatrix = projection * worldMatrix;
 
         #ifdef AUTO_ROTATE
         static float rotation;

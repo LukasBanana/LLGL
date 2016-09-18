@@ -194,6 +194,18 @@ struct RenderingCaps
     
     //! Specifies maximum work group size in a compute shader.
     Gs::Vector3ui   maxComputeShaderWorkGroupSize;
+
+    /**
+    \brief Specifies whether GLSL shaders are supported or not.
+    \note Only supported with: OpenGL, Vulkan.
+    */
+    bool            hasGLSL                         = false;
+
+    /**
+    \brief Specifies whether HLSL shaders are supported or not.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    */
+    bool            hasHLSL                         = false;
 };
 
 

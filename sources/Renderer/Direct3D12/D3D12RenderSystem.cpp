@@ -116,6 +116,7 @@ RenderingCaps D3D12RenderSystem::QueryRenderingCaps() const
     caps.maxAnisotropy                  = (level >= D3D_FEATURE_LEVEL_9_2 ? 16 : 2);
     caps.maxNumComputeShaderWorkGroups  = { maxThreadGroups, maxThreadGroups, (level >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u) };
     caps.maxComputeShaderWorkGroupSize  = { 1024, 1024, 1024 };
+    caps.hasHLSL                        = true;
 
     return caps;
 }

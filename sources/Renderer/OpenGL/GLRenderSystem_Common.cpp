@@ -350,6 +350,7 @@ void GLRenderSystem::StoreRenderingCaps()
     auto& caps = renderingCaps_;
 
     /* Set fixed states for this renderer */
+    caps.hasGLSL                        = true;
     caps.screenOrigin                   = ScreenOrigin::LowerLeft;
     caps.clippingRange                  = ClippingRange::MinusOneToOne;
 
