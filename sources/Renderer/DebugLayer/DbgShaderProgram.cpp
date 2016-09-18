@@ -111,14 +111,14 @@ void DbgShaderProgram::DebugShaderAttachment(DbgShader& shaderDbg, const std::st
         LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to attach uncompiled shader to shader program", source);
 
     /* Check if shader type already has been attached */
-    for (auto other : shaders_)
+    for (auto other : shaderTypes_)
     {
-        if (other->GetType() == shaderDbg.GetType())
+        if (other == shaderDbg.GetType())
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "duplicate shader type attachments in shader program", source);
     }
 
-    /* Add shader to list */
-    shaders_.push_back(&shaderDbg);
+    /* Add shader type to list */
+    shaderTypes_.push_back(shaderDbg.GetType());
 
     /* Update shader attachment mask */
     shaderAttachmentMask_ |= LLGL_SHADERTYPE_MASK(shaderDbg.GetType());

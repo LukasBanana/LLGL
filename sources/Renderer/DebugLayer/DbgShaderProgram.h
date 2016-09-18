@@ -66,7 +66,7 @@ class DbgShaderProgram : public ShaderProgram
         bool                    linked_                 = false;
         int                     shaderAttachmentMask_   = 0;
 
-        std::vector<DbgShader*> shaders_;
+        std::vector<ShaderType> shaderTypes_;
         VertexLayout            vertexLayout_;
 
 };
