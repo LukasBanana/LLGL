@@ -9,7 +9,6 @@
 #define __LLGL_D3D12_GRAPHICS_PIPELINE_H__
 
 
-//#include "../Shader/D3D12ShaderProgram.h"
 #include <LLGL/GraphicsPipeline.h>
 #include "../../ComPtr.h"
 #include <vector>
