@@ -142,7 +142,7 @@ protected:
 
             // Create shader and compile shader
             auto shader = renderer->CreateShader(desc.type);
-            shader->Compile(LLGL::ShaderSource(shaderCode, desc.entryPoint, desc.target));
+            shader->Compile(LLGL::ShaderSource(shaderCode, desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug));
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();

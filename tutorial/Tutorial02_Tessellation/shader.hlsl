@@ -62,10 +62,10 @@ OutputHS PatchConstantFuncHS(InputPatch<OutputVS, 4> inp)
 [outputcontrolpoints(4)]
 [patchconstantfunc("PatchConstantFuncHS")]
 [maxtessfactor(64.0)]
-OutputVS HS(InputPatch<OutputVS, 4> inp, uint controlPointID : SV_OutputControlPointID)
+OutputVS HS(InputPatch<OutputVS, 4> inp, uint id : SV_OutputControlPointID)
 {
 	OutputVS outp;
-	outp.position = inp[controlPointID].position;
+	outp.position = inp[id].position;
 	return outp;
 }
 

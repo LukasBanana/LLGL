@@ -9,10 +9,13 @@
 
 
 // Show scene in wireframe polygon mode
-#define SHOW_WIREFRAME
+//#define SHOW_WIREFRAME
 
 // Automatically rotate the model
 //#define AUTO_ROTATE
+
+// Enable multi-sampling anti-aliasing
+#define ENABLE_MULTISAMPLING
 
 
 class Tutorial02 : public Tutorial
@@ -95,8 +98,10 @@ public:
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::Patches4;
 
             // Enable multi-sample anti-aliasing
+            #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampleEnabled  = true;
             pipelineDesc.rasterizer.samples             = 8;
+            #endif
 
             // Enable depth test and writing
             pipelineDesc.depth.testEnabled              = true;

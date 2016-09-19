@@ -23,11 +23,7 @@ namespace LLGL
 D3D12RenderSystem::D3D12RenderSystem()
 {
     #ifdef LLGL_DEBUG
-    {
-        ComPtr<ID3D12Debug> debugController;
-        if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-            debugController->EnableDebugLayer();
-    }
+    EnableDebugLayer();
     #endif
 
     /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
@@ -570,6 +566,23 @@ void D3D12RenderSystem::SyncGPU()
 /*
  * ======= Private: =======
  */
+
+#ifdef LLGL_DEBUG
+
+void D3D12RenderSystem::EnableDebugLayer()
+{
+    ComPtr<ID3D12Debug> debugController0;
+    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController0))))
+    {
+        debugController0->EnableDebugLayer();
+
+        ComPtr<ID3D12Debug1> debugController1;
+        if (SUCCEEDED(debugController0->QueryInterface(IID_PPV_ARGS(&debugController1))))
+            debugController1->SetEnableGPUBasedValidation(TRUE);
+    }
+}
+
+#endif
 
 void D3D12RenderSystem::CreateFactory()
 {

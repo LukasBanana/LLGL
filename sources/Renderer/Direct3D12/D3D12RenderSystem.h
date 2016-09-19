@@ -184,6 +184,10 @@ class D3D12RenderSystem : public RenderSystem
         }
 
     private:
+        
+        #ifdef LLGL_DEBUG
+        void EnableDebugLayer();
+        #endif
 
         void CreateFactory();
         void QueryVideoAdapters();
@@ -204,6 +208,11 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<ID3D12Fence>                         fence_;
         HANDLE                                      fenceEvent_     = 0;
         UINT64                                      fenceValue_     = 0;
+
+        #ifdef LLGL_DEBUG
+        //ComPtr<ID3D12Debug>                         debugDevice_;
+        //ComPtr<ID3D12InfoQueue>                     debugInfoQueue_;
+        #endif
 
         /* ----- Hardware object containers ----- */
 
