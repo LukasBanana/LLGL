@@ -293,6 +293,7 @@ void GLRenderContext::UnsetRenderTarget()
 void GLRenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineGL = LLGL_CAST(GLGraphicsPipeline&, graphicsPipeline);
+    renderState_.drawMode = graphicsPipelineGL.GetDrawMode();
     graphicsPipelineGL.Bind(*stateMngr_);
 }
 
@@ -344,34 +345,6 @@ bool GLRenderContext::QueryResult(Query& query, std::uint64_t& result)
 }
 
 /* ----- Drawing ----- */
-
-void GLRenderContext::SetPrimitiveTopology(const PrimitiveTopology topology)
-{
-    if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
-    {
-        /* Set draw mode to patches for tessellation */
-        renderState_.drawMode = GL_PATCHES;
-
-        /* Set patch vertices (if supported) */
-        GLint patchVertices = static_cast<GLint>(topology) - static_cast<GLint>(PrimitiveTopology::Patches1) + 1;
-        GLint maxPatchVertices = renderSystem_.GetRenderingCaps().maxPatchVertices;
-
-        if (patchVertices > maxPatchVertices)
-        {
-            throw std::runtime_error(
-                "renderer does not support " + std::to_string(patchVertices) +
-                " control points for patches (limit is " + std::to_string(maxPatchVertices) + ")"
-            );
-        }
-        else
-            glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
-    }
-    else
-    {
-        /* Set standard draw mode */
-        renderState_.drawMode = GLTypes::Map(topology);
-    }
-}
 
 void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {

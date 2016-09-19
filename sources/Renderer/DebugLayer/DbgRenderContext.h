@@ -33,8 +33,7 @@ class DbgRenderContext : public RenderContext
             RenderContext& instance,
             RenderingProfiler* profiler,
             RenderingDebugger* debugger,
-            const RenderingCaps& caps,
-            const std::string& rendererName
+            const RenderingCaps& caps
         );
 
         void Present() override;
@@ -94,8 +93,6 @@ class DbgRenderContext : public RenderContext
 
         /* ----- Drawing ----- */
 
-        void SetPrimitiveTopology(const PrimitiveTopology topology) override;
-
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;
 
         void DrawIndexed(unsigned int numVertices, unsigned int firstIndex) override;
@@ -117,8 +114,6 @@ class DbgRenderContext : public RenderContext
         void SyncGPU() override;
 
     private:
-
-        void DetermineRenderer(const std::string& rendererName);
 
         void DebugGraphicsPipelineSet(const std::string& source);
         void DebugComputePipelineSet(const std::string& source);
@@ -156,14 +151,6 @@ class DbgRenderContext : public RenderContext
         /* ----- Render states ----- */
 
         PrimitiveTopology       topology_   = PrimitiveTopology::TriangleList;
-
-        struct Renderer
-        {
-            bool isOpenGL       = false;
-            bool isDirect3D     = false;
-            bool isVulkan       = false;
-        }
-        renderer_;
 
         struct Bindings
         {

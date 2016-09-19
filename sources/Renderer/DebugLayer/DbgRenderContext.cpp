@@ -21,15 +21,13 @@ namespace LLGL
 
 
 DbgRenderContext::DbgRenderContext(
-    RenderContext& instance, RenderingProfiler* profiler, RenderingDebugger* debugger,
-    const RenderingCaps& caps, const std::string& rendererName) :
+    RenderContext& instance, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCaps& caps) :
         instance_   ( instance ),
         profiler_   ( profiler ),
         debugger_   ( debugger ),
         caps_       ( caps     )
 {
     ShareWindowAndVideoMode(instance);
-    DetermineRenderer(rendererName);
 }
 
 void DbgRenderContext::Present()
@@ -189,6 +187,7 @@ void DbgRenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineDbg = LLGL_CAST(DbgGraphicsPipeline&, graphicsPipeline);
     bindings_.graphicsPipeline = (&graphicsPipelineDbg);
+    topology_ = graphicsPipelineDbg.desc.primitiveTopology;
     {
         instance_.SetGraphicsPipeline(graphicsPipelineDbg.instance);
     }
@@ -222,25 +221,6 @@ bool DbgRenderContext::QueryResult(Query& query, std::uint64_t& result)
 }
 
 /* ----- Drawing ----- */
-
-void DbgRenderContext::SetPrimitiveTopology(const PrimitiveTopology topology)
-{
-    if (renderer_.isDirect3D)
-    {
-        switch (topology)
-        {
-            case PrimitiveTopology::LineLoop:
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "renderer does not support primitive topology line loop", __FUNCTION__);
-                break;
-            case PrimitiveTopology::TriangleFan:
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "renderer does not support primitive topology triangle fan", __FUNCTION__);
-                break;
-        }
-    }
-
-    topology_ = topology;
-    instance_.SetPrimitiveTopology(topology);
-}
 
 void DbgRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
@@ -359,22 +339,6 @@ void DbgRenderContext::SyncGPU()
 /*
  * ======= Private: =======
  */
-
-static bool CompareSubStr(const std::string& lhs, const std::string& rhs)
-{
-    return (lhs.size() >= rhs.size() && lhs.substr(0, rhs.size()) == rhs);
-}
-
-void DbgRenderContext::DetermineRenderer(const std::string& rendererName)
-{
-    /* Determine renderer API by specified name */
-    if (CompareSubStr(rendererName, "OpenGL"))
-        renderer_.isOpenGL = true;
-    else if (CompareSubStr(rendererName, "Direct3D"))
-        renderer_.isDirect3D = true;
-    else if (CompareSubStr(rendererName, "Vulkan"))
-        renderer_.isVulkan = true;
-}
 
 void DbgRenderContext::DebugGraphicsPipelineSet(const std::string& source)
 {

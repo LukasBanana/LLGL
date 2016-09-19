@@ -52,8 +52,32 @@ void Convert(std::vector<To>& to, const std::vector<From>& from)
 
 /* ----- GLGraphicsPipeline class ----- */
 
-GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingCaps& renderCaps)
 {
+    /* Convert shader state */
+    shaderProgram_ = LLGL_CAST(GLShaderProgram*, desc.shaderProgram);
+
+    if (!shaderProgram_)
+        throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
+
+    /* Convert input-assembler state */
+    drawMode_ = GLTypes::Map(desc.primitiveTopology);
+
+    if (desc.primitiveTopology >= PrimitiveTopology::Patches1 && desc.primitiveTopology <= PrimitiveTopology::Patches32)
+    {
+        /* Store patch vertices and check limit */
+        patchVertices_ = static_cast<GLint>(desc.primitiveTopology) - static_cast<GLint>(PrimitiveTopology::Patches1) + 1;
+        if (patchVertices_ > renderCaps.maxPatchVertices)
+        {
+            throw std::runtime_error(
+                "renderer does not support " + std::to_string(patchVertices_) +
+                " control points for patches (limit is " + std::to_string(renderCaps.maxPatchVertices) + ")"
+            );
+        }
+    }
+    else
+        patchVertices_ = 0;
+
     /* Convert depth state */
     depthTestEnabled_   = desc.depth.testEnabled;
     depthMask_          = (desc.depth.writeEnabled ? GL_TRUE : GL_FALSE);
@@ -80,16 +104,17 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
     /* Convert blend state */
     blendEnabled_       = desc.blend.blendEnabled;
     Convert(blendStates_, desc.blend.targets);
-
-    /* Convert shader state */
-    shaderProgram_      = LLGL_CAST(GLShaderProgram*, desc.shaderProgram);
-
-    if (!shaderProgram_)
-        throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 {
+    /* Setup shader state */
+    stateMngr.BindShaderProgram(shaderProgram_->GetID());
+
+    /* Setup input-assembler state */
+    if (patchVertices_ > 0)
+        stateMngr.SetPatchVertices(patchVertices_);
+
     /* Setup depth state */
     if (depthTestEnabled_)
     {
@@ -135,9 +160,6 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     /* Setup blend state */
     stateMngr.Set(GLState::BLEND, blendEnabled_);
     stateMngr.SetBlendStates(blendStates_, blendEnabled_);
-
-    /* Setup shader state */
-    stateMngr.BindShaderProgram(shaderProgram_->GetID());
 }
 
 

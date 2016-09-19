@@ -523,6 +523,15 @@ void GLStateManager::SetDepthMask(GLboolean flag)
     }
 }
 
+void GLStateManager::SetPatchVertices(GLint patchVertices)
+{
+    if (commonState_.patchVertices_ != patchVertices)
+    {
+        commonState_.patchVertices_ = patchVertices;
+        glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
+    }
+}
+
 /* ----- Buffer binding ----- */
 
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)

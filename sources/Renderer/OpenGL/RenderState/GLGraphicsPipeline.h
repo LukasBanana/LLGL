@@ -13,6 +13,7 @@
 #include "GLStateManager.h"
 #include "../Shader/GLShaderProgram.h"
 #include <LLGL/GraphicsPipeline.h>
+#include <LLGL/RenderSystemFlags.h>
 #include <vector>
 
 
@@ -25,11 +26,23 @@ class GLGraphicsPipeline : public GraphicsPipeline
 
     public:
 
-        GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc);
+        GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingCaps& renderCaps);
 
         void Bind(GLStateManager& stateMngr);
 
+        inline GLenum GetDrawMode() const
+        {
+            return drawMode_;
+        }
+
     private:
+
+        // shader state
+        GLShaderProgram*        shaderProgram_      = nullptr;
+
+        // input-assembler state
+        GLenum                  drawMode_           = GL_TRIANGLES;
+        GLint                   patchVertices_      = 0;
 
         // depth state
         bool                    depthTestEnabled_   = false;    // glEnable(GL_DEPTH_TEST)
@@ -57,9 +70,6 @@ class GLGraphicsPipeline : public GraphicsPipeline
         // blend state
         bool                    blendEnabled_       = false;
         std::vector<GLBlend>    blendStates_;
-
-        // shader state
-        GLShaderProgram*        shaderProgram_      = nullptr;
 
 };
 

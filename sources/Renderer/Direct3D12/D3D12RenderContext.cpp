@@ -234,10 +234,11 @@ void D3D12RenderContext::UnsetRenderTarget()
 
 void D3D12RenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    /* Set graphics root signature and graphics pipeline state */
+    /* Set graphics root signature, graphics pipeline state, and primitive topology */
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
     commandList_->SetGraphicsRootSignature(graphicsPipelineD3D.GetRootSignature());
     commandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
+    commandList_->IASetPrimitiveTopology(graphicsPipelineD3D.GetPrimitiveTopology());
 }
 
 void D3D12RenderContext::SetComputePipeline(ComputePipeline& computePipeline)
@@ -263,11 +264,6 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
 }
 
 /* ----- Drawing ----- */
-
-void D3D12RenderContext::SetPrimitiveTopology(const PrimitiveTopology topology)
-{
-    commandList_->IASetPrimitiveTopology(DXTypes::Map(topology));
-}
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
 {

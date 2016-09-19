@@ -42,7 +42,7 @@ class Tutorial02 : public Tutorial
 public:
 
     Tutorial02() :
-        Tutorial( "Direct3D12", L"LLGL Tutorial 02: Tessellation", { 800, 600 }, 0 )
+        Tutorial( "OpenGL", L"LLGL Tutorial 02: Tessellation", { 800, 600 }, 0 )
     {
         // Check if constant buffers are supported
         auto renderCaps = renderer->QueryRenderingCaps();
@@ -90,6 +90,9 @@ public:
         {
             // Set shader program
             pipelineDesc.shaderProgram                  = shaderProgram;
+
+            // Set input-assembler state (draw pachtes with 4 control points)
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::Patches4;
 
             // Enable multi-sample anti-aliasing
             pipelineDesc.rasterizer.multiSampleEnabled  = true;
@@ -200,7 +203,6 @@ private:
         context->SetGraphicsPipeline(*pipeline);
 
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
-        context->SetPrimitiveTopology(LLGL::PrimitiveTopology::Patches4);
         context->DrawIndexed(24, 0);
 
         // Present result on the screen

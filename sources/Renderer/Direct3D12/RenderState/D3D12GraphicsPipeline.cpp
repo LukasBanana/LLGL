@@ -30,6 +30,9 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
 
     auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
 
+    /* Store D3D primitive topology */
+    primitiveTopology_ = DXTypes::Map(desc.primitiveTopology);
+
     /* Create root signature and graphics pipeline state  */
     CreateRootSignature(renderSystem, *shaderProgramD3D, desc);
     CreatePipelineState(renderSystem, *shaderProgramD3D, desc);
@@ -129,6 +132,35 @@ static void Convert(D3D12_DEPTH_STENCILOP_DESC& to, const StencilFaceDescriptor&
     to.StencilFunc          = DXTypes::Map(from.compareOp);
 }
 
+static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopology topology)
+{
+    switch (topology)
+    {
+        case PrimitiveTopology::PointList:
+            return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+
+        case PrimitiveTopology::LineList:
+        case PrimitiveTopology::LineStrip:
+        case PrimitiveTopology::LineLoop:
+        case PrimitiveTopology::LineListAdjacency:
+        case PrimitiveTopology::LineStripAdjacency:
+            return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+
+        case PrimitiveTopology::TriangleList:
+        case PrimitiveTopology::TriangleStrip:
+        case PrimitiveTopology::TriangleFan:
+        case PrimitiveTopology::TriangleListAdjacency:
+        case PrimitiveTopology::TriangleStripAdjacency:
+            return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+        default:
+            if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
+                return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+            break;
+    }
+    return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+}
+
 void D3D12GraphicsPipeline::CreatePipelineState(
     D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc)
 {
@@ -210,7 +242,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     /* Convert other states */
     stateDesc.InputLayout           = shaderProgram.GetInputLayoutDesc();
     stateDesc.IBStripCutValue       = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    stateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;//D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH
+    stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = UINT_MAX;
     stateDesc.NumRenderTargets      = 1;//8;
     stateDesc.SampleDesc.Count      = desc.rasterizer.samples;

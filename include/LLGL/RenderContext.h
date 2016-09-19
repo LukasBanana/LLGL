@@ -277,12 +277,6 @@ class LLGL_EXPORT RenderContext
         /* ----- Drawing ----- */
 
         /**
-        \brief Sets the primitive topology for subsequent draw operations.
-        \see PrimitiveTopology
-        */
-        virtual void SetPrimitiveTopology(const PrimitiveTopology topology) = 0;
-
-        /**
         \brief Draws the specified amount of primitives from the currently set vertex buffer.
         \param[in] numVertices Specifies the number of vertices to generate.
         \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.

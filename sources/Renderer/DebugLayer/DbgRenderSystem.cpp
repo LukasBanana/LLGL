@@ -30,6 +30,7 @@ DbgRenderSystem::DbgRenderSystem(
         profiler_( profiler ),
         debugger_( debugger )
 {
+    DetermineRenderer(instance_->GetName());
 }
 
 DbgRenderSystem::~DbgRenderSystem()
@@ -60,7 +61,7 @@ RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescripto
     caps_ = instance_->QueryRenderingCaps();
 
     return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(
-        *renderContextInstance, profiler_, debugger_, caps_, GetName()
+        *renderContextInstance, profiler_, debugger_, caps_
     ));
 }
 
@@ -467,6 +468,19 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
     if (desc.blend.targets.size() > 8)
         LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "too many blend state targets (limit is 8)");
 
+    if (renderer_.isDirect3D)
+    {
+        switch (desc.primitiveTopology)
+        {
+            case PrimitiveTopology::LineLoop:
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "renderer does not support primitive topology line loop", __FUNCTION__);
+                break;
+            case PrimitiveTopology::TriangleFan:
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "renderer does not support primitive topology triangle fan", __FUNCTION__);
+                break;
+        }
+    }
+
     if (desc.shaderProgram)
     {
         GraphicsPipelineDescriptor instanceDesc = desc;
@@ -530,6 +544,22 @@ void DbgRenderSystem::Release(Query& query)
 /*
  * ======= Private: =======
  */
+
+void DbgRenderSystem::DetermineRenderer(const std::string& rendererName)
+{
+    auto CompareSubStr = [](const std::string& lhs, const std::string& rhs)
+    {
+        return (lhs.size() >= rhs.size() && lhs.substr(0, rhs.size()) == rhs);
+    };
+
+    /* Determine renderer API by specified name */
+    if (CompareSubStr(rendererName, "OpenGL"))
+        renderer_.isOpenGL = true;
+    else if (CompareSubStr(rendererName, "Direct3D"))
+        renderer_.isDirect3D = true;
+    else if (CompareSubStr(rendererName, "Vulkan"))
+        renderer_.isVulkan = true;
+}
 
 bool DbgRenderSystem::OnMakeCurrent(RenderContext* renderContext)
 {

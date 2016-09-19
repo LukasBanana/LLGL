@@ -150,6 +150,8 @@ class DbgRenderSystem : public RenderSystem
 
     private:
 
+        void DetermineRenderer(const std::string& rendererName);
+
         bool OnMakeCurrent(RenderContext* renderContext) override;
 
         void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source);
@@ -170,6 +172,14 @@ class DbgRenderSystem : public RenderSystem
         RenderingDebugger*                      debugger_   = nullptr;
 
         RenderingCaps                           caps_;
+
+        struct Renderer
+        {
+            bool isOpenGL   = false;
+            bool isDirect3D = false;
+            bool isVulkan   = false;
+        }
+        renderer_;
 
         /* ----- Hardware object containers ----- */
 

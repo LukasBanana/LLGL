@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "RenderContextFlags.h"
+#include "GraphicsPipelineFlags.h"
 
 
 namespace LLGL

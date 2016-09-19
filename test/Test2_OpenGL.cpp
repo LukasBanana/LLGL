@@ -287,9 +287,10 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.rasterizer.multiSampleEnabled = true;
+            pipelineDesc.shaderProgram      = &shaderProgram;
+            pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleFan;
 
-            pipelineDesc.shaderProgram = &shaderProgram;
+            pipelineDesc.rasterizer.multiSampleEnabled = true;
 
             LLGL::BlendTargetDescriptor blendDesc;
             {
@@ -347,8 +348,6 @@ int main()
 
             context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
-
-            context->SetPrimitiveTopology(LLGL::PrimitiveTopology::TriangleFan);
 
             auto uniformSetter = shaderProgram.LockShaderUniform();
             if (uniformSetter)

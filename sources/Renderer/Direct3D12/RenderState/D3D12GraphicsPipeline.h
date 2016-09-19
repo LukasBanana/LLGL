@@ -45,6 +45,11 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
             return pipelineState_.Get();
         }
 
+        inline D3D12_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const
+        {
+            return primitiveTopology_;
+        }
+
     private:
 
         void CreateRootSignature(D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc);
@@ -52,6 +57,8 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
 
         ComPtr<ID3D12RootSignature> rootSignature_;
         ComPtr<ID3D12PipelineState> pipelineState_;
+
+        D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 
 };
 

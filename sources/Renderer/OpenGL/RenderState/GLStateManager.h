@@ -82,6 +82,7 @@ class GLStateManager
         void SetCullFace(GLenum face);
         void SetFrontFace(GLenum mode);
         void SetDepthMask(GLboolean flag);
+        void SetPatchVertices(GLint patchVertices);
 
         /* ----- Buffer binding ----- */
 
@@ -165,13 +166,14 @@ class GLStateManager
 
         struct GLCommonState
         {
-            GLenum                      depthFunc   = GL_LESS;
+            GLenum                      depthFunc       = GL_LESS;
             GLStencil                   stencil[2];
-            GLenum                      polygonMode = GL_FILL;
-            GLenum                      cullFace    = GL_BACK;
-            GLenum                      frontFace   = GL_CCW;
-            GLboolean                   depthMask   = GL_TRUE;
-            ColorRGBAT<GLboolean>       colorMask   = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
+            GLenum                      polygonMode     = GL_FILL;
+            GLenum                      cullFace        = GL_BACK;
+            GLenum                      frontFace       = GL_CCW;
+            GLboolean                   depthMask       = GL_TRUE;
+            GLint                       patchVertices_  = 0;
+            ColorRGBAT<GLboolean>       colorMask       = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
             //std::vector<GLViewport>     viewports;
             //std::vector<GLDepthRange>   depthRanges;
             //std::vector<GLScissor>      scissors;
