@@ -45,6 +45,7 @@ void DbgRenderContext::SetGraphicsAPIDependentState(const GraphicsAPIDependentSt
 void DbgRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     instance_.SetVideoMode(videoModeDesc);
+    RenderContext::SetVideoMode(videoModeDesc);
 }
 
 void DbgRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
