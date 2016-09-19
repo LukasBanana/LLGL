@@ -223,26 +223,28 @@ protected:
 };
 
 
-#ifdef _WIN32
-#   define LLGL_PAUSE_TUTORIAL system("pause")
-#else
-#   define LLGL_PAUSE_TUTORIAL
-#endif
+template <typename T>
+int RunTutorial()
+{
+    try
+    {
+        auto tutorial = std::unique_ptr<T>(new T());
+        tutorial->Run();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        #ifdef _WIN32
+        system("pause");
+        #endif
+    }
+    return 0;
+}
 
-#define LLGL_IMPLEMENT_TUTORIAL(CLASS)                              \
-    int main()                                                      \
-    {                                                               \
-        try                                                         \
-        {                                                           \
-            auto tutorial = std::unique_ptr<CLASS>(new CLASS());    \
-            tutorial->Run();                                        \
-        }                                                           \
-        catch (const std::exception& e)                             \
-        {                                                           \
-            std::cerr << e.what() << std::endl;                     \
-            LLGL_PAUSE_TUTORIAL;                                    \
-        }                                                           \
-        return 0;                                                   \
+#define LLGL_IMPLEMENT_TUTORIAL(CLASS)  \
+    int main()                          \
+    {                                   \
+        return RunTutorial<CLASS>();    \
     }
 
 
