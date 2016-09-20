@@ -90,6 +90,8 @@ std::string D3D11Shader::QueryInfoLog()
 
 void D3D11Shader::CreateHardwareShader(ID3D11ClassLinkage* classLinkage)
 {
+    hardwareShader_.vs.Reset();
+
     HRESULT hr = 0;
 
     switch (GetType())
