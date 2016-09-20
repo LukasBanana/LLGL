@@ -30,6 +30,9 @@ D3D12RenderContext::D3D12RenderContext(
     SetWindow(window, desc_.videoMode, nullptr);
     CreateWindowSizeDependentResources();
     InitStateManager();
+
+    /* Initialize v-sync */
+    SetVsync(desc_.vsync);
 }
 
 void D3D12RenderContext::Present()
@@ -87,11 +90,8 @@ void D3D12RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 
 void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 {
-    if (desc_.vsync != vsyncDesc)
-    {
-        desc_.vsync = vsyncDesc;
-        swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
-    }
+    desc_.vsync = vsyncDesc;
+    swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
 }
 
 void D3D12RenderContext::SetViewports(const std::vector<Viewport>& viewports)
@@ -399,11 +399,6 @@ void D3D12RenderContext::InitStateManager()
     auto resolution = desc_.videoMode.resolution;
     stateMngr_->SetViewports({ { 0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y) } });
     stateMngr_->SetScissors({ { 0, 0, resolution.x, resolution.y } });
-}
-
-void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
-{
-    swapChainInterval_ = (desc.enabled ? std::max(1u, std::min(desc.interval, 4u)) : 0);
 }
 
 void D3D12RenderContext::MoveToNextFrame()

@@ -41,6 +41,9 @@ D3D11RenderContext::D3D11RenderContext(
     CreateBackBufferAndRTV();
     CreateDepthStencilAndDSV(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
     SetDefaultRenderTargets();
+
+    /* Initialize v-sync */
+    SetVsync(desc_.vsync);
 }
 
 void D3D11RenderContext::Present()
@@ -68,11 +71,8 @@ void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 
 void D3D11RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 {
-    if (desc_.vsync != vsyncDesc)
-    {
-        desc_.vsync = vsyncDesc;
-        swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
-    }
+    desc_.vsync = vsyncDesc;
+    swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
 }
 
 void D3D11RenderContext::SetViewports(const std::vector<Viewport>& viewports)
