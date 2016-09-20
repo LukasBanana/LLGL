@@ -204,6 +204,43 @@ class ComPtr
 };
 
 
+template <typename T0, typename T1>
+bool operator == (const ComPtr<T0>& lhs, const ComPtr<T1>& rhs) throw()
+{
+    return (lhs.Get() == rhs.Get());
+}
+
+template <typename T>
+bool operator == (const ComPtr<T>& lhs, decltype(nullptr)) throw()
+{
+    return (lhs.Get() == nullptr);
+}
+
+template <typename T>
+bool operator == (decltype(nullptr), const ComPtr<T>& rhs) throw()
+{
+    return (nullptr == rhs.Get());
+}
+
+template <typename T0, typename T1>
+bool operator != (const ComPtr<T0>& lhs, const ComPtr<T1>& rhs) throw()
+{
+    return (lhs.Get() != rhs.Get());
+}
+
+template <typename T>
+bool operator != (const ComPtr<T>& lhs, decltype(nullptr)) throw()
+{
+    return (lhs.Get() != nullptr);
+}
+
+template <typename T>
+bool operator != (decltype(nullptr), const ComPtr<T>& rhs) throw()
+{
+    return (nullptr != rhs.Get());
+}
+
+
 } // /namespace LLGL
 
 
