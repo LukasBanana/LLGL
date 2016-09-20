@@ -7,7 +7,7 @@
 
 #include "D3D12ShaderProgram.h"
 #include "D3D12Shader.h"
-#include "../DXTypes.h"
+#include "../D3D12Types.h"
 #include "../../CheckedCast.h"
 #include <LLGL/Log.h>
 #include <LLGL/VertexFormat.h>
@@ -161,7 +161,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {
     try
     {
-        return DXTypes::Map(attrib);
+        return D3D12Types::Map(attrib);
     }
     catch (const std::exception& e)
     {

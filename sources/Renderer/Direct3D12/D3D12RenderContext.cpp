@@ -8,7 +8,7 @@
 #include "D3D12RenderContext.h"
 #include "D3D12RenderSystem.h"
 #include "D3D12Assert.h"
-#include "DXTypes.h"
+#include "D3D12Types.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"

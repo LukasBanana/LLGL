@@ -1,11 +1,11 @@
 /*
- * DXTypes.cpp
+ * D3D12Types.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "DXTypes.h"
+#include "D3D12Types.h"
 #include <stdexcept>
 #include <string>
 
@@ -13,7 +13,7 @@
 namespace LLGL
 {
 
-namespace DXTypes
+namespace D3D12Types
 {
 
 
@@ -311,7 +311,7 @@ D3D12_STENCIL_OP Map(const StencilOp stencilOp)
 }
 
 
-} // /namespace DXTypes
+} // /namespace D3D12Types
 
 } // /namespace LLGL
 

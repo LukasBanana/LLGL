@@ -7,11 +7,11 @@
 
 #include "D3D12GraphicsPipeline.h"
 #include "../D3D12RenderSystem.h"
+#include "../D3D12Types.h"
 #include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
-#include "../DXTypes.h"
 #include "../../CheckedCast.h"
 #include "../../Assertion.h"
 #include "../../../Core/Helper.h"
@@ -32,7 +32,7 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
 
     /* Store D3D primitive topology */
-    primitiveTopology_ = DXTypes::Map(desc.primitiveTopology);
+    primitiveTopology_ = D3D12Types::Map(desc.primitiveTopology);
 
     /* Create root signature and graphics pipeline state  */
     CreateRootSignature(renderSystem, *shaderProgramD3D, desc);
@@ -127,10 +127,10 @@ static UINT8 GetColorWriteMask(const ColorRGBAb& color)
 
 static void Convert(D3D12_DEPTH_STENCILOP_DESC& to, const StencilFaceDescriptor& from)
 {
-    to.StencilFailOp        = DXTypes::Map(from.stencilFailOp);
-    to.StencilDepthFailOp   = DXTypes::Map(from.depthFailOp);
-    to.StencilPassOp        = DXTypes::Map(from.depthPassOp);
-    to.StencilFunc          = DXTypes::Map(from.compareOp);
+    to.StencilFailOp        = D3D12Types::Map(from.stencilFailOp);
+    to.StencilDepthFailOp   = D3D12Types::Map(from.depthFailOp);
+    to.StencilPassOp        = D3D12Types::Map(from.depthPassOp);
+    to.StencilFunc          = D3D12Types::Map(from.compareOp);
 }
 
 static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopology topology)
@@ -192,12 +192,12 @@ void D3D12GraphicsPipeline::CreatePipelineState(
 
             targetState.BlendEnable             = desc.blend.blendEnabled;
             targetState.LogicOpEnable           = FALSE;
-            targetState.SrcBlend                = DXTypes::Map(targetDesc.srcColor);
-            targetState.DestBlend               = DXTypes::Map(targetDesc.destColor);
-            targetState.BlendOp                 = DXTypes::Map(targetDesc.colorArithmetic);
-            targetState.SrcBlendAlpha           = DXTypes::Map(targetDesc.srcAlpha);
-            targetState.DestBlendAlpha          = DXTypes::Map(targetDesc.destAlpha);
-            targetState.BlendOpAlpha            = DXTypes::Map(targetDesc.alphaArithmetic);
+            targetState.SrcBlend                = D3D12Types::Map(targetDesc.srcColor);
+            targetState.DestBlend               = D3D12Types::Map(targetDesc.destColor);
+            targetState.BlendOp                 = D3D12Types::Map(targetDesc.colorArithmetic);
+            targetState.SrcBlendAlpha           = D3D12Types::Map(targetDesc.srcAlpha);
+            targetState.DestBlendAlpha          = D3D12Types::Map(targetDesc.destAlpha);
+            targetState.BlendOpAlpha            = D3D12Types::Map(targetDesc.alphaArithmetic);
             targetState.LogicOp                 = D3D12_LOGIC_OP_NOOP;
             targetState.RenderTargetWriteMask   = GetColorWriteMask(targetDesc.colorMask);
         }
@@ -217,8 +217,8 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     }
 
     /* Convert rasterizer state */
-    stateDesc.RasterizerState.FillMode              = DXTypes::Map(desc.rasterizer.polygonMode);
-    stateDesc.RasterizerState.CullMode              = DXTypes::Map(desc.rasterizer.cullMode);
+    stateDesc.RasterizerState.FillMode              = D3D12Types::Map(desc.rasterizer.polygonMode);
+    stateDesc.RasterizerState.CullMode              = D3D12Types::Map(desc.rasterizer.cullMode);
     stateDesc.RasterizerState.FrontCounterClockwise = (desc.rasterizer.frontCCW ? TRUE : FALSE);
     stateDesc.RasterizerState.DepthBias             = desc.rasterizer.depthBias;
     stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBiasClamp;
@@ -232,7 +232,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     /* Convert depth-stencil state */
     stateDesc.DepthStencilState.DepthEnable         = (desc.depth.testEnabled ? TRUE : FALSE);
     stateDesc.DepthStencilState.DepthWriteMask      = (desc.depth.writeEnabled ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO);
-    stateDesc.DepthStencilState.DepthFunc           = DXTypes::Map(desc.depth.compareOp);
+    stateDesc.DepthStencilState.DepthFunc           = D3D12Types::Map(desc.depth.compareOp);
     stateDesc.DepthStencilState.StencilEnable       = (desc.stencil.testEnabled ? TRUE : FALSE);
     stateDesc.DepthStencilState.StencilReadMask     = D3D12_DEFAULT_STENCIL_READ_MASK;
     stateDesc.DepthStencilState.StencilWriteMask    = D3D12_DEFAULT_STENCIL_WRITE_MASK;

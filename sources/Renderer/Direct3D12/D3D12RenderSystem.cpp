@@ -6,8 +6,8 @@
  */
 
 #include "D3D12RenderSystem.h"
+#include "D3D12Types.h"
 #include "../DXCommon/DXCore.h"
-#include "DXTypes.h"
 #include "../CheckedCast.h"
 #include "../Assertion.h"
 #include "../../Core/Helper.h"
@@ -220,7 +220,7 @@ void D3D12RenderSystem::SetupIndexBuffer(
 
     /* Create hardware buffer resource */
     indexBufferD3D.hwBuffer.CreateResource(device_.Get(), dataSize);
-    indexBufferD3D.PutView(DXTypes::Map(indexFormat.GetDataType()));
+    indexBufferD3D.PutView(D3D12Types::Map(indexFormat.GetDataType()));
 
     /* Upload buffer data to GPU */
     ComPtr<ID3D12Resource> bufferUpload;
