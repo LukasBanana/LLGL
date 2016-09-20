@@ -30,6 +30,9 @@ void main()
 	
 	vec3 position = mix(a, b, v);
 	
+	// Set final vertex color
+	teColor = (1.0 - position) * 0.5;
+	
 	// Apply twist rotation matrix (rotate around Y axis)
 	float twistFactor = (position.y + 1.0) * 0.5;
 	
@@ -46,5 +49,4 @@ void main()
 	
 	// Transform vertex by the world-view-projection matrix chain
 	gl_Position = wvpMatrix * vec4(position, 1);
-	teColor = (1.0 - position) * 0.5;
 }

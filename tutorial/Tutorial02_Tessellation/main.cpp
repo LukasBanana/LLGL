@@ -9,7 +9,7 @@
 
 
 // Show scene in wireframe polygon mode
-//#define SHOW_WIREFRAME
+#define SHOW_WIREFRAME
 
 // Automatically rotate the model
 //#define AUTO_ROTATE
@@ -199,13 +199,13 @@ private:
         // Update constant buffer
         renderer->WriteConstantBuffer(*constantBuffer, &settings, sizeof(settings), 0);
 
+        // Set graphics pipeline with the shader
+        context->SetGraphicsPipeline(*pipeline);
+
         // Set hardware buffers to draw the model
         context->SetVertexBuffer(*vertexBuffer);
         context->SetIndexBuffer(*indexBuffer);
         context->SetConstantBuffer(*constantBuffer, constantBufferIndex);
-
-        // Set graphics pipeline with the shader
-        context->SetGraphicsPipeline(*pipeline);
 
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
         context->DrawIndexed(24, 0);

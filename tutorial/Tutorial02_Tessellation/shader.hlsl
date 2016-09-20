@@ -45,6 +45,7 @@ OutputHS PatchConstantFuncHS(InputPatch<OutputVS, 4> inp)
 {
 	OutputHS outp;
 	
+	#if 0
 	outp.edges[0] = tessLevelOuter;
 	outp.edges[1] = tessLevelOuter;
 	outp.edges[2] = tessLevelOuter;
@@ -52,6 +53,15 @@ OutputHS PatchConstantFuncHS(InputPatch<OutputVS, 4> inp)
 	
 	outp.inner[0] = tessLevelInner;
 	outp.inner[1] = tessLevelInner;
+	#else
+	outp.edges[0] = 5.0;
+	outp.edges[1] = 5.0;
+	outp.edges[2] = 5.0;
+	outp.edges[3] = 5.0;
+	
+	outp.inner[0] = 5.0;
+	outp.inner[1] = 5.0;
+	#endif
 	
 	return outp;
 }
@@ -61,7 +71,7 @@ OutputHS PatchConstantFuncHS(InputPatch<OutputVS, 4> inp)
 [outputtopology("triangle_cw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("PatchConstantFuncHS")]
-[maxtessfactor(64.0)]
+[maxtessfactor(65.0)]//(64.0)]
 OutputVS HS(InputPatch<OutputVS, 4> inp, uint id : SV_OutputControlPointID)
 {
 	OutputVS outp;
@@ -86,7 +96,11 @@ OutputDS DS(OutputHS inp, float2 tessCoord : SV_DomainLocation, const OutputPatc
 	
 	float3 position = lerp(a, b, v);
 	
+	// Set final vertex color
+	outp.color = (1.0 - position) * 0.5;
+	
 	// Apply twist rotation matrix (rotate around Y axis)
+	#if 0
 	float twistFactor = (position.y + 1.0) * 0.5;
 	
 	float s = sin(twist * twistFactor);
@@ -99,10 +113,21 @@ OutputDS DS(OutputHS inp, float2 tessCoord : SV_DomainLocation, const OutputPatc
 	);
 	
 	position = mul(rotation, position);
+	#endif
 	
 	// Transform vertex by the world-view-projection matrix chain
+	#if 0
 	outp.position = mul(wvpMatrix, float4(position, 1));
-	outp.color = (1.0 - position) * 0.5;
+	#else
+	
+	float4x4 m = float4x4(
+		1.81066000, 0, 0, 0,
+		0, 2.41421342, 0, 0,
+		0, 0, 1.00100100, 1,
+		0, 0, -0.100100100, 0
+	);
+	outp.position = mul(m, float4(position, 1));
+	#endif
 	
 	return outp;
 }
