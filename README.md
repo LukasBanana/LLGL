@@ -20,7 +20,7 @@ Progress
 - **Version**: 1.00 Alpha
 - **OpenGL Renderer**: ~70% done
 - **Direct3D 12 Renderer**: ~5% done
-- **Direct3D 11 Renderer**: not started yet
+- **Direct3D 11 Renderer**: ~5% done
 - **Vulkan Renderer**: not started yet
 
 
@@ -45,7 +45,7 @@ void GLRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIn
 // Direct3D 11 Implementation
 void D3D11RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-	context_->DrawIndexed(numVertices, 0, firstIndex);
+	context_->DrawIndexed(numVertices, firstIndex, 0);
 }
 
 // Direct3D 12 Implementation
