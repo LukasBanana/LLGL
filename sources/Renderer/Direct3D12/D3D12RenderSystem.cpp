@@ -6,7 +6,7 @@
  */
 
 #include "D3D12RenderSystem.h"
-#include "DXCore.h"
+#include "../DXCommon/DXCore.h"
 #include "DXTypes.h"
 #include "../CheckedCast.h"
 #include "../Assertion.h"

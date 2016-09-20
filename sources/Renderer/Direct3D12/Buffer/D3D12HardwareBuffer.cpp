@@ -7,7 +7,7 @@
 
 #include "D3D12HardwareBuffer.h"
 #include "../../Assertion.h"
-#include "../DXCore.h"
+#include "../../DXCommon/DXCore.h"
 #include "../D3DX12/d3dx12.h"
 #include <stdexcept>
 

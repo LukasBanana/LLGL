@@ -75,10 +75,7 @@ int main()
         };
 
         // Load vertex - and fragment shader code from file
-        std::string vertexShaderCode = ReadFileContent("vertex.glsl");
-        std::string fragmentShaderCode = ReadFileContent("fragment.glsl");
-
-        auto CompileShader = [](LLGL::Shader* shader, const std::string& code)
+        auto CompileShader = [](LLGL::Shader* shader, const LLGL::ShaderSource& code)
         {
             // Compile shader
             shader->Compile(code);
@@ -89,8 +86,17 @@ int main()
                 std::cerr << log << std::endl;
         };
 
-        CompileShader(vertexShader, vertexShaderCode);
-        CompileShader(fragmentShader, fragmentShaderCode);
+        if (renderer->QueryRenderingCaps().hasHLSL)
+        {
+            auto shaderCode = ReadFileContent("shader.hlsl");
+            CompileShader(vertexShader, LLGL::ShaderSource(shaderCode, "VS", "vs_5_0"));
+            CompileShader(fragmentShader, LLGL::ShaderSource(shaderCode, "PS", "ps_5_0"));
+        }
+        else
+        {
+            CompileShader(vertexShader, ReadFileContent("vertex.glsl"));
+            CompileShader(fragmentShader, ReadFileContent("fragment.glsl"));
+        }
 
         // Create shader program which is used as composite
         LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();

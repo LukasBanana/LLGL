@@ -13,8 +13,9 @@
 #include <LLGL/RenderContext.h>
 #include <cstddef>
 #include "../ComPtr.h"
+#include "../DXCommon/DXCore.h"
 
-//#include "RenderState/D3D12StateManager.h"
+#include "RenderState/D3D12StateManager.h"
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -121,7 +122,8 @@ class D3D12RenderContext : public RenderContext
         static const UINT maxNumBuffers = 3;
 
         void CreateWindowSizeDependentResources();
-        
+        void InitStateManager();
+
         void SetupSwapChainInterval(const VsyncDescriptor& desc);
 
         void MoveToNextFrame();
@@ -129,12 +131,13 @@ class D3D12RenderContext : public RenderContext
         //! Sets the current back buffer as render target view.
         void SetBackBufferRTV();
 
-        void ExecuteGfxCommandList();
+        void ExecuteCommandList();
+        void SubmitConsistentStates();
 
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
         RenderContextDescriptor             desc_;
 
-        //std::shared_ptr<D3D12StateManager>  stateMngr_;
+        std::unique_ptr<D3D12StateManager>  stateMngr_;
 
         ComPtr<IDXGISwapChain3>             swapChain_;
         UINT                                swapChainInterval_              = 0;
@@ -151,9 +154,7 @@ class D3D12RenderContext : public RenderContext
         UINT                                numFrames_                      = 0;
         UINT                                currentFrame_                   = 0;
 
-        ColorRGBAf                          clearColor_                     = { 0.0f, 0.0f, 0.0f, 0.0f };
-        FLOAT                               clearDepth_                     = 0.0f;
-        UINT8                               clearStencil_                   = 0;
+        D3DClearState                       clearState_;
 
 };
 

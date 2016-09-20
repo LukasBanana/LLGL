@@ -82,6 +82,8 @@ if(LLGL_ENABLE_DEBUG_LAYER)
 	file(GLOB FilesRendererDbg				${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/*.*)
 endif()
 
+file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
+
 if(WIN32)
 	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
 elseif(APPLE)
@@ -156,6 +158,11 @@ if(LLGL_ENABLE_DEBUG_LAYER)
 		${FilesRendererDbg}
 	)
 endif()
+
+source_group(
+	"Sources\\Renderer\\DXCommon" FILES
+	${FilesRendererDXCommon}
+)
 
 source_group(
 	"Sources\\Renderer\\Platform" FILES
@@ -235,6 +242,7 @@ set(
 	${FilesRendererD3D12Buffer}
 #	${FilesRendererD3D12Texture}
 	${FilesRendererD3D12RenderState}
+	${FilesRendererDXCommon}
 )
 
 # Base project

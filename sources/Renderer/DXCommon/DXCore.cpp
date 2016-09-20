@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "DXCore.h"
+#include "../DXCommon/DXCore.h"
 #include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
 #include <stdexcept>

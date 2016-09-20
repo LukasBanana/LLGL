@@ -10,7 +10,7 @@
 #include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
 #include "../D3DX12/d3dx12.h"
-#include "../DXCore.h"
+#include "../../DXCommon/DXCore.h"
 #include "../DXTypes.h"
 #include "../../CheckedCast.h"
 #include "../../Assertion.h"

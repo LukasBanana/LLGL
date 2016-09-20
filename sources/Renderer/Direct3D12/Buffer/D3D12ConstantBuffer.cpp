@@ -7,7 +7,7 @@
 
 #include "D3D12ConstantBuffer.h"
 #include "../../../Core/Helper.h"
-#include "../DXCore.h"
+#include "../../DXCommon/DXCore.h"
 
 
 namespace LLGL

@@ -8,7 +8,6 @@
 #include "D3D12RenderContext.h"
 #include "D3D12RenderSystem.h"
 #include "D3D12Assert.h"
-#include "DXCore.h"
 #include "DXTypes.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
@@ -31,11 +30,13 @@ D3D12RenderContext::D3D12RenderContext(
     /* Setup window for the render context */
     SetWindow(window, desc_.videoMode, nullptr);
     CreateWindowSizeDependentResources();
+    InitStateManager();
 }
 
 void D3D12RenderContext::Present()
 {
-    ExecuteGfxCommandList();
+    /* Execute pending command list */
+    ExecuteCommandList();
 
     /* Indicate that the render target will now be used to present when the command list is done executing */
     auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -62,6 +63,9 @@ void D3D12RenderContext::Present()
 
     /* Set current back buffer as new render target view */
     SetBackBufferRTV();
+
+    /* Re-submit consistent states */
+    SubmitConsistentStates();
 }
 
 /* ----- Configuration ----- */
@@ -93,43 +97,29 @@ void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 
 void D3D12RenderContext::SetViewports(const std::vector<Viewport>& viewports)
 {
-    commandList_->RSSetViewports(
-        static_cast<UINT>(viewports.size()),
-        reinterpret_cast<const D3D12_VIEWPORT*>(viewports.data())
-    );
+    stateMngr_->SetViewports(viewports);
+    stateMngr_->SubmitViewports();
 }
 
 void D3D12RenderContext::SetScissors(const std::vector<Scissor>& scissors)
 {
-    std::vector<D3D12_RECT> rects(scissors.size());
-
-    for (std::size_t i = 0; i < scissors.size(); ++i)
-    {
-        rects[i].left   = scissors[i].x;
-        rects[i].top    = scissors[i].y;
-        rects[i].right  = scissors[i].x + scissors[i].width;
-        rects[i].bottom = scissors[i].y + scissors[i].height;
-    }
-
-    commandList_->RSSetScissorRects(
-        static_cast<UINT>(rects.size()),
-        rects.data()
-    );
+    stateMngr_->SetScissors(scissors);
+    stateMngr_->SubmitScissors();
 }
 
 void D3D12RenderContext::SetClearColor(const ColorRGBAf& color)
 {
-    clearColor_ = color;
+    clearState_.color = color;
 }
 
 void D3D12RenderContext::SetClearDepth(float depth)
 {
-    clearDepth_ = depth;
+    clearState_.depth = depth;
 }
 
 void D3D12RenderContext::SetClearStencil(int stencil)
 {
-    clearStencil_ = stencil;
+    clearState_.stencil = stencil;
 }
 
 void D3D12RenderContext::ClearBuffers(long flags)
@@ -141,7 +131,7 @@ void D3D12RenderContext::ClearBuffers(long flags)
 
     /* Clear color buffer */
     if ((flags & ClearBuffersFlags::Color) != 0)
-        commandList_->ClearRenderTargetView(rtvHandle, clearColor_.Ptr(), 0, nullptr);
+        commandList_->ClearRenderTargetView(rtvHandle, clearState_.color.Ptr(), 0, nullptr);
     
     /* Clear depth-stencil buffer */
     int rtvClearFlags = 0;
@@ -154,7 +144,7 @@ void D3D12RenderContext::ClearBuffers(long flags)
     if (rtvClearFlags)
     {
         commandList_->ClearDepthStencilView(
-            rtvHandle, static_cast<D3D12_CLEAR_FLAGS>(rtvClearFlags), clearDepth_, clearStencil_, 0, nullptr
+            rtvHandle, static_cast<D3D12_CLEAR_FLAGS>(rtvClearFlags), clearState_.depth, clearState_.stencil, 0, nullptr
         );
     }
 }
@@ -401,6 +391,17 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     commandList_->OMSetRenderTargets(1, &rtvDescInit, FALSE, nullptr);
 }
 
+void D3D12RenderContext::InitStateManager()
+{
+    /* Create state manager */
+    stateMngr_ = MakeUnique<D3D12StateManager>(commandList_);
+
+    /* Initialize states */
+    auto resolution = desc_.videoMode.resolution;
+    stateMngr_->SetViewports({ { 0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y) } });
+    stateMngr_->SetScissors({ { 0, 0, resolution.x, resolution.y } });
+}
+
 void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
 {
     swapChainInterval_ = (desc.enabled ? std::max(1u, std::min(desc.interval, 4u)) : 0);
@@ -429,9 +430,16 @@ void D3D12RenderContext::SetBackBufferRTV()
     commandList_->OMSetRenderTargets(1, &rtvDesc, FALSE, nullptr);
 }
 
-void D3D12RenderContext::ExecuteGfxCommandList()
+void D3D12RenderContext::ExecuteCommandList()
 {
     renderSystem_.CloseAndExecuteCommandList(commandList_.Get());
+}
+
+void D3D12RenderContext::SubmitConsistentStates()
+{
+    /* Submit all constistent states: viewports, scissors */
+    stateMngr_->SubmitViewports();
+    stateMngr_->SubmitScissors();
 }
 
 

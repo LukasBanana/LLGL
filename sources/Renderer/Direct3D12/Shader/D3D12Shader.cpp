@@ -6,7 +6,7 @@
  */
 
 #include "D3D12Shader.h"
-#include "../DXCore.h"
+#include "../../DXCommon/DXCore.h"
 #include <algorithm>
 #include <stdexcept>
 #include <d3dcompiler.h>

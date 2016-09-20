@@ -9,6 +9,7 @@
 #define __LLGL_DX_CORE_H__
 
 
+#include <LLGL/ColorRGBA.h>
 #include <string>
 #include <vector>
 #include <Windows.h>
@@ -19,17 +20,17 @@ namespace LLGL
 {
 
 
-//! Release the specified D3D12 object.
-template <typename T>
-void SafeRelease(T*& obj)
-{
-    if (obj)
-    {
-        obj->Release();
-        obj = nullptr;
-    }
-}
+/* ----- Structure ----- */
 
+struct D3DClearState
+{
+    ColorRGBAf  color   = { 0.0f, 0.0f, 0.0f, 0.0f };
+    FLOAT       depth   = 0.0f;
+    UINT8       stencil = 0;
+};
+
+
+/* ----- Functions ----- */
 
 //! Converts the DX error code into a string.
 std::string DXErrorToStr(const HRESULT errorCode);
