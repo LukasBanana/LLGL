@@ -16,7 +16,7 @@ int main()
     try
     {
         // Load render system module
-        std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("OpenGL");
+        std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("Direct3D11");
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
@@ -89,8 +89,8 @@ int main()
         if (renderer->QueryRenderingCaps().hasHLSL)
         {
             auto shaderCode = ReadFileContent("shader.hlsl");
-            CompileShader(vertexShader, LLGL::ShaderSource(shaderCode, "VS", "vs_5_0"));
-            CompileShader(fragmentShader, LLGL::ShaderSource(shaderCode, "PS", "ps_5_0"));
+            CompileShader(vertexShader, LLGL::ShaderSource(shaderCode, "VS", "vs_4_0"));
+            CompileShader(fragmentShader, LLGL::ShaderSource(shaderCode, "PS", "ps_4_0"));
         }
         else
         {
@@ -112,22 +112,14 @@ int main()
         if (!shaderProgram->LinkShaders())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
 
-        // Create 4x4 planar projection matrix by the GaussianLib
-        Gs::Vector2f size = contextDesc.videoMode.resolution.Cast <float >();
-        Gs::Matrix4f projection = Gs::ProjectionMatrix4f::Planar(size.x, size.y);
-
-        // Set shader uniform
-        LLGL::ShaderUniform* shaderUniform = shaderProgram->LockShaderUniform();
-        if (shaderUniform)
-            shaderUniform->SetUniform("projection", projection);
-        shaderProgram->UnlockShaderUniform();
-
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram = shaderProgram;
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        
+        context->SetClearColor({ 0.2f, 0.2f, 0.7f });//!!!
 
         // Enter main loop
         while (context->GetWindow().ProcessEvents())

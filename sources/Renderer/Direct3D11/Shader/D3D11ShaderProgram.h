@@ -26,7 +26,7 @@ class D3D11ShaderProgram : public ShaderProgram
 
     public:
 
-        D3D11ShaderProgram();
+        D3D11ShaderProgram(ID3D11Device* device);
 
         void AttachShader(Shader& shader) override;
 
@@ -48,9 +48,9 @@ class D3D11ShaderProgram : public ShaderProgram
 
         /* ----- Extended internal functions ----- */
 
-        inline const std::vector<D3D11_INPUT_ELEMENT_DESC>& GetInputElements() const
+        inline ID3D11InputLayout* GetInputLayout() const
         {
-            return inputElements_;
+            return inputLayout_.Get();
         }
 
         inline D3D11Shader* GetVS() const { return vs_; }
@@ -69,7 +69,9 @@ class D3D11ShaderProgram : public ShaderProgram
             ByteCode,
         };
 
-        std::vector<D3D11_INPUT_ELEMENT_DESC>   inputElements_;
+        ID3D11Device*                           device_                 = nullptr;
+
+        ComPtr<ID3D11InputLayout>               inputLayout_;
 
         D3D11Shader*                            vs_                     = nullptr;
         D3D11Shader*                            ps_                     = nullptr;

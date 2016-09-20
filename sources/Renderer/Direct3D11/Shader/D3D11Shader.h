@@ -64,6 +64,11 @@ class D3D11Shader : public Shader
             return hardwareShader_;
         }
 
+        inline const std::vector<char>& GetByteCode() const
+        {
+            return byteCode_;
+        }
+
         inline const std::vector<VertexAttribute>& GetVertexAttributes() const
         {
             return vertexAttributes_;

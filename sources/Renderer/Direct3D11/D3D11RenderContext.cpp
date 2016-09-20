@@ -40,6 +40,7 @@ D3D11RenderContext::D3D11RenderContext(
     CreateSwapChain();
     CreateBackBufferAndRTV();
     CreateDepthStencilAndDSV(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
+    SetDefaultRenderTargets();
 }
 
 void D3D11RenderContext::Present()
@@ -101,8 +102,20 @@ void D3D11RenderContext::SetClearStencil(int stencil)
 
 void D3D11RenderContext::ClearBuffers(long flags)
 {
-    //context_->ClearDepthStencilView();
+    /* Clear color buffer */
+    if ((flags & ClearBuffersFlags::Color) != 0)
+        context_->ClearRenderTargetView(backBufferRTV_.Get(), clearState_.color.Ptr());
+    
+    /* Clear depth-stencil buffer */
+    int dsvClearFlags = 0;
 
+    if ((flags & ClearBuffersFlags::Depth) != 0)
+        dsvClearFlags |= D3D11_CLEAR_DEPTH;
+    if ((flags & ClearBuffersFlags::Stencil) != 0)
+        dsvClearFlags |= D3D11_CLEAR_STENCIL;
+        
+    if (dsvClearFlags)
+        context_->ClearDepthStencilView(backBufferDSV_.Get(), dsvClearFlags, clearState_.depth, clearState_.stencil);
 }
 
 /* ----- Hardware Buffers ------ */
@@ -172,7 +185,7 @@ void D3D11RenderContext::SetRenderTarget(RenderTarget& renderTarget)
 
 void D3D11RenderContext::UnsetRenderTarget()
 {
-    //todo
+    SetDefaultRenderTargets();
 }
 
 /* ----- Pipeline States ----- */
@@ -282,6 +295,7 @@ void D3D11RenderContext::CreateSwapChain()
         swapChainDesc.BufferDesc.RefreshRate.Denominator    = desc_.vsync.interval;
         swapChainDesc.SampleDesc.Count                      = (desc_.antiAliasing.enabled ? std::max(1u, desc_.antiAliasing.samples) : 1);
         swapChainDesc.SampleDesc.Quality                    = 0;
+        swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount                           = 1;//(desc_.videoMode.swapChainMode == SwapChainMode::TripleBuffering ? 2 : 1);
         swapChainDesc.OutputWindow                          = wndHandle.window;
         swapChainDesc.Windowed                              = (desc_.videoMode.fullscreen ? FALSE : TRUE);
@@ -331,6 +345,12 @@ void D3D11RenderContext::CreateDepthStencilAndDSV(UINT width, UINT height)
     }
     hr = renderSystem_.GetDevice()->CreateDepthStencilView(depthStencil_.Get(), &dsvDesc, &backBufferDSV_);
     DXThrowIfFailed(hr, "failed to create depth-stencil-view (DSV) for D3D11 depth-stencil");
+}
+
+void D3D11RenderContext::SetDefaultRenderTargets()
+{
+    ID3D11RenderTargetView* rtv[] = { backBufferRTV_.Get() };
+    context_->OMSetRenderTargets(1, rtv, backBufferDSV_.Get());
 }
 
 

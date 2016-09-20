@@ -133,17 +133,17 @@ void D3D12RenderContext::ClearBuffers(long flags)
         commandList_->ClearRenderTargetView(rtvHandle, clearState_.color.Ptr(), 0, nullptr);
     
     /* Clear depth-stencil buffer */
-    int rtvClearFlags = 0;
+    int dsvClearFlags = 0;
 
     if ((flags & ClearBuffersFlags::Depth) != 0)
-        rtvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
+        dsvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
     if ((flags & ClearBuffersFlags::Stencil) != 0)
-        rtvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
+        dsvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
         
-    if (rtvClearFlags)
+    if (dsvClearFlags)
     {
         commandList_->ClearDepthStencilView(
-            rtvHandle, static_cast<D3D12_CLEAR_FLAGS>(rtvClearFlags), clearState_.depth, clearState_.stencil, 0, nullptr
+            rtvHandle, static_cast<D3D12_CLEAR_FLAGS>(dsvClearFlags), clearState_.depth, clearState_.stencil, 0, nullptr
         );
     }
 }

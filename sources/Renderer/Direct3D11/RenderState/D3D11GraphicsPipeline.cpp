@@ -27,8 +27,11 @@ D3D11GraphicsPipeline::D3D11GraphicsPipeline(
     /* Validate pointers and get D3D shader objects */
     LLGL_ASSERT_PTR(desc.shaderProgram);
 
-    auto shaderProgramD3D = LLGL_CAST(D3D11ShaderProgram*, desc.shaderProgram);
-    GetShaderObjects(*shaderProgramD3D);
+    shaderProgram_ = LLGL_CAST(D3D11ShaderProgram*, desc.shaderProgram);
+    GetShaderObjects(*shaderProgram_);
+
+    if (!shaderProgram_->GetInputLayout())
+        throw std::runtime_error("can not create graphics pipeline while shader program has no D3D11 input layout");
 
     /* Store D3D primitive topology */
     primitiveTopology_ = D3D11Types::Map(desc.primitiveTopology);
@@ -46,14 +49,20 @@ void D3D11GraphicsPipeline::Bind(ID3D11DeviceContext* context)
 {
     /* Setup input-assembly states */
     context->IASetPrimitiveTopology(primitiveTopology_);
+    context->IASetInputLayout(shaderProgram_->GetInputLayout());
 
     /* Setup shader states */
-    if (vs_) { context->VSSetShader(vs_.Get(), nullptr, 0); }
-    if (ps_) { context->PSSetShader(ps_.Get(), nullptr, 0); }
-    if (hs_) { context->HSSetShader(hs_.Get(), nullptr, 0); }
-    if (ds_) { context->DSSetShader(ds_.Get(), nullptr, 0); }
-    if (gs_) { context->GSSetShader(gs_.Get(), nullptr, 0); }
-    if (cs_) { context->CSSetShader(cs_.Get(), nullptr, 0); }
+    if (vs_)
+        context->VSSetShader(vs_.Get(), nullptr, 0);
+    if (hs_ && ds_)
+    {
+        context->HSSetShader(hs_.Get(), nullptr, 0);
+        context->DSSetShader(ds_.Get(), nullptr, 0);
+    }
+    if (gs_)
+        context->GSSetShader(gs_.Get(), nullptr, 0);
+    if (ps_)
+        context->PSSetShader(ps_.Get(), nullptr, 0);
 
     /* Setup render states */
     context->RSSetState(rasterizerState_.Get());
@@ -69,11 +78,10 @@ void D3D11GraphicsPipeline::Bind(ID3D11DeviceContext* context)
 void D3D11GraphicsPipeline::GetShaderObjects(D3D11ShaderProgram& shaderProgramD3D)
 {
     if (shaderProgramD3D.GetVS()) { vs_ = shaderProgramD3D.GetVS()->GetHardwareShader().vs; }
-    if (shaderProgramD3D.GetPS()) { ps_ = shaderProgramD3D.GetPS()->GetHardwareShader().ps; }
     if (shaderProgramD3D.GetHS()) { hs_ = shaderProgramD3D.GetHS()->GetHardwareShader().hs; }
     if (shaderProgramD3D.GetDS()) { ds_ = shaderProgramD3D.GetDS()->GetHardwareShader().ds; }
     if (shaderProgramD3D.GetGS()) { gs_ = shaderProgramD3D.GetGS()->GetHardwareShader().gs; }
-    if (shaderProgramD3D.GetCS()) { cs_ = shaderProgramD3D.GetCS()->GetHardwareShader().cs; }
+    if (shaderProgramD3D.GetPS()) { ps_ = shaderProgramD3D.GetPS()->GetHardwareShader().ps; }
 }
 
 static void Convert(D3D11_DEPTH_STENCILOP_DESC& to, const StencilFaceDescriptor& from)
@@ -113,6 +121,7 @@ void D3D11GraphicsPipeline::CreateRasterizerState(ID3D11Device* device, const Ra
         stateDesc.DepthBiasClamp        = desc.depthBiasClamp;
         stateDesc.SlopeScaledDepthBias  = desc.slopeScaledDepthBias;
         stateDesc.DepthClipEnable       = (desc.depthClampEnabled ? TRUE : FALSE);
+        stateDesc.ScissorEnable         = (desc.scissorTestEnabled ? TRUE : FALSE);
         stateDesc.MultisampleEnable     = (desc.multiSampleEnabled ? TRUE : FALSE);
         stateDesc.AntialiasedLineEnable = (desc.antiAliasedLineEnabled ? TRUE : FALSE);
     }

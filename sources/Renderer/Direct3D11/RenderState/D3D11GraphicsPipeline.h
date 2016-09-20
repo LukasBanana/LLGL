@@ -34,12 +34,11 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
 
         void Bind(ID3D11DeviceContext* context);
 
-        inline ID3D11VertexShader*      GetVS() const { return vs_.Get(); }
-        inline ID3D11PixelShader*       GetPS() const { return ps_.Get(); }
+        /*inline ID3D11VertexShader*      GetVS() const { return vs_.Get(); }
         inline ID3D11HullShader*        GetHS() const { return hs_.Get(); }
         inline ID3D11DomainShader*      GetDS() const { return ds_.Get(); }
         inline ID3D11GeometryShader*    GetGS() const { return gs_.Get(); }
-        inline ID3D11ComputeShader*     GetCS() const { return cs_.Get(); }
+        inline ID3D11PixelShader*       GetPS() const { return ps_.Get(); }
 
         inline ID3D11DepthStencilState* GetDepthStencilState() const
         {
@@ -59,7 +58,7 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
         inline D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const
         {
             return primitiveTopology_;
-        }
+        }*/
 
     private:
 
@@ -69,12 +68,13 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
         void CreateRasterizerState(ID3D11Device* device, const RasterizerDescriptor& desc);
         void CreateBlendState(ID3D11Device* device, const BlendDescriptor& desc);
 
+        D3D11ShaderProgram*             shaderProgram_      = nullptr;
+
         ComPtr<ID3D11VertexShader>      vs_;
-        ComPtr<ID3D11PixelShader>       ps_;
         ComPtr<ID3D11HullShader>        hs_;
         ComPtr<ID3D11DomainShader>      ds_;
         ComPtr<ID3D11GeometryShader>    gs_;
-        ComPtr<ID3D11ComputeShader>     cs_;
+        ComPtr<ID3D11PixelShader>       ps_;
 
         ComPtr<ID3D11DepthStencilState> depthStencilState_;
         ComPtr<ID3D11RasterizerState>   rasterizerState_;

@@ -123,6 +123,8 @@ class D3D11RenderContext : public RenderContext
         void CreateBackBufferAndRTV();
         void CreateDepthStencilAndDSV(UINT width, UINT height);
 
+        void SetDefaultRenderTargets();
+
         D3D11RenderSystem&              renderSystem_;  // reference to its render system
         D3D11StateManager&              stateMngr_;
         RenderContextDescriptor         desc_;

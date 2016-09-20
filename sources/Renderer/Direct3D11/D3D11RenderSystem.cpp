@@ -309,7 +309,7 @@ Shader* D3D11RenderSystem::CreateShader(const ShaderType type)
 
 ShaderProgram* D3D11RenderSystem::CreateShaderProgram()
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<D3D11ShaderProgram>());
+    return TakeOwnership(shaderPrograms_, MakeUnique<D3D11ShaderProgram>(device_.Get()));
 }
 
 void D3D11RenderSystem::Release(Shader& shader)

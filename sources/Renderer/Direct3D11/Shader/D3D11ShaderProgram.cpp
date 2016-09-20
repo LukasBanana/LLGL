@@ -9,6 +9,7 @@
 #include "D3D11Shader.h"
 #include "../D3D11Types.h"
 #include "../../CheckedCast.h"
+#include "../../DXCommon/DXCore.h"
 #include <LLGL/Log.h>
 #include <LLGL/VertexFormat.h>
 #include <algorithm>
@@ -19,7 +20,8 @@ namespace LLGL
 {
 
 
-D3D11ShaderProgram::D3D11ShaderProgram()
+D3D11ShaderProgram::D3D11ShaderProgram(ID3D11Device* device) :
+    device_( device )
 {
 }
 
@@ -176,8 +178,12 @@ static D3D11_INPUT_CLASSIFICATION GetInputClassification(bool perInstance)
 
 void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
 {
-    inputElements_.clear();
-    inputElements_.reserve(vertexAttribs.size());
+    if (!vs_ || vs_->GetByteCode().empty())
+        throw std::runtime_error("can not bind vertex attributes without valid vertex shader");
+
+    /* Setup input element descriptors */
+    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+    inputElements.reserve(vertexAttribs.size());
 
     for (const auto& attrib : vertexAttribs)
     {
@@ -191,8 +197,19 @@ void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>
             elementDesc.InputSlotClass          = GetInputClassification(attrib.perInstance);
             elementDesc.InstanceDataStepRate    = 0;
         }
-        inputElements_.push_back(elementDesc);
+        inputElements.push_back(elementDesc);
     }
+
+    /* Create input layout */
+    inputLayout_.Reset();
+    auto hr = device_->CreateInputLayout(
+        inputElements.data(),
+        static_cast<UINT>(inputElements.size()),
+        vs_->GetByteCode().data(),
+        vs_->GetByteCode().size(),
+        &inputLayout_
+    );
+    DXThrowIfFailed(hr, "failed to create D3D11 input layout");
 }
 
 void D3D11ShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
