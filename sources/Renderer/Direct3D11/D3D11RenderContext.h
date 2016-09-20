@@ -120,17 +120,24 @@ class D3D11RenderContext : public RenderContext
     private:
 
         void CreateSwapChain();
+        void CreateBackBufferAndRTV();
+        void CreateDepthStencilAndDSV(UINT width, UINT height);
 
-        D3D11RenderSystem&          renderSystem_;  // reference to its render system
-        D3D11StateManager&          stateMngr_;
-        RenderContextDescriptor     desc_;
+        D3D11RenderSystem&              renderSystem_;  // reference to its render system
+        D3D11StateManager&              stateMngr_;
+        RenderContextDescriptor         desc_;
         
-        ComPtr<ID3D11DeviceContext> context_;
+        ComPtr<ID3D11DeviceContext>     context_;
 
-        ComPtr<IDXGISwapChain>      swapChain_;
-        UINT                        swapChainInterval_              = 0;
+        ComPtr<IDXGISwapChain>          swapChain_;
+        UINT                            swapChainInterval_              = 0;
 
-        D3DClearState               clearState_;
+        ComPtr<ID3D11Texture2D>         backBuffer_;
+        ComPtr<ID3D11RenderTargetView>  backBufferRTV_;
+        ComPtr<ID3D11DepthStencilView>  backBufferDSV_;
+        ComPtr<ID3D11Texture2D>         depthStencil_;
+
+        D3DClearState                   clearState_;
 
 };
 

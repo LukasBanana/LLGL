@@ -35,7 +35,11 @@ D3D11RenderContext::D3D11RenderContext(
 {
     /* Setup window for the render context */
     SetWindow(window, desc_.videoMode, nullptr);
+
+    /* Create D3D objects */
     CreateSwapChain();
+    CreateBackBufferAndRTV();
+    CreateDepthStencilAndDSV(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
 }
 
 void D3D11RenderContext::Present()
@@ -278,11 +282,55 @@ void D3D11RenderContext::CreateSwapChain()
         swapChainDesc.BufferDesc.RefreshRate.Denominator    = desc_.vsync.interval;
         swapChainDesc.SampleDesc.Count                      = (desc_.antiAliasing.enabled ? std::max(1u, desc_.antiAliasing.samples) : 1);
         swapChainDesc.SampleDesc.Quality                    = 0;
-        swapChainDesc.BufferCount                           = (desc_.videoMode.swapChainMode == SwapChainMode::TripleBuffering ? 2 : 1);
+        swapChainDesc.BufferCount                           = 1;//(desc_.videoMode.swapChainMode == SwapChainMode::TripleBuffering ? 2 : 1);
         swapChainDesc.OutputWindow                          = wndHandle.window;
         swapChainDesc.Windowed                              = (desc_.videoMode.fullscreen ? FALSE : TRUE);
     }
     swapChain_ = renderSystem_.CreateDXSwapChain(swapChainDesc);
+}
+
+void D3D11RenderContext::CreateBackBufferAndRTV()
+{
+    /* Get back buffer from swap chain */
+    backBuffer_.Reset();
+    auto hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&backBuffer_));
+    DXThrowIfFailed(hr, "failed to get back buffer from D3D11 swap chain");
+
+    /* Create back buffer RTV */
+    backBufferRTV_.Reset();
+    hr = renderSystem_.GetDevice()->CreateRenderTargetView(backBuffer_.Get(), nullptr, &backBufferRTV_);
+    DXThrowIfFailed(hr, "failed to create render-target-view (RTV) for D3D11 back buffer");
+}
+
+void D3D11RenderContext::CreateDepthStencilAndDSV(UINT width, UINT height)
+{
+    /* Create depth stencil texture */
+    D3D11_TEXTURE2D_DESC texDesc;
+    {
+        texDesc.Width               = width;
+        texDesc.Height              = height;
+        texDesc.MipLevels           = 1;
+        texDesc.ArraySize           = 1;
+        texDesc.Format              = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        texDesc.SampleDesc.Count    = (desc_.antiAliasing.enabled ? std::max(1u, desc_.antiAliasing.samples) : 1);
+        texDesc.SampleDesc.Quality  = 0;
+        texDesc.Usage               = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
+        texDesc.CPUAccessFlags      = 0;
+        texDesc.MiscFlags           = 0;
+    }
+    auto hr = renderSystem_.GetDevice()->CreateTexture2D(&texDesc, nullptr, &depthStencil_);
+    DXThrowIfFailed(hr, "failed to create texture 2D for D3D11 depth-stencil");
+
+    /* Create depth-stencil-view */
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+    InitMemory(dsvDesc);
+    {
+        dsvDesc.Format          = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        dsvDesc.ViewDimension   = (desc_.antiAliasing.enabled ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D);
+    }
+    hr = renderSystem_.GetDevice()->CreateDepthStencilView(depthStencil_.Get(), &dsvDesc, &backBufferDSV_);
+    DXThrowIfFailed(hr, "failed to create depth-stencil-view (DSV) for D3D11 depth-stencil");
 }
 
 
