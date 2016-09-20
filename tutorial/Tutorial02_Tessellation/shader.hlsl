@@ -71,7 +71,7 @@ OutputHS PatchConstantFuncHS(InputPatch<OutputVS, 4> inp)
 [outputtopology("triangle_cw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("PatchConstantFuncHS")]
-[maxtessfactor(65.0)]//(64.0)]
+[maxtessfactor(64.0)]
 OutputVS HS(InputPatch<OutputVS, 4> inp, uint id : SV_OutputControlPointID)
 {
 	OutputVS outp;

@@ -94,6 +94,9 @@ protected:
         // Add input event listener to window
         input = std::make_shared<LLGL::Input>();
         context->GetWindow().AddEventListener(input);
+
+        // Set dark blue as default clear color
+        context->SetClearColor({ 0.1f, 0.1f, 0.4f });
     }
 
     struct TutorialShaderDescriptor
