@@ -52,81 +52,16 @@ std::map<RendererInfo, std::string> D3D12RenderSystem::QueryRendererInfo() const
     return info;
 }
 
-static int GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
-{
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
-    else                                        return 2048;
-}
-
-static int GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
-{
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
-    else                                        return 512;
-}
-
-static unsigned int GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
-{
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4;
-    else                                        return 1;
-}
-
-// see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
 RenderingCaps D3D12RenderSystem::QueryRenderingCaps() const
 {
     RenderingCaps caps;
-
-    auto            level               = GetFeatureLevel();
-    unsigned int    maxThreadGroups     = D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
-
-    caps.screenOrigin                   = ScreenOrigin::UpperLeft;
-    caps.clippingRange                  = ClippingRange::ZeroToOne;
-    caps.hasRenderTargets               = true;
-    caps.has3DTextures                  = true;
-    caps.hasCubeTextures                = true;
-    caps.hasTextureArrays               = (level >= D3D_FEATURE_LEVEL_10_0);
-    caps.hasCubeTextureArrays           = (level >= D3D_FEATURE_LEVEL_10_1);
-    caps.hasSamplers                    = (level >= D3D_FEATURE_LEVEL_9_3);
-    caps.hasConstantBuffers             = true;
-    caps.hasStorageBuffers              = true;
-    caps.hasUniforms                    = false;
-    caps.hasGeometryShaders             = (level >= D3D_FEATURE_LEVEL_10_0);
-    caps.hasTessellationShaders         = (level >= D3D_FEATURE_LEVEL_11_0);
-    caps.hasComputeShaders              = (level >= D3D_FEATURE_LEVEL_10_0);
-    caps.hasInstancing                  = (level >= D3D_FEATURE_LEVEL_9_3);
-    caps.hasOffsetInstancing            = (level >= D3D_FEATURE_LEVEL_9_3);
-    caps.hasViewportArrays              = true;
-    caps.hasConservativeRasterization   = (level >= D3D_FEATURE_LEVEL_11_1);
-    caps.maxNumTextureArrayLayers       = (level >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
-    caps.maxNumRenderTargetAttachments  = GetMaxRenderTargets(level);
-    caps.maxConstantBufferSize          = 16384;
-    caps.maxPatchVertices               = 32;
-    caps.max1DTextureSize               = GetMaxTextureDimension(level);
-    caps.max2DTextureSize               = GetMaxTextureDimension(level);
-    caps.max3DTextureSize               = (level >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
-    caps.maxCubeTextureSize             = GetMaxCubeTextureDimension(level);
-    caps.maxAnisotropy                  = (level >= D3D_FEATURE_LEVEL_9_2 ? 16 : 2);
-    caps.maxNumComputeShaderWorkGroups  = { maxThreadGroups, maxThreadGroups, (level >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u) };
-    caps.maxComputeShaderWorkGroupSize  = { 1024, 1024, 1024 };
-    caps.hasHLSL                        = true;
-
+    DXGetRenderingCaps(caps, GetFeatureLevel());
     return caps;
 }
 
 ShadingLanguage D3D12RenderSystem::QueryShadingLanguage() const
 {
-    auto featureLevel = GetFeatureLevel();
-
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return ShadingLanguage::HLSL_5_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) return ShadingLanguage::HLSL_4_1;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return ShadingLanguage::HLSL_4_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return ShadingLanguage::HLSL_3_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) return ShadingLanguage::HLSL_2_0b;
-    else                                        return ShadingLanguage::HLSL_2_0a;
+    return DXGetHLSLVersion(GetFeatureLevel());
 }
 
 /* ----- Render Context ----- */
@@ -694,27 +629,11 @@ void D3D12RenderSystem::QueryVideoAdapters()
     }
 }
 
-static std::vector<D3D_FEATURE_LEVEL> GetFeatureLevels()
-{
-    return
-    {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0,
-        D3D_FEATURE_LEVEL_10_1,
-        D3D_FEATURE_LEVEL_10_0,
-        D3D_FEATURE_LEVEL_9_3,
-        D3D_FEATURE_LEVEL_9_2,
-        D3D_FEATURE_LEVEL_9_1,
-    };
-}
-
 void D3D12RenderSystem::CreateDevice()
 {
     /* Use default adapter (null) and try all feature levels */
     IDXGIAdapter* adapter = nullptr;
-    auto featureLevels = GetFeatureLevels();
+    auto featureLevels = DXGetFeatureLevels(D3D_FEATURE_LEVEL_12_1);
 
     /* Try to create a feature level with an hardware adapter */
     HRESULT hr = 0;

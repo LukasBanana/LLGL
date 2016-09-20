@@ -8,8 +8,10 @@
 #include "../DXCommon/DXCore.h"
 #include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
+#include <LLGL/Shader.h>
 #include <stdexcept>
 #include <algorithm>
+#include <d3dcompiler.h>
 
 
 namespace LLGL
@@ -100,6 +102,137 @@ std::string DXGetBlobString(ID3DBlob* blob)
 std::vector<char> DXGetBlobData(ID3DBlob* blob)
 {
     return GetBlobDataTmpl<std::vector<char>>(blob);
+}
+
+static int GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
+    else                                        return 2048;
+}
+
+static int GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4096;
+    else                                        return 512;
+}
+
+static unsigned int GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4;
+    else                                        return 1;
+}
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
+void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
+{
+    unsigned int maxThreadGroups = 65535;//D3D11_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
+
+    caps.screenOrigin                   = ScreenOrigin::UpperLeft;
+    caps.clippingRange                  = ClippingRange::ZeroToOne;
+    caps.hasRenderTargets               = true;
+    caps.has3DTextures                  = true;
+    caps.hasCubeTextures                = true;
+    caps.hasTextureArrays               = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasCubeTextureArrays           = (featureLevel >= D3D_FEATURE_LEVEL_10_1);
+    caps.hasSamplers                    = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
+    caps.hasConstantBuffers             = true;
+    caps.hasStorageBuffers              = true;
+    caps.hasUniforms                    = false;
+    caps.hasGeometryShaders             = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasTessellationShaders         = (featureLevel >= D3D_FEATURE_LEVEL_11_0);
+    caps.hasComputeShaders              = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.hasInstancing                  = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
+    caps.hasOffsetInstancing            = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
+    caps.hasViewportArrays              = true;
+    caps.hasConservativeRasterization   = (featureLevel >= D3D_FEATURE_LEVEL_11_1);
+    caps.maxNumTextureArrayLayers       = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
+    caps.maxNumRenderTargetAttachments  = GetMaxRenderTargets(featureLevel);
+    caps.maxConstantBufferSize          = 16384;
+    caps.maxPatchVertices               = 32;
+    caps.max1DTextureSize               = GetMaxTextureDimension(featureLevel);
+    caps.max2DTextureSize               = GetMaxTextureDimension(featureLevel);
+    caps.max3DTextureSize               = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048 : 256);
+    caps.maxCubeTextureSize             = GetMaxCubeTextureDimension(featureLevel);
+    caps.maxAnisotropy                  = (featureLevel >= D3D_FEATURE_LEVEL_9_2 ? 16 : 2);
+    caps.maxNumComputeShaderWorkGroups  = { maxThreadGroups, maxThreadGroups, (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u) };
+    caps.maxComputeShaderWorkGroupSize  = { 1024, 1024, 1024 };
+    caps.hasHLSL                        = true;
+}
+
+ShadingLanguage DXGetHLSLVersion(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return ShadingLanguage::HLSL_5_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) return ShadingLanguage::HLSL_4_1;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return ShadingLanguage::HLSL_4_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return ShadingLanguage::HLSL_3_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) return ShadingLanguage::HLSL_2_0b;
+    else                                        return ShadingLanguage::HLSL_2_0a;
+}
+
+std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel)
+{
+    std::vector<D3D_FEATURE_LEVEL> featureLeves =
+    {
+        D3D_FEATURE_LEVEL_12_1,
+        D3D_FEATURE_LEVEL_12_0,
+        D3D_FEATURE_LEVEL_11_1,
+        D3D_FEATURE_LEVEL_11_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_10_0,
+        D3D_FEATURE_LEVEL_9_3,
+        D3D_FEATURE_LEVEL_9_2,
+        D3D_FEATURE_LEVEL_9_1,
+    };
+
+    auto it = std::remove_if(
+        featureLeves.begin(), featureLeves.end(),
+        [maxFeatureLevel](D3D_FEATURE_LEVEL entry)
+        {
+            return (entry > maxFeatureLevel);
+        }
+    );
+    featureLeves.erase(it);
+
+    return featureLeves;
+}
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/gg615083(v=vs.85).aspx
+UINT DXGetCompilerFlags(int flags)
+{
+    UINT dxFlags = 0;
+
+    if ((flags & ShaderCompileFlags::Debug) != 0)
+        dxFlags |= D3DCOMPILE_DEBUG;
+
+    if ((flags & ShaderCompileFlags::O1) != 0)
+        dxFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL1;
+    else if ((flags & ShaderCompileFlags::O2) != 0)
+        dxFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL2;
+    else if ((flags & ShaderCompileFlags::O3) != 0)
+        dxFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
+    else
+        dxFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;//D3DCOMPILE_OPTIMIZATION_LEVEL0;
+
+    if ((flags & ShaderCompileFlags::WarnError) != 0)
+        dxFlags |= D3DCOMPILE_WARNINGS_ARE_ERRORS;
+
+    return dxFlags;
+}
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607326(v=vs.85).aspx
+UINT DXGetDisassemblerFlags(int flags)
+{
+    UINT dxFlags = 0;
+
+    if ((flags & ShaderDisassembleFlags::InstructionOnly) != 0)
+        dxFlags |= D3D_DISASM_INSTRUCTION_ONLY;
+
+    return dxFlags;
 }
 
 

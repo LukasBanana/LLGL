@@ -119,6 +119,13 @@ file(GLOB FilesRendererD3D12Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Dire
 #file(GLOB FilesRendererD3D12Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Texture/*.*)
 file(GLOB FilesRendererD3D12RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/RenderState/*.*)
 
+# Direct3D11 renderer files
+file(GLOB FilesRendererD3D11				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/*.*)
+file(GLOB FilesRendererD3D11Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/*.*)
+file(GLOB FilesRendererD3D11Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Buffer/*.*)
+#file(GLOB FilesRendererD3D11Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Texture/*.*)
+file(GLOB FilesRendererD3D11RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/RenderState/*.*)
+
 # Vulkan renderer files
 file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
 
@@ -149,6 +156,7 @@ source_group(
 	${FilesRenderer}
 	${FilesRendererGL}
 	${FilesRendererD3D12}
+	${FilesRendererD3D11}
 	${FilesRendererVulkan}
 )
 
@@ -178,24 +186,28 @@ source_group(
 	"Sources\\Renderer\\Shader" FILES
 	${FilesRendererGLShader}
 	${FilesRendererD3D12Shader}
+	${FilesRendererD3D11Shader}
 )
 
 source_group(
 	"Sources\\Renderer\\Buffer" FILES
 	${FilesRendererGLBuffer}
 	${FilesRendererD3D12Buffer}
+	${FilesRendererD3D11Buffer}
 )
 
 source_group(
 	"Sources\\Renderer\\Texture" FILES
 	${FilesRendererGLTexture}
 #	${FilesRendererD3D12Texture}
+#	${FilesRendererD3D11Texture}
 )
 
 source_group(
 	"Sources\\Renderer\\RenderState" FILES
 	${FilesRendererGLRenderState}
 	${FilesRendererD3D12RenderState}
+	${FilesRendererD3D11RenderState}
 )
 
 
@@ -245,6 +257,16 @@ set(
 	${FilesRendererDXCommon}
 )
 
+set(
+	FilesD3D11
+	${FilesRendererD3D11}
+	${FilesRendererD3D11Shader}
+	${FilesRendererD3D11Buffer}
+#	${FilesRendererD3D11Texture}
+	${FilesRendererD3D11RenderState}
+	${FilesRendererDXCommon}
+)
+
 # Base project
 add_library(LLGL SHARED ${FilesLLGL})
 
@@ -271,10 +293,17 @@ else()
 endif()
 
 if(WIN32)
+	# Direct3D 12 Renderer
 	add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
 	set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 	target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi D3DCompiler)
 	target_compile_features(LLGL_Direct3D12 PRIVATE cxx_range_for)
+	
+	# Direct3D 11 Renderer
+	add_library(LLGL_Direct3D11 SHARED ${FilesD3D11})
+	set_target_properties(LLGL_Direct3D11 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+	target_link_libraries(LLGL_Direct3D11 LLGL d3d11 dxgi D3DCompiler)
+	target_compile_features(LLGL_Direct3D11 PRIVATE cxx_range_for)
 endif()
 
 # Test Projects
