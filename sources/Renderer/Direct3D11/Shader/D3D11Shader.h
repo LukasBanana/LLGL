@@ -33,10 +33,10 @@ union D3D11HardwareShader
     }
 
     ComPtr<ID3D11VertexShader>      vs;
-    ComPtr<ID3D11PixelShader>       ps;
     ComPtr<ID3D11HullShader>        hs;
     ComPtr<ID3D11DomainShader>      ds;
     ComPtr<ID3D11GeometryShader>    gs;
+    ComPtr<ID3D11PixelShader>       ps;
     ComPtr<ID3D11ComputeShader>     cs;
 };
 

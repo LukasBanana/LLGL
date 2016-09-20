@@ -119,8 +119,6 @@ int main()
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
         
-        context->SetClearColor({ 0.2f, 0.2f, 0.7f });//!!!
-
         // Enter main loop
         while (context->GetWindow().ProcessEvents())
         {

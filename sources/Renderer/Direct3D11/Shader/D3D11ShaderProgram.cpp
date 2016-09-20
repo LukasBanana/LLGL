@@ -173,7 +173,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 
 static D3D11_INPUT_CLASSIFICATION GetInputClassification(bool perInstance)
 {
-    return (perInstance ? D3D11_INPUT_PER_VERTEX_DATA : D3D11_INPUT_PER_INSTANCE_DATA);
+    return (perInstance ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
 }
 
 void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)

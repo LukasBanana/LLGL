@@ -42,6 +42,10 @@ D3D11RenderContext::D3D11RenderContext(
     CreateDepthStencilAndDSV(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
     SetDefaultRenderTargets();
 
+    /* Initialize viewport */
+    auto resolution = desc_.videoMode.resolution.Cast<float>();
+    SetViewports({ { 0.0f, 0.0f, resolution.x, resolution.y } });
+
     /* Initialize v-sync */
     SetVsync(desc_.vsync);
 }

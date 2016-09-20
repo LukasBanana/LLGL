@@ -98,10 +98,6 @@ void D3D11Shader::CreateHardwareShader(ID3D11ClassLinkage* classLinkage)
             hr = device_->CreateVertexShader(byteCode_.data(), byteCode_.size(), classLinkage, &hardwareShader_.vs);
             DXThrowIfFailed(hr, "failed to create D3D11 vertex shader");
             break;
-        case ShaderType::Fragment:
-            hr = device_->CreatePixelShader(byteCode_.data(), byteCode_.size(), classLinkage, &hardwareShader_.ps);
-            DXThrowIfFailed(hr, "failed to create D3D11 pixel shader");
-            break;
         case ShaderType::TessControl:
             hr = device_->CreateHullShader(byteCode_.data(), byteCode_.size(), classLinkage, &hardwareShader_.hs);
             DXThrowIfFailed(hr, "failed to create D3D11 hull shader");
@@ -113,6 +109,10 @@ void D3D11Shader::CreateHardwareShader(ID3D11ClassLinkage* classLinkage)
         case ShaderType::Geometry:
             hr = device_->CreateGeometryShader(byteCode_.data(), byteCode_.size(), classLinkage, &hardwareShader_.gs);
             DXThrowIfFailed(hr, "failed to create D3D11 geometry shader");
+            break;
+        case ShaderType::Fragment:
+            hr = device_->CreatePixelShader(byteCode_.data(), byteCode_.size(), classLinkage, &hardwareShader_.ps);
+            DXThrowIfFailed(hr, "failed to create D3D11 pixel shader");
             break;
         case ShaderType::Compute:
             hr = device_->CreateComputeShader(byteCode_.data(), byteCode_.size(), classLinkage, &hardwareShader_.cs);

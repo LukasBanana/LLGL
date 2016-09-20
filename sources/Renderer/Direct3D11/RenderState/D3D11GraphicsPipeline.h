@@ -34,32 +34,6 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
 
         void Bind(ID3D11DeviceContext* context);
 
-        /*inline ID3D11VertexShader*      GetVS() const { return vs_.Get(); }
-        inline ID3D11HullShader*        GetHS() const { return hs_.Get(); }
-        inline ID3D11DomainShader*      GetDS() const { return ds_.Get(); }
-        inline ID3D11GeometryShader*    GetGS() const { return gs_.Get(); }
-        inline ID3D11PixelShader*       GetPS() const { return ps_.Get(); }
-
-        inline ID3D11DepthStencilState* GetDepthStencilState() const
-        {
-            return depthStencilState_.Get();
-        }
-
-        inline ID3D11RasterizerState* GetRasterizerState() const
-        {
-            return rasterizerState_.Get();
-        }
-
-        inline ID3D11BlendState* GetBlendState() const
-        {
-            return blendState_.Get();
-        }
-
-        inline D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const
-        {
-            return primitiveTopology_;
-        }*/
-
     private:
 
         void GetShaderObjects(D3D11ShaderProgram& shaderProgramD3D);
@@ -83,7 +57,7 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
         D3D11_PRIMITIVE_TOPOLOGY        primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
         UINT                            stencilRef_         = 0;
         FLOAT                           blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
-        UINT                            sampleMask_         = 0;
+        UINT                            sampleMask_         = ~0;
 
 };
 
