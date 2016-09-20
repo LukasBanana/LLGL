@@ -39,10 +39,6 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
     CreatePipelineState(renderSystem, *shaderProgramD3D, desc);
 }
 
-/*void D3D12GraphicsPipeline::Bind(D3D12StateManager& stateMngr)
-{
-}*/
-
 void D3D12GraphicsPipeline::CreateRootSignature(
     D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc)
 {

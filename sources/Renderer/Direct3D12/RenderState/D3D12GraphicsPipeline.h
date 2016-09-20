@@ -33,8 +33,6 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
             const GraphicsPipelineDescriptor& desc
         );
 
-        //void Bind(D3D12StateManager& stateMngr);
-
         inline ID3D12RootSignature* GetRootSignature() const
         {
             return rootSignature_.Get();
