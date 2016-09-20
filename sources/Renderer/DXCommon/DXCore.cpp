@@ -196,7 +196,7 @@ std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLe
             return (entry > maxFeatureLevel);
         }
     );
-    featureLeves.erase(it);
+    featureLeves.erase(it, featureLeves.end());
 
     return featureLeves;
 }

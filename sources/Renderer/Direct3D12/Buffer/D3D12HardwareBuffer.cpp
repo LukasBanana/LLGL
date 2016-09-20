@@ -41,7 +41,7 @@ void D3D12HardwareBuffer::CreateResource(ID3D12Device* device, UINT bufferSize)
     CreateResource(device, bufferSize, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COPY_DEST);
 }
 
-void D3D12HardwareBuffer::UpdateStaticSubResource(
+void D3D12HardwareBuffer::UpdateStaticSubresource(
     ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
     const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState)
 {
@@ -83,7 +83,7 @@ void D3D12HardwareBuffer::UpdateStaticSubResource(
     gfxCommandList->ResourceBarrier(1, &resourceBarrier);
 }
 
-void D3D12HardwareBuffer::UpdateDynamicSubResource(const void* data, UINT bufferSize, UINT64 offset)
+void D3D12HardwareBuffer::UpdateDynamicSubresource(const void* data, UINT bufferSize, UINT64 offset)
 {
     void* dest = nullptr;
     

@@ -11,6 +11,8 @@
 #include <fstream>
 
 
+#define ENABLE_MULTISAMPLING
+
 int main()
 {
     try
@@ -18,10 +20,16 @@ int main()
         // Load render system module
         std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("Direct3D11");
 
+        std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
+
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
         {
             contextDesc.videoMode.resolution = { 640, 480 };
+            #ifdef ENABLE_MULTISAMPLING
+            contextDesc.antiAliasing.enabled = true;
+            contextDesc.antiAliasing.samples = 8;
+            #endif
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
 
@@ -115,7 +123,11 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram = shaderProgram;
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            #ifdef ENABLE_MULTISAMPLING
+            pipelineDesc.rasterizer.multiSampleEnabled  = true;
+            pipelineDesc.rasterizer.samples             = 8;
+            #endif
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
         

@@ -141,7 +141,7 @@ void D3D12RenderSystem::SetupVertexBuffer(
 
     /* Upload buffer data to GPU */
     ComPtr<ID3D12Resource> bufferUpload;
-    vertexBufferD3D.UpdateSubResource(device_.Get(), commandList_.Get(), bufferUpload, data, dataSize);
+    vertexBufferD3D.UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, data, dataSize);
 
     /* Execute upload commands and wait for GPU to finish execution */
     CloseAndExecuteCommandList(commandList_.Get());
@@ -159,7 +159,7 @@ void D3D12RenderSystem::SetupIndexBuffer(
 
     /* Upload buffer data to GPU */
     ComPtr<ID3D12Resource> bufferUpload;
-    indexBufferD3D.UpdateSubResource(device_.Get(), commandList_.Get(), bufferUpload, data, dataSize);
+    indexBufferD3D.UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, data, dataSize);
 
     /* Execute upload commands and wait for GPU to finish execution */
     CloseAndExecuteCommandList(commandList_.Get());
@@ -176,7 +176,7 @@ void D3D12RenderSystem::SetupConstantBuffer(
 
     /* Upload buffer data to GPU */
     //ComPtr<ID3D12Resource> bufferUpload;
-    constantBufferD3D.UpdateSubResource(data, dataSize);
+    constantBufferD3D.UpdateSubresource(data, dataSize);
 
     /* Execute upload commands and wait for GPU to finish execution */
     //CloseAndExecuteCommandList(commandList_.Get());

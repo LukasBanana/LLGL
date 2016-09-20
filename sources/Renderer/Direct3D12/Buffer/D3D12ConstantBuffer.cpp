@@ -45,9 +45,9 @@ void D3D12ConstantBuffer::CreateResourceAndPutView(ID3D12Device* device, UINT bu
     device->CreateConstantBufferView(&viewDesc, descHeap_->GetCPUDescriptorHandleForHeapStart());
 }
 
-void D3D12ConstantBuffer::UpdateSubResource(const void* data, UINT bufferSize, UINT64 offset)
+void D3D12ConstantBuffer::UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset)
 {
-    hwBuffer.UpdateDynamicSubResource(data, bufferSize, offset);
+    hwBuffer.UpdateDynamicSubresource(data, bufferSize, offset);
 }
 
 

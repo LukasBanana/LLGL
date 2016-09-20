@@ -26,7 +26,7 @@ class D3D12ConstantBuffer : public ConstantBuffer
 
         void CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize);
 
-        void UpdateSubResource(const void* data, UINT bufferSize, UINT64 offset = 0);
+        void UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset = 0);
 
         inline ID3D12DescriptorHeap* GetDescriptorHeap() const
         {

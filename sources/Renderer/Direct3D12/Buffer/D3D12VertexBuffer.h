@@ -24,7 +24,7 @@ class D3D12VertexBuffer : public VertexBuffer
 
         D3D12VertexBuffer();
 
-        void UpdateSubResource(
+        void UpdateSubresource(
             ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
             const void* data, UINT bufferSize, UINT64 offset = 0
         );

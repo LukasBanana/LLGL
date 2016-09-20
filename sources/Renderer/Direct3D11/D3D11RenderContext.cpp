@@ -16,6 +16,7 @@
 #include "RenderState/D3D11StateManager.h"
 #include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11IndexBuffer.h"
+#include "Buffer/D3D11ConstantBuffer.h"
 
 
 namespace LLGL
@@ -143,7 +144,15 @@ void D3D11RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 
 void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
 {
-    //todo
+    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, constantBuffer);
+
+    ID3D11Buffer* buffers[] = { constantBufferD3D.hwBuffer.Get() };
+    context_->VSSetConstantBuffers(slot, 1, buffers);
+    context_->HSSetConstantBuffers(slot, 1, buffers);
+    context_->DSSetConstantBuffers(slot, 1, buffers);
+    context_->GSSetConstantBuffers(slot, 1, buffers);
+    context_->PSSetConstantBuffers(slot, 1, buffers);
+    context_->CSSetConstantBuffers(slot, 1, buffers);
 }
 
 void D3D11RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)

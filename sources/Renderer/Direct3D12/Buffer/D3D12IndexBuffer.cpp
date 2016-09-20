@@ -18,11 +18,11 @@ D3D12IndexBuffer::D3D12IndexBuffer()
     InitMemory(view_);
 }
 
-void D3D12IndexBuffer::UpdateSubResource(
+void D3D12IndexBuffer::UpdateSubresource(
     ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
     const void* data, UINT bufferSize, UINT64 offset)
 {
-    hwBuffer.UpdateStaticSubResource(
+    hwBuffer.UpdateStaticSubresource(
         device, gfxCommandList, bufferUpload,
         data, bufferSize, offset,
         D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
