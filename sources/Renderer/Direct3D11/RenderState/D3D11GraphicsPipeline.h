@@ -39,11 +39,6 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
         inline ID3D11GeometryShader*    GetGS() const { return gs_.Get(); }
         inline ID3D11ComputeShader*     GetCS() const { return cs_.Get(); }
 
-        inline ID3D11BlendState* GetBlendState() const
-        {
-            return blendState_.Get();
-        }
-
         inline ID3D11DepthStencilState* GetDepthStencilState() const
         {
             return depthStencilState_.Get();
@@ -52,6 +47,11 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
         inline ID3D11RasterizerState* GetRasterizerState() const
         {
             return rasterizerState_.Get();
+        }
+
+        inline ID3D11BlendState* GetBlendState() const
+        {
+            return blendState_.Get();
         }
 
         inline D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const
@@ -74,9 +74,9 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
         ComPtr<ID3D11GeometryShader>    gs_;
         ComPtr<ID3D11ComputeShader>     cs_;
 
-        ComPtr<ID3D11BlendState>        blendState_;
         ComPtr<ID3D11DepthStencilState> depthStencilState_;
         ComPtr<ID3D11RasterizerState>   rasterizerState_;
+        ComPtr<ID3D11BlendState>        blendState_;
 
         D3D11_PRIMITIVE_TOPOLOGY        primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 
