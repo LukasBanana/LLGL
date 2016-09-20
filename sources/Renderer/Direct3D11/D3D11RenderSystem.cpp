@@ -80,12 +80,12 @@ void D3D11RenderSystem::Release(RenderContext& renderContext)
 
 VertexBuffer* D3D11RenderSystem::CreateVertexBuffer()
 {
-    return nullptr;//TakeOwnership(vertexBuffers_, MakeUnique<D3D11VertexBuffer>());
+    return TakeOwnership(vertexBuffers_, MakeUnique<D3D11VertexBuffer>());
 }
 
 IndexBuffer* D3D11RenderSystem::CreateIndexBuffer()
 {
-    return nullptr;//TakeOwnership(indexBuffers_, MakeUnique<D3D11IndexBuffer>());
+    return TakeOwnership(indexBuffers_, MakeUnique<D3D11IndexBuffer>());
 }
 
 ConstantBuffer* D3D11RenderSystem::CreateConstantBuffer()
@@ -100,12 +100,12 @@ StorageBuffer* D3D11RenderSystem::CreateStorageBuffer()
 
 void D3D11RenderSystem::Release(VertexBuffer& vertexBuffer)
 {
-    //RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
+    RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
 }
 
 void D3D11RenderSystem::Release(IndexBuffer& indexBuffer)
 {
-    //RemoveFromUniqueSet(indexBuffers_, &indexBuffer);
+    RemoveFromUniqueSet(indexBuffers_, &indexBuffer);
 }
 
 void D3D11RenderSystem::Release(ConstantBuffer& constantBuffer)
@@ -121,13 +121,15 @@ void D3D11RenderSystem::Release(StorageBuffer& storageBuffer)
 void D3D11RenderSystem::SetupVertexBuffer(
     VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
 {
-    //todo
+    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, vertexBuffer);
+    vertexBufferD3D.CreateResource(device_.Get(), vertexFormat.GetFormatSize(), dataSize, data);
 }
 
 void D3D11RenderSystem::SetupIndexBuffer(
     IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
 {
-    //todo
+    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, indexBuffer);
+    indexBufferD3D.CreateResource(device_.Get(), D3D11Types::Map(indexFormat.GetDataType()), dataSize, data);
 }
 
 void D3D11RenderSystem::SetupConstantBuffer(
@@ -144,12 +146,14 @@ void D3D11RenderSystem::SetupStorageBuffer(
 
 void D3D11RenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    //todo
+    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, vertexBuffer);
+    vertexBufferD3D.hwBuffer.UpdateSubResource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(offset));
 }
 
 void D3D11RenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    //todo
+    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, indexBuffer);
+    indexBufferD3D.hwBuffer.UpdateSubResource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(offset));
 }
 
 void D3D11RenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset)

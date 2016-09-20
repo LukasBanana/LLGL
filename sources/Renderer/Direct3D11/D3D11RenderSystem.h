@@ -13,10 +13,10 @@
 #include <LLGL/VideoAdapter.h>
 #include "D3D11RenderContext.h"
 
-/*#include "Buffer/D3D11VertexBuffer.h"
+#include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11IndexBuffer.h"
-#include "Buffer/D3D11ConstantBuffer.h"
-#include "Buffer/D3D11StorageBuffer.h"*/
+//#include "Buffer/D3D11ConstantBuffer.h"
+//#include "Buffer/D3D11StorageBuffer.h"
 
 #include "RenderState/D3D11GraphicsPipeline.h"
 #include "RenderState/D3D11StateManager.h"
@@ -188,8 +188,8 @@ class D3D11RenderSystem : public RenderSystem
 
         HWObjectContainer<D3D11RenderContext>       renderContexts_;
         
-        //HWObjectContainer<D3D11VertexBuffer>        vertexBuffers_;
-        //HWObjectContainer<D3D11IndexBuffer>         indexBuffers_;
+        HWObjectContainer<D3D11VertexBuffer>        vertexBuffers_;
+        HWObjectContainer<D3D11IndexBuffer>         indexBuffers_;
         //HWObjectContainer<D3D11ConstantBuffer>      constantBuffers_;
         //HWObjectContainer<D3D11StorageBuffer>       storageBuffers_;
 

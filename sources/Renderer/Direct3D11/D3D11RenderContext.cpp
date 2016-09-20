@@ -7,12 +7,15 @@
 
 #include "D3D11RenderContext.h"
 #include "D3D11RenderSystem.h"
-#include "RenderState/D3D11StateManager.h"
 #include "D3D11Types.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
 #include <algorithm>
+
+#include "RenderState/D3D11StateManager.h"
+#include "Buffer/D3D11VertexBuffer.h"
+#include "Buffer/D3D11IndexBuffer.h"
 
 
 namespace LLGL
@@ -102,12 +105,19 @@ void D3D11RenderContext::ClearBuffers(long flags)
 
 void D3D11RenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
-    //todo
+    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, vertexBuffer);
+
+    ID3D11Buffer* buffers[] = { vertexBufferD3D.hwBuffer.Get() };
+    UINT strides[] = { vertexBufferD3D.GetStride() };
+    UINT offsets[] = { 0 };
+
+    context_->IASetVertexBuffers(0, 1, buffers, strides, offsets);
 }
 
 void D3D11RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 {
-    //todo
+    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, indexBuffer);
+    context_->IASetIndexBuffer(indexBufferD3D.hwBuffer.Get(), indexBufferD3D.GetFormat(), 0);
 }
 
 void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
