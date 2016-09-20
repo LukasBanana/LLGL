@@ -168,6 +168,9 @@ class D3D12RenderSystem : public RenderSystem
         void SyncGPU(UINT64& fenceValue);
         void SyncGPU();
 
+        void SignalFenceValue(UINT64 fenceValue);
+        void WaitForFenceValue(UINT64 fenceValue);
+
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
         {
             return featureLevel_;
@@ -185,6 +188,8 @@ class D3D12RenderSystem : public RenderSystem
 
     private:
         
+        bool OnMakeCurrent(RenderContext* renderContext) override;
+
         #ifdef LLGL_DEBUG
         void EnableDebugLayer();
         #endif
@@ -199,20 +204,22 @@ class D3D12RenderSystem : public RenderSystem
 
         ComPtr<IDXGIFactory4>                       factory_;
         ComPtr<ID3D12Device>                        device_;
-        D3D_FEATURE_LEVEL                           featureLevel_   = D3D_FEATURE_LEVEL_9_1;
+        D3D_FEATURE_LEVEL                           featureLevel_           = D3D_FEATURE_LEVEL_9_1;
 
         ComPtr<ID3D12CommandQueue>                  commandQueue_;
         ComPtr<ID3D12CommandAllocator>              commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>           commandList_; // graphics command list to upload data to the GPU
 
         ComPtr<ID3D12Fence>                         fence_;
-        HANDLE                                      fenceEvent_     = 0;
-        UINT64                                      fenceValue_     = 0;
+        HANDLE                                      fenceEvent_             = 0;
+        UINT64                                      fenceValue_             = 0;
 
         #ifdef LLGL_DEBUG
         //ComPtr<ID3D12Debug>                         debugDevice_;
         //ComPtr<ID3D12InfoQueue>                     debugInfoQueue_;
         #endif
+
+        D3D12RenderContext*                         activeRenderContext_    = nullptr;
 
         /* ----- Hardware object containers ----- */
 
@@ -223,8 +230,8 @@ class D3D12RenderSystem : public RenderSystem
         HWObjectContainer<D3D12ConstantBuffer>      constantBuffers_;
         HWObjectContainer<D3D12StorageBuffer>       storageBuffers_;
 
-        /*HWObjectContainer<D3D12Texture>             textures_;
-        HWObjectContainer<D3D12RenderTarget>        renderTargets_;*/
+        //HWObjectContainer<D3D12Texture>             textures_;
+        //HWObjectContainer<D3D12RenderTarget>        renderTargets_;
 
         HWObjectContainer<D3D12Shader>              shaders_;
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;

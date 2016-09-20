@@ -133,7 +133,9 @@ ShadingLanguage D3D12RenderSystem::QueryShadingLanguage() const
 
 RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
+    /* Create new render context and make it the current one */
     auto renderContext = MakeUnique<D3D12RenderContext>(*this, desc, window);
+    MakeCurrent(renderContext.get());
 
     /*
     If render context created it's own window then show it after creation,
@@ -142,6 +144,7 @@ RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescrip
     if (!window)
         renderContext->GetWindow().Show();
 
+    /* Take ownership and return new render context */
     return TakeOwnership(renderContexts_, std::move(renderContext));
 }
 
@@ -542,14 +545,11 @@ void D3D12RenderSystem::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* co
 
 void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 {
-    HRESULT hr = 0;
-
     /* Schedule signal command into the qeue */
-    hr = commandQueue_->Signal(fence_.Get(), fenceValue);
-    DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
+    SignalFenceValue(fenceValue);
 
     /* Wait until the fence has been crossed */
-    hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
+    auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
     DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
     WaitForSingleObjectEx(fenceEvent_, INFINITE, FALSE);
 
@@ -559,13 +559,40 @@ void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 
 void D3D12RenderSystem::SyncGPU()
 {
-    SyncGPU(fenceValue_);
+    if (activeRenderContext_)
+        activeRenderContext_->SyncGPU();
+    else
+        SyncGPU(fenceValue_);
+}
+
+void D3D12RenderSystem::SignalFenceValue(UINT64 fenceValue)
+{
+    /* Schedule signal command into the qeue */
+    auto hr = commandQueue_->Signal(fence_.Get(), fenceValue);
+    DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
+}
+
+void D3D12RenderSystem::WaitForFenceValue(UINT64 fenceValue)
+{
+    /* Wait until the fence has been crossed */
+    if (fence_->GetCompletedValue() < fenceValue)
+    {
+        auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
+        DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
+        WaitForSingleObjectEx(fenceEvent_, INFINITE, FALSE);
+    }
 }
 
 
 /*
  * ======= Private: =======
  */
+
+bool D3D12RenderSystem::OnMakeCurrent(RenderContext* renderContext)
+{
+    activeRenderContext_ = LLGL_CAST(D3D12RenderContext*, renderContext);
+    return true;
+}
 
 #ifdef LLGL_DEBUG
 

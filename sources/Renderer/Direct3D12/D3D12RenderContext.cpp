@@ -408,9 +408,18 @@ void D3D12RenderContext::SetupSwapChainInterval(const VsyncDescriptor& desc)
 
 void D3D12RenderContext::MoveToNextFrame()
 {
-    SyncGPU();
-    //currentFrame_ = (currentFrame_ + 1) % numFrames_;
+    /* Schedule signal command into the qeue */
+    auto currentFenceValue = fenceValues_[currentFrame_];
+    renderSystem_.SignalFenceValue(currentFenceValue);
+
+    /* Advance frame index */
     currentFrame_ = swapChain_->GetCurrentBackBufferIndex();
+
+    /* Check to see if the next frame is ready to start */
+    renderSystem_.WaitForFenceValue(fenceValues_[currentFrame_]);
+
+    /* Set fence value for next frame */
+    fenceValues_[currentFrame_] = currentFenceValue + 1;
 }
 
 void D3D12RenderContext::SetBackBufferRTV()
