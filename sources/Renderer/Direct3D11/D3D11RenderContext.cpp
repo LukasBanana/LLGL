@@ -165,7 +165,8 @@ void D3D11RenderContext::UnsetRenderTarget()
 
 void D3D11RenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    //todo
+    auto& graphicsPipelineD3D = LLGL_CAST(D3D11GraphicsPipeline&, graphicsPipeline);
+    graphicsPipelineD3D.Bind(context_.Get());
 }
 
 void D3D11RenderContext::SetComputePipeline(ComputePipeline& computePipeline)

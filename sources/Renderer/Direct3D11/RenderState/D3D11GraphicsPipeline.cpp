@@ -33,10 +33,32 @@ D3D11GraphicsPipeline::D3D11GraphicsPipeline(
     /* Store D3D primitive topology */
     primitiveTopology_ = D3D11Types::Map(desc.primitiveTopology);
 
+    /* Store D3D stencil reference value */
+    stencilRef_ = desc.stencil.front.reference;
+
     /* Create D3D11 render state objects */
     CreateDepthStencilState(device, desc.depth, desc.stencil);
     CreateRasterizerState(device, desc.rasterizer);
     CreateBlendState(device, desc.blend);
+}
+
+void D3D11GraphicsPipeline::Bind(ID3D11DeviceContext* context)
+{
+    /* Setup input-assembly states */
+    context->IASetPrimitiveTopology(primitiveTopology_);
+
+    /* Setup shader states */
+    if (vs_) { context->VSSetShader(vs_.Get(), nullptr, 0); }
+    if (ps_) { context->PSSetShader(ps_.Get(), nullptr, 0); }
+    if (hs_) { context->HSSetShader(hs_.Get(), nullptr, 0); }
+    if (ds_) { context->DSSetShader(ds_.Get(), nullptr, 0); }
+    if (gs_) { context->GSSetShader(gs_.Get(), nullptr, 0); }
+    if (cs_) { context->CSSetShader(cs_.Get(), nullptr, 0); }
+
+    /* Setup render states */
+    context->RSSetState(rasterizerState_.Get());
+    context->OMSetDepthStencilState(depthStencilState_.Get(), stencilRef_);
+    context->OMSetBlendState(blendState_.Get(), blendFactor_, sampleMask_);
 }
 
 

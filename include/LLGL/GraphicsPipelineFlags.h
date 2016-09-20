@@ -185,6 +185,11 @@ struct StencilFaceDescriptor
     CompareOp       compareOp       = CompareOp::Less;  //!< Specifies the stencil compare operation.
     std::uint32_t   compareMask     = 0;
     std::uint32_t   writeMask       = 0;
+
+    /**
+    \brief Specifies the stencil reference value.
+    \note For Direct3D 11, only the stencil reference value of the "front" face will be used.
+    */
     std::uint32_t   reference       = 0;
 };
 
