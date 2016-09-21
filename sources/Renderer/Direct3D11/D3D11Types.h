@@ -12,6 +12,7 @@
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/RenderContextFlags.h>
+#include <LLGL/SamplerFlags.h>
 #include <d3d11.h>
 
 
@@ -22,15 +23,17 @@ namespace D3D11Types
 {
 
 
-DXGI_FORMAT             Map( const VertexAttribute&     attrib          );
-DXGI_FORMAT             Map( const DataType             dataType        );
-D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology        );
-D3D11_FILL_MODE         Map( const PolygonMode          polygonMode     );
-D3D11_CULL_MODE         Map( const CullMode             cullMode        );
-D3D11_BLEND             Map( const BlendOp              blendOp         );
-D3D11_BLEND_OP          Map( const BlendArithmetic      blendArithmetic );
-D3D11_COMPARISON_FUNC   Map( const CompareOp            compareOp       );
-D3D11_STENCIL_OP        Map( const StencilOp            stencilOp       );
+DXGI_FORMAT                 Map( const VertexAttribute&     attrib          );
+DXGI_FORMAT                 Map( const DataType             dataType        );
+D3D_PRIMITIVE_TOPOLOGY      Map( const PrimitiveTopology    topology        );
+D3D11_FILL_MODE             Map( const PolygonMode          polygonMode     );
+D3D11_CULL_MODE             Map( const CullMode             cullMode        );
+D3D11_BLEND                 Map( const BlendOp              blendOp         );
+D3D11_BLEND_OP              Map( const BlendArithmetic      blendArithmetic );
+D3D11_COMPARISON_FUNC       Map( const CompareOp            compareOp       );
+D3D11_STENCIL_OP            Map( const StencilOp            stencilOp       );
+D3D11_FILTER                Map( const SamplerDescriptor&   samplerDesc     );
+D3D11_TEXTURE_ADDRESS_MODE  Map( const TextureWrap          textureWrap     );
 
 
 } // /namespace D3D11Types

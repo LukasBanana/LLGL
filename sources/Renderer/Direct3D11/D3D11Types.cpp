@@ -126,6 +126,84 @@ D3D11_STENCIL_OP Map(const StencilOp stencilOp)
     DXTypes::MapFailed("StencilOp", "D3D11_STENCIL_OP");
 }
 
+D3D11_FILTER Map(const SamplerDescriptor& samplerDesc)
+{
+    if (samplerDesc.maxAnisotropy > 1)
+        return D3D11_FILTER_ANISOTROPIC;
+
+    switch (samplerDesc.minFilter)
+    {
+        case TextureFilter::Nearest:
+        {
+            switch (samplerDesc.magFilter)
+            {
+                case TextureFilter::Nearest:
+                {
+                    switch (samplerDesc.mipMapFilter)
+                    {
+                        case TextureFilter::Nearest:    return D3D11_FILTER_MIN_MAG_MIP_POINT;
+                        case TextureFilter::Linear:     return D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+                    }
+                }
+                break;
+
+                case TextureFilter::Linear:
+                {
+                    switch (samplerDesc.mipMapFilter)
+                    {
+                        case TextureFilter::Nearest:    return D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
+                        case TextureFilter::Linear:     return D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
+                    }
+                }
+                break;
+            }
+        }
+        break;
+
+        case TextureFilter::Linear:
+        {
+            switch (samplerDesc.magFilter)
+            {
+                case TextureFilter::Nearest:
+                {
+                    switch (samplerDesc.mipMapFilter)
+                    {
+                        case TextureFilter::Nearest:    return D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT;
+                        case TextureFilter::Linear:     return D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+                    }
+                }
+                break;
+
+                case TextureFilter::Linear:
+                {
+                    switch (samplerDesc.mipMapFilter)
+                    {
+                        case TextureFilter::Nearest:    return D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+                        case TextureFilter::Linear:     return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+                    }
+                }
+                break;
+            }
+        }
+        break;
+    }
+
+    DXTypes::MapFailed("SamplerDescriptor", "D3D11_FILTER");
+}
+
+D3D11_TEXTURE_ADDRESS_MODE Map(const TextureWrap textureWrap)
+{
+    switch (textureWrap)
+    {
+        case TextureWrap::Repeat:       return D3D11_TEXTURE_ADDRESS_WRAP;
+        case TextureWrap::Mirror:       return D3D11_TEXTURE_ADDRESS_MIRROR;
+        case TextureWrap::Clamp:        return D3D11_TEXTURE_ADDRESS_CLAMP;
+        case TextureWrap::Border:       return D3D11_TEXTURE_ADDRESS_BORDER;
+        case TextureWrap::MirrorOnce:   return D3D11_TEXTURE_ADDRESS_MIRROR_ONCE;
+    }
+    DXTypes::MapFailed("TextureWrap", "D3D11_TEXTURE_ADDRESS_MODE");
+}
+
 
 } // /namespace D3D11Types
 
