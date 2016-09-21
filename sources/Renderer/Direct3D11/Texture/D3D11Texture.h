@@ -53,6 +53,12 @@ class D3D11Texture : public Texture
         void CreateTexture2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr);
         void CreateTexture3D(ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr);
 
+        void UpdateSubresource(
+            ID3D11DeviceContext* context,
+            UINT mipSlice, UINT arraySlice, const D3D11_BOX& destBox,
+            const ImageDataDescriptor& imageDesc
+        );
+
         inline const D3D11HardwareTexture& GetHardwareTexture() const
         {
             return hardwareTexture_;
@@ -64,12 +70,26 @@ class D3D11Texture : public Texture
             return srv_.Get();
         }
 
+        inline UINT GetNumMipLevels() const
+        {
+            return numMipLevels_;
+        }
+
+    protected:
+
+        friend class D3D11RenderSystem;
+
+        void SetType(const TextureType type);
+
     private:
 
         void CreateSRV(ID3D11Device* device);
+        void StoreNumMipLevels(UINT width, UINT height, UINT depth);
 
         D3D11HardwareTexture                hardwareTexture_;
         ComPtr<ID3D11ShaderResourceView>    srv_;
+
+        UINT                                numMipLevels_       = 0;
 
 };
 

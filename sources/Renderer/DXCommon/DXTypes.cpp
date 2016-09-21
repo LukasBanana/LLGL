@@ -166,6 +166,71 @@ DXGI_FORMAT Map(const DataType dataType)
     MapFailed("DataType", "DXGI_FORMAT");
 }
 
+DXGI_FORMAT Map(const TextureFormat textureFormat)
+{
+    switch (textureFormat)
+    {
+        /* --- Base internal formats --- */
+        case TextureFormat::DepthComponent: return DXGI_FORMAT_D32_FLOAT;
+        case TextureFormat::DepthStencil:   return DXGI_FORMAT_D24_UNORM_S8_UINT;
+        case TextureFormat::R:              return DXGI_FORMAT_R8_UNORM;
+        case TextureFormat::RG:             return DXGI_FORMAT_R8G8_UNORM;
+        case TextureFormat::RGB:            return DXGI_FORMAT_R8G8B8A8_UNORM; // there is no RGB only DXGI format
+        case TextureFormat::RGBA:           return DXGI_FORMAT_R8G8B8A8_UNORM;
+
+        /* --- Sized internal formats --- */
+        case TextureFormat::R8:             return DXGI_FORMAT_R8_UNORM;
+        case TextureFormat::R8Sgn:          return DXGI_FORMAT_R8_SNORM;
+
+        case TextureFormat::R16:            return DXGI_FORMAT_R16_UNORM;
+        case TextureFormat::R16Sgn:         return DXGI_FORMAT_R16_SNORM;
+        case TextureFormat::R16Float:       return DXGI_FORMAT_R16_FLOAT;
+
+        case TextureFormat::R32UInt:        return DXGI_FORMAT_R32_UINT;
+        case TextureFormat::R32SInt:        return DXGI_FORMAT_R32_SINT;
+        case TextureFormat::R32Float:       return DXGI_FORMAT_R32_FLOAT;
+
+        case TextureFormat::RG8:            return DXGI_FORMAT_R8G8_UNORM;
+        case TextureFormat::RG8Sgn:         return DXGI_FORMAT_R8G8_SNORM;
+
+        case TextureFormat::RG16:           return DXGI_FORMAT_R16G16_UNORM;
+        case TextureFormat::RG16Sgn:        return DXGI_FORMAT_R16G16_SNORM;
+        case TextureFormat::RG16Float:      return DXGI_FORMAT_R16G16_FLOAT;
+
+        case TextureFormat::RG32UInt:       return DXGI_FORMAT_R32G32_UINT;
+        case TextureFormat::RG32SInt:       return DXGI_FORMAT_R32G32_SINT;
+        case TextureFormat::RG32Float:      return DXGI_FORMAT_R32G32_FLOAT;
+
+        case TextureFormat::RGB8:           return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case TextureFormat::RGB8Sgn:        return DXGI_FORMAT_R8G8B8A8_SNORM;
+
+        case TextureFormat::RGB16:          return DXGI_FORMAT_R16G16B16A16_UNORM;
+        case TextureFormat::RGB16Sgn:       return DXGI_FORMAT_R16G16B16A16_SNORM;
+        case TextureFormat::RGB16Float:     return DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+        case TextureFormat::RGB32UInt:      return DXGI_FORMAT_R32G32B32A32_UINT;
+        case TextureFormat::RGB32SInt:      return DXGI_FORMAT_R32G32B32A32_SINT;
+        case TextureFormat::RGB32Float:     return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+        case TextureFormat::RGBA8:          return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case TextureFormat::RGBA8Sgn:       return DXGI_FORMAT_R8G8B8A8_SNORM;
+
+        case TextureFormat::RGBA16:         return DXGI_FORMAT_R16G16B16A16_UNORM;
+        case TextureFormat::RGBA16Sgn:      return DXGI_FORMAT_R16G16B16A16_SNORM;
+        case TextureFormat::RGBA16Float:    return DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+        case TextureFormat::RGBA32UInt:     return DXGI_FORMAT_R32G32B32A32_UINT;
+        case TextureFormat::RGBA32SInt:     return DXGI_FORMAT_R32G32B32A32_SINT;
+        case TextureFormat::RGBA32Float:    return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+        /* --- Compressed formats --- */
+        case TextureFormat::RGB_DXT1:       return DXGI_FORMAT_BC1_UNORM;
+        case TextureFormat::RGBA_DXT1:      return DXGI_FORMAT_BC1_UNORM;
+        case TextureFormat::RGBA_DXT3:      return DXGI_FORMAT_BC2_UNORM;
+        case TextureFormat::RGBA_DXT5:      return DXGI_FORMAT_BC3_UNORM;
+    }
+    MapFailed("TextureFormat", "DXGI_FORMAT");
+}
 
 D3D_PRIMITIVE_TOPOLOGY Map(const PrimitiveTopology topology)
 {

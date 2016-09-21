@@ -17,6 +17,8 @@
 #include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
+#include "Texture/D3D11Texture.h"
+#include "Texture/D3D11Sampler.h"
 
 
 namespace LLGL
@@ -144,15 +146,17 @@ void D3D11RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 
 void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
 {
+    /* Set constant buffer resource to all shader stages */
     auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, constantBuffer);
 
-    ID3D11Buffer* buffers[] = { constantBufferD3D.hwBuffer.Get() };
-    context_->VSSetConstantBuffers(slot, 1, buffers);
-    context_->HSSetConstantBuffers(slot, 1, buffers);
-    context_->DSSetConstantBuffers(slot, 1, buffers);
-    context_->GSSetConstantBuffers(slot, 1, buffers);
-    context_->PSSetConstantBuffers(slot, 1, buffers);
-    context_->CSSetConstantBuffers(slot, 1, buffers);
+    auto resource = constantBufferD3D.hwBuffer.Get();
+
+    context_->VSSetConstantBuffers(slot, 1, &resource);
+    context_->HSSetConstantBuffers(slot, 1, &resource);
+    context_->DSSetConstantBuffers(slot, 1, &resource);
+    context_->GSSetConstantBuffers(slot, 1, &resource);
+    context_->PSSetConstantBuffers(slot, 1, &resource);
+    context_->CSSetConstantBuffers(slot, 1, &resource);
 }
 
 void D3D11RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
@@ -174,19 +178,41 @@ void D3D11RenderContext::UnmapStorageBuffer()
 
 void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot)
 {
-    //todo
+    /* Set texture resource to all shader stages */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+
+    auto resource = textureD3D.GetSRV();
+
+    context_->VSSetShaderResources(slot, 1, &resource);
+    context_->PSSetShaderResources(slot, 1, &resource);
+    context_->GSSetShaderResources(slot, 1, &resource);
+    context_->HSSetShaderResources(slot, 1, &resource);
+    context_->DSSetShaderResources(slot, 1, &resource);
+    context_->CSSetShaderResources(slot, 1, &resource);
 }
 
 void D3D11RenderContext::GenerateMips(Texture& texture)
 {
-    //todo
+    /* Generate MIP-maps for SRV of specified texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    context_->GenerateMips(textureD3D.GetSRV());
 }
 
 /* ----- Sampler States ----- */
 
 void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot)
 {
-    //todo
+    /* Set sampler state object to all shader stages */
+    auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
+
+    auto resource = samplerD3D.GetSamplerState();
+
+    context_->VSSetSamplers(slot, 1, &resource);
+    context_->PSSetSamplers(slot, 1, &resource);
+    context_->GSSetSamplers(slot, 1, &resource);
+    context_->HSSetSamplers(slot, 1, &resource);
+    context_->DSSetSamplers(slot, 1, &resource);
+    context_->CSSetSamplers(slot, 1, &resource);
 }
 
 /* ----- Render Targets ----- */

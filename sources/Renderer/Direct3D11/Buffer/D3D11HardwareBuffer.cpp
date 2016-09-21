@@ -31,6 +31,7 @@ void D3D11HardwareBuffer::CreateResource(ID3D11Device* device, const D3D11_BUFFE
     DXThrowIfFailed(hr, "failed to create D3D11 buffer");
 }
 
+//TODO -> 'srcRowPitch' and 'srcDepthPitch' will possible never used!!!
 void D3D11HardwareBuffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data, const D3D11_BOX& destBox, UINT srcRowPitch, UINT srcDepthPitch)
 {
     context->UpdateSubresource(buffer_.Get(), 0, &destBox, data, srcRowPitch, srcDepthPitch);

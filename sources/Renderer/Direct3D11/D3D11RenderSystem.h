@@ -24,6 +24,9 @@
 #include "Shader/D3D11Shader.h"
 #include "Shader/D3D11ShaderProgram.h"
 
+#include "Texture/D3D11Texture.h"
+#include "Texture/D3D11Sampler.h"
+
 #include "../ContainerTypes.h"
 #include "../ComPtr.h"
 #include <d3d11.h>
@@ -175,6 +178,24 @@ class D3D11RenderSystem : public RenderSystem
         void CreateDevice(IDXGIAdapter* adapter);
         void InitStateManager();
 
+        void SetupGenericTexture1D(
+            D3D11Texture& textureD3D,
+            const TextureFormat format, int size, unsigned int layers,
+            const ImageDataDescriptor* imageDesc, UINT miscFlags
+        );
+
+        void SetupGenericTexture2D(
+            D3D11Texture& textureD3D,
+            const TextureFormat format, const Gs::Vector2i& size, unsigned int layers,
+            const ImageDataDescriptor* imageDesc, UINT miscFlags
+        );
+
+        void SetupGenericTexture3D(
+            D3D11Texture& textureD3D,
+            const TextureFormat format, const Gs::Vector3i& size,
+            const ImageDataDescriptor* imageDesc, UINT miscFlags
+        );
+
         /* ----- Common objects ----- */
 
         ComPtr<IDXGIFactory>                        factory_;
@@ -193,14 +214,14 @@ class D3D11RenderSystem : public RenderSystem
         HWObjectContainer<D3D11ConstantBuffer>      constantBuffers_;
         //HWObjectContainer<D3D11StorageBuffer>       storageBuffers_;
 
-        //HWObjectContainer<D3D11Texture>             textures_;
+        HWObjectContainer<D3D11Texture>             textures_;
         //HWObjectContainer<D3D11RenderTarget>        renderTargets_;
 
         HWObjectContainer<D3D11Shader>              shaders_;
         HWObjectContainer<D3D11ShaderProgram>       shaderPrograms_;
 
         HWObjectContainer<D3D11GraphicsPipeline>    graphicsPipelines_;
-        //HWObjectContainer<D3D11Sampler>             samplers_;
+        HWObjectContainer<D3D11Sampler>             samplers_;
 
         /* ----- Other members ----- */
 

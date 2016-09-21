@@ -12,6 +12,7 @@
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/TextureFlags.h>
 #include <dxgiformat.h>
 #include <d3dcommon.h>
 
@@ -32,6 +33,7 @@ void UnmapFailed(const std::string& typeName, const std::string& dxTypeName);
 
 DXGI_FORMAT             Map( const VertexAttribute&     attrib          );
 DXGI_FORMAT             Map( const DataType             dataType        );
+DXGI_FORMAT             Map( const TextureFormat        textureFormat   );
 D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology        );
 
 

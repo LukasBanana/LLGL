@@ -28,6 +28,11 @@ DXGI_FORMAT Map(const DataType dataType)
     return DXTypes::Map(dataType);
 }
 
+DXGI_FORMAT Map(const TextureFormat textureFormat)
+{
+    return DXTypes::Map(textureFormat);
+}
+
 D3D_PRIMITIVE_TOPOLOGY Map(const PrimitiveTopology topology)
 {
     return DXTypes::Map(topology);

@@ -24,7 +24,7 @@ class Tutorial03 : public Tutorial
 public:
 
     Tutorial03() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 03: Texturing")
+        Tutorial( "Direct3D11", L"LLGL Tutorial 03: Texturing")
     {
         // Check if samplers are supported
         auto renderCaps = renderer->QueryRenderingCaps();
@@ -82,12 +82,19 @@ public:
 
     void CreateTextures()
     {
+        std::string texFilename = "colorMap.png";
+
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         int texWidth = 0, texHeight = 0, texComponents = 0;
 
-        unsigned char* imageBuffer = stbi_load("colorMap.jpg", &texWidth, &texHeight, &texComponents, 3);
+        unsigned char* imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 3);
         if (!imageBuffer)
-            throw std::runtime_error("failed to open file: \"colorMap.jpg\"");
+            throw std::runtime_error("failed to open file: \"" + texFilename + "\"");
+
+        #if 1
+        imageBuffer = stbi__convert_format(imageBuffer, texComponents, 4, texWidth, texHeight);
+        texComponents = 4;
+        #endif
 
         // Create texture
         colorMap = renderer->CreateTexture();

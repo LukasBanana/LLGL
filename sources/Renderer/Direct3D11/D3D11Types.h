@@ -13,6 +13,7 @@
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/SamplerFlags.h>
+#include <LLGL/TextureFlags.h>
 #include <d3d11.h>
 
 
@@ -25,6 +26,7 @@ namespace D3D11Types
 
 DXGI_FORMAT                 Map( const VertexAttribute&     attrib          );
 DXGI_FORMAT                 Map( const DataType             dataType        );
+DXGI_FORMAT                 Map( const TextureFormat        textureFormat   );
 D3D_PRIMITIVE_TOPOLOGY      Map( const PrimitiveTopology    topology        );
 D3D11_FILL_MODE             Map( const PolygonMode          polygonMode     );
 D3D11_CULL_MODE             Map( const CullMode             cullMode        );

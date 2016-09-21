@@ -172,12 +172,12 @@ void D3D11RenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const v
 
 Texture* D3D11RenderSystem::CreateTexture()
 {
-    return nullptr;//TakeOwnership(textures_, MakeUnique<D3D11Texture>());
+    return TakeOwnership(textures_, MakeUnique<D3D11Texture>());
 }
 
 void D3D11RenderSystem::Release(Texture& texture)
 {
-    //RemoveFromUniqueSet(textures_, &texture);
+    RemoveFromUniqueSet(textures_, &texture);
 }
 
 TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& texture)
@@ -193,37 +193,58 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
 
 void D3D11RenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDataDescriptor* imageDesc)
 {
-    //todo
+    /* Get D3D texture, set type, and create generic 1D-texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    textureD3D.SetType(TextureType::Texture1D);
+    SetupGenericTexture1D(textureD3D, format, size, 1, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
 {
-    //todo
+    /* Get D3D texture, set type, and create generic 2D-texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    textureD3D.SetType(TextureType::Texture2D);
+    SetupGenericTexture2D(textureD3D, format, size, 1, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDataDescriptor* imageDesc)
 {
-    //todo
+    /* Get D3D texture, set type, and create generic 1D-texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    textureD3D.SetType(TextureType::Texture3D);
+    SetupGenericTexture3D(textureD3D, format, size, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc)
 {
-    //todo
+    /* Get D3D texture, set type, and create generic 2D-texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    textureD3D.SetType(TextureType::TextureCube);
+    SetupGenericTexture2D(textureD3D, format, size, 6, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
 }
 
 void D3D11RenderSystem::SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
-    //todo
+    /* Get D3D texture, set type, and create generic 1D-texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    textureD3D.SetType(TextureType::Texture1DArray);
+    SetupGenericTexture1D(textureD3D, format, size, layers, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
-    //todo
+    /* Get D3D texture, set type, and create generic 2D-texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    textureD3D.SetType(TextureType::Texture2DArray);
+    SetupGenericTexture2D(textureD3D, format, size, layers, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc)
 {
-    //todo
+    /* Get D3D texture, set type, and create generic 2D-texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    textureD3D.SetType(TextureType::TextureCubeArray);
+    SetupGenericTexture2D(textureD3D, format, size, layers*6, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
 }
 
 void D3D11RenderSystem::WriteTexture1D(
@@ -282,12 +303,12 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorF
 
 Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(samplers_, MakeUnique<D3D11Sampler>(device_.Get(), desc));
 }
 
 void D3D11RenderSystem::Release(Sampler& sampler)
 {
-    //RemoveFromUniqueSet(samplers_, &sampler);
+    RemoveFromUniqueSet(samplers_, &sampler);
 }
 
 /* ----- Render Targets ----- */
@@ -425,6 +446,100 @@ void D3D11RenderSystem::InitStateManager()
 {
     /* Create state manager */
     stateMngr_ = MakeUnique<D3D11StateManager>(context_);
+}
+
+void D3D11RenderSystem::SetupGenericTexture1D(
+    D3D11Texture& textureD3D, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc, UINT miscFlags)
+{
+    /* Setup D3D texture descriptor */
+    D3D11_TEXTURE1D_DESC texDesc;
+    {
+        texDesc.Width           = static_cast<UINT>(size);
+        texDesc.MipLevels       = 0;
+        texDesc.ArraySize       = layers;
+        texDesc.Format          = D3D11Types::Map(format);
+        texDesc.Usage           = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+        texDesc.CPUAccessFlags  = 0;
+        texDesc.MiscFlags       = miscFlags;
+    }
+
+    /* Create D3D texture resource */
+    textureD3D.CreateTexture1D(device_.Get(), texDesc);
+
+    if (imageDesc)
+    {
+        //TODO -> convert source data if it does not match the DXGI_FORMAT!!!
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size, layers, 1), *imageDesc);
+    }
+    else
+    {
+        //TODO -> fill texture with default data
+    }
+}
+
+void D3D11RenderSystem::SetupGenericTexture2D(
+    D3D11Texture& textureD3D, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc, UINT miscFlags)
+{
+    /* Setup D3D texture descriptor */
+    D3D11_TEXTURE2D_DESC texDesc;
+    {
+        texDesc.Width               = static_cast<UINT>(size.x);
+        texDesc.Height              = static_cast<UINT>(size.y);
+        texDesc.MipLevels           = 0;
+        texDesc.ArraySize           = layers;
+        texDesc.Format              = D3D11Types::Map(format);
+        texDesc.SampleDesc.Count    = 1;
+        texDesc.SampleDesc.Quality  = 0;
+        texDesc.Usage               = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+        texDesc.CPUAccessFlags      = 0;
+        texDesc.MiscFlags           = miscFlags;
+    }
+
+    /* Create D3D texture resource */
+    textureD3D.CreateTexture2D(device_.Get(), texDesc);
+
+    if (imageDesc)
+    {
+        //TODO -> convert source data if it does not match the DXGI_FORMAT!!!
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, layers), *imageDesc);
+    }
+    else
+    {
+        //TODO -> fill texture with default data
+    }
+}
+
+void D3D11RenderSystem::SetupGenericTexture3D(
+    D3D11Texture& textureD3D, const TextureFormat format, const Gs::Vector3i& size, const ImageDataDescriptor* imageDesc, UINT miscFlags)
+{
+    /* Setup D3D texture descriptor */
+    D3D11_TEXTURE3D_DESC texDesc;
+    {
+        texDesc.Width           = static_cast<UINT>(size.x);
+        texDesc.Height          = static_cast<UINT>(size.y);
+        texDesc.Depth           = static_cast<UINT>(size.z);
+        texDesc.MipLevels       = 0;
+        texDesc.Format          = D3D11Types::Map(format);
+        texDesc.Usage           = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+        texDesc.CPUAccessFlags  = 0;
+        texDesc.MiscFlags       = miscFlags;
+    }
+
+    /* Create D3D texture resource */
+    textureD3D.CreateTexture3D(device_.Get(), texDesc);
+
+    if (imageDesc)
+    {
+        //TODO -> convert source data if it does not match the DXGI_FORMAT!!!
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, size.z), *imageDesc);
+    }
+    else
+    {
+        //TODO -> fill texture with default data
+    }
 }
 
 
