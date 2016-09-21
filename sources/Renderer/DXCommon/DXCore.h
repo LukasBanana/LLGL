@@ -26,7 +26,7 @@ namespace LLGL
 struct D3DClearState
 {
     ColorRGBAf  color   = { 0.0f, 0.0f, 0.0f, 0.0f };
-    FLOAT       depth   = 0.0f;
+    FLOAT       depth   = 1.0f;
     UINT8       stencil = 0;
 };
 

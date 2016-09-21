@@ -110,7 +110,7 @@ class LLGL_EXPORT RenderContext
         //! Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
         virtual void SetClearColor(const ColorRGBAf& color) = 0;
 
-        //! Sets the new value to clear the depth buffer with. By default 0.0.
+        //! Sets the new value to clear the depth buffer with. By default 1.0.
         virtual void SetClearDepth(float depth) = 0;
 
         //! Sets the new value to clear the stencil buffer. By default 0.
