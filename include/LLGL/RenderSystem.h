@@ -66,10 +66,10 @@ class LLGL_EXPORT RenderSystem
         struct Configuration
         {
             /**
-            \brief Default color for an uninitialized texture. The default value is white (255, 255, 255, 255).
+            \brief Default color for an uninitialized textures. The default value is white (255, 255, 255, 255).
             \remarks This will be used for each "SetupTexture..." function (not the "WriteTexture..." functions), when no initial image data is specified.
             */
-            ColorRGBAub defaultTextureImageColor;
+            ColorRGBAub defaultImageColor;
         };
 
         /* ----- Common ----- */
