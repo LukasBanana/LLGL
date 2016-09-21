@@ -45,7 +45,7 @@ enum class TextureFormat
     DepthStencil,   //!< Base format: depth- and stencil components.
     R,              //!< Base format: red component.
     RG,             //!< Base format: red and green components.
-    RGB,            //!< Base format: red, green and blue components.
+    RGB,            //!< Base format: red, green and blue components. \note Only supported with: OpenGL.
     RGBA,           //!< Base format: red, green, blue and alpha components.
 
     /* --- Sized formats --- */
@@ -71,12 +71,12 @@ enum class TextureFormat
     RG32SInt,       //!< Sized format: red, green 32-bit un-normalized signed interger components.
     RG32Float,      //!< Sized format: red, green 32-bit floating point components.
 
-    RGB8,           //!< Sized format: red, green, blue 8-bit normalized unsigned integer components.
-    RGB8Sgn,        //!< Sized format: red, green, blue 8-bit normalized signed integer components.
+    RGB8,           //!< Sized format: red, green, blue 8-bit normalized unsigned integer components. \note Only supported with: OpenGL.
+    RGB8Sgn,        //!< Sized format: red, green, blue 8-bit normalized signed integer components. \note Only supported with: OpenGL.
 
-    RGB16,          //!< Sized format: red, green, blue 16-bit normalized unsigned interger components.
-    RGB16Sgn,       //!< Sized format: red, green, blue 16-bit normalized signed interger components.
-    RGB16Float,     //!< Sized format: red, green, blue 16-bit floating point components.
+    RGB16,          //!< Sized format: red, green, blue 16-bit normalized unsigned interger components. \note Only supported with: OpenGL.
+    RGB16Sgn,       //!< Sized format: red, green, blue 16-bit normalized signed interger components. \note Only supported with: OpenGL.
+    RGB16Float,     //!< Sized format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL.
 
     RGB32UInt,      //!< Sized format: red, green, blue 32-bit un-normalized unsigned interger components.
     RGB32SInt,      //!< Sized format: red, green, blue 32-bit un-normalized signed interger components.

@@ -111,7 +111,7 @@ public:
             // Set image buffer data type (unsigned char = 8-bit unsigned integer)
             imageDesc.dataType      = LLGL::DataType::UInt8;
         }
-        renderer->SetupTexture2D(*colorMap, LLGL::TextureFormat::RGB, Gs::Vector2i(texWidth, texHeight), &imageDesc);
+        renderer->SetupTexture2D(*colorMap, LLGL::TextureFormat::RGBA, Gs::Vector2i(texWidth, texHeight), &imageDesc);
 
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping

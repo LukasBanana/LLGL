@@ -262,7 +262,7 @@ bool operator != (const Color<T, N>& lhs, const Color<T, N>& rhs)
 }
 
 
-} // /namespace Gs
+} // /namespace LLGL
 
 
 #endif
