@@ -91,7 +91,7 @@ public:
         if (!imageBuffer)
             throw std::runtime_error("failed to open file: \"" + texFilename + "\"");
 
-        #if 1
+        #if 0
         imageBuffer = stbi__convert_format(imageBuffer, texComponents, 4, texWidth, texHeight);
         texComponents = 4;
         #endif

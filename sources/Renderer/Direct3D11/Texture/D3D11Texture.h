@@ -55,7 +55,7 @@ class D3D11Texture : public Texture
 
         void UpdateSubresource(
             ID3D11DeviceContext* context,
-            UINT mipSlice, UINT arraySlice, const D3D11_BOX& destBox,
+            UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox,
             const ImageDataDescriptor& imageDesc
         );
 
@@ -68,6 +68,11 @@ class D3D11Texture : public Texture
         inline ID3D11ShaderResourceView* GetSRV() const
         {
             return srv_.Get();
+        }
+
+        inline DXGI_FORMAT GetFormat() const
+        {
+            return format_;
         }
 
         inline UINT GetNumMipLevels() const
@@ -83,12 +88,12 @@ class D3D11Texture : public Texture
 
     private:
 
-        void CreateSRV(ID3D11Device* device);
-        void StoreNumMipLevels(UINT width, UINT height, UINT depth);
+        void CreateSRVAndStoreSettings(ID3D11Device* device, DXGI_FORMAT format, UINT width, UINT height, UINT depth);
 
         D3D11HardwareTexture                hardwareTexture_;
         ComPtr<ID3D11ShaderResourceView>    srv_;
 
+        DXGI_FORMAT                         format_             = DXGI_FORMAT_UNKNOWN;
         UINT                                numMipLevels_       = 0;
 
 };

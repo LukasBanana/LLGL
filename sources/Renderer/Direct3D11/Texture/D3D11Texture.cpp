@@ -6,6 +6,7 @@
  */
 
 #include "D3D11Texture.h"
+#include <LLGL/ImageConverter.h>
 #include "../../DXCommon/DXCore.h"
 
 
@@ -71,8 +72,7 @@ void D3D11Texture::CreateTexture1D(ID3D11Device* device, const D3D11_TEXTURE1D_D
     auto hr = device->CreateTexture1D(&desc, initialData, &hardwareTexture_.tex1D);
     DXThrowIfFailed(hr, "failed to create D3D11 1D-texture");
 
-    CreateSRV(device);
-    StoreNumMipLevels(desc.Width, 1, 1);
+    CreateSRVAndStoreSettings(device, desc.Format, desc.Width, 1, 1);
 }
 
 void D3D11Texture::CreateTexture2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData)
@@ -82,8 +82,7 @@ void D3D11Texture::CreateTexture2D(ID3D11Device* device, const D3D11_TEXTURE2D_D
     auto hr = device->CreateTexture2D(&desc, initialData, &hardwareTexture_.tex2D);
     DXThrowIfFailed(hr, "failed to create D3D11 2D-texture");
 
-    CreateSRV(device);
-    StoreNumMipLevels(desc.Width, desc.Height, 1);
+    CreateSRVAndStoreSettings(device, desc.Format, desc.Width, desc.Height, 1);
 }
 
 void D3D11Texture::CreateTexture3D(ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData)
@@ -93,26 +92,53 @@ void D3D11Texture::CreateTexture3D(ID3D11Device* device, const D3D11_TEXTURE3D_D
     auto hr = device->CreateTexture3D(&desc, initialData, &hardwareTexture_.tex3D);
     DXThrowIfFailed(hr, "failed to create D3D11 3D-texture");
 
-    CreateSRV(device);
-    StoreNumMipLevels(desc.Width, desc.Height, desc.Depth);
+    CreateSRVAndStoreSettings(device, desc.Format, desc.Width, desc.Height, desc.Depth);
 }
 
 void D3D11Texture::UpdateSubresource(
-    ID3D11DeviceContext* context, UINT mipSlice, UINT arraySlice, const D3D11_BOX& destBox, const ImageDataDescriptor& imageDesc)
+    ID3D11DeviceContext* context, UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox, const ImageDataDescriptor& imageDesc)
 {
     /* Get destination subresource index */
     auto dstSubresource = D3D11CalcSubresource(mipSlice, arraySlice, numMipLevels_);
+    auto srcPitch       = DataTypeSize(imageDesc.dataType)*ColorFormatSize(imageDesc.dataFormat);
 
-    /* Get source data stride */
-    auto pitchPerPixel  = DataTypeSize(imageDesc.dataType)*ColorFormatSize(imageDesc.dataFormat);
-    auto srcRowPitch    = (destBox.right - destBox.left)*pitchPerPixel;
-    auto srcDepthPitch  = (destBox.bottom - destBox.top)*srcRowPitch;
+    if (imageDesc.dataFormat == ColorFormat::RGB) // <-- TODO: just for testing right now!!!
+    {
+        if (imageDesc.dataType == DataType::UInt8)
+        {
+            /* Get source data stride */
+            auto srcRowPitch    = (dstBox.right - dstBox.left)*srcPitch;
+            auto srcDepthPitch  = (dstBox.bottom - dstBox.top)*srcRowPitch;
+            auto imageSize      = (dstBox.back - dstBox.front)*srcDepthPitch;
 
-    /* Update subresource with specified image data */
-    context->UpdateSubresource(
-        hardwareTexture_.resource.Get(), dstSubresource,
-        &destBox, imageDesc.data, srcRowPitch, srcDepthPitch
-    );
+            /* Convert image data from RGB to RGBA */
+            auto tempData = ImageConverter::RGBtoRGBA_UInt8(reinterpret_cast<const unsigned char*>(imageDesc.data), imageSize);
+
+            /* Get new source data stride */
+            srcPitch        = DataTypeSize(imageDesc.dataType)*ColorFormatSize(ColorFormat::RGBA);
+            srcRowPitch     = (dstBox.right - dstBox.left)*srcPitch;
+            srcDepthPitch   = (dstBox.bottom - dstBox.top)*srcRowPitch;
+            imageSize       = (dstBox.back - dstBox.front)*srcDepthPitch;
+
+            /* Update subresource with specified image data */
+            context->UpdateSubresource(
+                hardwareTexture_.resource.Get(), dstSubresource,
+                &dstBox, tempData.data(), srcRowPitch, srcDepthPitch
+            );
+        }
+    }
+    else
+    {
+        /* Get source data stride */
+        auto srcRowPitch    = (dstBox.right - dstBox.left)*srcPitch;
+        auto srcDepthPitch  = (dstBox.bottom - dstBox.top)*srcRowPitch;
+
+        /* Update subresource with specified image data */
+        context->UpdateSubresource(
+            hardwareTexture_.resource.Get(), dstSubresource,
+            &dstBox, imageDesc.data, srcRowPitch, srcDepthPitch
+        );
+    }
 }
 
 
@@ -130,15 +156,15 @@ void D3D11Texture::SetType(const TextureType type)
  * ====== Private: ======
  */
 
-void D3D11Texture::CreateSRV(ID3D11Device* device)
+void D3D11Texture::CreateSRVAndStoreSettings(ID3D11Device* device, DXGI_FORMAT format, UINT width, UINT height, UINT depth)
 {
+    /* Create SRV for D3D texture */
     auto hr = device->CreateShaderResourceView(hardwareTexture_.resource.Get(), nullptr, &srv_);
     DXThrowIfFailed(hr, "failed to create D3D11 shader-resouce-view (SRV) for texture");
-}
 
-void D3D11Texture::StoreNumMipLevels(UINT width, UINT height, UINT depth)
-{
-    numMipLevels_ = NumMipLevels(Gs::Vector3ui(width, height, depth).Cast<int>());
+    /* Store format and number of MIP-maps */
+    format_         = format;
+    numMipLevels_   = NumMipLevels(Gs::Vector3ui(width, height, depth).Cast<int>());
 }
 
 
