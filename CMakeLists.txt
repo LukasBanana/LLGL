@@ -123,7 +123,7 @@ file(GLOB FilesRendererD3D12RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/
 file(GLOB FilesRendererD3D11				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/*.*)
 file(GLOB FilesRendererD3D11Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/*.*)
 file(GLOB FilesRendererD3D11Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Buffer/*.*)
-#file(GLOB FilesRendererD3D11Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Texture/*.*)
+file(GLOB FilesRendererD3D11Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Texture/*.*)
 file(GLOB FilesRendererD3D11RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/RenderState/*.*)
 
 # Vulkan renderer files
@@ -138,6 +138,7 @@ set(FilesTest4 ${PROJECT_SOURCE_DIR}/test/Test4_Compute.cpp)
 # Tutorial files
 set(FilesTutorial01 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial01_HelloTriangle/main.cpp)
 set(FilesTutorial02 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial02_Tessellation/main.cpp)
+set(FilesTutorial03 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial03_Texturing/main.cpp)
 
 
 # === Source group folders ===
@@ -200,7 +201,7 @@ source_group(
 	"Sources\\Renderer\\Texture" FILES
 	${FilesRendererGLTexture}
 #	${FilesRendererD3D12Texture}
-#	${FilesRendererD3D11Texture}
+	${FilesRendererD3D11Texture}
 )
 
 source_group(
@@ -262,7 +263,7 @@ set(
 	${FilesRendererD3D11}
 	${FilesRendererD3D11Shader}
 	${FilesRendererD3D11Buffer}
-#	${FilesRendererD3D11Texture}
+	${FilesRendererD3D11Texture}
 	${FilesRendererD3D11RenderState}
 	${FilesRendererDXCommon}
 )
@@ -317,5 +318,6 @@ endif()
 ADD_TEST_PROJECT(Test4_Compute ${FilesTest4})
 ADD_TEST_PROJECT(Tutorial01_HelloTriangle ${FilesTutorial01})
 ADD_TEST_PROJECT(Tutorial02_Tessellation ${FilesTutorial02})
+ADD_TEST_PROJECT(Tutorial03_Texturing ${FilesTutorial03})
 
 

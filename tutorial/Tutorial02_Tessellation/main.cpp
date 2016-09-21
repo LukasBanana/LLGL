@@ -19,7 +19,7 @@ class Tutorial02 : public Tutorial
 {
 
     LLGL::ShaderProgram*    shaderProgram       = nullptr;
-    LLGL::GraphicsPipeline* pipeline[2]         = { nullptr, nullptr };
+    LLGL::GraphicsPipeline* pipeline[2]         = { nullptr };
 
     LLGL::VertexBuffer*     vertexBuffer        = nullptr;
     LLGL::IndexBuffer*      indexBuffer         = nullptr;
@@ -46,7 +46,7 @@ public:
     Tutorial02() :
         Tutorial( "Direct3D11", L"LLGL Tutorial 02: Tessellation")//, { 800, 600 }, 0 )
     {
-        // Check if constant buffers are supported
+        // Check if constant buffers and tessellation shaders are supported
         auto renderCaps = renderer->QueryRenderingCaps();
 
         if (!renderCaps.hasConstantBuffers)
@@ -54,12 +54,41 @@ public:
         if (!renderCaps.hasTessellationShaders)
             throw std::runtime_error("tessellation shaders are not supported by this renderer");
 
+        // Create graphics object
+        auto vertexFormat = CreateBuffers();
+        LoadShaders(vertexFormat, renderCaps.hasHLSL);
+        CreatePipelines();
+        InitProjection();
+
+        // Print some information on the standard output
+        std::cout << "press LEFT MOUSE BUTTON and move mouse on X axis to increase/decrease inner tessellation" << std::endl;
+        std::cout << "press RIGHT MOUSE BUTTON and move mouse on X axis to increase/decrease outer tessellation" << std::endl;
+        std::cout << "press MIDDLE MOUSE BUTTON and move mouse on X axis to increase/decrease twist" << std::endl;
+        std::cout << "press TAB KEY to switch between wireframe modes" << std::endl;
+        ShowTessLevel();
+    }
+
+    LLGL::VertexFormat CreateBuffers()
+    {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 3);
 
+        // Create vertex- and index buffers for a simple 3D cube model
+        vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
+        indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt32);
+
+        // Create constant buffer
+        constantBuffer = renderer->CreateConstantBuffer();
+        renderer->SetupConstantBuffer(*constantBuffer, nullptr, sizeof(Settings), LLGL::BufferUsage::Dynamic);
+
+        return vertexFormat;
+    }
+
+    void LoadShaders(const LLGL::VertexFormat& vertexFormat, bool loadHLSL)
+    {
         // Load shader program
-        if (renderCaps.hasHLSL)
+        if (loadHLSL)
         {
             shaderProgram = LoadShaderProgram(
                 {
@@ -86,7 +115,10 @@ public:
 
         // Bind constant buffer location to the index we use later with the render context
         shaderProgram->BindConstantBuffer("Settings", constantBufferIndex);
+    }
 
+    void CreatePipelines()
+    {
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
@@ -116,16 +148,11 @@ public:
 
         pipelineDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
         pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
+    }
 
-        // Create vertex- and index buffers for a simple 3D cube model
-        vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt32);
-
-        // Create constant buffer
-        constantBuffer = renderer->CreateConstantBuffer();
-        renderer->SetupConstantBuffer(*constantBuffer, nullptr, sizeof(Settings), LLGL::BufferUsage::Dynamic);
-
-        // Set initial matrices
+    void InitProjection()
+    {
+        // Initialize projection matrix
         auto resolution = context->GetVideoMode().resolution.Cast<float>();
 
         projection = Gs::ProjectionMatrix4f::Perspective(
@@ -134,12 +161,6 @@ public:
             100.0f,                         // far clipping plane
             Gs::Deg2Rad(45.0f)              // field-of-view from degree to radians
         ).ToMatrix4();
-
-        // Show info to user
-        std::cout << "press left mouse button and move mouse on X axis to increase/decrease inner tessellation" << std::endl;
-        std::cout << "press right mouse button and move mouse on X axis to increase/decrease outer tessellation" << std::endl;
-        std::cout << "press middle mouse button and move mouse on X axis to increase/decrease twist" << std::endl;
-        ShowTessLevel();
     }
 
     void ShowTessLevel()

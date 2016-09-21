@@ -168,6 +168,31 @@ protected:
         return shaderProgram;
     }
 
+    LLGL::ShaderProgram* LoadStandardShaderProgram(const LLGL::VertexFormat& vertexFormat)
+    {
+        // Load shader program
+        if (renderer->QueryRenderingCaps().hasHLSL)
+        {
+            return LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
+                    { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
+                },
+                vertexFormat.GetAttributes()
+            );
+        }
+        else
+        {
+            return LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "vertex.glsl" },
+                    { LLGL::ShaderType::Fragment, "fragment.glsl" }
+                },
+                vertexFormat.GetAttributes()
+            );
+        }
+    }
+
     // Generates eight vertices for a unit cube.
     std::vector<Gs::Vector3f> GenerateCubeVertices()
     {

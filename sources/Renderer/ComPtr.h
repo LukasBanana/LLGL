@@ -69,7 +69,7 @@ class ComPtr
             return ptr_;
         }
 
-        operator bool () throw()
+        operator bool () const throw()
         {
             return (ptr_ != nullptr);
         }
