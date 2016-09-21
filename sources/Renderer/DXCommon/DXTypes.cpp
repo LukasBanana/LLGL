@@ -175,7 +175,7 @@ DXGI_FORMAT Map(const TextureFormat textureFormat)
         case TextureFormat::DepthStencil:   return DXGI_FORMAT_D24_UNORM_S8_UINT;
         case TextureFormat::R:              return DXGI_FORMAT_R8_UNORM;
         case TextureFormat::RG:             return DXGI_FORMAT_R8G8_UNORM;
-        case TextureFormat::RGB:            return DXGI_FORMAT_R8G8B8A8_UNORM; // there is no RGB only DXGI format
+        case TextureFormat::RGB:            break;
         case TextureFormat::RGBA:           return DXGI_FORMAT_R8G8B8A8_UNORM;
 
         /* --- Sized internal formats --- */
@@ -201,16 +201,16 @@ DXGI_FORMAT Map(const TextureFormat textureFormat)
         case TextureFormat::RG32SInt:       return DXGI_FORMAT_R32G32_SINT;
         case TextureFormat::RG32Float:      return DXGI_FORMAT_R32G32_FLOAT;
 
-        case TextureFormat::RGB8:           return DXGI_FORMAT_R8G8B8A8_UNORM;
-        case TextureFormat::RGB8Sgn:        return DXGI_FORMAT_R8G8B8A8_SNORM;
+        case TextureFormat::RGB8:           break;
+        case TextureFormat::RGB8Sgn:        break;
 
-        case TextureFormat::RGB16:          return DXGI_FORMAT_R16G16B16A16_UNORM;
-        case TextureFormat::RGB16Sgn:       return DXGI_FORMAT_R16G16B16A16_SNORM;
-        case TextureFormat::RGB16Float:     return DXGI_FORMAT_R16G16B16A16_FLOAT;
+        case TextureFormat::RGB16:          break;
+        case TextureFormat::RGB16Sgn:       break;
+        case TextureFormat::RGB16Float:     break;
 
-        case TextureFormat::RGB32UInt:      return DXGI_FORMAT_R32G32B32A32_UINT;
-        case TextureFormat::RGB32SInt:      return DXGI_FORMAT_R32G32B32A32_SINT;
-        case TextureFormat::RGB32Float:     return DXGI_FORMAT_R32G32B32A32_FLOAT;
+        case TextureFormat::RGB32UInt:      return DXGI_FORMAT_R32G32B32_UINT;
+        case TextureFormat::RGB32SInt:      return DXGI_FORMAT_R32G32B32_SINT;
+        case TextureFormat::RGB32Float:     return DXGI_FORMAT_R32G32B32_FLOAT;
 
         case TextureFormat::RGBA8:          return DXGI_FORMAT_R8G8B8A8_UNORM;
         case TextureFormat::RGBA8Sgn:       return DXGI_FORMAT_R8G8B8A8_SNORM;
