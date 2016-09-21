@@ -66,10 +66,21 @@ class LLGL_EXPORT RenderSystem
         struct Configuration
         {
             /**
-            \brief Default color for an uninitialized textures. The default value is white (255, 255, 255, 255).
+            \brief Specifies the default color for an uninitialized textures. The default value is white (255, 255, 255, 255).
             \remarks This will be used for each "SetupTexture..." function (not the "WriteTexture..." functions), when no initial image data is specified.
             */
             ColorRGBAub defaultImageColor;
+
+            /**
+            \brief Specifies whether the render system shall convert the data of texture images in software mode,
+            when the renderering API can not automatically convert the image data into hardware image data.
+            \remarks This is necessary for Direct3D render systems when the image format is mismatched to the hardware texture format.
+            If this value is false, the render system will throw an exception in case of a format mismatch instead of converting the data.
+            Such a format mismatch happens when the desired hardware texture format is 'TextureFormat::RGBA' and the image format is 'ColorFormat::RGB' for instance.
+            \see ImageConverter
+            \note Only relevant for: Direct3D 11, Direct3D 12.
+            */
+            bool        convertImageData    = true;
         };
 
         /* ----- Common ----- */
