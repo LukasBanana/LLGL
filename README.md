@@ -19,8 +19,8 @@ Progress
 
 - **Version**: 1.00 Alpha
 - **OpenGL Renderer**: ~70% done
+- **Direct3D 11 Renderer**: ~10% done
 - **Direct3D 12 Renderer**: ~5% done
-- **Direct3D 11 Renderer**: ~5% done
 - **Vulkan Renderer**: not started yet
 
 
