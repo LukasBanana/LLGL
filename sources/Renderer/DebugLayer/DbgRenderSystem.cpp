@@ -478,6 +478,8 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
             case PrimitiveTopology::TriangleFan:
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "renderer does not support primitive topology triangle fan", __FUNCTION__);
                 break;
+            default:
+                break;
         }
     }
 

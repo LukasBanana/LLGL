@@ -15,7 +15,7 @@
 
 @interface AppDelegate : NSObject
 {
-    BOOL _quit;
+    BOOL quit_;
 }
 - (id) initApp;
 - (BOOL) isQuit;
@@ -26,18 +26,18 @@
 - (id) initApp
 {
     self = [super init];
-    _quit = FALSE;
+    quit_ = FALSE;
     return (self);
 }
 
 - (void) windowWillClose:(id)sender
 {
-    _quit = TRUE;
+    quit_ = TRUE;
 }
 
 - (BOOL) isQuit
 {
-    return (_quit);
+    return (quit_);
 }
 
 @end
