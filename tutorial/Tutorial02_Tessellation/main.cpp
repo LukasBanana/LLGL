@@ -8,9 +8,6 @@
 #include "../tutorial.h"
 
 
-// Show scene in wireframe polygon mode
-#define SHOW_WIREFRAME
-
 // Automatically rotate the model
 //#define AUTO_ROTATE
 
@@ -22,7 +19,7 @@ class Tutorial02 : public Tutorial
 {
 
     LLGL::ShaderProgram*    shaderProgram       = nullptr;
-    LLGL::GraphicsPipeline* pipeline            = nullptr;
+    LLGL::GraphicsPipeline* pipeline[2]         = { nullptr, nullptr };
 
     LLGL::VertexBuffer*     vertexBuffer        = nullptr;
     LLGL::IndexBuffer*      indexBuffer         = nullptr;
@@ -31,6 +28,8 @@ class Tutorial02 : public Tutorial
     unsigned int            constantBufferIndex = 0;
 
     Gs::Matrix4f            projection;
+
+    bool                    showWireframe       = false;
 
     struct Settings
     {
@@ -88,7 +87,7 @@ public:
         // Bind constant buffer location to the index we use later with the render context
         shaderProgram->BindConstantBuffer("Settings", constantBufferIndex);
 
-        // Create graphics pipeline
+        // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             // Set shader program
@@ -107,16 +106,16 @@ public:
             pipelineDesc.depth.testEnabled              = true;
             pipelineDesc.depth.writeEnabled             = true;
 
-            // Set polygon mode to wireframe (if macro is enabled)
-            #ifdef SHOW_WIREFRAME
-            pipelineDesc.rasterizer.polygonMode         = LLGL::PolygonMode::Wireframe;
-            #endif
-
             // Enable back-face culling
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
             pipelineDesc.rasterizer.frontCCW            = true;
         }
-        pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        // Create graphics pipelines
+        pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        pipelineDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
+        pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Create vertex- and index buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
@@ -177,6 +176,9 @@ private:
 
         if (input->KeyPressed(LLGL::Key::MButton))
             settings.twist += Gs::Deg2Rad(motionScaled);
+
+        if (input->KeyDown(LLGL::Key::Tab))
+            showWireframe = !showWireframe;
         
         // Update matrices
         Gs::Matrix4f worldMatrix;
@@ -200,7 +202,7 @@ private:
         renderer->WriteConstantBuffer(*constantBuffer, &settings, sizeof(settings), 0);
 
         // Set graphics pipeline with the shader
-        context->SetGraphicsPipeline(*pipeline);
+        context->SetGraphicsPipeline(*pipeline[showWireframe ? 1 : 0]);
 
         // Set hardware buffers to draw the model
         context->SetVertexBuffer(*vertexBuffer);
