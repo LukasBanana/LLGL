@@ -96,9 +96,9 @@ OutputDS DS(OutputHS inp, float2 tessCoord : SV_DomainLocation, const OutputPatc
 	float c = cos(twist * twistFactor);
 	
 	float3x3 rotation = float3x3(
-		 c, 0, s,
-		 0, 1, 0,
-		-s, 0, c
+		c,  0, -s,
+		0,  1,  0,
+		s,  0,  c
 	);
 	
 	position = mul(rotation, position);

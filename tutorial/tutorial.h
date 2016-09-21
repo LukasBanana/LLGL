@@ -89,7 +89,8 @@ protected:
         context = renderer->CreateRenderContext(contextDesc);
 
         // Set window title
-        context->GetWindow().SetTitle(title);
+        auto rendererName = renderer->GetName();
+        context->GetWindow().SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
 
         // Add input event listener to window
         input = std::make_shared<LLGL::Input>();
