@@ -13,20 +13,20 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat)
+LLGL_EXPORT std::size_t ColorFormatSize(const ImageFormat colorFormat)
 {
     switch (colorFormat)
     {
-        case ColorFormat::Gray:             return 1;
-        case ColorFormat::GrayAlpha:        return 2;
-        case ColorFormat::RGB:              return 3;
-        case ColorFormat::BGR:              return 3;
-        case ColorFormat::RGBA:             return 4;
-        case ColorFormat::BGRA:             return 4;
-        case ColorFormat::Depth:            return 1;
-        case ColorFormat::DepthStencil:     return 2;
-        case ColorFormat::CompressedRGB:    return 0;
-        case ColorFormat::CompressedRGBA:   return 0;
+        case ImageFormat::Gray:             return 1;
+        case ImageFormat::GrayAlpha:        return 2;
+        case ImageFormat::RGB:              return 3;
+        case ImageFormat::BGR:              return 3;
+        case ImageFormat::RGBA:             return 4;
+        case ImageFormat::BGRA:             return 4;
+        case ImageFormat::Depth:            return 1;
+        case ImageFormat::DepthStencil:     return 2;
+        case ImageFormat::CompressedRGB:    return 0;
+        case ImageFormat::CompressedRGBA:   return 0;
     }
     return 0;
 }
@@ -43,9 +43,9 @@ LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format)
     return (format >= TextureFormat::RGB_DXT1);
 }
 
-LLGL_EXPORT bool IsCompressedFormat(const ColorFormat format)
+LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format)
 {
-    return (format >= ColorFormat::CompressedRGB);
+    return (format >= ImageFormat::CompressedRGB);
 }
 
 

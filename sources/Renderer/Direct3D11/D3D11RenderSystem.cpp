@@ -292,7 +292,7 @@ void D3D11RenderSystem::WriteTextureCubeArray(
     //todo...
 }
 
-void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
+void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
 {
     LLGL_ASSERT_PTR(data);
 

@@ -249,7 +249,7 @@ int main()
 
         LLGL::ImageDataDescriptor textureData;
         {
-            textureData.dataFormat  = LLGL::ColorFormat::RGB;
+            textureData.dataFormat  = LLGL::ImageFormat::RGB;
             textureData.dataType    = LLGL::DataType::UInt8;
             textureData.data        = image;
         }

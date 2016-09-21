@@ -551,7 +551,7 @@ void GLRenderSystem::WriteTextureCubeArray(
     GLTexSubImageCubeArray(mipLevel, position.x, position.y, layerOffset, cubeFaceOffset, size.x, size.y, cubeFaces, imageDesc);
 }
 
-void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
+void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
 {
     LLGL_ASSERT_PTR(data);
 

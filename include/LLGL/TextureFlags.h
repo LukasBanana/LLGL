@@ -100,8 +100,8 @@ enum class TextureFormat
     RGBA_DXT5,      //!< Compressed format: RGBA S3TC DXT5.
 };
 
-//! Color format used to write texture data.
-enum class ColorFormat
+//! Image format used to write texture data.
+enum class ImageFormat
 {
     Gray,           //!< Single color component: Gray or rather brightness.
     GrayAlpha,      //!< Two color components: Gray, Alpha.
@@ -135,7 +135,7 @@ struct LLGL_EXPORT ImageDataDescriptor
     ImageDataDescriptor() = default;
 
     // Constructor for uncompressed image data.
-    ImageDataDescriptor(ColorFormat dataFormat, DataType dataType, const void* data) :
+    ImageDataDescriptor(ImageFormat dataFormat, DataType dataType, const void* data) :
         dataFormat  ( dataFormat ),
         dataType    ( dataType   ),
         data        ( data       )
@@ -143,14 +143,14 @@ struct LLGL_EXPORT ImageDataDescriptor
     }
 
     //! Constructor for compressed image data.
-    ImageDataDescriptor(ColorFormat dataFormat, const void* data, unsigned int compressedSize) :
+    ImageDataDescriptor(ImageFormat dataFormat, const void* data, unsigned int compressedSize) :
         dataFormat      ( dataFormat     ),
         data            ( data           ),
         compressedSize  ( compressedSize )
     {
     }
 
-    ColorFormat     dataFormat      = ColorFormat::Gray;    //!< Specifies the color format.
+    ImageFormat     dataFormat      = ImageFormat::Gray;    //!< Specifies the image data format.
     DataType        dataType        = DataType::UInt8;      //!< Speciifes the image data type. This must be DataType::UInt8 for compressed images.
     const void*     data            = nullptr;              //!< Pointer to the image data source.
     unsigned int    compressedSize  = 0;                    //!< Specifies the size (in bytes) of the compressed image. This must be 0 for uncompressed images.
@@ -204,9 +204,9 @@ union TextureDescriptor
 \brief Returns the size (in number of components) of the specified color format.
 \param[in] colorFormat Specifies the color format.
 \return Number of components of the specified color format, or 0 if 'colorFormat' specifies a compressed color format.
-\see IsCompressedFormat(const ColorFormat)
+\see IsCompressedFormat(const ImageFormat)
 */
-LLGL_EXPORT std::size_t ColorFormatSize(const ColorFormat colorFormat);
+LLGL_EXPORT std::size_t ColorFormatSize(const ImageFormat colorFormat);
 
 /**
 \brief Returns the number of MIP-map levels for a texture with the specified size.
@@ -224,9 +224,9 @@ LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format);
 /**
 \brief Returns true if the specified color format is a compressed format,
 i.e. either CompressedRGB, or CompressedRGBA.
-\see ColorFormat
+\see ImageFormat
 */
-LLGL_EXPORT bool IsCompressedFormat(const ColorFormat format);
+LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format);
 
 
 } // /namespace LLGL

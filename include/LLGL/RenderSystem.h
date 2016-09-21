@@ -76,7 +76,7 @@ class LLGL_EXPORT RenderSystem
             when the renderering API can not automatically convert the image data into hardware image data.
             \remarks This is necessary for Direct3D render systems when the image format is mismatched to the hardware texture format.
             If this value is false, the render system will throw an exception in case of a format mismatch instead of converting the data.
-            Such a format mismatch happens when the desired hardware texture format is 'TextureFormat::RGBA' and the image format is 'ColorFormat::RGB' for instance.
+            Such a format mismatch happens when the desired hardware texture format is 'TextureFormat::RGBA' and the image format is 'ImageFormat::RGB' for instance.
             \see ImageConverter
             \note Only relevant for: Direct3D 11, Direct3D 12.
             */
@@ -422,11 +422,11 @@ class LLGL_EXPORT RenderSystem
         The "QueryTextureDescriptor" function can be used to determine the texture dimensions.
         \code
         std::vector<LLGL::ColorRGBAub> image(textureWidth*textureHeight);
-        renderSystem->ReadTexture(texture, 0, LLGL::ColorFormat::RGBA, LLGL::DataType::UByte, image.data());
+        renderSystem->ReadTexture(texture, 0, LLGL::ImageFormat::RGBA, LLGL::DataType::UByte, image.data());
         \endcode
         \see QueryTextureDescriptor
         */
-        virtual void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) = 0;
+        virtual void ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data) = 0;
 
         /* ----- Samplers ---- */
 

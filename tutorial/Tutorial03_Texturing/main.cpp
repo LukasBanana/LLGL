@@ -106,7 +106,7 @@ public:
             imageDesc.data          = imageBuffer;
 
             // Set image buffer color format
-            imageDesc.dataFormat    = (texComponents == 3 ? LLGL::ColorFormat::RGB : LLGL::ColorFormat::RGBA);
+            imageDesc.dataFormat    = (texComponents == 3 ? LLGL::ImageFormat::RGB : LLGL::ImageFormat::RGBA);
             
             // Set image buffer data type (unsigned char = 8-bit unsigned integer)
             imageDesc.dataType      = LLGL::DataType::UInt8;

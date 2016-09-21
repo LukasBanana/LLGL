@@ -400,7 +400,7 @@ void DbgRenderSystem::WriteTextureCubeArray(
 
 #undef LLGL_GET_DBG_TEXTURE
 
-void DbgRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
+void DbgRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
 {
     auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
     DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);

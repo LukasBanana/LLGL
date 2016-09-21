@@ -102,7 +102,7 @@ void D3D11Texture::UpdateSubresource(
     auto dstSubresource = D3D11CalcSubresource(mipSlice, arraySlice, numMipLevels_);
     auto srcPitch       = DataTypeSize(imageDesc.dataType)*ColorFormatSize(imageDesc.dataFormat);
 
-    if (imageDesc.dataFormat == ColorFormat::RGB) // <-- TODO: just for testing right now!!!
+    if (imageDesc.dataFormat == ImageFormat::RGB) // <-- TODO: just for testing right now!!!
     {
         if (imageDesc.dataType == DataType::UInt8)
         {
@@ -115,7 +115,7 @@ void D3D11Texture::UpdateSubresource(
             auto tempData = ImageConverter::RGBtoRGBA_UInt8(reinterpret_cast<const unsigned char*>(imageDesc.data), imageSize);
 
             /* Get new source data stride */
-            srcPitch        = DataTypeSize(imageDesc.dataType)*ColorFormatSize(ColorFormat::RGBA);
+            srcPitch        = DataTypeSize(imageDesc.dataType)*ColorFormatSize(ImageFormat::RGBA);
             srcRowPitch     = (dstBox.right - dstBox.left)*srcPitch;
             srcDepthPitch   = (dstBox.bottom - dstBox.top)*srcRowPitch;
             imageSize       = (dstBox.back - dstBox.front)*srcDepthPitch;

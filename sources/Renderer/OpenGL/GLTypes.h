@@ -33,7 +33,7 @@ GLenum Map( const DataType          dataType      );
 GLenum Map( const PrimitiveTopology topology      );
 GLenum Map( const TextureType       textureType   );
 GLenum Map( const TextureFormat     textureFormat );
-GLenum Map( const ColorFormat       colorFormat   );
+GLenum Map( const ImageFormat       colorFormat   );
 GLenum Map( const CompareOp         compareOp     );
 GLenum Map( const StencilOp         stencilOp     );
 GLenum Map( const BlendOp           blendOp       );

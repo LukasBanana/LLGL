@@ -121,7 +121,7 @@ class D3D11RenderSystem : public RenderSystem
             const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc
         ) override;
 
-        void ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data) override;
+        void ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data) override;
 
         /* ----- Sampler States ---- */
 

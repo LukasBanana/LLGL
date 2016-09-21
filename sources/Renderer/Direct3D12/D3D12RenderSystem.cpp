@@ -312,7 +312,7 @@ void D3D12RenderSystem::WriteTextureCubeArray(
     //todo...
 }
 
-void D3D12RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ColorFormat dataFormat, DataType dataType, void* data)
+void D3D12RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
 {
     LLGL_ASSERT_PTR(data);
 
