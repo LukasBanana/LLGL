@@ -532,14 +532,12 @@ void DbgRenderSystem::Release(ComputePipeline& computePipeline)
 
 Query* DbgRenderSystem::CreateQuery(const QueryType type)
 {
-    return instance_->CreateQuery(type);
-    //return TakeOwnership(queries_, MakeUnique<DbgQuery>(*this, type));
+    return TakeOwnership(queries_, MakeUnique<DbgQuery>(*instance_->CreateQuery(type), type));
 }
 
 void DbgRenderSystem::Release(Query& query)
 {
-    instance_->Release(query);
-    //RemoveFromUniqueSet(queries_, &query);
+    ReleaseDbg(queries_, query);
 }
 
 

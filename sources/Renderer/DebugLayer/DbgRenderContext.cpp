@@ -14,6 +14,7 @@
 #include "DbgStorageBuffer.h"
 #include "DbgTexture.h"
 #include "DbgShaderProgram.h"
+#include "DbgQuery.h"
 
 
 namespace LLGL
@@ -208,17 +209,37 @@ void DbgRenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 
 void DbgRenderContext::BeginQuery(Query& query)
 {
-    instance_.BeginQuery(query);
+    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+
+    /* Validate query state */
+    if (queryDbg.state == DbgQuery::State::Busy)
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "query is already busy");
+    queryDbg.state = DbgQuery::State::Busy;
+
+    instance_.BeginQuery(queryDbg.instance);
 }
 
 void DbgRenderContext::EndQuery(Query& query)
 {
-    instance_.EndQuery(query);
+    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+
+    /* Validate query state */
+    if (queryDbg.state != DbgQuery::State::Busy)
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "missing query begin");
+    queryDbg.state = DbgQuery::State::Ready;
+
+    instance_.EndQuery(queryDbg.instance);
 }
 
 bool DbgRenderContext::QueryResult(Query& query, std::uint64_t& result)
 {
-    return instance_.QueryResult(query, result);
+    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+
+    /* Validate query state */
+    if (queryDbg.state != DbgQuery::State::Ready)
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "query result is not ready");
+
+    return instance_.QueryResult(queryDbg.instance, result);
 }
 
 /* ----- Drawing ----- */

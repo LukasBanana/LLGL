@@ -20,6 +20,7 @@
 #include "DbgTexture.h"
 #include "DbgShader.h"
 #include "DbgShaderProgram.h"
+#include "DbgQuery.h"
 
 #include "../ContainerTypes.h"
 
@@ -197,7 +198,9 @@ class DbgRenderSystem : public RenderSystem
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
 
         HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
+        //HWObjectContainer<DbgComputePipeline>   computePipelines_;
         //HWObjectContainer<DbgSampler>           samplers_;
+        HWObjectContainer<DbgQuery>             queries_;
 
 };
 
