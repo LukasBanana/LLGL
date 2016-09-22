@@ -45,7 +45,7 @@ std::vector<T> ConvertImageRGBtoRGBA(const T* srcImage, std::size_t imageSize)
 }
 
 template <typename T0, typename T1>
-std::vector<T0> ConvertImageType(const T1* srcImage, std::size_t imageSize)
+std::vector<T0> ConvertImageDataType(const T1* srcImage, std::size_t imageSize)
 {
     imageSize /= sizeof(T1);
     std::vector<T0> dstImage(imageSize);
@@ -62,7 +62,46 @@ std::vector<T0> ConvertImageType(const T1* srcImage, std::size_t imageSize)
 }
 
 
-/* ----- ImageConverter class ----- */
+/* ----- Public functions ----- */
+
+LLGL_EXPORT std::vector<char> ConvertImage(
+    ImageFormat srcImageFormat,
+    DataType    srcDataType,
+    const void* srcImageData,
+    std::size_t srcImageSize,
+    ImageFormat dstImageFormat,
+    DataType    dstDataType)
+{
+    std::vector<char> dstImage;
+    
+    #if 0//TODO
+    if (srcDataType != dstDataType)
+    {
+        auto dstImageSize = srcImageSize * DataTypeSize(dstDataType) / DataTypeSize(srcDataType);
+        dstImage.resize(dstImageSize);
+
+        for (std::size_t i = 0; i < dstImageSize; ++i)
+        {
+            switch (srcDataType)
+            {
+                case DataType::Int8:
+                case DataType::UInt8:
+                case DataType::Int16:
+                case DataType::UInt16:
+                case DataType::Int32:
+                case DataType::UInt32:
+                case DataType::Float32:
+                case DataType::Float64:
+            }
+        }
+    }
+    #endif
+    
+    return dstImage;
+}
+
+
+#if 1 //TODO: remove this class
 
 std::vector<char> ImageConverter::RGBtoRGBA_Int8(const char* srcImage, std::size_t imageSize)
 {
@@ -86,8 +125,10 @@ std::vector<unsigned short> ImageConverter::RGBtoRGBA_UInt16(const unsigned shor
 
 std::vector<float> ImageConverter::Float64toFloat32(const double* srcImage, std::size_t imageSize)
 {
-    return ConvertImageType<float>(srcImage, imageSize);
+    return ConvertImageDataType<float>(srcImage, imageSize);
 }
+
+#endif
 
 
 } // /namespace LLGL

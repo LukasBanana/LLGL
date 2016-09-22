@@ -20,6 +20,29 @@ namespace LLGL
 
 
 /**
+\brief Converts the image format and data type of the source image.
+\param[in] srcImageFormat Specifies the source image format.
+\param[in] srcDataType Specifies the source data type.
+\param[in] srcImageData Specifies the source image buffer which is to be converted.
+\param[in] srcImageSize Specifies the size (in bytes) of the source image buffer.
+\param[in] dstImageFormat Specifies the destination image format.
+\param[in] dstDataType Specifies the destination data type.
+\return Byte array with the converted image data.
+This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
+*/
+LLGL_EXPORT std::vector<char> ConvertImage(
+    ImageFormat srcImageFormat,
+    DataType    srcDataType,
+    const void* srcImageData,
+    std::size_t srcImageSize,
+    ImageFormat dstImageFormat,
+    DataType    dstDataType
+);
+
+
+#if 1 //TODO: remove this class
+
+/**
 \brief Helper class to convert image buffer formats.
 \remarks This is mainly used by the renderer, especially by the "SetupTexture..." functions
 when the input data must be converted before it can be uploaded to the GPU.
@@ -46,6 +69,8 @@ class LLGL_EXPORT ImageConverter
         static std::vector<float> Float64toFloat32(const double* srcImage, std::size_t imageSize);
 
 };
+
+#endif
 
 
 } // /namespace LLGL
