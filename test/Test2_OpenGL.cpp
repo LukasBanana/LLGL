@@ -307,6 +307,9 @@ int main()
             samplerDesc.minFilter       = LLGL::TextureFilter::Linear;
             samplerDesc.textureWrapU    = LLGL::TextureWrap::Border;
             samplerDesc.textureWrapV    = LLGL::TextureWrap::Border;
+            #ifdef __linux__
+            samplerDesc.mipMapping = false;
+            #endif
             samplerDesc.borderColor     = LLGL::ColorRGBAf(0, 0.7f, 0.5f, 1);
         }
         auto& sampler = *renderer->CreateSampler(samplerDesc);
