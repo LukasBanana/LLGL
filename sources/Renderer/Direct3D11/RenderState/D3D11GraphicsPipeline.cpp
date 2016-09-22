@@ -52,17 +52,11 @@ void D3D11GraphicsPipeline::Bind(ID3D11DeviceContext* context)
     context->IASetInputLayout(shaderProgram_->GetInputLayout());
 
     /* Setup shader states */
-    if (vs_)
-        context->VSSetShader(vs_.Get(), nullptr, 0);
-    if (hs_ && ds_)
-    {
-        context->HSSetShader(hs_.Get(), nullptr, 0);
-        context->DSSetShader(ds_.Get(), nullptr, 0);
-    }
-    if (gs_)
-        context->GSSetShader(gs_.Get(), nullptr, 0);
-    if (ps_)
-        context->PSSetShader(ps_.Get(), nullptr, 0);
+    context->VSSetShader(vs_.Get(), nullptr, 0);
+    context->HSSetShader(hs_.Get(), nullptr, 0);
+    context->DSSetShader(ds_.Get(), nullptr, 0);
+    context->GSSetShader(gs_.Get(), nullptr, 0);
+    context->PSSetShader(ps_.Get(), nullptr, 0);
 
     /* Setup render states */
     context->RSSetState(rasterizerState_.Get());
