@@ -23,9 +23,6 @@ class D3D11Query : public Query
 
     public:
 
-        D3D11Query(const D3D11Query&) = delete;
-        D3D11Query& operator = (const D3D11Query&) = delete;
-
         D3D11Query(ID3D11Device* device, const QueryType type);
 
         inline ID3D11Query* GetQueryObject() const

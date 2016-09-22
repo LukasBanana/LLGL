@@ -22,9 +22,6 @@ class GLQuery : public Query
 
     public:
 
-        GLQuery(const GLQuery&) = delete;
-        GLQuery& operator = (const GLQuery&) = delete;
-
         GLQuery(const QueryType type);
         ~GLQuery();
 

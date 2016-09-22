@@ -15,6 +15,7 @@ namespace LLGL
 
 
 D3D11Query::D3D11Query(ID3D11Device* device, const QueryType type) :
+    Query           ( type                  ),
     queryObjectType_( D3D11Types::Map(type) )
 {
     /* Create D3D query object */

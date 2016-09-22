@@ -15,7 +15,8 @@ namespace LLGL
 
 
 GLQuery::GLQuery(const QueryType type) :
-    target_( GLTypes::Map(type) )
+    Query   ( type               ),
+    target_ ( GLTypes::Map(type) )
 {
     glGenQueries(1, &id_);
 }

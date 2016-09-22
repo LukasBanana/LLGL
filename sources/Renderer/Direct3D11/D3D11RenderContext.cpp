@@ -263,20 +263,95 @@ void D3D11RenderContext::EndQuery(Query& query)
 bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-    HRESULT hr = 0;
 
     switch (queryD3D.GetQueryObjectType())
     {
-
-
-        default:
+        /* Query result from data of type: UINT64 */
+        case D3D11_QUERY_OCCLUSION:
+        case D3D11_QUERY_TIMESTAMP:
         {
-            hr = context_->GetData(queryD3D.GetQueryObject(), &result, sizeof(result), 0);
+            UINT64 data = 0;
+            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+            {
+                result = data;
+                return true;
+            }
+        }
+        break;
+
+        /* Query result from data of type: BOOL */
+        case D3D11_QUERY_OCCLUSION_PREDICATE:
+        case D3D11_QUERY_SO_OVERFLOW_PREDICATE:
+        {
+            BOOL data = 0;
+            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+            {
+                result = data;
+                return true;
+            }
+        }
+        break;
+
+        /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
+        case D3D11_QUERY_PIPELINE_STATISTICS:
+        {
+            D3D11_QUERY_DATA_PIPELINE_STATISTICS data;
+            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+            {
+                switch (queryD3D.GetType())
+                {
+                    case QueryType::PrimitivesGenerated:
+                        result = data.CPrimitives;
+                        break;
+                    case QueryType::VerticesSubmitted:
+                        result = data.IAVertices;
+                        break;
+                    case QueryType::PrimitivesSubmitted:
+                        result = data.IAPrimitives;
+                        break;
+                    case QueryType::VertexShaderInvocations:
+                        result = data.VSInvocations;
+                        break;
+                    case QueryType::TessControlShaderInvocations:
+                        result = data.HSInvocations;
+                        break;
+                    case QueryType::TessEvaluationShaderInvocations:
+                        result = data.DSInvocations;
+                        break;
+                    case QueryType::GeometryShaderInvocations:
+                        result = data.GSInvocations;
+                        break;
+                    case QueryType::FragmentShaderInvocations:
+                        result = data.PSInvocations;
+                        break;
+                    case QueryType::ComputeShaderInvocations:
+                        result = data.CSInvocations;
+                        break;
+                    case QueryType::GeometryPrimitivesGenerated:
+                        result = data.GSPrimitives;
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+        }
+        break;
+
+        /* Query result from data of type: D3D11_QUERY_DATA_SO_STATISTICS */
+        case D3D11_QUERY_SO_STATISTICS:
+        {
+            D3D11_QUERY_DATA_SO_STATISTICS data;
+            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+            {
+                result = data.NumPrimitivesWritten;
+                return true;
+            }
         }
         break;
     }
 
-    return SUCCEEDED(hr);
+    return false;
 }
 
 /* ----- Drawing ----- */
