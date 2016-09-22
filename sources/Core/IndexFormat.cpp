@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/IndexFormat.h>
-#include "TypeConversion.h"
+#include <LLGL/RenderSystemFlags.h>
 
 
 namespace LLGL
@@ -14,7 +14,7 @@ namespace LLGL
 
 
 IndexFormat::IndexFormat(const DataType dataType) :
-    formatSize_( GetDataTypeSize(dataType) )
+    formatSize_( DataTypeSize(dataType) )
 {
 }
 

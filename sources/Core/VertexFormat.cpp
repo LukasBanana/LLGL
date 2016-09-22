@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/VertexFormat.h>
-#include "TypeConversion.h"
+#include <LLGL/RenderSystemFlags.h>
 #include <stdexcept>
 #include <sstream>
 
@@ -45,7 +45,7 @@ void VertexFormat::AddAttribute(
     attributes_.push_back(attrib);
 
     /* Increase format size */
-    formatSize_ += (GetDataTypeSize(dataType) * components);
+    formatSize_ += (DataTypeSize(dataType) * components);
 }
 
 
