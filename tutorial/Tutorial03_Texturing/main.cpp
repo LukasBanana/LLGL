@@ -87,7 +87,7 @@ public:
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         int texWidth = 0, texHeight = 0, texComponents = 0;
 
-        unsigned char* imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 3);
+        unsigned char* imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 4);
         if (!imageBuffer)
             throw std::runtime_error("failed to open file: \"" + texFilename + "\"");
 
@@ -101,7 +101,7 @@ public:
             imageDesc.data          = imageBuffer;
 
             // Set image buffer color format
-            imageDesc.dataFormat    = (texComponents == 3 ? LLGL::ImageFormat::RGB : LLGL::ImageFormat::RGBA);
+            imageDesc.dataFormat    = LLGL::ImageFormat::RGBA;
             
             // Set image buffer data type (unsigned char = 8-bit unsigned integer)
             imageDesc.dataType      = LLGL::DataType::UInt8;
