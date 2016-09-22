@@ -214,12 +214,12 @@ void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>
 
 void D3D11ShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
 {
-    //todo...
+    // dummy
 }
 
 void D3D11ShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
 {
-    //todo...
+    // dummy
 }
 
 ShaderUniform* D3D11ShaderProgram::LockShaderUniform()

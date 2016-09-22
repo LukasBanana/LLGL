@@ -200,6 +200,33 @@ void D3D11Shader::ReflectShader()
             {
                 storeBufferDesc.name    = std::string(inputBindDesc.Name);
                 storeBufferDesc.index   = bufferIdx++;
+
+                /* Determine type from D3D_SHADER_INPUT_TYPE enum */
+                switch (inputBindDesc.Type)
+                {
+                    case D3D_SIT_UAV_RWTYPED:
+                        storeBufferDesc.type = StorageBufferType::Buffer;
+                        break;
+                    case D3D_SIT_STRUCTURED:
+                        storeBufferDesc.type = StorageBufferType::StructuredBuffer;
+                        break;
+                    case D3D_SIT_UAV_RWSTRUCTURED:
+                    case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
+                        storeBufferDesc.type = StorageBufferType::RWStructuredBuffer;
+                        break;
+                    case D3D_SIT_BYTEADDRESS:
+                        storeBufferDesc.type = StorageBufferType::ByteAddressBuffer;
+                        break;
+                    case D3D_SIT_UAV_RWBYTEADDRESS:
+                        storeBufferDesc.type = StorageBufferType::RWByteAddressBuffer;
+                        break;
+                    case D3D_SIT_UAV_APPEND_STRUCTURED:
+                        storeBufferDesc.type = StorageBufferType::AppendStructuredBuffer;
+                        break;
+                    case D3D_SIT_UAV_CONSUME_STRUCTURED:
+                        storeBufferDesc.type = StorageBufferType::ConsumeStructuredBuffer;
+                        break;
+                }
             }
             storageBufferDescs_.push_back(storeBufferDesc);
         }
