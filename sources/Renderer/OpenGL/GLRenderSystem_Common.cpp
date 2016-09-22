@@ -350,9 +350,9 @@ void GLRenderSystem::StoreRenderingCaps()
     auto& caps = renderingCaps_;
 
     /* Set fixed states for this renderer */
-    caps.hasGLSL                        = true;
     caps.screenOrigin                   = ScreenOrigin::LowerLeft;
     caps.clippingRange                  = ClippingRange::MinusOneToOne;
+    caps.hasGLSL                        = true;
 
     /* Query all boolean capabilies by their respective OpenGL extension */
     caps.hasRenderTargets               = HasExtension("GL_ARB_framebuffer_object");

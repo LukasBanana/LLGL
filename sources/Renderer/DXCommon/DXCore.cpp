@@ -134,6 +134,7 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
 
     caps.screenOrigin                   = ScreenOrigin::UpperLeft;
     caps.clippingRange                  = ClippingRange::ZeroToOne;
+    caps.hasHLSL                        = true;
     caps.hasRenderTargets               = true;
     caps.has3DTextures                  = true;
     caps.hasCubeTextures                = true;
@@ -161,7 +162,6 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
     caps.maxAnisotropy                  = (featureLevel >= D3D_FEATURE_LEVEL_9_2 ? 16 : 2);
     caps.maxNumComputeShaderWorkGroups  = { maxThreadGroups, maxThreadGroups, (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u) };
     caps.maxComputeShaderWorkGroupSize  = { 1024, 1024, 1024 };
-    caps.hasHLSL                        = true;
 }
 
 ShadingLanguage DXGetHLSLVersion(D3D_FEATURE_LEVEL featureLevel)
