@@ -106,14 +106,14 @@ This project is still in its early steps. Here is a short overview of its progre
 	\item \textbf{OpenGL renderer} \\
 	OpenGL renderer is \textasciitilde 90\% complete
 	
+	\item \textbf{Direct3D11 renderer} \\
+	Direct3D 11 renderer is \textasciitilde 50\% complete
+	
 	\item \textbf{Direct3D12 renderer} \\
 	Direct3D 12 renderer is \textasciitilde 5\% complete
 	
-	\item \textbf{Direct3D11 renderer} \\
-	Direct3D 11 renderer is not supported yet.
-	
 	\item \textbf{Vulkan renderer} \\
-	Vulkan renderer is not supported yet.
+	Vulkan renderer is not supported yet
 \end{itemize}
 
 
@@ -478,8 +478,7 @@ while (context->GetWindow().ProcessEvents()) {
 This main loop will run until the user clicks the close button on the window of the render context.
 The rest of the code is pretty simple, since the most work is done during initialization.
 What we need to do is to clear the color buffer of the previous frame,
-set the graphics pipeline, set the vertex buffer, set the primitive topology,
-draw the primitives, and present the result on the frame buffer:
+set the graphics pipeline, set the vertex buffer, draw the primitives, and present the result on the frame buffer:
 \begin{lstlisting}
 // Clear color buffer
 context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
@@ -489,9 +488,6 @@ context->SetGraphicsPipeline(*pipeline);
 
 // Bind vertex buffer
 context->SetVertexBuffer(*vertexBuffer);
-
-// Set primitive topology (tell the renderer what primitives to draw)
-context->SetPrimitiveTopology(LLGL::PrimitiveTopology::TriangleList);
 
 // Draw triangle with 3 vertices
 context->Draw(3, 0);
