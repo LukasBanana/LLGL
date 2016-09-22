@@ -354,7 +354,7 @@ GraphicsPipeline* D3D11RenderSystem::CreateGraphicsPipeline(const GraphicsPipeli
 
 ComputePipeline* D3D11RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
 {
-    return nullptr;//todo...
+    return TakeOwnership(computePipelines_, MakeUnique<D3D11ComputePipeline>(desc));
 }
 
 void D3D11RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
@@ -364,7 +364,7 @@ void D3D11RenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 
 void D3D11RenderSystem::Release(ComputePipeline& computePipeline)
 {
-    //RemoveFromUniqueSet(computePipelines_, &computePipeline);
+    RemoveFromUniqueSet(computePipelines_, &computePipeline);
 }
 
 /* ----- Queries ----- */

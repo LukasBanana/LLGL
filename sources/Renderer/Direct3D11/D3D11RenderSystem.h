@@ -19,6 +19,7 @@
 //#include "Buffer/D3D11StorageBuffer.h"
 
 #include "RenderState/D3D11GraphicsPipeline.h"
+#include "RenderState/D3D11ComputePipeline.h"
 #include "RenderState/D3D11StateManager.h"
 
 #include "Shader/D3D11Shader.h"
@@ -201,7 +202,7 @@ class D3D11RenderSystem : public RenderSystem
         ComPtr<IDXGIFactory>                        factory_;
         ComPtr<ID3D11Device>                        device_;
         ComPtr<ID3D11DeviceContext>                 context_;
-        D3D_FEATURE_LEVEL                           featureLevel_           = D3D_FEATURE_LEVEL_9_1;
+        D3D_FEATURE_LEVEL                           featureLevel_ = D3D_FEATURE_LEVEL_9_1;
 
         std::unique_ptr<D3D11StateManager>          stateMngr_;
 
@@ -221,7 +222,9 @@ class D3D11RenderSystem : public RenderSystem
         HWObjectContainer<D3D11ShaderProgram>       shaderPrograms_;
 
         HWObjectContainer<D3D11GraphicsPipeline>    graphicsPipelines_;
+        HWObjectContainer<D3D11ComputePipeline>     computePipelines_;
         HWObjectContainer<D3D11Sampler>             samplers_;
+        //HWObjectContainer<D3D11Query>               queries_;
 
         /* ----- Other members ----- */
 

@@ -14,6 +14,8 @@
 #include <algorithm>
 
 #include "RenderState/D3D11StateManager.h"
+#include "RenderState/D3D11GraphicsPipeline.h"
+#include "RenderState/D3D11ComputePipeline.h"
 #include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
@@ -237,7 +239,8 @@ void D3D11RenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
 void D3D11RenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 {
-    //todo
+    auto& computePipelineD3D = LLGL_CAST(D3D11ComputePipeline&, computePipeline);
+    computePipelineD3D.Bind(context_.Get());
 }
 
 /* ----- Queries ----- */
