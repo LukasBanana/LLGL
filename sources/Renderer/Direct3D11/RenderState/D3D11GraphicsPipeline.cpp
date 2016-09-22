@@ -27,11 +27,13 @@ D3D11GraphicsPipeline::D3D11GraphicsPipeline(
     /* Validate pointers and get D3D shader objects */
     LLGL_ASSERT_PTR(desc.shaderProgram);
 
-    shaderProgram_ = LLGL_CAST(D3D11ShaderProgram*, desc.shaderProgram);
-    GetShaderObjects(*shaderProgram_);
+    auto shaderProgramD3D = LLGL_CAST(D3D11ShaderProgram*, desc.shaderProgram);
+    GetShaderObjects(*shaderProgramD3D);
 
-    if (!shaderProgram_->GetInputLayout())
+    if (!shaderProgramD3D->GetInputLayout())
         throw std::runtime_error("can not create graphics pipeline while shader program has no D3D11 input layout");
+
+    inputLayout_ = shaderProgramD3D->GetInputLayout();
 
     /* Store D3D primitive topology */
     primitiveTopology_ = D3D11Types::Map(desc.primitiveTopology);
@@ -49,7 +51,7 @@ void D3D11GraphicsPipeline::Bind(ID3D11DeviceContext* context)
 {
     /* Setup input-assembly states */
     context->IASetPrimitiveTopology(primitiveTopology_);
-    context->IASetInputLayout(shaderProgram_->GetInputLayout());
+    context->IASetInputLayout(inputLayout_.Get());
 
     /* Setup shader states */
     context->VSSetShader(vs_.Get(), nullptr, 0);

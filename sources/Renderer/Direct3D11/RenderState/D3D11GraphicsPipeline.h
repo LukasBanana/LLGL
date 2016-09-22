@@ -19,7 +19,6 @@ namespace LLGL
 {
 
 
-class D3D11RenderSystem;
 class D3D11ShaderProgram;
 
 class D3D11GraphicsPipeline : public GraphicsPipeline
@@ -42,7 +41,7 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
         void CreateRasterizerState(ID3D11Device* device, const RasterizerDescriptor& desc);
         void CreateBlendState(ID3D11Device* device, const BlendDescriptor& desc);
 
-        D3D11ShaderProgram*             shaderProgram_      = nullptr;
+        ComPtr<ID3D11InputLayout>       inputLayout_;
 
         ComPtr<ID3D11VertexShader>      vs_;
         ComPtr<ID3D11HullShader>        hs_;

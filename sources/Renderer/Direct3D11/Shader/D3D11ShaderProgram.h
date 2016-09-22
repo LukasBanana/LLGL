@@ -48,9 +48,9 @@ class D3D11ShaderProgram : public ShaderProgram
 
         /* ----- Extended internal functions ----- */
 
-        inline ID3D11InputLayout* GetInputLayout() const
+        inline const ComPtr<ID3D11InputLayout>& GetInputLayout() const
         {
-            return inputLayout_.Get();
+            return inputLayout_;
         }
 
         inline D3D11Shader* GetVS() const { return vs_; }
