@@ -216,7 +216,7 @@ D3D11_QUERY Map(const QueryType queryType)
         case QueryType::SamplesPassed:                      return D3D11_QUERY_OCCLUSION;
         case QueryType::AnySamplesPassed:                   return D3D11_QUERY_OCCLUSION_PREDICATE;
         case QueryType::AnySamplesPassedConservative:       return D3D11_QUERY_OCCLUSION_PREDICATE;
-        case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP;
+        case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP_DISJOINT;
         case QueryType::StreamOutOverflow:                  return D3D11_QUERY_SO_OVERFLOW_PREDICATE;
         case QueryType::StreamOutPrimitivesWritten:         return D3D11_QUERY_SO_STATISTICS;
         case QueryType::PrimitivesGenerated:                /* pass */
@@ -228,9 +228,9 @@ D3D11_QUERY Map(const QueryType queryType)
         case QueryType::GeometryShaderInvocations:          /* pass */
         case QueryType::FragmentShaderInvocations:          /* pass */
         case QueryType::ComputeShaderInvocations:           /* pass */
-        case QueryType::GeometryPrimitivesGenerated:        return D3D11_QUERY_PIPELINE_STATISTICS;
-        case QueryType::ClippingInputPrimitives:            break; /* not supported */
-        case QueryType::ClippingOutputPrimitives:           break; /* not supported */
+        case QueryType::GeometryPrimitivesGenerated:        /* pass */
+        case QueryType::ClippingInputPrimitives:            /* pass */
+        case QueryType::ClippingOutputPrimitives:           return D3D11_QUERY_PIPELINE_STATISTICS;
     }
     DXTypes::MapFailed("QueryType", "D3D11_QUERY");
 }

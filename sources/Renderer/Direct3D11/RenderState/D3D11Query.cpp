@@ -14,6 +14,14 @@ namespace LLGL
 {
 
 
+static ComPtr<ID3D11Query> DXCreateQuery(ID3D11Device* device, const D3D11_QUERY_DESC& desc)
+{
+    ComPtr<ID3D11Query> queryObject;
+    auto hr = device->CreateQuery(&desc, &queryObject);
+    DXThrowIfFailed(hr, "failed to create D3D11 query");
+    return queryObject;
+}
+
 D3D11Query::D3D11Query(ID3D11Device* device, const QueryType type) :
     Query           ( type                  ),
     queryObjectType_( D3D11Types::Map(type) )
@@ -24,8 +32,15 @@ D3D11Query::D3D11Query(ID3D11Device* device, const QueryType type) :
         queryDesc.Query     = queryObjectType_;
         queryDesc.MiscFlags = 0;
     }
-    auto hr = device->CreateQuery(&queryDesc, &queryObject_);
-    DXThrowIfFailed(hr, "failed to create D3D11 query");
+    queryObject_ = DXCreateQuery(device, queryDesc);
+
+    /* Create secondary D3D query objects */
+    if (queryObjectType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    {
+        queryDesc.Query         = D3D11_QUERY_TIMESTAMP;
+        timeStampQueryBegin_    = DXCreateQuery(device, queryDesc);
+        timeStampQueryEnd_      = DXCreateQuery(device, queryDesc);
+    }
 }
 
 

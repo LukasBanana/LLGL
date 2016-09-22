@@ -251,13 +251,35 @@ void D3D11RenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 void D3D11RenderContext::BeginQuery(Query& query)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-    context_->Begin(queryD3D.GetQueryObject());
+
+    if (queryD3D.GetQueryObjectType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    {
+        /* Begin disjoint query first, and insert the beginning timestamp query */
+        context_->Begin(queryD3D.GetQueryObject());
+        context_->End(queryD3D.GetTimeStampQueryBegin());
+    }
+    else
+    {
+        /* Begin standard query */
+        context_->Begin(queryD3D.GetQueryObject());
+    }
 }
 
 void D3D11RenderContext::EndQuery(Query& query)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-    context_->End(queryD3D.GetQueryObject());
+
+    if (queryD3D.GetQueryObjectType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
+    {
+        /* Insert the ending timestamp query, and end the disjoint query */
+        context_->End(queryD3D.GetTimeStampQueryEnd());
+        context_->End(queryD3D.GetQueryObject());
+    }
+    else
+    {
+        /* End standard query */
+        context_->End(queryD3D.GetQueryObject());
+    }
 }
 
 bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
@@ -268,13 +290,44 @@ bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
     {
         /* Query result from data of type: UINT64 */
         case D3D11_QUERY_OCCLUSION:
-        case D3D11_QUERY_TIMESTAMP:
         {
             UINT64 data = 0;
             if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
             {
                 result = data;
                 return true;
+            }
+        }
+        break;
+
+        /* Query result from special case query type: TimeElapsed */
+        case D3D11_QUERY_TIMESTAMP_DISJOINT:
+        {
+            UINT64 startTime = 0;
+            if (context_->GetData(queryD3D.GetTimeStampQueryBegin(), &startTime, sizeof(startTime), 0) == S_OK)
+            {
+                UINT64 endTime = 0;
+                if (context_->GetData(queryD3D.GetTimeStampQueryEnd(), &endTime, sizeof(endTime), 0) == S_OK)
+                {
+                    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjointData;
+                    if (context_->GetData(queryD3D.GetQueryObject(), &disjointData, sizeof(disjointData), 0) == S_OK)
+                    {
+                        if (disjointData.Disjoint == FALSE)
+                        {
+                            /* Normalize elapsed time to nanoseconds */
+                            static const double nanoseconds = 1000000000.0;
+                            
+                            auto deltaTime      = (endTime - startTime);
+                            auto scale          = (nanoseconds / static_cast<double>(disjointData.Frequency));
+                            auto elapsedTime    = (static_cast<double>(deltaTime) * scale);
+
+                            result = static_cast<std::uint64_t>(elapsedTime + 0.5);
+                        }
+                        else
+                            result = 0;
+                        return true;
+                    }
+                }
             }
         }
         break;
@@ -329,6 +382,12 @@ bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
                         break;
                     case QueryType::GeometryPrimitivesGenerated:
                         result = data.GSPrimitives;
+                        break;
+                    case QueryType::ClippingInputPrimitives:
+                        result = data.GSPrimitives; // <-- TODO: workaround
+                        break;
+                    case QueryType::ClippingOutputPrimitives:
+                        result = data.CInvocations;
                         break;
                     default:
                         return false;

@@ -25,20 +25,34 @@ class D3D11Query : public Query
 
         D3D11Query(ID3D11Device* device, const QueryType type);
 
-        inline ID3D11Query* GetQueryObject() const
-        {
-            return queryObject_.Get();
-        }
-
         inline D3D11_QUERY GetQueryObjectType() const
         {
             return queryObjectType_;
         }
 
+        inline ID3D11Query* GetQueryObject() const
+        {
+            return queryObject_.Get();
+        }
+
+        inline ID3D11Query* GetTimeStampQueryBegin() const
+        {
+            return timeStampQueryBegin_.Get();
+        }
+
+        inline ID3D11Query* GetTimeStampQueryEnd() const
+        {
+            return timeStampQueryEnd_.Get();
+        }
+
     private:
 
+        D3D11_QUERY         queryObjectType_        = D3D11_QUERY_EVENT;
         ComPtr<ID3D11Query> queryObject_;
-        D3D11_QUERY         queryObjectType_    = D3D11_QUERY_EVENT;
+
+        // Query objects for the special query type: TimeElapsed
+        ComPtr<ID3D11Query> timeStampQueryBegin_;
+        ComPtr<ID3D11Query> timeStampQueryEnd_;
 
 };
 

@@ -31,6 +31,8 @@ class Tutorial02 : public Tutorial
 
     bool                    showWireframe       = false;
 
+    LLGL::Query* query = nullptr;
+
     struct Settings
     {
         Gs::Matrix4f    wvpMatrix;
@@ -59,6 +61,8 @@ public:
         LoadShaders(vertexFormat, renderCaps.hasHLSL);
         CreatePipelines();
         InitProjection();
+
+        query = renderer->CreateQuery(LLGL::QueryType::TimeElapsed);
 
         // Print some information on the standard output
         std::cout << "press LEFT MOUSE BUTTON and move mouse on X axis to increase/decrease inner tessellation" << std::endl;
@@ -165,8 +169,8 @@ public:
 
     void ShowTessLevel()
     {
-        std::cout << "tessellation level (inner = " << settings.tessLevelInner << ", outer = " << settings.tessLevelOuter << ")      \r";
-        std::flush(std::cout);
+        //std::cout << "tessellation level (inner = " << settings.tessLevelInner << ", outer = " << settings.tessLevelOuter << ")      \r";
+        //std::flush(std::cout);
     }
 
 private:
@@ -230,8 +234,16 @@ private:
         context->SetIndexBuffer(*indexBuffer);
         context->SetConstantBuffer(*constantBuffer, constantBufferIndex);
 
+        context->BeginQuery(*query);
+
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
         context->DrawIndexed(24, 0);
+
+        context->EndQuery(*query);
+        std::uint64_t result = 0;
+        while (!context->QueryResult(*query, result)) {}
+        std::cout << "result = " << result << "                         \r";
+        std::flush(std::cout);
 
         // Present result on the screen
         context->Present();
