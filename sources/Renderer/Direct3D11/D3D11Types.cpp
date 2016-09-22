@@ -209,6 +209,20 @@ D3D11_TEXTURE_ADDRESS_MODE Map(const TextureWrap textureWrap)
     DXTypes::MapFailed("TextureWrap", "D3D11_TEXTURE_ADDRESS_MODE");
 }
 
+D3D11_QUERY Map(const QueryType queryType)
+{
+    switch (queryType)
+    {
+        case QueryType::SamplesPassed:                      return D3D11_QUERY_OCCLUSION;
+        case QueryType::AnySamplesPassed:                   return D3D11_QUERY_OCCLUSION_PREDICATE;
+        case QueryType::AnySamplesPassedConservative:       return D3D11_QUERY_OCCLUSION_PREDICATE;
+        case QueryType::PrimitivesGenerated:                return D3D11_QUERY_SO_STATISTICS;
+        case QueryType::TransformFeedbackPrimitivesWritten: return D3D11_QUERY_SO_STATISTICS;
+        case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP;
+    }
+    DXTypes::MapFailed("QueryType", "D3D11_QUERY");
+}
+
 
 } // /namespace D3D11Types
 

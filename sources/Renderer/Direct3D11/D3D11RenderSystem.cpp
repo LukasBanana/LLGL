@@ -371,12 +371,12 @@ void D3D11RenderSystem::Release(ComputePipeline& computePipeline)
 
 Query* D3D11RenderSystem::CreateQuery(const QueryType type)
 {
-    return nullptr;//todo...
+    return TakeOwnership(queries_, MakeUnique<D3D11Query>(device_.Get(), type));
 }
 
 void D3D11RenderSystem::Release(Query& query)
 {
-    //todo...
+    RemoveFromUniqueSet(queries_, &query);
 }
 
 

@@ -16,9 +16,12 @@
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11GraphicsPipeline.h"
 #include "RenderState/D3D11ComputePipeline.h"
+#include "RenderState/D3D11Query.h"
+
 #include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
+
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
 
@@ -247,17 +250,33 @@ void D3D11RenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 
 void D3D11RenderContext::BeginQuery(Query& query)
 {
-    //todo
+    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
+    context_->Begin(queryD3D.GetQueryObject());
 }
 
 void D3D11RenderContext::EndQuery(Query& query)
 {
-    //todo
+    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
+    context_->End(queryD3D.GetQueryObject());
 }
 
 bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
 {
-    return false; //todo
+    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
+    HRESULT hr = 0;
+
+    switch (queryD3D.GetQueryObjectType())
+    {
+
+
+        default:
+        {
+            hr = context_->GetData(queryD3D.GetQueryObject(), &result, sizeof(result), 0);
+        }
+        break;
+    }
+
+    return SUCCEEDED(hr);
 }
 
 /* ----- Drawing ----- */
