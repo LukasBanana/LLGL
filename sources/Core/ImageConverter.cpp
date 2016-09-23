@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/ImageConverter.h>
+#include <LLGL/ColorRGBA.h>
 #include <limits>
 #include <algorithm>
 #include <cstdint>
@@ -19,52 +20,59 @@ namespace LLGL
 
 /* ----- Internal structures ----- */
 
-template <typename TBase, typename TMod>
-struct VariantType
+union Variant
 {
-    using type = TBase;
+    Variant()
+    {
+    }
+
+    std::int8_t      int8;
+    std::uint8_t     uint8;
+    std::int16_t     int16;
+    std::uint16_t    uint16;
+    std::int32_t     int32;
+    std::uint32_t    uint32;
+    float            real32;
+    double           real64;
 };
 
-template <typename TBase>
-struct VariantType<TBase, int>
+union VariantBuffer
 {
-    using type = TBase;
-};
-
-template <typename TBase>
-struct VariantType<TBase, int*>
-{
-    using type = TBase*;
-};
-
-template <typename TBase>
-struct VariantType<TBase, const int*>
-{
-    using type = const TBase*;
-};
-
-template <typename T>
-union VariantT
-{
-    VariantT(typename VariantType<void, T>::type raw) :
+    VariantBuffer(void* raw) :
         raw( raw )
     {
     }
 
-    typename VariantType<void, T>::type             raw;
-    typename VariantType<std::int8_t, T>::type      int8;
-    typename VariantType<std::uint8_t, T>::type     uint8;
-    typename VariantType<std::int16_t, T>::type     int16;
-    typename VariantType<std::uint16_t, T>::type    uint16;
-    typename VariantType<std::int32_t, T>::type     int32;
-    typename VariantType<std::uint32_t, T>::type    uint32;
-    typename VariantType<float, T>::type            real32;
-    typename VariantType<double, T>::type           real64;
+    void*           raw;
+    std::int8_t*    int8;
+    std::uint8_t*   uint8;
+    std::int16_t*   int16;
+    std::uint16_t*  uint16;
+    std::int32_t*   int32;
+    std::uint32_t*  uint32;
+    float*          real32;
+    double*         real64;
 };
 
-using Variant = VariantT<int>;
-using VariantBuffer = VariantT<int*>;
-using VariantConstBuffer = VariantT<const int*>;
+union VariantConstBuffer
+{
+    VariantConstBuffer(const void* raw) :
+        raw( raw )
+    {
+    }
+
+    const void*             raw;
+    const std::int8_t*      int8;
+    const std::uint8_t*     uint8;
+    const std::int16_t*     int16;
+    const std::uint16_t*    uint16;
+    const std::int32_t*     int32;
+    const std::uint32_t*    uint32;
+    const float*            real32;
+    const double*           real64;
+};
+
+using VariantColor = ColorRGBAT<Variant>;
 
 
 /* ----- Internal functions ----- */
@@ -227,6 +235,15 @@ static ImageBuffer ConvertImageBufferDataType(
     return dstImage;
 }
 
+static void ReadRGBAFormattedVariant(ColorRGBAT<Variant>& value, ImageFormat srcFormat, const VariantConstBuffer& srcBuffer, std::size_t idx)
+{
+    /*switch (srcFormat)
+    {
+
+
+    }*/
+}
+
 static ImageBuffer ConvertImageBufferFormat(
     ImageFormat srcFormat,
     DataType    srcDataType,
@@ -250,9 +267,11 @@ static ImageBuffer ConvertImageBufferFormat(
     VariantConstBuffer src(srcBuffer);
     VariantBuffer dst(dstImage.get());
 
+    ColorRGBAT<Variant> value(Gs::UninitializeTag{});
+
     for (std::size_t i = 0; i < imageSize; ++i)
     {
-
+        //ReadRGBAFormattedVariant();
 
 
     }
