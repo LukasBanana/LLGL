@@ -286,21 +286,21 @@ class LLGL_EXPORT RenderSystem
         \see WriteTexture1D
         \see Configuration::defaultTextureImageColor
         */
-        virtual void SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        virtual void SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc = nullptr) = 0;
 
         /**
         \brief Initializes the specified texture as a 2-dimensional texture.
         \see SetupTexture1D
         \see WriteTexture2D
         */
-        virtual void SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        virtual void SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) = 0;
 
         /**
         \brief Initializes the specified texture as a 3-dimensional texture.
         \see SetupTexture1D
         \see WriteTexture3D
         */
-        virtual void SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        virtual void SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc = nullptr) = 0;
 
         /**
         \brief Initializes the specified texture as a cube texture with six faces.
@@ -311,7 +311,7 @@ class LLGL_EXPORT RenderSystem
         \see WriteTextureCube
         \see AxisDirection
         */
-        virtual void SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        virtual void SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) = 0;
         
         /**
         \brief Initializes the specified texture as a 1-dimensional array texture.
@@ -319,21 +319,21 @@ class LLGL_EXPORT RenderSystem
         \see SetupTexture1D
         \see WriteTexture1DArray
         */
-        virtual void SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        virtual void SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) = 0;
         
         /**
         \brief Initializes the specified texture as a 2-dimensional array texture.
         \see SetupTexture1DArray
         \see WriteTexture2DArray
         */
-        virtual void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        virtual void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) = 0;
         
         /**
         \brief Initializes the specified texture as a cube array texture with six faces for each layer.
         \see SetupTexture1DArray
         \see WriteTextureCubeArray
         */
-        virtual void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor* imageDesc = nullptr) = 0;
+        virtual void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) = 0;
         
         /**
         \brief Updates the data of the specified texture.
@@ -344,19 +344,19 @@ class LLGL_EXPORT RenderSystem
         \param[in] imageDesc Specifies the image data descriptor. Its "data" member must not be null!
         \remarks This texture must be initialized as a 1-dimensional texture.
         */
-        virtual void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDataDescriptor& imageDesc) = 0;
+        virtual void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc) = 0;
         
         /**
         \see WriteTexture1D
         \remarks This texture must be initialized as a 2-dimensional texture.
         */
-        virtual void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc) = 0;
+        virtual void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc) = 0;
         
         /**
         \see WriteTexture1D
         \remarks This texture must be initialized as a 3-dimensional texture.
         */
-        virtual void WriteTexture3D(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDataDescriptor& imageDesc) = 0;
+        virtual void WriteTexture3D(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDescriptor& imageDesc) = 0;
         
         /**
         \param[in] cubeFace Specifies the cube face which is to be updated.
@@ -365,7 +365,7 @@ class LLGL_EXPORT RenderSystem
         */
         virtual void WriteTextureCube(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace,
-            const Gs::Vector2i& size, const ImageDataDescriptor& imageDesc
+            const Gs::Vector2i& size, const ImageDescriptor& imageDesc
         ) = 0;
         
         /**
@@ -376,7 +376,7 @@ class LLGL_EXPORT RenderSystem
         */
         virtual void WriteTexture1DArray(
             Texture& texture, int mipLevel, int position, unsigned int layerOffset,
-            int size, unsigned int layers, const ImageDataDescriptor& imageDesc
+            int size, unsigned int layers, const ImageDescriptor& imageDesc
         ) = 0;
         
         /**
@@ -385,7 +385,7 @@ class LLGL_EXPORT RenderSystem
         */
         virtual void WriteTexture2DArray(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
-            const Gs::Vector2i& size, unsigned int layers, const ImageDataDescriptor& imageDesc
+            const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor& imageDesc
         ) = 0;
 
         /**
@@ -397,7 +397,7 @@ class LLGL_EXPORT RenderSystem
         */
         virtual void WriteTextureCubeArray(
             Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
-            const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDataDescriptor& imageDesc
+            const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDescriptor& imageDesc
         ) = 0;
 
         /**

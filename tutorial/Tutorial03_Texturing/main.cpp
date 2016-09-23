@@ -95,7 +95,7 @@ public:
         colorMap = renderer->CreateTexture();
 
         // Upload image data onto hardware texture
-        LLGL::ImageDataDescriptor imageDesc;
+        LLGL::ImageDescriptor imageDesc;
         {
             // Set image buffer source for texture initial data
             imageDesc.data          = imageBuffer;

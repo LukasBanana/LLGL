@@ -130,12 +130,12 @@ enum class AxisDirection
 /* ----- Structures ----- */
 
 //! Texture data descriptor structure.
-struct LLGL_EXPORT ImageDataDescriptor
+struct LLGL_EXPORT ImageDescriptor
 {
-    ImageDataDescriptor() = default;
+    ImageDescriptor() = default;
 
     // Constructor for uncompressed image data.
-    ImageDataDescriptor(ImageFormat dataFormat, DataType dataType, const void* data) :
+    ImageDescriptor(ImageFormat dataFormat, DataType dataType, const void* data) :
         dataFormat  ( dataFormat ),
         dataType    ( dataType   ),
         data        ( data       )
@@ -143,7 +143,7 @@ struct LLGL_EXPORT ImageDataDescriptor
     }
 
     //! Constructor for compressed image data.
-    ImageDataDescriptor(ImageFormat dataFormat, const void* data, unsigned int compressedSize) :
+    ImageDescriptor(ImageFormat dataFormat, const void* data, unsigned int compressedSize) :
         dataFormat      ( dataFormat     ),
         data            ( data           ),
         compressedSize  ( compressedSize )

@@ -96,7 +96,7 @@ void D3D11Texture::CreateTexture3D(ID3D11Device* device, const D3D11_TEXTURE3D_D
 }
 
 void D3D11Texture::UpdateSubresource(
-    ID3D11DeviceContext* context, UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox, const ImageDataDescriptor& imageDesc)
+    ID3D11DeviceContext* context, UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox, const ImageDescriptor& imageDesc)
 {
     /* Get destination subresource index */
     auto dstSubresource = D3D11CalcSubresource(mipSlice, arraySlice, numMipLevels_);

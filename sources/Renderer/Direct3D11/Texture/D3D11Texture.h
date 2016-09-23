@@ -56,7 +56,7 @@ class D3D11Texture : public Texture
         void UpdateSubresource(
             ID3D11DeviceContext* context,
             UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox,
-            const ImageDataDescriptor& imageDesc
+            const ImageDescriptor& imageDesc
         );
 
         inline const D3D11HardwareTexture& GetHardwareTexture() const
