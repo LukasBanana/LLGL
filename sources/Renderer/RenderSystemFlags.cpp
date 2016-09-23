@@ -24,9 +24,9 @@ LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType)
             return 2;
         case DataType::Int32:
         case DataType::UInt32:
-        case DataType::Float32:
+        case DataType::Float:
             return 4;
-        case DataType::Float64:
+        case DataType::Double:
             return 8;
     }
     return 0;

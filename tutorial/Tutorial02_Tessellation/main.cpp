@@ -72,7 +72,7 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 3);
+        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 3);
 
         // Create vertex- and index buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);

@@ -47,8 +47,8 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float32, 2);
-        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float32, 2);
+        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
+        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
 
         // Define vertex buffer data
         struct Vertex
@@ -127,17 +127,17 @@ public:
         samplerDesc.mipMapLODBias = 3.0f;
         sampler[1] = renderer->CreateSampler(samplerDesc);
 
-        // Create 2nd sampler state with MIP-map bias
+        // Create 3rd sampler state with nearest filtering
         samplerDesc.minFilter = LLGL::TextureFilter::Nearest;
         sampler[2] = renderer->CreateSampler(samplerDesc);
 
-        // Create 3rd sampler state with clamped texture wrap modes
+        // Create 4th sampler state with clamped texture wrap mode
         samplerDesc.minFilter = LLGL::TextureFilter::Linear;
         samplerDesc.mipMapLODBias = 0.0f;
         samplerDesc.textureWrapU = LLGL::TextureWrap::Clamp;
         sampler[3] = renderer->CreateSampler(samplerDesc);
 
-        // Create 2nd sampler state with MIP-map bias
+        // Create 5th sampler state with mirrored texture wrap mode
         samplerDesc.textureWrapV = LLGL::TextureWrap::Mirror;
         sampler[4] = renderer->CreateSampler(samplerDesc);
     }

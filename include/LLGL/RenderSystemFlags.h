@@ -47,17 +47,17 @@ enum class BufferCPUAccess
 //! Renderer data types enumeration.
 enum class DataType
 {
-    Int8,       //!< 8-bit signed integer.
-    UInt8,      //!< 8-bit unsigned integer.
+    Int8,   //!< 8-bit signed integer (char).
+    UInt8,  //!< 8-bit unsigned integer (unsigned char).
 
-    Int16,      //!< 16-bit signed integer.
-    UInt16,     //!< 16-bit unsigned integer.
+    Int16,  //!< 16-bit signed integer (short).
+    UInt16, //!< 16-bit unsigned integer (unsigned short).
 
-    Int32,      //!< 32-bit signed integer.
-    UInt32,     //!< 32-bit unsigned integer.
+    Int32,  //!< 32-bit signed integer (int).
+    UInt32, //!< 32-bit unsigned integer (unsiged int).
     
-    Float32,    //!< 32-bit floating-point.
-    Float64,    //!< 64-bit floating-point.
+    Float,  //!< 32-bit floating-point (float).
+    Double, //!< 64-bit real type (double).
 };
 
 //! Shading language version enumation.

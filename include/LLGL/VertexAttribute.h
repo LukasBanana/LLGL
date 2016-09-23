@@ -20,8 +20,8 @@ namespace LLGL
 //! Vertex attribute class.
 struct VertexAttribute
 {
-    //! Data type of the vertex attribute components. By default DataType::Float32.
-    DataType        dataType        = DataType::Float32;
+    //! Data type of the vertex attribute components. By default DataType::Float.
+    DataType        dataType        = DataType::Float;
 
     //! Specifies whether non-floating-point data types are to be converted to floating-points. By default false.
     bool            conversion      = false;
