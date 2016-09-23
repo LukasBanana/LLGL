@@ -12,7 +12,8 @@
 #include "Export.h"
 #include "RenderSystemFlags.h"
 #include "TextureFlags.h"
-#include <vector>
+#include <memory>
+#include <vector>//!!!
 
 
 namespace LLGL
@@ -20,23 +21,40 @@ namespace LLGL
 
 
 /**
-\brief Converts the image format and data type of the source image.
-\param[in] srcImageFormat Specifies the source image format.
-\param[in] srcDataType Specifies the source data type.
-\param[in] srcImageData Specifies the source image buffer which is to be converted.
-\param[in] srcImageSize Specifies the size (in bytes) of the source image buffer.
-\param[in] dstImageFormat Specifies the destination image format.
-\param[in] dstDataType Specifies the destination data type.
-\return Byte array with the converted image data.
-This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
+\brief Image buffer type.
+\remarks Commonly this would be an std::vector<char>, but the image conversion is an optimized process,
+where the default initialization of an std::vector is undesired.
+Therefore, the image buffer type is an std::unique_ptr<char[]>.
+\see ConvertImage
 */
-LLGL_EXPORT std::vector<char> ConvertImage(
-    ImageFormat srcImageFormat,
+using ImageBuffer = std::unique_ptr<char[]>;
+
+/**
+\brief Converts the image format and data type of the source image.
+\param[in] srcFormat Specifies the source image format.
+\param[in] srcDataType Specifies the source data type.
+\param[in] srcBuffer Pointer to the source image buffer which is to be converted.
+\param[in] srcBufferSize Specifies the size (in bytes) of the source image buffer.
+\param[in] dstFormat Specifies the destination image format.
+\param[in] dstDataType Specifies the destination data type.
+\param[in] threadCount Specifies the number of threads to use for conversion.
+If this is 0, no multi-threading is used. By default 0.
+\return Image buffer with the converted image data or null if no conversion is necessary.
+This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
+\remarks Compressed images can not be converted.
+\throw std::invalid_argument If a compressed image format is specified either as source or destination,
+if the source buffer size is not a multiple of the source data type size times the image format size, or if 'srcBuffer' is a null pointer.
+\see ImageBuffer
+\see DataTypeSize
+*/
+LLGL_EXPORT ImageBuffer ConvertImageBuffer(
+    ImageFormat srcFormat,
     DataType    srcDataType,
-    const void* srcImageData,
-    std::size_t srcImageSize,
-    ImageFormat dstImageFormat,
-    DataType    dstDataType
+    const void* srcBuffer,
+    std::size_t srcBufferSize,
+    ImageFormat dstFormat,
+    DataType    dstDataType,
+    std::size_t threadCount = 0
 );
 
 

@@ -13,9 +13,9 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT std::size_t ColorFormatSize(const ImageFormat colorFormat)
+LLGL_EXPORT std::size_t ImageFormatSize(const ImageFormat imageFormat)
 {
-    switch (colorFormat)
+    switch (imageFormat)
     {
         case ImageFormat::R:                return 1;
         case ImageFormat::RG:               return 2;

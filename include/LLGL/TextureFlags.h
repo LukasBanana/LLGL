@@ -204,12 +204,12 @@ union TextureDescriptor
 /* ----- Functions ----- */
 
 /**
-\brief Returns the size (in number of components) of the specified color format.
-\param[in] colorFormat Specifies the color format.
-\return Number of components of the specified color format, or 0 if 'colorFormat' specifies a compressed color format.
+\brief Returns the size (in number of components) of the specified image format.
+\param[in] imageFormat Specifies the image format.
+\return Number of components of the specified image format, or 0 if 'imageFormat' specifies a compressed color format.
 \see IsCompressedFormat(const ImageFormat)
 */
-LLGL_EXPORT std::size_t ColorFormatSize(const ImageFormat colorFormat);
+LLGL_EXPORT std::size_t ImageFormatSize(const ImageFormat imageFormat);
 
 /**
 \brief Returns the number of MIP-map levels for a texture with the specified size.

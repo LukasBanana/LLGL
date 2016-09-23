@@ -255,7 +255,7 @@ void GLRenderSystem::SetupTextureCube(Texture& texture, const TextureFormat form
     {
         /* Setup texture image cube-faces from descriptor */
         auto imageFace          = reinterpret_cast<const char*>(imageDesc->buffer);
-        auto imageFaceStride    = (size.x * size.y * ColorFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType));
+        auto imageFaceStride    = (size.x * size.y * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType));
 
         if (IsCompressedFormat(format))
             imageFaceStride = imageDesc->compressedSize;
