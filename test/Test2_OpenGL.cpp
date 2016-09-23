@@ -249,9 +249,9 @@ int main()
 
         LLGL::ImageDescriptor textureData;
         {
-            textureData.dataFormat  = LLGL::ImageFormat::RGB;
+            textureData.format      = LLGL::ImageFormat::RGB;
             textureData.dataType    = LLGL::DataType::UInt8;
-            textureData.data        = image;
+            textureData.buffer      = image;
         }
         renderer->SetupTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture
         //renderer->SetupTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture

@@ -17,8 +17,8 @@ LLGL_EXPORT std::size_t ColorFormatSize(const ImageFormat colorFormat)
 {
     switch (colorFormat)
     {
-        case ImageFormat::Gray:             return 1;
-        case ImageFormat::GrayAlpha:        return 2;
+        case ImageFormat::R:                return 1;
+        case ImageFormat::RG:               return 2;
         case ImageFormat::RGB:              return 3;
         case ImageFormat::BGR:              return 3;
         case ImageFormat::RGBA:             return 4;

@@ -175,8 +175,8 @@ GLenum Map(const ImageFormat colorFormat)
 {
     switch (colorFormat)
     {
-        case ImageFormat::Gray:             return GL_RED;
-        case ImageFormat::GrayAlpha:        return GL_RG;
+        case ImageFormat::R:                return GL_RED;
+        case ImageFormat::RG:               return GL_RG;
         case ImageFormat::RGB:              return GL_RGB;
         case ImageFormat::BGR:              return GL_BGR;
         case ImageFormat::RGBA:             return GL_RGBA;

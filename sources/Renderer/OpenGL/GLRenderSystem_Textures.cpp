@@ -168,7 +168,7 @@ void GLRenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage1D(format, size, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+        GLTexImage1D(format, size, GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize);
     }
     else if (IsCompressedFormat(format))
     {
@@ -192,7 +192,7 @@ void GLRenderSystem::SetupTexture2D(Texture& texture, const TextureFormat format
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage2D(format, size.x, size.y, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+        GLTexImage2D(format, size.x, size.y, GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize);
     }
     else if (IsCompressedFormat(format))
     {
@@ -218,7 +218,7 @@ void GLRenderSystem::SetupTexture3D(Texture& texture, const TextureFormat format
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage3D(format, size.x, size.y, size.z, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+        GLTexImage3D(format, size.x, size.y, size.z, GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize);
     }
     else if (IsCompressedFormat(format))
     {
@@ -254,13 +254,13 @@ void GLRenderSystem::SetupTextureCube(Texture& texture, const TextureFormat form
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
-        auto imageFace          = reinterpret_cast<const char*>(imageDesc->data);
-        auto imageFaceStride    = (size.x * size.y * ColorFormatSize(imageDesc->dataFormat) * DataTypeSize(imageDesc->dataType));
+        auto imageFace          = reinterpret_cast<const char*>(imageDesc->buffer);
+        auto imageFaceStride    = (size.x * size.y * ColorFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType));
 
         if (IsCompressedFormat(format))
             imageFaceStride = imageDesc->compressedSize;
 
-        auto dataFormatGL       = GLTypes::Map(imageDesc->dataFormat);
+        auto dataFormatGL       = GLTypes::Map(imageDesc->format);
         auto dataTypeGL         = GLTypes::Map(imageDesc->dataType);
 
         for (auto face : cubeFaces)
@@ -295,7 +295,7 @@ void GLRenderSystem::SetupTexture1DArray(Texture& texture, const TextureFormat f
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage1DArray(format, size, layers, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+        GLTexImage1DArray(format, size, layers, GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize);
     }
     else if (IsCompressedFormat(format))
     {
@@ -321,7 +321,7 @@ void GLRenderSystem::SetupTexture2DArray(Texture& texture, const TextureFormat f
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
-        GLTexImage2DArray(format, size.x, size.y, layers, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+        GLTexImage2DArray(format, size.x, size.y, layers, GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize);
     }
     else if (IsCompressedFormat(format))
     {
@@ -347,7 +347,7 @@ void GLRenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
-        GLTexImageCubeArray(format, size.x, size.y, layers, GLTypes::Map(imageDesc->dataFormat), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->compressedSize);
+        GLTexImageCubeArray(format, size.x, size.y, layers, GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize);
     }
     else if (IsCompressedFormat(format))
     {
@@ -366,54 +366,54 @@ void GLRenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat
 
 static void GLTexSubImage1DBase(GLenum target, int mipLevel, int x, int width, const ImageDescriptor& imageDesc)
 {
-    if (IsCompressedFormat(imageDesc.dataFormat))
+    if (IsCompressedFormat(imageDesc.format))
     {
         glCompressedTexSubImage1D(
             target, mipLevel, x, width,
-            GLTypes::Map(imageDesc.dataFormat), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.data
+            GLTypes::Map(imageDesc.format), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.buffer
         );
     }
     else
     {
         glTexSubImage1D(
             target, mipLevel, x, width,
-            GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+            GLTypes::Map(imageDesc.format), GLTypes::Map(imageDesc.dataType), imageDesc.buffer
         );
     }
 }
 
 static void GLTexSubImage2DBase(GLenum target, int mipLevel, int x, int y, int width, int height, const ImageDescriptor& imageDesc)
 {
-    if (IsCompressedFormat(imageDesc.dataFormat))
+    if (IsCompressedFormat(imageDesc.format))
     {
         glCompressedTexSubImage2D(
             target, mipLevel, x, y, width, height,
-            GLTypes::Map(imageDesc.dataFormat), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.data
+            GLTypes::Map(imageDesc.format), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.buffer
         );
     }
     else
     {
         glTexSubImage2D(
             target, mipLevel, x, y, width, height,
-            GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+            GLTypes::Map(imageDesc.format), GLTypes::Map(imageDesc.dataType), imageDesc.buffer
         );
     }
 }
 
 static void GLTexSubImage3DBase(GLenum target, int mipLevel, int x, int y, int z, int width, int height, int depth, const ImageDescriptor& imageDesc)
 {
-    if (IsCompressedFormat(imageDesc.dataFormat))
+    if (IsCompressedFormat(imageDesc.format))
     {
         glCompressedTexSubImage3D(
             target, mipLevel, x, y, z, width, height, depth,
-            GLTypes::Map(imageDesc.dataFormat), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.data
+            GLTypes::Map(imageDesc.format), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.buffer
         );
     }
     else
     {
         glTexSubImage3D(
             target, mipLevel, x, y, z, width, height, depth,
-            GLTypes::Map(imageDesc.dataFormat), GLTypes::Map(imageDesc.dataType), imageDesc.data
+            GLTypes::Map(imageDesc.format), GLTypes::Map(imageDesc.dataType), imageDesc.buffer
         );
     }
 }

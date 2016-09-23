@@ -103,8 +103,8 @@ enum class TextureFormat
 //! Image format used to write texture data.
 enum class ImageFormat
 {
-    Gray,           //!< Single color component: Gray or rather brightness.
-    GrayAlpha,      //!< Two color components: Gray, Alpha.
+    R,              //!< Single color component: Red.
+    RG,             //!< Two color components: Red, Green.
     RGB,            //!< Three color components: Red, Green, Blue.
     BGR,            //!< Three color components: Blue, Green, Red.
     RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
@@ -129,31 +129,34 @@ enum class AxisDirection
 
 /* ----- Structures ----- */
 
-//! Texture data descriptor structure.
+/**
+\brief Image descriptor structure.
+\remarks This kind of 'Image' is mainly used to fill the image data of a hardware texture.
+*/
 struct LLGL_EXPORT ImageDescriptor
 {
     ImageDescriptor() = default;
 
     // Constructor for uncompressed image data.
-    ImageDescriptor(ImageFormat dataFormat, DataType dataType, const void* data) :
-        dataFormat  ( dataFormat ),
-        dataType    ( dataType   ),
-        data        ( data       )
+    ImageDescriptor(ImageFormat format, DataType dataType, const void* buffer) :
+        format  ( format   ),
+        dataType( dataType ),
+        buffer  ( buffer   )
     {
     }
 
     //! Constructor for compressed image data.
-    ImageDescriptor(ImageFormat dataFormat, const void* data, unsigned int compressedSize) :
-        dataFormat      ( dataFormat     ),
-        data            ( data           ),
+    ImageDescriptor(ImageFormat format, const void* buffer, unsigned int compressedSize) :
+        format          ( format         ),
+        buffer          ( buffer         ),
         compressedSize  ( compressedSize )
     {
     }
 
-    ImageFormat     dataFormat      = ImageFormat::Gray;    //!< Specifies the image data format.
-    DataType        dataType        = DataType::UInt8;      //!< Speciifes the image data type. This must be DataType::UInt8 for compressed images.
-    const void*     data            = nullptr;              //!< Pointer to the image data source.
-    unsigned int    compressedSize  = 0;                    //!< Specifies the size (in bytes) of the compressed image. This must be 0 for uncompressed images.
+    ImageFormat     format          = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
+    DataType        dataType        = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images.
+    const void*     buffer          = nullptr;              //!< Pointer to the image buffer.
+    unsigned int    compressedSize  = 0;                    //!< Specifies the size (in bytes) of a compressed image. This must be 0 for uncompressed images.
 };
 
 //! Texture descriptor union.

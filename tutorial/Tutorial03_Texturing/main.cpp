@@ -97,14 +97,14 @@ public:
         // Upload image data onto hardware texture
         LLGL::ImageDescriptor imageDesc;
         {
-            // Set image buffer source for texture initial data
-            imageDesc.data          = imageBuffer;
-
             // Set image buffer color format
-            imageDesc.dataFormat    = LLGL::ImageFormat::RGBA;
+            imageDesc.format    = LLGL::ImageFormat::RGBA;
             
             // Set image buffer data type (unsigned char = 8-bit unsigned integer)
-            imageDesc.dataType      = LLGL::DataType::UInt8;
+            imageDesc.dataType  = LLGL::DataType::UInt8;
+
+            // Set image buffer source for texture initial data
+            imageDesc.buffer    = imageBuffer;
         }
         renderer->SetupTexture2D(*colorMap, LLGL::TextureFormat::RGBA, Gs::Vector2i(texWidth, texHeight), &imageDesc);
 
