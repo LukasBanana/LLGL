@@ -159,6 +159,7 @@ static ImageBuffer AllocByteArray(std::size_t size)
     return ImageBuffer(new char[size]);
 }
 
+// Worker thread procedure for the "ConvertImageBufferDataType" function
 static void ConvertImageBufferDataTypeWorker(
     DataType srcDataType, const VariantConstBuffer& srcBuffer,
     DataType dstDataType, VariantBuffer& dstBuffer,
@@ -380,6 +381,7 @@ static void WriteRGBAFormattedVariant(
     TransferRGBAFormattedVariantColor(dstFormat, dataType, dstBuffer, idx, value);
 }
 
+// Worker thread procedure for the "ConvertImageBufferFormat" function
 static void ConvertImageBufferFormatWorker(
     ImageFormat srcFormat, DataType srcDataType, const VariantConstBuffer& srcBuffer,
     ImageFormat dstFormat, VariantBuffer& dstBuffer,
