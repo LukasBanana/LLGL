@@ -18,10 +18,13 @@ Progress
 --------
 
 - **Version**: 1.00 Alpha
-- **OpenGL Renderer**: ~70% done
-- **Direct3D 11 Renderer**: ~50% done
-- **Direct3D 12 Renderer**: ~5% done
-- **Vulkan Renderer**: not started yet
+
+| Renderer    | Progress | Remarks            |
+|-------------|:--------:|--------------------|
+| OpenGL      | ~70%     |                    |
+| Direct3D 11 | ~50%     |                    |
+| Direct3D 12 | ~5%      | Experimental state |
+| Vulkan      | 0%       | Not started yet    |
 
 
 Thin Abstraction Layer
