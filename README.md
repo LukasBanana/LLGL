@@ -19,12 +19,12 @@ Progress
 
 - **Version**: 1.00 Alpha
 
-| Renderer    | Progress | Remarks            |
-|-------------|:--------:|--------------------|
-| OpenGL      | ~70%     |                    |
-| Direct3D 11 | ~50%     |                    |
-| Direct3D 12 | ~5%      | Experimental state |
-| Vulkan      | 0%       | Not started yet    |
+| Renderer | Progress | Remarks |
+|----------|:--------:|---------|
+| OpenGL | ~70% | |
+| Direct3D 11 | ~50% | ToDo: Storage buffers, Image conversion, Texture update, Render targets |
+| Direct3D 12 | ~5% | Experimental state |
+| Vulkan | 0% | Not started yet |
 
 
 Thin Abstraction Layer
