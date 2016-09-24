@@ -176,6 +176,9 @@ static void ConvertImageBufferDataTypeWorker(
     }
 }
 
+// Minimal number of entries each worker thread shall process
+static const std::size_t threadMinWorkSize = 16;
+
 static ImageBuffer ConvertImageBufferDataType(
     DataType    srcDataType,
     const void* srcBuffer,
@@ -191,6 +194,8 @@ static ImageBuffer ConvertImageBufferDataType(
     /* Get variant buffer for source and destination images */
     VariantConstBuffer src(srcBuffer);
     VariantBuffer dst(dstBuffer.get());
+    
+    threadCount = std::min(threadCount, imageSize / threadMinWorkSize);
 
     if (threadCount > 1)
     {
@@ -424,6 +429,8 @@ static ImageBuffer ConvertImageBufferFormat(
     /* Get variant buffer for source and destination images */
     VariantConstBuffer src(srcBuffer);
     VariantBuffer dst(dstBuffer.get());
+
+    threadCount = std::min(threadCount, imageSize / threadMinWorkSize);
 
     if (threadCount > 1)
     {
