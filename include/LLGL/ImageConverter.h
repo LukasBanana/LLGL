@@ -30,7 +30,7 @@ Therefore, the image buffer type is an std::unique_ptr<char[]>.
 using ImageBuffer = std::unique_ptr<char[]>;
 
 /**
-\brief Converts the image format and data type of the source image.
+\brief Converts the image format and data type of the source image (only uncompressed color formats).
 \param[in] srcFormat Specifies the source image format.
 \param[in] srcDataType Specifies the source data type.
 \param[in] srcBuffer Pointer to the source image buffer which is to be converted.
@@ -41,9 +41,11 @@ using ImageBuffer = std::unique_ptr<char[]>;
 If this is 0, no multi-threading is used. By default 0.
 \return Image buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
-\remarks Compressed images can not be converted.
+\remarks Compressed images and depth-stencil images can not be converted.
 \throw std::invalid_argument If a compressed image format is specified either as source or destination,
-if the source buffer size is not a multiple of the source data type size times the image format size, or if 'srcBuffer' is a null pointer.
+if a depth-stencil format is specified either as source or destination,
+if the source buffer size is not a multiple of the source data type size times the image format size,
+or if 'srcBuffer' is a null pointer.
 \see ImageBuffer
 \see DataTypeSize
 */

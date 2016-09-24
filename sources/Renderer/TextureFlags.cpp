@@ -48,6 +48,11 @@ LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format)
     return (format >= ImageFormat::CompressedRGB);
 }
 
+LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format)
+{
+    return (format == ImageFormat::Depth || format == ImageFormat::DepthStencil);
+}
+
 
 } // /namespace LLGL
 

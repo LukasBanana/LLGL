@@ -219,17 +219,23 @@ LLGL_EXPORT int NumMipLevels(const Gs::Vector3i& textureSize);
 
 /**
 \brief Returns true if the specified texture format is a compressed format,
-i.e. either RGB_DXT1, RGBA_DXT1, RGBA_DXT3, or RGBA_DXT5.
+i.e. either TextureFormat::RGB_DXT1, TextureFormat::RGBA_DXT1, TextureFormat::RGBA_DXT3, or TextureFormat::RGBA_DXT5.
 \see TextureFormat
 */
 LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format);
 
 /**
 \brief Returns true if the specified color format is a compressed format,
-i.e. either CompressedRGB, or CompressedRGBA.
+i.e. either ImageFormat::CompressedRGB, or ImageFormat::CompressedRGBA.
 \see ImageFormat
 */
 LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format);
+
+/**
+\brief Returns true if the specified color foramt is a depth-stencil format,
+i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
+*/
+LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
 
 
 } // /namespace LLGL

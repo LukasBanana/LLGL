@@ -20,6 +20,10 @@ namespace LLGL
 
 /* ----- Internal structures ----- */
 
+/*
+The Variant structures are used to unify the data type conversion.
+*/
+
 union Variant
 {
     Variant()
@@ -76,55 +80,6 @@ using VariantColor = ColorRGBAT<Variant>;
 
 
 /* ----- Internal functions ----- */
-
-#if 0
-
-template <typename T>
-void FillEmpty(std::vector<T>& dstImage)
-{
-    std::fill(dstImage.begin(), dstImage.end(), T(0));
-}
-
-template <typename T>
-std::vector<T> ConvertImageRGBtoRGBA(const T* srcImage, std::size_t imageSize)
-{
-    imageSize /= sizeof(T);
-    std::vector<T> dstImage(imageSize/3*4);
-
-    if (srcImage)
-    {
-        for (std::size_t i = 0, j = 0; i < imageSize; i += 3, j += 4)
-        {
-            dstImage[j  ] = srcImage[i  ];
-            dstImage[j+1] = srcImage[i+1];
-            dstImage[j+2] = srcImage[i+2];
-            dstImage[j+3] = std::numeric_limits<T>::max();
-        }
-    }
-    else
-        FillEmpty(dstImage);
-
-    return dstImage;
-}
-
-template <typename T0, typename T1>
-std::vector<T0> ConvertImageDataType(const T1* srcImage, std::size_t imageSize)
-{
-    imageSize /= sizeof(T1);
-    std::vector<T0> dstImage(imageSize);
-
-    if (srcImage)
-    {
-        for (std::size_t i = 0; i < imageSize; ++i)
-            dstImage[i] = static_cast<T0>(srcImage[i]);
-    }
-    else
-        FillEmpty(dstImage);
-
-    return dstImage;
-}
-
-#endif
 
 // Reads the specified source variant and returns it to the normalized range [0, 1].
 template <typename T>
@@ -235,13 +190,149 @@ static ImageBuffer ConvertImageBufferDataType(
     return dstImage;
 }
 
-static void ReadRGBAFormattedVariant(ColorRGBAT<Variant>& value, ImageFormat srcFormat, const VariantConstBuffer& srcBuffer, std::size_t idx)
+static void SetVariantMinMax(DataType dataType, Variant& var, bool setMin)
 {
-    /*switch (srcFormat)
+    switch (dataType)
     {
+        case DataType::Int8:
+            var.int8 = (setMin ? std::numeric_limits<std::int8_t>::min() : std::numeric_limits<std::int8_t>::max());
+            break;
+        case DataType::UInt8:
+            var.uint8 = (setMin ? std::numeric_limits<std::uint8_t>::min() : std::numeric_limits<std::uint8_t>::max());
+            break;
+        case DataType::Int16:
+            var.int16 = (setMin ? std::numeric_limits<std::int16_t>::min() : std::numeric_limits<std::int16_t>::max());
+            break;
+        case DataType::UInt16:
+            var.uint16 = (setMin ? std::numeric_limits<std::uint16_t>::min() : std::numeric_limits<std::uint16_t>::max());
+            break;
+        case DataType::Int32:
+            var.int32 = (setMin ? std::numeric_limits<std::int32_t>::min() : std::numeric_limits<std::int32_t>::max());
+            break;
+        case DataType::UInt32:
+            var.uint32 = (setMin ? std::numeric_limits<std::uint32_t>::min() : std::numeric_limits<std::uint32_t>::max());
+            break;
+        case DataType::Float:
+            var.real32 = (setMin ? 0.0f : 1.0f);
+            break;
+        case DataType::Double:
+            var.real64 = (setMin ? 0.0 : 1.0);
+            break;
+    }
+}
 
+static void CopyTypedVariant(DataType dataType, const VariantConstBuffer& srcBuffer, std::size_t idx, Variant& dst)
+{
+    switch (dataType)
+    {
+        case DataType::Int8:
+            dst.int8 = srcBuffer.int8[idx];
+            break;
+        case DataType::UInt8:
+            dst.uint8 = srcBuffer.uint8[idx];
+            break;
+        case DataType::Int16:
+            dst.int16 = srcBuffer.int16[idx];
+            break;
+        case DataType::UInt16:
+            dst.uint16 = srcBuffer.uint16[idx];
+            break;
+        case DataType::Int32:
+            dst.int32 = srcBuffer.int32[idx];
+            break;
+        case DataType::UInt32:
+            dst.uint32 = srcBuffer.uint32[idx];
+            break;
+        case DataType::Float:
+            dst.real32 = srcBuffer.real32[idx];
+            break;
+        case DataType::Double:
+            dst.real64 = srcBuffer.real64[idx];
+            break;
+    }
+}
 
-    }*/
+static void CopyTypedVariant(DataType dataType, VariantBuffer& dstBuffer, std::size_t idx, const Variant& src)
+{
+    switch (dataType)
+    {
+        case DataType::Int8:
+            dstBuffer.int8[idx] = src.int8;
+            break;
+        case DataType::UInt8:
+            dstBuffer.uint8[idx] = src.uint8;
+            break;
+        case DataType::Int16:
+            dstBuffer.int16[idx] = src.int16;
+            break;
+        case DataType::UInt16:
+            dstBuffer.uint16[idx] = src.uint16;
+            break;
+        case DataType::Int32:
+            dstBuffer.int32[idx] = src.int32;
+            break;
+        case DataType::UInt32:
+            dstBuffer.uint32[idx] = src.uint32;
+            break;
+        case DataType::Float:
+            dstBuffer.real32[idx] = src.real32;
+            break;
+        case DataType::Double:
+            dstBuffer.real64[idx] = src.real64;
+            break;
+    }
+}
+
+template <typename TBuf, typename TVar>
+void TransferRGBAFormattedVariantColor(
+    ImageFormat format, DataType dataType, TBuf& buffer, std::size_t idx, TVar& value)
+{
+    switch (format)
+    {
+        case ImageFormat::R:
+            CopyTypedVariant(dataType, buffer, idx    , value.r);
+            break;
+        case ImageFormat::RG:
+            CopyTypedVariant(dataType, buffer, idx    , value.r);
+            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
+            break;
+        case ImageFormat::RGB:
+            CopyTypedVariant(dataType, buffer, idx    , value.r);
+            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx + 2, value.b);
+            break;
+        case ImageFormat::BGR:
+            CopyTypedVariant(dataType, buffer, idx    , value.b);
+            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx + 2, value.r);
+            break;
+        case ImageFormat::RGBA:
+            CopyTypedVariant(dataType, buffer, idx    , value.r);
+            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx + 2, value.b);
+            CopyTypedVariant(dataType, buffer, idx + 3, value.a);
+            break;
+        case ImageFormat::BGRA:
+            CopyTypedVariant(dataType, buffer, idx    , value.b);
+            CopyTypedVariant(dataType, buffer, idx + 1, value.g);
+            CopyTypedVariant(dataType, buffer, idx + 2, value.r);
+            CopyTypedVariant(dataType, buffer, idx + 3, value.a);
+            break;
+        default:
+            break;
+    }
+}
+
+static void ReadRGBAFormattedVariant(
+    ImageFormat srcFormat, DataType dataType, const VariantConstBuffer& srcBuffer, std::size_t idx, VariantColor& value)
+{
+    TransferRGBAFormattedVariantColor(srcFormat, dataType, srcBuffer, idx, value);
+}
+
+static void WriteRGBAFormattedVariant(
+    ImageFormat dstFormat, DataType dataType, VariantBuffer& dstBuffer, std::size_t idx, const VariantColor& value)
+{
+    TransferRGBAFormattedVariantColor(dstFormat, dataType, dstBuffer, idx, value);
 }
 
 static ImageBuffer ConvertImageBufferFormat(
@@ -267,13 +358,21 @@ static ImageBuffer ConvertImageBufferFormat(
     VariantConstBuffer src(srcBuffer);
     VariantBuffer dst(dstImage.get());
 
-    ColorRGBAT<Variant> value(Gs::UninitializeTag{});
+    /* Initialize default variant color (0, 0, 0, 1) */
+    VariantColor value(Gs::UninitializeTag{});
+
+    SetVariantMinMax(srcDataType, value.r, true);
+    SetVariantMinMax(srcDataType, value.g, true);
+    SetVariantMinMax(srcDataType, value.b, true);
+    SetVariantMinMax(srcDataType, value.a, false);
 
     for (std::size_t i = 0; i < imageSize; ++i)
     {
-        //ReadRGBAFormattedVariant();
-
-
+        /* Read RGBA variant from source buffer */
+        ReadRGBAFormattedVariant(srcFormat, srcDataType, src, i*srcFormatSize, value);
+        
+        /* Write RGBA variant to destination buffer */
+        WriteRGBAFormattedVariant(dstFormat, srcDataType, dst, i*dstFormatSize, value);
     }
 
     return dstImage;
@@ -296,6 +395,8 @@ LLGL_EXPORT ImageBuffer ConvertImageBuffer(
 
     if (IsCompressedFormat(srcFormat) || IsCompressedFormat(dstFormat))
         throw std::invalid_argument("can not convert compressed image formats");
+    if (IsDepthStencilFormat(srcFormat) || IsDepthStencilFormat(dstFormat))
+        throw std::invalid_argument("can not convert depth-stencil image formats");
     if (srcBufferSize % (DataTypeSize(srcDataType) * ImageFormatSize(srcFormat)) != 0)
         throw std::invalid_argument("source buffer size is not a multiple of the source data type size");
 
