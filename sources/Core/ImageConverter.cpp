@@ -159,6 +159,23 @@ static ImageBuffer AllocByteArray(std::size_t size)
     return ImageBuffer(new char[size]);
 }
 
+static void ConvertImageBufferDataTypeWorker(
+    DataType srcDataType, const VariantConstBuffer& srcBuffer,
+    DataType dstDataType, VariantBuffer& dstBuffer,
+    std::size_t idxBegin, std::size_t idxEnd)
+{
+    double value = 0.0;
+    
+    for (auto i = idxBegin; i < idxEnd; ++i)
+    {
+        /* Read normalized variant from source buffer */
+        value = ReadNormalizedTypedVariant(srcDataType, srcBuffer, i);
+        
+        /* Write normalized variant to destination buffer */
+        WriteNormalizedTypedVariant(dstDataType, dstBuffer, i, value);
+    }
+}
+
 static ImageBuffer ConvertImageBufferDataType(
     DataType    srcDataType,
     const void* srcBuffer,
@@ -169,25 +186,48 @@ static ImageBuffer ConvertImageBufferDataType(
     /* Allocate destination buffer */
     auto imageSize      = srcBufferSize / DataTypeSize(srcDataType);
     auto dstBufferSize  = imageSize * DataTypeSize(dstDataType);
-
-    auto dstImage = AllocByteArray(dstBufferSize);
+    auto dstBuffer      = AllocByteArray(dstBufferSize);
 
     /* Get variant buffer for source and destination images */
     VariantConstBuffer src(srcBuffer);
-    VariantBuffer dst(dstImage.get());
+    VariantBuffer dst(dstBuffer.get());
 
-    double value = 0.0;
-
-    for (std::size_t i = 0; i < imageSize; ++i)
+    if (threadCount > 1)
     {
-        /* Read normalized variant from source buffer */
-        value = ReadNormalizedTypedVariant(srcDataType, src, i);
-
-        /* Write normalized variant to destination buffer */
-        WriteNormalizedTypedVariant(dstDataType, dst, i, value);
+        /* Create worker threads */
+        std::vector<std::thread> workers(threadCount);
+        
+        auto workSize = imageSize / threadCount;
+        auto workSizeRemain = imageSize % threadCount;
+        
+        std::size_t offset = 0;
+        
+        for (std::size_t i = 0; i < threadCount; ++i)
+        {
+            workers[i] = std::thread(
+                ConvertImageBufferDataTypeWorker,
+                srcDataType, std::ref(src),
+                dstDataType, std::ref(dst),
+                offset, offset + workSize
+            );
+            offset += workSize;
+        }
+        
+        /* Execute conversion of remaining work on main thread */
+        if (workSizeRemain > 0)
+            ConvertImageBufferDataTypeWorker(srcDataType, src, dstDataType, dst, offset, offset + workSizeRemain);
+        
+        /* Join worker threads */
+        for (auto& w : workers)
+            w.join();
+    }
+    else
+    {
+        /* Execute conversion only on main thread */
+        ConvertImageBufferDataTypeWorker(srcDataType, src, dstDataType, dst, 0, imageSize);
     }
 
-    return dstImage;
+    return dstBuffer;
 }
 
 static void SetVariantMinMax(DataType dataType, Variant& var, bool setMin)
@@ -335,6 +375,33 @@ static void WriteRGBAFormattedVariant(
     TransferRGBAFormattedVariantColor(dstFormat, dataType, dstBuffer, idx, value);
 }
 
+static void ConvertImageBufferFormatWorker(
+    ImageFormat srcFormat, DataType srcDataType, const VariantConstBuffer& srcBuffer,
+    ImageFormat dstFormat, VariantBuffer& dstBuffer,
+    std::size_t idxBegin, std::size_t idxEnd)
+{
+    /* Get size for source and destination formats */
+    auto srcFormatSize  = ImageFormatSize(srcFormat);
+    auto dstFormatSize  = ImageFormatSize(dstFormat);
+    
+    /* Initialize default variant color (0, 0, 0, 1) */
+    VariantColor value(Gs::UninitializeTag{});
+    
+    SetVariantMinMax(srcDataType, value.r, true);
+    SetVariantMinMax(srcDataType, value.g, true);
+    SetVariantMinMax(srcDataType, value.b, true);
+    SetVariantMinMax(srcDataType, value.a, false);
+    
+    for (auto i = idxBegin; i < idxEnd; ++i)
+    {
+        /* Read RGBA variant from source buffer */
+        ReadRGBAFormattedVariant(srcFormat, srcDataType, srcBuffer, i*srcFormatSize, value);
+        
+        /* Write RGBA variant to destination buffer */
+        WriteRGBAFormattedVariant(dstFormat, srcDataType, dstBuffer, i*dstFormatSize, value);
+    }
+}
+
 static ImageBuffer ConvertImageBufferFormat(
     ImageFormat srcFormat,
     DataType    srcDataType,
@@ -352,30 +419,48 @@ static ImageBuffer ConvertImageBufferFormat(
     auto dstBufferSize  = imageSize * dstFormatSize;
     imageSize /= dataTypeSize;
 
-    auto dstImage = AllocByteArray(dstBufferSize);
+    auto dstBuffer = AllocByteArray(dstBufferSize);
 
     /* Get variant buffer for source and destination images */
     VariantConstBuffer src(srcBuffer);
-    VariantBuffer dst(dstImage.get());
+    VariantBuffer dst(dstBuffer.get());
 
-    /* Initialize default variant color (0, 0, 0, 1) */
-    VariantColor value(Gs::UninitializeTag{});
-
-    SetVariantMinMax(srcDataType, value.r, true);
-    SetVariantMinMax(srcDataType, value.g, true);
-    SetVariantMinMax(srcDataType, value.b, true);
-    SetVariantMinMax(srcDataType, value.a, false);
-
-    for (std::size_t i = 0; i < imageSize; ++i)
+    if (threadCount > 1)
     {
-        /* Read RGBA variant from source buffer */
-        ReadRGBAFormattedVariant(srcFormat, srcDataType, src, i*srcFormatSize, value);
+        /* Create worker threads */
+        std::vector<std::thread> workers(threadCount);
         
-        /* Write RGBA variant to destination buffer */
-        WriteRGBAFormattedVariant(dstFormat, srcDataType, dst, i*dstFormatSize, value);
+        auto workSize = imageSize / threadCount;
+        auto workSizeRemain = imageSize % threadCount;
+        
+        std::size_t offset = 0;
+        
+        for (std::size_t i = 0; i < threadCount; ++i)
+        {
+            workers[i] = std::thread(
+                ConvertImageBufferFormatWorker,
+                srcFormat, srcDataType, std::ref(src),
+                dstFormat, std::ref(dst),
+                offset, offset + workSize
+            );
+            offset += workSize;
+        }
+        
+        /* Execute conversion of remaining work on main thread */
+        if (workSizeRemain > 0)
+            ConvertImageBufferFormatWorker(srcFormat, srcDataType, src, dstFormat, dst, offset, offset + workSizeRemain);
+        
+        /* Join worker threads */
+        for (auto& w : workers)
+            w.join();
+    }
+    else
+    {
+        /* Execute conversion only on main thread */
+        ConvertImageBufferFormatWorker(srcFormat, srcDataType, src, dstFormat, dst, 0, imageSize);
     }
 
-    return dstImage;
+    return dstBuffer;
 }
 
 
