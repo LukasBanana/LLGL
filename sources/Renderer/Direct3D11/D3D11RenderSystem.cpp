@@ -296,53 +296,53 @@ void D3D11RenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFor
 void D3D11RenderSystem::WriteTexture1D(
     Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc)
 {
-    //todo...
+    UpdateGenerateTexture(texture, mipLevel, 0, { position, 0, 0 }, { size, 1, 1 }, imageDesc);
 }
 
 void D3D11RenderSystem::WriteTexture2D(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc)
 {
-    //todo...
+    UpdateGenerateTexture(texture, mipLevel, 0, { position.x, position.y, 0 }, { size.x, size.y, 1 }, imageDesc);
 }
 
 void D3D11RenderSystem::WriteTexture3D(
     Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDescriptor& imageDesc)
 {
-    //todo...
+    UpdateGenerateTexture(texture, mipLevel, 0, position, size, imageDesc);
 }
 
 void D3D11RenderSystem::WriteTextureCube(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDescriptor& imageDesc)
 {
-    //todo...
+    UpdateGenerateTexture(texture, mipLevel, static_cast<UINT>(cubeFace), { position.x, position.y, 0 }, { size.x, size.y, 1 }, imageDesc);
 }
 
 void D3D11RenderSystem::WriteTexture1DArray(
     Texture& texture, int mipLevel, int position, unsigned int layerOffset,
     int size, unsigned int layers, const ImageDescriptor& imageDesc)
 {
-    //todo...
+    UpdateGenerateTexture(texture, mipLevel, layerOffset, { position, 0, 0 }, { size, static_cast<int>(layers), 1 }, imageDesc);
 }
 
 void D3D11RenderSystem::WriteTexture2DArray(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
     const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor& imageDesc)
 {
-    //todo...
+    UpdateGenerateTexture(texture, mipLevel, layerOffset, { position.x, position.y, 0 }, { size.x, size.y, static_cast<int>(layers) }, imageDesc);
 }
 
 void D3D11RenderSystem::WriteTextureCubeArray(
     Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
     const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDescriptor& imageDesc)
 {
-    //todo...
+    UpdateGenerateTexture(texture, mipLevel, layerOffset*6, { position.x, position.y, 0 }, { size.x, size.y, static_cast<int>(cubeFaces) }, imageDesc);
 }
 
 void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
 {
     LLGL_ASSERT_PTR(data);
 
-    //todo
+    //todo...
 }
 
 /* ----- Sampler States ---- */
@@ -577,6 +577,21 @@ void D3D11RenderSystem::SetupGenericTexture3D(
     {
         //TODO -> fill texture with default data
     }
+}
+
+void D3D11RenderSystem::UpdateGenerateTexture(
+    Texture& texture, int mipLevel, unsigned int layer, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDescriptor& imageDesc)
+{
+    /* Get D3D texture and update subresource */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    textureD3D.UpdateSubresource(
+        context_.Get(), static_cast<UINT>(mipLevel), layer,
+        CD3D11_BOX(
+            position.x, position.y, position.z,
+            position.x + size.x, position.y + size.y, position.z + size.z
+        ),
+        imageDesc
+    );
 }
 
 

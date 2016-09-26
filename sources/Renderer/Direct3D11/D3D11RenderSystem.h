@@ -197,6 +197,12 @@ class D3D11RenderSystem : public RenderSystem
             const TextureFormat format, const Gs::Vector3i& size,
             const ImageDescriptor* imageDesc, UINT miscFlags
         );
+        
+        void UpdateGenerateTexture(
+            Texture& texture, int mipLevel, unsigned int layer,
+            const Gs::Vector3i& position, const Gs::Vector3i& size,
+            const ImageDescriptor& imageDesc
+        );
 
         /* ----- Common objects ----- */
 
