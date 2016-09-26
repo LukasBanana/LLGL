@@ -559,12 +559,12 @@ void D3D11RenderContext::SubmitFramebufferView()
     );
 }
 
-#define SHADERSTAGE_VS(FLAG) (((FLAG) & ShaderStageFlags::VertexStage) != 0)
-#define SHADERSTAGE_HS(FLAG) (((FLAG) & ShaderStageFlags::TessControlStage) != 0)
-#define SHADERSTAGE_DS(FLAG) (((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0)
-#define SHADERSTAGE_GS(FLAG) (((FLAG) & ShaderStageFlags::GeometryStage) != 0)
-#define SHADERSTAGE_PS(FLAG) (((FLAG) & ShaderStageFlags::FragmentStage) != 0)
-#define SHADERSTAGE_CS(FLAG) (((FLAG) & ShaderStageFlags::ComputeStage) != 0)
+#define SHADERSTAGE_VS(FLAG) ( ((FLAG) & ShaderStageFlags::VertexStage        ) != 0 )
+#define SHADERSTAGE_HS(FLAG) ( ((FLAG) & ShaderStageFlags::TessControlStage   ) != 0 )
+#define SHADERSTAGE_DS(FLAG) ( ((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0 )
+#define SHADERSTAGE_GS(FLAG) ( ((FLAG) & ShaderStageFlags::GeometryStage      ) != 0 )
+#define SHADERSTAGE_PS(FLAG) ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
+#define SHADERSTAGE_CS(FLAG) ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
 
 void D3D11RenderContext::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags)
 {
@@ -600,7 +600,7 @@ void D3D11RenderContext::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11S
 #undef SHADERSTAGE_HS
 #undef SHADERSTAGE_DS
 #undef SHADERSTAGE_GS
-#undef SHADERSTAGE_PP
+#undef SHADERSTAGE_PS
 #undef SHADERSTAGE_CS
 
 
