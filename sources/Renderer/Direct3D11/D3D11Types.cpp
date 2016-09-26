@@ -211,31 +211,40 @@ D3D11_TEXTURE_ADDRESS_MODE Map(const TextureWrap textureWrap)
 
 D3D11_QUERY Map(const QueryDescriptor& queryDesc)
 {
-    switch (queryDesc.type)
+    if (queryDesc.renderCondition)
     {
-        case QueryType::SamplesPassed:                      /* pass */
-        case QueryType::AnySamplesPassed:                   /* pass */
-        case QueryType::AnySamplesPassedConservative:       return (queryDesc.renderCondition ? D3D11_QUERY_OCCLUSION_PREDICATE : D3D11_QUERY_OCCLUSION);
-        case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP_DISJOINT;
-        case QueryType::StreamOutOverflow:
+        switch (queryDesc.type)
         {
-            if (queryDesc.renderCondition)
-                return D3D11_QUERY_SO_OVERFLOW_PREDICATE;
+            case QueryType::SamplesPassed:                      /* pass */
+            case QueryType::AnySamplesPassed:                   /* pass */
+            case QueryType::AnySamplesPassedConservative:       return D3D11_QUERY_OCCLUSION_PREDICATE;
+            case QueryType::StreamOutOverflow:                  return D3D11_QUERY_SO_OVERFLOW_PREDICATE;
+            default:                                            break;
         }
-        break;
-        case QueryType::StreamOutPrimitivesWritten:         return D3D11_QUERY_SO_STATISTICS;
-        case QueryType::PrimitivesGenerated:                /* pass */
-        case QueryType::VerticesSubmitted:                  /* pass */
-        case QueryType::PrimitivesSubmitted:                /* pass */
-        case QueryType::VertexShaderInvocations:            /* pass */
-        case QueryType::TessControlShaderInvocations:       /* pass */
-        case QueryType::TessEvaluationShaderInvocations:    /* pass */
-        case QueryType::GeometryShaderInvocations:          /* pass */
-        case QueryType::FragmentShaderInvocations:          /* pass */
-        case QueryType::ComputeShaderInvocations:           /* pass */
-        case QueryType::GeometryPrimitivesGenerated:        /* pass */
-        case QueryType::ClippingInputPrimitives:            /* pass */
-        case QueryType::ClippingOutputPrimitives:           return D3D11_QUERY_PIPELINE_STATISTICS;
+    }
+    else
+    {
+        switch (queryDesc.type)
+        {
+            case QueryType::SamplesPassed:                      /* pass */
+            case QueryType::AnySamplesPassed:                   /* pass */
+            case QueryType::AnySamplesPassedConservative:       return D3D11_QUERY_OCCLUSION;
+            case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP_DISJOINT;
+            case QueryType::StreamOutOverflow:                  break;
+            case QueryType::StreamOutPrimitivesWritten:         return D3D11_QUERY_SO_STATISTICS;
+            case QueryType::PrimitivesGenerated:                /* pass */
+            case QueryType::VerticesSubmitted:                  /* pass */
+            case QueryType::PrimitivesSubmitted:                /* pass */
+            case QueryType::VertexShaderInvocations:            /* pass */
+            case QueryType::TessControlShaderInvocations:       /* pass */
+            case QueryType::TessEvaluationShaderInvocations:    /* pass */
+            case QueryType::GeometryShaderInvocations:          /* pass */
+            case QueryType::FragmentShaderInvocations:          /* pass */
+            case QueryType::ComputeShaderInvocations:           /* pass */
+            case QueryType::GeometryPrimitivesGenerated:        /* pass */
+            case QueryType::ClippingInputPrimitives:            /* pass */
+            case QueryType::ClippingOutputPrimitives:           return D3D11_QUERY_PIPELINE_STATISTICS;
+        }
     }
     DXTypes::MapFailed("QueryType", "D3D11_QUERY");
 }

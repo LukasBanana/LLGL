@@ -33,7 +33,7 @@ class Tutorial04 : public Tutorial
 public:
 
     Tutorial04() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 04: Query")
+        Tutorial( "Direct3D11", L"LLGL Tutorial 04: Query")
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -114,7 +114,7 @@ public:
     void PrintQueryResult()
     {
         std::cout
-            << "occluded: " << (GetAndSyncQueryResult(occlusionQuery) != 0 ? "yes" : "no")
+            << "geometry visible: " << (GetAndSyncQueryResult(occlusionQuery) != 0 ? "yes" : "no")
             << ", primitives generated: " << GetAndSyncQueryResult(geometryQuery)
             << "         \r";
         std::flush(std::cout);

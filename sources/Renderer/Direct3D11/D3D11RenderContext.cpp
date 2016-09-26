@@ -354,7 +354,7 @@ bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
                 switch (queryD3D.GetType())
                 {
                     case QueryType::PrimitivesGenerated:
-                        result = data.CPrimitives;
+                        result = data.CInvocations;
                         break;
                     case QueryType::VerticesSubmitted:
                         result = data.IAVertices;
@@ -384,10 +384,10 @@ bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
                         result = data.GSPrimitives;
                         break;
                     case QueryType::ClippingInputPrimitives:
-                        result = data.GSPrimitives; // <-- TODO: workaround
+                        result = data.CInvocations; // <-- TODO: workaround
                         break;
                     case QueryType::ClippingOutputPrimitives:
-                        result = data.CInvocations;
+                        result = data.CPrimitives;
                         break;
                     default:
                         return false;
@@ -416,7 +416,7 @@ bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
 void D3D11RenderContext::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-    context_->SetPredication(queryD3D.GetPredicateObject(), (mode < RenderConditionMode::WaitInverted));
+    context_->SetPredication(queryD3D.GetPredicateObject(), (mode >= RenderConditionMode::WaitInverted));
 }
 
 void D3D11RenderContext::EndRenderCondition()

@@ -16,10 +16,18 @@ namespace LLGL
 
 static ComPtr<ID3D11Query> DXCreateQuery(ID3D11Device* device, const D3D11_QUERY_DESC& desc)
 {
-    ComPtr<ID3D11Query> queryObject;
-    auto hr = device->CreateQuery(&desc, &queryObject);
+    ComPtr<ID3D11Query> query;
+    auto hr = device->CreateQuery(&desc, &query);
     DXThrowIfFailed(hr, "failed to create D3D11 query");
-    return queryObject;
+    return query;
+}
+
+static ComPtr<ID3D11Predicate> DXCreatePredicate(ID3D11Device* device, const D3D11_QUERY_DESC& desc)
+{
+    ComPtr<ID3D11Predicate> predicate;
+    auto hr = device->CreatePredicate(&desc, &predicate);
+    DXThrowIfFailed(hr, "failed to create D3D11 predicate");
+    return predicate;
 }
 
 D3D11Query::D3D11Query(ID3D11Device* device, const QueryDescriptor& desc) :
@@ -32,7 +40,10 @@ D3D11Query::D3D11Query(ID3D11Device* device, const QueryDescriptor& desc) :
         queryDesc.Query     = queryObjectType_;
         queryDesc.MiscFlags = 0;
     }
-    hwQuery_.query = DXCreateQuery(device, queryDesc);
+    if (desc.renderCondition)
+        hwQuery_.predicate = DXCreatePredicate(device, queryDesc);
+    else
+        hwQuery_.query = DXCreateQuery(device, queryDesc);
 
     /* Create secondary D3D query objects */
     if (queryObjectType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)
