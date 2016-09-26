@@ -416,10 +416,7 @@ bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
 void D3D11RenderContext::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-    if (queryD3D.GetPredicateObject())
-        context_->SetPredication(queryD3D.GetPredicateObject(), (mode < RenderConditionMode::WaitInverted));
-    else
-        throw std::invalid_argument("can not begin render condition without D3D11 predicate object");
+    context_->SetPredication(queryD3D.GetPredicateObject(), (mode < RenderConditionMode::WaitInverted));
 }
 
 void D3D11RenderContext::EndRenderCondition()

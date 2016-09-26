@@ -37,7 +37,7 @@ D3D11_COMPARISON_FUNC       Map( const CompareOp            compareOp       );
 D3D11_STENCIL_OP            Map( const StencilOp            stencilOp       );
 D3D11_FILTER                Map( const SamplerDescriptor&   samplerDesc     );
 D3D11_TEXTURE_ADDRESS_MODE  Map( const TextureWrap          textureWrap     );
-D3D11_QUERY                 Map( const QueryType            queryType       );
+D3D11_QUERY                 Map( const QueryDescriptor&     queryDesc       );
 
 
 } // /namespace D3D11Types

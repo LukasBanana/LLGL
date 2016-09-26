@@ -88,10 +88,19 @@ public:
     void CreateQueries()
     {
         // Create query to determine if any samples passed the depth test (occlusion query)
-        occlusionQuery = renderer->CreateQuery(LLGL::QueryType::AnySamplesPassed);
+        LLGL::QueryDescriptor queryDesc;
+        {
+            queryDesc.type              = LLGL::QueryType::AnySamplesPassed;
+            queryDesc.renderCondition   = true;
+        }
+        occlusionQuery = renderer->CreateQuery(queryDesc);
 
         // Create query to determine number of primitives that are sent to the rasterizer
-        geometryQuery = renderer->CreateQuery(LLGL::QueryType::PrimitivesGenerated);
+        {
+            queryDesc.type              = LLGL::QueryType::PrimitivesGenerated;
+            queryDesc.renderCondition   = false;
+        }
+        geometryQuery = renderer->CreateQuery(queryDesc);
     }
 
     std::uint64_t GetAndSyncQueryResult(LLGL::Query* query)

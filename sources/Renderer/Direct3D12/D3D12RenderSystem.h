@@ -149,7 +149,7 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Queries ----- */
 
-        Query* CreateQuery(const QueryType type) override;
+        Query* CreateQuery(const QueryDescriptor& desc) override;
 
         void Release(Query& query) override;
 

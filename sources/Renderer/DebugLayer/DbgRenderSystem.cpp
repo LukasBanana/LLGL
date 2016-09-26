@@ -536,9 +536,9 @@ void DbgRenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* DbgRenderSystem::CreateQuery(const QueryType type)
+Query* DbgRenderSystem::CreateQuery(const QueryDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<DbgQuery>(*instance_->CreateQuery(type), type));
+    return TakeOwnership(queries_, MakeUnique<DbgQuery>(*instance_->CreateQuery(desc), desc));
 }
 
 void DbgRenderSystem::Release(Query& query)

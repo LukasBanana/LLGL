@@ -22,7 +22,7 @@ class GLQuery : public Query
 
     public:
 
-        GLQuery(const QueryType type);
+        GLQuery(const QueryDescriptor& desc);
         ~GLQuery();
 
         //! Returns the query target.

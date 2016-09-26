@@ -415,9 +415,9 @@ void D3D11RenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* D3D11RenderSystem::CreateQuery(const QueryType type)
+Query* D3D11RenderSystem::CreateQuery(const QueryDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<D3D11Query>(device_.Get(), type));
+    return TakeOwnership(queries_, MakeUnique<D3D11Query>(device_.Get(), desc));
 }
 
 void D3D11RenderSystem::Release(Query& query)

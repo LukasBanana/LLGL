@@ -198,9 +198,9 @@ void GLRenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* GLRenderSystem::CreateQuery(const QueryType type)
+Query* GLRenderSystem::CreateQuery(const QueryDescriptor& desc)
 {
-    return TakeOwnership(queries_, MakeUnique<GLQuery>(type));
+    return TakeOwnership(queries_, MakeUnique<GLQuery>(desc));
 }
 
 void GLRenderSystem::Release(Query& query)

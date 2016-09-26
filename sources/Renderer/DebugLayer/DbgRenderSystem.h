@@ -147,7 +147,7 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Queries ----- */
 
-        Query* CreateQuery(const QueryType type) override;
+        Query* CreateQuery(const QueryDescriptor& desc) override;
 
         void Release(Query& query) override;
 

@@ -389,7 +389,7 @@ void D3D12RenderSystem::Release(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-Query* D3D12RenderSystem::CreateQuery(const QueryType type)
+Query* D3D12RenderSystem::CreateQuery(const QueryDescriptor& desc)
 {
     return nullptr;//todo...
 }

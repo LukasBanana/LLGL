@@ -18,12 +18,26 @@ namespace LLGL
 {
 
 
+union D3D11HardwareQuery
+{
+    D3D11HardwareQuery() :
+        query( nullptr )
+    {
+    }
+    ~D3D11HardwareQuery()
+    {
+    }
+
+    ComPtr<ID3D11Query>     query;
+    ComPtr<ID3D11Predicate> predicate;
+};
+
 class D3D11Query : public Query
 {
 
     public:
 
-        D3D11Query(ID3D11Device* device, const QueryType type);
+        D3D11Query(ID3D11Device* device, const QueryDescriptor& desc);
 
         inline D3D11_QUERY GetQueryObjectType() const
         {
@@ -32,12 +46,12 @@ class D3D11Query : public Query
 
         inline ID3D11Query* GetQueryObject() const
         {
-            return queryObject_.Get();
+            return hwQuery_.query.Get();
         }
 
         inline ID3D11Predicate* GetPredicateObject() const
         {
-            return predicateObject_.Get();
+            return hwQuery_.predicate.Get();
         }
 
         inline ID3D11Query* GetTimeStampQueryBegin() const
@@ -52,14 +66,13 @@ class D3D11Query : public Query
 
     private:
 
-        D3D11_QUERY             queryObjectType_ = D3D11_QUERY_EVENT;
+        D3D11_QUERY         queryObjectType_ = D3D11_QUERY_EVENT;
 
-        ComPtr<ID3D11Query>     queryObject_;
-        ComPtr<ID3D11Predicate> predicateObject_;
+        D3D11HardwareQuery  hwQuery_;
 
         // Query objects for the special query type: TimeElapsed
-        ComPtr<ID3D11Query>     timeStampQueryBegin_;
-        ComPtr<ID3D11Query>     timeStampQueryEnd_;
+        ComPtr<ID3D11Query> timeStampQueryBegin_;
+        ComPtr<ID3D11Query> timeStampQueryEnd_;
 
 };
 

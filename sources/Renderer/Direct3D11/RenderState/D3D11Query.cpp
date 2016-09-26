@@ -22,9 +22,9 @@ static ComPtr<ID3D11Query> DXCreateQuery(ID3D11Device* device, const D3D11_QUERY
     return queryObject;
 }
 
-D3D11Query::D3D11Query(ID3D11Device* device, const QueryType type) :
-    Query           ( type                  ),
-    queryObjectType_( D3D11Types::Map(type) )
+D3D11Query::D3D11Query(ID3D11Device* device, const QueryDescriptor& desc) :
+    Query           ( desc.type             ),
+    queryObjectType_( D3D11Types::Map(desc) )
 {
     /* Create D3D query object */
     D3D11_QUERY_DESC queryDesc;
@@ -32,7 +32,7 @@ D3D11Query::D3D11Query(ID3D11Device* device, const QueryType type) :
         queryDesc.Query     = queryObjectType_;
         queryDesc.MiscFlags = 0;
     }
-    queryObject_ = DXCreateQuery(device, queryDesc);
+    hwQuery_.query = DXCreateQuery(device, queryDesc);
 
     /* Create secondary D3D query objects */
     if (queryObjectType_ == D3D11_QUERY_TIMESTAMP_DISJOINT)

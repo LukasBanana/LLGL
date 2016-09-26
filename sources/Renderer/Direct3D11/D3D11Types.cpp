@@ -209,15 +209,20 @@ D3D11_TEXTURE_ADDRESS_MODE Map(const TextureWrap textureWrap)
     DXTypes::MapFailed("TextureWrap", "D3D11_TEXTURE_ADDRESS_MODE");
 }
 
-D3D11_QUERY Map(const QueryType queryType)
+D3D11_QUERY Map(const QueryDescriptor& queryDesc)
 {
-    switch (queryType)
+    switch (queryDesc.type)
     {
-        case QueryType::SamplesPassed:                      return D3D11_QUERY_OCCLUSION;
-        case QueryType::AnySamplesPassed:                   return D3D11_QUERY_OCCLUSION_PREDICATE;
-        case QueryType::AnySamplesPassedConservative:       return D3D11_QUERY_OCCLUSION_PREDICATE;
+        case QueryType::SamplesPassed:                      /* pass */
+        case QueryType::AnySamplesPassed:                   /* pass */
+        case QueryType::AnySamplesPassedConservative:       return (queryDesc.renderCondition ? D3D11_QUERY_OCCLUSION_PREDICATE : D3D11_QUERY_OCCLUSION);
         case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP_DISJOINT;
-        case QueryType::StreamOutOverflow:                  return D3D11_QUERY_SO_OVERFLOW_PREDICATE;
+        case QueryType::StreamOutOverflow:
+        {
+            if (queryDesc.renderCondition)
+                return D3D11_QUERY_SO_OVERFLOW_PREDICATE;
+        }
+        break;
         case QueryType::StreamOutPrimitivesWritten:         return D3D11_QUERY_SO_STATISTICS;
         case QueryType::PrimitivesGenerated:                /* pass */
         case QueryType::VerticesSubmitted:                  /* pass */

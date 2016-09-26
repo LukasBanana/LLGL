@@ -489,8 +489,8 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Queries ----- */
 
-        //! Creates a new query of the specified type.
-        virtual Query* CreateQuery(const QueryType type) = 0;
+        //! Creates a new query.
+        virtual Query* CreateQuery(const QueryDescriptor& desc) = 0;
 
         virtual void Release(Query& query) = 0;
 
