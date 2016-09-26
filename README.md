@@ -21,8 +21,8 @@ Progress
 
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
-| OpenGL | ~70% | |
-| Direct3D 11 | ~50% | ToDo: Storage buffers, Image conversion, Texture update, Render targets |
+| OpenGL | ~80% | |
+| Direct3D 11 | ~60% | ToDo: Storage buffers, Render targets |
 | Direct3D 12 | ~5% | Experimental state |
 | Vulkan | 0% | Not started yet |
 
