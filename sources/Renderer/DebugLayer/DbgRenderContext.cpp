@@ -107,11 +107,11 @@ void DbgRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
     LLGL_DBG_PROFILER_DO(setIndexBuffer.Inc());
 }
 
-void DbgRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
+void DbgRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags)
 {
     auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
     {
-        instance_.SetConstantBuffer(constantBufferDbg.instance, slot);
+        instance_.SetConstantBuffer(constantBufferDbg.instance, slot, shaderStageFlags);
     }
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }

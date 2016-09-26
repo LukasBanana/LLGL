@@ -67,7 +67,7 @@ class GLRenderContext : public RenderContext
 
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
         void SetIndexBuffer(IndexBuffer& indexBuffer) override;
-        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot) override;
+        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot) override;
 
         void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;

@@ -212,7 +212,9 @@ private:
         // Set hardware buffers to draw the model
         context->SetVertexBuffer(*vertexBuffer);
         context->SetIndexBuffer(*indexBuffer);
-        context->SetConstantBuffer(*constantBuffer, constantBufferIndex);
+
+        // Set constant buffer only to tessellation shader stages
+        context->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
 
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
         context->DrawIndexed(24, 0);

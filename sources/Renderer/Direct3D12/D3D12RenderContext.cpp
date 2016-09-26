@@ -163,7 +163,7 @@ void D3D12RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 }
 
 //INCOMPLETE
-void D3D12RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
+void D3D12RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags)
 {
     auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, constantBuffer);
 

@@ -50,6 +50,35 @@ struct ShaderDisassembleFlags
     };
 };
 
+/**
+\brief Shader stage flags.
+\remarks Specifies which shader stages are affected by a state change,
+e.g. at which shader stages a constant buffer is set.
+For the render systems, which do not support these flags, always all shader stages are affected.
+\note Only supported with: Direct3D 11
+*/
+struct ShaderStageFlags
+{
+    enum
+    {
+        VertexStage         = (1 << 0), //!< Specifies the vertex shader stage.
+        TessControlStage    = (1 << 1), //!< Specifies the tessellation-control shader stage (also "Hull Shader").
+        TessEvaluationStage = (1 << 2), //!< Specifies the tessellation-evaluation shader stage (also "Domain Shader").
+        GeometryStage       = (1 << 3), //!< Specifies the geometry shader stage.
+        FragmentStage       = (1 << 4), //!< Specifies the fragment shader stage (also "Pixel Shader").
+        ComputeStage        = (1 << 5), //!< Specifies the compute shader stage.
+
+        //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
+        AllTessStages       = (TessControlStage | TessEvaluationStage),
+
+        //! Specifies all graphics pipeline shader stages, i.e. vertex-, tessellation-, geometry-, and fragment shader stages.
+        AllGraphicsStages   = (VertexStage | AllTessStages | GeometryStage | FragmentStage),
+
+        //! Specifies all shader stages.
+        AllStages           = (AllGraphicsStages | ComputeStage),
+    };
+};
+
 //! Shader source code union.
 union ShaderSource
 {

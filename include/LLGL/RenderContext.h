@@ -156,9 +156,11 @@ class LLGL_EXPORT RenderContext
         \param[in] constantBuffer Specifies the constant buffer to set. This must not be an unspecified constant buffer,
         i.e. it must be initialized with the "RenderSystem::SetupConstantBuffer" function.
         \param[in] slot Specifies the slot index where to put the constant buffer.
+        \param[in] shaderStageFlags Specifies at which shader stages the constant buffer is to be set. By default all shader stages are affected.
         \see RenderSystem::SetupConstantBuffer
+        \see ShaderStageFlags
         */
-        virtual void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot) = 0;
+        virtual void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.

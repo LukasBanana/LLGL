@@ -162,19 +162,19 @@ void D3D11RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
     context_->IASetIndexBuffer(indexBufferD3D.hwBuffer.Get(), indexBufferD3D.GetFormat(), 0);
 }
 
-void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
+void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags)
 {
     /* Set constant buffer resource to all shader stages */
     auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, constantBuffer);
 
     auto resource = constantBufferD3D.hwBuffer.Get();
 
-    context_->VSSetConstantBuffers(slot, 1, &resource);
-    context_->HSSetConstantBuffers(slot, 1, &resource);
-    context_->DSSetConstantBuffers(slot, 1, &resource);
-    context_->GSSetConstantBuffers(slot, 1, &resource);
-    context_->PSSetConstantBuffers(slot, 1, &resource);
-    context_->CSSetConstantBuffers(slot, 1, &resource);
+    if ((shaderStageFlags & ShaderStageFlags::VertexStage        ) != 0) { context_->VSSetConstantBuffers(slot, 1, &resource); }
+    if ((shaderStageFlags & ShaderStageFlags::TessControlStage   ) != 0) { context_->HSSetConstantBuffers(slot, 1, &resource); }
+    if ((shaderStageFlags & ShaderStageFlags::TessEvaluationStage) != 0) { context_->DSSetConstantBuffers(slot, 1, &resource); }
+    if ((shaderStageFlags & ShaderStageFlags::GeometryStage      ) != 0) { context_->GSSetConstantBuffers(slot, 1, &resource); }
+    if ((shaderStageFlags & ShaderStageFlags::FragmentStage      ) != 0) { context_->PSSetConstantBuffers(slot, 1, &resource); }
+    if ((shaderStageFlags & ShaderStageFlags::ComputeStage       ) != 0) { context_->CSSetConstantBuffers(slot, 1, &resource); }
 }
 
 void D3D11RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)

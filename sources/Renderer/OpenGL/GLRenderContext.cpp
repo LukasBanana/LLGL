@@ -180,7 +180,7 @@ void GLRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
     renderState_.indexBufferStride      = indexBuffer.GetIndexFormat().GetFormatSize();
 }
 
-void GLRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot)
+void GLRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long /*shaderStageFlags*/)
 {
     /* Bind constant buffer with BindBufferBase */
     auto& constantBufferGL = LLGL_CAST(GLConstantBuffer&, constantBuffer);
