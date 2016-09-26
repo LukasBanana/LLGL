@@ -46,8 +46,7 @@ D3D11RenderContext::D3D11RenderContext(
 
     /* Create D3D objects */
     CreateSwapChain();
-    CreateBackBufferAndRTV();
-    CreateDepthStencilAndDSV(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
+    CreateBackBuffer(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
     SetDefaultRenderTargets();
 
     /* Initialize viewport */
@@ -74,10 +73,21 @@ void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     if (GetVideoMode() != videoModeDesc)
     {
-        //todo
+        auto prevVideoMode = GetVideoMode();
 
         /* Update window appearance and store new video mode in base function */
         RenderContext::SetVideoMode(videoModeDesc);
+
+        /* Resize back buffer */
+        if (!Gs::Equals(prevVideoMode.resolution, videoModeDesc.resolution))
+        {
+            auto size = videoModeDesc.resolution.Cast<UINT>();
+            ResizeBackBuffer(size.x, size.y);
+        }
+
+        /* Switch fullscreen mode */
+        if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
+            swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
     }
 }
 
@@ -116,7 +126,10 @@ void D3D11RenderContext::ClearBuffers(long flags)
 {
     /* Clear color buffer */
     if ((flags & ClearBuffersFlags::Color) != 0)
-        context_->ClearRenderTargetView(backBufferRTV_.Get(), clearState_.color.Ptr());
+    {
+        for (auto rtv : framebufferView_.rtvList)
+            context_->ClearRenderTargetView(rtv, clearState_.color.Ptr());
+    }
     
     /* Clear depth-stencil buffer */
     int dsvClearFlags = 0;
@@ -127,7 +140,7 @@ void D3D11RenderContext::ClearBuffers(long flags)
         dsvClearFlags |= D3D11_CLEAR_STENCIL;
         
     if (dsvClearFlags)
-        context_->ClearDepthStencilView(backBufferDSV_.Get(), dsvClearFlags, clearState_.depth, clearState_.stencil);
+        context_->ClearDepthStencilView(framebufferView_.dsv, dsvClearFlags, clearState_.depth, clearState_.stencil);
 }
 
 /* ----- Hardware Buffers ------ */
@@ -502,42 +515,69 @@ void D3D11RenderContext::CreateSwapChain()
         swapChainDesc.SampleDesc.Count                      = (desc_.antiAliasing.enabled ? std::max(1u, desc_.antiAliasing.samples) : 1);
         swapChainDesc.SampleDesc.Quality                    = 0;
         swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount                           = 1;//(desc_.videoMode.swapChainMode == SwapChainMode::TripleBuffering ? 2 : 1);
+        swapChainDesc.BufferCount                           = (desc_.videoMode.swapChainMode == SwapChainMode::TripleBuffering ? 2 : 1);
         swapChainDesc.OutputWindow                          = wndHandle.window;
         swapChainDesc.Windowed                              = (desc_.videoMode.fullscreen ? FALSE : TRUE);
+        swapChainDesc.SwapEffect                            = DXGI_SWAP_EFFECT_DISCARD;
     }
     swapChain_ = renderSystem_.CreateDXSwapChain(swapChainDesc);
 }
 
-void D3D11RenderContext::CreateBackBufferAndRTV()
+void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
 {
     /* Get back buffer from swap chain */
-    backBuffer_.Reset();
-    auto hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&backBuffer_));
+    auto hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&backBuffer_.colorBuffer));
     DXThrowIfFailed(hr, "failed to get back buffer from D3D11 swap chain");
 
     /* Create back buffer RTV */
-    backBufferRTV_.Reset();
-    hr = renderSystem_.GetDevice()->CreateRenderTargetView(backBuffer_.Get(), nullptr, &backBufferRTV_);
+    hr = renderSystem_.GetDevice()->CreateRenderTargetView(backBuffer_.colorBuffer.Get(), nullptr, &backBuffer_.rtv);
     DXThrowIfFailed(hr, "failed to create render-target-view (RTV) for D3D11 back buffer");
-}
 
-void D3D11RenderContext::CreateDepthStencilAndDSV(UINT width, UINT height)
-{
+    /* Create depth-stencil and DSV */
     renderSystem_.CreateDXDepthStencilAndDSV(
         width,
         height,
         (desc_.antiAliasing.enabled ? std::max(1u, desc_.antiAliasing.samples) : 1),
         DXGI_FORMAT_D24_UNORM_S8_UINT,
-        depthStencil_,
-        backBufferDSV_
+        backBuffer_.depthStencil,
+        backBuffer_.dsv
     );
+}
+
+void D3D11RenderContext::ResizeBackBuffer(UINT width, UINT height)
+{
+    /* Unset render targets */
+    context_->OMSetRenderTargets(0, nullptr, nullptr);
+
+    /* Release buffers */
+    backBuffer_.colorBuffer.Reset();
+    backBuffer_.rtv.Reset();
+    backBuffer_.depthStencil.Reset();
+    backBuffer_.dsv.Reset();
+
+    /* Resize swap-chain buffers, let DXGI find out the client area, and preserve buffer count and format */
+    auto hr = swapChain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+    DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
+
+    /* Recreate back buffer and reset default render target */
+    CreateBackBuffer(width, height);
+    SetDefaultRenderTargets();
 }
 
 void D3D11RenderContext::SetDefaultRenderTargets()
 {
-    ID3D11RenderTargetView* rtv[] = { backBufferRTV_.Get() };
-    context_->OMSetRenderTargets(1, rtv, backBufferDSV_.Get());
+    framebufferView_.rtvList    = { backBuffer_.rtv.Get() };
+    framebufferView_.dsv        = backBuffer_.dsv.Get();
+    SubmitFramebufferView();
+}
+
+void D3D11RenderContext::SubmitFramebufferView()
+{
+    context_->OMSetRenderTargets(
+        static_cast<UINT>(framebufferView_.rtvList.size()),
+        framebufferView_.rtvList.data(),
+        framebufferView_.dsv
+    );
 }
 
 

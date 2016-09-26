@@ -71,7 +71,11 @@ class LLGL_EXPORT RenderContext
         */
         virtual void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) = 0;
 
-        //! Sets the new video mode for this render context.
+        /**
+        \brief Sets the new video mode for this render context.
+        \remarks This may invalidate the currently set render target.
+        \see SetRenderTarget
+        */
         virtual void SetVideoMode(const VideoModeDescriptor& videoModeDesc);
 
         //! Sets the new vertical-sychronization (Vsync) configuration for this render context.

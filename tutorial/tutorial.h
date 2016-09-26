@@ -54,6 +54,46 @@ private:
 
     };
 
+    class ResizeEventHandler : public LLGL::Window::EventListener
+    {
+
+        public:
+
+            ResizeEventHandler(LLGL::RenderContext* context, Gs::Matrix4f& projection) :
+                context_    ( context    ),
+                projection_ ( projection )
+            {
+            }
+
+            void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override
+            {
+                auto videoMode = context_->GetVideoMode();
+
+                // Update video mode
+                videoMode.resolution = clientAreaSize;
+                context_->SetVideoMode(videoMode);
+                
+                // Update viewport
+                LLGL::Viewport viewport;
+                {
+                    viewport.width  = static_cast<float>(videoMode.resolution.x);
+                    viewport.height = static_cast<float>(videoMode.resolution.y);
+                }
+                context_->SetViewports({ viewport });
+
+                // Update projection matrix
+                projection_ = Gs::ProjectionMatrix4f::Perspective(
+                    viewport.width / viewport.height, 0.1f, 100.0f, Gs::Deg2Rad(45.0f)
+                ).ToMatrix4();
+            }
+
+        private:
+
+            LLGL::RenderContext*    context_;
+            Gs::Matrix4f&           projection_;
+
+    };
+
     std::unique_ptr<LLGL::RenderingProfiler>    profilerObj_;
     std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
 
@@ -100,6 +140,14 @@ protected:
         // Add input event listener to window
         input = std::make_shared<LLGL::Input>();
         context->GetWindow().AddEventListener(input);
+
+        // Change window descriptor to allow resizing
+        auto wndDesc = context->GetWindow().QueryDesc();
+        wndDesc.resizable = true;
+        context->GetWindow().SetDesc(wndDesc);
+
+        // Add window resize listener
+        context->GetWindow().AddEventListener(std::make_shared<ResizeEventHandler>(context, projection));
 
         // Initialize default projection matrix
         projection = Gs::ProjectionMatrix4f::Perspective(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
