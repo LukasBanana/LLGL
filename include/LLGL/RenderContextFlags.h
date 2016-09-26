@@ -16,7 +16,7 @@ namespace LLGL
 /* ----- Enumerations ----- */
 
 /**
-\brief Enumeration of all renderer info entries.
+\brief Renderer info enumeration.
 \see RenderContext::QueryRendererInfo
 */
 enum class RendererInfo
@@ -27,6 +27,22 @@ enum class RendererInfo
     ShadingLanguageVersion,
 };
 
+/**
+\brief Render condition mode enumeration.
+\remarks The condition is determined by the type of the Query object.
+\see RenderContext::BeginRenderCondition
+*/
+enum class RenderConditionMode
+{
+    Wait,                   //!< Wait until the occlusion query result is available, before conditional rendering begins.
+    NoWait,                 //!< Do not wait until the occlusion query result is available, before conditional rendering begins.
+    ByRegionWait,           //!< Similar to Wait, but the renderer may discard the results of commands for any framebuffer region that did not contribute to the occlusion query.
+    ByRegionNoWait,         //!< Similar to NoWait, but the renderer may discard the results of commands for any framebuffer region that did not contribute to the occlusion query.
+    WaitInverted,           //!< Same as Wait, but the condition is inverted.
+    NoWaitInverted,         //!< Same as NoWait, but the condition is inverted.
+    ByRegionWaitInverted,   //!< Same as ByRegionWait, but the condition is inverted.
+    ByRegionNoWaitInverted, //!< Same as ByRegionNoWait, but the condition is inverted.
+};
 
 
 /* ----- Structures ----- */

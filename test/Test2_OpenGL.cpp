@@ -42,6 +42,10 @@ int main()
 
         contextDesc.vsync.enabled           = true;
 
+        /*contextDesc.profileOpenGL.extProfile    = true;
+        contextDesc.profileOpenGL.coreProfile   = true;
+        contextDesc.profileOpenGL.version       = LLGL::OpenGLVersion::OpenGL_3_0;*/
+
         #if 0
         contextDesc.debugCallback = [](const std::string& type, const std::string& message)
         {

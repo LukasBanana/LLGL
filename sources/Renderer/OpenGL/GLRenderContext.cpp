@@ -344,6 +344,17 @@ bool GLRenderContext::QueryResult(Query& query, std::uint64_t& result)
     return false;
 }
 
+void GLRenderContext::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+{
+    auto& queryGL = LLGL_CAST(GLQuery&, query);
+    glBeginConditionalRender(queryGL.GetID(), GLTypes::Map(mode));
+}
+
+void GLRenderContext::EndRenderCondition()
+{
+    glEndConditionalRender();
+}
+
 /* ----- Drawing ----- */
 
 void GLRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)

@@ -35,6 +35,11 @@ class D3D11Query : public Query
             return queryObject_.Get();
         }
 
+        inline ID3D11Predicate* GetPredicateObject() const
+        {
+            return predicateObject_.Get();
+        }
+
         inline ID3D11Query* GetTimeStampQueryBegin() const
         {
             return timeStampQueryBegin_.Get();
@@ -47,12 +52,14 @@ class D3D11Query : public Query
 
     private:
 
-        D3D11_QUERY         queryObjectType_        = D3D11_QUERY_EVENT;
-        ComPtr<ID3D11Query> queryObject_;
+        D3D11_QUERY             queryObjectType_ = D3D11_QUERY_EVENT;
+
+        ComPtr<ID3D11Query>     queryObject_;
+        ComPtr<ID3D11Predicate> predicateObject_;
 
         // Query objects for the special query type: TimeElapsed
-        ComPtr<ID3D11Query> timeStampQueryBegin_;
-        ComPtr<ID3D11Query> timeStampQueryEnd_;
+        ComPtr<ID3D11Query>     timeStampQueryBegin_;
+        ComPtr<ID3D11Query>     timeStampQueryEnd_;
 
 };
 

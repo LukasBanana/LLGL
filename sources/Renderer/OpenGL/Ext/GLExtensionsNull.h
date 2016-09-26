@@ -279,6 +279,11 @@ DECL_GLPROC(void, glEndQuery, (GLenum));
 DECL_GLPROC(void, glGetQueryObjectiv, (GLuint, GLenum, GLint*));
 DECL_GLPROC(void, glGetQueryObjectuiv, (GLuint, GLenum, GLuint*));
 
+/* --- Condition render objects (GL_NV_conditional_render) --- */
+
+DECL_GLPROC(void, glBeginConditionalRender, (GLuint, GLenum));
+DECL_GLPROC(void, glEndConditionalRender, (void));
+
 /* --- Timer query objects (GL_ARB_timer_query) --- */
 
 DECL_GLPROC(void, glQueryCounter, (GLuint, GLenum));

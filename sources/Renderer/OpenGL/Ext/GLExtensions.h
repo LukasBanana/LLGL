@@ -252,6 +252,11 @@ extern PFNGLENDQUERYPROC                                    glEndQuery;
 extern PFNGLGETQUERYOBJECTIVPROC                            glGetQueryObjectiv;
 extern PFNGLGETQUERYOBJECTUIVPROC                           glGetQueryObjectuiv;
 
+/* --- Condition render objects (GL_NV_conditional_render) --- */
+
+extern PFNGLBEGINCONDITIONALRENDERPROC                      glBeginConditionalRender;
+extern PFNGLENDCONDITIONALRENDERPROC                        glEndConditionalRender;
+
 /* --- Timer query objects (GL_ARB_timer_query) --- */
 
 extern PFNGLQUERYCOUNTERPROC                                glQueryCounter;

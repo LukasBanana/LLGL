@@ -246,6 +246,11 @@ PFNGLENDQUERYPROC                                       glEndQuery              
 PFNGLGETQUERYOBJECTIVPROC                               glGetQueryObjectiv                              = nullptr;
 PFNGLGETQUERYOBJECTUIVPROC                              glGetQueryObjectuiv                             = nullptr;
 
+/* --- Condition render objects (GL_NV_conditional_render) --- */
+
+PFNGLBEGINCONDITIONALRENDERPROC                         glBeginConditionalRender                        = nullptr;
+PFNGLENDCONDITIONALRENDERPROC                           glEndConditionalRender                          = nullptr;
+
 /* --- Timer query objects (GL_ARB_timer_query) --- */
 
 PFNGLQUERYCOUNTERPROC                                   glQueryCounter                                  = nullptr;

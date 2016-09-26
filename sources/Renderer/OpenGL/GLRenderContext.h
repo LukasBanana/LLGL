@@ -100,6 +100,9 @@ class GLRenderContext : public RenderContext
 
         bool QueryResult(Query& query, std::uint64_t& result) override;
 
+        void BeginRenderCondition(Query& query, const RenderConditionMode mode) override;
+        void EndRenderCondition() override;
+
         /* ----- Drawing ----- */
 
         void Draw(unsigned int numVertices, unsigned int firstVertex) override;

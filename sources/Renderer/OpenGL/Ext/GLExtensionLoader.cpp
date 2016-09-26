@@ -347,6 +347,13 @@ static bool LoadQueryObjectProcs(bool usePlaceHolder)
     return true;
 }
 
+static bool LoadConditionalRenderProcs(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glBeginConditionalRender );
+    LOAD_GLPROC( glEndConditionalRender   );
+    return true;
+}
+
 static bool LoadTimerQueryObjectProcs(bool usePlaceHolder)
 {
     LOAD_GLPROC( glQueryCounter        );
@@ -532,6 +539,7 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     LoadExtension( "GL_ARB_viewport_array",               LoadViewportArrayProcs         );
     LoadExtension( "GL_ARB_draw_buffers_blend",           LoadDrawBuffersBlendProcs      );
     LoadExtension( "GL_ARB_occlusion_query",              LoadQueryObjectProcs           );
+    LoadExtension( "GL_NV_conditional_render",            LoadConditionalRenderProcs     );
     LoadExtension( "GL_ARB_timer_query",                  LoadTimerQueryObjectProcs      );
     LoadExtension( "GL_ARB_multi_bind",                   LoadMultiBindProcs             );
     LoadExtension( "GL_EXT_stencil_two_side",             LoadStencilSeparateProcs       ); // <--- correct extension ???

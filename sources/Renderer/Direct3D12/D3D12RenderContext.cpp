@@ -252,6 +252,19 @@ bool D3D12RenderContext::QueryResult(Query& query, std::uint64_t& result)
     return false; //todo
 }
 
+void D3D12RenderContext::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+{
+    //auto predicateOp = (mode >= RenderConditionMode::WaitInverted ? D3D12_PREDICATION_OP_EQUAL_NOT_ZERO : D3D12_PREDICATION_OP_EQUAL_ZERO);
+    //commandList_->SetPredication(nullptr, offset, predicateOp);
+    //todo...
+}
+
+void D3D12RenderContext::EndRenderCondition()
+{
+    //commandList_->SetPredication(nullptr, offset, D3D12_PREDICATION_OP_EQUAL_ZERO);
+    //todo...
+}
+
 /* ----- Drawing ----- */
 
 void D3D12RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)

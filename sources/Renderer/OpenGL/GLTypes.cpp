@@ -17,6 +17,8 @@ namespace GLTypes
 {
 
 
+/* ----- Internal functions ----- */
+
 [[noreturn]]
 static void MapFailed(const std::string& typeName)
 {
@@ -28,6 +30,9 @@ static void UnmapFailed(const std::string& typeName)
 {
     throw std::invalid_argument("failed to unmap '" + typeName + "' from OpenGL parameter");
 }
+
+
+/* ----- Map functions ----- */
 
 GLenum Map(const BufferUsage bufferUsage)
 {
@@ -369,6 +374,25 @@ GLenum Map(const QueryType queryType)
     }
     MapFailed("QueryType");
 }
+
+GLenum Map(const RenderConditionMode renderConditionMode)
+{
+    switch (renderConditionMode)
+    {
+        case RenderConditionMode::Wait:                     return GL_QUERY_WAIT;
+        case RenderConditionMode::NoWait:                   return GL_QUERY_NO_WAIT;
+        case RenderConditionMode::ByRegionWait:             return GL_QUERY_BY_REGION_WAIT;
+        case RenderConditionMode::ByRegionNoWait:           return GL_QUERY_BY_REGION_NO_WAIT;
+        case RenderConditionMode::WaitInverted:             return GL_QUERY_WAIT_INVERTED;
+        case RenderConditionMode::NoWaitInverted:           return GL_QUERY_NO_WAIT_INVERTED;
+        case RenderConditionMode::ByRegionWaitInverted:     return GL_QUERY_BY_REGION_WAIT_INVERTED;
+        case RenderConditionMode::ByRegionNoWaitInverted:   return GL_QUERY_BY_REGION_NO_WAIT_INVERTED;
+    }
+    MapFailed("RenderConditionMode");
+}
+
+
+/* ----- Unmap functions ----- */
 
 void Unmap(UniformType& result, const GLenum uniformType)
 {

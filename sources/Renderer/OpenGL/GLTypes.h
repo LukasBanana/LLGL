@@ -28,24 +28,25 @@ namespace GLTypes
 {
 
 
-GLenum Map( const BufferUsage       bufferUsage   );
-GLenum Map( const BufferCPUAccess   cpuAccess     );
-GLenum Map( const DataType          dataType      );
-GLenum Map( const PrimitiveTopology topology      );
-GLenum Map( const TextureType       textureType   );
-GLenum Map( const TextureFormat     textureFormat );
-GLenum Map( const ImageFormat       colorFormat   );
-GLenum Map( const CompareOp         compareOp     );
-GLenum Map( const StencilOp         stencilOp     );
-GLenum Map( const BlendOp           blendOp       );
-GLenum Map( const PolygonMode       polygonMode   ); // GL_FILL, GL_LINE, GL_POINT
-GLenum Map( const CullMode          cullMode      ); // 0, GL_FRONT, GL_BACK
-GLenum Map( const AxisDirection     cubeFace      ); // GL_TEXTURE_CUBE_MAP_...
-GLenum Map( const TextureWrap       textureWrap   ); // GL_REPEAT, ...
-GLenum Map( const TextureFilter     textureFilter ); // GL_NEAREST, GL_LINEAR
-GLenum Map( const TextureFilter     textureMinFilter, const TextureFilter textureMipMapFilter );
-GLenum Map( const ShaderType        shaderType    );
-GLenum Map( const QueryType         queryType     );
+GLenum Map( const BufferUsage           bufferUsage         );
+GLenum Map( const BufferCPUAccess       cpuAccess           );
+GLenum Map( const DataType              dataType            );
+GLenum Map( const PrimitiveTopology     topology            );
+GLenum Map( const TextureType           textureType         );
+GLenum Map( const TextureFormat         textureFormat       );
+GLenum Map( const ImageFormat           colorFormat         );
+GLenum Map( const CompareOp             compareOp           );
+GLenum Map( const StencilOp             stencilOp           );
+GLenum Map( const BlendOp               blendOp             );
+GLenum Map( const PolygonMode           polygonMode         ); // GL_FILL, GL_LINE, GL_POINT
+GLenum Map( const CullMode              cullMode            ); // 0, GL_FRONT, GL_BACK
+GLenum Map( const AxisDirection         cubeFace            ); // GL_TEXTURE_CUBE_MAP_...
+GLenum Map( const TextureWrap           textureWrap         ); // GL_REPEAT, ...
+GLenum Map( const TextureFilter         textureFilter       ); // GL_NEAREST, GL_LINEAR
+GLenum Map( const TextureFilter         textureMinFilter, const TextureFilter textureMipMapFilter );
+GLenum Map( const ShaderType            shaderType          );
+GLenum Map( const QueryType             queryType           );
+GLenum Map( const RenderConditionMode   renderConditionMode );
 
 void Unmap( UniformType& result, const GLenum uniformType );
 

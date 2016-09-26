@@ -19,9 +19,9 @@ namespace LLGL
 //! Query type enumeration.
 enum class QueryType
 {
-    SamplesPassed,                      //!< Number of samples that passed the depth test.
-    AnySamplesPassed,                   //!< Non-zero if any samples passed the depth test.
-    AnySamplesPassedConservative,       //!< Non-zero if any samples passed the depth test within a conservative rasterization.
+    SamplesPassed,                      //!< Number of samples that passed the depth test. This can be used as render condition.
+    AnySamplesPassed,                   //!< Non-zero if any samples passed the depth test. This can be used as render condition.
+    AnySamplesPassedConservative,       //!< Non-zero if any samples passed the depth test within a conservative rasterization. This can be used as render condition.
     PrimitivesGenerated,                //!< Number of generated primitives which are send to the rasterizer (either emitted from the geometry or vertex shader).
     TimeElapsed,                        //!< Elapsed time (in nanoseconds) between the begin- and end query command.
     StreamOutPrimitivesWritten,         //!< Number of vertices that have been written into a stream output (also called "Transform Feedback").

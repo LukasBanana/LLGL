@@ -225,7 +225,7 @@ void DbgRenderContext::EndQuery(Query& query)
 
     /* Validate query state */
     if (queryDbg.state != DbgQuery::State::Busy)
-        LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "missing query begin");
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "query has not started");
     queryDbg.state = DbgQuery::State::Ready;
 
     instance_.EndQuery(queryDbg.instance);
@@ -240,6 +240,17 @@ bool DbgRenderContext::QueryResult(Query& query, std::uint64_t& result)
         LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "query result is not ready");
 
     return instance_.QueryResult(queryDbg.instance, result);
+}
+
+void DbgRenderContext::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+{
+    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+    instance_.BeginRenderCondition(queryDbg.instance, mode);
+}
+
+void DbgRenderContext::EndRenderCondition()
+{
+    instance_.EndRenderCondition();
 }
 
 /* ----- Drawing ----- */

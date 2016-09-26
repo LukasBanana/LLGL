@@ -274,6 +274,32 @@ class LLGL_EXPORT RenderContext
         */
         virtual bool QueryResult(Query& query, std::uint64_t& result) = 0;
 
+        /**
+        \brief Begins conditional rendering with the specified query object.
+        \param[in] query Specifies the query object which is to be used as render condition.
+        This must be an occlusion query, i.e. it's type must be either
+        QueryType::SamplesPassed, QueryType::AnySamplesPassed, or QueryType::AnySamplesPassedConservative.
+        \param[in] mode Specifies the mode of the render conidition.
+        \remarks Here is a usage example:
+        \code
+        context->BeginQuery(*occlusionQuery);
+        // draw bounding box ...
+        context->EndQuery(*occlusionQuery);
+        context->BeginRenderConidtion(*occlusionQuery, LLGL::RenderConditionMode::Wait);
+        // draw actual object ...
+        context->EndRenderConidtion();
+        \endcode
+        \see QueryType
+        \see RenderConditionMode
+        */
+        virtual void BeginRenderCondition(Query& query, const RenderConditionMode mode) = 0;
+
+        /**
+        \brief Ends the current render condition.
+        \see BeginRenderCondition
+        */
+        virtual void EndRenderCondition() = 0;
+
         /* ----- Drawing ----- */
 
         /**
