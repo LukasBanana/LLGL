@@ -10,6 +10,7 @@
 
 
 #include <LLGL/ConstantBuffer.h>
+#include <LLGL/RenderSystemFlags.h>
 #include "D3D11HardwareBuffer.h"
 #include <vector>
 
@@ -23,7 +24,7 @@ class D3D11ConstantBuffer : public ConstantBuffer
 
     public:
 
-        void CreateResource(ID3D11Device* device, UINT bufferSize, const void* initialData = nullptr);
+        void CreateResource(ID3D11Device* device, UINT bufferSize, const BufferUsage usage, const void* initialData = nullptr);
 
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
 
@@ -31,8 +32,8 @@ class D3D11ConstantBuffer : public ConstantBuffer
 
     private:
 
-        UINT                bufferSize_ = 0;
-        std::vector<char>   intermediateBuffer_;
+        UINT        bufferSize_ = 0;
+        D3D11_USAGE usage_      = D3D11_USAGE_DEFAULT;
 
 };
 

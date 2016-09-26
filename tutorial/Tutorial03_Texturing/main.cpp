@@ -84,6 +84,8 @@ public:
     {
         std::string texFilename = "colorMap.png";
 
+        renderer->config.threadCount = 0;
+
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         int texWidth = 0, texHeight = 0, texComponents = 0;
 
@@ -94,7 +96,7 @@ public:
         // Create texture
         colorMap = renderer->CreateTexture();
 
-        // Upload image data onto hardware texture
+        // Initialize image descriptor to upload image data onto hardware texture
         LLGL::ImageDescriptor imageDesc;
         {
             // Set image buffer color format
@@ -106,13 +108,16 @@ public:
             // Set image buffer source for texture initial data
             imageDesc.buffer    = imageBuffer;
         }
-        auto timer = LLGL::Timer::Create();
+
+        // Upload image data onto hardware texture and stop the time
+        renderer->SetupTexture2D(*colorMap, LLGL::TextureFormat::RGBA, Gs::Vector2i(texWidth, texHeight));//, &imageDesc);
+
         timer->Start();
-
-        renderer->SetupTexture2D(*colorMap, LLGL::TextureFormat::RGBA, Gs::Vector2i(texWidth, texHeight), &imageDesc);
-
-        auto t = timer->Stop();
-        std::cout << "image conversion time: " << t << " microseconds" << std::endl;
+        {
+            renderer->WriteTexture2D(*colorMap, 0, { 0, 0 }, Gs::Vector2i(texWidth, texHeight), imageDesc);
+        }
+        auto texCreationTime = timer->Stop();
+        std::cout << "texture creation time: " << texCreationTime << " microseconds" << std::endl;
     
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping

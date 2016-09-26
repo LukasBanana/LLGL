@@ -139,7 +139,8 @@ static TexFormatDesc GetFormatAndDataType(DXGI_FORMAT format)
 }
 
 void D3D11Texture::UpdateSubresource(
-    ID3D11DeviceContext* context, UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox, const ImageDescriptor& imageDesc)
+    ID3D11DeviceContext* context, UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox,
+    const ImageDescriptor& imageDesc, std::size_t threadCount)
 {
     /* Get destination subresource index */
     auto dstSubresource = D3D11CalcSubresource(mipSlice, arraySlice, numMipLevels_);
@@ -160,7 +161,7 @@ void D3D11Texture::UpdateSubresource(
             imageDesc.format, imageDesc.dataType,
             imageDesc.buffer, imageSize,
             dstTexFormat.format, dstTexFormat.dataType,
-            maxThreadCount
+            threadCount
         );
 
         /* Get new source data stride */

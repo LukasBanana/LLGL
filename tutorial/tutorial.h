@@ -62,6 +62,7 @@ protected:
     LLGL::RenderContext*                        context     = nullptr;
     std::shared_ptr<LLGL::Input>                input;
 
+    std::unique_ptr<LLGL::Timer>                timer;
     const LLGL::RenderingProfiler&              profiler;
 
     virtual void OnDrawFrame() = 0;
@@ -73,6 +74,7 @@ protected:
         unsigned int multiSampling = 8) :
             profilerObj_( new LLGL::RenderingProfiler() ),
             debuggerObj_( new Debugger()                ),
+            timer       ( LLGL::Timer::Create()         ),
             profiler    ( *profilerObj_                 )
     {
         // Create render system

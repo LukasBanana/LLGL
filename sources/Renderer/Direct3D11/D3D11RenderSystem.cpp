@@ -136,7 +136,7 @@ void D3D11RenderSystem::SetupConstantBuffer(
     ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
 {
     auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, constantBuffer);
-    constantBufferD3D.CreateResource(device_.Get(), dataSize, data);
+    constantBufferD3D.CreateResource(device_.Get(), dataSize, usage, data);
 }
 
 void D3D11RenderSystem::SetupStorageBuffer(
@@ -514,7 +514,7 @@ void D3D11RenderSystem::SetupGenericTexture1D(
     textureD3D.CreateTexture1D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size, layers, 1), *imageDesc);
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size, layers, 1), *imageDesc, config.threadCount);
     else
     {
         //TODO -> fill texture with default data
@@ -544,7 +544,7 @@ void D3D11RenderSystem::SetupGenericTexture2D(
     textureD3D.CreateTexture2D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, layers), *imageDesc);
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, layers), *imageDesc, config.threadCount);
     else
     {
         //TODO -> fill texture with default data
@@ -572,7 +572,7 @@ void D3D11RenderSystem::SetupGenericTexture3D(
     textureD3D.CreateTexture3D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, size.z), *imageDesc);
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, size.z), *imageDesc, config.threadCount);
     else
     {
         //TODO -> fill texture with default data
@@ -590,7 +590,7 @@ void D3D11RenderSystem::UpdateGenerateTexture(
             position.x, position.y, position.z,
             position.x + size.x, position.y + size.y, position.z + size.z
         ),
-        imageDesc
+        imageDesc, config.threadCount
     );
 }
 

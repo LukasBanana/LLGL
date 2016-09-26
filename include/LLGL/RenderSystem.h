@@ -48,10 +48,10 @@ The main functions for most graphics objects are "Create...", "Setup...", "Write
 auto vertexBuffer = renderSystem->CreateVertexBuffer();
 
 // Initialize object
-renderSystem->SetupVertexBuffer(vertexBuffer, initialData, ...);
+renderSystem->SetupVertexBuffer(*vertexBuffer, initialData, ...);
 
 // Modify data
-renderSystem->WriteVertexBuffer(vertexBuffer, modificationData, ...);
+renderSystem->WriteVertexBuffer(*vertexBuffer, modificationData, ...);
 
 // Release object
 renderSystem->Release(*vertexBuffer);
@@ -70,6 +70,14 @@ class LLGL_EXPORT RenderSystem
             \remarks This will be used for each "SetupTexture..." function (not the "WriteTexture..." functions), when no initial image data is specified.
             */
             ColorRGBAub defaultImageColor;
+
+            /**
+            \brief Specifies the number of threads that will be used internally by the render system. By default maxThreadCount.
+            \remarks This is mainly used by the Direct3D render systems, e.g. inside the "SetupTexture..." and "WriteTexture..." functions
+            to convert the image data into the respective hardware texture format. OpenGL does this automatically.
+            \see maxThreadCount
+            */
+            std::size_t threadCount = maxThreadCount;
         };
 
         /* ----- Common ----- */

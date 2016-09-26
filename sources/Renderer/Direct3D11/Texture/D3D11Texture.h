@@ -56,7 +56,8 @@ class D3D11Texture : public Texture
         void UpdateSubresource(
             ID3D11DeviceContext* context,
             UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox,
-            const ImageDescriptor& imageDesc
+            const ImageDescriptor& imageDesc,
+            std::size_t threadCount
         );
 
         inline const D3D11HardwareTexture& GetHardwareTexture() const
