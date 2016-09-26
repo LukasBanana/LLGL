@@ -28,13 +28,13 @@ namespace LLGL
 static const std::size_t maxThreadCount = ~0;
 
 /**
-\brief Image buffer type.
-\remarks Commonly this would be an std::vector<char>, but the image conversion is an optimized process,
+\brief Common byte buffer type.
+\remarks Commonly this would be an std::vector<char>, but the buffer conversion is an optimized process,
 where the default initialization of an std::vector is undesired.
-Therefore, the image buffer type is an std::unique_ptr<char[]>.
+Therefore, the byte buffer type is an std::unique_ptr<char[]>.
 \see ConvertImage
 */
-using ImageBuffer = std::unique_ptr<char[]>;
+using ByteBuffer = std::unique_ptr<char[]>;
 
 
 /* ----- Enumerations ----- */
@@ -141,7 +141,7 @@ LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is 'maxThreadCount',
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
-\return Image buffer with the converted image data or null if no conversion is necessary.
+\return Byte buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
 \remarks Compressed images and depth-stencil images can not be converted.
 \throw std::invalid_argument If a compressed image format is specified either as source or destination,
@@ -149,10 +149,10 @@ if a depth-stencil format is specified either as source or destination,
 if the source buffer size is not a multiple of the source data type size times the image format size,
 or if 'srcBuffer' is a null pointer.
 \see maxThreadCount
-\see ImageBuffer
+\see ByteBuffer
 \see DataTypeSize
 */
-LLGL_EXPORT ImageBuffer ConvertImageBuffer(
+LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     ImageFormat srcFormat,
     DataType    srcDataType,
     const void* srcBuffer,

@@ -154,9 +154,9 @@ static void WriteNormalizedTypedVariant(DataType dstDataType, VariantBuffer& dst
     }
 }
 
-static ImageBuffer AllocByteArray(std::size_t size)
+static ByteBuffer AllocByteArray(std::size_t size)
 {
-    return ImageBuffer(new char[size]);
+    return ByteBuffer(new char[size]);
 }
 
 // Worker thread procedure for the "ConvertImageBufferDataType" function
@@ -180,7 +180,7 @@ static void ConvertImageBufferDataTypeWorker(
 // Minimal number of entries each worker thread shall process
 static const std::size_t threadMinWorkSize = 64;
 
-static ImageBuffer ConvertImageBufferDataType(
+static ByteBuffer ConvertImageBufferDataType(
     DataType    srcDataType,
     const void* srcBuffer,
     std::size_t srcBufferSize,
@@ -409,7 +409,7 @@ static void ConvertImageBufferFormatWorker(
     }
 }
 
-static ImageBuffer ConvertImageBufferFormat(
+static ByteBuffer ConvertImageBufferFormat(
     ImageFormat srcFormat,
     DataType    srcDataType,
     const void* srcBuffer,
@@ -523,7 +523,7 @@ LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format)
     return (format == ImageFormat::Depth || format == ImageFormat::DepthStencil);
 }
 
-LLGL_EXPORT ImageBuffer ConvertImageBuffer(
+LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     ImageFormat srcFormat,
     DataType    srcDataType,
     const void* srcBuffer,
@@ -542,7 +542,7 @@ LLGL_EXPORT ImageBuffer ConvertImageBuffer(
     if (srcBufferSize % (DataTypeSize(srcDataType) * ImageFormatSize(srcFormat)) != 0)
         throw std::invalid_argument("source buffer size is not a multiple of the source data type size");
 
-    ImageBuffer dstImage;
+    ByteBuffer dstImage;
 
     if (threadCount == maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
