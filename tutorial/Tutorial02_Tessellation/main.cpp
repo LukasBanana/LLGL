@@ -27,8 +27,6 @@ class Tutorial02 : public Tutorial
 
     unsigned int            constantBufferIndex = 0;
 
-    Gs::Matrix4f            projection;
-
     bool                    showWireframe       = false;
 
     struct Settings
@@ -58,7 +56,6 @@ public:
         auto vertexFormat = CreateBuffers();
         LoadShaders(vertexFormat, renderCaps.hasHLSL);
         CreatePipelines();
-        InitProjection();
 
         // Print some information on the standard output
         std::cout << "press LEFT MOUSE BUTTON and move mouse on X axis to increase/decrease inner tessellation" << std::endl;
@@ -148,19 +145,6 @@ public:
 
         pipelineDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
         pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
-    }
-
-    void InitProjection()
-    {
-        // Initialize projection matrix
-        auto resolution = context->GetVideoMode().resolution.Cast<float>();
-
-        projection = Gs::ProjectionMatrix4f::Perspective(
-            (resolution.x / resolution.y),  // aspect ratio
-            0.1f,                           // near clipping plane
-            100.0f,                         // far clipping plane
-            Gs::Deg2Rad(45.0f)              // field-of-view from degree to radians
-        ).ToMatrix4();
     }
 
     void ShowTessLevel()

@@ -14,6 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <type_traits>
 
 
 class Tutorial
@@ -65,6 +66,8 @@ protected:
     std::unique_ptr<LLGL::Timer>                timer;
     const LLGL::RenderingProfiler&              profiler;
 
+    Gs::Matrix4f                                projection;
+
     virtual void OnDrawFrame() = 0;
 
     Tutorial(
@@ -97,6 +100,9 @@ protected:
         // Add input event listener to window
         input = std::make_shared<LLGL::Input>();
         context->GetWindow().AddEventListener(input);
+
+        // Initialize default projection matrix
+        projection = Gs::ProjectionMatrix4f::Perspective(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
 
         // Set dark blue as default clear color
         context->SetClearColor({ 0.1f, 0.1f, 0.4f });
@@ -249,6 +255,29 @@ protected:
         auto indexBuffer = renderer->CreateIndexBuffer();
         renderer->SetupIndexBuffer(*indexBuffer, indices.data(), indices.size() * sizeof(IndexType), LLGL::BufferUsage::Static, indexFormat);
         return indexBuffer;
+    }
+
+    template <typename Buffer>
+    LLGL::ConstantBuffer* CreateConstantBuffer(const Buffer& buffer)
+    {
+        static_assert(!std::is_pointer<Buffer>::value, "buffer type must not be a pointer");
+        auto constantBuffer = renderer->CreateConstantBuffer();
+        renderer->SetupConstantBuffer(*constantBuffer, &buffer, sizeof(buffer), LLGL::BufferUsage::Dynamic);
+        return constantBuffer;
+    }
+
+    template <typename Buffer>
+    void UpdateConstantBuffer(LLGL::ConstantBuffer* constantBuffer, const Buffer& buffer)
+    {
+        GS_ASSERT(constantBuffer != nullptr);
+        renderer->WriteConstantBuffer(*constantBuffer, &buffer, sizeof(buffer), 0);
+    }
+
+    // Returns the aspect ratio of the render context resolution (X:Y).
+    float GetAspectRatio() const
+    {
+        auto resolution = context->GetVideoMode().resolution.Cast<float>();
+        return (resolution.x / resolution.y);
     }
 
 };
