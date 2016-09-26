@@ -29,7 +29,6 @@ class D3D11HardwareBuffer
 
         void CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData = nullptr);
 
-        void UpdateSubresource(ID3D11DeviceContext* context, const void* data, const D3D11_BOX& destBox, UINT srcRowPitch = 0, UINT srcDepthPitch = 0);
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data);
 
