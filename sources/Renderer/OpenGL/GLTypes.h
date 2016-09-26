@@ -11,6 +11,7 @@
 
 #include "OpenGL.h"
 #include <LLGL/RenderSystemFlags.h>
+#include <LLGL/Image.h>
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>

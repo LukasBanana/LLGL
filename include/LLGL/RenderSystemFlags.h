@@ -9,7 +9,6 @@
 #define __LLGL_RENDER_SYSTEM_FLAGS_H__
 
 
-#include "Export.h"
 #include <Gauss/Vector3.h>
 #include <cstddef>
 
@@ -42,22 +41,6 @@ enum class BufferCPUAccess
     ReadOnly,   //!< CPU read access only.
     WriteOnly,  //!< CPU write access only.
     ReadWrite,  //!< CPU read and write access.
-};
-
-//! Renderer data types enumeration.
-enum class DataType
-{
-    Int8,   //!< 8-bit signed integer (char).
-    UInt8,  //!< 8-bit unsigned integer (unsigned char).
-
-    Int16,  //!< 16-bit signed integer (short).
-    UInt16, //!< 16-bit unsigned integer (unsigned short).
-
-    Int32,  //!< 32-bit signed integer (int).
-    UInt32, //!< 32-bit unsigned integer (unsiged int).
-    
-    Float,  //!< 32-bit floating-point (float).
-    Double, //!< 64-bit real type (double).
 };
 
 //! Shading language version enumation.
@@ -207,12 +190,6 @@ struct RenderingCaps
     //! Specifies maximum work group size in a compute shader.
     Gs::Vector3ui   maxComputeShaderWorkGroupSize;
 };
-
-
-/* ----- Functions ----- */
-
-//! Returns the size (in bytes) of the specified data type.
-LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType);
 
 
 } // /namespace LLGL

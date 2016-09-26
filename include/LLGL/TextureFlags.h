@@ -100,21 +100,6 @@ enum class TextureFormat
     RGBA_DXT5,      //!< Compressed format: RGBA S3TC DXT5.
 };
 
-//! Image format used to write texture data.
-enum class ImageFormat
-{
-    R,              //!< Single color component: Red.
-    RG,             //!< Two color components: Red, Green.
-    RGB,            //!< Three color components: Red, Green, Blue.
-    BGR,            //!< Three color components: Blue, Green, Red.
-    RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
-    BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
-    Depth,          //!< Single color component used as depth component.
-    DepthStencil,   //!< Pair of depth and stencil component.
-    CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
-    CompressedRGBA, //!< Generic compressed format with four color components: Red, Green, Blue, Alpha.
-};
-
 //! Axis direction (also used for texture cube face).
 enum class AxisDirection
 {
@@ -128,36 +113,6 @@ enum class AxisDirection
 
 
 /* ----- Structures ----- */
-
-/**
-\brief Image descriptor structure.
-\remarks This kind of 'Image' is mainly used to fill the image data of a hardware texture.
-*/
-struct LLGL_EXPORT ImageDescriptor
-{
-    ImageDescriptor() = default;
-
-    // Constructor for uncompressed image data.
-    ImageDescriptor(ImageFormat format, DataType dataType, const void* buffer) :
-        format  ( format   ),
-        dataType( dataType ),
-        buffer  ( buffer   )
-    {
-    }
-
-    //! Constructor for compressed image data.
-    ImageDescriptor(ImageFormat format, const void* buffer, unsigned int compressedSize) :
-        format          ( format         ),
-        buffer          ( buffer         ),
-        compressedSize  ( compressedSize )
-    {
-    }
-
-    ImageFormat     format          = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
-    DataType        dataType        = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images.
-    const void*     buffer          = nullptr;              //!< Pointer to the image buffer.
-    unsigned int    compressedSize  = 0;                    //!< Specifies the size (in bytes) of a compressed image. This must be 0 for uncompressed images.
-};
 
 //! Texture descriptor union.
 union TextureDescriptor
@@ -204,14 +159,6 @@ union TextureDescriptor
 /* ----- Functions ----- */
 
 /**
-\brief Returns the size (in number of components) of the specified image format.
-\param[in] imageFormat Specifies the image format.
-\return Number of components of the specified image format, or 0 if 'imageFormat' specifies a compressed color format.
-\see IsCompressedFormat(const ImageFormat)
-*/
-LLGL_EXPORT std::size_t ImageFormatSize(const ImageFormat imageFormat);
-
-/**
 \brief Returns the number of MIP-map levels for a texture with the specified size.
 \return 1 + floor(log2(max{ x, y, z })).
 */
@@ -223,19 +170,6 @@ i.e. either TextureFormat::RGB_DXT1, TextureFormat::RGBA_DXT1, TextureFormat::RG
 \see TextureFormat
 */
 LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format);
-
-/**
-\brief Returns true if the specified color format is a compressed format,
-i.e. either ImageFormat::CompressedRGB, or ImageFormat::CompressedRGBA.
-\see ImageFormat
-*/
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format);
-
-/**
-\brief Returns true if the specified color foramt is a depth-stencil format,
-i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
-*/
-LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
 
 
 } // /namespace LLGL

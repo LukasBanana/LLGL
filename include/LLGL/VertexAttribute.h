@@ -9,7 +9,7 @@
 #define __LLGL_VERTEX_ATTRIBUTE_H__
 
 
-#include "RenderSystemFlags.h"
+#include "Image.h"
 #include <string>
 
 

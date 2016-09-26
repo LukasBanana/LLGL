@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "Image.h"
 #include "VertexAttribute.h"
 #include <vector>
 

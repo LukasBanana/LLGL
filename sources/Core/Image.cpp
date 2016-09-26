@@ -1,11 +1,11 @@
 /*
- * ImageConverter.cpp
+ * Image.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/ImageConverter.h>
+#include <LLGL/Image.h>
 #include <LLGL/ColorRGBA.h>
 #include <limits>
 #include <algorithm>
@@ -474,6 +474,54 @@ static ImageBuffer ConvertImageBufferFormat(
 
 
 /* ----- Public functions ----- */
+
+LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType)
+{
+    switch (dataType)
+    {
+        case DataType::Int8:
+        case DataType::UInt8:
+            return 1;
+        case DataType::Int16:
+        case DataType::UInt16:
+            return 2;
+        case DataType::Int32:
+        case DataType::UInt32:
+        case DataType::Float:
+            return 4;
+        case DataType::Double:
+            return 8;
+    }
+    return 0;
+}
+
+LLGL_EXPORT std::size_t ImageFormatSize(const ImageFormat imageFormat)
+{
+    switch (imageFormat)
+    {
+        case ImageFormat::R:                return 1;
+        case ImageFormat::RG:               return 2;
+        case ImageFormat::RGB:              return 3;
+        case ImageFormat::BGR:              return 3;
+        case ImageFormat::RGBA:             return 4;
+        case ImageFormat::BGRA:             return 4;
+        case ImageFormat::Depth:            return 1;
+        case ImageFormat::DepthStencil:     return 2;
+        case ImageFormat::CompressedRGB:    return 0;
+        case ImageFormat::CompressedRGBA:   return 0;
+    }
+    return 0;
+}
+
+LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format)
+{
+    return (format >= ImageFormat::CompressedRGB);
+}
+
+LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format)
+{
+    return (format == ImageFormat::Depth || format == ImageFormat::DepthStencil);
+}
 
 LLGL_EXPORT ImageBuffer ConvertImageBuffer(
     ImageFormat srcFormat,

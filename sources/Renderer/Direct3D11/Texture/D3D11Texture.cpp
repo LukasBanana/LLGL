@@ -6,7 +6,6 @@
  */
 
 #include "D3D11Texture.h"
-#include <LLGL/ImageConverter.h>
 #include "../../DXCommon/DXCore.h"
 
 

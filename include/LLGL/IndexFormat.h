@@ -10,7 +10,7 @@
 
 
 #include "Export.h"
-#include "RenderSystemFlags.h"
+#include "Image.h"
 
 
 namespace LLGL
