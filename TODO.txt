@@ -4,5 +4,5 @@ Add More Interfaces:
 - QueryPredicate (ID3D11Predicate, Conditional render)
 - Stream output (Transform feedback)
 
-Refactore RenderContext:
+Refactor RenderContext:
 - Move most functions into new interface "CommandBuffer"
