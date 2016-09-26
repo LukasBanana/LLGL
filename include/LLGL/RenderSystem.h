@@ -62,24 +62,6 @@ class LLGL_EXPORT RenderSystem
 
     public:
 
-        //! Render system configuration structure.
-        struct Configuration
-        {
-            /**
-            \brief Specifies the default color for an uninitialized textures. The default value is white (255, 255, 255, 255).
-            \remarks This will be used for each "SetupTexture..." function (not the "WriteTexture..." functions), when no initial image data is specified.
-            */
-            ColorRGBAub defaultImageColor;
-
-            /**
-            \brief Specifies the number of threads that will be used internally by the render system. By default maxThreadCount.
-            \remarks This is mainly used by the Direct3D render systems, e.g. inside the "SetupTexture..." and "WriteTexture..." functions
-            to convert the image data into the respective hardware texture format. OpenGL does this automatically.
-            \see maxThreadCount
-            */
-            std::size_t threadCount = maxThreadCount;
-        };
-
         /* ----- Common ----- */
 
         RenderSystem(const RenderSystem&) = delete;
@@ -134,6 +116,22 @@ class LLGL_EXPORT RenderSystem
 
         //! Returns the highest version of the supported shading language.
         virtual ShadingLanguage QueryShadingLanguage() const = 0;
+
+        /**
+        \brief Sets the basic configuration.
+        \remarks This can be used to change the behavior of default initializion of textures for instance.
+        \see RenderSystemConfiguration
+        */
+        virtual void SetConfiguration(const RenderSystemConfiguration& config);
+
+        /**
+        \brief Returns the basic configuration.
+        \see SetConfiguration
+        */
+        inline const RenderSystemConfiguration& GetConfiguration() const
+        {
+            return config_;
+        }
 
         /* ----- Render Context ----- */
 
@@ -289,10 +287,10 @@ class LLGL_EXPORT RenderSystem
         \param[in] format Specifies the hardware texture format.
         \param[in] size Specifies the size of the texture (in texels, 'texture elements').
         \param[in] imageDesc Optional pointer to the image data descriptor.
-        If this is null, the texture will be initialized with the currently configured default image color (see "Configuration::defaultTextureImageColor").
+        If this is null, the texture will be initialized with the currently configured default image color (see "RenderSystemConfiguration::defaultImageColor").
         If this is non-null, is is used to initialize the texture data.
         \see WriteTexture1D
-        \see Configuration::defaultTextureImageColor
+        \see RenderSystemConfiguration::defaultImageColor
         */
         virtual void SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc = nullptr) = 0;
 
@@ -496,15 +494,6 @@ class LLGL_EXPORT RenderSystem
 
         virtual void Release(Query& query) = 0;
 
-        /* === Members === */
-
-        /**
-        \brief Render system basic configuration.
-        \remarks This can be used to change the behavior of default initializion of textures for instance.
-        \see Configuration
-        */
-        Configuration config;
-
     protected:
 
         RenderSystem() = default;
@@ -520,9 +509,11 @@ class LLGL_EXPORT RenderSystem
 
     private:
 
-        std::string     name_;
+        std::string                 name_;
 
-        RenderContext*  currentContext_ = nullptr;
+        RenderContext*              currentContext_ = nullptr;
+
+        RenderSystemConfiguration   config_;
 
 };
 

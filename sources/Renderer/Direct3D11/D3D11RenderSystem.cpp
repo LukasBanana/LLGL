@@ -514,7 +514,7 @@ void D3D11RenderSystem::SetupGenericTexture1D(
     textureD3D.CreateTexture1D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size, layers, 1), *imageDesc, config.threadCount);
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size, layers, 1), *imageDesc, GetConfiguration().threadCount);
     else
     {
         //TODO -> fill texture with default data
@@ -544,7 +544,7 @@ void D3D11RenderSystem::SetupGenericTexture2D(
     textureD3D.CreateTexture2D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, layers), *imageDesc, config.threadCount);
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, layers), *imageDesc, GetConfiguration().threadCount);
     else
     {
         //TODO -> fill texture with default data
@@ -572,7 +572,7 @@ void D3D11RenderSystem::SetupGenericTexture3D(
     textureD3D.CreateTexture3D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, size.z), *imageDesc, config.threadCount);
+        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, size.z), *imageDesc, GetConfiguration().threadCount);
     else
     {
         //TODO -> fill texture with default data
@@ -590,7 +590,7 @@ void D3D11RenderSystem::UpdateGenerateTexture(
             position.x, position.y, position.z,
             position.x + size.x, position.y + size.y, position.z + size.z
         ),
-        imageDesc, config.threadCount
+        imageDesc, GetConfiguration().threadCount
     );
 }
 

@@ -10,11 +10,21 @@
 
 
 #include <Gauss/Vector3.h>
+#include "ColorRGBA.h"
 #include <cstddef>
 
 
 namespace LLGL
 {
+
+
+/* ----- Constants ----- */
+
+/**
+\brief Specifies the maximal number of threads the system supports.
+\see ConvertImageBuffer
+*/
+static const std::size_t maxThreadCount = ~0;
 
 
 /* ----- Enumerations ----- */
@@ -96,6 +106,24 @@ enum class ClippingRange
 
 
 /* ----- Structures ----- */
+
+//! Render system configuration structure.
+struct RenderSystemConfiguration
+{
+    /**
+    \brief Specifies the default color for an uninitialized textures. The default value is white (255, 255, 255, 255).
+    \remarks This will be used for each "SetupTexture..." function (not the "WriteTexture..." functions), when no initial image data is specified.
+    */
+    ColorRGBAub defaultImageColor;
+
+    /**
+    \brief Specifies the number of threads that will be used internally by the render system. By default maxThreadCount.
+    \remarks This is mainly used by the Direct3D render systems, e.g. inside the "SetupTexture..." and "WriteTexture..." functions
+    to convert the image data into the respective hardware texture format. OpenGL does this automatically.
+    \see maxThreadCount
+    */
+    std::size_t threadCount = maxThreadCount;
+};
 
 //! Rendering capabilities structure.
 struct RenderingCaps

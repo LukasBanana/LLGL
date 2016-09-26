@@ -52,6 +52,12 @@ ShadingLanguage DbgRenderSystem::QueryShadingLanguage() const
     return instance_->QueryShadingLanguage();
 }
 
+void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
+{
+    RenderSystem::SetConfiguration(config);
+    instance_->SetConfiguration(config);
+}
+
 /* ----- Render Context ----- */
 
 RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)

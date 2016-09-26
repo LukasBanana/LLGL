@@ -120,6 +120,11 @@ bool RenderSystem::MakeCurrent(RenderContext* renderContext)
     return true;
 }
 
+void RenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
+{
+    config_ = config;
+}
+
 
 /*
  * ======= Protected: =======
@@ -132,7 +137,7 @@ bool RenderSystem::OnMakeCurrent(RenderContext* renderContext)
 
 std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixels) const
 {
-    return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), config.defaultImageColor);
+    return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), GetConfiguration().defaultImageColor);
 }
 
 

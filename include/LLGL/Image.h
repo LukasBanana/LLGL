@@ -22,12 +22,6 @@ namespace LLGL
 /* ----- Types ----- */
 
 /**
-\brief Specifies the maximal number of threads the system supports.
-\see ConvertImageBuffer
-*/
-static const std::size_t maxThreadCount = ~0;
-
-/**
 \brief Common byte buffer type.
 \remarks Commonly this would be an std::vector<char>, but the buffer conversion is an optimized process,
 where the default initialization of an std::vector is undesired.

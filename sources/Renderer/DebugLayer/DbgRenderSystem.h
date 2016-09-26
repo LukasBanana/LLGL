@@ -45,6 +45,8 @@ class DbgRenderSystem : public RenderSystem
 
         ShadingLanguage QueryShadingLanguage() const override;
 
+        void SetConfiguration(const RenderSystemConfiguration& config) override;
+
         /* ----- Render Context ------ */
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
