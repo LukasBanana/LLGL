@@ -182,13 +182,59 @@ void D3D11RenderSystem::Release(Texture& texture)
 
 TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& texture)
 {
-    /* Setup texture descriptor */
-    TextureDescriptor desc;
-    InitMemory(desc);
+    /* Get D3D hardware texture resource */
+    auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
+    const auto& hwTex = textureD3D.GetHardwareTexture();
 
-    //todo
+    /* Initialize texture descriptor */
+    TextureDescriptor texDesc;
+    InitMemory(texDesc);
 
-    return desc;
+    texDesc.type = texture.GetType();
+
+    /* Get resource dimension to query the respective D3D descriptor */
+    D3D11_RESOURCE_DIMENSION dimension;
+    hwTex.resource->GetType(&dimension);
+
+    switch (dimension)
+    {
+        case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
+        {
+            /* Query descriptor from 1D texture */
+            D3D11_TEXTURE1D_DESC desc;
+            hwTex.tex1D->GetDesc(&desc);
+
+            texDesc.texture1DDesc.width     = static_cast<int>(desc.Width);
+            texDesc.texture1DDesc.layers    = desc.ArraySize;
+        }
+        break;
+
+        case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
+        {
+            /* Query descriptor from 2D texture */
+            D3D11_TEXTURE2D_DESC desc;
+            hwTex.tex2D->GetDesc(&desc);
+
+            texDesc.texture2DDesc.width     = static_cast<int>(desc.Width);
+            texDesc.texture2DDesc.height    = static_cast<int>(desc.Height);
+            texDesc.texture2DDesc.layers    = desc.ArraySize;
+        }
+        break;
+
+        case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
+        {
+            /* Query descriptor from 3D texture */
+            D3D11_TEXTURE3D_DESC desc;
+            hwTex.tex3D->GetDesc(&desc);
+
+            texDesc.texture3DDesc.width     = static_cast<int>(desc.Width);
+            texDesc.texture3DDesc.height    = static_cast<int>(desc.Height);
+            texDesc.texture3DDesc.depth     = static_cast<int>(desc.Depth);
+        }
+        break;
+    }
+
+    return texDesc;
 }
 
 void D3D11RenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc)
