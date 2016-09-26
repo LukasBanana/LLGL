@@ -3,3 +3,6 @@ Add More Interfaces:
 - Counter (GL_ATOMIC_COUNTER_BUFFER, ID3D11Counter)
 - QueryPredicate (ID3D11Predicate, Conditional render)
 - Stream output (Transform feedback)
+
+Refactore RenderContext:
+- Move most functions into new interface "CommandBuffer"

@@ -361,7 +361,7 @@ void D3D11RenderSystem::Release(Sampler& sampler)
 
 RenderTarget* D3D11RenderSystem::CreateRenderTarget(unsigned int multiSamples)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), multiSamples));
+    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(*this, multiSamples));
 }
 
 void D3D11RenderSystem::Release(RenderTarget& renderTarget)
@@ -436,6 +436,33 @@ ComPtr<IDXGISwapChain> D3D11RenderSystem::CreateDXSwapChain(DXGI_SWAP_CHAIN_DESC
     DXThrowIfFailed(hr, "failed to create D3D11 swap chain");
 
     return swapChain;
+}
+
+void D3D11RenderSystem::CreateDXDepthStencilAndDSV(
+    UINT width, UINT height, UINT sampleCount, DXGI_FORMAT format,
+    ComPtr<ID3D11Texture2D>& depthStencil, ComPtr<ID3D11DepthStencilView>& dsv)
+{
+    /* Create depth stencil texture */
+    D3D11_TEXTURE2D_DESC texDesc;
+    {
+        texDesc.Width               = width;
+        texDesc.Height              = height;
+        texDesc.MipLevels           = 1;
+        texDesc.ArraySize           = 1;
+        texDesc.Format              = format;
+        texDesc.SampleDesc.Count    = std::max(1u, sampleCount);
+        texDesc.SampleDesc.Quality  = 0;
+        texDesc.Usage               = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
+        texDesc.CPUAccessFlags      = 0;
+        texDesc.MiscFlags           = 0;
+    }
+    auto hr = device_->CreateTexture2D(&texDesc, nullptr, &depthStencil);
+    DXThrowIfFailed(hr, "failed to create texture 2D for D3D11 depth-stencil");
+
+    /* Create depth-stencil-view */
+    hr = device_->CreateDepthStencilView(depthStencil.Get(), nullptr, &dsv);
+    DXThrowIfFailed(hr, "failed to create depth-stencil-view (DSV) for D3D11 depth-stencil");
 }
 
 

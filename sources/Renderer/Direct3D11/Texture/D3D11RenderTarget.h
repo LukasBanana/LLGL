@@ -19,12 +19,14 @@ namespace LLGL
 {
 
 
+class D3D11RenderSystem;
+
 class D3D11RenderTarget : public RenderTarget
 {
 
     public:
 
-        D3D11RenderTarget(ID3D11Device* device, unsigned int multiSamples);
+        D3D11RenderTarget(D3D11RenderSystem& renderSystem, unsigned int multiSamples);
 
         void AttachDepthBuffer(const Gs::Vector2i& size) override;
         void AttachStencilBuffer(const Gs::Vector2i& size) override;
@@ -42,21 +44,29 @@ class D3D11RenderTarget : public RenderTarget
 
         /* ----- Extended Internal Functions ----- */
 
-        inline const std::vector<ID3D11RenderTargetView*>& GetRTVList() const
+        inline const std::vector<ID3D11RenderTargetView*>& GetRenderTargetViews() const
         {
-            return rtvRefList_;
+            return renderTargetViewsRef_;
         }
 
-        inline ID3D11DepthStencilView* GetDSV() const
+        inline ID3D11DepthStencilView* GetDepthStencilView() const
         {
-            return dsv_.Get();
+            return depthStencilView_.Get();
         }
 
     private:
 
-        std::vector<ComPtr<ID3D11RenderTargetView>> rtvList_;
-        std::vector<ID3D11RenderTargetView*>        rtvRefList_;
-        ComPtr<ID3D11DepthStencilView>              dsv_;
+        void CreateDepthStencilAndDSV(const Gs::Vector2i& size, DXGI_FORMAT format);
+
+        D3D11RenderSystem&                          renderSystem_;
+
+        std::vector<ComPtr<ID3D11RenderTargetView>> renderTargetViews_;
+        std::vector<ID3D11RenderTargetView*>        renderTargetViewsRef_;
+
+        ComPtr<ID3D11Texture2D>                     depthStencil_;
+        ComPtr<ID3D11DepthStencilView>              depthStencilView_;
+
+        UINT                                        multiSamples_ = 0;
 
 };
 

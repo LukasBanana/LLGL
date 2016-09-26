@@ -20,7 +20,13 @@ namespace LLGL
 
 class Texture;
 
-//! Render target interface.
+/**
+\brief Render target interface.
+\remarks A render target in the broader sense is a composition of Texture objects
+which can be specified as the destination for drawing operations.
+After a texture has been attached to a render target, its image content is undefined
+until something has been rendered into the render target.
+*/
 class LLGL_EXPORT RenderTarget
 {
 
