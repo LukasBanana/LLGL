@@ -223,7 +223,7 @@ void GLRenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void GLRenderContext::SetTexture(Texture& texture, unsigned int slot)
+void GLRenderContext::SetTexture(Texture& texture, unsigned int slot, long /*shaderStageFlags*/)
 {
     /* Bind texture to layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -250,7 +250,7 @@ void GLRenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void GLRenderContext::SetSampler(Sampler& sampler, unsigned int slot)
+void GLRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long /*shaderStageFlags*/)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     stateMngr_->BindSampler(slot, samplerGL.GetID());

@@ -187,12 +187,12 @@ void D3D11RenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot)
+void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
 {
     /* Set texture resource to all shader stages */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     auto resource = textureD3D.GetSRV();
-    SetShaderResourcesOnStages(slot, 1, &resource, ShaderStageFlags::AllStages);
+    SetShaderResourcesOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
 void D3D11RenderContext::GenerateMips(Texture& texture)
@@ -204,12 +204,12 @@ void D3D11RenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot)
+void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
 {
     /* Set sampler state object to all shader stages */
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
     auto resource = samplerD3D.GetSamplerState();
-    SetSamplersOnStages(slot, 1, &resource, ShaderStageFlags::AllStages);
+    SetSamplersOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
 /* ----- Render Targets ----- */

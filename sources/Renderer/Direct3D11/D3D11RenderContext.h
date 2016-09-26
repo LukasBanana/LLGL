@@ -71,13 +71,13 @@ class D3D11RenderContext : public RenderContext
 
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, unsigned int slot) override;
+        void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         void GenerateMips(Texture& texture) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, unsigned int slot) override;
+        void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Render Targets ----- */
 

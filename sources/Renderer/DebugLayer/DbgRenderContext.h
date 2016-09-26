@@ -66,13 +66,13 @@ class DbgRenderContext : public RenderContext
 
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, unsigned int slot) override;
+        void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         void GenerateMips(Texture& texture) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, unsigned int slot) override;
+        void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Render Targets ----- */
 
@@ -139,6 +139,8 @@ class DbgRenderContext : public RenderContext
         void DebugInstancing(const std::string& source);
         void DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source);
         void DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source);
+
+        void DebugShaderStageFlags(long shaderStageFlags, const std::string& source);
 
         void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);
 

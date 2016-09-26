@@ -195,7 +195,7 @@ class LLGL_EXPORT RenderContext
         i.e. it must be initialized with any of the "RenderSystem::SetupTexture..." functions.
         \param[in] slot Specifies the slot index where to put the texture.
         */
-        virtual void SetTexture(Texture& texture, unsigned int slot) = 0;
+        virtual void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.
@@ -211,7 +211,7 @@ class LLGL_EXPORT RenderContext
         \param[in] slot Specifies the slot index where to put the sampler.
         \see RenderSystem::CreateSampler
         */
-        virtual void SetSampler(Sampler& sampler, unsigned int slot) = 0;
+        virtual void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /* ----- Render Targets ----- */
 

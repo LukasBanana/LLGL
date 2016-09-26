@@ -109,6 +109,7 @@ void DbgRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 
 void DbgRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags)
 {
+    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
     auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
     {
         instance_.SetConstantBuffer(constantBufferDbg.instance, slot, shaderStageFlags);
@@ -143,11 +144,12 @@ void DbgRenderContext::UnmapStorageBuffer()
 
 /* ----- Textures ----- */
 
-void DbgRenderContext::SetTexture(Texture& texture, unsigned int slot)
+void DbgRenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
 {
+    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
     {
-        instance_.SetTexture(textureDbg.instance, slot);
+        instance_.SetTexture(textureDbg.instance, slot, shaderStageFlags);
     }
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
@@ -163,9 +165,12 @@ void DbgRenderContext::GenerateMips(Texture& texture)
 
 /* ----- Sampler States ----- */
 
-void DbgRenderContext::SetSampler(Sampler& sampler, unsigned int slot)
+void DbgRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
 {
-    instance_.SetSampler(sampler, slot);
+    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+    {
+        instance_.SetSampler(sampler, slot, shaderStageFlags);
+    }
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
 
@@ -542,6 +547,14 @@ void DbgRenderContext::DebugVertexLimit(unsigned int vertexCount, unsigned int v
             source
         );
     }
+}
+
+void DbgRenderContext::DebugShaderStageFlags(long shaderStageFlags, const std::string& source)
+{
+    if ((shaderStageFlags & ShaderStageFlags::AllStages) == 0)
+        LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stage is specified", source);
+    if ((shaderStageFlags & (~ShaderStageFlags::AllStages)) != 0)
+        LLGL_DBG_WARN(WarningType::PointlessOperation, "unknown shader stage flag is specified", source);
 }
 
 void DbgRenderContext::WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source)
