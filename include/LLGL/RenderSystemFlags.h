@@ -21,6 +21,8 @@ namespace LLGL
 
 /**
 \brief Hardware buffer usage enumeration.
+\remarks For OpenGL, the buffer usage is just a hint to the GL server.
+For Direct3D, the buffer usage is crucial during buffer creation.
 \see RenderSystem::SetupVertexBuffer
 \see RenderSystem::SetupIndexBuffer
 \see RenderSystem::SetupConstantBuffer
@@ -28,8 +30,18 @@ namespace LLGL
 */
 enum class BufferUsage
 {
-    Static,     //!< The hardware buffer will be rarely changed by the client but often used by the hardware.
-    Dynamic,    //!< The hardware buffer will be often changed by the client (e.g. almost every frame).
+    /**
+    \brief The hardware buffer will be rarely changed by the client but often used by the hardware.
+    \remarks For Direct3D 11, a buffer can use the static buffer usage, if always the entire buffer will be updated.
+    Otherwise, the dynamic buffer usage must be used.
+    */
+    Static,
+
+    /**
+    \brief The hardware buffer will be often changed by the client (e.g. almost every frame).
+    \remarks For Direct3D 11, a buffer must use the dynamic buffer usage, if it will only partially be updated at any time.
+    */
+    Dynamic,
 };
 
 /**
