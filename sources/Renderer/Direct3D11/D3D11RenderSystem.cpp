@@ -433,7 +433,7 @@ ComPtr<IDXGISwapChain> D3D11RenderSystem::CreateDXSwapChain(DXGI_SWAP_CHAIN_DESC
     ComPtr<IDXGISwapChain> swapChain;
 
     auto hr = factory_->CreateSwapChain(device_.Get(), &desc, &swapChain);
-    DXThrowIfFailed(hr, "failed to create D3D11 swap chain");
+    DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
 }

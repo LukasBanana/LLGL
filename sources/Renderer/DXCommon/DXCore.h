@@ -36,7 +36,7 @@ struct D3DClearState
 // Converts the DX error code into a string.
 std::string DXErrorToStr(const HRESULT errorCode);
 
-// Throws an std::runtime_error exception of 'errorCode' is not S_OK.
+// Throws an std::runtime_error exception if 'errorCode' is not S_OK.
 void DXThrowIfFailed(const HRESULT errorCode, const std::string& info);
 
 // Returns the blob data as string.
