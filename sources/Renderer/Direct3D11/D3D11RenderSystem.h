@@ -28,6 +28,7 @@
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
+#include "Texture/D3D11RenderTarget.h"
 
 #include "../ContainerTypes.h"
 #include "../ComPtr.h"
@@ -223,7 +224,7 @@ class D3D11RenderSystem : public RenderSystem
         //HWObjectContainer<D3D11StorageBuffer>       storageBuffers_;
 
         HWObjectContainer<D3D11Texture>             textures_;
-        //HWObjectContainer<D3D11RenderTarget>        renderTargets_;
+        HWObjectContainer<D3D11RenderTarget>        renderTargets_;
 
         HWObjectContainer<D3D11Shader>              shaders_;
         HWObjectContainer<D3D11ShaderProgram>       shaderPrograms_;

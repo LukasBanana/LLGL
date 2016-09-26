@@ -361,12 +361,12 @@ void D3D11RenderSystem::Release(Sampler& sampler)
 
 RenderTarget* D3D11RenderSystem::CreateRenderTarget(unsigned int multiSamples)
 {
-    return nullptr;//TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(multiSamples));
+    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), multiSamples));
 }
 
 void D3D11RenderSystem::Release(RenderTarget& renderTarget)
 {
-    //RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
 /* ----- Shader ----- */
