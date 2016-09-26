@@ -514,10 +514,7 @@ void D3D11RenderSystem::SetupGenericTexture1D(
     textureD3D.CreateTexture1D(device_.Get(), texDesc);
 
     if (imageDesc)
-    {
-        //TODO -> convert source data if it does not match the DXGI_FORMAT!!!
         textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size, layers, 1), *imageDesc);
-    }
     else
     {
         //TODO -> fill texture with default data
@@ -547,10 +544,7 @@ void D3D11RenderSystem::SetupGenericTexture2D(
     textureD3D.CreateTexture2D(device_.Get(), texDesc);
 
     if (imageDesc)
-    {
-        //TODO -> convert source data if it does not match the DXGI_FORMAT!!!
         textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, layers), *imageDesc);
-    }
     else
     {
         //TODO -> fill texture with default data
@@ -578,10 +572,7 @@ void D3D11RenderSystem::SetupGenericTexture3D(
     textureD3D.CreateTexture3D(device_.Get(), texDesc);
 
     if (imageDesc)
-    {
-        //TODO -> convert source data if it does not match the DXGI_FORMAT!!!
         textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, size.z), *imageDesc);
-    }
     else
     {
         //TODO -> fill texture with default data

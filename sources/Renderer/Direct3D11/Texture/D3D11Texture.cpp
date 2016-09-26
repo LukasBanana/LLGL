@@ -94,6 +94,50 @@ void D3D11Texture::CreateTexture3D(ID3D11Device* device, const D3D11_TEXTURE3D_D
     CreateSRVAndStoreSettings(device, desc.Format, desc.Width, desc.Height, desc.Depth);
 }
 
+struct TexFormatDesc
+{
+    ImageFormat format;
+    DataType    dataType;
+};
+
+static TexFormatDesc GetFormatAndDataType(DXGI_FORMAT format)
+{
+    switch (format)
+    {
+        case DXGI_FORMAT_D32_FLOAT:             return { ImageFormat::Depth,            DataType::Float  };
+        case DXGI_FORMAT_D24_UNORM_S8_UINT:     return { ImageFormat::DepthStencil,     DataType::Float  };
+        case DXGI_FORMAT_R8_UNORM:              return { ImageFormat::R,                DataType::UInt8  };
+        case DXGI_FORMAT_R8_SNORM:              return { ImageFormat::R,                DataType::Int8   };
+        case DXGI_FORMAT_R16_UNORM:             return { ImageFormat::R,                DataType::UInt16 };
+        case DXGI_FORMAT_R16_SNORM:             return { ImageFormat::R,                DataType::Int16  };
+        case DXGI_FORMAT_R32_UINT:              return { ImageFormat::R,                DataType::UInt32 };
+        case DXGI_FORMAT_R32_SINT:              return { ImageFormat::R,                DataType::Int32  };
+        case DXGI_FORMAT_R32_FLOAT:             return { ImageFormat::R,                DataType::Float  };
+        case DXGI_FORMAT_R8G8_UNORM:            return { ImageFormat::RG,               DataType::UInt8  };
+        case DXGI_FORMAT_R8G8_SNORM:            return { ImageFormat::RG,               DataType::Int8   };
+        case DXGI_FORMAT_R16G16_UNORM:          return { ImageFormat::RG,               DataType::UInt16 };
+        case DXGI_FORMAT_R16G16_SNORM:          return { ImageFormat::RG,               DataType::Int16  };
+        case DXGI_FORMAT_R32G32_UINT:           return { ImageFormat::RG,               DataType::UInt32 };
+        case DXGI_FORMAT_R32G32_SINT:           return { ImageFormat::RG,               DataType::Int32  };
+        case DXGI_FORMAT_R32G32_FLOAT:          return { ImageFormat::RG,               DataType::Float  };
+        case DXGI_FORMAT_R32G32B32_UINT:        return { ImageFormat::RGB,              DataType::UInt32 };
+        case DXGI_FORMAT_R32G32B32_SINT:        return { ImageFormat::RGB,              DataType::Int32  };
+        case DXGI_FORMAT_R32G32B32_FLOAT:       return { ImageFormat::RGB,              DataType::Float  };
+        case DXGI_FORMAT_R8G8B8A8_UNORM:        return { ImageFormat::RGBA,             DataType::UInt8  };
+        case DXGI_FORMAT_R8G8B8A8_SNORM:        return { ImageFormat::RGBA,             DataType::Int8   };
+        case DXGI_FORMAT_R16G16B16A16_UNORM:    return { ImageFormat::RGBA,             DataType::UInt16 };
+        case DXGI_FORMAT_R16G16B16A16_SNORM:    return { ImageFormat::RGBA,             DataType::Int16  };
+        case DXGI_FORMAT_R32G32B32A32_UINT:     return { ImageFormat::RGBA,             DataType::UInt32 };
+        case DXGI_FORMAT_R32G32B32A32_SINT:     return { ImageFormat::RGBA,             DataType::Int32  };
+        case DXGI_FORMAT_R32G32B32A32_FLOAT:    return { ImageFormat::RGBA,             DataType::Float  };
+        case DXGI_FORMAT_BC1_UNORM:             return { ImageFormat::CompressedRGB,    DataType::UInt8  };
+        case DXGI_FORMAT_BC2_UNORM:             return { ImageFormat::CompressedRGBA,   DataType::UInt8  };
+        case DXGI_FORMAT_BC3_UNORM:             return { ImageFormat::CompressedRGBA,   DataType::UInt8  };
+        default:                                break;
+    }
+    throw std::invalid_argument("failed to convert image buffer into hardware texture format");
+}
+
 void D3D11Texture::UpdateSubresource(
     ID3D11DeviceContext* context, UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox, const ImageDescriptor& imageDesc)
 {
@@ -101,10 +145,11 @@ void D3D11Texture::UpdateSubresource(
     auto dstSubresource = D3D11CalcSubresource(mipSlice, arraySlice, numMipLevels_);
     auto srcPitch       = DataTypeSize(imageDesc.dataType)*ImageFormatSize(imageDesc.format);
 
-    if (imageDesc.format == ImageFormat::RGB || imageDesc.format == ImageFormat::BGR || imageDesc.format == ImageFormat::BGRA)
-    {
-        auto dstFormat = ImageFormat::RGBA;
+    /* Check if source image must be converted */
+    auto dstTexFormat = GetFormatAndDataType(format_);
 
+    if (dstTexFormat.format != imageDesc.format || dstTexFormat.dataType != imageDesc.dataType)
+    {
         /* Get source data stride */
         auto srcRowPitch    = (dstBox.right - dstBox.left)*srcPitch;
         auto srcDepthPitch  = (dstBox.bottom - dstBox.top)*srcRowPitch;
@@ -114,12 +159,12 @@ void D3D11Texture::UpdateSubresource(
         auto tempData = ConvertImageBuffer(
             imageDesc.format, imageDesc.dataType,
             imageDesc.buffer, imageSize,
-            dstFormat, imageDesc.dataType,
+            dstTexFormat.format, dstTexFormat.dataType,
             maxThreadCount
         );
 
         /* Get new source data stride */
-        srcPitch        = DataTypeSize(imageDesc.dataType)*ImageFormatSize(dstFormat);
+        srcPitch        = DataTypeSize(dstTexFormat.dataType)*ImageFormatSize(dstTexFormat.format);
         srcRowPitch     = (dstBox.right - dstBox.left)*srcPitch;
         srcDepthPitch   = (dstBox.bottom - dstBox.top)*srcRowPitch;
 
