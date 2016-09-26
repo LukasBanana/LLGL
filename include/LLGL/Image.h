@@ -13,7 +13,6 @@
 #include "RenderSystemFlags.h"
 #include "TextureFlags.h"
 #include <memory>
-#include <vector>//!!!
 
 
 namespace LLGL
@@ -21,6 +20,12 @@ namespace LLGL
 
 
 /* ----- Types ----- */
+
+/**
+\brief Specifies the maximal number of threads the system supports.
+\see ConvertImageBuffer
+*/
+static const std::size_t maxThreadCount = ~0;
 
 /**
 \brief Image buffer type.
@@ -134,7 +139,8 @@ LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
 \param[in] dstFormat Specifies the destination image format.
 \param[in] dstDataType Specifies the destination data type.
 \param[in] threadCount Specifies the number of threads to use for conversion.
-If this is 0, no multi-threading is used. By default 0.
+If this is less than 2, no multi-threading is used. If this is 'maxThreadCount',
+the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Image buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
 \remarks Compressed images and depth-stencil images can not be converted.
@@ -142,6 +148,7 @@ This can be casted to the respective target data type (e.g. "unsigned char", "in
 if a depth-stencil format is specified either as source or destination,
 if the source buffer size is not a multiple of the source data type size times the image format size,
 or if 'srcBuffer' is a null pointer.
+\see maxThreadCount
 \see ImageBuffer
 \see DataTypeSize
 */
@@ -154,39 +161,6 @@ LLGL_EXPORT ImageBuffer ConvertImageBuffer(
     DataType    dstDataType,
     std::size_t threadCount = 0
 );
-
-
-#if 1 //TODO: remove this class
-
-/**
-\brief Helper class to convert image buffer formats.
-\remarks This is mainly used by the renderer, especially by the "SetupTexture..." functions
-when the input data must be converted before it can be uploaded to the GPU.
-For each conversion function 'srcImage' is the pointer to the source image buffer which is to be converted
-and 'imageSize' specifies the size (in bytes) of this source image buffer.
-If 'srcImage' is null, an empty image buffer with the respective size is returned.
-*/
-class LLGL_EXPORT ImageConverter
-{
-
-    public:
-
-        static std::vector<char> RGBtoRGBA_Int8(const char* srcImage, std::size_t imageSize);
-        static std::vector<unsigned char> RGBtoRGBA_UInt8(const unsigned char* srcImage, std::size_t imageSize);
-
-        static std::vector<short> RGBtoRGBA_Int16(const short* srcImage, std::size_t imageSize);
-        static std::vector<unsigned short> RGBtoRGBA_UInt16(const unsigned short* srcImage, std::size_t imageSize);
-
-        /**
-        \brief Converts the specified 64-bit double precision image into a 32-bit single precision image.
-        \param[in] srcImage Pointer to the source image buffer which is to be converted.
-        \param[in] imageSize Specifies the size (in bytes) of the source image buffer.
-        */
-        static std::vector<float> Float64toFloat32(const double* srcImage, std::size_t imageSize);
-
-};
-
-#endif
 
 
 } // /namespace LLGL

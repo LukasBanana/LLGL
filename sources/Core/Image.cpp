@@ -178,7 +178,7 @@ static void ConvertImageBufferDataTypeWorker(
 }
 
 // Minimal number of entries each worker thread shall process
-static const std::size_t threadMinWorkSize = 16;
+static const std::size_t threadMinWorkSize = 64;
 
 static ImageBuffer ConvertImageBufferDataType(
     DataType    srcDataType,
@@ -543,6 +543,9 @@ LLGL_EXPORT ImageBuffer ConvertImageBuffer(
         throw std::invalid_argument("source buffer size is not a multiple of the source data type size");
 
     ImageBuffer dstImage;
+
+    if (threadCount == maxThreadCount)
+        threadCount = std::thread::hardware_concurrency();
     
     if (srcDataType != dstDataType)
     {
@@ -560,39 +563,9 @@ LLGL_EXPORT ImageBuffer ConvertImageBuffer(
         /* Convert image format */
         dstImage = ConvertImageBufferFormat(srcFormat, srcDataType, srcBuffer, srcBufferSize, dstFormat, threadCount);
     }
-    
+
     return dstImage;
 }
-
-
-#if 1 //TODO: remove this class
-
-std::vector<char> ImageConverter::RGBtoRGBA_Int8(const char* srcImage, std::size_t imageSize)
-{
-    return {};//ConvertImageRGBtoRGBA(srcImage, imageSize);
-}
-
-std::vector<unsigned char> ImageConverter::RGBtoRGBA_UInt8(const unsigned char* srcImage, std::size_t imageSize)
-{
-    return {};//ConvertImageRGBtoRGBA(srcImage, imageSize);
-}
-
-std::vector<short> ImageConverter::RGBtoRGBA_Int16(const short* srcImage, std::size_t imageSize)
-{
-    return {};//ConvertImageRGBtoRGBA(srcImage, imageSize);
-}
-
-std::vector<unsigned short> ImageConverter::RGBtoRGBA_UInt16(const unsigned short* srcImage, std::size_t imageSize)
-{
-    return {};//ConvertImageRGBtoRGBA(srcImage, imageSize);
-}
-
-std::vector<float> ImageConverter::Float64toFloat32(const double* srcImage, std::size_t imageSize)
-{
-    return {};
-}
-
-#endif
 
 
 } // /namespace LLGL

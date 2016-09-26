@@ -87,7 +87,7 @@ public:
         // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
         int texWidth = 0, texHeight = 0, texComponents = 0;
 
-        unsigned char* imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 4);
+        unsigned char* imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 0);
         if (!imageBuffer)
             throw std::runtime_error("failed to open file: \"" + texFilename + "\"");
 
@@ -98,7 +98,7 @@ public:
         LLGL::ImageDescriptor imageDesc;
         {
             // Set image buffer color format
-            imageDesc.format    = LLGL::ImageFormat::RGBA;
+            imageDesc.format    = (texComponents == 4 ? LLGL::ImageFormat::RGBA : LLGL::ImageFormat::RGB);
             
             // Set image buffer data type (unsigned char = 8-bit unsigned integer)
             imageDesc.dataType  = LLGL::DataType::UInt8;
@@ -106,8 +106,14 @@ public:
             // Set image buffer source for texture initial data
             imageDesc.buffer    = imageBuffer;
         }
+        auto timer = LLGL::Timer::Create();
+        timer->Start();
+
         renderer->SetupTexture2D(*colorMap, LLGL::TextureFormat::RGBA, Gs::Vector2i(texWidth, texHeight), &imageDesc);
 
+        auto t = timer->Stop();
+        std::cout << "image conversion time: " << t << " microseconds" << std::endl;
+    
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping
         // see http://whatis.techtarget.com/definition/MIP-map
