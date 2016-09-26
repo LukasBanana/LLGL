@@ -104,7 +104,7 @@ This project is still in its early steps. Here is a short overview of its progre
 	MacOS is currently not supported, but it's part of the plan ;-)
 	
 	\item \textbf{OpenGL renderer} \\
-	OpenGL renderer is \textasciitilde 90\% complete
+	OpenGL renderer is \textasciitilde 70\% complete
 	
 	\item \textbf{Direct3D11 renderer} \\
 	Direct3D 11 renderer is \textasciitilde 50\% complete
@@ -179,6 +179,10 @@ Then your project files should be located in the build directory you just set up
 There are a few options you can switch on and off, which will enable or disable the respective macro
 when you compile the project:
 \begin{itemize}
+	\item \texttt{LLGL\_ENABLE\_DEBUG\_LAYER} \\
+	Specifies whether to enable or disabled the debug layer.
+	This is a wrapper around the render system and all other render objects for effective debugging.
+	
 	\item \texttt{LLGL\_GL\_ENABLE\_EXT\_PLACEHOLDERS} \\
 	Specifies whether OpenGL extensions should be replaced by placeholder procedures
 	when they are not available. This may help debugging and should not influence the runtime performance.
@@ -195,18 +199,49 @@ when you compile the project:
 %	API OVERVIEW
 %----------------------------------------------------------------------------------------
 
-%\newpage
+\newpage
 
-%\section*{API Overview}
+\section*{API Overview}
 
-%LLGL has a very simple and unified API design.
+LLGL has a very simple and unified API design.
+For object creation, there is commonly a ``\texttt{\dots Descriptor}'' structure (e.g. \texttt{LLGL::ImageDescriptor}),
+which contains all necessary information to describe the object which is to be created.
+There are two main interfaces: \emph{RenderSystem} which is mainly used for object creation,
+and \emph{RenderContext} which is used to configure and draw primitives for each framebuffer.
 
-%\begin{lstlisting}
-%class RenderSystem
-%{
-%	static shared_ptr<RenderSystem> Load(string moduleName);
-%}
-%\end{lstlisting}
+\subsection*{RenderSystem}
+
+In the RenderSystem interface there are many functions of the following form:
+\begin{lstlisting}
+// Create a new empty object
+Create...
+
+// Initialize a newly created object
+Setup...
+
+// Update the data of an initialized object
+Write...
+
+// Release the object
+Release
+\end{lstlisting}
+
+\subsection*{RenderContext}
+
+There are several overloaded functions for drawing operations with the naming convention
+``\texttt{Draw}'', ``\texttt{DrawIndexed}'', ``\texttt{DrawInstanced}'', or ``\texttt{DrawIndexedInstanced}''.
+The most other functions are used to configure the command buffer of the graphics API, which have the following form:
+\begin{lstlisting}
+// Set a hardware buffer
+Set...
+
+// Unset a hardware buffer
+Unset...
+
+// Begin and always end a state
+Begin...
+End...
+\end{lstlisting}
 
 
 %----------------------------------------------------------------------------------------
