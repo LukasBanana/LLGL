@@ -144,6 +144,10 @@ class D3D11RenderContext : public RenderContext
         void SetDefaultRenderTargets();
         void SubmitFramebufferView();
 
+        void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags);
+        void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long flags);
+        void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long flags);
+
         D3D11RenderSystem&          renderSystem_;  // reference to its render system
         D3D11StateManager&          stateMngr_;
         RenderContextDescriptor     desc_;

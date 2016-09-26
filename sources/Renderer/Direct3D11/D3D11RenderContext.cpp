@@ -166,15 +166,8 @@ void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsig
 {
     /* Set constant buffer resource to all shader stages */
     auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, constantBuffer);
-
     auto resource = constantBufferD3D.hwBuffer.Get();
-
-    if ((shaderStageFlags & ShaderStageFlags::VertexStage        ) != 0) { context_->VSSetConstantBuffers(slot, 1, &resource); }
-    if ((shaderStageFlags & ShaderStageFlags::TessControlStage   ) != 0) { context_->HSSetConstantBuffers(slot, 1, &resource); }
-    if ((shaderStageFlags & ShaderStageFlags::TessEvaluationStage) != 0) { context_->DSSetConstantBuffers(slot, 1, &resource); }
-    if ((shaderStageFlags & ShaderStageFlags::GeometryStage      ) != 0) { context_->GSSetConstantBuffers(slot, 1, &resource); }
-    if ((shaderStageFlags & ShaderStageFlags::FragmentStage      ) != 0) { context_->PSSetConstantBuffers(slot, 1, &resource); }
-    if ((shaderStageFlags & ShaderStageFlags::ComputeStage       ) != 0) { context_->CSSetConstantBuffers(slot, 1, &resource); }
+    SetConstantBuffersOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
 void D3D11RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
@@ -198,15 +191,8 @@ void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot)
 {
     /* Set texture resource to all shader stages */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-
     auto resource = textureD3D.GetSRV();
-
-    context_->VSSetShaderResources(slot, 1, &resource);
-    context_->PSSetShaderResources(slot, 1, &resource);
-    context_->GSSetShaderResources(slot, 1, &resource);
-    context_->HSSetShaderResources(slot, 1, &resource);
-    context_->DSSetShaderResources(slot, 1, &resource);
-    context_->CSSetShaderResources(slot, 1, &resource);
+    SetShaderResourcesOnStages(slot, 1, &resource, ShaderStageFlags::AllStages);
 }
 
 void D3D11RenderContext::GenerateMips(Texture& texture)
@@ -222,15 +208,8 @@ void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot)
 {
     /* Set sampler state object to all shader stages */
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
-
     auto resource = samplerD3D.GetSamplerState();
-
-    context_->VSSetSamplers(slot, 1, &resource);
-    context_->PSSetSamplers(slot, 1, &resource);
-    context_->GSSetSamplers(slot, 1, &resource);
-    context_->HSSetSamplers(slot, 1, &resource);
-    context_->DSSetSamplers(slot, 1, &resource);
-    context_->CSSetSamplers(slot, 1, &resource);
+    SetSamplersOnStages(slot, 1, &resource, ShaderStageFlags::AllStages);
 }
 
 /* ----- Render Targets ----- */
@@ -579,6 +558,50 @@ void D3D11RenderContext::SubmitFramebufferView()
         framebufferView_.dsv
     );
 }
+
+#define SHADERSTAGE_VS(FLAG) (((FLAG) & ShaderStageFlags::VertexStage) != 0)
+#define SHADERSTAGE_HS(FLAG) (((FLAG) & ShaderStageFlags::TessControlStage) != 0)
+#define SHADERSTAGE_DS(FLAG) (((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0)
+#define SHADERSTAGE_GS(FLAG) (((FLAG) & ShaderStageFlags::GeometryStage) != 0)
+#define SHADERSTAGE_PS(FLAG) (((FLAG) & ShaderStageFlags::FragmentStage) != 0)
+#define SHADERSTAGE_CS(FLAG) (((FLAG) & ShaderStageFlags::ComputeStage) != 0)
+
+void D3D11RenderContext::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags)
+{
+    if (SHADERSTAGE_VS(flags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
+    if (SHADERSTAGE_HS(flags)) { context_->HSSetConstantBuffers(startSlot, count, buffers); }
+    if (SHADERSTAGE_DS(flags)) { context_->DSSetConstantBuffers(startSlot, count, buffers); }
+    if (SHADERSTAGE_GS(flags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
+    if (SHADERSTAGE_PS(flags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
+    if (SHADERSTAGE_CS(flags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
+}
+
+void D3D11RenderContext::SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long flags)
+{
+    if (SHADERSTAGE_VS(flags)) { context_->VSSetShaderResources(startSlot, count, views); }
+    if (SHADERSTAGE_HS(flags)) { context_->HSSetShaderResources(startSlot, count, views); }
+    if (SHADERSTAGE_DS(flags)) { context_->DSSetShaderResources(startSlot, count, views); }
+    if (SHADERSTAGE_GS(flags)) { context_->GSSetShaderResources(startSlot, count, views); }
+    if (SHADERSTAGE_PS(flags)) { context_->GSSetShaderResources(startSlot, count, views); }
+    if (SHADERSTAGE_CS(flags)) { context_->CSSetShaderResources(startSlot, count, views); }
+}
+
+void D3D11RenderContext::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long flags)
+{
+    if (SHADERSTAGE_VS(flags)) { context_->VSSetSamplers(startSlot, count, samplers); }
+    if (SHADERSTAGE_HS(flags)) { context_->HSSetSamplers(startSlot, count, samplers); }
+    if (SHADERSTAGE_DS(flags)) { context_->DSSetSamplers(startSlot, count, samplers); }
+    if (SHADERSTAGE_GS(flags)) { context_->GSSetSamplers(startSlot, count, samplers); }
+    if (SHADERSTAGE_PS(flags)) { context_->PSSetSamplers(startSlot, count, samplers); }
+    if (SHADERSTAGE_CS(flags)) { context_->CSSetSamplers(startSlot, count, samplers); }
+}
+
+#undef SHADERSTAGE_VS
+#undef SHADERSTAGE_HS
+#undef SHADERSTAGE_DS
+#undef SHADERSTAGE_GS
+#undef SHADERSTAGE_PP
+#undef SHADERSTAGE_CS
 
 
 } // /namespace LLGL
