@@ -55,7 +55,7 @@ public:
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateCubeTriangelIndices(), LLGL::DataType::UInt32);
+        indexBuffer = CreateIndexBuffer(GenerateCubeTriangleIndices(), LLGL::DataType::UInt32);
         constantBuffer = CreateConstantBuffer(settings);
 
         return vertexFormat;

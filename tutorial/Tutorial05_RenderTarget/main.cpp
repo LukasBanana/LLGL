@@ -53,10 +53,11 @@ public:
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 3);
+        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
 
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
-        indexBuffer = CreateIndexBuffer(GenerateCubeTriangelIndices(), LLGL::DataType::UInt32);
+        vertexBuffer = CreateVertexBuffer(GenerateTexturedCubeVertices(), vertexFormat);
+        indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::DataType::UInt32);
         constantBuffer = CreateConstantBuffer(settings);
 
         return vertexFormat;
@@ -125,8 +126,12 @@ private:
         static const auto shaderStages = LLGL::ShaderStageFlags::VertexStage | LLGL::ShaderStageFlags::FragmentStage;
 
         // Update scene animation (simple rotation)
-        static float anim;
-        anim += 0.01f;
+        static float rot0, rot1;
+
+        if (input->KeyPressed(LLGL::Key::LButton))
+            rot0 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
+        if (input->KeyPressed(LLGL::Key::RButton))
+            rot1 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
 
         // Set common buffers and sampler states
         context->SetVertexBuffer(*vertexBuffer);
@@ -159,7 +164,7 @@ private:
             context->SetTexture(*colorMap, 0, shaderStages);
 
             // Update model transformation with render-target projection
-            UpdateModelTransform(renderTargetProj, -anim*2);
+            UpdateModelTransform(renderTargetProj, -rot1);
 
             // Draw scene
             context->DrawIndexed(36, 0);
@@ -185,7 +190,7 @@ private:
         context->SetTexture(*renderTargetTex, 0, shaderStages);
 
         // Update model transformation with standard projection
-        UpdateModelTransform(projection, anim);
+        UpdateModelTransform(projection, rot0);
 
         // Draw scene
         context->DrawIndexed(36, 0);

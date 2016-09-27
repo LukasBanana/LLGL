@@ -305,9 +305,9 @@ protected:
         };
     }
 
-    // Generates 36 indices for a unit cube of eight vertices
+    // Generates 36 indices for a unit cube of 8 vertices
     // (36 = 3 indices per triangle * 2 triangles per cube face * 6 faces).
-    std::vector<std::uint32_t> GenerateCubeTriangelIndices()
+    std::vector<std::uint32_t> GenerateCubeTriangleIndices()
     {
         return
         {
@@ -320,7 +320,7 @@ protected:
         };
     }
 
-    // Generates 24 indices for a unit cube of eight vertices.
+    // Generates 24 indices for a unit cube of 8 vertices.
     // (24 = 4 indices per quad * 1 quad per cube face * 6 faces)
     std::vector<std::uint32_t> GenerateCubeQuadlIndices()
     {
@@ -332,6 +332,40 @@ protected:
             1, 5, 2, 6, // top
             4, 0, 7, 3, // bottom
             7, 6, 4, 5, // back
+        };
+    }
+
+    struct VertexPositionTexCoord
+    {
+        Gs::Vector3f position;
+        Gs::Vector2f texCoord;
+    };
+
+    // Generates 24 vertices for a unit cube with texture coordinates.
+    std::vector<VertexPositionTexCoord> GenerateTexturedCubeVertices()
+    {
+        return
+        {
+            { { -1, -1, -1 }, { 0, 1 } }, { { -1,  1, -1 }, { 0, 0 } }, { {  1,  1, -1 }, { 1, 0 } }, { {  1, -1, -1 }, { 1, 1 } }, // front
+            { {  1, -1, -1 }, { 0, 1 } }, { {  1,  1, -1 }, { 0, 0 } }, { {  1,  1,  1 }, { 1, 0 } }, { {  1, -1,  1 }, { 1, 1 } }, // right
+            { { -1, -1,  1 }, { 0, 1 } }, { { -1,  1,  1 }, { 0, 0 } }, { { -1,  1, -1 }, { 1, 0 } }, { { -1, -1, -1 }, { 1, 1 } }, // left
+            { { -1,  1, -1 }, { 0, 1 } }, { { -1,  1,  1 }, { 0, 0 } }, { {  1,  1,  1 }, { 1, 0 } }, { {  1,  1, -1 }, { 1, 1 } }, // top
+            { { -1, -1,  1 }, { 0, 1 } }, { { -1, -1, -1 }, { 0, 0 } }, { {  1, -1, -1 }, { 1, 0 } }, { {  1, -1,  1 }, { 1, 1 } }, // bottom
+            { {  1, -1,  1 }, { 0, 1 } }, { {  1,  1,  1 }, { 0, 0 } }, { { -1,  1,  1 }, { 1, 0 } }, { { -1, -1,  1 }, { 1, 1 } }, // back
+        };
+    }
+
+    // Generates 36 indices for a unit cube of 24 vertices
+    std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices()
+    {
+        return
+        {
+             0,  1,  2,  0,  2,  3, // front
+             4,  5,  6,  4,  6,  7, // right
+             8,  9, 10,  8, 10, 11, // left
+            12, 13, 14, 12, 14, 15, // top
+            16, 17, 18, 16, 18, 19, // bottom
+            20, 21, 22, 20, 22, 23, // back
         };
     }
 
