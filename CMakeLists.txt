@@ -140,6 +140,7 @@ set(FilesTutorial01 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial01_HelloTriangle/main
 set(FilesTutorial02 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial02_Tessellation/main.cpp)
 set(FilesTutorial03 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial03_Texturing/main.cpp)
 set(FilesTutorial04 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial04_Query/main.cpp)
+set(FilesTutorial05 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial05_RenderTarget/main.cpp)
 
 
 # === Source group folders ===
@@ -321,5 +322,6 @@ ADD_TEST_PROJECT(Tutorial01_HelloTriangle ${FilesTutorial01})
 ADD_TEST_PROJECT(Tutorial02_Tessellation ${FilesTutorial02})
 ADD_TEST_PROJECT(Tutorial03_Texturing ${FilesTutorial03})
 ADD_TEST_PROJECT(Tutorial04_Query ${FilesTutorial04})
+ADD_TEST_PROJECT(Tutorial05_RenderTarget ${FilesTutorial05})
 
 

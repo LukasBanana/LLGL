@@ -16,6 +16,9 @@
 #include <vector>
 #include <type_traits>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../stb_image.h"
+
 
 class Tutorial
 {
@@ -99,6 +102,8 @@ private:
 
 protected:
 
+    const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
+
     std::shared_ptr<LLGL::RenderSystem>         renderer;
     LLGL::RenderContext*                        context     = nullptr;
     std::shared_ptr<LLGL::Input>                input;
@@ -153,7 +158,7 @@ protected:
         projection = Gs::ProjectionMatrix4f::Perspective(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
 
         // Set dark blue as default clear color
-        context->SetClearColor({ 0.1f, 0.1f, 0.4f });
+        context->SetClearColor(defaultClearColor);
     }
 
     struct TutorialShaderDescriptor
@@ -224,6 +229,7 @@ protected:
         return shaderProgram;
     }
 
+    // Load standard shader program (with vertex- and fragment shaders)
     LLGL::ShaderProgram* LoadStandardShaderProgram(const LLGL::VertexFormat& vertexFormat)
     {
         // Load shader program
@@ -247,6 +253,46 @@ protected:
                 vertexFormat.GetAttributes()
             );
         }
+    }
+
+    // Load image from file, create texture, upload image into texture, and generate MIP-maps.
+    LLGL::Texture* LoadTexture(const std::string& filename)
+    {
+        // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
+        int width = 0, height = 0, components = 0;
+
+        unsigned char* imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, 4);
+        if (!imageBuffer)
+            throw std::runtime_error("failed to open file: \"" + filename + "\"");
+
+        // Create texture
+        auto tex = renderer->CreateTexture();
+
+        // Initialize image descriptor to upload image data onto hardware texture
+        LLGL::ImageDescriptor imageDesc;
+        {
+            // Set image buffer color format
+            imageDesc.format    = LLGL::ImageFormat::RGBA;
+            
+            // Set image buffer data type (unsigned char = 8-bit unsigned integer)
+            imageDesc.dataType  = LLGL::DataType::UInt8;
+
+            // Set image buffer source for texture initial data
+            imageDesc.buffer    = imageBuffer;
+        }
+
+        // Upload image data onto hardware texture and stop the time
+        renderer->SetupTexture2D(*tex, LLGL::TextureFormat::RGBA, Gs::Vector2i(width, height), &imageDesc);
+
+        // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
+        // see https://developer.valvesoftware.com/wiki/MIP_Mapping
+        // see http://whatis.techtarget.com/definition/MIP-map
+        context->GenerateMips(*tex);
+
+        // Release image data
+        stbi_image_free(imageBuffer);
+
+        return tex;
     }
 
     // Generates eight vertices for a unit cube.

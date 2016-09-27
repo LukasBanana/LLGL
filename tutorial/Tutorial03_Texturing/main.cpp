@@ -7,9 +7,6 @@
 
 #include "../tutorial.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "../stb_image.h"
-
 
 class Tutorial03 : public Tutorial
 {
