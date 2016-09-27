@@ -1,12 +1,6 @@
 // HLSL texturing shader
 
 
-// Uniform buffer object (also named "Constant Buffer")
-cbuffer Settings : register(b0)
-{
-	float4x4 wvpMatrix;
-};
-
 Texture2D colorMap : register(t0);
 SamplerState samplerState : register(s0);
 
