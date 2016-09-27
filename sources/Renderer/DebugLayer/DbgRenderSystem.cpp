@@ -433,14 +433,12 @@ void DbgRenderSystem::Release(Sampler& sampler)
 
 RenderTarget* DbgRenderSystem::CreateRenderTarget(unsigned int multiSamples)
 {
-    return instance_->CreateRenderTarget(multiSamples);
-    //TakeOwnership(renderTargets_, MakeUnique<DbgRenderTarget>(multiSamples));
+    return TakeOwnership(renderTargets_, MakeUnique<DbgRenderTarget>(*instance_->CreateRenderTarget(multiSamples), multiSamples));
 }
 
 void DbgRenderSystem::Release(RenderTarget& renderTarget)
 {
-    instance_->Release(renderTarget);
-    //RemoveFromUniqueSet(renderTargets_, &renderTarget);
+    RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
 /* ----- Shader ----- */

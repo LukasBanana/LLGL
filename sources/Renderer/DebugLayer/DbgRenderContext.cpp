@@ -13,6 +13,7 @@
 #include "DbgConstantBuffer.h"
 #include "DbgStorageBuffer.h"
 #include "DbgTexture.h"
+#include "DbgRenderTarget.h"
 #include "DbgShaderProgram.h"
 #include "DbgQuery.h"
 
@@ -178,7 +179,10 @@ void DbgRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shad
 
 void DbgRenderContext::SetRenderTarget(RenderTarget& renderTarget)
 {
-    instance_.SetRenderTarget(renderTarget);
+    auto& renderTargetDbg = LLGL_CAST(DbgRenderTarget&, renderTarget);
+    {
+        instance_.SetRenderTarget(renderTargetDbg.instance);
+    }
     LLGL_DBG_PROFILER_DO(setRenderTarget.Inc());
 }
 
