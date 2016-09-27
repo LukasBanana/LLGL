@@ -90,7 +90,7 @@ public:
     void CreateRenderTarget()
     {
         // Create render-target with multi-sampling
-        renderTarget = renderer->CreateRenderTarget(8);
+        renderTarget = renderer->CreateRenderTarget(0);//8);
 
         // Create empty render-target texture
         renderTargetTex = renderer->CreateTexture();

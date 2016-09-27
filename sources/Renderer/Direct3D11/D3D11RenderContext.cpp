@@ -140,7 +140,7 @@ void D3D11RenderContext::ClearBuffers(long flags)
     if ((flags & ClearBuffersFlags::Stencil) != 0)
         dsvClearFlags |= D3D11_CLEAR_STENCIL;
         
-    if (dsvClearFlags)
+    if (dsvClearFlags && framebufferView_.dsv != nullptr)
         context_->ClearDepthStencilView(framebufferView_.dsv, dsvClearFlags, clearState_.depth, clearState_.stencil);
 }
 
