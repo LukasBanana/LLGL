@@ -11,17 +11,19 @@
 class Tutorial04 : public Tutorial
 {
 
-    LLGL::ShaderProgram*    shaderProgram       = nullptr;
+    LLGL::ShaderProgram*    shaderProgram           = nullptr;
 
-    LLGL::GraphicsPipeline* occlusionPipeline   = nullptr;
-    LLGL::GraphicsPipeline* scenePipeline       = nullptr;
+    LLGL::GraphicsPipeline* occlusionPipeline       = nullptr;
+    LLGL::GraphicsPipeline* scenePipeline           = nullptr;
 
-    LLGL::VertexBuffer*     vertexBuffer        = nullptr;
-    LLGL::IndexBuffer*      indexBuffer         = nullptr;
-    LLGL::ConstantBuffer*   constantBuffer      = nullptr;
+    LLGL::VertexBuffer*     vertexBuffer            = nullptr;
+    LLGL::IndexBuffer*      indexBuffer             = nullptr;
+    LLGL::ConstantBuffer*   constantBuffer          = nullptr;
 
-    LLGL::Query*            occlusionQuery      = nullptr;
-    LLGL::Query*            geometryQuery       = nullptr;
+    LLGL::Query*            occlusionQuery          = nullptr;
+    LLGL::Query*            geometryQuery           = nullptr;
+
+    bool                    occlusionCullingEnabled = true;
 
     struct Settings
     {
@@ -40,6 +42,9 @@ public:
         shaderProgram = LoadStandardShaderProgram(vertexFormat);
         CreatePipelines();
         CreateQueries();
+
+        // Print some information
+        std::cout << "press TAB KEY to enable/disable occlusion culling" << std::endl;
     }
 
     LLGL::VertexFormat CreateBuffers()
@@ -113,10 +118,11 @@ public:
 
     void PrintQueryResult()
     {
-        std::cout
-            << "geometry visible: " << (GetAndSyncQueryResult(occlusionQuery) != 0 ? "yes" : "no")
-            << ", primitives generated: " << GetAndSyncQueryResult(geometryQuery)
-            << "         \r";
+        std::cout << "occlusion culling: " << (occlusionCullingEnabled ? "enabled" : "disabled");
+        std::cout << ", primitives generated: " << GetAndSyncQueryResult(geometryQuery);
+        if (occlusionCullingEnabled)
+            std::cout << ", geometry visible: " << (GetAndSyncQueryResult(occlusionQuery) != 0 ? "yes" : "no");
+        std::cout << "                         \r";
         std::flush(std::cout);
     }
 
@@ -130,6 +136,10 @@ private:
 
     void OnDrawFrame() override
     {
+        // Update user input
+        if (input->KeyDown(LLGL::Key::Tab))
+            occlusionCullingEnabled = !occlusionCullingEnabled;
+
         // Update matrices in constant buffer
         static float anim;
         anim += 0.01f;
@@ -139,38 +149,47 @@ private:
         Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
         Gs::RotateFree(settings.wvpMatrix, Gs::Vector3f(1).Normalized(), anim*3);
 
-        SetBoxColor({ 1, 1, 1 });
-
         // Clear color and depth buffers
         context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
         // Set buffers
         context->SetVertexBuffer(*vertexBuffer);
         context->SetIndexBuffer(*indexBuffer);
-        context->SetConstantBuffer(*constantBuffer, 0);
+        context->SetConstantBuffer(*constantBuffer, 0, LLGL::ShaderStageFlags::VertexStage | LLGL::ShaderStageFlags::FragmentStage);
 
         // Start with qeometry query
         context->BeginQuery(*geometryQuery);
         {
-            // Draw box for occlusion query
-            context->SetGraphicsPipeline(*occlusionPipeline);
-
-            context->BeginQuery(*occlusionQuery);
+            if (occlusionCullingEnabled)
             {
+                // Draw box for occlusion query
+                context->SetGraphicsPipeline(*occlusionPipeline);
+                SetBoxColor({ 1, 1, 1 });
+
+                context->BeginQuery(*occlusionQuery);
+                {
+                    context->DrawIndexed(36, 0);
+                }
+                context->EndQuery(*occlusionQuery);
+
+                // Draw scene
+                context->SetGraphicsPipeline(*scenePipeline);
+                SetBoxColor({ 0, 1, 0 });
+
+                context->BeginRenderCondition(*occlusionQuery, LLGL::RenderConditionMode::Wait);
+                {
+                    context->DrawIndexed(36, 0);
+                }
+                context->EndRenderCondition();
+            }
+            else
+            {
+                // Draw scene without occlusion query
+                context->SetGraphicsPipeline(*scenePipeline);
+                SetBoxColor({ 0, 1, 0 });
+
                 context->DrawIndexed(36, 0);
             }
-            context->EndQuery(*occlusionQuery);
-
-            // Draw scene
-            context->SetGraphicsPipeline(*scenePipeline);
-
-            SetBoxColor({ 0, 1, 0 });
-
-            context->BeginRenderCondition(*occlusionQuery, LLGL::RenderConditionMode::Wait);
-            {
-                context->DrawIndexed(36, 0);
-            }
-            context->EndRenderCondition();
         }
         context->EndQuery(*geometryQuery);
 
