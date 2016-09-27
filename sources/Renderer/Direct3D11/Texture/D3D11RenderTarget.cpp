@@ -39,51 +39,101 @@ void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
 
 void D3D11RenderTarget::AttachTexture1D(Texture& texture, int mipLevel)
 {
-    /* Get D3D texture object */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-
-    /* Apply resolution for MIP-map level */
-    ApplyMipResolution(texture, mipLevel);
-
-    /* Create RTV for texture attachment */
-    D3D11_RENDER_TARGET_VIEW_DESC desc;
-    InitMemory(desc);
-    {
-        desc.Format             = textureD3D.GetFormat();
-        desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;
-        desc.Texture1D.MipSlice = static_cast<UINT>(mipLevel);
-    }
-    CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), desc);
+    AttachTexture(
+        texture, TextureType::Texture1D, mipLevel,
+        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
+        {
+            desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;
+            desc.Texture1D.MipSlice = static_cast<UINT>(mipLevel);
+        }
+    );
 }
 
 void D3D11RenderTarget::AttachTexture2D(Texture& texture, int mipLevel)
 {
-    //todo...
+    AttachTexture(
+        texture, TextureType::Texture2D, mipLevel,
+        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
+        {
+            /*if (HasMultiSampling())
+                desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+            else*/
+            {
+                desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
+                desc.Texture2D.MipSlice = static_cast<UINT>(mipLevel);
+            }
+        }
+    );
 }
 
 void D3D11RenderTarget::AttachTexture3D(Texture& texture, int layer, int mipLevel)
 {
-    //todo...
+    AttachTexture(
+        texture, TextureType::Texture3D, mipLevel,
+        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
+        {
+            desc.ViewDimension          = D3D11_RTV_DIMENSION_TEXTURE3D;
+            desc.Texture3D.MipSlice     = static_cast<UINT>(mipLevel);
+            desc.Texture3D.FirstWSlice  = static_cast<UINT>(layer);
+            desc.Texture3D.WSize        = 1;
+        }
+    );
 }
 
 void D3D11RenderTarget::AttachTextureCube(Texture& texture, const AxisDirection cubeFace, int mipLevel)
 {
-    //todo...
+    AttachTexture(
+        texture, TextureType::TextureCube, mipLevel,
+        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
+        {
+            desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+            desc.Texture2DArray.MipSlice        = static_cast<UINT>(mipLevel);
+            desc.Texture2DArray.FirstArraySlice = static_cast<UINT>(cubeFace);
+            desc.Texture2DArray.ArraySize       = 1;
+        }
+    );
 }
 
 void D3D11RenderTarget::AttachTexture1DArray(Texture& texture, int layer, int mipLevel)
 {
-    //todo...
+    AttachTexture(
+        texture, TextureType::Texture1DArray, mipLevel,
+        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
+        {
+            desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
+            desc.Texture1DArray.MipSlice        = static_cast<UINT>(mipLevel);
+            desc.Texture1DArray.FirstArraySlice = static_cast<UINT>(layer);
+            desc.Texture1DArray.ArraySize       = 1;
+        }
+    );
 }
 
 void D3D11RenderTarget::AttachTexture2DArray(Texture& texture, int layer, int mipLevel)
 {
-    //todo...
+    AttachTexture(
+        texture, TextureType::Texture2DArray, mipLevel,
+        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
+        {
+            desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+            desc.Texture2DArray.MipSlice        = static_cast<UINT>(mipLevel);
+            desc.Texture2DArray.FirstArraySlice = static_cast<UINT>(layer);
+            desc.Texture2DArray.ArraySize       = 1;
+        }
+    );
 }
 
 void D3D11RenderTarget::AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel)
 {
-    //todo...
+    AttachTexture(
+        texture, TextureType::TextureCubeArray, mipLevel,
+        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
+        {
+            desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+            desc.Texture2DArray.MipSlice        = static_cast<UINT>(mipLevel);
+            desc.Texture2DArray.FirstArraySlice = static_cast<UINT>(layer*6) + static_cast<UINT>(cubeFace);
+            desc.Texture2DArray.ArraySize       = 1;
+        }
+    );
 }
 
 void D3D11RenderTarget::DetachTextures()
@@ -97,10 +147,6 @@ void D3D11RenderTarget::DetachTextures()
     depthStencil_.Reset();
     depthStencilView_.Reset();
 }
-
-/* ----- Extended Internal Functions ----- */
-
-//...
 
 
 /*
@@ -127,6 +173,31 @@ void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11
 
     renderTargetViews_.push_back(rtv);
     renderTargetViewsRef_.push_back(rtv.Get());
+}
+
+void D3D11RenderTarget::AttachTexture(Texture& texture, const TextureType type, int mipLevel, const AttachTextureCallback& attachmentProc)
+{
+    /* Validate texture type */
+    if (texture.GetType() != type)
+        throw std::invalid_argument("texture type mismatch in render target attachment");
+
+    /* Get D3D texture object and apply resolution for MIP-map level */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    ApplyMipResolution(texture, mipLevel);
+
+    /* Initialize RTV descriptor with attachment procedure and create RTV */
+    D3D11_RENDER_TARGET_VIEW_DESC desc;
+    InitMemory(desc);
+    {
+        desc.Format = textureD3D.GetFormat();
+        attachmentProc(textureD3D, desc);
+    }
+    CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), desc);
+}
+
+bool D3D11RenderTarget::HasMultiSampling() const
+{
+    return (multiSamples_ > 1);
 }
 
 

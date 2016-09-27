@@ -12,6 +12,7 @@
 #include <LLGL/RenderTarget.h>
 #include "../../ComPtr.h"
 #include <vector>
+#include <functional>
 #include <d3d11.h>
 
 
@@ -19,6 +20,7 @@ namespace LLGL
 {
 
 
+class D3D11Texture;
 class D3D11RenderSystem;
 
 class D3D11RenderTarget : public RenderTarget
@@ -56,9 +58,14 @@ class D3D11RenderTarget : public RenderTarget
 
     private:
 
-        void CreateDepthStencilAndDSV(const Gs::Vector2i& size, DXGI_FORMAT format);
+        using AttachTextureCallback = std::function<void(D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)>;
 
+        void CreateDepthStencilAndDSV(const Gs::Vector2i& size, DXGI_FORMAT format);
         void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& desc);
+
+        void AttachTexture(Texture& texture, const TextureType type, int mipLevel, const AttachTextureCallback& attachmentProc);
+
+        bool HasMultiSampling() const;
 
         D3D11RenderSystem&                          renderSystem_;
 
