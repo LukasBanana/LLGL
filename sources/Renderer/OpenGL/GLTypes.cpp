@@ -383,10 +383,12 @@ GLenum Map(const RenderConditionMode renderConditionMode)
         case RenderConditionMode::NoWait:                   return GL_QUERY_NO_WAIT;
         case RenderConditionMode::ByRegionWait:             return GL_QUERY_BY_REGION_WAIT;
         case RenderConditionMode::ByRegionNoWait:           return GL_QUERY_BY_REGION_NO_WAIT;
+        #ifndef __APPLE__
         case RenderConditionMode::WaitInverted:             return GL_QUERY_WAIT_INVERTED;
         case RenderConditionMode::NoWaitInverted:           return GL_QUERY_NO_WAIT_INVERTED;
         case RenderConditionMode::ByRegionWaitInverted:     return GL_QUERY_BY_REGION_WAIT_INVERTED;
         case RenderConditionMode::ByRegionNoWaitInverted:   return GL_QUERY_BY_REGION_NO_WAIT_INVERTED;
+        #endif
     }
     MapFailed("RenderConditionMode");
 }
