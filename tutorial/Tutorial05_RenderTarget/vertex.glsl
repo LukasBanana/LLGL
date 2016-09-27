@@ -8,12 +8,11 @@ layout(std140) uniform Settings
 };
 
 in vec3 position;
-in vec2 texCoord;
 
 out vec2 vTexCoord;
 
 void main()
 {
 	gl_Position = wvpMatrix * vec4(position, 1);
-	vTexCoord = texCoord;
+	vTexCoord = position.xy;
 }

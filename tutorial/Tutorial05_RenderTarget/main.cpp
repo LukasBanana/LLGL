@@ -25,6 +25,8 @@ class Tutorial05 : public Tutorial
     LLGL::RenderTarget*     renderTarget    = nullptr;
     LLGL::Texture*          renderTargetTex = nullptr;
 
+    Gs::Matrix4f            renderTargetProj;
+
     const Gs::Vector2i      renderTargetSize { 512, 512 };
 
     struct Settings
@@ -36,7 +38,7 @@ class Tutorial05 : public Tutorial
 public:
 
     Tutorial05() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 05: RenderTarget")
+        Tutorial( "Direct3D11", L"LLGL Tutorial 05: RenderTarget")
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -51,7 +53,6 @@ public:
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 3);
-        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
@@ -74,6 +75,7 @@ public:
             pipelineDesc.rasterizer.multiSampleEnabled  = true;
             pipelineDesc.rasterizer.samples             = 8;
         }
+        pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
 
     void CreateColorMap()
@@ -94,29 +96,46 @@ public:
         renderTargetTex = renderer->CreateTexture();
         renderer->SetupTexture2D(*renderTargetTex, LLGL::TextureFormat::RGBA, renderTargetSize);
 
+        // Generate all MIP-map levels
+        context->GenerateMips(*renderTargetTex);
+
+        // Attach depth buffer to render-target
+        renderTarget->AttachDepthBuffer(renderTargetSize);
+
         // Attach texture (first MIP-map level) to render-target
         renderTarget->AttachTexture2D(*renderTargetTex);
+
+        // Initialize projection matrix for render-target scene rendering
+        renderTargetProj = Gs::ProjectionMatrix4f::Perspective(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
     }
 
 private:
+
+    void UpdateModelTransform(const Gs::Matrix4f& proj, float rotation)
+    {
+        settings.wvpMatrix = proj;
+        Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
+        Gs::RotateFree(settings.wvpMatrix, { 0, 1, 0 }, rotation);
+
+        UpdateConstantBuffer(constantBuffer, settings);
+    }
 
     void OnDrawFrame() override
     {
         static const auto shaderStages = LLGL::ShaderStageFlags::VertexStage | LLGL::ShaderStageFlags::FragmentStage;
 
-        // Update matrices in constant buffer
+        // Update scene animation (simple rotation)
         static float anim;
         anim += 0.01f;
-
-        settings.wvpMatrix = projection;
-        Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
-        Gs::RotateFree(settings.wvpMatrix, Gs::Vector3f(1).Normalized(), anim*3);
 
         // Set common buffers and sampler states
         context->SetVertexBuffer(*vertexBuffer);
         context->SetIndexBuffer(*indexBuffer);
         context->SetConstantBuffer(*constantBuffer, 0, shaderStages);
         context->SetSampler(*samplerState, 0, shaderStages);
+
+        // Set graphics pipeline state
+        context->SetGraphicsPipeline(*pipeline);
 
         // Set graphics API dependent state.
         // This is important for OpenGL to be uniform with Direct3D.
@@ -139,10 +158,16 @@ private:
             // Set color map texture
             context->SetTexture(*colorMap, 0, shaderStages);
 
+            // Update model transformation with render-target projection
+            UpdateModelTransform(renderTargetProj, -anim*2);
+
             // Draw scene
             context->DrawIndexed(36, 0);
         }
         context->UnsetRenderTarget();
+
+        // Generate MIP-maps again after texture has been written by the render-target
+        context->GenerateMips(*renderTargetTex);
 
         // Reset renderer specific state
         apiState.stateOpenGL.flipViewportVertical = false;
@@ -158,6 +183,9 @@ private:
 
         // Set render-target texture
         context->SetTexture(*renderTargetTex, 0, shaderStages);
+
+        // Update model transformation with standard projection
+        UpdateModelTransform(projection, anim);
 
         // Draw scene
         context->DrawIndexed(36, 0);

@@ -11,7 +11,6 @@ cbuffer Settings : register(b0)
 struct InputVS
 {
 	float3 position : POSITION;
-	float2 texCoord : TEXCOORD;
 };
 
 struct OutputVS
@@ -24,7 +23,7 @@ OutputVS VS(InputVS inp)
 {
 	OutputVS outp;
 	outp.position = mul(wvpMatrix, float4(inp.position, 1));
-	outp.texCoord = inp.texCoord;
+	outp.texCoord = inp.position.xy;
 	return outp;
 }
 
