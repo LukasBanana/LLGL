@@ -1,4 +1,4 @@
-// GLSL model shader
+// GLSL model fragment shader
 
 #version 140
 
