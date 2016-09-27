@@ -589,7 +589,7 @@ void D3D11RenderContext::SetShaderResourcesOnStages(UINT startSlot, UINT count, 
     if (SHADERSTAGE_HS(flags)) { context_->HSSetShaderResources(startSlot, count, views); }
     if (SHADERSTAGE_DS(flags)) { context_->DSSetShaderResources(startSlot, count, views); }
     if (SHADERSTAGE_GS(flags)) { context_->GSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_PS(flags)) { context_->GSSetShaderResources(startSlot, count, views); }
+    if (SHADERSTAGE_PS(flags)) { context_->PSSetShaderResources(startSlot, count, views); }
     if (SHADERSTAGE_CS(flags)) { context_->CSSetShaderResources(startSlot, count, views); }
 }
 
