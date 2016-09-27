@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/RenderTarget.h>
+#include <LLGL/Texture.h>
 #include <Gauss/Equals.h>
 #include <stdexcept>
 #include <string>
@@ -39,10 +40,17 @@ void RenderTarget::ApplyResolution(const Gs::Vector2i& resolution)
     if (resolution_ != Gs::Vector2i(0, 0))
     {
         if (resolution != resolution_)
-            throw std::invalid_argument("attachment to to render target failed, due to resolution mismatch");
+            throw std::invalid_argument("attachment to render target failed, due to resolution mismatch");
     }
     else
         resolution_ = resolution;
+}
+
+void RenderTarget::ApplyMipResolution(Texture& texture, int mipLevel)
+{
+    /* Apply texture size to frame buffer resolution */
+    auto size = texture.QueryMipLevelSize(mipLevel);
+    ApplyResolution({ size.x, size.y });
 }
 
 void RenderTarget::ResetResolution()

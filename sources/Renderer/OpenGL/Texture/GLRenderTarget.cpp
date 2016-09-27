@@ -195,13 +195,6 @@ static GLenum CheckDrawFramebufferStatus()
     return glCheckFramebufferStatus(GL_FRAMEBUFFER);
 }
 
-void GLRenderTarget::ApplyMipResolution(Texture& texture, int mipLevel)
-{
-    /* Apply texture size to frame buffer resolution */
-    auto size = texture.QueryMipLevelSize(mipLevel);
-    ApplyResolution({ size.x, size.y });
-}
-
 void GLRenderTarget::InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat)
 {
     renderBuffer.Bind();

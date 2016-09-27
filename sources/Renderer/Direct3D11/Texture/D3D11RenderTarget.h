@@ -58,6 +58,8 @@ class D3D11RenderTarget : public RenderTarget
 
         void CreateDepthStencilAndDSV(const Gs::Vector2i& size, DXGI_FORMAT format);
 
+        void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& desc);
+
         D3D11RenderSystem&                          renderSystem_;
 
         std::vector<ComPtr<ID3D11RenderTargetView>> renderTargetViews_;

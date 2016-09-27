@@ -8,6 +8,8 @@
 #include "D3D11RenderTarget.h"
 #include "../D3D11RenderSystem.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../CheckedCast.h"
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
@@ -37,7 +39,21 @@ void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
 
 void D3D11RenderTarget::AttachTexture1D(Texture& texture, int mipLevel)
 {
-    //todo...
+    /* Get D3D texture object */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+
+    /* Apply resolution for MIP-map level */
+    ApplyMipResolution(texture, mipLevel);
+
+    /* Create RTV for texture attachment */
+    D3D11_RENDER_TARGET_VIEW_DESC desc;
+    InitMemory(desc);
+    {
+        desc.Format             = textureD3D.GetFormat();
+        desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;
+        desc.Texture1D.MipSlice = static_cast<UINT>(mipLevel);
+    }
+    CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), desc);
 }
 
 void D3D11RenderTarget::AttachTexture2D(Texture& texture, int mipLevel)
@@ -100,6 +116,17 @@ void D3D11RenderTarget::CreateDepthStencilAndDSV(const Gs::Vector2i& size, DXGI_
         static_cast<UINT>(size.x), static_cast<UINT>(size.y), multiSamples_, format,
         depthStencil_, depthStencilView_
     );
+}
+
+void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& desc)
+{
+    ComPtr<ID3D11RenderTargetView> rtv;
+
+    auto hr = renderSystem_.GetDevice()->CreateRenderTargetView(resource, &desc, &rtv);
+    DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV)");
+
+    renderTargetViews_.push_back(rtv);
+    renderTargetViewsRef_.push_back(rtv.Get());
 }
 
 

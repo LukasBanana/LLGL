@@ -64,8 +64,6 @@ class GLRenderTarget : public RenderTarget
 
         using AttachTextureCallback = std::function<void(GLenum attachment, GLTexture& textureGL)>;
 
-        void ApplyMipResolution(Texture& texture, int mipLevel);
-
         void InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat);
         GLenum AttachDefaultRenderBuffer(GLFrameBuffer& frameBuffer, GLenum attachment);
 

@@ -24,6 +24,7 @@
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
+#include "Texture/D3D11RenderTarget.h"
 
 
 namespace LLGL
@@ -216,7 +217,13 @@ void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long sh
 
 void D3D11RenderContext::SetRenderTarget(RenderTarget& renderTarget)
 {
-    //todo
+    /* Set RTV list and DSV in framebuffer view */
+    auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
+
+    framebufferView_.rtvList    = renderTargetD3D.GetRenderTargetViews();
+    framebufferView_.dsv        = renderTargetD3D.GetDepthStencilView();
+
+    SubmitFramebufferView();
 }
 
 void D3D11RenderContext::UnsetRenderTarget()
