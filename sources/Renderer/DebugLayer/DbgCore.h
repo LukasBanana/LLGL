@@ -21,16 +21,14 @@
     if (debugger_)                  \
         STMNT
 
-#define LLGL_DBG_ERROR(TYPE, MESSAGE, SOURCE)               \
-    if (debugger_)                                          \
-        debugger_->PostError((TYPE), (MESSAGE), (SOURCE))
+#define LLGL_DBG_ERROR(TYPE, MESSAGE, SOURCE) \
+    [&] { if (debugger_) { debugger_->PostError((TYPE), (MESSAGE), (SOURCE)); } } ()
 
 #define LLGL_DBG_ERROR_HERE(TYPE, MESSAGE) \
     LLGL_DBG_ERROR((TYPE), (MESSAGE), __FUNCTION__)
 
-#define LLGL_DBG_WARN(TYPE, MESSAGE, SOURCE)                \
-    if (debugger_)                                          \
-        debugger_->PostWarning((TYPE), (MESSAGE), (SOURCE))
+#define LLGL_DBG_WARN(TYPE, MESSAGE, SOURCE) \
+    [&] { if (debugger_) { debugger_->PostWarning((TYPE), (MESSAGE), (SOURCE)); } } ()
 
 #define LLGL_DBG_WARN_HERE(TYPE, MESSAGE) \
     LLGL_DBG_WARN((TYPE), (MESSAGE), __FUNCTION__)

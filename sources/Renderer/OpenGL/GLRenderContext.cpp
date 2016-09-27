@@ -334,7 +334,7 @@ bool GLRenderContext::QueryResult(Query& query, std::uint64_t& result)
             glGetQueryObjectui64v(queryGL.GetID(), GL_QUERY_RESULT, &result);
         else
         {
-            GLuint result32;
+            GLuint result32 = 0;
             glGetQueryObjectuiv(queryGL.GetID(), GL_QUERY_RESULT, &result32);
             result = result32;
         }
