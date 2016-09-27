@@ -438,7 +438,9 @@ OpenGLExtensionMap QueryExtensions(bool coreProfile)
     {
         #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
         
+        #ifndef __APPLE__
         if (glGetStringi || LoadGLProc(glGetStringi, "glGetStringi"))
+        #endif
         {
             /* Get number of extensions */
             GLint numExtensions = 0;

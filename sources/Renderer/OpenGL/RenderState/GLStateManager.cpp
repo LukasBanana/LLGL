@@ -310,7 +310,7 @@ void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
             static_cast<GLsizei>(vp.height)
         );
     }
-    else if (viewports.size() > 1 && glViewportArrayv)
+    else if (viewports.size() > 1)// && glViewportArrayv)
     {
         if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.flipViewportVertical)
         {
@@ -333,7 +333,7 @@ void GLStateManager::SetDepthRanges(std::vector<GLDepthRange>& depthRanges)
         const auto& dr = depthRanges.front();
         glDepthRange(dr.minDepth, dr.maxDepth);
     }
-    else if (depthRanges.size() > 1 && glDepthRangeArrayv)
+    else if (depthRanges.size() > 1)// && glDepthRangeArrayv)
     {
         glDepthRangeArrayv(
             0,
@@ -360,7 +360,7 @@ void GLStateManager::SetScissors(std::vector<GLScissor>& scissors)
 
         glScissor(sc.x, sc.y, sc.width, sc.height);
     }
-    else if (scissors.size() > 1 && glScissorArrayv)
+    else if (scissors.size() > 1)// && glScissorArrayv)
     {
         if (emulateClipControl_)
         {

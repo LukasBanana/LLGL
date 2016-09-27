@@ -388,7 +388,7 @@ void GLRenderSystem::StoreRenderingCaps()
     auto GetUIntIdx = [](GLenum param, GLuint index)
     {
         GLint attr = 0;
-        if (glGetIntegeri_v)
+        //if (glGetIntegeri_v)
             glGetIntegeri_v(param, index, &attr);
         return static_cast<unsigned int>(attr);
     };

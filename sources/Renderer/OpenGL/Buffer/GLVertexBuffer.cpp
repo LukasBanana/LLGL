@@ -41,8 +41,8 @@ void GLVertexBuffer::UpdateVertexFormat(const VertexFormat& vertexFormat)
 
         if (!attrib.conversion && attrib.dataType != DataType::Float && attrib.dataType != DataType::Double)
         {
-            if (!glVertexAttribIPointer)
-                throw std::runtime_error("integral vertex attributes not supported by renderer");
+            //if (!glVertexAttribIPointer)
+            //    throw std::runtime_error("integral vertex attributes not supported by renderer");
 
             glVertexAttribIPointer(
                 index,

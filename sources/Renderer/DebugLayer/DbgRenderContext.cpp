@@ -512,7 +512,7 @@ void DbgRenderContext::DebugDraw(
     DebugNumInstances(numInstances, instanceOffset, source);
 
     if (bindings_.vertexBuffer)
-        DebugVertexLimit(numVertices + firstVertex, bindings_.vertexBuffer->elements, source);
+        DebugVertexLimit(numVertices + firstVertex, static_cast<unsigned int>(bindings_.vertexBuffer->elements), source);
 }
 
 void DbgRenderContext::DebugDrawIndexed(
@@ -527,7 +527,7 @@ void DbgRenderContext::DebugDrawIndexed(
     DebugNumInstances(numInstances, instanceOffset, source);
 
     if (bindings_.indexBuffer)
-        DebugVertexLimit(numVertices + firstIndex, bindings_.indexBuffer->elements, source);
+        DebugVertexLimit(numVertices + firstIndex, static_cast<unsigned int>(bindings_.indexBuffer->elements), source);
 }
 
 void DbgRenderContext::DebugInstancing(const std::string& source)

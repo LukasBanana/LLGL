@@ -371,6 +371,8 @@ GLenum Map(const QueryType queryType)
         case QueryType::ClippingInputPrimitives:            return GL_CLIPPING_INPUT_PRIMITIVES_ARB;
         case QueryType::ClippingOutputPrimitives:           return GL_CLIPPING_OUTPUT_PRIMITIVES_ARB;
         #endif
+        
+        default:                                            break;
     }
     MapFailed("QueryType");
 }
@@ -388,6 +390,8 @@ GLenum Map(const RenderConditionMode renderConditionMode)
         case RenderConditionMode::NoWaitInverted:           return GL_QUERY_NO_WAIT_INVERTED;
         case RenderConditionMode::ByRegionWaitInverted:     return GL_QUERY_BY_REGION_WAIT_INVERTED;
         case RenderConditionMode::ByRegionNoWaitInverted:   return GL_QUERY_BY_REGION_NO_WAIT_INVERTED;
+        #else
+        default:                                            break;
         #endif
     }
     MapFailed("RenderConditionMode");
