@@ -121,6 +121,33 @@ enum class AxisDirection
 */
 struct TextureDescriptor
 {
+    struct Texture1DDescriptor
+    {
+        int             width;  //!< Texture width.
+        unsigned int    layers; //!< Number of texture array layers.
+    };
+
+    struct Texture2DDescriptor
+    {
+        int             width;  //!< Texture width.
+        int             height; //!< Texture height.
+        unsigned int    layers; //!< Number of texture array layers.
+    };
+
+    struct Texture3DDescriptor
+    {
+        int             width;  //!< Texture width.
+        int             height; //!< Texture height.
+        int             depth;  //!< Texture depth.
+    };
+
+    struct TextureCubeDescriptor
+    {
+        int             width;  //!< Texture width.
+        int             height; //!< Texture height.
+        unsigned int    layers; //!< Number of texture array layers (internally it will be a multiple of 6).
+    };
+    
     TextureDescriptor()
     {
         type                    = TextureType::Undefined;
@@ -133,41 +160,15 @@ struct TextureDescriptor
     {
     }
 
-    TextureType             type;   //!< Texture type.
-    TextureFormat           format; //!< Texture hardware format.
+    TextureType                 type;               //!< Texture type.
+    TextureFormat               format;             //!< Texture hardware format.
 
     union
     {
-        struct Texture1DDescriptor
-        {
-            int             width;  //!< Texture width.
-            unsigned int    layers; //!< Number of texture array layers.
-        }
-        texture1DDesc;
-
-        struct Texture2DDescriptor
-        {
-            int             width;  //!< Texture width.
-            int             height; //!< Texture height.
-            unsigned int    layers; //!< Number of texture array layers.
-        }
-        texture2DDesc;
-
-        struct Texture3DDescriptor
-        {
-            int             width;  //!< Texture width.
-            int             height; //!< Texture height.
-            int             depth;  //!< Texture depth.
-        }
-        texture3DDesc;
-
-        struct TextureCubeDescriptor
-        {
-            int             width;  //!< Texture width.
-            int             height; //!< Texture height.
-            unsigned int    layers; //!< Number of texture array layers (internally it will be a multiple of 6).
-        }
-        textureCubeDesc;
+        Texture1DDescriptor     texture1DDesc;      //!< Descriptor for 1D- and 1D-Array textures.
+        Texture2DDescriptor     texture2DDesc;      //!< Descriptor for 2D- and 2D-Array textures.
+        Texture3DDescriptor     texture3DDesc;      //!< Descriptor for 3D textures.
+        TextureCubeDescriptor   textureCubeDesc;    //!< Descriptor for Cube- and Cube-Array textures.
     };
 };
 
@@ -177,6 +178,45 @@ struct TextureDescriptor
 */
 struct SubTextureDescriptor
 {
+    struct Texture1DDescriptor
+    {
+        int             x;              //!< Sub-texture X-axis offset.
+        unsigned int    layerOffset;    //!< Zero-based layer offset.
+        int             width;          //!< Sub-texture width.
+        unsigned int    layers;         //!< Number of texture array layers.
+    };
+
+    struct Texture2DDescriptor
+    {
+        int             x;              //!< Sub-texture X-axis offset.
+        int             y;              //!< Sub-texture Y-axis offset.
+        unsigned int    layerOffset;    //!< Zero-based layer offset.
+        int             width;          //!< Sub-texture width.
+        int             height;         //!< Sub-texture height.
+        unsigned int    layers;         //!< Number of texture array layers.
+    };
+
+    struct Texture3DDescriptor
+    {
+        int             x;              //!< Sub-texture X-axis offset.
+        int             y;              //!< Sub-texture Y-axis offset.
+        int             z;              //!< Sub-texture Z-axis offset.
+        int             width;          //!< Sub-texture width.
+        int             height;         //!< Sub-texture height.
+        int             depth;          //!< Number of texture array layers.
+    };
+
+    struct TextureCubeDescriptor
+    {
+        int             x;              //!< Sub-texture X-axis offset.
+        int             y;              //!< Sub-texture Y-axis offset.
+        unsigned int    layerOffset;    //!< Zero-based layer offset.
+        int             width;          //!< Sub-texture width.
+        int             height;         //!< Sub-texture height.
+        unsigned int    cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be a N*6.
+        AxisDirection   cubeFaceOffset; //!< First cube face in the current layer.
+    };
+
     SubTextureDescriptor()
     {
         mipLevel                        = 0;
@@ -192,52 +232,14 @@ struct SubTextureDescriptor
     {
     }
 
-    int                     mipLevel;       //!< Zero-based MIP-map level for the sub-texture.
+    int                         mipLevel;           //!< Zero-based MIP-map level for the sub-texture.
 
     union
     {
-        struct Texture1DDescriptor
-        {
-            int             x;              //!< Sub-texture X-axis offset.
-            unsigned int    layerOffset;    //!< Zero-based layer offset.
-            int             width;          //!< Sub-texture width.
-            unsigned int    layers;         //!< Number of texture array layers.
-        }
-        texture1DDesc;
-
-        struct Texture2DDescriptor
-        {
-            int             x;              //!< Sub-texture X-axis offset.
-            int             y;              //!< Sub-texture Y-axis offset.
-            unsigned int    layerOffset;    //!< Zero-based layer offset.
-            int             width;          //!< Sub-texture width.
-            int             height;         //!< Sub-texture height.
-            unsigned int    layers;         //!< Number of texture array layers.
-        }
-        texture2DDesc;
-
-        struct Texture3DDescriptor
-        {
-            int             x;              //!< Sub-texture X-axis offset.
-            int             y;              //!< Sub-texture Y-axis offset.
-            int             z;              //!< Sub-texture Z-axis offset.
-            int             width;          //!< Sub-texture width.
-            int             height;         //!< Sub-texture height.
-            int             depth;          //!< Number of texture array layers.
-        }
-        texture3DDesc;
-
-        struct TextureCubeDescriptor
-        {
-            int             x;              //!< Sub-texture X-axis offset.
-            int             y;              //!< Sub-texture Y-axis offset.
-            unsigned int    layerOffset;    //!< Zero-based layer offset.
-            int             width;          //!< Sub-texture width.
-            int             height;         //!< Sub-texture height.
-            unsigned int    cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be a N*6.
-            AxisDirection   cubeFaceOffset; //!< First cube face in the current layer.
-        }
-        textureCubeDesc;
+        Texture1DDescriptor     texture1DDesc;      //!< Descriptor for 1D- and 1D-Array textures.
+        Texture2DDescriptor     texture2DDesc;      //!< Descriptor for 2D- and 2D-Array textures.
+        Texture3DDescriptor     texture3DDesc;      //!< Descriptor for 3D textures.
+        TextureCubeDescriptor   textureCubeDesc;    //!< Descriptor for Cube- and Cube-Array textures.
     };
 };
 
