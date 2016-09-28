@@ -38,7 +38,7 @@ class Tutorial05 : public Tutorial
 public:
 
     Tutorial05() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 05: RenderTarget")
+        Tutorial( "Direct3D11", L"LLGL Tutorial 05: RenderTarget")
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -46,6 +46,10 @@ public:
         CreatePipelines();
         CreateColorMap();
         CreateRenderTarget();
+
+        // Show some information
+        std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
+        std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube" << std::endl;
     }
 
     LLGL::VertexFormat CreateBuffers()
@@ -55,8 +59,14 @@ public:
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 3);
         vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
 
+        // Initialize vertices (scale texture-coordiantes a little bit, to show the texture border)
+        auto vertices = GenerateTexturedCubeVertices();
+
+        for (auto& v : vertices)
+            v.texCoord = (v.texCoord - Gs::Vector2f(0.5f))*1.05f + Gs::Vector2f(0.5f);
+
         // Create vertex, index, and constant buffer
-        vertexBuffer = CreateVertexBuffer(GenerateTexturedCubeVertices(), vertexFormat);
+        vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
         indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::DataType::UInt32);
         constantBuffer = CreateConstantBuffer(settings);
 
@@ -85,8 +95,14 @@ public:
         // Load color map texture from file
         colorMap = LoadTexture("colorMap.jpg");
 
-        // Create common sampler state with default descriptor
-        samplerState = renderer->CreateSampler({});
+        // Create common sampler state for all textures
+        LLGL::SamplerDescriptor samplerDesc;
+        {
+            samplerDesc.textureWrapU    = LLGL::TextureWrap::Border;
+            samplerDesc.textureWrapV    = LLGL::TextureWrap::Border;
+            samplerDesc.maxAnisotropy   = 8;
+        }
+        samplerState = renderer->CreateSampler(samplerDesc);
     }
 
     void CreateRenderTarget()
@@ -167,7 +183,7 @@ private:
             context->SetViewport({ 0, 0, static_cast<float>(renderTargetSize.x), static_cast<float>(renderTargetSize.y) });
 
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            context->SetClearColor({ 0, 1, 0 });
+            context->SetClearColor({ 0.2f, 0.7f, 0.1f });
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
             // Set color map texture

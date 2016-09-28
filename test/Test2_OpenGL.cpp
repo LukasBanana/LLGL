@@ -322,7 +322,7 @@ int main()
         context->SetSampler(sampler, 0);
         //#endif
         
-        //context->SetViewports({ LLGL::Viewport(0, 0, 300, 300) });
+        //context->SetViewport(LLGL::Viewport(0, 0, 300, 300));
 
         #ifdef TEST_QUERY
         auto query = renderer->CreateQuery(LLGL::QueryType::SamplesPassed);
