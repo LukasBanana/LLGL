@@ -134,7 +134,7 @@ union GraphicsAPIDependentStateDescriptor
     struct StateOpenGLDescriptor
     {
         /**
-        \briefs Specifies whether the screen-space origin is on the lower-left. By default false.
+        \brief Specifies whether the screen-space origin is on the lower-left. By default false.
         \remarks If this is true, the viewports and scissor rectangles of OpenGL are NOT emulated to the upper-left,
         which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
         */

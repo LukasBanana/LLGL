@@ -65,7 +65,7 @@ class LLGL_EXPORT RenderContext
         /* ----- Configuration ----- */
 
         /**
-        \briefs Sets a few low-level graphics API dependent states.
+        \brief Sets a few low-level graphics API dependent states.
         \remarks This is mainly used to work around uniform render target behavior between different
         low-level graphics APIs such as OpenGL and Direct3D.
         */
@@ -246,7 +246,7 @@ class LLGL_EXPORT RenderContext
         /* ----- Pipeline States ----- */
 
         /**
-        \briefs Sets the active graphics pipeline state.
+        \brief Sets the active graphics pipeline state.
         \param[in] graphicsPipeline Specifies the graphics pipeline state to set.
         \remarks This will set all blending-, rasterizer-, depth-, stencil-, and shader states.
         A valid graphics pipeline must always be set before any drawing operation can be performed.
