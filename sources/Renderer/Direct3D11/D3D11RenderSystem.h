@@ -204,7 +204,7 @@ class D3D11RenderSystem : public RenderSystem
             const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
         
-        void UpdateGenerateTexture(
+        void UpdateGenericTexture(
             Texture& texture, int mipLevel, unsigned int layer,
             const Gs::Vector3i& position, const Gs::Vector3i& size,
             const ImageDescriptor& imageDesc
