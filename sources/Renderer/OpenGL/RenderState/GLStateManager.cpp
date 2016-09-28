@@ -166,7 +166,7 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
     gfxDependentState_ = state;
 
     /* Update front face */
-    if (prevState.stateOpenGL.flipFrontFace != state.stateOpenGL.flipFrontFace)
+    if (prevState.stateOpenGL.invertFrontFace != state.stateOpenGL.invertFrontFace)
         SetFrontFace(commonState_.frontFace);
 }
 
