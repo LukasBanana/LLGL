@@ -23,28 +23,30 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& desc, const Imag
 {
     auto texture = MakeUnique<GLTexture>();
 
+    BindTextureAndSetType(*texture, desc.type);
+
     switch (desc.type)
     {
         case TextureType::Texture1D:
-            BuildTexture1D(*texture, desc.format, desc.texture1DDesc.width, imageDesc);
+            BuildTexture1D(desc.format, desc.texture1DDesc.width, imageDesc);
             break;
         case TextureType::Texture2D:
-            BuildTexture2D(*texture, desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, imageDesc);
+            BuildTexture2D(desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, imageDesc);
             break;
         case TextureType::Texture3D:
-            BuildTexture3D(*texture, desc.format, { desc.texture3DDesc.width, desc.texture3DDesc.height, desc.texture3DDesc.depth }, imageDesc);
+            BuildTexture3D(desc.format, { desc.texture3DDesc.width, desc.texture3DDesc.height, desc.texture3DDesc.depth }, imageDesc);
             break;
         case TextureType::TextureCube:
-            BuildTextureCube(*texture, desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, imageDesc);
+            BuildTextureCube(desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, imageDesc);
             break;
         case TextureType::Texture1DArray:
-            BuildTexture1DArray(*texture, desc.format, desc.texture1DDesc.width, desc.texture1DDesc.layers, imageDesc);
+            BuildTexture1DArray(desc.format, desc.texture1DDesc.width, desc.texture1DDesc.layers, imageDesc);
             break;
         case TextureType::Texture2DArray:
-            BuildTexture2DArray(*texture, desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, desc.texture2DDesc.layers, imageDesc);
+            BuildTexture2DArray(desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, desc.texture2DDesc.layers, imageDesc);
             break;
         case TextureType::TextureCubeArray:
-            BuildTextureCubeArray(*texture, desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, desc.textureCubeDesc.layers, imageDesc);
+            BuildTextureCubeArray(desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, desc.textureCubeDesc.layers, imageDesc);
             break;
         default:
             throw std::invalid_argument("failed to create texture with invalid texture type");
@@ -89,6 +91,30 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
 }
 
 /* ----- "BuildTexture..." functions ----- */
+
+void GLRenderSystem::BindTextureAndSetType(GLTexture& textureGL, const TextureType type)
+{
+    if (textureGL.GetType() == type)
+    {
+        /* If type is already set, just bind texture */
+        GLStateManager::active->BindTexture(textureGL);
+    }
+    else
+    {
+        /* If texture is not undefined -> recreate it */
+        if (textureGL.GetType() != TextureType::Undefined)
+            textureGL.Recreate();
+
+        /* Set type of the specified texture for the first time */
+        textureGL.SetType(type);
+        GLStateManager::active->ForcedBindTexture(textureGL);
+
+        /* Setup texture parameters for the first time */
+        auto target = GLTypes::Map(type);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+}
 
 static void GLTexImage1DBase(
     GLenum target, const TextureFormat internalFormat, int width,
@@ -196,12 +222,8 @@ static void GLTexImageCubeArray(
     );
 }
 
-void GLRenderSystem::BuildTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc)
+void GLRenderSystem::BuildTexture1D(const TextureFormat format, int size, const ImageDescriptor* imageDesc)
 {
-    /* Bind texture and set type */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    BindTextureAndSetType(textureGL, TextureType::Texture1D);
-
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
@@ -220,12 +242,8 @@ void GLRenderSystem::BuildTexture1D(Texture& texture, const TextureFormat format
     }
 }
 
-void GLRenderSystem::BuildTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
+void GLRenderSystem::BuildTexture2D(const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
 {
-    /* Bind texture and set type */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    BindTextureAndSetType(textureGL, TextureType::Texture2D);
-
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
@@ -244,13 +262,9 @@ void GLRenderSystem::BuildTexture2D(Texture& texture, const TextureFormat format
     }
 }
 
-void GLRenderSystem::BuildTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc)
+void GLRenderSystem::BuildTexture3D(const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(has3DTextures);
-
-    /* Bind texture and set type */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    BindTextureAndSetType(textureGL, TextureType::Texture3D);
 
     if (imageDesc)
     {
@@ -270,7 +284,7 @@ void GLRenderSystem::BuildTexture3D(Texture& texture, const TextureFormat format
     }
 }
 
-void GLRenderSystem::BuildTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
+void GLRenderSystem::BuildTextureCube(const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(hasCubeTextures);
 
@@ -283,10 +297,6 @@ void GLRenderSystem::BuildTextureCube(Texture& texture, const TextureFormat form
         AxisDirection::ZPos,
         AxisDirection::ZNeg
     }};
-
-    /* Bind texture and set type */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    BindTextureAndSetType(textureGL, TextureType::TextureCube);
 
     if (imageDesc)
     {
@@ -321,13 +331,9 @@ void GLRenderSystem::BuildTextureCube(Texture& texture, const TextureFormat form
     }
 }
 
-void GLRenderSystem::BuildTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc)
+void GLRenderSystem::BuildTexture1DArray(const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(hasTextureArrays);
-
-    /* Bind texture and set type */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    BindTextureAndSetType(textureGL, TextureType::Texture1DArray);
 
     if (imageDesc)
     {
@@ -347,13 +353,9 @@ void GLRenderSystem::BuildTexture1DArray(Texture& texture, const TextureFormat f
     }
 }
 
-void GLRenderSystem::BuildTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
+void GLRenderSystem::BuildTexture2DArray(const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(hasTextureArrays);
-
-    /* Bind texture and set type */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    BindTextureAndSetType(textureGL, TextureType::Texture2DArray);
 
     if (imageDesc)
     {
@@ -373,13 +375,9 @@ void GLRenderSystem::BuildTexture2DArray(Texture& texture, const TextureFormat f
     }
 }
 
-void GLRenderSystem::BuildTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
+void GLRenderSystem::BuildTextureCubeArray(const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
 {
     LLGL_ASSERT_CAP(hasCubeTextureArrays);
-
-    /* Bind texture and set type */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    BindTextureAndSetType(textureGL, TextureType::TextureCubeArray);
 
     if (imageDesc)
     {

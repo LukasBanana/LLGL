@@ -322,30 +322,6 @@ void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
     #endif
 }
 
-void GLRenderSystem::BindTextureAndSetType(GLTexture& textureGL, const TextureType type)
-{
-    if (textureGL.GetType() == type)
-    {
-        /* If type is already set, just bind texture */
-        GLStateManager::active->BindTexture(textureGL);
-    }
-    else
-    {
-        /* If texture is not undefined -> recreate it */
-        if (textureGL.GetType() != TextureType::Undefined)
-            textureGL.Recreate();
-
-        /* Set type of the specified texture for the first time */
-        textureGL.SetType(type);
-        GLStateManager::active->ForcedBindTexture(textureGL);
-
-        /* Setup texture parameters for the first time */
-        auto target = GLTypes::Map(type);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-}
-
 void GLRenderSystem::StoreRenderingCaps()
 {
     auto& caps = renderingCaps_;
