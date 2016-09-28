@@ -188,7 +188,6 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
 
     /* Initialize texture descriptor */
     TextureDescriptor texDesc;
-    InitMemory(texDesc);
 
     texDesc.type = texture.GetType();
 
@@ -204,8 +203,9 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             D3D11_TEXTURE1D_DESC desc;
             hwTex.tex1D->GetDesc(&desc);
 
-            texDesc.texture1DDesc.width     = static_cast<int>(desc.Width);
-            texDesc.texture1DDesc.layers    = desc.ArraySize;
+            texDesc.format                      = D3D11Types::Unmap(desc.Format);
+            texDesc.texture1DArrayDesc.width    = static_cast<int>(desc.Width);
+            texDesc.texture1DArrayDesc.layers   = desc.ArraySize;
         }
         break;
 
@@ -215,9 +215,20 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             D3D11_TEXTURE2D_DESC desc;
             hwTex.tex2D->GetDesc(&desc);
 
-            texDesc.texture2DDesc.width     = static_cast<int>(desc.Width);
-            texDesc.texture2DDesc.height    = static_cast<int>(desc.Height);
-            texDesc.texture2DDesc.layers    = desc.ArraySize;
+            texDesc.format = D3D11Types::Unmap(desc.Format);
+
+            if (texDesc.type == TextureType::TextureCube || texDesc.type == TextureType::TextureCubeArray)
+            {
+                texDesc.textureCubeArrayDesc.width  = static_cast<int>(desc.Width);
+                texDesc.textureCubeArrayDesc.height = static_cast<int>(desc.Height);
+                texDesc.textureCubeArrayDesc.layers = desc.ArraySize / 6;
+            }
+            else
+            {
+                texDesc.texture2DArrayDesc.width    = static_cast<int>(desc.Width);
+                texDesc.texture2DArrayDesc.height   = static_cast<int>(desc.Height);
+                texDesc.texture2DArrayDesc.layers   = desc.ArraySize;
+            }
         }
         break;
 
@@ -227,6 +238,7 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             D3D11_TEXTURE3D_DESC desc;
             hwTex.tex3D->GetDesc(&desc);
 
+            texDesc.format                  = D3D11Types::Unmap(desc.Format);
             texDesc.texture3DDesc.width     = static_cast<int>(desc.Width);
             texDesc.texture3DDesc.height    = static_cast<int>(desc.Height);
             texDesc.texture3DDesc.depth     = static_cast<int>(desc.Depth);

@@ -225,7 +225,6 @@ TextureDescriptor D3D12RenderSystem::QueryTextureDescriptor(const Texture& textu
 {
     /* Setup texture descriptor */
     TextureDescriptor desc;
-    InitMemory(desc);
 
     //todo
 

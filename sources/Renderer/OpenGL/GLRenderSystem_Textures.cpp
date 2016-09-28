@@ -37,16 +37,23 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
 
     /* Setup texture descriptor */
     TextureDescriptor desc;
-    InitMemory(desc);
 
     desc.type = texture.GetType();
 
-    /* Query texture size */
     auto target = GLTypes::Map(texture.GetType());
 
+    /* Query hardware texture format */
+    GLint internalFormat = 0;
+    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+    GLTypes::Unmap(desc.format, static_cast<GLenum>(internalFormat));
+
+    /* Query texture size */
     glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &desc.texture3DDesc.width);
     glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &desc.texture3DDesc.height);
     glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH, &desc.texture3DDesc.depth);
+
+    if (desc.type == TextureType::TextureCube || desc.type == TextureType::TextureCubeArray)
+        desc.texture3DDesc.depth /= 6;
 
     return desc;
 }

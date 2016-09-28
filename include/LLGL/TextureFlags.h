@@ -39,6 +39,8 @@ enum class TextureType
 */
 enum class TextureFormat
 {
+    Unknown,        //!< Unknown texture format.
+
     /* --- Base formats --- */
     DepthComponent, //!< Base format: depth component.
     DepthStencil,   //!< Base format: depth- and stencil components.
@@ -113,45 +115,75 @@ enum class AxisDirection
 
 /* ----- Structures ----- */
 
-//! Texture descriptor union.
-union TextureDescriptor
+//! Texture descriptor structure.
+struct TextureDescriptor
 {
-    TextureType type;
-
-    struct Texture1DDescriptor
+    TextureDescriptor()
     {
-        TextureType     type;
-        int             width;
-        unsigned int    layers;
+        texture3DDesc.width     = 0;
+        texture3DDesc.height    = 0;
+        texture3DDesc.depth     = 0;
     }
-    texture1DDesc;
-
-    struct Texture2DDescriptor
+    ~TextureDescriptor()
     {
-        TextureType     type;
-        int             width;
-        int             height;
-        unsigned int    layers;
     }
-    texture2DDesc;
 
-    struct Texture3DDescriptor
-    {
-        TextureType     type;
-        int             width;
-        int             height;
-        int             depth;
-    }
-    texture3DDesc;
+    TextureType             type    = TextureType::Undefined;   //!< Texture type.
+    TextureFormat           format  = TextureFormat::Unknown;   //!< Texture hardware format.
 
-    struct TextureCubeDescriptor
+    union
     {
-        TextureType     type;
-        int             width;
-        int             height;
-        unsigned int    layers;
-    }
-    textureCubeDesc;
+        struct Texture1DDescriptor
+        {
+            int             width;  //!< Texture width.
+        }
+        texture1DDesc;
+
+        struct Texture2DDescriptor
+        {
+            int             width;  //!< Texture width.
+            int             height; //!< Texture height.
+        }
+        texture2DDesc;
+
+        struct Texture3DDescriptor
+        {
+            int             width;  //!< Texture width.
+            int             height; //!< Texture height.
+            int             depth;  //!< Texture depth.
+        }
+        texture3DDesc;
+
+        struct TextureCubeDescriptor
+        {
+            int             width;  //!< Texture width.
+            int             height; //!< Texture height.
+        }
+        textureCubeDesc;
+
+        struct Texture1DArrayDescriptor
+        {
+            int             width;  //!< Texture width.
+            unsigned int    layers; //!< Number of texture array layers.
+        }
+        texture1DArrayDesc;
+
+        struct Texture2DArrayDescriptor
+        {
+            int             width;  //!< Texture width.
+            int             height; //!< Texture height.
+            unsigned int    layers; //!< Number of texture array layers.
+        }
+        texture2DArrayDesc;
+
+        struct TextureCubeArrayDescriptor
+        {
+            int             width;  //!< Texture width.
+            int             height; //!< Texture height.
+            unsigned int    layers; //!< Number of texture array layers (this will be multiplied by 6 internally to fit the 6-cube-faces requirement).
+        }
+        textureCubeArrayDesc;
+    };
 };
 
 
