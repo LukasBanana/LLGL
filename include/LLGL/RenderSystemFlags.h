@@ -112,13 +112,13 @@ struct RenderSystemConfiguration
 {
     /**
     \brief Specifies the default color for an uninitialized textures. The default value is white (255, 255, 255, 255).
-    \remarks This will be used for each "SetupTexture..." function (not the "WriteTexture..." functions), when no initial image data is specified.
+    \remarks This will be used when a texture is created and no initial image data is specified.
     */
     ColorRGBAub defaultImageColor;
 
     /**
     \brief Specifies the number of threads that will be used internally by the render system. By default maxThreadCount.
-    \remarks This is mainly used by the Direct3D render systems, e.g. inside the "SetupTexture..." and "WriteTexture..." functions
+    \remarks This is mainly used by the Direct3D render systems, e.g. inside the "CreateTexture" and "WriteTexture" functions
     to convert the image data into the respective hardware texture format. OpenGL does this automatically.
     \see maxThreadCount
     */

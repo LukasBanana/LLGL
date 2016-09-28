@@ -290,8 +290,14 @@ int main()
 
         auto renderTargetSize = contextDesc.videoMode.resolution;
 
-        renderTargetTex = renderer->CreateTexture();
-        renderer->SetupTexture2D(*renderTargetTex, LLGL::TextureFormat::RGBA8, renderTargetSize);
+        LLGL::TextureDescriptor texDesc;
+        {
+            texDesc.type                    = LLGL::TextureType::Texture2D;
+            texDesc.format                  = LLGL::TextureFormat::RGBA8;
+            texDesc.texture2DDesc.width     = renderTargetSize.x;
+            texDesc.texture2DDesc.height    = renderTargetSize.y;
+        }
+        renderTargetTex = renderer->CreateTexture(texDesc);
 
         //auto numMips = LLGL::NumMipLevels({ renderTargetSize.x, renderTargetSize.y, 1 });
 

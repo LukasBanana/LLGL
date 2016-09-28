@@ -203,8 +203,7 @@ class LLGL_EXPORT RenderContext
 
         /**
         \brief Sets the active texture of the specified slot index for subsequent drawing and compute operations.
-        \param[in] texture Specifies the texture to set. This must not be an unspecified texture,
-        i.e. it must be initialized with any of the "RenderSystem::SetupTexture..." functions.
+        \param[in] texture Specifies the texture to set.
         \param[in] slot Specifies the slot index where to put the texture.
         */
         virtual void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
