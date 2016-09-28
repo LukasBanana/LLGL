@@ -113,6 +113,8 @@ protected:
 
     Gs::Matrix4f                                projection;
 
+    const bool                                  isOpenGL;
+
     virtual void OnDrawFrame() = 0;
 
     Tutorial(
@@ -123,7 +125,8 @@ protected:
             profilerObj_( new LLGL::RenderingProfiler() ),
             debuggerObj_( new Debugger()                ),
             timer       ( LLGL::Timer::Create()         ),
-            profiler    ( *profilerObj_                 )
+            profiler    ( *profilerObj_                 ),
+            isOpenGL    ( rendererModule == "OpenGL"    )
     {
         // Create render system
         renderer = LLGL::RenderSystem::Load(rendererModule, profilerObj_.get(), debuggerObj_.get());

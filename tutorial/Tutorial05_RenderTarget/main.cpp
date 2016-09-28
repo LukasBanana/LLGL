@@ -73,6 +73,7 @@ public:
             pipelineDesc.depth.testEnabled              = true;
             pipelineDesc.depth.writeEnabled             = true;
 
+            pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
             pipelineDesc.rasterizer.multiSampleEnabled  = true;
             pipelineDesc.rasterizer.samples             = 8;
         }
@@ -117,8 +118,6 @@ private:
         settings.wvpMatrix = proj;
         Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
         Gs::RotateFree(settings.wvpMatrix, axis.Normalized(), rotation);
-
-        UpdateConstantBuffer(constantBuffer, settings);
     }
 
     void OnDrawFrame() override
@@ -142,13 +141,24 @@ private:
         // Set graphics pipeline state
         context->SetGraphicsPipeline(*pipeline);
 
-        // Set graphics API dependent state.
-        // This is important for OpenGL to be uniform with Direct3D.
-        // The viewport and scissor origin will be flipped vertically.
-        LLGL::GraphicsAPIDependentStateDescriptor apiState;
-        
-        apiState.stateOpenGL.screenSpaceOriginLowerLeft = true;
-        //context->SetGraphicsAPIDependentState(apiState);
+        if (isOpenGL)
+        {
+            /*
+            Set graphics API dependent state to be uniform between OpenGL and Direct3D:
+            A huge difference between OpenGL and Direct3D is,
+            that OpenGL stores image data from the lower-left to the upper-right in a texture,
+            but Direct3D stores image data from the upper-left to the lower-right in a texture.
+            The default screen-space origin of LLGL is the upper-left, so when rendering into a texture,
+            we need to render vertically flipped when OpenGL is used.
+            To do this we flip the Y-axis of the world-view-projection matrix and invert the front-facing,
+            so that the face-culling works as excepted.
+            */
+            LLGL::GraphicsAPIDependentStateDescriptor apiState;
+            {
+                apiState.stateOpenGL.invertFrontFace = true;
+            }
+            context->SetGraphicsAPIDependentState(apiState);
+        }
 
         // Draw scene into render-target
         context->SetRenderTarget(*renderTarget);
@@ -165,6 +175,17 @@ private:
 
             // Update model transformation with render-target projection
             UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
+            
+            if (isOpenGL)
+            {
+                /*
+                Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
+                world-view-projection matrix to render vertically flipped into the render-target
+                */
+                Gs::FlipAxis(settings.wvpMatrix, 1);
+            }
+
+            UpdateConstantBuffer(constantBuffer, settings);
 
             // Draw scene
             context->DrawIndexed(36, 0);
@@ -174,9 +195,11 @@ private:
         // Generate MIP-maps again after texture has been written by the render-target
         context->GenerateMips(*renderTargetTex);
 
-        // Reset renderer specific state
-        apiState.stateOpenGL.screenSpaceOriginLowerLeft = false;
-        //context->SetGraphicsAPIDependentState(apiState);
+        if (isOpenGL)
+        {
+            // Reset graphics API dependent state
+            context->SetGraphicsAPIDependentState({});
+        }
 
         // Reset viewport for the screen
         auto resolution = context->GetVideoMode().resolution.Cast<float>();
@@ -191,6 +214,7 @@ private:
 
         // Update model transformation with standard projection
         UpdateModelTransform(projection, rot0);
+        UpdateConstantBuffer(constantBuffer, settings);
 
         // Draw scene
         context->DrawIndexed(36, 0);

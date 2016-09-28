@@ -161,13 +161,15 @@ void GLStateManager::NotifyRenderTargetHeight(GLint height)
 
 void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
 {
-    /* Store previous and new graphics API dependent state */
-    auto prevState = gfxDependentState_;
+    /* Check for necessary updates */
+    bool updateFrontFace = (gfxDependentState_.stateOpenGL.invertFrontFace != state.stateOpenGL.invertFrontFace);
+
+    /* Store new graphics state */
     gfxDependentState_ = state;
 
     /* Update front face */
-    if (prevState.stateOpenGL.invertFrontFace != state.stateOpenGL.invertFrontFace)
-        SetFrontFace(commonState_.frontFace);
+    if (updateFrontFace)
+        SetFrontFace(commonState_.frontFaceAct);
 }
 
 /* ----- Boolean states ----- */
@@ -506,6 +508,9 @@ void GLStateManager::SetCullFace(GLenum face)
 
 void GLStateManager::SetFrontFace(GLenum mode)
 {
+    /* Store actual input front face (without inversion) */
+    commonState_.frontFaceAct = mode;
+
     /* Check if mode must be inverted */
     if (gfxDependentState_.stateOpenGL.invertFrontFace)
         mode = (mode == GL_CW ? GL_CCW : GL_CW);

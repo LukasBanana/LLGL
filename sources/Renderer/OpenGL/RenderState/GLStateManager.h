@@ -172,6 +172,7 @@ class GLStateManager
             GLenum                      polygonMode     = GL_FILL;
             GLenum                      cullFace        = GL_BACK;
             GLenum                      frontFace       = GL_CCW;
+            GLenum                      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
             GLboolean                   depthMask       = GL_TRUE;
             GLint                       patchVertices_  = 0;
             ColorRGBAT<GLboolean>       colorMask       = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
