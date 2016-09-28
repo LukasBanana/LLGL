@@ -42,13 +42,10 @@ namespace LLGL
 \brief Render system interface.
 \remarks This is the main interface for the entire renderer.
 It manages the ownership of all graphics objects and is used to create, modify, and delete all those objects.
-The main functions for most graphics objects are "Create...", "Setup...", "Write...", and "Release":
+The main functions for most graphics objects are "Create...", "Write...", and "Release":
 \code
-// Create an empty and unspecified vertex buffer
-auto vertexBuffer = renderSystem->CreateVertexBuffer();
-
-// Initialize object
-renderSystem->SetupVertexBuffer(*vertexBuffer, initialData, ...);
+// Create and initialize vertex buffer
+auto vertexBuffer = renderSystem->CreateVertexBuffer(*vertexBuffer, ...);
 
 // Modify data
 renderSystem->WriteVertexBuffer(*vertexBuffer, modificationData, ...);
@@ -160,88 +157,70 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Hardware Buffers ------ */
 
-        /**
-        \brief Creates a new, empty, and unspecified vertex buffer.
-        \see SetupVertexBuffer
-        */
+        //TODO: remove
         virtual VertexBuffer* CreateVertexBuffer() = 0;
-
-        /**
-        \brief Creates a new, empty, and unspecified index buffer.
-        \see SetupIndexBuffer
-        */
         virtual IndexBuffer* CreateIndexBuffer() = 0;
-
-        /**
-        \brief Creates a new, empty, and unspecified constant buffer (also called "Uniform Buffer Object").
-        \see SetupConstantBuffer
-        */
         virtual ConstantBuffer* CreateConstantBuffer() = 0;
+        virtual StorageBuffer* CreateStorageBuffer() = 0;
 
         /**
-        \brief Creates a new, empty, and unspecified storage buffer (also called "Read/Write Buffer").
-        \see SetupStorageBuffer
+        \brief Creates a new vertex buffer.
+        \param[in] dataSize Specifies the size (in bytes) of the buffer.
+        \param[in] usage Specifies the buffer usage, which is typically "BufferUsage::Static" for a vertex buffer, since it is rarely changed.
+        \param[in] vertexFormat Specifies the vertex format layout, which is required to tell the renderer how the vertex attributes are stored inside the vertex buffer.
+        This must be the same vertex format which is used for the respective graphics pipeline shader program.
+        \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
+        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
+        be initialized with the "WriteVertexBuffer" function before it is used for drawing operations. By default null.
+        \see WriteVertexBuffer
         */
-        virtual StorageBuffer* CreateStorageBuffer() = 0;
+        virtual VertexBuffer* CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData = nullptr) = 0;
+
+        /**
+        \brief Creates a new index buffer.
+        \param[in] dataSize Specifies the size (in bytes) of the buffer.
+        \param[in] usage Specifies the buffer usage, which is typically "BufferUsage::Static" for an index buffer, since it is rarely changed.
+        \param[in] indexFormat Specifies the index format layout, which is basically only the data type of each index.
+        The only valid format types for an index buffer are: DataType::UByte, DataType::UShort, DataType::UInt.
+        \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
+        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
+        be initialized with the "WriteIndexBuffer" function before it is used for drawing operations.
+        \see WriteIndexBuffer
+        */
+        virtual IndexBuffer* CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData = nullptr) = 0;
+
+        /**
+        \brief Creates a new buffer (also called "Uniform Buffer Object").
+        \param[in] constantBuffer Specifies the constant buffer which is to be initialized.
+        \param[in] dataSize Specifies the size (in bytes) of the buffer.
+        \param[in] usage Specifies the buffer usage.
+        \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
+        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
+        be initialized with the "WriteConstantBuffer" function before it is used for drawing operations.
+        \see WriteConstantBuffer
+        */
+        virtual ConstantBuffer* CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) = 0;
+
+        /**
+        \brief Creates a new storage buffer (also called "Read/Write Buffer").
+        \param[in] dataSize Specifies the size (in bytes) of the buffer.
+        \param[in] usage Specifies the buffer usage.
+        \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
+        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
+        be initialized with the "WriteStorageBuffer" function before it is used for drawing operations.
+        \see WriteStorageBuffer
+        */
+        virtual StorageBuffer* CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) = 0;
 
         virtual void Release(VertexBuffer& vertexBuffer) = 0;
         virtual void Release(IndexBuffer& indexBuffer) = 0;
         virtual void Release(ConstantBuffer& constantBuffer) = 0;
         virtual void Release(StorageBuffer& storageBuffer) = 0;
 
-        /**
-        \brief Initializes the specified vertex buffer.
-        \param[in] vertexBuffer Specifies the vertex buffer which is to be initialized.
-        \param[in] data Raw pointer to the data with which the vertex buffer is to be initialized.
-        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
-        be initialized with the "WriteVertexBuffer" function before it is used for drawing operations.
-        \param[in] dataSize Specifies the size (in bytes) of the buffer.
-        \param[in] usage Specifies the buffer usage, which is typically "BufferUsage::Static" for a vertex buffer, since it is rarely changed.
-        \param[in] vertexFormat Specifies the vertex format layout, which is required to tell the renderer how the vertex attributes are stored inside the vertex buffer.
-        This must be the same vertex format which is used for the respective graphics pipeline shader program.
-        \see VertexFormat
-        \see WriteVertexBuffer
-        \see ShaderProgram
-        */
+        //TODO: remove
         virtual void SetupVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) = 0;
-
-        /**
-        \brief Initializes the specified index buffer.
-        \param[in] indexBuffer Specifies the index buffer which is to be initialized.
-        \param[in] data Raw pointer to the data with which the index buffer is to be initialized.
-        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
-        be initialized with the "WriteIndexBuffer" function before it is used for drawing operations.
-        \param[in] dataSize Specifies the size (in bytes) of the buffer.
-        \param[in] usage Specifies the buffer usage, which is typically "BufferUsage::Static" for an index buffer, since it is rarely changed.
-        \param[in] indexFormat Specifies the index format layout, which is basically only the data type of each index.
-        The only valid format types for an index buffer are: DataType::UByte, DataType::UShort, DataType::UInt.
-        \see IndexFormat
-        \see WriteIndexBuffer
-        */
         virtual void SetupIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) = 0;
-        
-        /**
-        \brief Initializes the specified constant buffer.
-        \param[in] constantBuffer Specifies the constant buffer which is to be initialized.
-        \param[in] data Raw pointer to the data with which the constant buffer is to be initialized.
-        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
-        be initialized with the "WriteConstantBuffer" function before it is used for drawing operations.
-        \param[in] dataSize Specifies the size (in bytes) of the buffer.
-        \param[in] usage Specifies the buffer usage.
-        \see WriteConstantBuffer
-        */
         virtual void SetupConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
-        
-        /**
-        \brief Initializes the specified storage buffer.
-        \param[in] storageBuffer Specifies the storage buffer which is to be initialized.
-        \param[in] data Raw pointer to the data with which the storage buffer is to be initialized.
-        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
-        be initialized with the "WriteStorageBuffer" function before it is used for drawing operations.
-        \param[in] dataSize Specifies the size (in bytes) of the buffer.
-        \param[in] usage Specifies the buffer usage.
-        \see WriteStorageBuffer
-        */
         virtual void SetupStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
 
         /**

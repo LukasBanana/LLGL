@@ -110,6 +110,67 @@ StorageBuffer* D3D12RenderSystem::CreateStorageBuffer()
     return TakeOwnership(storageBuffers_, MakeUnique<D3D12StorageBuffer>());
 }
 
+VertexBuffer* D3D12RenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
+{
+    auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer>();
+
+    /* Create hardware buffer resource */
+    vertexBufferD3D->hwBuffer.CreateResource(device_.Get(), size);
+    vertexBufferD3D->PutView(vertexFormat.GetFormatSize());
+
+    /* Upload buffer data to GPU */
+    ComPtr<ID3D12Resource> bufferUpload;
+    vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, size);
+
+    /* Execute upload commands and wait for GPU to finish execution */
+    CloseAndExecuteCommandList(commandList_.Get());
+    SyncGPU();
+
+    return TakeOwnership(vertexBuffers_, std::move(vertexBufferD3D));
+}
+
+IndexBuffer* D3D12RenderSystem::CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData)
+{
+    auto indexBufferD3D = MakeUnique<D3D12IndexBuffer>();
+
+    /* Create hardware buffer resource */
+    indexBufferD3D->hwBuffer.CreateResource(device_.Get(), size);
+    indexBufferD3D->PutView(D3D12Types::Map(indexFormat.GetDataType()));
+
+    /* Upload buffer data to GPU */
+    ComPtr<ID3D12Resource> bufferUpload;
+    indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, size);
+
+    /* Execute upload commands and wait for GPU to finish execution */
+    CloseAndExecuteCommandList(commandList_.Get());
+    SyncGPU();
+
+    return TakeOwnership(indexBuffers_, std::move(indexBufferD3D));
+}
+
+ConstantBuffer* D3D12RenderSystem::CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+{
+    auto constantBufferD3D = MakeUnique<D3D12ConstantBuffer>(device_.Get());
+
+    /* Create hardware buffer resource */
+    constantBufferD3D->CreateResourceAndPutView(device_.Get(), size);
+
+    /* Upload buffer data to GPU */
+    //ComPtr<ID3D12Resource> bufferUpload;
+    constantBufferD3D->UpdateSubresource(initialData, size);
+
+    /* Execute upload commands and wait for GPU to finish execution */
+    //CloseAndExecuteCommandList(commandList_.Get());
+    //SyncGPU();
+
+    return TakeOwnership(constantBuffers_, std::move(constantBufferD3D));
+}
+
+StorageBuffer* D3D12RenderSystem::CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+{
+    return nullptr;//todo...
+}
+
 void D3D12RenderSystem::Release(VertexBuffer& vertexBuffer)
 {
     RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);

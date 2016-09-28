@@ -61,6 +61,11 @@ class DbgRenderSystem : public RenderSystem
         ConstantBuffer* CreateConstantBuffer() override;
         StorageBuffer* CreateStorageBuffer() override;
 
+        VertexBuffer* CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData = nullptr) override;
+        IndexBuffer* CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData = nullptr) override;
+        ConstantBuffer* CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) override;
+        StorageBuffer* CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) override;
+
         void Release(VertexBuffer& vertexBuffer) override;
         void Release(IndexBuffer& indexBuffer) override;
         void Release(ConstantBuffer& constantBuffer) override;

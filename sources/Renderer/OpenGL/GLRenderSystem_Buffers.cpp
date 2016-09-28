@@ -47,6 +47,52 @@ StorageBuffer* GLRenderSystem::CreateStorageBuffer()
     return TakeOwnership(storageBuffers_, MakeUnique<GLStorageBuffer>());
 }
 
+VertexBuffer* GLRenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
+{
+    auto vertexBufferGL = MakeUnique<GLVertexBuffer>();
+    GLStateManager::active->BindBuffer(*vertexBufferGL);
+    {
+        /* Update buffer data and update new vertex format */
+        vertexBufferGL->hwBuffer.BufferData(initialData, size, GLTypes::Map(usage));
+        vertexBufferGL->UpdateVertexFormat(vertexFormat);
+    }
+    return TakeOwnership(vertexBuffers_, std::move(vertexBufferGL));
+}
+
+IndexBuffer* GLRenderSystem::CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData)
+{
+    auto indexBufferGL = MakeUnique<GLIndexBuffer>();
+    GLStateManager::active->BindBuffer(*indexBufferGL);
+    {
+        /* Update buffer data and update new index format */
+        indexBufferGL->hwBuffer.BufferData(initialData, size, GLTypes::Map(usage));
+        indexBufferGL->UpdateIndexFormat(indexFormat);
+    }
+    return TakeOwnership(indexBuffers_, std::move(indexBufferGL));
+}
+
+ConstantBuffer* GLRenderSystem::CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+{
+    LLGL_ASSERT_CAP(hasConstantBuffers);
+    auto constantBufferGL = MakeUnique<GLConstantBuffer>();
+    GLStateManager::active->BindBuffer(*constantBufferGL);
+    {
+        constantBufferGL->hwBuffer.BufferData(initialData, size, GLTypes::Map(usage));
+    }
+    return TakeOwnership(constantBuffers_, std::move(constantBufferGL));
+}
+
+StorageBuffer* GLRenderSystem::CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+{
+    LLGL_ASSERT_CAP(hasStorageBuffers);
+    auto storageBufferGL = MakeUnique<GLStorageBuffer>();
+    GLStateManager::active->BindBuffer(*storageBufferGL);
+    {
+        storageBufferGL->hwBuffer.BufferData(initialData, size, GLTypes::Map(usage));
+    }
+    return TakeOwnership(storageBuffers_, std::move(storageBufferGL));
+}
+
 void GLRenderSystem::Release(VertexBuffer& vertexBuffer)
 {
     RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);

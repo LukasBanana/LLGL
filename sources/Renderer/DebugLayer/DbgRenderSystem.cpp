@@ -99,6 +99,59 @@ StorageBuffer* DbgRenderSystem::CreateStorageBuffer()
     return TakeOwnership(storageBuffers_, MakeUnique<DbgStorageBuffer>(*instance_->CreateStorageBuffer()));
 }
 
+VertexBuffer* DbgRenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
+{
+    if (size % vertexFormat.GetFormatSize() != 0)
+        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with vertex format of " + std::to_string(vertexFormat.GetFormatSize()) + " bytes");
+
+    auto vertexBufferDbg = MakeUnique<DbgVertexBuffer>(*instance_->CreateVertexBuffer(size, usage, vertexFormat, initialData));
+
+    vertexBufferDbg->format         = vertexFormat;
+    vertexBufferDbg->size           = size;
+    vertexBufferDbg->elements       = size / vertexFormat.GetFormatSize();
+    vertexBufferDbg->initialized    = true;
+
+    return TakeOwnership(vertexBuffers_, std::move(vertexBufferDbg));
+}
+
+IndexBuffer* DbgRenderSystem::CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData)
+{
+    if (size % indexFormat.GetFormatSize() != 0)
+        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with index format of " + std::to_string(indexFormat.GetFormatSize()) + " bytes");
+
+    auto indexBufferDbg = MakeUnique<DbgIndexBuffer>(*instance_->CreateIndexBuffer(size, usage, indexFormat, initialData));
+
+    indexBufferDbg->size        = size;
+    indexBufferDbg->elements    = size / indexFormat.GetFormatSize();
+    indexBufferDbg->initialized = true;
+
+    return TakeOwnership(indexBuffers_, std::move(indexBufferDbg));
+}
+
+ConstantBuffer* DbgRenderSystem::CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+{
+    static const std::size_t packAlignment = 16;
+    if (size % packAlignment != 0)
+        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "buffer size is out of pack alignment");
+
+    auto constantBufferDbg = MakeUnique<DbgConstantBuffer>(*instance_->CreateConstantBuffer(size, usage, initialData));
+
+    constantBufferDbg->size         = size;
+    constantBufferDbg->initialized  = true;
+
+    return TakeOwnership(constantBuffers_, std::move(constantBufferDbg));
+}
+
+StorageBuffer* DbgRenderSystem::CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+{
+    auto storageBufferDbg = MakeUnique<DbgStorageBuffer>(*instance_->CreateStorageBuffer());
+
+    storageBufferDbg->size          = size;
+    storageBufferDbg->initialized   = true;
+
+    return TakeOwnership(storageBuffers_, std::move(storageBufferDbg));
+}
+
 void DbgRenderSystem::Release(VertexBuffer& vertexBuffer)
 {
     ReleaseDbg(vertexBuffers_, vertexBuffer);

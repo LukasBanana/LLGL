@@ -98,6 +98,38 @@ StorageBuffer* D3D11RenderSystem::CreateStorageBuffer()
     return nullptr;//TakeOwnership(storageBuffers_, MakeUnique<D3D11StorageBuffer>());
 }
 
+VertexBuffer* D3D11RenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
+{
+    auto vertexBufferD3D = MakeUnique<D3D11VertexBuffer>();
+    {
+        vertexBufferD3D->CreateResource(device_.Get(), vertexFormat.GetFormatSize(), size, initialData);
+    }
+    return TakeOwnership(vertexBuffers_, std::move(vertexBufferD3D));
+}
+
+IndexBuffer* D3D11RenderSystem::CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData)
+{
+    auto indexBufferD3D = MakeUnique<D3D11IndexBuffer>();
+    {
+        indexBufferD3D->CreateResource(device_.Get(), D3D11Types::Map(indexFormat.GetDataType()), size, initialData);
+    }
+    return TakeOwnership(indexBuffers_, std::move(indexBufferD3D));
+}
+
+ConstantBuffer* D3D11RenderSystem::CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+{
+    auto constantBufferD3D = MakeUnique<D3D11ConstantBuffer>();
+    {
+        constantBufferD3D->CreateResource(device_.Get(), size, usage, initialData);
+    }
+    return TakeOwnership(constantBuffers_, std::move(constantBufferD3D));
+}
+
+StorageBuffer* D3D11RenderSystem::CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+{
+    return nullptr;//todo...
+}
+
 void D3D11RenderSystem::Release(VertexBuffer& vertexBuffer)
 {
     RemoveFromUniqueSet(vertexBuffers_, &vertexBuffer);
