@@ -288,7 +288,7 @@ class LLGL_EXPORT RenderSystem
         \param[in] size Specifies the size of the texture (in texels, 'texture elements').
         \param[in] imageDesc Optional pointer to the image data descriptor.
         If this is null, the texture will be initialized with the currently configured default image color (see "RenderSystemConfiguration::defaultImageColor").
-        If this is non-null, is is used to initialize the texture data.
+        If this is non-null, it is used to initialize the texture data.
         \see WriteTexture1D
         \see RenderSystemConfiguration::defaultImageColor
         */

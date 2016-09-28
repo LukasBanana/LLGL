@@ -36,7 +36,7 @@ enum class PrimitiveTopology
 
     /**
     \brief Line loop which is similiar to line strip but the last line ends with the first vertex.
-    \note This is only supported with OpenGL.
+    \note Only supported with: OpenGL.
     */
     LineLoop,
 
@@ -48,7 +48,7 @@ enum class PrimitiveTopology
 
     /**
     \brief Triangle fan where each triangle uses the first vertex, the previous vertex, and a new vertex.
-    \note This is only supported with OpenGL.
+    \note Only supported with: OpenGL.
     */
     TriangleFan,
 

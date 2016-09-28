@@ -189,19 +189,19 @@ class D3D11RenderSystem : public RenderSystem
         void SetupGenericTexture1D(
             D3D11Texture& textureD3D,
             const TextureFormat format, int size, unsigned int layers,
-            const ImageDescriptor* imageDesc, UINT miscFlags
+            const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
 
         void SetupGenericTexture2D(
             D3D11Texture& textureD3D,
             const TextureFormat format, const Gs::Vector2i& size, unsigned int layers,
-            const ImageDescriptor* imageDesc, UINT miscFlags
+            const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
 
         void SetupGenericTexture3D(
             D3D11Texture& textureD3D,
             const TextureFormat format, const Gs::Vector3i& size,
-            const ImageDescriptor* imageDesc, UINT miscFlags
+            const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
         
         void UpdateGenerateTexture(

@@ -24,28 +24,28 @@ namespace LLGL
 //! Shader uniform type enumeration.
 enum class UniformType
 {
-    Float,
-    Float2,
-    Float3,
-    Float4,
-    Double,
-    Double2,
-    Double3,
-    Double4,
-    Int,
-    Int2,
-    Int3,
-    Int4,
-    Float2x2,
-    Float3x3,
-    Float4x4,
-    Double2x2,
-    Double3x3,
-    Double4x4,
-    Sampler1D,
-    Sampler2D,
-    Sampler3D,
-    SamplerCube,
+    Float,          //!< float uniform.
+    Float2,         //!< float2/ vec2 uniform.
+    Float3,         //!< float3/ vec3 uniform.
+    Float4,         //!< float4/ vec4 uniform.
+    Double,         //!< double uniform.
+    Double2,        //!< double2/ dvec2 uniform.
+    Double3,        //!< double3/ dvec3 uniform.
+    Double4,        //!< double4/ dvec4 uniform.
+    Int,            //!< int uniform.
+    Int2,           //!< int2/ ivec2 uniform.
+    Int3,           //!< int3/ ivec3 uniform.
+    Int4,           //!< int4/ ivec4 uniform.
+    Float2x2,       //!< float2x2/ mat2 uniform.
+    Float3x3,       //!< float3x3/ mat3 uniform.
+    Float4x4,       //!< float4x4/ mat4 uniform.
+    Double2x2,      //!< double2x2/ dmat2 uniform.
+    Double3x3,      //!< double3x3/ dmat3 uniform.
+    Double4x4,      //!< double4x4/ dmat4 uniform.
+    Sampler1D,      //!< sampler1D uniform.
+    Sampler2D,      //!< sampler2D uniform.
+    Sampler3D,      //!< sampler3D uniform.
+    SamplerCube,    //!< samplerCube uniform.
 };
 
 

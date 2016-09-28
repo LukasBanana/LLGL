@@ -26,7 +26,7 @@ namespace LLGL
 \remarks Commonly this would be an std::vector<char>, but the buffer conversion is an optimized process,
 where the default initialization of an std::vector is undesired.
 Therefore, the byte buffer type is an std::unique_ptr<char[]>.
-\see ConvertImage
+\see ConvertImageBuffer
 */
 using ByteBuffer = std::unique_ptr<char[]>;
 
@@ -58,8 +58,8 @@ enum class ImageFormat
     BGR,            //!< Three color components: Blue, Green, Red.
     RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
     BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
-    Depth,          //!< Single color component used as depth component.
-    DepthStencil,   //!< Pair of depth and stencil component.
+    Depth,          //!< 32-bit depth component.
+    DepthStencil,   //!< 24-bit depth- and 8-bit stencil component.
     CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
     CompressedRGBA, //!< Generic compressed format with four color components: Red, Green, Blue, Alpha.
 };

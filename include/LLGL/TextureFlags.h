@@ -44,8 +44,8 @@ enum class TextureFormat
     DepthStencil,   //!< Base format: depth- and stencil components.
     R,              //!< Base format: red component.
     RG,             //!< Base format: red and green components.
-    RGB,            //!< Base format: red, green and blue components. \note Only supported with: OpenGL.
-    RGBA,           //!< Base format: red, green, blue and alpha components.
+    RGB,            //!< Base format: red, green, and blue components. \note Only supported with: OpenGL.
+    RGBA,           //!< Base format: red, green, blue, and alpha components.
 
     /* --- Sized formats --- */
     R8,             //!< Sized format: red 8-bit normalized unsigned integer component.

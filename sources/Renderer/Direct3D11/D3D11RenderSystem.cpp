@@ -242,7 +242,7 @@ void D3D11RenderSystem::SetupTexture1D(Texture& texture, const TextureFormat for
     /* Get D3D texture, set type, and create generic 1D-texture */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.SetType(TextureType::Texture1D);
-    SetupGenericTexture1D(textureD3D, format, size, 1, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+    SetupGenericTexture1D(textureD3D, format, size, 1, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
@@ -250,7 +250,7 @@ void D3D11RenderSystem::SetupTexture2D(Texture& texture, const TextureFormat for
     /* Get D3D texture, set type, and create generic 2D-texture */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.SetType(TextureType::Texture2D);
-    SetupGenericTexture2D(textureD3D, format, size, 1, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+    SetupGenericTexture2D(textureD3D, format, size, 1, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc)
@@ -258,7 +258,7 @@ void D3D11RenderSystem::SetupTexture3D(Texture& texture, const TextureFormat for
     /* Get D3D texture, set type, and create generic 1D-texture */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.SetType(TextureType::Texture3D);
-    SetupGenericTexture3D(textureD3D, format, size, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+    SetupGenericTexture3D(textureD3D, format, size, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
@@ -266,7 +266,7 @@ void D3D11RenderSystem::SetupTextureCube(Texture& texture, const TextureFormat f
     /* Get D3D texture, set type, and create generic 2D-texture */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.SetType(TextureType::TextureCube);
-    SetupGenericTexture2D(textureD3D, format, size, 6, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
+    SetupGenericTexture2D(textureD3D, format, size, 6, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
 }
 
 void D3D11RenderSystem::SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc)
@@ -274,7 +274,7 @@ void D3D11RenderSystem::SetupTexture1DArray(Texture& texture, const TextureForma
     /* Get D3D texture, set type, and create generic 1D-texture */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.SetType(TextureType::Texture1DArray);
-    SetupGenericTexture1D(textureD3D, format, size, layers, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+    SetupGenericTexture1D(textureD3D, format, size, layers, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
@@ -282,7 +282,7 @@ void D3D11RenderSystem::SetupTexture2DArray(Texture& texture, const TextureForma
     /* Get D3D texture, set type, and create generic 2D-texture */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.SetType(TextureType::Texture2DArray);
-    SetupGenericTexture2D(textureD3D, format, size, layers, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+    SetupGenericTexture2D(textureD3D, format, size, layers, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
 }
 
 void D3D11RenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
@@ -290,7 +290,7 @@ void D3D11RenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFor
     /* Get D3D texture, set type, and create generic 2D-texture */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.SetType(TextureType::TextureCubeArray);
-    SetupGenericTexture2D(textureD3D, format, size, layers*6, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
+    SetupGenericTexture2D(textureD3D, format, size, layers*6, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
 }
 
 void D3D11RenderSystem::WriteTexture1D(
@@ -341,6 +341,8 @@ void D3D11RenderSystem::WriteTextureCubeArray(
 void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
 {
     LLGL_ASSERT_PTR(data);
+
+    auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
 
     //todo...
 }
@@ -522,7 +524,8 @@ void D3D11RenderSystem::InitStateManager()
 }
 
 void D3D11RenderSystem::SetupGenericTexture1D(
-    D3D11Texture& textureD3D, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc, UINT miscFlags)
+    D3D11Texture& textureD3D, const TextureFormat format, int size, unsigned int layers,
+    const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE1D_DESC texDesc;
@@ -533,7 +536,7 @@ void D3D11RenderSystem::SetupGenericTexture1D(
         texDesc.Format          = D3D11Types::Map(format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags  = 0;
+        texDesc.CPUAccessFlags  = cpuAccessFlags;
         texDesc.MiscFlags       = miscFlags;
     }
 
@@ -549,7 +552,8 @@ void D3D11RenderSystem::SetupGenericTexture1D(
 }
 
 void D3D11RenderSystem::SetupGenericTexture2D(
-    D3D11Texture& textureD3D, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc, UINT miscFlags)
+    D3D11Texture& textureD3D, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers,
+    const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE2D_DESC texDesc;
@@ -563,7 +567,7 @@ void D3D11RenderSystem::SetupGenericTexture2D(
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags      = 0;
+        texDesc.CPUAccessFlags      = cpuAccessFlags;
         texDesc.MiscFlags           = miscFlags;
     }
 
@@ -579,7 +583,8 @@ void D3D11RenderSystem::SetupGenericTexture2D(
 }
 
 void D3D11RenderSystem::SetupGenericTexture3D(
-    D3D11Texture& textureD3D, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc, UINT miscFlags)
+    D3D11Texture& textureD3D, const TextureFormat format, const Gs::Vector3i& size,
+    const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE3D_DESC texDesc;
@@ -591,7 +596,7 @@ void D3D11RenderSystem::SetupGenericTexture3D(
         texDesc.Format          = D3D11Types::Map(format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags  = 0;
+        texDesc.CPUAccessFlags  = cpuAccessFlags;
         texDesc.MiscFlags       = miscFlags;
     }
 
