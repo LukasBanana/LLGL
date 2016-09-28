@@ -240,6 +240,7 @@ void DbgRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const voi
 
 Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
+    DebugTextureDescriptor(desc, __FUNCTION__);
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(desc, imageDesc), desc));
 }
 
@@ -515,6 +516,66 @@ void DbgRenderSystem::DebugMipLevelLimit(int mipLevel, int mipLevelCount, const 
 void DbgRenderSystem::ErrWriteUninitializedResource(const std::string& source)
 {
     LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized resource", source);
+}
+
+void DbgRenderSystem::DebugTextureDescriptor(const TextureDescriptor& desc, const std::string& source)
+{
+    switch (desc.type)
+    {
+        case TextureType::Texture1D:
+            DebugTextureSize(desc.texture1DDesc.width, source);
+            if (desc.texture1DDesc.layers > 1)
+                WarnTextureLayersGreaterOne(source);
+            break;
+
+        case TextureType::Texture2D:
+        case TextureType::TextureCube:
+            DebugTextureSize(desc.texture2DDesc.width, source);
+            DebugTextureSize(desc.texture2DDesc.height, source);
+            if (desc.texture2DDesc.layers > 1)
+                WarnTextureLayersGreaterOne(source);
+            break;
+
+        case TextureType::Texture3D:
+            DebugTextureSize(desc.texture3DDesc.width, source);
+            DebugTextureSize(desc.texture3DDesc.height, source);
+            DebugTextureSize(desc.texture3DDesc.depth, source);
+            break;
+
+        case TextureType::Texture1DArray:
+            DebugTextureSize(desc.texture1DDesc.width, source);
+            if (desc.texture1DDesc.layers == 0)
+                ErrTextureLayersEqualZero(source);
+            break;
+
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCubeArray:
+            DebugTextureSize(desc.texture2DDesc.width, source);
+            DebugTextureSize(desc.texture2DDesc.height, source);
+            if (desc.texture2DDesc.layers == 0)
+                ErrTextureLayersEqualZero(source);
+            break;
+
+        default:
+            LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "invalid texture type");
+            break;
+    }
+}
+
+void DbgRenderSystem::DebugTextureSize(int size, const std::string& source)
+{
+    if (size <= 0)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid texture size", source);
+}
+
+void DbgRenderSystem::WarnTextureLayersGreaterOne(const std::string& source)
+{
+    LLGL_DBG_WARN(WarningType::ImproperArgument, "texture layers is greater than 1 but no array texture is specified", source);
+}
+
+void DbgRenderSystem::ErrTextureLayersEqualZero(const std::string& source)
+{
+    LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of texture layers must not be zero for array texutres", source);
 }
 
 template <typename T, typename TBase>
