@@ -64,11 +64,6 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Hardware Buffers ------ */
 
-        VertexBuffer* CreateVertexBuffer() override;
-        IndexBuffer* CreateIndexBuffer() override;
-        ConstantBuffer* CreateConstantBuffer() override;
-        StorageBuffer* CreateStorageBuffer() override;
-
         VertexBuffer* CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData = nullptr) override;
         IndexBuffer* CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData = nullptr) override;
         ConstantBuffer* CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) override;
@@ -78,11 +73,6 @@ class D3D11RenderSystem : public RenderSystem
         void Release(IndexBuffer& indexBuffer) override;
         void Release(ConstantBuffer& constantBuffer) override;
         void Release(StorageBuffer& storageBuffer) override;
-
-        void SetupVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) override;
-        void SetupIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) override;
-        void SetupConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) override;
-        void SetupStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) override;
 
         void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
         void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;

@@ -25,28 +25,6 @@ GLHardwareBuffer& BindAndGetHWBuffer(From& buffer)
     return bufferGL.hwBuffer;
 }
 
-VertexBuffer* GLRenderSystem::CreateVertexBuffer()
-{
-    return TakeOwnership(vertexBuffers_, MakeUnique<GLVertexBuffer>());
-}
-
-IndexBuffer* GLRenderSystem::CreateIndexBuffer()
-{
-    return TakeOwnership(indexBuffers_, MakeUnique<GLIndexBuffer>());
-}
-
-ConstantBuffer* GLRenderSystem::CreateConstantBuffer()
-{
-    LLGL_ASSERT_CAP(hasConstantBuffers);
-    return TakeOwnership(constantBuffers_, MakeUnique<GLConstantBuffer>());
-}
-
-StorageBuffer* GLRenderSystem::CreateStorageBuffer()
-{
-    LLGL_ASSERT_CAP(hasStorageBuffers);
-    return TakeOwnership(storageBuffers_, MakeUnique<GLStorageBuffer>());
-}
-
 VertexBuffer* GLRenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
 {
     auto vertexBufferGL = MakeUnique<GLVertexBuffer>();
@@ -111,40 +89,6 @@ void GLRenderSystem::Release(ConstantBuffer& constantBuffer)
 void GLRenderSystem::Release(StorageBuffer& storageBuffer)
 {
     RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
-}
-
-void GLRenderSystem::SetupVertexBuffer(
-    VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
-{
-    /* Bind vertex buffer */
-    auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, vertexBuffer);
-    GLStateManager::active->BindBuffer(vertexBufferGL);
-
-    /* Update buffer data and update new vertex format */
-    vertexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypes::Map(usage));
-    vertexBufferGL.UpdateVertexFormat(vertexFormat);
-}
-
-void GLRenderSystem::SetupIndexBuffer(
-    IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
-{
-    /* Bind index buffer */
-    auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, indexBuffer);
-    GLStateManager::active->BindBuffer(indexBufferGL);
-
-    /* Update buffer data and update new index format */
-    indexBufferGL.hwBuffer.BufferData(data, dataSize, GLTypes::Map(usage));
-    indexBufferGL.UpdateIndexFormat(indexFormat);
-}
-
-void GLRenderSystem::SetupConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    BindAndGetHWBuffer<GLConstantBuffer>(constantBuffer).BufferData(data, dataSize, GLTypes::Map(usage));
-}
-
-void GLRenderSystem::SetupStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    BindAndGetHWBuffer<GLStorageBuffer>(storageBuffer).BufferData(data, dataSize, GLTypes::Map(usage));
 }
 
 void GLRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)

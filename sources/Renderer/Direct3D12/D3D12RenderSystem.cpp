@@ -90,26 +90,6 @@ void D3D12RenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
-VertexBuffer* D3D12RenderSystem::CreateVertexBuffer()
-{
-    return TakeOwnership(vertexBuffers_, MakeUnique<D3D12VertexBuffer>());
-}
-
-IndexBuffer* D3D12RenderSystem::CreateIndexBuffer()
-{
-    return TakeOwnership(indexBuffers_, MakeUnique<D3D12IndexBuffer>());
-}
-
-ConstantBuffer* D3D12RenderSystem::CreateConstantBuffer()
-{
-    return TakeOwnership(constantBuffers_, MakeUnique<D3D12ConstantBuffer>(device_.Get()));
-}
-
-StorageBuffer* D3D12RenderSystem::CreateStorageBuffer()
-{
-    return TakeOwnership(storageBuffers_, MakeUnique<D3D12StorageBuffer>());
-}
-
 VertexBuffer* D3D12RenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
 {
     auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer>();
@@ -189,65 +169,6 @@ void D3D12RenderSystem::Release(ConstantBuffer& constantBuffer)
 void D3D12RenderSystem::Release(StorageBuffer& storageBuffer)
 {
     RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
-}
-
-void D3D12RenderSystem::SetupVertexBuffer(
-    VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
-{
-    auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, vertexBuffer);
-
-    /* Create hardware buffer resource */
-    vertexBufferD3D.hwBuffer.CreateResource(device_.Get(), dataSize);
-    vertexBufferD3D.PutView(vertexFormat.GetFormatSize());
-
-    /* Upload buffer data to GPU */
-    ComPtr<ID3D12Resource> bufferUpload;
-    vertexBufferD3D.UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, data, dataSize);
-
-    /* Execute upload commands and wait for GPU to finish execution */
-    CloseAndExecuteCommandList(commandList_.Get());
-    SyncGPU();
-}
-
-void D3D12RenderSystem::SetupIndexBuffer(
-    IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
-{
-    auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer&, indexBuffer);
-
-    /* Create hardware buffer resource */
-    indexBufferD3D.hwBuffer.CreateResource(device_.Get(), dataSize);
-    indexBufferD3D.PutView(D3D12Types::Map(indexFormat.GetDataType()));
-
-    /* Upload buffer data to GPU */
-    ComPtr<ID3D12Resource> bufferUpload;
-    indexBufferD3D.UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, data, dataSize);
-
-    /* Execute upload commands and wait for GPU to finish execution */
-    CloseAndExecuteCommandList(commandList_.Get());
-    SyncGPU();
-}
-
-void D3D12RenderSystem::SetupConstantBuffer(
-    ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, constantBuffer);
-
-    /* Create hardware buffer resource */
-    constantBufferD3D.CreateResourceAndPutView(device_.Get(), dataSize);
-
-    /* Upload buffer data to GPU */
-    //ComPtr<ID3D12Resource> bufferUpload;
-    constantBufferD3D.UpdateSubresource(data, dataSize);
-
-    /* Execute upload commands and wait for GPU to finish execution */
-    //CloseAndExecuteCommandList(commandList_.Get());
-    //SyncGPU();
-}
-
-void D3D12RenderSystem::SetupStorageBuffer(
-    StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    //todo
 }
 
 void D3D12RenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)

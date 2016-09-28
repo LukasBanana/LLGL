@@ -79,26 +79,6 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
-VertexBuffer* DbgRenderSystem::CreateVertexBuffer()
-{
-    return TakeOwnership(vertexBuffers_, MakeUnique<DbgVertexBuffer>(*instance_->CreateVertexBuffer()));
-}
-
-IndexBuffer* DbgRenderSystem::CreateIndexBuffer()
-{
-    return TakeOwnership(indexBuffers_, MakeUnique<DbgIndexBuffer>(*instance_->CreateIndexBuffer()));
-}
-
-ConstantBuffer* DbgRenderSystem::CreateConstantBuffer()
-{
-    return TakeOwnership(constantBuffers_, MakeUnique<DbgConstantBuffer>(*instance_->CreateConstantBuffer()));
-}
-
-StorageBuffer* DbgRenderSystem::CreateStorageBuffer()
-{
-    return TakeOwnership(storageBuffers_, MakeUnique<DbgStorageBuffer>(*instance_->CreateStorageBuffer()));
-}
-
 VertexBuffer* DbgRenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
 {
     if (size % vertexFormat.GetFormatSize() != 0)
@@ -144,7 +124,7 @@ ConstantBuffer* DbgRenderSystem::CreateConstantBuffer(std::size_t size, const Bu
 
 StorageBuffer* DbgRenderSystem::CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
 {
-    auto storageBufferDbg = MakeUnique<DbgStorageBuffer>(*instance_->CreateStorageBuffer());
+    auto storageBufferDbg = MakeUnique<DbgStorageBuffer>(*instance_->CreateStorageBuffer(size, usage, initialData));
 
     storageBufferDbg->size          = size;
     storageBufferDbg->initialized   = true;
@@ -170,63 +150,6 @@ void DbgRenderSystem::Release(ConstantBuffer& constantBuffer)
 void DbgRenderSystem::Release(StorageBuffer& storageBuffer)
 {
     ReleaseDbg(storageBuffers_, storageBuffer);
-}
-
-void DbgRenderSystem::SetupVertexBuffer(
-    VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
-{
-    if (dataSize % vertexFormat.GetFormatSize() != 0)
-        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with vertex format of " + std::to_string(vertexFormat.GetFormatSize()) + " bytes");
-
-    auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
-    {
-        instance_->SetupVertexBuffer(vertexBufferDbg.instance, data, dataSize, usage, vertexFormat);
-    }
-    vertexBufferDbg.format      = vertexFormat;
-    vertexBufferDbg.size        = dataSize;
-    vertexBufferDbg.elements    = dataSize / vertexFormat.GetFormatSize();
-    vertexBufferDbg.initialized = true;
-}
-
-void DbgRenderSystem::SetupIndexBuffer(
-    IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
-{
-    if (dataSize % indexFormat.GetFormatSize() != 0)
-        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with index format of " + std::to_string(indexFormat.GetFormatSize()) + " bytes");
-
-    auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
-    {
-        instance_->SetupIndexBuffer(indexBufferDbg.instance, data, dataSize, usage, indexFormat);
-    }
-    indexBufferDbg.size         = dataSize;
-    indexBufferDbg.elements     = dataSize / indexFormat.GetFormatSize();
-    indexBufferDbg.initialized  = true;
-}
-
-void DbgRenderSystem::SetupConstantBuffer(
-    ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    static const std::size_t packAlignment = 16;
-    if (dataSize % packAlignment != 0)
-        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "buffer size is out of pack alignment");
-
-    auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
-    {
-        instance_->SetupConstantBuffer(constantBufferDbg.instance, data, dataSize, usage);
-    }
-    constantBufferDbg.size          = dataSize;
-    constantBufferDbg.initialized   = true;
-}
-
-void DbgRenderSystem::SetupStorageBuffer(
-    StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
-    {
-        instance_->SetupStorageBuffer(storageBufferDbg.instance, data, dataSize, usage);
-    }
-    storageBufferDbg.size           = dataSize;
-    storageBufferDbg.initialized    = true;
 }
 
 void DbgRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)

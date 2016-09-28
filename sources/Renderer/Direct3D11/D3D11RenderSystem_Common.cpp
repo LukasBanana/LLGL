@@ -78,26 +78,6 @@ void D3D11RenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
-VertexBuffer* D3D11RenderSystem::CreateVertexBuffer()
-{
-    return TakeOwnership(vertexBuffers_, MakeUnique<D3D11VertexBuffer>());
-}
-
-IndexBuffer* D3D11RenderSystem::CreateIndexBuffer()
-{
-    return TakeOwnership(indexBuffers_, MakeUnique<D3D11IndexBuffer>());
-}
-
-ConstantBuffer* D3D11RenderSystem::CreateConstantBuffer()
-{
-    return TakeOwnership(constantBuffers_, MakeUnique<D3D11ConstantBuffer>());
-}
-
-StorageBuffer* D3D11RenderSystem::CreateStorageBuffer()
-{
-    return nullptr;//TakeOwnership(storageBuffers_, MakeUnique<D3D11StorageBuffer>());
-}
-
 VertexBuffer* D3D11RenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
 {
     auto vertexBufferD3D = MakeUnique<D3D11VertexBuffer>();
@@ -148,33 +128,6 @@ void D3D11RenderSystem::Release(ConstantBuffer& constantBuffer)
 void D3D11RenderSystem::Release(StorageBuffer& storageBuffer)
 {
     //RemoveFromUniqueSet(storageBuffers_, &storageBuffer);
-}
-
-void D3D11RenderSystem::SetupVertexBuffer(
-    VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat)
-{
-    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, vertexBuffer);
-    vertexBufferD3D.CreateResource(device_.Get(), vertexFormat.GetFormatSize(), dataSize, data);
-}
-
-void D3D11RenderSystem::SetupIndexBuffer(
-    IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat)
-{
-    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, indexBuffer);
-    indexBufferD3D.CreateResource(device_.Get(), D3D11Types::Map(indexFormat.GetDataType()), dataSize, data);
-}
-
-void D3D11RenderSystem::SetupConstantBuffer(
-    ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, constantBuffer);
-    constantBufferD3D.CreateResource(device_.Get(), dataSize, usage, data);
-}
-
-void D3D11RenderSystem::SetupStorageBuffer(
-    StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage)
-{
-    //todo
 }
 
 void D3D11RenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset)

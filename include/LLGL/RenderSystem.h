@@ -157,12 +157,6 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Hardware Buffers ------ */
 
-        //TODO: remove
-        virtual VertexBuffer* CreateVertexBuffer() = 0;
-        virtual IndexBuffer* CreateIndexBuffer() = 0;
-        virtual ConstantBuffer* CreateConstantBuffer() = 0;
-        virtual StorageBuffer* CreateStorageBuffer() = 0;
-
         /**
         \brief Creates a new vertex buffer.
         \param[in] dataSize Specifies the size (in bytes) of the buffer.
@@ -216,12 +210,6 @@ class LLGL_EXPORT RenderSystem
         virtual void Release(IndexBuffer& indexBuffer) = 0;
         virtual void Release(ConstantBuffer& constantBuffer) = 0;
         virtual void Release(StorageBuffer& storageBuffer) = 0;
-
-        //TODO: remove
-        virtual void SetupVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const VertexFormat& vertexFormat) = 0;
-        virtual void SetupIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, const BufferUsage usage, const IndexFormat& indexFormat) = 0;
-        virtual void SetupConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
-        virtual void SetupStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, const BufferUsage usage) = 0;
 
         /**
         \brief Updates the data of the specified vertex buffer.

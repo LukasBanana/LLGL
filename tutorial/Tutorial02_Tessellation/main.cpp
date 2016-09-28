@@ -76,8 +76,7 @@ public:
         indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt32);
 
         // Create constant buffer
-        constantBuffer = renderer->CreateConstantBuffer();
-        renderer->SetupConstantBuffer(*constantBuffer, nullptr, sizeof(Settings), LLGL::BufferUsage::Dynamic);
+        constantBuffer = renderer->CreateConstantBuffer(sizeof(Settings), LLGL::BufferUsage::Dynamic);
 
         return vertexFormat;
     }
