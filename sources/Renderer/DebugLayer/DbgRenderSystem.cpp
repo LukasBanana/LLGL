@@ -19,7 +19,7 @@ namespace LLGL
 ~~~~~~ INFO ~~~~~~
 This is the debug layer render system.
 It is a wrapper for the actual render system to validate the parameters, specified by the client programmer.
-All the "Setup..." and "Write..." functions wrap the function call of the actual render system
+All the "Create..." and "Write..." functions wrap the function call of the actual render system
 into a single braces block to highlight this function call, wher the input parameters are just passed on.
 All the actual render system objects are stored in the members named "instance", since they are the actual object instances.
 */

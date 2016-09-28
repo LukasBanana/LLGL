@@ -149,27 +149,30 @@ class LLGL_EXPORT RenderContext
         /**
         \brief Sets the active vertex buffer for subsequent drawing operations.
         \param[in] vertexBuffer Specifies the vertex buffer to set. This must not be an unspecified vertex buffer,
-        i.e. it must be initialized with the "RenderSystem::SetupVertexBuffer" function.
-        \see RenderSystem::SetupVertexBuffer
+        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateVertexBuffer"
+        function or with the "RenderSystem::WriteVertexBuffer" function.
+        \see RenderSystem::WriteVertexBuffer
         */
         virtual void SetVertexBuffer(VertexBuffer& vertexBuffer) = 0;
         
         /**
         \brief Sets the active index buffer for subsequent drawing operations.
         \param[in] indexBuffer Specifies the index buffer to set. This must not be an unspecified index buffer,
-        i.e. it must be initialized with the "RenderSystem::SetupIndexBuffer" function.
+        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateIndexBuffer"
+        function or with the "RenderSystem::WriteIndexBuffer" function.
         \remarks An active index buffer is only required for any "DrawIndexed" or "DrawIndexedInstanced" draw call.
-        \see RenderSystem::SetupIndexBuffer
+        \see RenderSystem::WriteIndexBuffer
         */
         virtual void SetIndexBuffer(IndexBuffer& indexBuffer) = 0;
         
         /**
         \brief Sets the active constant buffer of the specified slot index for subsequent drawing and compute operations.
         \param[in] constantBuffer Specifies the constant buffer to set. This must not be an unspecified constant buffer,
-        i.e. it must be initialized with the "RenderSystem::SetupConstantBuffer" function.
+        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateConstantBuffer"
+        function or with the "RenderSystem::WriteConstantBuffer" function.
         \param[in] slot Specifies the slot index where to put the constant buffer.
         \param[in] shaderStageFlags Specifies at which shader stages the constant buffer is to be set. By default all shader stages are affected.
-        \see RenderSystem::SetupConstantBuffer
+        \see RenderSystem::WriteConstantBuffer
         \see ShaderStageFlags
         */
         virtual void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
@@ -177,9 +180,10 @@ class LLGL_EXPORT RenderContext
         /**
         \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.
         \param[in] storageBuffer Specifies the storage buffer to set. This must not be an unspecified storage buffer,
-        i.e. it must be initialized with the "RenderSystem::SetupStorageBuffer" function.
+        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateStorageBuffer"
+        function or with the "RenderSystem::WriteStorageBuffer" function.
         \param[in] slot Specifies the slot index where to put the storage buffer.
-        \see RenderSystem::SetupStorageBuffer
+        \see RenderSystem::WriteStorageBuffer
         */
         virtual void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot) = 0;
 
