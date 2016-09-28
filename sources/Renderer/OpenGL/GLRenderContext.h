@@ -54,7 +54,10 @@ class GLRenderContext : public RenderContext
         void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         void SetVsync(const VsyncDescriptor& vsyncDesc) override;
 
+        void SetViewport(const Viewport& viewport) override;
         void SetViewportArray(const std::vector<Viewport>& viewports) override;
+
+        void SetScissor(const Scissor& scissor) override;
         void SetScissorArray(const std::vector<Scissor>& scissors) override;
 
         void SetClearColor(const ColorRGBAf& color) override;

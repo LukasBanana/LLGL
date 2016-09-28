@@ -88,6 +88,13 @@ class LLGL_EXPORT RenderContext
         }
 
         /**
+        \brief Sets a single viewport.
+        \remarks Similar to SetViewportArray but only a single viewport is set.
+        \see SetViewportArray
+        */
+        virtual void SetViewport(const Viewport& viewport) = 0;
+
+        /**
         \brief Sets the array of viewports.
         \param[in] viewports Specifies the array of viewports.
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
@@ -97,6 +104,13 @@ class LLGL_EXPORT RenderContext
         \see SetGraphicsAPIDependentState
         */
         virtual void SetViewportArray(const std::vector<Viewport>& viewports) = 0;
+
+        /**
+        \brief Sets a single scissor rectangle.
+        \remarks Similar to SetScissorArray but only a single scissor rectangle is set.
+        \see SetScissorArray
+        */
+        virtual void SetScissor(const Scissor& scissor) = 0;
 
         /**
         \brief Sets the specified scissor rectangles.

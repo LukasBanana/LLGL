@@ -55,9 +55,19 @@ void DbgRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     instance_.SetVsync(vsyncDesc);
 }
 
+void DbgRenderContext::SetViewport(const Viewport& viewport)
+{
+    instance_.SetViewport(viewport);
+}
+
 void DbgRenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
 {
     instance_.SetViewportArray(viewports);
+}
+
+void DbgRenderContext::SetScissor(const Scissor& scissor)
+{
+    instance_.SetScissor(scissor);
 }
 
 void DbgRenderContext::SetScissorArray(const std::vector<Scissor>& scissors)

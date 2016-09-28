@@ -18,7 +18,7 @@ D3D11StateManager::D3D11StateManager(ComPtr<ID3D11DeviceContext>& context) :
 {
 }
 
-void D3D11StateManager::SetViewports(const std::vector<Viewport>& viewports)
+void D3D11StateManager::SetViewports(std::size_t numViewports, const Viewport* viewports)
 {
     /* Check (at compile time) if D3D11_VIEWPORT and Viewport structures can be safly reinterpret-casted */
     if ( sizeof(D3D11_VIEWPORT)             == sizeof(Viewport)             &&
@@ -30,14 +30,14 @@ void D3D11StateManager::SetViewports(const std::vector<Viewport>& viewports)
          offsetof(D3D11_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth) )
     {
         /* Now it's safe to reinterpret cast the viewports into D3D viewports */
-        context_->RSSetViewports(static_cast<UINT>(viewports.size()), reinterpret_cast<const D3D11_VIEWPORT*>(viewports.data()));
+        context_->RSSetViewports(static_cast<UINT>(numViewports), reinterpret_cast<const D3D11_VIEWPORT*>(viewports));
     }
     else
     {
         /* Convert viewport into D3D viewport */
-        std::vector<D3D11_VIEWPORT> viewportsD3D(viewports.size());
+        std::vector<D3D11_VIEWPORT> viewportsD3D(numViewports);
     
-        for (std::size_t i = 0, n = viewports.size(); i < n; ++i)
+        for (std::size_t i = 0; i < numViewports; ++i)
         {
             const auto& src = viewports[i];
             auto& dest = viewportsD3D[i];
@@ -54,11 +54,11 @@ void D3D11StateManager::SetViewports(const std::vector<Viewport>& viewports)
     }
 }
 
-void D3D11StateManager::SetScissors(const std::vector<Scissor>& scissors)
+void D3D11StateManager::SetScissors(std::size_t numScissors, const Scissor* scissors)
 {
-    std::vector<D3D11_RECT> scissorsD3D(scissors.size());
+    std::vector<D3D11_RECT> scissorsD3D(numScissors);
     
-    for (std::size_t i = 0, n = scissors.size(); i < n; ++i)
+    for (std::size_t i = 0; i < numScissors; ++i)
     {
         const auto& src = scissors[i];
         auto& dest = scissorsD3D[i];

@@ -52,7 +52,7 @@ D3D11RenderContext::D3D11RenderContext(
 
     /* Initialize viewport */
     auto resolution = desc_.videoMode.resolution.Cast<float>();
-    SetViewportArray({ { 0.0f, 0.0f, resolution.x, resolution.y } });
+    SetViewport({ 0.0f, 0.0f, resolution.x, resolution.y });
 
     /* Initialize v-sync */
     SetVsync(desc_.vsync);
@@ -98,14 +98,24 @@ void D3D11RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
 }
 
+void D3D11RenderContext::SetViewport(const Viewport& viewport)
+{
+    stateMngr_.SetViewports(1, &viewport);
+}
+
 void D3D11RenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
 {
-    stateMngr_.SetViewports(viewports);
+    stateMngr_.SetViewports(viewports.size(), viewports.data());
+}
+
+void D3D11RenderContext::SetScissor(const Scissor& scissor)
+{
+    stateMngr_.SetScissors(1, &scissor);
 }
 
 void D3D11RenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
 {
-    stateMngr_.SetScissors(scissors);
+    stateMngr_.SetScissors(scissors.size(), scissors.data());
 }
 
 void D3D11RenderContext::SetClearColor(const ColorRGBAf& color)

@@ -94,15 +94,27 @@ void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
 }
 
+void D3D12RenderContext::SetViewport(const Viewport& viewport)
+{
+    stateMngr_->SetViewports(1, &viewport);
+    stateMngr_->SubmitViewports();
+}
+
 void D3D12RenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
 {
-    stateMngr_->SetViewports(viewports);
+    stateMngr_->SetViewports(viewports.size(), viewports.data());
     stateMngr_->SubmitViewports();
+}
+
+void D3D12RenderContext::SetScissor(const Scissor& scissor)
+{
+    stateMngr_->SetScissors(1, &scissor);
+    stateMngr_->SubmitScissors();
 }
 
 void D3D12RenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
 {
-    stateMngr_->SetScissors(scissors);
+    stateMngr_->SetScissors(scissors.size(), scissors.data());
     stateMngr_->SubmitScissors();
 }
 
@@ -410,8 +422,12 @@ void D3D12RenderContext::InitStateManager()
 
     /* Initialize states */
     auto resolution = desc_.videoMode.resolution;
-    stateMngr_->SetViewports({ { 0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y) } });
-    stateMngr_->SetScissors({ { 0, 0, resolution.x, resolution.y } });
+
+    Viewport viewport(0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y));
+    stateMngr_->SetViewports(1, &viewport);
+
+    Scissor scissor(0, 0, resolution.x, resolution.y);
+    stateMngr_->SetScissors(1, &scissor);
 }
 
 void D3D12RenderContext::MoveToNextFrame()

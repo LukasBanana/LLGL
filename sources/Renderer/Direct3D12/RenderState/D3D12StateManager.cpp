@@ -6,6 +6,7 @@
  */
 
 #include "D3D12StateManager.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -17,21 +18,37 @@ D3D12StateManager::D3D12StateManager(ComPtr<ID3D12GraphicsCommandList>& commandL
 {
 }
 
-void D3D12StateManager::SetViewports(const std::vector<Viewport>& viewports)
+void D3D12StateManager::SetViewports(std::size_t numViewports, const Viewport* viewports)
 {
-    viewports_.resize(viewports.size());
+    viewports_.resize(numViewports);
     
-    for (std::size_t i = 0, n = viewports.size(); i < n; ++i)
+    /* Check (at compile time) if D3D12_VIEWPORT and Viewport structures can be safly reinterpret-casted */
+    if ( sizeof(D3D12_VIEWPORT)             == sizeof(Viewport)             &&
+         offsetof(D3D12_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
+         offsetof(D3D12_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&
+         offsetof(D3D12_VIEWPORT, Width   ) == offsetof(Viewport, width   ) &&
+         offsetof(D3D12_VIEWPORT, Height  ) == offsetof(Viewport, height  ) &&
+         offsetof(D3D12_VIEWPORT, MinDepth) == offsetof(Viewport, minDepth) &&
+         offsetof(D3D12_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth) )
     {
-        const auto& src = viewports[i];
-        auto& dest = viewports_[i];
+        /* Now it's safe to reinterpret cast the viewports into D3D viewports */
+        auto viewportsD3D = reinterpret_cast<const D3D12_VIEWPORT*>(viewports);
+        std::copy(viewportsD3D, viewportsD3D + numViewports, viewports_.data());
+    }
+    else
+    {
+        for (std::size_t i = 0; i < numViewports; ++i)
+        {
+            const auto& src = viewports[i];
+            auto& dest = viewports_[i];
 
-        dest.TopLeftX   = src.x;
-        dest.TopLeftY   = src.y;
-        dest.Width      = src.width;
-        dest.Height     = src.height;
-        dest.MinDepth   = src.minDepth;
-        dest.MaxDepth   = src.maxDepth;
+            dest.TopLeftX   = src.x;
+            dest.TopLeftY   = src.y;
+            dest.Width      = src.width;
+            dest.Height     = src.height;
+            dest.MinDepth   = src.minDepth;
+            dest.MaxDepth   = src.maxDepth;
+        }
     }
 }
 
@@ -41,11 +58,11 @@ void D3D12StateManager::SubmitViewports()
         commandList_->RSSetViewports(static_cast<UINT>(viewports_.size()), viewports_.data());
 }
 
-void D3D12StateManager::SetScissors(const std::vector<Scissor>& scissors)
+void D3D12StateManager::SetScissors(std::size_t numScissors, const Scissor* scissors)
 {
-    scissors_.resize(scissors.size());
+    scissors_.resize(numScissors);
     
-    for (std::size_t i = 0, n = scissors.size(); i < n; ++i)
+    for (std::size_t i = 0; i < numScissors; ++i)
     {
         const auto& src = scissors[i];
         auto& dest = scissors_[i];

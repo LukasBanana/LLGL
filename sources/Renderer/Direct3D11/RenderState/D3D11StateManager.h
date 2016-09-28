@@ -26,8 +26,8 @@ class D3D11StateManager
 
         D3D11StateManager(ComPtr<ID3D11DeviceContext>& context);
 
-        void SetViewports(const std::vector<Viewport>& viewports);
-        void SetScissors(const std::vector<Scissor>& scissors);
+        void SetViewports(std::size_t numViewports, const Viewport* viewports);
+        void SetScissors(std::size_t numScissors, const Scissor* scissors);
 
     private:
 

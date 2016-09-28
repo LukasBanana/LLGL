@@ -87,6 +87,17 @@ void GLRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     }
 }
 
+void GLRenderContext::SetViewport(const Viewport& viewport)
+{
+    /* Setup GL viewport and depth-range */
+    GLViewport viewportGL { viewport.x, viewport.y, viewport.width, viewport.height };
+    GLDepthRange depthRangeGL { viewport.minDepth, viewport.maxDepth };
+
+    /* Set final state */
+    stateMngr_->SetViewport(viewportGL);
+    stateMngr_->SetDepthRange(depthRangeGL);
+}
+
 void GLRenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
 {
     /* Setup GL viewports and depth-ranges */
@@ -102,21 +113,28 @@ void GLRenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
         depthRangesGL.push_back({ static_cast<GLdouble>(vp.minDepth), static_cast<GLdouble>(vp.maxDepth) });
     }
 
-    /* Set final state */
+    /* Submit viewports and depth-ranges to state manager */
     stateMngr_->SetViewportArray(std::move(viewportsGL));
     stateMngr_->SetDepthRangeArray(std::move(depthRangesGL));
 }
 
+void GLRenderContext::SetScissor(const Scissor& scissor)
+{
+    /* Setup and submit GL scissor to state manager */
+    GLScissor scissorGL { scissor.x, scissor.y, scissor.width, scissor.height };
+    stateMngr_->SetScissor(scissorGL);
+}
+
 void GLRenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
 {
-    /* Setup GL viewports and depth-ranges */
+    /* Setup GL scissors */
     std::vector<GLScissor> scissorsGL;
     scissorsGL.reserve(scissors.size());
 
     for (const auto& sc : scissors)
         scissorsGL.push_back({ sc.x, sc.y, sc.width, sc.height });
 
-    /* Set final state */
+    /* Submit scissors to state manager */
     stateMngr_->SetScissorArray(std::move(scissorsGL));
 }
 
