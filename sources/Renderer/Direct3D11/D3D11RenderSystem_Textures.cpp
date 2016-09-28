@@ -142,51 +142,74 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
 
 void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
 {
-}
+    /* Determine update region */
+    Gs::Vector3i position, size;
 
-void D3D11RenderSystem::WriteTexture1D(
-    Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc)
-{
-    UpdateGenericTexture(texture, mipLevel, 0, { position, 0, 0 }, { size, 1, 1 }, imageDesc);
-}
+    switch (texture.GetType())
+    {
+        case TextureType::Texture1D:
+            position.x  = subTextureDesc.texture1DDesc.x;
+            size.x      = subTextureDesc.texture1DDesc.width;
+            size.y      = 1;
+            size.z      = 1;
+            break;
 
-void D3D11RenderSystem::WriteTexture2D(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc)
-{
-    UpdateGenericTexture(texture, mipLevel, 0, { position.x, position.y, 0 }, { size.x, size.y, 1 }, imageDesc);
-}
+        case TextureType::Texture2D:
+            position.x  = subTextureDesc.texture2DDesc.x;
+            position.y  = subTextureDesc.texture2DDesc.y;
+            size.x      = subTextureDesc.texture2DDesc.width;
+            size.y      = subTextureDesc.texture2DDesc.height;
+            size.z      = 1;
+            break;
 
-void D3D11RenderSystem::WriteTexture3D(
-    Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDescriptor& imageDesc)
-{
-    UpdateGenericTexture(texture, mipLevel, 0, position, size, imageDesc);
-}
+        case TextureType::Texture3D:
+            position.x  = subTextureDesc.texture3DDesc.x;
+            position.y  = subTextureDesc.texture3DDesc.y;
+            position.z  = subTextureDesc.texture3DDesc.z;
+            size.x      = subTextureDesc.texture3DDesc.width;
+            size.y      = subTextureDesc.texture3DDesc.height;
+            size.z      = subTextureDesc.texture3DDesc.depth;
+            break;
 
-void D3D11RenderSystem::WriteTextureCube(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDescriptor& imageDesc)
-{
-    UpdateGenericTexture(texture, mipLevel, static_cast<UINT>(cubeFace), { position.x, position.y, 0 }, { size.x, size.y, 1 }, imageDesc);
-}
+        case TextureType::TextureCube:
+            position.x  = subTextureDesc.textureCubeDesc.x;
+            position.y  = subTextureDesc.textureCubeDesc.y;
+            position.z  = static_cast<int>(subTextureDesc.textureCubeDesc.cubeFaceOffset);
+            size.x      = subTextureDesc.textureCubeDesc.width;
+            size.y      = subTextureDesc.textureCubeDesc.height;
+            size.z      = 1;
+            break;
 
-void D3D11RenderSystem::WriteTexture1DArray(
-    Texture& texture, int mipLevel, int position, unsigned int layerOffset,
-    int size, unsigned int layers, const ImageDescriptor& imageDesc)
-{
-    UpdateGenericTexture(texture, mipLevel, layerOffset, { position, 0, 0 }, { size, static_cast<int>(layers), 1 }, imageDesc);
-}
+        case TextureType::Texture1DArray:
+            position.x  = subTextureDesc.texture1DDesc.x;
+            position.y  = static_cast<int>(subTextureDesc.texture1DDesc.layerOffset);
+            position.z  = 0;
+            size.x      = subTextureDesc.texture1DDesc.width;
+            size.y      = static_cast<int>(subTextureDesc.texture1DDesc.layers);
+            size.z      = 1;
+            break;
 
-void D3D11RenderSystem::WriteTexture2DArray(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
-    const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor& imageDesc)
-{
-    UpdateGenericTexture(texture, mipLevel, layerOffset, { position.x, position.y, 0 }, { size.x, size.y, static_cast<int>(layers) }, imageDesc);
-}
+        case TextureType::Texture2DArray:
+            position.x  = subTextureDesc.texture2DDesc.x;
+            position.y  = subTextureDesc.texture2DDesc.y;
+            position.z  = static_cast<int>(subTextureDesc.texture2DDesc.layerOffset);
+            size.x      = subTextureDesc.texture2DDesc.width;
+            size.y      = subTextureDesc.texture2DDesc.height;
+            size.z      = static_cast<int>(subTextureDesc.texture2DDesc.layers);
+            break;
 
-void D3D11RenderSystem::WriteTextureCubeArray(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
-    const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDescriptor& imageDesc)
-{
-    UpdateGenericTexture(texture, mipLevel, layerOffset*6, { position.x, position.y, 0 }, { size.x, size.y, static_cast<int>(cubeFaces) }, imageDesc);
+        case TextureType::TextureCubeArray:
+            position.x  = subTextureDesc.textureCubeDesc.x;
+            position.y  = subTextureDesc.textureCubeDesc.y;
+            position.z  = subTextureDesc.textureCubeDesc.layerOffset * 6 + static_cast<int>(subTextureDesc.textureCubeDesc.cubeFaceOffset);
+            size.x      = subTextureDesc.textureCubeDesc.width;
+            size.y      = subTextureDesc.textureCubeDesc.height;
+            size.z      = subTextureDesc.textureCubeDesc.cubeFaces;
+            break;
+    }
+
+    /* Update generic texture at determined region */
+    UpdateGenericTexture(texture, subTextureDesc.mipLevel, 0, position, size, imageDesc);
 }
 
 void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)

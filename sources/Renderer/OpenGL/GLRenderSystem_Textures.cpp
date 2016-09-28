@@ -422,7 +422,35 @@ void GLRenderSystem::BuildTextureCubeArray(const TextureDescriptor& desc, const 
 
 void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
 {
+    /* Bind texture and write texture sub data */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
 
+    /* Write data into specific texture type */
+    switch (texture.GetType())
+    {
+        case TextureType::Texture1D:
+            WriteTexture1D(subTextureDesc, imageDesc);
+            break;
+        case TextureType::Texture2D:
+            WriteTexture2D(subTextureDesc, imageDesc);
+            break;
+        case TextureType::Texture3D:
+            WriteTexture3D(subTextureDesc, imageDesc);
+            break;
+        case TextureType::TextureCube:
+            WriteTextureCube(subTextureDesc, imageDesc);
+            break;
+        case TextureType::Texture1DArray:
+            WriteTexture1DArray(subTextureDesc, imageDesc);
+            break;
+        case TextureType::Texture2DArray:
+            WriteTexture2DArray(subTextureDesc, imageDesc);
+            break;
+        case TextureType::TextureCubeArray:
+            WriteTextureCubeArray(subTextureDesc, imageDesc);
+            break;
+    }
 }
 
 static void GLTexSubImage1DBase(GLenum target, int mipLevel, int x, int width, const ImageDescriptor& imageDesc)
@@ -524,92 +552,67 @@ static void GLTexSubImageCubeArray(
 {
     GLTexSubImage3DBase(
         GL_TEXTURE_CUBE_MAP_ARRAY,
-        mipLevel, x, y, static_cast<GLsizei>(layerOffset + static_cast<int>(cubeFaceOffset))*6,
+        mipLevel, x, y, static_cast<GLsizei>(layerOffset*6 + static_cast<unsigned int>(cubeFaceOffset)),
         width, height, static_cast<GLsizei>(cubeFaces), imageDesc
     );
 }
 
-void GLRenderSystem::WriteTexture1D(
-    Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTexture1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
-    /* Bind texture and write texture sub data */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
-
-    GLTexSubImage1D(mipLevel, position, size, imageDesc);
+    GLTexSubImage1D(desc.mipLevel, desc.texture1DDesc.x, desc.texture1DDesc.width, imageDesc);
 }
 
-void GLRenderSystem::WriteTexture2D(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTexture2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
-    /* Bind texture and write texture sub data */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
-
-    GLTexSubImage2D(mipLevel, position.x, position.y, size.x, size.y, imageDesc);
+    GLTexSubImage2D(
+        desc.mipLevel, desc.texture2DDesc.x, desc.texture2DDesc.y,
+        desc.texture2DDesc.width, desc.texture2DDesc.height, imageDesc
+    );
 }
 
-void GLRenderSystem::WriteTexture3D(
-    Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTexture3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_CAP(has3DTextures);
-
-    /* Bind texture and write texture sub data */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
-
-    GLTexSubImage3D(mipLevel, position.x, position.y, position.z, size.x, size.y, size.z, imageDesc);
+    GLTexSubImage3D(
+        desc.mipLevel, desc.texture3DDesc.x, desc.texture3DDesc.y, desc.texture3DDesc.z,
+        desc.texture3DDesc.width, desc.texture3DDesc.height, desc.texture3DDesc.depth, imageDesc
+    );
 }
 
-void GLRenderSystem::WriteTextureCube(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTextureCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_CAP(hasCubeTextures);
-
-    /* Bind texture and write texture sub data */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
-
-    GLTexSubImageCube(mipLevel, position.x, position.y, size.x, size.y, cubeFace, imageDesc);
+    GLTexSubImageCube(
+        desc.mipLevel, desc.textureCubeDesc.x, desc.textureCubeDesc.y,
+        desc.textureCubeDesc.width, desc.textureCubeDesc.height, desc.textureCubeDesc.cubeFaceOffset, imageDesc
+    );
 }
 
-void GLRenderSystem::WriteTexture1DArray(
-    Texture& texture, int mipLevel, int position, unsigned int layerOffset,
-    int size, unsigned int layers, const ImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTexture1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_CAP(hasTextureArrays);
-
-    /* Bind texture and write texture sub data */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
-
-    GLTexSubImage1DArray(mipLevel, position, layerOffset, size, layers, imageDesc);
+    GLTexSubImage1DArray(
+        desc.mipLevel, desc.texture1DDesc.x, desc.texture1DDesc.layerOffset,
+        desc.texture1DDesc.width, desc.texture1DDesc.layers, imageDesc
+    );
 }
 
-void GLRenderSystem::WriteTexture2DArray(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
-    const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTexture2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_CAP(hasTextureArrays);
-
-    /* Bind texture and write texture sub data */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
-
-    GLTexSubImage2DArray(mipLevel, position.x, position.y, layerOffset, size.x, size.y, layers, imageDesc);
+    GLTexSubImage2DArray(
+        desc.mipLevel, desc.texture2DDesc.x, desc.texture2DDesc.y, desc.texture2DDesc.layerOffset,
+        desc.texture2DDesc.width, desc.texture2DDesc.height, desc.texture2DDesc.layers, imageDesc
+    );
 }
 
-void GLRenderSystem::WriteTextureCubeArray(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
-    const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTextureCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     LLGL_ASSERT_CAP(hasCubeTextureArrays);
-
-    /* Bind texture and write texture sub data */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
-
-    GLTexSubImageCubeArray(mipLevel, position.x, position.y, layerOffset, cubeFaceOffset, size.x, size.y, cubeFaces, imageDesc);
+    GLTexSubImageCubeArray(
+        desc.mipLevel, desc.textureCubeDesc.x, desc.textureCubeDesc.y, desc.textureCubeDesc.layerOffset, desc.textureCubeDesc.cubeFaceOffset,
+        desc.textureCubeDesc.width, desc.textureCubeDesc.height, desc.textureCubeDesc.cubeFaces, imageDesc
+    );
 }
 
 void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)

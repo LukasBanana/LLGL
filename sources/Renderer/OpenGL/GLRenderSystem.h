@@ -98,30 +98,6 @@ class GLRenderSystem : public RenderSystem
 
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
         
-        void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc) override;
-        void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc) override;
-        void WriteTexture3D(Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDescriptor& imageDesc) override;
-
-        void WriteTextureCube(
-            Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace,
-            const Gs::Vector2i& size, const ImageDescriptor& imageDesc
-        ) override;
-        
-        void WriteTexture1DArray(
-            Texture& texture, int mipLevel, int position, unsigned int layerOffset,
-            int size, unsigned int layers, const ImageDescriptor& imageDesc
-        ) override;
-        
-        void WriteTexture2DArray(
-            Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
-            const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor& imageDesc
-        ) override;
-
-        void WriteTextureCubeArray(
-            Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
-            const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDescriptor& imageDesc
-        ) override;
-
         void ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data) override;
 
         /* ----- Sampler States ---- */
@@ -194,6 +170,14 @@ class GLRenderSystem : public RenderSystem
         void BuildTexture1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
         void BuildTexture2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
         void BuildTextureCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+
+        void WriteTexture1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+        void WriteTexture2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+        void WriteTexture3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+        void WriteTextureCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+        void WriteTexture1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+        void WriteTexture2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+        void WriteTextureCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
 
         /* ----- Common objects ----- */
 

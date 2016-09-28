@@ -268,7 +268,15 @@ int main()
         context->GenerateMips(texture);
         #endif
 
-        renderer->WriteTexture2D(texture, 1, { 0, 1 }, { 2, 1 }, imageDesc); // create 2D texture
+        LLGL::SubTextureDescriptor subTexDesc;
+        {
+            subTexDesc.mipLevel             = 0;
+            subTexDesc.texture2DDesc.x      = 0;
+            subTexDesc.texture2DDesc.y      = 1;
+            subTexDesc.texture2DDesc.width  = 2;
+            subTexDesc.texture2DDesc.height = 1;
+        }
+        //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
 
         auto textureQueryDesc = renderer->QueryTextureDescriptor(texture);
 

@@ -236,51 +236,6 @@ void D3D12RenderSystem::WriteTexture(Texture& texture, const SubTextureDescripto
     //todo...
 }
 
-void D3D12RenderSystem::WriteTexture1D(
-    Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc)
-{
-    //todo...
-}
-
-void D3D12RenderSystem::WriteTexture2D(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc)
-{
-    //todo...
-}
-
-void D3D12RenderSystem::WriteTexture3D(
-    Texture& texture, int mipLevel, const Gs::Vector3i& position, const Gs::Vector3i& size, const ImageDescriptor& imageDesc)
-{
-    //todo...
-}
-
-void D3D12RenderSystem::WriteTextureCube(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, const AxisDirection cubeFace, const Gs::Vector2i& size, const ImageDescriptor& imageDesc)
-{
-    //todo...
-}
-
-void D3D12RenderSystem::WriteTexture1DArray(
-    Texture& texture, int mipLevel, int position, unsigned int layerOffset,
-    int size, unsigned int layers, const ImageDescriptor& imageDesc)
-{
-    //todo...
-}
-
-void D3D12RenderSystem::WriteTexture2DArray(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset,
-    const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor& imageDesc)
-{
-    //todo...
-}
-
-void D3D12RenderSystem::WriteTextureCubeArray(
-    Texture& texture, int mipLevel, const Gs::Vector2i& position, unsigned int layerOffset, const AxisDirection cubeFaceOffset,
-    const Gs::Vector2i& size, unsigned int cubeFaces, const ImageDescriptor& imageDesc)
-{
-    //todo...
-}
-
 void D3D12RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
 {
     LLGL_ASSERT_PTR(data);
