@@ -211,7 +211,7 @@ void D3D12RenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const v
 
 /* ----- Textures ----- */
 
-Texture* D3D12RenderSystem::CreateTexture()
+Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     return nullptr;//TakeOwnership(textures_, MakeUnique<D3D12Texture>());
 }

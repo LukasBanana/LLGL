@@ -19,11 +19,6 @@ namespace LLGL
 
 /* ----- Textures ----- */
 
-Texture* GLRenderSystem::CreateTexture()
-{
-    return TakeOwnership(textures_, MakeUnique<GLTexture>());
-}
-
 Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     auto texture = MakeUnique<GLTexture>();

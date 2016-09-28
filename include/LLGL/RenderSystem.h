@@ -267,12 +267,6 @@ class LLGL_EXPORT RenderSystem
         /* ----- Textures ----- */
 
         /**
-        \brief Creates a new, empty, and unspecified texture.
-        \remarks The type and dimension size of the this texture will be determined by any of the "SetupTexture..." functions.
-        */
-        virtual Texture* CreateTexture() = 0;
-
-        /**
         \brief Creates a new texture.
         \param[in] desc Specifies the texture descriptor.
         \param[in] imageDesc Optional pointer to the image data descriptor.
@@ -281,7 +275,7 @@ class LLGL_EXPORT RenderSystem
         \see WriteTexture
         \see RenderSystemConfiguration::defaultImageColor
         */
-        virtual Texture* CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc = nullptr) { return nullptr; /* TODO: make this pure virtual! */ }
+        virtual Texture* CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc = nullptr) = 0;
 
         virtual void Release(Texture& texture) = 0;
 

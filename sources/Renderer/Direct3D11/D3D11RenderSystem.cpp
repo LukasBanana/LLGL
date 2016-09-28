@@ -170,11 +170,6 @@ void D3D11RenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const v
 
 /* ----- Textures ----- */
 
-Texture* D3D11RenderSystem::CreateTexture()
-{
-    return TakeOwnership(textures_, MakeUnique<D3D11Texture>());
-}
-
 Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     auto texture = MakeUnique<D3D11Texture>();

@@ -79,7 +79,7 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Textures ----- */
 
-        Texture* CreateTexture() override;
+        Texture* CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc = nullptr) override;
 
         void Release(Texture& texture) override;
 

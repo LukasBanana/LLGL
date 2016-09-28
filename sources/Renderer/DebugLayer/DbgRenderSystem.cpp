@@ -238,11 +238,6 @@ void DbgRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const voi
 
 /* ----- Textures ----- */
 
-Texture* DbgRenderSystem::CreateTexture()
-{
-    return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture()));
-}
-
 Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(desc, imageDesc)));
