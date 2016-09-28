@@ -19,34 +19,34 @@ namespace LLGL
 
 /* ----- Textures ----- */
 
-Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
 {
     auto texture = MakeUnique<GLTexture>();
 
-    BindTextureAndSetType(*texture, desc.type);
+    BindTextureAndSetType(*texture, textureDesc.type);
 
-    switch (desc.type)
+    switch (textureDesc.type)
     {
         case TextureType::Texture1D:
-            BuildTexture1D(desc, imageDesc);
+            BuildTexture1D(textureDesc, imageDesc);
             break;
         case TextureType::Texture2D:
-            BuildTexture2D(desc, imageDesc);
+            BuildTexture2D(textureDesc, imageDesc);
             break;
         case TextureType::Texture3D:
-            BuildTexture3D(desc, imageDesc);
+            BuildTexture3D(textureDesc, imageDesc);
             break;
         case TextureType::TextureCube:
-            BuildTextureCube(desc, imageDesc);
+            BuildTextureCube(textureDesc, imageDesc);
             break;
         case TextureType::Texture1DArray:
-            BuildTexture1DArray(desc, imageDesc);
+            BuildTexture1DArray(textureDesc, imageDesc);
             break;
         case TextureType::Texture2DArray:
-            BuildTexture2DArray(desc, imageDesc);
+            BuildTexture2DArray(textureDesc, imageDesc);
             break;
         case TextureType::TextureCubeArray:
-            BuildTextureCubeArray(desc, imageDesc);
+            BuildTextureCubeArray(textureDesc, imageDesc);
             break;
         default:
             throw std::invalid_argument("failed to create texture with invalid texture type");

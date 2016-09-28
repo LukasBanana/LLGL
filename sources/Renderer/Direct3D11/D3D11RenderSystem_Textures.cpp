@@ -19,17 +19,17 @@ namespace LLGL
 
 /* ----- Textures ----- */
 
-Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
 {
     /* Create texture object and store type */
     auto texture = MakeUnique<D3D11Texture>();
     
-    texture->SetType(desc.type);
+    texture->SetType(textureDesc.type);
 
     /* Modify number of layers */
-    auto descD3D = desc;
+    auto descD3D = textureDesc;
 
-    switch (desc.type)
+    switch (descD3D.type)
     {
         case TextureType::Texture1D:
             descD3D.texture1DDesc.layers = 1;

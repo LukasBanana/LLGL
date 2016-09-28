@@ -90,7 +90,7 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Textures ----- */
 
-        Texture* CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc = nullptr) override;
+        Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) override;
 
         void Release(Texture& texture) override;
 

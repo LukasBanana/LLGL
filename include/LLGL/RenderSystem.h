@@ -268,7 +268,7 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new texture.
-        \param[in] desc Specifies the texture descriptor.
+        \param[in] textureDesc Specifies the texture descriptor.
         \param[in] imageDesc Optional pointer to the image data descriptor.
         If this is null, the texture will be initialized with the currently configured default image color.
         If this is non-null, it is used to initialize the texture data.
@@ -276,7 +276,7 @@ class LLGL_EXPORT RenderSystem
         \see WriteTexture
         \see RenderSystemConfiguration::defaultImageColor
         */
-        virtual Texture* CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc = nullptr) = 0;
+        virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) = 0;
 
         virtual void Release(Texture& texture) = 0;
 
