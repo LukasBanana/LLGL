@@ -70,9 +70,14 @@ class GLStateManager
 
         /* ----- Common states ----- */
 
-        void SetViewports(std::vector<GLViewport>& viewports);
-        void SetDepthRanges(std::vector<GLDepthRange>& depthRanges);
-        void SetScissors(std::vector<GLScissor>& scissors);
+        void SetViewport(GLViewport& viewport);
+        void SetViewportArray(std::vector<GLViewport>&& viewports);
+
+        void SetDepthRange(GLDepthRange& depthRange);
+        void SetDepthRangeArray(std::vector<GLDepthRange>&& depthRanges);
+
+        void SetScissor(GLScissor& scissor);
+        void SetScissorArray(std::vector<GLScissor>&& scissors);
 
         void SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled);
 
@@ -150,6 +155,8 @@ class GLStateManager
         void SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled);
         void AdjustViewport(GLViewport& viewport);
         void AdjustScissor(GLScissor& scissor);
+
+        void AssertExtViewportArray();
 
         /* ----- Constants ----- */
 
@@ -268,6 +275,11 @@ class GLStateManager
             std::array<GLuint, numTextureLayers> boundSamplers;
         };
 
+        struct GLExtSupport
+        {
+            bool viewportArray = false;
+        };
+
         /* ----- Members ----- */
 
         GraphicsAPIDependentStateDescriptor gfxDependentState_;
@@ -289,6 +301,8 @@ class GLStateManager
 
         bool                                emulateClipControl_ = false;
         GLint                               renderTargetHeight_ = 0;
+
+        GLExtSupport                        extension_;
 
 };
 

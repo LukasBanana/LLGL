@@ -87,7 +87,7 @@ void GLRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     }
 }
 
-void GLRenderContext::SetViewports(const std::vector<Viewport>& viewports)
+void GLRenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
 {
     /* Setup GL viewports and depth-ranges */
     std::vector<GLViewport> viewportsGL;
@@ -103,11 +103,11 @@ void GLRenderContext::SetViewports(const std::vector<Viewport>& viewports)
     }
 
     /* Set final state */
-    stateMngr_->SetViewports(viewportsGL);
-    stateMngr_->SetDepthRanges(depthRangesGL);
+    stateMngr_->SetViewportArray(std::move(viewportsGL));
+    stateMngr_->SetDepthRangeArray(std::move(depthRangesGL));
 }
 
-void GLRenderContext::SetScissors(const std::vector<Scissor>& scissors)
+void GLRenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
 {
     /* Setup GL viewports and depth-ranges */
     std::vector<GLScissor> scissorsGL;
@@ -117,7 +117,7 @@ void GLRenderContext::SetScissors(const std::vector<Scissor>& scissors)
         scissorsGL.push_back({ sc.x, sc.y, sc.width, sc.height });
 
     /* Set final state */
-    stateMngr_->SetScissors(scissorsGL);
+    stateMngr_->SetScissorArray(std::move(scissorsGL));
 }
 
 void GLRenderContext::SetClearColor(const ColorRGBAf& color)

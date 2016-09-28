@@ -52,7 +52,7 @@ D3D11RenderContext::D3D11RenderContext(
 
     /* Initialize viewport */
     auto resolution = desc_.videoMode.resolution.Cast<float>();
-    SetViewports({ { 0.0f, 0.0f, resolution.x, resolution.y } });
+    SetViewportArray({ { 0.0f, 0.0f, resolution.x, resolution.y } });
 
     /* Initialize v-sync */
     SetVsync(desc_.vsync);
@@ -98,12 +98,12 @@ void D3D11RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
 }
 
-void D3D11RenderContext::SetViewports(const std::vector<Viewport>& viewports)
+void D3D11RenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
 {
     stateMngr_.SetViewports(viewports);
 }
 
-void D3D11RenderContext::SetScissors(const std::vector<Scissor>& scissors)
+void D3D11RenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
 {
     stateMngr_.SetScissors(scissors);
 }

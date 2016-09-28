@@ -94,13 +94,13 @@ void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
 }
 
-void D3D12RenderContext::SetViewports(const std::vector<Viewport>& viewports)
+void D3D12RenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
 {
     stateMngr_->SetViewports(viewports);
     stateMngr_->SubmitViewports();
 }
 
-void D3D12RenderContext::SetScissors(const std::vector<Scissor>& scissors)
+void D3D12RenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
 {
     stateMngr_->SetScissors(scissors);
     stateMngr_->SubmitScissors();

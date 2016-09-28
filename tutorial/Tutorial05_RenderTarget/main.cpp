@@ -164,7 +164,7 @@ private:
         context->SetRenderTarget(*renderTarget);
         {
             // Set viewport for render target
-            context->SetViewports({ { 0, 0, static_cast<float>(renderTargetSize.x), static_cast<float>(renderTargetSize.y) } });
+            context->SetViewportArray({ { 0, 0, static_cast<float>(renderTargetSize.x), static_cast<float>(renderTargetSize.y) } });
 
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
             context->SetClearColor({ 0, 1, 0 });
@@ -203,7 +203,7 @@ private:
 
         // Reset viewport for the screen
         auto resolution = context->GetVideoMode().resolution.Cast<float>();
-        context->SetViewports({ { 0, 0, resolution.x, resolution.y } });
+        context->SetViewportArray({ { 0, 0, resolution.x, resolution.y } });
 
         // Clear color and depth buffers of active framebuffer (i.e. the screen)
         context->SetClearColor(defaultClearColor);

@@ -146,6 +146,9 @@ GLStateManager::GLStateManager(GLRenderSystem& renderSystem)
 
     #endif
 
+    /* Initialize extension states for later operations */
+    extension_.viewportArray = renderSystem.HasExtension("GL_ARB_viewport_array");
+
     /* Make this to the active state manager */
     GLStateManager::active = this;
 }
@@ -300,24 +303,25 @@ void GLStateManager::AdjustViewport(GLViewport& viewport)
     viewport.y = static_cast<GLfloat>(renderTargetHeight_) - viewport.height - viewport.y;
 }
 
-void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
+void GLStateManager::SetViewport(GLViewport& viewport)
 {
-    if (viewports.size() == 1)
-    {
-        auto& vp = viewports.front();
+    if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
+        AdjustViewport(viewport);
 
-        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
-            AdjustViewport(vp);
+    glViewport(
+        static_cast<GLint>(viewport.x),
+        static_cast<GLint>(viewport.y),
+        static_cast<GLsizei>(viewport.width),
+        static_cast<GLsizei>(viewport.height)
+    );
+}
 
-        glViewport(
-            static_cast<GLint>(vp.x),
-            static_cast<GLint>(vp.y),
-            static_cast<GLsizei>(vp.width),
-            static_cast<GLsizei>(vp.height)
-        );
-    }
-    else if (viewports.size() > 1)// && glViewportArrayv)
+void GLStateManager::SetViewportArray(std::vector<GLViewport>&& viewports)
+{
+    if (viewports.size() > 1)
     {
+        AssertExtViewportArray();
+
         if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
         {
             for (auto& vp : viewports)
@@ -330,23 +334,29 @@ void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
             reinterpret_cast<const GLfloat*>(viewports.data())
         );
     }
+    else if (viewports.size() == 1)
+        SetViewport(viewports.front());
 }
 
-void GLStateManager::SetDepthRanges(std::vector<GLDepthRange>& depthRanges)
+void GLStateManager::SetDepthRange(GLDepthRange& depthRange)
 {
-    if (depthRanges.size() == 1)
+    glDepthRange(depthRange.minDepth, depthRange.maxDepth);
+}
+
+void GLStateManager::SetDepthRangeArray(std::vector<GLDepthRange>&& depthRanges)
+{
+    if (depthRanges.size() > 1)
     {
-        const auto& dr = depthRanges.front();
-        glDepthRange(dr.minDepth, dr.maxDepth);
-    }
-    else if (depthRanges.size() > 1)// && glDepthRangeArrayv)
-    {
+        AssertExtViewportArray();
+
         glDepthRangeArrayv(
             0,
             static_cast<GLsizei>(depthRanges.size()),
             reinterpret_cast<const GLdouble*>(depthRanges.data())
         );
     }
+    else if (depthRanges.size() == 1)
+        SetDepthRange(depthRanges.front());
 }
 
 //private
@@ -355,19 +365,20 @@ void GLStateManager::AdjustScissor(GLScissor& scissor)
     scissor.y = renderTargetHeight_ - scissor.height - scissor.y;
 }
 
-void GLStateManager::SetScissors(std::vector<GLScissor>& scissors)
+void GLStateManager::SetScissor(GLScissor& scissor)
 {
-    if (scissors.size() == 1)
-    {
-        auto& sc = scissors.front();
+    if (emulateClipControl_)
+        AdjustScissor(scissor);
 
-        if (emulateClipControl_)
-            AdjustScissor(sc);
+    glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
+}
 
-        glScissor(sc.x, sc.y, sc.width, sc.height);
-    }
-    else if (scissors.size() > 1)// && glScissorArrayv)
+void GLStateManager::SetScissorArray(std::vector<GLScissor>&& scissors)
+{
+    if (scissors.size() > 1)
     {
+        AssertExtViewportArray();
+
         if (emulateClipControl_)
         {
             for (auto& sc : scissors)
@@ -380,6 +391,8 @@ void GLStateManager::SetScissors(std::vector<GLScissor>& scissors)
             reinterpret_cast<const GLint*>(scissors.data())
         );
     }
+    else if (scissors.size() == 1)
+        SetScissor(scissors.front());
 }
 
 void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled)
@@ -798,6 +811,17 @@ void GLStateManager::PopShaderProgram()
 {
     BindShaderProgram(shaderState_.boundProgramStack.top());
     shaderState_.boundProgramStack.pop();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLStateManager::AssertExtViewportArray()
+{
+    if (!extension_.viewportArray)
+        throw std::runtime_error("renderer does not support viewport, depth-range, and scissor arrays");
 }
 
 

@@ -55,14 +55,14 @@ void DbgRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     instance_.SetVsync(vsyncDesc);
 }
 
-void DbgRenderContext::SetViewports(const std::vector<Viewport>& viewports)
+void DbgRenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
 {
-    instance_.SetViewports(viewports);
+    instance_.SetViewportArray(viewports);
 }
 
-void DbgRenderContext::SetScissors(const std::vector<Scissor>& scissors)
+void DbgRenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
 {
-    instance_.SetScissors(scissors);
+    instance_.SetScissorArray(scissors);
 }
 
 void DbgRenderContext::SetClearColor(const ColorRGBAf& color)

@@ -88,15 +88,15 @@ class LLGL_EXPORT RenderContext
         }
 
         /**
-        \brief Sets the specified viewports.
-        \param[in] viewports Specifies the list of viewports.
+        \brief Sets the array of viewports.
+        \param[in] viewports Specifies the array of viewports.
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each viewport is on the upper-left (like for all other render systems).
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each viewport is on the lower-left.
         \see SetGraphicsAPIDependentState
         */
-        virtual void SetViewports(const std::vector<Viewport>& viewports) = 0;
+        virtual void SetViewportArray(const std::vector<Viewport>& viewports) = 0;
 
         /**
         \brief Sets the specified scissor rectangles.
@@ -107,7 +107,7 @@ class LLGL_EXPORT RenderContext
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each scissor rectangle is on the lower-left.
         \see SetGraphicsAPIDependentState
         */
-        virtual void SetScissors(const std::vector<Scissor>& scissors) = 0;
+        virtual void SetScissorArray(const std::vector<Scissor>& scissors) = 0;
 
         //! Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
         virtual void SetClearColor(const ColorRGBAf& color) = 0;

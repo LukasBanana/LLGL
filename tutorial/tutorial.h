@@ -82,7 +82,7 @@ private:
                     viewport.width  = static_cast<float>(videoMode.resolution.x);
                     viewport.height = static_cast<float>(videoMode.resolution.y);
                 }
-                context_->SetViewports({ viewport });
+                context_->SetViewportArray({ viewport });
 
                 // Update projection matrix
                 projection_ = Gs::ProjectionMatrix4f::Perspective(

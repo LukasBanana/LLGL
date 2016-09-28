@@ -149,8 +149,8 @@ int main()
         {
             context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
-            context->SetViewports({ LLGL::Viewport(0, 0, 800, 600) });
-            context->SetScissors({ LLGL::Scissor(0, 0, 800, 600) });
+            context->SetViewportArray({ LLGL::Viewport(0, 0, 800, 600) });
+            context->SetScissorArray({ LLGL::Scissor(0, 0, 800, 600) });
 
             context->SetGraphicsPipeline(*pipeline);
             context->SetVertexBuffer(*vertexBuffer);

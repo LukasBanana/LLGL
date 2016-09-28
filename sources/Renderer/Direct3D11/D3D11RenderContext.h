@@ -50,8 +50,8 @@ class D3D11RenderContext : public RenderContext
         void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         void SetVsync(const VsyncDescriptor& vsyncDesc) override;
 
-        void SetViewports(const std::vector<Viewport>& viewports) override;
-        void SetScissors(const std::vector<Scissor>& scissors) override;
+        void SetViewportArray(const std::vector<Viewport>& viewports) override;
+        void SetScissorArray(const std::vector<Scissor>& scissors) override;
 
         void SetClearColor(const ColorRGBAf& color) override;
         void SetClearDepth(float depth) override;
