@@ -231,41 +231,6 @@ TextureDescriptor D3D12RenderSystem::QueryTextureDescriptor(const Texture& textu
     return desc;
 }
 
-void D3D12RenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc)
-{
-    //todo
-}
-
-void D3D12RenderSystem::SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
-{
-    //todo
-}
-
-void D3D12RenderSystem::SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc)
-{
-    //todo
-}
-
-void D3D12RenderSystem::SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
-{
-    //todo
-}
-
-void D3D12RenderSystem::SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    //todo
-}
-
-void D3D12RenderSystem::SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    //todo
-}
-
-void D3D12RenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    //todo
-}
-
 void D3D12RenderSystem::WriteTexture1D(
     Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc)
 {

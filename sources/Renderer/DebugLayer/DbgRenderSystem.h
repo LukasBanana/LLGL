@@ -83,14 +83,6 @@ class DbgRenderSystem : public RenderSystem
         void Release(Texture& texture) override;
 
         TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
-
-        void SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
         
         void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc) override;
         void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc) override;

@@ -95,14 +95,6 @@ class GLRenderSystem : public RenderSystem
         void Release(Texture& texture) override;
 
         TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
-
-        void SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
         
         void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc) override;
         void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc) override;
@@ -192,6 +184,14 @@ class GLRenderSystem : public RenderSystem
 
         void StoreRenderingCaps();
         void AssertCap(bool supported, const std::string& memberName);
+
+        void BuildTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc);
+        void BuildTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc);
+        void BuildTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc);
+        void BuildTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc);
+        void BuildTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc);
+        void BuildTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc);
+        void BuildTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc);
 
         /* ----- Common objects ----- */
 

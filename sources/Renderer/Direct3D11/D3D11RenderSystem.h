@@ -91,14 +91,6 @@ class D3D11RenderSystem : public RenderSystem
         void Release(Texture& texture) override;
 
         TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
-
-        void SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
-        void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) override;
         
         void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc) override;
         void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc) override;
@@ -186,19 +178,27 @@ class D3D11RenderSystem : public RenderSystem
         void CreateDevice(IDXGIAdapter* adapter);
         void InitStateManager();
 
-        void SetupGenericTexture1D(
+        void BuildTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc);
+        void BuildTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc);
+        void BuildTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc);
+        void BuildTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc);
+        void BuildTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc);
+        void BuildTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc);
+        void BuildTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc);
+
+        void BuildGenericTexture1D(
             D3D11Texture& textureD3D,
             const TextureFormat format, int size, unsigned int layers,
             const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
 
-        void SetupGenericTexture2D(
+        void BuildGenericTexture2D(
             D3D11Texture& textureD3D,
             const TextureFormat format, const Gs::Vector2i& size, unsigned int layers,
             const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
 
-        void SetupGenericTexture3D(
+        void BuildGenericTexture3D(
             D3D11Texture& textureD3D,
             const TextureFormat format, const Gs::Vector3i& size,
             const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags

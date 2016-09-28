@@ -171,7 +171,8 @@ void DbgRenderContext::GenerateMips(Texture& texture)
     {
         instance_.GenerateMips(textureDbg.instance);
     }
-    textureDbg.mipLevels = NumMipLevels(textureDbg.size);
+    const auto& tex3DDesc = textureDbg.desc.texture3DDesc;
+    textureDbg.mipLevels = NumMipLevels({ tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth });
 }
 
 /* ----- Sampler States ----- */

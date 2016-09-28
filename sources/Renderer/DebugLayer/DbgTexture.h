@@ -21,8 +21,9 @@ class DbgTexture : public Texture
 
     public:
 
-        DbgTexture(Texture& instance) :
-            instance( instance )
+        DbgTexture(Texture& instance, const TextureDescriptor& desc) :
+            instance( instance ),
+            desc    ( desc     )
         {
         }
 
@@ -36,9 +37,9 @@ class DbgTexture : public Texture
             Texture::SetType(type);
         }
 
-        Texture&        instance;
-        Gs::Vector3i    size;
-        int             mipLevels   = 0;
+        Texture&            instance;
+        TextureDescriptor   desc;
+        int                 mipLevels   = 1;
 
 };
 

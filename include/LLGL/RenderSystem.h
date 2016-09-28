@@ -285,66 +285,6 @@ class LLGL_EXPORT RenderSystem
         \see TextureDescriptor
         */
         virtual TextureDescriptor QueryTextureDescriptor(const Texture& texture) = 0;
-
-        /**
-        \brief Initializes the specified texture as a 1-dimensional texture.
-        \param[in] texture Specifies the texture which is to be initialized.
-        \param[in] format Specifies the hardware texture format.
-        \param[in] size Specifies the size of the texture (in texels, 'texture elements').
-        \param[in] imageDesc Optional pointer to the image data descriptor.
-        If this is null, the texture will be initialized with the currently configured default image color (see "RenderSystemConfiguration::defaultImageColor").
-        If this is non-null, it is used to initialize the texture data.
-        \see WriteTexture1D
-        \see RenderSystemConfiguration::defaultImageColor
-        */
-        virtual void SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc = nullptr) = 0;
-
-        /**
-        \brief Initializes the specified texture as a 2-dimensional texture.
-        \see SetupTexture1D
-        \see WriteTexture2D
-        */
-        virtual void SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) = 0;
-
-        /**
-        \brief Initializes the specified texture as a 3-dimensional texture.
-        \see SetupTexture1D
-        \see WriteTexture3D
-        */
-        virtual void SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc = nullptr) = 0;
-
-        /**
-        \brief Initializes the specified texture as a cube texture with six faces.
-        \remarks If the image data descriptor is used, the image data must be large anough
-        to store the image data of all six cube faces (i.e. width * height * 6 texels). The order of the cube faces is:
-        AxisDirection::XPos, AxisDirection::XNeg, AxisDirection::YPos, AxisDirection::YNeg, AxisDirection::ZPos, AxisDirection::ZNeg.
-        \see SetupTexture1D
-        \see WriteTextureCube
-        \see AxisDirection
-        */
-        virtual void SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc = nullptr) = 0;
-        
-        /**
-        \brief Initializes the specified texture as a 1-dimensional array texture.
-        \param[in] layers Specifies the number of array layers.
-        \see SetupTexture1D
-        \see WriteTexture1DArray
-        */
-        virtual void SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) = 0;
-        
-        /**
-        \brief Initializes the specified texture as a 2-dimensional array texture.
-        \see SetupTexture1DArray
-        \see WriteTexture2DArray
-        */
-        virtual void SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) = 0;
-        
-        /**
-        \brief Initializes the specified texture as a cube array texture with six faces for each layer.
-        \see SetupTexture1DArray
-        \see WriteTextureCubeArray
-        */
-        virtual void SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc = nullptr) = 0;
         
         /**
         \brief Updates the data of the specified texture.

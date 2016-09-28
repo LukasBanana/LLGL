@@ -240,7 +240,7 @@ void DbgRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const voi
 
 Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
-    return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(desc, imageDesc)));
+    return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(desc, imageDesc), desc));
 }
 
 void DbgRenderSystem::Release(Texture& texture)
@@ -252,83 +252,6 @@ TextureDescriptor DbgRenderSystem::QueryTextureDescriptor(const Texture& texture
 {
     auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
     return instance_->QueryTextureDescriptor(textureDbg.instance);
-}
-
-void DbgRenderSystem::SetupTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    {
-        instance_->SetupTexture1D(textureDbg.instance, format, size, imageDesc);
-    }
-    textureDbg.SetType(TextureType::Texture1D);
-    textureDbg.size         = { size, 1, 1 };
-    textureDbg.mipLevels    = 1;
-}
-
-void DbgRenderSystem::SetupTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    {
-        instance_->SetupTexture2D(textureDbg.instance, format, size, imageDesc);
-    }
-    textureDbg.SetType(TextureType::Texture2D);
-    textureDbg.size         = { size.x, size.y, 1 };
-    textureDbg.mipLevels    = 1;
-}
-
-void DbgRenderSystem::SetupTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    {
-        instance_->SetupTexture3D(textureDbg.instance, format, size, imageDesc);
-    }
-    textureDbg.SetType(TextureType::Texture3D);
-    textureDbg.size         = size;
-    textureDbg.mipLevels    = 1;
-}
-
-void DbgRenderSystem::SetupTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    {
-        instance_->SetupTextureCube(textureDbg.instance, format, size, imageDesc);
-    }
-    textureDbg.SetType(TextureType::TextureCube);
-    textureDbg.size         = { size.x, size.y, 6 };
-    textureDbg.mipLevels    = 1;
-}
-
-void DbgRenderSystem::SetupTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    {
-        instance_->SetupTexture1DArray(textureDbg.instance, format, size, layers, imageDesc);
-    }
-    textureDbg.SetType(TextureType::Texture1DArray);
-    textureDbg.size         = { size, static_cast<int>(layers), 1 };
-    textureDbg.mipLevels    = 1;
-}
-
-void DbgRenderSystem::SetupTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    {
-        instance_->SetupTexture2DArray(textureDbg.instance, format, size, layers, imageDesc);
-    }
-    textureDbg.SetType(TextureType::Texture2DArray);
-    textureDbg.size         = { size.x, size.y, static_cast<int>(layers) };
-    textureDbg.mipLevels    = 1;
-}
-
-void DbgRenderSystem::SetupTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    {
-        instance_->SetupTextureCubeArray(textureDbg.instance, format, size, layers, imageDesc);
-    }
-    textureDbg.SetType(TextureType::TextureCubeArray);
-    textureDbg.size         = { size.x, size.y, static_cast<int>(layers)*6 };
-    textureDbg.mipLevels    = 1;
 }
 
 void DbgRenderSystem::WriteTexture1D(
