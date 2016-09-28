@@ -36,6 +36,8 @@ DXGI_FORMAT             Map( const DataType             dataType        );
 DXGI_FORMAT             Map( const TextureFormat        textureFormat   );
 D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology        );
 
+TextureFormat           Unmap( const DXGI_FORMAT format );
+
 
 } // /namespace DXTypes
 

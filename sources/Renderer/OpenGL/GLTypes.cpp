@@ -400,34 +400,26 @@ GLenum Map(const RenderConditionMode renderConditionMode)
 
 /* ----- Unmap functions ----- */
 
-void Unmap(UniformType& result, const GLenum uniformType)
+static UniformType UnmapUniformType(const GLenum uniformType)
 {
     switch (uniformType)
     {
         case GL_FLOAT:
-            result = UniformType::Float;
-            return;
+            return UniformType::Float;
         case GL_FLOAT_VEC2:
-            result = UniformType::Float2;
-            return;
+            return UniformType::Float2;
         case GL_FLOAT_VEC3:
-            result = UniformType::Float3;
-            return;
+            return UniformType::Float3;
         case GL_FLOAT_VEC4:
-            result = UniformType::Float4;
-            return;
+            return UniformType::Float4;
         case GL_DOUBLE:
-            result = UniformType::Double;
-            return;
+            return UniformType::Double;
         case GL_DOUBLE_VEC2:
-            result = UniformType::Double2;
-            return;
+            return UniformType::Double2;
         case GL_DOUBLE_VEC3:
-            result = UniformType::Double3;
-            return;
+            return UniformType::Double3;
         case GL_DOUBLE_VEC4:
-            result = UniformType::Double4;
-            return;
+            return UniformType::Double4;
         case GL_SAMPLER_1D:
         case GL_SAMPLER_2D:
         case GL_SAMPLER_3D:
@@ -500,17 +492,13 @@ void Unmap(UniformType& result, const GLenum uniformType)
         case GL_UNSIGNED_INT_ATOMIC_COUNTER:
         #endif
         case GL_INT:
-            result = UniformType::Int;
-            return;
+            return UniformType::Int;
         case GL_INT_VEC2:
-            result = UniformType::Int2;
-            return;
+            return UniformType::Int2;
         case GL_INT_VEC3:
-            result = UniformType::Int3;
-            return;
+            return UniformType::Int3;
         case GL_INT_VEC4:
-            result = UniformType::Int4;
-            return;
+            return UniformType::Int4;
         /*case GL_UNSIGNED_INT:
         case GL_UNSIGNED_INT_VEC2:
         case GL_UNSIGNED_INT_VEC3:
@@ -520,14 +508,11 @@ void Unmap(UniformType& result, const GLenum uniformType)
         case GL_BOOL_VEC3:
         case GL_BOOL_VEC4:*/
         case GL_FLOAT_MAT2:
-            result = UniformType::Float2x2;
-            return;
+            return UniformType::Float2x2;
         case GL_FLOAT_MAT3:
-            result = UniformType::Float3x3;
-            return;
+            return UniformType::Float3x3;
         case GL_FLOAT_MAT4:
-            result = UniformType::Float4x4;
-            return;
+            return UniformType::Float4x4;
         /*case GL_FLOAT_MAT2x3:
         case GL_FLOAT_MAT2x4:
         case GL_FLOAT_MAT3x2:
@@ -535,14 +520,11 @@ void Unmap(UniformType& result, const GLenum uniformType)
         case GL_FLOAT_MAT4x2:
         case GL_FLOAT_MAT4x3:*/
         case GL_DOUBLE_MAT2:
-            result = UniformType::Double2x2;
-            return;
+            return UniformType::Double2x2;
         case GL_DOUBLE_MAT3:
-            result = UniformType::Double3x3;
-            return;
+            return UniformType::Double3x3;
         case GL_DOUBLE_MAT4:
-            result = UniformType::Double4x4;
-            return;
+            return UniformType::Double4x4;
         /*case GL_DOUBLE_MAT2x3:
         case GL_DOUBLE_MAT2x4:
         case GL_DOUBLE_MAT3x2:
@@ -551,6 +533,82 @@ void Unmap(UniformType& result, const GLenum uniformType)
         case GL_DOUBLE_MAT4x3:*/
     }
     UnmapFailed("UniformType");
+}
+
+void Unmap(UniformType& result, const GLenum uniformType)
+{
+    result = UnmapUniformType(uniformType);
+}
+
+static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
+{
+    switch (internalFormat)
+    {
+        /* --- Base internal formats --- */
+        case GL_DEPTH_COMPONENT:                return TextureFormat::DepthComponent;
+        case GL_DEPTH_STENCIL:                  return TextureFormat::DepthStencil;
+        case GL_RED:                            return TextureFormat::R;
+        case GL_RG:                             return TextureFormat::RG;
+        case GL_RGB:                            return TextureFormat::RGB;
+        case GL_RGBA:                           return TextureFormat::RGBA;
+
+        /* --- Sized internal formats --- */
+        case GL_R8:                             return TextureFormat::R8;
+        case GL_R8_SNORM:                       return TextureFormat::R8Sgn;
+
+        case GL_R16:                            return TextureFormat::R16;
+        case GL_R16_SNORM:                      return TextureFormat::R16Sgn;
+        case GL_R16F:                           return TextureFormat::R16Float;
+
+        case GL_R32I:                           return TextureFormat::R32UInt;
+        case GL_R32UI:                          return TextureFormat::R32SInt;
+        case GL_R32F:                           return TextureFormat::R32Float;
+
+        case GL_RG8:                            return TextureFormat::RG8;
+        case GL_RG8_SNORM:                      return TextureFormat::RG8Sgn;
+
+        case GL_RG16:                           return TextureFormat::RG16;
+        case GL_RG16_SNORM:                     return TextureFormat::RG16Sgn;
+        case GL_RG16F:                          return TextureFormat::RG16Float;
+
+        case GL_RG32UI:                         return TextureFormat::RG32UInt;
+        case GL_RG32I:                          return TextureFormat::RG32SInt;
+        case GL_RG32F:                          return TextureFormat::RG32Float;
+
+        case GL_RGB8:                           return TextureFormat::RGB8;
+        case GL_RGB8_SNORM:                     return TextureFormat::RGB8Sgn;
+
+        case GL_RGB16:                          return TextureFormat::RGB16;
+        case GL_RGB16_SNORM:                    return TextureFormat::RGB16Sgn;
+        case GL_RGB16F:                         return TextureFormat::RGB16Float;
+
+        case GL_RGB32UI:                        return TextureFormat::RGB32UInt;
+        case GL_RGB32I:                         return TextureFormat::RGB32SInt;
+        case GL_RGB32F:                         return TextureFormat::RGB32Float;
+
+        case GL_RGBA8:                          return TextureFormat::RGBA8;
+        case GL_RGBA8_SNORM:                    return TextureFormat::RGBA8Sgn;
+
+        case GL_RGBA16:                         return TextureFormat::RGBA16;
+        case GL_RGBA16_SNORM:                   return TextureFormat::RGBA16Sgn;
+        case GL_RGBA16F:                        return TextureFormat::RGBA16Float;
+
+        case GL_RGBA32UI:                       return TextureFormat::RGBA32UInt;
+        case GL_RGBA32I:                        return TextureFormat::RGBA32SInt;
+        case GL_RGBA32F:                        return TextureFormat::RGBA32Float;
+
+        /* --- Compressed formats --- */
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:   return TextureFormat::RGB_DXT1;
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:  return TextureFormat::RGBA_DXT1;
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:  return TextureFormat::RGBA_DXT3;
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:  return TextureFormat::RGBA_DXT5;
+    }
+    return TextureFormat::Unknown;
+}
+
+void Unmap(TextureFormat& result, const GLenum internalFormat)
+{
+    result = UnmapTextureFormat(internalFormat);
 }
 
 
