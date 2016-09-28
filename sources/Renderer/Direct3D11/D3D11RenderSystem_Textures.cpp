@@ -21,30 +21,49 @@ namespace LLGL
 
 Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
+    /* Create texture object and store type */
     auto texture = MakeUnique<D3D11Texture>();
     
+    texture->SetType(desc.type);
+
+    /* Modify number of layers */
+    auto descD3D = desc;
+
     switch (desc.type)
     {
         case TextureType::Texture1D:
-            BuildTexture1D(*texture, desc.format, desc.texture1DDesc.width, imageDesc);
+            descD3D.texture1DDesc.layers = 1;
             break;
         case TextureType::Texture2D:
-            BuildTexture2D(*texture, desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, imageDesc);
-            break;
-        case TextureType::Texture3D:
-            BuildTexture3D(*texture, desc.format, { desc.texture3DDesc.width, desc.texture3DDesc.height, desc.texture3DDesc.depth }, imageDesc);
+            descD3D.texture2DDesc.layers = 1;
             break;
         case TextureType::TextureCube:
-            BuildTextureCube(*texture, desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, imageDesc);
-            break;
-        case TextureType::Texture1DArray:
-            BuildTexture1DArray(*texture, desc.format, desc.texture1DDesc.width, desc.texture1DDesc.layers, imageDesc);
-            break;
-        case TextureType::Texture2DArray:
-            BuildTexture2DArray(*texture, desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, desc.texture2DDesc.layers, imageDesc);
+            descD3D.textureCubeDesc.layers = 6;
             break;
         case TextureType::TextureCubeArray:
-            BuildTextureCubeArray(*texture, desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, desc.textureCubeDesc.layers, imageDesc);
+            descD3D.textureCubeDesc.layers *= 6;
+            break;
+        default:
+            break;
+    }
+
+    /* Bulid generic texture */
+    switch (descD3D.type)
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            BuildGenericTexture1D(*texture, descD3D, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            break;
+        case TextureType::Texture2D:
+        case TextureType::Texture2DArray:
+            BuildGenericTexture2D(*texture, descD3D, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            break;
+        case TextureType::Texture3D:
+            BuildGenericTexture3D(*texture, descD3D, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            break;
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+            BuildGenericTexture2D(*texture, descD3D, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
             break;
         default:
             throw std::invalid_argument("failed to create texture with invalid texture type");
@@ -121,62 +140,6 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
     return texDesc;
 }
 
-void D3D11RenderSystem::BuildTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc)
-{
-    /* Get D3D texture, set type, and create generic 1D-texture */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    textureD3D.SetType(TextureType::Texture1D);
-    BuildGenericTexture1D(textureD3D, format, size, 1, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
-}
-
-void D3D11RenderSystem::BuildTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
-{
-    /* Get D3D texture, set type, and create generic 2D-texture */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    textureD3D.SetType(TextureType::Texture2D);
-    BuildGenericTexture2D(textureD3D, format, size, 1, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
-}
-
-void D3D11RenderSystem::BuildTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc)
-{
-    /* Get D3D texture, set type, and create generic 1D-texture */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    textureD3D.SetType(TextureType::Texture3D);
-    BuildGenericTexture3D(textureD3D, format, size, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
-}
-
-void D3D11RenderSystem::BuildTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc)
-{
-    /* Get D3D texture, set type, and create generic 2D-texture */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    textureD3D.SetType(TextureType::TextureCube);
-    BuildGenericTexture2D(textureD3D, format, size, 6, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
-}
-
-void D3D11RenderSystem::BuildTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    /* Get D3D texture, set type, and create generic 1D-texture */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    textureD3D.SetType(TextureType::Texture1DArray);
-    BuildGenericTexture1D(textureD3D, format, size, layers, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
-}
-
-void D3D11RenderSystem::BuildTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    /* Get D3D texture, set type, and create generic 2D-texture */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    textureD3D.SetType(TextureType::Texture2DArray);
-    BuildGenericTexture2D(textureD3D, format, size, layers, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
-}
-
-void D3D11RenderSystem::BuildTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc)
-{
-    /* Get D3D texture, set type, and create generic 2D-texture */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    textureD3D.SetType(TextureType::TextureCubeArray);
-    BuildGenericTexture2D(textureD3D, format, size, layers*6, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
-}
-
 void D3D11RenderSystem::WriteTexture1D(
     Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc)
 {
@@ -237,16 +200,16 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageF
  */
 
 void D3D11RenderSystem::BuildGenericTexture1D(
-    D3D11Texture& textureD3D, const TextureFormat format, int size, unsigned int layers,
+    D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
     const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE1D_DESC texDesc;
     {
-        texDesc.Width           = static_cast<UINT>(size);
+        texDesc.Width           = static_cast<UINT>(descD3D.texture1DDesc.width);
         texDesc.MipLevels       = 0;
-        texDesc.ArraySize       = layers;
-        texDesc.Format          = D3D11Types::Map(format);
+        texDesc.ArraySize       = descD3D.texture1DDesc.layers;
+        texDesc.Format          = D3D11Types::Map(descD3D.format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
         texDesc.CPUAccessFlags  = cpuAccessFlags;
@@ -257,7 +220,13 @@ void D3D11RenderSystem::BuildGenericTexture1D(
     textureD3D.CreateTexture1D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size, layers, 1), *imageDesc, GetConfiguration().threadCount);
+    {
+        textureD3D.UpdateSubresource(
+            context_.Get(), 0, 0,
+            CD3D11_BOX(0, 0, 0, descD3D.texture1DDesc.width, descD3D.texture1DDesc.layers, 1),
+            *imageDesc, GetConfiguration().threadCount
+        );
+    }
     else
     {
         //TODO -> fill texture with default data
@@ -265,17 +234,17 @@ void D3D11RenderSystem::BuildGenericTexture1D(
 }
 
 void D3D11RenderSystem::BuildGenericTexture2D(
-    D3D11Texture& textureD3D, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers,
+    D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
     const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width               = static_cast<UINT>(size.x);
-        texDesc.Height              = static_cast<UINT>(size.y);
+        texDesc.Width               = static_cast<UINT>(descD3D.texture2DDesc.width);
+        texDesc.Height              = static_cast<UINT>(descD3D.texture2DDesc.height);
         texDesc.MipLevels           = 0;
-        texDesc.ArraySize           = layers;
-        texDesc.Format              = D3D11Types::Map(format);
+        texDesc.ArraySize           = descD3D.texture2DDesc.layers;
+        texDesc.Format              = D3D11Types::Map(descD3D.format);
         texDesc.SampleDesc.Count    = 1;
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
@@ -288,7 +257,13 @@ void D3D11RenderSystem::BuildGenericTexture2D(
     textureD3D.CreateTexture2D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, layers), *imageDesc, GetConfiguration().threadCount);
+    {
+        textureD3D.UpdateSubresource(
+            context_.Get(), 0, 0,
+            CD3D11_BOX(0, 0, 0, descD3D.texture2DDesc.width, descD3D.texture2DDesc.height, descD3D.texture2DDesc.layers),
+            *imageDesc, GetConfiguration().threadCount
+        );
+    }
     else
     {
         //TODO -> fill texture with default data
@@ -296,17 +271,17 @@ void D3D11RenderSystem::BuildGenericTexture2D(
 }
 
 void D3D11RenderSystem::BuildGenericTexture3D(
-    D3D11Texture& textureD3D, const TextureFormat format, const Gs::Vector3i& size,
+    D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
     const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE3D_DESC texDesc;
     {
-        texDesc.Width           = static_cast<UINT>(size.x);
-        texDesc.Height          = static_cast<UINT>(size.y);
-        texDesc.Depth           = static_cast<UINT>(size.z);
+        texDesc.Width           = static_cast<UINT>(descD3D.texture3DDesc.width);
+        texDesc.Height          = static_cast<UINT>(descD3D.texture3DDesc.height);
+        texDesc.Depth           = static_cast<UINT>(descD3D.texture3DDesc.depth);
         texDesc.MipLevels       = 0;
-        texDesc.Format          = D3D11Types::Map(format);
+        texDesc.Format          = D3D11Types::Map(descD3D.format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
         texDesc.CPUAccessFlags  = cpuAccessFlags;
@@ -317,7 +292,13 @@ void D3D11RenderSystem::BuildGenericTexture3D(
     textureD3D.CreateTexture3D(device_.Get(), texDesc);
 
     if (imageDesc)
-        textureD3D.UpdateSubresource(context_.Get(), 0, 0, CD3D11_BOX(0, 0, 0, size.x, size.y, size.z), *imageDesc, GetConfiguration().threadCount);
+    {
+        textureD3D.UpdateSubresource(
+            context_.Get(), 0, 0,
+            CD3D11_BOX(0, 0, 0, descD3D.texture3DDesc.width, descD3D.texture3DDesc.height, descD3D.texture3DDesc.depth),
+            *imageDesc, GetConfiguration().threadCount
+        );
+    }
     else
     {
         //TODO -> fill texture with default data

@@ -178,29 +178,18 @@ class D3D11RenderSystem : public RenderSystem
         void CreateDevice(IDXGIAdapter* adapter);
         void InitStateManager();
 
-        void BuildTexture1D(Texture& texture, const TextureFormat format, int size, const ImageDescriptor* imageDesc);
-        void BuildTexture2D(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc);
-        void BuildTexture3D(Texture& texture, const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc);
-        void BuildTextureCube(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc);
-        void BuildTexture1DArray(Texture& texture, const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc);
-        void BuildTexture2DArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc);
-        void BuildTextureCubeArray(Texture& texture, const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc);
-
         void BuildGenericTexture1D(
-            D3D11Texture& textureD3D,
-            const TextureFormat format, int size, unsigned int layers,
+            D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
             const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
 
         void BuildGenericTexture2D(
-            D3D11Texture& textureD3D,
-            const TextureFormat format, const Gs::Vector2i& size, unsigned int layers,
+            D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
             const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
 
         void BuildGenericTexture3D(
-            D3D11Texture& textureD3D,
-            const TextureFormat format, const Gs::Vector3i& size,
+            D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
             const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags
         );
         

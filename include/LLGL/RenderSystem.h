@@ -272,6 +272,7 @@ class LLGL_EXPORT RenderSystem
         \param[in] imageDesc Optional pointer to the image data descriptor.
         If this is null, the texture will be initialized with the currently configured default image color.
         If this is non-null, it is used to initialize the texture data.
+        \remarks If the texture type of the descriptor is not an  array texture the number of layers will be ignored.
         \see WriteTexture
         \see RenderSystemConfiguration::defaultImageColor
         */
