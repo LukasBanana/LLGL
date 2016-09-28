@@ -136,6 +136,7 @@ struct TextureDescriptor
         struct Texture1DDescriptor
         {
             int             width;  //!< Texture width.
+            unsigned int    layers; //!< Number of texture array layers.
         }
         texture1DDesc;
 
@@ -143,6 +144,7 @@ struct TextureDescriptor
         {
             int             width;  //!< Texture width.
             int             height; //!< Texture height.
+            unsigned int    layers; //!< Number of texture array layers.
         }
         texture2DDesc;
 
@@ -158,31 +160,9 @@ struct TextureDescriptor
         {
             int             width;  //!< Texture width.
             int             height; //!< Texture height.
+            unsigned int    layers; //!< Number of texture array layers (internally it will be a multiple of 6).
         }
         textureCubeDesc;
-
-        struct Texture1DArrayDescriptor
-        {
-            int             width;  //!< Texture width.
-            unsigned int    layers; //!< Number of texture array layers.
-        }
-        texture1DArrayDesc;
-
-        struct Texture2DArrayDescriptor
-        {
-            int             width;  //!< Texture width.
-            int             height; //!< Texture height.
-            unsigned int    layers; //!< Number of texture array layers.
-        }
-        texture2DArrayDesc;
-
-        struct TextureCubeArrayDescriptor
-        {
-            int             width;  //!< Texture width.
-            int             height; //!< Texture height.
-            unsigned int    layers; //!< Number of texture array layers (this will be multiplied by 6 internally to fit the 6-cube-faces requirement).
-        }
-        textureCubeArrayDesc;
     };
 };
 

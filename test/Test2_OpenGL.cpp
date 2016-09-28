@@ -241,8 +241,6 @@ int main()
         }
 
         // Create texture
-        auto& texture = *renderer->CreateTexture();
-
         LLGL::ColorRGBub image[4] =
         {
             { 255, 0, 0 },
@@ -251,22 +249,28 @@ int main()
             { 255, 0, 255 }
         };
 
-        LLGL::ImageDescriptor textureData;
+        LLGL::ImageDescriptor imageDesc;
         {
-            textureData.format      = LLGL::ImageFormat::RGB;
-            textureData.dataType    = LLGL::DataType::UInt8;
-            textureData.buffer      = image;
+            imageDesc.format    = LLGL::ImageFormat::RGB;
+            imageDesc.dataType  = LLGL::DataType::UInt8;
+            imageDesc.buffer    = image;
         }
-        renderer->SetupTexture2D(texture, LLGL::TextureFormat::RGBA, { 2, 2 }, &textureData); // create 2D texture
-        //renderer->SetupTexture1D(texture, LLGL::TextureFormat::RGBA, 4, &textureData); // immediate change to 1D texture
+        LLGL::TextureDescriptor textureDesc;
+        {
+            textureDesc.type                    = LLGL::TextureType::Texture2D;
+            textureDesc.format                  = LLGL::TextureFormat::RGBA;
+            textureDesc.texture2DDesc.width     = 2;
+            textureDesc.texture2DDesc.height    = 2;
+        }
+        auto& texture = *renderer->CreateTexture(textureDesc, &imageDesc);
 
         #ifndef __linux__
         context->GenerateMips(texture);
         #endif
 
-        renderer->WriteTexture2D(texture, 1, { 0, 1 }, { 2, 1 }, textureData); // create 2D texture
+        renderer->WriteTexture2D(texture, 1, { 0, 1 }, { 2, 1 }, imageDesc); // create 2D texture
 
-        auto textureDesc = renderer->QueryTextureDescriptor(texture);
+        auto textureQueryDesc = renderer->QueryTextureDescriptor(texture);
 
         // Create render target
         LLGL::RenderTarget* renderTarget = nullptr;

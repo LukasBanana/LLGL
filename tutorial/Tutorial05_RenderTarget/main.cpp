@@ -111,8 +111,14 @@ public:
         renderTarget = renderer->CreateRenderTarget(8);
 
         // Create empty render-target texture
-        renderTargetTex = renderer->CreateTexture();
-        renderer->SetupTexture2D(*renderTargetTex, LLGL::TextureFormat::RGBA, renderTargetSize);
+        LLGL::TextureDescriptor textureDesc;
+        {
+            textureDesc.type                    = LLGL::TextureType::Texture2D;
+            textureDesc.format                  = LLGL::TextureFormat::RGBA;
+            textureDesc.texture2DDesc.width     = renderTargetSize.x;
+            textureDesc.texture2DDesc.height    = renderTargetSize.y;
+        }
+        renderTargetTex = renderer->CreateTexture(textureDesc);
 
         // Generate all MIP-map levels
         context->GenerateMips(*renderTargetTex);

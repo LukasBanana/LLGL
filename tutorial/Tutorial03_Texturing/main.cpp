@@ -88,9 +88,6 @@ public:
         if (!imageBuffer)
             throw std::runtime_error("failed to open file: \"" + texFilename + "\"");
 
-        // Create texture
-        colorMap = renderer->CreateTexture();
-
         // Initialize image descriptor to upload image data onto hardware texture
         LLGL::ImageDescriptor imageDesc;
         {
@@ -107,7 +104,20 @@ public:
         // Upload image data onto hardware texture and stop the time
         timer->Start();
         {
-            renderer->SetupTexture2D(*colorMap, LLGL::TextureFormat::RGBA, Gs::Vector2i(texWidth, texHeight), &imageDesc);
+            // Create texture
+            LLGL::TextureDescriptor texDesc;
+            {
+                // Texture type: 2D
+                texDesc.type                    = LLGL::TextureType::Texture2D;
+
+                // Texture hardware format: RGBA with normalized 8-bit unsigned char type
+                texDesc.format                  = LLGL::TextureFormat::RGBA;
+
+                // Texture size
+                texDesc.texture2DDesc.width     = texWidth;
+                texDesc.texture2DDesc.height    = texHeight;
+            }
+            colorMap = renderer->CreateTexture(texDesc, &imageDesc);
         }
         auto texCreationTime = timer->Stop();
         std::cout << "texture creation time: " << texCreationTime << " microseconds" << std::endl;
@@ -119,6 +129,9 @@ public:
 
         // Release image data
         stbi_image_free(imageBuffer);
+
+        // Query texture descriptor to see what is really stored on the GPU
+        //auto textureDesc = renderer->QueryTextureDescriptor(*colorMap);
     }
 
     void CreateSamplers()

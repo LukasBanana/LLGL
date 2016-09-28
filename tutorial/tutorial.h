@@ -268,9 +268,6 @@ protected:
         if (!imageBuffer)
             throw std::runtime_error("failed to open file: \"" + filename + "\"");
 
-        // Create texture
-        auto tex = renderer->CreateTexture();
-
         // Initialize image descriptor to upload image data onto hardware texture
         LLGL::ImageDescriptor imageDesc;
         {
@@ -284,8 +281,15 @@ protected:
             imageDesc.buffer    = imageBuffer;
         }
 
-        // Upload image data onto hardware texture and stop the time
-        renderer->SetupTexture2D(*tex, LLGL::TextureFormat::RGBA, Gs::Vector2i(width, height), &imageDesc);
+        // Create texture and upload image data onto hardware texture
+        LLGL::TextureDescriptor textureDesc;
+        {
+            textureDesc.type                    = LLGL::TextureType::Texture2D;
+            textureDesc.format                  = LLGL::TextureFormat::RGBA;
+            textureDesc.texture2DDesc.width     = width;
+            textureDesc.texture2DDesc.height    = height;
+        }
+        auto tex = renderer->CreateTexture(textureDesc, &imageDesc);
 
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping

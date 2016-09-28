@@ -175,6 +175,41 @@ Texture* D3D11RenderSystem::CreateTexture()
     return TakeOwnership(textures_, MakeUnique<D3D11Texture>());
 }
 
+Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+{
+    auto texture = MakeUnique<D3D11Texture>();
+    
+    switch (desc.type)
+    {
+        case TextureType::Texture1D:
+            SetupTexture1D(*texture, desc.format, desc.texture1DDesc.width, imageDesc);
+            break;
+        case TextureType::Texture2D:
+            SetupTexture2D(*texture, desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, imageDesc);
+            break;
+        case TextureType::Texture3D:
+            SetupTexture3D(*texture, desc.format, { desc.texture3DDesc.width, desc.texture3DDesc.height, desc.texture3DDesc.depth }, imageDesc);
+            break;
+        case TextureType::TextureCube:
+            SetupTextureCube(*texture, desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, imageDesc);
+            break;
+        case TextureType::Texture1DArray:
+            SetupTexture1DArray(*texture, desc.format, desc.texture1DDesc.width, desc.texture1DDesc.layers, imageDesc);
+            break;
+        case TextureType::Texture2DArray:
+            SetupTexture2DArray(*texture, desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, desc.texture2DDesc.layers, imageDesc);
+            break;
+        case TextureType::TextureCubeArray:
+            SetupTextureCubeArray(*texture, desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, desc.textureCubeDesc.layers, imageDesc);
+            break;
+        default:
+            throw std::invalid_argument("failed to create texture with invalid texture type");
+            break;
+    }
+    
+    return TakeOwnership(textures_, std::move(texture));
+}
+
 void D3D11RenderSystem::Release(Texture& texture)
 {
     RemoveFromUniqueSet(textures_, &texture);
@@ -203,9 +238,9 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             D3D11_TEXTURE1D_DESC desc;
             hwTex.tex1D->GetDesc(&desc);
 
-            texDesc.format                      = D3D11Types::Unmap(desc.Format);
-            texDesc.texture1DArrayDesc.width    = static_cast<int>(desc.Width);
-            texDesc.texture1DArrayDesc.layers   = desc.ArraySize;
+            texDesc.format                  = D3D11Types::Unmap(desc.Format);
+            texDesc.texture1DDesc.width     = static_cast<int>(desc.Width);
+            texDesc.texture1DDesc.layers    = desc.ArraySize;
         }
         break;
 
@@ -215,20 +250,13 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             D3D11_TEXTURE2D_DESC desc;
             hwTex.tex2D->GetDesc(&desc);
 
-            texDesc.format = D3D11Types::Unmap(desc.Format);
+            texDesc.format                  = D3D11Types::Unmap(desc.Format);
+            texDesc.texture2DDesc.width     = static_cast<int>(desc.Width);
+            texDesc.texture2DDesc.height    = static_cast<int>(desc.Height);
+            texDesc.texture2DDesc.layers    = desc.ArraySize;
 
             if (texDesc.type == TextureType::TextureCube || texDesc.type == TextureType::TextureCubeArray)
-            {
-                texDesc.textureCubeArrayDesc.width  = static_cast<int>(desc.Width);
-                texDesc.textureCubeArrayDesc.height = static_cast<int>(desc.Height);
-                texDesc.textureCubeArrayDesc.layers = desc.ArraySize / 6;
-            }
-            else
-            {
-                texDesc.texture2DArrayDesc.width    = static_cast<int>(desc.Width);
-                texDesc.texture2DArrayDesc.height   = static_cast<int>(desc.Height);
-                texDesc.texture2DArrayDesc.layers   = desc.ArraySize;
-            }
+                texDesc.textureCubeDesc.layers /= 6;
         }
         break;
 

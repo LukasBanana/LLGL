@@ -24,6 +24,41 @@ Texture* GLRenderSystem::CreateTexture()
     return TakeOwnership(textures_, MakeUnique<GLTexture>());
 }
 
+Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+{
+    auto texture = MakeUnique<GLTexture>();
+
+    switch (desc.type)
+    {
+        case TextureType::Texture1D:
+            SetupTexture1D(*texture, desc.format, desc.texture1DDesc.width, imageDesc);
+            break;
+        case TextureType::Texture2D:
+            SetupTexture2D(*texture, desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, imageDesc);
+            break;
+        case TextureType::Texture3D:
+            SetupTexture3D(*texture, desc.format, { desc.texture3DDesc.width, desc.texture3DDesc.height, desc.texture3DDesc.depth }, imageDesc);
+            break;
+        case TextureType::TextureCube:
+            SetupTextureCube(*texture, desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, imageDesc);
+            break;
+        case TextureType::Texture1DArray:
+            SetupTexture1DArray(*texture, desc.format, desc.texture1DDesc.width, desc.texture1DDesc.layers, imageDesc);
+            break;
+        case TextureType::Texture2DArray:
+            SetupTexture2DArray(*texture, desc.format, { desc.texture2DDesc.width, desc.texture2DDesc.height }, desc.texture2DDesc.layers, imageDesc);
+            break;
+        case TextureType::TextureCubeArray:
+            SetupTextureCubeArray(*texture, desc.format, { desc.textureCubeDesc.width, desc.textureCubeDesc.height }, desc.textureCubeDesc.layers, imageDesc);
+            break;
+        default:
+            throw std::invalid_argument("failed to create texture with invalid texture type");
+            break;
+    }
+
+    return TakeOwnership(textures_, std::move(texture));
+}
+
 void GLRenderSystem::Release(Texture& texture)
 {
     RemoveFromUniqueSet(textures_, &texture);
