@@ -115,11 +115,16 @@ enum class AxisDirection
 
 /* ----- Structures ----- */
 
-//! Texture descriptor structure.
+/**
+\brief Texture descriptor structure.
+\remarks This is used to specifiy the dimensions of a texture which is to be created.
+*/
 struct TextureDescriptor
 {
     TextureDescriptor()
     {
+        type                    = TextureType::Undefined;
+        format                  = TextureFormat::Unknown;
         texture3DDesc.width     = 0;
         texture3DDesc.height    = 0;
         texture3DDesc.depth     = 0;
@@ -128,8 +133,8 @@ struct TextureDescriptor
     {
     }
 
-    TextureType             type    = TextureType::Undefined;   //!< Texture type.
-    TextureFormat           format  = TextureFormat::Unknown;   //!< Texture hardware format.
+    TextureType             type;   //!< Texture type.
+    TextureFormat           format; //!< Texture hardware format.
 
     union
     {
@@ -161,6 +166,76 @@ struct TextureDescriptor
             int             width;  //!< Texture width.
             int             height; //!< Texture height.
             unsigned int    layers; //!< Number of texture array layers (internally it will be a multiple of 6).
+        }
+        textureCubeDesc;
+    };
+};
+
+/**
+\brief Sub-texture descriptor structure.
+\remarks This is used to write (or partially write) the image data of a texture MIP-map level.
+*/
+struct SubTextureDescriptor
+{
+    SubTextureDescriptor()
+    {
+        mipLevel                        = 0;
+        textureCubeDesc.x               = 0;
+        textureCubeDesc.y               = 0;
+        textureCubeDesc.layerOffset     = 0;
+        textureCubeDesc.width           = 0;
+        textureCubeDesc.height          = 0;
+        textureCubeDesc.cubeFaces       = 0;
+        textureCubeDesc.cubeFaceOffset  = AxisDirection::XPos;
+    }
+    ~SubTextureDescriptor()
+    {
+    }
+
+    int                     mipLevel;       //!< Zero-based MIP-map level for the sub-texture.
+
+    union
+    {
+        struct Texture1DDescriptor
+        {
+            int             x;              //!< Sub-texture X-axis offset.
+            unsigned int    layerOffset;    //!< Zero-based layer offset.
+            int             width;          //!< Sub-texture width.
+            unsigned int    layers;         //!< Number of texture array layers.
+        }
+        texture1DDesc;
+
+        struct Texture2DDescriptor
+        {
+            int             x;              //!< Sub-texture X-axis offset.
+            int             y;              //!< Sub-texture Y-axis offset.
+            unsigned int    layerOffset;    //!< Zero-based layer offset.
+            int             width;          //!< Sub-texture width.
+            int             height;         //!< Sub-texture height.
+            unsigned int    layers;         //!< Number of texture array layers.
+        }
+        texture2DDesc;
+
+        struct Texture3DDescriptor
+        {
+            int             x;              //!< Sub-texture X-axis offset.
+            int             y;              //!< Sub-texture Y-axis offset.
+            int             z;              //!< Sub-texture Z-axis offset.
+            int             width;          //!< Sub-texture width.
+            int             height;         //!< Sub-texture height.
+            int             depth;          //!< Number of texture array layers.
+        }
+        texture3DDesc;
+
+        struct TextureCubeDescriptor
+        {
+            int             x;              //!< Sub-texture X-axis offset.
+            int             y;              //!< Sub-texture Y-axis offset.
+            unsigned int    layerOffset;    //!< Zero-based layer offset.
+            int             width;          //!< Sub-texture width.
+            int             height;         //!< Sub-texture height.
+            unsigned int    cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be a N*6.
+            AxisDirection   cubeFaceOffset; //!< First cube face in the current layer.
         }
         textureCubeDesc;
     };
