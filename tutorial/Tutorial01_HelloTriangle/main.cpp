@@ -18,7 +18,7 @@ int main()
     try
     {
         // Load render system module
-        std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("Direct3D11");
+        std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("OpenGL");
 
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 
@@ -35,9 +35,6 @@ int main()
 
         // Set window title
         context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
-
-        // Create vertex buffer
-        LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer();
 
         // Vertex data structure
         struct Vertex
@@ -59,13 +56,12 @@ int main()
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2); // position has 2 float components
         vertexFormat.AddAttribute("color",    LLGL::DataType::Float, 3); // color has 3 float components
 
-        // Setup vertex buffer
-        renderer->SetupVertexBuffer(
-            *vertexBuffer,              // Pass the vertex buffer as reference
-            vertices,                   // Pointer to the vertex data
+        // Create vertex buffer
+        LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer(
             sizeof(vertices),           // Size (in bytes) of the vertex buffer
             LLGL::BufferUsage::Static,  // Buffer usage is static since we won't change it frequently
-            vertexFormat                // Vertex format
+            vertexFormat,               // Vertex format
+            vertices                    // Pointer to the vertex data
         );
 
         // Create shaders

@@ -379,26 +379,20 @@ protected:
     template <typename VertexType>
     LLGL::VertexBuffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
     {
-        auto vertexBuffer = renderer->CreateVertexBuffer();
-        renderer->SetupVertexBuffer(*vertexBuffer, vertices.data(), vertices.size() * sizeof(VertexType), LLGL::BufferUsage::Static, vertexFormat);
-        return vertexBuffer;
+        return renderer->CreateVertexBuffer(vertices.size() * sizeof(VertexType), LLGL::BufferUsage::Static, vertexFormat, vertices.data());
     }
 
     template <typename IndexType>
     LLGL::IndexBuffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::IndexFormat& indexFormat)
     {
-        auto indexBuffer = renderer->CreateIndexBuffer();
-        renderer->SetupIndexBuffer(*indexBuffer, indices.data(), indices.size() * sizeof(IndexType), LLGL::BufferUsage::Static, indexFormat);
-        return indexBuffer;
+        return renderer->CreateIndexBuffer(indices.size() * sizeof(IndexType), LLGL::BufferUsage::Static, indexFormat, indices.data());
     }
 
     template <typename Buffer>
     LLGL::ConstantBuffer* CreateConstantBuffer(const Buffer& buffer)
     {
         static_assert(!std::is_pointer<Buffer>::value, "buffer type must not be a pointer");
-        auto constantBuffer = renderer->CreateConstantBuffer();
-        renderer->SetupConstantBuffer(*constantBuffer, &buffer, sizeof(buffer), LLGL::BufferUsage::Dynamic);
-        return constantBuffer;
+        return renderer->CreateConstantBuffer(sizeof(buffer), LLGL::BufferUsage::Dynamic, &buffer);
     }
 
     template <typename Buffer>

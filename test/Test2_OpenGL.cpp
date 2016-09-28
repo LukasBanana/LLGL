@@ -125,8 +125,6 @@ int main()
         window->AddEventListener(resizeEventHandler);
 
         // Create vertex buffer
-        auto& vertexBuffer = *renderer->CreateVertexBuffer();
-
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
@@ -139,7 +137,7 @@ int main()
             { 0, 0 }, { 100, 200 },
         };
         
-        renderer->SetupVertexBuffer(vertexBuffer, vertices, sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat);
+        auto& vertexBuffer = *renderer->CreateVertexBuffer(sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat, vertices);
 
         // Create vertex shader
         auto& vertShader = *renderer->CreateShader(LLGL::ShaderType::Vertex);
@@ -224,7 +222,7 @@ int main()
         {
             if (desc.name == "Matrices")
             {
-                projectionBuffer = renderer->CreateConstantBuffer();
+                projectionBuffer = renderer->CreateConstantBuffer(sizeof(projection), LLGL::BufferUsage::Static);
 
                 renderer->WriteConstantBuffer(*projectionBuffer, &projection, sizeof(projection), LLGL::BufferUsage::Static);
 
