@@ -91,10 +91,9 @@ class LLGL_EXPORT RenderContext
         \brief Sets the specified viewports.
         \param[in] viewports Specifies the list of viewports.
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
-        with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.flipViewportVertical' is false,
+        with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each viewport is on the upper-left (like for all other render systems).
-        If 'stateOpenGL.flipViewportVertical' is true, the origin of each viewport
-        is on the lower-left (this is useful when a render target is set).
+        If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each viewport is on the lower-left.
         \see SetGraphicsAPIDependentState
         */
         virtual void SetViewports(const std::vector<Viewport>& viewports) = 0;
@@ -103,10 +102,9 @@ class LLGL_EXPORT RenderContext
         \brief Sets the specified scissor rectangles.
         \param[in] scissors Specifies the list of scissor rectangles.
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
-        with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.flipViewportVertical' is false,
+        with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each scissor rectangle is on the upper-left (like for all other render systems).
-        If 'stateOpenGL.flipViewportVertical' is true, the origin of each scissor rectangle
-        is on the lower-left (this is useful when a render target is set).
+        If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each scissor rectangle is on the lower-left.
         \see SetGraphicsAPIDependentState
         */
         virtual void SetScissors(const std::vector<Scissor>& scissors) = 0;
@@ -219,6 +217,7 @@ class LLGL_EXPORT RenderContext
         \brief Sets the active render target.
         \param[in] renderTarget Specifies the render target to set.
         \remarks Subsequent drawing operations will be rendered into the textures that are attached to the specified render target.
+        \note If the specified render-target has not the same resolution as this render context, the viewports and scissor rectangles may be invalidated!
         \see UnsetRenderTarget
         */
         virtual void SetRenderTarget(RenderTarget& renderTarget) = 0;

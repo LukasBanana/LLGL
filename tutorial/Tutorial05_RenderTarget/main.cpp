@@ -38,7 +38,7 @@ class Tutorial05 : public Tutorial
 public:
 
     Tutorial05() :
-        Tutorial( "Direct3D11", L"LLGL Tutorial 05: RenderTarget")
+        Tutorial( "OpenGL", L"LLGL Tutorial 05: RenderTarget")
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -112,11 +112,11 @@ public:
 
 private:
 
-    void UpdateModelTransform(const Gs::Matrix4f& proj, float rotation)
+    void UpdateModelTransform(const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
     {
         settings.wvpMatrix = proj;
         Gs::Translate(settings.wvpMatrix, { 0, 0, 5 });
-        Gs::RotateFree(settings.wvpMatrix, { 0, 1, 0 }, rotation);
+        Gs::RotateFree(settings.wvpMatrix, axis.Normalized(), rotation);
 
         UpdateConstantBuffer(constantBuffer, settings);
     }
@@ -147,8 +147,8 @@ private:
         // The viewport and scissor origin will be flipped vertically.
         LLGL::GraphicsAPIDependentStateDescriptor apiState;
         
-        apiState.stateOpenGL.flipViewportVertical = true;
-        context->SetGraphicsAPIDependentState(apiState);
+        apiState.stateOpenGL.screenSpaceOriginLowerLeft = true;
+        //context->SetGraphicsAPIDependentState(apiState);
 
         // Draw scene into render-target
         context->SetRenderTarget(*renderTarget);
@@ -164,7 +164,7 @@ private:
             context->SetTexture(*colorMap, 0, shaderStages);
 
             // Update model transformation with render-target projection
-            UpdateModelTransform(renderTargetProj, -rot1);
+            UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
 
             // Draw scene
             context->DrawIndexed(36, 0);
@@ -175,8 +175,8 @@ private:
         context->GenerateMips(*renderTargetTex);
 
         // Reset renderer specific state
-        apiState.stateOpenGL.flipViewportVertical = false;
-        context->SetGraphicsAPIDependentState(apiState);
+        apiState.stateOpenGL.screenSpaceOriginLowerLeft = false;
+        //context->SetGraphicsAPIDependentState(apiState);
 
         // Reset viewport for the screen
         auto resolution = context->GetVideoMode().resolution.Cast<float>();

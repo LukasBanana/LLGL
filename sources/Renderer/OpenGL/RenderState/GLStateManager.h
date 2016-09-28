@@ -38,6 +38,7 @@ class GLStateManager
 
         static GLStateManager* active;
 
+        //! Notifies the state manager about a new render-target height.
         void NotifyRenderTargetHeight(GLint height);
 
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state);

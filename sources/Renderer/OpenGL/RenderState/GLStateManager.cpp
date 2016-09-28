@@ -152,7 +152,11 @@ GLStateManager::GLStateManager(GLRenderSystem& renderSystem)
 
 void GLStateManager::NotifyRenderTargetHeight(GLint height)
 {
+    /* Store new render-target height */
     renderTargetHeight_ = height;
+
+    /* Update viewports */
+    //todo...
 }
 
 void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
@@ -162,7 +166,7 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
     gfxDependentState_ = state;
 
     /* Update front face */
-    if (prevState.stateOpenGL.flipViewportVertical != state.stateOpenGL.flipViewportVertical)
+    if (prevState.stateOpenGL.screenSpaceOriginLowerLeft != state.stateOpenGL.screenSpaceOriginLowerLeft)
         SetFrontFace(commonState_.frontFace);
 }
 
@@ -300,7 +304,7 @@ void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
     {
         auto& vp = viewports.front();
 
-        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.flipViewportVertical)
+        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
             AdjustViewport(vp);
 
         glViewport(
@@ -312,7 +316,7 @@ void GLStateManager::SetViewports(std::vector<GLViewport>& viewports)
     }
     else if (viewports.size() > 1)// && glViewportArrayv)
     {
-        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.flipViewportVertical)
+        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
         {
             for (auto& vp : viewports)
                 AdjustViewport(vp);
@@ -503,7 +507,7 @@ void GLStateManager::SetCullFace(GLenum face)
 void GLStateManager::SetFrontFace(GLenum mode)
 {
     /* Check if mode must be inverted */
-    if (gfxDependentState_.stateOpenGL.flipViewportVertical)
+    if (gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
         mode = (mode == GL_CW ? GL_CCW : GL_CW);
 
     /* Set front face */

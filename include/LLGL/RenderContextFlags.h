@@ -127,20 +127,17 @@ union GraphicsAPIDependentStateDescriptor
 {
     GraphicsAPIDependentStateDescriptor()
     {
-        stateOpenGL.flipViewportVertical = false;
+        stateOpenGL.screenSpaceOriginLowerLeft = false;
     }
 
     struct StateOpenGLDescriptor
     {
         /**
-        \briefs Specifies whether to flip the viewport setttings vertical. By default false.
-        \remarks If this is true, the front facing will be inverted everytime "BindGraphicsPipeline" is called,
-        and everytime the viewports and scissors are set, their origin will be lower-left instead of upper-left.
-        This can be used for compatability with other renderers such as Direct3D when a render target is bound.
-        \see RasterizerDescriptor::frontCCW
-        \see RenderContext::BindGraphicsPipeline
+        \briefs Specifies whether the screen-space origin is on the lower-left. By default false.
+        \remarks If this is true, the viewports and scissor rectangles of OpenGL are NOT emulated to the upper-left,
+        which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
         */
-        bool flipViewportVertical;
+        bool screenSpaceOriginLowerLeft;
     }
     stateOpenGL;
 };
