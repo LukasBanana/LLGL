@@ -49,15 +49,28 @@ void D3D11RenderTarget::AttachTexture1D(Texture& texture, int mipLevel)
     );
 }
 
+//TODO -> multi-sampled texture (D3D11_RTV_DIMENSION_TEXTURE2DMS) must be created separately
+//        and be blitted (ID3D11DeviceContext::CopyResource) to texture target
 void D3D11RenderTarget::AttachTexture2D(Texture& texture, int mipLevel)
 {
     AttachTexture(
         texture, TextureType::Texture2D, mipLevel,
         [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
         {
-            /*if (HasMultiSampling())
+            if (HasMultiSampling())
+            {
                 desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2DMS;
-            else*/
+
+                /* Recreate resource with multi-sampling */
+                D3D11_TEXTURE2D_DESC texDesc;
+                textureD3D.GetHardwareTexture().tex2D->GetDesc(&texDesc);
+                {
+                    texDesc.MipLevels           = 1;
+                    texDesc.SampleDesc.Count    = multiSamples_;
+                }
+                textureD3D.CreateTexture2D(renderSystem_.GetDevice(), texDesc);
+            }
+            else
             {
                 desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
                 desc.Texture2D.MipSlice = static_cast<UINT>(mipLevel);
@@ -114,10 +127,19 @@ void D3D11RenderTarget::AttachTexture2DArray(Texture& texture, int layer, int mi
         texture, TextureType::Texture2DArray, mipLevel,
         [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
         {
-            desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-            desc.Texture2DArray.MipSlice        = static_cast<UINT>(mipLevel);
-            desc.Texture2DArray.FirstArraySlice = static_cast<UINT>(layer);
-            desc.Texture2DArray.ArraySize       = 1;
+            if (HasMultiSampling())
+            {
+                desc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+                desc.Texture2DMSArray.FirstArraySlice   = static_cast<UINT>(layer);
+                desc.Texture2DMSArray.ArraySize         = 1;
+            }
+            else
+            {
+                desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+                desc.Texture2DArray.MipSlice        = static_cast<UINT>(mipLevel);
+                desc.Texture2DArray.FirstArraySlice = static_cast<UINT>(layer);
+                desc.Texture2DArray.ArraySize       = 1;
+            }
         }
     );
 }

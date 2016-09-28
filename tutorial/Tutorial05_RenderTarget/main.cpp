@@ -38,7 +38,7 @@ class Tutorial05 : public Tutorial
 public:
 
     Tutorial05() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 05: RenderTarget")
+        Tutorial( "Direct3D11", L"LLGL Tutorial 05: RenderTarget")
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -108,7 +108,7 @@ public:
     void CreateRenderTarget()
     {
         // Create render-target with multi-sampling
-        renderTarget = renderer->CreateRenderTarget(0);//8);
+        renderTarget = renderer->CreateRenderTarget(8);
 
         // Create empty render-target texture
         LLGL::TextureDescriptor textureDesc;
