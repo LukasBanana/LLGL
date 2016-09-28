@@ -95,6 +95,8 @@ class GLRenderSystem : public RenderSystem
         void Release(Texture& texture) override;
 
         TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
+
+        void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
         
         void WriteTexture1D(Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc) override;
         void WriteTexture2D(Texture& texture, int mipLevel, const Gs::Vector2i& position, const Gs::Vector2i& size, const ImageDescriptor& imageDesc) override;

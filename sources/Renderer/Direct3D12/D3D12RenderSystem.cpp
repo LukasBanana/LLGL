@@ -231,6 +231,11 @@ TextureDescriptor D3D12RenderSystem::QueryTextureDescriptor(const Texture& textu
     return desc;
 }
 
+void D3D12RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
+{
+    //todo...
+}
+
 void D3D12RenderSystem::WriteTexture1D(
     Texture& texture, int mipLevel, int position, int size, const ImageDescriptor& imageDesc)
 {

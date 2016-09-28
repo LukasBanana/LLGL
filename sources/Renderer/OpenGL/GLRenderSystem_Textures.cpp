@@ -420,6 +420,11 @@ void GLRenderSystem::BuildTextureCubeArray(const TextureDescriptor& desc, const 
 
 /* ----- "WriteTexture..." functions ----- */
 
+void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
+{
+
+}
+
 static void GLTexSubImage1DBase(GLenum target, int mipLevel, int x, int width, const ImageDescriptor& imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))

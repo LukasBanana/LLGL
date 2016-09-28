@@ -288,6 +288,14 @@ class LLGL_EXPORT RenderSystem
         virtual TextureDescriptor QueryTextureDescriptor(const Texture& texture) = 0;
         
         /**
+        \brief Updates the image data of the specified texture.
+        \param[in] texture Specifies the texture whose data is to be updated.
+        \param[in] subTextureDesc Specifies the sub-texture descriptor.
+        \param[in] imageDesc Specifies the image data descriptor. Its "data" member must not be null!
+        */
+        virtual void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) = 0;
+
+        /**
         \brief Updates the data of the specified texture.
         \param[in] texture Specifies the texture whose data is to be updated.
         \param[in] mipLevel Specifies the zero-based MIP ("Multum in Parvo") level which is to be updated.
