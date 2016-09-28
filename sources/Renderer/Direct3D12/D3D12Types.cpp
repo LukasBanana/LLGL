@@ -131,6 +131,11 @@ D3D12_STENCIL_OP Map(const StencilOp stencilOp)
     DXTypes::MapFailed("StencilOp", "D3D12_STENCIL_OP");
 }
 
+TextureFormat Unmap(const DXGI_FORMAT format)
+{
+    return DXTypes::Unmap(format);
+}
+
 
 } // /namespace D3D12Types
 

@@ -39,6 +39,8 @@ D3D11_FILTER                Map( const SamplerDescriptor&   samplerDesc     );
 D3D11_TEXTURE_ADDRESS_MODE  Map( const TextureWrap          textureWrap     );
 D3D11_QUERY                 Map( const QueryDescriptor&     queryDesc       );
 
+TextureFormat               Unmap( const DXGI_FORMAT format );
+
 
 } // /namespace D3D11Types
 

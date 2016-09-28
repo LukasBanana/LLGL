@@ -249,6 +249,11 @@ D3D11_QUERY Map(const QueryDescriptor& queryDesc)
     DXTypes::MapFailed("QueryType", "D3D11_QUERY");
 }
 
+TextureFormat Unmap(const DXGI_FORMAT format)
+{
+    return DXTypes::Unmap(format);
+}
+
 
 } // /namespace D3D11Types
 
