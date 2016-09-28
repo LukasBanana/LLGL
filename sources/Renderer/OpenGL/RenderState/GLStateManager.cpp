@@ -166,7 +166,7 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
     gfxDependentState_ = state;
 
     /* Update front face */
-    if (prevState.stateOpenGL.screenSpaceOriginLowerLeft != state.stateOpenGL.screenSpaceOriginLowerLeft)
+    if (prevState.stateOpenGL.flipFrontFace != state.stateOpenGL.flipFrontFace)
         SetFrontFace(commonState_.frontFace);
 }
 
@@ -507,7 +507,7 @@ void GLStateManager::SetCullFace(GLenum face)
 void GLStateManager::SetFrontFace(GLenum mode)
 {
     /* Check if mode must be inverted */
-    if (gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
+    if (gfxDependentState_.stateOpenGL.invertFrontFace)
         mode = (mode == GL_CW ? GL_CCW : GL_CW);
 
     /* Set front face */

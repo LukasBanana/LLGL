@@ -127,7 +127,8 @@ union GraphicsAPIDependentStateDescriptor
 {
     GraphicsAPIDependentStateDescriptor()
     {
-        stateOpenGL.screenSpaceOriginLowerLeft = false;
+        stateOpenGL.screenSpaceOriginLowerLeft  = false;
+        stateOpenGL.invertFrontFace             = false;
     }
 
     struct StateOpenGLDescriptor
@@ -138,6 +139,13 @@ union GraphicsAPIDependentStateDescriptor
         which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
         */
         bool screenSpaceOriginLowerLeft;
+
+        /**
+        \brief Specifies whether to invert front-facing. By default false.
+        \remarks If this is true, the front facing (either GL_CW or GL_CCW) will be inverted,
+        i.e. CCW becomes CW, and CW becomes CCW.
+        */
+        bool invertFrontFace;
     }
     stateOpenGL;
 };
