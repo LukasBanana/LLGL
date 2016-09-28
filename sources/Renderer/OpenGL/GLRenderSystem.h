@@ -185,13 +185,13 @@ class GLRenderSystem : public RenderSystem
 
         void BindTextureAndSetType(GLTexture& textureGL, const TextureType type);
 
-        void BuildTexture1D(const TextureFormat format, int size, const ImageDescriptor* imageDesc);
-        void BuildTexture2D(const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc);
-        void BuildTexture3D(const TextureFormat format, const Gs::Vector3i& size, const ImageDescriptor* imageDesc);
-        void BuildTextureCube(const TextureFormat format, const Gs::Vector2i& size, const ImageDescriptor* imageDesc);
-        void BuildTexture1DArray(const TextureFormat format, int size, unsigned int layers, const ImageDescriptor* imageDesc);
-        void BuildTexture2DArray(const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc);
-        void BuildTextureCubeArray(const TextureFormat format, const Gs::Vector2i& size, unsigned int layers, const ImageDescriptor* imageDesc);
+        void BuildTexture1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildTexture2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildTexture3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildTextureCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildTexture1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildTexture2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildTextureCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
 
         /* ----- Common objects ----- */
 
