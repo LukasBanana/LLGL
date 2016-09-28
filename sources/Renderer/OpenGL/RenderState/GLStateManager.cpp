@@ -107,7 +107,7 @@ static const GLenum textureLayersMap[] =
 
 GLStateManager* GLStateManager::active = nullptr;
 
-GLStateManager::GLStateManager(GLRenderSystem& renderSystem)
+GLStateManager::GLStateManager()
 {
     /* Initialize all states with zero */
     Fill(renderState_.values, false);
@@ -120,6 +120,12 @@ GLStateManager::GLStateManager(GLRenderSystem& renderSystem)
 
     activeTextureLayer_ = &(textureState_.layers[0]);
 
+    /* Make this to the active state manager */
+    GLStateManager::active = this;
+}
+
+void GLStateManager::DetermineExtensions(GLRenderSystem& renderSystem)
+{
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
     /* Initialize extenstion states */
@@ -147,10 +153,9 @@ GLStateManager::GLStateManager(GLRenderSystem& renderSystem)
     #endif
 
     /* Initialize extension states for later operations */
-    extension_.viewportArray = renderSystem.HasExtension("GL_ARB_viewport_array");
-
-    /* Make this to the active state manager */
-    GLStateManager::active = this;
+    extension_.viewportArray    = renderSystem.HasExtension("GL_ARB_viewport_array");
+    extension_.clipControl      = renderSystem.HasExtension("GL_ARB_clip_control");
+    extension_.drawBuffersBlend = renderSystem.HasExtension("GL_ARB_draw_buffers_blend");
 }
 
 void GLStateManager::NotifyRenderTargetHeight(GLint height)
@@ -424,7 +429,7 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
 void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled)
 {
     #ifndef __APPLE__
-    if (glBlendFuncSeparatei != nullptr && glColorMaski != nullptr)
+    if (extension_.drawBuffersBlend)
     #endif
     {
         glColorMaski(drawBuffer, state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
@@ -444,7 +449,7 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
-    /*if (glClipControl)
+    /*if (extension_.clipControl)
         glClipControl(origin, depth);
     else*/
         emulateClipControl_ = (origin == GL_UPPER_LEFT);

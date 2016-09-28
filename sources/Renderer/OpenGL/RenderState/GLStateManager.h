@@ -34,9 +34,11 @@ class GLStateManager
 
         /* ----- Common ----- */
 
-        GLStateManager(GLRenderSystem& renderSystem);
+        GLStateManager();
 
         static GLStateManager* active;
+
+        void DetermineExtensions(GLRenderSystem& renderSystem);
 
         //! Notifies the state manager about a new render-target height.
         void NotifyRenderTargetHeight(GLint height);
@@ -277,7 +279,9 @@ class GLStateManager
 
         struct GLExtSupport
         {
-            bool viewportArray = false;
+            bool viewportArray      = false; // GL_ARB_viewport_array
+            bool clipControl        = false; // GL_ARB_clip_control
+            bool drawBuffersBlend   = false; // GL_ARB_draw_buffers_blend
         };
 
         /* ----- Members ----- */
