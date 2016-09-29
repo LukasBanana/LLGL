@@ -116,16 +116,16 @@ void RemoveFromUniqueSet(std::set<std::unique_ptr<T>>& cont, const TBase* entry)
     }
 }
 
-template <typename T>
-T* TakeOwnership(std::set<std::unique_ptr<T>>& objectSet, std::unique_ptr<T>&& object)
+template <typename BaseType, typename SubType>
+SubType* TakeOwnership(std::set<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
 {
     auto ref = object.get();
     objectSet.emplace(std::move(object));
     return ref;
 }
 
-template <typename T>
-T* TakeOwnership(std::vector<std::unique_ptr<T>>& objectSet, std::unique_ptr<T>&& object)
+template <typename BaseType, typename SubType>
+SubType* TakeOwnership(std::vector<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
 {
     auto ref = object.get();
     objectSet.emplace_back(std::move(object));
