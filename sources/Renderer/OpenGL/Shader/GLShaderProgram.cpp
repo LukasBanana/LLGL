@@ -205,9 +205,9 @@ std::vector<ConstantBufferViewDescriptor> GLShaderProgram::QueryConstantBuffers(
     return descList;
 }
 
-std::vector<StorageBufferDescriptor> GLShaderProgram::QueryStorageBuffers() const
+std::vector<StorageBufferViewDescriptor> GLShaderProgram::QueryStorageBuffers() const
 {
-    std::vector<StorageBufferDescriptor> descList;
+    std::vector<StorageBufferViewDescriptor> descList;
 
     #ifndef __APPLE__
     
@@ -230,7 +230,7 @@ std::vector<StorageBufferDescriptor> GLShaderProgram::QueryStorageBuffers() cons
     /* Iterate over all shader storage blocks */
     for (GLuint i = 0; i < static_cast<GLuint>(numStorageBlocks); ++i)
     {
-        StorageBufferDescriptor desc;
+        StorageBufferViewDescriptor desc;
         desc.index = i;
 
         /* Query shader storage block name */

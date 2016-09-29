@@ -68,7 +68,7 @@ class LLGL_EXPORT ShaderProgram
         \brief Returns a list of storage buffer view descriptors, which describe all storage buffers within this shader program.
         \remarks Also called "Shader Storage Buffer Object" or "Read/Write Buffer".
         */
-        virtual std::vector<StorageBufferDescriptor> QueryStorageBuffers() const = 0;
+        virtual std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const = 0;
 
         /**
         \brief Returns a list of uniform descriptors, which describe all uniforms within this shader program.
@@ -92,6 +92,7 @@ class LLGL_EXPORT ShaderProgram
         \brief Binds the specified constant buffer to this shader.
         \param[in] name Specifies the name of the constant buffer within this shader.
         \param[in] bindingIndex Specifies the binding index. This index must match the index which will be used for "RenderContext::BindConstantBuffer".
+        \remarks This function is only necessary if the binding index does not match the default binding index of the constant buffer within the shader.
         \see QueryConstantBuffers
         \see RenderContext::BindConstantBuffer
         */
@@ -101,6 +102,7 @@ class LLGL_EXPORT ShaderProgram
         \brief Binds the specified storage buffer to this shader.
         \param[in] name Specifies the name of the storage buffer within this shader.
         \param[in] bindingIndex Specifies the binding index. This index must match the index which will be used for "RenderContext::BindStorageBuffer".
+        \remarks This function is only necessary if the binding index does not match the default binding index of the storage buffer within the shader.
         \see RenderContext::BindStorageBuffer
         */
         virtual void BindStorageBuffer(const std::string& name, unsigned int bindingIndex) = 0;

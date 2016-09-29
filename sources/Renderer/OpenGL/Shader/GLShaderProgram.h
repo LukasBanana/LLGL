@@ -34,7 +34,7 @@ class GLShaderProgram : public ShaderProgram
 
         std::vector<VertexAttribute> QueryVertexAttributes() const override;
         std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const override;
-        std::vector<StorageBufferDescriptor> QueryStorageBuffers() const override;
+        std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
 
         void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) override;

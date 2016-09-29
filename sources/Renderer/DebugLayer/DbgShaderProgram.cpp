@@ -50,7 +50,7 @@ std::vector<ConstantBufferViewDescriptor> DbgShaderProgram::QueryConstantBuffers
     return instance.QueryConstantBuffers();
 }
 
-std::vector<StorageBufferDescriptor> DbgShaderProgram::QueryStorageBuffers() const
+std::vector<StorageBufferViewDescriptor> DbgShaderProgram::QueryStorageBuffers() const
 {
     return instance.QueryStorageBuffers();
 }

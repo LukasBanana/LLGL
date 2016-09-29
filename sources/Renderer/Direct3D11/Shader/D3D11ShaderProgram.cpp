@@ -149,7 +149,7 @@ std::vector<ConstantBufferViewDescriptor> D3D11ShaderProgram::QueryConstantBuffe
     return constantBufferDescs_;
 }
 
-std::vector<StorageBufferDescriptor> D3D11ShaderProgram::QueryStorageBuffers() const
+std::vector<StorageBufferViewDescriptor> D3D11ShaderProgram::QueryStorageBuffers() const
 {
     return storageBufferDescs_;
 }

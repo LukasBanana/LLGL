@@ -196,7 +196,7 @@ void D3D11Shader::ReflectShader()
              inputBindDesc.Type <= D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER )
         {
             /* Add storage buffer descriptor to output list */
-            StorageBufferDescriptor storeBufferDesc;
+            StorageBufferViewDescriptor storeBufferDesc;
             {
                 storeBufferDesc.name    = std::string(inputBindDesc.Name);
                 storeBufferDesc.index   = bufferIdx++;

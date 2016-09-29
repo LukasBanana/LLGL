@@ -33,8 +33,11 @@ enum class StorageBufferType
     ConsumeStructuredBuffer,    //!< Consume structured buffer.
 };
 
-//! Storage buffer descriptor structure.
-struct StorageBufferDescriptor
+/**
+\brief Storage buffer shader-view descriptor structure.
+\remarks This structure is used to describe the view of a storage buffer within a shader.
+*/
+struct StorageBufferViewDescriptor
 {
     std::string         name;           //!< Storage buffer name.
     unsigned int        index   = 0;    //!< Index of the storage buffer within the respective shader.

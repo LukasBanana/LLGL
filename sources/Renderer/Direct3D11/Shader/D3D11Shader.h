@@ -80,7 +80,7 @@ class D3D11Shader : public Shader
             return constantBufferDescs_;
         }
 
-        inline const std::vector<StorageBufferDescriptor>& GetStorageBufferDescs() const
+        inline const std::vector<StorageBufferViewDescriptor>& GetStorageBufferDescs() const
         {
             return storageBufferDescs_;
         }
@@ -99,7 +99,7 @@ class D3D11Shader : public Shader
 
         std::vector<VertexAttribute>                vertexAttributes_;
         std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
-        std::vector<StorageBufferDescriptor>        storageBufferDescs_;
+        std::vector<StorageBufferViewDescriptor>        storageBufferDescs_;
 
 };
 
