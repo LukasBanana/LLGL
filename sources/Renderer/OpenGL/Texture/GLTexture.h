@@ -22,9 +22,6 @@ class GLTexture : public Texture
 
     public:
 
-        GLTexture(const GLTexture&) = delete;
-        GLTexture& operator = (const GLTexture&) = delete;
-
         GLTexture(const TextureType type);
         ~GLTexture();
 

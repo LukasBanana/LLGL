@@ -25,6 +25,9 @@ class LLGL_EXPORT Texture
 
     public:
 
+        Texture(const Texture&) = delete;
+        Texture& operator = (const Texture&) = delete;
+
         virtual ~Texture();
 
         //! Returns the type of this texture.
