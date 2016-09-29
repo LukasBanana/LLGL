@@ -24,10 +24,10 @@ namespace LLGL
 enum class StorageBufferType
 {
     Buffer,                     //!< Typed buffer.
-    RWBuffer,                   //!< Typed read/write buffer.
     StructuredBuffer,           //!< Structured buffer.
-    RWStructuredBuffer,         //!< Structured read/write buffer.
     ByteAddressBuffer,          //!< Byte-address buffer.
+    RWBuffer,                   //!< Typed read/write buffer.
+    RWStructuredBuffer,         //!< Structured read/write buffer.
     RWByteAddressBuffer,        //!< Byte-address read/write buffer.
     AppendStructuredBuffer,     //!< Append structured buffer.
     ConsumeStructuredBuffer,    //!< Consume structured buffer.

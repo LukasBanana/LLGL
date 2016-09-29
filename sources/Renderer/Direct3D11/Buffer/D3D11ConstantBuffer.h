@@ -12,7 +12,6 @@
 #include <LLGL/ConstantBuffer.h>
 #include <LLGL/RenderSystemFlags.h>
 #include "D3D11HardwareBuffer.h"
-#include <vector>
 
 
 namespace LLGL
