@@ -249,23 +249,6 @@ void GLRenderContext::SetTexture(Texture& texture, unsigned int slot, long /*sha
     stateMngr_->BindTexture(textureGL);
 }
 
-void GLRenderContext::GenerateMips(Texture& texture)
-{
-    /* Bind texture to active layer */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    stateMngr_->BindTexture(textureGL);
-
-    /* Generate MIP-maps and update minification filter */
-    auto target = GLTypes::Map(textureGL.GetType());
-
-    glGenerateMipmap(target);
-    /*glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);*/
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-}
-
 /* ----- Sampler States ----- */
 
 void GLRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long /*shaderStageFlags*/)

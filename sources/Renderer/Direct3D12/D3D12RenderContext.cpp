@@ -207,11 +207,6 @@ void D3D12RenderContext::SetTexture(Texture& texture, unsigned int slot, long sh
     //todo
 }
 
-void D3D12RenderContext::GenerateMips(Texture& texture)
-{
-    //todo
-}
-
 /* ----- Sampler States ----- */
 
 void D3D12RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)

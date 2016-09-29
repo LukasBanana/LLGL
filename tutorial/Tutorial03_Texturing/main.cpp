@@ -125,7 +125,7 @@ public:
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping
         // see http://whatis.techtarget.com/definition/MIP-map
-        context->GenerateMips(*colorMap);
+        renderer->GenerateMips(*colorMap);
 
         // Release image data
         stbi_image_free(imageBuffer);

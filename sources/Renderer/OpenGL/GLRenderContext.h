@@ -80,8 +80,6 @@ class GLRenderContext : public RenderContext
 
         void SetTexture(Texture& texture, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
-        void GenerateMips(Texture& texture) override;
-
         /* ----- Sampler States ----- */
 
         void SetSampler(Sampler& sampler, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;

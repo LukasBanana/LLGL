@@ -633,6 +633,21 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageForm
     );
 }
 
+void GLRenderSystem::GenerateMips(Texture& texture)
+{
+    /* Bind texture to active layer */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::active->BindTexture(textureGL);
+
+    auto target = GLTypes::Map(textureGL.GetType());
+
+    /* Generate MIP-maps */
+    glGenerateMipmap(target);
+
+    /* Update texture minification filter to a default value */
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+}
+
 
 } // /namespace LLGL
 

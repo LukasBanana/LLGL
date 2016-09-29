@@ -279,6 +279,12 @@ class LLGL_EXPORT RenderSystem
         */
         virtual void ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data) = 0;
 
+        /**
+        \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.
+        \see https://developer.valvesoftware.com/wiki/MIP_Mapping
+        */
+        virtual void GenerateMips(Texture& texture) = 0;
+
         /* ----- Samplers ---- */
 
         /**

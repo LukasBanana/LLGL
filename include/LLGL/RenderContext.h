@@ -212,12 +212,6 @@ class LLGL_EXPORT RenderContext
         */
         virtual void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
-        /**
-        \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.
-        \see https://developer.valvesoftware.com/wiki/MIP_Mapping
-        */
-        virtual void GenerateMips(Texture& texture) = 0;
-
         /* ----- Samplers ----- */
 
         /**

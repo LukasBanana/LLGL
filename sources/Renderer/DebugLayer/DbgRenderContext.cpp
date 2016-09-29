@@ -165,16 +165,6 @@ void DbgRenderContext::SetTexture(Texture& texture, unsigned int slot, long shad
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
-void DbgRenderContext::GenerateMips(Texture& texture)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    {
-        instance_.GenerateMips(textureDbg.instance);
-    }
-    const auto& tex3DDesc = textureDbg.desc.texture3DDesc;
-    textureDbg.mipLevels = NumMipLevels({ tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth });
-}
-
 /* ----- Sampler States ----- */
 
 void DbgRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)

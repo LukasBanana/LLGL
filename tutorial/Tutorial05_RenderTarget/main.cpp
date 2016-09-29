@@ -121,7 +121,7 @@ public:
         renderTargetTex = renderer->CreateTexture(textureDesc);
 
         // Generate all MIP-map levels
-        context->GenerateMips(*renderTargetTex);
+        renderer->GenerateMips(*renderTargetTex);
 
         // Attach depth buffer to render-target
         renderTarget->AttachDepthBuffer(renderTargetSize);
@@ -215,7 +215,7 @@ private:
         context->UnsetRenderTarget();
 
         // Generate MIP-maps again after texture has been written by the render-target
-        context->GenerateMips(*renderTargetTex);
+        renderer->GenerateMips(*renderTargetTex);
 
         if (isOpenGL)
         {

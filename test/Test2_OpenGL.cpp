@@ -263,7 +263,7 @@ int main()
         auto& texture = *renderer->CreateTexture(textureDesc, &imageDesc);
 
         #ifndef __linux__
-        context->GenerateMips(texture);
+        renderer->GenerateMips(texture);
         #endif
 
         LLGL::SubTextureDescriptor subTexDesc;

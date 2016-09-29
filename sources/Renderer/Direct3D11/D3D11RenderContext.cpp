@@ -209,13 +209,6 @@ void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long sh
     SetShaderResourcesOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
-void D3D11RenderContext::GenerateMips(Texture& texture)
-{
-    /* Generate MIP-maps for SRV of specified texture */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    context_->GenerateMips(textureD3D.GetSRV());
-}
-
 /* ----- Sampler States ----- */
 
 void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)

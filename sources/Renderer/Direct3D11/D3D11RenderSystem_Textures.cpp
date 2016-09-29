@@ -221,6 +221,13 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageF
     //todo...
 }
 
+void D3D11RenderSystem::GenerateMips(Texture& texture)
+{
+    /* Generate MIP-maps for SRV of specified texture */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    context_->GenerateMips(textureD3D.GetSRV());
+}
+
 
 /*
  * ======= Private: =======

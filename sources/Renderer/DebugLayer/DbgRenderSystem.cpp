@@ -249,6 +249,16 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFor
     }
 }
 
+void DbgRenderSystem::GenerateMips(Texture& texture)
+{
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+    {
+        instance_->GenerateMips(textureDbg.instance);
+    }
+    const auto& tex3DDesc = textureDbg.desc.texture3DDesc;
+    textureDbg.mipLevels = NumMipLevels({ tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth });
+}
+
 /* ----- Sampler States ---- */
 
 Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)

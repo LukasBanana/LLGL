@@ -83,6 +83,8 @@ class DbgRenderSystem : public RenderSystem
 
         void ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data) override;
 
+        void GenerateMips(Texture& texture) override;
+
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;

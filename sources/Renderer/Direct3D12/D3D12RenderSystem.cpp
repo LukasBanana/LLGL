@@ -225,6 +225,11 @@ void D3D12RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageF
     //todo
 }
 
+void D3D12RenderSystem::GenerateMips(Texture& texture)
+{
+    //todo
+}
+
 /* ----- Sampler States ---- */
 
 Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& desc)
