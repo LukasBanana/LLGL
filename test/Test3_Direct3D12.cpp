@@ -65,7 +65,7 @@ int main()
             { { -1, -1 }, { 0, 0, 1 } },
         };
 
-        auto vertexBuffer = renderer->CreateVertexBuffer(sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat, vertices);
+        auto vertexBuffer = renderer->CreateVertexBuffer({ sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat }, vertices);
 
         // Create constant buffer
         struct Matrices

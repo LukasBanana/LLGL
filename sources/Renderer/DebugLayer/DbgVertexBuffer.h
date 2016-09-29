@@ -26,11 +26,10 @@ class DbgVertexBuffer : public VertexBuffer
         {
         }
 
-        LLGL::VertexBuffer& instance;
-        LLGL::VertexFormat  format;
-        std::size_t         size        = 0;
-        std::size_t         elements    = 0;
-        bool                initialized = false;
+        LLGL::VertexBuffer&     instance;
+        VertexBufferDescriptor  desc;
+        unsigned int            elements    = 0;
+        bool                    initialized = false;
 
 };
 

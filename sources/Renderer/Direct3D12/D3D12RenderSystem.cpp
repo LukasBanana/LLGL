@@ -90,17 +90,17 @@ void D3D12RenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
-VertexBuffer* D3D12RenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
+VertexBuffer* D3D12RenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData)
 {
     auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer>();
 
     /* Create hardware buffer resource */
-    vertexBufferD3D->hwBuffer.CreateResource(device_.Get(), size);
-    vertexBufferD3D->PutView(vertexFormat.GetFormatSize());
+    vertexBufferD3D->hwBuffer.CreateResource(device_.Get(), desc.size);
+    vertexBufferD3D->PutView(desc.vertexFormat.GetFormatSize());
 
     /* Upload buffer data to GPU */
     ComPtr<ID3D12Resource> bufferUpload;
-    vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, size);
+    vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, desc.size);
 
     /* Execute upload commands and wait for GPU to finish execution */
     CloseAndExecuteCommandList(commandList_.Get());

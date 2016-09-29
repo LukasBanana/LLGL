@@ -379,7 +379,12 @@ protected:
     template <typename VertexType>
     LLGL::VertexBuffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
     {
-        return renderer->CreateVertexBuffer(vertices.size() * sizeof(VertexType), LLGL::BufferUsage::Static, vertexFormat, vertices.data());
+        LLGL::VertexBufferDescriptor desc;
+        {
+            desc.size           = vertices.size() * sizeof(VertexType);
+            desc.vertexFormat   = vertexFormat;
+        }
+        return renderer->CreateVertexBuffer(desc, vertices.data());
     }
 
     template <typename IndexType>

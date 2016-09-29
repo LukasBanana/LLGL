@@ -137,7 +137,7 @@ int main()
             { 0, 0 }, { 100, 200 },
         };
         
-        auto& vertexBuffer = *renderer->CreateVertexBuffer(sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat, vertices);
+        auto& vertexBuffer = *renderer->CreateVertexBuffer({ sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat }, vertices);
 
         // Create vertex shader
         auto& vertShader = *renderer->CreateShader(LLGL::ShaderType::Vertex);

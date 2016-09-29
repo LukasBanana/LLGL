@@ -57,12 +57,13 @@ int main()
         vertexFormat.AddAttribute("color",    LLGL::DataType::Float, 3); // color has 3 float components
 
         // Create vertex buffer
-        LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer(
-            sizeof(vertices),           // Size (in bytes) of the vertex buffer
-            LLGL::BufferUsage::Static,  // Buffer usage is static since we won't change it frequently
-            vertexFormat,               // Vertex format
-            vertices                    // Pointer to the vertex data
-        );
+        LLGL::VertexBufferDescriptor vertexBufferDesc;
+        {
+            vertexBufferDesc.size           = sizeof(vertices);             // Size (in bytes) of the vertex buffer
+            vertexBufferDesc.usage          = LLGL::BufferUsage::Static;    // Buffer usage is static since we won't change it frequently
+            vertexBufferDesc.vertexFormat   = vertexFormat;                 // Vertex format layout
+        }
+        LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer(vertexBufferDesc, vertices);
 
         // Create shaders
         LLGL::Shader* vertexShader = renderer->CreateShader(LLGL::ShaderType::Vertex);

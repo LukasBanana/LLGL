@@ -25,14 +25,14 @@ GLHardwareBuffer& BindAndGetHWBuffer(From& buffer)
     return bufferGL.hwBuffer;
 }
 
-VertexBuffer* GLRenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
+VertexBuffer* GLRenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData)
 {
     auto vertexBufferGL = MakeUnique<GLVertexBuffer>();
     GLStateManager::active->BindBuffer(*vertexBufferGL);
     {
         /* Update buffer data and update new vertex format */
-        vertexBufferGL->hwBuffer.BufferData(initialData, size, GLTypes::Map(usage));
-        vertexBufferGL->UpdateVertexFormat(vertexFormat);
+        vertexBufferGL->hwBuffer.BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
+        vertexBufferGL->UpdateVertexFormat(desc.vertexFormat);
     }
     return TakeOwnership(vertexBuffers_, std::move(vertexBufferGL));
 }

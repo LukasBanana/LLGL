@@ -159,16 +159,13 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new vertex buffer.
-        \param[in] dataSize Specifies the size (in bytes) of the buffer.
-        \param[in] usage Specifies the buffer usage, which is typically "BufferUsage::Static" for a vertex buffer, since it is rarely changed.
-        \param[in] vertexFormat Specifies the vertex format layout, which is required to tell the renderer how the vertex attributes are stored inside the vertex buffer.
-        This must be the same vertex format which is used for the respective graphics pipeline shader program.
+        \param[in] desc Specifies the vertex buffer descriptor.
         \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
         This may also be null, to only initialize the size of the buffer. In this case, the buffer must
         be initialized with the "WriteVertexBuffer" function before it is used for drawing operations. By default null.
         \see WriteVertexBuffer
         */
-        virtual VertexBuffer* CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData = nullptr) = 0;
+        virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData = nullptr) = 0;
 
         /**
         \brief Creates a new index buffer.

@@ -78,11 +78,11 @@ void D3D11RenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
-VertexBuffer* D3D11RenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
+VertexBuffer* D3D11RenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData)
 {
     auto vertexBufferD3D = MakeUnique<D3D11VertexBuffer>();
     {
-        vertexBufferD3D->CreateResource(device_.Get(), vertexFormat.GetFormatSize(), size, initialData);
+        vertexBufferD3D->CreateResource(device_.Get(), desc.vertexFormat.GetFormatSize(), desc.size, initialData);
     }
     return TakeOwnership(vertexBuffers_, std::move(vertexBufferD3D));
 }

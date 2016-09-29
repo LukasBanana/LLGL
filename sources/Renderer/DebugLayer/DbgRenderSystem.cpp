@@ -79,16 +79,15 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
-VertexBuffer* DbgRenderSystem::CreateVertexBuffer(std::size_t size, const BufferUsage usage, const VertexFormat& vertexFormat, const void* initialData)
+VertexBuffer* DbgRenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData)
 {
-    if (size % vertexFormat.GetFormatSize() != 0)
-        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with vertex format of " + std::to_string(vertexFormat.GetFormatSize()) + " bytes");
+    if (desc.size % desc.vertexFormat.GetFormatSize() != 0)
+        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with vertex format of " + std::to_string(desc.vertexFormat.GetFormatSize()) + " bytes");
 
-    auto vertexBufferDbg = MakeUnique<DbgVertexBuffer>(*instance_->CreateVertexBuffer(size, usage, vertexFormat, initialData));
+    auto vertexBufferDbg = MakeUnique<DbgVertexBuffer>(*instance_->CreateVertexBuffer(desc, initialData));
 
-    vertexBufferDbg->format         = vertexFormat;
-    vertexBufferDbg->size           = size;
-    vertexBufferDbg->elements       = size / vertexFormat.GetFormatSize();
+    vertexBufferDbg->desc           = desc;
+    vertexBufferDbg->elements       = desc.size / desc.vertexFormat.GetFormatSize();
     vertexBufferDbg->initialized    = true;
 
     return TakeOwnership(vertexBuffers_, std::move(vertexBufferDbg));
@@ -157,7 +156,7 @@ void DbgRenderSystem::WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* 
     auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
     if (vertexBufferDbg.initialized)
     {
-        DebugBufferSize(vertexBufferDbg.size, dataSize, offset, __FUNCTION__);
+        DebugBufferSize(vertexBufferDbg.desc.size, dataSize, offset, __FUNCTION__);
         {
             instance_->WriteVertexBuffer(vertexBufferDbg.instance, data, dataSize, offset);
         }
