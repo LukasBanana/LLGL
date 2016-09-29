@@ -12,6 +12,8 @@
 #include "Export.h"
 #include "VertexFormat.h"
 #include "IndexFormat.h"
+#include "RenderSystemFlags.h"
+#include <string>
 
 
 namespace LLGL
@@ -102,6 +104,41 @@ struct BufferDescriptor
         IndexBufferDescriptor   indexBufferDesc;    //!< Index buffer type descriptor appendix.
         StorageBufferDescriptor storageBufferDesc;  //!< Storage buffer type descriptor appendix.
     };
+};
+
+/**
+\brief Constant buffer shader-view descriptor structure.
+\remarks This structure is used to describe the view of a constant buffer within a shader.
+*/
+struct ConstantBufferViewDescriptor
+{
+    std::string     name;           //!< Constant buffer name.
+    unsigned int    index   = 0;    //!< Index of the constant buffer within the respective shader.
+    unsigned int    size    = 0;    //!< Buffer size (in bytes).
+};
+
+/**
+\brief Storage buffer shader-view descriptor structure.
+\remarks This structure is used to describe the view of a storage buffer within a shader.
+*/
+struct StorageBufferViewDescriptor
+{
+    std::string         name;           //!< Storage buffer name.
+    unsigned int        index   = 0;    //!< Index of the storage buffer within the respective shader.
+
+    /**
+    \brief Storage buffer type.
+    \remarks For the OpenGL render system, this type is always 'StorageBufferType::Buffer',
+    since GLSL only supports generic shader storage buffers. Here is an example:
+    \code
+    layout(std430, binding=0) buffer myBuffer
+    {
+        vec4 myBufferArray[];
+    };
+    \endcode
+    \note Only supported with: Direct3D 11, Direct3D 12
+    */
+    StorageBufferType   type    = StorageBufferType::Buffer;
 };
 
 

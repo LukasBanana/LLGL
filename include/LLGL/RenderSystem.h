@@ -160,7 +160,6 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Buffers ------ */
 
-        #if 0
         /**
         \brief Creates a new generic hardware buffer.
         \param[in] desc Specifies the vertex buffer descriptor.
@@ -184,25 +183,23 @@ class LLGL_EXPORT RenderSystem
         This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the buffer.
         */
         virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
-        #endif
 
-        //TODO: remove
+        #if 1//TODO: remove
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData = nullptr) = 0;
         virtual IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData = nullptr) = 0;
         virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData = nullptr) = 0;
         virtual StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData = nullptr) = 0;
 
-        //RODO: remove
         virtual void Release(VertexBuffer& vertexBuffer) = 0;
         virtual void Release(IndexBuffer& indexBuffer) = 0;
         virtual void Release(ConstantBuffer& constantBuffer) = 0;
         virtual void Release(StorageBuffer& storageBuffer) = 0;
 
-        //TODO: remove
         virtual void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
         virtual void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
         virtual void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
         virtual void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        #endif
 
         /* ----- Textures ----- */
 

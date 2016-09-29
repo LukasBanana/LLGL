@@ -25,6 +25,23 @@ GLHardwareBuffer& BindAndGetHWBuffer(From& buffer)
     return bufferGL.hwBuffer;
 }
 
+Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+{
+    return nullptr;//todo...
+}
+
+void GLRenderSystem::Release(Buffer& buffer)
+{
+    //todo...
+}
+
+void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    //todo...
+}
+
+#if 1//TODO: remove
+
 VertexBuffer* GLRenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData)
 {
     auto vertexBufferGL = MakeUnique<GLVertexBuffer>();
@@ -110,6 +127,8 @@ void GLRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const void
 {
     BindAndGetHWBuffer<GLStorageBuffer>(storageBuffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
+
+#endif
 
 
 } // /namespace LLGL

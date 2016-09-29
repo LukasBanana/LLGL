@@ -79,6 +79,21 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
+Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+{
+    return nullptr;//todo...
+}
+
+void DbgRenderSystem::Release(Buffer& buffer)
+{
+    //todo...
+}
+
+void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    //todo...
+}
+
 VertexBuffer* DbgRenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData)
 {
     if (desc.size % desc.vertexFormat.GetFormatSize() != 0)

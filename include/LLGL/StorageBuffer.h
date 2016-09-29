@@ -10,9 +10,7 @@
 
 
 #include "Export.h"
-#include "RenderSystemFlags.h"
 #include "BufferFlags.h"
-#include <string>
 
 
 namespace LLGL
@@ -40,30 +38,6 @@ struct StorageBufferDescriptor
     \brief Specifies the storage buffer type.
     \remarks In OpenGL there are only generic storage buffers (or rather "Shader Storage Buffer Objects").
     \note Only supported with: Direct3D 11, Direct3D 12.
-    */
-    StorageBufferType   type    = StorageBufferType::Buffer;
-};
-
-/**
-\brief Storage buffer shader-view descriptor structure.
-\remarks This structure is used to describe the view of a storage buffer within a shader.
-*/
-struct StorageBufferViewDescriptor
-{
-    std::string         name;           //!< Storage buffer name.
-    unsigned int        index   = 0;    //!< Index of the storage buffer within the respective shader.
-
-    /**
-    \brief Storage buffer type.
-    \remarks For the OpenGL render system, this type is always 'StorageBufferType::Buffer',
-    since GLSL only supports generic shader storage buffers. Here is an example:
-    \code
-    layout(std430, binding=0) buffer myBuffer
-    {
-        vec4 myBufferArray[];
-    };
-    \endcode
-    \note Only supported with: Direct3D 11, Direct3D 12
     */
     StorageBufferType   type    = StorageBufferType::Buffer;
 };

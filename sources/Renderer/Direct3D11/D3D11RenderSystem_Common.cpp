@@ -78,6 +78,23 @@ void D3D11RenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
+Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
+{
+    return nullptr;//todo...
+}
+
+void D3D11RenderSystem::Release(Buffer& buffer)
+{
+    //todo...
+}
+
+void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    //todo...
+}
+
+#if 1//TODO: remove
+
 VertexBuffer* D3D11RenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData)
 {
     auto vertexBufferD3D = MakeUnique<D3D11VertexBuffer>();
@@ -152,6 +169,8 @@ void D3D11RenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const v
 {
     //todo
 }
+
+#endif
 
 /* ----- Sampler States ---- */
 

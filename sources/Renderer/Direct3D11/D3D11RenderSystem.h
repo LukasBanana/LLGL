@@ -64,6 +64,13 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Hardware Buffers ------ */
 
+        Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
+        
+        void Release(Buffer& buffer) override;
+        
+        void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+
+        #if 1//TODO: remove
         VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData = nullptr) override;
         IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData = nullptr) override;
         ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData = nullptr) override;
@@ -78,6 +85,7 @@ class D3D11RenderSystem : public RenderSystem
         void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
         void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
         void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+        #endif
 
         /* ----- Textures ----- */
 

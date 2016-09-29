@@ -10,8 +10,7 @@
 
 
 #include "Export.h"
-#include "RenderSystemFlags.h"
-#include <string>
+#include "BufferFlags.h"
 
 
 namespace LLGL
@@ -34,17 +33,6 @@ struct ConstantBufferDescriptor
 
     //! Buffer usage (typically "BufferUsage::Dynamic", since a constant buffer is commonly frequently changed).
     BufferUsage     usage   = BufferUsage::Dynamic;
-};
-
-/**
-\brief Constant buffer shader-view descriptor structure.
-\remarks This structure is used to describe the view of a constant buffer within a shader.
-*/
-struct ConstantBufferViewDescriptor
-{
-    std::string     name;           //!< Constant buffer name.
-    unsigned int    index   = 0;    //!< Index of the constant buffer within the respective shader.
-    unsigned int    size    = 0;    //!< Buffer size (in bytes).
 };
 
 
