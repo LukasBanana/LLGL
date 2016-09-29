@@ -213,13 +213,10 @@ and \emph{RenderContext} which is used to configure and draw primitives for each
 
 In the RenderSystem interface there are many functions of the following form:
 \begin{lstlisting}
-// Create a new empty object
+// Create a new object
 Create...
 
-// Initialize a newly created object
-Setup...
-
-// Update the data of an initialized object
+// Update the data of an object
 Write...
 
 // Release the object
@@ -336,11 +333,7 @@ Since some platforms (such as Win32) support Unicode window titles, our string l
 \newpage
 \noindent
 Next we create a vertex buffer to store our geometry. For this example we give up an index buffer,
-since we only draw a single triangle and no complex models:
-\begin{lstlisting}
-LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer();
-\end{lstlisting}
-Now we have an empty and unspecified vertex buffer. Next we define our vertex data and the vertex format,
+since we only draw a single triangle and no complex models. At first we define our vertex data and the vertex format,
 which is required to tell the rendering API how the vertex attributes are located within the vertex buffer:
 \begin{lstlisting}
 // Vertex data structure
@@ -365,17 +358,16 @@ The \texttt{AddAttribute} function adds the attributes to the vertex format.
 The order of these function calls determines the location in the vertex data, so they must match
 the order of the member fields in the vertex data structure (here ``\texttt{struct Vertex}'').
 
-The final step for our vertex buffer generation is to upload the data to the GPU.
-For all hardware buffers and textures, this is done with the respective ``\texttt{Setup\dots}'' function
-of the \texttt{RenderSystem} interface:
+Now we can create our vertex buffer and upload the vertex data to the GPU by passing a pointer
+to the \texttt{initialData} parameter:
 \begin{lstlisting}
-renderer->SetupVertexBuffer(
-    *vertexBuffer,             // Pass the vertex buffer as reference
-    vertices,                  // Pointer to the vertex data
-    sizeof(vertices),          // Size (in bytes) of the vertex buffer
-    LLGL::BufferUsage::Static, // Buffer usage is static since we won't change it frequently
-    vertexFormat               // Vertex format
-);
+LLGL::VertexBufferDescriptor vertexBufferDesc;
+
+vertexBufferDesc.size         = sizeof(vertices);          // Size (in bytes) of the vertex buffer
+vertexBufferDesc.usage        = LLGL::BufferUsage::Static, // Static, we won't change it frequently
+vertexBufferDesc.vertexFormat = vertexFormat;              // Copy the vertex format
+
+LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer(vertexBufferDesc, vertices);
 \end{lstlisting}
 To update an entire hardware buffer or texture (or only a portion of it) there is a respective
 ``\texttt{Write...}'' function.
