@@ -183,7 +183,10 @@ void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsig
 
 void D3D11RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
 {
-    //todo
+    /*context_->OMSetRenderTargetsAndUnorderedAccessViews(
+        D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
+        slot, 1, 
+    );*/
 }
 
 void* D3D11RenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
