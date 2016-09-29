@@ -49,13 +49,13 @@ IndexBuffer* GLRenderSystem::CreateIndexBuffer(const IndexBufferDescriptor& desc
     return TakeOwnership(indexBuffers_, std::move(indexBufferGL));
 }
 
-ConstantBuffer* GLRenderSystem::CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+ConstantBuffer* GLRenderSystem::CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData)
 {
     LLGL_ASSERT_CAP(hasConstantBuffers);
     auto constantBufferGL = MakeUnique<GLConstantBuffer>();
     GLStateManager::active->BindBuffer(*constantBufferGL);
     {
-        constantBufferGL->hwBuffer.BufferData(initialData, size, GLTypes::Map(usage));
+        constantBufferGL->hwBuffer.BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
     }
     return TakeOwnership(constantBuffers_, std::move(constantBufferGL));
 }

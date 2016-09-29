@@ -402,7 +402,11 @@ protected:
     LLGL::ConstantBuffer* CreateConstantBuffer(const Buffer& buffer)
     {
         static_assert(!std::is_pointer<Buffer>::value, "buffer type must not be a pointer");
-        return renderer->CreateConstantBuffer(sizeof(buffer), LLGL::BufferUsage::Dynamic, &buffer);
+        LLGL::ConstantBufferDescriptor desc;
+        {
+            desc.size = sizeof(buffer);
+        }
+        return renderer->CreateConstantBuffer(desc, &buffer);
     }
 
     template <typename Buffer>

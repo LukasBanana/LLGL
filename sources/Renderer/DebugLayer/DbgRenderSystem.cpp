@@ -107,15 +107,15 @@ IndexBuffer* DbgRenderSystem::CreateIndexBuffer(const IndexBufferDescriptor& des
     return TakeOwnership(indexBuffers_, std::move(indexBufferDbg));
 }
 
-ConstantBuffer* DbgRenderSystem::CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+ConstantBuffer* DbgRenderSystem::CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData)
 {
     static const std::size_t packAlignment = 16;
-    if (size % packAlignment != 0)
+    if (desc.size % packAlignment != 0)
         LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "buffer size is out of pack alignment");
 
-    auto constantBufferDbg = MakeUnique<DbgConstantBuffer>(*instance_->CreateConstantBuffer(size, usage, initialData));
+    auto constantBufferDbg = MakeUnique<DbgConstantBuffer>(*instance_->CreateConstantBuffer(desc, initialData));
 
-    constantBufferDbg->size         = size;
+    constantBufferDbg->desc         = desc;
     constantBufferDbg->initialized  = true;
 
     return TakeOwnership(constantBuffers_, std::move(constantBufferDbg));
@@ -186,7 +186,7 @@ void DbgRenderSystem::WriteConstantBuffer(ConstantBuffer& constantBuffer, const 
     auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
     if (constantBufferDbg.initialized)
     {
-        DebugBufferSize(constantBufferDbg.size, dataSize, offset, __FUNCTION__);
+        DebugBufferSize(constantBufferDbg.desc.size, dataSize, offset, __FUNCTION__);
         {
             instance_->WriteConstantBuffer(constantBufferDbg.instance, data, dataSize, offset);
         }

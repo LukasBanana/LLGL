@@ -26,9 +26,9 @@ class DbgConstantBuffer : public ConstantBuffer
         {
         }
 
-        LLGL::ConstantBuffer&   instance;
-        std::size_t             size        = 0;
-        bool                    initialized = false;
+        LLGL::ConstantBuffer&       instance;
+        ConstantBufferDescriptor    desc;
+        bool                        initialized = false;
 
 };
 

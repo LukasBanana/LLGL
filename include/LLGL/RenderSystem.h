@@ -179,15 +179,13 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new buffer (also called "Uniform Buffer Object").
-        \param[in] constantBuffer Specifies the constant buffer which is to be initialized.
-        \param[in] dataSize Specifies the size (in bytes) of the buffer.
-        \param[in] usage Specifies the buffer usage.
+        \param[in] desc Specifies the constant buffer descriptor.
         \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
         This may also be null, to only initialize the size of the buffer. In this case, the buffer must
         be initialized with the "WriteConstantBuffer" function before it is used for drawing operations.
         \see WriteConstantBuffer
         */
-        virtual ConstantBuffer* CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) = 0;
+        virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData = nullptr) = 0;
 
         /**
         \brief Creates a new storage buffer (also called "Read/Write Buffer").

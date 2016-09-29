@@ -128,16 +128,16 @@ IndexBuffer* D3D12RenderSystem::CreateIndexBuffer(const IndexBufferDescriptor& d
     return TakeOwnership(indexBuffers_, std::move(indexBufferD3D));
 }
 
-ConstantBuffer* D3D12RenderSystem::CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+ConstantBuffer* D3D12RenderSystem::CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData)
 {
     auto constantBufferD3D = MakeUnique<D3D12ConstantBuffer>(device_.Get());
 
     /* Create hardware buffer resource */
-    constantBufferD3D->CreateResourceAndPutView(device_.Get(), size);
+    constantBufferD3D->CreateResourceAndPutView(device_.Get(), desc.size);
 
     /* Upload buffer data to GPU */
     //ComPtr<ID3D12Resource> bufferUpload;
-    constantBufferD3D->UpdateSubresource(initialData, size);
+    constantBufferD3D->UpdateSubresource(initialData, desc.size);
 
     /* Execute upload commands and wait for GPU to finish execution */
     //CloseAndExecuteCommandList(commandList_.Get());

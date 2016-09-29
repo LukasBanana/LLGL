@@ -77,7 +77,7 @@ int main()
         float orthoSize = 0.01f;
         matrices.projection = Gs::ProjectionMatrix4f::Orthogonal(800.0f * orthoSize, 600.0f * orthoSize, 0.1f, 100.0f).ToMatrix4();
 
-        auto constantBuffer = renderer->CreateConstantBuffer(sizeof(matrices), LLGL::BufferUsage::Static, &matrices);
+        auto constantBuffer = renderer->CreateConstantBuffer({ sizeof(matrices), LLGL::BufferUsage::Static }, &matrices);
 
         // Load shader
         auto shaderSource = ReadFileContent("TestShader.hlsl");

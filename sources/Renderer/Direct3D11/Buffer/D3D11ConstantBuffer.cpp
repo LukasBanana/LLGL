@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-void D3D11ConstantBuffer::CreateResource(ID3D11Device* device, UINT bufferSize, const BufferUsage usage, const void* initialData)
+void D3D11ConstantBuffer::CreateResource(ID3D11Device* device, const ConstantBufferDescriptor& desc, const void* initialData)
 {
     /* Setup descriptor and create constant buffer */
-    CD3D11_BUFFER_DESC bufferDesc(bufferSize, D3D11_BIND_CONSTANT_BUFFER);
+    CD3D11_BUFFER_DESC bufferDesc(desc.size, D3D11_BIND_CONSTANT_BUFFER);
 
-    if (usage == BufferUsage::Dynamic)
+    if (desc.usage == BufferUsage::Dynamic)
     {
         bufferDesc.Usage            = D3D11_USAGE_DYNAMIC;
         bufferDesc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
@@ -30,7 +30,7 @@ void D3D11ConstantBuffer::CreateResource(ID3D11Device* device, UINT bufferSize, 
     usage_ = bufferDesc.Usage;
 
     hwBuffer.CreateResource(device, bufferDesc, initialData);
-    bufferSize_ = bufferSize;
+    bufferSize_ = desc.size;
 }
 
 void D3D11ConstantBuffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset)

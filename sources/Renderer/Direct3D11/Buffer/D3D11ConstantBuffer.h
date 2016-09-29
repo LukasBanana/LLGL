@@ -23,7 +23,7 @@ class D3D11ConstantBuffer : public ConstantBuffer
 
     public:
 
-        void CreateResource(ID3D11Device* device, UINT bufferSize, const BufferUsage usage, const void* initialData = nullptr);
+        void CreateResource(ID3D11Device* device, const ConstantBufferDescriptor& desc, const void* initialData = nullptr);
 
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
 

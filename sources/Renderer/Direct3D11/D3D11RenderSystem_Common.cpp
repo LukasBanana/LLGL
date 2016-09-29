@@ -96,11 +96,11 @@ IndexBuffer* D3D11RenderSystem::CreateIndexBuffer(const IndexBufferDescriptor& d
     return TakeOwnership(indexBuffers_, std::move(indexBufferD3D));
 }
 
-ConstantBuffer* D3D11RenderSystem::CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+ConstantBuffer* D3D11RenderSystem::CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData)
 {
     auto constantBufferD3D = MakeUnique<D3D11ConstantBuffer>();
     {
-        constantBufferD3D->CreateResource(device_.Get(), size, usage, initialData);
+        constantBufferD3D->CreateResource(device_.Get(), desc, initialData);
     }
     return TakeOwnership(constantBuffers_, std::move(constantBufferD3D));
 }
