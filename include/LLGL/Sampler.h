@@ -26,11 +26,13 @@ class LLGL_EXPORT Sampler
         Sampler(const Sampler&) = delete;
         Sampler& operator = (const Sampler&) = delete;
 
-        Sampler() = default;
-
         virtual ~Sampler()
         {
         }
+
+    protected:
+
+        Sampler() = default;
 
 };
 

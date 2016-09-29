@@ -32,8 +32,6 @@ class LLGL_EXPORT ShaderProgram
         ShaderProgram(const ShaderProgram&) = delete;
         ShaderProgram& operator = (const ShaderProgram&) = delete;
 
-        ShaderProgram() = default;
-
         virtual ~ShaderProgram()
         {
         }
@@ -135,6 +133,10 @@ class LLGL_EXPORT ShaderProgram
         \see LockShaderUniform
         */
         virtual void UnlockShaderUniform() = 0;
+
+    protected:
+
+        ShaderProgram() = default;
 
 };
 

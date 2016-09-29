@@ -23,9 +23,21 @@ class LLGL_EXPORT Buffer
 
     public:
 
-        virtual ~Buffer()
+        virtual ~Buffer();
+
+        //! Returns the type of this buffer.
+        inline BufferType GetType() const
         {
+            return type_;
         }
+
+    protected:
+
+        Buffer(const BufferType type);
+
+    private:
+
+        BufferType type_;
 
 };
 
