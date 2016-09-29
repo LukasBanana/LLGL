@@ -14,7 +14,8 @@ namespace LLGL
 {
 
 
-GLTexture::GLTexture()
+GLTexture::GLTexture(const TextureType type) :
+    Texture( type )
 {
     glGenTextures(1, &id_);
 }
@@ -47,16 +48,6 @@ void GLTexture::Recreate()
     /* Delete previous texture and create a new one */
     glDeleteTextures(1, &id_);
     glGenTextures(1, &id_);
-}
-
-
-/*
- * ======= Protected: =======
- */
-
-void GLTexture::SetType(const TextureType type)
-{
-    Texture::SetType(type);
 }
 
 

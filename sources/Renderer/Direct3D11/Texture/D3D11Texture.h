@@ -43,7 +43,7 @@ class D3D11Texture : public Texture
         D3D11Texture(const D3D11Texture&) = delete;
         D3D11Texture& operator = (const D3D11Texture&) = delete;
 
-        D3D11Texture() = default;
+        D3D11Texture(const TextureType type);
 
         Gs::Vector3i QueryMipLevelSize(int mipLevel) const override;
 
@@ -80,12 +80,6 @@ class D3D11Texture : public Texture
         {
             return numMipLevels_;
         }
-
-    protected:
-
-        friend class D3D11RenderSystem;
-
-        void SetType(const TextureType type);
 
     private:
 

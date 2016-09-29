@@ -25,17 +25,9 @@ class LLGL_EXPORT Texture
 
     public:
 
-        virtual ~Texture()
-        {
-        }
+        virtual ~Texture();
 
-        /**
-        \brief Returns the texture type. This type can only be changed by the render system.
-        \see RenderSystem::WriteTexture1D
-        \see RenderSystem::WriteTexture2D
-        \see RenderSystem::WriteTexture3D
-        \see RenderSystem::WriteTextureCube
-        */
+        //! Returns the type of this texture.
         inline TextureType GetType() const
         {
             return type_;
@@ -51,14 +43,11 @@ class LLGL_EXPORT Texture
 
     protected:
 
-        inline void SetType(const TextureType type)
-        {
-            type_ = type;
-        }
+        Texture(const TextureType type);
 
     private:
 
-        TextureType type_ = TextureType::Undefined;
+        TextureType type_;
 
 };
 

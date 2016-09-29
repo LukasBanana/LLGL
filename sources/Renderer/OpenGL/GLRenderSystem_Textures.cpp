@@ -21,10 +21,17 @@ namespace LLGL
 
 Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
 {
-    auto texture = MakeUnique<GLTexture>();
+    auto texture = MakeUnique<GLTexture>(textureDesc.type);
 
-    BindTextureAndSetType(*texture, textureDesc.type);
+    /* Bind texture */
+    GLStateManager::active->BindTexture(*texture);
 
+    /* Initialize texture parameters for the first time */
+    auto target = GLTypes::Map(textureDesc.type);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    /* Build texture storage and upload image dataa */
     switch (textureDesc.type)
     {
         case TextureType::Texture1D:
@@ -91,30 +98,6 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
 }
 
 /* ----- "BuildTexture..." functions ----- */
-
-void GLRenderSystem::BindTextureAndSetType(GLTexture& textureGL, const TextureType type)
-{
-    if (textureGL.GetType() == type)
-    {
-        /* If type is already set, just bind texture */
-        GLStateManager::active->BindTexture(textureGL);
-    }
-    else
-    {
-        /* If texture is not undefined -> recreate it */
-        if (textureGL.GetType() != TextureType::Undefined)
-            textureGL.Recreate();
-
-        /* Set type of the specified texture for the first time */
-        textureGL.SetType(type);
-        GLStateManager::active->ForcedBindTexture(textureGL);
-
-        /* Setup texture parameters for the first time */
-        auto target = GLTypes::Map(type);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-}
 
 static void GLTexImage1DBase(
     GLenum target, const TextureFormat internalFormat, int width,

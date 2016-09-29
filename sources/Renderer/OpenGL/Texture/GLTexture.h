@@ -25,7 +25,7 @@ class GLTexture : public Texture
         GLTexture(const GLTexture&) = delete;
         GLTexture& operator = (const GLTexture&) = delete;
 
-        GLTexture();
+        GLTexture(const TextureType type);
         ~GLTexture();
 
         Gs::Vector3i QueryMipLevelSize(int mipLevel) const override;
@@ -38,12 +38,6 @@ class GLTexture : public Texture
         {
             return id_;
         }
-
-    protected:
-
-        friend class GLRenderSystem;
-
-        void SetType(const TextureType type);
 
     private:
 

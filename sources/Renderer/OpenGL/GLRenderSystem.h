@@ -158,8 +158,6 @@ class GLRenderSystem : public RenderSystem
         void StoreRenderingCaps();
         void AssertCap(bool supported, const std::string& memberName);
 
-        void BindTextureAndSetType(GLTexture& textureGL, const TextureType type);
-
         void BuildTexture1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
         void BuildTexture2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
         void BuildTexture3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);

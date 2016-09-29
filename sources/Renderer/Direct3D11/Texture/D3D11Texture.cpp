@@ -13,6 +13,11 @@ namespace LLGL
 {
 
 
+D3D11Texture::D3D11Texture(const TextureType type) :
+    Texture( type )
+{
+}
+
 Gs::Vector3i D3D11Texture::QueryMipLevelSize(int mipLevel) const
 {
     Gs::Vector3i size;
@@ -187,16 +192,6 @@ void D3D11Texture::UpdateSubresource(
             &dstBox, imageDesc.buffer, srcRowPitch, srcDepthPitch
         );
     }
-}
-
-
-/*
- * ======= Protected: =======
- */
-
-void D3D11Texture::SetType(const TextureType type)
-{
-    Texture::SetType(type);
 }
 
 
