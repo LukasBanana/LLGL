@@ -180,6 +180,37 @@ void GLRenderContext::ClearBuffers(long flags)
 
 /* ----- Hardware Buffers ------ */
 
+void GLRenderContext::SetVertexBuffer(Buffer& buffer)
+{
+    //todo...
+}
+
+void GLRenderContext::SetIndexBuffer(Buffer& buffer)
+{
+    //todo...
+}
+
+void GLRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+{
+    //todo...
+}
+
+void GLRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+{
+    //todo...
+}
+
+void* GLRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    return nullptr;//todo...
+}
+
+void GLRenderContext::UnmapBuffer()
+{
+    //todo...
+}
+
+#if 1//TODO: remove
 void GLRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
     /* Bind vertex buffer */
@@ -238,6 +269,7 @@ void GLRenderContext::UnmapStorageBuffer()
     else
         throw std::runtime_error(LLGL_ASSERT_INFO("no storage buffer set to unmap"));
 }
+#endif
 
 /* ----- Textures ----- */
 

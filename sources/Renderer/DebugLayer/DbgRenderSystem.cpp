@@ -81,17 +81,71 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
 
 Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    return nullptr;//todo...
+    /* Validate and store format size (if supported) */
+    unsigned int formatSize = 0;
+
+    switch (desc.type)
+    {
+        case BufferType::Vertex:
+        {
+            /* Validate buffer size for specified vertex format */
+            formatSize = desc.vertexBufferDesc.vertexFormat.GetFormatSize();
+            if (desc.size % formatSize != 0)
+                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
+        }
+        break;
+
+        case BufferType::Index:
+        {
+            /* Validate buffer size for specified index format */
+            formatSize = desc.indexBufferDesc.indexFormat.GetFormatSize();
+            if (desc.size % formatSize != 0)
+                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with index format of " + std::to_string(formatSize) + " bytes");
+        }
+        break;
+
+        case BufferType::Constant:
+        {
+            /* Validate pack alginemnt of 16 bytes */
+            static const std::size_t packAlignment = 16;
+            if (desc.size % packAlignment != 0)
+                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "buffer size is out of pack alignment");
+        }
+        break;
+    }
+
+    /* Create buffer object */
+    auto bufferDbg = MakeUnique<DbgBuffer>(*instance_->CreateBuffer(desc, initialData), desc.type);
+
+    /* Store settings */
+    bufferDbg->desc         = desc;
+    bufferDbg->elements     = (formatSize > 0 ? desc.size / formatSize : 0);
+    bufferDbg->initialized  = (initialData != nullptr);
+
+    return TakeOwnership(buffers_, std::move(bufferDbg));
 }
 
 void DbgRenderSystem::Release(Buffer& buffer)
 {
-    //todo...
+    ReleaseDbg(buffers_, buffer);
 }
 
 void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    //todo...
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    
+    /* Make a rough approximation if the buffer is now being initialized */
+    if (!bufferDbg.initialized)
+    {
+        if (offset == 0)
+            bufferDbg.initialized = true;
+    }
+
+    DebugBufferSize(bufferDbg.desc.size, dataSize, offset, __FUNCTION__);
+    {
+        instance_->WriteBuffer(bufferDbg.instance, data, dataSize, offset);
+    }
+    LLGL_DBG_PROFILER_DO(writeVertexBuffer.Inc());
 }
 
 VertexBuffer* DbgRenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData)

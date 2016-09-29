@@ -16,10 +16,7 @@
 #include "RenderSystemFlags.h"
 #include "ColorRGBA.h"
 
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "ConstantBuffer.h"
-#include "StorageBuffer.h"
+#include "Buffer.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
 #include "RenderTarget.h"
@@ -27,6 +24,13 @@
 #include "ComputePipeline.h"
 #include "Sampler.h"
 #include "Query.h"
+
+#if 1//TODO: remove
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "ConstantBuffer.h"
+#include "StorageBuffer.h"
+#endif
 
 #include <Gauss/Vector3.h>
 #include <string>
@@ -147,6 +151,64 @@ class LLGL_EXPORT RenderContext
         /* ----- Hardware Buffers ------ */
 
         /**
+        \brief Sets the specified vertex buffer for subsequent drawing operations.
+        \param[in] buffer Specifies the vertex buffer to set. This must not be an unspecified vertex buffer,
+        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
+        function or with the "RenderSystem::WriteBuffer" function.
+        \see RenderSystem::WriteBuffer
+        */
+        virtual void SetVertexBuffer(Buffer& buffer) = 0;
+
+        /**
+        \brief Sets the active index buffer for subsequent drawing operations.
+        \param[in] buffer Specifies the index buffer to set. This must not be an unspecified index buffer,
+        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
+        function or with the "RenderSystem::WriteBuffer" function.
+        \remarks An active index buffer is only required for any "DrawIndexed" or "DrawIndexedInstanced" draw call.
+        \see RenderSystem::WriteIndexBuffer
+        */
+        virtual void SetIndexBuffer(Buffer& buffer) = 0;
+        
+        /**
+        \brief Sets the active constant buffer of the specified slot index for subsequent drawing and compute operations.
+        \param[in] buffer Specifies the constant buffer to set. This must not be an unspecified constant buffer,
+        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
+        function or with the "RenderSystem::WriteBuffer" function.
+        \param[in] slot Specifies the slot index where to put the constant buffer.
+        \param[in] shaderStageFlags Specifies at which shader stages the constant buffer is to be set. By default all shader stages are affected.
+        \see RenderSystem::WriteBuffer
+        \see ShaderStageFlags
+        */
+        virtual void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+
+        /**
+        \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.
+        \param[in] storageBuffer Specifies the storage buffer to set. This must not be an unspecified storage buffer,
+        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateStorageBuffer"
+        function or with the "RenderSystem::WriteStorageBuffer" function.
+        \param[in] slot Specifies the slot index where to put the storage buffer.
+        \see RenderSystem::WriteStorageBuffer
+        */
+        virtual void SetStorageBuffer(Buffer& buffer, unsigned int slot) = 0;
+
+        /**
+        \brief Maps the specified buffer from GPU to CPU memory space.
+        \param[in] buffer Specifies the buffer which is to be mapped.
+        \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
+        \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
+        \throws std::runtime_error If a buffer is already being mapped.
+        \see UnmapStorageBuffer
+        */
+        virtual void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) = 0;
+
+        /**
+        \brief Unmaps the previously mapped storage buffer.
+        \see MapStorageBuffer
+        */
+        virtual void UnmapBuffer() = 0;
+
+        #if 1//TODO: remove
+        /**
         \brief Sets the active vertex buffer for subsequent drawing operations.
         \param[in] vertexBuffer Specifies the vertex buffer to set. This must not be an unspecified vertex buffer,
         i.e. it must be initialized with either the initial data in the "RenderSystem::CreateVertexBuffer"
@@ -202,6 +264,7 @@ class LLGL_EXPORT RenderContext
         \see MapStorageBuffer
         */
         virtual void UnmapStorageBuffer() = 0;
+        #endif
 
         /* ----- Textures ----- */
 

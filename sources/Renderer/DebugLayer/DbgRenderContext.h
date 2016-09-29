@@ -13,14 +13,14 @@
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
 
-#include "DbgVertexBuffer.h"
-#include "DbgIndexBuffer.h"
 #include "DbgGraphicsPipeline.h"
 
 
 namespace LLGL
 {
 
+
+class DbgBuffer;
 
 class DbgRenderContext : public RenderContext
 {
@@ -59,6 +59,15 @@ class DbgRenderContext : public RenderContext
 
         /* ----- Hardware Buffers ------ */
 
+        void SetVertexBuffer(Buffer& buffer) override;
+        void SetIndexBuffer(Buffer& buffer) override;
+        void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
+
+        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
+        void UnmapBuffer() override;
+
+        #if 1//TODO: remove
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
         void SetIndexBuffer(IndexBuffer& indexBuffer) override;
         void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
@@ -66,6 +75,7 @@ class DbgRenderContext : public RenderContext
 
         void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
         void UnmapStorageBuffer() override;
+        #endif
 
         /* ----- Textures ----- */
 
@@ -160,8 +170,8 @@ class DbgRenderContext : public RenderContext
 
         struct Bindings
         {
-            DbgVertexBuffer*        vertexBuffer        = nullptr;
-            DbgIndexBuffer*         indexBuffer         = nullptr;
+            DbgBuffer*              vertexBuffer        = nullptr;
+            DbgBuffer*              indexBuffer         = nullptr;
             DbgGraphicsPipeline*    graphicsPipeline    = nullptr;
             ComputePipeline*        computePipeline     = nullptr;
         }

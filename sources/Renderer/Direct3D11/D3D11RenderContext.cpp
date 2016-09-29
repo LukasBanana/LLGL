@@ -157,6 +157,37 @@ void D3D11RenderContext::ClearBuffers(long flags)
 
 /* ----- Hardware Buffers ------ */
 
+void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
+{
+    //todo...
+}
+
+void D3D11RenderContext::SetIndexBuffer(Buffer& buffer)
+{
+    //todo...
+}
+
+void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+{
+    //todo...
+}
+
+void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+{
+    //todo...
+}
+
+void* D3D11RenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    return nullptr;//todo...
+}
+
+void D3D11RenderContext::UnmapBuffer()
+{
+    //todo...
+}
+
+#if 1//TODO: remove
 void D3D11RenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
     auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, vertexBuffer);
@@ -206,6 +237,7 @@ void D3D11RenderContext::UnmapStorageBuffer()
 {
     //todo
 }
+#endif
 
 /* ----- Textures ----- */
 

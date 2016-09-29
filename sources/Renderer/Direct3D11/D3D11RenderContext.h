@@ -64,6 +64,15 @@ class D3D11RenderContext : public RenderContext
 
         /* ----- Hardware Buffers ------ */
 
+        void SetVertexBuffer(Buffer& buffer) override;
+        void SetIndexBuffer(Buffer& buffer) override;
+        void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
+
+        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
+        void UnmapBuffer() override;
+
+        #if 1//TODO: remove
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
         void SetIndexBuffer(IndexBuffer& indexBuffer) override;
         void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
@@ -71,6 +80,7 @@ class D3D11RenderContext : public RenderContext
 
         void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
         void UnmapStorageBuffer() override;
+        #endif
 
         /* ----- Textures ----- */
 

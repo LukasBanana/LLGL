@@ -54,6 +54,33 @@ struct BufferDescriptor
     {
     }
 
+    BufferDescriptor(const BufferDescriptor& rhs)
+    {
+        *this = rhs;
+    }
+
+    BufferDescriptor& operator = (const BufferDescriptor& rhs)
+    {
+        type = rhs.type;
+        size = rhs.size;
+        usage = rhs.usage;
+
+        switch (type)
+        {
+            case BufferType::Vertex:
+                vertexBufferDesc = rhs.vertexBufferDesc;
+                break;
+            case BufferType::Index:
+                indexBufferDesc = rhs.indexBufferDesc;
+                break;
+            case BufferType::Storage:
+                storageBufferDesc = rhs.storageBufferDesc;
+                break;
+        }
+
+        return *this;
+    }
+
     ~BufferDescriptor()
     {
     }

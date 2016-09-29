@@ -12,16 +12,20 @@
 #include <LLGL/RenderSystem.h>
 #include "DbgRenderContext.h"
 
-#include "DbgVertexBuffer.h"
-#include "DbgIndexBuffer.h"
-#include "DbgConstantBuffer.h"
-#include "DbgStorageBuffer.h"
+#include "DbgBuffer.h"
 #include "DbgGraphicsPipeline.h"
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
 #include "DbgShader.h"
 #include "DbgShaderProgram.h"
 #include "DbgQuery.h"
+
+#if 1//TODO: remove
+#include "DbgVertexBuffer.h"
+#include "DbgIndexBuffer.h"
+#include "DbgConstantBuffer.h"
+#include "DbgStorageBuffer.h"
+#endif
 
 #include "../ContainerTypes.h"
 
@@ -169,6 +173,8 @@ class DbgRenderSystem : public RenderSystem
 
         HWObjectContainer<DbgRenderContext>     renderContexts_;
         
+        HWObjectContainer<DbgBuffer>            buffers_;
+
         HWObjectContainer<DbgVertexBuffer>      vertexBuffers_;
         HWObjectContainer<DbgIndexBuffer>       indexBuffers_;
         HWObjectContainer<DbgConstantBuffer>    constantBuffers_;

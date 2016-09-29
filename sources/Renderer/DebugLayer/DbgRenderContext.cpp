@@ -10,12 +10,17 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 
-#include "DbgConstantBuffer.h"
-#include "DbgStorageBuffer.h"
+#include "DbgBuffer.h"
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
 #include "DbgShaderProgram.h"
 #include "DbgQuery.h"
+
+//TODO: remove
+#include "DbgVertexBuffer.h"
+#include "DbgIndexBuffer.h"
+#include "DbgConstantBuffer.h"
+#include "DbgStorageBuffer.h"
 
 
 namespace LLGL
@@ -97,10 +102,66 @@ void DbgRenderContext::ClearBuffers(long flags)
 
 /* ----- Hardware Buffers ------ */
 
+void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    bindings_.vertexBuffer = (&bufferDbg);
+    vertexLayout_.attributes = bufferDbg.desc.vertexBufferDesc.vertexFormat.GetAttributes();
+    {
+        instance_.SetVertexBuffer(bufferDbg.instance);
+    }
+    LLGL_DBG_PROFILER_DO(setVertexBuffer.Inc());
+}
+
+void DbgRenderContext::SetIndexBuffer(Buffer& buffer)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    bindings_.indexBuffer = (&bufferDbg);
+    {
+        instance_.SetIndexBuffer(bufferDbg.instance);
+    }
+    LLGL_DBG_PROFILER_DO(setIndexBuffer.Inc());
+}
+
+void DbgRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+{
+    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    {
+        instance_.SetConstantBuffer(bufferDbg.instance, slot, shaderStageFlags);
+    }
+    LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
+}
+
+void DbgRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    {
+        instance_.SetStorageBuffer(bufferDbg.instance, slot);
+    }
+    LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
+}
+
+void* DbgRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    void* result = nullptr;
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    {
+        result = instance_.MapBuffer(bufferDbg.instance, access);
+    }
+    LLGL_DBG_PROFILER_DO(mapStorageBuffer.Inc());
+    return result;
+}
+
+void DbgRenderContext::UnmapBuffer()
+{
+    instance_.UnmapBuffer();
+}
+
+#if 1//TODO: remove
 void DbgRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 {
     auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
-    bindings_.vertexBuffer = (&vertexBufferDbg);
     vertexLayout_.attributes = vertexBufferDbg.desc.vertexFormat.GetAttributes();
     {
         instance_.SetVertexBuffer(vertexBufferDbg.instance);
@@ -111,7 +172,6 @@ void DbgRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
 void DbgRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
 {
     auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
-    bindings_.indexBuffer = (&indexBufferDbg);
     {
         instance_.SetIndexBuffer(indexBufferDbg.instance);
     }
@@ -152,6 +212,7 @@ void DbgRenderContext::UnmapStorageBuffer()
 {
     instance_.UnmapStorageBuffer();
 }
+#endif
 
 /* ----- Textures ----- */
 
