@@ -75,7 +75,7 @@ class D3D11Shader : public Shader
             return vertexAttributes_;
         }
 
-        inline const std::vector<ConstantBufferView>& GetConstantBufferDescs() const
+        inline const std::vector<ConstantBufferViewDescriptor>& GetConstantBufferDescs() const
         {
             return constantBufferDescs_;
         }
@@ -90,16 +90,16 @@ class D3D11Shader : public Shader
         void CreateHardwareShader(ID3D11ClassLinkage* classLinkage);
         void ReflectShader();
 
-        ID3D11Device*                           device_             = nullptr;
+        ID3D11Device*                               device_             = nullptr;
 
-        D3D11HardwareShader                     hardwareShader_;
+        D3D11HardwareShader                         hardwareShader_;
 
-        std::vector<char>                       byteCode_;
-        ComPtr<ID3DBlob>                        errors_;
+        std::vector<char>                           byteCode_;
+        ComPtr<ID3DBlob>                            errors_;
 
-        std::vector<VertexAttribute>            vertexAttributes_;
-        std::vector<ConstantBufferView>   constantBufferDescs_;
-        std::vector<StorageBufferDescriptor>    storageBufferDescs_;
+        std::vector<VertexAttribute>                vertexAttributes_;
+        std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
+        std::vector<StorageBufferDescriptor>        storageBufferDescs_;
 
 };
 

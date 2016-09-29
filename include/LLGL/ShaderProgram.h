@@ -58,10 +58,16 @@ class LLGL_EXPORT ShaderProgram
         //! Returns a list of vertex attributes, which describe all vertex attributes within this shader program.
         virtual std::vector<VertexAttribute> QueryVertexAttributes() const = 0;
 
-        //! Returns a list of constant buffer views, which describe all constant buffers (also "Uniform Buffer Object") within this shader program.
-        virtual std::vector<ConstantBufferView> QueryConstantBuffers() const = 0;
+        /**
+        \brief Returns a list of constant buffer view descriptors, which describe all constant buffers within this shader program.
+        \remarks Also called "Uniform Buffer Object".
+        */
+        virtual std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const = 0;
 
-        //! Returns a list of storage buffer views, which describe all storage buffers (also "Shader Storage Buffer Object" or "Read/Write Buffer") within this shader program.
+        /**
+        \brief Returns a list of storage buffer view descriptors, which describe all storage buffers within this shader program.
+        \remarks Also called "Shader Storage Buffer Object" or "Read/Write Buffer".
+        */
         virtual std::vector<StorageBufferDescriptor> QueryStorageBuffers() const = 0;
 
         /**

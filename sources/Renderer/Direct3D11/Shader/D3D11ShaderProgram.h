@@ -35,7 +35,7 @@ class D3D11ShaderProgram : public ShaderProgram
         std::string QueryInfoLog() override;
 
         std::vector<VertexAttribute> QueryVertexAttributes() const override;
-        std::vector<ConstantBufferView> QueryConstantBuffers() const override;
+        std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const override;
         std::vector<StorageBufferDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
 
@@ -69,22 +69,22 @@ class D3D11ShaderProgram : public ShaderProgram
             ByteCode,
         };
 
-        ID3D11Device*                           device_                 = nullptr;
+        ID3D11Device*                               device_                 = nullptr;
 
-        ComPtr<ID3D11InputLayout>               inputLayout_;
+        ComPtr<ID3D11InputLayout>                   inputLayout_;
 
-        D3D11Shader*                            vs_                     = nullptr;
-        D3D11Shader*                            ds_                     = nullptr;
-        D3D11Shader*                            hs_                     = nullptr;
-        D3D11Shader*                            gs_                     = nullptr;
-        D3D11Shader*                            ps_                     = nullptr;
-        D3D11Shader*                            cs_                     = nullptr;
+        D3D11Shader*                                vs_                     = nullptr;
+        D3D11Shader*                                ds_                     = nullptr;
+        D3D11Shader*                                hs_                     = nullptr;
+        D3D11Shader*                                gs_                     = nullptr;
+        D3D11Shader*                                ps_                     = nullptr;
+        D3D11Shader*                                cs_                     = nullptr;
 
-        std::vector<VertexAttribute>            vertexAttributes_;
-        std::vector<ConstantBufferView>   constantBufferDescs_;
-        std::vector<StorageBufferDescriptor>    storageBufferDescs_;
+        std::vector<VertexAttribute>                vertexAttributes_;
+        std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
+        std::vector<StorageBufferDescriptor>        storageBufferDescs_;
 
-        LinkError                               linkError_              = LinkError::NoError;
+        LinkError                                   linkError_              = LinkError::NoError;
 
 };
 
