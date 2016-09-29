@@ -64,8 +64,8 @@ class LLGL_EXPORT RenderTarget
         virtual void AttachTexture2DArray(Texture& texture, int layer, int mipLevel = 0) = 0;
         virtual void AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel = 0) = 0;
 
-        //! Detaches all textures from this render target.
-        virtual void DetachTextures() = 0;
+        //! Detaches all textures and depth-stencil buffers from this render target.
+        virtual void DetachAll() = 0;
 
         /**
         \brief Returns the frame buffer resolution.

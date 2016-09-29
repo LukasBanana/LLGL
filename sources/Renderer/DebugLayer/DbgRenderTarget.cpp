@@ -77,9 +77,9 @@ void DbgRenderTarget::AttachTextureCubeArray(Texture& texture, int layer, const 
     instance.AttachTextureCubeArray(textureDbg.instance, layer, cubeFace, mipLevel);
 }
 
-void DbgRenderTarget::DetachTextures()
+void DbgRenderTarget::DetachAll()
 {
-    instance.DetachTextures();
+    instance.DetachAll();
 }
 
 

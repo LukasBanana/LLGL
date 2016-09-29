@@ -35,7 +35,7 @@ class DbgRenderTarget : public RenderTarget
         void AttachTexture2DArray(Texture& texture, int layer, int mipLevel = 0) override;
         void AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel = 0) override;
 
-        void DetachTextures() override;
+        void DetachAll() override;
 
         RenderTarget& instance;
 

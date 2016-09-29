@@ -120,7 +120,7 @@ void GLRenderTarget::AttachTextureCubeArray(Texture& texture, int layer, const A
     );
 }
 
-void GLRenderTarget::DetachTextures()
+void GLRenderTarget::DetachAll()
 {
     /* Recreate frame buffer, and reset resolution and other parameters (except multi-sample parameter) */
     frameBuffer_.Recreate();

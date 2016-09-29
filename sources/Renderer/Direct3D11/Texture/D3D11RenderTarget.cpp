@@ -158,7 +158,7 @@ void D3D11RenderTarget::AttachTextureCubeArray(Texture& texture, int layer, cons
     );
 }
 
-void D3D11RenderTarget::DetachTextures()
+void D3D11RenderTarget::DetachAll()
 {
     /* Reset all ComPtr instances */
     ResetResolution();
