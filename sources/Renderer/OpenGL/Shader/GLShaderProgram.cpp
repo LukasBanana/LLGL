@@ -164,9 +164,9 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
     return vertexFormat.GetAttributes();
 }
 
-std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() const
+std::vector<ConstantBufferView> GLShaderProgram::QueryConstantBuffers() const
 {
-    std::vector<ConstantBufferDescriptor> descList;
+    std::vector<ConstantBufferView> descList;
 
     /* Query number of uniform blocks */
     GLint numUniformBlocks = 0;
@@ -185,7 +185,7 @@ std::vector<ConstantBufferDescriptor> GLShaderProgram::QueryConstantBuffers() co
     /* Iterate over all uniform blocks */
     for (GLuint i = 0; i < static_cast<GLuint>(numUniformBlocks); ++i)
     {
-        ConstantBufferDescriptor desc;
+        ConstantBufferView desc;
         desc.index = i;
 
         /* Query uniform block name */

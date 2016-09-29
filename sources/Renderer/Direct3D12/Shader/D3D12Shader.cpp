@@ -144,7 +144,7 @@ void D3D12Shader::ReflectShader()
         if (shaderBufferDesc.Type == D3D_CT_CBUFFER)
         {
             /* Add constant buffer descriptor to output list */
-            ConstantBufferDescriptor constBufferDesc;
+            ConstantBufferView constBufferDesc;
             {
                 constBufferDesc.name    = std::string(shaderBufferDesc.Name);
                 constBufferDesc.index   = bufferIdx++;

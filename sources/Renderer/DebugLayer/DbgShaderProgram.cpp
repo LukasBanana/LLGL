@@ -45,7 +45,7 @@ std::vector<VertexAttribute> DbgShaderProgram::QueryVertexAttributes() const
     return instance.QueryVertexAttributes();
 }
 
-std::vector<ConstantBufferDescriptor> DbgShaderProgram::QueryConstantBuffers() const
+std::vector<ConstantBufferView> DbgShaderProgram::QueryConstantBuffers() const
 {
     return instance.QueryConstantBuffers();
 }

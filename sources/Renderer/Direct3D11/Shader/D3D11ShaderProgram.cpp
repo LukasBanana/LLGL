@@ -144,7 +144,7 @@ std::vector<VertexAttribute> D3D11ShaderProgram::QueryVertexAttributes() const
     return vertexAttributes_;
 }
 
-std::vector<ConstantBufferDescriptor> D3D11ShaderProgram::QueryConstantBuffers() const
+std::vector<ConstantBufferView> D3D11ShaderProgram::QueryConstantBuffers() const
 {
     return constantBufferDescs_;
 }

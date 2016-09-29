@@ -33,7 +33,7 @@ class GLShaderProgram : public ShaderProgram
         std::string QueryInfoLog() override;
 
         std::vector<VertexAttribute> QueryVertexAttributes() const override;
-        std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const override;
+        std::vector<ConstantBufferView> QueryConstantBuffers() const override;
         std::vector<StorageBufferDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
 

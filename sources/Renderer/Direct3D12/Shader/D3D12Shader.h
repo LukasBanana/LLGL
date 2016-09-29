@@ -47,7 +47,7 @@ class D3D12Shader : public Shader
             return vertexAttributes_;
         }
 
-        inline const std::vector<ConstantBufferDescriptor>& GetConstantBufferDescs() const
+        inline const std::vector<ConstantBufferView>& GetConstantBufferDescs() const
         {
             return constantBufferDescs_;
         }
@@ -65,7 +65,7 @@ class D3D12Shader : public Shader
         ComPtr<ID3DBlob>                        errors_;
 
         std::vector<VertexAttribute>            vertexAttributes_;
-        std::vector<ConstantBufferDescriptor>   constantBufferDescs_;
+        std::vector<ConstantBufferView>   constantBufferDescs_;
         std::vector<StorageBufferDescriptor>    storageBufferDescs_;
 
 };

@@ -35,7 +35,7 @@ class D3D12ShaderProgram : public ShaderProgram
         std::string QueryInfoLog() override;
 
         std::vector<VertexAttribute> QueryVertexAttributes() const override;
-        std::vector<ConstantBufferDescriptor> QueryConstantBuffers() const override;
+        std::vector<ConstantBufferView> QueryConstantBuffers() const override;
         std::vector<StorageBufferDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
 
@@ -86,7 +86,7 @@ class D3D12ShaderProgram : public ShaderProgram
         D3D12Shader*                            cs_                     = nullptr;
 
         std::vector<VertexAttribute>            vertexAttributes_;
-        std::vector<ConstantBufferDescriptor>   constantBufferDescs_;
+        std::vector<ConstantBufferView>   constantBufferDescs_;
         std::vector<StorageBufferDescriptor>    storageBufferDescs_;
 
         LinkError                               linkError_              = LinkError::NoError;

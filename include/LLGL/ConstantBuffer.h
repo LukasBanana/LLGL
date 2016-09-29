@@ -17,8 +17,11 @@ namespace LLGL
 {
 
 
-//! Constant buffer descriptor structure.
-struct ConstantBufferDescriptor
+/**
+\brief Constant buffer shader-view structure.
+\remarks This structure is used to describe the view of a constant buffer within a shader.
+*/
+struct ConstantBufferView
 {
     std::string     name;           //!< Constant buffer name.
     unsigned int    index   = 0;    //!< Index of the constant buffer within the respective shader.
