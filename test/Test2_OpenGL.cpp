@@ -137,7 +137,14 @@ int main()
             { 0, 0 }, { 100, 200 },
         };
         
-        auto& vertexBuffer = *renderer->CreateVertexBuffer({ sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat }, vertices);
+        LLGL::BufferDescriptor vertexBufferDesc;
+        {
+            vertexBufferDesc.type   = LLGL::BufferType::Vertex;
+            vertexBufferDesc.size   = sizeof(vertices);
+            vertexBufferDesc.usage  = LLGL::BufferUsage::Static;
+            vertexBufferDesc.vertexBufferDesc.vertexFormat = vertexFormat;
+        }
+        auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
         // Create vertex shader
         auto& vertShader = *renderer->CreateShader(LLGL::ShaderType::Vertex);
@@ -384,7 +391,7 @@ int main()
             shaderProgram.UnlockShaderUniform();
             
             context->SetGraphicsPipeline(pipeline);
-            context->SetVertexBuffer(vertexBuffer);
+            context->SetVertexBuffer(*vertexBuffer);
 
             if (renderTarget && renderTargetTex)
             {

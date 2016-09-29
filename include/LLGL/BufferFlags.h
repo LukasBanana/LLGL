@@ -50,41 +50,6 @@ enum class StorageBufferType
 //! Hardware buffer descriptor structure.
 struct BufferDescriptor
 {
-    BufferDescriptor()
-    {
-    }
-
-    BufferDescriptor(const BufferDescriptor& rhs)
-    {
-        *this = rhs;
-    }
-
-    BufferDescriptor& operator = (const BufferDescriptor& rhs)
-    {
-        type = rhs.type;
-        size = rhs.size;
-        usage = rhs.usage;
-
-        switch (type)
-        {
-            case BufferType::Vertex:
-                vertexBufferDesc = rhs.vertexBufferDesc;
-                break;
-            case BufferType::Index:
-                indexBufferDesc = rhs.indexBufferDesc;
-                break;
-            case BufferType::Storage:
-                storageBufferDesc = rhs.storageBufferDesc;
-                break;
-        }
-
-        return *this;
-    }
-
-    ~BufferDescriptor()
-    {
-    }
-
     //! Vertex buffer descriptor structure.
     struct VertexBufferDescriptor
     {
@@ -117,20 +82,22 @@ struct BufferDescriptor
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.
-    BufferType      type    = BufferType::Vertex;
+    BufferType              type    = BufferType::Vertex;
 
     //! Buffer size (in bytes). By default 0.
-    unsigned int    size    = 0;
+    unsigned int            size    = 0;
 
     //! Buffer usage. By default BufferUsage::Static.
-    BufferUsage     usage   = BufferUsage::Static;
+    BufferUsage             usage   = BufferUsage::Static;
 
-    union
-    {
-        VertexBufferDescriptor  vertexBufferDesc;   //!< Vertex buffer type descriptor appendix.
-        IndexBufferDescriptor   indexBufferDesc;    //!< Index buffer type descriptor appendix.
-        StorageBufferDescriptor storageBufferDesc;  //!< Storage buffer type descriptor appendix.
-    };
+    //! Vertex buffer type descriptor appendix.
+    VertexBufferDescriptor  vertexBufferDesc;
+
+    //! Index buffer type descriptor appendix.
+    IndexBufferDescriptor   indexBufferDesc;
+
+    //! Storage buffer type descriptor appendix.
+    StorageBufferDescriptor storageBufferDesc;
 };
 
 /**
