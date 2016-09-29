@@ -39,9 +39,18 @@ enum class QueryType
     ClippingOutputPrimitives,           //!< Number of primitives that passed the primitive clipping stage.
 };
 
+
 //! Query descriptor structure.
 struct QueryDescriptor
 {
+    QueryDescriptor() = default;
+
+    QueryDescriptor(QueryType type, bool renderCondition = false) :
+        type            ( type            ),
+        renderCondition ( renderCondition )
+    {
+    }
+
     //! Specifies the type of the query. By default QueryType::SamplesPassed (occlusion query).
     QueryType   type            = QueryType::SamplesPassed;
 
@@ -52,6 +61,7 @@ struct QueryDescriptor
     */
     bool        renderCondition = false;
 };
+
 
 //! Query interface.
 class LLGL_EXPORT Query
