@@ -32,6 +32,16 @@ class D3D11StorageBuffer : public StorageBuffer
         bool IsStructured() const;
         bool IsByteAddressable() const;
 
+        inline ID3D11ShaderResourceView* GetSRV() const
+        {
+            return srv_.Get();
+        }
+
+        inline ID3D11UnorderedAccessView* GetUAV() const
+        {
+            return uav_.Get();
+        }
+
         D3D11HardwareBuffer hwBuffer;
 
     private:

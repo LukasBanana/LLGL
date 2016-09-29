@@ -121,7 +121,7 @@ union ShaderSource
     {
         const std::string&  sourceCode; //!< Shader source code string.
         std::string         entryPoint; //!< Shader entry point (this is the name of the shader main function).
-        std::string         target;     //!< Shdaer version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
+        std::string         target;     //!< Shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
         int                 flags;      //!< Optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries.
     }
     sourceHLSL;

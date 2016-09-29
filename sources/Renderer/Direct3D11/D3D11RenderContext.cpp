@@ -21,6 +21,7 @@
 #include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
+#include "Buffer/D3D11StorageBuffer.h"
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
@@ -183,10 +184,17 @@ void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsig
 
 void D3D11RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
 {
-    /*context_->OMSetRenderTargetsAndUnorderedAccessViews(
+    #if 0//INCOMPLETE
+    auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, storageBuffer);
+
+    ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
+    UINT auvCounts[] = { 0 };
+
+    context_->OMSetRenderTargetsAndUnorderedAccessViews(
         D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
-        slot, 1, 
-    );*/
+        slot, 1, uavList, auvCounts
+    );
+    #endif
 }
 
 void* D3D11RenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
