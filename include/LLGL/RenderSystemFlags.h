@@ -111,10 +111,10 @@ enum class ClippingRange
 struct RenderSystemConfiguration
 {
     /**
-    \brief Specifies the default color for an uninitialized textures. The default value is white (255, 255, 255, 255).
+    \brief Specifies the default color for an uninitialized textures. The default value is black (0, 0, 0, 0).
     \remarks This will be used when a texture is created and no initial image data is specified.
     */
-    ColorRGBAub defaultImageColor;
+    ColorRGBAub defaultImageColor { 0, 0, 0, 0 };
 
     /**
     \brief Specifies the number of threads that will be used internally by the render system. By default maxThreadCount.
