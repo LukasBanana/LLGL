@@ -43,81 +43,97 @@ void GLRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
     blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
-void GLRenderTarget::AttachTexture1D(Texture& texture, int mipLevel)
+static GLenum CheckDrawFramebufferStatus()
 {
-    AttachTexture(
-        texture, mipLevel,
-        [&](GLenum attachment, GLTexture& textureGL)
-        {
-            GLFrameBuffer::AttachTexture1D(attachment, textureGL, GL_TEXTURE_1D, mipLevel);
-        }
-    );
+    return glCheckFramebufferStatus(GL_FRAMEBUFFER);
 }
 
-void GLRenderTarget::AttachTexture2D(Texture& texture, int mipLevel)
+static GLenum GetTexInternalFormat(const GLTexture& textureGL)
 {
-    AttachTexture(
-        texture, mipLevel,
-        [&](GLenum attachment, GLTexture& textureGL)
-        {
-            GLFrameBuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D, mipLevel);
-        }
-    );
+    GLint internalFormat = GL_RGBA;
+    {
+        GLStateManager::active->BindTexture(textureGL);
+        glGetTexLevelParameteriv(GLTypes::Map(textureGL.GetType()), 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+    }
+    return internalFormat;
 }
 
-void GLRenderTarget::AttachTexture3D(Texture& texture, int layer, int mipLevel)
+void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc)
 {
-    AttachTexture(
-        texture, mipLevel,
-        [&](GLenum attachment, GLTexture& textureGL)
-        {
-            GLFrameBuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_3D, mipLevel, layer);
-        }
-    );
-}
+    /* Get OpenGL texture object */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
 
-void GLRenderTarget::AttachTextureCube(Texture& texture, const AxisDirection cubeFace, int mipLevel)
-{
-    AttachTexture(
-        texture, mipLevel,
-        [&](GLenum attachment, GLTexture& textureGL)
-        {
-            GLFrameBuffer::AttachTexture2D(attachment, textureGL, GLTypes::Map(cubeFace), mipLevel);
-        }
-    );
-}
+    /* Apply resolution for MIP-map level */
+    auto mipLevel = attachmentDesc.mipLevel;
+    ApplyMipResolution(texture, mipLevel);
 
-void GLRenderTarget::AttachTexture1DArray(Texture& texture, int layer, int mipLevel)
-{
-    AttachTexture(
-        texture, mipLevel,
-        [&](GLenum attachment, GLTexture& textureGL)
-        {
-            GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, layer);
-        }
-    );
-}
+    GLenum status = 0;
+    GLenum attachment = MakeColorAttachment();
 
-void GLRenderTarget::AttachTexture2DArray(Texture& texture, int layer, int mipLevel)
-{
-    AttachTexture(
-        texture, mipLevel,
-        [&](GLenum attachment, GLTexture& textureGL)
+    /* Attach texture to frame buffer (via callback) */
+    frameBuffer_.Bind();
+    {
+        switch (texture.GetType())
         {
-            GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, layer);
+            case TextureType::Texture1D:
+                GLFrameBuffer::AttachTexture1D(attachment, textureGL, GL_TEXTURE_1D, mipLevel);
+                break;
+            case TextureType::Texture2D:
+                GLFrameBuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D, mipLevel);
+                break;
+            case TextureType::Texture3D:
+                GLFrameBuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_3D, mipLevel, attachmentDesc.layer);
+                break;
+            case TextureType::TextureCube:
+                GLFrameBuffer::AttachTexture2D(attachment, textureGL, GLTypes::Map(attachmentDesc.cubeFace), mipLevel);
+                break;
+            case TextureType::Texture1DArray:
+                GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer);
+                break;
+            case TextureType::Texture2DArray:
+                GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer);
+                break;
+            case TextureType::TextureCubeArray:
+                GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
+                break;
         }
-    );
-}
 
-void GLRenderTarget::AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel)
-{
-    AttachTexture(
-        texture, mipLevel,
-        [&](GLenum attachment, GLTexture& textureGL)
+        status = CheckDrawFramebufferStatus();
+        
+        /* Set draw buffers for this frame buffer is multi-sampling is disabled */
+        if (!frameBufferMS_)
+            SetDrawBuffers();
+    }
+    frameBuffer_.Unbind();
+
+    CheckFrameBufferStatus(status, "color attachment to frame buffer object (FBO)");
+
+    /* Create render buffer for attachment if multi-sample frame buffer is used */
+    if (frameBufferMS_)
+    {
+        auto renderBuffer = MakeUnique<GLRenderBuffer>();
         {
-            GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, layer * 6 + static_cast<int>(cubeFace));
+            /* Setup render buffer storage by texture's internal format */
+            InitRenderBufferStorage(*renderBuffer, GetTexInternalFormat(textureGL));
+
+            /* Attach render buffer to multi-sample frame buffer */
+            frameBufferMS_->Bind();
+            {
+                GLFrameBuffer::AttachRenderBuffer(attachment, *renderBuffer);
+                status = CheckDrawFramebufferStatus();
+                
+                /* Set draw buffers for this frame buffer is multi-sampling is enabled */
+                SetDrawBuffers();
+            }
+            frameBufferMS_->Unbind();
+
+            CheckFrameBufferStatus(status, "color attachment to multi-sample frame buffer object (FBO)");
         }
-    );
+        renderBuffersMS_.emplace_back(std::move(renderBuffer));
+    }
+
+    /* Add color buffer bit to blit mask */
+    blitMask_ |= GL_COLOR_BUFFER_BIT;
 }
 
 void GLRenderTarget::DetachAll()
@@ -190,11 +206,6 @@ const GLFrameBuffer& GLRenderTarget::GetFrameBuffer() const
  * ======= Private: =======
  */
 
-static GLenum CheckDrawFramebufferStatus()
-{
-    return glCheckFramebufferStatus(GL_FRAMEBUFFER);
-}
-
 void GLRenderTarget::InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat)
 {
     renderBuffer.Bind();
@@ -246,69 +257,6 @@ void GLRenderTarget::AttachRenderBuffer(const Gs::Vector2i& size, GLenum interna
     }
     else
         throw std::runtime_error("attachment to render target failed, because render target already has a depth- or depth-stencil buffer");
-}
-
-static GLenum GetTexInternalFormat(const GLTexture& textureGL)
-{
-    GLint internalFormat = GL_RGBA;
-    {
-        GLStateManager::active->BindTexture(textureGL);
-        glGetTexLevelParameteriv(GLTypes::Map(textureGL.GetType()), 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
-    }
-    return internalFormat;
-}
-
-void GLRenderTarget::AttachTexture(Texture& texture, int mipLevel, const AttachTextureCallback& attachmentProc)
-{
-    /* Get OpenGL texture object */
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
-
-    /* Apply resolution for MIP-map level */
-    ApplyMipResolution(texture, mipLevel);
-
-    GLenum status = 0;
-    GLenum attachment = MakeColorAttachment();
-
-    /* Attach texture to frame buffer (via callback) */
-    frameBuffer_.Bind();
-    {
-        attachmentProc(attachment, textureGL);
-        status = CheckDrawFramebufferStatus();
-        
-        /* Set draw buffers for this frame buffer is multi-sampling is disabled */
-        if (!frameBufferMS_)
-            SetDrawBuffers();
-    }
-    frameBuffer_.Unbind();
-
-    CheckFrameBufferStatus(status, "color attachment to frame buffer object (FBO)");
-
-    /* Create render buffer for attachment if multi-sample frame buffer is used */
-    if (frameBufferMS_)
-    {
-        auto renderBuffer = MakeUnique<GLRenderBuffer>();
-        {
-            /* Setup render buffer storage by texture's internal format */
-            InitRenderBufferStorage(*renderBuffer, GetTexInternalFormat(textureGL));
-
-            /* Attach render buffer to multi-sample frame buffer */
-            frameBufferMS_->Bind();
-            {
-                GLFrameBuffer::AttachRenderBuffer(attachment, *renderBuffer);
-                status = CheckDrawFramebufferStatus();
-                
-                /* Set draw buffers for this frame buffer is multi-sampling is enabled */
-                SetDrawBuffers();
-            }
-            frameBufferMS_->Unbind();
-
-            CheckFrameBufferStatus(status, "color attachment to multi-sample frame buffer object (FBO)");
-        }
-        renderBuffersMS_.emplace_back(std::move(renderBuffer));
-    }
-
-    /* Add color buffer bit to blit mask */
-    blitMask_ |= GL_COLOR_BUFFER_BIT;
 }
 
 GLenum GLRenderTarget::MakeColorAttachment()

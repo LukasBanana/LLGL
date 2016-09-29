@@ -34,13 +34,7 @@ class D3D11RenderTarget : public RenderTarget
         void AttachStencilBuffer(const Gs::Vector2i& size) override;
         void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
 
-        void AttachTexture1D(Texture& texture, int mipLevel = 0) override;
-        void AttachTexture2D(Texture& texture, int mipLevel = 0) override;
-        void AttachTexture3D(Texture& texture, int layer, int mipLevel = 0) override;
-        void AttachTextureCube(Texture& texture, const AxisDirection cubeFace, int mipLevel = 0) override;
-        void AttachTexture1DArray(Texture& texture, int layer, int mipLevel = 0) override;
-        void AttachTexture2DArray(Texture& texture, int layer, int mipLevel = 0) override;
-        void AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel = 0) override;
+        void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
 
         void DetachAll() override;
 
@@ -62,8 +56,6 @@ class D3D11RenderTarget : public RenderTarget
 
         void CreateDepthStencilAndDSV(const Gs::Vector2i& size, DXGI_FORMAT format);
         void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& desc);
-
-        void AttachTexture(Texture& texture, const TextureType type, int mipLevel, const AttachTextureCallback& attachmentProc);
 
         bool HasMultiSampling() const;
 

@@ -33,13 +33,7 @@ class GLRenderTarget : public RenderTarget
         void AttachStencilBuffer(const Gs::Vector2i& size) override;
         void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
 
-        void AttachTexture1D(Texture& texture, int mipLevel = 0) override;
-        void AttachTexture2D(Texture& texture, int mipLevel = 0) override;
-        void AttachTexture3D(Texture& texture, int layer, int mipLevel = 0) override;
-        void AttachTextureCube(Texture& texture, const AxisDirection cubeFace, int mipLevel = 0) override;
-        void AttachTexture1DArray(Texture& texture, int layer, int mipLevel = 0) override;
-        void AttachTexture2DArray(Texture& texture, int layer, int mipLevel = 0) override;
-        void AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel = 0) override;
+        void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
 
         void DetachAll() override;
 
@@ -62,13 +56,10 @@ class GLRenderTarget : public RenderTarget
 
     private:
 
-        using AttachTextureCallback = std::function<void(GLenum attachment, GLTexture& textureGL)>;
-
         void InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat);
         GLenum AttachDefaultRenderBuffer(GLFrameBuffer& frameBuffer, GLenum attachment);
 
         void AttachRenderBuffer(const Gs::Vector2i& size, GLenum internalFormat, GLenum attachment);
-        void AttachTexture(Texture& texture, int mipLevel, const AttachTextureCallback& attachmentProc);
 
         GLenum MakeColorAttachment();
 

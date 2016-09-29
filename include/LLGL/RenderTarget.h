@@ -18,6 +18,14 @@ namespace LLGL
 {
 
 
+//! Render target attachment descriptor structure.
+struct RenderTargetAttachmentDescriptor
+{
+    int             mipLevel    = 0;                    //!< MIP-map level.
+    int             layer       = 0;                    //!< Array texture layer.
+    AxisDirection   cubeFace    = AxisDirection::XPos;  //!< Cube texture face.
+};
+
 class Texture;
 
 /**
@@ -56,13 +64,12 @@ class LLGL_EXPORT RenderTarget
         */
         virtual void AttachDepthStencilBuffer(const Gs::Vector2i& size) = 0;
 
-        virtual void AttachTexture1D(Texture& texture, int mipLevel = 0) = 0;
-        virtual void AttachTexture2D(Texture& texture, int mipLevel = 0) = 0;
-        virtual void AttachTexture3D(Texture& texture, int layer, int mipLevel = 0) = 0;
-        virtual void AttachTextureCube(Texture& texture, const AxisDirection cubeFace, int mipLevel = 0) = 0;
-        virtual void AttachTexture1DArray(Texture& texture, int layer, int mipLevel = 0) = 0;
-        virtual void AttachTexture2DArray(Texture& texture, int layer, int mipLevel = 0) = 0;
-        virtual void AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel = 0) = 0;
+        /**
+        \brief Attaches the specified texture to this render target.
+        \param[in] attachmnetDesc Specifies the attachment descriptor.
+        Unused members will be ignored, e.g. the 'layer' member is ignored when a non-array texture is passed.
+        */
+        virtual void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) = 0;
 
         //! Detaches all textures and depth-stencil buffers from this render target.
         virtual void DetachAll() = 0;

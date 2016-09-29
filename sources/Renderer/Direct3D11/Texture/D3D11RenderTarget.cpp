@@ -37,125 +37,133 @@ void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
     CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
-void D3D11RenderTarget::AttachTexture1D(Texture& texture, int mipLevel)
+
+static void FillViewDescForTexture1D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
-    AttachTexture(
-        texture, TextureType::Texture1D, mipLevel,
-        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
-        {
-            desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;
-            desc.Texture1D.MipSlice = static_cast<UINT>(mipLevel);
-        }
-    );
+    viewDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;
+    viewDesc.Texture1D.MipSlice = static_cast<UINT>(attachmentDesc.mipLevel);
 }
 
-//TODO -> multi-sampled texture (D3D11_RTV_DIMENSION_TEXTURE2DMS) must be created separately
-//        and be blitted (ID3D11DeviceContext::CopyResource) to texture target
-void D3D11RenderTarget::AttachTexture2D(Texture& texture, int mipLevel)
+static void FillViewDescForTexture2D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
-    AttachTexture(
-        texture, TextureType::Texture2D, mipLevel,
-        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
-        {
-            if (HasMultiSampling())
-            {
-                desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+    viewDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
+    viewDesc.Texture2D.MipSlice = static_cast<UINT>(attachmentDesc.mipLevel);
+}
 
-                /* Recreate resource with multi-sampling */
-                D3D11_TEXTURE2D_DESC texDesc;
-                textureD3D.GetHardwareTexture().tex2D->GetDesc(&texDesc);
+static void FillViewDescForTexture3D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
+{
+    viewDesc.ViewDimension          = D3D11_RTV_DIMENSION_TEXTURE3D;
+    viewDesc.Texture3D.MipSlice     = static_cast<UINT>(attachmentDesc.mipLevel);
+    viewDesc.Texture3D.FirstWSlice  = static_cast<UINT>(attachmentDesc.layer);
+    viewDesc.Texture3D.WSize        = 1;
+}
+
+static void FillViewDescForTextureCube(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
+{
+    viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+    viewDesc.Texture2DArray.MipSlice        = static_cast<UINT>(attachmentDesc.mipLevel);
+    viewDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.cubeFace);
+    viewDesc.Texture2DArray.ArraySize       = 1;
+}
+
+static void FillViewDescForTexture1DArray(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
+{
+    viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
+    viewDesc.Texture1DArray.MipSlice        = static_cast<UINT>(attachmentDesc.mipLevel);
+    viewDesc.Texture1DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.layer);
+    viewDesc.Texture1DArray.ArraySize       = 1;
+}
+
+static void FillViewDescForTexture2DArray(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
+{
+    viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+    viewDesc.Texture2DArray.MipSlice        = static_cast<UINT>(attachmentDesc.mipLevel);
+    viewDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.layer);
+    viewDesc.Texture2DArray.ArraySize       = 1;
+}
+
+static void FillViewDescForTexture2DArrayMS(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
+{
+    viewDesc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+    viewDesc.Texture2DMSArray.FirstArraySlice   = static_cast<UINT>(attachmentDesc.layer);
+    viewDesc.Texture2DMSArray.ArraySize         = 1;
+}
+
+static void FillViewDescForTextureCubeArray(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
+{
+    viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+    viewDesc.Texture2DArray.MipSlice        = static_cast<UINT>(attachmentDesc.mipLevel);
+    viewDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.layer*6) + static_cast<UINT>(attachmentDesc.cubeFace);
+    viewDesc.Texture2DArray.ArraySize       = 1;
+}
+
+void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc)
+{
+    /* Get D3D texture object and apply resolution for MIP-map level */
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    ApplyMipResolution(texture, attachmentDesc.mipLevel);
+
+    /* Initialize RTV descriptor with attachment procedure and create RTV */
+    D3D11_RENDER_TARGET_VIEW_DESC viewDesc;
+    InitMemory(viewDesc);
+    {
+        viewDesc.Format = textureD3D.GetFormat();
+
+        if (HasMultiSampling())
+        {
+            //TODO -> multi-sampled texture (D3D11_RTV_DIMENSION_TEXTURE2DMS) must be created separately
+            //        and be blitted (ID3D11DeviceContext::CopyResource) to texture target
+            switch (texture.GetType())
+            {
+                case TextureType::Texture2D:
                 {
-                    texDesc.MipLevels           = 1;
-                    texDesc.SampleDesc.Count    = multiSamples_;
+                    viewDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+
+                    /* Recreate resource with multi-sampling */
+                    D3D11_TEXTURE2D_DESC texDesc;
+                    textureD3D.GetHardwareTexture().tex2D->GetDesc(&texDesc);
+                    {
+                        texDesc.MipLevels           = 1;
+                        texDesc.SampleDesc.Count    = multiSamples_;
+                    }
+                    textureD3D.CreateTexture2D(renderSystem_.GetDevice(), texDesc);
                 }
-                textureD3D.CreateTexture2D(renderSystem_.GetDevice(), texDesc);
+                break;
+
+                default:
+                    throw std::invalid_argument("only 2D-textures can be attached to a D3D11 multi-sample render-target");
+                    break;
             }
-            else
+        }
+        else
+        {
+            switch (texture.GetType())
             {
-                desc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
-                desc.Texture2D.MipSlice = static_cast<UINT>(mipLevel);
+                case TextureType::Texture1D:
+                    FillViewDescForTexture1D(attachmentDesc, viewDesc);
+                    break;
+                case TextureType::Texture2D:
+                    FillViewDescForTexture2D(attachmentDesc, viewDesc);
+                    break;
+                case TextureType::Texture3D:
+                    FillViewDescForTexture3D(attachmentDesc, viewDesc);
+                    break;
+                case TextureType::TextureCube:
+                    FillViewDescForTextureCube(attachmentDesc, viewDesc);
+                    break;
+                case TextureType::Texture1DArray:
+                    FillViewDescForTexture1DArray(attachmentDesc, viewDesc);
+                    break;
+                case TextureType::Texture2DArray:
+                    FillViewDescForTexture2DArray(attachmentDesc, viewDesc);
+                    break;
+                case TextureType::TextureCubeArray:
+                    FillViewDescForTextureCubeArray(attachmentDesc, viewDesc);
+                    break;
             }
         }
-    );
-}
-
-void D3D11RenderTarget::AttachTexture3D(Texture& texture, int layer, int mipLevel)
-{
-    AttachTexture(
-        texture, TextureType::Texture3D, mipLevel,
-        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
-        {
-            desc.ViewDimension          = D3D11_RTV_DIMENSION_TEXTURE3D;
-            desc.Texture3D.MipSlice     = static_cast<UINT>(mipLevel);
-            desc.Texture3D.FirstWSlice  = static_cast<UINT>(layer);
-            desc.Texture3D.WSize        = 1;
-        }
-    );
-}
-
-void D3D11RenderTarget::AttachTextureCube(Texture& texture, const AxisDirection cubeFace, int mipLevel)
-{
-    AttachTexture(
-        texture, TextureType::TextureCube, mipLevel,
-        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
-        {
-            desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-            desc.Texture2DArray.MipSlice        = static_cast<UINT>(mipLevel);
-            desc.Texture2DArray.FirstArraySlice = static_cast<UINT>(cubeFace);
-            desc.Texture2DArray.ArraySize       = 1;
-        }
-    );
-}
-
-void D3D11RenderTarget::AttachTexture1DArray(Texture& texture, int layer, int mipLevel)
-{
-    AttachTexture(
-        texture, TextureType::Texture1DArray, mipLevel,
-        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
-        {
-            desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
-            desc.Texture1DArray.MipSlice        = static_cast<UINT>(mipLevel);
-            desc.Texture1DArray.FirstArraySlice = static_cast<UINT>(layer);
-            desc.Texture1DArray.ArraySize       = 1;
-        }
-    );
-}
-
-void D3D11RenderTarget::AttachTexture2DArray(Texture& texture, int layer, int mipLevel)
-{
-    AttachTexture(
-        texture, TextureType::Texture2DArray, mipLevel,
-        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
-        {
-            if (HasMultiSampling())
-            {
-                desc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMS;
-                desc.Texture2DMSArray.FirstArraySlice   = static_cast<UINT>(layer);
-                desc.Texture2DMSArray.ArraySize         = 1;
-            }
-            else
-            {
-                desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-                desc.Texture2DArray.MipSlice        = static_cast<UINT>(mipLevel);
-                desc.Texture2DArray.FirstArraySlice = static_cast<UINT>(layer);
-                desc.Texture2DArray.ArraySize       = 1;
-            }
-        }
-    );
-}
-
-void D3D11RenderTarget::AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel)
-{
-    AttachTexture(
-        texture, TextureType::TextureCubeArray, mipLevel,
-        [&](D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)
-        {
-            desc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-            desc.Texture2DArray.MipSlice        = static_cast<UINT>(mipLevel);
-            desc.Texture2DArray.FirstArraySlice = static_cast<UINT>(layer*6) + static_cast<UINT>(cubeFace);
-            desc.Texture2DArray.ArraySize       = 1;
-        }
-    );
+    }
+    CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), viewDesc);
 }
 
 void D3D11RenderTarget::DetachAll()
@@ -195,26 +203,6 @@ void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11
 
     renderTargetViews_.push_back(rtv);
     renderTargetViewsRef_.push_back(rtv.Get());
-}
-
-void D3D11RenderTarget::AttachTexture(Texture& texture, const TextureType type, int mipLevel, const AttachTextureCallback& attachmentProc)
-{
-    /* Validate texture type */
-    if (texture.GetType() != type)
-        throw std::invalid_argument("texture type mismatch in render target attachment");
-
-    /* Get D3D texture object and apply resolution for MIP-map level */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    ApplyMipResolution(texture, mipLevel);
-
-    /* Initialize RTV descriptor with attachment procedure and create RTV */
-    D3D11_RENDER_TARGET_VIEW_DESC desc;
-    InitMemory(desc);
-    {
-        desc.Format = textureD3D.GetFormat();
-        attachmentProc(textureD3D, desc);
-    }
-    CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), desc);
 }
 
 bool D3D11RenderTarget::HasMultiSampling() const

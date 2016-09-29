@@ -35,46 +35,10 @@ void DbgRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
     instance.AttachDepthStencilBuffer(size);
 }
 
-void DbgRenderTarget::AttachTexture1D(Texture& texture, int mipLevel)
+void DbgRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    instance.AttachTexture1D(textureDbg.instance, mipLevel);
-}
-
-void DbgRenderTarget::AttachTexture2D(Texture& texture, int mipLevel)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    instance.AttachTexture2D(textureDbg.instance, mipLevel);
-}
-
-void DbgRenderTarget::AttachTexture3D(Texture& texture, int layer, int mipLevel)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    instance.AttachTexture3D(textureDbg.instance, layer, mipLevel);
-}
-
-void DbgRenderTarget::AttachTextureCube(Texture& texture, const AxisDirection cubeFace, int mipLevel)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    instance.AttachTextureCube(textureDbg.instance, cubeFace, mipLevel);
-}
-
-void DbgRenderTarget::AttachTexture1DArray(Texture& texture, int layer, int mipLevel)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    instance.AttachTexture1DArray(textureDbg.instance, layer, mipLevel);
-}
-
-void DbgRenderTarget::AttachTexture2DArray(Texture& texture, int layer, int mipLevel)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    instance.AttachTexture2DArray(textureDbg.instance, layer, mipLevel);
-}
-
-void DbgRenderTarget::AttachTextureCubeArray(Texture& texture, int layer, const AxisDirection cubeFace, int mipLevel)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    instance.AttachTextureCubeArray(textureDbg.instance, layer, cubeFace, mipLevel);
+    instance.AttachTexture(textureDbg.instance, attachmentDesc);
 }
 
 void DbgRenderTarget::DetachAll()

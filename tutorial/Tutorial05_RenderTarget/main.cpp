@@ -127,7 +127,7 @@ public:
         renderTarget->AttachDepthBuffer(renderTargetSize);
 
         // Attach texture (first MIP-map level) to render-target
-        renderTarget->AttachTexture2D(*renderTargetTex);
+        renderTarget->AttachTexture(*renderTargetTex, {});
 
         // Initialize projection matrix for render-target scene rendering
         renderTargetProj = Gs::ProjectionMatrix4f::Perspective(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
