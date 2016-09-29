@@ -14,10 +14,13 @@
 #include "GLRenderContext.h"
 #include "../ContainerTypes.h"
 
+#include "Buffer/GLBuffer.h"
+#if 1//TODO: remove
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
 #include "Buffer/GLConstantBuffer.h"
 #include "Buffer/GLStorageBuffer.h"
+#endif
 
 #include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
@@ -192,10 +195,14 @@ class GLRenderSystem : public RenderSystem
 
         HWObjectContainer<GLRenderContext>      renderContexts_;
         
+        HWObjectContainer<GLBuffer>             buffers_;
+
+        #if 1//TODO: remove
         HWObjectContainer<GLVertexBuffer>       vertexBuffers_;
         HWObjectContainer<GLIndexBuffer>        indexBuffers_;
         HWObjectContainer<GLConstantBuffer>     constantBuffers_;
         HWObjectContainer<GLStorageBuffer>      storageBuffers_;
+        #endif
 
         HWObjectContainer<GLTexture>            textures_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;

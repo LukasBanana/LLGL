@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_INDEX_BUFFER_H__
-#define __LLGL_GL_INDEX_BUFFER_H__
+#ifndef __LLGL_GL_INDEX_BUFFER__DEPRECATED___H__
+#define __LLGL_GL_INDEX_BUFFER__DEPRECATED___H__
 
 
 #include <LLGL/IndexBuffer.h>

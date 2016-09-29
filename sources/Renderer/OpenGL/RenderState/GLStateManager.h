@@ -10,6 +10,7 @@
 
 
 #include "GLState.h"
+#include "../Buffer/GLBuffer.h"
 #include "../Buffer/GLVertexBuffer.h"
 #include "../Buffer/GLIndexBuffer.h"
 #include "../Buffer/GLConstantBuffer.h"
@@ -103,10 +104,14 @@ class GLStateManager
         void PushBoundBuffer(GLBufferTarget target);
         void PopBoundBuffer();
 
+        void BindBuffer(const GLBuffer& buffer);
+
+        #if 1//TODO: remove
         void BindBuffer(const GLVertexBuffer& vertexBuffer);
         void BindBuffer(const GLIndexBuffer& indexBuffer);
         void BindBuffer(const GLConstantBuffer& constantBuffer);
         void BindBuffer(const GLStorageBuffer& storageBuffer);
+        #endif
         
         /* ----- Framebuffer binding ----- */
 

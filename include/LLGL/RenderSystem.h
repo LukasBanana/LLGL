@@ -16,8 +16,6 @@
 #include "RenderingDebugger.h"
 
 #include "Buffer.h"
-#include "VertexFormat.h"
-#include "IndexFormat.h"
 #include "Texture.h"
 #include "RenderTarget.h"
 #include "ShaderProgram.h"

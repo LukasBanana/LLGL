@@ -615,6 +615,25 @@ void GLStateManager::PopBoundBuffer()
     bufferState_.boundBufferStack.pop();
 }
 
+static GLBufferTarget GetGLBufferTarget(const BufferType type)
+{
+    switch (type)
+    {
+        case BufferType::Vertex:        return GLBufferTarget::ARRAY_BUFFER;
+        case BufferType::Index:         return GLBufferTarget::ELEMENT_ARRAY_BUFFER;
+        case BufferType::Constant:      return GLBufferTarget::UNIFORM_BUFFER;
+        case BufferType::Storage:       return GLBufferTarget::SHADER_STORAGE_BUFFER;
+        case BufferType::StreamOutput:  return GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER;
+    }
+    throw std::invalid_argument("failed to map 'BufferType' to internal type 'GLBufferTarget'");
+}
+
+void GLStateManager::BindBuffer(const GLBuffer& buffer)
+{
+    BindBuffer(GetGLBufferTarget(buffer.GetType()), buffer.GetID());
+}
+
+#if 1//TODO: remove
 void GLStateManager::BindBuffer(const GLVertexBuffer& vertexBuffer)
 {
     BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBuffer.hwBuffer.GetID());
@@ -634,6 +653,7 @@ void GLStateManager::BindBuffer(const GLStorageBuffer& storageBuffer)
 {
     BindBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, storageBuffer.hwBuffer.GetID());
 }
+#endif
 
 /* ----- Framebuffer binding ----- */
 

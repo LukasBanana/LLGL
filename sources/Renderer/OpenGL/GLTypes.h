@@ -12,13 +12,14 @@
 #include "OpenGL.h"
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Image.h>
+#include <LLGL/BufferFlags.h>
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/ShaderUniform.h>
-#include <LLGL/Shader.h>
-#include <LLGL/Query.h>
+#include <LLGL/ShaderFlags.h>
+#include <LLGL/QueryFlags.h>
 
 
 namespace LLGL
@@ -46,6 +47,7 @@ GLenum Map( const TextureFilter         textureFilter       ); // GL_NEAREST, GL
 GLenum Map( const TextureFilter         textureMinFilter, const TextureFilter textureMipMapFilter );
 GLenum Map( const ShaderType            shaderType          );
 GLenum Map( const QueryType             queryType           );
+GLenum Map( const BufferType            bufferType          );
 GLenum Map( const RenderConditionMode   renderConditionMode );
 
 void Unmap( UniformType& result,    const GLenum uniformType    );

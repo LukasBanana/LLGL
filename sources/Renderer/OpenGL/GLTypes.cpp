@@ -377,6 +377,19 @@ GLenum Map(const QueryType queryType)
     MapFailed("QueryType");
 }
 
+GLenum Map(const BufferType bufferType)
+{
+    switch (bufferType)
+    {
+        case BufferType::Vertex:        return GL_ARRAY_BUFFER;
+        case BufferType::Index:         return GL_ELEMENT_ARRAY_BUFFER;
+        case BufferType::Constant:      return GL_UNIFORM_BUFFER;
+        case BufferType::Storage:       return GL_SHADER_STORAGE_BUFFER;
+        case BufferType::StreamOutput:  return GL_TRANSFORM_FEEDBACK_BUFFER;
+    }
+    MapFailed("BufferType");
+}
+
 GLenum Map(const RenderConditionMode renderConditionMode)
 {
     switch (renderConditionMode)

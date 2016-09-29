@@ -27,7 +27,7 @@ enum class BufferType
     Index,          //!< Index buffer type.
     Constant,       //!< Constant buffer type (also called "Uniform Buffer Object").
     Storage,        //!< Storage buffer type (also called "Shader Storage Buffer Object" or "Read/Write Buffer").
-    //StreamOutput,   //!< Stream output buffer type (also called "Transform Feedback Buffer").
+    StreamOutput,   //!< Stream output buffer type (also called "Transform Feedback Buffer").
 };
 
 /**
