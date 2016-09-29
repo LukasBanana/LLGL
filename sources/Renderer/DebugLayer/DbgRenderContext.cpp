@@ -104,8 +104,11 @@ void DbgRenderContext::ClearBuffers(long flags)
 
 void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
 {
+    DebugBufferType(buffer, BufferType::Vertex, __FUNCTION__);
+
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     bindings_.vertexBuffer = (&bufferDbg);
+
     vertexLayout_.attributes = bufferDbg.desc.vertexBufferDesc.vertexFormat.GetAttributes();
     {
         instance_.SetVertexBuffer(bufferDbg.instance);
@@ -115,6 +118,8 @@ void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
 
 void DbgRenderContext::SetIndexBuffer(Buffer& buffer)
 {
+    DebugBufferType(buffer, BufferType::Index, __FUNCTION__);
+
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     bindings_.indexBuffer = (&bufferDbg);
     {
@@ -125,7 +130,9 @@ void DbgRenderContext::SetIndexBuffer(Buffer& buffer)
 
 void DbgRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
+    DebugBufferType(buffer, BufferType::Constant, __FUNCTION__);
     DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     {
         instance_.SetConstantBuffer(bufferDbg.instance, slot, shaderStageFlags);
@@ -135,6 +142,8 @@ void DbgRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long
 
 void DbgRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
+    DebugBufferType(buffer, BufferType::Storage, __FUNCTION__);
+
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     {
         instance_.SetStorageBuffer(bufferDbg.instance, slot);
@@ -153,9 +162,9 @@ void* DbgRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
     return result;
 }
 
-void DbgRenderContext::UnmapBuffer()
+void DbgRenderContext::UnmapBuffer(Buffer& buffer)
 {
-    instance_.UnmapBuffer();
+    instance_.UnmapBuffer(buffer);
 }
 
 #if 1//TODO: remove
@@ -621,6 +630,12 @@ void DbgRenderContext::DebugShaderStageFlags(long shaderStageFlags, const std::s
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stage is specified", source);
     if ((shaderStageFlags & (~ShaderStageFlags::AllStages)) != 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "unknown shader stage flag is specified", source);
+}
+
+void DbgRenderContext::DebugBufferType(const Buffer& buffer, const BufferType type, const std::string& source)
+{
+    if (buffer.GetType() != type)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type", source);
 }
 
 void DbgRenderContext::WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source)

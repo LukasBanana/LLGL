@@ -74,7 +74,7 @@ class GLRenderContext : public RenderContext
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
 
         void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
-        void UnmapBuffer() override;
+        void UnmapBuffer(Buffer& buffer) override;
 
         #if 1//TODO: remove
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
@@ -144,10 +144,11 @@ class GLRenderContext : public RenderContext
 
         struct RenderState
         {
-            GLenum              drawMode            = GL_TRIANGLES;
-            GLenum              indexBufferDataType = GL_UNSIGNED_INT;
-            GLintptr            indexBufferStride   = 4;
-            GLStorageBuffer*    mappedStorageBuffer = nullptr;
+            GLenum      drawMode            = GL_TRIANGLES;
+            GLenum      indexBufferDataType = GL_UNSIGNED_INT;
+            GLintptr    indexBufferStride   = 4;
+
+            GLStorageBuffer* _mappedStorageBuffer_deprecated_ = nullptr;
         };
 
         #ifndef __APPLE__

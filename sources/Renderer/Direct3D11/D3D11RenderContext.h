@@ -70,7 +70,7 @@ class D3D11RenderContext : public RenderContext
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
 
         void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
-        void UnmapBuffer() override;
+        void UnmapBuffer(Buffer& buffer) override;
 
         #if 1//TODO: remove
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;

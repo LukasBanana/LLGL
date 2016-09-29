@@ -15,6 +15,8 @@
 #include "Texture/GLTexture.h"
 #include "Texture/GLRenderTarget.h"
 #include "Texture/GLSampler.h"
+#include "Buffer/GLVertexBuffer_.h"
+#include "Buffer/GLIndexBuffer_.h"
 #include "RenderState/GLGraphicsPipeline.h"
 
 #ifndef __APPLE__
@@ -182,32 +184,51 @@ void GLRenderContext::ClearBuffers(long flags)
 
 void GLRenderContext::SetVertexBuffer(Buffer& buffer)
 {
-    //todo...
+    /* Bind vertex buffer */
+    auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer_&, buffer);
+    stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
 }
 
 void GLRenderContext::SetIndexBuffer(Buffer& buffer)
 {
-    //todo...
+    /* Bind index buffer */
+    auto& indexBufferGL = LLGL_CAST(GLIndexBuffer_&, buffer);
+    stateMngr_->BindBuffer(indexBufferGL);
+
+    /* Store new index buffer data in global render state */
+    const auto& format = indexBufferGL.GetIndexFormat();
+    renderState_.indexBufferDataType    = GLTypes::Map(format.GetDataType());
+    renderState_.indexBufferStride      = format.GetFormatSize();
 }
 
 void GLRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
-    //todo...
+    /* Bind constant buffer with BindBufferBase */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, slot, bufferGL.GetID());
 }
 
 void GLRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
-    //todo...
+    /* Bind storage buffer with BindBufferBase */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, slot, bufferGL.GetID());
 }
 
 void* GLRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
 {
-    return nullptr;//todo...
+    /* Get, bind, and map buffer */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBuffer(bufferGL);
+    return bufferGL.MapBuffer(GLTypes::Map(access));
 }
 
-void GLRenderContext::UnmapBuffer()
+void GLRenderContext::UnmapBuffer(Buffer& buffer)
 {
-    //todo...
+    /* Get, bind, and unmap buffer */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBuffer(bufferGL);
+    bufferGL.UnmapBuffer();
 }
 
 #if 1//TODO: remove
@@ -245,11 +266,11 @@ void GLRenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned in
 
 void* GLRenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
 {
-    if (!renderState_.mappedStorageBuffer)
+    if (!renderState_._mappedStorageBuffer_deprecated_)
     {
         /* Get and store storage buffer */
         auto& storageBufferGL = LLGL_CAST(GLStorageBuffer&, storageBuffer);
-        renderState_.mappedStorageBuffer = &storageBufferGL;
+        renderState_._mappedStorageBuffer_deprecated_ = &storageBufferGL;
 
         /* Bind and map storage buffer */
         stateMngr_->BindBuffer(storageBufferGL);
@@ -261,10 +282,10 @@ void* GLRenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const Buff
 
 void GLRenderContext::UnmapStorageBuffer()
 {
-    if (renderState_.mappedStorageBuffer)
+    if (renderState_._mappedStorageBuffer_deprecated_)
     {
-        renderState_.mappedStorageBuffer->hwBuffer.UnmapBuffer();
-        renderState_.mappedStorageBuffer = nullptr;
+        renderState_._mappedStorageBuffer_deprecated_->hwBuffer.UnmapBuffer();
+        renderState_._mappedStorageBuffer_deprecated_ = nullptr;
     }
     else
         throw std::runtime_error(LLGL_ASSERT_INFO("no storage buffer set to unmap"));

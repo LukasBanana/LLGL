@@ -196,16 +196,15 @@ class LLGL_EXPORT RenderContext
         \param[in] buffer Specifies the buffer which is to be mapped.
         \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
         \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
-        \throws std::runtime_error If a buffer is already being mapped.
-        \see UnmapStorageBuffer
+        \see UnmapBuffer
         */
         virtual void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) = 0;
 
         /**
-        \brief Unmaps the previously mapped storage buffer.
-        \see MapStorageBuffer
+        \brief Unmaps the specified buffer.
+        \see MapBuffer
         */
-        virtual void UnmapBuffer() = 0;
+        virtual void UnmapBuffer(Buffer& buffer) = 0;
 
         #if 1//TODO: remove
         /**

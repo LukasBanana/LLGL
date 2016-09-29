@@ -182,7 +182,7 @@ void* D3D11RenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access
     return nullptr;//todo...
 }
 
-void D3D11RenderContext::UnmapBuffer()
+void D3D11RenderContext::UnmapBuffer(Buffer& buffer)
 {
     //todo...
 }

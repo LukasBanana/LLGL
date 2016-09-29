@@ -65,7 +65,7 @@ class DbgRenderContext : public RenderContext
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
 
         void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
-        void UnmapBuffer() override;
+        void UnmapBuffer(Buffer& buffer) override;
 
         #if 1//TODO: remove
         void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
@@ -152,6 +152,7 @@ class DbgRenderContext : public RenderContext
         void DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source);
 
         void DebugShaderStageFlags(long shaderStageFlags, const std::string& source);
+        void DebugBufferType(const Buffer& buffer, const BufferType type, const std::string& source);
 
         void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);
 
