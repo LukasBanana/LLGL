@@ -212,9 +212,9 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescripto
     UpdateGenericTexture(texture, subTextureDesc.mipLevel, 0, position, size, imageDesc);
 }
 
-void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
+void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer)
 {
-    LLGL_ASSERT_PTR(data);
+    LLGL_ASSERT_PTR(buffer);
 
     auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
 

@@ -615,9 +615,9 @@ void GLRenderSystem::WriteTextureCubeArray(const SubTextureDescriptor& desc, con
     );
 }
 
-void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
+void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer)
 {
-    LLGL_ASSERT_PTR(data);
+    LLGL_ASSERT_PTR(buffer);
 
     /* Bind texture */
     auto& textureGL = LLGL_CAST(const GLTexture&, texture);
@@ -627,9 +627,9 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageForm
     glGetTexImage(
         GLTypes::Map(textureGL.GetType()),
         mipLevel,
-        GLTypes::Map(dataFormat),
+        GLTypes::Map(imageFormat),
         GLTypes::Map(dataType),
-        data
+        buffer
     );
 }
 

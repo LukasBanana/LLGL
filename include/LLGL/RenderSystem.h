@@ -266,18 +266,18 @@ class LLGL_EXPORT RenderSystem
         \brief Reads the image data from the specified texture.
         \param[in] texture Specifies the texture object to read from.
         \param[in] mipLevel Specifies the MIP-level from which to read the image data.
-        \param[in] dataFormat Specifies the output data format.
+        \param[in] imageFormat Specifies the output image format.
         \param[in] dataType Specifies the output data type.
-        \param[out] data Specifies the output image data. This must be a pointer to a memory block, which is large enough to fit all the image data.
-        \remarks Depending on the data format, data type, and texture size, the output image container must be allocated with enough memory size.
+        \param[out] buffer Specifies the output image buffer. This must be a pointer to a memory block, which is large enough to fit all the image data.
+        \remarks Depending on the image format, data type, and texture size, the output image container must be allocated with enough memory size.
         The "QueryTextureDescriptor" function can be used to determine the texture dimensions.
         \code
         std::vector<LLGL::ColorRGBAub> image(textureWidth*textureHeight);
-        renderSystem->ReadTexture(texture, 0, LLGL::ImageFormat::RGBA, LLGL::DataType::UByte, image.data());
+        renderSystem->ReadTexture(texture, 0, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, image.data());
         \endcode
         \see QueryTextureDescriptor
         */
-        virtual void ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data) = 0;
+        virtual void ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer) = 0;
 
         /**
         \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.

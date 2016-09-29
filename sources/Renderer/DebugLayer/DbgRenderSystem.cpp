@@ -240,12 +240,12 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor&
     }
 }
 
-void DbgRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data)
+void DbgRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer)
 {
     auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
     DebugMipLevelLimit(mipLevel, textureDbg.mipLevels, __FUNCTION__);
     {
-        instance_->ReadTexture(textureDbg.instance, mipLevel, dataFormat, dataType, data);
+        instance_->ReadTexture(textureDbg.instance, mipLevel, imageFormat, dataType, buffer);
     }
 }
 

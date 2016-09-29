@@ -81,7 +81,7 @@ class DbgRenderSystem : public RenderSystem
         
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
 
-        void ReadTexture(const Texture& texture, int mipLevel, ImageFormat dataFormat, DataType dataType, void* data) override;
+        void ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer) override;
 
         void GenerateMips(Texture& texture) override;
 
