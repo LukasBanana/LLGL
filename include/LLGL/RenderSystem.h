@@ -169,16 +169,13 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new index buffer.
-        \param[in] dataSize Specifies the size (in bytes) of the buffer.
-        \param[in] usage Specifies the buffer usage, which is typically "BufferUsage::Static" for an index buffer, since it is rarely changed.
-        \param[in] indexFormat Specifies the index format layout, which is basically only the data type of each index.
-        The only valid format types for an index buffer are: DataType::UByte, DataType::UShort, DataType::UInt.
+        \param[in] desc Specifies the index buffer descriptor.
         \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
         This may also be null, to only initialize the size of the buffer. In this case, the buffer must
         be initialized with the "WriteIndexBuffer" function before it is used for drawing operations.
         \see WriteIndexBuffer
         */
-        virtual IndexBuffer* CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData = nullptr) = 0;
+        virtual IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData = nullptr) = 0;
 
         /**
         \brief Creates a new buffer (also called "Uniform Buffer Object").

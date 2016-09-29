@@ -93,15 +93,15 @@ VertexBuffer* DbgRenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& 
     return TakeOwnership(vertexBuffers_, std::move(vertexBufferDbg));
 }
 
-IndexBuffer* DbgRenderSystem::CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData)
+IndexBuffer* DbgRenderSystem::CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData)
 {
-    if (size % indexFormat.GetFormatSize() != 0)
-        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with index format of " + std::to_string(indexFormat.GetFormatSize()) + " bytes");
+    if (desc.size % desc.indexFormat.GetFormatSize() != 0)
+        LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with index format of " + std::to_string(desc.indexFormat.GetFormatSize()) + " bytes");
 
-    auto indexBufferDbg = MakeUnique<DbgIndexBuffer>(*instance_->CreateIndexBuffer(size, usage, indexFormat, initialData));
+    auto indexBufferDbg = MakeUnique<DbgIndexBuffer>(*instance_->CreateIndexBuffer(desc, initialData));
 
-    indexBufferDbg->size        = size;
-    indexBufferDbg->elements    = size / indexFormat.GetFormatSize();
+    indexBufferDbg->desc        = desc;
+    indexBufferDbg->elements    = desc.size / desc.indexFormat.GetFormatSize();
     indexBufferDbg->initialized = true;
 
     return TakeOwnership(indexBuffers_, std::move(indexBufferDbg));
@@ -171,7 +171,7 @@ void DbgRenderSystem::WriteIndexBuffer(IndexBuffer& indexBuffer, const void* dat
     auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
     if (indexBufferDbg.initialized)
     {
-        DebugBufferSize(indexBufferDbg.size, dataSize, offset, __FUNCTION__);
+        DebugBufferSize(indexBufferDbg.desc.size, dataSize, offset, __FUNCTION__);
         {
             instance_->WriteIndexBuffer(indexBufferDbg.instance, data, dataSize, offset);
         }

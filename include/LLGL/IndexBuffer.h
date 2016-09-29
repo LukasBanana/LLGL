@@ -17,6 +17,33 @@ namespace LLGL
 {
 
 
+//! Index buffer descriptor structure.
+struct IndexBufferDescriptor
+{
+    IndexBufferDescriptor() = default;
+
+    IndexBufferDescriptor(unsigned int size, BufferUsage usage, const IndexFormat& indexFormat) :
+        size        ( size        ),
+        usage       ( usage       ),
+        indexFormat ( indexFormat )
+    {
+    }
+
+    //! Buffer size (in bytes).
+    unsigned int    size        = 0;
+
+    //! Buffer usage (typically "BufferUsage::Static", since an index buffer is rarely changed).
+    BufferUsage     usage       = BufferUsage::Static;
+
+    /**
+    \brief Specifies the index format layout, which is basically only the data type of each index.
+    \remarks The only valid format types for an index buffer are: DataType::UByte, DataType::UShort, and DataType::UInt.
+    \see DataType
+    */
+    IndexFormat     indexFormat;
+};
+
+
 //! Index buffer interface.
 class LLGL_EXPORT IndexBuffer
 {

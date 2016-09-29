@@ -65,7 +65,7 @@ class D3D11RenderSystem : public RenderSystem
         /* ----- Hardware Buffers ------ */
 
         VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData = nullptr) override;
-        IndexBuffer* CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData = nullptr) override;
+        IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData = nullptr) override;
         ConstantBuffer* CreateConstantBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) override;
         StorageBuffer* CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) override;
 

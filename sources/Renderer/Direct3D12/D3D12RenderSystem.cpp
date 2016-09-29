@@ -109,17 +109,17 @@ VertexBuffer* D3D12RenderSystem::CreateVertexBuffer(const VertexBufferDescriptor
     return TakeOwnership(vertexBuffers_, std::move(vertexBufferD3D));
 }
 
-IndexBuffer* D3D12RenderSystem::CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData)
+IndexBuffer* D3D12RenderSystem::CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData)
 {
     auto indexBufferD3D = MakeUnique<D3D12IndexBuffer>();
 
     /* Create hardware buffer resource */
-    indexBufferD3D->hwBuffer.CreateResource(device_.Get(), size);
-    indexBufferD3D->PutView(D3D12Types::Map(indexFormat.GetDataType()));
+    indexBufferD3D->hwBuffer.CreateResource(device_.Get(), desc.size);
+    indexBufferD3D->PutView(D3D12Types::Map(desc.indexFormat.GetDataType()));
 
     /* Upload buffer data to GPU */
     ComPtr<ID3D12Resource> bufferUpload;
-    indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, size);
+    indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, desc.size);
 
     /* Execute upload commands and wait for GPU to finish execution */
     CloseAndExecuteCommandList(commandList_.Get());

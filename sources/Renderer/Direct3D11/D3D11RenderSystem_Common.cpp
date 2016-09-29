@@ -87,11 +87,11 @@ VertexBuffer* D3D11RenderSystem::CreateVertexBuffer(const VertexBufferDescriptor
     return TakeOwnership(vertexBuffers_, std::move(vertexBufferD3D));
 }
 
-IndexBuffer* D3D11RenderSystem::CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData)
+IndexBuffer* D3D11RenderSystem::CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData)
 {
     auto indexBufferD3D = MakeUnique<D3D11IndexBuffer>();
     {
-        indexBufferD3D->CreateResource(device_.Get(), D3D11Types::Map(indexFormat.GetDataType()), size, initialData);
+        indexBufferD3D->CreateResource(device_.Get(), D3D11Types::Map(desc.indexFormat.GetDataType()), desc.size, initialData);
     }
     return TakeOwnership(indexBuffers_, std::move(indexBufferD3D));
 }

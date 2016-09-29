@@ -22,6 +22,8 @@ class LLGL_EXPORT IndexFormat
 
     public:
 
+        IndexFormat() = default;
+
         IndexFormat(const DataType dataType);
 
         //! Returns the data type of this index format.

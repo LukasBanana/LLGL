@@ -26,10 +26,10 @@ class DbgIndexBuffer : public IndexBuffer
         {
         }
 
-        LLGL::IndexBuffer&  instance;
-        std::size_t         size        = 0;
-        std::size_t         elements    = 0;
-        bool                initialized = false;
+        LLGL::IndexBuffer&      instance;
+        IndexBufferDescriptor   desc;
+        unsigned int            elements    = 0;
+        bool                    initialized = false;
 
 };
 

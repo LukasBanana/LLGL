@@ -37,14 +37,14 @@ VertexBuffer* GLRenderSystem::CreateVertexBuffer(const VertexBufferDescriptor& d
     return TakeOwnership(vertexBuffers_, std::move(vertexBufferGL));
 }
 
-IndexBuffer* GLRenderSystem::CreateIndexBuffer(std::size_t size, const BufferUsage usage, const IndexFormat& indexFormat, const void* initialData)
+IndexBuffer* GLRenderSystem::CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData)
 {
     auto indexBufferGL = MakeUnique<GLIndexBuffer>();
     GLStateManager::active->BindBuffer(*indexBufferGL);
     {
         /* Update buffer data and update new index format */
-        indexBufferGL->hwBuffer.BufferData(initialData, size, GLTypes::Map(usage));
-        indexBufferGL->UpdateIndexFormat(indexFormat);
+        indexBufferGL->hwBuffer.BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
+        indexBufferGL->UpdateIndexFormat(desc.indexFormat);
     }
     return TakeOwnership(indexBuffers_, std::move(indexBufferGL));
 }
