@@ -377,43 +377,46 @@ protected:
     }
 
     template <typename VertexType>
-    LLGL::VertexBuffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
+    LLGL::Buffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
     {
-        LLGL::VertexBufferDescriptor desc;
+        LLGL::BufferDescriptor desc;
         {
-            desc.size           = vertices.size() * sizeof(VertexType);
-            desc.vertexFormat   = vertexFormat;
+            desc.type                           = LLGL::BufferType::Vertex;
+            desc.size                           = vertices.size() * sizeof(VertexType);
+            desc.vertexBufferDesc.vertexFormat  = vertexFormat;
         }
-        return renderer->CreateVertexBuffer(desc, vertices.data());
+        return renderer->CreateBuffer(desc, vertices.data());
     }
 
     template <typename IndexType>
-    LLGL::IndexBuffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::IndexFormat& indexFormat)
+    LLGL::Buffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::IndexFormat& indexFormat)
     {
-        LLGL::IndexBufferDescriptor desc;
+        LLGL::BufferDescriptor desc;
         {
-            desc.size           = indices.size() * sizeof(IndexType);
-            desc.indexFormat    = indexFormat;
+            desc.type                           = LLGL::BufferType::Index;
+            desc.size                           = indices.size() * sizeof(IndexType);
+            desc.indexBufferDesc.indexFormat    = indexFormat;
         }
-        return renderer->CreateIndexBuffer(desc, indices.data());
+        return renderer->CreateBuffer(desc, indices.data());
     }
 
     template <typename Buffer>
-    LLGL::ConstantBuffer* CreateConstantBuffer(const Buffer& buffer)
+    LLGL::Buffer* CreateConstantBuffer(const Buffer& buffer)
     {
         static_assert(!std::is_pointer<Buffer>::value, "buffer type must not be a pointer");
-        LLGL::ConstantBufferDescriptor desc;
+        LLGL::BufferDescriptor desc;
         {
-            desc.size = sizeof(buffer);
+            desc.type   = LLGL::BufferType::Constant;
+            desc.size   = sizeof(buffer);
         }
-        return renderer->CreateConstantBuffer(desc, &buffer);
+        return renderer->CreateBuffer(desc, &buffer);
     }
 
-    template <typename Buffer>
-    void UpdateConstantBuffer(LLGL::ConstantBuffer* constantBuffer, const Buffer& buffer)
+    template <typename T>
+    void UpdateBuffer(LLGL::Buffer* buffer, const T& data)
     {
-        GS_ASSERT(constantBuffer != nullptr);
-        renderer->WriteConstantBuffer(*constantBuffer, &buffer, sizeof(buffer), 0);
+        GS_ASSERT(buffer != nullptr);
+        renderer->WriteBuffer(*buffer, &data, sizeof(data), 0);
     }
 
     // Returns the aspect ratio of the render context resolution (X:Y).

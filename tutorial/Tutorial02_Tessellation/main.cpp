@@ -21,9 +21,9 @@ class Tutorial02 : public Tutorial
     LLGL::ShaderProgram*    shaderProgram       = nullptr;
     LLGL::GraphicsPipeline* pipeline[2]         = { nullptr };
 
-    LLGL::VertexBuffer*     vertexBuffer        = nullptr;
-    LLGL::IndexBuffer*      indexBuffer         = nullptr;
-    LLGL::ConstantBuffer*   constantBuffer      = nullptr;
+    LLGL::Buffer*           vertexBuffer        = nullptr;
+    LLGL::Buffer*           indexBuffer         = nullptr;
+    LLGL::Buffer*           constantBuffer      = nullptr;
 
     unsigned int            constantBufferIndex = 0;
 
@@ -42,7 +42,7 @@ class Tutorial02 : public Tutorial
 public:
 
     Tutorial02() :
-        Tutorial( "Direct3D11", L"LLGL Tutorial 02: Tessellation")//, { 800, 600 }, 0 )
+        Tutorial( "OpenGL", L"LLGL Tutorial 02: Tessellation")//, { 800, 600 }, 0 )
     {
         // Check if constant buffers and tessellation shaders are supported
         auto renderCaps = renderer->QueryRenderingCaps();
@@ -71,17 +71,10 @@ public:
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AddAttribute("position", LLGL::DataType::Float, 3);
 
-        // Create vertex- and index buffers for a simple 3D cube model
+        // Create buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
         indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt32);
-
-        // Create constant buffer
-        LLGL::ConstantBufferDescriptor constantBufferDesc;
-        {
-            constantBufferDesc.size     = sizeof(Settings);
-            constantBufferDesc.usage    = LLGL::BufferUsage::Dynamic;
-        }
-        constantBuffer = renderer->CreateConstantBuffer(constantBufferDesc);
+        constantBuffer = CreateConstantBuffer(settings);
 
         return vertexFormat;
     }
@@ -208,7 +201,7 @@ private:
         context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
         // Update constant buffer
-        renderer->WriteConstantBuffer(*constantBuffer, &settings, sizeof(settings), 0);
+        UpdateBuffer(constantBuffer, settings);
 
         // Set graphics pipeline with the shader
         context->SetGraphicsPipeline(*pipeline[showWireframe ? 1 : 0]);

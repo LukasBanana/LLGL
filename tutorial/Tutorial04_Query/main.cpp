@@ -16,9 +16,9 @@ class Tutorial04 : public Tutorial
     LLGL::GraphicsPipeline* occlusionPipeline       = nullptr;
     LLGL::GraphicsPipeline* scenePipeline           = nullptr;
 
-    LLGL::VertexBuffer*     vertexBuffer            = nullptr;
-    LLGL::IndexBuffer*      indexBuffer             = nullptr;
-    LLGL::ConstantBuffer*   constantBuffer          = nullptr;
+    LLGL::Buffer*           vertexBuffer            = nullptr;
+    LLGL::Buffer*           indexBuffer             = nullptr;
+    LLGL::Buffer*           constantBuffer          = nullptr;
 
     LLGL::Query*            occlusionQuery          = nullptr;
     LLGL::Query*            geometryQuery           = nullptr;
@@ -35,7 +35,7 @@ class Tutorial04 : public Tutorial
 public:
 
     Tutorial04() :
-        Tutorial( "Direct3D11", L"LLGL Tutorial 04: Query")
+        Tutorial( "OpenGL", L"LLGL Tutorial 04: Query")
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -129,7 +129,7 @@ public:
     void SetBoxColor(const LLGL::ColorRGBAf& color)
     {
         settings.color = color;
-        UpdateConstantBuffer(constantBuffer, settings);
+        UpdateBuffer(constantBuffer, settings);
     }
 
 private:

@@ -15,9 +15,9 @@ class Tutorial05 : public Tutorial
 
     LLGL::GraphicsPipeline* pipeline        = nullptr;
 
-    LLGL::VertexBuffer*     vertexBuffer    = nullptr;
-    LLGL::IndexBuffer*      indexBuffer     = nullptr;
-    LLGL::ConstantBuffer*   constantBuffer  = nullptr;
+    LLGL::Buffer*           vertexBuffer    = nullptr;
+    LLGL::Buffer*           indexBuffer     = nullptr;
+    LLGL::Buffer*           constantBuffer  = nullptr;
 
     LLGL::Texture*          colorMap        = nullptr;
     LLGL::Sampler*          samplerState    = nullptr;
@@ -38,7 +38,7 @@ class Tutorial05 : public Tutorial
 public:
 
     Tutorial05() :
-        Tutorial( "Direct3D11", L"LLGL Tutorial 05: RenderTarget")
+        Tutorial( "OpenGL", L"LLGL Tutorial 05: RenderTarget")
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -207,7 +207,7 @@ private:
                 Gs::FlipAxis(settings.wvpMatrix, 1);
             }
 
-            UpdateConstantBuffer(constantBuffer, settings);
+            UpdateBuffer(constantBuffer, settings);
 
             // Draw scene
             context->DrawIndexed(36, 0);
@@ -236,7 +236,7 @@ private:
 
         // Update model transformation with standard projection
         UpdateModelTransform(projection, rot0);
-        UpdateConstantBuffer(constantBuffer, settings);
+        UpdateBuffer(constantBuffer, settings);
 
         // Draw scene
         context->DrawIndexed(36, 0);

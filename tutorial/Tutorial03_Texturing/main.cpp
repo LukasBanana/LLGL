@@ -13,7 +13,7 @@ class Tutorial03 : public Tutorial
 
     LLGL::ShaderProgram*    shaderProgram   = nullptr;
     LLGL::GraphicsPipeline* pipeline        = nullptr;
-    LLGL::VertexBuffer*     vertexBuffer    = nullptr;
+    LLGL::Buffer*           vertexBuffer    = nullptr;
     LLGL::Texture*          colorMap        = nullptr;
     LLGL::Sampler*          sampler[5]      = { nullptr };
     int                     samplerIndex    = 0;
@@ -21,7 +21,7 @@ class Tutorial03 : public Tutorial
 public:
 
     Tutorial03() :
-        Tutorial( "Direct3D11", L"LLGL Tutorial 03: Texturing")
+        Tutorial( "OpenGL", L"LLGL Tutorial 03: Texturing")
     {
         // Check if samplers are supported
         auto renderCaps = renderer->QueryRenderingCaps();
