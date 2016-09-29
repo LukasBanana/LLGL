@@ -11,28 +11,12 @@
 
 #include "Export.h"
 #include "RenderSystemFlags.h"
+#include "BufferFlags.h"
 #include <string>
 
 
 namespace LLGL
 {
-
-
-/**
-\brief Storage buffer type enumeration.
-\note Only supported with: Direct3D 11, Direct3D 12.
-*/
-enum class StorageBufferType
-{
-    Buffer,                     //!< Typed buffer.
-    StructuredBuffer,           //!< Structured buffer.
-    ByteAddressBuffer,          //!< Byte-address buffer.
-    RWBuffer,                   //!< Typed read/write buffer.
-    RWStructuredBuffer,         //!< Structured read/write buffer.
-    RWByteAddressBuffer,        //!< Byte-address read/write buffer.
-    AppendStructuredBuffer,     //!< Append structured buffer.
-    ConsumeStructuredBuffer,    //!< Consume structured buffer.
-};
 
 
 //! Storage buffer descriptor structure.

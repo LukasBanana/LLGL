@@ -15,12 +15,9 @@
 #include "RenderingProfiler.h"
 #include "RenderingDebugger.h"
 
-#include "VertexBuffer.h"
+#include "Buffer.h"
 #include "VertexFormat.h"
-#include "IndexBuffer.h"
 #include "IndexFormat.h"
-#include "ConstantBuffer.h"
-#include "StorageBuffer.h"
 #include "Texture.h"
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
@@ -32,6 +29,12 @@
 #include <string>
 #include <memory>
 #include <vector>
+
+//TODO: remove
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+#include "ConstantBuffer.h"
+#include "StorageBuffer.h"
 
 
 namespace LLGL
@@ -155,71 +158,50 @@ class LLGL_EXPORT RenderSystem
             return currentContext_;
         }
 
-        /* ----- Hardware Buffers ------ */
+        /* ----- Buffers ------ */
 
+        #if 0
         /**
-        \brief Creates a new vertex buffer.
+        \brief Creates a new generic hardware buffer.
         \param[in] desc Specifies the vertex buffer descriptor.
         \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
         This may also be null, to only initialize the size of the buffer. In this case, the buffer must
-        be initialized with the "WriteVertexBuffer" function before it is used for drawing operations. By default null.
-        \see WriteVertexBuffer
+        be initialized with the "WriteBuffer" function before it is used for drawing operations. By default null.
+        \see WriteBuffer
         */
+        virtual Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) = 0;
+        
+        //! Releases the specified buffer object.
+        virtual void Release(Buffer& buffer) = 0;
+        
+        /**
+        \brief Updates the data of the specified buffer.
+        \param[in] buffer Specifies the buffer whose data is to be updated.
+        \param[in] data Raw pointer to the data with which the buffer is to be updated. This must not be null!
+        \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
+        This must be less then or equal to the size of the buffer.
+        \param[in] offset Specifies the offset (in bytes) at which the buffer is to be updated.
+        This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the buffer.
+        */
+        virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+        #endif
+
+        //TODO: remove
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData = nullptr) = 0;
-
-        /**
-        \brief Creates a new index buffer.
-        \param[in] desc Specifies the index buffer descriptor.
-        \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
-        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
-        be initialized with the "WriteIndexBuffer" function before it is used for drawing operations.
-        \see WriteIndexBuffer
-        */
         virtual IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData = nullptr) = 0;
-
-        /**
-        \brief Creates a new buffer (also called "Uniform Buffer Object").
-        \param[in] desc Specifies the constant buffer descriptor.
-        \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
-        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
-        be initialized with the "WriteConstantBuffer" function before it is used for drawing operations.
-        \see WriteConstantBuffer
-        */
         virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData = nullptr) = 0;
-
-        /**
-        \brief Creates a new storage buffer (also called "Shader Storage Buffer Object" or "Read/Write Buffer").
-        \param[in] desc Specifies the storage buffer descriptor.
-        \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
-        This may also be null, to only initialize the size of the buffer. In this case, the buffer must
-        be initialized with the "WriteStorageBuffer" function before it is used for drawing operations.
-        \see WriteStorageBuffer
-        */
         virtual StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData = nullptr) = 0;
 
+        //RODO: remove
         virtual void Release(VertexBuffer& vertexBuffer) = 0;
         virtual void Release(IndexBuffer& indexBuffer) = 0;
         virtual void Release(ConstantBuffer& constantBuffer) = 0;
         virtual void Release(StorageBuffer& storageBuffer) = 0;
 
-        /**
-        \brief Updates the data of the specified vertex buffer.
-        \param[in] vertexBuffer Specifies the vertex buffer whose data is to be updated.
-        \param[in] data Raw pointer to the data with which the vertex buffer is to be updated. This must not be null!
-        \param[in] dataSize Specifies the size (in bytes) of the data block which is to be updated.
-        This must be less then or equal to the size of the vertex buffer.
-        \param[in] offset Specifies the offset (in bytes) at which the vertex buffer is to be updated.
-        This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the vertex buffer.
-        */
+        //TODO: remove
         virtual void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
-        
-        //! \see WriteVertexBuffer
         virtual void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
-        
-        //! \see WriteVertexBuffer
         virtual void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
-        
-        //! \see WriteVertexBuffer
         virtual void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
 
         /* ----- Textures ----- */
