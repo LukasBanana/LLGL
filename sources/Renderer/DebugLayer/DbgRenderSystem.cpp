@@ -121,11 +121,11 @@ ConstantBuffer* DbgRenderSystem::CreateConstantBuffer(const ConstantBufferDescri
     return TakeOwnership(constantBuffers_, std::move(constantBufferDbg));
 }
 
-StorageBuffer* DbgRenderSystem::CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+StorageBuffer* DbgRenderSystem::CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData)
 {
-    auto storageBufferDbg = MakeUnique<DbgStorageBuffer>(*instance_->CreateStorageBuffer(size, usage, initialData));
+    auto storageBufferDbg = MakeUnique<DbgStorageBuffer>(*instance_->CreateStorageBuffer(desc, initialData));
 
-    storageBufferDbg->size          = size;
+    storageBufferDbg->desc          = desc;
     storageBufferDbg->initialized   = true;
 
     return TakeOwnership(storageBuffers_, std::move(storageBufferDbg));
@@ -201,7 +201,7 @@ void DbgRenderSystem::WriteStorageBuffer(StorageBuffer& storageBuffer, const voi
     auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
     if (storageBufferDbg.initialized)
     {
-        DebugBufferSize(storageBufferDbg.size, dataSize, offset, __FUNCTION__);
+        DebugBufferSize(storageBufferDbg.desc.size, dataSize, offset, __FUNCTION__);
         {
             instance_->WriteStorageBuffer(storageBufferDbg.instance, data, dataSize, offset);
         }

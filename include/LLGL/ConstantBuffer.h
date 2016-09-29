@@ -23,17 +23,17 @@ struct ConstantBufferDescriptor
 {
     ConstantBufferDescriptor() = default;
 
-    ConstantBufferDescriptor(unsigned int size, BufferUsage usage):
+    ConstantBufferDescriptor(unsigned int size, BufferUsage usage) :
         size    ( size  ),
         usage   ( usage )
     {
     }
 
     //! Buffer size (in bytes).
-    unsigned int    size        = 0;
+    unsigned int    size    = 0;
 
     //! Buffer usage (typically "BufferUsage::Dynamic", since a constant buffer is commonly frequently changed).
-    BufferUsage     usage       = BufferUsage::Dynamic;
+    BufferUsage     usage   = BufferUsage::Dynamic;
 };
 
 /**

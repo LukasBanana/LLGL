@@ -27,7 +27,7 @@ class DbgStorageBuffer : public StorageBuffer
         }
 
         LLGL::StorageBuffer&    instance;
-        std::size_t             size        = 0;
+        StorageBufferDescriptor desc;
         bool                    initialized = false;
 
 };

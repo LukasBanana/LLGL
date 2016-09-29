@@ -60,13 +60,13 @@ ConstantBuffer* GLRenderSystem::CreateConstantBuffer(const ConstantBufferDescrip
     return TakeOwnership(constantBuffers_, std::move(constantBufferGL));
 }
 
-StorageBuffer* GLRenderSystem::CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+StorageBuffer* GLRenderSystem::CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData)
 {
     LLGL_ASSERT_CAP(hasStorageBuffers);
     auto storageBufferGL = MakeUnique<GLStorageBuffer>();
     GLStateManager::active->BindBuffer(*storageBufferGL);
     {
-        storageBufferGL->hwBuffer.BufferData(initialData, size, GLTypes::Map(usage));
+        storageBufferGL->hwBuffer.BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
     }
     return TakeOwnership(storageBuffers_, std::move(storageBufferGL));
 }

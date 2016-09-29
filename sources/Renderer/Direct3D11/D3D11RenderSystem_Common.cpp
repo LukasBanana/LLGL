@@ -105,7 +105,7 @@ ConstantBuffer* D3D11RenderSystem::CreateConstantBuffer(const ConstantBufferDesc
     return TakeOwnership(constantBuffers_, std::move(constantBufferD3D));
 }
 
-StorageBuffer* D3D11RenderSystem::CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData)
+StorageBuffer* D3D11RenderSystem::CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData)
 {
     return nullptr;//todo...
 }

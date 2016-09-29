@@ -51,7 +51,12 @@ int main()
         static const unsigned int vecSize = 128;
         auto vec = GetTestVector(vecSize);
 
-        auto storageBuffer = renderer->CreateStorageBuffer(sizeof(Gs::Vector4f)*vecSize, LLGL::BufferUsage::Static, vec.data());
+        LLGL::StorageBufferDescriptor storageBufferDesc;
+        {
+            storageBufferDesc.size  = sizeof(Gs::Vector4f)*vecSize;
+            storageBufferDesc.usage = LLGL::BufferUsage::Dynamic;
+        }
+        auto storageBuffer = renderer->CreateStorageBuffer(storageBufferDesc, vec.data());
 
         // Load shader
         auto computeShader = renderer->CreateShader(LLGL::ShaderType::Compute);

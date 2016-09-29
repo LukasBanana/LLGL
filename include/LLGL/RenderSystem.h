@@ -188,15 +188,14 @@ class LLGL_EXPORT RenderSystem
         virtual ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData = nullptr) = 0;
 
         /**
-        \brief Creates a new storage buffer (also called "Read/Write Buffer").
-        \param[in] dataSize Specifies the size (in bytes) of the buffer.
-        \param[in] usage Specifies the buffer usage.
+        \brief Creates a new storage buffer (also called "Shader Storage Buffer Object" or "Read/Write Buffer").
+        \param[in] desc Specifies the storage buffer descriptor.
         \param[in] initialData Optional raw pointer to the data with which the buffer is to be initialized.
         This may also be null, to only initialize the size of the buffer. In this case, the buffer must
         be initialized with the "WriteStorageBuffer" function before it is used for drawing operations.
         \see WriteStorageBuffer
         */
-        virtual StorageBuffer* CreateStorageBuffer(std::size_t size, const BufferUsage usage, const void* initialData = nullptr) = 0;
+        virtual StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData = nullptr) = 0;
 
         virtual void Release(VertexBuffer& vertexBuffer) = 0;
         virtual void Release(IndexBuffer& indexBuffer) = 0;
