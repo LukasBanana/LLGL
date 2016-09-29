@@ -22,9 +22,6 @@ class GLShader : public Shader
 
     public:
 
-        GLShader(const GLShader&) = delete;
-        GLShader& operator = (const GLShader&) = delete;
-
         GLShader(const ShaderType type);
         ~GLShader();
 

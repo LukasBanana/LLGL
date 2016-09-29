@@ -47,9 +47,6 @@ class D3D11Shader : public Shader
 
     public:
 
-        D3D11Shader(const D3D11Shader&) = delete;
-        D3D11Shader& operator = (const D3D11Shader&) = delete;
-
         D3D11Shader(ID3D11Device* device, const ShaderType type);
 
         bool Compile(const ShaderSource& shaderSource) override;

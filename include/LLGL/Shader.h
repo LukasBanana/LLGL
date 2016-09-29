@@ -23,6 +23,9 @@ class LLGL_EXPORT Shader
 
     public:
 
+        Shader(const Shader&) = delete;
+        Shader& operator = (const Shader&) = delete;
+
         virtual ~Shader();
 
         /**

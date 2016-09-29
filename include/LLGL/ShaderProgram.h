@@ -29,6 +29,11 @@ class LLGL_EXPORT ShaderProgram
 
     public:
 
+        ShaderProgram(const ShaderProgram&) = delete;
+        ShaderProgram& operator = (const ShaderProgram&) = delete;
+
+        ShaderProgram() = default;
+
         virtual ~ShaderProgram()
         {
         }
