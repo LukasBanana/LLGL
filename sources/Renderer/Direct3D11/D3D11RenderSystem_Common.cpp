@@ -31,21 +31,15 @@ D3D11RenderSystem::D3D11RenderSystem()
     CreateFactory();
     //QueryVideoAdapters();
     CreateDevice(nullptr);
+
+    /* Initialize states and renderer information */
     InitStateManager();
+    QueryRendererInfo();
     QueryRenderingCaps();
 }
 
 D3D11RenderSystem::~D3D11RenderSystem()
 {
-}
-
-std::map<RendererInfo, std::string> D3D11RenderSystem::QueryRendererInfo() const
-{
-    std::map<RendererInfo, std::string> info;
-
-    //todo
-
-    return info;
 }
 
 /* ----- Render Context ----- */
@@ -282,6 +276,19 @@ void D3D11RenderSystem::InitStateManager()
 {
     /* Create state manager */
     stateMngr_ = MakeUnique<D3D11StateManager>(context_);
+}
+
+void D3D11RenderSystem::QueryRendererInfo()
+{
+    RendererInfo info;
+
+    info.rendererName           = "Direct3D 11";
+    info.deviceName             = "???";
+    info.vendorName             = "???";
+    info.shadingLanguageName    = "HLSL";
+    info.rendererID             = RendererID::Direct3D11;
+
+    SetRendererInfo(info);
 }
 
 void D3D11RenderSystem::QueryRenderingCaps()

@@ -51,8 +51,6 @@ class GLRenderSystem : public RenderSystem
         GLRenderSystem();
         ~GLRenderSystem();
 
-        std::map<RendererInfo, std::string> QueryRendererInfo() const override;
-
         /* ----- Render Context ----- */
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
@@ -134,7 +132,9 @@ class GLRenderSystem : public RenderSystem
         void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
         void SetDebugCallback(const DebugCallback& debugCallback);
 
+        void QueryRendererInfo();
         void QueryRenderingCaps();
+
         void AssertCap(bool supported, const std::string& memberName);
 
         void BuildTexture1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);

@@ -16,18 +16,6 @@ namespace LLGL
 /* ----- Enumerations ----- */
 
 /**
-\brief Renderer info enumeration.
-\see RenderContext::QueryRendererInfo
-*/
-enum class RendererInfo
-{
-    Version,
-    Vendor,
-    Hardware,
-    ShadingLanguageVersion,
-};
-
-/**
 \brief Render condition mode enumeration.
 \remarks The condition is determined by the type of the Query object.
 \see RenderContext::BeginRenderCondition

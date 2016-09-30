@@ -100,10 +100,21 @@ class LLGL_EXPORT RenderSystem
             return name_;
         }
 
-        //! Returns all available renderer information.
-        virtual std::map<RendererInfo, std::string> QueryRendererInfo() const = 0;
+        /**
+        \brief Returns basic renderer information.
+        \remarks The validity of these information is only guaranteed if this function is called
+        after a valid render context has been created. Otherwise the behavior is undefined!
+        */
+        inline const RendererInfo& GetRendererInfo() const
+        {
+            return info_;
+        }
 
-        //! Returns the rendering capabilities.
+        /**
+        \brief Returns the rendering capabilities.
+        \remarks The validity of these information is only guaranteed if this function is called
+        after a valid render context has been created. Otherwise the behavior is undefined!
+        */
         inline const RenderingCaps& GetRenderingCaps() const
         {
             return caps_;
@@ -317,6 +328,9 @@ class LLGL_EXPORT RenderSystem
         //! Validates the specified buffer descriptor to be used for buffer creation.
         void AssertCreateBuffer(const BufferDescriptor& desc);
 
+        //! Sets the renderer information.
+        void SetRendererInfo(const RendererInfo& info);
+
         //! Sets the rendering capabilities.
         void SetRenderingCaps(const RenderingCaps& caps);
 
@@ -326,6 +340,7 @@ class LLGL_EXPORT RenderSystem
 
         RenderContext*              currentContext_ = nullptr;
 
+        RendererInfo                info_;
         RenderingCaps               caps_;
         RenderSystemConfiguration   config_;
 

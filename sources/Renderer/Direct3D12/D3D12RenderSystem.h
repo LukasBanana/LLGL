@@ -40,8 +40,6 @@ class D3D12RenderSystem : public RenderSystem
         D3D12RenderSystem();
         ~D3D12RenderSystem();
 
-        std::map<RendererInfo, std::string> QueryRendererInfo() const override;
-
         /* ----- Render Context ------ */
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
@@ -151,6 +149,7 @@ class D3D12RenderSystem : public RenderSystem
         bool CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
         void CreateGPUSynchObjects();
 
+        void QueryRendererInfo();
         void QueryRenderingCaps();
 
         std::unique_ptr<D3D12Buffer> MakeBufferAndInitialize(const BufferDescriptor& desc, const void* initialData);

@@ -41,20 +41,15 @@ D3D12RenderSystem::D3D12RenderSystem()
     commandQueue_   = CreateDXCommandQueue();
     commandAlloc_   = CreateDXCommandAllocator();
     commandList_    = CreateDXCommandList(commandAlloc_.Get());
+
+    /* Initialize renderer information */
+    QueryRendererInfo();
+    QueryRenderingCaps();
 }
 
 D3D12RenderSystem::~D3D12RenderSystem()
 {
     CloseHandle(fenceEvent_);
-}
-
-std::map<RendererInfo, std::string> D3D12RenderSystem::QueryRendererInfo() const
-{
-    std::map<RendererInfo, std::string> info;
-
-    //todo
-
-    return info;
 }
 
 /* ----- Render Context ----- */
@@ -539,6 +534,19 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
     
     /* Create Win32 event */
     fenceEvent_ = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+}
+
+void D3D12RenderSystem::QueryRendererInfo()
+{
+    RendererInfo info;
+
+    info.rendererName           = "Direct3D 12";
+    info.deviceName             = "???";
+    info.vendorName             = "???";
+    info.shadingLanguageName    = "HLSL";
+    info.rendererID             = RendererID::Direct3D12;
+
+    SetRendererInfo(info);
 }
 
 void D3D12RenderSystem::QueryRenderingCaps()

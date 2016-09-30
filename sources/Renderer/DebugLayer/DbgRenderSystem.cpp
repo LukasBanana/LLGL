@@ -37,11 +37,6 @@ DbgRenderSystem::~DbgRenderSystem()
 {
 }
 
-std::map<RendererInfo, std::string> DbgRenderSystem::QueryRendererInfo() const
-{
-    return instance_->QueryRendererInfo();
-}
-
 void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 {
     RenderSystem::SetConfiguration(config);
@@ -54,6 +49,7 @@ RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescripto
 {
     auto renderContextInstance = instance_->CreateRenderContext(desc, window);
 
+    SetRendererInfo(instance_->GetRendererInfo());
     SetRenderingCaps(instance_->GetRenderingCaps());
 
     return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(

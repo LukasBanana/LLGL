@@ -47,8 +47,6 @@ class D3D11RenderSystem : public RenderSystem
         D3D11RenderSystem();
         ~D3D11RenderSystem();
 
-        std::map<RendererInfo, std::string> QueryRendererInfo() const override;
-
         /* ----- Render Context ------ */
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
@@ -137,6 +135,7 @@ class D3D11RenderSystem : public RenderSystem
         void CreateDevice(IDXGIAdapter* adapter);
         void InitStateManager();
 
+        void QueryRendererInfo();
         void QueryRenderingCaps();
 
         void BuildGenericTexture1D(

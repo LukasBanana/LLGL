@@ -37,8 +37,6 @@ class DbgRenderSystem : public RenderSystem
         DbgRenderSystem(const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger);
         ~DbgRenderSystem();
 
-        std::map<RendererInfo, std::string> QueryRendererInfo() const override;
-
         void SetConfiguration(const RenderSystemConfiguration& config) override;
 
         /* ----- Render Context ------ */

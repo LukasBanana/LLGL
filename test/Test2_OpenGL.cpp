@@ -78,14 +78,6 @@ int main()
 
         const auto& renderCaps = renderer->GetRenderingCaps();
 
-        // Show renderer info
-        auto info = renderer->QueryRendererInfo();
-
-        std::cout << "Renderer:         " << info[LLGL::RendererInfo::Version] << std::endl;
-        std::cout << "Vendor:           " << info[LLGL::RendererInfo::Vendor] << std::endl;
-        std::cout << "Hardware:         " << info[LLGL::RendererInfo::Hardware] << std::endl;
-        std::cout << "Shading Language: " << info[LLGL::RendererInfo::ShadingLanguageVersion] << std::endl;
-
         // Setup window title
         auto title = "LLGL Test 2 ( " + renderer->GetName() + " )";
         window->SetTitle(std::wstring(title.begin(), title.end()));

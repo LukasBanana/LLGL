@@ -132,6 +132,35 @@ struct RenderSystemConfiguration
     std::size_t threadCount = maxThreadCount;
 };
 
+/**
+\brief Renderer identification number enumeration.
+\see RendererInfo::rendererID
+*/
+struct RendererID
+{
+    static const unsigned int OpenGL        = 0x00000001; //!< ID number for the OpenGL renderer.
+    static const unsigned int Direct3D11    = 0x00000002; //!< ID number for the Direct3D 11 renderer.
+    static const unsigned int Direct3D12    = 0x00000003; //!< ID number for the Direct3D 12 renderer.
+    static const unsigned int Vulkan        = 0x00000004; //!< ID number for the Vulkan renderer.
+};
+
+//! Renderer basic information structure.
+struct RendererInfo
+{
+    std::string     rendererName;           //!< Rendering API name and version (e.g. "OpenGL 4.5.0").
+    std::string     deviceName;             //!< Renderer device name (e.g. "GeForce GTX 1070/PCIe/SSE2").
+    std::string     vendorName;             //!< Vendor name of the renderer device (e.g. "NVIDIA Corporation").
+    std::string     shadingLanguageName;    //!< Shading language version (e.g. "GLSL 4.50").
+
+    /**
+    \brief Rendering API identification number.
+    \remarks This can be value of the RendererID entries.
+    Since the render system is modular, a new render system can use its own ID number.
+    \see RendererID
+    */
+    unsigned int    rendererID = 0;
+};
+
 //! Rendering capabilities structure.
 struct RenderingCaps
 {

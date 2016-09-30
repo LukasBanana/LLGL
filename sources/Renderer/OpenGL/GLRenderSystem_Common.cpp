@@ -29,28 +29,6 @@ GLRenderSystem::~GLRenderSystem()
     Desktop::ResetVideoMode();
 }
 
-std::map<RendererInfo, std::string> GLRenderSystem::QueryRendererInfo() const
-{
-    std::map<RendererInfo, std::string> info;
-
-    std::vector<std::pair<RendererInfo, GLenum>> entries
-    {{
-        { RendererInfo::Version,                GL_VERSION                  },
-        { RendererInfo::Vendor,                 GL_VENDOR                   },
-        { RendererInfo::Hardware,               GL_RENDERER                 },
-        { RendererInfo::ShadingLanguageVersion, GL_SHADING_LANGUAGE_VERSION },
-    }};
-    
-    for (const auto& entry : entries)
-    {
-        auto bytes = glGetString(entry.second);
-        if (bytes)
-            info[entry.first] = std::string(reinterpret_cast<const char*>(bytes));
-    }
-
-    return info;
-}
-
 /* ----- Render Context ----- */
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
@@ -243,7 +221,8 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
         extensionMap_ = QueryExtensions(coreProfile);
         LoadAllExtensions(extensionMap_);
 
-        /* Query and store all rendering capabilities */
+        /* Query and store all renderer information and capabilities */
+        QueryRendererInfo();
         QueryRenderingCaps();
     }
 }
@@ -315,6 +294,25 @@ static ShadingLanguage QueryShadingLanguage()
     if (IsVer(4, 5)) return ShadingLanguage::GLSL_450;
 
     return ShadingLanguage::GLSL_110;
+}
+
+static std::string GLGetString(GLenum name)
+{
+    auto bytes = glGetString(name);
+    return (bytes != nullptr ? std::string(reinterpret_cast<const char*>(bytes)) : "");
+}
+
+void GLRenderSystem::QueryRendererInfo()
+{
+    RendererInfo info;
+
+    info.rendererName           = "OpenGL " + GLGetString(GL_VERSION);
+    info.deviceName             = GLGetString(GL_RENDERER);
+    info.vendorName             = GLGetString(GL_VENDOR);
+    info.shadingLanguageName    = "GLSL " + GLGetString(GL_SHADING_LANGUAGE_VERSION);
+    info.rendererID             = RendererID::OpenGL;
+
+    SetRendererInfo(info);
 }
 
 void GLRenderSystem::QueryRenderingCaps()
