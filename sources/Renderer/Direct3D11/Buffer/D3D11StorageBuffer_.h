@@ -5,28 +5,23 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D11_STORAGE_BUFFER__DEPRECATED__H__
-#define __LLGL_D3D11_STORAGE_BUFFER__DEPRECATED__H__
+#ifndef __LLGL_D3D11_STORAGE_BUFFER_H__
+#define __LLGL_D3D11_STORAGE_BUFFER_H__
 
 
-#include <LLGL/StorageBuffer.h>
-#include <LLGL/RenderSystemFlags.h>
-#include "D3D11HardwareBuffer.h"
+#include "D3D11Buffer.h"
 
 
 namespace LLGL
 {
 
 
-class D3D11StorageBuffer : public StorageBuffer
+class D3D11StorageBuffer_ : public D3D11Buffer
 {
 
     public:
 
-        void CreateResource(
-            ID3D11Device* device, UINT bufferSize, const BufferUsage usage,
-            const StorageBufferType type, const void* initialData = nullptr
-        );
+        D3D11StorageBuffer_(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
         bool IsUAV() const;
         bool IsStructured() const;
@@ -42,14 +37,12 @@ class D3D11StorageBuffer : public StorageBuffer
             return uav_.Get();
         }
 
-        D3D11HardwareBuffer hwBuffer;
-
     private:
 
         void CreateUAV(ID3D11Device* device);
         void CreateSRV(ID3D11Device* device);
 
-        StorageBufferType                   type_   = StorageBufferType::Buffer;
+        StorageBufferType                   storageType_ = StorageBufferType::Buffer;
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;

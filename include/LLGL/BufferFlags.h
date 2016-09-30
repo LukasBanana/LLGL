@@ -78,7 +78,7 @@ struct BufferDescriptor
         \remarks In OpenGL there are only generic storage buffers (or rather "Shader Storage Buffer Objects").
         \note Only supported with: Direct3D 11, Direct3D 12.
         */
-        StorageBufferType type = StorageBufferType::Buffer;
+        StorageBufferType storageType = StorageBufferType::Buffer;
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.

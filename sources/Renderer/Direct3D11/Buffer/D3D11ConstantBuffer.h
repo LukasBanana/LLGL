@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D11_CONSTANT_BUFFER_H__
-#define __LLGL_D3D11_CONSTANT_BUFFER_H__
+#ifndef __LLGL_D3D11_CONSTANT_BUFFER__DEPRECATED__H__
+#define __LLGL_D3D11_CONSTANT_BUFFER__DEPRECATED__H__
 
 
 #include <LLGL/ConstantBuffer.h>

@@ -23,6 +23,9 @@ class LLGL_EXPORT Buffer
 
     public:
 
+        Buffer(const Buffer&) = delete;
+        Buffer& operator = (const Buffer&) = delete;
+
         virtual ~Buffer();
 
         //! Returns the type of this buffer.

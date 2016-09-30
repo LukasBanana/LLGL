@@ -12,6 +12,13 @@
 #include "../Assertion.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
+#include <sstream>
+#include <iomanip>
+
+#include "Buffer/D3D11VertexBuffer_.h"
+#include "Buffer/D3D11IndexBuffer_.h"
+#include "Buffer/D3D11ConstantBuffer_.h"
+#include "Buffer/D3D11StorageBuffer_.h"
 
 
 namespace LLGL
@@ -78,19 +85,41 @@ void D3D11RenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
+std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
+{
+    /* Make respective buffer type */
+    switch (desc.type)
+    {
+        case BufferType::Vertex:
+            return MakeUnique<D3D11VertexBuffer_>(device, desc, initialData);
+        case BufferType::Index:
+            return MakeUnique<D3D11IndexBuffer_>(device, desc, initialData);
+        case BufferType::Constant:
+            return MakeUnique<D3D11ConstantBuffer_>(device, desc, initialData);
+        case BufferType::Storage:
+            return MakeUnique<D3D11StorageBuffer_>(device, desc, initialData);
+    }
+
+    /* Invalid type -> throw exception */
+    std::stringstream s;
+    s << std::hex << static_cast<unsigned char>(desc.type);
+    throw std::invalid_argument("unknown buffer type (0x" + s.str() + ")");
+}
+
 Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    return nullptr;//todo...
+    return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)
 {
-    //todo...
+    RemoveFromUniqueSet(buffers_, &buffer);
 }
 
 void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    //todo...
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    bufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(offset));
 }
 
 #if 1//TODO: remove

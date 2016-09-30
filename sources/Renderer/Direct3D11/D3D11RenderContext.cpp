@@ -18,10 +18,17 @@
 #include "RenderState/D3D11ComputePipeline.h"
 #include "RenderState/D3D11Query.h"
 
+#include "Buffer/D3D11VertexBuffer_.h"
+#include "Buffer/D3D11IndexBuffer_.h"
+#include "Buffer/D3D11ConstantBuffer_.h"
+#include "Buffer/D3D11StorageBuffer_.h"
+
+#if 1//TODO: remove
 #include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
+#endif
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
@@ -159,22 +166,42 @@ void D3D11RenderContext::ClearBuffers(long flags)
 
 void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
 {
-    //todo...
+    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer_&, buffer);
+
+    ID3D11Buffer* buffers[] = { vertexBufferD3D.Get() };
+    UINT strides[] = { vertexBufferD3D.GetStride() };
+    UINT offsets[] = { 0 };
+
+    context_->IASetVertexBuffers(0, 1, buffers, strides, offsets);
 }
 
 void D3D11RenderContext::SetIndexBuffer(Buffer& buffer)
 {
-    //todo...
+    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer_&, buffer);
+    context_->IASetIndexBuffer(indexBufferD3D.Get(), indexBufferD3D.GetFormat(), 0);
 }
 
 void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
-    //todo...
+    /* Set constant buffer resource to all shader stages */
+    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer_&, buffer);
+    auto resource = constantBufferD3D.Get();
+    SetConstantBuffersOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
 void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
-    //todo...
+    #if 0//INCOMPLETE
+    auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer_&, buffer);
+
+    ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
+    UINT auvCounts[] = { 0 };
+
+    context_->OMSetRenderTargetsAndUnorderedAccessViews(
+        D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
+        slot, 1, uavList, auvCounts
+    );
+    #endif
 }
 
 void* D3D11RenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
