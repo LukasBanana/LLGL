@@ -23,13 +23,6 @@
 #include "Buffer/D3D11ConstantBuffer_.h"
 #include "Buffer/D3D11StorageBuffer_.h"
 
-#if 1//TODO: remove
-#include "Buffer/D3D11VertexBuffer.h"
-#include "Buffer/D3D11IndexBuffer.h"
-#include "Buffer/D3D11ConstantBuffer.h"
-#include "Buffer/D3D11StorageBuffer.h"
-#endif
-
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
 #include "Texture/D3D11RenderTarget.h"

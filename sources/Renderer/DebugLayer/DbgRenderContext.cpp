@@ -16,12 +16,6 @@
 #include "DbgShaderProgram.h"
 #include "DbgQuery.h"
 
-//TODO: remove
-#include "DbgVertexBuffer.h"
-#include "DbgIndexBuffer.h"
-#include "DbgConstantBuffer.h"
-#include "DbgStorageBuffer.h"
-
 
 namespace LLGL
 {
