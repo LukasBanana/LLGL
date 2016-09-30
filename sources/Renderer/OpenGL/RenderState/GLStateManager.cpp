@@ -633,28 +633,6 @@ void GLStateManager::BindBuffer(const GLBuffer& buffer)
     BindBuffer(GetGLBufferTarget(buffer.GetType()), buffer.GetID());
 }
 
-#if 1//TODO: remove
-void GLStateManager::BindBuffer(const GLVertexBuffer& vertexBuffer)
-{
-    BindBuffer(GLBufferTarget::ARRAY_BUFFER, vertexBuffer.hwBuffer.GetID());
-}
-
-void GLStateManager::BindBuffer(const GLIndexBuffer& indexBuffer)
-{
-    BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, indexBuffer.hwBuffer.GetID());
-}
-
-void GLStateManager::BindBuffer(const GLConstantBuffer& constantBuffer)
-{
-    BindBuffer(GLBufferTarget::UNIFORM_BUFFER, constantBuffer.hwBuffer.GetID());
-}
-
-void GLStateManager::BindBuffer(const GLStorageBuffer& storageBuffer)
-{
-    BindBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, storageBuffer.hwBuffer.GetID());
-}
-#endif
-
 /* ----- Framebuffer binding ----- */
 
 void GLStateManager::BindFrameBuffer(GLFrameBufferTarget target, GLuint framebuffer)

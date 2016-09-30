@@ -137,8 +137,6 @@ class GLRenderContext : public RenderContext
             GLenum      drawMode            = GL_TRIANGLES;
             GLenum      indexBufferDataType = GL_UNSIGNED_INT;
             GLintptr    indexBufferStride   = 4;
-
-            GLStorageBuffer* _mappedStorageBuffer_deprecated_ = nullptr;
         };
 
         #ifndef __APPLE__

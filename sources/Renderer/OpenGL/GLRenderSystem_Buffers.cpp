@@ -19,14 +19,6 @@ namespace LLGL
 
 /* ----- Hardware Buffers ------ */
 
-template <typename To, typename From>
-GLHardwareBuffer& BindAndGetHWBuffer(From& buffer)
-{
-    auto& bufferGL = LLGL_CAST(To&, buffer);
-    GLStateManager::active->BindBuffer(bufferGL);
-    return bufferGL.hwBuffer;
-}
-
 Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
     /* Create either base of sub-class GLBuffer object */
