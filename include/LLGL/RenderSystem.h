@@ -337,6 +337,9 @@ class LLGL_EXPORT RenderSystem
         //! Creates an RGBA unsigned-byte image buffer for the specified number of pixels.
         std::vector<ColorRGBAub> GetDefaultTextureImageRGBAub(int numPixels) const;
 
+        //! Validates the specified buffer descriptor to be used for buffer creation.
+        void AssertCreateBuffer(const BufferDescriptor& desc);
+
     private:
 
         std::string                 name_;

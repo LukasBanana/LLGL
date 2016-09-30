@@ -15,6 +15,11 @@
 #include "D3DX12/d3dx12.h"
 //#include "RenderState/D3D12StateManager.h"
 
+#include "Buffer/D3D12VertexBuffer_.h"
+#include "Buffer/D3D12IndexBuffer_.h"
+#include "Buffer/D3D12ConstantBuffer_.h"
+#include "Buffer/D3D12StorageBuffer_.h"
+
 
 namespace LLGL
 {
@@ -90,14 +95,64 @@ void D3D12RenderSystem::Release(RenderContext& renderContext)
 
 /* ----- Hardware Buffers ------ */
 
+// private
+std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const BufferDescriptor& desc, const void* initialData)
+{
+    std::unique_ptr<D3D12Buffer> buffer;
+    ComPtr<ID3D12Resource> bufferUpload;
+
+    /* Create buffer and upload data to GPU */
+    switch (desc.type)
+    {
+        case BufferType::Vertex:
+        {
+            auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer_>(device_.Get(), desc);
+            vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, desc.size);
+            buffer = std::move(vertexBufferD3D);
+        }
+        break;
+
+        case BufferType::Index:
+        {
+            auto indexBufferD3D = MakeUnique<D3D12IndexBuffer_>(device_.Get(), desc);
+            indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, desc.size);
+            buffer = std::move(indexBufferD3D);
+        }
+        break;
+
+        case BufferType::Constant:
+        {
+            auto constantBufferD3D = MakeUnique<D3D12ConstantBuffer_>(device_.Get(), desc);
+            constantBufferD3D->UpdateSubresource(initialData, desc.size);
+            buffer = std::move(constantBufferD3D);
+        }
+        break;
+
+        case BufferType::Storage:
+        {
+            auto storageBufferD3D = MakeUnique<D3D12StorageBuffer_>(device_.Get(), desc);
+            //todo...
+            buffer = std::move(storageBufferD3D);
+        }
+        break;
+    }
+
+    /* Execute upload commands and wait for GPU to finish execution */
+    CloseAndExecuteCommandList(commandList_.Get());
+    SyncGPU();
+
+    return buffer;
+}
+
 Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    return nullptr;//todo...
+    AssertCreateBuffer(desc);
+    return TakeOwnership(buffers_, MakeBufferAndInitialize(desc, initialData));
 }
 
 void D3D12RenderSystem::Release(Buffer& buffer)
 {
-    //todo...
+    RemoveFromUniqueSet(buffers_, &buffer);
 }
 
 void D3D12RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)

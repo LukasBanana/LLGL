@@ -11,7 +11,7 @@
 #include <fstream>
 
 
-#define ENABLE_MULTISAMPLING
+//#define ENABLE_MULTISAMPLING
 
 int main()
 {
@@ -57,13 +57,14 @@ int main()
         vertexFormat.AddAttribute("color",    LLGL::DataType::Float, 3); // color has 3 float components
 
         // Create vertex buffer
-        LLGL::VertexBufferDescriptor vertexBufferDesc;
+        LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.size           = sizeof(vertices);             // Size (in bytes) of the vertex buffer
-            vertexBufferDesc.usage          = LLGL::BufferUsage::Static;    // Buffer usage is static since we won't change it frequently
-            vertexBufferDesc.vertexFormat   = vertexFormat;                 // Vertex format layout
+            vertexBufferDesc.type                           = LLGL::BufferType::Vertex;
+            vertexBufferDesc.size                           = sizeof(vertices);             // Size (in bytes) of the vertex buffer
+            vertexBufferDesc.usage                          = LLGL::BufferUsage::Static;    // Buffer usage is static since we won't change it frequently
+            vertexBufferDesc.vertexBufferDesc.vertexFormat  = vertexFormat;                 // Vertex format layout
         }
-        LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer(vertexBufferDesc, vertices);
+        LLGL::Buffer* vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
         // Create shaders
         LLGL::Shader* vertexShader = renderer->CreateShader(LLGL::ShaderType::Vertex);

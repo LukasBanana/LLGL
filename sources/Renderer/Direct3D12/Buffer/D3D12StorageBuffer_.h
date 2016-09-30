@@ -5,24 +5,23 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D12_STORAGE_BUFFER__DEPRECATED_H__
-#define __LLGL_D3D12_STORAGE_BUFFER__DEPRECATED_H__
+#ifndef __LLGL_D3D12_STORAGE_BUFFER_H__
+#define __LLGL_D3D12_STORAGE_BUFFER_H__
 
 
-#include <LLGL/StorageBuffer.h>
-#include "D3D12HardwareBuffer.h"
+#include "D3D12Buffer.h"
 
 
 namespace LLGL
 {
 
 
-class D3D12StorageBuffer : public StorageBuffer
+class D3D12StorageBuffer_ : public D3D12Buffer
 {
 
     public:
 
-        D3D12HardwareBuffer hwBuffer;
+        D3D12StorageBuffer_(ID3D12Device* device, const BufferDescriptor& desc);
 
 };
 

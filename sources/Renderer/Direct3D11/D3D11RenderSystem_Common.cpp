@@ -99,15 +99,12 @@ std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferD
         case BufferType::Storage:
             return MakeUnique<D3D11StorageBuffer_>(device, desc, initialData);
     }
-
-    /* Invalid type -> throw exception */
-    std::stringstream s;
-    s << std::hex << static_cast<unsigned char>(desc.type);
-    throw std::invalid_argument("unknown buffer type (0x" + s.str() + ")");
+    return nullptr;
 }
 
 Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
+    AssertCreateBuffer(desc);
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 

@@ -5,38 +5,33 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D12_VERTEX_BUFFER__DEPRECATED_H__
-#define __LLGL_D3D12_VERTEX_BUFFER__DEPRECATED_H__
+#ifndef __LLGL_D3D12_VERTEX_BUFFER_H__
+#define __LLGL_D3D12_VERTEX_BUFFER_H__
 
 
-#include <LLGL/VertexBuffer.h>
-#include "D3D12HardwareBuffer.h"
+#include "D3D12Buffer.h"
 
 
 namespace LLGL
 {
 
 
-class D3D12VertexBuffer : public VertexBuffer
+class D3D12VertexBuffer_ : public D3D12Buffer
 {
 
     public:
 
-        D3D12VertexBuffer();
+        D3D12VertexBuffer_(ID3D12Device* device, const BufferDescriptor& desc);
 
         void UpdateSubresource(
             ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
             const void* data, UINT bufferSize, UINT64 offset = 0
         );
 
-        void PutView(UINT stride);
-
         inline const D3D12_VERTEX_BUFFER_VIEW& GetView() const
         {
             return view_;
         }
-
-        D3D12HardwareBuffer hwBuffer;
 
     private:
         

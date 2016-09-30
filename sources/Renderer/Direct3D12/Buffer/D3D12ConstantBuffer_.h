@@ -5,26 +5,23 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D12_CONSTANT_BUFFER__DEPRECATED_H__
-#define __LLGL_D3D12_CONSTANT_BUFFER__DEPRECATED_H__
+#ifndef __LLGL_D3D12_CONSTANT_BUFFER_H__
+#define __LLGL_D3D12_CONSTANT_BUFFER_H__
 
 
-#include <LLGL/ConstantBuffer.h>
-#include "D3D12HardwareBuffer.h"
+#include "D3D12Buffer.h"
 
 
 namespace LLGL
 {
 
 
-class D3D12ConstantBuffer : public ConstantBuffer
+class D3D12ConstantBuffer_ : public D3D12Buffer
 {
 
     public:
 
-        D3D12ConstantBuffer(ID3D12Device* device);
-
-        void CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize);
+        D3D12ConstantBuffer_(ID3D12Device* device, const BufferDescriptor& desc);
 
         void UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset = 0);
 
@@ -33,9 +30,9 @@ class D3D12ConstantBuffer : public ConstantBuffer
             return descHeap_.Get();
         }
 
-        D3D12HardwareBuffer hwBuffer;
-
     private:
+
+        void CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize);
 
         ComPtr<ID3D12DescriptorHeap> descHeap_; // descriptor heap for constant buffer views (CBV)
 

@@ -13,10 +13,14 @@
 #include <LLGL/VideoAdapter.h>
 #include "D3D12RenderContext.h"
 
+#include "Buffer/D3D12Buffer.h"
+
+#if 1//TODO: remove
 #include "Buffer/D3D12VertexBuffer.h"
 #include "Buffer/D3D12IndexBuffer.h"
 #include "Buffer/D3D12ConstantBuffer.h"
 #include "Buffer/D3D12StorageBuffer.h"
+#endif
 
 #include "RenderState/D3D12GraphicsPipeline.h"
 
@@ -175,6 +179,8 @@ class D3D12RenderSystem : public RenderSystem
         bool CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels);
         void CreateGPUSynchObjects();
 
+        std::unique_ptr<D3D12Buffer> MakeBufferAndInitialize(const BufferDescriptor& desc, const void* initialData);
+
         /* ----- Common objects ----- */
 
         ComPtr<IDXGIFactory4>                       factory_;
@@ -200,10 +206,14 @@ class D3D12RenderSystem : public RenderSystem
 
         HWObjectContainer<D3D12RenderContext>       renderContexts_;
         
+        HWObjectContainer<D3D12Buffer>              buffers_;
+            ;
+        #if 1//TODO: remove
         HWObjectContainer<D3D12VertexBuffer>        vertexBuffers_;
         HWObjectContainer<D3D12IndexBuffer>         indexBuffers_;
         HWObjectContainer<D3D12ConstantBuffer>      constantBuffers_;
         HWObjectContainer<D3D12StorageBuffer>       storageBuffers_;
+        #endif
 
         //HWObjectContainer<D3D12Texture>             textures_;
         //HWObjectContainer<D3D12RenderTarget>        renderTargets_;

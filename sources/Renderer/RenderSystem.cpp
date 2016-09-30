@@ -6,6 +6,7 @@
  */
 
 #include "../Platform/Module.h"
+#include "../Core/Helper.h"
 
 #include <LLGL/RenderSystem.h>
 #include <array>
@@ -138,6 +139,12 @@ bool RenderSystem::OnMakeCurrent(RenderContext* renderContext)
 std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixels) const
 {
     return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), GetConfiguration().defaultImageColor);
+}
+
+void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc)
+{
+    if (desc.type < BufferType::Vertex || desc.type > BufferType::StreamOutput)
+        throw std::invalid_argument("failed to create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
 }
 
 
