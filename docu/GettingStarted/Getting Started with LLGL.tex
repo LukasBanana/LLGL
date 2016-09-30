@@ -79,9 +79,8 @@ To use this library you should be familiar with these subjects:
 	
 	\item \textbf{Shading Languages} \\
 	\LLGL forces you to always write your own shaders, so you should be familiar with
-	\href{https://www.opengl.org/documentation/glsl/}{GLSL},
-	\href{https://msdn.microsoft.com/de-de/library/windows/desktop/bb509561(v=vs.85).aspx}{HLSL},
-	or \href{https://developer.nvidia.com/cg-toolkit}{Cg}.
+	\href{https://www.opengl.org/documentation/glsl/}{GLSL} or
+	\href{https://msdn.microsoft.com/de-de/library/windows/desktop/bb509561(v=vs.85).aspx}{HLSL}.
 \end{itemize}
 
 
@@ -104,10 +103,10 @@ This project is still in its early steps. Here is a short overview of its progre
 	MacOS is currently not supported, but it's part of the plan ;-)
 	
 	\item \textbf{OpenGL renderer} \\
-	OpenGL renderer is \textasciitilde 70\% complete
+	OpenGL renderer is \textasciitilde 80\% complete
 	
 	\item \textbf{Direct3D11 renderer} \\
-	Direct3D 11 renderer is \textasciitilde 50\% complete
+	Direct3D 11 renderer is \textasciitilde 60\% complete
 	
 	\item \textbf{Direct3D12 renderer} \\
 	Direct3D 12 renderer is \textasciitilde 5\% complete
@@ -361,13 +360,17 @@ the order of the member fields in the vertex data structure (here ``\texttt{stru
 Now we can create our vertex buffer and upload the vertex data to the GPU by passing a pointer
 to the \texttt{initialData} parameter:
 \begin{lstlisting}
-LLGL::VertexBufferDescriptor vertexBufferDesc;
+LLGL::BufferDescriptor bufferDesc;
 
-vertexBufferDesc.size         = sizeof(vertices);          // Size (in bytes) of the vertex buffer
-vertexBufferDesc.usage        = LLGL::BufferUsage::Static, // Static, we won't change it frequently
-vertexBufferDesc.vertexFormat = vertexFormat;              // Copy the vertex format
+// Set the common buffer attributes
+bufferDesc.type  = LLGL::BufferType::Vertex;  // Buffer type
+bufferDesc.size  = sizeof(vertices);          // Size (in bytes) of the buffer
+bufferDesc.usage = LLGL::BufferUsage::Static, // Staitc, because we won't write it frequently
 
-LLGL::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer(vertexBufferDesc, vertices);
+// Set the vertex buffer specific attributes
+bufferDesc.vertexBufferDesc.vertexFormat = vertexFormat; // Copy the vertex format
+
+LLGL::Buffer* vertexBuffer = renderer->CreateBuffer(bufferDesc, vertices);
 \end{lstlisting}
 To update an entire hardware buffer or texture (or only a portion of it) there is a respective
 ``\texttt{Write...}'' function.
