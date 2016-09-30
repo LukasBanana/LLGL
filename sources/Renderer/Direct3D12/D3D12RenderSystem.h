@@ -15,13 +15,6 @@
 
 #include "Buffer/D3D12Buffer.h"
 
-#if 1//TODO: remove
-#include "Buffer/D3D12VertexBuffer.h"
-#include "Buffer/D3D12IndexBuffer.h"
-#include "Buffer/D3D12ConstantBuffer.h"
-#include "Buffer/D3D12StorageBuffer.h"
-#endif
-
 #include "RenderState/D3D12GraphicsPipeline.h"
 
 #include "Shader/D3D12Shader.h"
@@ -66,23 +59,6 @@ class D3D12RenderSystem : public RenderSystem
         void Release(Buffer& buffer) override;
         
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-
-        #if 1//TODO: remove
-        VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData = nullptr) override;
-        IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData = nullptr) override;
-        ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData = nullptr) override;
-        StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData = nullptr) override;
-
-        void Release(VertexBuffer& vertexBuffer) override;
-        void Release(IndexBuffer& indexBuffer) override;
-        void Release(ConstantBuffer& constantBuffer) override;
-        void Release(StorageBuffer& storageBuffer) override;
-
-        void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        #endif
 
         /* ----- Textures ----- */
 
@@ -205,22 +181,11 @@ class D3D12RenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<D3D12RenderContext>       renderContexts_;
-        
         HWObjectContainer<D3D12Buffer>              buffers_;
-            ;
-        #if 1//TODO: remove
-        HWObjectContainer<D3D12VertexBuffer>        vertexBuffers_;
-        HWObjectContainer<D3D12IndexBuffer>         indexBuffers_;
-        HWObjectContainer<D3D12ConstantBuffer>      constantBuffers_;
-        HWObjectContainer<D3D12StorageBuffer>       storageBuffers_;
-        #endif
-
         //HWObjectContainer<D3D12Texture>             textures_;
         //HWObjectContainer<D3D12RenderTarget>        renderTargets_;
-
         HWObjectContainer<D3D12Shader>              shaders_;
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
-
         HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
         //HWObjectContainer<D3D12Sampler>             samplers_;
 

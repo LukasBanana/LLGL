@@ -20,13 +20,6 @@
 #include "DbgShaderProgram.h"
 #include "DbgQuery.h"
 
-#if 1//TODO: remove
-#include "DbgVertexBuffer.h"
-#include "DbgIndexBuffer.h"
-#include "DbgConstantBuffer.h"
-#include "DbgStorageBuffer.h"
-#endif
-
 #include "../ContainerTypes.h"
 
 
@@ -65,23 +58,6 @@ class DbgRenderSystem : public RenderSystem
         void Release(Buffer& buffer) override;
         
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-
-        #if 1//TODO: remove
-        VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData = nullptr) override;
-        IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData = nullptr) override;
-        ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData = nullptr) override;
-        StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData = nullptr) override;
-
-        void Release(VertexBuffer& vertexBuffer) override;
-        void Release(IndexBuffer& indexBuffer) override;
-        void Release(ConstantBuffer& constantBuffer) override;
-        void Release(StorageBuffer& storageBuffer) override;
-
-        void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        #endif
 
         /* ----- Textures ----- */
 
@@ -172,20 +148,11 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<DbgRenderContext>     renderContexts_;
-        
         HWObjectContainer<DbgBuffer>            buffers_;
-
-        HWObjectContainer<DbgVertexBuffer>      vertexBuffers_;
-        HWObjectContainer<DbgIndexBuffer>       indexBuffers_;
-        HWObjectContainer<DbgConstantBuffer>    constantBuffers_;
-        HWObjectContainer<DbgStorageBuffer>     storageBuffers_;
-
         HWObjectContainer<DbgTexture>           textures_;
         HWObjectContainer<DbgRenderTarget>      renderTargets_;
-
         HWObjectContainer<DbgShader>            shaders_;
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;
-
         HWObjectContainer<DbgGraphicsPipeline>  graphicsPipelines_;
         //HWObjectContainer<DbgComputePipeline>   computePipelines_;
         //HWObjectContainer<DbgSampler>           samplers_;

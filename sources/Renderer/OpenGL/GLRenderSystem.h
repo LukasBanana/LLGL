@@ -15,12 +15,6 @@
 #include "../ContainerTypes.h"
 
 #include "Buffer/GLBuffer.h"
-#if 1//TODO: remove
-#include "Buffer/GLVertexBuffer.h"
-#include "Buffer/GLIndexBuffer.h"
-#include "Buffer/GLConstantBuffer.h"
-#include "Buffer/GLStorageBuffer.h"
-#endif
 
 #include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
@@ -76,23 +70,6 @@ class GLRenderSystem : public RenderSystem
         void Release(Buffer& buffer) override;
         
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-
-        #if 1//TODO: remove
-        VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& desc, const void* initialData = nullptr) override;
-        IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& desc, const void* initialData = nullptr) override;
-        ConstantBuffer* CreateConstantBuffer(const ConstantBufferDescriptor& desc, const void* initialData = nullptr) override;
-        StorageBuffer* CreateStorageBuffer(const StorageBufferDescriptor& desc, const void* initialData = nullptr) override;
-
-        void Release(VertexBuffer& vertexBuffer) override;
-        void Release(IndexBuffer& indexBuffer) override;
-        void Release(ConstantBuffer& constantBuffer) override;
-        void Release(StorageBuffer& storageBuffer) override;
-
-        void WriteVertexBuffer(VertexBuffer& vertexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteIndexBuffer(IndexBuffer& indexBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteConstantBuffer(ConstantBuffer& constantBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        void WriteStorageBuffer(StorageBuffer& storageBuffer, const void* data, std::size_t dataSize, std::size_t offset) override;
-        #endif
 
         /* ----- Textures ----- */
 
@@ -194,22 +171,11 @@ class GLRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<GLRenderContext>      renderContexts_;
-        
         HWObjectContainer<GLBuffer>             buffers_;
-
-        #if 1//TODO: remove
-        HWObjectContainer<GLVertexBuffer>       vertexBuffers_;
-        HWObjectContainer<GLIndexBuffer>        indexBuffers_;
-        HWObjectContainer<GLConstantBuffer>     constantBuffers_;
-        HWObjectContainer<GLStorageBuffer>      storageBuffers_;
-        #endif
-
         HWObjectContainer<GLTexture>            textures_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;
-
         HWObjectContainer<GLShader>             shaders_;
         HWObjectContainer<GLShaderProgram>      shaderPrograms_;
-
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<GLComputePipeline>    computePipelines_;
         HWObjectContainer<GLSampler>            samplers_;
