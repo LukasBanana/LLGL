@@ -282,10 +282,10 @@ void D3D11RenderSystem::QueryRendererInfo()
 {
     RendererInfo info;
 
-    info.rendererName           = "Direct3D 11";
+    info.rendererName           = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
     info.deviceName             = "???";
     info.vendorName             = "???";
-    info.shadingLanguageName    = "HLSL";
+    info.shadingLanguageName    = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
     info.rendererID             = RendererID::Direct3D11;
 
     SetRendererInfo(info);

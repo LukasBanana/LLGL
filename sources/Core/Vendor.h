@@ -17,6 +17,7 @@ namespace LLGL
 {
 
 
+//! Returns the name of the hardware vendor by the specified ID number.
 LLGL_EXPORT std::string GetVendorByID(unsigned short id);
 
 

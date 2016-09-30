@@ -20,16 +20,18 @@ namespace LLGL
 
 /* ----- Structures ----- */
 
+//! Video display mode structure.
 struct VideoDisplayMode
 {
-    unsigned int width          = 0;
-    unsigned int height         = 0;
-    unsigned int refreshRate    = 0;
+    unsigned int width          = 0; //!< Display resolution width (in pixels).
+    unsigned int height         = 0; //!< Display resolution width (in height).
+    unsigned int refreshRate    = 0; //!< Refresh reate (in Hz).
 };
 
+//! Video output structure.
 struct VideoOutput
 {
-    std::vector<VideoDisplayMode> displayModes;
+    std::vector<VideoDisplayMode> displayModes; //!< Video display mode list.
 };
 
 //! Video adapter descriptor structure.

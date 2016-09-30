@@ -202,6 +202,40 @@ std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLe
     return featureLeves;
 }
 
+std::string DXFeatureLevelToVersion(D3D_FEATURE_LEVEL featureLevel)
+{
+    switch (featureLevel)
+    {
+        case D3D_FEATURE_LEVEL_12_1:    return "12.1";
+        case D3D_FEATURE_LEVEL_12_0:    return "12.0";
+        case D3D_FEATURE_LEVEL_11_1:    return "11.1";
+        case D3D_FEATURE_LEVEL_11_0:    return "11.0";
+        case D3D_FEATURE_LEVEL_10_1:    return "10.1";
+        case D3D_FEATURE_LEVEL_10_0:    return "10.0";
+        case D3D_FEATURE_LEVEL_9_3:     return "9.3";
+        case D3D_FEATURE_LEVEL_9_2:     return "9.2";
+        case D3D_FEATURE_LEVEL_9_1:     return "9.1";
+    }
+    return "";
+}
+
+std::string DXFeatureLevelToShaderModel(D3D_FEATURE_LEVEL featureLevel)
+{
+    switch (featureLevel)
+    {
+        case D3D_FEATURE_LEVEL_12_1:    /*pass*/
+        case D3D_FEATURE_LEVEL_12_0:    /*pass*/
+        case D3D_FEATURE_LEVEL_11_1:    /*pass*/
+        case D3D_FEATURE_LEVEL_11_0:    return "5.0";
+        case D3D_FEATURE_LEVEL_10_1:    return "4.1";
+        case D3D_FEATURE_LEVEL_10_0:    return "4.0";
+        case D3D_FEATURE_LEVEL_9_3:     return "3.0";
+        case D3D_FEATURE_LEVEL_9_2:     return "2.0b";
+        case D3D_FEATURE_LEVEL_9_1:     return "2.0a";
+    }
+    return "";
+}
+
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/gg615083(v=vs.85).aspx
 UINT DXGetCompilerFlags(int flags)
 {

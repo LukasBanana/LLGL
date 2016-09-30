@@ -540,10 +540,10 @@ void D3D12RenderSystem::QueryRendererInfo()
 {
     RendererInfo info;
 
-    info.rendererName           = "Direct3D 12";
+    info.rendererName           = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
     info.deviceName             = "???";
     info.vendorName             = "???";
-    info.shadingLanguageName    = "HLSL";
+    info.shadingLanguageName    = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
     info.rendererID             = RendererID::Direct3D12;
 
     SetRendererInfo(info);
