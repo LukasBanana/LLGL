@@ -8,6 +8,8 @@
 #include "../DXCommon/DXCore.h"
 #include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
+#include "../../Core/Vendor.h"
+#include "../ComPtr.h"
 #include <LLGL/Shader.h>
 #include <stdexcept>
 #include <algorithm>
@@ -268,6 +270,69 @@ UINT DXGetDisassemblerFlags(int flags)
         dxFlags |= D3D_DISASM_INSTRUCTION_ONLY;
 
     return dxFlags;
+}
+
+VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
+{
+    ComPtr<IDXGIOutput> output;
+
+    /* Query adapter description */
+    DXGI_ADAPTER_DESC desc;
+    adapter->GetDesc(&desc);
+
+    /* Setup adapter information */
+    VideoAdapterDescriptor videoAdapterDesc;
+
+    videoAdapterDesc.name           = std::wstring(desc.Description);
+    videoAdapterDesc.vendor         = GetVendorByID(desc.VendorId);
+    videoAdapterDesc.videoMemory    = desc.DedicatedVideoMemory;
+
+    /* Enumerate over all adapter outputs */
+    for (UINT j = 0; adapter->EnumOutputs(j, &output) != DXGI_ERROR_NOT_FOUND; ++j)
+    {
+        /* Get output description */
+        DXGI_OUTPUT_DESC desc;
+        output->GetDesc(&desc);
+
+        /* Query number of display modes */
+        UINT numModes = 0;
+        output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, nullptr);
+
+        /* Query display modes */
+        std::vector<DXGI_MODE_DESC> modeDesc(numModes);
+
+        auto hr = output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, modeDesc.data());
+        DXThrowIfFailed(hr, "failed to get display mode list with format DXGI_FORMAT_R8G8B8A8_UNORM");
+
+        /* Add output information to the current adapter */
+        VideoOutput videoOutput;
+            
+        for (UINT i = 0; i < numModes; ++i)
+        {
+            VideoDisplayMode displayMode;
+            {
+                displayMode.width       = modeDesc[i].Width;
+                displayMode.height      = modeDesc[i].Height;
+                displayMode.refreshRate = (modeDesc[i].RefreshRate.Denominator > 0 ? modeDesc[i].RefreshRate.Numerator / modeDesc[i].RefreshRate.Denominator : 0);
+            }
+            videoOutput.displayModes.push_back(displayMode);
+        }
+            
+        /* Remove duplicate display modes */
+        std::sort(videoOutput.displayModes.begin(), videoOutput.displayModes.end(), CompareSWO);
+
+        videoOutput.displayModes.erase(
+            std::unique(videoOutput.displayModes.begin(), videoOutput.displayModes.end()),
+            videoOutput.displayModes.end()
+        );
+
+        /* Add output to the list and release handle */
+        videoAdapterDesc.outputs.push_back(videoOutput);
+
+        output.Reset();
+    }
+
+    return videoAdapterDesc;
 }
 
 

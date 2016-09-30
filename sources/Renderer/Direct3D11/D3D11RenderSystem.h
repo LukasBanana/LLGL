@@ -131,7 +131,7 @@ class D3D11RenderSystem : public RenderSystem
     private:
         
         void CreateFactory();
-        //void QueryVideoAdapters();
+        void QueryVideoAdapters();
         void CreateDevice(IDXGIAdapter* adapter);
         void InitStateManager();
 

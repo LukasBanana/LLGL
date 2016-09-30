@@ -11,6 +11,8 @@
 
 #include <LLGL/ColorRGBA.h>
 #include <LLGL/RenderSystemFlags.h>
+#include <LLGL/VideoAdapter.h>
+#include <dxgi.h>
 #include <string>
 #include <vector>
 #include <Windows.h>
@@ -62,6 +64,9 @@ UINT DXGetCompilerFlags(int flags);
 
 // Returns the disassembler flags for the 'ShaderDisassembleFlags' enumeration values.
 UINT DXGetDisassemblerFlags(int flags);
+
+// Returns the video adapter descriptor from the specified DXGI adapter.
+VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter);
 
 
 } // /namespace LLGL

@@ -29,7 +29,7 @@ D3D11RenderSystem::D3D11RenderSystem()
 {
     /* Create DXGU factory, query video adapters, and create D3D11 device */
     CreateFactory();
-    //QueryVideoAdapters();
+    QueryVideoAdapters();
     CreateDevice(nullptr);
 
     /* Initialize states and renderer information */
@@ -234,10 +234,18 @@ void D3D11RenderSystem::CreateFactory()
     DXThrowIfFailed(hr, "failed to create DXGI factor");
 }
 
-//TODO -> generalize this for D3D11 and D3D12
-/*void D3D11RenderSystem::QueryVideoAdapters()
+void D3D11RenderSystem::QueryVideoAdapters()
 {
-}*/
+    /* Enumerate over all video adapters */
+    ComPtr<IDXGIAdapter> adapter;
+
+    for (UINT i = 0; factory_->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i)
+    {
+        /* Add adapter to the list and release handle */
+        videoAdatperDescs_.push_back(DXGetVideoAdapterDesc(adapter.Get()));
+        adapter.Reset();
+    }
+}
 
 void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
 {
@@ -283,10 +291,17 @@ void D3D11RenderSystem::QueryRendererInfo()
     RendererInfo info;
 
     info.rendererName           = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
-    info.deviceName             = "???";
-    info.vendorName             = "???";
     info.shadingLanguageName    = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
     info.rendererID             = RendererID::Direct3D11;
+
+    if (!videoAdatperDescs_.empty())
+    {
+        const auto& videoAdapterDesc = videoAdatperDescs_.front();
+        info.deviceName = std::string(videoAdapterDesc.name.begin(), videoAdapterDesc.name.end());
+        info.vendorName = videoAdapterDesc.vendor;
+    }
+    else
+        info.deviceName = info.vendorName = "<no adapter found>";
 
     SetRendererInfo(info);
 }

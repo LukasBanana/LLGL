@@ -33,7 +33,7 @@ D3D12RenderSystem::D3D12RenderSystem()
 
     /* Create DXGU factory 1.4, query video adapters, and create D3D12 device */
     CreateFactory();
-    //QueryVideoAdapters();
+    QueryVideoAdapters();
     CreateDevice();
     CreateGPUSynchObjects();
 
@@ -425,69 +425,11 @@ void D3D12RenderSystem::QueryVideoAdapters()
 {
     /* Enumerate over all video adapters */
     ComPtr<IDXGIAdapter> adapter;
-    ComPtr<IDXGIOutput> output;
 
     for (UINT i = 0; factory_->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i)
     {
-        /* Query adapter description */
-        DXGI_ADAPTER_DESC desc;
-        adapter->GetDesc(&desc);
-
-        /* Setup adapter information */
-        VideoAdapterDescriptor videoAdapterDesc;
-
-        videoAdapterDesc.name           = std::wstring(desc.Description);
-        videoAdapterDesc.vendor         = GetVendorByID(desc.VendorId);
-        videoAdapterDesc.videoMemory    = desc.DedicatedVideoMemory;
-
-        /* Enumerate over all adapter outputs */
-        for (UINT j = 0; adapter->EnumOutputs(j, &output) != DXGI_ERROR_NOT_FOUND; ++j)
-        {
-            /* Get output description */
-            DXGI_OUTPUT_DESC desc;
-            output->GetDesc(&desc);
-
-            /* Query number of display modes */
-            UINT numModes = 0;
-            output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, nullptr);
-
-            /* Query display modes */
-            std::vector<DXGI_MODE_DESC> modeDesc(numModes);
-
-            auto hr = output->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, modeDesc.data());
-            DXThrowIfFailed(hr, "failed to get display mode list with format DXGI_FORMAT_R8G8B8A8_UNORM");
-
-            /* Add output information to the current adapter */
-            VideoOutput videoOutput;
-            
-            for (UINT i = 0; i < numModes; ++i)
-            {
-                VideoDisplayMode displayMode;
-                {
-                    displayMode.width       = modeDesc[i].Width;
-                    displayMode.height      = modeDesc[i].Height;
-                    displayMode.refreshRate = (modeDesc[i].RefreshRate.Denominator > 0 ? modeDesc[i].RefreshRate.Numerator / modeDesc[i].RefreshRate.Denominator : 0);
-                }
-                videoOutput.displayModes.push_back(displayMode);
-            }
-            
-            /* Remove duplicate display modes */
-            std::sort(videoOutput.displayModes.begin(), videoOutput.displayModes.end(), CompareSWO);
-
-            videoOutput.displayModes.erase(
-                std::unique(videoOutput.displayModes.begin(), videoOutput.displayModes.end()),
-                videoOutput.displayModes.end()
-            );
-
-            /* Add output to the list and release handle */
-            videoAdapterDesc.outputs.push_back(videoOutput);
-
-            output.Reset();
-        }
-
         /* Add adapter to the list and release handle */
-        videoAdatperDescs_.push_back(videoAdapterDesc);
-
+        videoAdatperDescs_.push_back(DXGetVideoAdapterDesc(adapter.Get()));
         adapter.Reset();
     }
 }
@@ -541,10 +483,17 @@ void D3D12RenderSystem::QueryRendererInfo()
     RendererInfo info;
 
     info.rendererName           = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
-    info.deviceName             = "???";
-    info.vendorName             = "???";
     info.shadingLanguageName    = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
     info.rendererID             = RendererID::Direct3D12;
+
+    if (!videoAdatperDescs_.empty())
+    {
+        const auto& videoAdapterDesc = videoAdatperDescs_.front();
+        info.deviceName = std::string(videoAdapterDesc.name.begin(), videoAdapterDesc.name.end());
+        info.vendorName = videoAdapterDesc.vendor;
+    }
+    else
+        info.deviceName = info.vendorName = "<no adapter found>";
 
     SetRendererInfo(info);
 }
