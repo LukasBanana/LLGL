@@ -32,18 +32,22 @@ enum class BufferType
 
 /**
 \brief Storage buffer type enumeration.
-\note Only supported with: Direct3D 11, Direct3D 12.
+\remarks The generic type is for OpenGL, the others for Direct3D.
 */
 enum class StorageBufferType
 {
-    Buffer,                     //!< Typed buffer.
-    StructuredBuffer,           //!< Structured buffer.
-    ByteAddressBuffer,          //!< Byte-address buffer.
-    RWBuffer,                   //!< Typed read/write buffer.
-    RWStructuredBuffer,         //!< Structured read/write buffer.
-    RWByteAddressBuffer,        //!< Byte-address read/write buffer.
-    AppendStructuredBuffer,     //!< Append structured buffer.
-    ConsumeStructuredBuffer,    //!< Consume structured buffer.
+    /* ----- OpenGL's Shader Storage Buffer Object (SSBO) types ----- */
+    Generic,                    //!< Generic storage buffer type. \note Only supported with: OpenGL.
+
+    /* ----- Direct3D's Read/Write Buffer types ----- */
+    Buffer,                     //!< Typed buffer. \note Only supported with: Direct3D 11, Direct3D 12.
+    StructuredBuffer,           //!< Structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
+    ByteAddressBuffer,          //!< Byte-address buffer. \note Only supported with: Direct3D 11, Direct3D 12.
+    RWBuffer,                   //!< Typed read/write buffer. \note Only supported with: Direct3D 11, Direct3D 12.
+    RWStructuredBuffer,         //!< Structured read/write buffer. \note Only supported with: Direct3D 11, Direct3D 12.
+    RWByteAddressBuffer,        //!< Byte-address read/write buffer. \note Only supported with: Direct3D 11, Direct3D 12.
+    AppendStructuredBuffer,     //!< Append structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
+    ConsumeStructuredBuffer,    //!< Consume structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
 };
 
 
@@ -76,9 +80,8 @@ struct BufferDescriptor
         /**
         \brief Specifies the storage buffer type.
         \remarks In OpenGL there are only generic storage buffers (or rather "Shader Storage Buffer Objects").
-        \note Only supported with: Direct3D 11, Direct3D 12.
         */
-        StorageBufferType storageType = StorageBufferType::Buffer;
+        StorageBufferType storageType = StorageBufferType::Generic;
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.
