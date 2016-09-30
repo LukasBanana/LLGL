@@ -214,58 +214,6 @@ void D3D11RenderContext::UnmapBuffer(Buffer& buffer)
     //todo...
 }
 
-#if 1//TODO: remove
-void D3D11RenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
-{
-    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, vertexBuffer);
-
-    ID3D11Buffer* buffers[] = { vertexBufferD3D.hwBuffer.Get() };
-    UINT strides[] = { vertexBufferD3D.GetStride() };
-    UINT offsets[] = { 0 };
-
-    context_->IASetVertexBuffers(0, 1, buffers, strides, offsets);
-}
-
-void D3D11RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
-{
-    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, indexBuffer);
-    context_->IASetIndexBuffer(indexBufferD3D.hwBuffer.Get(), indexBufferD3D.GetFormat(), 0);
-}
-
-void D3D11RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags)
-{
-    /* Set constant buffer resource to all shader stages */
-    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, constantBuffer);
-    auto resource = constantBufferD3D.hwBuffer.Get();
-    SetConstantBuffersOnStages(slot, 1, &resource, shaderStageFlags);
-}
-
-void D3D11RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
-{
-    #if 0//INCOMPLETE
-    auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, storageBuffer);
-
-    ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
-    UINT auvCounts[] = { 0 };
-
-    context_->OMSetRenderTargetsAndUnorderedAccessViews(
-        D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
-        slot, 1, uavList, auvCounts
-    );
-    #endif
-}
-
-void* D3D11RenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
-{
-    return nullptr;//todo
-}
-
-void D3D11RenderContext::UnmapStorageBuffer()
-{
-    //todo
-}
-#endif
-
 /* ----- Textures ----- */
 
 void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)

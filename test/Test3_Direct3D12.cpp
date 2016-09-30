@@ -65,7 +65,14 @@ int main()
             { { -1, -1 }, { 0, 0, 1 } },
         };
 
-        auto vertexBuffer = renderer->CreateVertexBuffer({ sizeof(vertices), LLGL::BufferUsage::Static, vertexFormat }, vertices);
+        LLGL::BufferDescriptor vertexBufferDesc;
+        {
+            vertexBufferDesc.type                           = LLGL::BufferType::Vertex;
+            vertexBufferDesc.size                           = sizeof(vertices);
+            vertexBufferDesc.usage                          = LLGL::BufferUsage::Static;
+            vertexBufferDesc.vertexBufferDesc.vertexFormat  = vertexFormat;
+        }
+        auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
         // Create constant buffer
         struct Matrices
@@ -77,7 +84,13 @@ int main()
         float orthoSize = 0.01f;
         matrices.projection = Gs::ProjectionMatrix4f::Orthogonal(800.0f * orthoSize, 600.0f * orthoSize, 0.1f, 100.0f).ToMatrix4();
 
-        auto constantBuffer = renderer->CreateConstantBuffer({ sizeof(matrices), LLGL::BufferUsage::Static }, &matrices);
+        LLGL::BufferDescriptor constantBufferDesc;
+        {
+            constantBufferDesc.type     = LLGL::BufferType::Constant;
+            constantBufferDesc.size     = sizeof(matrices);
+            constantBufferDesc.usage    = LLGL::BufferUsage::Dynamic;
+        }
+        auto constantBuffer = renderer->CreateBuffer(constantBufferDesc, &matrices);
 
         // Load shader
         auto shaderSource = ReadFileContent("TestShader.hlsl");

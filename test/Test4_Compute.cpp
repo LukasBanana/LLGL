@@ -51,12 +51,13 @@ int main()
         static const unsigned int vecSize = 128;
         auto vec = GetTestVector(vecSize);
 
-        LLGL::StorageBufferDescriptor storageBufferDesc;
+        LLGL::BufferDescriptor storageBufferDesc;
         {
+            storageBufferDesc.type  = LLGL::BufferType::Storage;
             storageBufferDesc.size  = sizeof(Gs::Vector4f)*vecSize;
             storageBufferDesc.usage = LLGL::BufferUsage::Dynamic;
         }
-        auto storageBuffer = renderer->CreateStorageBuffer(storageBufferDesc, vec.data());
+        auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, vec.data());
 
         // Load shader
         auto computeShader = renderer->CreateShader(LLGL::ShaderType::Compute);
@@ -97,7 +98,7 @@ int main()
         context->SyncGPU();
 
         // Evaluate compute shader
-        auto mappedBuffer = context->MapStorageBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
+        auto mappedBuffer = context->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
         {
             // Show result
             auto vecBuffer = reinterpret_cast<const Gs::Vector4f*>(mappedBuffer);
@@ -108,7 +109,7 @@ int main()
             while (!context->QueryResult(*timerQuery, result)) { /* wait until the result is available */ }
             std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
-        context->UnmapStorageBuffer();
+        context->UnmapBuffer(*storageBuffer);
 
     }
     catch (const std::exception& e)

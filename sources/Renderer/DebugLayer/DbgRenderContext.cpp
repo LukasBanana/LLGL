@@ -164,64 +164,9 @@ void* DbgRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
 
 void DbgRenderContext::UnmapBuffer(Buffer& buffer)
 {
-    instance_.UnmapBuffer(buffer);
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    instance_.UnmapBuffer(bufferDbg.instance);
 }
-
-#if 1//TODO: remove
-void DbgRenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
-{
-    auto& vertexBufferDbg = LLGL_CAST(DbgVertexBuffer&, vertexBuffer);
-    vertexLayout_.attributes = vertexBufferDbg.desc.vertexFormat.GetAttributes();
-    {
-        instance_.SetVertexBuffer(vertexBufferDbg.instance);
-    }
-    LLGL_DBG_PROFILER_DO(setVertexBuffer.Inc());
-}
-
-void DbgRenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
-{
-    auto& indexBufferDbg = LLGL_CAST(DbgIndexBuffer&, indexBuffer);
-    {
-        instance_.SetIndexBuffer(indexBufferDbg.instance);
-    }
-    LLGL_DBG_PROFILER_DO(setIndexBuffer.Inc());
-}
-
-void DbgRenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags)
-{
-    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
-    auto& constantBufferDbg = LLGL_CAST(DbgConstantBuffer&, constantBuffer);
-    {
-        instance_.SetConstantBuffer(constantBufferDbg.instance, slot, shaderStageFlags);
-    }
-    LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
-}
-
-void DbgRenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
-{
-    auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
-    {
-        instance_.SetStorageBuffer(storageBufferDbg.instance, slot);
-    }
-    LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
-}
-
-void* DbgRenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
-{
-    void* result = nullptr;
-    auto& storageBufferDbg = LLGL_CAST(DbgStorageBuffer&, storageBuffer);
-    {
-        result = instance_.MapStorageBuffer(storageBufferDbg.instance, access);
-    }
-    LLGL_DBG_PROFILER_DO(mapStorageBuffer.Inc());
-    return result;
-}
-
-void DbgRenderContext::UnmapStorageBuffer()
-{
-    instance_.UnmapStorageBuffer();
-}
-#endif
 
 /* ----- Textures ----- */
 

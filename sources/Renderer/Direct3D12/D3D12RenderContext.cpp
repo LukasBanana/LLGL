@@ -204,47 +204,6 @@ void D3D12RenderContext::UnmapBuffer(Buffer& buffer)
     //todo...
 }
 
-#if 1//TODO: remove
-void D3D12RenderContext::SetVertexBuffer(VertexBuffer& vertexBuffer)
-{
-    auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, vertexBuffer);
-    commandList_->IASetVertexBuffers(0, 1, &(vertexBufferD3D.GetView()));
-}
-
-void D3D12RenderContext::SetIndexBuffer(IndexBuffer& indexBuffer)
-{
-    auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer&, indexBuffer);
-    commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
-}
-
-//INCOMPLETE
-void D3D12RenderContext::SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags)
-{
-    auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, constantBuffer);
-
-    /* Set CBV descriptor heap */
-    ID3D12DescriptorHeap* descHeaps[] = { constantBufferD3D.GetDescriptorHeap() };
-    commandList_->SetDescriptorHeaps(1, descHeaps);
-    commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
-}
-
-void D3D12RenderContext::SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot)
-{
-    //todo
-}
-
-void* D3D12RenderContext::MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access)
-{
-    return nullptr;//todo
-}
-
-void D3D12RenderContext::UnmapStorageBuffer()
-{
-    //todo
-}
-
-#endif
-
 /* ----- Textures ----- */
 
 void D3D12RenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)

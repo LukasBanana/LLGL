@@ -76,16 +76,6 @@ class GLRenderContext : public RenderContext
         void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
         void UnmapBuffer(Buffer& buffer) override;
 
-        #if 1//TODO: remove
-        void SetVertexBuffer(VertexBuffer& vertexBuffer) override;
-        void SetIndexBuffer(IndexBuffer& indexBuffer) override;
-        void SetConstantBuffer(ConstantBuffer& constantBuffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetStorageBuffer(StorageBuffer& storageBuffer, unsigned int slot) override;
-
-        void* MapStorageBuffer(StorageBuffer& storageBuffer, const BufferCPUAccess access) override;
-        void UnmapStorageBuffer() override;
-        #endif
-
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
