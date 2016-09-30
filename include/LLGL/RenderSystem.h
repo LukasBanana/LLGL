@@ -63,7 +63,7 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Returns the list of all available render system modules for the current platform
-        (e.g. on Windows this might be { "OpenGL", "Direct3D12" }, but on MacOS it might be only { "OpenGL" }).
+        (e.g. on Windows this might be { "OpenGL", "Direct3D11", "Direct3D12" }, but on MacOS it might be only { "OpenGL" }).
         */
         static std::vector<std::string> FindModules();
 

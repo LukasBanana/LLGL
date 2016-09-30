@@ -11,8 +11,7 @@
 
 #include <LLGL/Shader.h>
 #include <LLGL/VertexAttribute.h>
-#include <LLGL/ConstantBuffer.h>
-#include <LLGL/StorageBuffer.h>
+#include <LLGL/BufferFlags.h>
 #include "../../ComPtr.h"
 #include <vector>
 #include <d3d12.h>

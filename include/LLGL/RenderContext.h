@@ -25,13 +25,6 @@
 #include "Sampler.h"
 #include "Query.h"
 
-#if 1//TODO: remove
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "ConstantBuffer.h"
-#include "StorageBuffer.h"
-#endif
-
 #include <Gauss/Vector3.h>
 #include <string>
 #include <map>

@@ -12,8 +12,7 @@
 #include "Export.h"
 #include "Shader.h"
 #include "VertexAttribute.h"
-#include "ConstantBuffer.h"
-#include "StorageBuffer.h"
+#include "BufferFlags.h"
 #include "ShaderUniform.h"
 #include <string>
 #include <vector>
