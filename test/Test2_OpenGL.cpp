@@ -213,15 +213,19 @@ int main()
 
         #if 0
         // Create constant buffer
-        LLGL::ConstantBuffer* projectionBuffer = nullptr;
+        LLGL::Buffer* projectionBuffer = nullptr;
 
         for (const auto& desc : shaderProgram.QueryConstantBuffers())
         {
             if (desc.name == "Matrices")
             {
-                projectionBuffer = renderer->CreateConstantBuffer(sizeof(projection), LLGL::BufferUsage::Static);
-
-                renderer->WriteConstantBuffer(*projectionBuffer, &projection, sizeof(projection), LLGL::BufferUsage::Static);
+                LLGL::BufferDescriptor constantBufferDesc;
+                {
+                    constantBufferDesc.type = LLGL::BufferType::Constant;
+                    constantBufferDesc.size = sizeof(projection);
+                    constantBufferDesc.usage = LLGL::BufferUsage::Static;
+                }
+                projectionBuffer = renderer->CreateBuffer(constantBufferDesc, &projection);
 
                 unsigned int bindingIndex = 2; // the 2 is just for testing
                 shaderProgram.BindConstantBuffer(desc.name, bindingIndex);

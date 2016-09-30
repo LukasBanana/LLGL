@@ -95,21 +95,21 @@ class LLGL_EXPORT Input : public Window::EventListener
         void OnLocalMotion(Window& sender, const Point& position) override;
         void OnGlobalMotion(Window& sender, const Point& motion) override;
 
-        KeyStateArray           keyPressed_;
-        KeyStateArray           keyDown_;
-        KeyStateArray           keyUp_;
+        KeyStateArray       keyPressed_;
+        KeyStateArray       keyDown_;
+        KeyStateArray       keyUp_;
 
-        Point                   mousePosition_;
-        Point                   mouseMotion_;
+        Point               mousePosition_;
+        Point               mouseMotion_;
 
-        int                     wheelMotion_    = 0;
+        int                 wheelMotion_    = 0;
 
-        KeyTracker              keyDownTracker_;
-        KeyTracker              keyUpTracker_;
+        KeyTracker          keyDownTracker_;
+        KeyTracker          keyUpTracker_;
 
-        std::array<bool, 3>     doubleClick_;
+        std::array<bool, 3> doubleClick_;
 
-        std::wstring            chars_;
+        std::wstring        chars_;
 
 };
 

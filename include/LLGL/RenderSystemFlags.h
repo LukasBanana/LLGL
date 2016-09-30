@@ -33,10 +33,7 @@ static const std::size_t maxThreadCount = ~0;
 \brief Hardware buffer usage enumeration.
 \remarks For OpenGL, the buffer usage is just a hint to the GL server.
 For Direct3D, the buffer usage is crucial during buffer creation.
-\see RenderSystem::CreateVertexBuffer
-\see RenderSystem::CreateIndexBuffer
-\see RenderSystem::CreateConstantBuffer
-\see RenderSystem::CreateStorageBuffer
+\see RenderSystem::CreateBuffer
 */
 enum class BufferUsage
 {

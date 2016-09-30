@@ -35,9 +35,9 @@
  * Progress
  * --------
  * 
- * - **OpenGL Renderer**: ~70% done
+ * - **OpenGL Renderer**: ~80% done
+ * - **Direct3D 11 Renderer**: ~60% done
  * - **Direct3D 12 Renderer**: ~5% done
- * - **Direct3D 11 Renderer**: not started yet
  * - **Vulkan Renderer**: not started yet
  * 
  * 

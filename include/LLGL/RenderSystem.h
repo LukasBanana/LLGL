@@ -40,13 +40,15 @@ It manages the ownership of all graphics objects and is used to create, modify, 
 The main functions for most graphics objects are "Create...", "Write...", and "Release":
 \code
 // Create and initialize vertex buffer
-auto vertexBuffer = renderSystem->CreateVertexBuffer(*vertexBuffer, ...);
+LLGL::BufferDescriptor bufferDesc;
+//fill descriptor ...
+auto vertexBuffer = renderSystem->CreateBuffer(*buffer, bufferDesc, initialData);
 
 // Modify data
-renderSystem->WriteVertexBuffer(*vertexBuffer, modificationData, ...);
+renderSystem->WriteBuffer(*buffer, modificationData, ...);
 
 // Release object
-renderSystem->Release(*vertexBuffer);
+renderSystem->Release(*buffer);
 \endcode
 */
 class LLGL_EXPORT RenderSystem
