@@ -38,7 +38,7 @@ class Tutorial05 : public Tutorial
 public:
 
     Tutorial05() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 05: RenderTarget")
+        Tutorial( L"LLGL Tutorial 05: RenderTarget" )
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

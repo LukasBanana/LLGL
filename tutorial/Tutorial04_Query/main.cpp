@@ -35,7 +35,7 @@ class Tutorial04 : public Tutorial
 public:
 
     Tutorial04() :
-        Tutorial( "Direct3D11", L"LLGL Tutorial 04: Query" )
+        Tutorial( L"LLGL Tutorial 04: Query" )
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

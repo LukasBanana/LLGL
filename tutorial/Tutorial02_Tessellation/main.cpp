@@ -42,7 +42,7 @@ class Tutorial02 : public Tutorial
 public:
 
     Tutorial02() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 02: Tessellation")//, { 800, 600 }, 0 )
+        Tutorial( L"LLGL Tutorial 02: Tessellation" )//, { 800, 600 }, 0 )
     {
         // Check if constant buffers and tessellation shaders are supported
         auto renderCaps = renderer->QueryRenderingCaps();

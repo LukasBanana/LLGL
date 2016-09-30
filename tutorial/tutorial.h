@@ -25,6 +25,63 @@ class Tutorial
 
 public:
 
+    static void SelectRendererModuel(int argc, char* argv[])
+    {
+        /* Select renderer module */
+        std::string rendererModule;
+
+        if (argc > 1)
+        {
+            /* Get renderer module name from command line argument */
+            rendererModule = argv[1];
+        }
+        else
+        {
+            /* Find available modules */
+            auto modules = LLGL::RenderSystem::FindModules();
+
+            if (modules.empty())
+            {
+                /* No modules available -> throw error */
+                throw std::runtime_error("no renderer modules available on target platform");
+            }
+            else if (modules.size() == 1)
+            {
+                /* Use the only available module */
+                rendererModule = modules.front();
+            }
+            else
+            {
+                /* Let user select a renderer */
+                char c = 0;
+                while (rendererModule.empty())
+                {
+                    /* Print list of available modules */
+                    std::cout << "select renderer:" << std::endl;
+
+                    int i = 0;
+                    for (const auto& mod : modules)
+                        std::cout << " " << (++i) << ".) " << mod << std::endl;
+
+                    /* Wait for user input */
+                    std::size_t selection = 0;
+                    std::cin >> selection;
+                    --selection;
+
+                    if (selection < modules.size())
+                        rendererModule = modules[selection];
+                    else
+                        std::cerr << "invalid input" << std::endl;
+                }
+            }
+        }
+
+        /* Choose final renderer module */
+        std::cout << "selected renderer: " << rendererModule << std::endl;
+
+        rendererModule_ = rendererModule;
+    }
+
     virtual ~Tutorial()
     {
     }
@@ -100,6 +157,8 @@ private:
     std::unique_ptr<LLGL::RenderingProfiler>    profilerObj_;
     std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
 
+    static std::string                          rendererModule_;
+
 protected:
 
     const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
@@ -118,7 +177,6 @@ protected:
     virtual void OnDrawFrame() = 0;
 
     Tutorial(
-        const std::string& rendererModule,
         const std::wstring& title,
         const LLGL::Size& resolution = { 800, 600 },
         unsigned int multiSampling = 8) :
@@ -126,10 +184,10 @@ protected:
             debuggerObj_( new Debugger()                ),
             timer       ( LLGL::Timer::Create()         ),
             profiler    ( *profilerObj_                 ),
-            isOpenGL    ( rendererModule == "OpenGL"    )
+            isOpenGL    ( rendererModule_ == "OpenGL"   )
     {
         // Create render system
-        renderer = LLGL::RenderSystem::Load(rendererModule, profilerObj_.get(), debuggerObj_.get());
+        renderer = LLGL::RenderSystem::Load(rendererModule_, profilerObj_.get(), debuggerObj_.get());
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
@@ -428,12 +486,16 @@ protected:
 
 };
 
+std::string Tutorial::rendererModule_;
+
 
 template <typename T>
-int RunTutorial()
+int RunTutorial(int argc, char* argv[])
 {
     try
     {
+        /* Run tutorial */
+        Tutorial::SelectRendererModuel(argc, argv);
         auto tutorial = std::unique_ptr<T>(new T());
         tutorial->Run();
     }
@@ -447,10 +509,10 @@ int RunTutorial()
     return 0;
 }
 
-#define LLGL_IMPLEMENT_TUTORIAL(CLASS)  \
-    int main()                          \
-    {                                   \
-        return RunTutorial<CLASS>();    \
+#define LLGL_IMPLEMENT_TUTORIAL(CLASS)          \
+    int main(int argc, char* argv[])            \
+    {                                           \
+        return RunTutorial<CLASS>(argc, argv);  \
     }
 
 
