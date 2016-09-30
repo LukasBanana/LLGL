@@ -147,6 +147,11 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc)
         throw std::invalid_argument("failed to create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
 }
 
+void RenderSystem::SetRenderingCaps(const RenderingCaps& caps)
+{
+    caps_ = caps;
+}
+
 
 } // /namespace LLGL
 

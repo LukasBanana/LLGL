@@ -76,9 +76,7 @@ int main()
 
         window->Show();
 
-        auto renderCaps = renderer->QueryRenderingCaps();
-
-        auto shadingLang = renderer->QueryShadingLanguage();
+        const auto& renderCaps = renderer->GetRenderingCaps();
 
         // Show renderer info
         auto info = renderer->QueryRendererInfo();

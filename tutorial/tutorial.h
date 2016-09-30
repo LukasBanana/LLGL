@@ -294,7 +294,7 @@ protected:
     LLGL::ShaderProgram* LoadStandardShaderProgram(const LLGL::VertexFormat& vertexFormat)
     {
         // Load shader program
-        if (renderer->QueryRenderingCaps().hasHLSL)
+        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
         {
             return LoadShaderProgram(
                 {

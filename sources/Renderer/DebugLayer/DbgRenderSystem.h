@@ -39,10 +39,6 @@ class DbgRenderSystem : public RenderSystem
 
         std::map<RendererInfo, std::string> QueryRendererInfo() const override;
 
-        RenderingCaps QueryRenderingCaps() const override;
-
-        ShadingLanguage QueryShadingLanguage() const override;
-
         void SetConfiguration(const RenderSystemConfiguration& config) override;
 
         /* ----- Render Context ------ */
@@ -134,8 +130,6 @@ class DbgRenderSystem : public RenderSystem
 
         RenderingProfiler*                      profiler_   = nullptr;
         RenderingDebugger*                      debugger_   = nullptr;
-
-        RenderingCaps                           caps_;
 
         struct Renderer
         {

@@ -57,18 +57,6 @@ std::map<RendererInfo, std::string> D3D12RenderSystem::QueryRendererInfo() const
     return info;
 }
 
-RenderingCaps D3D12RenderSystem::QueryRenderingCaps() const
-{
-    RenderingCaps caps;
-    DXGetRenderingCaps(caps, GetFeatureLevel());
-    return caps;
-}
-
-ShadingLanguage D3D12RenderSystem::QueryShadingLanguage() const
-{
-    return DXGetHLSLVersion(GetFeatureLevel());
-}
-
 /* ----- Render Context ----- */
 
 RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
@@ -551,6 +539,13 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
     
     /* Create Win32 event */
     fenceEvent_ = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+}
+
+void D3D12RenderSystem::QueryRenderingCaps()
+{
+    RenderingCaps caps;
+    DXGetRenderingCaps(caps, GetFeatureLevel());
+    SetRenderingCaps(caps);
 }
 
 

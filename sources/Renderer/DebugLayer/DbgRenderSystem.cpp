@@ -42,16 +42,6 @@ std::map<RendererInfo, std::string> DbgRenderSystem::QueryRendererInfo() const
     return instance_->QueryRendererInfo();
 }
 
-RenderingCaps DbgRenderSystem::QueryRenderingCaps() const
-{
-    return instance_->QueryRenderingCaps();
-}
-
-ShadingLanguage DbgRenderSystem::QueryShadingLanguage() const
-{
-    return instance_->QueryShadingLanguage();
-}
-
 void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 {
     RenderSystem::SetConfiguration(config);
@@ -64,10 +54,10 @@ RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescripto
 {
     auto renderContextInstance = instance_->CreateRenderContext(desc, window);
 
-    caps_ = instance_->QueryRenderingCaps();
+    SetRenderingCaps(instance_->GetRenderingCaps());
 
     return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(
-        *renderContextInstance, profiler_, debugger_, caps_
+        *renderContextInstance, profiler_, debugger_, GetRenderingCaps()
     ));
 }
 
@@ -247,7 +237,7 @@ void DbgRenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    if (desc.rasterizer.conservativeRasterization && !caps_.hasConservativeRasterization)
+    if (desc.rasterizer.conservativeRasterization && !GetRenderingCaps().hasConservativeRasterization)
         LLGL_DBG_ERROR_NOT_SUPPORTED("conservative rasterization", __FUNCTION__);
     if (desc.blend.targets.size() > 8)
         LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "too many blend state targets (limit is 8)");

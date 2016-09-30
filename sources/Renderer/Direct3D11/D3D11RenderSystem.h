@@ -49,10 +49,6 @@ class D3D11RenderSystem : public RenderSystem
 
         std::map<RendererInfo, std::string> QueryRendererInfo() const override;
 
-        RenderingCaps QueryRenderingCaps() const override;
-
-        ShadingLanguage QueryShadingLanguage() const override;
-
         /* ----- Render Context ------ */
 
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
@@ -140,6 +136,8 @@ class D3D11RenderSystem : public RenderSystem
         //void QueryVideoAdapters();
         void CreateDevice(IDXGIAdapter* adapter);
         void InitStateManager();
+
+        void QueryRenderingCaps();
 
         void BuildGenericTexture1D(
             D3D11Texture& textureD3D, const TextureDescriptor& descD3D,

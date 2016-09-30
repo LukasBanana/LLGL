@@ -127,6 +127,17 @@ static unsigned int GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
     else                                        return 1;
 }
 
+// Returns the HLSL version for the specified Direct3D feature level.
+static ShadingLanguage DXGetHLSLVersion(D3D_FEATURE_LEVEL featureLevel)
+{
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return ShadingLanguage::HLSL_5_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) return ShadingLanguage::HLSL_4_1;
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return ShadingLanguage::HLSL_4_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return ShadingLanguage::HLSL_3_0;
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) return ShadingLanguage::HLSL_2_0b;
+    else                                        return ShadingLanguage::HLSL_2_0a;
+}
+
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
 void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
 {
@@ -134,7 +145,7 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
 
     caps.screenOrigin                   = ScreenOrigin::UpperLeft;
     caps.clippingRange                  = ClippingRange::ZeroToOne;
-    caps.hasHLSL                        = true;
+    caps.shadingLanguage                = DXGetHLSLVersion(featureLevel);
     caps.hasRenderTargets               = true;
     caps.has3DTextures                  = true;
     caps.hasCubeTextures                = true;
@@ -162,16 +173,6 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
     caps.maxAnisotropy                  = (featureLevel >= D3D_FEATURE_LEVEL_9_2 ? 16 : 2);
     caps.maxNumComputeShaderWorkGroups  = { maxThreadGroups, maxThreadGroups, (featureLevel >= D3D_FEATURE_LEVEL_11_0 ? maxThreadGroups : 1u) };
     caps.maxComputeShaderWorkGroupSize  = { 1024, 1024, 1024 };
-}
-
-ShadingLanguage DXGetHLSLVersion(D3D_FEATURE_LEVEL featureLevel)
-{
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return ShadingLanguage::HLSL_5_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) return ShadingLanguage::HLSL_4_1;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return ShadingLanguage::HLSL_4_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return ShadingLanguage::HLSL_3_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) return ShadingLanguage::HLSL_2_0b;
-    else                                        return ShadingLanguage::HLSL_2_0a;
 }
 
 std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel)

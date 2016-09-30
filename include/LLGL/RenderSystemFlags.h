@@ -65,29 +65,36 @@ enum class BufferCPUAccess
     ReadWrite,  //!< CPU read and write access.
 };
 
-//! Shading language version enumation.
+/**
+\brief Shading language version enumation.
+\remarks These enumeration entries can be casted to an integer to get the respective version number.
+GLSL versions range from 110 (v.1.10) to 450 (v.4.50),
+and HLSL version range from 100200 (v.2.0) to 100500 (v.5.0).
+*/
 enum class ShadingLanguage
 {
-    GLSL_110,   //!< GLSL 1.10 (since OpenGL 2.0).
-    GLSL_120,   //!< GLSL 1.20 (since OpenGL 2.1).
-    GLSL_130,   //!< GLSL 1.30 (since OpenGL 3.0).
-    GLSL_140,   //!< GLSL 1.40 (since OpenGL 3.1).
-    GLSL_150,   //!< GLSL 1.50 (since OpenGL 3.2).
-    GLSL_330,   //!< GLSL 3.30 (since OpenGL 3.3).
-    GLSL_400,   //!< GLSL 4.00 (since OpenGL 4.0).
-    GLSL_410,   //!< GLSL 4.10 (since OpenGL 4.1).
-    GLSL_420,   //!< GLSL 4.20 (since OpenGL 4.2).
-    GLSL_430,   //!< GLSL 4.30 (since OpenGL 4.3).
-    GLSL_440,   //!< GLSL 4.40 (since OpenGL 4.4).
-    GLSL_450,   //!< GLSL 4.50 (since OpenGL 4.5).
+    Unsupported = 0,        //!< Enumeration entry if shaders are not supported.
 
-    HLSL_2_0,   //!< HLSL 2.0 (since Direct3D 9).
-    HLSL_2_0a,  //!< HLSL 2.0a (since Direct3D 9a).
-    HLSL_2_0b,  //!< HLSL 2.0b (since Direct3D 9b).
-    HLSL_3_0,   //!< HLSL 3.0 (since Direct3D 9c).
-    HLSL_4_0,   //!< HLSL 4.0 (since Direct3D 10).
-    HLSL_4_1,   //!< HLSL 4.1 (since Direct3D 10.1).
-    HLSL_5_0,   //!< HLSL 5.0 (since Direct3D 11).
+    GLSL_110    = 110,      //!< GLSL 1.10 (since OpenGL 2.0).
+    GLSL_120    = 120,      //!< GLSL 1.20 (since OpenGL 2.1).
+    GLSL_130    = 130,      //!< GLSL 1.30 (since OpenGL 3.0).
+    GLSL_140    = 140,      //!< GLSL 1.40 (since OpenGL 3.1).
+    GLSL_150    = 150,      //!< GLSL 1.50 (since OpenGL 3.2).
+    GLSL_330    = 330,      //!< GLSL 3.30 (since OpenGL 3.3).
+    GLSL_400    = 400,      //!< GLSL 4.00 (since OpenGL 4.0).
+    GLSL_410    = 410,      //!< GLSL 4.10 (since OpenGL 4.1).
+    GLSL_420    = 420,      //!< GLSL 4.20 (since OpenGL 4.2).
+    GLSL_430    = 430,      //!< GLSL 4.30 (since OpenGL 4.3).
+    GLSL_440    = 440,      //!< GLSL 4.40 (since OpenGL 4.4).
+    GLSL_450    = 450,      //!< GLSL 4.50 (since OpenGL 4.5).
+
+    HLSL_2_0    = 100200,   //!< HLSL 2.0 (since Direct3D 9).
+    HLSL_2_0a   = 100201,   //!< HLSL 2.0a (since Direct3D 9a).
+    HLSL_2_0b   = 100202,   //!< HLSL 2.0b (since Direct3D 9b).
+    HLSL_3_0    = 100300,   //!< HLSL 3.0 (since Direct3D 9c).
+    HLSL_4_0    = 100400,   //!< HLSL 4.0 (since Direct3D 10).
+    HLSL_4_1    = 100410,   //!< HLSL 4.1 (since Direct3D 10.1).
+    HLSL_5_0    = 100500,   //!< HLSL 5.0 (since Direct3D 11).
 };
 
 //! Screen coordinate system origin enumeration.
@@ -137,17 +144,8 @@ struct RenderingCaps
     //! Clipping depth range.
     ClippingRange   clippingRange                   = ClippingRange::ZeroToOne;
 
-    /**
-    \brief Specifies whether GLSL shaders are supported or not.
-    \note Only supported with: OpenGL, Vulkan.
-    */
-    bool            hasGLSL                         = false;
-
-    /**
-    \brief Specifies whether HLSL shaders are supported or not.
-    \note Only supported with: Direct3D 11, Direct3D 12.
-    */
-    bool            hasHLSL                         = false;
+    //! Latest suppported shading language.
+    ShadingLanguage shadingLanguage                 = ShadingLanguage::Unsupported;
 
     //! Specifies whether render targets (also "frame buffer objects") are supported.
     bool            hasRenderTargets                = false;

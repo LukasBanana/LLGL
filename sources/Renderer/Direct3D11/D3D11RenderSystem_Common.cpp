@@ -32,6 +32,7 @@ D3D11RenderSystem::D3D11RenderSystem()
     //QueryVideoAdapters();
     CreateDevice(nullptr);
     InitStateManager();
+    QueryRenderingCaps();
 }
 
 D3D11RenderSystem::~D3D11RenderSystem()
@@ -45,18 +46,6 @@ std::map<RendererInfo, std::string> D3D11RenderSystem::QueryRendererInfo() const
     //todo
 
     return info;
-}
-
-RenderingCaps D3D11RenderSystem::QueryRenderingCaps() const
-{
-    RenderingCaps caps;
-    DXGetRenderingCaps(caps, GetFeatureLevel());
-    return caps;
-}
-
-ShadingLanguage D3D11RenderSystem::QueryShadingLanguage() const
-{
-    return DXGetHLSLVersion(GetFeatureLevel());
 }
 
 /* ----- Render Context ----- */
@@ -293,6 +282,13 @@ void D3D11RenderSystem::InitStateManager()
 {
     /* Create state manager */
     stateMngr_ = MakeUnique<D3D11StateManager>(context_);
+}
+
+void D3D11RenderSystem::QueryRenderingCaps()
+{
+    RenderingCaps caps;
+    DXGetRenderingCaps(caps, GetFeatureLevel());
+    SetRenderingCaps(caps);
 }
 
 

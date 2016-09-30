@@ -38,7 +38,7 @@ namespace LLGL
 
 
 #define LLGL_ASSERT_CAP(FEATURE) \
-    AssertCap(renderingCaps_.FEATURE, #FEATURE)
+    AssertCap(GetRenderingCaps().FEATURE, #FEATURE)
 
 
 class GLRenderSystem : public RenderSystem
@@ -52,10 +52,6 @@ class GLRenderSystem : public RenderSystem
         ~GLRenderSystem();
 
         std::map<RendererInfo, std::string> QueryRendererInfo() const override;
-
-        RenderingCaps QueryRenderingCaps() const override;
-
-        ShadingLanguage QueryShadingLanguage() const override;
 
         /* ----- Render Context ----- */
 
@@ -123,11 +119,6 @@ class GLRenderSystem : public RenderSystem
 
         bool HasExtension(const std::string& name) const;
 
-        inline const RenderingCaps& GetRenderingCaps() const
-        {
-            return renderingCaps_;
-        }
-
     protected:
 
         RenderContext* AddRenderContext(
@@ -143,7 +134,7 @@ class GLRenderSystem : public RenderSystem
         void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
         void SetDebugCallback(const DebugCallback& debugCallback);
 
-        void StoreRenderingCaps();
+        void QueryRenderingCaps();
         void AssertCap(bool supported, const std::string& memberName);
 
         void BuildTexture1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
@@ -165,8 +156,6 @@ class GLRenderSystem : public RenderSystem
         /* ----- Common objects ----- */
 
         OpenGLExtensionMap                      extensionMap_;
-
-        RenderingCaps                           renderingCaps_;
 
         /* ----- Hardware object containers ----- */
 

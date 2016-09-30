@@ -43,7 +43,7 @@ int main()
         context->GetWindow().SetTitle(std::wstring(title.begin(), title.end()));
 
         // Quit if compute shaders are not supported
-        auto renderCaps = renderer->QueryRenderingCaps();
+        const auto& renderCaps = renderer->GetRenderingCaps();
         if (!renderCaps.hasComputeShaders)
             throw std::runtime_error("compute shaders are not supported by renderer");
 

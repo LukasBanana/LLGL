@@ -41,8 +41,7 @@ int main()
         auto title = "LLGL Test 3 ( " + renderer->GetName() + " )";
         window->SetTitle(std::wstring(title.begin(), title.end()));
 
-        auto renderCaps = renderer->QueryRenderingCaps();
-        auto shadingLang = renderer->QueryShadingLanguage();
+        auto renderCaps = renderer->GetRenderingCaps();
 
         // Setup input controller
         auto input = std::make_shared<LLGL::Input>();

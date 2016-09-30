@@ -92,7 +92,7 @@ int main()
                 std::cerr << log << std::endl;
         };
 
-        if (renderer->QueryRenderingCaps().hasHLSL)
+        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
         {
             auto shaderCode = ReadFileContent("shader.hlsl");
             CompileShader(vertexShader, LLGL::ShaderSource(shaderCode, "VS", "vs_4_0"));

@@ -24,7 +24,7 @@ public:
         Tutorial( L"LLGL Tutorial 03: Texturing" )
     {
         // Check if samplers are supported
-        auto renderCaps = renderer->QueryRenderingCaps();
+        const auto& renderCaps = renderer->GetRenderingCaps();
 
         if (!renderCaps.hasSamplers)
             throw std::runtime_error("samplers are not supported by this renderer");

@@ -51,39 +51,6 @@ std::map<RendererInfo, std::string> GLRenderSystem::QueryRendererInfo() const
     return info;
 }
 
-RenderingCaps GLRenderSystem::QueryRenderingCaps() const
-{
-    return GetRenderingCaps();
-}
-
-ShadingLanguage GLRenderSystem::QueryShadingLanguage() const
-{
-    /* Derive shading language version by OpenGL version */
-    GLint major = 0, minor = 0;
-    glGetIntegerv(GL_MAJOR_VERSION, &major);
-    glGetIntegerv(GL_MINOR_VERSION, &minor);
-
-    auto IsVer = [major, minor](int maj, int min)
-    {
-        return (major == maj && minor == min);
-    };
-
-    if (IsVer(2, 0)) return ShadingLanguage::GLSL_110;
-    if (IsVer(2, 1)) return ShadingLanguage::GLSL_120;
-    if (IsVer(3, 0)) return ShadingLanguage::GLSL_130;
-    if (IsVer(3, 1)) return ShadingLanguage::GLSL_140;
-    if (IsVer(3, 2)) return ShadingLanguage::GLSL_150;
-    if (IsVer(3, 3)) return ShadingLanguage::GLSL_330;
-    if (IsVer(4, 0)) return ShadingLanguage::GLSL_400;
-    if (IsVer(4, 1)) return ShadingLanguage::GLSL_410;
-    if (IsVer(4, 2)) return ShadingLanguage::GLSL_420;
-    if (IsVer(4, 3)) return ShadingLanguage::GLSL_430;
-    if (IsVer(4, 4)) return ShadingLanguage::GLSL_440;
-    if (IsVer(4, 5)) return ShadingLanguage::GLSL_450;
-
-    return ShadingLanguage::GLSL_110;
-}
-
 /* ----- Render Context ----- */
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
@@ -277,7 +244,7 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
         LoadAllExtensions(extensionMap_);
 
         /* Query and store all rendering capabilities */
-        StoreRenderingCaps();
+        QueryRenderingCaps();
     }
 }
 
@@ -322,14 +289,42 @@ void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
     #endif
 }
 
-void GLRenderSystem::StoreRenderingCaps()
+static ShadingLanguage QueryShadingLanguage()
 {
-    auto& caps = renderingCaps_;
+    /* Derive shading language version by OpenGL version */
+    GLint major = 0, minor = 0;
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+    auto IsVer = [major, minor](int maj, int min)
+    {
+        return (major == maj && minor == min);
+    };
+
+    if (IsVer(2, 0)) return ShadingLanguage::GLSL_110;
+    if (IsVer(2, 1)) return ShadingLanguage::GLSL_120;
+    if (IsVer(3, 0)) return ShadingLanguage::GLSL_130;
+    if (IsVer(3, 1)) return ShadingLanguage::GLSL_140;
+    if (IsVer(3, 2)) return ShadingLanguage::GLSL_150;
+    if (IsVer(3, 3)) return ShadingLanguage::GLSL_330;
+    if (IsVer(4, 0)) return ShadingLanguage::GLSL_400;
+    if (IsVer(4, 1)) return ShadingLanguage::GLSL_410;
+    if (IsVer(4, 2)) return ShadingLanguage::GLSL_420;
+    if (IsVer(4, 3)) return ShadingLanguage::GLSL_430;
+    if (IsVer(4, 4)) return ShadingLanguage::GLSL_440;
+    if (IsVer(4, 5)) return ShadingLanguage::GLSL_450;
+
+    return ShadingLanguage::GLSL_110;
+}
+
+void GLRenderSystem::QueryRenderingCaps()
+{
+    RenderingCaps caps;
 
     /* Set fixed states for this renderer */
     caps.screenOrigin                   = ScreenOrigin::LowerLeft;
     caps.clippingRange                  = ClippingRange::MinusOneToOne;
-    caps.hasGLSL                        = true;
+    caps.shadingLanguage                = QueryShadingLanguage();
 
     /* Query all boolean capabilies by their respective OpenGL extension */
     caps.hasRenderTargets               = HasExtension("GL_ARB_framebuffer_object");
@@ -433,6 +428,9 @@ void GLRenderSystem::StoreRenderingCaps()
             querySize /= 2;
         }
     }
+
+    /* Finally store queried rendering capabilities */
+    SetRenderingCaps(caps);
 }
 
 void GLRenderSystem::AssertCap(bool supported, const std::string& memberName)

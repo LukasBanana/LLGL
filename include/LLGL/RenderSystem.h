@@ -104,10 +104,10 @@ class LLGL_EXPORT RenderSystem
         virtual std::map<RendererInfo, std::string> QueryRendererInfo() const = 0;
 
         //! Returns the rendering capabilities.
-        virtual RenderingCaps QueryRenderingCaps() const = 0;
-
-        //! Returns the highest version of the supported shading language.
-        virtual ShadingLanguage QueryShadingLanguage() const = 0;
+        inline const RenderingCaps& GetRenderingCaps() const
+        {
+            return caps_;
+        }
 
         /**
         \brief Sets the basic configuration.
@@ -317,12 +317,16 @@ class LLGL_EXPORT RenderSystem
         //! Validates the specified buffer descriptor to be used for buffer creation.
         void AssertCreateBuffer(const BufferDescriptor& desc);
 
+        //! Sets the rendering capabilities.
+        void SetRenderingCaps(const RenderingCaps& caps);
+
     private:
 
         std::string                 name_;
 
         RenderContext*              currentContext_ = nullptr;
 
+        RenderingCaps               caps_;
         RenderSystemConfiguration   config_;
 
 };
