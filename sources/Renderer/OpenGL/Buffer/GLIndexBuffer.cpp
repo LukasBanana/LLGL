@@ -1,21 +1,21 @@
 /*
- * D3D12StorageBuffer.cpp
+ * GLIndexBuffer.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D12StorageBuffer_.h"
+#include "GLIndexBuffer.h"
 
 
 namespace LLGL
 {
 
 
-D3D12StorageBuffer_::D3D12StorageBuffer_(ID3D12Device* device, const BufferDescriptor& desc) :
-    D3D12Buffer( BufferType::Storage )
+GLIndexBuffer_::GLIndexBuffer_(const IndexFormat& indexFormat) :
+    GLBuffer    ( BufferType::Index ),
+    indexFormat_( indexFormat       )
 {
-    //todo...
 }
 
 

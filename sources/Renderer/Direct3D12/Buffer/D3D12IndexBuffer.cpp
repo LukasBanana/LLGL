@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D12IndexBuffer_.h"
+#include "D3D12IndexBuffer.h"
 #include "../D3D12Types.h"
 #include "../../../Core/Helper.h"
 

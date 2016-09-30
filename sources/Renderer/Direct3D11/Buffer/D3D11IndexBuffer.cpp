@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D11IndexBuffer_.h"
+#include "D3D11IndexBuffer.h"
 #include "../D3D11Types.h"
 #include "../../../Core/Helper.h"
 

@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D12ConstantBuffer_.h"
+#include "D3D12ConstantBuffer.h"
 #include "../../../Core/Helper.h"
 #include "../../DXCommon/DXCore.h"
 

@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D11StorageBuffer_.h"
+#include "D3D11StorageBuffer.h"
 #include "../../../Core/Helper.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../Assertion.h"

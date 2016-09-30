@@ -9,8 +9,8 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "GLTypes.h"
-#include "Buffer/GLVertexBuffer_.h"
-#include "Buffer/GLIndexBuffer_.h"
+#include "Buffer/GLVertexBuffer.h"
+#include "Buffer/GLIndexBuffer.h"
 
 
 namespace LLGL

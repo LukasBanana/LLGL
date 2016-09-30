@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "D3D11VertexBuffer_.h"
+#include "D3D11VertexBuffer.h"
 
 
 namespace LLGL

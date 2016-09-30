@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLVertexBuffer_.h"
+#include "GLVertexBuffer.h"
 #include "../Ext/GLExtensions.h"
 #include "../GLTypes.h"
 #include "../RenderState/GLStateManager.h"
