@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class D3D12StorageBuffer_ : public D3D12Buffer
+class D3D12StorageBuffer : public D3D12Buffer
 {
 
     public:
 
-        D3D12StorageBuffer_(ID3D12Device* device, const BufferDescriptor& desc);
+        D3D12StorageBuffer(ID3D12Device* device, const BufferDescriptor& desc);
 
 };
 

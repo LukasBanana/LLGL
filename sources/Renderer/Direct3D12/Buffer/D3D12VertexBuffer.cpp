@@ -13,7 +13,7 @@ namespace LLGL
 {
 
 
-D3D12VertexBuffer_::D3D12VertexBuffer_(ID3D12Device* device, const BufferDescriptor& desc) :
+D3D12VertexBuffer::D3D12VertexBuffer(ID3D12Device* device, const BufferDescriptor& desc) :
     D3D12Buffer( BufferType::Vertex )
 {
     /* Create resource and initialize buffer view */
@@ -24,7 +24,7 @@ D3D12VertexBuffer_::D3D12VertexBuffer_(ID3D12Device* device, const BufferDescrip
     view_.StrideInBytes     = desc.vertexBufferDesc.vertexFormat.GetFormatSize();
 }
 
-void D3D12VertexBuffer_::UpdateSubresource(
+void D3D12VertexBuffer::UpdateSubresource(
     ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
     const void* data, UINT bufferSize, UINT64 offset)
 {

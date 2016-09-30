@@ -21,7 +21,7 @@ class Tutorial03 : public Tutorial
 public:
 
     Tutorial03() :
-        Tutorial( "OpenGL", L"LLGL Tutorial 03: Texturing")
+        Tutorial( "Direct3D11", L"LLGL Tutorial 03: Texturing" )
     {
         // Check if samplers are supported
         auto renderCaps = renderer->QueryRenderingCaps();

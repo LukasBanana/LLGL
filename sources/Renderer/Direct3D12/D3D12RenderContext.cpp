@@ -14,10 +14,10 @@
 #include <algorithm>
 #include "D3DX12/d3dx12.h"
 
-#include "Buffer/D3D12VertexBuffer_.h"
-#include "Buffer/D3D12IndexBuffer_.h"
-#include "Buffer/D3D12ConstantBuffer_.h"
-#include "Buffer/D3D12StorageBuffer_.h"
+#include "Buffer/D3D12VertexBuffer.h"
+#include "Buffer/D3D12IndexBuffer.h"
+#include "Buffer/D3D12ConstantBuffer.h"
+#include "Buffer/D3D12StorageBuffer.h"
 
 
 namespace LLGL
@@ -169,19 +169,19 @@ void D3D12RenderContext::ClearBuffers(long flags)
 
 void D3D12RenderContext::SetVertexBuffer(Buffer& buffer)
 {
-    auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer_&, buffer);
+    auto& vertexBufferD3D = LLGL_CAST(D3D12VertexBuffer&, buffer);
     commandList_->IASetVertexBuffers(0, 1, &(vertexBufferD3D.GetView()));
 }
 
 void D3D12RenderContext::SetIndexBuffer(Buffer& buffer)
 {
-    auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer_&, buffer);
+    auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer&, buffer);
     commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
 }
 
 void D3D12RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
-    auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer_&, buffer);
+    auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, buffer);
 
     /* Set CBV descriptor heap */
     ID3D12DescriptorHeap* descHeaps[] = { constantBufferD3D.GetDescriptorHeap() };

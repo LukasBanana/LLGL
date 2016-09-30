@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-D3D12IndexBuffer_::D3D12IndexBuffer_(ID3D12Device* device, const BufferDescriptor& desc) :
+D3D12IndexBuffer::D3D12IndexBuffer(ID3D12Device* device, const BufferDescriptor& desc) :
     D3D12Buffer( BufferType::Index )
 {
     /* Create resource and initialize buffer view */
@@ -25,7 +25,7 @@ D3D12IndexBuffer_::D3D12IndexBuffer_(ID3D12Device* device, const BufferDescripto
     view_.Format            = D3D12Types::Map(desc.indexBufferDesc.indexFormat.GetDataType());
 }
 
-void D3D12IndexBuffer_::UpdateSubresource(
+void D3D12IndexBuffer::UpdateSubresource(
     ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
     const void* data, UINT bufferSize, UINT64 offset)
 {

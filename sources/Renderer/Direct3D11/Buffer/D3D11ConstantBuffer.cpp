@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-D3D11ConstantBuffer_::D3D11ConstantBuffer_(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
+D3D11ConstantBuffer::D3D11ConstantBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
     D3D11Buffer( BufferType::Constant )
 {
     /* Setup descriptor and create constant buffer */
@@ -34,7 +34,7 @@ D3D11ConstantBuffer_::D3D11ConstantBuffer_(ID3D11Device* device, const BufferDes
     bufferSize_ = desc.size;
 }
 
-void D3D11ConstantBuffer_::UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset)
+void D3D11ConstantBuffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset)
 {
     /* Validate parameters */
     if (dataSize + offset > bufferSize_)

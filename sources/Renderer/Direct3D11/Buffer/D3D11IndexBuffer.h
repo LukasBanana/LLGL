@@ -17,12 +17,12 @@ namespace LLGL
 {
 
 
-class D3D11IndexBuffer_ : public D3D11Buffer
+class D3D11IndexBuffer : public D3D11Buffer
 {
 
     public:
 
-        D3D11IndexBuffer_(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
+        D3D11IndexBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
         inline DXGI_FORMAT GetFormat() const
         {

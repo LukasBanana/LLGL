@@ -15,18 +15,18 @@ namespace LLGL
 {
 
 
-GLVertexBuffer_::GLVertexBuffer_() :
+GLVertexBuffer::GLVertexBuffer() :
     GLBuffer( BufferType::Vertex )
 {
     glGenVertexArrays(1, &vaoID_);
 }
 
-GLVertexBuffer_::~GLVertexBuffer_()
+GLVertexBuffer::~GLVertexBuffer()
 {
     glDeleteVertexArrays(1, &vaoID_);
 }
 
-void GLVertexBuffer_::BuildVertexArray(const VertexFormat& vertexFormat)
+void GLVertexBuffer::BuildVertexArray(const VertexFormat& vertexFormat)
 {
     /* Bind this vertex buffer to the vertex-array-object */
     GLStateManager::active->BindVertexArray(GetVaoID());

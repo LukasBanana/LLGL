@@ -15,10 +15,10 @@
 #include "D3DX12/d3dx12.h"
 //#include "RenderState/D3D12StateManager.h"
 
-#include "Buffer/D3D12VertexBuffer_.h"
-#include "Buffer/D3D12IndexBuffer_.h"
-#include "Buffer/D3D12ConstantBuffer_.h"
-#include "Buffer/D3D12StorageBuffer_.h"
+#include "Buffer/D3D12VertexBuffer.h"
+#include "Buffer/D3D12IndexBuffer.h"
+#include "Buffer/D3D12ConstantBuffer.h"
+#include "Buffer/D3D12StorageBuffer.h"
 
 
 namespace LLGL
@@ -106,7 +106,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
     {
         case BufferType::Vertex:
         {
-            auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer_>(device_.Get(), desc);
+            auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer>(device_.Get(), desc);
             vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, desc.size);
             buffer = std::move(vertexBufferD3D);
         }
@@ -114,7 +114,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
 
         case BufferType::Index:
         {
-            auto indexBufferD3D = MakeUnique<D3D12IndexBuffer_>(device_.Get(), desc);
+            auto indexBufferD3D = MakeUnique<D3D12IndexBuffer>(device_.Get(), desc);
             indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, desc.size);
             buffer = std::move(indexBufferD3D);
         }
@@ -122,7 +122,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
 
         case BufferType::Constant:
         {
-            auto constantBufferD3D = MakeUnique<D3D12ConstantBuffer_>(device_.Get(), desc);
+            auto constantBufferD3D = MakeUnique<D3D12ConstantBuffer>(device_.Get(), desc);
             constantBufferD3D->UpdateSubresource(initialData, desc.size);
             buffer = std::move(constantBufferD3D);
         }
@@ -130,7 +130,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
 
         case BufferType::Storage:
         {
-            auto storageBufferD3D = MakeUnique<D3D12StorageBuffer_>(device_.Get(), desc);
+            auto storageBufferD3D = MakeUnique<D3D12StorageBuffer>(device_.Get(), desc);
             //todo...
             buffer = std::move(storageBufferD3D);
         }

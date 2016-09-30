@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class GLIndexBuffer_ : public GLBuffer
+class GLIndexBuffer : public GLBuffer
 {
 
     public:
 
-        GLIndexBuffer_(const IndexFormat& indexFormat);
+        GLIndexBuffer(const IndexFormat& indexFormat);
 
         inline const IndexFormat& GetIndexFormat() const
         {

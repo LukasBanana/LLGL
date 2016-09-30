@@ -18,10 +18,10 @@
 #include "RenderState/D3D11ComputePipeline.h"
 #include "RenderState/D3D11Query.h"
 
-#include "Buffer/D3D11VertexBuffer_.h"
-#include "Buffer/D3D11IndexBuffer_.h"
-#include "Buffer/D3D11ConstantBuffer_.h"
-#include "Buffer/D3D11StorageBuffer_.h"
+#include "Buffer/D3D11VertexBuffer.h"
+#include "Buffer/D3D11IndexBuffer.h"
+#include "Buffer/D3D11ConstantBuffer.h"
+#include "Buffer/D3D11StorageBuffer.h"
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
@@ -159,7 +159,7 @@ void D3D11RenderContext::ClearBuffers(long flags)
 
 void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
 {
-    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer_&, buffer);
+    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, buffer);
 
     ID3D11Buffer* buffers[] = { vertexBufferD3D.Get() };
     UINT strides[] = { vertexBufferD3D.GetStride() };
@@ -170,14 +170,14 @@ void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
 
 void D3D11RenderContext::SetIndexBuffer(Buffer& buffer)
 {
-    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer_&, buffer);
+    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, buffer);
     context_->IASetIndexBuffer(indexBufferD3D.Get(), indexBufferD3D.GetFormat(), 0);
 }
 
 void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
     /* Set constant buffer resource to all shader stages */
-    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer_&, buffer);
+    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, buffer);
     auto resource = constantBufferD3D.Get();
     SetConstantBuffersOnStages(slot, 1, &resource, shaderStageFlags);
 }
@@ -185,7 +185,7 @@ void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, lo
 void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
     #if 0//INCOMPLETE
-    auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer_&, buffer);
+    auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
 
     ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
     UINT auvCounts[] = { 0 };

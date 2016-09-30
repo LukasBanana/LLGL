@@ -15,8 +15,8 @@
 #include "Texture/GLTexture.h"
 #include "Texture/GLRenderTarget.h"
 #include "Texture/GLSampler.h"
-#include "Buffer/GLVertexBuffer_.h"
-#include "Buffer/GLIndexBuffer_.h"
+#include "Buffer/GLVertexBuffer.h"
+#include "Buffer/GLIndexBuffer.h"
 #include "RenderState/GLGraphicsPipeline.h"
 
 #ifndef __APPLE__
@@ -185,14 +185,14 @@ void GLRenderContext::ClearBuffers(long flags)
 void GLRenderContext::SetVertexBuffer(Buffer& buffer)
 {
     /* Bind vertex buffer */
-    auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer_&, buffer);
+    auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, buffer);
     stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
 }
 
 void GLRenderContext::SetIndexBuffer(Buffer& buffer)
 {
     /* Bind index buffer */
-    auto& indexBufferGL = LLGL_CAST(GLIndexBuffer_&, buffer);
+    auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, buffer);
     stateMngr_->BindBuffer(indexBufferGL);
 
     /* Store new index buffer data in global render state */

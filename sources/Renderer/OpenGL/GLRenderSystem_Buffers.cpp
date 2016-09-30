@@ -27,7 +27,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
         case BufferType::Vertex:
         {
             /* Create vertex buffer and build vertex array */
-            auto bufferGL = MakeUnique<GLVertexBuffer_>();
+            auto bufferGL = MakeUnique<GLVertexBuffer>();
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
                 bufferGL->BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
@@ -40,7 +40,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
         case BufferType::Index:
         {
             /* Create index buffer and store index format */
-            auto bufferGL = MakeUnique<GLIndexBuffer_>(desc.indexBufferDesc.indexFormat);
+            auto bufferGL = MakeUnique<GLIndexBuffer>(desc.indexBufferDesc.indexFormat);
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
                 bufferGL->BufferData(initialData, desc.size, GLTypes::Map(desc.usage));

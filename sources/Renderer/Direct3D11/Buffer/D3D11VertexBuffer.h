@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class D3D11VertexBuffer_ : public D3D11Buffer
+class D3D11VertexBuffer : public D3D11Buffer
 {
 
     public:
 
-        D3D11VertexBuffer_(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
+        D3D11VertexBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
         inline UINT GetStride() const
         {

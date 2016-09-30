@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-D3D11StorageBuffer_::D3D11StorageBuffer_(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
+D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
     D3D11Buffer( BufferType::Storage )
 {
     storageType_ = desc.storageBufferDesc.storageType;
@@ -47,12 +47,12 @@ D3D11StorageBuffer_::D3D11StorageBuffer_(ID3D11Device* device, const BufferDescr
         CreateSRV(device);
 }
 
-bool D3D11StorageBuffer_::IsUAV() const
+bool D3D11StorageBuffer::IsUAV() const
 {
     return ( storageType_ >= StorageBufferType::RWBuffer );
 }
 
-bool D3D11StorageBuffer_::IsStructured() const
+bool D3D11StorageBuffer::IsStructured() const
 {
     return ( storageType_ == StorageBufferType::StructuredBuffer       ||
              storageType_ == StorageBufferType::RWStructuredBuffer     ||
@@ -60,7 +60,7 @@ bool D3D11StorageBuffer_::IsStructured() const
              storageType_ == StorageBufferType::ConsumeStructuredBuffer );
 }
 
-bool D3D11StorageBuffer_::IsByteAddressable() const
+bool D3D11StorageBuffer::IsByteAddressable() const
 {
     return ( storageType_ == StorageBufferType::ByteAddressBuffer ||
              storageType_ == StorageBufferType::RWByteAddressBuffer );
@@ -71,7 +71,7 @@ bool D3D11StorageBuffer_::IsByteAddressable() const
  * ======= Private: =======
  */
 
-void D3D11StorageBuffer_::CreateUAV(ID3D11Device* device)
+void D3D11StorageBuffer::CreateUAV(ID3D11Device* device)
 {
     /* Initialize descriptor and create UAV */
     D3D11_UNORDERED_ACCESS_VIEW_DESC desc;
@@ -83,7 +83,7 @@ void D3D11StorageBuffer_::CreateUAV(ID3D11Device* device)
     DXThrowIfFailed(hr, "failed to create D3D11 unordered-acces-view (UAV) for storage buffer");
 }
 
-void D3D11StorageBuffer_::CreateSRV(ID3D11Device* device)
+void D3D11StorageBuffer::CreateSRV(ID3D11Device* device)
 {
     /* Initialize descriptor and create SRV */
     D3D11_SHADER_RESOURCE_VIEW_DESC desc;

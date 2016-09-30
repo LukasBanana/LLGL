@@ -15,10 +15,10 @@
 #include <sstream>
 #include <iomanip>
 
-#include "Buffer/D3D11VertexBuffer_.h"
-#include "Buffer/D3D11IndexBuffer_.h"
-#include "Buffer/D3D11ConstantBuffer_.h"
-#include "Buffer/D3D11StorageBuffer_.h"
+#include "Buffer/D3D11VertexBuffer.h"
+#include "Buffer/D3D11IndexBuffer.h"
+#include "Buffer/D3D11ConstantBuffer.h"
+#include "Buffer/D3D11StorageBuffer.h"
 
 
 namespace LLGL
@@ -91,13 +91,13 @@ std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferD
     switch (desc.type)
     {
         case BufferType::Vertex:
-            return MakeUnique<D3D11VertexBuffer_>(device, desc, initialData);
+            return MakeUnique<D3D11VertexBuffer>(device, desc, initialData);
         case BufferType::Index:
-            return MakeUnique<D3D11IndexBuffer_>(device, desc, initialData);
+            return MakeUnique<D3D11IndexBuffer>(device, desc, initialData);
         case BufferType::Constant:
-            return MakeUnique<D3D11ConstantBuffer_>(device, desc, initialData);
+            return MakeUnique<D3D11ConstantBuffer>(device, desc, initialData);
         case BufferType::Storage:
-            return MakeUnique<D3D11StorageBuffer_>(device, desc, initialData);
+            return MakeUnique<D3D11StorageBuffer>(device, desc, initialData);
     }
     return nullptr;
 }

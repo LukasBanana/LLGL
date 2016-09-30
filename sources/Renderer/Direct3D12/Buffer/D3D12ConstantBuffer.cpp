@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-D3D12ConstantBuffer_::D3D12ConstantBuffer_(ID3D12Device* device, const BufferDescriptor& desc) :
+D3D12ConstantBuffer::D3D12ConstantBuffer(ID3D12Device* device, const BufferDescriptor& desc) :
     D3D12Buffer( BufferType::Constant )
 {
     /* Create descriptor heap for constant buffer */
@@ -32,7 +32,7 @@ D3D12ConstantBuffer_::D3D12ConstantBuffer_(ID3D12Device* device, const BufferDes
     CreateResourceAndPutView(device, desc.size);
 }
 
-void D3D12ConstantBuffer_::UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset)
+void D3D12ConstantBuffer::UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset)
 {
     UpdateDynamicSubresource(data, bufferSize, offset);
 }
@@ -42,7 +42,7 @@ void D3D12ConstantBuffer_::UpdateSubresource(const void* data, UINT bufferSize, 
  * ======= Private: =======
  */
 
-void D3D12ConstantBuffer_::CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize)
+void D3D12ConstantBuffer::CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize)
 {
     /* Constant buffers are required to be 256-byte aligned */
     static const UINT alignment = 255;

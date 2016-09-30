@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class D3D11ConstantBuffer_ : public D3D11Buffer
+class D3D11ConstantBuffer : public D3D11Buffer
 {
 
     public:
 
-        D3D11ConstantBuffer_(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
+        D3D11ConstantBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
         void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset) override;
 

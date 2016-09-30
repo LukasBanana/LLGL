@@ -16,13 +16,13 @@ namespace LLGL
 {
 
 
-class GLVertexBuffer_ : public GLBuffer
+class GLVertexBuffer : public GLBuffer
 {
 
     public:
 
-        GLVertexBuffer_();
-        ~GLVertexBuffer_();
+        GLVertexBuffer();
+        ~GLVertexBuffer();
 
         void BuildVertexArray(const VertexFormat& vertexFormat);
 

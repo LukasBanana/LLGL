@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class D3D12ConstantBuffer_ : public D3D12Buffer
+class D3D12ConstantBuffer : public D3D12Buffer
 {
 
     public:
 
-        D3D12ConstantBuffer_(ID3D12Device* device, const BufferDescriptor& desc);
+        D3D12ConstantBuffer(ID3D12Device* device, const BufferDescriptor& desc);
 
         void UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset = 0);
 

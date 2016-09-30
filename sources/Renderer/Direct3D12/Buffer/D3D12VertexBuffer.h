@@ -16,12 +16,12 @@ namespace LLGL
 {
 
 
-class D3D12VertexBuffer_ : public D3D12Buffer
+class D3D12VertexBuffer : public D3D12Buffer
 {
 
     public:
 
-        D3D12VertexBuffer_(ID3D12Device* device, const BufferDescriptor& desc);
+        D3D12VertexBuffer(ID3D12Device* device, const BufferDescriptor& desc);
 
         void UpdateSubresource(
             ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
