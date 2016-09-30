@@ -163,7 +163,7 @@ private:
         // Set graphics pipeline state
         context->SetGraphicsPipeline(*pipeline);
 
-        if (isOpenGL)
+        if (IsOpenGL())
         {
             /*
             Set graphics API dependent state to be uniform between OpenGL and Direct3D:
@@ -198,7 +198,7 @@ private:
             // Update model transformation with render-target projection
             UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
             
-            if (isOpenGL)
+            if (IsOpenGL())
             {
                 /*
                 Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
@@ -217,7 +217,7 @@ private:
         // Generate MIP-maps again after texture has been written by the render-target
         renderer->GenerateMips(*renderTargetTex);
 
-        if (isOpenGL)
+        if (IsOpenGL())
         {
             // Reset graphics API dependent state
             context->SetGraphicsAPIDependentState({});

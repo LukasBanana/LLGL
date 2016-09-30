@@ -172,8 +172,6 @@ protected:
 
     Gs::Matrix4f                                projection;
 
-    const bool                                  isOpenGL;
-
     virtual void OnDrawFrame() = 0;
 
     Tutorial(
@@ -183,8 +181,7 @@ protected:
             profilerObj_( new LLGL::RenderingProfiler() ),
             debuggerObj_( new Debugger()                ),
             timer       ( LLGL::Timer::Create()         ),
-            profiler    ( *profilerObj_                 ),
-            isOpenGL    ( rendererModule_ == "OpenGL"   )
+            profiler    ( *profilerObj_                 )
     {
         // Create render system
         renderer = LLGL::RenderSystem::Load(rendererModule_, profilerObj_.get(), debuggerObj_.get());
@@ -198,6 +195,15 @@ protected:
             contextDesc.antiAliasing.samples    = multiSampling;
         }
         context = renderer->CreateRenderContext(contextDesc);
+
+        // Print renderer information
+        const auto& info = renderer->GetRendererInfo();
+
+        std::cout << "renderer information:" << std::endl;
+        std::cout << "  renderer:         " << info.rendererName << std::endl;
+        std::cout << "  device:           " << info.deviceName << std::endl;
+        std::cout << "  vendor:           " << info.vendorName << std::endl;
+        std::cout << "  shading language: " << info.shadingLanguageName << std::endl;
 
         // Set window title
         auto rendererName = renderer->GetName();
@@ -482,6 +488,12 @@ protected:
     {
         auto resolution = context->GetVideoMode().resolution.Cast<float>();
         return (resolution.x / resolution.y);
+    }
+
+    // Returns ture if OpenGL is used as rendering API.
+    bool IsOpenGL() const
+    {
+        return (renderer->GetRendererInfo().rendererID == LLGL::RendererID::OpenGL);
     }
 
 };
