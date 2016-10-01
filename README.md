@@ -71,23 +71,23 @@ Tutorials and Examples
 This repository contains several tutorials and examples which show how to use LLGL.
 Here are a few with a screenshot:
 
-## Tutorial 01: Hello Triangle
+### Tutorial 01: Hello Triangle
 
 Getting started tutorial where a single multi-colored triangle is rendered.
 
-![alt text](https://github.com/LukasBanana/LLGL/blob/master/tutorial/Tutorial01_HelloTriangle.png)
+<p align="center"><img src="tutorial/Tutorial01_HelloTriangle.png" width="512" height="384"/></p>
 
-## Tutorial 02: Tessellation
+### Tutorial 02: Tessellation
 
 Simple tessellation example without any textures.
 
 ![alt text](https://github.com/LukasBanana/LLGL/blob/master/tutorial/Tutorial02_Tessellation.png)
 
-## Tutorial 05: Render Target
+### Tutorial 05: Render Target
 
 ![alt text](https://github.com/LukasBanana/LLGL/blob/master/tutorial/Tutorial05_RenderTarget.png)
 
-## Tutorial 06: Multi Context
+### Tutorial 06: Multi Context
 
 Multi-context tutorial shows the following rendering techniques:
 multiple render contexts (one window each), rendering simultaneously into multiple viewports, geometry shader.
