@@ -104,9 +104,9 @@ void D3D11RenderContext::SetViewport(const Viewport& viewport)
     stateMngr_.SetViewports(1, &viewport);
 }
 
-void D3D11RenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
+void D3D11RenderContext::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
 {
-    stateMngr_.SetViewports(viewports.size(), viewports.data());
+    stateMngr_.SetViewports(numViewports, viewportArray);
 }
 
 void D3D11RenderContext::SetScissor(const Scissor& scissor)
@@ -114,9 +114,9 @@ void D3D11RenderContext::SetScissor(const Scissor& scissor)
     stateMngr_.SetScissors(1, &scissor);
 }
 
-void D3D11RenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
+void D3D11RenderContext::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
 {
-    stateMngr_.SetScissors(scissors.size(), scissors.data());
+    stateMngr_.SetScissors(numScissors, scissorArray);
 }
 
 void D3D11RenderContext::SetClearColor(const ColorRGBAf& color)

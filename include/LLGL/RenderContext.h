@@ -92,15 +92,16 @@ class LLGL_EXPORT RenderContext
         virtual void SetViewport(const Viewport& viewport) = 0;
 
         /**
-        \brief Sets the array of viewports.
-        \param[in] viewports Specifies the array of viewports.
+        \brief Sets an array of viewports.
+        \param[in] numViewports Specifies the number of viewports to set.
+        \param[in] viewportArray Pointer to the array of viewports. This must not be null!
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each viewport is on the upper-left (like for all other render systems).
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each viewport is on the lower-left.
         \see SetGraphicsAPIDependentState
         */
-        virtual void SetViewportArray(const std::vector<Viewport>& viewports) = 0;
+        virtual void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) = 0;
 
         /**
         \brief Sets a single scissor rectangle.
@@ -110,15 +111,16 @@ class LLGL_EXPORT RenderContext
         virtual void SetScissor(const Scissor& scissor) = 0;
 
         /**
-        \brief Sets the specified scissor rectangles.
-        \param[in] scissors Specifies the list of scissor rectangles.
+        \brief Sets an array of scissor rectangles.
+        \param[in] numScissors Specifies the number of scissor rectangles to set.
+        \param[in] scissorArray Pointer to the array of scissor rectangles. This must not be null!
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each scissor rectangle is on the upper-left (like for all other render systems).
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each scissor rectangle is on the lower-left.
         \see SetGraphicsAPIDependentState
         */
-        virtual void SetScissorArray(const std::vector<Scissor>& scissors) = 0;
+        virtual void SetScissorArray(unsigned int numScissors, const Scissor* scissorArray) = 0;
 
         //! Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
         virtual void SetClearColor(const ColorRGBAf& color) = 0;

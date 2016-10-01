@@ -59,9 +59,13 @@ void DbgRenderContext::SetViewport(const Viewport& viewport)
     instance_.SetViewport(viewport);
 }
 
-void DbgRenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
+void DbgRenderContext::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
 {
-    instance_.SetViewportArray(viewports);
+    if (!viewportArray)
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "viewport array must not be a null pointer");
+    if (numViewports == 0)
+        LLGL_DBG_WARN_HERE(WarningType::PointlessOperation, "no viewports are specified");
+    instance_.SetViewportArray(numViewports, viewportArray);
 }
 
 void DbgRenderContext::SetScissor(const Scissor& scissor)
@@ -69,9 +73,13 @@ void DbgRenderContext::SetScissor(const Scissor& scissor)
     instance_.SetScissor(scissor);
 }
 
-void DbgRenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
+void DbgRenderContext::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
 {
-    instance_.SetScissorArray(scissors);
+    if (!scissorArray)
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "scissor array must not be a null pointer");
+    if (numScissors == 0)
+        LLGL_DBG_WARN_HERE(WarningType::PointlessOperation, "no scissor rectangles are specified");
+    instance_.SetScissorArray(numScissors, scissorArray);
 }
 
 void DbgRenderContext::SetClearColor(const ColorRGBAf& color)

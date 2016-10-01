@@ -18,7 +18,7 @@ D3D12StateManager::D3D12StateManager(ComPtr<ID3D12GraphicsCommandList>& commandL
 {
 }
 
-void D3D12StateManager::SetViewports(std::size_t numViewports, const Viewport* viewports)
+void D3D12StateManager::SetViewports(unsigned int numViewports, const Viewport* viewportArray)
 {
     viewports_.resize(numViewports);
     
@@ -32,14 +32,14 @@ void D3D12StateManager::SetViewports(std::size_t numViewports, const Viewport* v
          offsetof(D3D12_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth) )
     {
         /* Now it's safe to reinterpret cast the viewports into D3D viewports */
-        auto viewportsD3D = reinterpret_cast<const D3D12_VIEWPORT*>(viewports);
+        auto viewportsD3D = reinterpret_cast<const D3D12_VIEWPORT*>(viewportArray);
         std::copy(viewportsD3D, viewportsD3D + numViewports, viewports_.data());
     }
     else
     {
-        for (std::size_t i = 0; i < numViewports; ++i)
+        for (unsigned int i = 0; i < numViewports; ++i)
         {
-            const auto& src = viewports[i];
+            const auto& src = viewportArray[i];
             auto& dest = viewports_[i];
 
             dest.TopLeftX   = src.x;
@@ -58,13 +58,13 @@ void D3D12StateManager::SubmitViewports()
         commandList_->RSSetViewports(static_cast<UINT>(viewports_.size()), viewports_.data());
 }
 
-void D3D12StateManager::SetScissors(std::size_t numScissors, const Scissor* scissors)
+void D3D12StateManager::SetScissors(unsigned int numScissors, const Scissor* scissorArray)
 {
     scissors_.resize(numScissors);
     
-    for (std::size_t i = 0; i < numScissors; ++i)
+    for (unsigned int i = 0; i < numScissors; ++i)
     {
-        const auto& src = scissors[i];
+        const auto& src = scissorArray[i];
         auto& dest = scissors_[i];
 
         dest.left   = src.x;

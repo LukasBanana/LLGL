@@ -105,7 +105,7 @@ int main()
                     viewport.width  = static_cast<float>(videoMode.resolution.x);
                     viewport.height = static_cast<float>(videoMode.resolution.y);
                 }
-                context_->SetViewportArray({ viewport });
+                context_->SetViewport(viewport);
             }
         private:
             LLGL::RenderContext* context_;
@@ -418,7 +418,7 @@ int main()
                     viewport.width  = static_cast<float>(contextDesc.videoMode.resolution.x);
                     viewport.height = static_cast<float>(contextDesc.videoMode.resolution.y);
                 }
-                context->SetViewportArray({ viewport });
+                context->SetViewport(viewport);
             }
             
             #endif

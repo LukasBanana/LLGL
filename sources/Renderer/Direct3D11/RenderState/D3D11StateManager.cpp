@@ -18,7 +18,7 @@ D3D11StateManager::D3D11StateManager(ComPtr<ID3D11DeviceContext>& context) :
 {
 }
 
-void D3D11StateManager::SetViewports(std::size_t numViewports, const Viewport* viewports)
+void D3D11StateManager::SetViewports(unsigned int numViewports, const Viewport* viewportArray)
 {
     /* Check (at compile time) if D3D11_VIEWPORT and Viewport structures can be safly reinterpret-casted */
     if ( sizeof(D3D11_VIEWPORT)             == sizeof(Viewport)             &&
@@ -30,16 +30,16 @@ void D3D11StateManager::SetViewports(std::size_t numViewports, const Viewport* v
          offsetof(D3D11_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth) )
     {
         /* Now it's safe to reinterpret cast the viewports into D3D viewports */
-        context_->RSSetViewports(static_cast<UINT>(numViewports), reinterpret_cast<const D3D11_VIEWPORT*>(viewports));
+        context_->RSSetViewports(numViewports, reinterpret_cast<const D3D11_VIEWPORT*>(viewportArray));
     }
     else
     {
         /* Convert viewport into D3D viewport */
         std::vector<D3D11_VIEWPORT> viewportsD3D(numViewports);
-    
-        for (std::size_t i = 0; i < numViewports; ++i)
+
+        for (unsigned int i = 0; i < numViewports; ++i)
         {
-            const auto& src = viewports[i];
+            const auto& src = viewportArray[i];
             auto& dest = viewportsD3D[i];
 
             dest.TopLeftX   = src.x;
@@ -50,17 +50,17 @@ void D3D11StateManager::SetViewports(std::size_t numViewports, const Viewport* v
             dest.MaxDepth   = src.maxDepth;
         }
 
-        context_->RSSetViewports(static_cast<UINT>(viewportsD3D.size()), viewportsD3D.data());
+        context_->RSSetViewports(numViewports, viewportsD3D.data());
     }
 }
 
-void D3D11StateManager::SetScissors(std::size_t numScissors, const Scissor* scissors)
+void D3D11StateManager::SetScissors(unsigned int numScissors, const Scissor* scissorArray)
 {
     std::vector<D3D11_RECT> scissorsD3D(numScissors);
     
-    for (std::size_t i = 0; i < numScissors; ++i)
+    for (unsigned int i = 0; i < numScissors; ++i)
     {
-        const auto& src = scissors[i];
+        const auto& src = scissorArray[i];
         auto& dest = scissorsD3D[i];
 
         dest.left   = src.x;
@@ -69,7 +69,7 @@ void D3D11StateManager::SetScissors(std::size_t numScissors, const Scissor* scis
         dest.bottom = src.y + src.height;
     }
 
-    context_->RSSetScissorRects(static_cast<UINT>(scissorsD3D.size()), scissorsD3D.data());
+    context_->RSSetScissorRects(numScissors, scissorsD3D.data());
 }
 
 

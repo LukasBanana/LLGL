@@ -105,9 +105,9 @@ void D3D12RenderContext::SetViewport(const Viewport& viewport)
     stateMngr_->SubmitViewports();
 }
 
-void D3D12RenderContext::SetViewportArray(const std::vector<Viewport>& viewports)
+void D3D12RenderContext::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
 {
-    stateMngr_->SetViewports(viewports.size(), viewports.data());
+    stateMngr_->SetViewports(numViewports, viewportArray);
     stateMngr_->SubmitViewports();
 }
 
@@ -117,9 +117,9 @@ void D3D12RenderContext::SetScissor(const Scissor& scissor)
     stateMngr_->SubmitScissors();
 }
 
-void D3D12RenderContext::SetScissorArray(const std::vector<Scissor>& scissors)
+void D3D12RenderContext::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
 {
-    stateMngr_->SetScissors(scissors.size(), scissors.data());
+    stateMngr_->SetScissors(numScissors, scissorArray);
     stateMngr_->SubmitScissors();
 }
 
