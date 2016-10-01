@@ -24,6 +24,7 @@ class D3D11Buffer : public Buffer
     public:
 
         D3D11Buffer(const BufferType type);
+        D3D11Buffer(const BufferType type, ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData = nullptr);
 
         virtual void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
         virtual void UpdateSubresource(ID3D11DeviceContext* context, const void* data);

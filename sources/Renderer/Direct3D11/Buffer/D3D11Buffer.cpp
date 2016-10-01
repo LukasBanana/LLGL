@@ -19,6 +19,12 @@ D3D11Buffer::D3D11Buffer(const BufferType type) :
 {
 }
 
+D3D11Buffer::D3D11Buffer(const BufferType type, ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData) :
+    Buffer( type )
+{
+    CreateResource(device, desc, initialData);
+}
+
 void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset)
 {
     CD3D11_BOX destBox(offset, 0, 0, offset + dataSize, 1, 1);
