@@ -147,7 +147,7 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc)
         throw std::invalid_argument("can not create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
 }
 
-void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     /* Validate number of buffers */
     if (numBuffers == 0)

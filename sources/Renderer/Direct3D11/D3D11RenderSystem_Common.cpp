@@ -91,7 +91,7 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 
-BufferArray* D3D11RenderSystem::CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+BufferArray* D3D11RenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
     return nullptr;//todo

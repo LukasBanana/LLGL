@@ -133,7 +133,7 @@ Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeBufferAndInitialize(desc, initialData));
 }
 
-BufferArray* D3D12RenderSystem::CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+BufferArray* D3D12RenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
     return nullptr;//todo

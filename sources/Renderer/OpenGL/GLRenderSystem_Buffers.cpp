@@ -62,7 +62,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     }
 }
 
-BufferArray* GLRenderSystem::CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+BufferArray* GLRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
     return nullptr;//todo

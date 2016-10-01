@@ -111,7 +111,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
     return TakeOwnership(buffers_, std::move(bufferDbg));
 }
 
-BufferArray* DbgRenderSystem::CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+BufferArray* DbgRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     return instance_->CreateBufferArray(numBuffers, bufferArray);
 }

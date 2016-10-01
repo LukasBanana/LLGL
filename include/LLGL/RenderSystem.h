@@ -188,7 +188,7 @@ class LLGL_EXPORT RenderSystem
         \throws std::invalid_argument If 'numBuffers' is 0, if 'bufferArray' is null,
         if any of the pointers in the array are null, or if not all buffers have the same type.
         */
-        virtual BufferArray* CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray) = 0;
+        virtual BufferArray* CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) = 0;
 
         //! Releases the specified buffer object.
         virtual void Release(Buffer& buffer) = 0;
@@ -349,7 +349,7 @@ class LLGL_EXPORT RenderSystem
         void AssertCreateBuffer(const BufferDescriptor& desc);
 
         //! Validates the specified arguments to be used for buffer array creation.
-        void AssertCreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray);
+        void AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray);
 
         //! Sets the renderer information.
         void SetRendererInfo(const RendererInfo& info);
