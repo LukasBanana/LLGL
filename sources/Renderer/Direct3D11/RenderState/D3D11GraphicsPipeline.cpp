@@ -99,8 +99,8 @@ void D3D11GraphicsPipeline::CreateDepthStencilState(ID3D11Device* device, const 
         stateDesc.DepthWriteMask    = (depthDesc.writeEnabled ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO);
         stateDesc.DepthFunc         = D3D11Types::Map(depthDesc.compareOp);
         stateDesc.StencilEnable     = (stencilDesc.testEnabled ? TRUE : FALSE);
-        stateDesc.StencilReadMask   = D3D11_DEFAULT_STENCIL_READ_MASK;
-        stateDesc.StencilWriteMask  = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+        stateDesc.StencilReadMask   = static_cast<UINT8>(stencilDesc.front.readMask);
+        stateDesc.StencilWriteMask  = static_cast<UINT8>(stencilDesc.front.writeMask);
 
         Convert(stateDesc.FrontFace, stencilDesc.front);
         Convert(stateDesc.BackFace, stencilDesc.back);

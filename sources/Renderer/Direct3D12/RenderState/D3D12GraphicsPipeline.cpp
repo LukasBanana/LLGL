@@ -230,8 +230,8 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.DepthStencilState.DepthWriteMask      = (desc.depth.writeEnabled ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO);
     stateDesc.DepthStencilState.DepthFunc           = D3D12Types::Map(desc.depth.compareOp);
     stateDesc.DepthStencilState.StencilEnable       = (desc.stencil.testEnabled ? TRUE : FALSE);
-    stateDesc.DepthStencilState.StencilReadMask     = D3D12_DEFAULT_STENCIL_READ_MASK;
-    stateDesc.DepthStencilState.StencilWriteMask    = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+    stateDesc.DepthStencilState.StencilReadMask     = static_cast<UINT8>(desc.stencil.front.readMask);
+    stateDesc.DepthStencilState.StencilWriteMask    = static_cast<UINT8>(desc.stencil.front.writeMask);
     
     Convert(stateDesc.DepthStencilState.FrontFace, desc.stencil.front);
     Convert(stateDesc.DepthStencilState.BackFace, desc.stencil.back);

@@ -188,13 +188,25 @@ struct StencilFaceDescriptor
     StencilOp       depthFailOp     = StencilOp::Keep;  //!< Specifies the operation to take when the stencil test passes but the depth test fails.
     StencilOp       depthPassOp     = StencilOp::Keep;  //!< Specifies the operation to take when both the stencil test and the depth test pass.
     CompareOp       compareOp       = CompareOp::Less;  //!< Specifies the stencil compare operation.
-    std::uint32_t   compareMask     = 0;
-    std::uint32_t   writeMask       = 0;
+
+    /**
+    \brief Specifies the portion of the depth-stencil buffer for reading stencil data. By default 0xffffffff.
+    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (readMask & 0xff) of the read mask value of the front face will be used.
+    \see StencilDescriptor::front
+    */
+    std::uint32_t   readMask        = ~0;
+
+    /**
+    \brief Specifies the portion of the depth-stencil buffer for writing stencil data. By default 0xffffffff.
+    \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (writeMask & 0xff) of the write mask value of the front face will be used.
+    \see StencilDescriptor::front
+    */
+    std::uint32_t   writeMask       = ~0;
 
     /**
     \brief Specifies the stencil reference value.
     \remarks This value will be used when the stencil operation is StencilOp::Replace.
-    \note For Direct3D 11, only the stencil reference value of the front face will be used.
+    \note For Direct3D 11 and Direct3D 12, only the stencil reference value of the front face will be used.
     \see StencilDescriptor::front
     */
     std::uint32_t   reference       = 0;

@@ -25,7 +25,7 @@ static void Convert(GLStencil& to, const StencilFaceDescriptor& from)
     to.dppass       = GLTypes::Map(from.depthPassOp);
     to.func         = GLTypes::Map(from.compareOp);
     to.ref          = static_cast<GLint>(from.reference);
-    to.mask         = from.compareMask;
+    to.mask         = from.readMask;
     to.writeMask    = from.writeMask;
 }
 
