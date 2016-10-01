@@ -32,6 +32,38 @@ enum class RenderConditionMode
     ByRegionNoWaitInverted, //!< Same as ByRegionNoWait, but the condition is inverted.
 };
 
+/**
+\brief Logical pixel operation enumeration.
+\remarks These logical pixel operations are bitwise operations.
+\note Only supported with: OpenGL.
+\see GraphicsAPIDependentStateDescriptor::StateOpenGLDescriptor::logicOp
+\see https://www.opengl.org/sdk/docs/man/html/glLogicOp.xhtml
+*/
+enum class LogicOp
+{
+    /* Configuration entries */
+    Keep,           //!< Keep previous logical pixel operation.
+    Disabled,       //!< Logical pixel operation is disabled.
+
+    /* Logical operation entries */
+    Clear,          //!< Resulting operation: 0.
+    Set,            //!< Resulting operation: 1
+    Copy,           //!< Resulting operation: src
+    InvertedCopy,   //!< Resulting operation: ~src
+    Noop,           //!< Resulting operation: dest
+    Invert,         //!< Resulting operation: ~dest
+    AND,            //!< Resulting operation: src & dest
+    NAND,           //!< Resulting operation: ~(src & dest)
+    OR,             //!< Resulting operation: src | dest
+    NOR,            //!< Resulting operation: ~(src | dest)
+    XOR,            //!< Resulting operation: src ^ dest
+    Equiv,          //!< Resulting operation: ~(src ^ dest)
+    ReverseAND,     //!< Resulting operation: src & ~dest
+    InvertedAND,    //!< Resulting operation: ~src & dest
+    ReverseOR,      //!< Resulting operation: src | ~dest
+    InvertedOR,     //!< Resulting operation: ~src | dest
+};
+
 
 /* ----- Structures ----- */
 
@@ -109,6 +141,7 @@ struct Scissor
 
 /**
 \brief Low-level graphics API dependent state descriptor union.
+\remarks This descriptor is used to compensate a few differences between OpenGL and Direct3D.
 \see RenderContext::SetGraphicsAPIDependentState
 */
 union GraphicsAPIDependentStateDescriptor
@@ -117,6 +150,8 @@ union GraphicsAPIDependentStateDescriptor
     {
         stateOpenGL.screenSpaceOriginLowerLeft  = false;
         stateOpenGL.invertFrontFace             = false;
+        stateOpenGL.logicOp                     = LogicOp::Keep;
+        stateOpenGL.lineWidth                   = 0.0f;
     }
 
     struct StateOpenGLDescriptor
@@ -126,14 +161,27 @@ union GraphicsAPIDependentStateDescriptor
         \remarks If this is true, the viewports and scissor rectangles of OpenGL are NOT emulated to the upper-left,
         which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
         */
-        bool screenSpaceOriginLowerLeft;
+        bool        screenSpaceOriginLowerLeft;
 
         /**
         \brief Specifies whether to invert front-facing. By default false.
         \remarks If this is true, the front facing (either GL_CW or GL_CCW) will be inverted,
         i.e. CCW becomes CW, and CW becomes CCW.
         */
-        bool invertFrontFace;
+        bool        invertFrontFace;
+
+        /**
+        \brief Specifies the logical pixel operation for drawing operations. By default LogicOp::Keep.
+        \see https://www.opengl.org/sdk/docs/man/html/glLogicOp.xhtml
+        */
+        LogicOp     logicOp;
+
+        /**
+        \brief Specifies the width to rasterize lines. By default 0.
+        \remarks If this is 0, the attribute is ignored and the current line width will not be changed.
+        \see https://www.opengl.org/sdk/docs/man/html/glLineWidth.xhtml
+        */
+        float       lineWidth;
     }
     stateOpenGL;
 };

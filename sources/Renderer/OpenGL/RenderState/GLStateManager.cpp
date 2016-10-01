@@ -11,6 +11,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../../../Core/Helper.h"
 #include "../../Assertion.h"
+#include "../GLTypes.h"
 
 
 namespace LLGL
@@ -178,6 +179,22 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
     /* Update front face */
     if (updateFrontFace)
         SetFrontFace(commonState_.frontFaceAct);
+
+    /* Set logical operation */
+    if (state.stateOpenGL.logicOp != LogicOp::Keep)
+    {
+        if (state.stateOpenGL.logicOp != LogicOp::Disabled)
+        {
+            Enable(GLState::COLOR_LOGIC_OP);
+            SetLogicOp(GLTypes::Map(state.stateOpenGL.logicOp));
+        }
+        else
+            Disable(GLState::COLOR_LOGIC_OP);
+    }
+
+    /* Set line width */
+    if (state.stateOpenGL.lineWidth > 0.0f)
+        glLineWidth(state.stateOpenGL.lineWidth);
 }
 
 /* ----- Boolean states ----- */
@@ -565,6 +582,15 @@ void GLStateManager::SetBlendColor(const ColorRGBAf& color)
     {
         commonState_.blendColor = color;
         glBlendColor(color.r, color.g, color.b, color.a);
+    }
+}
+
+void GLStateManager::SetLogicOp(GLenum opcode)
+{
+    if (commonState_.logicOpCode != opcode)
+    {
+        commonState_.logicOpCode = opcode;
+        glLogicOp(opcode);
     }
 }
 

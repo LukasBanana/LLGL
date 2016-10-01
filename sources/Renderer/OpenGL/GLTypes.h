@@ -49,6 +49,7 @@ GLenum Map( const ShaderType            shaderType          );
 GLenum Map( const QueryType             queryType           );
 GLenum Map( const BufferType            bufferType          );
 GLenum Map( const RenderConditionMode   renderConditionMode );
+GLenum Map( const LogicOp               logicOp             );
 
 void Unmap( UniformType& result,    const GLenum uniformType    );
 void Unmap( TextureFormat& result,  const GLenum internalFormat );
