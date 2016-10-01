@@ -131,6 +131,7 @@ enum class BlendOp
     InvDestColor,       //!< Data source is inverted color data (1 - RGB) from a framebuffer.
     DestAlpha,          //!< Data source is alpha data (A) from a framebuffer.
     InvDestAlpha,       //!< Data source is inverted alpha data (1 - A) from a framebuffer.
+    SrcAlphaSaturate,   //!< Data source is alpha data (A) from a fragment shader which is clamped to 1 or less.
 };
 
 //! Blending arithmetic operations enumeration.

@@ -65,23 +65,23 @@ D3D12_BLEND Map(const BlendOp blendOp)
 {
     switch (blendOp)
     {
-        case BlendOp::Zero:         return D3D12_BLEND_ZERO;
-        case BlendOp::One:          return D3D12_BLEND_ONE;
-        case BlendOp::SrcColor:     return D3D12_BLEND_SRC_COLOR;
-        case BlendOp::InvSrcColor:  return D3D12_BLEND_INV_SRC_COLOR;
-        case BlendOp::SrcAlpha:     return D3D12_BLEND_SRC_ALPHA;
-        case BlendOp::InvSrcAlpha:  return D3D12_BLEND_INV_SRC_ALPHA;
-        case BlendOp::DestColor:    return D3D12_BLEND_DEST_COLOR;
-        case BlendOp::InvDestColor: return D3D12_BLEND_INV_DEST_COLOR;
-        case BlendOp::DestAlpha:    return D3D12_BLEND_DEST_ALPHA;
-        case BlendOp::InvDestAlpha: return D3D12_BLEND_INV_DEST_ALPHA;
-                                    /*return D3D12_BLEND_SRC_ALPHA_SAT;
-                                    return D3D12_BLEND_BLEND_FACTOR;
-                                    return D3D12_BLEND_INV_BLEND_FACTOR;
-                                    return D3D12_BLEND_SRC1_COLOR;
-                                    return D3D12_BLEND_INV_SRC1_COLOR;
-                                    return D3D12_BLEND_SRC1_ALPHA;
-                                    return D3D12_BLEND_INV_SRC1_ALPHA;*/
+        case BlendOp::Zero:             return D3D12_BLEND_ZERO;
+        case BlendOp::One:              return D3D12_BLEND_ONE;
+        case BlendOp::SrcColor:         return D3D12_BLEND_SRC_COLOR;
+        case BlendOp::InvSrcColor:      return D3D12_BLEND_INV_SRC_COLOR;
+        case BlendOp::SrcAlpha:         return D3D12_BLEND_SRC_ALPHA;
+        case BlendOp::InvSrcAlpha:      return D3D12_BLEND_INV_SRC_ALPHA;
+        case BlendOp::DestColor:        return D3D12_BLEND_DEST_COLOR;
+        case BlendOp::InvDestColor:     return D3D12_BLEND_INV_DEST_COLOR;
+        case BlendOp::DestAlpha:        return D3D12_BLEND_DEST_ALPHA;
+        case BlendOp::InvDestAlpha:     return D3D12_BLEND_INV_DEST_ALPHA;
+        case BlendOp::SrcAlphaSaturate: return D3D12_BLEND_SRC_ALPHA_SAT;
+                                      /*return D3D12_BLEND_BLEND_FACTOR;
+                                        return D3D12_BLEND_INV_BLEND_FACTOR;
+                                        return D3D12_BLEND_SRC1_COLOR;
+                                        return D3D12_BLEND_INV_SRC1_COLOR;
+                                        return D3D12_BLEND_SRC1_ALPHA;
+                                        return D3D12_BLEND_INV_SRC1_ALPHA;*/
     }
     DXTypes::MapFailed("BlendOp", "D3D12_BLEND");
 }

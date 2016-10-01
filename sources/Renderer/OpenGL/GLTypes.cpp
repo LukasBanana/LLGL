@@ -230,16 +230,17 @@ GLenum Map(const BlendOp blendOp)
 {
     switch (blendOp)
     {
-        case BlendOp::Zero:         return GL_ZERO;
-        case BlendOp::One:          return GL_ONE;
-        case BlendOp::SrcColor:     return GL_SRC_COLOR;
-        case BlendOp::InvSrcColor:  return GL_ONE_MINUS_SRC_COLOR;
-        case BlendOp::SrcAlpha:     return GL_SRC_ALPHA;
-        case BlendOp::InvSrcAlpha:  return GL_ONE_MINUS_SRC_ALPHA;
-        case BlendOp::DestColor:    return GL_DST_COLOR;
-        case BlendOp::InvDestColor: return GL_ONE_MINUS_DST_COLOR;
-        case BlendOp::DestAlpha:    return GL_DST_ALPHA;
-        case BlendOp::InvDestAlpha: return GL_ONE_MINUS_DST_ALPHA;
+        case BlendOp::Zero:             return GL_ZERO;
+        case BlendOp::One:              return GL_ONE;
+        case BlendOp::SrcColor:         return GL_SRC_COLOR;
+        case BlendOp::InvSrcColor:      return GL_ONE_MINUS_SRC_COLOR;
+        case BlendOp::SrcAlpha:         return GL_SRC_ALPHA;
+        case BlendOp::InvSrcAlpha:      return GL_ONE_MINUS_SRC_ALPHA;
+        case BlendOp::DestColor:        return GL_DST_COLOR;
+        case BlendOp::InvDestColor:     return GL_ONE_MINUS_DST_COLOR;
+        case BlendOp::DestAlpha:        return GL_DST_ALPHA;
+        case BlendOp::InvDestAlpha:     return GL_ONE_MINUS_DST_ALPHA;
+        case BlendOp::SrcAlphaSaturate: return GL_SRC_ALPHA_SATURATE;
     }
     MapFailed("BlendOp");
 }
