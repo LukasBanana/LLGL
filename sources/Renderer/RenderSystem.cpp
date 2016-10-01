@@ -144,7 +144,33 @@ std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixel
 void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc)
 {
     if (desc.type < BufferType::Vertex || desc.type > BufferType::StreamOutput)
-        throw std::invalid_argument("failed to create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
+        throw std::invalid_argument("can not create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
+}
+
+void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+{
+    /* Validate number of buffers */
+    if (numBuffers == 0)
+        throw std::invalid_argument("can not create buffer array with zero buffers");
+
+    /* Validate array pointer */
+    if (bufferArray == nullptr)
+        throw std::invalid_argument("can not create buffer array with invalid array pointer");
+    
+    /* Validate pointers in array */
+    for (unsigned int i = 0; i < numBuffers; ++i)
+    {
+        if (bufferArray[i] == nullptr)
+            throw std::invalid_argument("can not create buffer array with invalid pointer in array");
+    }
+    
+    /* Validate buffer types */
+    auto refType = bufferArray[0]->GetType();
+    for (unsigned int i = 1; i < numBuffers; ++i)
+    {
+        if (bufferArray[i]->GetType() != refType)
+            throw std::invalid_argument("can not create buffer array with type mismatch");
+    }
 }
 
 void RenderSystem::SetRendererInfo(const RendererInfo& info)

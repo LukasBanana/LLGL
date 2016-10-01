@@ -62,9 +62,20 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     }
 }
 
+BufferArray* GLRenderSystem::CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+{
+    AssertCreateBufferArray(numBuffers, bufferArray);
+    return nullptr;//todo
+}
+
 void GLRenderSystem::Release(Buffer& buffer)
 {
     RemoveFromUniqueSet(buffers_, &buffer);
+}
+
+void GLRenderSystem::Release(BufferArray& bufferArray)
+{
+    //RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
 void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)

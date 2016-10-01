@@ -91,9 +91,20 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 
+BufferArray* D3D11RenderSystem::CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+{
+    AssertCreateBufferArray(numBuffers, bufferArray);
+    return nullptr;//todo
+}
+
 void D3D11RenderSystem::Release(Buffer& buffer)
 {
     RemoveFromUniqueSet(buffers_, &buffer);
+}
+
+void D3D11RenderSystem::Release(BufferArray& bufferArray)
+{
+    //RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
 void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)

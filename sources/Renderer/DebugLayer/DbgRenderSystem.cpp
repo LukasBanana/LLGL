@@ -111,9 +111,20 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
     return TakeOwnership(buffers_, std::move(bufferDbg));
 }
 
+BufferArray* DbgRenderSystem::CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+{
+    return instance_->CreateBufferArray(numBuffers, bufferArray);
+}
+
 void DbgRenderSystem::Release(Buffer& buffer)
 {
     ReleaseDbg(buffers_, buffer);
+}
+
+void DbgRenderSystem::Release(BufferArray& bufferArray)
+{
+    instance_->Release(bufferArray);
+    //ReleaseDbg(bufferArrays_, bufferArray);
 }
 
 void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)

@@ -133,9 +133,20 @@ Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeBufferAndInitialize(desc, initialData));
 }
 
+BufferArray* D3D12RenderSystem::CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray)
+{
+    AssertCreateBufferArray(numBuffers, bufferArray);
+    return nullptr;//todo
+}
+
 void D3D12RenderSystem::Release(Buffer& buffer)
 {
     RemoveFromUniqueSet(buffers_, &buffer);
+}
+
+void D3D12RenderSystem::Release(BufferArray& bufferArray)
+{
+    //RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
 void D3D12RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)

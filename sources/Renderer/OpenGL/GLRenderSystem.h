@@ -60,8 +60,10 @@ class GLRenderSystem : public RenderSystem
         /* ----- Hardware Buffers ------ */
 
         Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
-        
+        BufferArray* CreateBufferArray(unsigned int numBuffers, const Buffer** bufferArray) override;
+
         void Release(Buffer& buffer) override;
+        void Release(BufferArray& bufferArray) override;
         
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
 
