@@ -75,23 +75,23 @@ Here are a few with a screenshot:
 
 Getting started tutorial where a single multi-colored triangle is rendered.
 
-<p align="center"><img src="tutorial/Tutorial01_HelloTriangle.png" width="512" height="384"/></p>
+<p align="center"><img src="tutorial/Tutorial01_HelloTriangle.png" width="400" height="300"/></p>
 
 ### Tutorial 02: Tessellation
 
 Simple tessellation example without any textures.
 
-![alt text](https://github.com/LukasBanana/LLGL/blob/master/tutorial/Tutorial02_Tessellation.png)
+<p align="center"><img src="tutorial/Tutorial02_Tessellation.png" width="400" height="300"/></p>
 
 ### Tutorial 05: Render Target
 
-![alt text](https://github.com/LukasBanana/LLGL/blob/master/tutorial/Tutorial05_RenderTarget.png)
+<p align="center"><img src="tutorial/Tutorial05_RenderTarget.png" width="400" height="300"/></p>
 
 ### Tutorial 06: Multi Context
 
 Multi-context tutorial shows the following rendering techniques:
 multiple render contexts (one window each), rendering simultaneously into multiple viewports, geometry shader.
 
-![alt text](https://github.com/LukasBanana/LLGL/blob/master/tutorial/Tutorial06_MultiContext.png)
+<p align="center"><img src="tutorial/Tutorial06_MultiContext.png" width="400" height="300"/></p>
 
 
