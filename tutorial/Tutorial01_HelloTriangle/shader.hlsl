@@ -13,7 +13,7 @@ struct OutputVS
 };
 
 // Vertex shader main function
-OutputVS VS(InputVS inp, uint id : SV_VertexID)
+OutputVS VS(InputVS inp)
 {
 	OutputVS outp;
 	outp.position = float4(inp.position, 0, 1);

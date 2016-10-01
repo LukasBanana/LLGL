@@ -85,6 +85,7 @@ int main()
 
         // Create shaders
         auto vertexShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
+        auto geometryShader = renderer->CreateShader(LLGL::ShaderType::Geometry);
         auto fragmentShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
 
         // Define the lambda function to read an entire text file
@@ -109,18 +110,18 @@ int main()
                 std::cerr << log << std::endl;
         };
 
-        const std::string shaderPath = "../Tutorial01_HelloTriangle/";
-
         if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
         {
-            auto shaderCode = ReadFileContent(shaderPath + "shader.hlsl");
+            auto shaderCode = ReadFileContent("shader.hlsl");
             CompileShader(vertexShader, LLGL::ShaderSource(shaderCode, "VS", "vs_4_0"));
+            CompileShader(geometryShader, LLGL::ShaderSource(shaderCode, "GS", "gs_4_0"));
             CompileShader(fragmentShader, LLGL::ShaderSource(shaderCode, "PS", "ps_4_0"));
         }
         else
         {
-            CompileShader(vertexShader, ReadFileContent(shaderPath + "vertex.glsl"));
-            CompileShader(fragmentShader, ReadFileContent(shaderPath + "fragment.glsl"));
+            CompileShader(vertexShader, ReadFileContent("vertex.glsl"));
+            CompileShader(geometryShader, ReadFileContent("geometry.glsl"));
+            CompileShader(fragmentShader, ReadFileContent("fragment.glsl"));
         }
 
         // Create shader program which is used as composite
@@ -128,6 +129,7 @@ int main()
 
         // Attach vertex- and fragment shader to the shader program
         shaderProgram->AttachShader(*vertexShader);
+        shaderProgram->AttachShader(*geometryShader);
         shaderProgram->AttachShader(*fragmentShader);
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
@@ -146,6 +148,13 @@ int main()
             pipelineDesc.rasterizer.samples             = 8;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        // Initialize viewport array
+        LLGL::Viewport viewports[2] =
+        {
+            LLGL::Viewport(0, 0, 320, 480),
+            LLGL::Viewport(320, 0, 320, 480),
+        };
         
         // Enter main loop
         while ( ( context1->GetWindow().ProcessEvents() || context2->GetWindow().ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
@@ -154,6 +163,9 @@ int main()
             {
                 // Make 1st render context to the current one
                 renderer->MakeCurrent(context1);
+
+                // Set viewport array
+                context1->SetViewportArray(2, viewports);
 
                 // Set graphics pipeline
                 context1->SetGraphicsPipeline(*pipeline);
@@ -175,6 +187,9 @@ int main()
             {
                 // Make 2nd render context to the current one
                 renderer->MakeCurrent(context2);
+
+                // Set viewport array
+                context2->SetViewportArray(2, viewports);
 
                 // Set graphics pipeline
                 context2->SetGraphicsPipeline(*pipeline);
