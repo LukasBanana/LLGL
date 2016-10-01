@@ -313,6 +313,22 @@ void D3D11RenderSystem::QueryRenderingCaps()
     SetRenderingCaps(caps);
 }
 
+bool D3D11RenderSystem::OnMakeCurrent(RenderContext* renderContext)
+{
+    if (renderContext)
+    {
+        /* Notify render context */
+        auto renderContextD3D = LLGL_CAST(D3D11RenderContext*, renderContext);
+        renderContextD3D->OnMakeCurrent();
+    }
+    else
+    {
+        /* Unset render targets */
+        context_->OMSetRenderTargets(0, nullptr, nullptr);
+    }
+    return true;
+}
+
 
 } // /namespace LLGL
 

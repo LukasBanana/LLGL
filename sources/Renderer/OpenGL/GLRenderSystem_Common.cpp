@@ -31,9 +31,15 @@ GLRenderSystem::~GLRenderSystem()
 
 /* ----- Render Context ----- */
 
+// private
+GLRenderContext* GLRenderSystem::GetSharedRenderContext() const
+{
+    return (!renderContexts_.empty() ? renderContexts_.begin()->get() : nullptr);
+}
+
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    return AddRenderContext(MakeUnique<GLRenderContext>(*this, desc, window, nullptr), desc, window);
+    return AddRenderContext(MakeUnique<GLRenderContext>(*this, desc, window, GetSharedRenderContext()), desc, window);
 }
 
 void GLRenderSystem::Release(RenderContext& renderContext)

@@ -493,6 +493,14 @@ void D3D11RenderContext::SyncGPU()
     context_->Flush();
 }
 
+/* ----- Extended internal functions ----- */
+
+void D3D11RenderContext::OnMakeCurrent()
+{
+    /* Submit default render targets to device context */
+    SetDefaultRenderTargets();
+}
+
 
 /*
  * ======= Private: =======

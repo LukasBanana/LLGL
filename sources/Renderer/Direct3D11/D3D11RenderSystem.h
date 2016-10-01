@@ -159,6 +159,8 @@ class D3D11RenderSystem : public RenderSystem
             const ImageDescriptor& imageDesc
         );
 
+        bool OnMakeCurrent(RenderContext* renderContext) override;
+
         /* ----- Common objects ----- */
 
         ComPtr<IDXGIFactory>                        factory_;

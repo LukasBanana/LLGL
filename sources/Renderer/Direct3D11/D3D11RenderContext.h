@@ -122,6 +122,10 @@ class D3D11RenderContext : public RenderContext
 
         void SyncGPU() override;
 
+        /* ----- Extended internal functions ----- */
+
+        void OnMakeCurrent();
+
     private:
 
         struct D3D11BackBuffer

@@ -153,6 +153,8 @@ class GLRenderSystem : public RenderSystem
         void WriteTexture2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
         void WriteTextureCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
 
+        GLRenderContext* GetSharedRenderContext() const;
+
         /* ----- Common objects ----- */
 
         OpenGLExtensionMap                      extensionMap_;
