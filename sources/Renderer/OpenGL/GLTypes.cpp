@@ -243,10 +243,10 @@ GLenum Map(const BlendOp blendOp)
         case BlendOp::SrcAlphaSaturate: return GL_SRC_ALPHA_SATURATE;
         case BlendOp::BlendFactor:      return GL_CONSTANT_COLOR;
         case BlendOp::InvBlendFactor:   return GL_ONE_MINUS_CONSTANT_COLOR;
-                                      /*return GL_SRC1_COLOR;
-                                        return GL_ONE_MINUS_SRC1_COLOR;
-                                        return GL_SRC1_ALPHA;
-                                        return GL_ONE_MINUS_SRC1_ALPHA;*/
+        case BlendOp::Src1Color:        return GL_SRC1_COLOR;
+        case BlendOp::InvSrc1Color:     return GL_ONE_MINUS_SRC1_COLOR;
+        case BlendOp::Src1Alpha:        return GL_SRC1_ALPHA;
+        case BlendOp::InvSrc1Alpha:     return GL_ONE_MINUS_SRC1_ALPHA;
     }
     MapFailed("BlendOp");
 }

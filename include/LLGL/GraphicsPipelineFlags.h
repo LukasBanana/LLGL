@@ -134,6 +134,10 @@ enum class BlendOp
     SrcAlphaSaturate,   //!< Data source is alpha data (A) from a fragment shader which is clamped to 1 or less.
     BlendFactor,        //!< Data source is the blend factor (RGBA) from the blend state. \see BlendDescriptor::blendFactor
     InvBlendFactor,     //!< Data source is the inverted blend factor (1 - RGBA) from the blend state. \see BlendDescriptor::blendFactor
+    Src1Color,          //!< Data sources are both color data (RGB) from a fragment shader with dual-source color blending.
+    InvSrc1Color,       //!< Data sources are both inverted color data (1 - RGB) from a fragment shader with dual-source color blending.
+    Src1Alpha,          //!< Data sources are both alpha data (A) from a fragment shader with dual-source color blending.
+    InvSrc1Alpha        //!< Data sources are both inverted alpha data (1 - A) from a fragment shader with dual-source color blending.
 };
 
 //! Blending arithmetic operations enumeration.

@@ -78,10 +78,10 @@ D3D11_BLEND Map(const BlendOp blendOp)
         case BlendOp::SrcAlphaSaturate: return D3D11_BLEND_SRC_ALPHA_SAT;
         case BlendOp::BlendFactor:      return D3D11_BLEND_BLEND_FACTOR;
         case BlendOp::InvBlendFactor:   return D3D11_BLEND_INV_BLEND_FACTOR;
-                                      /*return D3D11_BLEND_SRC1_COLOR;
-                                        return D3D11_BLEND_INV_SRC1_COLOR;
-                                        return D3D11_BLEND_SRC1_ALPHA;
-                                        return D3D11_BLEND_INV_SRC1_ALPHA;*/
+        case BlendOp::Src1Color:        return D3D11_BLEND_SRC1_COLOR;
+        case BlendOp::InvSrc1Color:     return D3D11_BLEND_INV_SRC1_COLOR;
+        case BlendOp::Src1Alpha:        return D3D11_BLEND_SRC1_ALPHA;
+        case BlendOp::InvSrc1Alpha:     return D3D11_BLEND_INV_SRC1_ALPHA;
     }
     DXTypes::MapFailed("BlendOp", "D3D11_BLEND");
 }
