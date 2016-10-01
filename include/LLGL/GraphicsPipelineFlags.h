@@ -95,44 +95,42 @@ enum class PrimitiveTopology
 */
 enum class CompareOp
 {
-    Never,          //!< Compare test never succeeds.
-    Less,           //!< Compare test succeeds if the left-hand-side is less than the right-hand-side.
-    Equal,          //!< Compare test succeeds if the left-hand-side is euqal to the right-hand-side.
-    LessEqual,      //!< Compare test succeeds if the left-hand-side is less than or equal to the right-hand-side.
-    Greater,        //!< Compare test succeeds if the left-hand-side is greater than the right-hand-side.
-    NotEqual,       //!< Compare test succeeds if the left-hand-side is not equal to the right-hand-side.
-    GreaterEqual,   //!< Compare test succeeds if the left-hand-side is greater than or equal to the right-hand-side.
-    Ever,           //!< Compare test always succeeds. (Can not be called "Always" due to conflict with X11 lib on Linux).
+    Never,          //!< Comparison never passes.
+    Less,           //!< Comparison passes if the source data is less than the destination data.
+    Equal,          //!< Comparison passes if the source data is euqal to the right-hand-side.
+    LessEqual,      //!< Comparison passes if the source data is less than or equal to the right-hand-side.
+    Greater,        //!< Comparison passes if the source data is greater than the right-hand-side.
+    NotEqual,       //!< Comparison passes if the source data is not equal to the right-hand-side.
+    GreaterEqual,   //!< Comparison passes if the source data is greater than or equal to the right-hand-side.
+    Ever,           //!< Comparison always passes. (Can not be called "Always" due to conflict with X11 lib on Linux).
 };
 
 //! Stencil operations enumeration.
 enum class StencilOp
 {
-    Keep,
-    Zero,
-    Replace,
-    IncClamp,
-    DecClamp,
-    Invert,
-    IncWrap,
-    DecWrap,
+    Keep,       //!< Keep the existing stencil data.
+    Zero,       //!< Set stencil data to 0.
+    Replace,    //!< Set the stencil data to the reference value. \see StencilFaceDescriptor::reference
+    IncClamp,   //!< Increment the stencil value by 1, and clamp the result.
+    DecClamp,   //!< Decrement the stencil value by 1, and clamp the result.
+    Invert,     //!< Invert the stencil data.
+    IncWrap,    //!< Increment the stencil value by 1, and wrap the result if necessary.
+    DecWrap,    //!< Decrement the stencil value by 1, and wrap the result if necessary.
 };
 
 //! Blending operations enumeration.
 enum class BlendOp
 {
-    Zero,
-    One,
-
-    SrcColor,
-    InvSrcColor,
-    SrcAlpha,
-    InvSrcAlpha,
-
-    DestColor,
-    InvDestColor,
-    DestAlpha,
-    InvDestAlpha,
+    Zero,               //!< Data source is the color black (0, 0, 0, 0).
+    One,                //!< Data source is the color white (1, 1, 1, 1).
+    SrcColor,           //!< Data source is color data (RGB) from a fragment shader.
+    InvSrcColor,        //!< Data source is inverted color data (1 - RGB) from a fragment shader.
+    SrcAlpha,           //!< Data source is alpha data (A) from a fragment shader.
+    InvSrcAlpha,        //!< Data source is inverted alpha data (1 - A) from a fragment shader.
+    DestColor,          //!< Data source is color data (RGB) from a framebuffer.
+    InvDestColor,       //!< Data source is inverted color data (1 - RGB) from a framebuffer.
+    DestAlpha,          //!< Data source is alpha data (A) from a framebuffer.
+    InvDestAlpha,       //!< Data source is inverted alpha data (1 - A) from a framebuffer.
 };
 
 //! Blending arithmetic operations enumeration.
@@ -188,7 +186,9 @@ struct StencilFaceDescriptor
 
     /**
     \brief Specifies the stencil reference value.
-    \note For Direct3D 11, only the stencil reference value of the "front" face will be used.
+    \remarks This value will be used when the stencil operation is StencilOp::Replace.
+    \note For Direct3D 11, only the stencil reference value of the front face will be used.
+    \see StencilDescriptor::front
     */
     std::uint32_t   reference       = 0;
 };
