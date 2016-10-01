@@ -77,7 +77,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
             /* Validate buffer size for specified vertex format */
             formatSize = desc.vertexBufferDesc.vertexFormat.GetFormatSize();
             if (desc.size % formatSize != 0)
-                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
+                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
         }
         break;
 
@@ -86,7 +86,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
             /* Validate buffer size for specified index format */
             formatSize = desc.indexBufferDesc.indexFormat.GetFormatSize();
             if (desc.size % formatSize != 0)
-                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper buffer size with index format of " + std::to_string(formatSize) + " bytes");
+                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper index buffer size with index format of " + std::to_string(formatSize) + " bytes");
         }
         break;
 
@@ -95,7 +95,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
             /* Validate pack alginemnt of 16 bytes */
             static const std::size_t packAlignment = 16;
             if (desc.size % packAlignment != 0)
-                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "buffer size is out of pack alignment");
+                LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "constant buffer size is out of pack alignment (alignment is 16 bytes)");
         }
         break;
     }
