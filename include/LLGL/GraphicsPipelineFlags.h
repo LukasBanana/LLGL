@@ -132,6 +132,8 @@ enum class BlendOp
     DestAlpha,          //!< Data source is alpha data (A) from a framebuffer.
     InvDestAlpha,       //!< Data source is inverted alpha data (1 - A) from a framebuffer.
     SrcAlphaSaturate,   //!< Data source is alpha data (A) from a fragment shader which is clamped to 1 or less.
+    BlendFactor,        //!< Data source is the blend factor (RGBA) from the blend state. \see BlendDescriptor::blendFactor
+    InvBlendFactor,     //!< Data source is the inverted blend factor (1 - RGBA) from the blend state. \see BlendDescriptor::blendFactor
 };
 
 //! Blending arithmetic operations enumeration.
@@ -272,6 +274,14 @@ struct BlendDescriptor
 {
     //! Specifies whether blending is enabled or disabled. This applies to all blending targets.
     bool                                blendEnabled    = false;
+
+    /**
+    \brief Specifies the blending color factor. By default (0, 0, 0, 0).
+    \remarks This is only used if any blending operations of any blending target is either BlendOp::BlendFactor or BlendOp::InvBlendFactor.
+    \see BlendOp::BlendFactor
+    \see BlendOp::InvBlendFactor
+    */
+    ColorRGBAf                          blendFactor { 0.0f, 0.0f, 0.0f, 0.0f };
 
     //! Render-target blend states. A maximum of 8 targets is supported. Further targets will be ignored.
     std::vector<BlendTargetDescriptor>  targets;

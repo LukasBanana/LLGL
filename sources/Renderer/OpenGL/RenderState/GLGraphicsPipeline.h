@@ -69,6 +69,8 @@ class GLGraphicsPipeline : public GraphicsPipeline
 
         // blend state
         bool                    blendEnabled_       = false;
+        ColorRGBAf              blendColor_         = { 0.0f, 0.0f, 0.0f, 0.0f };
+        bool                    blendColorNeeded_   = false;
         std::vector<GLBlend>    blendStates_;
 
 };

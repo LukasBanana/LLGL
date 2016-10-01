@@ -50,6 +50,10 @@ extern PFNGLGETSTRINGIPROC                                  glGetStringi;
 extern PFNGLBLENDFUNCSEPARATEPROC                           glBlendFuncSeparate;
 extern PFNGLBLENDFUNCSEPARATEIPROC                          glBlendFuncSeparatei;
 
+/* --- Blending factor (GL_EXT_blend_color) --- */
+
+extern PFNGLBLENDCOLORPROC                                  glBlendColor;
+
 /* --- Indexed (GL_EXT_draw_buffers2) --- */
 
 extern PFNGLCOLORMASKIPROC                                  glColorMaski;

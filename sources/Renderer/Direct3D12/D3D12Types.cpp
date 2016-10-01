@@ -76,9 +76,9 @@ D3D12_BLEND Map(const BlendOp blendOp)
         case BlendOp::DestAlpha:        return D3D12_BLEND_DEST_ALPHA;
         case BlendOp::InvDestAlpha:     return D3D12_BLEND_INV_DEST_ALPHA;
         case BlendOp::SrcAlphaSaturate: return D3D12_BLEND_SRC_ALPHA_SAT;
-                                      /*return D3D12_BLEND_BLEND_FACTOR;
-                                        return D3D12_BLEND_INV_BLEND_FACTOR;
-                                        return D3D12_BLEND_SRC1_COLOR;
+        case BlendOp::BlendFactor:      return D3D12_BLEND_BLEND_FACTOR;
+        case BlendOp::InvBlendFactor:   return D3D12_BLEND_INV_BLEND_FACTOR;
+                                      /*return D3D12_BLEND_SRC1_COLOR;
                                         return D3D12_BLEND_INV_SRC1_COLOR;
                                         return D3D12_BLEND_SRC1_ALPHA;
                                         return D3D12_BLEND_INV_SRC1_ALPHA;*/

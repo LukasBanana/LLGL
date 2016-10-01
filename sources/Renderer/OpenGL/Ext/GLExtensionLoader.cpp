@@ -377,6 +377,12 @@ static bool LoadDrawBuffersBlendProcs(bool usePlaceHolder)
     return true;
 }
 
+static bool LoadBlendFactorProcs(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glBlendColor );
+    return true;
+}
+
 static bool LoadMultiBindProcs(bool usePlaceHolder)
 {
     LOAD_GLPROC( glBindBuffersBase   );
@@ -548,6 +554,7 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     LoadExtension( "GL_KHR_debug",                        LoadDebugProcs                 );
     LoadExtension( "GL_ARB_clip_control",                 LoadClipControlProcs           );
     LoadExtension( "GL_EXT_draw_buffers2",                LoadIndexedProcs               );
+    LoadExtension( "GL_EXT_blend_color",                  LoadBlendFactorProcs           );
 
     extAlreadyLoaded = true;
     

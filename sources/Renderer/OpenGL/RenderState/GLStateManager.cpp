@@ -559,6 +559,15 @@ void GLStateManager::SetPatchVertices(GLint patchVertices)
     }
 }
 
+void GLStateManager::SetBlendColor(const ColorRGBAf& color)
+{
+    if (!Gs::Equals(color, commonState_.blendColor))
+    {
+        commonState_.blendColor = color;
+        glBlendColor(color.r, color.g, color.b, color.a);
+    }
+}
+
 /* ----- Buffer binding ----- */
 
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)

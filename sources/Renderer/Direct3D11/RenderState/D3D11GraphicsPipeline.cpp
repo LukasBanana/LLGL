@@ -41,6 +41,9 @@ D3D11GraphicsPipeline::D3D11GraphicsPipeline(
     /* Store D3D stencil reference value */
     stencilRef_ = desc.stencil.front.reference;
 
+    /* Store blend factor */
+    blendFactor_ = desc.blend.blendFactor;
+
     /* Create D3D11 render state objects */
     CreateDepthStencilState(device, desc.depth, desc.stencil);
     CreateRasterizerState(device, desc.rasterizer);
@@ -63,7 +66,7 @@ void D3D11GraphicsPipeline::Bind(ID3D11DeviceContext* context)
     /* Setup render states */
     context->RSSetState(rasterizerState_.Get());
     context->OMSetDepthStencilState(depthStencilState_.Get(), stencilRef_);
-    context->OMSetBlendState(blendState_.Get(), blendFactor_, sampleMask_);
+    context->OMSetBlendState(blendState_.Get(), blendFactor_.Ptr(), sampleMask_);
 }
 
 

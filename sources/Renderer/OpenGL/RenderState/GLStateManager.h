@@ -88,6 +88,7 @@ class GLStateManager
         void SetFrontFace(GLenum mode);
         void SetDepthMask(GLboolean flag);
         void SetPatchVertices(GLint patchVertices);
+        void SetBlendColor(const ColorRGBAf& color);
 
         /* ----- Buffer binding ----- */
 
@@ -179,6 +180,7 @@ class GLStateManager
             GLboolean                   depthMask       = GL_TRUE;
             GLint                       patchVertices_  = 0;
             ColorRGBAT<GLboolean>       colorMask       = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
+            ColorRGBAf                  blendColor      = { 0.0f, 0.0f, 0.0f, 0.0f };
             //std::vector<GLViewport>     viewports;
             //std::vector<GLDepthRange>   depthRanges;
             //std::vector<GLScissor>      scissors;

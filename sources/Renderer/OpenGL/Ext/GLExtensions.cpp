@@ -44,6 +44,10 @@ PFNGLGETSTRINGIPROC                                     glGetStringi            
 PFNGLBLENDFUNCSEPARATEPROC                              glBlendFuncSeparate                             = nullptr;
 PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
 
+/* --- Blending factor (GL_EXT_blend_color) --- */
+
+PFNGLBLENDCOLORPROC                                     glBlendColor                                    = nullptr;
+
 /* --- Indexed (GL_EXT_draw_buffers2) --- */
 
 PFNGLCOLORMASKIPROC                                     glColorMaski                                    = nullptr;

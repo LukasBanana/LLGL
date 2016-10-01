@@ -77,6 +77,10 @@ DECL_GLPROC(const GLubyte*, glGetStringi, (GLenum GLuint));
 DECL_GLPROC(void, glBlendFuncSeparate, (GLenum, GLenum, GLenum, GLenum));
 DECL_GLPROC(void, glBlendFuncSeparatei, (GLuint, GLenum, GLenum, GLenum, GLenum));
 
+/* --- Blending factor (GL_EXT_blend_color) --- */
+
+DECL_GLPROC(void, glBlendColor, (GLfloat, GLfloat, GLfloat, GLfloat));
+
 /* --- Indexed (GL_EXT_draw_buffers2) --- */
 
 DECL_GLPROC(void, glColorMaski, (GLuint, GLboolean, GLboolean, GLboolean, GLboolean));

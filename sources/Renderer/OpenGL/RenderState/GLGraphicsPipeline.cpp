@@ -49,6 +49,31 @@ void Convert(std::vector<To>& to, const std::vector<From>& from)
         Convert(to[i], from[i]);
 }
 
+static bool IsBlendColorNeeded(const BlendOp blendOp)
+{
+    return (blendOp == BlendOp::BlendFactor || blendOp == BlendOp::InvBlendFactor);
+}
+
+// Returns true if the specified blend description requires that "glBlendColor" is called when the blend state is bound
+static bool IsBlendColorNeeded(const BlendDescriptor& blendDesc)
+{
+    if (!blendDesc.blendEnabled)
+        return false;
+
+    for (const auto& target : blendDesc.targets)
+    {
+        if ( IsBlendColorNeeded(target.srcColor)  ||
+             IsBlendColorNeeded(target.srcAlpha)  ||
+             IsBlendColorNeeded(target.destColor) ||
+             IsBlendColorNeeded(target.destAlpha) )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 /* ----- GLGraphicsPipeline class ----- */
 
@@ -103,6 +128,8 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
 
     /* Convert blend state */
     blendEnabled_       = desc.blend.blendEnabled;
+    blendColor_         = desc.blend.blendFactor;
+    blendColorNeeded_   = IsBlendColorNeeded(desc.blend);
     Convert(blendStates_, desc.blend.targets);
 }
 
@@ -160,6 +187,9 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     /* Setup blend state */
     stateMngr.Set(GLState::BLEND, blendEnabled_);
     stateMngr.SetBlendStates(blendStates_, blendEnabled_);
+
+    if (blendColorNeeded_)
+        stateMngr.SetBlendColor(blendColor_);
 }
 
 
