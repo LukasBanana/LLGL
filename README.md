@@ -71,7 +71,7 @@ Tutorials and Examples
 This repository contains several tutorials and examples which show how to use LLGL.
 Here are a few with a screenshot:
 
-### Tutorial 01: Hello Triangle
+### [Tutorial 01: Hello Triangle](tutorial/Tutorial01_HelloTriangle/main.cpp)
 
 Getting started tutorial where a single multi-colored triangle is rendered.
 
