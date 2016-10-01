@@ -77,17 +77,31 @@ Getting started tutorial where a single multi-colored triangle is rendered.
 
 <p align="center"><img src="tutorial/Tutorial01_HelloTriangle.png" width="400" height="300"/></p>
 
-### Tutorial 02: Tessellation
+### [Tutorial 02: Tessellation](tutorial/Tutorial02_Tessellation/main.cpp)
 
 Simple tessellation example without any textures.
 
 <p align="center"><img src="tutorial/Tutorial02_Tessellation.png" width="400" height="300"/></p>
 
-### Tutorial 05: Render Target
+### [Tutorial 03: Texturing](tutorial/Tutorial03_Texturing/main.cpp)
+
+Simple texturing and sampler state example.
+
+*No screenshot available*
+
+### [Tutorial 04: Query](tutorial/Tutorial04_Query/main.cpp)
+
+Shows how to use Query objects and conditional rendering.
+
+*No screenshot available*
+
+### [Tutorial 05: Render Target](tutorial/Tutorial05_RenderTarget/main.cpp)
+
+Simple render target example.
 
 <p align="center"><img src="tutorial/Tutorial05_RenderTarget.png" width="400" height="300"/></p>
 
-### Tutorial 06: Multi Context
+### [Tutorial 06: Multi Context](tutorial/Tutorial06_MultiContext/main.cpp)
 
 Multi-context tutorial shows the following rendering techniques:
 multiple render contexts (one window each), rendering simultaneously into multiple viewports, geometry shader.
