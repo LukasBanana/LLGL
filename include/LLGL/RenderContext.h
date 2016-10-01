@@ -36,7 +36,7 @@ namespace LLGL
 
 /**
 \brief Render context interface.
-\remarks The render context is the main interface for drawing and compute operations.
+\remarks Each render context has its own window and back buffer (or rather swap-chain) to draw into.
 */
 class LLGL_EXPORT RenderContext
 {
@@ -183,6 +183,8 @@ class LLGL_EXPORT RenderContext
         \see RenderSystem::WriteStorageBuffer
         */
         virtual void SetStorageBuffer(Buffer& buffer, unsigned int slot) = 0;
+
+        //virtual void SetStreamOutputBuffer(Buffer& buffer) = 0;
 
         /**
         \brief Maps the specified buffer from GPU to CPU memory space.
