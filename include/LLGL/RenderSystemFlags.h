@@ -12,6 +12,7 @@
 #include <Gauss/Vector3.h>
 #include "ColorRGBA.h"
 #include <cstddef>
+#include <string>
 
 
 namespace LLGL

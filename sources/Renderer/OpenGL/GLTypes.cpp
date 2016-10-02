@@ -114,6 +114,8 @@ GLenum Map(const TextureFormat textureFormat)
 {
     switch (textureFormat)
     {
+        case TextureFormat::Unknown:        break;
+        
         /* --- Base internal formats --- */
         case TextureFormat::DepthComponent: return GL_DEPTH_COMPONENT;
         case TextureFormat::DepthStencil:   return GL_DEPTH_STENCIL;

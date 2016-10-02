@@ -53,7 +53,6 @@ public:
             else
             {
                 /* Let user select a renderer */
-                char c = 0;
                 while (rendererModule.empty())
                 {
                     /* Print list of available modules */
