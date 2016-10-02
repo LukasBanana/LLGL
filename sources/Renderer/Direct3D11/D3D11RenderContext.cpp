@@ -19,6 +19,7 @@
 #include "RenderState/D3D11Query.h"
 
 #include "Buffer/D3D11VertexBuffer.h"
+#include "Buffer/D3D11VertexBufferArray.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
@@ -170,7 +171,15 @@ void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
 
 void D3D11RenderContext::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    //todo...
+    auto& vertexBufferArrayD3D = LLGL_CAST(D3D11VertexBufferArray&, bufferArray);
+
+    context_->IASetVertexBuffers(
+        0,
+        static_cast<UINT>(vertexBufferArrayD3D.GetBuffers().size()),
+        vertexBufferArrayD3D.GetBuffers().data(),
+        vertexBufferArrayD3D.GetStrides().data(),
+        vertexBufferArrayD3D.GetOffsets().data()
+    );
 }
 
 void D3D11RenderContext::SetIndexBuffer(Buffer& buffer)

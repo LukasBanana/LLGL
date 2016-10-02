@@ -16,6 +16,7 @@
 #include <iomanip>
 
 #include "Buffer/D3D11VertexBuffer.h"
+#include "Buffer/D3D11VertexBufferArray.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
@@ -94,7 +95,12 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
 BufferArray* D3D11RenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return nullptr;//todo
+    auto type = (*bufferArray)->GetType();
+
+    if (type == BufferType::Vertex)
+        return TakeOwnership(bufferArrays_, MakeUnique<D3D11VertexBufferArray>(numBuffers, bufferArray));
+
+    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(type, numBuffers, bufferArray));
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)
@@ -104,7 +110,7 @@ void D3D11RenderSystem::Release(Buffer& buffer)
 
 void D3D11RenderSystem::Release(BufferArray& bufferArray)
 {
-    //RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
 void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)

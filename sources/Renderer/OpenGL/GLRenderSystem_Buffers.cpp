@@ -75,7 +75,7 @@ void GLRenderSystem::Release(Buffer& buffer)
 
 void GLRenderSystem::Release(BufferArray& bufferArray)
 {
-    //RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
 void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)

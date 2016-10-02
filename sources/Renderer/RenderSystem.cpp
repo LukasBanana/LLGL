@@ -181,6 +181,15 @@ void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* cons
         if (bufferArray[i]->GetType() != refType)
             throw std::invalid_argument("can not create buffer array with type mismatch");
     }
+
+    /* Validate buffer array type */
+    if ( refType != BufferType::Vertex      &&
+         refType != BufferType::Constant    &&
+         refType != BufferType::Storage     &&
+         refType != BufferType::StreamOutput )
+    {
+        throw std::invalid_argument("invalid buffer type for buffer array");
+    }
 }
 
 

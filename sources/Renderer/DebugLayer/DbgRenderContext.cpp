@@ -120,6 +120,7 @@ void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
 
 void DbgRenderContext::SetVertexBufferArray(BufferArray& bufferArray)
 {
+    //todo...
     instance_.SetVertexBufferArray(bufferArray);
 }
 

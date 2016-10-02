@@ -187,7 +187,8 @@ class LLGL_EXPORT RenderSystem
         The buffers inside this array must persist as long as this buffer array is used,
         and the individual buffers are still required to read and write its data from and to the GPU.
         \throws std::invalid_argument If 'numBuffers' is 0, if 'bufferArray' is null,
-        if any of the pointers in the array are null, or if not all buffers have the same type.
+        if any of the pointers in the array are null, if not all buffers have the same type, or if the buffer array type is
+        not one of these: BufferType::Vertex, BufferType::Constant, BufferType::Storage, or BufferType::StreamOutput.
         */
         virtual BufferArray* CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) = 0;
 

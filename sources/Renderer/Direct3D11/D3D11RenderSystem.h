@@ -14,6 +14,7 @@
 #include "D3D11RenderContext.h"
 
 #include "Buffer/D3D11Buffer.h"
+#include "Buffer/D3D11BufferArray.h"
 
 #include "RenderState/D3D11GraphicsPipeline.h"
 #include "RenderState/D3D11ComputePipeline.h"
@@ -176,6 +177,7 @@ class D3D11RenderSystem : public RenderSystem
 
         HWObjectContainer<D3D11RenderContext>       renderContexts_;
         HWObjectContainer<D3D11Buffer>              buffers_;
+        HWObjectContainer<D3D11BufferArray>         bufferArrays_;
         HWObjectContainer<D3D11Texture>             textures_;
         HWObjectContainer<D3D11RenderTarget>        renderTargets_;
         HWObjectContainer<D3D11Shader>              shaders_;
