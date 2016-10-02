@@ -602,33 +602,60 @@ void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
     auto targetIdx = static_cast<std::size_t>(target);
     if (bufferState_.boundBuffers[targetIdx] != buffer)
     {
-        bufferState_.boundBuffers[targetIdx] = buffer;
         glBindBuffer(bufferTargetsMap[targetIdx], buffer);
+        bufferState_.boundBuffers[targetIdx] = buffer;
     }
 }
 
 void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer)
 {
+    GLint id = 0;
+    glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &id);
+
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
-    bufferState_.boundBuffers[targetIdx] = buffer;
     glBindBufferBase(bufferTargetsMap[targetIdx], index, buffer);
-}
-
-void GLStateManager::BindVertexArray(GLuint buffer)
-{
-    /* Always bind vertex array */
-    glBindVertexArray(buffer);
-    bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ARRAY_BUFFER)] = 0;
-    bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
-}
-
-void GLStateManager::ForcedBindBuffer(GLBufferTarget target, GLuint buffer)
-{
-    /* Always bind buffer with a forced binding */
-    auto targetIdx = static_cast<std::size_t>(target);
     bufferState_.boundBuffers[targetIdx] = buffer;
-    glBindBuffer(bufferTargetsMap[targetIdx], buffer);
+
+    id = 0;
+    glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &id);
+    int x=0;
+}
+
+void GLStateManager::BindVertexArray(GLuint vertexArray)
+{
+    /* Only bind VAO if it has changed */
+    if (vertexArrayState_.boundVertexArray != vertexArray)
+    {
+        /* Bind VAO */
+        glBindVertexArray(vertexArray);
+        vertexArrayState_.boundVertexArray = vertexArray;
+
+        /*
+        Always reset index buffer binding
+        -> see https://www.opengl.org/wiki/Vertex_Specification#Index_buffers
+        */
+        bufferState_.boundBuffers[static_cast<std::size_t>(GLBufferTarget::ELEMENT_ARRAY_BUFFER)] = 0;
+
+        /* Bind deferred index buffer */
+        if (vertexArray != 0 && vertexArrayState_.deferredBoundIndexBuffer != 0)
+        {
+            BindBuffer(
+                GLBufferTarget::ELEMENT_ARRAY_BUFFER,
+                vertexArrayState_.deferredBoundIndexBuffer
+            );
+        }
+    }
+}
+
+void GLStateManager::DeferredBindIndexBuffer(GLuint buffer)
+{
+    /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
+    vertexArrayState_.deferredBoundIndexBuffer = buffer;
+
+    /* If a valid VAO is currently being bound, bind the specified buffer directly */
+    if (vertexArrayState_.boundVertexArray != 0)
+        BindBuffer(GLBufferTarget::ELEMENT_ARRAY_BUFFER, buffer);
 }
 
 void GLStateManager::PushBoundBuffer(GLBufferTarget target)

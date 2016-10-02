@@ -191,6 +191,7 @@ void GLRenderContext::SetVertexBuffer(Buffer& buffer)
     /* Bind vertex buffer */
     auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, buffer);
     stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
+    stateMngr_->BindBuffer(vertexBufferGL);
 }
 
 void GLRenderContext::SetVertexBufferArray(BufferArray& bufferArray)
@@ -202,7 +203,7 @@ void GLRenderContext::SetIndexBuffer(Buffer& buffer)
 {
     /* Bind index buffer */
     auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, buffer);
-    stateMngr_->BindBuffer(indexBufferGL);
+    stateMngr_->DeferredBindIndexBuffer(indexBufferGL.GetID());
 
     /* Store new index buffer data in global render state */
     const auto& format = indexBufferGL.GetIndexFormat();

@@ -30,7 +30,7 @@ void GLVertexBuffer::BuildVertexArray(const VertexFormat& vertexFormat)
 {
     /* Bind this vertex buffer to the vertex-array-object */
     GLStateManager::active->BindVertexArray(GetVaoID());
-    GLStateManager::active->ForcedBindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
+    GLStateManager::active->BindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
 
     /* Setup each vertex attribute */
     GLuint index = 0;

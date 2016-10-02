@@ -95,9 +95,14 @@ class GLStateManager
 
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
-        void BindVertexArray(GLuint buffer);
 
-        void ForcedBindBuffer(GLBufferTarget target, GLuint buffer);
+        void BindVertexArray(GLuint vertexArray);
+
+        /**
+        \brief Binds the specified index buffer as soon as the next VAO with "BindVertexArray" is bound.
+        \see BindVertexArray
+        */
+        void DeferredBindIndexBuffer(GLuint buffer);
 
         void PushBoundBuffer(GLBufferTarget target);
         void PopBoundBuffer();
@@ -262,6 +267,12 @@ class GLStateManager
             std::stack<StackEntry>                          boundTextureStack;
         };
 
+        struct GLVertexArrayState
+        {
+            GLuint boundVertexArray         = 0;
+            GLuint deferredBoundIndexBuffer = 0;
+        };
+
         struct GLShaderState
         {
             GLuint              boundProgram = 0;
@@ -290,6 +301,7 @@ class GLStateManager
         GLFrameBufferState                  frameBufferState_;
         GLRenderBufferState                 renderBufferState_;
         GLTextureState                      textureState_;
+        GLVertexArrayState                  vertexArrayState_;
         GLShaderState                       shaderState_;
         GLSamplerState                      samplerState_;
 
