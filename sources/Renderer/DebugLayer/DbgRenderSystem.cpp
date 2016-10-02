@@ -113,7 +113,18 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
 
 BufferArray* DbgRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
-    return instance_->CreateBufferArray(numBuffers, bufferArray);
+    AssertCreateBufferArray(numBuffers, bufferArray);
+
+    /* Create temporary buffer array with buffer instances */
+    std::vector<Buffer*> bufferInstanceArray;
+    for (unsigned int i = 0; i < numBuffers; ++i)
+    {
+        auto bufferDbg = LLGL_CAST(DbgBuffer*, (*bufferArray));
+        bufferInstanceArray.push_back(&(bufferDbg->instance));
+        ++bufferArray;
+    }
+
+    return instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
 }
 
 void DbgRenderSystem::Release(Buffer& buffer)

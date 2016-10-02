@@ -136,6 +136,16 @@ bool RenderSystem::OnMakeCurrent(RenderContext* renderContext)
     return true; // dummy
 }
 
+void RenderSystem::SetRendererInfo(const RendererInfo& info)
+{
+    info_ = info;
+}
+
+void RenderSystem::SetRenderingCaps(const RenderingCaps& caps)
+{
+    caps_ = caps;
+}
+
 std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixels) const
 {
     return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), GetConfiguration().defaultImageColor);
@@ -171,16 +181,6 @@ void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* cons
         if (bufferArray[i]->GetType() != refType)
             throw std::invalid_argument("can not create buffer array with type mismatch");
     }
-}
-
-void RenderSystem::SetRendererInfo(const RendererInfo& info)
-{
-    info_ = info;
-}
-
-void RenderSystem::SetRenderingCaps(const RenderingCaps& caps)
-{
-    caps_ = caps;
 }
 
 

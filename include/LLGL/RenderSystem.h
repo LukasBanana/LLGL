@@ -184,7 +184,8 @@ class LLGL_EXPORT RenderSystem
         \param[in] numBuffers Specifies the number of buffers in the array. This must be greater than 0.
         \param[in] bufferArray Pointer to an array of Buffer object pointers. Thist must not be null.
         \remarks This array can only contain buffers which are all from the same type, like an array of vertex buffers for instance.
-        The buffers inside this array must persist as long as this buffer array is used.
+        The buffers inside this array must persist as long as this buffer array is used,
+        and the individual buffers are still required to read and write its data from and to the GPU.
         \throws std::invalid_argument If 'numBuffers' is 0, if 'bufferArray' is null,
         if any of the pointers in the array are null, or if not all buffers have the same type.
         */
@@ -342,6 +343,12 @@ class LLGL_EXPORT RenderSystem
         */
         virtual bool OnMakeCurrent(RenderContext* renderContext);
 
+        //! Sets the renderer information.
+        void SetRendererInfo(const RendererInfo& info);
+
+        //! Sets the rendering capabilities.
+        void SetRenderingCaps(const RenderingCaps& caps);
+
         //! Creates an RGBA unsigned-byte image buffer for the specified number of pixels.
         std::vector<ColorRGBAub> GetDefaultTextureImageRGBAub(int numPixels) const;
 
@@ -350,12 +357,6 @@ class LLGL_EXPORT RenderSystem
 
         //! Validates the specified arguments to be used for buffer array creation.
         void AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray);
-
-        //! Sets the renderer information.
-        void SetRendererInfo(const RendererInfo& info);
-
-        //! Sets the rendering capabilities.
-        void SetRenderingCaps(const RenderingCaps& caps);
 
     private:
 

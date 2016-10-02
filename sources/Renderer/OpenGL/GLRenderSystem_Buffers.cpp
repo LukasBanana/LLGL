@@ -65,7 +65,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 BufferArray* GLRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return nullptr;//todo
+    return TakeOwnership(bufferArrays_, MakeUnique<GLBufferArray>((*bufferArray)->GetType(), numBuffers, bufferArray));
 }
 
 void GLRenderSystem::Release(Buffer& buffer)

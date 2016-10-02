@@ -15,6 +15,7 @@
 #include "../ContainerTypes.h"
 
 #include "Buffer/GLBuffer.h"
+#include "Buffer/GLBufferArray.h"
 
 #include "Shader/GLShader.h"
 #include "Shader/GLShaderProgram.h"
@@ -165,6 +166,7 @@ class GLRenderSystem : public RenderSystem
 
         HWObjectContainer<GLRenderContext>      renderContexts_;
         HWObjectContainer<GLBuffer>             buffers_;
+        HWObjectContainer<GLBufferArray>        bufferArrays_;
         HWObjectContainer<GLTexture>            textures_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;
         HWObjectContainer<GLShader>             shaders_;
