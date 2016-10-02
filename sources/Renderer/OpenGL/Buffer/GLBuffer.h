@@ -31,12 +31,6 @@ class GLBuffer : public Buffer
         void* MapBuffer(GLenum access);
         GLboolean UnmapBuffer();
 
-        //! Returns the buffer target.
-        inline GLenum GetTarget() const
-        {
-            return target_;
-        }
-
         //! Returns the hardware buffer ID.
         inline GLuint GetID() const
         {
@@ -45,8 +39,10 @@ class GLBuffer : public Buffer
 
     private:
 
-        GLenum target_  = 0;
-        GLuint id_      = 0;
+        //! Returns the buffer target.
+        GLenum GetTarget() const;
+
+        GLuint id_ = 0;
 
 };
 
