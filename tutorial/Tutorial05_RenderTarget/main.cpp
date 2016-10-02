@@ -8,6 +8,9 @@
 #include "../tutorial.h"
 
 
+// Test: use a second vertex buffer
+#define _TEST_BUFFER2_
+
 class Tutorial05 : public Tutorial
 {
 
@@ -18,6 +21,10 @@ class Tutorial05 : public Tutorial
     LLGL::Buffer*           vertexBuffer    = nullptr;
     LLGL::Buffer*           indexBuffer     = nullptr;
     LLGL::Buffer*           constantBuffer  = nullptr;
+
+    #ifdef _TEST_BUFFER2_
+    LLGL::Buffer*           vertexBuffer2    = nullptr;
+    #endif
 
     LLGL::Texture*          colorMap        = nullptr;
     LLGL::Sampler*          samplerState    = nullptr;
@@ -69,6 +76,10 @@ public:
         vertexBuffer = CreateVertexBuffer(vertices, vertexFormat);
         indexBuffer = CreateIndexBuffer(GenerateTexturedCubeTriangleIndices(), LLGL::DataType::UInt32);
         constantBuffer = CreateConstantBuffer(settings);
+
+        #ifdef _TEST_BUFFER2_
+        vertexBuffer2 = CreateVertexBuffer(vertices, vertexFormat);
+        #endif
 
         return vertexFormat;
     }
@@ -154,9 +165,14 @@ private:
         if (input->KeyPressed(LLGL::Key::RButton))
             rot1 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
 
+        #ifdef _TEST_BUFFER2_
+        int x = 0;
+        renderer->WriteBuffer(*vertexBuffer2, &x, sizeof(x), 0);
+        #endif
+
         // Set common buffers and sampler states
-        context->SetVertexBuffer(*vertexBuffer);
         context->SetIndexBuffer(*indexBuffer);
+        context->SetVertexBuffer(*vertexBuffer);
         context->SetConstantBuffer(*constantBuffer, 0, shaderStages);
         context->SetSampler(*samplerState, 0, shaderStages);
 
