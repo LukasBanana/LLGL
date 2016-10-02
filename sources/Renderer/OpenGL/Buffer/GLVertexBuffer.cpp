@@ -37,8 +37,10 @@ void GLVertexBuffer::BuildVertexArray(const VertexFormat& vertexFormat)
 
     for (const auto& attrib : vertexFormat.GetAttributes())
     {
+        /* Enable array index in currently bound VAO */
         glEnableVertexAttribArray(index);
 
+        /* Use currently bound VBO for VertexAttribPointer functions */
         if (!attrib.conversion && attrib.dataType != DataType::Float && attrib.dataType != DataType::Double)
         {
             //if (!glVertexAttribIPointer)
