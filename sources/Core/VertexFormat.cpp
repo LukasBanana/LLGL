@@ -48,6 +48,12 @@ void VertexFormat::AddAttribute(
     formatSize_ += (DataTypeSize(dataType) * components);
 }
 
+void VertexFormat::AppendAttributes(const VertexFormat& vertexFormat)
+{
+    attributes_.insert(attributes_.end(), vertexFormat.GetAttributes().begin(), vertexFormat.GetAttributes().end());
+    formatSize_ += vertexFormat.GetFormatSize();
+}
+
 
 } // /namespace LLGL
 

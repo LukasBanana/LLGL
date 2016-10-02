@@ -71,6 +71,12 @@ class LLGL_EXPORT VertexFormat
         );
 
         /**
+        \brief Append all attributes of the specified vertex format.
+        \remarks This can be used to build a vertex format for vertex buffer arrays.
+        */
+        void AppendAttributes(const VertexFormat& vertexFormat);
+
+        /**
         \brief Returns the list of all vertex attributes.
         \see AddAttribute
         */
