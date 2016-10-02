@@ -766,14 +766,6 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
     }
 }
 
-void GLStateManager::ForcedBindTexture(GLTextureTarget target, GLuint texture)
-{
-    /* Always bind texutre with a forced binding */
-    auto targetIdx = static_cast<std::size_t>(target);
-    activeTextureLayer_->boundTextures[targetIdx] = texture;
-    glBindTexture(textureTargetsMap[targetIdx], texture);
-}
-
 void GLStateManager::PushBoundTexture(unsigned int layer, GLTextureTarget target)
 {
     #ifdef LLGL_DEBUG
@@ -807,11 +799,6 @@ void GLStateManager::PopBoundTexture()
 void GLStateManager::BindTexture(const GLTexture& texture)
 {
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
-}
-
-void GLStateManager::ForcedBindTexture(const GLTexture& texture)
-{
-    ForcedBindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
 /* ----- Sampler binding ----- */

@@ -125,14 +125,12 @@ class GLStateManager
         void ActiveTexture(unsigned int layer);
 
         void BindTexture(GLTextureTarget target, GLuint texture);
-        void ForcedBindTexture(GLTextureTarget target, GLuint texture);
         
         void PushBoundTexture(unsigned int layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
 
         void BindTexture(const GLTexture& texture);
-        void ForcedBindTexture(const GLTexture& texture);
 
         /* ----- Sampler binding ----- */
 
