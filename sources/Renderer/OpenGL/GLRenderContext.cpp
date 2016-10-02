@@ -193,6 +193,11 @@ void GLRenderContext::SetVertexBuffer(Buffer& buffer)
     stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
 }
 
+void GLRenderContext::SetVertexBufferArray(BufferArray& bufferArray)
+{
+    //todo...
+}
+
 void GLRenderContext::SetIndexBuffer(Buffer& buffer)
 {
     /* Bind index buffer */

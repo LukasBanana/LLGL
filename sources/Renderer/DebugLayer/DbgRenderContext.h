@@ -60,6 +60,7 @@ class DbgRenderContext : public RenderContext
         /* ----- Hardware Buffers ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
+        void SetVertexBufferArray(BufferArray& bufferArray) override;
         void SetIndexBuffer(Buffer& buffer) override;
         void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;

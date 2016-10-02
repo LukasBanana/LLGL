@@ -168,6 +168,11 @@ void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
     context_->IASetVertexBuffers(0, 1, buffers, strides, offsets);
 }
 
+void D3D11RenderContext::SetVertexBufferArray(BufferArray& bufferArray)
+{
+    //todo...
+}
+
 void D3D11RenderContext::SetIndexBuffer(Buffer& buffer)
 {
     auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, buffer);

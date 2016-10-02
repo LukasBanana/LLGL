@@ -173,6 +173,11 @@ void D3D12RenderContext::SetVertexBuffer(Buffer& buffer)
     commandList_->IASetVertexBuffers(0, 1, &(vertexBufferD3D.GetView()));
 }
 
+void D3D12RenderContext::SetVertexBufferArray(BufferArray& bufferArray)
+{
+    //todo...
+}
+
 void D3D12RenderContext::SetIndexBuffer(Buffer& buffer)
 {
     auto& indexBufferD3D = LLGL_CAST(D3D12IndexBuffer&, buffer);

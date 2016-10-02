@@ -17,6 +17,7 @@
 #include "ColorRGBA.h"
 
 #include "Buffer.h"
+#include "BufferArray.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
 #include "RenderTarget.h"
@@ -147,17 +148,27 @@ class LLGL_EXPORT RenderContext
 
         /**
         \brief Sets the specified vertex buffer for subsequent drawing operations.
-        \param[in] buffer Specifies the vertex buffer to set. This must not be an unspecified vertex buffer,
-        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
+        \param[in] buffer Specifies the vertex buffer to set. This buffer must have been created with the buffer type: BufferType::Vertex.
+        This must not be an unspecified vertex buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
         function or with the "RenderSystem::WriteBuffer" function.
+        \see RenderSystem::CreateBuffer
         \see RenderSystem::WriteBuffer
+        \see SetVertexBufferArray
         */
         virtual void SetVertexBuffer(Buffer& buffer) = 0;
 
         /**
+        \brief Sets the specified array of vertex buffers for subsequent drawing operations.
+        \param[in] bufferArray Specifies the vertex buffer array to set.
+        \see RenderSystem::CreateBufferArray
+        \see SetVertexBuffer
+        */
+        virtual void SetVertexBufferArray(BufferArray& bufferArray) = 0;
+
+        /**
         \brief Sets the active index buffer for subsequent drawing operations.
-        \param[in] buffer Specifies the index buffer to set. This must not be an unspecified index buffer,
-        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
+        \param[in] buffer Specifies the index buffer to set. This buffer must have been created with the buffer type: BufferType::Index.
+        This must not be an unspecified index buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
         function or with the "RenderSystem::WriteBuffer" function.
         \remarks An active index buffer is only required for any "DrawIndexed" or "DrawIndexedInstanced" draw call.
         \see RenderSystem::WriteIndexBuffer
@@ -166,8 +177,8 @@ class LLGL_EXPORT RenderContext
         
         /**
         \brief Sets the active constant buffer of the specified slot index for subsequent drawing and compute operations.
-        \param[in] buffer Specifies the constant buffer to set. This must not be an unspecified constant buffer,
-        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
+        \param[in] buffer Specifies the constant buffer to set. This buffer must have been created with the buffer type: BufferType::Constant.
+        This must not be an unspecified constant buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
         function or with the "RenderSystem::WriteBuffer" function.
         \param[in] slot Specifies the slot index where to put the constant buffer.
         \param[in] shaderStageFlags Specifies at which shader stages the constant buffer is to be set. By default all shader stages are affected.
@@ -178,8 +189,8 @@ class LLGL_EXPORT RenderContext
 
         /**
         \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.
-        \param[in] storageBuffer Specifies the storage buffer to set. This must not be an unspecified storage buffer,
-        i.e. it must be initialized with either the initial data in the "RenderSystem::CreateStorageBuffer"
+        \param[in] storageBuffer Specifies the storage buffer to set. This buffer must have been created with the buffer type: BufferType::Storage.
+        This must not be an unspecified storage buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateStorageBuffer"
         function or with the "RenderSystem::WriteStorageBuffer" function.
         \param[in] slot Specifies the slot index where to put the storage buffer.
         \see RenderSystem::WriteStorageBuffer

@@ -118,6 +118,11 @@ void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
     LLGL_DBG_PROFILER_DO(setVertexBuffer.Inc());
 }
 
+void DbgRenderContext::SetVertexBufferArray(BufferArray& bufferArray)
+{
+    instance_.SetVertexBufferArray(bufferArray);
+}
+
 void DbgRenderContext::SetIndexBuffer(Buffer& buffer)
 {
     DebugBufferType(buffer, BufferType::Index, __FUNCTION__);
