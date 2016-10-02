@@ -9,7 +9,7 @@
 
 
 // Test: use a second vertex buffer
-#define _TEST_BUFFER2_
+//#define _TEST_BUFFER2_
 
 class Tutorial05 : public Tutorial
 {

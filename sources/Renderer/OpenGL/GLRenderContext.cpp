@@ -201,7 +201,7 @@ void GLRenderContext::SetVertexBufferArray(BufferArray& bufferArray)
 
 void GLRenderContext::SetIndexBuffer(Buffer& buffer)
 {
-    /* Bind index buffer */
+    /* Bind index buffer deferred (can only be bound to the active VAO) */
     auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, buffer);
     stateMngr_->DeferredBindIndexBuffer(indexBufferGL.GetID());
 
