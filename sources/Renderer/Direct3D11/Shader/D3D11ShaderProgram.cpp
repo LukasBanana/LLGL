@@ -171,11 +171,6 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
 }
 
-static D3D11_INPUT_CLASSIFICATION GetInputClassification(bool perInstance)
-{
-    return (perInstance ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
-}
-
 void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
 {
     if (!vs_ || vs_->GetByteCode().empty())
@@ -185,17 +180,22 @@ void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
     inputElements.reserve(vertexAttribs.size());
 
+    UINT inputSlot = -1;//!!!
+
     for (const auto& attrib : vertexAttribs)
     {
+        if (attrib.offset == 0)//!!!
+            ++inputSlot;
+
         D3D11_INPUT_ELEMENT_DESC elementDesc;
         {
             elementDesc.SemanticName            = attrib.name.c_str();
             elementDesc.SemanticIndex           = attrib.semanticIndex;
             elementDesc.Format                  = GetInputElementFormat(attrib);
-            elementDesc.InputSlot               = 0;
+            elementDesc.InputSlot               = inputSlot;
             elementDesc.AlignedByteOffset       = attrib.offset;
-            elementDesc.InputSlotClass          = GetInputClassification(attrib.perInstance);
-            elementDesc.InstanceDataStepRate    = 0;
+            elementDesc.InputSlotClass          = (attrib.perInstance ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
+            elementDesc.InstanceDataStepRate    = (attrib.perInstance ? 1 : 0);
         }
         inputElements.push_back(elementDesc);
     }

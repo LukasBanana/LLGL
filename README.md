@@ -106,6 +106,12 @@ Simple render target example.
 Multi-context tutorial shows the following rendering techniques:
 multiple render contexts (one window each), rendering simultaneously into multiple viewports, geometry shader.
 
+### [Tutorial 07: Array](tutorial/Tutorial07_Array/main.cpp)
+
+Shows how to buffer arrays, i.e. render with multiple vertex buffers simultaneously.
+
+*No screenshot available*
+
 <p align="center"><img src="tutorial/Tutorial06_MultiContext.png" width="752" height="300"/></p>
 
 

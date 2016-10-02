@@ -1,2 +1,0 @@
-
-This tutorial reads the shaders from "../Tutorial01_HelloTriangle/"

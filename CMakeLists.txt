@@ -142,6 +142,7 @@ set(FilesTutorial03 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial03_Texturing/main.cpp
 set(FilesTutorial04 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial04_Query/main.cpp)
 set(FilesTutorial05 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial05_RenderTarget/main.cpp)
 set(FilesTutorial06 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial06_MultiContext/main.cpp)
+set(FilesTutorial07 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial07_Array/main.cpp)
 
 
 # === Source group folders ===
@@ -325,5 +326,6 @@ ADD_TEST_PROJECT(Tutorial03_Texturing ${FilesTutorial03})
 ADD_TEST_PROJECT(Tutorial04_Query ${FilesTutorial04})
 ADD_TEST_PROJECT(Tutorial05_RenderTarget ${FilesTutorial05})
 ADD_TEST_PROJECT(Tutorial06_MultiContext ${FilesTutorial06})
+ADD_TEST_PROJECT(Tutorial07_Array ${FilesTutorial07})
 
 
