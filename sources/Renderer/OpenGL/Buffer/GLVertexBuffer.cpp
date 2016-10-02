@@ -7,8 +7,8 @@
 
 #include "GLVertexBuffer.h"
 #include "../Ext/GLExtensions.h"
-#include "../GLTypes.h"
 #include "../RenderState/GLStateManager.h"
+#include "../GLTypes.h"
 
 
 namespace LLGL
@@ -18,57 +18,20 @@ namespace LLGL
 GLVertexBuffer::GLVertexBuffer() :
     GLBuffer( BufferType::Vertex )
 {
-    glGenVertexArrays(1, &vaoID_);
-}
-
-GLVertexBuffer::~GLVertexBuffer()
-{
-    glDeleteVertexArrays(1, &vaoID_);
 }
 
 void GLVertexBuffer::BuildVertexArray(const VertexFormat& vertexFormat)
 {
-    /* Bind this vertex buffer to the vertex-array-object */
+    /* Bind VAO */
     GLStateManager::active->BindVertexArray(GetVaoID());
-    GLStateManager::active->BindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
-
-    /* Setup each vertex attribute */
-    GLuint index = 0;
-
-    for (const auto& attrib : vertexFormat.GetAttributes())
     {
-        /* Enable array index in currently bound VAO */
-        glEnableVertexAttribArray(index);
+        /* Bind VBO */
+        GLStateManager::active->BindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
 
-        /* Use currently bound VBO for VertexAttribPointer functions */
-        if (!attrib.conversion && attrib.dataType != DataType::Float && attrib.dataType != DataType::Double)
-        {
-            //if (!glVertexAttribIPointer)
-            //    throw std::runtime_error("integral vertex attributes not supported by renderer");
-
-            glVertexAttribIPointer(
-                index,
-                attrib.components,
-                GLTypes::Map(attrib.dataType),
-                vertexFormat.GetFormatSize(),
-                reinterpret_cast<const char*>(0) + attrib.offset
-            );
-        }
-        else
-        {
-            glVertexAttribPointer(
-                index,
-                attrib.components,
-                GLTypes::Map(attrib.dataType),
-                GL_FALSE,
-                vertexFormat.GetFormatSize(),
-                reinterpret_cast<const char*>(0) + attrib.offset
-            );
-        }
-
-        ++index;
+        /* Build each vertex attribute */
+        for (unsigned int i = 0, n = static_cast<unsigned int>(vertexFormat.GetAttributes().size()); i < n; ++i)
+            vao_.BuildVertexAttribute(vertexFormat, i);
     }
-
     GLStateManager::active->BindVertexArray(0);
 }
 

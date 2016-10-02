@@ -10,6 +10,7 @@
 
 
 #include "GLBuffer.h"
+#include "GLVertexArrayObject.h"
 
 
 namespace LLGL
@@ -22,19 +23,18 @@ class GLVertexBuffer : public GLBuffer
     public:
 
         GLVertexBuffer();
-        ~GLVertexBuffer();
 
         void BuildVertexArray(const VertexFormat& vertexFormat);
 
         //! Returns the ID of the vertex-array-object (VAO)
         inline GLuint GetVaoID() const
         {
-            return vaoID_;
+            return vao_.GetID();
         }
 
     private:
 
-        GLuint vaoID_ = 0; //!< Vertex array object ID.
+        GLVertexArrayObject vao_;
 
 };
 
