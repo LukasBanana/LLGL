@@ -253,11 +253,20 @@ void D3D11RenderSystem::BuildGenericTexture1D(
 
     if (imageDesc)
     {
-        textureD3D.UpdateSubresource(
-            context_.Get(), 0, 0,
-            CD3D11_BOX(0, 0, 0, descD3D.texture1DDesc.width, descD3D.texture1DDesc.layers, 1),
-            *imageDesc, GetConfiguration().threadCount
-        );
+        /* Update only the first MIP-map level for each array slice */
+        auto subImageDesc = *imageDesc;
+        auto subImageStride = descD3D.texture1DDesc.width * ImageFormatSize(subImageDesc.format) * DataTypeSize(subImageDesc.dataType);
+
+        for (unsigned int arraySlice = 0; arraySlice < descD3D.texture1DDesc.layers; ++arraySlice)
+        {
+            textureD3D.UpdateSubresource(
+                context_.Get(), 0, 0,
+                CD3D11_BOX(0, 0, 0, descD3D.texture1DDesc.width, 1, 1),
+                subImageDesc, GetConfiguration().threadCount
+            );
+
+            subImageDesc.buffer = reinterpret_cast<const char*>(subImageDesc.buffer) + subImageStride;
+        }
     }
     else
     {
@@ -290,11 +299,20 @@ void D3D11RenderSystem::BuildGenericTexture2D(
 
     if (imageDesc)
     {
-        textureD3D.UpdateSubresource(
-            context_.Get(), 0, 0,
-            CD3D11_BOX(0, 0, 0, descD3D.texture2DDesc.width, descD3D.texture2DDesc.height, descD3D.texture2DDesc.layers),
-            *imageDesc, GetConfiguration().threadCount
-        );
+        /* Update only the first MIP-map level for each array slice */
+        auto subImageDesc = *imageDesc;
+        auto subImageStride = descD3D.texture2DDesc.width * descD3D.texture2DDesc.height * ImageFormatSize(subImageDesc.format) * DataTypeSize(subImageDesc.dataType);
+
+        for (unsigned int arraySlice = 0; arraySlice < descD3D.texture2DDesc.layers; ++arraySlice)
+        {
+            textureD3D.UpdateSubresource(
+                context_.Get(), 0, arraySlice,
+                CD3D11_BOX(0, 0, 0, descD3D.texture2DDesc.width, descD3D.texture2DDesc.height, 1),
+                subImageDesc, GetConfiguration().threadCount
+            );
+
+            subImageDesc.buffer = reinterpret_cast<const char*>(subImageDesc.buffer) + subImageStride;
+        }
     }
     else
     {
