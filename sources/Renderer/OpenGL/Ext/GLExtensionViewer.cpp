@@ -6,20 +6,21 @@
  */
 
 #include "GLExtensionViewer.h"
+#include <algorithm>
 
 
 namespace LLGL
 {
 
 
-GLExtensionViewer::GLExtensionViewer(GLExtensionList&& extensions) :
-    extensions_( std::move(extensions) )
+GLExtensionViewer::GLExtensionViewer()
 {
+    std::fill(extensions_.begin(), extensions_.end(), false);
 }
 
-bool GLExtensionViewer::HasExtension(const std::string& name) const
+void GLExtensionViewer::Enable(GLExt extension)
 {
-    return (extensions_.find(name) != extensions_.end());
+    extensions_[static_cast<unsigned int>(extension)] = true;
 }
 
 

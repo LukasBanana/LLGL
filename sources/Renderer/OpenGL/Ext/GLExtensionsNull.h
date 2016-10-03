@@ -1,5 +1,5 @@
 /*
- * GLExtensionNull.h
+ * GLExtensionsNull.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -274,7 +274,7 @@ DECL_GLPROC(void, glGetProgramResourceiv, (GLuint, GLenum, GLuint, GLsizei, cons
 DECL_GLPROC(GLint, glGetProgramResourceLocation, (GLuint, GLenum, const GLchar*));
 DECL_GLPROC(GLint, glGetProgramResourceLocationIndex, (GLuint, GLenum, const GLchar*));
 
-/* GL_ARB_uniform_buffer_objects */
+/* GL_ARB_uniform_buffer_object */
 
 DECL_GLPROC(GLuint, glGetUniformBlockIndex, (GLuint, const GLchar*));
 DECL_GLPROC(void, glGetActiveUniformBlockiv, (GLuint, GLuint, GLenum, GLint*));

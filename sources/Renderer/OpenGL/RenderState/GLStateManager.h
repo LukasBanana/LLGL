@@ -36,7 +36,7 @@ class GLStateManager
 
         static GLStateManager* active;
 
-        void DetermineExtensions(GLExtensionViewer& extensionViewer);
+        void DetermineExtensions();
 
         //! Notifies the state manager about a new render-target height.
         void NotifyRenderTargetHeight(GLint height);

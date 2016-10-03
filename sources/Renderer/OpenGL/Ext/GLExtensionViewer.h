@@ -9,36 +9,35 @@
 #define __LLGL_GL_EXTENSION_VIEWER_H__
 
 
+#include "GLExtensionsEnum.h"
 #include <string>
-#include <set>
+#include <array>
 
 
 namespace LLGL
 {
 
 
-//! OpenGL extension map type.
-using GLExtensionList = std::set<std::string>;
-
 class GLExtensionViewer
 {
 
     public:
 
-        GLExtensionViewer(GLExtensionList&& extensions);
+        GLExtensionViewer();
 
-        //! Returns true if the specified extensions is supported.
-        bool HasExtension(const std::string& name) const;
-
-        //! Returns the hash-map of all extensions.
-        inline const GLExtensionList& GetExtensions() const
+        //! Returns true if the specified extension is supported.
+        inline bool HasExtension(GLExt extension) const
         {
-            return extensions_;
+            return extensions_[static_cast<unsigned int>(extension)];
         }
+
+        void Enable(GLExt extension);
 
     private:
 
-        GLExtensionList extensions_;
+        static const unsigned int numExtensions = static_cast<int>(GLExt::Count);
+
+        std::array<bool, numExtensions> extensions_;
 
 };
 

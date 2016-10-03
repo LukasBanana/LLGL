@@ -125,16 +125,16 @@ GLStateManager::GLStateManager()
     GLStateManager::active = this;
 }
 
-void GLStateManager::DetermineExtensions(GLExtensionViewer& extensionViewer)
+void GLStateManager::DetermineExtensions()
 {
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
     /* Initialize extenstion states */
-    auto InitStateExt = [&](GLStateExt state, const std::string& extensionName, GLenum cap)
+    auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
     {
         auto idx = static_cast<std::size_t>(state);
         auto& val = renderStateExt_.values[idx];
-        if (val.cap == 0 && extensionViewer.HasExtension(extensionName))
+        if (val.cap == 0 && HasExtension(extension))
         {
             val.cap     = cap;
             val.enabled = (glIsEnabled(cap) != GL_FALSE);
@@ -143,21 +143,21 @@ void GLStateManager::DetermineExtensions(GLExtensionViewer& extensionViewer)
 
     #ifdef GL_NV_conservative_raster
     // see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
-    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, "GL_NV_conservative_raster", GL_CONSERVATIVE_RASTERIZATION_NV);
+    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::NV_conservative_raster, GL_CONSERVATIVE_RASTERIZATION_NV);
     #endif
 
     #ifdef GL_INTEL_conservative_rasterization
     // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
-    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, "GL_INTEL_conservative_rasterization", GL_CONSERVATIVE_RASTERIZATION_INTEL);
+    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::INTEL_conservative_rasterization, GL_CONSERVATIVE_RASTERIZATION_INTEL);
     #endif
 
     #endif
 
     /* Initialize extension states for later operations */
-    extension_.viewportArray    = extensionViewer.HasExtension("GL_ARB_viewport_array");
-    extension_.clipControl      = extensionViewer.HasExtension("GL_ARB_clip_control");
-    extension_.drawBuffersBlend = extensionViewer.HasExtension("GL_ARB_draw_buffers_blend");
-    extension_.multiBind        = extensionViewer.HasExtension("GL_ARB_multi_bind");
+    extension_.viewportArray    = HasExtension(GLExt::ARB_viewport_array);
+    extension_.clipControl      = HasExtension(GLExt::ARB_clip_control);
+    extension_.drawBuffersBlend = HasExtension(GLExt::ARB_draw_buffers_blend);
+    extension_.multiBind        = HasExtension(GLExt::ARB_multi_bind);
 }
 
 void GLStateManager::NotifyRenderTargetHeight(GLint height)

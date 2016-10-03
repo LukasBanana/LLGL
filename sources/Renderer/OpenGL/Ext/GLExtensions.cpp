@@ -1,5 +1,5 @@
 /*
- * GLExtension.cpp
+ * GLExtensions.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -241,7 +241,7 @@ PFNGLGETPROGRAMRESOURCEIVPROC                           glGetProgramResourceiv  
 PFNGLGETPROGRAMRESOURCELOCATIONPROC                     glGetProgramResourceLocation                    = nullptr;
 PFNGLGETPROGRAMRESOURCELOCATIONINDEXPROC                glGetProgramResourceLocationIndex               = nullptr;
 
-/* GL_ARB_uniform_buffer_objects */
+/* GL_ARB_uniform_buffer_object */
 
 PFNGLGETUNIFORMBLOCKINDEXPROC                           glGetUniformBlockIndex                          = nullptr;
 PFNGLGETACTIVEUNIFORMBLOCKIVPROC                        glGetActiveUniformBlockiv                       = nullptr;

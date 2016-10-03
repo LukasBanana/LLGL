@@ -186,7 +186,7 @@ RenderContext* GLRenderSystem::AddRenderContext(
     }
 
     /* Use uniform clipping space */
-    GLStateManager::active->DetermineExtensions(*extensionViewer_);
+    GLStateManager::active->DetermineExtensions();
     GLStateManager::active->SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 
     /* Take ownership and return raw pointer */
@@ -212,16 +212,13 @@ bool GLRenderSystem::OnMakeCurrent(RenderContext* renderContext)
 void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc)
 {
     /* Load OpenGL extensions if not already done */
-    if (!extensionViewer_)
+    if (!AreExtensionsLoaded())
     {
         auto coreProfile = (profileDesc.extProfile && profileDesc.coreProfile);
 
         /* Query extensions and load all of them */
         auto extensions = QueryExtensions(coreProfile);
         LoadAllExtensions(extensions);
-
-        /* Create extensions viewer */
-        extensionViewer_ = MakeUnique<GLExtensionViewer>(std::move(extensions));
 
         /* Query and store all renderer information and capabilities */
         QueryRendererInfo();
@@ -321,33 +318,28 @@ void GLRenderSystem::QueryRenderingCaps()
 {
     RenderingCaps caps;
 
-    auto HasExtension = [this](const std::string& name)
-    {
-        return extensionViewer_->HasExtension(name);
-    };
-
     /* Set fixed states for this renderer */
     caps.screenOrigin                   = ScreenOrigin::LowerLeft;
     caps.clippingRange                  = ClippingRange::MinusOneToOne;
     caps.shadingLanguage                = QueryShadingLanguage();
 
     /* Query all boolean capabilies by their respective OpenGL extension */
-    caps.hasRenderTargets               = HasExtension("GL_ARB_framebuffer_object");
-    caps.has3DTextures                  = HasExtension("GL_EXT_texture3D");
-    caps.hasCubeTextures                = HasExtension("GL_ARB_texture_cube_map");
-    caps.hasTextureArrays               = HasExtension("GL_EXT_texture_array");
-    caps.hasCubeTextureArrays           = HasExtension("GL_ARB_texture_cube_map_array");
-    caps.hasSamplers                    = HasExtension("GL_ARB_sampler_objects");
-    caps.hasConstantBuffers             = HasExtension("GL_ARB_uniform_buffer_object");
-    caps.hasStorageBuffers              = HasExtension("GL_ARB_shader_storage_buffer_object");
-    caps.hasUniforms                    = HasExtension("GL_ARB_shader_objects");
-    caps.hasGeometryShaders             = HasExtension("GL_ARB_geometry_shader4");
-    caps.hasTessellationShaders         = HasExtension("GL_ARB_tessellation_shader");
-    caps.hasComputeShaders              = HasExtension("GL_ARB_compute_shader");
-    caps.hasInstancing                  = HasExtension("GL_ARB_draw_instanced");
-    caps.hasOffsetInstancing            = HasExtension("GL_ARB_base_instance");
-    caps.hasViewportArrays              = HasExtension("GL_ARB_viewport_array");
-    caps.hasConservativeRasterization   = (HasExtension("GL_NV_conservative_raster") || HasExtension("GL_INTEL_conservative_rasterization"));
+    caps.hasRenderTargets               = HasExtension(GLExt::ARB_framebuffer_object);
+    caps.has3DTextures                  = HasExtension(GLExt::EXT_texture3D);
+    caps.hasCubeTextures                = HasExtension(GLExt::ARB_texture_cube_map);
+    caps.hasTextureArrays               = HasExtension(GLExt::EXT_texture_array);
+    caps.hasCubeTextureArrays           = HasExtension(GLExt::ARB_texture_cube_map_array);
+    caps.hasSamplers                    = HasExtension(GLExt::ARB_sampler_objects);
+    caps.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
+    caps.hasStorageBuffers              = HasExtension(GLExt::ARB_shader_storage_buffer_object);
+    caps.hasUniforms                    = HasExtension(GLExt::ARB_shader_objects);
+    caps.hasGeometryShaders             = HasExtension(GLExt::ARB_geometry_shader4);
+    caps.hasTessellationShaders         = HasExtension(GLExt::ARB_tessellation_shader);
+    caps.hasComputeShaders              = HasExtension(GLExt::ARB_compute_shader);
+    caps.hasInstancing                  = HasExtension(GLExt::ARB_draw_instanced);
+    caps.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);
+    caps.hasViewportArrays              = HasExtension(GLExt::ARB_viewport_array);
+    caps.hasConservativeRasterization   = (HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization));
 
     /* Query integral attributes */
     auto GetInt = [](GLenum param)

@@ -154,10 +154,6 @@ class GLRenderSystem : public RenderSystem
 
         GLRenderContext* GetSharedRenderContext() const;
 
-        /* ----- Common objects ----- */
-
-        std::unique_ptr<GLExtensionViewer>      extensionViewer_;
-
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<GLRenderContext>      renderContexts_;

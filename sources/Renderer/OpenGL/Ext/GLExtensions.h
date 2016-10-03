@@ -1,5 +1,5 @@
 /*
- * GLExtension.h
+ * GLExtensions.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -247,7 +247,7 @@ extern PFNGLGETPROGRAMRESOURCEIVPROC                        glGetProgramResource
 extern PFNGLGETPROGRAMRESOURCELOCATIONPROC                  glGetProgramResourceLocation;
 extern PFNGLGETPROGRAMRESOURCELOCATIONINDEXPROC             glGetProgramResourceLocationIndex;
 
-/* GL_ARB_uniform_buffer_objects */
+/* GL_ARB_uniform_buffer_object */
 
 extern PFNGLGETUNIFORMBLOCKINDEXPROC                        glGetUniformBlockIndex;
 extern PFNGLGETACTIVEUNIFORMBLOCKIVPROC                     glGetActiveUniformBlockiv;

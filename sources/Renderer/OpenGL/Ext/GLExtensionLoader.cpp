@@ -450,6 +450,19 @@ static bool Load_GL_EXT_draw_buffers2(bool usePlaceHolder)
 #endif
 
 
+/* --- Internal members --- */
+
+static const unsigned int g_numExtensions = static_cast<int>(GLExt::Count);
+
+static std::array<bool, g_numExtensions> g_extensionsEnabled { false };
+static bool g_extAlreadyLoaded = false;
+
+static void EnableExtensionSupport(GLExt extension)
+{
+    g_extensionsEnabled[static_cast<std::size_t>(extension)] = true;
+}
+
+
 /* --- Common extension loading functions --- */
 
 GLExtensionList QueryExtensions(bool coreProfile)
@@ -509,16 +522,11 @@ void LoadAllExtensions(GLExtensionList& extensions)
 {
     #ifndef __APPLE__
     
-    #define LOAD_GLEXT(NAME) LoadExtension(#NAME, Load_##NAME)
-
     /* Only load GL extensions once */
-    static bool extAlreadyLoaded;
-
-    if (extAlreadyLoaded)
+    if (g_extAlreadyLoaded)
         return;
 
-    /* Internal extension loading lambda function */
-    auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc) -> void
+    auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc, GLExt viewerExt) -> void
     {
         /* Try to load OpenGL extension */
         auto it = extensions.find(extName);
@@ -534,59 +542,95 @@ void LoadAllExtensions(GLExtensionList& extensions)
             extLoadingProc(true);
         }
         #endif
+        else if (it != extensions.end())
+        {
+            /* Enable extension in viewer */
+            EnableExtensionSupport(viewerExt);
+        }
     };
 
+    auto EnableExtension = [&](const std::string& extName, GLExt viewerExt) -> void
+    {
+        /* Try to enable OpenGL extension */
+        if (extensions.find(extName) != extensions.end())
+            EnableExtensionSupport(viewerExt);
+    };
+
+    #define LOAD_GLEXT(NAME) \
+        LoadExtension("GL_" + std::string(#NAME), Load_GL_##NAME, GLExt::NAME)
+
+    #define ENABLE_GLEXT(NAME) \
+        EnableExtension("GL_" + std::string(#NAME), GLExt::NAME)
+
     /* Load hardware buffer extensions */
-    LOAD_GLEXT( GL_ARB_vertex_buffer_object         );
-    LOAD_GLEXT( GL_ARB_vertex_array_object          );
-    LOAD_GLEXT( GL_ARB_framebuffer_object           );
-    LOAD_GLEXT( GL_ARB_uniform_buffer_object        );
-    LOAD_GLEXT( GL_ARB_shader_storage_buffer_object );
+    LOAD_GLEXT( ARB_vertex_buffer_object         );
+    LOAD_GLEXT( ARB_vertex_array_object          );
+    LOAD_GLEXT( ARB_framebuffer_object           );
+    LOAD_GLEXT( ARB_uniform_buffer_object        );
+    LOAD_GLEXT( ARB_shader_storage_buffer_object );
 
     /* Load drawing extensions */
-    LOAD_GLEXT( GL_ARB_draw_buffers                 );
-    LOAD_GLEXT( GL_ARB_draw_instanced               );
-    LOAD_GLEXT( GL_ARB_base_instance                );
-    LOAD_GLEXT( GL_ARB_draw_elements_base_vertex    );
+    LOAD_GLEXT( ARB_draw_buffers                 );
+    LOAD_GLEXT( ARB_draw_instanced               );
+    LOAD_GLEXT( ARB_base_instance                );
+    LOAD_GLEXT( ARB_draw_elements_base_vertex    );
 
     /* Load shader extensions */
-    LOAD_GLEXT( GL_ARB_shader_objects               );
-    LOAD_GLEXT( GL_ARB_instanced_arrays             );
-    LOAD_GLEXT( GL_ARB_tessellation_shader          );
-    LOAD_GLEXT( GL_ARB_compute_shader               );
-    LOAD_GLEXT( GL_ARB_get_program_binary           );
-    LOAD_GLEXT( GL_ARB_program_interface_query      );
+    LOAD_GLEXT( ARB_shader_objects               );
+    LOAD_GLEXT( ARB_instanced_arrays             );
+    LOAD_GLEXT( ARB_tessellation_shader          );
+    LOAD_GLEXT( ARB_compute_shader               );
+    LOAD_GLEXT( ARB_get_program_binary           );
+    LOAD_GLEXT( ARB_program_interface_query      );
 
     /* Load texture extensions */
-    LOAD_GLEXT( GL_ARB_multitexture                 );
-    LOAD_GLEXT( GL_EXT_texture3D                    );
-    LOAD_GLEXT( GL_ARB_clear_texture                );
-    LOAD_GLEXT( GL_ARB_texture_compression          );
-    LOAD_GLEXT( GL_ARB_sampler_objects              );
+    LOAD_GLEXT( ARB_multitexture                 );
+    LOAD_GLEXT( EXT_texture3D                    );
+    LOAD_GLEXT( ARB_clear_texture                );
+    LOAD_GLEXT( ARB_texture_compression          );
+    LOAD_GLEXT( ARB_sampler_objects              );
 
     /* Load blending extensions */
-    LOAD_GLEXT( GL_EXT_blend_minmax                 );
-    LOAD_GLEXT( GL_EXT_blend_func_separate          );
-    LOAD_GLEXT( GL_EXT_blend_equation_separate      );
-    LOAD_GLEXT( GL_EXT_blend_color                  );
-    LOAD_GLEXT( GL_ARB_draw_buffers_blend           );
+    LOAD_GLEXT( EXT_blend_minmax                 );
+    LOAD_GLEXT( EXT_blend_func_separate          );
+    LOAD_GLEXT( EXT_blend_equation_separate      );
+    LOAD_GLEXT( EXT_blend_color                  );
+    LOAD_GLEXT( ARB_draw_buffers_blend           );
 
     /* Load misc extensions */
-    LOAD_GLEXT( GL_ARB_viewport_array               );
-    LOAD_GLEXT( GL_ARB_occlusion_query              );
-    LOAD_GLEXT( GL_NV_conditional_render            );
-    LOAD_GLEXT( GL_ARB_timer_query                  );
-    LOAD_GLEXT( GL_ARB_multi_bind                   );
-    LOAD_GLEXT( GL_EXT_stencil_two_side             );
-    LOAD_GLEXT( GL_KHR_debug                        );
-    LOAD_GLEXT( GL_ARB_clip_control                 );
-    LOAD_GLEXT( GL_EXT_draw_buffers2                );
+    LOAD_GLEXT( ARB_viewport_array               );
+    LOAD_GLEXT( ARB_occlusion_query              );
+    LOAD_GLEXT( NV_conditional_render            );
+    LOAD_GLEXT( ARB_timer_query                  );
+    LOAD_GLEXT( ARB_multi_bind                   );
+    LOAD_GLEXT( EXT_stencil_two_side             );
+    LOAD_GLEXT( KHR_debug                        );
+    LOAD_GLEXT( ARB_clip_control                 );
+    LOAD_GLEXT( EXT_draw_buffers2                );
 
-    extAlreadyLoaded = true;
+    /* Enable extensions without procedures */
+    ENABLE_GLEXT( ARB_texture_cube_map             );
+    ENABLE_GLEXT( EXT_texture_array                );
+    ENABLE_GLEXT( ARB_texture_cube_map_array       );
+    ENABLE_GLEXT( ARB_geometry_shader4             );
+    ENABLE_GLEXT( NV_conservative_raster           );
+    ENABLE_GLEXT( INTEL_conservative_rasterization );
+
+    g_extAlreadyLoaded = true;
 
     #undef LOAD_GLEXT
     
     #endif
+}
+
+bool AreExtensionsLoaded()
+{
+    return g_extAlreadyLoaded;
+}
+
+bool HasExtension(const GLExt extension)
+{
+    return g_extensionsEnabled[static_cast<std::size_t>(extension)];
 }
 
 

@@ -9,12 +9,18 @@
 #define __LLGL_GL_EXTENSION_LOADER_H__
 
 
-#include "GLExtensionViewer.h"
+#include "GLExtensionsEnum.h"
+#include <string>
+#include <array>
+#include <set>
 
 
 namespace LLGL
 {
 
+
+//! OpenGL extension map type.
+using GLExtensionList = std::set<std::string>;
 
 /* --- Common extension loading functions --- */
 
@@ -34,6 +40,12 @@ the respective entry in the map will be invalidated (set to 'false').
 \see QueryExtensions
 */
 void LoadAllExtensions(GLExtensionList& extensions);
+
+//! Returns true if all available extensions have been loaded.
+bool AreExtensionsLoaded();
+
+//! Returns true if the specified OpenGL extension is supported.
+bool HasExtension(const GLExt extension);
 
 /* --- Common GL extensions --- */
 
