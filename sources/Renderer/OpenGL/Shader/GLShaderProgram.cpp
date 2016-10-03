@@ -298,9 +298,9 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
     return descList;
 }
 
-void GLShaderProgram::BuildInputLayout(const std::vector<VertexAttribute>& vertexAttribs)
+void GLShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
 {
-    if (vertexAttribs.size() > GL_MAX_VERTEX_ATTRIBS)
+    if (vertexFormat.attributes.size() > GL_MAX_VERTEX_ATTRIBS)
     {
         throw std::invalid_argument(
             "failed to bind vertex attributes, because too many attributes are specified (maximum is " +
@@ -311,7 +311,7 @@ void GLShaderProgram::BuildInputLayout(const std::vector<VertexAttribute>& verte
     /* Bind all vertex attribute locations */
     GLuint index = 0;
 
-    for (const auto& attrib : vertexAttribs)
+    for (const auto& attrib : vertexFormat.attributes)
     {
         /* Bind attribute location */
         glBindAttribLocation(id_, index, attrib.name.c_str());

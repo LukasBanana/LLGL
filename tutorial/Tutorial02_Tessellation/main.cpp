@@ -91,7 +91,7 @@ public:
                     { LLGL::ShaderType::TessEvaluation, "shader.hlsl", "DS", "ds_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
                 },
-                vertexFormat.attributes
+                vertexFormat
             );
         }
         else
@@ -103,7 +103,7 @@ public:
                     { LLGL::ShaderType::TessEvaluation, "tesseval.glsl" },
                     { LLGL::ShaderType::Fragment, "fragment.glsl" }
                 },
-                vertexFormat.attributes
+                vertexFormat
             );
         }
 

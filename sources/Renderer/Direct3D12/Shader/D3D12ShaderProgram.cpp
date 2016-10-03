@@ -169,12 +169,12 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
 }
 
-void D3D12ShaderProgram::BuildInputLayout(const std::vector<VertexAttribute>& vertexAttribs)
+void D3D12ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
 {
     inputElements_.clear();
-    inputElements_.reserve(vertexAttribs.size());
+    inputElements_.reserve(vertexFormat.attributes.size());
 
-    for (const auto& attrib : vertexAttribs)
+    for (const auto& attrib : vertexFormat.attributes)
     {
         D3D12_INPUT_ELEMENT_DESC elementDesc;
         {

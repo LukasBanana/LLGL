@@ -125,7 +125,7 @@ int main()
         shaderProgram->AttachShader(*vertShader);
         shaderProgram->AttachShader(*fragShader);
 
-        shaderProgram->BuildInputLayout(vertexFormat.attributes);
+        shaderProgram->BuildInputLayout(vertexFormat);
 
         if (!shaderProgram->LinkShaders())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;

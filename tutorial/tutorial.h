@@ -253,7 +253,7 @@ protected:
 
     LLGL::ShaderProgram* LoadShaderProgram(
         const std::vector<TutorialShaderDescriptor>& shaderDescs,
-        const std::vector<LLGL::VertexAttribute>& vertexAttribs = {})
+        const LLGL::VertexFormat& vertexFormat = {})
     {
         // Create shader program
         LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
@@ -285,8 +285,8 @@ protected:
         }
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
-        if (!vertexAttribs.empty())
-            shaderProgram->BuildInputLayout(vertexAttribs);
+        if (!vertexFormat.attributes.empty())
+            shaderProgram->BuildInputLayout(vertexFormat);
 
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())
@@ -306,7 +306,7 @@ protected:
                     { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
                 },
-                vertexFormat.attributes
+                vertexFormat
             );
         }
         else
@@ -316,7 +316,7 @@ protected:
                     { LLGL::ShaderType::Vertex, "vertex.glsl" },
                     { LLGL::ShaderType::Fragment, "fragment.glsl" }
                 },
-                vertexFormat.attributes
+                vertexFormat
             );
         }
     }

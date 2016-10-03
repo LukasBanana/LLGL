@@ -171,16 +171,16 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
 }
 
-void D3D11ShaderProgram::BuildInputLayout(const std::vector<VertexAttribute>& vertexAttribs)
+void D3D11ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
 {
     if (!vs_ || vs_->GetByteCode().empty())
         throw std::runtime_error("can not bind vertex attributes without valid vertex shader");
 
     /* Setup input element descriptors */
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
-    inputElements.reserve(vertexAttribs.size());
+    inputElements.reserve(vertexFormat.attributes.size());
 
-    for (const auto& attrib : vertexAttribs)
+    for (const auto& attrib : vertexFormat.attributes)
     {
         D3D11_INPUT_ELEMENT_DESC elementDesc;
         {

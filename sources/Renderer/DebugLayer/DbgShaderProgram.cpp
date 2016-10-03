@@ -60,12 +60,12 @@ std::vector<UniformDescriptor> DbgShaderProgram::QueryUniforms() const
     return instance.QueryUniforms();
 }
 
-void DbgShaderProgram::BuildInputLayout(const std::vector<VertexAttribute>& vertexAttribs)
+void DbgShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
 {
-    vertexLayout_.attributes    = vertexAttribs;
+    vertexLayout_.attributes    = vertexFormat.attributes;
     vertexLayout_.bound         = true;
 
-    instance.BuildInputLayout(vertexAttribs);
+    instance.BuildInputLayout(vertexFormat);
 }
 
 void DbgShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)

@@ -43,7 +43,7 @@ class DbgShaderProgram : public ShaderProgram
         std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
 
-        void BuildInputLayout(const std::vector<VertexAttribute>& vertexAttribs) override;
+        void BuildInputLayout(const VertexFormat& vertexFormat) override;
         void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) override;
         void BindStorageBuffer(const std::string& name, unsigned int bindingIndex) override;
 
