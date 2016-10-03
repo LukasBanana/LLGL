@@ -257,28 +257,22 @@ struct RasterizerDescriptor
 //! Blend target state descriptor structure.
 struct BlendTargetDescriptor
 {
-    //! Source color blending operation.
+    //! Source color blending operation. By default BlendOp::SrcAlpha.
     BlendOp         srcColor        = BlendOp::SrcAlpha;
 
-    //! Destination color blending operation.
+    //! Destination color blending operation. By default BlendOp::InvSrcAlpha.
     BlendOp         destColor       = BlendOp::InvSrcAlpha;
     
-    /**
-    \brief Color blending arithmetic.
-    \note Only supported with: Direct3D 11, Direct3D 12.
-    */
+    //! Color blending arithmetic. By default BlendArithmetic::Add.
     BlendArithmetic colorArithmetic = BlendArithmetic::Add;
     
-    //! Source alpha blending operation.
+    //! Source alpha blending operation. By default BlendOp::SrcAlpha.
     BlendOp         srcAlpha        = BlendOp::SrcAlpha;
 
-    //! Destination alpha blending operation.
+    //! Destination alpha blending operation. By default BlendOp::InvSrcAlpha.
     BlendOp         destAlpha       = BlendOp::InvSrcAlpha;
 
-    /**
-    \brief Alpha blending arithmetic.
-    \note Only supported with: Direct3D 11, Direct3D 12.
-    */
+    //! Alpha blending arithmetic. By default BlendArithmetic::Add.
     BlendArithmetic alphaArithmetic = BlendArithmetic::Add;
 
     //! Specifies which color components are enabled for writing. By default (true, true, true, true).

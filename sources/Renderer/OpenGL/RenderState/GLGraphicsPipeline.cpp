@@ -33,8 +33,10 @@ static void Convert(GLBlend& to, const BlendTargetDescriptor& from)
 {
     to.srcColor     = GLTypes::Map(from.srcColor);
     to.destColor    = GLTypes::Map(from.destColor);
+    to.funcColor    = GLTypes::Map(from.colorArithmetic);
     to.srcAlpha     = GLTypes::Map(from.srcAlpha);
     to.destAlpha    = GLTypes::Map(from.destAlpha);
+    to.funcAlpha    = GLTypes::Map(from.alphaArithmetic);
     to.colorMask.r  = GLBoolean(from.colorMask.r);
     to.colorMask.g  = GLBoolean(from.colorMask.g);
     to.colorMask.b  = GLBoolean(from.colorMask.b);

@@ -72,14 +72,28 @@ DECL_GLPROC(const GLubyte*, glGetStringi, (GLenum GLuint));
 
 #endif
 
-/* --- Blending (GL_ARB_draw_buffers_blend) --- */
+/* --- Blending (GL_EXT_blend_func_separate) --- */
 
 DECL_GLPROC(void, glBlendFuncSeparate, (GLenum, GLenum, GLenum, GLenum));
-DECL_GLPROC(void, glBlendFuncSeparatei, (GLuint, GLenum, GLenum, GLenum, GLenum));
+
+/* --- Blending equation (GL_EXT_blend_minmax) --- */
+
+DECL_GLPROC(void, glBlendEquation, (GLenum));
 
 /* --- Blending factor (GL_EXT_blend_color) --- */
 
 DECL_GLPROC(void, glBlendColor, (GLfloat, GLfloat, GLfloat, GLfloat));
+
+/* --- Blending (GL_EXT_blend_equation_separate) --- */
+
+DECL_GLPROC(void, glBlendEquationSeparate, (GLenum, GLenum));
+
+/* --- Blending (GL_ARB_draw_buffers_blend) --- */
+
+DECL_GLPROC(void, glBlendEquationi, (GLuint, GLenum));
+DECL_GLPROC(void, glBlendEquationSeparatei, (GLuint, GLenum, GLenum));
+DECL_GLPROC(void, glBlendFunci, (GLuint, GLenum, GLenum));
+DECL_GLPROC(void, glBlendFuncSeparatei, (GLuint, GLenum, GLenum, GLenum, GLenum));
 
 /* --- Indexed (GL_EXT_draw_buffers2) --- */
 

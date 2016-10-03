@@ -39,14 +39,28 @@ PFNGLGETSTRINGIPROC                                     glGetStringi            
 
 #endif
 
-/* --- Blending (GL_ARB_draw_buffers_blend) --- */
+/* --- Blending (GL_EXT_blend_func_separate) --- */
 
 PFNGLBLENDFUNCSEPARATEPROC                              glBlendFuncSeparate                             = nullptr;
-PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
+
+/* --- Blending equation (GL_EXT_blend_minmax) --- */
+
+PFNGLBLENDEQUATIONPROC                                  glBlendEquation                                 = nullptr;
 
 /* --- Blending factor (GL_EXT_blend_color) --- */
 
 PFNGLBLENDCOLORPROC                                     glBlendColor                                    = nullptr;
+
+/* --- Blending (GL_EXT_blend_equation_separate) --- */
+
+PFNGLBLENDEQUATIONSEPARATEPROC                          glBlendEquationSeparate                         = nullptr;
+
+/* --- Blending (GL_ARB_draw_buffers_blend) --- */
+
+PFNGLBLENDEQUATIONIPROC                                 glBlendEquationi                                = nullptr;
+PFNGLBLENDEQUATIONSEPARATEIPROC                         glBlendEquationSeparatei                        = nullptr;
+PFNGLBLENDFUNCIPROC                                     glBlendFunci                                    = nullptr;
+PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
 
 /* --- Indexed (GL_EXT_draw_buffers2) --- */
 

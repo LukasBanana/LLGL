@@ -39,6 +39,7 @@ GLenum Map( const ImageFormat           colorFormat         );
 GLenum Map( const CompareOp             compareOp           );
 GLenum Map( const StencilOp             stencilOp           );
 GLenum Map( const BlendOp               blendOp             );
+GLenum Map( const BlendArithmetic       blendArithmetic     );
 GLenum Map( const PolygonMode           polygonMode         ); // GL_FILL, GL_LINE, GL_POINT
 GLenum Map( const CullMode              cullMode            ); // 0, GL_FRONT, GL_BACK
 GLenum Map( const AxisDirection         cubeFace            ); // GL_TEXTURE_CUBE_MAP_...

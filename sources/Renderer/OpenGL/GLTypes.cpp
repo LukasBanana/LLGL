@@ -253,6 +253,19 @@ GLenum Map(const BlendOp blendOp)
     MapFailed("BlendOp");
 }
 
+GLenum Map(const BlendArithmetic blendArithmetic)
+{
+    switch (blendArithmetic)
+    {
+        case BlendArithmetic::Add:          return GL_FUNC_ADD;
+        case BlendArithmetic::Subtract:     return GL_FUNC_SUBTRACT;
+        case BlendArithmetic::RevSubtract:  return GL_FUNC_REVERSE_SUBTRACT;
+        case BlendArithmetic::Min:          return GL_MIN;
+        case BlendArithmetic::Max:          return GL_MAX;
+    }
+    MapFailed("BlendArithmetic");
+}
+
 GLenum Map(const PolygonMode polygonMode)
 {
     switch (polygonMode)

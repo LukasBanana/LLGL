@@ -376,16 +376,36 @@ static bool LoadViewportArrayProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadDrawBuffersBlendProcs(bool usePlaceHolder)
+static bool LoadBlendMinMaxProcs(bool usePlaceHolder)
 {
-    LOAD_GLPROC( glBlendFuncSeparate  );
-    LOAD_GLPROC( glBlendFuncSeparatei );
+    LOAD_GLPROC( glBlendEquation );
     return true;
 }
 
 static bool LoadBlendFactorProcs(bool usePlaceHolder)
 {
     LOAD_GLPROC( glBlendColor );
+    return true;
+}
+
+static bool Load_GL_EXT_blend_func_separate(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glBlendFuncSeparate );
+    return true;
+}
+
+static bool Load_GL_EXT_blend_equation_separate(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glBlendEquationSeparate );
+    return true;
+}
+
+static bool LoadDrawBuffersBlendProcs(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glBlendEquationi         );
+    LOAD_GLPROC( glBlendEquationSeparatei );
+    LOAD_GLPROC( glBlendFunci             );
+    LOAD_GLPROC( glBlendFuncSeparatei     );
     return true;
 }
 
@@ -496,6 +516,8 @@ void LoadAllExtensions(GLExtensionList& extensions)
 {
     #ifndef __APPLE__
     
+    #define LOAD_GLEXT(NAME) LoadExtension(#NAME, Load_##NAME)
+
     /* Only load GL extensions once */
     static bool extAlreadyLoaded;
 
@@ -550,9 +572,15 @@ void LoadAllExtensions(GLExtensionList& extensions)
     LoadExtension( "GL_ARB_texture_compression",          LoadCompressedTextureProcs     );
     LoadExtension( "GL_ARB_sampler_objects",              LoadSamplerProcs               );
 
+    /* Load blending extensions */
+    LoadExtension( "GL_EXT_blend_minmax",                 LoadBlendMinMaxProcs           );
+    LOAD_GLEXT( GL_EXT_blend_func_separate );
+    LOAD_GLEXT( GL_EXT_blend_equation_separate );
+    LoadExtension( "GL_EXT_blend_color",                  LoadBlendFactorProcs           );
+    LoadExtension( "GL_ARB_draw_buffers_blend",           LoadDrawBuffersBlendProcs      );
+
     /* Load misc extensions */
     LoadExtension( "GL_ARB_viewport_array",               LoadViewportArrayProcs         );
-    LoadExtension( "GL_ARB_draw_buffers_blend",           LoadDrawBuffersBlendProcs      );
     LoadExtension( "GL_ARB_occlusion_query",              LoadQueryObjectProcs           );
     LoadExtension( "GL_NV_conditional_render",            LoadConditionalRenderProcs     );
     LoadExtension( "GL_ARB_timer_query",                  LoadTimerQueryObjectProcs      );
@@ -561,9 +589,10 @@ void LoadAllExtensions(GLExtensionList& extensions)
     LoadExtension( "GL_KHR_debug",                        LoadDebugProcs                 );
     LoadExtension( "GL_ARB_clip_control",                 LoadClipControlProcs           );
     LoadExtension( "GL_EXT_draw_buffers2",                LoadIndexedProcs               );
-    LoadExtension( "GL_EXT_blend_color",                  LoadBlendFactorProcs           );
 
     extAlreadyLoaded = true;
+
+    #undef LOAD_GLEXT
     
     #endif
 }
