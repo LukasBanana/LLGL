@@ -73,6 +73,15 @@ void D3D11ShaderProgram::AttachShader(Shader& shader)
     /* Add constant- and storage buffer descriptors */
     InsertBufferDesc(constantBufferDescs_, shaderD3D->GetConstantBufferDescs());
     InsertBufferDesc(storageBufferDescs_, shaderD3D->GetStorageBufferDescs());
+
+    /* Update buffer view indices */
+    unsigned int bufferIdx = 0;
+    for (auto& desc : constantBufferDescs_)
+        desc.index = bufferIdx++;
+
+    bufferIdx = 0;
+    for (auto& desc : storageBufferDescs_)
+        desc.index = bufferIdx++;
 }
 
 bool D3D11ShaderProgram::LinkShaders()
