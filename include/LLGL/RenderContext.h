@@ -176,7 +176,7 @@ class LLGL_EXPORT RenderContext
         virtual void SetIndexBuffer(Buffer& buffer) = 0;
         
         /**
-        \brief Sets the active constant buffer of the specified slot index for subsequent drawing and compute operations.
+        \brief Sets the active constant buffer at the specified slot index for subsequent drawing and compute operations.
         \param[in] buffer Specifies the constant buffer to set. This buffer must have been created with the buffer type: BufferType::Constant.
         This must not be an unspecified constant buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
         function or with the "RenderSystem::WriteBuffer" function.
@@ -186,6 +186,12 @@ class LLGL_EXPORT RenderContext
         \see ShaderStageFlags
         */
         virtual void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+
+        /**
+        \brief Sets the active array of constant buffers at the specified start slot index.
+        \see SetConstantBuffer
+        */
+        virtual void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.

@@ -213,11 +213,23 @@ void GLRenderContext::SetIndexBuffer(Buffer& buffer)
     renderState_.indexBufferStride      = format.GetFormatSize();
 }
 
-void GLRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+void GLRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
 {
     /* Bind constant buffer with BindBufferBase */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, slot, bufferGL.GetID());
+}
+
+void GLRenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long /*shaderStageFlags*/)
+{
+    /* Bind constant buffers with BindBuffersBase */
+    auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
+    stateMngr_->BindBuffersBase(
+        GLBufferTarget::UNIFORM_BUFFER,
+        startSlot,
+        static_cast<GLsizei>(bufferArrayGL.GetIDArray().size()),
+        bufferArrayGL.GetIDArray().data()
+    );
 }
 
 void GLRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)

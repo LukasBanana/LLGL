@@ -65,8 +65,12 @@ class D3D12RenderContext : public RenderContext
 
         void SetVertexBuffer(Buffer& buffer) override;
         void SetVertexBufferArray(BufferArray& bufferArray) override;
+
         void SetIndexBuffer(Buffer& buffer) override;
+        
         void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
 
         void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;

@@ -196,6 +196,11 @@ void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, lo
     SetConstantBuffersOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
+void D3D11RenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+{
+    //todo...
+}
+
 void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
     #if 0//INCOMPLETE

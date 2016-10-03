@@ -194,6 +194,11 @@ void D3D12RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, lo
     commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
 
+void D3D12RenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+{
+    //todo...
+}
+
 void D3D12RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
     //todo...
