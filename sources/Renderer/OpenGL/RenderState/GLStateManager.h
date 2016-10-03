@@ -180,20 +180,16 @@ class GLStateManager
 
         struct GLCommonState
         {
-            GLenum                      depthFunc       = GL_LESS;
-            GLStencil                   stencil[2];
-            GLenum                      polygonMode     = GL_FILL;
-            GLenum                      cullFace        = GL_BACK;
-            GLenum                      frontFace       = GL_CCW;
-            GLenum                      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
-            GLboolean                   depthMask       = GL_TRUE;
-            GLint                       patchVertices_  = 0;
-            //ColorRGBAT<GLboolean>       colorMask       = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
-            ColorRGBAf                  blendColor      = { 0.0f, 0.0f, 0.0f, 0.0f };
-            GLenum                      logicOpCode     = GL_COPY;
-            //std::vector<GLViewport>     viewports;
-            //std::vector<GLDepthRange>   depthRanges;
-            //std::vector<GLScissor>      scissors;
+            GLenum      depthFunc       = GL_LESS;
+            GLStencil   stencil[2];
+            GLenum      polygonMode     = GL_FILL;
+            GLenum      cullFace        = GL_BACK;
+            GLenum      frontFace       = GL_CCW;
+            GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
+            GLboolean   depthMask       = GL_TRUE;
+            GLint       patchVertices_  = 0;
+            ColorRGBAf  blendColor      = { 0.0f, 0.0f, 0.0f, 0.0f };
+            GLenum      logicOpCode     = GL_COPY;
         };
 
         struct GLRenderState
