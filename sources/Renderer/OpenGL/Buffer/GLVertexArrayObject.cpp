@@ -25,37 +25,34 @@ GLVertexArrayObject::~GLVertexArrayObject()
     glDeleteVertexArrays(1, &id_);
 }
 
-void GLVertexArrayObject::BuildVertexAttribute(const VertexFormat& vertexFormat, unsigned int index)
+void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute, unsigned int stride, unsigned int index)
 {
-    /* Get vertex attribute from list */
-    const auto& attrib = vertexFormat.attributes[index];
-
     /* Enable array index in currently bound VAO */
     glEnableVertexAttribArray(index);
 
     /* Use currently bound VBO for VertexAttribPointer functions */
-    if (!attrib.conversion && attrib.dataType != DataType::Float && attrib.dataType != DataType::Double)
+    if (!attribute.conversion && attribute.dataType != DataType::Float && attribute.dataType != DataType::Double)
     {
         //if (!glVertexAttribIPointer)
         //    throw std::runtime_error("integral vertex attributes not supported by renderer");
 
         glVertexAttribIPointer(
             index,
-            attrib.components,
-            GLTypes::Map(attrib.dataType),
-            vertexFormat.stride,
-            reinterpret_cast<const char*>(0) + attrib.offset
+            attribute.components,
+            GLTypes::Map(attribute.dataType),
+            stride,
+            reinterpret_cast<const char*>(0) + attribute.offset
         );
     }
     else
     {
         glVertexAttribPointer(
             index,
-            attrib.components,
-            GLTypes::Map(attrib.dataType),
+            attribute.components,
+            GLTypes::Map(attribute.dataType),
             GL_FALSE,
-            vertexFormat.stride,
-            reinterpret_cast<const char*>(0) + attrib.offset
+            stride,
+            reinterpret_cast<const char*>(0) + attribute.offset
         );
     }
 }

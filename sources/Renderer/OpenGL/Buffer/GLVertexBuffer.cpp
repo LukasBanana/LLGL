@@ -6,9 +6,7 @@
  */
 
 #include "GLVertexBuffer.h"
-#include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
-#include "../GLTypes.h"
 
 
 namespace LLGL
@@ -30,9 +28,12 @@ void GLVertexBuffer::BuildVertexArray(const VertexFormat& vertexFormat)
 
         /* Build each vertex attribute */
         for (unsigned int i = 0, n = static_cast<unsigned int>(vertexFormat.attributes.size()); i < n; ++i)
-            vao_.BuildVertexAttribute(vertexFormat, i);
+            vao_.BuildVertexAttribute(vertexFormat.attributes[i], vertexFormat.stride, i);
     }
     GLStateManager::active->BindVertexArray(0);
+
+    /* Store vertex format (required if this buffer is used in a buffer array) */
+    vertexFormat_ = vertexFormat;
 }
 
 

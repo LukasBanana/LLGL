@@ -25,7 +25,7 @@ class GLVertexArrayObject
         GLVertexArrayObject();
         ~GLVertexArrayObject();
 
-        void BuildVertexAttribute(const VertexFormat& vertexFormat, unsigned int index);
+        void BuildVertexAttribute(const VertexAttribute& attribute, unsigned int stride, unsigned int index);
 
         //! Returns the ID of the hardware vertex-array-object (VAO)
         inline GLuint GetID() const

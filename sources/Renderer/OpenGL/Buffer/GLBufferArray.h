@@ -25,6 +25,7 @@ class GLBufferArray : public BufferArray
 
     public:
 
+        GLBufferArray(const BufferType type);
         GLBufferArray(const BufferType type, unsigned int numBuffers, Buffer* const * bufferArray);
 
         //! Returns the array of buffer IDs.
@@ -32,6 +33,10 @@ class GLBufferArray : public BufferArray
         {
             return idArray_;
         }
+
+    protected:
+
+        void BuildArray(unsigned int numBuffers, Buffer* const * bufferArray);
 
     private:
 

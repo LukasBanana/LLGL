@@ -1,15 +1,15 @@
 /*
- * GLVertexBuffer.h
+ * GLVertexBufferArray.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_VERTEX_BUFFER_H__
-#define __LLGL_GL_VERTEX_BUFFER_H__
+#ifndef __LLGL_GL_VERTEX_BUFFER_ARRAY_H__
+#define __LLGL_GL_VERTEX_BUFFER_ARRAY_H__
 
 
-#include "GLBuffer.h"
+#include "GLBufferArray.h"
 #include "GLVertexArrayObject.h"
 
 
@@ -17,14 +17,14 @@ namespace LLGL
 {
 
 
-class GLVertexBuffer : public GLBuffer
+class GLVertexBufferArray : public GLBufferArray
 {
 
     public:
 
-        GLVertexBuffer();
+        GLVertexBufferArray();
 
-        void BuildVertexArray(const VertexFormat& vertexFormat);
+        void BuildVertexArray(unsigned int numBuffers, Buffer* const * bufferArray);
 
         //! Returns the ID of the vertex-array-object (VAO)
         inline GLuint GetVaoID() const
@@ -32,16 +32,9 @@ class GLVertexBuffer : public GLBuffer
             return vao_.GetID();
         }
 
-        //! Returns the vertex format.
-        inline const VertexFormat& GetVertexFormat() const
-        {
-            return vertexFormat_;
-        }
-
     private:
 
         GLVertexArrayObject vao_;
-        VertexFormat        vertexFormat_;
 
 };
 
