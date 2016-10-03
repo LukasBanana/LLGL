@@ -41,7 +41,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
             attribute.components,
             GLTypes::Map(attribute.dataType),
             stride,
-            reinterpret_cast<const char*>(0) + attribute.offset
+            reinterpret_cast<const void*>(attribute.offset)
         );
     }
     else
@@ -52,7 +52,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
             GLTypes::Map(attribute.dataType),
             GL_FALSE,
             stride,
-            reinterpret_cast<const char*>(0) + attribute.offset
+            reinterpret_cast<const void*>(attribute.offset)
         );
     }
 }

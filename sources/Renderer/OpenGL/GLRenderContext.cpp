@@ -17,6 +17,7 @@
 #include "Texture/GLSampler.h"
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
+#include "Buffer/GLVertexBufferArray.h"
 #include "RenderState/GLGraphicsPipeline.h"
 
 #ifndef __APPLE__
@@ -195,7 +196,9 @@ void GLRenderContext::SetVertexBuffer(Buffer& buffer)
 
 void GLRenderContext::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    //todo...
+    /* Bind vertex buffer */
+    auto& vertexBufferArrayGL = LLGL_CAST(GLVertexBufferArray&, bufferArray);
+    stateMngr_->BindVertexArray(vertexBufferArrayGL.GetVaoID());
 }
 
 void GLRenderContext::SetIndexBuffer(Buffer& buffer)

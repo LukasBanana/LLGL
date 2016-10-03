@@ -11,6 +11,7 @@
 #include "GLTypes.h"
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
+#include "Buffer/GLVertexBufferArray.h"
 
 
 namespace LLGL
@@ -65,7 +66,17 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 BufferArray* GLRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return TakeOwnership(bufferArrays_, MakeUnique<GLBufferArray>((*bufferArray)->GetType(), numBuffers, bufferArray));
+    auto type = (*bufferArray)->GetType();
+
+    if (type == BufferType::Vertex)
+    {
+        /* Create vertex buffer array and build VAO */
+        auto vertexBufferArray = MakeUnique<GLVertexBufferArray>();
+        vertexBufferArray->BuildVertexArray(numBuffers, bufferArray);
+        return TakeOwnership(bufferArrays_, std::move(vertexBufferArray));
+    }
+
+    return TakeOwnership(bufferArrays_, MakeUnique<GLBufferArray>(type, numBuffers, bufferArray));
 }
 
 void GLRenderSystem::Release(Buffer& buffer)
