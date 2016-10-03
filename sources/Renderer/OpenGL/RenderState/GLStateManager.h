@@ -131,6 +131,7 @@ class GLStateManager
         void ActiveTexture(unsigned int layer);
 
         void BindTexture(GLTextureTarget target, GLuint texture);
+        void BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures);
         
         void PushBoundTexture(unsigned int layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
@@ -159,6 +160,8 @@ class GLStateManager
         void AdjustScissor(GLScissor& scissor);
 
         void AssertExtViewportArray();
+
+        void SetActiveTextureLayer(unsigned int layer);
 
         /* ----- Constants ----- */
 

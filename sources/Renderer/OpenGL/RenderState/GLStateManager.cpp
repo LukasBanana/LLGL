@@ -119,7 +119,7 @@ GLStateManager::GLStateManager()
     for (auto& layer : textureState_.layers)
         Fill(layer.boundTextures, 0);
 
-    activeTextureLayer_ = &(textureState_.layers[0]);
+    SetActiveTextureLayer(0);
 
     /* Make this to the active state manager */
     GLStateManager::active = this;
@@ -795,8 +795,7 @@ void GLStateManager::ActiveTexture(unsigned int layer)
     if (textureState_.activeTexture != layer)
     {
         /* Active specified texture layer and store reference to bound textures array */
-        textureState_.activeTexture = layer;
-        activeTextureLayer_ = &(textureState_.layers[textureState_.activeTexture]);
+        SetActiveTextureLayer(layer);
         glActiveTexture(textureLayersMap[layer]);
     }
 }
@@ -809,6 +808,27 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
     {
         activeTextureLayer_->boundTextures[targetIdx] = texture;
         glBindTexture(textureTargetsMap[targetIdx], texture);
+    }
+}
+
+void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures)
+{
+    if (extension_.multiBind)
+    {
+        /* Bind all textures at once */
+        glBindTextures(first, count, textures);
+    }
+    else if (count > 0)
+    {
+        /* Bind each texture layer individually */
+        while (count-- > 0)
+        {
+            ActiveTexture(first);
+            BindTexture(*targets, *textures);
+            ++targets;
+            ++textures;
+            ++first;
+        }
     }
 }
 
@@ -893,6 +913,12 @@ void GLStateManager::AssertExtViewportArray()
 {
     if (!extension_.viewportArray)
         throw std::runtime_error("renderer does not support viewport, depth-range, and scissor arrays");
+}
+
+void GLStateManager::SetActiveTextureLayer(unsigned int layer)
+{
+    textureState_.activeTexture = layer;
+    activeTextureLayer_ = &(textureState_.layers[textureState_.activeTexture]);
 }
 
 
