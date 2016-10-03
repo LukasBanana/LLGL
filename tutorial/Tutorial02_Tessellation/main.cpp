@@ -14,6 +14,9 @@
 // Enable multi-sampling anti-aliasing
 #define ENABLE_MULTISAMPLING
 
+// Test constant buffer array
+#define _TEST_BUFFER_ARRAY_
+
 
 class Tutorial02 : public Tutorial
 {
@@ -24,6 +27,10 @@ class Tutorial02 : public Tutorial
     LLGL::Buffer*           vertexBuffer        = nullptr;
     LLGL::Buffer*           indexBuffer         = nullptr;
     LLGL::Buffer*           constantBuffer      = nullptr;
+
+    #ifdef _TEST_BUFFER_ARRAY_
+    LLGL::BufferArray*      constantBufferArray = nullptr;
+    #endif
 
     unsigned int            constantBufferIndex = 0;
 
@@ -75,6 +82,13 @@ public:
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
         indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt32);
         constantBuffer = CreateConstantBuffer(settings);
+
+        #ifdef _TEST_BUFFER_ARRAY_
+
+        // Create constant buffer array
+        constantBufferArray = renderer->CreateBufferArray(1, &constantBuffer);
+
+        #endif
 
         return vertexFormat;
     }
@@ -211,7 +225,11 @@ private:
         context->SetIndexBuffer(*indexBuffer);
 
         // Set constant buffer only to tessellation shader stages
+        #ifdef _TEST_BUFFER_ARRAY_
+        context->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+        #else
         context->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+        #endif
 
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
         context->DrawIndexed(24, 0);

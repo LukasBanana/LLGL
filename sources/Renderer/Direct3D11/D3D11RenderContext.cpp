@@ -198,7 +198,14 @@ void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, lo
 
 void D3D11RenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
 {
-    //todo...
+    /* Set constant buffer resource to all shader stages */
+    auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
+    SetConstantBuffersOnStages(
+        startSlot,
+        static_cast<UINT>(bufferArrayD3D.GetBuffers().size()),
+        bufferArrayD3D.GetBuffers().data(),
+        shaderStageFlags
+    );
 }
 
 void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
