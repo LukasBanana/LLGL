@@ -95,6 +95,7 @@ class GLStateManager
 
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
+        void BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers);
 
         void BindVertexArray(GLuint vertexArray);
 
@@ -289,6 +290,7 @@ class GLStateManager
             bool viewportArray      = false; // GL_ARB_viewport_array
             bool clipControl        = false; // GL_ARB_clip_control
             bool drawBuffersBlend   = false; // GL_ARB_draw_buffers_blend
+            bool multiBind          = false; // GL_ARB_multi_bind
         };
 
         /* ----- Members ----- */

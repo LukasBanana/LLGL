@@ -157,6 +157,7 @@ void GLStateManager::DetermineExtensions(GLRenderSystem& renderSystem)
     extension_.viewportArray    = renderSystem.HasExtension("GL_ARB_viewport_array");
     extension_.clipControl      = renderSystem.HasExtension("GL_ARB_clip_control");
     extension_.drawBuffersBlend = renderSystem.HasExtension("GL_ARB_draw_buffers_blend");
+    extension_.multiBind        = renderSystem.HasExtension("GL_ARB_multi_bind");
 }
 
 void GLStateManager::NotifyRenderTargetHeight(GLint height)
@@ -613,6 +614,31 @@ void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint 
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferBase(bufferTargetsMap[targetIdx], index, buffer);
     bufferState_.boundBuffers[targetIdx] = buffer;
+}
+
+void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers)
+{
+    /* Always bind buffers with a base index */
+    auto targetIdx = static_cast<std::size_t>(target);
+    auto targetGL = bufferTargetsMap[targetIdx];
+    
+    if (extension_.multiBind)
+    {
+        /* Bind buffer array, but don't reset the currently bound buffer */
+        glBindBuffersBase(targetGL, first, count, buffers);
+    }
+    else if (count > 0)
+    {
+        /* Bind each individual buffer, and store last bound buffer */
+        bufferState_.boundBuffers[targetIdx] = buffers[count - 1];
+
+        while (count-- > 0)
+        {
+            glBindBufferBase(targetGL, first, *buffers);
+            ++buffers;
+            ++first;
+        }
+    }
 }
 
 void GLStateManager::BindVertexArray(GLuint vertexArray)
