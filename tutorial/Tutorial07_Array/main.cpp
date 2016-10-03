@@ -128,7 +128,7 @@ private:
         // Set graphics pipeline state
         context->SetGraphicsPipeline(*pipeline);
 
-        // Draw scene
+        // Draw 4 instances of the triangle with 3 vertices each
         context->DrawInstanced(3, 0, 4);
 
         // Present result on the screen

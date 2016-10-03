@@ -155,6 +155,7 @@ public:
         sampler[3] = renderer->CreateSampler(samplerDesc);
 
         // Create 5th sampler state with mirrored texture wrap mode
+        samplerDesc.textureWrapU = LLGL::TextureWrap::Mirror;
         samplerDesc.textureWrapV = LLGL::TextureWrap::Mirror;
         sampler[4] = renderer->CreateSampler(samplerDesc);
     }

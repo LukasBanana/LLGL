@@ -87,7 +87,7 @@ Simple tessellation example without any textures.
 
 Simple texturing and sampler state example.
 
-*No screenshot available*
+<p align="center"><img src="tutorial/Tutorial03_Texturing.png" width="400" height="300"/></p>
 
 ### [Tutorial 04: Query](tutorial/Tutorial04_Query/main.cpp)
 

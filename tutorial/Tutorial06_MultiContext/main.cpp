@@ -16,7 +16,7 @@ int main()
     try
     {
         // Load render system module
-        auto renderer = LLGL::RenderSystem::Load("Direct3D11");
+        auto renderer = LLGL::RenderSystem::Load("OpenGL");
 
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 
