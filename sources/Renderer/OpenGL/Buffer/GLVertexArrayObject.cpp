@@ -28,7 +28,7 @@ GLVertexArrayObject::~GLVertexArrayObject()
 void GLVertexArrayObject::BuildVertexAttribute(const VertexFormat& vertexFormat, unsigned int index)
 {
     /* Get vertex attribute from list */
-    const auto& attrib = vertexFormat.GetAttributes()[index];
+    const auto& attrib = vertexFormat.attributes[index];
 
     /* Enable array index in currently bound VAO */
     glEnableVertexAttribArray(index);
@@ -43,7 +43,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexFormat& vertexFormat,
             index,
             attrib.components,
             GLTypes::Map(attrib.dataType),
-            vertexFormat.GetFormatSize(),
+            vertexFormat.stride,
             reinterpret_cast<const char*>(0) + attrib.offset
         );
     }
@@ -54,7 +54,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexFormat& vertexFormat,
             attrib.components,
             GLTypes::Map(attrib.dataType),
             GL_FALSE,
-            vertexFormat.GetFormatSize(),
+            vertexFormat.stride,
             reinterpret_cast<const char*>(0) + attrib.offset
         );
     }

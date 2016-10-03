@@ -111,7 +111,7 @@ void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     bindings_.vertexBuffer = (&bufferDbg);
 
-    vertexLayout_.attributes = bufferDbg.desc.vertexBufferDesc.vertexFormat.GetAttributes();
+    vertexFormat_ = bufferDbg.desc.vertexBufferDesc.vertexFormat;
     {
         instance_.SetVertexBuffer(bufferDbg.instance);
     }
@@ -445,7 +445,7 @@ void DbgRenderContext::DebugVertexLayout(const std::string& source)
         if (vertexLayout.bound)
         {
             /* Check if all vertex attributes are served by active vertex buffer(s) */
-            if (vertexLayout.attributes != vertexLayout_.attributes)
+            if (vertexLayout.attributes != vertexFormat_.attributes)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex layout mismatch between shader program and vertex buffer(s)", source);
         }
         else

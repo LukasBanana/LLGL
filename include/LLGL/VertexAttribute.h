@@ -65,6 +65,15 @@ struct LLGL_EXPORT VertexAttribute
         unsigned int instanceDivisor = 0
     );
 
+    /**
+    \brief Returns the size (in bytes) which is required for this vertex attribute.
+    \return
+    \code
+    DataTypeSize(dataType) * components.
+    \endcode
+    */
+    unsigned int GetSize() const;
+
     //! Vertex attribute name (for GLSL) or semantic name (for HLSL).
     std::string     name;
 

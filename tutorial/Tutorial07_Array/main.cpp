@@ -33,15 +33,15 @@ public:
     {
         // Specify vertex formats
         LLGL::VertexFormat vertexFormatPositions;
-        vertexFormatPositions.AddAttribute("position", LLGL::DataType::Float, 2);
+        vertexFormatPositions.AppendAttribute({ "position", LLGL::DataType::Float, 2 });
 
         LLGL::VertexFormat vertexFormatColors;
-        vertexFormatColors.AddAttribute("color", LLGL::DataType::Float, 3);
+        vertexFormatColors.AppendAttribute({ "color", LLGL::DataType::Float, 3 });
 
         LLGL::VertexFormat vertexFormatInstanceData;
-        vertexFormatInstanceData.AddAttribute("instanceColor", LLGL::DataType::Float, 3, false, true);
-        vertexFormatInstanceData.AddAttribute("instanceOffset", LLGL::DataType::Float, 2, false, true);
-        vertexFormatInstanceData.AddAttribute("instanceScale", LLGL::DataType::Float, 1, false, true);
+        vertexFormatInstanceData.AppendAttribute({ "instanceColor", LLGL::DataType::Float, 3, 1 });
+        vertexFormatInstanceData.AppendAttribute({ "instanceOffset", LLGL::DataType::Float, 2, 1 });
+        vertexFormatInstanceData.AppendAttribute({ "instanceScale", LLGL::DataType::Float, 1, 1 });
 
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttributes(vertexFormatPositions);

@@ -29,6 +29,11 @@ VertexAttribute::VertexAttribute(
 {
 }
 
+unsigned int VertexAttribute::GetSize() const
+{
+    return (DataTypeSize(dataType) * components);
+}
+
 
 LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute& rhs)
 {

@@ -29,7 +29,7 @@ void GLVertexBuffer::BuildVertexArray(const VertexFormat& vertexFormat)
         GLStateManager::active->BindBuffer(GLBufferTarget::ARRAY_BUFFER, GetID());
 
         /* Build each vertex attribute */
-        for (unsigned int i = 0, n = static_cast<unsigned int>(vertexFormat.GetAttributes().size()); i < n; ++i)
+        for (unsigned int i = 0, n = static_cast<unsigned int>(vertexFormat.attributes.size()); i < n; ++i)
             vao_.BuildVertexAttribute(vertexFormat, i);
     }
     GLStateManager::active->BindVertexArray(0);

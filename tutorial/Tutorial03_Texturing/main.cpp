@@ -44,8 +44,8 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
-        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
+        vertexFormat.AppendAttribute({ "position", LLGL::DataType::Float, 2 });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::DataType::Float, 2 });
 
         // Define vertex buffer data
         struct Vertex

@@ -151,14 +151,15 @@ class DbgRenderContext : public RenderContext
 
         RenderContext&          instance_;
 
-        RenderingProfiler*      profiler_   = nullptr;
-        RenderingDebugger*      debugger_   = nullptr;
+        RenderingProfiler*      profiler_       = nullptr;
+        RenderingDebugger*      debugger_       = nullptr;
 
         const RenderingCaps&    caps_;
 
         /* ----- Render states ----- */
 
-        PrimitiveTopology       topology_   = PrimitiveTopology::TriangleList;
+        PrimitiveTopology       topology_       = PrimitiveTopology::TriangleList;
+        VertexFormat            vertexFormat_;
 
         struct Bindings
         {
@@ -168,12 +169,6 @@ class DbgRenderContext : public RenderContext
             ComputePipeline*        computePipeline     = nullptr;
         }
         bindings_;
-
-        struct VertexLayout
-        {
-            std::vector<LLGL::VertexAttribute> attributes;
-        }
-        vertexLayout_;
 
         /*struct MetaInfo
         {

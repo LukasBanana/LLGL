@@ -116,8 +116,8 @@ int main()
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("texCoord", LLGL::DataType::Float, 2);
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2);
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::DataType::Float, 2 });
+        vertexFormat.AppendAttribute({ "position", LLGL::DataType::Float, 2 });
 
         const Gs::Vector2f vertices[] =
         {
@@ -193,7 +193,7 @@ int main()
         shaderProgram.AttachShader(vertShader);
         shaderProgram.AttachShader(fragShader);
 
-        shaderProgram.BindVertexAttributes(vertexFormat.GetAttributes());
+        shaderProgram.BindVertexAttributes(vertexFormat.attributes);
 
         if (!shaderProgram.LinkShaders())
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;

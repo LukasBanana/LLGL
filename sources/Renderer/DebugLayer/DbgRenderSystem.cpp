@@ -75,7 +75,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
         case BufferType::Vertex:
         {
             /* Validate buffer size for specified vertex format */
-            formatSize = desc.vertexBufferDesc.vertexFormat.GetFormatSize();
+            formatSize = desc.vertexBufferDesc.vertexFormat.stride;
             if (desc.size % formatSize != 0)
                 LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
         }

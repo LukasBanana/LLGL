@@ -70,8 +70,8 @@ int main()
 
         // Vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2); // position has 2 float components
-        vertexFormat.AddAttribute("color",    LLGL::DataType::Float, 3); // color has 3 float components
+        vertexFormat.AppendAttribute({ "position", LLGL::DataType::Float, 2 }); // position has 2 float components
+        vertexFormat.AppendAttribute({ "color",    LLGL::DataType::Float, 3 }); // color has 3 float components
 
         // Create vertex buffer
         LLGL::BufferDescriptor vertexBufferDesc;
@@ -133,7 +133,7 @@ int main()
         shaderProgram->AttachShader(*fragmentShader);
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
-        shaderProgram->BindVertexAttributes(vertexFormat.GetAttributes());
+        shaderProgram->BindVertexAttributes(vertexFormat.attributes);
         
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())

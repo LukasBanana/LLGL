@@ -21,7 +21,7 @@ D3D12VertexBuffer::D3D12VertexBuffer(ID3D12Device* device, const BufferDescripto
 
     view_.BufferLocation    = Get()->GetGPUVirtualAddress();
     view_.SizeInBytes       = GetBufferSize();
-    view_.StrideInBytes     = desc.vertexBufferDesc.vertexFormat.GetFormatSize();
+    view_.StrideInBytes     = desc.vertexBufferDesc.vertexFormat.stride;
 }
 
 void D3D12VertexBuffer::UpdateSubresource(

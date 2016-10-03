@@ -306,7 +306,7 @@ protected:
                     { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
                 },
-                vertexFormat.GetAttributes()
+                vertexFormat.attributes
             );
         }
         else
@@ -316,7 +316,7 @@ protected:
                     { LLGL::ShaderType::Vertex, "vertex.glsl" },
                     { LLGL::ShaderType::Fragment, "fragment.glsl" }
                 },
-                vertexFormat.GetAttributes()
+                vertexFormat.attributes
             );
         }
     }

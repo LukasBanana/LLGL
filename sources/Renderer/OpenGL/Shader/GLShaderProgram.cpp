@@ -129,13 +129,13 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
     GLint numVertexAttribs = 0;
     glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &numVertexAttribs);
     if (numVertexAttribs <= 0)
-        return vertexFormat.GetAttributes();
+        return vertexFormat.attributes;
 
     /* Query maximal name length of all vertex attributes */
     GLint maxNameLength = 0;
     glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxNameLength);
     if (maxNameLength <= 0)
-        return vertexFormat.GetAttributes();
+        return vertexFormat.attributes;
 
     std::vector<char> attribName(maxNameLength, 0);
 
@@ -158,10 +158,10 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
         auto components = rows*cols;
 
         /* Insert uniform block into list */
-        vertexFormat.AddAttribute(name, dataType, components);
+        vertexFormat.AppendAttribute({ name, dataType, components });
     }
 
-    return vertexFormat.GetAttributes();
+    return vertexFormat.attributes;
 }
 
 std::vector<ConstantBufferViewDescriptor> GLShaderProgram::QueryConstantBuffers() const

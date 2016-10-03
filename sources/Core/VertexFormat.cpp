@@ -15,43 +15,57 @@ namespace LLGL
 {
 
 
-void VertexFormat::AddAttribute(
-    const std::string& name, const DataType dataType, unsigned int components, bool conversion, unsigned int instanceDivisor)
+static void UpdateStride(VertexFormat& vertexFormat)
 {
-    AddAttribute(name, 0, dataType, components, conversion, instanceDivisor);
+    vertexFormat.stride = 0;
+    for (const auto& attr : vertexFormat.attributes)
+        vertexFormat.stride = std::max(vertexFormat.stride, attr.offset + attr.GetSize());
 }
 
-void VertexFormat::AddAttribute(
-    const std::string& semanticName, unsigned int semanticIndex, const DataType dataType, unsigned int components, bool conversion, unsigned int instanceDivisor)
+void VertexFormat::AppendAttribute(const VertexAttribute& attrib, unsigned int offset)
 {
-    if (components < 1 || components > 4)
+    /* Validate input arguments */
+    if (attrib.components < 1 || attrib.components > 4)
     {
         std::stringstream s;
-        s << __FUNCTION__ << ": 'components' argument must be 1, 2, 3, or 4 (but " << components << " is specified)";
+        s << __FUNCTION__ << ": 'attrib.components' must be 1, 2, 3, or 4 (but " << attrib.components << " is specified)";
         throw std::invalid_argument(s.str());
     }
 
-    /* Setup new vertex attribute */
-    VertexAttribute attrib;
-    {
-        attrib.dataType         = dataType;
-        attrib.conversion       = conversion;
-        attrib.components       = components;
-        attrib.instanceDivisor  = instanceDivisor;
-        attrib.offset           = formatSize_;
-        attrib.name             = semanticName;
-        attrib.semanticIndex    = semanticIndex;
-    }
-    attributes_.push_back(attrib);
+    /* Append attribute to the list */
+    attributes.push_back(attrib);
 
-    /* Increase format size */
-    formatSize_ += (DataTypeSize(dataType) * components);
+    /* Overwrite attribute offset */
+    auto& attr = attributes.back();
+
+    if (offset == OffsetAppend)
+    {
+        /* Set offset after the previous attribute */
+        if (attributes.size() > 1)
+        {
+            const auto& prevAttr = attributes[attributes.size() - 2];
+            attr.offset = prevAttr.offset + prevAttr.GetSize();
+        }
+        else
+            attr.offset = 0;
+
+        /* Increase stride */
+        stride += attr.GetSize();
+    }
+    else
+    {
+        /* Set custom offset */
+        attr.offset = offset;
+
+        /* Update stride */
+        UpdateStride(*this);
+    }
 }
 
 void VertexFormat::AppendAttributes(const VertexFormat& vertexFormat)
 {
-    attributes_.insert(attributes_.end(), vertexFormat.GetAttributes().begin(), vertexFormat.GetAttributes().end());
-    formatSize_ += vertexFormat.GetFormatSize();
+    attributes.insert(attributes.end(), vertexFormat.attributes.begin(), vertexFormat.attributes.end());
+    stride += vertexFormat.stride;
 }
 
 

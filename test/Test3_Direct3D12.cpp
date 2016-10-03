@@ -49,8 +49,8 @@ int main()
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AddAttribute("POSITION", LLGL::DataType::Float, 2);
-        vertexFormat.AddAttribute("COLOR", LLGL::DataType::Float, 3);
+        vertexFormat.AppendAttribute({ "POSITION", LLGL::DataType::Float, 2 });
+        vertexFormat.AppendAttribute({ "COLOR", LLGL::DataType::Float, 3 });
 
         struct Vertex
         {
@@ -125,7 +125,7 @@ int main()
         shaderProgram->AttachShader(*vertShader);
         shaderProgram->AttachShader(*fragShader);
 
-        shaderProgram->BindVertexAttributes(vertexFormat.GetAttributes());
+        shaderProgram->BindVertexAttributes(vertexFormat.attributes);
 
         if (!shaderProgram->LinkShaders())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
