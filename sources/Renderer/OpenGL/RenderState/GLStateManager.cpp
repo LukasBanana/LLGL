@@ -815,7 +815,14 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
 {
     if (extension_.multiBind)
     {
-        /* Bind all textures at once */
+        /* Store bound textures */
+        for (GLsizei i = 0; i < count; ++i)
+        {
+            auto targetIdx = static_cast<std::size_t>(targets[i]);
+            textureState_.layers[i].boundTextures[targetIdx] = textures[i];
+        }
+
+        /* Bind all textures at once (if something has changed) */
         glBindTextures(first, count, textures);
     }
     else if (count > 0)
