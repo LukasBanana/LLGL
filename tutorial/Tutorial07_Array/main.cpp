@@ -110,8 +110,7 @@ public:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram                  = shaderProgram;
-            pipelineDesc.rasterizer.multiSampleEnabled  = !true;
-            pipelineDesc.rasterizer.samples             = 1;
+            pipelineDesc.rasterizer.multiSampleEnabled  = true;
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
