@@ -286,7 +286,7 @@ protected:
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
         if (!vertexAttribs.empty())
-            shaderProgram->BindVertexAttributes(vertexAttribs);
+            shaderProgram->BuildInputLayout(vertexAttribs);
 
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())

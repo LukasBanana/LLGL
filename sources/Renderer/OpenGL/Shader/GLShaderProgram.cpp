@@ -298,7 +298,7 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
     return descList;
 }
 
-void GLShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
+void GLShaderProgram::BuildInputLayout(const std::vector<VertexAttribute>& vertexAttribs)
 {
     if (vertexAttribs.size() > GL_MAX_VERTEX_ATTRIBS)
     {

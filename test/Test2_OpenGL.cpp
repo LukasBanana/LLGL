@@ -193,7 +193,7 @@ int main()
         shaderProgram.AttachShader(vertShader);
         shaderProgram.AttachShader(fragShader);
 
-        shaderProgram.BindVertexAttributes(vertexFormat.attributes);
+        shaderProgram.BuildInputLayout(vertexFormat.attributes);
 
         if (!shaderProgram.LinkShaders())
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;

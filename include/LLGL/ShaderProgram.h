@@ -88,7 +88,7 @@ class LLGL_EXPORT ShaderProgram
         \see LinkShaders
         \throws std::invalid_argument If the name of an vertex attribute is invalid or the maximal number of available vertex attributes is exceeded.
         */
-        virtual void BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs) = 0;
+        virtual void BuildInputLayout(const std::vector<VertexAttribute>& vertexAttribs) = 0;
 
         /**
         \brief Binds the specified constant buffer to this shader.

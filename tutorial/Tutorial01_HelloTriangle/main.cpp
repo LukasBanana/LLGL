@@ -112,7 +112,7 @@ int main()
         shaderProgram->AttachShader(*fragmentShader);
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
-        shaderProgram->BindVertexAttributes(vertexFormat.attributes);
+        shaderProgram->BuildInputLayout(vertexFormat.attributes);
         
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())

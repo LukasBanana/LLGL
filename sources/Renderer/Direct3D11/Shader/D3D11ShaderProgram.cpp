@@ -171,7 +171,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
 }
 
-void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>& vertexAttribs)
+void D3D11ShaderProgram::BuildInputLayout(const std::vector<VertexAttribute>& vertexAttribs)
 {
     if (!vs_ || vs_->GetByteCode().empty())
         throw std::runtime_error("can not bind vertex attributes without valid vertex shader");
