@@ -38,7 +38,12 @@ struct LLGL_EXPORT VertexFormat
     \param[in] offset Specifies the optional offset (in bytes) for this attribute.
     If this is 'OffsetAppend', the offset is determined by the previous vertex attribute offset plus its size.
     If there is no previous vertex attribute, the determined offset is 0. By default OffsetAppend.
+    \remarks This function will always overwrite the 'offset' and 'inputSlot' members before the attribute is appended to this vertex format.
+    The 'inputSlot' member will be set to the input slot value of the previous vertex attribute and is increased by one,
+    if the new offset of the new vertex attribute is less than the offset plus size of the previous vertex attribute.
     \throws std::invalid_argument If 'attrib.components' is neither 1, 2, 3, nor 4.
+    \see VertexAttribute::offset
+    \see VertexAttribute::inputSlot
     */
     void AppendAttribute(const VertexAttribute& attrib, unsigned int offset = OffsetAppend);
 

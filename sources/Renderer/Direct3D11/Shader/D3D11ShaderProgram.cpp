@@ -180,19 +180,14 @@ void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
     inputElements.reserve(vertexAttribs.size());
 
-    UINT inputSlot = -1;//!!!
-
     for (const auto& attrib : vertexAttribs)
     {
-        if (attrib.offset == 0)//!!!
-            ++inputSlot;
-
         D3D11_INPUT_ELEMENT_DESC elementDesc;
         {
             elementDesc.SemanticName            = attrib.name.c_str();
             elementDesc.SemanticIndex           = attrib.semanticIndex;
             elementDesc.Format                  = GetInputElementFormat(attrib);
-            elementDesc.InputSlot               = inputSlot;
+            elementDesc.InputSlot               = attrib.inputSlot;
             elementDesc.AlignedByteOffset       = attrib.offset;
             elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
             elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;

@@ -84,7 +84,7 @@ struct LLGL_EXPORT VertexAttribute
     unsigned int    components      = 4;
 
     /**
-    \brief Specifies the instance data divosor (or instance data step rate).
+    \brief Instance data divosor (or instance data step rate).
     \remarks If this is 0, this attribute is considered to be stored per vertex.
     If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
     */
@@ -98,6 +98,12 @@ struct LLGL_EXPORT VertexAttribute
 
     //! Semantic index (only relevant for HLSL).
     unsigned int    semanticIndex   = 0;
+
+    /**
+    \brief Vertex buffer input slot.
+    \remarks This is used when multiple vertex buffers are used simultaneously.
+    */
+    unsigned int    inputSlot       = 0;
 };
 
 

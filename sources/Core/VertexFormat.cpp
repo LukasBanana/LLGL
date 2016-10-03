@@ -60,12 +60,24 @@ void VertexFormat::AppendAttribute(const VertexAttribute& attrib, unsigned int o
         /* Update stride */
         UpdateStride(*this);
     }
+
+    /* Overwrite attribute input slot */
+    if (attributes.size() > 1)
+    {
+        /* Check if input slot must be increased */
+        const auto& prevAttr = attributes[attributes.size() - 2];
+        attr.inputSlot = prevAttr.inputSlot;
+        if (attr.offset < prevAttr.offset + prevAttr.GetSize())
+            ++attr.inputSlot;
+    }
+    else
+        attr.inputSlot = 0;
 }
 
 void VertexFormat::AppendAttributes(const VertexFormat& vertexFormat)
 {
-    attributes.insert(attributes.end(), vertexFormat.attributes.begin(), vertexFormat.attributes.end());
-    stride += vertexFormat.stride;
+    for (const auto& attr : vertexFormat.attributes)
+        AppendAttribute(attr, attr.offset);
 }
 
 
