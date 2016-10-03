@@ -23,6 +23,14 @@ macro(ADD_DEFINE IDENT)
 	endif(MSVC)
 endmacro()
 
+macro(ADD_DEBUG_DEFINE IDENT)
+	if(MSVC)
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /D${IDENT}")
+	else(MSVC)
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D${IDENT}")
+	endif(MSVC)
+endmacro()
+
 macro(ADD_TEST_PROJECT TEST_NAME TEST_FILES)
 	if(APPLE)
 		add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
@@ -49,12 +57,19 @@ else()
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DLLGL_DEBUG")
 endif(WIN32)
 
+ADD_DEBUG_DEFINE(LLGL_DEBUG)
+
 
 # === Options ===
 
+option(LLGL_ENABLE_CHECKED_CAST "Enable Dynamic Checked Cast (only in Debug mode)" ON)
 option(LLGL_ENABLE_DEBUG_LAYER "Enable Renderer Debug Layer (for both Debug and Release mode)" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable Vendor Specific OpenGL Extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL Extension Placeholders" ON)
+
+if(LLGL_ENABLE_CHECKED_CAST)
+	ADD_DEBUG_DEFINE(LLGL_ENABLE_CHECKED_CAST)
+endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
 	ADD_DEFINE(LLGL_ENABLE_DEBUG_LAYER)

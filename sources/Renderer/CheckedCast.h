@@ -9,7 +9,7 @@
 #define __LLGL_CHECKED_CAST_H__
 
 
-#ifdef LLGL_DEBUG
+#ifdef LLGL_ENABLE_CHECKED_CAST
 #   include <typeinfo>
 #   ifdef _WIN32
 #       include <Windows.h>
@@ -21,7 +21,7 @@ namespace LLGL
 {
 
 
-#ifdef LLGL_DEBUG
+#ifdef LLGL_ENABLE_CHECKED_CAST
 
 template <typename To, typename From>
 To& CheckedCast(From& obj)
