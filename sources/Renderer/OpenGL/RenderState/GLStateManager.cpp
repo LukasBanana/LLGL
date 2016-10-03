@@ -125,7 +125,7 @@ GLStateManager::GLStateManager()
     GLStateManager::active = this;
 }
 
-void GLStateManager::DetermineExtensions(GLRenderSystem& renderSystem)
+void GLStateManager::DetermineExtensions(GLExtensionViewer& extensionViewer)
 {
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
 
@@ -134,7 +134,7 @@ void GLStateManager::DetermineExtensions(GLRenderSystem& renderSystem)
     {
         auto idx = static_cast<std::size_t>(state);
         auto& val = renderStateExt_.values[idx];
-        if (val.cap == 0 && renderSystem.HasExtension(extensionName))
+        if (val.cap == 0 && extensionViewer.HasExtension(extensionName))
         {
             val.cap     = cap;
             val.enabled = (glIsEnabled(cap) != GL_FALSE);
@@ -154,10 +154,10 @@ void GLStateManager::DetermineExtensions(GLRenderSystem& renderSystem)
     #endif
 
     /* Initialize extension states for later operations */
-    extension_.viewportArray    = renderSystem.HasExtension("GL_ARB_viewport_array");
-    extension_.clipControl      = renderSystem.HasExtension("GL_ARB_clip_control");
-    extension_.drawBuffersBlend = renderSystem.HasExtension("GL_ARB_draw_buffers_blend");
-    extension_.multiBind        = renderSystem.HasExtension("GL_ARB_multi_bind");
+    extension_.viewportArray    = extensionViewer.HasExtension("GL_ARB_viewport_array");
+    extension_.clipControl      = extensionViewer.HasExtension("GL_ARB_clip_control");
+    extension_.drawBuffersBlend = extensionViewer.HasExtension("GL_ARB_draw_buffers_blend");
+    extension_.multiBind        = extensionViewer.HasExtension("GL_ARB_multi_bind");
 }
 
 void GLStateManager::NotifyRenderTargetHeight(GLint height)

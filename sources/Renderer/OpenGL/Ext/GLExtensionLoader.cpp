@@ -1,5 +1,5 @@
 /*
- * GLModuleInterface.cpp
+ * GLExtensionLoader.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -492,7 +492,7 @@ OpenGLExtensionMap QueryExtensions(bool coreProfile)
     return extMap;
 }
 
-void LoadAllExtensions(OpenGLExtensionMap& extMap)
+void LoadAllExtensions(OpenGLExtensionMap& extensions)
 {
     #ifndef __APPLE__
     
@@ -506,14 +506,14 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc) -> void
     {
         /* Try to load OpenGL extension */
-        auto it = extMap.find(extName);
-        if (it != extMap.end() && !extLoadingProc(false))
+        auto it = extensions.find(extName);
+        if (it != extensions.end() && !extLoadingProc(false))
         {
             Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
             it->second = false;
         }
         #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
-        else if (it == extMap.end())
+        else if (it == extensions.end())
         {
             /* If failed, use dummy procedures to detect illegal use of OpenGL extension */
             extLoadingProc(true);

@@ -159,13 +159,6 @@ void GLRenderSystem::Release(Query& query)
     RemoveFromUniqueSet(queries_, &query);
 }
 
-/* ----- Extended Internal Functions ----- */
-
-bool GLRenderSystem::HasExtension(const std::string& name) const
-{
-    return (extensionMap_.find(name) != extensionMap_.end());
-}
-
 
 /*
  * ======= Protected: =======
@@ -193,7 +186,7 @@ RenderContext* GLRenderSystem::AddRenderContext(
     }
 
     /* Use uniform clipping space */
-    GLStateManager::active->DetermineExtensions(*this);
+    GLStateManager::active->DetermineExtensions(*extensionViewer_);
     GLStateManager::active->SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 
     /* Take ownership and return raw pointer */
@@ -219,13 +212,16 @@ bool GLRenderSystem::OnMakeCurrent(RenderContext* renderContext)
 void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc)
 {
     /* Load OpenGL extensions if not already done */
-    if (extensionMap_.empty())
+    if (!extensionViewer_)
     {
         auto coreProfile = (profileDesc.extProfile && profileDesc.coreProfile);
 
         /* Query extensions and load all of them */
-        extensionMap_ = QueryExtensions(coreProfile);
-        LoadAllExtensions(extensionMap_);
+        auto extensions = QueryExtensions(coreProfile);
+        LoadAllExtensions(extensions);
+
+        /* Create extensions viewer */
+        extensionViewer_ = MakeUnique<GLExtensionViewer>(std::move(extensions));
 
         /* Query and store all renderer information and capabilities */
         QueryRendererInfo();
@@ -324,6 +320,11 @@ void GLRenderSystem::QueryRendererInfo()
 void GLRenderSystem::QueryRenderingCaps()
 {
     RenderingCaps caps;
+
+    auto HasExtension = [this](const std::string& name)
+    {
+        return extensionViewer_->HasExtension(name);
+    };
 
     /* Set fixed states for this renderer */
     caps.screenOrigin                   = ScreenOrigin::LowerLeft;

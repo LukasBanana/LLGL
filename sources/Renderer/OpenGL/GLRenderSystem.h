@@ -116,10 +116,6 @@ class GLRenderSystem : public RenderSystem
 
         void Release(Query& query) override;
 
-        /* ----- Extended Internal Functions ----- */
-
-        bool HasExtension(const std::string& name) const;
-
     protected:
 
         RenderContext* AddRenderContext(
@@ -160,7 +156,7 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        OpenGLExtensionMap                      extensionMap_;
+        std::unique_ptr<GLExtensionViewer>      extensionViewer_;
 
         /* ----- Hardware object containers ----- */
 

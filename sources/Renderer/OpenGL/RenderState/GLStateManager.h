@@ -10,6 +10,7 @@
 
 
 #include "GLState.h"
+#include "../Ext/GLExtensionViewer.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include <LLGL/RenderContextFlags.h>
@@ -35,7 +36,7 @@ class GLStateManager
 
         static GLStateManager* active;
 
-        void DetermineExtensions(GLRenderSystem& renderSystem);
+        void DetermineExtensions(GLExtensionViewer& extensionViewer);
 
         //! Notifies the state manager about a new render-target height.
         void NotifyRenderTargetHeight(GLint height);

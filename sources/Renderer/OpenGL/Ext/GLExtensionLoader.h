@@ -9,6 +9,7 @@
 #define __LLGL_GL_EXTENSION_LOADER_H__
 
 
+#include "GLExtensionViewer.h"
 #include <string>
 #include <map>
 
@@ -16,9 +17,6 @@
 namespace LLGL
 {
 
-
-//! OpenGL extension map type.
-using OpenGLExtensionMap = std::map<std::string, bool>;
 
 /* --- Common extension loading functions --- */
 
@@ -37,7 +35,7 @@ If an extension is available but some of their respective functions could not be
 the respective entry in the map will be invalidated (set to 'false').
 \see QueryExtensions
 */
-void LoadAllExtensions(OpenGLExtensionMap& extMap);
+void LoadAllExtensions(OpenGLExtensionMap& extensions);
 
 /* --- Common GL extensions --- */
 
