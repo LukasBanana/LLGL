@@ -25,7 +25,7 @@ Returns a hash-map with all supported OpenGL extensions.
 The hash-map can be used for faster single-extension queries.
 \param[in] coreProfile Specifies whether the extension are to be loaded via GL core profile or not.
 */
-OpenGLExtensionMap QueryExtensions(bool coreProfile);
+GLExtensionList QueryExtensions(bool coreProfile);
 
 /**
 Loads all available extensions and prints errors if an extension is available,
@@ -35,7 +35,7 @@ If an extension is available but some of their respective functions could not be
 the respective entry in the map will be invalidated (set to 'false').
 \see QueryExtensions
 */
-void LoadAllExtensions(OpenGLExtensionMap& extensions);
+void LoadAllExtensions(GLExtensionList& extensions);
 
 /* --- Common GL extensions --- */
 

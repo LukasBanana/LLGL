@@ -439,9 +439,9 @@ static bool LoadIndexedProcs(bool usePlaceHolder)
 
 /* --- Common extension loading functions --- */
 
-OpenGLExtensionMap QueryExtensions(bool coreProfile)
+GLExtensionList QueryExtensions(bool coreProfile)
 {
-    OpenGLExtensionMap extMap;
+    GLExtensionList extMap;
 
     const char* extString = nullptr;
     
@@ -492,7 +492,7 @@ OpenGLExtensionMap QueryExtensions(bool coreProfile)
     return extMap;
 }
 
-void LoadAllExtensions(OpenGLExtensionMap& extensions)
+void LoadAllExtensions(GLExtensionList& extensions)
 {
     #ifndef __APPLE__
     

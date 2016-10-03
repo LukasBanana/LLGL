@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-GLExtensionViewer::GLExtensionViewer(OpenGLExtensionMap&& extensions) :
+GLExtensionViewer::GLExtensionViewer(GLExtensionList&& extensions) :
     extensions_( std::move(extensions) )
 {
 }

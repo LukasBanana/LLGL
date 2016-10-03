@@ -18,27 +18,27 @@ namespace LLGL
 
 
 //! OpenGL extension map type.
-using OpenGLExtensionMap = std::map<std::string, bool>;
+using GLExtensionList = std::map<std::string, bool>;
 
 class GLExtensionViewer
 {
 
     public:
 
-        GLExtensionViewer(OpenGLExtensionMap&& extensions);
+        GLExtensionViewer(GLExtensionList&& extensions);
 
         //! Returns true if the specified extensions is supported.
         bool HasExtension(const std::string& name) const;
 
         //! Returns the hash-map of all extensions.
-        inline const OpenGLExtensionMap& GetExtensions() const
+        inline const GLExtensionList& GetExtensions() const
         {
             return extensions_;
         }
 
     private:
 
-        OpenGLExtensionMap extensions_;
+        GLExtensionList extensions_;
 
 };
 
