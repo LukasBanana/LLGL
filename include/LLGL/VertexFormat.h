@@ -20,9 +20,8 @@ namespace LLGL
 
 
 /**
-\brief Vertex format descriptor class.
+\brief Vertex format descriptor structure.
 \remarks A vertex format is required to describe how the vertex attributes are supported inside a vertex buffer.
-\see VertexBuffer
 */
 struct LLGL_EXPORT VertexFormat
 {

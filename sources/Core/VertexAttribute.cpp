@@ -42,10 +42,11 @@ LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute&
         LLGL_COMPARE_MEMBER_EQ( name            ) &&
         LLGL_COMPARE_MEMBER_EQ( dataType        ) &&
         LLGL_COMPARE_MEMBER_EQ( components      ) &&
-        LLGL_COMPARE_MEMBER_EQ( conversion      ) &&
         LLGL_COMPARE_MEMBER_EQ( instanceDivisor ) &&
+        LLGL_COMPARE_MEMBER_EQ( conversion      ) &&
         LLGL_COMPARE_MEMBER_EQ( offset          ) &&
-        LLGL_COMPARE_MEMBER_EQ( semanticIndex   )
+        LLGL_COMPARE_MEMBER_EQ( semanticIndex   ) &&
+        LLGL_COMPARE_MEMBER_EQ( inputSlot       )
     );
 }
 

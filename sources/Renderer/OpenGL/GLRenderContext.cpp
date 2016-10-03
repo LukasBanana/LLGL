@@ -191,7 +191,6 @@ void GLRenderContext::SetVertexBuffer(Buffer& buffer)
     /* Bind vertex buffer */
     auto& vertexBufferGL = LLGL_CAST(GLVertexBuffer&, buffer);
     stateMngr_->BindVertexArray(vertexBufferGL.GetVaoID());
-    //stateMngr_->BindBuffer(vertexBufferGL);
 }
 
 void GLRenderContext::SetVertexBufferArray(BufferArray& bufferArray)
