@@ -609,17 +609,10 @@ void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 
 void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer)
 {
-    GLint id = 0;
-    glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &id);
-
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     glBindBufferBase(bufferTargetsMap[targetIdx], index, buffer);
     bufferState_.boundBuffers[targetIdx] = buffer;
-
-    id = 0;
-    glGetIntegerv(GL_UNIFORM_BUFFER_BINDING, &id);
-    int x=0;
 }
 
 void GLStateManager::BindVertexArray(GLuint vertexArray)
