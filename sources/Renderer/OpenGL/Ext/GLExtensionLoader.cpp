@@ -113,7 +113,7 @@ bool LoadCreateContextProcs()
 
 /* --- Hardware buffer extensions --- */
 
-static bool LoadVBOProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGenBuffers    );
     LOAD_GLPROC( glDeleteBuffers );
@@ -122,10 +122,18 @@ static bool LoadVBOProcs(bool usePlaceHolder)
     LOAD_GLPROC( glBufferSubData );
     LOAD_GLPROC( glMapBuffer     );
     LOAD_GLPROC( glUnmapBuffer   );
+
+    #if 1//TODO: which extension???
+    LOAD_GLPROC( glEnableVertexAttribArray  );
+    LOAD_GLPROC( glDisableVertexAttribArray );
+    LOAD_GLPROC( glVertexAttribPointer      );
+    LOAD_GLPROC( glVertexAttribIPointer     );
+    LOAD_GLPROC( glBindAttribLocation       );
+    #endif
     return true;
 }
 
-static bool LoadVAOProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_vertex_array_object(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGenVertexArrays    );
     LOAD_GLPROC( glDeleteVertexArrays );
@@ -133,19 +141,17 @@ static bool LoadVAOProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadFBOProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_framebuffer_object(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGenRenderbuffers                    );
     LOAD_GLPROC( glDeleteRenderbuffers                 );
     LOAD_GLPROC( glBindRenderbuffer                    );
     LOAD_GLPROC( glRenderbufferStorage                 );
     LOAD_GLPROC( glRenderbufferStorageMultisample      );
-
     LOAD_GLPROC( glGenFramebuffers                     );
     LOAD_GLPROC( glDeleteFramebuffers                  );
     LOAD_GLPROC( glBindFramebuffer                     );
     LOAD_GLPROC( glCheckFramebufferStatus              );
-
     LOAD_GLPROC( glFramebufferTexture                  );
     LOAD_GLPROC( glFramebufferTexture1D                );
     LOAD_GLPROC( glFramebufferTexture2D                );
@@ -154,12 +160,11 @@ static bool LoadFBOProcs(bool usePlaceHolder)
     LOAD_GLPROC( glFramebufferRenderbuffer             );
     LOAD_GLPROC( glGetFramebufferAttachmentParameteriv );
     LOAD_GLPROC( glBlitFramebuffer                     );
-
     LOAD_GLPROC( glGenerateMipmap                      );
     return true;
 }
 
-static bool LoadUBOProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_uniform_buffer_object(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGetUniformBlockIndex      );
     LOAD_GLPROC( glGetActiveUniformBlockiv   );
@@ -169,7 +174,7 @@ static bool LoadUBOProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadSSBOProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_shader_storage_buffer_object(bool usePlaceHolder)
 {
     LOAD_GLPROC( glShaderStorageBlockBinding );
     return true;
@@ -177,20 +182,20 @@ static bool LoadSSBOProcs(bool usePlaceHolder)
 
 /* --- Drawing extensions --- */
 
-static bool LoadDrawBuffersProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_draw_buffers(bool usePlaceHolder)
 {
     LOAD_GLPROC( glDrawBuffers );
     return true;
 }
 
-static bool LoadInstancedProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_draw_instanced(bool usePlaceHolder)
 {
     LOAD_GLPROC( glDrawArraysInstanced   );
     LOAD_GLPROC( glDrawElementsInstanced );
     return true;
 }
 
-static bool LoadInstancedOffsetProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_base_instance(bool usePlaceHolder)
 {
     LOAD_GLPROC( glDrawArraysInstancedBaseInstance             );
     LOAD_GLPROC( glDrawElementsInstancedBaseInstance           );
@@ -198,7 +203,7 @@ static bool LoadInstancedOffsetProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadBaseVertexProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_draw_elements_base_vertex(bool usePlaceHolder)
 {
     LOAD_GLPROC( glDrawElementsBaseVertex          );
     LOAD_GLPROC( glDrawElementsInstancedBaseVertex );
@@ -207,7 +212,7 @@ static bool LoadBaseVertexProcs(bool usePlaceHolder)
 
 /* --- Shader extensions --- */
 
-static bool LoadShaderProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_shader_objects(bool usePlaceHolder)
 {
     LOAD_GLPROC( glCreateShader       );
     LOAD_GLPROC( glShaderSource       );
@@ -215,7 +220,6 @@ static bool LoadShaderProcs(bool usePlaceHolder)
     LOAD_GLPROC( glGetShaderiv        );
     LOAD_GLPROC( glGetShaderInfoLog   );
     LOAD_GLPROC( glDeleteShader       );
-
     LOAD_GLPROC( glCreateProgram      );
     LOAD_GLPROC( glDeleteProgram      );
     LOAD_GLPROC( glAttachShader       );
@@ -225,10 +229,8 @@ static bool LoadShaderProcs(bool usePlaceHolder)
     LOAD_GLPROC( glGetProgramiv       );
     LOAD_GLPROC( glGetProgramInfoLog  );
     LOAD_GLPROC( glUseProgram         );
-
     LOAD_GLPROC( glGetActiveAttrib    );
     LOAD_GLPROC( glGetAttribLocation  );
-        
     LOAD_GLPROC( glGetActiveUniform   );
     LOAD_GLPROC( glGetUniformLocation );
     LOAD_GLPROC( glUniform1fv         );
@@ -245,37 +247,27 @@ static bool LoadShaderProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadVertexAttribProcs(bool usePlaceHolder)
-{
-    LOAD_GLPROC( glEnableVertexAttribArray  );
-    LOAD_GLPROC( glDisableVertexAttribArray );
-    LOAD_GLPROC( glVertexAttribPointer      );
-    LOAD_GLPROC( glVertexAttribIPointer     );
-    LOAD_GLPROC( glBindAttribLocation       );
-    return true;
-}
-
-static bool LoadInstancedArrayProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_instanced_arrays(bool usePlaceHolder)
 {
     LOAD_GLPROC( glVertexAttribDivisor );
     return true;
 }
 
-static bool LoadTessellationShaderProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_tessellation_shader(bool usePlaceHolder)
 {
     LOAD_GLPROC( glPatchParameteri  );
     LOAD_GLPROC( glPatchParameterfv );
     return true;
 }
 
-static bool LoadComputeShaderProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_compute_shader(bool usePlaceHolder)
 {
     LOAD_GLPROC( glDispatchCompute         );
     LOAD_GLPROC( glDispatchComputeIndirect );
     return true;
 }
 
-static bool LoadProgramBinaryProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_get_program_binary(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGetProgramBinary  );
     LOAD_GLPROC( glProgramBinary     );
@@ -283,7 +275,7 @@ static bool LoadProgramBinaryProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadProgramInterfaceQueryProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_program_interface_query(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGetProgramInterfaceiv           );
     LOAD_GLPROC( glGetProgramResourceIndex         );
@@ -296,27 +288,27 @@ static bool LoadProgramInterfaceQueryProcs(bool usePlaceHolder)
 
 /* --- Texture extensions --- */
 
-static bool LoadMultiTextureProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_multitexture(bool usePlaceHolder)
 {
     LOAD_GLPROC( glActiveTexture );
     return true;
 }
 
-static bool Load3DTextureProcs(bool usePlaceHolder)
+static bool Load_GL_EXT_texture3D(bool usePlaceHolder)
 {
     LOAD_GLPROC( glTexImage3D    );
     LOAD_GLPROC( glTexSubImage3D );
     return true;
 }
 
-static bool LoadClearTextureProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_clear_texture(bool usePlaceHolder)
 {
     LOAD_GLPROC( glClearTexImage    );
     LOAD_GLPROC( glClearTexSubImage );
     return true;
 }
 
-static bool LoadCompressedTextureProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_texture_compression(bool usePlaceHolder)
 {
     LOAD_GLPROC( glCompressedTexImage1D    );
     LOAD_GLPROC( glCompressedTexImage2D    );
@@ -328,7 +320,7 @@ static bool LoadCompressedTextureProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadSamplerProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_sampler_objects(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGenSamplers        );
     LOAD_GLPROC( glDeleteSamplers     );
@@ -342,7 +334,7 @@ static bool LoadSamplerProcs(bool usePlaceHolder)
 
 /* --- Other extensions --- */
 
-static bool LoadQueryObjectProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_occlusion_query(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGenQueries        );
     LOAD_GLPROC( glDeleteQueries     );
@@ -353,14 +345,14 @@ static bool LoadQueryObjectProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadConditionalRenderProcs(bool usePlaceHolder)
+static bool Load_GL_NV_conditional_render(bool usePlaceHolder)
 {
     LOAD_GLPROC( glBeginConditionalRender );
     LOAD_GLPROC( glEndConditionalRender   );
     return true;
 }
 
-static bool LoadTimerQueryObjectProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_timer_query(bool usePlaceHolder)
 {
     LOAD_GLPROC( glQueryCounter        );
     LOAD_GLPROC( glGetQueryObjecti64v  );
@@ -368,7 +360,7 @@ static bool LoadTimerQueryObjectProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadViewportArrayProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_viewport_array(bool usePlaceHolder)
 {
     LOAD_GLPROC( glViewportArrayv   );
     LOAD_GLPROC( glScissorArrayv    );
@@ -376,13 +368,13 @@ static bool LoadViewportArrayProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadBlendMinMaxProcs(bool usePlaceHolder)
+static bool Load_GL_EXT_blend_minmax(bool usePlaceHolder)
 {
     LOAD_GLPROC( glBlendEquation );
     return true;
 }
 
-static bool LoadBlendFactorProcs(bool usePlaceHolder)
+static bool Load_GL_EXT_blend_color(bool usePlaceHolder)
 {
     LOAD_GLPROC( glBlendColor );
     return true;
@@ -400,7 +392,7 @@ static bool Load_GL_EXT_blend_equation_separate(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadDrawBuffersBlendProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_draw_buffers_blend(bool usePlaceHolder)
 {
     LOAD_GLPROC( glBlendEquationi         );
     LOAD_GLPROC( glBlendEquationSeparatei );
@@ -409,7 +401,7 @@ static bool LoadDrawBuffersBlendProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadMultiBindProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_multi_bind(bool usePlaceHolder)
 {
     LOAD_GLPROC( glBindBuffersBase   );
     LOAD_GLPROC( glBindBuffersRange  );
@@ -420,27 +412,28 @@ static bool LoadMultiBindProcs(bool usePlaceHolder)
     return true;
 }
 
-static bool LoadStencilSeparateProcs(bool usePlaceHolder)
+static bool Load_GL_EXT_stencil_two_side(bool usePlaceHolder)
 {
+    //correct extension ??? maybe "GL_ATI_separate_stencil"
     LOAD_GLPROC( glStencilFuncSeparate );
     LOAD_GLPROC( glStencilMaskSeparate );
     LOAD_GLPROC( glStencilOpSeparate   );
     return true;
 }
 
-static bool LoadDebugProcs(bool usePlaceHolder)
+static bool Load_GL_KHR_debug(bool usePlaceHolder)
 {
     LOAD_GLPROC( glDebugMessageCallback );
     return true;
 }
 
-static bool LoadClipControlProcs(bool usePlaceHolder)
+static bool Load_GL_ARB_clip_control(bool usePlaceHolder)
 {
     LOAD_GLPROC( glClipControl );
     return true;
 }
 
-static bool LoadIndexedProcs(bool usePlaceHolder)
+static bool Load_GL_EXT_draw_buffers2(bool usePlaceHolder)
 {
     LOAD_GLPROC( glColorMaski    );
     LOAD_GLPROC( glGetBooleani_v );
@@ -544,51 +537,50 @@ void LoadAllExtensions(GLExtensionList& extensions)
     };
 
     /* Load hardware buffer extensions */
-    LoadExtension( "GL_ARB_vertex_buffer_object",         LoadVBOProcs                   );
-    LoadExtension( "GL_ARB_vertex_array_object",          LoadVAOProcs                   );
-    LoadExtension( "GL_ARB_framebuffer_object",           LoadFBOProcs                   );
-    LoadExtension( "GL_ARB_uniform_buffer_object",        LoadUBOProcs                   );
-    LoadExtension( "GL_ARB_shader_storage_buffer_object", LoadSSBOProcs                  );
+    LOAD_GLEXT( GL_ARB_vertex_buffer_object         );
+    LOAD_GLEXT( GL_ARB_vertex_array_object          );
+    LOAD_GLEXT( GL_ARB_framebuffer_object           );
+    LOAD_GLEXT( GL_ARB_uniform_buffer_object        );
+    LOAD_GLEXT( GL_ARB_shader_storage_buffer_object );
 
     /* Load drawing extensions */
-    LoadExtension( "GL_ARB_draw_buffers",                 LoadDrawBuffersProcs           );
-    LoadExtension( "GL_ARB_draw_instanced",               LoadInstancedProcs             );
-    LoadExtension( "GL_ARB_base_instance",                LoadInstancedOffsetProcs       );
-    LoadExtension( "GL_ARB_draw_elements_base_vertex",    LoadBaseVertexProcs            );
+    LOAD_GLEXT( GL_ARB_draw_buffers                 );
+    LOAD_GLEXT( GL_ARB_draw_instanced               );
+    LOAD_GLEXT( GL_ARB_base_instance                );
+    LOAD_GLEXT( GL_ARB_draw_elements_base_vertex    );
 
     /* Load shader extensions */
-    LoadExtension( "GL_ARB_shader_objects",               LoadShaderProcs                );
-    LoadExtension( "GL_ARB_vertex_buffer_object",         LoadVertexAttribProcs          ); // <--- correct extension ???
-    LoadExtension( "GL_ARB_instanced_arrays",             LoadInstancedArrayProcs        );
-    LoadExtension( "GL_ARB_tessellation_shader",          LoadTessellationShaderProcs    );
-    LoadExtension( "GL_ARB_compute_shader",               LoadComputeShaderProcs         );
-    LoadExtension( "GL_ARB_get_program_binary",           LoadProgramBinaryProcs         );
-    LoadExtension( "GL_ARB_program_interface_query",      LoadProgramInterfaceQueryProcs );
+    LOAD_GLEXT( GL_ARB_shader_objects               );
+    LOAD_GLEXT( GL_ARB_instanced_arrays             );
+    LOAD_GLEXT( GL_ARB_tessellation_shader          );
+    LOAD_GLEXT( GL_ARB_compute_shader               );
+    LOAD_GLEXT( GL_ARB_get_program_binary           );
+    LOAD_GLEXT( GL_ARB_program_interface_query      );
 
     /* Load texture extensions */
-    LoadExtension( "GL_ARB_multitexture",                 LoadMultiTextureProcs          );
-    LoadExtension( "GL_EXT_texture3D",                    Load3DTextureProcs             );
-    LoadExtension( "GL_ARB_clear_texture",                LoadClearTextureProcs          );
-    LoadExtension( "GL_ARB_texture_compression",          LoadCompressedTextureProcs     );
-    LoadExtension( "GL_ARB_sampler_objects",              LoadSamplerProcs               );
+    LOAD_GLEXT( GL_ARB_multitexture                 );
+    LOAD_GLEXT( GL_EXT_texture3D                    );
+    LOAD_GLEXT( GL_ARB_clear_texture                );
+    LOAD_GLEXT( GL_ARB_texture_compression          );
+    LOAD_GLEXT( GL_ARB_sampler_objects              );
 
     /* Load blending extensions */
-    LoadExtension( "GL_EXT_blend_minmax",                 LoadBlendMinMaxProcs           );
-    LOAD_GLEXT( GL_EXT_blend_func_separate );
-    LOAD_GLEXT( GL_EXT_blend_equation_separate );
-    LoadExtension( "GL_EXT_blend_color",                  LoadBlendFactorProcs           );
-    LoadExtension( "GL_ARB_draw_buffers_blend",           LoadDrawBuffersBlendProcs      );
+    LOAD_GLEXT( GL_EXT_blend_minmax                 );
+    LOAD_GLEXT( GL_EXT_blend_func_separate          );
+    LOAD_GLEXT( GL_EXT_blend_equation_separate      );
+    LOAD_GLEXT( GL_EXT_blend_color                  );
+    LOAD_GLEXT( GL_ARB_draw_buffers_blend           );
 
     /* Load misc extensions */
-    LoadExtension( "GL_ARB_viewport_array",               LoadViewportArrayProcs         );
-    LoadExtension( "GL_ARB_occlusion_query",              LoadQueryObjectProcs           );
-    LoadExtension( "GL_NV_conditional_render",            LoadConditionalRenderProcs     );
-    LoadExtension( "GL_ARB_timer_query",                  LoadTimerQueryObjectProcs      );
-    LoadExtension( "GL_ARB_multi_bind",                   LoadMultiBindProcs             );
-    LoadExtension( "GL_EXT_stencil_two_side",             LoadStencilSeparateProcs       ); // <--- correct extension ???
-    LoadExtension( "GL_KHR_debug",                        LoadDebugProcs                 );
-    LoadExtension( "GL_ARB_clip_control",                 LoadClipControlProcs           );
-    LoadExtension( "GL_EXT_draw_buffers2",                LoadIndexedProcs               );
+    LOAD_GLEXT( GL_ARB_viewport_array               );
+    LOAD_GLEXT( GL_ARB_occlusion_query              );
+    LOAD_GLEXT( GL_NV_conditional_render            );
+    LOAD_GLEXT( GL_ARB_timer_query                  );
+    LOAD_GLEXT( GL_ARB_multi_bind                   );
+    LOAD_GLEXT( GL_EXT_stencil_two_side             );
+    LOAD_GLEXT( GL_KHR_debug                        );
+    LOAD_GLEXT( GL_ARB_clip_control                 );
+    LOAD_GLEXT( GL_EXT_draw_buffers2                );
 
     extAlreadyLoaded = true;
 
