@@ -110,7 +110,7 @@ multiple render contexts (one window each), rendering simultaneously into multip
 
 ### [Tutorial 07: Array](tutorial/Tutorial07_Array/main.cpp)
 
-Shows how to buffer arrays, i.e. render with multiple vertex buffers simultaneously.
+Shows how to use buffer arrays, i.e. render with multiple vertex buffers simultaneously, and hardware instancing.
 
 <p align="center"><img src="tutorial/Tutorial07_Array.png" width="400" height="300"/></p>
 
