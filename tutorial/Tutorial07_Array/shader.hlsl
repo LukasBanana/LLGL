@@ -2,17 +2,17 @@
 
 struct InputVS
 {
-	float2 position : POSITION;
-	float3 color : COLOR;
-	float3 instanceColor : INSTANCECOLOR;
-	float2 instanceOffset : INSTANCEOFFSET;
-	float instanceScale : INSTANCESCALE;
+	float2	position		: POSITION;
+	float3	color			: COLOR;
+	float3	instanceColor	: INSTANCECOLOR;
+	float2	instanceOffset	: INSTANCEOFFSET;
+	float	instanceScale	: INSTANCESCALE;
 };
 
 struct OutputVS
 {
-	float4 position : SV_Position;
-	float3 color : COLOR;
+	float4 position	: SV_Position;
+	float3 color	: COLOR;
 };
 
 // Vertex shader main function

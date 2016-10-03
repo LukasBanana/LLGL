@@ -69,7 +69,7 @@ Tutorials and Examples
 ----------------------
 
 This repository contains several tutorials and examples which show how to use LLGL.
-Here are a few with a screenshot:
+Here are a brief overview:
 
 ### [Tutorial 01: Hello Triangle](tutorial/Tutorial01_HelloTriangle/main.cpp)
 
