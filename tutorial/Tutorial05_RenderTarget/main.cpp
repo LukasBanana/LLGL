@@ -9,7 +9,7 @@
 
 
 // Test: use a second vertex buffer
-//#define _TEST_BUFFER2_
+#define _TEST_BUFFER2_
 
 class Tutorial05 : public Tutorial
 {
@@ -165,16 +165,16 @@ private:
         if (input->KeyPressed(LLGL::Key::RButton))
             rot1 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
 
-        #ifdef _TEST_BUFFER2_
-        int x = 0;
-        renderer->WriteBuffer(*vertexBuffer2, &x, sizeof(x), 0);
-        #endif
-
         // Set common buffers and sampler states
         context->SetIndexBuffer(*indexBuffer);
         context->SetVertexBuffer(*vertexBuffer);
         context->SetConstantBuffer(*constantBuffer, 0, shaderStages);
         context->SetSampler(*samplerState, 0, shaderStages);
+
+        #ifdef _TEST_BUFFER2_
+        int x = 0;
+        renderer->WriteBuffer(*vertexBuffer2, &x, sizeof(x), 0);
+        #endif
 
         // Set graphics pipeline state
         context->SetGraphicsPipeline(*pipeline);

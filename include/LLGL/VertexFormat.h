@@ -48,7 +48,7 @@ class LLGL_EXPORT VertexFormat
             const DataType dataType,
             unsigned int components,
             bool conversion = false,
-            bool perInstance = false
+            unsigned int instanceDivisor = 0
         );
 
         /**
@@ -67,7 +67,7 @@ class LLGL_EXPORT VertexFormat
             const DataType dataType,
             unsigned int components,
             bool conversion = false,
-            bool perInstance = false
+            unsigned int instanceDivisor = 0
         );
 
         /**

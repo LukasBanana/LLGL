@@ -17,13 +17,13 @@ LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute&
 {
     return
     (
-        LLGL_COMPARE_MEMBER_EQ( dataType      ) &&
-        LLGL_COMPARE_MEMBER_EQ( conversion    ) &&
-        LLGL_COMPARE_MEMBER_EQ( perInstance   ) &&
-        LLGL_COMPARE_MEMBER_EQ( components    ) &&
-        LLGL_COMPARE_MEMBER_EQ( offset        ) &&
-        LLGL_COMPARE_MEMBER_EQ( name          ) &&
-        LLGL_COMPARE_MEMBER_EQ( semanticIndex )
+        LLGL_COMPARE_MEMBER_EQ( dataType        ) &&
+        LLGL_COMPARE_MEMBER_EQ( conversion      ) &&
+        LLGL_COMPARE_MEMBER_EQ( instanceDivisor ) &&
+        LLGL_COMPARE_MEMBER_EQ( components      ) &&
+        LLGL_COMPARE_MEMBER_EQ( offset          ) &&
+        LLGL_COMPARE_MEMBER_EQ( name            ) &&
+        LLGL_COMPARE_MEMBER_EQ( semanticIndex   )
     );
 }
 

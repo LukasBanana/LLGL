@@ -194,8 +194,8 @@ void D3D11ShaderProgram::BindVertexAttributes(const std::vector<VertexAttribute>
             elementDesc.Format                  = GetInputElementFormat(attrib);
             elementDesc.InputSlot               = inputSlot;
             elementDesc.AlignedByteOffset       = attrib.offset;
-            elementDesc.InputSlotClass          = (attrib.perInstance ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
-            elementDesc.InstanceDataStepRate    = (attrib.perInstance ? 1 : 0);
+            elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
+            elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
         }
         inputElements.push_back(elementDesc);
     }

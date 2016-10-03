@@ -16,18 +16,18 @@ namespace LLGL
 
 
 void VertexFormat::AddAttribute(
-    const std::string& name, const DataType dataType, unsigned int components, bool conversion, bool perInstance)
+    const std::string& name, const DataType dataType, unsigned int components, bool conversion, unsigned int instanceDivisor)
 {
-    AddAttribute(name, 0, dataType, components, conversion, perInstance);
+    AddAttribute(name, 0, dataType, components, conversion, instanceDivisor);
 }
 
 void VertexFormat::AddAttribute(
-    const std::string& semanticName, unsigned int semanticIndex, const DataType dataType, unsigned int components, bool conversion, bool perInstance)
+    const std::string& semanticName, unsigned int semanticIndex, const DataType dataType, unsigned int components, bool conversion, unsigned int instanceDivisor)
 {
     if (components < 1 || components > 4)
     {
         std::stringstream s;
-        s << __FUNCTION__ << ": 'components' argument must be 1, 2, 3, or 4 but ( " << components << " ) is specified";
+        s << __FUNCTION__ << ": 'components' argument must be 1, 2, 3, or 4 (but " << components << " is specified)";
         throw std::invalid_argument(s.str());
     }
 
@@ -37,7 +37,7 @@ void VertexFormat::AddAttribute(
         attrib.dataType         = dataType;
         attrib.conversion       = conversion;
         attrib.components       = components;
-        attrib.perInstance      = perInstance;
+        attrib.instanceDivisor  = instanceDivisor;
         attrib.offset           = formatSize_;
         attrib.name             = semanticName;
         attrib.semanticIndex    = semanticIndex;

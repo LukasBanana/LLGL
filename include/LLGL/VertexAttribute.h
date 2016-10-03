@@ -27,12 +27,17 @@ struct VertexAttribute
     bool            conversion      = false;
 
     //! Specifies whether this is a per-instance data. If false, this is a per-vertex data.
-    bool            perInstance     = false;
+    /**
+    \brief Specifies the instance data divosor (or instance data step rate).
+    \remarks If this is 0, this attribute is considered to be stored per vertex.
+    If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
+    */
+    unsigned int    instanceDivisor = 0;
 
     //! Number of components: 1, 2, 3, or 4. By default 4.
     unsigned int    components      = 4;
 
-    //! Byte offset for within each vertex. By default 0.
+    //! Byte offset within each vertex. By default 0.
     unsigned int    offset          = 0;
 
     //! Vertex attribute name (for GLSL) or semantic name (for HLSL).
