@@ -124,6 +124,10 @@ extern PFNGLVERTEXATTRIBPOINTERPROC                         glVertexAttribPointe
 extern PFNGLVERTEXATTRIBIPOINTERPROC                        glVertexAttribIPointer;
 extern PFNGLBINDATTRIBLOCATIONPROC                          glBindAttribLocation;
 
+/* --- Instanced arrays (GL_ARB_instanced_arrays) --- */
+
+extern PFNGLVERTEXATTRIBDIVISORPROC                         glVertexAttribDivisor;
+
 /* --- Draw buffers (GL_ARB_draw_buffers) --- */
 
 extern PFNGLDRAWBUFFERSPROC                                 glDrawBuffers;

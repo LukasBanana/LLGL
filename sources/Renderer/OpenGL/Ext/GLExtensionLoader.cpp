@@ -255,6 +255,12 @@ static bool LoadVertexAttribProcs(bool usePlaceHolder)
     return true;
 }
 
+static bool LoadInstancedArrayProcs(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glVertexAttribDivisor );
+    return true;
+}
+
 static bool LoadTessellationShaderProcs(bool usePlaceHolder)
 {
     LOAD_GLPROC( glPatchParameteri  );
@@ -531,6 +537,7 @@ void LoadAllExtensions(OpenGLExtensionMap& extMap)
     /* Load shader extensions */
     LoadExtension( "GL_ARB_shader_objects",               LoadShaderProcs                );
     LoadExtension( "GL_ARB_vertex_buffer_object",         LoadVertexAttribProcs          ); // <--- correct extension ???
+    LoadExtension( "GL_ARB_instanced_arrays",             LoadInstancedArrayProcs        );
     LoadExtension( "GL_ARB_tessellation_shader",          LoadTessellationShaderProcs    );
     LoadExtension( "GL_ARB_compute_shader",               LoadComputeShaderProcs         );
     LoadExtension( "GL_ARB_get_program_binary",           LoadProgramBinaryProcs         );

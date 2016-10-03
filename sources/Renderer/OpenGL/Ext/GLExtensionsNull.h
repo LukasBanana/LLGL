@@ -151,6 +151,10 @@ DECL_GLPROC(void, glVertexAttribPointer, (GLuint, GLint, GLenum, GLboolean, GLsi
 DECL_GLPROC(void, glVertexAttribIPointer, (GLuint, GLint, GLenum, GLsizei, const void*));
 DECL_GLPROC(void, glBindAttribLocation, (GLuint, GLuint, const GLchar*));
 
+/* --- Instanced arrays (GL_ARB_instanced_arrays) --- */
+
+DECL_GLPROC(void, glVertexAttribDivisor, (GLuint, GLuint));
+
 /* --- Draw buffers (GL_ARB_draw_buffers) --- */
 
 DECL_GLPROC(void, glDrawBuffers, (GLsizei, const GLenum*));

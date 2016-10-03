@@ -118,6 +118,10 @@ PFNGLVERTEXATTRIBPOINTERPROC                            glVertexAttribPointer   
 PFNGLVERTEXATTRIBIPOINTERPROC                           glVertexAttribIPointer                          = nullptr;
 PFNGLBINDATTRIBLOCATIONPROC                             glBindAttribLocation                            = nullptr;
 
+/* --- Instanced arrays (GL_ARB_instanced_arrays) --- */
+
+PFNGLVERTEXATTRIBDIVISORPROC                            glVertexAttribDivisor                           = nullptr;
+
 /* --- Draw buffers (GL_ARB_draw_buffers) --- */
 
 PFNGLDRAWBUFFERSPROC                                    glDrawBuffers                                   = nullptr;

@@ -109,7 +109,9 @@ public:
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram = shaderProgram;
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.rasterizer.multiSampleEnabled  = !true;
+            pipelineDesc.rasterizer.samples             = 1;
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }

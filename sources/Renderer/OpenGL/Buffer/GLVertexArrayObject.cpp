@@ -30,6 +30,10 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
     /* Enable array index in currently bound VAO */
     glEnableVertexAttribArray(index);
 
+    /* Set instance divisor */
+    if (attribute.instanceDivisor > 0)
+        glVertexAttribDivisor(index, attribute.instanceDivisor);
+
     /* Use currently bound VBO for VertexAttribPointer functions */
     if (!attribute.conversion && attribute.dataType != DataType::Float && attribute.dataType != DataType::Double)
     {
