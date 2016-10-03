@@ -14,7 +14,7 @@ namespace LLGL
     
 #ifndef __APPLE__
 
-/* --- Platform specific GL extensions --- */
+/* Platform specific GL extensions */
 
 #if defined(_WIN32)
 
@@ -33,36 +33,36 @@ PFNGLXSWAPINTERVALSGIPROC                               glXSwapIntervalSGI      
 
 #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
 
-/* --- GL 3.0 extensions (for Core Profile) --- */
+/* GL 3.0 extensions (for Core Profile) */
 
 PFNGLGETSTRINGIPROC                                     glGetStringi                                    = nullptr;
 
 #endif
 
-/* --- Blending (GL_EXT_blend_func_separate) --- */
+/* GL_EXT_blend_func_separate */
 
 PFNGLBLENDFUNCSEPARATEPROC                              glBlendFuncSeparate                             = nullptr;
 
-/* --- Blending equation (GL_EXT_blend_minmax) --- */
+/* GL_EXT_blend_minmax */
 
 PFNGLBLENDEQUATIONPROC                                  glBlendEquation                                 = nullptr;
 
-/* --- Blending factor (GL_EXT_blend_color) --- */
+/* GL_EXT_blend_color */
 
 PFNGLBLENDCOLORPROC                                     glBlendColor                                    = nullptr;
 
-/* --- Blending (GL_EXT_blend_equation_separate) --- */
+/* GL_EXT_blend_equation_separate */
 
 PFNGLBLENDEQUATIONSEPARATEPROC                          glBlendEquationSeparate                         = nullptr;
 
-/* --- Blending (GL_ARB_draw_buffers_blend) --- */
+/* GL_ARB_draw_buffers_blend */
 
 PFNGLBLENDEQUATIONIPROC                                 glBlendEquationi                                = nullptr;
 PFNGLBLENDEQUATIONSEPARATEIPROC                         glBlendEquationSeparatei                        = nullptr;
 PFNGLBLENDFUNCIPROC                                     glBlendFunci                                    = nullptr;
 PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
 
-/* --- Indexed (GL_EXT_draw_buffers2) --- */
+/* GL_EXT_draw_buffers2 */
 
 PFNGLCOLORMASKIPROC                                     glColorMaski                                    = nullptr;
 PFNGLGETBOOLEANI_VPROC                                  glGetBooleani_v                                 = nullptr;
@@ -71,21 +71,21 @@ PFNGLENABLEIPROC                                        glEnablei               
 PFNGLDISABLEIPROC                                       glDisablei                                      = nullptr;
 PFNGLISENABLEDIPROC                                     glIsEnabledi                                    = nullptr;
 
-/* --- Multi texture (GL_ARB_multitexture) --- */
+/* GL_ARB_multitexture */
 
 PFNGLACTIVETEXTUREPROC                                  glActiveTexture                                 = nullptr;
 
-/* --- 3D texture (GL_EXT_texture3D) --- */
+/* GL_EXT_texture3D */
 
 PFNGLTEXIMAGE3DPROC                                     glTexImage3D                                    = nullptr;
 PFNGLTEXSUBIMAGE3DPROC                                  glTexSubImage3D                                 = nullptr;
 
-/* --- Clear texture (GL_ARB_clear_texture) --- */
+/* GL_ARB_clear_texture */
 
 PFNGLCLEARTEXIMAGEPROC                                  glClearTexImage                                 = nullptr;
 PFNGLCLEARTEXSUBIMAGEPROC                               glClearTexSubImage                              = nullptr;
 
-/* --- Texture compression (GL_ARB_texture_compression) --- */
+/* GL_ARB_texture_compression */
 
 PFNGLCOMPRESSEDTEXIMAGE1DPROC                           glCompressedTexImage1D                          = nullptr;
 PFNGLCOMPRESSEDTEXIMAGE2DPROC                           glCompressedTexImage2D                          = nullptr;
@@ -95,7 +95,7 @@ PFNGLCOMPRESSEDTEXSUBIMAGE2DPROC                        glCompressedTexSubImage2
 PFNGLCOMPRESSEDTEXSUBIMAGE3DPROC                        glCompressedTexSubImage3D                       = nullptr;
 PFNGLGETCOMPRESSEDTEXIMAGEPROC                          glGetCompressedTexImage                         = nullptr;
 
-/* --- Sampler objects (GL_ARB_sampler_objects) --- */
+/* GL_ARB_sampler_objects */
 
 PFNGLGENSAMPLERSPROC                                    glGenSamplers                                   = nullptr;
 PFNGLDELETESAMPLERSPROC                                 glDeleteSamplers                                = nullptr;
@@ -105,7 +105,7 @@ PFNGLSAMPLERPARAMETERFPROC                              glSamplerParameterf     
 PFNGLSAMPLERPARAMETERIVPROC                             glSamplerParameteriv                            = nullptr;
 PFNGLSAMPLERPARAMETERFVPROC                             glSamplerParameterfv                            = nullptr;
 
-/* --- Multi bind (GL_ARB_multi_bind) --- */
+/* GL_ARB_multi_bind */
 
 PFNGLBINDBUFFERSBASEPROC                                glBindBuffersBase                               = nullptr;
 PFNGLBINDBUFFERSRANGEPROC                               glBindBuffersRange                              = nullptr;
@@ -114,7 +114,7 @@ PFNGLBINDSAMPLERSPROC                                   glBindSamplers          
 PFNGLBINDIMAGETEXTURESPROC                              glBindImageTextures                             = nullptr;
 PFNGLBINDVERTEXBUFFERSPROC                              glBindVertexBuffers                             = nullptr;
 
-/* --- Vertex buffer object (GL_ARB_vertex_buffer_object) --- */
+/* GL_ARB_vertex_buffer_object */
 
 PFNGLGENBUFFERSPROC                                     glGenBuffers                                    = nullptr;
 PFNGLDELETEBUFFERSPROC                                  glDeleteBuffers                                 = nullptr;
@@ -124,7 +124,7 @@ PFNGLBUFFERSUBDATAPROC                                  glBufferSubData         
 PFNGLMAPBUFFERPROC                                      glMapBuffer                                     = nullptr;
 PFNGLUNMAPBUFFERPROC                                    glUnmapBuffer                                   = nullptr;
 
-/* --- Vertex attributes (GL_ARB_vertex_buffer_object???) --- */
+/* GL_ARB_vertex_buffer_object ??? */
 
 PFNGLENABLEVERTEXATTRIBARRAYPROC                        glEnableVertexAttribArray                       = nullptr;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC                       glDisableVertexAttribArray                      = nullptr;
@@ -132,33 +132,31 @@ PFNGLVERTEXATTRIBPOINTERPROC                            glVertexAttribPointer   
 PFNGLVERTEXATTRIBIPOINTERPROC                           glVertexAttribIPointer                          = nullptr;
 PFNGLBINDATTRIBLOCATIONPROC                             glBindAttribLocation                            = nullptr;
 
-/* --- Instanced arrays (GL_ARB_instanced_arrays) --- */
+/* GL_ARB_instanced_arrays */
 
 PFNGLVERTEXATTRIBDIVISORPROC                            glVertexAttribDivisor                           = nullptr;
 
-/* --- Draw buffers (GL_ARB_draw_buffers) --- */
+/* GL_ARB_draw_buffers */
 
 PFNGLDRAWBUFFERSPROC                                    glDrawBuffers                                   = nullptr;
 
-/* --- Vertex array objects (GL_ARB_vertex_array_object) --- */
+/* GL_ARB_vertex_array_object */
 
 PFNGLGENVERTEXARRAYSPROC                                glGenVertexArrays                               = nullptr;
 PFNGLDELETEVERTEXARRAYSPROC                             glDeleteVertexArrays                            = nullptr;
 PFNGLBINDVERTEXARRAYPROC                                glBindVertexArray                               = nullptr;
 
-/* --- Frame buffer objects (GL_ARB_framebuffer_object) --- */
+/* GL_ARB_framebuffer_object */
 
 PFNGLGENRENDERBUFFERSPROC                               glGenRenderbuffers                              = nullptr;
 PFNGLDELETERENDERBUFFERSPROC                            glDeleteRenderbuffers                           = nullptr;
 PFNGLBINDRENDERBUFFERPROC                               glBindRenderbuffer                              = nullptr;
 PFNGLRENDERBUFFERSTORAGEPROC                            glRenderbufferStorage                           = nullptr;
 PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC                 glRenderbufferStorageMultisample                = nullptr;
-
 PFNGLGENFRAMEBUFFERSPROC                                glGenFramebuffers                               = nullptr;
 PFNGLDELETEFRAMEBUFFERSPROC                             glDeleteFramebuffers                            = nullptr;
 PFNGLBINDFRAMEBUFFERPROC                                glBindFramebuffer                               = nullptr;
 PFNGLCHECKFRAMEBUFFERSTATUSPROC                         glCheckFramebufferStatus                        = nullptr;
-
 PFNGLFRAMEBUFFERTEXTUREPROC                             glFramebufferTexture                            = nullptr;
 PFNGLFRAMEBUFFERTEXTURE1DPROC                           glFramebufferTexture1D                          = nullptr;
 PFNGLFRAMEBUFFERTEXTURE2DPROC                           glFramebufferTexture2D                          = nullptr;
@@ -167,26 +165,25 @@ PFNGLFRAMEBUFFERTEXTURELAYERPROC                        glFramebufferTextureLaye
 PFNGLFRAMEBUFFERRENDERBUFFERPROC                        glFramebufferRenderbuffer                       = nullptr;
 PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC            glGetFramebufferAttachmentParameteriv           = nullptr;
 PFNGLBLITFRAMEBUFFERPROC                                glBlitFramebuffer                               = nullptr;
-
 PFNGLGENERATEMIPMAPPROC                                 glGenerateMipmap                                = nullptr;
 
-/* --- Instanced drawing (GL_ARB_draw_instanced) --- */
+/* GL_ARB_draw_instanced */
 
 PFNGLDRAWARRAYSINSTANCEDPROC                            glDrawArraysInstanced                           = nullptr;
 PFNGLDRAWELEMENTSINSTANCEDPROC                          glDrawElementsInstanced                         = nullptr;
 
-/* --- Base vertex drawing (GL_ARB_draw_elements_base_vertex) --- */
+/* GL_ARB_draw_elements_base_vertex */
 
 PFNGLDRAWELEMENTSBASEVERTEXPROC                         glDrawElementsBaseVertex                        = nullptr;
 PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXPROC                glDrawElementsInstancedBaseVertex               = nullptr;
 
-/* --- Instanced offset drawing (GL_ARB_base_instance) --- */
+/* GL_ARB_base_instance */
 
 PFNGLDRAWARRAYSINSTANCEDBASEINSTANCEPROC                glDrawArraysInstancedBaseInstance               = nullptr;
 PFNGLDRAWELEMENTSINSTANCEDBASEINSTANCEPROC              glDrawElementsInstancedBaseInstance             = nullptr;
 PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXBASEINSTANCEPROC    glDrawElementsInstancedBaseVertexBaseInstance   = nullptr;
 
-/* --- OpenGL shader extension (GL_ARB_shader_objects) --- */
+/* GL_ARB_shader_objects */
 
 PFNGLCREATESHADERPROC                                   glCreateShader                                  = nullptr;
 PFNGLSHADERSOURCEPROC                                   glShaderSource                                  = nullptr;
@@ -194,7 +191,6 @@ PFNGLCOMPILESHADERPROC                                  glCompileShader         
 PFNGLGETSHADERIVPROC                                    glGetShaderiv                                   = nullptr;
 PFNGLGETSHADERINFOLOGPROC                               glGetShaderInfoLog                              = nullptr;
 PFNGLDELETESHADERPROC                                   glDeleteShader                                  = nullptr;
-
 PFNGLCREATEPROGRAMPROC                                  glCreateProgram                                 = nullptr;
 PFNGLDELETEPROGRAMPROC                                  glDeleteProgram                                 = nullptr;
 PFNGLATTACHSHADERPROC                                   glAttachShader                                  = nullptr;
@@ -204,10 +200,8 @@ PFNGLVALIDATEPROGRAMPROC                                glValidateProgram       
 PFNGLGETPROGRAMIVPROC                                   glGetProgramiv                                  = nullptr;
 PFNGLGETPROGRAMINFOLOGPROC                              glGetProgramInfoLog                             = nullptr;
 PFNGLUSEPROGRAMPROC                                     glUseProgram                                    = nullptr;
-
 PFNGLGETACTIVEATTRIBPROC                                glGetActiveAttrib                               = nullptr;
 PFNGLGETATTRIBLOCATIONPROC                              glGetAttribLocation                             = nullptr;
-
 PFNGLGETACTIVEUNIFORMARBPROC                            glGetActiveUniform                              = nullptr;
 PFNGLGETUNIFORMLOCATIONPROC                             glGetUniformLocation                            = nullptr;
 PFNGLUNIFORM1FVPROC                                     glUniform1fv                                    = nullptr;
@@ -222,23 +216,23 @@ PFNGLUNIFORMMATRIX2FVPROC                               glUniformMatrix2fv      
 PFNGLUNIFORMMATRIX3FVPROC                               glUniformMatrix3fv                              = nullptr;
 PFNGLUNIFORMMATRIX4FVPROC                               glUniformMatrix4fv                              = nullptr;
 
-/* --- Tessellation shader (GL_ARB_tessellation_shader) --- */
+/* GL_ARB_tessellation_shader */
 
 PFNGLPATCHPARAMETERIPROC                                glPatchParameteri                               = nullptr;
 PFNGLPATCHPARAMETERFVPROC                               glPatchParameterfv                              = nullptr;
 
-/* --- Compute shader (GL_ARB_compute_shader) --- */
+/* GL_ARB_compute_shader */
 
 PFNGLDISPATCHCOMPUTEPROC                                glDispatchCompute                               = nullptr;
 PFNGLDISPATCHCOMPUTEINDIRECTPROC                        glDispatchComputeIndirect                       = nullptr;
 
-/* --- Binary program (GL_ARB_get_program_binary) --- */
+/* GL_ARB_get_program_binary */
 
 PFNGLGETPROGRAMBINARYPROC                               glGetProgramBinary                              = nullptr;
 PFNGLPROGRAMBINARYPROC                                  glProgramBinary                                 = nullptr;
 PFNGLPROGRAMPARAMETERIPROC                              glProgramParameteri                             = nullptr;
 
-/* --- Program interface query (GL_ARB_program_interface_query) --- */
+/* GL_ARB_program_interface_query */
 
 PFNGLGETPROGRAMINTERFACEIVPROC                          glGetProgramInterfaceiv                         = nullptr;
 PFNGLGETPROGRAMRESOURCEINDEXPROC                        glGetProgramResourceIndex                       = nullptr;
@@ -247,7 +241,7 @@ PFNGLGETPROGRAMRESOURCEIVPROC                           glGetProgramResourceiv  
 PFNGLGETPROGRAMRESOURCELOCATIONPROC                     glGetProgramResourceLocation                    = nullptr;
 PFNGLGETPROGRAMRESOURCELOCATIONINDEXPROC                glGetProgramResourceLocationIndex               = nullptr;
 
-/* --- Uniform buffer objects (GL_ARB_uniform_buffer_objects) --- */
+/* GL_ARB_uniform_buffer_objects */
 
 PFNGLGETUNIFORMBLOCKINDEXPROC                           glGetUniformBlockIndex                          = nullptr;
 PFNGLGETACTIVEUNIFORMBLOCKIVPROC                        glGetActiveUniformBlockiv                       = nullptr;
@@ -255,11 +249,11 @@ PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC                      glGetActiveUniformBlockN
 PFNGLUNIFORMBLOCKBINDINGPROC                            glUniformBlockBinding                           = nullptr;
 PFNGLBINDBUFFERBASEPROC                                 glBindBufferBase                                = nullptr;
 
-/* --- Shader storage buffer objects (GL_ARB_shader_storage_buffer_object) --- */
+/* GL_ARB_shader_storage_buffer_object */
 
 PFNGLSHADERSTORAGEBLOCKBINDINGPROC                      glShaderStorageBlockBinding                     = nullptr;
 
-/* --- Query objects (GL_ARB_occlusion_query) --- */
+/* GL_ARB_occlusion_query */
 
 PFNGLGENQUERIESPROC                                     glGenQueries                                    = nullptr;
 PFNGLDELETEQUERIESPROC                                  glDeleteQueries                                 = nullptr;
@@ -268,34 +262,34 @@ PFNGLENDQUERYPROC                                       glEndQuery              
 PFNGLGETQUERYOBJECTIVPROC                               glGetQueryObjectiv                              = nullptr;
 PFNGLGETQUERYOBJECTUIVPROC                              glGetQueryObjectuiv                             = nullptr;
 
-/* --- Condition render objects (GL_NV_conditional_render) --- */
+/* GL_NV_conditional_render */
 
 PFNGLBEGINCONDITIONALRENDERPROC                         glBeginConditionalRender                        = nullptr;
 PFNGLENDCONDITIONALRENDERPROC                           glEndConditionalRender                          = nullptr;
 
-/* --- Timer query objects (GL_ARB_timer_query) --- */
+/* GL_ARB_timer_query */
 
 PFNGLQUERYCOUNTERPROC                                   glQueryCounter                                  = nullptr;
 PFNGLGETQUERYOBJECTI64VPROC                             glGetQueryObjecti64v                            = nullptr;
 PFNGLGETQUERYOBJECTUI64VPROC                            glGetQueryObjectui64v                           = nullptr;
 
-/* --- Viewport array (GL_ARB_viewport_array) --- */
+/* GL_ARB_viewport_array */
 
 PFNGLVIEWPORTARRAYVPROC                                 glViewportArrayv                                = nullptr;
 PFNGLSCISSORARRAYVPROC                                  glScissorArrayv                                 = nullptr;
 PFNGLDEPTHRANGEARRAYVPROC                               glDepthRangeArrayv                              = nullptr;
 
-/* --- ??? --- */
+/* GL_ATI_separate_stencil ??? */
 
 PFNGLSTENCILFUNCSEPARATEPROC                            glStencilFuncSeparate                           = nullptr;
 PFNGLSTENCILMASKSEPARATEPROC                            glStencilMaskSeparate                           = nullptr;
 PFNGLSTENCILOPSEPARATEPROC                              glStencilOpSeparate                             = nullptr;
 
-/* --- Debug context (GL_KHR_debug) --- */
+/* GL_KHR_debug */
 
 PFNGLDEBUGMESSAGECALLBACKPROC                           glDebugMessageCallback                          = nullptr;
 
-/* --- Clipping control (GL_ARB_clip_control) --- */
+/* GL_ARB_clip_control */
 
 PFNGLCLIPCONTROLPROC                                    glClipControl                                   = nullptr;
     
