@@ -44,7 +44,7 @@ bool LoadGLProc(T& procAddr, const char* procName)
     return true;
 }
 
-static void ExtractExtensionsFromString(std::map<std::string, bool>& extMap, const std::string& extString)
+static void ExtractExtensionsFromString(std::set<std::string>& extensions, const std::string& extString)
 {
     size_t first = 0, last = 0;
     
@@ -53,7 +53,7 @@ static void ExtractExtensionsFromString(std::map<std::string, bool>& extMap, con
     {
         /* Store current extension name in hash-map */
         auto name = extString.substr(first, last - first);
-        extMap[name] = true;
+        extensions.insert(name);
         first = last + 1;
     }
 }
@@ -441,7 +441,7 @@ static bool LoadIndexedProcs(bool usePlaceHolder)
 
 GLExtensionList QueryExtensions(bool coreProfile)
 {
-    GLExtensionList extMap;
+    GLExtensionList extensions;
 
     const char* extString = nullptr;
     
@@ -463,7 +463,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
                 /* Get current extension string */
                 extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i));
                 if (extString)
-                    extMap[std::string(extString)] = true;
+                    extensions.insert(std::string(extString));
             }
         }
         
@@ -474,7 +474,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
         /* Get complete extension string */
         extString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
         if (extString)
-            ExtractExtensionsFromString(extMap, extString);
+            ExtractExtensionsFromString(extensions, extString);
     }
 
     #if defined(_WIN32) && defined(WGL_ARB_extensions_string)
@@ -484,12 +484,12 @@ GLExtensionList QueryExtensions(bool coreProfile)
     {
         extString = wglGetExtensionsStringARB(wglGetCurrentDC());
         if (extString)
-            ExtractExtensionsFromString(extMap, extString);
+            ExtractExtensionsFromString(extensions, extString);
     }
     
     #endif
 
-    return extMap;
+    return extensions;
 }
 
 void LoadAllExtensions(GLExtensionList& extensions)
@@ -510,7 +510,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
         if (it != extensions.end() && !extLoadingProc(false))
         {
             Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
-            it->second = false;
+            extensions.erase(it);
         }
         #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
         else if (it == extensions.end())

@@ -10,7 +10,7 @@
 
 
 #include <string>
-#include <map>
+#include <set>
 
 
 namespace LLGL
@@ -18,7 +18,7 @@ namespace LLGL
 
 
 //! OpenGL extension map type.
-using GLExtensionList = std::map<std::string, bool>;
+using GLExtensionList = std::set<std::string>;
 
 class GLExtensionViewer
 {

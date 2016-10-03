@@ -10,8 +10,6 @@
 
 
 #include "GLExtensionViewer.h"
-#include <string>
-#include <map>
 
 
 namespace LLGL
