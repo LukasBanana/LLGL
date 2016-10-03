@@ -34,7 +34,7 @@ void InsertBufferDesc(std::vector<T>& container, const std::vector<T>& entries)
             container.begin(), container.end(), 
             [&desc](const T& entry)
             {
-                return (entry.index == desc.index);
+                return (entry.name == desc.name);
             }
         );
         if (it == container.end())
