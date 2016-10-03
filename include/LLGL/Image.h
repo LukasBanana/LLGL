@@ -52,14 +52,19 @@ enum class DataType
 //! Image format used to write texture data.
 enum class ImageFormat
 {
+    /* Color formats */
     R,              //!< Single color component: Red.
     RG,             //!< Two color components: Red, Green.
     RGB,            //!< Three color components: Red, Green, Blue.
     BGR,            //!< Three color components: Blue, Green, Red.
     RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
     BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
+
+    /* Depth-stencil formats */
     Depth,          //!< 32-bit depth component.
     DepthStencil,   //!< 24-bit depth- and 8-bit stencil component.
+
+    /* Compressed formats */
     CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
     CompressedRGBA, //!< Generic compressed format with four color components: Red, Green, Blue, Alpha.
 };
