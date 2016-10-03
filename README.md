@@ -91,7 +91,7 @@ Simple texturing and sampler state example.
 
 ### [Tutorial 04: Query](tutorial/Tutorial04_Query/main.cpp)
 
-Shows how to use Query objects and conditional rendering.
+Shows how to use Query objects and conditional rendering for occlusion culling.
 
 *No screenshot available*
 
