@@ -152,12 +152,6 @@ void GLStateManager::DetermineExtensions()
     #endif
 
     #endif
-
-    /* Initialize extension states for later operations */
-    extension_.viewportArray    = HasExtension(GLExt::ARB_viewport_array);
-    extension_.clipControl      = HasExtension(GLExt::ARB_clip_control);
-    extension_.drawBuffersBlend = HasExtension(GLExt::ARB_draw_buffers_blend);
-    extension_.multiBind        = HasExtension(GLExt::ARB_multi_bind);
 }
 
 void GLStateManager::NotifyRenderTargetHeight(GLint height)
@@ -445,7 +439,7 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
 void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled)
 {
     #ifndef __APPLE__
-    if (extension_.drawBuffersBlend)
+    if (HasExtension(GLExt::ARB_draw_buffers_blend))
     #endif
     {
         glColorMaski(drawBuffer, state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
@@ -473,7 +467,7 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
-    /*if (extension_.clipControl)
+    /*if (HasExtension(GLExt::ARB_clip_control))
         glClipControl(origin, depth);
     else*/
         emulateClipControl_ = (origin == GL_UPPER_LEFT);
@@ -628,7 +622,7 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     auto targetIdx = static_cast<std::size_t>(target);
     auto targetGL = bufferTargetsMap[targetIdx];
     
-    if (extension_.multiBind)
+    if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Bind buffer array, but don't reset the currently bound buffer */
         glBindBuffersBase(targetGL, first, count, buffers);
@@ -819,7 +813,7 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
 
 void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures)
 {
-    if (extension_.multiBind)
+    if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Store bound textures */
         for (GLsizei i = 0; i < count; ++i)
@@ -924,7 +918,7 @@ void GLStateManager::PopShaderProgram()
 
 void GLStateManager::AssertExtViewportArray()
 {
-    if (!extension_.viewportArray)
+    if (!HasExtension(GLExt::ARB_viewport_array))
         throw std::runtime_error("renderer does not support viewport, depth-range, and scissor arrays");
 }
 

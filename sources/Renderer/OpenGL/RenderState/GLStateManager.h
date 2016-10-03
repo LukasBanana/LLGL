@@ -10,7 +10,6 @@
 
 
 #include "GLState.h"
-#include "../Ext/GLExtensionViewer.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
 #include <LLGL/RenderContextFlags.h>
@@ -285,14 +284,6 @@ class GLStateManager
             std::array<GLuint, numTextureLayers> boundSamplers;
         };
 
-        struct GLExtSupport
-        {
-            bool viewportArray      = false; // GL_ARB_viewport_array
-            bool clipControl        = false; // GL_ARB_clip_control
-            bool drawBuffersBlend   = false; // GL_ARB_draw_buffers_blend
-            bool multiBind          = false; // GL_ARB_multi_bind
-        };
-
         /* ----- Members ----- */
 
         GraphicsAPIDependentStateDescriptor gfxDependentState_;
@@ -315,8 +306,6 @@ class GLStateManager
 
         bool                                emulateClipControl_ = false;
         GLint                               renderTargetHeight_ = 0;
-
-        GLExtSupport                        extension_;
 
 };
 
