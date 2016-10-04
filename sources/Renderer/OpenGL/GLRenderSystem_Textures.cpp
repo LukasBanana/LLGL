@@ -605,33 +605,22 @@ static void GLTexSubImage1DArray(
     unsigned int mipLevel, unsigned int x, unsigned int layerOffset,
     unsigned int width, unsigned int layers, const ImageDescriptor& imageDesc)
 {
-    GLTexSubImage2DBase(
-        GL_TEXTURE_1D_ARRAY,
-        mipLevel, x, static_cast<GLsizei>(layerOffset),
-        width, static_cast<GLsizei>(layers), imageDesc
-    );
+    GLTexSubImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevel, x, layerOffset, width, layers, imageDesc);
 }
 
 static void GLTexSubImage2DArray(
     int mipLevel, int x, int y, unsigned int layerOffset,
     int width, int height, unsigned int layers, const ImageDescriptor& imageDesc)
 {
-    GLTexSubImage3DBase(
-        GL_TEXTURE_2D_ARRAY,
-        mipLevel, x, y, static_cast<GLsizei>(layerOffset),
-        width, height, static_cast<GLsizei>(layers), imageDesc
-    );
+    GLTexSubImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevel, x, y, layerOffset, width, height, layers, imageDesc);
 }
 
 static void GLTexSubImageCubeArray(
     unsigned int mipLevel, unsigned int x, unsigned int y, unsigned int layerOffset, AxisDirection cubeFaceOffset,
     unsigned int width, unsigned int height, unsigned int cubeFaces, const ImageDescriptor& imageDesc)
 {
-    GLTexSubImage3DBase(
-        GL_TEXTURE_CUBE_MAP_ARRAY,
-        mipLevel, x, y, static_cast<GLsizei>(layerOffset*6 + static_cast<unsigned int>(cubeFaceOffset)),
-        width, height, static_cast<GLsizei>(cubeFaces), imageDesc
-    );
+    layerOffset = layerOffset * 6 + static_cast<unsigned int>(cubeFaceOffset);
+    GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, layerOffset, width, height, cubeFaces, imageDesc);
 }
 
 void GLRenderSystem::WriteTexture1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
