@@ -37,7 +37,6 @@ void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
     CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
-
 static void FillViewDescForTexture1D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;

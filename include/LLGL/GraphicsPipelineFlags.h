@@ -233,7 +233,7 @@ struct RasterizerDescriptor
     /**
     \brief Number of samples for multi-sample anti-aliasing (MSAA).
     \see multiSampleEnabled
-    \note Only supported with: Direct3D 11, Direct3D 12.
+    \note Only supported with: Direct3D 12.
     */
     unsigned int    samples                     = 1;
 

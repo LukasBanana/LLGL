@@ -14,27 +14,27 @@
 class Tutorial05 : public Tutorial
 {
 
-    LLGL::ShaderProgram*    shaderProgram   = nullptr;
+    LLGL::ShaderProgram*    shaderProgram       = nullptr;
 
-    LLGL::GraphicsPipeline* pipeline        = nullptr;
+    LLGL::GraphicsPipeline* pipeline            = nullptr;
 
-    LLGL::Buffer*           vertexBuffer    = nullptr;
-    LLGL::Buffer*           indexBuffer     = nullptr;
-    LLGL::Buffer*           constantBuffer  = nullptr;
+    LLGL::Buffer*           vertexBuffer        = nullptr;
+    LLGL::Buffer*           indexBuffer         = nullptr;
+    LLGL::Buffer*           constantBuffer      = nullptr;
 
     #ifdef _TEST_BUFFER2_
-    LLGL::Buffer*           vertexBuffer2    = nullptr;
+    LLGL::Buffer*           vertexBuffer2       = nullptr;
     #endif
 
-    LLGL::Texture*          colorMap        = nullptr;
-    LLGL::Sampler*          samplerState    = nullptr;
+    LLGL::Texture*          colorMap            = nullptr;
+    LLGL::Sampler*          samplerState        = nullptr;
 
-    LLGL::RenderTarget*     renderTarget    = nullptr;
-    LLGL::Texture*          renderTargetTex = nullptr;
+    LLGL::RenderTarget*     renderTarget        = nullptr;
+    LLGL::Texture*          renderTargetTex     = nullptr;
 
     Gs::Matrix4f            renderTargetProj;
 
-    const Gs::Vector2i      renderTargetSize { 512, 512 };
+    const Gs::Vector2i      renderTargetSize    = Gs::Vector2i(64);//512);
 
     struct Settings
     {
@@ -45,7 +45,7 @@ class Tutorial05 : public Tutorial
 public:
 
     Tutorial05() :
-        Tutorial( L"LLGL Tutorial 05: RenderTarget" )
+        Tutorial( L"LLGL Tutorial 05: RenderTarget", {800,600},0 )
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
