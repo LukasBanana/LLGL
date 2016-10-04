@@ -13,10 +13,10 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT int NumMipLevels(const Gs::Vector3i& textureSize)
+LLGL_EXPORT unsigned int NumMipLevels(unsigned int width, unsigned int height, unsigned int depth)
 {
-    auto maxSize = std::max(textureSize.x, std::max(textureSize.y, textureSize.z));
-    auto log2Size = static_cast<int>(std::log2(maxSize));
+    auto maxSize = std::max({ width, height, depth });
+    auto log2Size = static_cast<unsigned int>(std::log2(maxSize));
     return (1 + log2Size);
 }
 

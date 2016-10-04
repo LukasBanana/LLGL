@@ -200,7 +200,7 @@ void DbgRenderSystem::GenerateMips(Texture& texture)
         instance_->GenerateMips(textureDbg.instance);
     }
     const auto& tex3DDesc = textureDbg.desc.texture3DDesc;
-    textureDbg.mipLevels = NumMipLevels(Gs::Vector3ui(tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth).Cast<int>());
+    textureDbg.mipLevels = NumMipLevels(tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth);
 }
 
 /* ----- Sampler States ---- */

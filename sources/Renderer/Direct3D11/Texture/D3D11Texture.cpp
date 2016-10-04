@@ -207,7 +207,7 @@ void D3D11Texture::CreateSRVAndStoreSettings(ID3D11Device* device, DXGI_FORMAT f
 
     /* Store format and number of MIP-maps */
     format_         = format;
-    numMipLevels_   = NumMipLevels(Gs::Vector3ui(width, height, depth).Cast<int>());
+    numMipLevels_   = NumMipLevels(width, height, depth);
 }
 
 
