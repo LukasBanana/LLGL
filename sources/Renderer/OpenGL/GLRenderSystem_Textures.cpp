@@ -87,9 +87,14 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
     GLTypes::Unmap(desc.format, static_cast<GLenum>(internalFormat));
 
     /* Query texture size */
-    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &desc.texture3DDesc.width);
-    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &desc.texture3DDesc.height);
-    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH, &desc.texture3DDesc.depth);
+    GLint texSize[3] = { 0 };
+    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH,  &texSize[0]);
+    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
+    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &texSize[2]);
+
+    desc.texture3DDesc.width    = static_cast<unsigned int>(texSize[0]);
+    desc.texture3DDesc.height   = static_cast<unsigned int>(texSize[1]);
+    desc.texture3DDesc.depth    = static_cast<unsigned int>(texSize[2]);
 
     if (desc.type == TextureType::TextureCube || desc.type == TextureType::TextureCubeArray)
         desc.texture3DDesc.depth /= 6;
@@ -100,37 +105,69 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
 /* ----- "BuildTexture..." functions ----- */
 
 static void GLTexImage1DBase(
-    GLenum target, const TextureFormat internalFormat, int width,
+    GLenum target, const TextureFormat internalFormat, unsigned int width,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize)
 {
     if (IsCompressedFormat(internalFormat))
-        glCompressedTexImage1D(target, 0, GLTypes::Map(internalFormat), width, 0, static_cast<GLsizei>(compressedSize), data);
+    {
+        glCompressedTexImage1D(
+            target, 0, GLTypes::Map(internalFormat), static_cast<GLsizei>(width), 0, static_cast<GLsizei>(compressedSize), data
+        );
+    }
     else
-        glTexImage1D(target, 0, GLTypes::Map(internalFormat), width, 0, format, type, data);
+    {
+        glTexImage1D(
+            target, 0, GLTypes::Map(internalFormat), static_cast<GLsizei>(width), 0, format, type, data
+        );
+    }
 }
 
 static void GLTexImage2DBase(
-    GLenum target, const TextureFormat internalFormat, int width, int height,
+    GLenum target, const TextureFormat internalFormat, unsigned int width, unsigned int height,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize)
 {
     if (IsCompressedFormat(internalFormat))
-        glCompressedTexImage2D(target, 0, GLTypes::Map(internalFormat), width, height, 0, static_cast<GLsizei>(compressedSize), data);
+    {
+        glCompressedTexImage2D(
+            target, 0, GLTypes::Map(internalFormat),
+            static_cast<GLsizei>(width), static_cast<GLsizei>(height),
+            0, static_cast<GLsizei>(compressedSize), data
+        );
+    }
     else
-        glTexImage2D(target, 0, GLTypes::Map(internalFormat), width, height, 0, format, type, data);
+    {
+        glTexImage2D(
+            target, 0, GLTypes::Map(internalFormat),
+            static_cast<GLsizei>(width), static_cast<GLsizei>(height),
+            0, format, type, data
+        );
+    }
 }
 
 static void GLTexImage3DBase(
-    GLenum target, const TextureFormat internalFormat, int width, int height, int depth,
+    GLenum target, const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int depth,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize)
 {
     if (IsCompressedFormat(internalFormat))
-        glCompressedTexImage3D(target, 0, GLTypes::Map(internalFormat), width, height, depth, 0, static_cast<GLsizei>(compressedSize), data);
+    {
+        glCompressedTexImage3D(
+            target, 0, GLTypes::Map(internalFormat),
+            static_cast<GLsizei>(width), static_cast<GLsizei>(height), static_cast<GLsizei>(depth),
+            0, static_cast<GLsizei>(compressedSize), data
+        );
+    }
     else
-        glTexImage3D(target, 0, GLTypes::Map(internalFormat), width, height, depth, 0, format, type, data);
+    {
+        glTexImage3D(
+            target, 0, GLTypes::Map(internalFormat),
+            static_cast<GLsizei>(width), static_cast<GLsizei>(height), static_cast<GLsizei>(depth),
+            0, format, type, data
+        );
+    }
 }
 
 static void GLTexImage1D(
-    const TextureFormat internalFormat, int width,
+    const TextureFormat internalFormat, unsigned int width,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
 {
     GLTexImage1DBase(
@@ -141,7 +178,7 @@ static void GLTexImage1D(
 }
 
 static void GLTexImage2D(
-    const TextureFormat internalFormat, int width, int height,
+    const TextureFormat internalFormat, unsigned int width, unsigned int height,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
 {
     GLTexImage2DBase(
@@ -152,7 +189,7 @@ static void GLTexImage2D(
 }
 
 static void GLTexImage3D(
-    const TextureFormat internalFormat, int width, int height, int depth,
+    const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int depth,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
 {
     GLTexImage3DBase(
@@ -163,7 +200,7 @@ static void GLTexImage3D(
 }
 
 static void GLTexImageCube(
-    const TextureFormat internalFormat, int width, int height, AxisDirection cubeFace,
+    const TextureFormat internalFormat, unsigned int width, unsigned int height, AxisDirection cubeFace,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
 {
     GLTexImage2DBase(
@@ -174,7 +211,7 @@ static void GLTexImageCube(
 }
 
 static void GLTexImage1DArray(
-    const TextureFormat internalFormat, int width, unsigned int layers,
+    const TextureFormat internalFormat, unsigned int width, unsigned int layers,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
 {
     GLTexImage2DBase(
@@ -185,17 +222,18 @@ static void GLTexImage1DArray(
 }
 
 static void GLTexImage2DArray(
-    const TextureFormat internalFormat, int width, int height, unsigned int layers,
+    const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int layers,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
 {
     GLTexImage3DBase(
         GL_TEXTURE_2D_ARRAY,
         internalFormat, width, height, static_cast<GLsizei>(layers),
-        format, type, data, compressedSize);
+        format, type, data, compressedSize
+    );
 }
 
 static void GLTexImageCubeArray(
-    const TextureFormat internalFormat, int width, int height, unsigned int layers,
+    const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int layers,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
 {
     GLTexImage3DBase(

@@ -200,7 +200,7 @@ void DbgRenderSystem::GenerateMips(Texture& texture)
         instance_->GenerateMips(textureDbg.instance);
     }
     const auto& tex3DDesc = textureDbg.desc.texture3DDesc;
-    textureDbg.mipLevels = NumMipLevels({ tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth });
+    textureDbg.mipLevels = NumMipLevels(Gs::Vector3ui(tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth).Cast<int>());
 }
 
 /* ----- Sampler States ---- */
@@ -426,9 +426,9 @@ void DbgRenderSystem::DebugTextureDescriptor(const TextureDescriptor& desc, cons
     }
 }
 
-void DbgRenderSystem::DebugTextureSize(int size, const std::string& source)
+void DbgRenderSystem::DebugTextureSize(unsigned int size, const std::string& source)
 {
-    if (size <= 0)
+    if (size == 0)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid texture size", source);
 }
 

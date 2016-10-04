@@ -115,7 +115,7 @@ class DbgRenderSystem : public RenderSystem
         void ErrWriteUninitializedResource(const std::string& source);
 
         void DebugTextureDescriptor(const TextureDescriptor& desc, const std::string& source);
-        void DebugTextureSize(int size, const std::string& source);
+        void DebugTextureSize(unsigned int size, const std::string& source);
         void WarnTextureLayersGreaterOne(const std::string& source);
         void ErrTextureLayersEqualZero(const std::string& source);
 

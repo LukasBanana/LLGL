@@ -123,29 +123,29 @@ struct TextureDescriptor
 {
     struct Texture1DDescriptor
     {
-        int             width;  //!< Texture width.
-        unsigned int    layers; //!< Number of texture array layers.
+        unsigned int width;     //!< Texture width.
+        unsigned int layers;    //!< Number of texture array layers.
     };
 
     struct Texture2DDescriptor
     {
-        int             width;  //!< Texture width.
-        int             height; //!< Texture height.
-        unsigned int    layers; //!< Number of texture array layers.
+        unsigned int width;     //!< Texture width.
+        unsigned int height;    //!< Texture height.
+        unsigned int layers;    //!< Number of texture array layers.
     };
 
     struct Texture3DDescriptor
     {
-        int             width;  //!< Texture width.
-        int             height; //!< Texture height.
-        int             depth;  //!< Texture depth.
+        unsigned int width;     //!< Texture width.
+        unsigned int height;    //!< Texture height.
+        unsigned int depth;     //!< Texture depth.
     };
 
     struct TextureCubeDescriptor
     {
-        int             width;  //!< Texture width.
-        int             height; //!< Texture height.
-        unsigned int    layers; //!< Number of texture array layers (internally it will be a multiple of 6).
+        unsigned int width;     //!< Texture width.
+        unsigned int height;    //!< Texture height.
+        unsigned int layers;    //!< Number of texture array layers (internally it will be a multiple of 6).
     };
     
     TextureDescriptor()

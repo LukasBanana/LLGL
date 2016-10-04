@@ -238,7 +238,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE1D_DESC texDesc;
     {
-        texDesc.Width           = static_cast<UINT>(descD3D.texture1DDesc.width);
+        texDesc.Width           = descD3D.texture1DDesc.width;
         texDesc.MipLevels       = 0;
         texDesc.ArraySize       = descD3D.texture1DDesc.layers;
         texDesc.Format          = D3D11Types::Map(descD3D.format);
@@ -281,8 +281,8 @@ void D3D11RenderSystem::BuildGenericTexture2D(
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width               = static_cast<UINT>(descD3D.texture2DDesc.width);
-        texDesc.Height              = static_cast<UINT>(descD3D.texture2DDesc.height);
+        texDesc.Width               = descD3D.texture2DDesc.width;
+        texDesc.Height              = descD3D.texture2DDesc.height;
         texDesc.MipLevels           = 0;
         texDesc.ArraySize           = descD3D.texture2DDesc.layers;
         texDesc.Format              = D3D11Types::Map(descD3D.format);
@@ -327,9 +327,9 @@ void D3D11RenderSystem::BuildGenericTexture3D(
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE3D_DESC texDesc;
     {
-        texDesc.Width           = static_cast<UINT>(descD3D.texture3DDesc.width);
-        texDesc.Height          = static_cast<UINT>(descD3D.texture3DDesc.height);
-        texDesc.Depth           = static_cast<UINT>(descD3D.texture3DDesc.depth);
+        texDesc.Width           = descD3D.texture3DDesc.width;
+        texDesc.Height          = descD3D.texture3DDesc.height;
+        texDesc.Depth           = descD3D.texture3DDesc.depth;
         texDesc.MipLevels       = 0;
         texDesc.Format          = D3D11Types::Map(descD3D.format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
