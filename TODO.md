@@ -13,3 +13,4 @@ Common
 | Texture arrays | 0% | High | Textures shall be grouped to arrays with a "TextureArray" interface |
 | Query arrays | 0% | Medium | Queries shall be grouped to arrays with a "QueryArray" interface |
 | Debug layer | 0% | Low | Optimize debug layer (especially when only the profiler is used) |
+| Shader interfaces | 0% | Medium | An interface for shader interfaces (also "Subroutines") is required |
