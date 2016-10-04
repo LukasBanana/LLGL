@@ -474,81 +474,136 @@ void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& 
     }
 }
 
-static void GLTexSubImage1DBase(GLenum target, int mipLevel, int x, int width, const ImageDescriptor& imageDesc)
+static void GLTexSubImage1DBase(
+    GLenum target, unsigned int mipLevel, unsigned int x, unsigned int width, const ImageDescriptor& imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))
     {
         glCompressedTexSubImage1D(
-            target, mipLevel, x, width,
-            GLTypes::Map(imageDesc.format), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.buffer
+            target,
+            static_cast<GLint>(mipLevel),
+            static_cast<GLint>(x),
+            static_cast<GLsizei>(width),
+            GLTypes::Map(imageDesc.format),
+            static_cast<GLsizei>(imageDesc.compressedSize),
+            imageDesc.buffer
         );
     }
     else
     {
         glTexSubImage1D(
-            target, mipLevel, x, width,
-            GLTypes::Map(imageDesc.format), GLTypes::Map(imageDesc.dataType), imageDesc.buffer
+            target,
+            static_cast<GLint>(mipLevel),
+            static_cast<GLint>(x),
+            static_cast<GLsizei>(width),
+            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.dataType),
+            imageDesc.buffer
         );
     }
 }
 
-static void GLTexSubImage2DBase(GLenum target, int mipLevel, int x, int y, int width, int height, const ImageDescriptor& imageDesc)
+static void GLTexSubImage2DBase(
+    GLenum target, unsigned int mipLevel, unsigned int x, unsigned int y,
+    unsigned int width, unsigned int height, const ImageDescriptor& imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))
     {
         glCompressedTexSubImage2D(
-            target, mipLevel, x, y, width, height,
-            GLTypes::Map(imageDesc.format), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.buffer
+            target,
+            static_cast<GLint>(mipLevel),
+            static_cast<GLint>(x),
+            static_cast<GLint>(y),
+            static_cast<GLsizei>(width),
+            static_cast<GLsizei>(height),
+            GLTypes::Map(imageDesc.format),
+            static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.buffer
         );
     }
     else
     {
         glTexSubImage2D(
-            target, mipLevel, x, y, width, height,
-            GLTypes::Map(imageDesc.format), GLTypes::Map(imageDesc.dataType), imageDesc.buffer
+            target,
+            static_cast<GLint>(mipLevel),
+            static_cast<GLint>(x),
+            static_cast<GLint>(y),
+            static_cast<GLsizei>(width),
+            static_cast<GLsizei>(height),
+            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.dataType),
+            imageDesc.buffer
         );
     }
 }
 
-static void GLTexSubImage3DBase(GLenum target, int mipLevel, int x, int y, int z, int width, int height, int depth, const ImageDescriptor& imageDesc)
+static void GLTexSubImage3DBase(
+    GLenum target, unsigned int mipLevel, unsigned int x, unsigned int y, unsigned int z,
+    unsigned int width, unsigned int height, unsigned int depth, const ImageDescriptor& imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))
     {
         glCompressedTexSubImage3D(
-            target, mipLevel, x, y, z, width, height, depth,
-            GLTypes::Map(imageDesc.format), static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.buffer
+            target,
+            static_cast<GLint>(mipLevel),
+            static_cast<GLint>(x),
+            static_cast<GLint>(y),
+            static_cast<GLint>(z),
+            static_cast<GLsizei>(width),
+            static_cast<GLsizei>(height),
+            static_cast<GLsizei>(depth),
+            GLTypes::Map(imageDesc.format),
+            static_cast<GLsizei>(imageDesc.compressedSize),
+            imageDesc.buffer
         );
     }
     else
     {
         glTexSubImage3D(
-            target, mipLevel, x, y, z, width, height, depth,
-            GLTypes::Map(imageDesc.format), GLTypes::Map(imageDesc.dataType), imageDesc.buffer
+            target,
+            static_cast<GLint>(mipLevel),
+            static_cast<GLint>(x),
+            static_cast<GLint>(y),
+            static_cast<GLint>(z),
+            static_cast<GLsizei>(width),
+            static_cast<GLsizei>(height),
+            static_cast<GLsizei>(depth),
+            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.dataType),
+            imageDesc.buffer
         );
     }
 }
 
-static void GLTexSubImage1D(int mipLevel, int x, int width, const ImageDescriptor& imageDesc)
+static void GLTexSubImage1D(
+    unsigned int mipLevel, unsigned int x, unsigned int width, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage1DBase(GL_TEXTURE_1D, mipLevel, x, width, imageDesc);
 }
 
-static void GLTexSubImage2D(int mipLevel, int x, int y, int width, int height, const ImageDescriptor& imageDesc)
+static void GLTexSubImage2D(
+    unsigned int mipLevel, unsigned int x, unsigned int y,
+    unsigned int width, unsigned int height, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage2DBase(GL_TEXTURE_2D, mipLevel, x, y, width, height, imageDesc);
 }
 
-static void GLTexSubImage3D(int mipLevel, int x, int y, int z, int width, int height, int depth, const ImageDescriptor& imageDesc)
+static void GLTexSubImage3D(
+    unsigned int mipLevel, unsigned int x, unsigned int y, unsigned int z,
+    unsigned int width, unsigned int height, unsigned int depth, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage3DBase(GL_TEXTURE_3D, mipLevel, x, y, z, width, height, depth, imageDesc);
 }
 
-static void GLTexSubImageCube(int mipLevel, int x, int y, int width, int height, AxisDirection cubeFace, const ImageDescriptor& imageDesc)
+static void GLTexSubImageCube(
+    unsigned int mipLevel, unsigned int x, unsigned int y,
+    unsigned int width, unsigned int height, AxisDirection cubeFace, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage2DBase(GLTypes::Map(cubeFace), mipLevel, x, y, width, height, imageDesc);
 }
 
-static void GLTexSubImage1DArray(int mipLevel, int x, unsigned int layerOffset, int width, unsigned int layers, const ImageDescriptor& imageDesc)
+static void GLTexSubImage1DArray(
+    unsigned int mipLevel, unsigned int x, unsigned int layerOffset,
+    unsigned int width, unsigned int layers, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage2DBase(
         GL_TEXTURE_1D_ARRAY,
@@ -558,7 +613,8 @@ static void GLTexSubImage1DArray(int mipLevel, int x, unsigned int layerOffset, 
 }
 
 static void GLTexSubImage2DArray(
-    int mipLevel, int x, int y, unsigned int layerOffset, int width, int height, unsigned int layers, const ImageDescriptor& imageDesc)
+    int mipLevel, int x, int y, unsigned int layerOffset,
+    int width, int height, unsigned int layers, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage3DBase(
         GL_TEXTURE_2D_ARRAY,
@@ -568,8 +624,8 @@ static void GLTexSubImage2DArray(
 }
 
 static void GLTexSubImageCubeArray(
-    int mipLevel, int x, int y, unsigned int layerOffset, AxisDirection cubeFaceOffset,
-    int width, int height, unsigned int cubeFaces, const ImageDescriptor& imageDesc)
+    unsigned int mipLevel, unsigned int x, unsigned int y, unsigned int layerOffset, AxisDirection cubeFaceOffset,
+    unsigned int width, unsigned int height, unsigned int cubeFaces, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage3DBase(
         GL_TEXTURE_CUBE_MAP_ARRAY,

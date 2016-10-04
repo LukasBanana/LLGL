@@ -157,8 +157,8 @@ class D3D11RenderSystem : public RenderSystem
         );
         
         void UpdateGenericTexture(
-            Texture& texture, int mipLevel, unsigned int layer,
-            const Gs::Vector3i& position, const Gs::Vector3i& size,
+            Texture& texture, unsigned int mipLevel, unsigned int layer,
+            const Gs::Vector3ui& position, const Gs::Vector3ui& size,
             const ImageDescriptor& imageDesc
         );
 
