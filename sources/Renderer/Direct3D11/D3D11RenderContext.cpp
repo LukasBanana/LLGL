@@ -255,8 +255,18 @@ void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long sh
 
 /* ----- Render Targets ----- */
 
+//private
+void D3D11RenderContext::ResolveBoundRenderTarget()
+{
+    if (boundRenderTarget_)
+        boundRenderTarget_->ResolveSubresources();
+}
+
 void D3D11RenderContext::SetRenderTarget(RenderTarget& renderTarget)
 {
+    /* Resolve previously bound render target (in case mutli-sampling is used) */
+    ResolveBoundRenderTarget();
+
     /* Set RTV list and DSV in framebuffer view */
     auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
 
@@ -264,11 +274,21 @@ void D3D11RenderContext::SetRenderTarget(RenderTarget& renderTarget)
     framebufferView_.dsv        = renderTargetD3D.GetDepthStencilView();
 
     SubmitFramebufferView();
+
+    /* Store current render target */
+    boundRenderTarget_ = &renderTargetD3D;
 }
 
 void D3D11RenderContext::UnsetRenderTarget()
 {
+    /* Resolve previously bound render target (in case mutli-sampling is used) */
+    ResolveBoundRenderTarget();
+
+    /* Set default RTVs to OM-stage */
     SetDefaultRenderTargets();
+
+    /* Reset reference to render target */
+    boundRenderTarget_ = nullptr;
 }
 
 /* ----- Pipeline States ----- */

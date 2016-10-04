@@ -156,6 +156,9 @@ class GLRenderContext : public RenderContext
 
         bool SetupVsyncInterval();
 
+        // Blits the currently bound render target
+        void BlitBoundRenderTarget();
+
         #if defined(_WIN32)
 
         void DeleteGLContext(HGLRC& renderContext);

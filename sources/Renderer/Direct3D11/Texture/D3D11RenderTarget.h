@@ -40,6 +40,9 @@ class D3D11RenderTarget : public RenderTarget
 
         /* ----- Extended Internal Functions ----- */
 
+        // Resolves all multi-sampled subresources.
+        void ResolveSubresources();
+
         inline const std::vector<ID3D11RenderTargetView*>& GetRenderTargetViews() const
         {
             return renderTargetViewsRef_;
@@ -66,8 +69,20 @@ class D3D11RenderTarget : public RenderTarget
 
         ComPtr<ID3D11Texture2D>                     depthStencil_;
         ComPtr<ID3D11DepthStencilView>              depthStencilView_;
+        
+        // Members for multi-sampled render-targets
+        struct TexAttachmentMS
+        {
+            ComPtr<ID3D11Texture2D> texture2DMS;
+            ID3D11Texture2D*        targetTexture;
+            UINT                    mipSlice;
+            UINT                    arraySlice;
+            UINT                    mipLevels;
+            DXGI_FORMAT             format;
+        };
 
         UINT                                        multiSamples_ = 0;
+        std::vector<TexAttachmentMS>                multiSampledAttachments_;
 
 };
 

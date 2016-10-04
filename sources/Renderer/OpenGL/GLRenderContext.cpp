@@ -275,8 +275,18 @@ void GLRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long /*sha
 
 /* ----- Render Targets ----- */
 
+//private
+void GLRenderContext::BlitBoundRenderTarget()
+{
+    if (boundRenderTarget_)
+        boundRenderTarget_->BlitOntoFrameBuffer();
+}
+
 void GLRenderContext::SetRenderTarget(RenderTarget& renderTarget)
 {
+    /* Blit previously bound render target (in case mutli-sampling is used) */
+    BlitBoundRenderTarget();
+
     /* Bind framebuffer object */
     auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
     stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFrameBuffer().GetID());
@@ -291,9 +301,7 @@ void GLRenderContext::SetRenderTarget(RenderTarget& renderTarget)
 void GLRenderContext::UnsetRenderTarget()
 {
     /* Blit previously bound render target (in case mutli-sampling is used) */
-    if (boundRenderTarget_)
-        boundRenderTarget_->BlitOntoFrameBuffer();
-        //boundRenderTarget_->BlitOntoScreen(0);//!!!
+    BlitBoundRenderTarget();
 
     /* Unbind framebuffer object */
     stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);

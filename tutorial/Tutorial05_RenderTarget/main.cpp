@@ -9,7 +9,9 @@
 
 
 // Test: use a second vertex buffer
-#define _TEST_BUFFER2_
+//#define _TEST_BUFFER2_
+
+#define ENABLE_MULTISAMPLING
 
 class Tutorial05 : public Tutorial
 {
@@ -34,7 +36,7 @@ class Tutorial05 : public Tutorial
 
     Gs::Matrix4f            renderTargetProj;
 
-    const Gs::Vector2ui     renderTargetSize    = Gs::Vector2ui(64);//512);
+    const Gs::Vector2ui     renderTargetSize    = Gs::Vector2ui(512);
 
     struct Settings
     {
@@ -95,8 +97,9 @@ public:
             pipelineDesc.depth.writeEnabled             = true;
 
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+            #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampleEnabled  = true;
-            pipelineDesc.rasterizer.samples             = 8;
+            #endif
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -119,7 +122,12 @@ public:
     void CreateRenderTarget()
     {
         // Create render-target with multi-sampling
-        renderTarget = renderer->CreateRenderTarget(8);
+        #ifdef ENABLE_MULTISAMPLING
+        unsigned int multiSamples = 8;
+        #else
+        unsigned int multiSamples = 0;
+        #endif
+        renderTarget = renderer->CreateRenderTarget(multiSamples);
 
         // Create empty render-target texture
         LLGL::TextureDescriptor textureDesc;
@@ -132,7 +140,7 @@ public:
         renderTargetTex = renderer->CreateTexture(textureDesc);
 
         // Generate all MIP-map levels
-        //renderer->GenerateMips(*renderTargetTex);
+        renderer->GenerateMips(*renderTargetTex);
 
         // Attach depth buffer to render-target
         renderTarget->AttachDepthBuffer(renderTargetSize);
@@ -231,7 +239,7 @@ private:
         context->UnsetRenderTarget();
 
         // Generate MIP-maps again after texture has been written by the render-target
-        //renderer->GenerateMips(*renderTargetTex);
+        renderer->GenerateMips(*renderTargetTex);
 
         if (IsOpenGL())
         {

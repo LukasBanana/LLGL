@@ -25,6 +25,7 @@ namespace LLGL
 
 class D3D11RenderSystem;
 class D3D11StateManager;
+class D3D11RenderTarget;
 
 class D3D11RenderContext : public RenderContext
 {
@@ -158,6 +159,8 @@ class D3D11RenderContext : public RenderContext
         void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long flags);
         void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long flags);
 
+        void ResolveBoundRenderTarget();
+
         D3D11RenderSystem&          renderSystem_;  // reference to its render system
         D3D11StateManager&          stateMngr_;
         RenderContextDescriptor     desc_;
@@ -171,6 +174,8 @@ class D3D11RenderContext : public RenderContext
         D3D11FramebufferView        framebufferView_;
 
         D3DClearState               clearState_;
+
+        D3D11RenderTarget*          boundRenderTarget_  = nullptr;
 
 };
 

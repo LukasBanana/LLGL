@@ -124,72 +124,89 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
     /* Initialize RTV descriptor with attachment procedure and create RTV */
     D3D11_RENDER_TARGET_VIEW_DESC viewDesc;
     InitMemory(viewDesc);
+    
+    viewDesc.Format = textureD3D.GetFormat();
+
+    if (HasMultiSampling())
     {
-        viewDesc.Format = textureD3D.GetFormat();
-
-        if (HasMultiSampling())
+        switch (texture.GetType())
         {
-            switch (texture.GetType())
-            {
-                case TextureType::Texture2D:
-                    FillViewDescForTexture2DMS(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::TextureCube:
-                    FillViewDescForTextureCubeMS(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::Texture2DArray:
-                    FillViewDescForTexture2DArrayMS(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::TextureCubeArray:
-                    FillViewDescForTextureCubeArrayMS(attachmentDesc, viewDesc);
-                    break;
-                default:
-                    throw std::invalid_argument("only 2D-textures can be attached to a D3D11 multi-sample render-target");
-                    break;
-            }
-
-            //TODO -> multi-sampled texture (D3D11_RTV_DIMENSION_TEXTURE2DMS) must be created separately
-            //        and be blitted (ID3D11DeviceContext::CopyResource) to texture target
-
-            /* Recreate resource with multi-sampling */
-            D3D11_TEXTURE2D_DESC texDesc;
-            textureD3D.GetHardwareTexture().tex2D->GetDesc(&texDesc);
-            {
-                texDesc.MipLevels           = 1;
-                texDesc.SampleDesc.Count    = multiSamples_;
-                texDesc.MiscFlags           = 0;
-            }
-            textureD3D.CreateTexture2D(renderSystem_.GetDevice(), texDesc);
+            case TextureType::Texture2D:
+                FillViewDescForTexture2DMS(attachmentDesc, viewDesc);
+                break;
+            case TextureType::TextureCube:
+                FillViewDescForTextureCubeMS(attachmentDesc, viewDesc);
+                break;
+            case TextureType::Texture2DArray:
+                FillViewDescForTexture2DArrayMS(attachmentDesc, viewDesc);
+                break;
+            case TextureType::TextureCubeArray:
+                FillViewDescForTextureCubeArrayMS(attachmentDesc, viewDesc);
+                break;
+            default:
+                throw std::invalid_argument("only 2D-textures can be attached to a D3D11 multi-sample render-target");
+                break;
         }
-        else
+
+        /* Recreate texture resource with multi-sampling */
+        D3D11_TEXTURE2D_DESC texDesc;
+        textureD3D.GetHardwareTexture().tex2D->GetDesc(&texDesc);
         {
-            switch (texture.GetType())
-            {
-                case TextureType::Texture1D:
-                    FillViewDescForTexture1D(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::Texture2D:
-                    FillViewDescForTexture2D(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::Texture3D:
-                    FillViewDescForTexture3D(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::TextureCube:
-                    FillViewDescForTextureCube(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::Texture1DArray:
-                    FillViewDescForTexture1DArray(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::Texture2DArray:
-                    FillViewDescForTexture2DArray(attachmentDesc, viewDesc);
-                    break;
-                case TextureType::TextureCubeArray:
-                    FillViewDescForTextureCubeArray(attachmentDesc, viewDesc);
-                    break;
-            }
+            texDesc.Width               = (texDesc.Width << attachmentDesc.mipLevel);
+            texDesc.Height              = (texDesc.Height << attachmentDesc.mipLevel);
+            texDesc.MipLevels           = 1;
+            texDesc.SampleDesc.Count    = multiSamples_;
+            texDesc.MiscFlags           = 0;
         }
+        ComPtr<ID3D11Texture2D> tex2DMS;
+        auto hr = renderSystem_.GetDevice()->CreateTexture2D(&texDesc, nullptr, tex2DMS.ReleaseAndGetAddressOf());
+        DXThrowIfFailed(hr, "failed to create D3D11 multi-sampled 2D-texture for render-target");
+
+        /* Store multi-sampled texture, and reference to texture target */
+        multiSampledAttachments_.push_back(
+            {
+                tex2DMS,
+                textureD3D.GetHardwareTexture().tex2D.Get(),
+                attachmentDesc.mipLevel,
+                attachmentDesc.layer,
+                texDesc.MipLevels,
+                texDesc.Format
+            }
+        );
+
+        /* Create RTV for multi-sampled (intermediate) texture */
+        CreateAndAppendRTV(tex2DMS.Get(), viewDesc);
     }
-    CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), viewDesc);
+    else
+    {
+        switch (texture.GetType())
+        {
+            case TextureType::Texture1D:
+                FillViewDescForTexture1D(attachmentDesc, viewDesc);
+                break;
+            case TextureType::Texture2D:
+                FillViewDescForTexture2D(attachmentDesc, viewDesc);
+                break;
+            case TextureType::Texture3D:
+                FillViewDescForTexture3D(attachmentDesc, viewDesc);
+                break;
+            case TextureType::TextureCube:
+                FillViewDescForTextureCube(attachmentDesc, viewDesc);
+                break;
+            case TextureType::Texture1DArray:
+                FillViewDescForTexture1DArray(attachmentDesc, viewDesc);
+                break;
+            case TextureType::Texture2DArray:
+                FillViewDescForTexture2DArray(attachmentDesc, viewDesc);
+                break;
+            case TextureType::TextureCubeArray:
+                FillViewDescForTextureCubeArray(attachmentDesc, viewDesc);
+                break;
+        }
+    
+        /* Create RTV for target texture */
+        CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), viewDesc);
+    }
 }
 
 void D3D11RenderTarget::DetachAll()
@@ -202,6 +219,27 @@ void D3D11RenderTarget::DetachAll()
 
     depthStencil_.Reset();
     depthStencilView_.Reset();
+
+    multiSampledAttachments_.clear();
+}
+
+/* ----- Extended Internal Functions ----- */
+
+void D3D11RenderTarget::ResolveSubresources()
+{
+    for (const auto& attachment : multiSampledAttachments_)
+    {
+        auto dstSubresource = D3D11CalcSubresource(attachment.mipSlice, attachment.arraySlice, attachment.mipLevels);
+        auto srcSubresource = D3D11CalcSubresource(0, 0, 1);
+
+        renderSystem_.GetDeviceContext()->ResolveSubresource(
+            attachment.targetTexture,
+            dstSubresource,
+            attachment.texture2DMS.Get(),
+            srcSubresource,
+            attachment.format
+        );
+    }
 }
 
 
