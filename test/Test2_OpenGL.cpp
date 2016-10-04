@@ -311,10 +311,10 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram      = &shaderProgram;
-            pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleFan;
+            pipelineDesc.shaderProgram          = &shaderProgram;
+            pipelineDesc.primitiveTopology      = LLGL::PrimitiveTopology::TriangleFan;
 
-            pipelineDesc.rasterizer.multiSampleEnabled = true;
+            pipelineDesc.rasterizer.sampling    = contextDesc.sampling;
 
             LLGL::BlendTargetDescriptor blendDesc;
             {

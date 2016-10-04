@@ -140,14 +140,13 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            //pipelineDesc.depth.testEnabled  = true;
-            //pipelineDesc.depth.writeEnabled = true;
-            //pipelineDesc.depth.compareOp    = LLGL::CompareOp::Less;
+            pipelineDesc.shaderProgram          = shaderProgram;
 
-            pipelineDesc.rasterizer.multiSampleEnabled  = true;
-            pipelineDesc.rasterizer.samples             = 8;
+            //pipelineDesc.depth.testEnabled      = true;
+            //pipelineDesc.depth.writeEnabled     = true;
+            //pipelineDesc.depth.compareOp        = LLGL::CompareOp::Less;
 
-            pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.rasterizer.sampling    = contextDesc.sampling;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 

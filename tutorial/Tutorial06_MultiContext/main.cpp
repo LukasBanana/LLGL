@@ -144,8 +144,8 @@ int main()
         {
             pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.shaderProgram                  = shaderProgram;
-            pipelineDesc.rasterizer.multiSampleEnabled  = true;
-            pipelineDesc.rasterizer.samples             = 8;
+            pipelineDesc.rasterizer.sampling.enabled    = true;
+            pipelineDesc.rasterizer.sampling.samples    = 8;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 

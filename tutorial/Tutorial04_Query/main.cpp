@@ -70,8 +70,8 @@ public:
 
             pipelineDesc.depth.testEnabled              = true;
 
-            pipelineDesc.rasterizer.multiSampleEnabled  = true;
-            pipelineDesc.rasterizer.samples             = 8;
+            pipelineDesc.rasterizer.sampling.enabled    = true;
+            pipelineDesc.rasterizer.sampling.samples    = 8;
 
             LLGL::BlendTargetDescriptor blendDesc;
             {

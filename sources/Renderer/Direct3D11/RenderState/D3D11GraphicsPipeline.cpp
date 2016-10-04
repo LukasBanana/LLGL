@@ -121,7 +121,7 @@ void D3D11GraphicsPipeline::CreateRasterizerState(ID3D11Device* device, const Ra
         stateDesc.SlopeScaledDepthBias  = desc.slopeScaledDepthBias;
         stateDesc.DepthClipEnable       = (desc.depthClampEnabled ? TRUE : FALSE);
         stateDesc.ScissorEnable         = (desc.scissorTestEnabled ? TRUE : FALSE);
-        stateDesc.MultisampleEnable     = (desc.multiSampleEnabled ? TRUE : FALSE);
+        stateDesc.MultisampleEnable     = (desc.sampling.enabled ? TRUE : FALSE);
         stateDesc.AntialiasedLineEnable = (desc.antiAliasedLineEnabled ? TRUE : FALSE);
     }
     auto hr = device->CreateRasterizerState(&stateDesc, &rasterizerState_);

@@ -98,7 +98,7 @@ public:
 
             pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
             #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampleEnabled  = true;
+            pipelineDesc.rasterizer.sampling.enabled    = true;
             #endif
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);

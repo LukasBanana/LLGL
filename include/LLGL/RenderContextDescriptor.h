@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "Types.h"
+#include "GraphicsPipelineFlags.h"
 #include <functional>
 
 
@@ -71,13 +72,6 @@ struct VsyncDescriptor
     bool            enabled     = false;    //!< Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
     unsigned int    refreshRate = 60;       //!< Refresh rate (in Hz). By default 60.
     unsigned int    interval    = 1;        //!< Synchronisation interval. Can be 1, 2, 3, or 4. If Vsync is disabled, this value is implicit zero.
-};
-
-//! (Multi-)sampling descriptor structure.
-struct SamplingDescriptor
-{
-    bool            enabled     = false;    //!< Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    unsigned int    samples     = 1;        //!< Number of samples used for multi-sampling. By default 1.
 };
 
 //! Video mode descriptor structure.

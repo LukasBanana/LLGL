@@ -138,8 +138,8 @@ public:
 
             // Enable multi-sample anti-aliasing
             #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampleEnabled  = true;
-            pipelineDesc.rasterizer.samples             = 8;
+            pipelineDesc.rasterizer.sampling.enabled    = true;
+            pipelineDesc.rasterizer.sampling.samples    = 8;
             #endif
 
             // Enable depth test and writing

@@ -173,6 +173,13 @@ enum class CullMode
 
 /* ----- Structures ----- */
 
+//! (Multi-)sampling descriptor structure.
+struct SamplingDescriptor
+{
+    bool            enabled     = false;    //!< Specifies whether multi-sampling is enabled or disabled. By default disabled.
+    unsigned int    samples     = 1;        //!< Number of samples used for multi-sampling. By default 1.
+};
+
 //! Depth state descriptor structure.
 struct DepthDescriptor
 {
@@ -224,26 +231,27 @@ struct StencilDescriptor
 struct RasterizerDescriptor
 {
     //! Polygon render mode. By default PolygonMode::Fill.
-    PolygonMode     polygonMode                 = PolygonMode::Fill;
-    CullMode        cullMode                    = CullMode::Disabled;
-    int             depthBias                   = 0;
-    float           depthBiasClamp              = 0.0f;
-    float           slopeScaledDepthBias        = 0.0f;
+    PolygonMode         polygonMode                 = PolygonMode::Fill;
 
-    /**
-    \brief Number of samples for multi-sample anti-aliasing (MSAA).
-    \see multiSampleEnabled
-    \note Only supported with: Direct3D 12.
-    */
-    unsigned int    samples                     = 1;
+    //! Polygon face culling mode. By default CullMode::Disabled.
+    CullMode            cullMode                    = CullMode::Disabled;
+    int                 depthBias                   = 0;
+    float               depthBiasClamp              = 0.0f;
+    float               slopeScaledDepthBias        = 0.0f;
+
+    //! (Multi-)sampling descriptor.
+    SamplingDescriptor  sampling;
 
     //! If true, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding.
-    bool            frontCCW                    = false;
+    bool                frontCCW                    = false;
 
-    bool            depthClampEnabled           = false;
-    bool            scissorTestEnabled          = false;
-    bool            multiSampleEnabled          = false;
-    bool            antiAliasedLineEnabled      = false;
+    bool                depthClampEnabled           = false;
+
+    //! Specifies whether scissor test is enabled or disabled. By default disabled.
+    bool                scissorTestEnabled          = false;
+
+    //! Specifies whether lines are rendered with or without anti-aliasing. By default disabled.
+    bool                antiAliasedLineEnabled      = false;
 
     /**
     \brief If ture, conservative rasterization is enabled.
@@ -251,7 +259,7 @@ struct RasterizerDescriptor
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     */
-    bool            conservativeRasterization   = false;
+    bool                conservativeRasterization   = false;
 };
 
 //! Blend target state descriptor structure.

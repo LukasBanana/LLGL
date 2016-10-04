@@ -220,7 +220,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBiasClamp;
     stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.slopeScaledDepthBias;
     stateDesc.RasterizerState.DepthClipEnable       = (desc.rasterizer.depthClampEnabled ? TRUE : FALSE);
-    stateDesc.RasterizerState.MultisampleEnable     = (desc.rasterizer.multiSampleEnabled ? TRUE : FALSE);
+    stateDesc.RasterizerState.MultisampleEnable     = (desc.rasterizer.sampling.enabled ? TRUE : FALSE);
     stateDesc.RasterizerState.AntialiasedLineEnable = (desc.rasterizer.antiAliasedLineEnabled ? TRUE : FALSE);
     stateDesc.RasterizerState.ForcedSampleCount     = 0; // no forced sample count
     stateDesc.RasterizerState.ConservativeRaster    = GetConservativeRaster(desc.rasterizer.conservativeRasterization);
@@ -242,7 +242,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = UINT_MAX;
     stateDesc.NumRenderTargets      = 1;//8;
-    stateDesc.SampleDesc.Count      = std::max(1u, desc.rasterizer.samples);
+    stateDesc.SampleDesc.Count      = std::max(1u, desc.rasterizer.sampling.samples);
     
     for (UINT i = 0; i < 8u; ++i)
         stateDesc.RTVFormats[i] = (i < stateDesc.NumRenderTargets ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_UNKNOWN);

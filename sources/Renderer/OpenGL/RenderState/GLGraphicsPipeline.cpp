@@ -121,7 +121,7 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     frontFace_          = (desc.rasterizer.frontCCW ? GL_CCW : GL_CW);
     scissorTestEnabled_ = desc.rasterizer.scissorTestEnabled;
     depthClampEnabled_  = desc.rasterizer.depthClampEnabled;
-    multiSampleEnabled_ = desc.rasterizer.multiSampleEnabled;
+    multiSampleEnabled_ = desc.rasterizer.sampling.enabled;
     lineSmoothEnabled_  = desc.rasterizer.antiAliasedLineEnabled;
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
