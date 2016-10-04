@@ -46,9 +46,26 @@ class D3D11Texture : public Texture
 
         /* ----- Extended internal functions ---- */
 
-        void CreateTexture1D(ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr);
-        void CreateTexture2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr);
-        void CreateTexture3D(ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr);
+        void CreateTexture1D(
+            ID3D11Device* device,
+            const D3D11_TEXTURE1D_DESC& desc,
+            const D3D11_SUBRESOURCE_DATA* initialData = nullptr,
+            const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
+        );
+
+        void CreateTexture2D(
+            ID3D11Device* device,
+            const D3D11_TEXTURE2D_DESC& desc,
+            const D3D11_SUBRESOURCE_DATA* initialData = nullptr,
+            const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
+        );
+
+        void CreateTexture3D(
+            ID3D11Device* device,
+            const D3D11_TEXTURE3D_DESC& desc,
+            const D3D11_SUBRESOURCE_DATA* initialData = nullptr,
+            const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
+        );
 
         void UpdateSubresource(
             ID3D11DeviceContext* context,
@@ -80,7 +97,12 @@ class D3D11Texture : public Texture
 
     private:
 
-        void CreateSRVAndStoreSettings(ID3D11Device* device, DXGI_FORMAT format, UINT width, UINT height, UINT depth);
+        void CreateSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr);
+
+        void CreateSRVAndStoreSettings(
+            ID3D11Device* device, DXGI_FORMAT format, const Gs::Vector3ui& size,
+            const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
+        );
 
         D3D11HardwareTexture                hardwareTexture_;
         ComPtr<ID3D11ShaderResourceView>    srv_;

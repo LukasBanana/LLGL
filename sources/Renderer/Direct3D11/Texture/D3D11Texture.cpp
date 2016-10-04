@@ -67,34 +67,31 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(unsigned int mipLevel) const
     return size;
 }
 
-void D3D11Texture::CreateTexture1D(ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData)
+void D3D11Texture::CreateTexture1D(
+    ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
-    hardwareTexture_.resource.Reset();
-
-    auto hr = device->CreateTexture1D(&desc, initialData, &hardwareTexture_.tex1D);
+    auto hr = device->CreateTexture1D(&desc, initialData, hardwareTexture_.tex1D.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 1D-texture");
 
-    CreateSRVAndStoreSettings(device, desc.Format, desc.Width, 1, 1);
+    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, 1, 1 }, srvDesc);
 }
 
-void D3D11Texture::CreateTexture2D(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData)
+void D3D11Texture::CreateTexture2D(
+    ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
-    hardwareTexture_.resource.Reset();
-
-    auto hr = device->CreateTexture2D(&desc, initialData, &hardwareTexture_.tex2D);
+    auto hr = device->CreateTexture2D(&desc, initialData, hardwareTexture_.tex2D.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 2D-texture");
 
-    CreateSRVAndStoreSettings(device, desc.Format, desc.Width, desc.Height, 1);
+    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, 1 }, srvDesc);
 }
 
-void D3D11Texture::CreateTexture3D(ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData)
+void D3D11Texture::CreateTexture3D(
+    ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
-    hardwareTexture_.resource.Reset();
-
-    auto hr = device->CreateTexture3D(&desc, initialData, &hardwareTexture_.tex3D);
+    auto hr = device->CreateTexture3D(&desc, initialData, hardwareTexture_.tex3D.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 3D-texture");
 
-    CreateSRVAndStoreSettings(device, desc.Format, desc.Width, desc.Height, desc.Depth);
+    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, desc.Depth }, srvDesc);
 }
 
 struct TexFormatDesc
@@ -197,15 +194,21 @@ void D3D11Texture::UpdateSubresource(
  * ====== Private: ======
  */
 
-void D3D11Texture::CreateSRVAndStoreSettings(ID3D11Device* device, DXGI_FORMAT format, UINT width, UINT height, UINT depth)
+void D3D11Texture::CreateSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
+{
+    auto hr = device->CreateShaderResourceView(hardwareTexture_.resource.Get(), srvDesc, srv_.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 shader-resouce-view (SRV) for texture");
+}
+
+void D3D11Texture::CreateSRVAndStoreSettings(
+    ID3D11Device* device, DXGI_FORMAT format, const Gs::Vector3ui& size, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
     /* Create SRV for D3D texture */
-    auto hr = device->CreateShaderResourceView(hardwareTexture_.resource.Get(), nullptr, &srv_);
-    DXThrowIfFailed(hr, "failed to create D3D11 shader-resouce-view (SRV) for texture");
+    CreateSRV(device, srvDesc);
 
     /* Store format and number of MIP-maps */
     format_         = format;
-    numMipLevels_   = NumMipLevels(width, height, depth);
+    numMipLevels_   = NumMipLevels(size.x, size.y, size.z);
 }
 
 

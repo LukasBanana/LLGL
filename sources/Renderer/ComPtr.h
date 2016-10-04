@@ -137,12 +137,13 @@ class ComPtr
             return &ptr_;
         }
 
-        //! Returns the reference of ths internal pointer.
+        //! Returns the reference of the internal pointer.
         T** GetAddressOf() throw()
         {
             return &ptr_;
         }
 
+        //! Release the reference and returns the reference of the internal pointer.
         T** ReleaseAndGetAddressOf() throw()
         {
             Release();

@@ -45,7 +45,7 @@ class Tutorial05 : public Tutorial
 public:
 
     Tutorial05() :
-        Tutorial( L"LLGL Tutorial 05: RenderTarget", {800,600},0 )
+        Tutorial( L"LLGL Tutorial 05: RenderTarget" )
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
@@ -132,7 +132,7 @@ public:
         renderTargetTex = renderer->CreateTexture(textureDesc);
 
         // Generate all MIP-map levels
-        renderer->GenerateMips(*renderTargetTex);
+        //renderer->GenerateMips(*renderTargetTex);
 
         // Attach depth buffer to render-target
         renderTarget->AttachDepthBuffer(renderTargetSize);
@@ -231,7 +231,7 @@ private:
         context->UnsetRenderTarget();
 
         // Generate MIP-maps again after texture has been written by the render-target
-        renderer->GenerateMips(*renderTargetTex);
+        //renderer->GenerateMips(*renderTargetTex);
 
         if (IsOpenGL())
         {
