@@ -278,16 +278,16 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
     for (D3D_DRIVER_TYPE driver : { D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_WARP, D3D_DRIVER_TYPE_SOFTWARE })
     {
         auto hr = D3D11CreateDevice(
-            adapter,                // Video adapter
-            driver,                 // Driver type
-            0,                      // Software rasterizer module (none)
-            flags,                  // Flags
-            featureLevels.data(),   // Feature level
-            featureLevels.size(),   // Num feature levels
-            D3D11_SDK_VERSION,      // SDK version
-            &device_,               // Output device
-            &featureLevel_,         // Output feature level
-            &context_               // Output device context
+            adapter,                            // Video adapter
+            driver,                             // Driver type
+            0,                                  // Software rasterizer module (none)
+            flags,                              // Flags
+            featureLevels.data(),               // Feature level
+            featureLevels.size(),               // Num feature levels
+            D3D11_SDK_VERSION,                  // SDK version
+            device_.ReleaseAndGetAddressOf(),   // Output device
+            &featureLevel_,                     // Output feature level
+            context_.ReleaseAndGetAddressOf()   // Output device context
         );
 
         if (SUCCEEDED(hr))
