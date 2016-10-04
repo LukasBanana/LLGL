@@ -25,10 +25,10 @@ int main()
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
         {
-            contextDesc.videoMode.resolution = { 640, 480 };
+            contextDesc.videoMode.resolution    = { 640, 480 };
             #ifdef ENABLE_MULTISAMPLING
-            contextDesc.antiAliasing.enabled = true;
-            contextDesc.antiAliasing.samples = 8;
+            contextDesc.sampling.enabled        = true;
+            contextDesc.sampling.samples        = 8;
             #endif
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);

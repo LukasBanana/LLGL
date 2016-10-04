@@ -366,7 +366,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         swapChainDesc.Height                = static_cast<UINT>(desc_.videoMode.resolution.y);
         swapChainDesc.Format                = DXGI_FORMAT_B8G8R8A8_UNORM;
         swapChainDesc.Stereo                = false;
-        swapChainDesc.SampleDesc.Count      = (desc_.antiAliasing.enabled ? desc_.antiAliasing.samples : 1);
+        swapChainDesc.SampleDesc.Count      = (desc_.sampling.enabled ? desc_.sampling.samples : 1);
         swapChainDesc.SampleDesc.Quality    = 0;
         swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount           = numFrames_;

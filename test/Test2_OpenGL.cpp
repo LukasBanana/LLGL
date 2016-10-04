@@ -37,8 +37,8 @@ int main()
         contextDesc.videoMode.resolution    = { 800, 600 };
         //contextDesc.videoMode.fullscreen    = true;
 
-        contextDesc.antiAliasing.enabled    = true;
-        contextDesc.antiAliasing.samples    = 8;
+        contextDesc.sampling.enabled        = true;
+        contextDesc.sampling.samples        = 8;
 
         contextDesc.vsync.enabled           = true;
 

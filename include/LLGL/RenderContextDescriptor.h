@@ -65,6 +65,7 @@ enum class SwapChainMode
 
 /* ----- Structures ----- */
 
+//! Vertical-synchronization (Vsync) descriptor structure.
 struct VsyncDescriptor
 {
     bool            enabled     = false;    //!< Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
@@ -72,12 +73,14 @@ struct VsyncDescriptor
     unsigned int    interval    = 1;        //!< Synchronisation interval. Can be 1, 2, 3, or 4. If Vsync is disabled, this value is implicit zero.
 };
 
-struct AntiAliasingDescriptor
+//! (Multi-)sampling descriptor structure.
+struct SamplingDescriptor
 {
     bool            enabled     = false;    //!< Specifies whether multi-sampling is enabled or disabled. By default disabled.
     unsigned int    samples     = 1;        //!< Number of samples used for multi-sampling. By default 1.
 };
 
+//! Video mode descriptor structure.
 struct VideoModeDescriptor
 {
     Size            resolution;                                         //!< Screen resolution.
@@ -110,7 +113,7 @@ struct ProfileOpenGLDescriptor
 struct RenderContextDescriptor
 {
     VsyncDescriptor         vsync;          //!< Vertical-synchronization (Vsync) descriptor.
-    AntiAliasingDescriptor  antiAliasing;   //!< Multi-sample anti-aliasing descriptor.
+    SamplingDescriptor      sampling;       //!< Sampling descriptor.
     VideoModeDescriptor     videoMode;      //!< Video mode descriptor.
     ProfileOpenGLDescriptor profileOpenGL;  //!< OpenGL profile descriptor (to switch between compatability or core profile).
     DebugCallback           debugCallback;  //!< Debuging callback descriptor.

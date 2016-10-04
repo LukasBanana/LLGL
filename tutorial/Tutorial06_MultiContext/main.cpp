@@ -23,9 +23,9 @@ int main()
         // Create two render contexts
         LLGL::RenderContextDescriptor contextDesc;
         {
-            contextDesc.videoMode.resolution = { 640, 480 };
-            contextDesc.antiAliasing.enabled = true;
-            contextDesc.antiAliasing.samples = 8;
+            contextDesc.videoMode.resolution    = { 640, 480 };
+            contextDesc.sampling.enabled        = true;
+            contextDesc.sampling.samples        = 8;
         }
         auto context1 = renderer->CreateRenderContext(contextDesc);
         auto context2 = renderer->CreateRenderContext(contextDesc);
