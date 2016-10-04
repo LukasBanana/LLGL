@@ -83,6 +83,7 @@ struct VideoModeDescriptor
     SwapChainMode   swapChainMode   = SwapChainMode::DoubleBuffering;   //!< Swap chain buffering mode.
 };
 
+//! OpenGL profile descriptor structure.
 struct ProfileOpenGLDescriptor
 {
     //! Specifies whether an extended renderer profile is to be used. By default false.
@@ -104,6 +105,7 @@ struct ProfileOpenGLDescriptor
     OpenGLVersion   version     = OpenGLVersion::OpenGL_Latest;
 };
 
+//! Render context descriptor structure.
 struct RenderContextDescriptor
 {
     VsyncDescriptor         vsync;          //!< Vertical-synchronization (Vsync) descriptor.
