@@ -75,7 +75,7 @@ class D3D11Texture : public Texture
         );
 
         // Creates a copy of the specified subresource of the hardware texture with CPU read access.
-        bool CreateSubresourceCopyWithCPUAccess(
+        void CreateSubresourceCopyWithCPUAccess(
             ID3D11Device* device, ID3D11DeviceContext* context,
             D3D11HardwareTexture& textureCopy,
             UINT cpuAccessFlags,
@@ -93,11 +93,13 @@ class D3D11Texture : public Texture
             return srv_.Get();
         }
 
+        // Returns the hardware resource format.
         inline DXGI_FORMAT GetFormat() const
         {
             return format_;
         }
 
+        // Returns the number of MIP-map levels.
         inline UINT GetNumMipLevels() const
         {
             return numMipLevels_;

@@ -215,11 +215,46 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageF
     LLGL_ASSERT_PTR(buffer);
     auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
 
+    /* Create a copy of the hardware texture with CPU read access */
     D3D11HardwareTexture hwTextureCopy;
-    if (textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), hwTextureCopy, D3D11_CPU_ACCESS_READ, mipLevel))
+    textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), hwTextureCopy, D3D11_CPU_ACCESS_READ, mipLevel);
+    
+    /* Map subresource for reading */
+    D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+    auto hr = context_->Map(hwTextureCopy.resource.Get(), 0, D3D11_MAP_READ, 0, &mappedSubresource);
+    DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
+
+    /* Query MIP-level size to determine image buffer size */
+    auto size = texture.QueryMipLevelSize(mipLevel);
+
+    /* Check if image buffer must be converted */
+    auto srcTexFormat   = DXGetTextureFormatDesc(textureD3D.GetFormat());
+    auto srcPitch       = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
+    auto srcImageSize   = (size.x*size.y*size.z * srcPitch);
+
+    if (srcTexFormat.format != imageFormat || srcTexFormat.dataType != dataType)
     {
-        //todo...
+        /* Convert mapped data into requested format */
+        auto tempData = ConvertImageBuffer(
+            srcTexFormat.format, srcTexFormat.dataType,
+            mappedSubresource.pData, srcImageSize,
+            imageFormat, dataType,
+            GetConfiguration().threadCount
+        );
+
+        /* Copy temporary data into output buffer */
+        auto dstPitch       = DataTypeSize(dataType) * ImageFormatSize(imageFormat);
+        auto dstImageSize   = (size.x*size.y*size.z * dstPitch);
+        ::memcpy(buffer, tempData.get(), dstImageSize);
     }
+    else
+    {
+        /* Copy mapped data directly into the output buffer */
+        ::memcpy(buffer, mappedSubresource.pData, srcImageSize);
+    }
+
+    /* Unmap resource */
+    context_->Unmap(hwTextureCopy.resource.Get(), 0);
 }
 
 void D3D11RenderSystem::GenerateMips(Texture& texture)

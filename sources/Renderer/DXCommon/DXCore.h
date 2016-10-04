@@ -12,6 +12,7 @@
 #include <LLGL/ColorRGBA.h>
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/VideoAdapter.h>
+#include <LLGL/Image.h>
 #include <dxgi.h>
 #include <string>
 #include <vector>
@@ -30,6 +31,12 @@ struct D3DClearState
     ColorRGBAf  color   = { 0.0f, 0.0f, 0.0f, 0.0f };
     FLOAT       depth   = 1.0f;
     UINT8       stencil = 0;
+};
+
+struct D3DTextureFormatDescriptor
+{
+    ImageFormat format;
+    DataType    dataType;
 };
 
 
@@ -67,6 +74,9 @@ UINT DXGetDisassemblerFlags(int flags);
 
 // Returns the video adapter descriptor from the specified DXGI adapter.
 VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter);
+
+// Returns the LLGL format and data type for the specified DXGI format.
+D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format);
 
 
 } // /namespace LLGL
