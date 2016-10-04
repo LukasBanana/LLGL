@@ -67,27 +67,51 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(unsigned int mipLevel) const
     return size;
 }
 
+static ComPtr<ID3D11Texture1D> DXCreateTexture1D(
+    ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
+{
+    ComPtr<ID3D11Texture1D> tex1D;
+    auto hr = device->CreateTexture1D(&desc, initialData, &tex1D);
+    DXThrowIfFailed(hr, "failed to create D3D11 1D-texture");
+    return tex1D;
+}
+
+static ComPtr<ID3D11Texture2D> DXCreateTexture2D(
+    ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
+{
+    ComPtr<ID3D11Texture2D> tex2D;
+    auto hr = device->CreateTexture2D(&desc, initialData, &tex2D);
+    DXThrowIfFailed(hr, "failed to create D3D11 2D-texture");
+    return tex2D;
+}
+
+static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
+    ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData = nullptr)
+{
+    ComPtr<ID3D11Texture3D> tex3D;
+    auto hr = device->CreateTexture3D(&desc, initialData, &tex3D);
+    DXThrowIfFailed(hr, "failed to create D3D11 3D-texture");
+    return tex3D;
+}
+
 void D3D11Texture::CreateTexture1D(
     ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
-    auto hr = device->CreateTexture1D(&desc, initialData, hardwareTexture_.tex1D.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 1D-texture");
+    hardwareTexture_.tex1D = DXCreateTexture1D(device, desc, initialData);
     CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, 1, 1 }, srvDesc);
 }
 
 void D3D11Texture::CreateTexture2D(
     ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
-    auto hr = device->CreateTexture2D(&desc, initialData, hardwareTexture_.tex2D.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 2D-texture");
+    hardwareTexture_.tex2D = DXCreateTexture2D(device, desc, initialData);
     CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, 1 }, srvDesc);
 }
 
 void D3D11Texture::CreateTexture3D(
     ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
-    auto hr = device->CreateTexture3D(&desc, initialData, hardwareTexture_.tex3D.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 3D-texture");
+    hardwareTexture_.tex3D = DXCreateTexture3D(device, desc, initialData);
     CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, desc.Depth }, srvDesc);
 }
 
@@ -184,6 +208,80 @@ void D3D11Texture::UpdateSubresource(
             &dstBox, imageDesc.buffer, srcRowPitch, srcDepthPitch
         );
     }
+}
+
+bool D3D11Texture::CreateSubresourceCopyWithCPUAccess(
+    ID3D11Device* device, ID3D11DeviceContext* context,
+    D3D11HardwareTexture& textureCopy, UINT cpuAccessFlags, unsigned int mipLevel) const
+{
+    if (!hardwareTexture_.resource)
+        return false;
+
+    D3D11_RESOURCE_DIMENSION dimension;
+    hardwareTexture_.resource->GetType(&dimension);
+
+    switch (dimension)
+    {
+        case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
+        {
+            /* Create temporary 1D texture with a similar descriptor */
+            D3D11_TEXTURE1D_DESC desc;
+            hardwareTexture_.tex1D->GetDesc(&desc);
+            {
+                desc.Width          = (desc.Width << mipLevel);
+                desc.MipLevels      = 1;
+                desc.Usage          = D3D11_USAGE_STAGING;
+                desc.CPUAccessFlags = cpuAccessFlags;
+            }
+            textureCopy.tex1D = DXCreateTexture1D(device, desc);
+        }
+        break;
+
+        case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
+        {
+            /* Query and modify descriptor for 2D texture */
+            D3D11_TEXTURE2D_DESC desc;
+            hardwareTexture_.tex2D->GetDesc(&desc);
+            {
+                desc.Width          = (desc.Width << mipLevel);
+                desc.Height         = (desc.Height << mipLevel);
+                desc.MipLevels      = 1;
+                desc.Usage          = D3D11_USAGE_STAGING;
+                desc.CPUAccessFlags = cpuAccessFlags;
+            }
+            textureCopy.tex2D = DXCreateTexture2D(device, desc);
+        }
+        break;
+
+        case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
+        {
+            /* Query and modify descriptor for 3D texture */
+            D3D11_TEXTURE3D_DESC desc;
+            hardwareTexture_.tex3D->GetDesc(&desc);
+            {
+                desc.Width          = (desc.Width << mipLevel);
+                desc.Height         = (desc.Height << mipLevel);
+                desc.Depth          = (desc.Depth << mipLevel);
+                desc.MipLevels      = 1;
+                desc.Usage          = D3D11_USAGE_STAGING;
+                desc.CPUAccessFlags = cpuAccessFlags;
+            }
+            textureCopy.tex3D = DXCreateTexture3D(device, desc);
+        }
+        break;
+    }
+
+    /* Copy subresource */
+    context->CopySubresourceRegion(
+        textureCopy.resource.Get(),
+        0,
+        0, 0, 0, // DstX, DstY, DstZ
+        hardwareTexture_.resource.Get(),
+        D3D11CalcSubresource(mipLevel, 0, numMipLevels_),
+        nullptr
+    );
+
+    return true;
 }
 
 

@@ -74,6 +74,14 @@ class D3D11Texture : public Texture
             std::size_t threadCount
         );
 
+        // Creates a copy of the specified subresource of the hardware texture with CPU read access.
+        bool CreateSubresourceCopyWithCPUAccess(
+            ID3D11Device* device, ID3D11DeviceContext* context,
+            D3D11HardwareTexture& textureCopy,
+            UINT cpuAccessFlags,
+            unsigned int mipLevel
+        ) const;
+
         inline const D3D11HardwareTexture& GetHardwareTexture() const
         {
             return hardwareTexture_;
@@ -104,7 +112,7 @@ class D3D11Texture : public Texture
             const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
         );
 
-        D3D11HardwareTexture                hardwareTexture_;
+        D3D11HardwareTexture                hardwareTexture_;//hwTexture_
         ComPtr<ID3D11ShaderResourceView>    srv_;
 
         DXGI_FORMAT                         format_             = DXGI_FORMAT_UNKNOWN;

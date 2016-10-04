@@ -215,7 +215,11 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageF
     LLGL_ASSERT_PTR(buffer);
     auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
 
-    //todo...
+    D3D11HardwareTexture hwTextureCopy;
+    if (textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), hwTextureCopy, D3D11_CPU_ACCESS_READ, mipLevel))
+    {
+        //todo...
+    }
 }
 
 void D3D11RenderSystem::GenerateMips(Texture& texture)
