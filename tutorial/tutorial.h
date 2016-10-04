@@ -19,6 +19,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 
 class Tutorial
 {
@@ -324,12 +327,12 @@ protected:
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.
     LLGL::Texture* LoadTexture(const std::string& filename)
     {
-        // Load image data from file (using STBI library, see http://nothings.org/stb_image.h)
+        // Load image data from file (using STBI library, see https://github.com/nothings/stb)
         int width = 0, height = 0, components = 0;
 
         unsigned char* imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, 4);
         if (!imageBuffer)
-            throw std::runtime_error("failed to open file: \"" + filename + "\"");
+            throw std::runtime_error("failed to load texture from file: \"" + filename + "\"");
 
         // Initialize image descriptor to upload image data onto hardware texture
         LLGL::ImageDescriptor imageDesc;
@@ -362,7 +365,33 @@ protected:
         // Release image data
         stbi_image_free(imageBuffer);
 
+        // Show info
+        std::cout << "loaded texture: " << filename << std::endl;
+
         return tex;
+    }
+
+    // Save texture image to a PNG file.
+    bool SaveTexture(LLGL::Texture& texture, const std::string& filename, unsigned int mipLevel = 0)
+    {
+        // Get texture dimension
+        auto texSize = texture.QueryMipLevelSize(0).Cast<int>();
+
+        // Read texture image data
+        std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.x*texSize.y);
+        renderer->ReadTexture(texture, mipLevel, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, imageBuffer.data());
+
+        // Save image data to file (using STBI library, see https://github.com/nothings/stb)
+        if (!stbi_write_png(filename.c_str(), texSize.x, texSize.y, 4, imageBuffer.data(), texSize.x*4))
+        {
+            std::cerr << "failed to write texture to file: \"" + filename + "\"" << std::endl;
+            return false;
+        }
+
+        // Show info
+        std::cout << "saved texture: " << filename << std::endl;
+
+        return true;
     }
 
     // Generates eight vertices for a unit cube.

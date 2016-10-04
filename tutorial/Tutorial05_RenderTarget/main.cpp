@@ -52,6 +52,7 @@ public:
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
         std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube" << std::endl;
+        std::cout << "press RETURN KEY to save the render target texture to a PNG file" << std::endl;
     }
 
     LLGL::VertexFormat CreateBuffers()
@@ -104,6 +105,7 @@ public:
             samplerDesc.textureWrapU    = LLGL::TextureWrap::Border;
             samplerDesc.textureWrapV    = LLGL::TextureWrap::Border;
             samplerDesc.maxAnisotropy   = 8;
+            samplerDesc.borderColor     = { 0, 0, 0, 1 };
         }
         samplerState = renderer->CreateSampler(samplerDesc);
     }
@@ -251,6 +253,10 @@ private:
 
         // Present result on the screen
         context->Present();
+
+        // Check if user wants to sage the render target texture to file
+        if (input->KeyDown(LLGL::Key::Return))
+            SaveTexture(*renderTargetTex, "RenderTargetTexture.png");
     }
 
 };
