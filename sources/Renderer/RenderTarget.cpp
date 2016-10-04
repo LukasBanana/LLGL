@@ -25,10 +25,10 @@ RenderTarget::~RenderTarget()
  * ======= Protected: =======
  */
 
-void RenderTarget::ApplyResolution(const Gs::Vector2i& resolution)
+void RenderTarget::ApplyResolution(const Gs::Vector2ui& resolution)
 {
     /* Validate texture attachment size */
-    if (resolution.x == 0 || resolution.y == 0)
+    if (resolution == Gs::Vector2ui(0, 0))
     {
         throw std::invalid_argument(
             "attachment to render target failed, due to invalid size (" +
@@ -37,7 +37,7 @@ void RenderTarget::ApplyResolution(const Gs::Vector2i& resolution)
     }
 
     /* Check if size matches the current resolution */
-    if (resolution_ != Gs::Vector2i(0, 0))
+    if (resolution_ != Gs::Vector2ui(0, 0))
     {
         if (resolution != resolution_)
             throw std::invalid_argument("attachment to render target failed, due to resolution mismatch");
@@ -46,7 +46,7 @@ void RenderTarget::ApplyResolution(const Gs::Vector2i& resolution)
         resolution_ = resolution;
 }
 
-void RenderTarget::ApplyMipResolution(Texture& texture, int mipLevel)
+void RenderTarget::ApplyMipResolution(Texture& texture, unsigned int mipLevel)
 {
     /* Apply texture size to frame buffer resolution */
     auto size = texture.QueryMipLevelSize(mipLevel);
@@ -55,7 +55,7 @@ void RenderTarget::ApplyMipResolution(Texture& texture, int mipLevel)
 
 void RenderTarget::ResetResolution()
 {
-    resolution_ = Gs::Vector2i(0, 0);
+    resolution_ = Gs::Vector2ui(0, 0);
 }
 
 

@@ -22,17 +22,17 @@ D3D11RenderTarget::D3D11RenderTarget(D3D11RenderSystem& renderSystem, unsigned i
 {
 }
 
-void D3D11RenderTarget::AttachDepthBuffer(const Gs::Vector2i& size)
+void D3D11RenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
 {
     CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
-void D3D11RenderTarget::AttachStencilBuffer(const Gs::Vector2i& size)
+void D3D11RenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
 {
     CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
-void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
+void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
 {
     CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
@@ -40,27 +40,27 @@ void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
 static void FillViewDescForTexture1D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE1D;
-    viewDesc.Texture1D.MipSlice = static_cast<UINT>(attachmentDesc.mipLevel);
+    viewDesc.Texture1D.MipSlice = attachmentDesc.mipLevel;
 }
 
 static void FillViewDescForTexture2D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
-    viewDesc.Texture2D.MipSlice = static_cast<UINT>(attachmentDesc.mipLevel);
+    viewDesc.Texture2D.MipSlice = attachmentDesc.mipLevel;
 }
 
 static void FillViewDescForTexture3D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension          = D3D11_RTV_DIMENSION_TEXTURE3D;
-    viewDesc.Texture3D.MipSlice     = static_cast<UINT>(attachmentDesc.mipLevel);
-    viewDesc.Texture3D.FirstWSlice  = static_cast<UINT>(attachmentDesc.layer);
+    viewDesc.Texture3D.MipSlice     = attachmentDesc.mipLevel;
+    viewDesc.Texture3D.FirstWSlice  = attachmentDesc.layer;
     viewDesc.Texture3D.WSize        = 1;
 }
 
 static void FillViewDescForTextureCube(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-    viewDesc.Texture2DArray.MipSlice        = static_cast<UINT>(attachmentDesc.mipLevel);
+    viewDesc.Texture2DArray.MipSlice        = attachmentDesc.mipLevel;
     viewDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.cubeFace);
     viewDesc.Texture2DArray.ArraySize       = 1;
 }
@@ -68,31 +68,31 @@ static void FillViewDescForTextureCube(const RenderTargetAttachmentDescriptor& a
 static void FillViewDescForTexture1DArray(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
-    viewDesc.Texture1DArray.MipSlice        = static_cast<UINT>(attachmentDesc.mipLevel);
-    viewDesc.Texture1DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.layer);
+    viewDesc.Texture1DArray.MipSlice        = attachmentDesc.mipLevel;
+    viewDesc.Texture1DArray.FirstArraySlice = attachmentDesc.layer;
     viewDesc.Texture1DArray.ArraySize       = 1;
 }
 
 static void FillViewDescForTexture2DArray(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-    viewDesc.Texture2DArray.MipSlice        = static_cast<UINT>(attachmentDesc.mipLevel);
-    viewDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.layer);
+    viewDesc.Texture2DArray.MipSlice        = attachmentDesc.mipLevel;
+    viewDesc.Texture2DArray.FirstArraySlice = attachmentDesc.layer;
     viewDesc.Texture2DArray.ArraySize       = 1;
 }
 
 static void FillViewDescForTexture2DArrayMS(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMS;
-    viewDesc.Texture2DMSArray.FirstArraySlice   = static_cast<UINT>(attachmentDesc.layer);
+    viewDesc.Texture2DMSArray.FirstArraySlice   = attachmentDesc.layer;
     viewDesc.Texture2DMSArray.ArraySize         = 1;
 }
 
 static void FillViewDescForTextureCubeArray(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-    viewDesc.Texture2DArray.MipSlice        = static_cast<UINT>(attachmentDesc.mipLevel);
-    viewDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.layer*6) + static_cast<UINT>(attachmentDesc.cubeFace);
+    viewDesc.Texture2DArray.MipSlice        = attachmentDesc.mipLevel;
+    viewDesc.Texture2DArray.FirstArraySlice = attachmentDesc.layer * 6 + static_cast<UINT>(attachmentDesc.cubeFace);
     viewDesc.Texture2DArray.ArraySize       = 1;
 }
 
@@ -182,15 +182,11 @@ void D3D11RenderTarget::DetachAll()
  * ======= Private: =======
  */
 
-void D3D11RenderTarget::CreateDepthStencilAndDSV(const Gs::Vector2i& size, DXGI_FORMAT format)
+void D3D11RenderTarget::CreateDepthStencilAndDSV(const Gs::Vector2ui& size, DXGI_FORMAT format)
 {
     /* Apply size to render target resolution, and create depth-stencil */
     ApplyResolution(size);
-
-    renderSystem_.CreateDXDepthStencilAndDSV(
-        static_cast<UINT>(size.x), static_cast<UINT>(size.y), multiSamples_, format,
-        depthStencil_, depthStencilView_
-    );
+    renderSystem_.CreateDXDepthStencilAndDSV(size.x, size.y, multiSamples_, format, depthStencil_, depthStencilView_);
 }
 
 void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& desc)

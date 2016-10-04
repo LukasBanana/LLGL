@@ -21,8 +21,8 @@ namespace LLGL
 //! Render target attachment descriptor structure.
 struct RenderTargetAttachmentDescriptor
 {
-    int             mipLevel    = 0;                    //!< MIP-map level.
-    int             layer       = 0;                    //!< Array texture layer.
+    unsigned int    mipLevel    = 0;                    //!< MIP-map level.
+    unsigned int    layer       = 0;                    //!< Array texture layer.
     AxisDirection   cubeFace    = AxisDirection::XPos;  //!< Cube texture face.
 };
 
@@ -48,21 +48,21 @@ class LLGL_EXPORT RenderTarget
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthStencilBuffer
         */
-        virtual void AttachDepthBuffer(const Gs::Vector2i& size) = 0;
+        virtual void AttachDepthBuffer(const Gs::Vector2ui& size) = 0;
 
         /**
         \brief Attaches an internal stencil buffer to this render target.
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthBuffer
         */
-        virtual void AttachStencilBuffer(const Gs::Vector2i& size) = 0;
+        virtual void AttachStencilBuffer(const Gs::Vector2ui& size) = 0;
 
         /**
         \brief Attaches an internal depth-stencil buffer to this render target.
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthBuffer
         */
-        virtual void AttachDepthStencilBuffer(const Gs::Vector2i& size) = 0;
+        virtual void AttachDepthStencilBuffer(const Gs::Vector2ui& size) = 0;
 
         /**
         \brief Attaches the specified texture to this render target.
@@ -78,20 +78,20 @@ class LLGL_EXPORT RenderTarget
         \brief Returns the frame buffer resolution.
         \remarks This will be determined by the first texture attachment. Every further attachment must have the same size.
         */
-        inline const Gs::Vector2i& GetResolution() const
+        inline const Gs::Vector2ui& GetResolution() const
         {
             return resolution_;
         }
 
     protected:
 
-        void ApplyResolution(const Gs::Vector2i& resolution);
-        void ApplyMipResolution(Texture& texture, int mipLevel);
+        void ApplyResolution(const Gs::Vector2ui& resolution);
+        void ApplyMipResolution(Texture& texture, unsigned int mipLevel);
         void ResetResolution();
 
     private:
 
-        Gs::Vector2i resolution_;
+        Gs::Vector2ui resolution_;
 
 };
 

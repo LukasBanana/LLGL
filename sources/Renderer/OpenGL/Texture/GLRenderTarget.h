@@ -29,9 +29,9 @@ class GLRenderTarget : public RenderTarget
 
         GLRenderTarget(unsigned int multiSamples);
 
-        void AttachDepthBuffer(const Gs::Vector2i& size) override;
-        void AttachStencilBuffer(const Gs::Vector2i& size) override;
-        void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
+        void AttachDepthBuffer(const Gs::Vector2ui& size) override;
+        void AttachStencilBuffer(const Gs::Vector2ui& size) override;
+        void AttachDepthStencilBuffer(const Gs::Vector2ui& size) override;
 
         void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
 
@@ -59,7 +59,7 @@ class GLRenderTarget : public RenderTarget
         void InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat);
         GLenum AttachDefaultRenderBuffer(GLFrameBuffer& frameBuffer, GLenum attachment);
 
-        void AttachRenderBuffer(const Gs::Vector2i& size, GLenum internalFormat, GLenum attachment);
+        void AttachRenderBuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment);
 
         GLenum MakeColorAttachment();
 

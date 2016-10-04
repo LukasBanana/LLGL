@@ -20,17 +20,17 @@ DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, unsigned int multiSampl
 {
 }
 
-void DbgRenderTarget::AttachDepthBuffer(const Gs::Vector2i& size)
+void DbgRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
 {
     instance.AttachDepthBuffer(size);
 }
 
-void DbgRenderTarget::AttachStencilBuffer(const Gs::Vector2i& size)
+void DbgRenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
 {
     instance.AttachStencilBuffer(size);
 }
 
-void DbgRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
+void DbgRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
 {
     instance.AttachDepthStencilBuffer(size);
 }

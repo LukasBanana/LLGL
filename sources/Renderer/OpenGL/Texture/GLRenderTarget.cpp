@@ -25,19 +25,19 @@ GLRenderTarget::GLRenderTarget(unsigned int multiSamples) :
         frameBufferMS_ = MakeUnique<GLFrameBuffer>();
 }
 
-void GLRenderTarget::AttachDepthBuffer(const Gs::Vector2i& size)
+void GLRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
 {
     AttachRenderBuffer(size, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
     blitMask_ |= GL_DEPTH_BUFFER_BIT;
 }
 
-void GLRenderTarget::AttachStencilBuffer(const Gs::Vector2i& size)
+void GLRenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
 {
     AttachRenderBuffer(size, GL_STENCIL_INDEX, GL_STENCIL_ATTACHMENT);
     blitMask_ |= GL_STENCIL_BUFFER_BIT;
 }
 
-void GLRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2i& size)
+void GLRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
 {
     AttachRenderBuffer(size, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL_ATTACHMENT);
     blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -172,7 +172,7 @@ void GLRenderTarget::BlitOntoFrameBuffer()
             glReadBuffer(attachment);
             glDrawBuffer(attachment);
 
-            GLFrameBuffer::Blit(GetResolution(), blitMask_);
+            GLFrameBuffer::Blit(GetResolution().Cast<int>(), blitMask_);
         }
 
         frameBufferMS_->Unbind(GLFrameBufferTarget::READ_FRAMEBUFFER);
@@ -190,7 +190,7 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
             glReadBuffer(colorAttachments_[colorAttachmentIndex]);
             glDrawBuffer(GL_BACK);
 
-            GLFrameBuffer::Blit(GetResolution(), blitMask_);
+            GLFrameBuffer::Blit(GetResolution().Cast<int>(), blitMask_);
         }
         GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::READ_FRAMEBUFFER, 0);
     }
@@ -210,7 +210,7 @@ void GLRenderTarget::InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenu
 {
     renderBuffer.Bind();
     {
-        GLRenderBuffer::Storage(internalFormat, GetResolution(), multiSamples_);
+        GLRenderBuffer::Storage(internalFormat, GetResolution().Cast<int>(), multiSamples_);
     }
     renderBuffer.Unbind();
 }
@@ -229,7 +229,7 @@ GLenum GLRenderTarget::AttachDefaultRenderBuffer(GLFrameBuffer& frameBuffer, GLe
     return status;
 }
 
-void GLRenderTarget::AttachRenderBuffer(const Gs::Vector2i& size, GLenum internalFormat, GLenum attachment)
+void GLRenderTarget::AttachRenderBuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment)
 {
     if (!renderBuffer_)
     {

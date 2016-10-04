@@ -34,7 +34,7 @@ class Tutorial05 : public Tutorial
 
     Gs::Matrix4f            renderTargetProj;
 
-    const Gs::Vector2i      renderTargetSize    = Gs::Vector2i(64);//512);
+    const Gs::Vector2ui     renderTargetSize    = Gs::Vector2ui(64);//512);
 
     struct Settings
     {

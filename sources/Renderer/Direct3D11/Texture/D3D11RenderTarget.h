@@ -30,9 +30,9 @@ class D3D11RenderTarget : public RenderTarget
 
         D3D11RenderTarget(D3D11RenderSystem& renderSystem, unsigned int multiSamples);
 
-        void AttachDepthBuffer(const Gs::Vector2i& size) override;
-        void AttachStencilBuffer(const Gs::Vector2i& size) override;
-        void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
+        void AttachDepthBuffer(const Gs::Vector2ui& size) override;
+        void AttachStencilBuffer(const Gs::Vector2ui& size) override;
+        void AttachDepthStencilBuffer(const Gs::Vector2ui& size) override;
 
         void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
 
@@ -54,7 +54,7 @@ class D3D11RenderTarget : public RenderTarget
 
         using AttachTextureCallback = std::function<void(D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)>;
 
-        void CreateDepthStencilAndDSV(const Gs::Vector2i& size, DXGI_FORMAT format);
+        void CreateDepthStencilAndDSV(const Gs::Vector2ui& size, DXGI_FORMAT format);
         void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& desc);
 
         bool HasMultiSampling() const;

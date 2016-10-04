@@ -23,9 +23,9 @@ class DbgRenderTarget : public RenderTarget
 
         DbgRenderTarget(RenderTarget& instance, unsigned int multiSamples);
 
-        void AttachDepthBuffer(const Gs::Vector2i& size) override;
-        void AttachStencilBuffer(const Gs::Vector2i& size) override;
-        void AttachDepthStencilBuffer(const Gs::Vector2i& size) override;
+        void AttachDepthBuffer(const Gs::Vector2ui& size) override;
+        void AttachStencilBuffer(const Gs::Vector2ui& size) override;
+        void AttachDepthStencilBuffer(const Gs::Vector2ui& size) override;
 
         void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
 

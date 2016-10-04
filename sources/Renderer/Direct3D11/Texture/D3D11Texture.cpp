@@ -18,16 +18,14 @@ D3D11Texture::D3D11Texture(const TextureType type) :
 {
 }
 
-Gs::Vector3i D3D11Texture::QueryMipLevelSize(int mipLevel) const
+Gs::Vector3ui D3D11Texture::QueryMipLevelSize(unsigned int mipLevel) const
 {
-    Gs::Vector3i size;
+    Gs::Vector3ui size;
 
     if (hardwareTexture_.resource)
     {
         D3D11_RESOURCE_DIMENSION dimension;
         hardwareTexture_.resource->GetType(&dimension);
-
-        UINT level = static_cast<UINT>(mipLevel);
 
         switch (dimension)
         {
@@ -37,8 +35,8 @@ Gs::Vector3i D3D11Texture::QueryMipLevelSize(int mipLevel) const
                 D3D11_TEXTURE1D_DESC desc;
                 hardwareTexture_.tex1D->GetDesc(&desc);
 
-                if (level < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width << level), 1, 1).Cast<int>();
+                if (mipLevel < desc.MipLevels)
+                    size = Gs::Vector3ui((desc.Width << mipLevel), 1, 1);
             }
             break;
 
@@ -48,8 +46,8 @@ Gs::Vector3i D3D11Texture::QueryMipLevelSize(int mipLevel) const
                 D3D11_TEXTURE2D_DESC desc;
                 hardwareTexture_.tex2D->GetDesc(&desc);
 
-                if (level < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width << level), (desc.Height << level), 1).Cast<int>();
+                if (mipLevel < desc.MipLevels)
+                    size = Gs::Vector3ui((desc.Width << mipLevel), (desc.Height << mipLevel), 1);
             }
             break;
 
@@ -59,8 +57,8 @@ Gs::Vector3i D3D11Texture::QueryMipLevelSize(int mipLevel) const
                 D3D11_TEXTURE3D_DESC desc;
                 hardwareTexture_.tex3D->GetDesc(&desc);
 
-                if (level < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width << level), (desc.Height << level), (desc.Depth << level)).Cast<int>();
+                if (mipLevel < desc.MipLevels)
+                    size = Gs::Vector3ui((desc.Width << mipLevel), (desc.Height << mipLevel), (desc.Depth << mipLevel));
             }
             break;
         }

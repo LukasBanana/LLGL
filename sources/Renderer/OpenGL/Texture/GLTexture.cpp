@@ -25,18 +25,24 @@ GLTexture::~GLTexture()
     glDeleteTextures(1, &id_);
 }
 
-Gs::Vector3i GLTexture::QueryMipLevelSize(int mipLevel) const
+Gs::Vector3ui GLTexture::QueryMipLevelSize(unsigned int mipLevel) const
 {
-    Gs::Vector3i size;
+    Gs::Vector3ui size;
 
     GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
     {
         GLStateManager::active->BindTexture(*this);
 
         auto target = GLTypes::Map(GetType());
-        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_WIDTH, &size.x);
-        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_HEIGHT, &size.y);
-        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_DEPTH, &size.z);
+
+        GLint texSize[3] = { 0 };
+        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_WIDTH,  &texSize[0]);
+        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_HEIGHT, &texSize[1]);
+        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_DEPTH,  &texSize[2]);
+
+        size.x = static_cast<unsigned int>(texSize[0]);
+        size.y = static_cast<unsigned int>(texSize[1]);
+        size.z = static_cast<unsigned int>(texSize[2]);
     }
     GLStateManager::active->PopBoundTexture();
 
