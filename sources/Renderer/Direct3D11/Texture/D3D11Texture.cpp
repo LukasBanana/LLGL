@@ -72,7 +72,6 @@ void D3D11Texture::CreateTexture1D(
 {
     auto hr = device->CreateTexture1D(&desc, initialData, hardwareTexture_.tex1D.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 1D-texture");
-
     CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, 1, 1 }, srvDesc);
 }
 
@@ -81,7 +80,6 @@ void D3D11Texture::CreateTexture2D(
 {
     auto hr = device->CreateTexture2D(&desc, initialData, hardwareTexture_.tex2D.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 2D-texture");
-
     CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, 1 }, srvDesc);
 }
 
@@ -90,7 +88,6 @@ void D3D11Texture::CreateTexture3D(
 {
     auto hr = device->CreateTexture3D(&desc, initialData, hardwareTexture_.tex3D.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 3D-texture");
-
     CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, desc.Depth }, srvDesc);
 }
 

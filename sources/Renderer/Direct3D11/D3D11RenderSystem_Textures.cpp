@@ -50,18 +50,18 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            BuildGenericTexture1D(*texture, descD3D, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            BuildGenericTexture1D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
             break;
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-            BuildGenericTexture2D(*texture, descD3D, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            BuildGenericTexture2D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
             break;
         case TextureType::Texture3D:
-            BuildGenericTexture3D(*texture, descD3D, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            BuildGenericTexture3D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
             break;
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
-            BuildGenericTexture2D(*texture, descD3D, imageDesc, 0, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
+            BuildGenericTexture2D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
             break;
         default:
             throw std::invalid_argument("failed to create texture with invalid texture type");
@@ -231,8 +231,7 @@ void D3D11RenderSystem::GenerateMips(Texture& texture)
  */
 
 void D3D11RenderSystem::BuildGenericTexture1D(
-    D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
-    const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
+    D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE1D_DESC texDesc;
@@ -243,7 +242,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(
         texDesc.Format          = D3D11Types::Map(descD3D.format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags  = cpuAccessFlags;
+        texDesc.CPUAccessFlags  = 0;
         texDesc.MiscFlags       = miscFlags;
     }
 
@@ -274,8 +273,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(
 }
 
 void D3D11RenderSystem::BuildGenericTexture2D(
-    D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
-    const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
+    D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE2D_DESC texDesc;
@@ -289,7 +287,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags      = cpuAccessFlags;
+        texDesc.CPUAccessFlags      = 0;
         texDesc.MiscFlags           = miscFlags;
     }
 
@@ -320,8 +318,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(
 }
 
 void D3D11RenderSystem::BuildGenericTexture3D(
-    D3D11Texture& textureD3D, const TextureDescriptor& descD3D,
-    const ImageDescriptor* imageDesc, UINT cpuAccessFlags, UINT miscFlags)
+    D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags)
 {
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE3D_DESC texDesc;
@@ -333,7 +330,7 @@ void D3D11RenderSystem::BuildGenericTexture3D(
         texDesc.Format          = D3D11Types::Map(descD3D.format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags  = cpuAccessFlags;
+        texDesc.CPUAccessFlags  = 0;
         texDesc.MiscFlags       = miscFlags;
     }
 
