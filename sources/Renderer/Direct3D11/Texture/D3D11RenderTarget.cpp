@@ -167,9 +167,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
             {
                 tex2DMS,
                 textureD3D.GetHardwareTexture().tex2D.Get(),
-                attachmentDesc.mipLevel,
-                attachmentDesc.layer,
-                texDesc.MipLevels,
+                D3D11CalcSubresource(attachmentDesc.mipLevel, attachmentDesc.layer, texDesc.MipLevels),
                 texDesc.Format
             }
         );
@@ -225,18 +223,15 @@ void D3D11RenderTarget::DetachAll()
 
 /* ----- Extended Internal Functions ----- */
 
-void D3D11RenderTarget::ResolveSubresources()
+void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
 {
     for (const auto& attachment : multiSampledAttachments_)
     {
-        auto dstSubresource = D3D11CalcSubresource(attachment.mipSlice, attachment.arraySlice, attachment.mipLevels);
-        auto srcSubresource = D3D11CalcSubresource(0, 0, 1);
-
-        renderSystem_.GetDeviceContext()->ResolveSubresource(
+        context->ResolveSubresource(
             attachment.targetTexture,
-            dstSubresource,
+            attachment.targetSubresourceIndex,
             attachment.texture2DMS.Get(),
-            srcSubresource,
+            0,
             attachment.format
         );
     }

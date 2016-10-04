@@ -131,11 +131,6 @@ class D3D11RenderSystem : public RenderSystem
             return device_.Get();
         }
 
-        inline ID3D11DeviceContext* GetDeviceContext() const
-        {
-            return context_.Get();
-        }
-
     private:
         
         void CreateFactory();

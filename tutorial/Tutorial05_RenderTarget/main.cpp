@@ -114,7 +114,7 @@ public:
         {
             samplerDesc.textureWrapU    = LLGL::TextureWrap::Border;
             samplerDesc.textureWrapV    = LLGL::TextureWrap::Border;
-            //samplerDesc.maxAnisotropy   = 8;
+            samplerDesc.maxAnisotropy   = 8;
         }
         samplerState = renderer->CreateSampler(samplerDesc);
     }

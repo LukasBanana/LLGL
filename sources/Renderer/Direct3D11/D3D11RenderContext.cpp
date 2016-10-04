@@ -259,7 +259,7 @@ void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long sh
 void D3D11RenderContext::ResolveBoundRenderTarget()
 {
     if (boundRenderTarget_)
-        boundRenderTarget_->ResolveSubresources();
+        boundRenderTarget_->ResolveSubresources(context_.Get());
 }
 
 void D3D11RenderContext::SetRenderTarget(RenderTarget& renderTarget)
