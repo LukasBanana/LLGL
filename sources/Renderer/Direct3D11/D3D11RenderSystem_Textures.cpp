@@ -301,7 +301,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(
     {
         /* Update only the first MIP-map level for each array slice */
         auto subImageDesc = *imageDesc;
-        auto subImageStride = descD3D.texture2DDesc.width * descD3D.texture2DDesc.height * ImageFormatSize(subImageDesc.format) * DataTypeSize(subImageDesc.dataType);
+        auto subImageStride = descD3D.texture2DDesc.width * descD3D.texture2DDesc.height * subImageDesc.GetElementSize();
 
         for (unsigned int arraySlice = 0; arraySlice < descD3D.texture2DDesc.layers; ++arraySlice)
         {

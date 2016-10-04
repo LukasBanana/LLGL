@@ -81,7 +81,7 @@ struct LLGL_EXPORT ImageDescriptor
     ImageDescriptor() = default;
 
     // Constructor for uncompressed image data.
-    ImageDescriptor(ImageFormat format, DataType dataType, const void* buffer) :
+    inline ImageDescriptor(ImageFormat format, DataType dataType, const void* buffer) :
         format  ( format   ),
         dataType( dataType ),
         buffer  ( buffer   )
@@ -89,12 +89,21 @@ struct LLGL_EXPORT ImageDescriptor
     }
 
     //! Constructor for compressed image data.
-    ImageDescriptor(ImageFormat format, const void* buffer, unsigned int compressedSize) :
+    inline ImageDescriptor(ImageFormat format, const void* buffer, unsigned int compressedSize) :
         format          ( format         ),
         buffer          ( buffer         ),
         compressedSize  ( compressedSize )
     {
     }
+
+    /**
+    \brief Returns the size (in bytes) for each image element (i.e. per "texel" or "pixel")
+    \return
+    \code
+    ImageFormatSize(format) * DataTypeSize(dataType);
+    \endcode
+    */
+    unsigned int GetElementSize() const;
 
     ImageFormat     format          = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
     DataType        dataType        = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images.

@@ -473,6 +473,14 @@ static ByteBuffer ConvertImageBufferFormat(
 }
 
 
+/* ----- Public structures ----- */
+
+unsigned int ImageDescriptor::GetElementSize() const
+{
+    return ImageFormatSize(format) * DataTypeSize(dataType);
+}
+
+
 /* ----- Public functions ----- */
 
 LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType)
