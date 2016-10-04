@@ -106,7 +106,7 @@ struct LLGL_EXPORT ImageDescriptor
 /* ----- Functions ----- */
 
 //! Returns the size (in bytes) of the specified data type.
-LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType);
+LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType);
 
 /**
 \brief Returns the size (in number of components) of the specified image format.
@@ -114,7 +114,7 @@ LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType);
 \return Number of components of the specified image format, or 0 if 'imageFormat' specifies a compressed color format.
 \see IsCompressedFormat(const ImageFormat)
 */
-LLGL_EXPORT std::size_t ImageFormatSize(const ImageFormat imageFormat);
+LLGL_EXPORT unsigned int ImageFormatSize(const ImageFormat imageFormat);
 
 /**
 \brief Returns true if the specified color format is a compressed format,

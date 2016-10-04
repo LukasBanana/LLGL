@@ -475,7 +475,7 @@ static ByteBuffer ConvertImageBufferFormat(
 
 /* ----- Public functions ----- */
 
-LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType)
+LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType)
 {
     switch (dataType)
     {
@@ -495,7 +495,7 @@ LLGL_EXPORT std::size_t DataTypeSize(const DataType dataType)
     return 0;
 }
 
-LLGL_EXPORT std::size_t ImageFormatSize(const ImageFormat imageFormat)
+LLGL_EXPORT unsigned int ImageFormatSize(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
