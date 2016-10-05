@@ -65,8 +65,12 @@ ADD_DEBUG_DEFINE(LLGL_DEBUG)
 option(LLGL_ENABLE_CHECKED_CAST "Enable Dynamic Checked Cast (only in Debug mode)" ON)
 option(LLGL_ENABLE_DEBUG_LAYER "Enable Renderer Debug Layer (for both Debug and Release mode)" ON)
 option(LLGL_ENABLE_UTILITY "Enable Utility Functions (LLGL/Utility.h)" ON)
+
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable Vendor Specific OpenGL Extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL Extension Placeholders" ON)
+
+option(LLGL_BUILD_TESTS "Include Test Projects" ON)
+option(LLGL_BUILD_TUTORIALS "Include Tutorial Projects" ON)
 
 if(LLGL_ENABLE_CHECKED_CAST)
 	ADD_DEBUG_DEFINE(LLGL_ENABLE_CHECKED_CAST)
@@ -163,6 +167,7 @@ set(FilesTutorial04 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial04_Query/main.cpp)
 set(FilesTutorial05 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial05_RenderTarget/main.cpp)
 set(FilesTutorial06 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial06_MultiContext/main.cpp)
 set(FilesTutorial07 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial07_Array/main.cpp)
+set(FilesTutorial08 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial08_Compute/main.cpp)
 
 
 # === Source group folders ===
@@ -332,20 +337,25 @@ if(WIN32)
 endif()
 
 # Test Projects
-ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
-ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
-
-if(WIN32)
-	ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
+if(LLGL_BUILD_TESTS)
+	ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
+	ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
+	if(WIN32)
+		ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
+	endif()
+	ADD_TEST_PROJECT(Test4_Compute ${FilesTest4})
 endif()
 
-ADD_TEST_PROJECT(Test4_Compute ${FilesTest4})
-ADD_TEST_PROJECT(Tutorial01_HelloTriangle ${FilesTutorial01})
-ADD_TEST_PROJECT(Tutorial02_Tessellation ${FilesTutorial02})
-ADD_TEST_PROJECT(Tutorial03_Texturing ${FilesTutorial03})
-ADD_TEST_PROJECT(Tutorial04_Query ${FilesTutorial04})
-ADD_TEST_PROJECT(Tutorial05_RenderTarget ${FilesTutorial05})
-ADD_TEST_PROJECT(Tutorial06_MultiContext ${FilesTutorial06})
-ADD_TEST_PROJECT(Tutorial07_Array ${FilesTutorial07})
+# Tutorial Projects
+if(LLGL_BUILD_TUTORIALS)
+	ADD_TEST_PROJECT(Tutorial01_HelloTriangle ${FilesTutorial01})
+	ADD_TEST_PROJECT(Tutorial02_Tessellation ${FilesTutorial02})
+	ADD_TEST_PROJECT(Tutorial03_Texturing ${FilesTutorial03})
+	ADD_TEST_PROJECT(Tutorial04_Query ${FilesTutorial04})
+	ADD_TEST_PROJECT(Tutorial05_RenderTarget ${FilesTutorial05})
+	ADD_TEST_PROJECT(Tutorial06_MultiContext ${FilesTutorial06})
+	ADD_TEST_PROJECT(Tutorial07_Array ${FilesTutorial07})
+	ADD_TEST_PROJECT(Tutorial08_Compute ${FilesTutorial08})
+endif()
 
 

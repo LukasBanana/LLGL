@@ -5,18 +5,15 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/LLGL.h>
-#include <Gauss/Gauss.h>
-#include <iostream>
-#include <fstream>
+#include "../tutorial.h"
 
 
-int main()
+int main(int argc, char* argv[])
 {
     try
     {
         // Load render system module
-        auto renderer = LLGL::RenderSystem::Load("OpenGL");
+        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv));
 
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 

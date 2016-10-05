@@ -1,14 +1,11 @@
-// ComputeShader.glsl
-// OpenGL Test Shader for LLGL
-// 09/09/2016
-
+// GLSL compute shader
 #version 430
 
 #define VEC_SIZE 128
 
 layout(std430) buffer OutputBuffer
 {
-	vec4 vec[];
+	vec4 vec[VEC_SIZE];
 };
 
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
@@ -25,8 +22,7 @@ void main()
 	{
 		if (id % offset == 0)
 		{
-			// Read sum or average from vector and write the result back
-			//vec[x] = (vec[x] + vec[x + offset]);
+			// Read average from vector and write the result back
 			vec[x] = (vec[x]*0.5 + vec[x + offset]*0.5);
 		}
 		offset *= 2;

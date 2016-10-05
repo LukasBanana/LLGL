@@ -24,65 +24,89 @@
 #include "stb_image_write.h"
 
 
+/* ----- Global helper functions ----- */
+
+static std::string GetSelectedRendererModule(int argc, char* argv[])
+{
+    /* Select renderer module */
+    std::string rendererModule;
+
+    if (argc > 1)
+    {
+        /* Get renderer module name from command line argument */
+        rendererModule = argv[1];
+    }
+    else
+    {
+        /* Find available modules */
+        auto modules = LLGL::RenderSystem::FindModules();
+
+        if (modules.empty())
+        {
+            /* No modules available -> throw error */
+            throw std::runtime_error("no renderer modules available on target platform");
+        }
+        else if (modules.size() == 1)
+        {
+            /* Use the only available module */
+            rendererModule = modules.front();
+        }
+        else
+        {
+            /* Let user select a renderer */
+            while (rendererModule.empty())
+            {
+                /* Print list of available modules */
+                std::cout << "select renderer:" << std::endl;
+
+                int i = 0;
+                for (const auto& mod : modules)
+                    std::cout << " " << (++i) << ".) " << mod << std::endl;
+
+                /* Wait for user input */
+                std::size_t selection = 0;
+                std::cin >> selection;
+                --selection;
+
+                if (selection < modules.size())
+                    rendererModule = modules[selection];
+                else
+                    std::cerr << "invalid input" << std::endl;
+            }
+        }
+    }
+
+    /* Choose final renderer module */
+    std::cout << "selected renderer: " << rendererModule << std::endl;
+
+    return rendererModule;
+}
+
+static std::string ReadFileContent(const std::string& filename)
+{
+    // Read shader file
+    std::ifstream file(filename);
+
+    if (!file.good())
+        throw std::runtime_error("failed to open file: \"" + filename + "\"");
+
+    return std::string(
+        ( std::istreambuf_iterator<char>(file) ),
+        ( std::istreambuf_iterator<char>() )
+    );
+}
+
+
+/* ----- Tutorial class ----- */
+
 class Tutorial
 {
 
 public:
 
-    static void SelectRendererModuel(int argc, char* argv[])
+    static void SelectRendererModule(int argc, char* argv[])
     {
-        /* Select renderer module */
-        std::string rendererModule;
-
-        if (argc > 1)
-        {
-            /* Get renderer module name from command line argument */
-            rendererModule = argv[1];
-        }
-        else
-        {
-            /* Find available modules */
-            auto modules = LLGL::RenderSystem::FindModules();
-
-            if (modules.empty())
-            {
-                /* No modules available -> throw error */
-                throw std::runtime_error("no renderer modules available on target platform");
-            }
-            else if (modules.size() == 1)
-            {
-                /* Use the only available module */
-                rendererModule = modules.front();
-            }
-            else
-            {
-                /* Let user select a renderer */
-                while (rendererModule.empty())
-                {
-                    /* Print list of available modules */
-                    std::cout << "select renderer:" << std::endl;
-
-                    int i = 0;
-                    for (const auto& mod : modules)
-                        std::cout << " " << (++i) << ".) " << mod << std::endl;
-
-                    /* Wait for user input */
-                    std::size_t selection = 0;
-                    std::cin >> selection;
-                    --selection;
-
-                    if (selection < modules.size())
-                        rendererModule = modules[selection];
-                    else
-                        std::cerr << "invalid input" << std::endl;
-                }
-            }
-        }
-
-        /* Choose final renderer module */
-        std::cout << "selected renderer: " << rendererModule << std::endl;
-
-        rendererModule_ = rendererModule;
+        rendererModule_ = GetSelectedRendererModule(argc, argv);
     }
 
     virtual ~Tutorial()
@@ -229,6 +253,9 @@ protected:
 
         // Set dark blue as default clear color
         context->SetClearColor(defaultClearColor);
+
+        // Show window
+        context->GetWindow().Show();
     }
 
     struct TutorialShaderDescriptor
@@ -265,15 +292,7 @@ protected:
         for (const auto& desc : shaderDescs)
         {
             // Read shader file
-            std::ifstream file(desc.filename);
-
-            if (!file.good())
-                throw std::runtime_error("failed to open file: \"" + desc.filename + "\"");
-
-            std::string shaderCode(
-                ( std::istreambuf_iterator<char>(file) ),
-                ( std::istreambuf_iterator<char>() )
-            );
+            auto shaderCode = ReadFileContent(desc.filename);
 
             // Create shader and compile shader
             auto shader = renderer->CreateShader(desc.type);
@@ -523,7 +542,7 @@ int RunTutorial(int argc, char* argv[])
     try
     {
         /* Run tutorial */
-        Tutorial::SelectRendererModuel(argc, argv);
+        Tutorial::SelectRendererModule(argc, argv);
         auto tutorial = std::unique_ptr<T>(new T());
         tutorial->Run();
     }
