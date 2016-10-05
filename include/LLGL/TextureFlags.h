@@ -120,7 +120,7 @@ enum class AxisDirection
 \brief Texture descriptor structure.
 \remarks This is used to specifiy the dimensions of a texture which is to be created.
 */
-struct TextureDescriptor
+struct LLGL_EXPORT TextureDescriptor
 {
     struct Texture1DDescriptor
     {
@@ -189,7 +189,7 @@ struct TextureDescriptor
 \brief Sub-texture descriptor structure.
 \remarks This is used to write (or partially write) the image data of a texture MIP-map level.
 */
-struct SubTextureDescriptor
+struct LLGL_EXPORT SubTextureDescriptor
 {
     struct Texture1DDescriptor
     {
