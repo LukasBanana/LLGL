@@ -17,20 +17,17 @@ int main(int argc, char* argv[])
 
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 
-        // Create two render contexts
+        // Create render context but do not show its window
         LLGL::RenderContextDescriptor contextDesc;
         {
             contextDesc.videoMode.resolution = { 640, 480 };
         }
         auto context = renderer->CreateRenderContext(contextDesc);
 
-        // Set window titles
-        context->GetWindow().SetTitle(L"LLGL Tutorial 08: Compute");
-
         // Initialize buffer data
         struct InputData
         {
-            Gs::Vector2f    position;
+            Gs::Vector3f    position;
             LLGL::ColorRGBf color;
         };
 
@@ -79,6 +76,7 @@ int main(int argc, char* argv[])
         // Create compute pipeline
         auto pipeline = renderer->CreateComputePipeline(shaderProgram);
 
+        //to be continued ...
 
 
     }
@@ -86,5 +84,10 @@ int main(int argc, char* argv[])
     {
         std::cerr << e.what() << std::endl;
     }
+
+    #ifdef _WIN32
+    system("pause");
+    #endif
+
     return 0;
 }

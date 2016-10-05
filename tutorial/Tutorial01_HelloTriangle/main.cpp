@@ -5,22 +5,20 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/LLGL.h>
-#include <Gauss/Gauss.h>
-#include <iostream>
-#include <fstream>
+#include "../tutorial.h"
 
 
 //#define ENABLE_MULTISAMPLING
 
-int main()
+int main(int argc, char* argv[])
 {
     try
     {
-        // Load render system module
-        std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("OpenGL");
+        // Let the user choose an available renderer
+        std::string rendererModule = GetSelectedRendererModule(argc, argv);
 
-        std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
+        // Load render system module
+        std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load(rendererModule);
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
@@ -33,8 +31,9 @@ int main()
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
 
-        // Set window title
+        // Set window title and show window
         context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
+        context->GetWindow().Show();
 
         // Vertex data structure
         struct Vertex
