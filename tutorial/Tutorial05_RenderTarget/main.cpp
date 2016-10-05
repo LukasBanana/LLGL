@@ -123,10 +123,10 @@ public:
         // Create empty render-target texture
         LLGL::TextureDescriptor textureDesc;
         {
-            textureDesc.type                    = LLGL::TextureType::Texture2D;
-            textureDesc.format                  = LLGL::TextureFormat::RGBA;
-            textureDesc.texture2DDesc.width     = renderTargetSize.x;
-            textureDesc.texture2DDesc.height    = renderTargetSize.y;
+            textureDesc.type                = LLGL::TextureType::Texture2D;
+            textureDesc.format              = LLGL::TextureFormat::RGBA;
+            textureDesc.texture2D.width     = renderTargetSize.x;
+            textureDesc.texture2D.height    = renderTargetSize.y;
         }
         renderTargetTex = renderer->CreateTexture(textureDesc);
 

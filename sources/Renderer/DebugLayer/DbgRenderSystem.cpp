@@ -199,7 +199,7 @@ void DbgRenderSystem::GenerateMips(Texture& texture)
     {
         instance_->GenerateMips(textureDbg.instance);
     }
-    const auto& tex3DDesc = textureDbg.desc.texture3DDesc;
+    const auto& tex3DDesc = textureDbg.desc.texture3D;
     textureDbg.mipLevels = NumMipLevels(tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth);
 }
 
@@ -382,36 +382,36 @@ void DbgRenderSystem::DebugTextureDescriptor(const TextureDescriptor& desc, cons
     switch (desc.type)
     {
         case TextureType::Texture1D:
-            DebugTextureSize(desc.texture1DDesc.width, source);
-            if (desc.texture1DDesc.layers > 1)
+            DebugTextureSize(desc.texture1D.width, source);
+            if (desc.texture1D.layers > 1)
                 WarnTextureLayersGreaterOne(source);
             break;
 
         case TextureType::Texture2D:
         case TextureType::TextureCube:
-            DebugTextureSize(desc.texture2DDesc.width, source);
-            DebugTextureSize(desc.texture2DDesc.height, source);
-            if (desc.texture2DDesc.layers > 1)
+            DebugTextureSize(desc.texture2D.width, source);
+            DebugTextureSize(desc.texture2D.height, source);
+            if (desc.texture2D.layers > 1)
                 WarnTextureLayersGreaterOne(source);
             break;
 
         case TextureType::Texture3D:
-            DebugTextureSize(desc.texture3DDesc.width, source);
-            DebugTextureSize(desc.texture3DDesc.height, source);
-            DebugTextureSize(desc.texture3DDesc.depth, source);
+            DebugTextureSize(desc.texture3D.width, source);
+            DebugTextureSize(desc.texture3D.height, source);
+            DebugTextureSize(desc.texture3D.depth, source);
             break;
 
         case TextureType::Texture1DArray:
-            DebugTextureSize(desc.texture1DDesc.width, source);
-            if (desc.texture1DDesc.layers == 0)
+            DebugTextureSize(desc.texture1D.width, source);
+            if (desc.texture1D.layers == 0)
                 ErrTextureLayersEqualZero(source);
             break;
 
         case TextureType::Texture2DArray:
         case TextureType::TextureCubeArray:
-            DebugTextureSize(desc.texture2DDesc.width, source);
-            DebugTextureSize(desc.texture2DDesc.height, source);
-            if (desc.texture2DDesc.layers == 0)
+            DebugTextureSize(desc.texture2D.width, source);
+            DebugTextureSize(desc.texture2D.height, source);
+            if (desc.texture2D.layers == 0)
                 ErrTextureLayersEqualZero(source);
             break;
 

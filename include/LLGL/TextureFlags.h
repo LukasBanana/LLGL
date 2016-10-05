@@ -148,28 +148,36 @@ struct TextureDescriptor
         unsigned int height;    //!< Texture height.
         unsigned int layers;    //!< Number of texture array layers (internally it will be a multiple of 6).
     };
+
+    /*struct Texture2DMSDescriptor
+    {
+        unsigned int width;     //!< Texture width.
+        unsigned int height;    //!< Texture height.
+        unsigned int layers;    //!< Number of texture array layers.
+        unsigned int samples;   //!< Number of samples.
+    };*/
     
     TextureDescriptor()
     {
-        type                    = TextureType::Texture1D;
-        format                  = TextureFormat::RGBA;
-        texture3DDesc.width     = 0;
-        texture3DDesc.height    = 0;
-        texture3DDesc.depth     = 0;
+        type                = TextureType::Texture1D;
+        format              = TextureFormat::RGBA;
+        texture3D.width     = 0;
+        texture3D.height    = 0;
+        texture3D.depth     = 0;
     }
     ~TextureDescriptor()
     {
     }
 
-    TextureType                 type;               //!< Texture type. By default TextureType::Texture1D.
-    TextureFormat               format;             //!< Texture hardware format. By default TextureFormat::RGBA.
+    TextureType                 type;           //!< Texture type. By default TextureType::Texture1D.
+    TextureFormat               format;         //!< Texture hardware format. By default TextureFormat::RGBA.
 
     union
     {
-        Texture1DDescriptor     texture1DDesc;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2DDescriptor     texture2DDesc;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3DDescriptor     texture3DDesc;      //!< Descriptor for 3D textures.
-        TextureCubeDescriptor   textureCubeDesc;    //!< Descriptor for Cube- and Cube-Array textures.
+        Texture1DDescriptor     texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
+        Texture2DDescriptor     texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
+        Texture3DDescriptor     texture3D;      //!< Descriptor for 3D textures.
+        TextureCubeDescriptor   textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
     };
 };
 
@@ -220,27 +228,27 @@ struct SubTextureDescriptor
 
     SubTextureDescriptor()
     {
-        mipLevel                        = 0;
-        textureCubeDesc.x               = 0;
-        textureCubeDesc.y               = 0;
-        textureCubeDesc.layerOffset     = 0;
-        textureCubeDesc.width           = 0;
-        textureCubeDesc.height          = 0;
-        textureCubeDesc.cubeFaces       = 0;
-        textureCubeDesc.cubeFaceOffset  = AxisDirection::XPos;
+        mipLevel                    = 0;
+        textureCube.x               = 0;
+        textureCube.y               = 0;
+        textureCube.layerOffset     = 0;
+        textureCube.width           = 0;
+        textureCube.height          = 0;
+        textureCube.cubeFaces       = 0;
+        textureCube.cubeFaceOffset  = AxisDirection::XPos;
     }
     ~SubTextureDescriptor()
     {
     }
 
-    unsigned int                mipLevel;           //!< MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
+    unsigned int                mipLevel;       //!< MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
 
     union
     {
-        Texture1DDescriptor     texture1DDesc;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2DDescriptor     texture2DDesc;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3DDescriptor     texture3DDesc;      //!< Descriptor for 3D textures.
-        TextureCubeDescriptor   textureCubeDesc;    //!< Descriptor for Cube- and Cube-Array textures.
+        Texture1DDescriptor     texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
+        Texture2DDescriptor     texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
+        Texture3DDescriptor     texture3D;      //!< Descriptor for 3D textures.
+        TextureCubeDescriptor   textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
     };
 };
 

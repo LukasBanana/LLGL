@@ -108,14 +108,14 @@ public:
             LLGL::TextureDescriptor texDesc;
             {
                 // Texture type: 2D
-                texDesc.type                    = LLGL::TextureType::Texture2D;
+                texDesc.type                = LLGL::TextureType::Texture2D;
 
                 // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format                  = LLGL::TextureFormat::RGBA;
+                texDesc.format              = LLGL::TextureFormat::RGBA;
 
                 // Texture size
-                texDesc.texture2DDesc.width     = texWidth;
-                texDesc.texture2DDesc.height    = texHeight;
+                texDesc.texture2D.width     = texWidth;
+                texDesc.texture2D.height    = texHeight;
             }
             colorMap = renderer->CreateTexture(texDesc, &imageDesc);
         }

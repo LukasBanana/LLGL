@@ -259,10 +259,10 @@ int main()
         }
         LLGL::TextureDescriptor textureDesc;
         {
-            textureDesc.type                    = LLGL::TextureType::Texture2D;
-            textureDesc.format                  = LLGL::TextureFormat::RGBA;
-            textureDesc.texture2DDesc.width     = 2;
-            textureDesc.texture2DDesc.height    = 2;
+            textureDesc.type                = LLGL::TextureType::Texture2D;
+            textureDesc.format              = LLGL::TextureFormat::RGBA;
+            textureDesc.texture2D.width     = 2;
+            textureDesc.texture2D.height    = 2;
         }
         auto& texture = *renderer->CreateTexture(textureDesc, &imageDesc);
 
@@ -272,11 +272,11 @@ int main()
 
         LLGL::SubTextureDescriptor subTexDesc;
         {
-            subTexDesc.mipLevel             = 0;
-            subTexDesc.texture2DDesc.x      = 0;
-            subTexDesc.texture2DDesc.y      = 1;
-            subTexDesc.texture2DDesc.width  = 2;
-            subTexDesc.texture2DDesc.height = 1;
+            subTexDesc.mipLevel         = 0;
+            subTexDesc.texture2D.x      = 0;
+            subTexDesc.texture2D.y      = 1;
+            subTexDesc.texture2D.width  = 2;
+            subTexDesc.texture2D.height = 1;
         }
         //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
 

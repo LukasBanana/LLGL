@@ -350,10 +350,10 @@ protected:
         // Create texture and upload image data onto hardware texture
         LLGL::TextureDescriptor textureDesc;
         {
-            textureDesc.type                    = LLGL::TextureType::Texture2D;
-            textureDesc.format                  = LLGL::TextureFormat::RGBA;
-            textureDesc.texture2DDesc.width     = width;
-            textureDesc.texture2DDesc.height    = height;
+            textureDesc.type                = LLGL::TextureType::Texture2D;
+            textureDesc.format              = LLGL::TextureFormat::RGBA;
+            textureDesc.texture2D.width     = width;
+            textureDesc.texture2D.height    = height;
         }
         auto tex = renderer->CreateTexture(textureDesc, &imageDesc);
 

@@ -30,16 +30,16 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     switch (descD3D.type)
     {
         case TextureType::Texture1D:
-            descD3D.texture1DDesc.layers = 1;
+            descD3D.texture1D.layers = 1;
             break;
         case TextureType::Texture2D:
-            descD3D.texture2DDesc.layers = 1;
+            descD3D.texture2D.layers = 1;
             break;
         case TextureType::TextureCube:
-            descD3D.textureCubeDesc.layers = 6;
+            descD3D.textureCube.layers = 6;
             break;
         case TextureType::TextureCubeArray:
-            descD3D.textureCubeDesc.layers *= 6;
+            descD3D.textureCube.layers *= 6;
             break;
         default:
             break;
@@ -99,9 +99,9 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             D3D11_TEXTURE1D_DESC desc;
             hwTex.tex1D->GetDesc(&desc);
 
-            texDesc.format                  = D3D11Types::Unmap(desc.Format);
-            texDesc.texture1DDesc.width     = static_cast<int>(desc.Width);
-            texDesc.texture1DDesc.layers    = desc.ArraySize;
+            texDesc.format              = D3D11Types::Unmap(desc.Format);
+            texDesc.texture1D.width     = static_cast<int>(desc.Width);
+            texDesc.texture1D.layers    = desc.ArraySize;
         }
         break;
 
@@ -111,13 +111,13 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             D3D11_TEXTURE2D_DESC desc;
             hwTex.tex2D->GetDesc(&desc);
 
-            texDesc.format                  = D3D11Types::Unmap(desc.Format);
-            texDesc.texture2DDesc.width     = static_cast<int>(desc.Width);
-            texDesc.texture2DDesc.height    = static_cast<int>(desc.Height);
-            texDesc.texture2DDesc.layers    = desc.ArraySize;
+            texDesc.format              = D3D11Types::Unmap(desc.Format);
+            texDesc.texture2D.width     = static_cast<int>(desc.Width);
+            texDesc.texture2D.height    = static_cast<int>(desc.Height);
+            texDesc.texture2D.layers    = desc.ArraySize;
 
             if (texDesc.type == TextureType::TextureCube || texDesc.type == TextureType::TextureCubeArray)
-                texDesc.textureCubeDesc.layers /= 6;
+                texDesc.textureCube.layers /= 6;
         }
         break;
 
@@ -127,10 +127,10 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             D3D11_TEXTURE3D_DESC desc;
             hwTex.tex3D->GetDesc(&desc);
 
-            texDesc.format                  = D3D11Types::Unmap(desc.Format);
-            texDesc.texture3DDesc.width     = static_cast<int>(desc.Width);
-            texDesc.texture3DDesc.height    = static_cast<int>(desc.Height);
-            texDesc.texture3DDesc.depth     = static_cast<int>(desc.Depth);
+            texDesc.format              = D3D11Types::Unmap(desc.Format);
+            texDesc.texture3D.width     = static_cast<int>(desc.Width);
+            texDesc.texture3D.height    = static_cast<int>(desc.Height);
+            texDesc.texture3D.depth     = static_cast<int>(desc.Depth);
         }
         break;
     }
@@ -146,63 +146,63 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescripto
     switch (texture.GetType())
     {
         case TextureType::Texture1D:
-            position.x  = subTextureDesc.texture1DDesc.x;
-            size.x      = subTextureDesc.texture1DDesc.width;
+            position.x  = subTextureDesc.texture1D.x;
+            size.x      = subTextureDesc.texture1D.width;
             size.y      = 1;
             size.z      = 1;
             break;
 
         case TextureType::Texture2D:
-            position.x  = subTextureDesc.texture2DDesc.x;
-            position.y  = subTextureDesc.texture2DDesc.y;
-            size.x      = subTextureDesc.texture2DDesc.width;
-            size.y      = subTextureDesc.texture2DDesc.height;
+            position.x  = subTextureDesc.texture2D.x;
+            position.y  = subTextureDesc.texture2D.y;
+            size.x      = subTextureDesc.texture2D.width;
+            size.y      = subTextureDesc.texture2D.height;
             size.z      = 1;
             break;
 
         case TextureType::Texture3D:
-            position.x  = subTextureDesc.texture3DDesc.x;
-            position.y  = subTextureDesc.texture3DDesc.y;
-            position.z  = subTextureDesc.texture3DDesc.z;
-            size.x      = subTextureDesc.texture3DDesc.width;
-            size.y      = subTextureDesc.texture3DDesc.height;
-            size.z      = subTextureDesc.texture3DDesc.depth;
+            position.x  = subTextureDesc.texture3D.x;
+            position.y  = subTextureDesc.texture3D.y;
+            position.z  = subTextureDesc.texture3D.z;
+            size.x      = subTextureDesc.texture3D.width;
+            size.y      = subTextureDesc.texture3D.height;
+            size.z      = subTextureDesc.texture3D.depth;
             break;
 
         case TextureType::TextureCube:
-            position.x  = subTextureDesc.textureCubeDesc.x;
-            position.y  = subTextureDesc.textureCubeDesc.y;
-            position.z  = static_cast<unsigned int>(subTextureDesc.textureCubeDesc.cubeFaceOffset);
-            size.x      = subTextureDesc.textureCubeDesc.width;
-            size.y      = subTextureDesc.textureCubeDesc.height;
+            position.x  = subTextureDesc.textureCube.x;
+            position.y  = subTextureDesc.textureCube.y;
+            position.z  = static_cast<unsigned int>(subTextureDesc.textureCube.cubeFaceOffset);
+            size.x      = subTextureDesc.textureCube.width;
+            size.y      = subTextureDesc.textureCube.height;
             size.z      = 1;
             break;
 
         case TextureType::Texture1DArray:
-            position.x  = subTextureDesc.texture1DDesc.x;
-            position.y  = subTextureDesc.texture1DDesc.layerOffset;
+            position.x  = subTextureDesc.texture1D.x;
+            position.y  = subTextureDesc.texture1D.layerOffset;
             position.z  = 0;
-            size.x      = subTextureDesc.texture1DDesc.width;
-            size.y      = subTextureDesc.texture1DDesc.layers;
+            size.x      = subTextureDesc.texture1D.width;
+            size.y      = subTextureDesc.texture1D.layers;
             size.z      = 1;
             break;
 
         case TextureType::Texture2DArray:
-            position.x  = subTextureDesc.texture2DDesc.x;
-            position.y  = subTextureDesc.texture2DDesc.y;
-            position.z  = subTextureDesc.texture2DDesc.layerOffset;
-            size.x      = subTextureDesc.texture2DDesc.width;
-            size.y      = subTextureDesc.texture2DDesc.height;
-            size.z      = subTextureDesc.texture2DDesc.layers;
+            position.x  = subTextureDesc.texture2D.x;
+            position.y  = subTextureDesc.texture2D.y;
+            position.z  = subTextureDesc.texture2D.layerOffset;
+            size.x      = subTextureDesc.texture2D.width;
+            size.y      = subTextureDesc.texture2D.height;
+            size.z      = subTextureDesc.texture2D.layers;
             break;
 
         case TextureType::TextureCubeArray:
-            position.x  = subTextureDesc.textureCubeDesc.x;
-            position.y  = subTextureDesc.textureCubeDesc.y;
-            position.z  = subTextureDesc.textureCubeDesc.layerOffset * 6 + static_cast<unsigned int>(subTextureDesc.textureCubeDesc.cubeFaceOffset);
-            size.x      = subTextureDesc.textureCubeDesc.width;
-            size.y      = subTextureDesc.textureCubeDesc.height;
-            size.z      = subTextureDesc.textureCubeDesc.cubeFaces;
+            position.x  = subTextureDesc.textureCube.x;
+            position.y  = subTextureDesc.textureCube.y;
+            position.z  = subTextureDesc.textureCube.layerOffset * 6 + static_cast<unsigned int>(subTextureDesc.textureCube.cubeFaceOffset);
+            size.x      = subTextureDesc.textureCube.width;
+            size.y      = subTextureDesc.textureCube.height;
+            size.z      = subTextureDesc.textureCube.cubeFaces;
             break;
     }
 
@@ -275,9 +275,9 @@ void D3D11RenderSystem::BuildGenericTexture1D(
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE1D_DESC texDesc;
     {
-        texDesc.Width           = descD3D.texture1DDesc.width;
+        texDesc.Width           = descD3D.texture1D.width;
         texDesc.MipLevels       = 0;
-        texDesc.ArraySize       = descD3D.texture1DDesc.layers;
+        texDesc.ArraySize       = descD3D.texture1D.layers;
         texDesc.Format          = D3D11Types::Map(descD3D.format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
@@ -292,13 +292,13 @@ void D3D11RenderSystem::BuildGenericTexture1D(
     {
         /* Update only the first MIP-map level for each array slice */
         auto subImageDesc = *imageDesc;
-        auto subImageStride = descD3D.texture1DDesc.width * ImageFormatSize(subImageDesc.format) * DataTypeSize(subImageDesc.dataType);
+        auto subImageStride = descD3D.texture1D.width * ImageFormatSize(subImageDesc.format) * DataTypeSize(subImageDesc.dataType);
 
-        for (unsigned int arraySlice = 0; arraySlice < descD3D.texture1DDesc.layers; ++arraySlice)
+        for (unsigned int arraySlice = 0; arraySlice < descD3D.texture1D.layers; ++arraySlice)
         {
             textureD3D.UpdateSubresource(
                 context_.Get(), 0, 0,
-                CD3D11_BOX(0, 0, 0, descD3D.texture1DDesc.width, 1, 1),
+                CD3D11_BOX(0, 0, 0, descD3D.texture1D.width, 1, 1),
                 subImageDesc, GetConfiguration().threadCount
             );
 
@@ -317,10 +317,10 @@ void D3D11RenderSystem::BuildGenericTexture2D(
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width               = descD3D.texture2DDesc.width;
-        texDesc.Height              = descD3D.texture2DDesc.height;
+        texDesc.Width               = descD3D.texture2D.width;
+        texDesc.Height              = descD3D.texture2D.height;
         texDesc.MipLevels           = 0;
-        texDesc.ArraySize           = descD3D.texture2DDesc.layers;
+        texDesc.ArraySize           = descD3D.texture2D.layers;
         texDesc.Format              = D3D11Types::Map(descD3D.format);
         texDesc.SampleDesc.Count    = 1;
         texDesc.SampleDesc.Quality  = 0;
@@ -337,13 +337,13 @@ void D3D11RenderSystem::BuildGenericTexture2D(
     {
         /* Update only the first MIP-map level for each array slice */
         auto subImageDesc = *imageDesc;
-        auto subImageStride = descD3D.texture2DDesc.width * descD3D.texture2DDesc.height * subImageDesc.GetElementSize();
+        auto subImageStride = descD3D.texture2D.width * descD3D.texture2D.height * subImageDesc.GetElementSize();
 
-        for (unsigned int arraySlice = 0; arraySlice < descD3D.texture2DDesc.layers; ++arraySlice)
+        for (unsigned int arraySlice = 0; arraySlice < descD3D.texture2D.layers; ++arraySlice)
         {
             textureD3D.UpdateSubresource(
                 context_.Get(), 0, arraySlice,
-                CD3D11_BOX(0, 0, 0, descD3D.texture2DDesc.width, descD3D.texture2DDesc.height, 1),
+                CD3D11_BOX(0, 0, 0, descD3D.texture2D.width, descD3D.texture2D.height, 1),
                 subImageDesc, GetConfiguration().threadCount
             );
 
@@ -362,9 +362,9 @@ void D3D11RenderSystem::BuildGenericTexture3D(
     /* Setup D3D texture descriptor */
     D3D11_TEXTURE3D_DESC texDesc;
     {
-        texDesc.Width           = descD3D.texture3DDesc.width;
-        texDesc.Height          = descD3D.texture3DDesc.height;
-        texDesc.Depth           = descD3D.texture3DDesc.depth;
+        texDesc.Width           = descD3D.texture3D.width;
+        texDesc.Height          = descD3D.texture3D.height;
+        texDesc.Depth           = descD3D.texture3D.depth;
         texDesc.MipLevels       = 0;
         texDesc.Format          = D3D11Types::Map(descD3D.format);
         texDesc.Usage           = D3D11_USAGE_DEFAULT;
@@ -380,7 +380,7 @@ void D3D11RenderSystem::BuildGenericTexture3D(
     {
         textureD3D.UpdateSubresource(
             context_.Get(), 0, 0,
-            CD3D11_BOX(0, 0, 0, descD3D.texture3DDesc.width, descD3D.texture3DDesc.height, descD3D.texture3DDesc.depth),
+            CD3D11_BOX(0, 0, 0, descD3D.texture3D.width, descD3D.texture3D.height, descD3D.texture3D.depth),
             *imageDesc, GetConfiguration().threadCount
         );
     }
