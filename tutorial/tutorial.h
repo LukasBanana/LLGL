@@ -473,9 +473,9 @@ protected:
     {
         LLGL::BufferDescriptor desc;
         {
-            desc.type                           = LLGL::BufferType::Vertex;
-            desc.size                           = vertices.size() * sizeof(VertexType);
-            desc.vertexBufferDesc.vertexFormat  = vertexFormat;
+            desc.type                       = LLGL::BufferType::Vertex;
+            desc.size                       = vertices.size() * sizeof(VertexType);
+            desc.vertexBuffer.vertexFormat  = vertexFormat;
         }
         return renderer->CreateBuffer(desc, vertices.data());
     }
@@ -485,9 +485,9 @@ protected:
     {
         LLGL::BufferDescriptor desc;
         {
-            desc.type                           = LLGL::BufferType::Index;
-            desc.size                           = indices.size() * sizeof(IndexType);
-            desc.indexBufferDesc.indexFormat    = indexFormat;
+            desc.type                       = LLGL::BufferType::Index;
+            desc.size                       = indices.size() * sizeof(IndexType);
+            desc.indexBuffer.indexFormat    = indexFormat;
         }
         return renderer->CreateBuffer(desc, indices.data());
     }

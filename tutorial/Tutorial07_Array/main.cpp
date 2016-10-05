@@ -82,19 +82,19 @@ public:
         
         desc.type                           = LLGL::BufferType::Vertex;
         desc.size                           = sizeof(vertexPositions);
-        desc.vertexBufferDesc.vertexFormat  = vertexFormatPositions;
+        desc.vertexBuffer.vertexFormat  = vertexFormatPositions;
         
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexPositions);
 
         // Create buffer for vertex colors
         desc.size                           = sizeof(vertexColors);
-        desc.vertexBufferDesc.vertexFormat  = vertexFormatColors;
+        desc.vertexBuffer.vertexFormat  = vertexFormatColors;
 
         vertexBuffers[1] = renderer->CreateBuffer(desc, vertexColors);
 
         // Create buffer for instance data
         desc.size                           = sizeof(instanceData);
-        desc.vertexBufferDesc.vertexFormat  = vertexFormatInstanceData;
+        desc.vertexBuffer.vertexFormat  = vertexFormatInstanceData;
 
         vertexBuffers[2] = renderer->CreateBuffer(desc, instanceData);
 

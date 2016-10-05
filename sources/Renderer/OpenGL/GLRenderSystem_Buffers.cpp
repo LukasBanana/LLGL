@@ -32,7 +32,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
                 bufferGL->BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
-                bufferGL->BuildVertexArray(desc.vertexBufferDesc.vertexFormat);
+                bufferGL->BuildVertexArray(desc.vertexBuffer.vertexFormat);
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
         }
@@ -41,7 +41,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
         case BufferType::Index:
         {
             /* Create index buffer and store index format */
-            auto bufferGL = MakeUnique<GLIndexBuffer>(desc.indexBufferDesc.indexFormat);
+            auto bufferGL = MakeUnique<GLIndexBuffer>(desc.indexBuffer.indexFormat);
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
                 bufferGL->BufferData(initialData, desc.size, GLTypes::Map(desc.usage));

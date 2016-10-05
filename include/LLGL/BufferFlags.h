@@ -94,13 +94,13 @@ struct BufferDescriptor
     BufferUsage             usage   = BufferUsage::Static;
 
     //! Vertex buffer type descriptor appendix.
-    VertexBufferDescriptor  vertexBufferDesc;
+    VertexBufferDescriptor  vertexBuffer;
 
     //! Index buffer type descriptor appendix.
-    IndexBufferDescriptor   indexBufferDesc;
+    IndexBufferDescriptor   indexBuffer;
 
     //! Storage buffer type descriptor appendix.
-    StorageBufferDescriptor storageBufferDesc;
+    StorageBufferDescriptor storageBuffer;
 };
 
 /**

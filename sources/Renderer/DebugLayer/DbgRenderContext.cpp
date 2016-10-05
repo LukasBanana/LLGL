@@ -111,7 +111,7 @@ void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     bindings_.vertexBuffer = (&bufferDbg);
 
-    vertexFormat_ = bufferDbg.desc.vertexBufferDesc.vertexFormat;
+    vertexFormat_ = bufferDbg.desc.vertexBuffer.vertexFormat;
     {
         instance_.SetVertexBuffer(bufferDbg.instance);
     }

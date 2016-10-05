@@ -22,7 +22,7 @@ D3D12IndexBuffer::D3D12IndexBuffer(ID3D12Device* device, const BufferDescriptor&
 
     view_.BufferLocation    = Get()->GetGPUVirtualAddress();
     view_.SizeInBytes       = GetBufferSize();
-    view_.Format            = D3D12Types::Map(desc.indexBufferDesc.indexFormat.GetDataType());
+    view_.Format            = D3D12Types::Map(desc.indexBuffer.indexFormat.GetDataType());
 }
 
 void D3D12IndexBuffer::UpdateSubresource(
