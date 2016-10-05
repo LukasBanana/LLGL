@@ -30,6 +30,8 @@ enum class TextureType
     Texture1DArray,     //!< 1-Dimensional array texture.
     Texture2DArray,     //!< 2-Dimensional array texture.
     TextureCubeArray,   //!< Cube array texture.
+    Texture2DMS,        //!< 2-Dimensional multi-sample texture.
+    Texture2DMSArray,   //!< 2-Dimensional multi-sample array texture.
 };
 
 /**

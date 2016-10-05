@@ -26,6 +26,7 @@ enum class GLExt
     EXT_texture3D,
     ARB_clear_texture,
     ARB_texture_compression,
+    ARB_texture_multisample,
     ARB_sampler_objects,
     ARB_multi_bind,
     ARB_vertex_buffer_object,

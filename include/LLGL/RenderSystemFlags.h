@@ -177,28 +177,57 @@ struct RenderingCaps
     //! Specifies whether render targets (also "frame buffer objects") are supported.
     bool            hasRenderTargets                = false;
 
-    //! Specifies whether 3D textures are supported.
+    /**
+    \brief Specifies whether 3D textures are supported.
+    \see TextureType::Texture3D
+    */
     bool            has3DTextures                   = false;
 
-    //! Specifies whether cube textures are supported.
+    /**
+    \brief Specifies whether cube textures are supported.
+    \see TextureType::TextureCube
+    */
     bool            hasCubeTextures                 = false;
 
-    //! Specifies whether 1D- and 2D array textures are supported.
+    /**
+    \brief Specifies whether 1D- and 2D array textures are supported.
+    \see TextureType::Texture1DArray
+    \see TextureType::Texture2DArray
+    */
     bool            hasTextureArrays                = false;
 
-    //! Specifies whether cube array textures are supported.
+    /**
+    \brief Specifies whether cube array textures are supported.
+    \see TextureType::TextureCubeArray
+    */
     bool            hasCubeTextureArrays            = false;
+
+    /**
+    \brief Specifies whether multi-sample textures are supported.
+    \see TextureType::Texture2DMS
+    \see TextureType::Texture2DMSArray
+    */
+    bool            hasMultiSampleTextures          = false;
     
     //! Specifies whether samplers are supported.
     bool            hasSamplers                     = false;
 
-    //! Specifies whether constant buffers (also "uniform buffer objects") are supported.
+    /**
+    \brief Specifies whether constant buffers (also "uniform buffer objects") are supported.
+    \see BufferType::Constant
+    */
     bool            hasConstantBuffers              = false;
 
-    //! Specifies whether storage buffers (also "read/write buffers") are supported.
+    /**
+    \brief Specifies whether storage buffers (also "read/write buffers") are supported.
+    \see BufferType::Storage
+    */
     bool            hasStorageBuffers               = false;
 
-    //! Specifies whether individual shader uniforms are supported (typically only for OpenGL 2.0+).
+    /**
+    \brief Specifies whether individual shader uniforms are supported (typically only for OpenGL 2.0+).
+    \see ShaderProgram::LockShaderUniform
+    */
     bool            hasUniforms                     = false;
 
     //! Specifies whether geometry shaders are supported.
@@ -210,16 +239,28 @@ struct RenderingCaps
     //! Speciifes whether compute shaders are supported.
     bool            hasComputeShaders               = false;
 
-    //! Specifies whether hardware instancing is supported.
+    /**
+    \brief Specifies whether hardware instancing is supported.
+    \see RenderContext::DrawInstanced(unsigned int, unsigned int, unsigned int)
+    \see RenderContext::DrawIndexedInstanced(unsigned int, unsigned int, unsigned int)
+    \see RenderContext::DrawIndexedInstanced(unsigned int, unsigned int, unsigned int, int)
+    */
     bool            hasInstancing                   = false;
 
-    //! Specifies whether hardware instancing with instance offsets is supported.
+    /**
+    \brief Specifies whether hardware instancing with instance offsets is supported.
+    \see RenderContext::DrawInstanced(unsigned int, unsigned int, unsigned int, unsigned int)
+    \see RenderContext::DrawIndexedInstanced(unsigned int, unsigned int, unsigned int, int, unsigned int)
+    */
     bool            hasOffsetInstancing             = false;
 
     //! Specifies whether multiple viewports, depth-ranges, and scissors are supported at once.
     bool            hasViewportArrays               = false;
 
-    //! Specifies whether conservative rasterization is supported.
+    /**
+    \brief Specifies whether conservative rasterization is supported.
+    \see RasterizerDescriptor::conservativeRasterization
+    */
     bool            hasConservativeRasterization    = false;
 
     //! Specifies maximum number of texture array layers (for 1D-, 2D-, and cube textures).
@@ -246,10 +287,16 @@ struct RenderingCaps
     //! Specifies maximum size of each cube texture (for width and height).
     int             maxCubeTextureSize              = 0;
 
-    //! Specifies maximum anisotropy texture filter.
+    /**
+    \brief Specifies maximum anisotropy texture filter.
+    \see SamplerDescriptor::maxAnisotropy
+    */
     int             maxAnisotropy                   = 0;
 
-    //! Specifies maximum number of work groups in a compute shader.
+    /**
+    \brief Specifies maximum number of work groups in a compute shader.
+    \see RenderContext::DispatchCompute
+    */
     Gs::Vector3ui   maxNumComputeShaderWorkGroups;
     
     //! Specifies maximum work group size in a compute shader.

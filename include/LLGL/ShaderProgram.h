@@ -123,7 +123,8 @@ class LLGL_EXPORT ShaderProgram
         }
         shaderProgram->UnlockShaderUniform();
         \endcode
-        \note Only a shader program from an OpenGL render system will return a non-null pointer!
+        \note Only supported with: OpenGL.
+        \see UnlockShaderUniform
         */
         virtual ShaderUniform* LockShaderUniform() = 0;
 

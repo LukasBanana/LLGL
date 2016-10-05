@@ -153,6 +153,7 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
     caps.hasCubeTextures                = true;
     caps.hasTextureArrays               = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.hasCubeTextureArrays           = (featureLevel >= D3D_FEATURE_LEVEL_10_1);
+    caps.hasMultiSampleTextures         = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
     caps.hasSamplers                    = (featureLevel >= D3D_FEATURE_LEVEL_9_3);
     caps.hasConstantBuffers             = true;
     caps.hasStorageBuffers              = true;

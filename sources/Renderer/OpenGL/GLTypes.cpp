@@ -105,7 +105,8 @@ GLenum Map(const TextureType textureType)
         case TextureType::Texture1DArray:   return GL_TEXTURE_1D_ARRAY;
         case TextureType::Texture2DArray:   return GL_TEXTURE_2D_ARRAY;
         case TextureType::TextureCubeArray: return GL_TEXTURE_CUBE_MAP_ARRAY;
-        default:                            break;
+        case TextureType::Texture2DMS:      return GL_TEXTURE_2D_MULTISAMPLE;
+        case TextureType::Texture2DMSArray: return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
     }
     MapFailed("TextureType");
 }

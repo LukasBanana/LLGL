@@ -320,6 +320,15 @@ static bool Load_GL_ARB_texture_compression(bool usePlaceHolder)
     return true;
 }
 
+static bool Load_GL_ARB_texture_multisample(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glTexImage2DMultisample );
+    LOAD_GLPROC( glTexImage3DMultisample );
+    LOAD_GLPROC( glGetMultisamplefv      );
+    LOAD_GLPROC( glSampleMaski           );
+    return true;
+}
+
 static bool Load_GL_ARB_sampler_objects(bool usePlaceHolder)
 {
     LOAD_GLPROC( glGenSamplers        );
@@ -588,6 +597,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
     LOAD_GLEXT( EXT_texture3D                    );
     LOAD_GLEXT( ARB_clear_texture                );
     LOAD_GLEXT( ARB_texture_compression          );
+    LOAD_GLEXT( ARB_texture_multisample          );
     LOAD_GLEXT( ARB_sampler_objects              );
 
     /* Load blending extensions */

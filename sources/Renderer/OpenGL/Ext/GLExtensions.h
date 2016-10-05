@@ -101,6 +101,13 @@ extern PFNGLCOMPRESSEDTEXSUBIMAGE2DPROC                     glCompressedTexSubIm
 extern PFNGLCOMPRESSEDTEXSUBIMAGE3DPROC                     glCompressedTexSubImage3D;
 extern PFNGLGETCOMPRESSEDTEXIMAGEPROC                       glGetCompressedTexImage;
 
+/* GL_ARB_texture_multisample */
+
+extern PFNGLTEXIMAGE2DMULTISAMPLEPROC                       glTexImage2DMultisample;
+extern PFNGLTEXIMAGE3DMULTISAMPLEPROC                       glTexImage3DMultisample;
+extern PFNGLGETMULTISAMPLEFVPROC                            glGetMultisamplefv;
+extern PFNGLSAMPLEMASKIPROC                                 glSampleMaski;
+
 /* GL_ARB_sampler_objects */
 
 extern PFNGLGENSAMPLERSPROC                                 glGenSamplers;

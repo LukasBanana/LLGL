@@ -329,6 +329,7 @@ void GLRenderSystem::QueryRenderingCaps()
     caps.hasCubeTextures                = HasExtension(GLExt::ARB_texture_cube_map);
     caps.hasTextureArrays               = HasExtension(GLExt::EXT_texture_array);
     caps.hasCubeTextureArrays           = HasExtension(GLExt::ARB_texture_cube_map_array);
+    caps.hasMultiSampleTextures         = HasExtension(GLExt::ARB_texture_multisample);
     caps.hasSamplers                    = HasExtension(GLExt::ARB_sampler_objects);
     caps.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
     caps.hasStorageBuffers              = HasExtension(GLExt::ARB_shader_storage_buffer_object);

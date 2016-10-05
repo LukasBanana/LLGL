@@ -95,6 +95,13 @@ PFNGLCOMPRESSEDTEXSUBIMAGE2DPROC                        glCompressedTexSubImage2
 PFNGLCOMPRESSEDTEXSUBIMAGE3DPROC                        glCompressedTexSubImage3D                       = nullptr;
 PFNGLGETCOMPRESSEDTEXIMAGEPROC                          glGetCompressedTexImage                         = nullptr;
 
+/* GL_ARB_texture_multisample */
+
+PFNGLTEXIMAGE2DMULTISAMPLEPROC                          glTexImage2DMultisample                         = nullptr;
+PFNGLTEXIMAGE3DMULTISAMPLEPROC                          glTexImage3DMultisample                         = nullptr;
+PFNGLGETMULTISAMPLEFVPROC                               glGetMultisamplefv                              = nullptr;
+PFNGLSAMPLEMASKIPROC                                    glSampleMaski                                   = nullptr;
+
 /* GL_ARB_sampler_objects */
 
 PFNGLGENSAMPLERSPROC                                    glGenSamplers                                   = nullptr;

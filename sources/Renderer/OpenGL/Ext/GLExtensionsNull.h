@@ -128,6 +128,13 @@ DECL_GLPROC(void, glCompressedTexSubImage2D, (GLenum, GLint, GLint, GLint, GLsiz
 DECL_GLPROC(void, glCompressedTexSubImage3D, (GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, const void*));
 DECL_GLPROC(void, glGetCompressedTexImage, (GLenum, GLint, void*));
 
+/* GL_ARB_texture_multisample */
+
+DECL_GLPROC(void, glTexImage2DMultisample, (GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLboolean));
+DECL_GLPROC(void, glTexImage3DMultisample, (GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, GLboolean));
+DECL_GLPROC(void, glGetMultisamplefv, (GLenum, GLuint, GLfloat*));
+DECL_GLPROC(void, glSampleMaski, (GLuint, GLbitfield));
+
 /* GL_ARB_sampler_objects */
 
 DECL_GLPROC(void, glGenSamplers, (GLsizei, GLuint*));
