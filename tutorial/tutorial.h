@@ -467,37 +467,29 @@ protected:
     template <typename VertexType>
     LLGL::Buffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
     {
-        LLGL::BufferDescriptor desc;
-        {
-            desc.type                       = LLGL::BufferType::Vertex;
-            desc.size                       = vertices.size() * sizeof(VertexType);
-            desc.vertexBuffer.vertexFormat  = vertexFormat;
-        }
-        return renderer->CreateBuffer(desc, vertices.data());
+        return renderer->CreateBuffer(
+            LLGL::VertexBufferDesc(vertices.size() * sizeof(VertexType), vertexFormat),
+            vertices.data()
+        );
     }
 
     template <typename IndexType>
     LLGL::Buffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::IndexFormat& indexFormat)
     {
-        LLGL::BufferDescriptor desc;
-        {
-            desc.type                       = LLGL::BufferType::Index;
-            desc.size                       = indices.size() * sizeof(IndexType);
-            desc.indexBuffer.indexFormat    = indexFormat;
-        }
-        return renderer->CreateBuffer(desc, indices.data());
+        return renderer->CreateBuffer(
+            LLGL::IndexBufferDesc(indices.size() * sizeof(IndexType), indexFormat),
+            indices.data()
+        );
     }
 
     template <typename Buffer>
     LLGL::Buffer* CreateConstantBuffer(const Buffer& buffer)
     {
         static_assert(!std::is_pointer<Buffer>::value, "buffer type must not be a pointer");
-        LLGL::BufferDescriptor desc;
-        {
-            desc.type   = LLGL::BufferType::Constant;
-            desc.size   = sizeof(buffer);
-        }
-        return renderer->CreateBuffer(desc, &buffer);
+        return renderer->CreateBuffer(
+            LLGL::ConstantBufferDesc(sizeof(buffer)),
+            &buffer
+        );
     }
 
     template <typename T>

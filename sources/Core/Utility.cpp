@@ -14,7 +14,9 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT TextureDescriptor Texture1DDesc(const TextureFormat format, unsigned int width)
+/* ----- TextureDescriptor utility functions ----- */
+
+LLGL_EXPORT TextureDescriptor Texture1DDesc(TextureFormat format, unsigned int width)
 {
     TextureDescriptor desc;
     {
@@ -25,7 +27,7 @@ LLGL_EXPORT TextureDescriptor Texture1DDesc(const TextureFormat format, unsigned
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DDesc(const TextureFormat format, unsigned int width, unsigned int height)
+LLGL_EXPORT TextureDescriptor Texture2DDesc(TextureFormat format, unsigned int width, unsigned int height)
 {
     TextureDescriptor desc;
     {
@@ -37,7 +39,7 @@ LLGL_EXPORT TextureDescriptor Texture2DDesc(const TextureFormat format, unsigned
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture3DDesc(const TextureFormat format, unsigned int width, unsigned int height, unsigned int depth)
+LLGL_EXPORT TextureDescriptor Texture3DDesc(TextureFormat format, unsigned int width, unsigned int height, unsigned int depth)
 {
     TextureDescriptor desc;
     {
@@ -50,7 +52,7 @@ LLGL_EXPORT TextureDescriptor Texture3DDesc(const TextureFormat format, unsigned
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor TextureCubeDesc(const TextureFormat format, unsigned int width, unsigned int height)
+LLGL_EXPORT TextureDescriptor TextureCubeDesc(TextureFormat format, unsigned int width, unsigned int height)
 {
     TextureDescriptor desc;
     {
@@ -62,7 +64,7 @@ LLGL_EXPORT TextureDescriptor TextureCubeDesc(const TextureFormat format, unsign
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(const TextureFormat format, unsigned int width, unsigned int layers)
+LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(TextureFormat format, unsigned int width, unsigned int layers)
 {
     TextureDescriptor desc;
     {
@@ -74,7 +76,7 @@ LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(const TextureFormat format, uns
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(const TextureFormat format, unsigned int width, unsigned int height, unsigned int layers)
+LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(TextureFormat format, unsigned int width, unsigned int height, unsigned int layers)
 {
     TextureDescriptor desc;
     {
@@ -87,7 +89,7 @@ LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(const TextureFormat format, uns
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(const TextureFormat format, unsigned int width, unsigned int height, unsigned int layers)
+LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(TextureFormat format, unsigned int width, unsigned int height, unsigned int layers)
 {
     TextureDescriptor desc;
     {
@@ -100,7 +102,7 @@ LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(const TextureFormat format, u
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DMSDesc(const TextureFormat format, unsigned int width, unsigned int height, unsigned int samples, bool fixedSamples)
+LLGL_EXPORT TextureDescriptor Texture2DMSDesc(TextureFormat format, unsigned int width, unsigned int height, unsigned int samples, bool fixedSamples)
 {
     TextureDescriptor desc;
     {
@@ -114,7 +116,7 @@ LLGL_EXPORT TextureDescriptor Texture2DMSDesc(const TextureFormat format, unsign
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(const TextureFormat format, unsigned int width, unsigned int height, unsigned int layers, unsigned int samples, bool fixedSamples)
+LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(TextureFormat format, unsigned int width, unsigned int height, unsigned int layers, unsigned int samples, bool fixedSamples)
 {
     TextureDescriptor desc;
     {
@@ -125,6 +127,55 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(const TextureFormat format, u
         desc.texture2DMS.layers         = layers;
         desc.texture2DMS.samples        = samples;
         desc.texture2DMS.fixedSamples   = fixedSamples;
+    }
+    return desc;
+}
+
+/* ----- BufferDescriptor utility functions ----- */
+
+LLGL_EXPORT BufferDescriptor VertexBufferDesc(unsigned int size, const VertexFormat& vertexFormat, const BufferUsage usage)
+{
+    BufferDescriptor desc;
+    {
+        desc.type                       = BufferType::Vertex;
+        desc.size                       = size;
+        desc.usage                      = usage;
+        desc.vertexBuffer.vertexFormat  = vertexFormat;
+    }
+    return desc;
+}
+
+LLGL_EXPORT BufferDescriptor IndexBufferDesc(unsigned int size, const IndexFormat& indexFormat, const BufferUsage usage)
+{
+    BufferDescriptor desc;
+    {
+        desc.type                       = BufferType::Index;
+        desc.size                       = size;
+        desc.usage                      = usage;
+        desc.indexBuffer.indexFormat    = indexFormat;
+    }
+    return desc;
+}
+
+LLGL_EXPORT BufferDescriptor ConstantBufferDesc(unsigned int size, const BufferUsage usage)
+{
+    BufferDescriptor desc;
+    {
+        desc.type   = BufferType::Constant;
+        desc.size   = size;
+        desc.usage  = usage;
+    }
+    return desc;
+}
+
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType, const BufferUsage usage)
+{
+    BufferDescriptor desc;
+    {
+        desc.type                       = BufferType::Storage;
+        desc.size                       = size;
+        desc.usage                      = usage;
+        desc.storageBuffer.storageType  = storageType;
     }
     return desc;
 }
