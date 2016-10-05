@@ -97,7 +97,7 @@ Shows how to use Query objects and conditional rendering for occlusion culling.
 
 ### [Tutorial 05: Render Target](tutorial/Tutorial05_RenderTarget/main.cpp)
 
-Simple render target example.
+Simple render target example with optional multi-sample texture (Texture2DMS/ sampler2DMS).
 
 <p align="center"><img src="tutorial/Tutorial05_RenderTarget.png" width="400" height="300"/></p>
 
