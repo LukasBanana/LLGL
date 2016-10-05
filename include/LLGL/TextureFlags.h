@@ -124,46 +124,49 @@ struct TextureDescriptor
 {
     struct Texture1DDescriptor
     {
-        unsigned int width;     //!< Texture width.
-        unsigned int layers;    //!< Number of texture array layers.
+        unsigned int    width;          //!< Texture width.
+        unsigned int    layers;         //!< Number of texture array layers.
     };
 
     struct Texture2DDescriptor
     {
-        unsigned int width;     //!< Texture width.
-        unsigned int height;    //!< Texture height.
-        unsigned int layers;    //!< Number of texture array layers.
+        unsigned int    width;          //!< Texture width.
+        unsigned int    height;         //!< Texture height.
+        unsigned int    layers;         //!< Number of texture array layers.
     };
 
     struct Texture3DDescriptor
     {
-        unsigned int width;     //!< Texture width.
-        unsigned int height;    //!< Texture height.
-        unsigned int depth;     //!< Texture depth.
+        unsigned int    width;          //!< Texture width.
+        unsigned int    height;         //!< Texture height.
+        unsigned int    depth;          //!< Texture depth.
     };
 
     struct TextureCubeDescriptor
     {
-        unsigned int width;     //!< Texture width.
-        unsigned int height;    //!< Texture height.
-        unsigned int layers;    //!< Number of texture array layers (internally it will be a multiple of 6).
+        unsigned int    width;          //!< Texture width.
+        unsigned int    height;         //!< Texture height.
+        unsigned int    layers;         //!< Number of texture array layers (internally it will be a multiple of 6).
     };
 
-    /*struct Texture2DMSDescriptor
+    struct Texture2DMSDescriptor
     {
-        unsigned int width;     //!< Texture width.
-        unsigned int height;    //!< Texture height.
-        unsigned int layers;    //!< Number of texture array layers.
-        unsigned int samples;   //!< Number of samples.
-    };*/
+        unsigned int    width;          //!< Texture width.
+        unsigned int    height;         //!< Texture height.
+        unsigned int    layers;         //!< Number of texture array layers.
+        unsigned int    samples;        //!< Number of samples.
+        bool            fixedSamples;   //!< Specifies whether the sample locations are fixed or not. By default true.
+    };
     
     TextureDescriptor()
     {
-        type                = TextureType::Texture1D;
-        format              = TextureFormat::RGBA;
-        texture3D.width     = 0;
-        texture3D.height    = 0;
-        texture3D.depth     = 0;
+        type                        = TextureType::Texture1D;
+        format                      = TextureFormat::RGBA;
+        texture2DMS.width           = 0;
+        texture2DMS.height          = 0;
+        texture2DMS.layers          = 0;
+        texture2DMS.samples         = 0;
+        texture2DMS.fixedSamples    = true;
     }
     ~TextureDescriptor()
     {
@@ -178,6 +181,7 @@ struct TextureDescriptor
         Texture2DDescriptor     texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
         Texture3DDescriptor     texture3D;      //!< Descriptor for 3D textures.
         TextureCubeDescriptor   textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
+        Texture2DMSDescriptor   texture2DMS;    //!< Descriptor for multi-sampled 2D- and 2D-Array textures.
     };
 };
 

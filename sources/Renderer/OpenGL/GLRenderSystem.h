@@ -143,8 +143,8 @@ class GLRenderSystem : public RenderSystem
         void BuildTexture1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
         void BuildTexture2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
         void BuildTextureCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        //void BuildTexture2DMS(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        //void BuildTexture2DMSArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildTexture2DMS(const TextureDescriptor& desc);
+        void BuildTexture2DMSArray(const TextureDescriptor& desc);
 
         void WriteTexture1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
         void WriteTexture2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);

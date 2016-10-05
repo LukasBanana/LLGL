@@ -217,12 +217,13 @@ class LLGL_EXPORT RenderSystem
         \param[in] imageDesc Optional pointer to the image data descriptor.
         If this is null, the texture will be initialized with the currently configured default image color.
         If this is non-null, it is used to initialize the texture data.
-        \remarks If the texture type of the descriptor is not an  array texture the number of layers will be ignored.
+        This parameter will be ignored if the texture type is a multi-sampled texture (i.e. TextureType::Texture2DMS or TextureType::Texture2DMSArray).
         \see WriteTexture
         \see RenderSystemConfiguration::defaultImageColor
         */
         virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) = 0;
 
+        //! Releases the specified texture object.
         virtual void Release(Texture& texture) = 0;
 
         /**
@@ -237,6 +238,8 @@ class LLGL_EXPORT RenderSystem
         \param[in] texture Specifies the texture whose data is to be updated.
         \param[in] subTextureDesc Specifies the sub-texture descriptor.
         \param[in] imageDesc Specifies the image data descriptor. Its "data" member must not be null!
+        \remarks This function can only be used for non-multi-sample textures
+        (i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray),
         */
         virtual void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) = 0;
 

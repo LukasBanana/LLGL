@@ -415,6 +415,20 @@ void DbgRenderSystem::DebugTextureDescriptor(const TextureDescriptor& desc, cons
                 ErrTextureLayersEqualZero(source);
             break;
 
+        case TextureType::Texture2DMS:
+            DebugTextureSize(desc.texture2DMS.width, source);
+            DebugTextureSize(desc.texture2DMS.height, source);
+            if (desc.texture2DMS.layers > 1)
+                WarnTextureLayersGreaterOne(source);
+            break;
+
+        case TextureType::Texture2DMSArray:
+            DebugTextureSize(desc.texture2DMS.width, source);
+            DebugTextureSize(desc.texture2DMS.height, source);
+            if (desc.texture2DMS.layers == 0)
+                ErrTextureLayersEqualZero(source);
+            break;
+
         default:
             LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "invalid texture type");
             break;

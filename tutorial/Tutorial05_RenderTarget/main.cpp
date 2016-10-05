@@ -9,6 +9,7 @@
 
 
 #define ENABLE_MULTISAMPLING
+#define USE_TEXTURE2DMS
 
 class Tutorial05 : public Tutorial
 {
@@ -26,6 +27,10 @@ class Tutorial05 : public Tutorial
 
     LLGL::RenderTarget*     renderTarget        = nullptr;
     LLGL::Texture*          renderTargetTex     = nullptr;
+
+    #ifdef USE_TEXTURE2DMS
+    LLGL::Texture*          texture2DMS         = nullptr;
+    #endif
 
     Gs::Matrix4f            renderTargetProj;
 
@@ -141,6 +146,20 @@ public:
 
         // Initialize projection matrix for render-target scene rendering
         renderTargetProj = Gs::ProjectionMatrix4f::Perspective(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
+
+        #ifdef USE_TEXTURE2DMS
+        
+        LLGL::TextureDescriptor texture2DMSDesc;
+        {
+            texture2DMSDesc.type                = LLGL::TextureType::Texture2DMS;
+            texture2DMSDesc.format              = LLGL::TextureFormat::RGBA;
+            texture2DMSDesc.texture2DMS.width   = renderTargetSize.x;
+            texture2DMSDesc.texture2DMS.height  = renderTargetSize.y;
+            texture2DMSDesc.texture2DMS.samples = 8;
+        }
+        texture2DMS = renderer->CreateTexture(texture2DMSDesc);
+
+        #endif
     }
 
 private:

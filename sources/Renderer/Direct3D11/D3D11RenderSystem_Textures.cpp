@@ -41,6 +41,9 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
         case TextureType::TextureCubeArray:
             descD3D.textureCube.layers *= 6;
             break;
+        case TextureType::Texture2DMS:
+            descD3D.texture2DMS.layers = 1;
+            break;
         default:
             break;
     }
@@ -62,6 +65,10 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
             BuildGenericTexture2D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
+            break;
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            BuildGenericTexture2DMS(*texture, descD3D);
             break;
         default:
             throw std::invalid_argument("failed to create texture with invalid texture type");
@@ -100,7 +107,7 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             hwTex.tex1D->GetDesc(&desc);
 
             texDesc.format              = D3D11Types::Unmap(desc.Format);
-            texDesc.texture1D.width     = static_cast<int>(desc.Width);
+            texDesc.texture1D.width     = desc.Width;
             texDesc.texture1D.layers    = desc.ArraySize;
         }
         break;
@@ -112,12 +119,14 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             hwTex.tex2D->GetDesc(&desc);
 
             texDesc.format              = D3D11Types::Unmap(desc.Format);
-            texDesc.texture2D.width     = static_cast<int>(desc.Width);
-            texDesc.texture2D.height    = static_cast<int>(desc.Height);
+            texDesc.texture2D.width     = desc.Width;
+            texDesc.texture2D.height    = desc.Height;
             texDesc.texture2D.layers    = desc.ArraySize;
 
             if (texDesc.type == TextureType::TextureCube || texDesc.type == TextureType::TextureCubeArray)
                 texDesc.textureCube.layers /= 6;
+            else if (texDesc.type == TextureType::Texture2DMS || texDesc.type == TextureType::Texture2DMSArray)
+                texDesc.texture2DMS.samples = desc.SampleDesc.Count;
         }
         break;
 
@@ -128,9 +137,9 @@ TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& textu
             hwTex.tex3D->GetDesc(&desc);
 
             texDesc.format              = D3D11Types::Unmap(desc.Format);
-            texDesc.texture3D.width     = static_cast<int>(desc.Width);
-            texDesc.texture3D.height    = static_cast<int>(desc.Height);
-            texDesc.texture3D.depth     = static_cast<int>(desc.Depth);
+            texDesc.texture3D.width     = desc.Width;
+            texDesc.texture3D.height    = desc.Height;
+            texDesc.texture3D.depth     = desc.Depth;
         }
         break;
     }
@@ -204,6 +213,10 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescripto
             size.y      = subTextureDesc.textureCube.height;
             size.z      = subTextureDesc.textureCube.cubeFaces;
             break;
+
+        default:
+            /* Ignore multi-sample textures */
+            return;
     }
 
     /* Update generic texture at determined region */
@@ -314,7 +327,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(
 void D3D11RenderSystem::BuildGenericTexture2D(
     D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags)
 {
-    /* Setup D3D texture descriptor */
+    /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE2D_DESC texDesc;
     {
         texDesc.Width               = descD3D.texture2D.width;
@@ -329,8 +342,6 @@ void D3D11RenderSystem::BuildGenericTexture2D(
         texDesc.CPUAccessFlags      = 0;
         texDesc.MiscFlags           = miscFlags;
     }
-
-    /* Create D3D texture resource */
     textureD3D.CreateTexture2D(device_.Get(), texDesc);
 
     if (imageDesc)
@@ -359,7 +370,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(
 void D3D11RenderSystem::BuildGenericTexture3D(
     D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags)
 {
-    /* Setup D3D texture descriptor */
+    /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE3D_DESC texDesc;
     {
         texDesc.Width           = descD3D.texture3D.width;
@@ -372,8 +383,6 @@ void D3D11RenderSystem::BuildGenericTexture3D(
         texDesc.CPUAccessFlags  = 0;
         texDesc.MiscFlags       = miscFlags;
     }
-
-    /* Create D3D texture resource */
     textureD3D.CreateTexture3D(device_.Get(), texDesc);
 
     if (imageDesc)
@@ -388,6 +397,26 @@ void D3D11RenderSystem::BuildGenericTexture3D(
     {
         //TODO -> fill texture with default data
     }
+}
+
+void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& descD3D)
+{
+    /* Setup D3D texture descriptor and create D3D texture resouce */
+    D3D11_TEXTURE2D_DESC texDesc;
+    {
+        texDesc.Width               = descD3D.texture2DMS.width;
+        texDesc.Height              = descD3D.texture2DMS.height;
+        texDesc.MipLevels           = 1;
+        texDesc.ArraySize           = descD3D.texture2DMS.layers;
+        texDesc.Format              = D3D11Types::Map(descD3D.format);
+        texDesc.SampleDesc.Count    = descD3D.texture2DMS.samples;
+        texDesc.SampleDesc.Quality  = 0;
+        texDesc.Usage               = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+        texDesc.CPUAccessFlags      = 0;
+        texDesc.MiscFlags           = 0;
+    }
+    textureD3D.CreateTexture2D(device_.Get(), texDesc);
 }
 
 void D3D11RenderSystem::UpdateGenericTexture(

@@ -96,6 +96,12 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
             case TextureType::TextureCubeArray:
                 GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
                 break;
+            case TextureType::Texture2DMS:
+                GLFrameBuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D_MULTISAMPLE, 0);
+                break;
+            case TextureType::Texture2DMSArray:
+                GLFrameBuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 0, attachmentDesc.layer);
+                break;
         }
 
         status = CheckDrawFramebufferStatus();
