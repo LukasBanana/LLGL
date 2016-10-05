@@ -155,7 +155,7 @@ struct LLGL_EXPORT TextureDescriptor
         unsigned int    height;         //!< Texture height.
         unsigned int    layers;         //!< Number of texture array layers.
         unsigned int    samples;        //!< Number of samples.
-        bool            fixedSamples;   //!< Specifies whether the sample locations are fixed or not. By default true.
+        bool            fixedSamples;   //!< Specifies whether the sample locations are fixed or not. By default true. \note Only supported with: OpenGL.
     };
     
     TextureDescriptor()
