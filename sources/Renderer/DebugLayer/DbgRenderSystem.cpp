@@ -153,7 +153,7 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t 
     {
         instance_->WriteBuffer(bufferDbg.instance, data, dataSize, offset);
     }
-    LLGL_DBG_PROFILER_DO(writeVertexBuffer.Inc());
+    LLGL_DBG_PROFILER_DO(writeBuffer.Inc());
 }
 
 /* ----- Textures ----- */

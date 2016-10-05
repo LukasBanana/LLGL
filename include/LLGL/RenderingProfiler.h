@@ -74,13 +74,8 @@ class LLGL_EXPORT RenderingProfiler
         void RecordDrawCall(const PrimitiveTopology topology, Counter::ValueType numVertices);
         void RecordDrawCall(const PrimitiveTopology topology, Counter::ValueType numVertices, Counter::ValueType numInstances);
 
-        Counter writeVertexBuffer;
-        Counter writeIndexBuffer;
-        Counter writeConstantBuffer;
-        Counter writeStorageBuffer;
-
-        Counter mapConstantBuffer;
-        Counter mapStorageBuffer;
+        Counter writeBuffer;
+        Counter mapBuffer;
 
         Counter setVertexBuffer;
         Counter setIndexBuffer;

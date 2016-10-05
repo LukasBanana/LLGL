@@ -176,7 +176,7 @@ void* DbgRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
     {
         result = instance_.MapBuffer(bufferDbg.instance, access);
     }
-    LLGL_DBG_PROFILER_DO(mapStorageBuffer.Inc());
+    LLGL_DBG_PROFILER_DO(mapBuffer.Inc());
     return result;
 }
 
