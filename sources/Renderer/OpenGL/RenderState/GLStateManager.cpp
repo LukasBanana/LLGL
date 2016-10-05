@@ -781,6 +781,8 @@ GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
         case TextureType::Texture1DArray:   return GLTextureTarget::TEXTURE_1D_ARRAY;
         case TextureType::Texture2DArray:   return GLTextureTarget::TEXTURE_2D_ARRAY;
         case TextureType::TextureCubeArray: return GLTextureTarget::TEXTURE_CUBE_MAP_ARRAY;
+        case TextureType::Texture2DMS:      return GLTextureTarget::TEXTURE_2D_MULTISAMPLE;
+        case TextureType::Texture2DMSArray: return GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY;
         default:                            break;
     }
     throw std::invalid_argument("failed to convert texture type to OpenGL texture target");
