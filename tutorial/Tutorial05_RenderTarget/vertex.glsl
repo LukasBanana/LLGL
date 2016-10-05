@@ -5,6 +5,7 @@
 layout(std140) uniform Settings
 {
 	mat4 wvpMatrix;
+	int useTexture2DMS;
 };
 
 in vec3 position;

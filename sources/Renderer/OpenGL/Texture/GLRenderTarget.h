@@ -48,12 +48,6 @@ class GLRenderTarget : public RenderTarget
         //! Returns the active frame buffer (i.e. either the default frame buffer or the multi-sample frame buffer).
         const GLFrameBuffer& GetFrameBuffer() const;
 
-        //! Returns the number of color attachments.
-        inline std::size_t GetNumColorAttachments() const
-        {
-            return colorAttachments_.size();
-        }
-
     private:
 
         void InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat);
@@ -67,6 +61,10 @@ class GLRenderTarget : public RenderTarget
         void SetDrawBuffers();
 
         void CheckFrameBufferStatus(GLenum status, const std::string& info);
+
+        void CreateOnceFrameBufferMS();
+
+        bool HasMultiSampling() const;
 
         GLFrameBuffer                                   frameBuffer_;
 

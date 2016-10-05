@@ -85,6 +85,7 @@ class LLGL_EXPORT RenderTarget
         \brief Attaches the specified texture to this render target.
         \param[in] attachmnetDesc Specifies the attachment descriptor.
         Unused members will be ignored, e.g. the 'layer' member is ignored when a non-array texture is passed.
+        \note A mixed attachment of multi-sample and non-multi-sample textures to a render-target is currently only supported with: Direct3D 11.
         */
         virtual void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) = 0;
 
