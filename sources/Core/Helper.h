@@ -9,6 +9,7 @@
 #define __LLGL_HELPER_H__
 
 
+#include "../Renderer/CheckedCast.h"
 #include <algorithm>
 #include <type_traits>
 #include <memory>
@@ -19,6 +20,7 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
+#include <functional>
 
 
 namespace LLGL
@@ -138,6 +140,17 @@ std::string ToHex(T value)
     std::stringstream s;
     s << std::setfill('0') << std::setw(sizeof(T)*2) << std::hex << std::uppercase << value;
     return s.str();
+}
+
+/**
+\brief Returns the next resource from the specified resource array.
+\param[in,out] numResources Specifies the remaining number of resources in the array.
+\param[in,out] resourceArray Pointer to the remaining array of resource pointers.
+*/
+template <typename TSub, typename TBase>
+TSub* NextArrayResource(unsigned int& numResources, TBase* const * & resourceArray)
+{
+    return (numResources-- > 0 ? LLGL_CAST(TSub*, (*(resourceArray++))) : nullptr);
 }
 
 

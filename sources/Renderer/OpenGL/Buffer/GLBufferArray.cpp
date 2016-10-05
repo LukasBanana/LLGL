@@ -8,6 +8,7 @@
 #include "GLBufferArray.h"
 #include "GLBuffer.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
@@ -34,12 +35,9 @@ void GLBufferArray::BuildArray(unsigned int numBuffers, Buffer* const * bufferAr
 {
     /* Store the ID of each GLBuffer inside the array */
     idArray_.clear();
-    for (idArray_.reserve(numBuffers); numBuffers > 0; --numBuffers)
-    {
-        auto bufferGL = LLGL_CAST(GLBuffer*, (*bufferArray));
-        idArray_.push_back(bufferGL->GetID());
-        ++bufferArray;
-    }
+    idArray_.reserve(numBuffers);
+    while (auto next = NextArrayResource<GLBuffer>(numBuffers, bufferArray))
+        idArray_.push_back(next->GetID());
 }
 
 
