@@ -81,6 +81,7 @@ class D3D11RenderContext : public RenderContext
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Sampler States ----- */
 

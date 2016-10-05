@@ -84,6 +84,7 @@ class GLRenderContext : public RenderContext
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Sampler States ----- */
 

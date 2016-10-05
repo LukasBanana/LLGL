@@ -243,6 +243,11 @@ void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long sh
     SetShaderResourcesOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
+void D3D11RenderContext::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
+{
+    //todo...
+}
+
 /* ----- Sampler States ----- */
 
 void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)

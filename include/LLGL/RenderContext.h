@@ -20,6 +20,7 @@
 #include "BufferArray.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
+#include "TextureArray.h"
 #include "RenderTarget.h"
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
@@ -211,12 +212,14 @@ class LLGL_EXPORT RenderContext
         \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
         \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
         \see UnmapBuffer
+        \todo Move this to RenderSystem interface.
         */
         virtual void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) = 0;
 
         /**
         \brief Unmaps the specified buffer.
         \see MapBuffer
+        \todo Move this to RenderSystem interface.
         */
         virtual void UnmapBuffer(Buffer& buffer) = 0;
 
@@ -228,6 +231,12 @@ class LLGL_EXPORT RenderContext
         \param[in] slot Specifies the slot index where to put the texture.
         */
         virtual void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+
+        /**
+        \brief Sets the active array of textures at the specified start slot index.
+        \see SetTexture
+        */
+        virtual void SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /* ----- Samplers ----- */
 

@@ -13,6 +13,7 @@
 #include "../CheckedCast.h"
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
+#include "Texture/GLTextureArray.h"
 #include "Texture/GLRenderTarget.h"
 #include "Texture/GLSampler.h"
 #include "Buffer/GLVertexBuffer.h"
@@ -263,6 +264,18 @@ void GLRenderContext::SetTexture(Texture& texture, unsigned int slot, long /*sha
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
     stateMngr_->ActiveTexture(slot);
     stateMngr_->BindTexture(textureGL);
+}
+
+void GLRenderContext::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long /*shaderStageFlags*/)
+{
+    /* Bind texture array to layers */
+    auto& textureArrayGL = LLGL_CAST(GLTextureArray&, textureArray);
+    stateMngr_->BindTextures(
+        startSlot,
+        static_cast<GLsizei>(textureArrayGL.GetIDArray().size()),
+        textureArrayGL.GetTargetArray().data(),
+        textureArrayGL.GetIDArray().data()
+    );
 }
 
 /* ----- Sampler States ----- */

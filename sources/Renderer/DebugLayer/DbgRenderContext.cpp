@@ -198,6 +198,15 @@ void DbgRenderContext::SetTexture(Texture& texture, unsigned int slot, long shad
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
+void DbgRenderContext::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
+{
+    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+    {
+        instance_.SetTextureArray(textureArray, startSlot, shaderStageFlags);
+    }
+    LLGL_DBG_PROFILER_DO(setTexture.Inc());
+}
+
 /* ----- Sampler States ----- */
 
 void DbgRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
