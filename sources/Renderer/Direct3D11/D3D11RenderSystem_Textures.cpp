@@ -80,7 +80,8 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 
 TextureArray* D3D11RenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
 {
-    return nullptr;//todo...
+    AssertCreateTextureArray(numTextures, textureArray);
+    return TakeOwnership(textureArrays_, MakeUnique<D3D11TextureArray>(numTextures, textureArray));
 }
 
 void D3D11RenderSystem::Release(Texture& texture)
@@ -90,7 +91,7 @@ void D3D11RenderSystem::Release(Texture& texture)
 
 void D3D11RenderSystem::Release(TextureArray& textureArray)
 {
-    //RemoveFromUniqueSet(textureArrays_, &textureArray);
+    RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
 TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& texture)

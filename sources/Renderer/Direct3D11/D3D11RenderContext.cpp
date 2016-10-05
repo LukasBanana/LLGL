@@ -245,7 +245,14 @@ void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long sh
 
 void D3D11RenderContext::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
 {
-    //todo...
+    /* Set texture resource to all shader stages */
+    auto& textureArrayD3D = LLGL_CAST(D3D11TextureArray&, textureArray);
+    SetShaderResourcesOnStages(
+        startSlot,
+        static_cast<UINT>(textureArrayD3D.GetResourceViews().size()),
+        textureArrayD3D.GetResourceViews().data(),
+        shaderStageFlags
+    );
 }
 
 /* ----- Sampler States ----- */
