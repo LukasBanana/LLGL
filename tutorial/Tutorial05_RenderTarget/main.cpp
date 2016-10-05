@@ -12,7 +12,7 @@
 #define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
-#define ENABLE_CUSTOM_MULTISAMPLING
+//#define ENABLE_CUSTOM_MULTISAMPLING
 
 
 #ifndef ENABLE_MULTISAMPLING
@@ -38,7 +38,13 @@ class Tutorial05 : public Tutorial
 
     Gs::Matrix4f            renderTargetProj;
 
-    const Gs::Vector2ui     renderTargetSize    = Gs::Vector2ui(64);//512);
+    const Gs::Vector2ui     renderTargetSize    = Gs::Vector2ui(
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+        64
+        #else
+        512
+        #endif
+    );
 
     struct Settings
     {
