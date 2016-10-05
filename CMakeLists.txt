@@ -64,6 +64,7 @@ ADD_DEBUG_DEFINE(LLGL_DEBUG)
 
 option(LLGL_ENABLE_CHECKED_CAST "Enable Dynamic Checked Cast (only in Debug mode)" ON)
 option(LLGL_ENABLE_DEBUG_LAYER "Enable Renderer Debug Layer (for both Debug and Release mode)" ON)
+option(LLGL_ENABLE_UTILITY "Enable Utility Functions (LLGL/Utility.h)" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable Vendor Specific OpenGL Extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL Extension Placeholders" ON)
 
@@ -73,6 +74,10 @@ endif()
 
 if(LLGL_ENABLE_DEBUG_LAYER)
 	ADD_DEFINE(LLGL_ENABLE_DEBUG_LAYER)
+endif()
+
+if(LLGL_ENABLE_UTILITY)
+	ADD_DEFINE(LLGL_ENABLE_UTILITY)
 endif()
 
 if(LLGL_GL_ENABLE_VENDOR_EXT)

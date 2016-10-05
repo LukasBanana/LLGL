@@ -10,6 +10,7 @@
 
 
 #include <LLGL/LLGL.h>
+#include <LLGL/Utility.h>
 #include <Gauss/Gauss.h>
 #include <iostream>
 #include <fstream>
@@ -348,14 +349,9 @@ protected:
         }
 
         // Create texture and upload image data onto hardware texture
-        LLGL::TextureDescriptor textureDesc;
-        {
-            textureDesc.type                = LLGL::TextureType::Texture2D;
-            textureDesc.format              = LLGL::TextureFormat::RGBA;
-            textureDesc.texture2D.width     = width;
-            textureDesc.texture2D.height    = height;
-        }
-        auto tex = renderer->CreateTexture(textureDesc, &imageDesc);
+        auto tex = renderer->CreateTexture(
+            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, width, height), &imageDesc
+        );
 
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping

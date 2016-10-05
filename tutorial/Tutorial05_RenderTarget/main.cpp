@@ -132,26 +132,19 @@ public:
         renderTarget = renderer->CreateRenderTarget(multiSamples);
 
         // Create empty render-target texture
-        LLGL::TextureDescriptor textureDesc;
-        {
-            textureDesc.format              = LLGL::TextureFormat::RGBA;
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+        
+        renderTargetTex = renderer->CreateTexture(
+            LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA, renderTargetSize.x, renderTargetSize.y, multiSamples)
+        );
+        
+        #else
+        
+        renderTargetTex = renderer->CreateTexture(
+            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, renderTargetSize.x, renderTargetSize.y)
+        );
 
-            #ifdef ENABLE_CUSTOM_MULTISAMPLING
-            
-            textureDesc.type                = LLGL::TextureType::Texture2DMS;
-            textureDesc.texture2DMS.width   = renderTargetSize.x;
-            textureDesc.texture2DMS.height  = renderTargetSize.y;
-            textureDesc.texture2DMS.samples = multiSamples;
-
-            #else
-            
-            textureDesc.type                = LLGL::TextureType::Texture2D;
-            textureDesc.texture2D.width     = renderTargetSize.x;
-            textureDesc.texture2D.height    = renderTargetSize.y;
-            
-            #endif
-        }
-        renderTargetTex = renderer->CreateTexture(textureDesc);
+        #endif
 
         // Generate all MIP-map levels
         renderer->GenerateMips(*renderTargetTex);
