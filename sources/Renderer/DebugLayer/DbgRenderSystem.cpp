@@ -177,7 +177,7 @@ TextureDescriptor DbgRenderSystem::QueryTextureDescriptor(const Texture& texture
 
 void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
 {
-    auto& textureDbg = GetInitializedTexture(texture, __FUNCTION__);
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
     DebugMipLevelLimit(subTextureDesc.mipLevel, textureDbg.mipLevels, __FUNCTION__);
     {
         instance_->WriteTexture(textureDbg.instance, subTextureDesc, imageDesc);
@@ -377,11 +377,6 @@ void DbgRenderSystem::DebugMipLevelLimit(int mipLevel, int mipLevelCount, const 
     }
 }
 
-void DbgRenderSystem::ErrWriteUninitializedResource(const std::string& source)
-{
-    LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to write uninitialized resource", source);
-}
-
 void DbgRenderSystem::DebugTextureDescriptor(const TextureDescriptor& desc, const std::string& source)
 {
     switch (desc.type)
@@ -448,14 +443,6 @@ void DbgRenderSystem::ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entr
     auto& entryDbg = LLGL_CAST(T&, entry);
     instance_->Release(entryDbg.instance);
     RemoveFromUniqueSet(cont, &entry);
-}
-
-DbgTexture& DbgRenderSystem::GetInitializedTexture(Texture& texture, const std::string& source)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-    if (textureDbg.GetType() == TextureType::Undefined)
-        ErrWriteUninitializedResource(source);
-    return textureDbg;
 }
 
 

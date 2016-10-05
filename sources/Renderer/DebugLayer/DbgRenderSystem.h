@@ -112,8 +112,6 @@ class DbgRenderSystem : public RenderSystem
         void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source);
         void DebugMipLevelLimit(int mipLevel, int mipLevelCount, const std::string& source);
 
-        void ErrWriteUninitializedResource(const std::string& source);
-
         void DebugTextureDescriptor(const TextureDescriptor& desc, const std::string& source);
         void DebugTextureSize(unsigned int size, const std::string& source);
         void WarnTextureLayersGreaterOne(const std::string& source);
@@ -121,8 +119,6 @@ class DbgRenderSystem : public RenderSystem
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
-
-        DbgTexture& GetInitializedTexture(Texture& texture, const std::string& source);
 
         /* ----- Common objects ----- */
 

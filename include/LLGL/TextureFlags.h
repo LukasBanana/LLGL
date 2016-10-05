@@ -23,7 +23,6 @@ namespace LLGL
 //! Texture type enumeration.
 enum class TextureType
 {
-    Undefined,          //!< Initial value of a Texture object.
     Texture1D,          //!< 1-Dimensional texture.
     Texture2D,          //!< 2-Dimensional texture.
     Texture3D,          //!< 3-Dimensional texture.
@@ -150,8 +149,8 @@ struct TextureDescriptor
     
     TextureDescriptor()
     {
-        type                    = TextureType::Undefined;
-        format                  = TextureFormat::Unknown;
+        type                    = TextureType::Texture1D;
+        format                  = TextureFormat::RGBA;
         texture3DDesc.width     = 0;
         texture3DDesc.height    = 0;
         texture3DDesc.depth     = 0;
@@ -160,8 +159,8 @@ struct TextureDescriptor
     {
     }
 
-    TextureType                 type;               //!< Texture type.
-    TextureFormat               format;             //!< Texture hardware format.
+    TextureType                 type;               //!< Texture type. By default TextureType::Texture1D.
+    TextureFormat               format;             //!< Texture hardware format. By default TextureFormat::RGBA.
 
     union
     {
