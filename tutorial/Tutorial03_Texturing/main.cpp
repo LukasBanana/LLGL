@@ -15,6 +15,7 @@ class Tutorial03 : public Tutorial
     LLGL::GraphicsPipeline* pipeline        = nullptr;
     LLGL::Buffer*           vertexBuffer    = nullptr;
     LLGL::Texture*          colorMap        = nullptr;
+    LLGL::TextureArray*     textureArray    = nullptr;
     LLGL::Sampler*          sampler[5]      = { nullptr };
     int                     samplerIndex    = 0;
 
@@ -132,6 +133,9 @@ public:
 
         // Query texture descriptor to see what is really stored on the GPU
         //auto textureDesc = renderer->QueryTextureDescriptor(*colorMap);
+
+        // Create array of textures (not to be confused with an "array texture" which is a texture of arrays)
+        textureArray = renderer->CreateTextureArray(1, &colorMap);
     }
 
     void CreateSamplers()
@@ -176,7 +180,7 @@ private:
         context->SetVertexBuffer(*vertexBuffer);
 
         // Set texture and sampler state on slot index 0
-        context->SetTexture(*colorMap, 0);
+        context->SetTextureArray(*textureArray, 0);
         context->SetSampler(*sampler[samplerIndex], 0);
 
         // Draw fullscreen triangle
