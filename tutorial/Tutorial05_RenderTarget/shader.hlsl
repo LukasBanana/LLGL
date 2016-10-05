@@ -6,6 +6,7 @@
 cbuffer Settings : register(b0)
 {
 	float4x4 wvpMatrix;
+	int useTexture2DMS;
 };
 
 struct InputVS
@@ -32,11 +33,38 @@ OutputVS VS(InputVS inp)
 // PIXEL SHADER
 
 Texture2D colorMap : register(t0);
+Texture2DMS<float4, 8> colorMapMS : register(t1);
+
 SamplerState samplerState : register(s0);
 
 float4 PS(OutputVS inp) : SV_Target
 {
-	return colorMap.Sample(samplerState, inp.texCoord);
+	if (useTexture2DMS)
+	{
+		// Load texel from multi-sample texture
+		uint w, h, numSamples;
+		colorMapMS.GetDimensions(w, h, numSamples);
+		
+		int2 tc = int2(
+			(int)(inp.texCoord.x * (float)w),
+			(int)(inp.texCoord.y * (float)h)
+		);
+		
+		// Compute average of all samples
+		float4 c = (float4)0.0;
+		
+		for (int i = 0; i < numSamples; ++i)
+			c += colorMapMS.Load(tc, i);
+		
+		c /= numSamples;
+		
+		return c;
+	}
+	else
+	{
+		// Sample texel from standard texture
+		return colorMap.Sample(samplerState, inp.texCoord);
+	}
 }
 
 

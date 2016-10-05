@@ -55,10 +55,8 @@ class D3D11RenderTarget : public RenderTarget
 
     private:
 
-        using AttachTextureCallback = std::function<void(D3D11Texture& textureD3D, D3D11_RENDER_TARGET_VIEW_DESC& desc)>;
-
         void CreateDepthStencilAndDSV(const Gs::Vector2ui& size, DXGI_FORMAT format);
-        void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& desc);
+        void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc);
 
         bool HasMultiSampling() const;
 

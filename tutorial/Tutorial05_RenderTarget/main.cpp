@@ -8,8 +8,16 @@
 #include "../tutorial.h"
 
 
+// Enable multi-sampling
 #define ENABLE_MULTISAMPLING
-#define USE_TEXTURE2DMS
+
+// Enable custom multi-sampling by rendering directly into a multi-sample texture
+#define ENABLE_CUSTOM_MULTISAMPLING
+
+
+#ifndef ENABLE_MULTISAMPLING
+#undef ENABLE_CUSTOM_MULTISAMPLING
+#endif
 
 class Tutorial05 : public Tutorial
 {
@@ -28,17 +36,15 @@ class Tutorial05 : public Tutorial
     LLGL::RenderTarget*     renderTarget        = nullptr;
     LLGL::Texture*          renderTargetTex     = nullptr;
 
-    #ifdef USE_TEXTURE2DMS
-    LLGL::Texture*          texture2DMS         = nullptr;
-    #endif
-
     Gs::Matrix4f            renderTargetProj;
 
-    const Gs::Vector2ui     renderTargetSize    = Gs::Vector2ui(512);
+    const Gs::Vector2ui     renderTargetSize    = Gs::Vector2ui(64);//512);
 
     struct Settings
     {
         Gs::Matrix4f        wvpMatrix;
+        int                 useTexture2DMS = 0;
+        int                 _pad0[3];
     }
     settings;
 
@@ -128,10 +134,22 @@ public:
         // Create empty render-target texture
         LLGL::TextureDescriptor textureDesc;
         {
-            textureDesc.type                = LLGL::TextureType::Texture2D;
             textureDesc.format              = LLGL::TextureFormat::RGBA;
+
+            #ifdef ENABLE_CUSTOM_MULTISAMPLING
+            
+            textureDesc.type                = LLGL::TextureType::Texture2DMS;
+            textureDesc.texture2DMS.width   = renderTargetSize.x;
+            textureDesc.texture2DMS.height  = renderTargetSize.y;
+            textureDesc.texture2DMS.samples = multiSamples;
+
+            #else
+            
+            textureDesc.type                = LLGL::TextureType::Texture2D;
             textureDesc.texture2D.width     = renderTargetSize.x;
             textureDesc.texture2D.height    = renderTargetSize.y;
+            
+            #endif
         }
         renderTargetTex = renderer->CreateTexture(textureDesc);
 
@@ -146,20 +164,6 @@ public:
 
         // Initialize projection matrix for render-target scene rendering
         renderTargetProj = Gs::ProjectionMatrix4f::Perspective(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
-
-        #ifdef USE_TEXTURE2DMS
-        
-        LLGL::TextureDescriptor texture2DMSDesc;
-        {
-            texture2DMSDesc.type                = LLGL::TextureType::Texture2DMS;
-            texture2DMSDesc.format              = LLGL::TextureFormat::RGBA;
-            texture2DMSDesc.texture2DMS.width   = renderTargetSize.x;
-            texture2DMSDesc.texture2DMS.height  = renderTargetSize.y;
-            texture2DMSDesc.texture2DMS.samples = 8;
-        }
-        texture2DMS = renderer->CreateTexture(texture2DMSDesc);
-
-        #endif
     }
 
 private:
@@ -236,6 +240,13 @@ private:
                 Gs::FlipAxis(settings.wvpMatrix, 1);
             }
 
+            #ifdef ENABLE_CUSTOM_MULTISAMPLING
+            
+            // Disable multi-sample texture in fragment shader
+            settings.useTexture2DMS = 0;
+
+            #endif
+
             UpdateBuffer(constantBuffer, settings);
 
             // Draw scene
@@ -260,8 +271,24 @@ private:
         context->SetClearColor(defaultClearColor);
         context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+        
+        // Set multi-sample render-target texture
+        context->SetTexture(*renderTargetTex, 1, shaderStages);
+        
+        #else
+        
         // Set render-target texture
         context->SetTexture(*renderTargetTex, 0, shaderStages);
+
+        #endif
+
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+
+        // Enable multi-sample texture in fragment shader
+        settings.useTexture2DMS = 1;
+
+        #endif
 
         // Update model transformation with standard projection
         UpdateModelTransform(projection, rot0);

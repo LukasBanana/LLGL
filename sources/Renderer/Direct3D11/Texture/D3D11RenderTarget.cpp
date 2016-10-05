@@ -122,29 +122,34 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
     ApplyMipResolution(texture, attachmentDesc.mipLevel);
 
     /* Initialize RTV descriptor with attachment procedure and create RTV */
-    D3D11_RENDER_TARGET_VIEW_DESC viewDesc;
-    InitMemory(viewDesc);
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+    InitMemory(rtvDesc);
     
-    viewDesc.Format = textureD3D.GetFormat();
+    rtvDesc.Format = textureD3D.GetFormat();
 
-    if (HasMultiSampling())
+    /*
+    If this is a multi-sample render target, but the target texture is not a multi-sample texture,
+    an intermediate multi-sample texture is required, which will be 'blitted' (or 'resolved') after the render target was rendered.
+    */
+    if (HasMultiSampling() && !IsMultiSampleTexture(texture.GetType()))
     {
+        /* Get RTV descriptor for intermediate multi-sample texture */
         switch (texture.GetType())
         {
             case TextureType::Texture2D:
-                FillViewDescForTexture2DMS(attachmentDesc, viewDesc);
+                FillViewDescForTexture2DMS(attachmentDesc, rtvDesc);
                 break;
             case TextureType::TextureCube:
-                FillViewDescForTextureCubeMS(attachmentDesc, viewDesc);
+                FillViewDescForTextureCubeMS(attachmentDesc, rtvDesc);
                 break;
             case TextureType::Texture2DArray:
-                FillViewDescForTexture2DArrayMS(attachmentDesc, viewDesc);
+                FillViewDescForTexture2DArrayMS(attachmentDesc, rtvDesc);
                 break;
             case TextureType::TextureCubeArray:
-                FillViewDescForTextureCubeArrayMS(attachmentDesc, viewDesc);
+                FillViewDescForTextureCubeArrayMS(attachmentDesc, rtvDesc);
                 break;
             default:
-                throw std::invalid_argument("only 2D-textures can be attached to a D3D11 multi-sample render-target");
+                throw std::invalid_argument("failed to attach D3D11 texture to multi-sample render-target");
                 break;
         }
 
@@ -173,37 +178,44 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
         );
 
         /* Create RTV for multi-sampled (intermediate) texture */
-        CreateAndAppendRTV(tex2DMS.Get(), viewDesc);
+        CreateAndAppendRTV(tex2DMS.Get(), rtvDesc);
     }
     else
     {
+        /* Get RTV descriptor for this the target texture */
         switch (texture.GetType())
         {
             case TextureType::Texture1D:
-                FillViewDescForTexture1D(attachmentDesc, viewDesc);
+                FillViewDescForTexture1D(attachmentDesc, rtvDesc);
                 break;
             case TextureType::Texture2D:
-                FillViewDescForTexture2D(attachmentDesc, viewDesc);
+                FillViewDescForTexture2D(attachmentDesc, rtvDesc);
                 break;
             case TextureType::Texture3D:
-                FillViewDescForTexture3D(attachmentDesc, viewDesc);
+                FillViewDescForTexture3D(attachmentDesc, rtvDesc);
                 break;
             case TextureType::TextureCube:
-                FillViewDescForTextureCube(attachmentDesc, viewDesc);
+                FillViewDescForTextureCube(attachmentDesc, rtvDesc);
                 break;
             case TextureType::Texture1DArray:
-                FillViewDescForTexture1DArray(attachmentDesc, viewDesc);
+                FillViewDescForTexture1DArray(attachmentDesc, rtvDesc);
                 break;
             case TextureType::Texture2DArray:
-                FillViewDescForTexture2DArray(attachmentDesc, viewDesc);
+                FillViewDescForTexture2DArray(attachmentDesc, rtvDesc);
                 break;
             case TextureType::TextureCubeArray:
-                FillViewDescForTextureCubeArray(attachmentDesc, viewDesc);
+                FillViewDescForTextureCubeArray(attachmentDesc, rtvDesc);
+                break;
+            case TextureType::Texture2DMS:
+                FillViewDescForTexture2DMS(attachmentDesc, rtvDesc);
+                break;
+            case TextureType::Texture2DMSArray:
+                FillViewDescForTexture2DArrayMS(attachmentDesc, rtvDesc);
                 break;
         }
     
         /* Create RTV for target texture */
-        CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), viewDesc);
+        CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), rtvDesc);
     }
 }
 
@@ -249,11 +261,11 @@ void D3D11RenderTarget::CreateDepthStencilAndDSV(const Gs::Vector2ui& size, DXGI
     renderSystem_.CreateDXDepthStencilAndDSV(size.x, size.y, multiSamples_, format, depthStencil_, depthStencilView_);
 }
 
-void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& desc)
+void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc)
 {
     ComPtr<ID3D11RenderTargetView> rtv;
 
-    auto hr = renderSystem_.GetDevice()->CreateRenderTargetView(resource, &desc, &rtv);
+    auto hr = renderSystem_.GetDevice()->CreateRenderTargetView(resource, &rtvDesc, &rtv);
     DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV)");
 
     renderTargetViews_.push_back(rtv);
