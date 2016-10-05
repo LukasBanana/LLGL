@@ -25,6 +25,16 @@ LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format)
     return (format >= TextureFormat::RGB_DXT1);
 }
 
+LLGL_EXPORT bool IsArrayTexture(const TextureType type)
+{
+    return (type >= TextureType::Texture1DArray && type != TextureType::Texture2DMS);
+}
+
+LLGL_EXPORT bool IsMultiSampleTexture(const TextureType type)
+{
+    return (type >= TextureType::Texture2DMS);
+}
+
 
 } // /namespace LLGL
 
