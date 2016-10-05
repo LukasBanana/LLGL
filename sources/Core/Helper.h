@@ -27,20 +27,23 @@ namespace LLGL
 {
 
 
+//! Alternative to std::make_unique for strict C++11 support.
 template <typename T, typename... Args>
 std::unique_ptr<T> MakeUnique(Args&&... args)
 {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
-    
+
+//! Initializes the specified data of basic type of POD structure type with zeros (using ::memset).
 template <class T>
 void InitMemory(T& data)
 {
     static_assert(!std::is_pointer<T>::value, "'InitMemory' does not allow pointer types");
     static_assert(std::is_pod<T>::value, "'InitMemory' does only allow plain-old-data (POD)");
-    memset(&data, 0, sizeof(T));
+    ::memset(&data, 0, sizeof(T));
 }
 
+//! Fills the specified container with 'value' (using std::fill).
 template <typename Container, typename Value>
 void Fill(Container& container, Value&& value)
 {
@@ -146,11 +149,18 @@ std::string ToHex(T value)
 \brief Returns the next resource from the specified resource array.
 \param[in,out] numResources Specifies the remaining number of resources in the array.
 \param[in,out] resourceArray Pointer to the remaining array of resource pointers.
+\remarks If the last element in the array is reached,
+'resourceArray' is points to the location after the last entry, and 'numResources' is 0.
 */
 template <typename TSub, typename TBase>
 TSub* NextArrayResource(unsigned int& numResources, TBase* const * & resourceArray)
 {
-    return (numResources-- > 0 ? LLGL_CAST(TSub*, (*(resourceArray++))) : nullptr);
+    if (numResources > 0)
+    {
+        --numResources;
+        return LLGL_CAST(TSub*, (*(resourceArray++)));
+    }
+    return nullptr;
 }
 
 

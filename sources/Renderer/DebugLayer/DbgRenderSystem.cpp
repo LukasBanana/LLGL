@@ -119,9 +119,8 @@ BufferArray* DbgRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer*
     std::vector<Buffer*> bufferInstanceArray;
     for (unsigned int i = 0; i < numBuffers; ++i)
     {
-        auto bufferDbg = LLGL_CAST(DbgBuffer*, (*bufferArray));
+        auto bufferDbg = LLGL_CAST(DbgBuffer*, (*(bufferArray++)));
         bufferInstanceArray.push_back(&(bufferDbg->instance));
-        ++bufferArray;
     }
 
     return instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
@@ -164,9 +163,30 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
 }
 
+TextureArray* DbgRenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+{
+    AssertCreateTextureArray(numTextures, textureArray);
+
+    /* Create temporary buffer array with buffer instances */
+    std::vector<Texture*> textureInstanceArray;
+    for (unsigned int i = 0; i < numTextures; ++i)
+    {
+        auto textureDbg = LLGL_CAST(DbgTexture*, (*(textureArray++)));
+        textureInstanceArray.push_back(&(textureDbg->instance));
+    }
+
+    return instance_->CreateTextureArray(numTextures, textureInstanceArray.data());
+}
+
 void DbgRenderSystem::Release(Texture& texture)
 {
     ReleaseDbg(textures_, texture);
+}
+
+void DbgRenderSystem::Release(TextureArray& textureArray)
+{
+    instance_->Release(textureArray);
+    //ReleaseDbg(textureArrays_, textureArray);
 }
 
 TextureDescriptor DbgRenderSystem::QueryTextureDescriptor(const Texture& texture)

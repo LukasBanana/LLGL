@@ -78,9 +78,19 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     return TakeOwnership(textures_, std::move(texture));
 }
 
+TextureArray* D3D11RenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+{
+    return nullptr;//todo...
+}
+
 void D3D11RenderSystem::Release(Texture& texture)
 {
     RemoveFromUniqueSet(textures_, &texture);
+}
+
+void D3D11RenderSystem::Release(TextureArray& textureArray)
+{
+    //RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
 TextureDescriptor D3D11RenderSystem::QueryTextureDescriptor(const Texture& texture)

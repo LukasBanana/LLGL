@@ -25,7 +25,7 @@
 #include "Query.h"
 
 #include "BufferArray.h"
-//#include "TextureArray.h"
+#include "TextureArray.h"
 //#include "QueryArray.h"
 
 #include <string>
@@ -223,8 +223,22 @@ class LLGL_EXPORT RenderSystem
         */
         virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) = 0;
 
+        /**
+        \brief Creates a new texture array.
+        \param[in] numBuffers Specifies the number of buffers in the array. This must be greater than 0.
+        \param[in] bufferArray Pointer to an array of Buffer object pointers. Thist must not be null.
+        \remarks This texture array is not an "array texture" (like TextureType::Texture2DArray for instance).
+        It is just a container of multiple texture objects, which can be used to bind several hardware textures at once, to improve performance.
+        \throws std::invalid_argument If 'numTextures' is 0, if 'textureArray' is null,
+        or if any of the pointers in the array are null.
+        */
+        virtual TextureArray* CreateTextureArray(unsigned int numTextures, Texture* const * textureArray) = 0;
+
         //! Releases the specified texture object.
         virtual void Release(Texture& texture) = 0;
+
+        //! Releases the specified texture array object.
+        virtual void Release(TextureArray& textureArray) = 0;
 
         /**
         \brief Queries a descriptor of the specified texture.
@@ -361,6 +375,9 @@ class LLGL_EXPORT RenderSystem
 
         //! Validates the specified arguments to be used for buffer array creation.
         void AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray);
+
+        //! Validates the specified arguments to be used for texture array creation.
+        void AssertCreateTextureArray(unsigned int numTextures, Texture* const * textureArray);
 
     private:
 

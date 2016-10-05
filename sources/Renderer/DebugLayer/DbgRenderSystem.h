@@ -58,8 +58,10 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) override;
+        TextureArray* CreateTextureArray(unsigned int numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
+        void Release(TextureArray& textureArray) override;
 
         TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
         

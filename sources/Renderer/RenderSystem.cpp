@@ -157,22 +157,28 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc)
         throw std::invalid_argument("can not create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
 }
 
-void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+static void AssertCreateResourceArrayCommon(unsigned int numResources, void* const * resourceArray, const std::string& resourceName)
 {
     /* Validate number of buffers */
-    if (numBuffers == 0)
-        throw std::invalid_argument("can not create buffer array with zero buffers");
+    if (numResources == 0)
+        throw std::invalid_argument("can not " + resourceName + " buffer array with zero " + resourceName + "s");
 
     /* Validate array pointer */
-    if (bufferArray == nullptr)
-        throw std::invalid_argument("can not create buffer array with invalid array pointer");
+    if (resourceArray == nullptr)
+        throw std::invalid_argument("can not create " + resourceName + " array with invalid array pointer");
     
     /* Validate pointers in array */
-    for (unsigned int i = 0; i < numBuffers; ++i)
+    for (unsigned int i = 0; i < numResources; ++i)
     {
-        if (bufferArray[i] == nullptr)
-            throw std::invalid_argument("can not create buffer array with invalid pointer in array");
+        if (resourceArray[i] == nullptr)
+            throw std::invalid_argument("can not create " + resourceName + " array with invalid pointer in array");
     }
+}
+
+void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+{
+    /* Validate common resource array parameters */
+    AssertCreateResourceArrayCommon(numBuffers, reinterpret_cast<void* const*>(bufferArray), "buffer");
     
     /* Validate buffer types */
     auto refType = bufferArray[0]->GetType();
@@ -190,6 +196,12 @@ void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* cons
     {
         throw std::invalid_argument("invalid buffer type for buffer array");
     }
+}
+
+void RenderSystem::AssertCreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+{
+    /* Validate common resource array parameters */
+    AssertCreateResourceArrayCommon(numTextures, reinterpret_cast<void* const*>(textureArray), "texture");
 }
 
 

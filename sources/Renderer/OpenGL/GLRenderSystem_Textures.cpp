@@ -69,9 +69,20 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     return TakeOwnership(textures_, std::move(texture));
 }
 
+TextureArray* GLRenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+{
+    AssertCreateTextureArray(numTextures, textureArray);
+    return TakeOwnership(textureArrays_, MakeUnique<GLTextureArray>(numTextures, textureArray));
+}
+
 void GLRenderSystem::Release(Texture& texture)
 {
     RemoveFromUniqueSet(textures_, &texture);
+}
+
+void GLRenderSystem::Release(TextureArray& textureArray)
+{
+    RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
 TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)

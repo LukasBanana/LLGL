@@ -154,9 +154,19 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     return nullptr;//TakeOwnership(textures_, MakeUnique<D3D12Texture>());
 }
 
+TextureArray* D3D12RenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+{
+    return nullptr;//todo...
+}
+
 void D3D12RenderSystem::Release(Texture& texture)
 {
     //RemoveFromUniqueSet(textures_, &texture);
+}
+
+void D3D12RenderSystem::Release(TextureArray& textureArray)
+{
+    //RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
 TextureDescriptor D3D12RenderSystem::QueryTextureDescriptor(const Texture& texture)
