@@ -51,13 +51,6 @@ RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescrip
     auto renderContext = MakeUnique<D3D11RenderContext>(*this, *stateMngr_, context_, desc, window);
     MakeCurrent(renderContext.get());
 
-    /*
-    If render context created it's own window then show it after creation,
-    since anti-aliasing may force the window to be recreated several times
-    */
-    if (!window)
-        renderContext->GetWindow().Show();
-
     /* Take ownership and return new render context */
     return TakeOwnership(renderContexts_, std::move(renderContext));
 }

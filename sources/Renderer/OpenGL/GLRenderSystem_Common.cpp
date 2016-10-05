@@ -167,13 +167,6 @@ void GLRenderSystem::Release(Query& query)
 RenderContext* GLRenderSystem::AddRenderContext(
     std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    /*
-    If render context created it's own window then show it after creation,
-    since anti-aliasing may force the window to be recreated several times
-    */
-    if (!window)
-        renderContext->GetWindow().Show();
-
     /* Switch to fullscreen mode (if enabled) */
     if (desc.videoMode.fullscreen)
         Desktop::SetVideoMode(desc.videoMode);
