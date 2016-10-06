@@ -59,6 +59,12 @@ class GLRenderSystem : public RenderSystem
 
         void Release(RenderContext& renderContext) override;
 
+        /* ----- Command buffers ----- */
+
+        CommandBuffer* CreateCommandBuffer() override;
+
+        void Release(CommandBuffer& commandBuffer) override;
+
         /* ----- Hardware Buffers ------ */
 
         Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;

@@ -49,6 +49,18 @@ void GLRenderSystem::Release(RenderContext& renderContext)
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
+/* ----- Command buffers ----- */
+
+CommandBuffer* GLRenderSystem::CreateCommandBuffer()
+{
+    return nullptr;//todo...
+}
+
+void GLRenderSystem::Release(CommandBuffer& commandBuffer)
+{
+    //todo...
+}
+
 /* ----- Hardware Buffers ------ */
 
 // --> see "GLRenderSystem_Buffers.cpp" file

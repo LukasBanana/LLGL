@@ -63,6 +63,18 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
+/* ----- Command buffers ----- */
+
+CommandBuffer* DbgRenderSystem::CreateCommandBuffer()
+{
+    return nullptr;//todo...
+}
+
+void DbgRenderSystem::Release(CommandBuffer& commandBuffer)
+{
+    //todo...
+}
+
 /* ----- Hardware Buffers ------ */
 
 Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)

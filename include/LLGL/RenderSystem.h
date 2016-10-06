@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "RenderContext.h"
+#include "CommandBuffer.h"
 #include "RenderSystemFlags.h"
 #include "RenderingProfiler.h"
 #include "RenderingDebugger.h"
@@ -158,14 +159,29 @@ class LLGL_EXPORT RenderSystem
         \param[in] renderContext Specifies the new current render context. If this is null, no render context is active.
         \return True on success, otherwise false.
         \remarks Never draw anything, while no render context is active!
+        \todo Replace this by the 'CommandBuffer::SetRenderTarget(RenderContext&)' function
         */
         bool MakeCurrent(RenderContext* renderContext);
 
-        //! Returns the current render context. This may also be null.
+        /**
+        \brief Returns the current render context. This may also be null.
+        \todo Remove this
+        */
         inline RenderContext* GetCurrentContext() const
         {
             return currentContext_;
         }
+
+        /* ----- Command buffers ----- */
+
+        /**
+        \brief Creates a new command buffer.
+        \remarks Some render systems only support a single command buffer, such as OpenGL and Direct3D 11.
+        */
+        virtual CommandBuffer* CreateCommandBuffer() = 0;
+
+        //! Releases the specified command buffer.
+        virtual void Release(CommandBuffer& commandBuffer) = 0;
 
         /* ----- Buffers ------ */
 
