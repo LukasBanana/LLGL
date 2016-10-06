@@ -39,7 +39,7 @@ GLRenderContext* GLRenderSystem::GetSharedRenderContext() const
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    return AddRenderContext(MakeUnique<GLRenderContext>(*this, desc, window, GetSharedRenderContext()), desc, window);
+    return AddRenderContext(MakeUnique<GLRenderContext>(desc, window, GetSharedRenderContext()), desc, window);
 }
 
 void GLRenderSystem::Release(RenderContext& renderContext)

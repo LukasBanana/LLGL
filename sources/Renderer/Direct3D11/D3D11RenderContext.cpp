@@ -7,26 +7,8 @@
 
 #include "D3D11RenderContext.h"
 #include "D3D11RenderSystem.h"
-#include "D3D11Types.h"
-#include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
-#include <algorithm>
-
-#include "RenderState/D3D11StateManager.h"
-#include "RenderState/D3D11GraphicsPipeline.h"
-#include "RenderState/D3D11ComputePipeline.h"
-#include "RenderState/D3D11Query.h"
-
-#include "Buffer/D3D11VertexBuffer.h"
-#include "Buffer/D3D11VertexBufferArray.h"
-#include "Buffer/D3D11IndexBuffer.h"
-#include "Buffer/D3D11ConstantBuffer.h"
-#include "Buffer/D3D11StorageBuffer.h"
-
-#include "Texture/D3D11Texture.h"
-#include "Texture/D3D11Sampler.h"
-#include "Texture/D3D11RenderTarget.h"
 
 
 namespace LLGL
@@ -50,11 +32,6 @@ D3D11RenderContext::D3D11RenderContext(
     /* Create D3D objects */
     CreateSwapChain();
     CreateBackBuffer(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
-    SetDefaultRenderTargets();
-
-    /* Initialize viewport */
-    auto resolution = desc_.videoMode.resolution.Cast<float>();
-    SetViewport({ 0.0f, 0.0f, resolution.x, resolution.y });
 
     /* Initialize v-sync */
     SetVsync(desc_.vsync);
@@ -66,11 +43,6 @@ void D3D11RenderContext::Present()
 }
 
 /* ----- Configuration ----- */
-
-void D3D11RenderContext::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
-{
-    // dummy
-}
 
 void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
@@ -98,447 +70,6 @@ void D3D11RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 {
     desc_.vsync = vsyncDesc;
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
-}
-
-void D3D11RenderContext::SetViewport(const Viewport& viewport)
-{
-    stateMngr_.SetViewports(1, &viewport);
-}
-
-void D3D11RenderContext::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
-{
-    stateMngr_.SetViewports(numViewports, viewportArray);
-}
-
-void D3D11RenderContext::SetScissor(const Scissor& scissor)
-{
-    stateMngr_.SetScissors(1, &scissor);
-}
-
-void D3D11RenderContext::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
-{
-    stateMngr_.SetScissors(numScissors, scissorArray);
-}
-
-void D3D11RenderContext::SetClearColor(const ColorRGBAf& color)
-{
-    clearState_.color = color;
-}
-
-void D3D11RenderContext::SetClearDepth(float depth)
-{
-    clearState_.depth = depth;
-}
-
-void D3D11RenderContext::SetClearStencil(int stencil)
-{
-    clearState_.stencil = stencil;
-}
-
-void D3D11RenderContext::ClearBuffers(long flags)
-{
-    /* Clear color buffer */
-    if ((flags & ClearBuffersFlags::Color) != 0)
-    {
-        for (auto rtv : framebufferView_.rtvList)
-            context_->ClearRenderTargetView(rtv, clearState_.color.Ptr());
-    }
-    
-    /* Clear depth-stencil buffer */
-    int dsvClearFlags = 0;
-
-    if ((flags & ClearBuffersFlags::Depth) != 0)
-        dsvClearFlags |= D3D11_CLEAR_DEPTH;
-    if ((flags & ClearBuffersFlags::Stencil) != 0)
-        dsvClearFlags |= D3D11_CLEAR_STENCIL;
-        
-    if (dsvClearFlags && framebufferView_.dsv != nullptr)
-        context_->ClearDepthStencilView(framebufferView_.dsv, dsvClearFlags, clearState_.depth, clearState_.stencil);
-}
-
-/* ----- Hardware Buffers ------ */
-
-void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
-{
-    auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, buffer);
-
-    ID3D11Buffer* buffers[] = { vertexBufferD3D.Get() };
-    UINT strides[] = { vertexBufferD3D.GetStride() };
-    UINT offsets[] = { 0 };
-
-    context_->IASetVertexBuffers(0, 1, buffers, strides, offsets);
-}
-
-void D3D11RenderContext::SetVertexBufferArray(BufferArray& bufferArray)
-{
-    auto& vertexBufferArrayD3D = LLGL_CAST(D3D11VertexBufferArray&, bufferArray);
-
-    context_->IASetVertexBuffers(
-        0,
-        static_cast<UINT>(vertexBufferArrayD3D.GetBuffers().size()),
-        vertexBufferArrayD3D.GetBuffers().data(),
-        vertexBufferArrayD3D.GetStrides().data(),
-        vertexBufferArrayD3D.GetOffsets().data()
-    );
-}
-
-void D3D11RenderContext::SetIndexBuffer(Buffer& buffer)
-{
-    auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, buffer);
-    context_->IASetIndexBuffer(indexBufferD3D.Get(), indexBufferD3D.GetFormat(), 0);
-}
-
-void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
-{
-    /* Set constant buffer resource to all shader stages */
-    auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, buffer);
-    auto resource = constantBufferD3D.Get();
-    SetConstantBuffersOnStages(slot, 1, &resource, shaderStageFlags);
-}
-
-void D3D11RenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
-{
-    /* Set constant buffer resource to all shader stages */
-    auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
-    SetConstantBuffersOnStages(
-        startSlot,
-        static_cast<UINT>(bufferArrayD3D.GetBuffers().size()),
-        bufferArrayD3D.GetBuffers().data(),
-        shaderStageFlags
-    );
-}
-
-void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
-{
-    #if 0//INCOMPLETE
-    auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
-
-    ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
-    UINT auvCounts[] = { 0 };
-
-    context_->OMSetRenderTargetsAndUnorderedAccessViews(
-        D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
-        slot, 1, uavList, auvCounts
-    );
-    #endif
-}
-
-/* ----- Textures ----- */
-
-void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
-{
-    /* Set texture resource to all shader stages */
-    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    auto resource = textureD3D.GetSRV();
-    SetShaderResourcesOnStages(slot, 1, &resource, shaderStageFlags);
-}
-
-void D3D11RenderContext::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
-{
-    /* Set texture resource to all shader stages */
-    auto& textureArrayD3D = LLGL_CAST(D3D11TextureArray&, textureArray);
-    SetShaderResourcesOnStages(
-        startSlot,
-        static_cast<UINT>(textureArrayD3D.GetResourceViews().size()),
-        textureArrayD3D.GetResourceViews().data(),
-        shaderStageFlags
-    );
-}
-
-/* ----- Sampler States ----- */
-
-void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
-{
-    /* Set sampler state object to all shader stages */
-    auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
-    auto resource = samplerD3D.GetSamplerState();
-    SetSamplersOnStages(slot, 1, &resource, shaderStageFlags);
-}
-
-/* ----- Render Targets ----- */
-
-//private
-void D3D11RenderContext::ResolveBoundRenderTarget()
-{
-    if (boundRenderTarget_)
-        boundRenderTarget_->ResolveSubresources(context_.Get());
-}
-
-void D3D11RenderContext::SetRenderTarget(RenderTarget& renderTarget)
-{
-    /* Resolve previously bound render target (in case mutli-sampling is used) */
-    ResolveBoundRenderTarget();
-
-    /* Set RTV list and DSV in framebuffer view */
-    auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
-
-    framebufferView_.rtvList    = renderTargetD3D.GetRenderTargetViews();
-    framebufferView_.dsv        = renderTargetD3D.GetDepthStencilView();
-
-    SubmitFramebufferView();
-
-    /* Store current render target */
-    boundRenderTarget_ = &renderTargetD3D;
-}
-
-void D3D11RenderContext::UnsetRenderTarget()
-{
-    /* Resolve previously bound render target (in case mutli-sampling is used) */
-    ResolveBoundRenderTarget();
-
-    /* Set default RTVs to OM-stage */
-    SetDefaultRenderTargets();
-
-    /* Reset reference to render target */
-    boundRenderTarget_ = nullptr;
-}
-
-/* ----- Pipeline States ----- */
-
-void D3D11RenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
-{
-    auto& graphicsPipelineD3D = LLGL_CAST(D3D11GraphicsPipeline&, graphicsPipeline);
-    graphicsPipelineD3D.Bind(context_.Get());
-}
-
-void D3D11RenderContext::SetComputePipeline(ComputePipeline& computePipeline)
-{
-    auto& computePipelineD3D = LLGL_CAST(D3D11ComputePipeline&, computePipeline);
-    computePipelineD3D.Bind(context_.Get());
-}
-
-/* ----- Queries ----- */
-
-void D3D11RenderContext::BeginQuery(Query& query)
-{
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-
-    if (queryD3D.GetQueryObjectType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
-    {
-        /* Begin disjoint query first, and insert the beginning timestamp query */
-        context_->Begin(queryD3D.GetQueryObject());
-        context_->End(queryD3D.GetTimeStampQueryBegin());
-    }
-    else
-    {
-        /* Begin standard query */
-        context_->Begin(queryD3D.GetQueryObject());
-    }
-}
-
-void D3D11RenderContext::EndQuery(Query& query)
-{
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-
-    if (queryD3D.GetQueryObjectType() == D3D11_QUERY_TIMESTAMP_DISJOINT)
-    {
-        /* Insert the ending timestamp query, and end the disjoint query */
-        context_->End(queryD3D.GetTimeStampQueryEnd());
-        context_->End(queryD3D.GetQueryObject());
-    }
-    else
-    {
-        /* End standard query */
-        context_->End(queryD3D.GetQueryObject());
-    }
-}
-
-bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
-{
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-
-    switch (queryD3D.GetQueryObjectType())
-    {
-        /* Query result from data of type: UINT64 */
-        case D3D11_QUERY_OCCLUSION:
-        {
-            UINT64 data = 0;
-            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
-            {
-                result = data;
-                return true;
-            }
-        }
-        break;
-
-        /* Query result from special case query type: TimeElapsed */
-        case D3D11_QUERY_TIMESTAMP_DISJOINT:
-        {
-            UINT64 startTime = 0;
-            if (context_->GetData(queryD3D.GetTimeStampQueryBegin(), &startTime, sizeof(startTime), 0) == S_OK)
-            {
-                UINT64 endTime = 0;
-                if (context_->GetData(queryD3D.GetTimeStampQueryEnd(), &endTime, sizeof(endTime), 0) == S_OK)
-                {
-                    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjointData;
-                    if (context_->GetData(queryD3D.GetQueryObject(), &disjointData, sizeof(disjointData), 0) == S_OK)
-                    {
-                        if (disjointData.Disjoint == FALSE)
-                        {
-                            /* Normalize elapsed time to nanoseconds */
-                            static const double nanoseconds = 1000000000.0;
-                            
-                            auto deltaTime      = (endTime - startTime);
-                            auto scale          = (nanoseconds / static_cast<double>(disjointData.Frequency));
-                            auto elapsedTime    = (static_cast<double>(deltaTime) * scale);
-
-                            result = static_cast<std::uint64_t>(elapsedTime + 0.5);
-                        }
-                        else
-                            result = 0;
-                        return true;
-                    }
-                }
-            }
-        }
-        break;
-
-        /* Query result from data of type: BOOL */
-        case D3D11_QUERY_OCCLUSION_PREDICATE:
-        case D3D11_QUERY_SO_OVERFLOW_PREDICATE:
-        {
-            BOOL data = 0;
-            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
-            {
-                result = data;
-                return true;
-            }
-        }
-        break;
-
-        /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
-        case D3D11_QUERY_PIPELINE_STATISTICS:
-        {
-            D3D11_QUERY_DATA_PIPELINE_STATISTICS data;
-            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
-            {
-                switch (queryD3D.GetType())
-                {
-                    case QueryType::PrimitivesGenerated:
-                        result = data.CInvocations;
-                        break;
-                    case QueryType::VerticesSubmitted:
-                        result = data.IAVertices;
-                        break;
-                    case QueryType::PrimitivesSubmitted:
-                        result = data.IAPrimitives;
-                        break;
-                    case QueryType::VertexShaderInvocations:
-                        result = data.VSInvocations;
-                        break;
-                    case QueryType::TessControlShaderInvocations:
-                        result = data.HSInvocations;
-                        break;
-                    case QueryType::TessEvaluationShaderInvocations:
-                        result = data.DSInvocations;
-                        break;
-                    case QueryType::GeometryShaderInvocations:
-                        result = data.GSInvocations;
-                        break;
-                    case QueryType::FragmentShaderInvocations:
-                        result = data.PSInvocations;
-                        break;
-                    case QueryType::ComputeShaderInvocations:
-                        result = data.CSInvocations;
-                        break;
-                    case QueryType::GeometryPrimitivesGenerated:
-                        result = data.GSPrimitives;
-                        break;
-                    case QueryType::ClippingInputPrimitives:
-                        result = data.CInvocations; // <-- TODO: workaround
-                        break;
-                    case QueryType::ClippingOutputPrimitives:
-                        result = data.CPrimitives;
-                        break;
-                    default:
-                        return false;
-                }
-                return true;
-            }
-        }
-        break;
-
-        /* Query result from data of type: D3D11_QUERY_DATA_SO_STATISTICS */
-        case D3D11_QUERY_SO_STATISTICS:
-        {
-            D3D11_QUERY_DATA_SO_STATISTICS data;
-            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
-            {
-                result = data.NumPrimitivesWritten;
-                return true;
-            }
-        }
-        break;
-    }
-
-    return false;
-}
-
-void D3D11RenderContext::BeginRenderCondition(Query& query, const RenderConditionMode mode)
-{
-    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
-    context_->SetPredication(queryD3D.GetPredicateObject(), (mode >= RenderConditionMode::WaitInverted));
-}
-
-void D3D11RenderContext::EndRenderCondition()
-{
-    context_->SetPredication(nullptr, FALSE);
-}
-
-/* ----- Drawing ----- */
-
-void D3D11RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
-{
-    context_->Draw(numVertices, firstVertex);
-}
-
-void D3D11RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
-{
-    context_->DrawIndexed(numVertices, firstIndex, 0);
-}
-
-void D3D11RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
-{
-    context_->DrawIndexed(numVertices, firstIndex, vertexOffset);
-}
-
-void D3D11RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
-{
-    context_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
-}
-
-void D3D11RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
-{
-    context_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
-}
-
-void D3D11RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
-{
-    context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
-}
-
-void D3D11RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
-{
-    context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
-}
-
-void D3D11RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
-{
-    context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
-}
-
-/* ----- Compute ----- */
-
-void D3D11RenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
-{
-    context_->Dispatch(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
-}
-
-/* ----- Misc ----- */
-
-void D3D11RenderContext::SyncGPU()
-{
-    context_->Flush();
 }
 
 
@@ -574,11 +105,11 @@ void D3D11RenderContext::CreateSwapChain()
 void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
 {
     /* Get back buffer from swap chain */
-    auto hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&backBuffer_.colorBuffer));
+    auto hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(backBuffer_.colorBuffer.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to get back buffer from D3D11 swap chain");
 
     /* Create back buffer RTV */
-    hr = renderSystem_.GetDevice()->CreateRenderTargetView(backBuffer_.colorBuffer.Get(), nullptr, &backBuffer_.rtv);
+    hr = renderSystem_.GetDevice()->CreateRenderTargetView(backBuffer_.colorBuffer.Get(), nullptr, backBuffer_.rtv.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create render-target-view (RTV) for D3D11 back buffer");
 
     /* Create depth-stencil and DSV */
@@ -594,8 +125,20 @@ void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
 
 void D3D11RenderContext::ResizeBackBuffer(UINT width, UINT height)
 {
-    /* Unset render targets */
-    context_->OMSetRenderTargets(0, nullptr, nullptr);
+    /* Check if the current RTV and DSV is from this render context */
+    /*ID3D11RenderTargetView* rtv = nullptr;
+    ID3D11DepthStencilView* dsv = nullptr;
+
+    context_->OMGetRenderTargets(1, &rtv, &dsv);
+
+    bool rtvFromThis = (rtv == backBuffer_.rtv.Get() && dsv == backBuffer_.dsv.Get());
+
+    auto r1 = rtv->Release();
+    auto r2 = dsv->Release();*/
+
+    /* Unset render targets (if the current RTV and DSV was from this render context) */
+    //if (rtvFromThis)
+        context_->OMSetRenderTargets(0, nullptr, nullptr);
 
     /* Release buffers */
     backBuffer_.colorBuffer.Reset();
@@ -609,68 +152,14 @@ void D3D11RenderContext::ResizeBackBuffer(UINT width, UINT height)
 
     /* Recreate back buffer and reset default render target */
     CreateBackBuffer(width, height);
-    SetDefaultRenderTargets();
+
+    /* Reset render target (if the previous RTV and DSV was from this render context) */
+    //if (rtvFromThis)
+    /*{
+        ID3D11RenderTargetView* rtvList[] = { backBuffer_.rtv.Get() };
+        context_->OMSetRenderTargets(1, rtvList, backBuffer_.dsv.Get());
+    }*/
 }
-
-void D3D11RenderContext::SetDefaultRenderTargets()
-{
-    framebufferView_.rtvList    = { backBuffer_.rtv.Get() };
-    framebufferView_.dsv        = backBuffer_.dsv.Get();
-    SubmitFramebufferView();
-}
-
-void D3D11RenderContext::SubmitFramebufferView()
-{
-    context_->OMSetRenderTargets(
-        static_cast<UINT>(framebufferView_.rtvList.size()),
-        framebufferView_.rtvList.data(),
-        framebufferView_.dsv
-    );
-}
-
-#define SHADERSTAGE_VS(FLAG) ( ((FLAG) & ShaderStageFlags::VertexStage        ) != 0 )
-#define SHADERSTAGE_HS(FLAG) ( ((FLAG) & ShaderStageFlags::TessControlStage   ) != 0 )
-#define SHADERSTAGE_DS(FLAG) ( ((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0 )
-#define SHADERSTAGE_GS(FLAG) ( ((FLAG) & ShaderStageFlags::GeometryStage      ) != 0 )
-#define SHADERSTAGE_PS(FLAG) ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
-#define SHADERSTAGE_CS(FLAG) ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
-
-void D3D11RenderContext::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags)
-{
-    if (SHADERSTAGE_VS(flags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_HS(flags)) { context_->HSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_DS(flags)) { context_->DSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_GS(flags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_PS(flags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_CS(flags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
-}
-
-void D3D11RenderContext::SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long flags)
-{
-    if (SHADERSTAGE_VS(flags)) { context_->VSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_HS(flags)) { context_->HSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_DS(flags)) { context_->DSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_GS(flags)) { context_->GSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_PS(flags)) { context_->PSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_CS(flags)) { context_->CSSetShaderResources(startSlot, count, views); }
-}
-
-void D3D11RenderContext::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long flags)
-{
-    if (SHADERSTAGE_VS(flags)) { context_->VSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_HS(flags)) { context_->HSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_DS(flags)) { context_->DSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_GS(flags)) { context_->GSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_PS(flags)) { context_->PSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_CS(flags)) { context_->CSSetSamplers(startSlot, count, samplers); }
-}
-
-#undef SHADERSTAGE_VS
-#undef SHADERSTAGE_HS
-#undef SHADERSTAGE_DS
-#undef SHADERSTAGE_GS
-#undef SHADERSTAGE_PS
-#undef SHADERSTAGE_CS
 
 
 } // /namespace LLGL

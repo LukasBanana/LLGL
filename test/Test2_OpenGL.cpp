@@ -76,6 +76,9 @@ int main()
 
         window->Show();
 
+        // Create command buffer
+        auto commands = renderer->CreateCommandBuffer();
+
         const auto& renderCaps = renderer->GetRenderingCaps();
 
         // Setup window title
@@ -89,8 +92,9 @@ int main()
         class ResizeEventHandler : public LLGL::Window::EventListener
         {
         public:
-            ResizeEventHandler(LLGL::RenderContext* context) :
-                context_( context )
+            ResizeEventHandler(LLGL::RenderContext* context, LLGL::CommandBuffer* commands) :
+                context_    ( context  ),
+                commands_   ( commands )
             {
             }
             void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override
@@ -99,19 +103,21 @@ int main()
                 videoMode.resolution = clientAreaSize;
 
                 context_->SetVideoMode(videoMode);
+                commands_->SetRenderTarget(*context_);
                 
                 LLGL::Viewport viewport;
                 {
                     viewport.width  = static_cast<float>(videoMode.resolution.x);
                     viewport.height = static_cast<float>(videoMode.resolution.y);
                 }
-                context_->SetViewport(viewport);
+                commands_->SetViewport(viewport);
             }
         private:
             LLGL::RenderContext* context_;
+            LLGL::CommandBuffer* commands_;
         };
 
-        auto resizeEventHandler = std::make_shared<ResizeEventHandler>(context);
+        auto resizeEventHandler = std::make_shared<ResizeEventHandler>(context, commands);
         window->AddEventListener(resizeEventHandler);
 
         // Create vertex buffer
@@ -232,7 +238,7 @@ int main()
 
                 unsigned int bindingIndex = 2; // the 2 is just for testing
                 shaderProgram.BindConstantBuffer(desc.name, bindingIndex);
-                context->SetConstantBuffer(*projectionBuffer, bindingIndex);
+                commands->SetConstantBuffer(*projectionBuffer, bindingIndex);
             }
         }
         #endif
@@ -339,10 +345,10 @@ int main()
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 
         //#ifndef __linux__
-        context->SetSampler(sampler, 0);
+        commands->SetSampler(sampler, 0);
         //#endif
         
-        //context->SetViewport(LLGL::Viewport(0, 0, 300, 300));
+        //commands->SetViewport(LLGL::Viewport(0, 0, 300, 300));
 
         #ifdef TEST_QUERY
         auto query = renderer->CreateQuery(LLGL::QueryType::SamplesPassed);
@@ -358,7 +364,7 @@ int main()
             storage = renderer->CreateStorageBuffer();
             renderer->SetupStorageBuffer(*storage, nullptr, sizeof(float)*4, LLGL::BufferUsage::Static);
             shaderProgram.BindStorageBuffer("outputBuffer", 0);
-            context->SetStorageBuffer(0, *storage);
+            commands->SetStorageBuffer(0, *storage);
 
             auto storeBufferDescs = shaderProgram.QueryStorageBuffers();
             for (const auto& desc : storeBufferDescs)
@@ -373,8 +379,8 @@ int main()
             if (profiler)
                 profiler->ResetCounters();
 
-            context->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
-            context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+            commands->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
+            commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             auto uniformSetter = shaderProgram.LockShaderUniform();
             if (uniformSetter)
@@ -387,14 +393,14 @@ int main()
             }
             shaderProgram.UnlockShaderUniform();
             
-            context->SetGraphicsPipeline(pipeline);
-            context->SetVertexBuffer(*vertexBuffer);
+            commands->SetGraphicsPipeline(pipeline);
+            commands->SetVertexBuffer(*vertexBuffer);
 
             if (renderTarget && renderTargetTex)
             {
-                context->SetRenderTarget(*renderTarget);
-                context->SetClearColor({ 1, 1, 1, 1 });
-                context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+                commands->SetRenderTarget(*renderTarget);
+                commands->SetClearColor({ 1, 1, 1, 1 });
+                commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
             }
 
             #ifndef __linux__
@@ -421,7 +427,7 @@ int main()
                     viewport.width  = static_cast<float>(contextDesc.videoMode.resolution.x);
                     viewport.height = static_cast<float>(contextDesc.videoMode.resolution.y);
                 }
-                context->SetViewport(viewport);
+                commands->SetViewport(viewport);
             }
             
             #endif
@@ -429,12 +435,12 @@ int main()
             #ifdef TEST_QUERY
             
             if (!hasQueryResult)
-                context->BeginQuery(*query);
+                commands->BeginQuery(*query);
 
             #endif
 
-            context->SetTexture(texture, 0);
-            context->Draw(4, 0);
+            commands->SetTexture(texture, 0);
+            commands->Draw(4, 0);
             
             #ifdef TEST_STORAGE_BUFFER
             
@@ -444,12 +450,12 @@ int main()
                 if (!outputShown)
                 {
                     outputShown = true;
-                    auto outputData = context->MapStorageBuffer(*storage, LLGL::BufferCPUAccess::ReadOnly);
+                    auto outputData = renderer->MapBuffer(*storage, LLGL::BufferCPUAccess::ReadOnly);
                     {
                         auto v = reinterpret_cast<Gs::Vector4f*>(outputData);
                         std::cout << "storage buffer output: " << *v << std::endl;
                     }
-                    context->UnmapStorageBuffer();
+                    renderer->UnmapBuffer();
                 }
             }
 
@@ -459,12 +465,12 @@ int main()
 
             if (!hasQueryResult)
             {
-                context->EndQuery(*query);
+                commands->EndQuery(*query);
                 hasQueryResult = true;
             }
 
             std::uint64_t result = 0;
-            if (context->QueryResult(*query, result))
+            if (commands->QueryResult(*query, result))
             {
                 static std::uint64_t prevResult;
                 if (prevResult != result)
@@ -479,9 +485,9 @@ int main()
 
             if (renderTarget && renderTargetTex)
             {
-                context->UnsetRenderTarget();
-                context->SetTexture(*renderTargetTex, 0);
-                context->Draw(4, 0);
+                commands->SetRenderTarget(*context);
+                commands->SetTexture(*renderTargetTex, 0);
+                commands->Draw(4, 0);
             }
 
             context->Present();

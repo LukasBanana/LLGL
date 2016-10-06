@@ -38,6 +38,9 @@ int main()
 
         auto context = renderer->CreateRenderContext(contextDesc);
         
+        // Create command buffer
+        auto commands = renderer->CreateCommandBuffer();
+
         // Change window title
         auto title = "LLGL Test 4: Compute ( " + renderer->GetName() + " )";
         context->GetWindow().SetTitle(std::wstring(title.begin(), title.end()));
@@ -84,18 +87,18 @@ int main()
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
 
         // Set resources
-        context->SetStorageBuffer(*storageBuffer, 0);
-        context->SetComputePipeline(*pipeline);
+        commands->SetStorageBuffer(*storageBuffer, 0);
+        commands->SetComputePipeline(*pipeline);
 
         // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query
-        context->BeginQuery(*timerQuery);
+        commands->BeginQuery(*timerQuery);
         {
-            context->DispatchCompute({ 1, 1, 1 });
+            commands->DispatchCompute({ 1, 1, 1 });
         }
-        context->EndQuery(*timerQuery);
+        commands->EndQuery(*timerQuery);
 
         // Wait until the GPU has completed all work, to be sure we can evaluate the storage buffer
-        context->SyncGPU();
+        commands->SyncGPU();
 
         // Evaluate compute shader
         auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
@@ -106,7 +109,7 @@ int main()
 
             // Show elapsed time from timer query
             std::uint64_t result = 0;
-            while (!context->QueryResult(*timerQuery, result)) { /* wait until the result is available */ }
+            while (!commands->QueryResult(*timerQuery, result)) { /* wait until the result is available */ }
             std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
         renderer->UnmapBuffer(*storageBuffer);

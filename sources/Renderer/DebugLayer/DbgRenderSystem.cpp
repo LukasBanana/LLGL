@@ -52,9 +52,7 @@ RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescripto
     SetRendererInfo(instance_->GetRendererInfo());
     SetRenderingCaps(instance_->GetRenderingCaps());
 
-    return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(
-        *renderContextInstance, profiler_, debugger_, GetRenderingCaps()
-    ));
+    return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(*renderContextInstance));
 }
 
 void DbgRenderSystem::Release(RenderContext& renderContext)

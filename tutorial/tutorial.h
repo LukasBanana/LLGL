@@ -146,8 +146,9 @@ private:
 
         public:
 
-            ResizeEventHandler(LLGL::RenderContext* context, Gs::Matrix4f& projection) :
+            ResizeEventHandler(LLGL::RenderContext* context, LLGL::CommandBuffer* commands, Gs::Matrix4f& projection) :
                 context_    ( context    ),
+                commands_   ( commands   ),
                 projection_ ( projection )
             {
             }
@@ -159,6 +160,7 @@ private:
                 // Update video mode
                 videoMode.resolution = clientAreaSize;
                 context_->SetVideoMode(videoMode);
+                commands_->SetRenderTarget(*context_);
                 
                 // Update viewport
                 LLGL::Viewport viewport;
@@ -166,7 +168,7 @@ private:
                     viewport.width  = static_cast<float>(videoMode.resolution.x);
                     viewport.height = static_cast<float>(videoMode.resolution.y);
                 }
-                context_->SetViewport(viewport);
+                commands_->SetViewport(viewport);
 
                 // Update projection matrix
                 projection_ = Gs::ProjectionMatrix4f::Perspective(
@@ -177,6 +179,7 @@ private:
         private:
 
             LLGL::RenderContext*    context_;
+            LLGL::CommandBuffer*    commands_;
             Gs::Matrix4f&           projection_;
 
     };
@@ -263,7 +266,7 @@ protected:
         window.SetDesc(wndDesc);
 
         // Add window resize listener
-        window.AddEventListener(std::make_shared<ResizeEventHandler>(context, projection));
+        window.AddEventListener(std::make_shared<ResizeEventHandler>(context, commands, projection));
 
         // Initialize default projection matrix
         projection = Gs::ProjectionMatrix4f::Perspective(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();

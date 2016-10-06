@@ -244,11 +244,11 @@ void D3D11RenderSystem::CreateDXDepthStencilAndDSV(
         texDesc.CPUAccessFlags      = 0;
         texDesc.MiscFlags           = 0;
     }
-    auto hr = device_->CreateTexture2D(&texDesc, nullptr, &depthStencil);
+    auto hr = device_->CreateTexture2D(&texDesc, nullptr, depthStencil.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create texture 2D for D3D11 depth-stencil");
 
     /* Create depth-stencil-view */
-    hr = device_->CreateDepthStencilView(depthStencil.Get(), nullptr, &dsv);
+    hr = device_->CreateDepthStencilView(depthStencil.Get(), nullptr, dsv.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create depth-stencil-view (DSV) for D3D11 depth-stencil");
 }
 

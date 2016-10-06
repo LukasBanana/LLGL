@@ -43,6 +43,9 @@ int main()
 
         auto renderCaps = renderer->GetRenderingCaps();
 
+        // Create command buffer
+        auto commands = renderer->CreateCommandBuffer();
+
         // Setup input controller
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
@@ -150,22 +153,22 @@ int main()
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
-        context->SetClearColor({ 0.2f, 0.2f, 0.7f });
+        commands->SetClearColor({ 0.2f, 0.2f, 0.7f });
         //context->SetClearColor({ 0, 0, 0 });
 
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
-            context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+            commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
-            context->SetViewport(LLGL::Viewport(0, 0, 800, 600));
-            context->SetScissor(LLGL::Scissor(0, 0, 800, 600));
+            commands->SetViewport(LLGL::Viewport(0, 0, 800, 600));
+            commands->SetScissor(LLGL::Scissor(0, 0, 800, 600));
 
-            context->SetGraphicsPipeline(*pipeline);
-            context->SetVertexBuffer(*vertexBuffer);
-            context->SetConstantBuffer(*constantBuffer, 0);
+            commands->SetGraphicsPipeline(*pipeline);
+            commands->SetVertexBuffer(*vertexBuffer);
+            commands->SetConstantBuffer(*constantBuffer, 0);
 
-            context->Draw(3, 0);
+            commands->Draw(3, 0);
 
 			context->Present();
         }
