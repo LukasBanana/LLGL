@@ -96,6 +96,8 @@ class GLRenderContext : public RenderContext
 
         #endif
 
+        static GLRenderContext*         activeRenderContext_;
+
         RenderContextDescriptor         desc_;
 
         #ifndef __APPLE__

@@ -44,8 +44,6 @@ RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor
 
 void GLRenderSystem::Release(RenderContext& renderContext)
 {
-    if (GetCurrentContext() == &renderContext)
-        GLRenderContext::GLMakeCurrent(nullptr);
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 

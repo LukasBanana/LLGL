@@ -154,15 +154,6 @@ class LLGL_EXPORT RenderSystem
         //! Releases the specified render context. This will all release all resources, that are associated with this render context.
         virtual void Release(RenderContext& renderContext) = 0;
 
-        /**
-        \brief Returns the current render context. This may also be null.
-        \todo Remove this
-        */
-        inline RenderContext* GetCurrentContext() const
-        {
-            return currentContext_;
-        }
-
         /* ----- Command buffers ----- */
 
         /**
@@ -398,8 +389,6 @@ class LLGL_EXPORT RenderSystem
     private:
 
         std::string                 name_;
-
-        RenderContext*              currentContext_ = nullptr;
 
         RendererInfo                info_;
         RenderingCaps               caps_;

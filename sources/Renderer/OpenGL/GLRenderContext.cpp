@@ -19,6 +19,8 @@ namespace LLGL
 {
 
 
+GLRenderContext* GLRenderContext::activeRenderContext_ = nullptr;
+
 GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
     desc_           ( desc                        ),
     contextHeight_  ( desc.videoMode.resolution.y )
@@ -43,6 +45,11 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
 
 GLRenderContext::~GLRenderContext()
 {
+    /* Unset the current OpenGL render context if this is the active one */
+    if (activeRenderContext_ == this)
+        GLRenderContext::GLMakeCurrent(nullptr);
+
+    /* Delete OpenGL render context */
     DeleteContext();
 }
 
