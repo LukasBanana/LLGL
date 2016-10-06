@@ -367,15 +367,18 @@ bool GLRenderContext::QueryResult(Query& query, std::uint64_t& result)
 
     if (available != GL_FALSE)
     {
-        /* Get query result either with 64-bit or 32-bit version */
-        //if (glGetQueryObjectui64v)
-            glGetQueryObjectui64v(queryGL.GetID(), GL_QUERY_RESULT, &result);
-        /*else
+        if (HasExtension(GLExt::ARB_timer_query))
         {
+            /* Get query result with 64-bit version */
+            glGetQueryObjectui64v(queryGL.GetID(), GL_QUERY_RESULT, &result);
+        }
+        else
+        {
+            /* Get query result with 32-bit version and convert to 64-bit */
             GLuint result32 = 0;
             glGetQueryObjectuiv(queryGL.GetID(), GL_QUERY_RESULT, &result32);
             result = result32;
-        }*/
+        }
         return true;
     }
 
