@@ -98,7 +98,7 @@ int main()
         context->SyncGPU();
 
         // Evaluate compute shader
-        auto mappedBuffer = context->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
+        auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
         {
             // Show result
             auto vecBuffer = reinterpret_cast<const Gs::Vector4f*>(mappedBuffer);
@@ -109,7 +109,7 @@ int main()
             while (!context->QueryResult(*timerQuery, result)) { /* wait until the result is available */ }
             std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
-        context->UnmapBuffer(*storageBuffer);
+        renderer->UnmapBuffer(*storageBuffer);
 
     }
     catch (const std::exception& e)

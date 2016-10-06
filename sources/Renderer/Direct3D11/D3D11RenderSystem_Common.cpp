@@ -122,6 +122,16 @@ void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_
     bufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(offset));
 }
 
+void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    return nullptr;//todo...
+}
+
+void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
+{
+    //todo...
+}
+
 /* ----- Sampler States ---- */
 
 Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)

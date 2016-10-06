@@ -97,6 +97,22 @@ void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
     bufferGL.BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
+void* GLRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    /* Get, bind, and map buffer */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    GLStateManager::active->BindBuffer(bufferGL);
+    return bufferGL.MapBuffer(GLTypes::Map(access));
+}
+
+void GLRenderSystem::UnmapBuffer(Buffer& buffer)
+{
+    /* Get, bind, and unmap buffer */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    GLStateManager::active->BindBuffer(bufferGL);
+    bufferGL.UnmapBuffer();
+}
+
 
 } // /namespace LLGL
 

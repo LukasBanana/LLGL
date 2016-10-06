@@ -240,22 +240,6 @@ void GLRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
     stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, slot, bufferGL.GetID());
 }
 
-void* GLRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
-{
-    /* Get, bind, and map buffer */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(bufferGL);
-    return bufferGL.MapBuffer(GLTypes::Map(access));
-}
-
-void GLRenderContext::UnmapBuffer(Buffer& buffer)
-{
-    /* Get, bind, and unmap buffer */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBuffer(bufferGL);
-    bufferGL.UnmapBuffer();
-}
-
 /* ----- Textures ----- */
 
 void GLRenderContext::SetTexture(Texture& texture, unsigned int slot, long /*shaderStageFlags*/)

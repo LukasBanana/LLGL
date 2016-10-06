@@ -223,16 +223,6 @@ void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
     #endif
 }
 
-void* D3D11RenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
-{
-    return nullptr;//todo...
-}
-
-void D3D11RenderContext::UnmapBuffer(Buffer& buffer)
-{
-    //todo...
-}
-
 /* ----- Textures ----- */
 
 void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)

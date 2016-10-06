@@ -79,9 +79,6 @@ class GLRenderContext : public RenderContext
         
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
 
-        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
-        void UnmapBuffer(Buffer& buffer) override;
-
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;

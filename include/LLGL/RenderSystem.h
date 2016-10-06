@@ -216,6 +216,21 @@ class LLGL_EXPORT RenderSystem
         */
         virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
 
+        /**
+        \brief Maps the specified buffer from GPU to CPU memory space.
+        \param[in] buffer Specifies the buffer which is to be mapped.
+        \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
+        \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
+        \see UnmapBuffer
+        */
+        virtual void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) = 0;
+
+        /**
+        \brief Unmaps the specified buffer.
+        \see MapBuffer
+        */
+        virtual void UnmapBuffer(Buffer& buffer) = 0;
+
         /* ----- Textures ----- */
 
         /**

@@ -169,23 +169,6 @@ void DbgRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
 
-void* DbgRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
-{
-    void* result = nullptr;
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-    {
-        result = instance.MapBuffer(bufferDbg.instance, access);
-    }
-    LLGL_DBG_PROFILER_DO(mapBuffer.Inc());
-    return result;
-}
-
-void DbgRenderContext::UnmapBuffer(Buffer& buffer)
-{
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-    instance.UnmapBuffer(bufferDbg.instance);
-}
-
 /* ----- Textures ----- */
 
 void DbgRenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)

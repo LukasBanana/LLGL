@@ -168,6 +168,23 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t 
     LLGL_DBG_PROFILER_DO(writeBuffer.Inc());
 }
 
+void* DbgRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    void* result = nullptr;
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    {
+        result = instance_->MapBuffer(bufferDbg.instance, access);
+    }
+    LLGL_DBG_PROFILER_DO(mapBuffer.Inc());
+    return result;
+}
+
+void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    instance_->UnmapBuffer(bufferDbg.instance);
+}
+
 /* ----- Textures ----- */
 
 Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
