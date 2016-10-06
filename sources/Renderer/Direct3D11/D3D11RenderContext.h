@@ -45,10 +45,10 @@ class D3D11RenderContext : public RenderContext
         /* ----- Common ----- */
 
         D3D11RenderContext(
-            D3D11RenderSystem& renderSystem,
-            D3D11StateManager& stateMngr,
+            IDXGIFactory* factory,
+            const ComPtr<ID3D11Device>& device,
             const ComPtr<ID3D11DeviceContext>& context,
-            RenderContextDescriptor desc,
+            const RenderContextDescriptor& desc,
             const std::shared_ptr<Window>& window
         );
 
@@ -68,14 +68,13 @@ class D3D11RenderContext : public RenderContext
 
     private:
 
-        void CreateSwapChain();
+        void CreateSwapChain(IDXGIFactory* factory);
         void CreateBackBuffer(UINT width, UINT height);
         void ResizeBackBuffer(UINT width, UINT height);
 
-        D3D11RenderSystem&          renderSystem_;  // reference to its render system
-        D3D11StateManager&          stateMngr_;
         RenderContextDescriptor     desc_;
         
+        ComPtr<ID3D11Device>        device_;
         ComPtr<ID3D11DeviceContext> context_;
 
         ComPtr<IDXGISwapChain>      swapChain_;

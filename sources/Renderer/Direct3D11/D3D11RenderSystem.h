@@ -128,13 +128,6 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
-        ComPtr<IDXGISwapChain> CreateDXSwapChain(DXGI_SWAP_CHAIN_DESC& desc);
-
-        void CreateDXDepthStencilAndDSV(
-            UINT width, UINT height, UINT sampleCount, DXGI_FORMAT format,
-            ComPtr<ID3D11Texture2D>& depthStencil, ComPtr<ID3D11DepthStencilView>& dsv
-        );
-
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
         {
             return featureLevel_;

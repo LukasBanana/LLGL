@@ -16,21 +16,20 @@ namespace LLGL
 
 
 D3D11RenderContext::D3D11RenderContext(
-    D3D11RenderSystem& renderSystem,
-    D3D11StateManager& stateMngr,
+    IDXGIFactory* factory,
+    const ComPtr<ID3D11Device>& device,
     const ComPtr<ID3D11DeviceContext>& context,
-    RenderContextDescriptor desc,
+    const RenderContextDescriptor& desc,
     const std::shared_ptr<Window>& window) :
-        renderSystem_   ( renderSystem ),
-        stateMngr_      ( stateMngr    ),
-        context_        ( context      ),
-        desc_           ( desc         )
+        device_ ( device  ),
+        context_( context ),
+        desc_   ( desc    )
 {
     /* Setup window for the render context */
     SetWindow(window, desc_.videoMode, nullptr);
 
     /* Create D3D objects */
-    CreateSwapChain();
+    CreateSwapChain(factory);
     CreateBackBuffer(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
 
     /* Initialize v-sync */
@@ -77,7 +76,7 @@ void D3D11RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
  * ======= Private: =======
  */
 
-void D3D11RenderContext::CreateSwapChain()
+void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
 {
     /* Create swap chain for window handle */
     NativeHandle wndHandle;
@@ -99,28 +98,43 @@ void D3D11RenderContext::CreateSwapChain()
         swapChainDesc.Windowed                              = (desc_.videoMode.fullscreen ? FALSE : TRUE);
         swapChainDesc.SwapEffect                            = DXGI_SWAP_EFFECT_DISCARD;
     }
-    swapChain_ = renderSystem_.CreateDXSwapChain(swapChainDesc);
+    auto hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 }
 
 void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
 {
+    HRESULT hr = 0;
+
     /* Get back buffer from swap chain */
-    auto hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(backBuffer_.colorBuffer.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to get back buffer from D3D11 swap chain");
+    hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(backBuffer_.colorBuffer.ReleaseAndGetAddressOf()));
+    DXThrowIfFailed(hr, "failed to get D3D11 back buffer from swap chain");
 
     /* Create back buffer RTV */
-    hr = renderSystem_.GetDevice()->CreateRenderTargetView(backBuffer_.colorBuffer.Get(), nullptr, backBuffer_.rtv.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create render-target-view (RTV) for D3D11 back buffer");
+    hr = device_->CreateRenderTargetView(backBuffer_.colorBuffer.Get(), nullptr, backBuffer_.rtv.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for back buffer");
 
-    /* Create depth-stencil and DSV */
-    renderSystem_.CreateDXDepthStencilAndDSV(
-        width,
-        height,
-        (desc_.sampling.enabled ? std::max(1u, desc_.sampling.samples) : 1),
-        DXGI_FORMAT_D24_UNORM_S8_UINT,
-        backBuffer_.depthStencil,
-        backBuffer_.dsv
-    );
+    /* Create depth stencil texture */
+    D3D11_TEXTURE2D_DESC texDesc;
+    {
+        texDesc.Width               = width;
+        texDesc.Height              = height;
+        texDesc.MipLevels           = 1;
+        texDesc.ArraySize           = 1;
+        texDesc.Format              = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        texDesc.SampleDesc.Count    = (desc_.sampling.enabled ? std::max(1u, desc_.sampling.samples) : 1);
+        texDesc.SampleDesc.Quality  = 0;
+        texDesc.Usage               = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
+        texDesc.CPUAccessFlags      = 0;
+        texDesc.MiscFlags           = 0;
+    }
+    hr = device_->CreateTexture2D(&texDesc, nullptr, backBuffer_.depthStencil.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 depth-texture for swap-chain");
+
+    /* Create DSV */
+    hr = device_->CreateDepthStencilView(backBuffer_.depthStencil.Get(), nullptr, backBuffer_.dsv.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for swap-chain");
 }
 
 void D3D11RenderContext::ResizeBackBuffer(UINT width, UINT height)

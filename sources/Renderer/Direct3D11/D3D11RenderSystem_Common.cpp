@@ -49,7 +49,7 @@ RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescrip
 {
     return TakeOwnership(
         renderContexts_,
-        MakeUnique<D3D11RenderContext>(*this, *stateMngr_, context_, desc, window)
+        MakeUnique<D3D11RenderContext>(factory_.Get(), device_, context_, desc, window)
     );
 }
 
@@ -148,7 +148,7 @@ void D3D11RenderSystem::Release(Sampler& sampler)
 
 RenderTarget* D3D11RenderSystem::CreateRenderTarget(unsigned int multiSamples)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(*this, multiSamples));
+    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), multiSamples));
 }
 
 void D3D11RenderSystem::Release(RenderTarget& renderTarget)
@@ -210,46 +210,6 @@ Query* D3D11RenderSystem::CreateQuery(const QueryDescriptor& desc)
 void D3D11RenderSystem::Release(Query& query)
 {
     RemoveFromUniqueSet(queries_, &query);
-}
-
-
-/* ----- Extended internal functions ----- */
-
-ComPtr<IDXGISwapChain> D3D11RenderSystem::CreateDXSwapChain(DXGI_SWAP_CHAIN_DESC& desc)
-{
-    ComPtr<IDXGISwapChain> swapChain;
-
-    auto hr = factory_->CreateSwapChain(device_.Get(), &desc, &swapChain);
-    DXThrowIfFailed(hr, "failed to create DXGI swap chain");
-
-    return swapChain;
-}
-
-void D3D11RenderSystem::CreateDXDepthStencilAndDSV(
-    UINT width, UINT height, UINT sampleCount, DXGI_FORMAT format,
-    ComPtr<ID3D11Texture2D>& depthStencil, ComPtr<ID3D11DepthStencilView>& dsv)
-{
-    /* Create depth stencil texture */
-    D3D11_TEXTURE2D_DESC texDesc;
-    {
-        texDesc.Width               = width;
-        texDesc.Height              = height;
-        texDesc.MipLevels           = 1;
-        texDesc.ArraySize           = 1;
-        texDesc.Format              = format;
-        texDesc.SampleDesc.Count    = std::max(1u, sampleCount);
-        texDesc.SampleDesc.Quality  = 0;
-        texDesc.Usage               = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
-        texDesc.CPUAccessFlags      = 0;
-        texDesc.MiscFlags           = 0;
-    }
-    auto hr = device_->CreateTexture2D(&texDesc, nullptr, depthStencil.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create texture 2D for D3D11 depth-stencil");
-
-    /* Create depth-stencil-view */
-    hr = device_->CreateDepthStencilView(depthStencil.Get(), nullptr, dsv.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create depth-stencil-view (DSV) for D3D11 depth-stencil");
 }
 
 
