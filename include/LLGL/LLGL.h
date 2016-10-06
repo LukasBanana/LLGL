@@ -36,7 +36,7 @@
  * --------
  * 
  * - **OpenGL Renderer**: ~80% done
- * - **Direct3D 11 Renderer**: ~60% done
+ * - **Direct3D 11 Renderer**: ~70% done
  * - **Direct3D 12 Renderer**: ~5% done
  * - **Vulkan Renderer**: not started yet
  * 
@@ -83,10 +83,10 @@
  * ----------------------
  * ```cpp
  * // Interface:
- * RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex);
+ * CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex);
  * 
  * // OpenGL Implementation:
- * void GLRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+ * void GLCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
  * {
  *     glDrawElements(
  *         renderState_.drawMode,
@@ -97,19 +97,19 @@
  * }
  * 
  * // Direct3D 11 Implementation
- * void D3D11RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+ * void D3D11CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
  * {
  *     context_->DrawIndexed(numVertices, 0, firstIndex);
  * }
  * 
  * // Direct3D 12 Implementation
- * void D3D12RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+ * void D3D12CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
  * {
  *     commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
  * }
  * 
  * // Vulkan Implementation
- * void VKRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+ * void VKCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
  * {
  *     vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, 0, 0);
  * }
