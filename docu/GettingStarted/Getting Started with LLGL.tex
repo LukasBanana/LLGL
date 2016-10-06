@@ -88,30 +88,36 @@ To use this library you should be familiar with these subjects:
 %	PROGRESS
 %----------------------------------------------------------------------------------------
 
+\newpage
 \section*{Progress}
 
 This project is still in its early steps. Here is a short overview of its progress:
+
+\subsection*{Platforms}
 \begin{itemize}
-	\item \textbf{Windows support} \\
+	\item \textbf{Windows} \\
 	Windows 10 is the main development environment of the author, so this platform has the best support.
 	
-	\item \textbf{Linux support} \\
-	Kubuntu Linux 16 is used inside a virtual machine by the author to develop the linux port.
-	This platform is partially supported (i.e. anti-aliasing or other features are not complete on this platform).
-	
-	\item \textbf{MacOS support} \\
+	\item \textbf{MacOS} \\
 	MacOS is currently not supported, but it's part of the plan ;-)
 	
-	\item \textbf{OpenGL renderer} \\
+	\item \textbf{Linux} \\
+	Kubuntu 16 (GNU/Linux) is used inside a virtual machine by the author to develop the linux port.
+	This platform is partially supported (i.e. anti-aliasing or other features are not complete on this platform).
+\end{itemize}
+	
+\subsection*{Renderers}
+\begin{itemize}
+	\item \textbf{OpenGL} \\
 	OpenGL renderer is \textasciitilde 80\% complete
 	
-	\item \textbf{Direct3D11 renderer} \\
-	Direct3D 11 renderer is \textasciitilde 60\% complete
+	\item \textbf{Direct3D 11} \\
+	Direct3D 11 renderer is \textasciitilde 70\% complete
 	
-	\item \textbf{Direct3D12 renderer} \\
+	\item \textbf{Direct3D 12} \\
 	Direct3D 12 renderer is \textasciitilde 5\% complete
 	
-	\item \textbf{Vulkan renderer} \\
+	\item \textbf{Vulkan} \\
 	Vulkan renderer is not supported yet
 \end{itemize}
 
@@ -430,8 +436,8 @@ LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
 shaderProgram->AttachShader(*vertexShader);
 shaderProgram->AttachShader(*fragmentShader);
 
-// Bind vertex attribute layout (this is not required for a compute shader program)
-shaderProgram->BindVertexAttributes(vertexFormat.GetAttributes());
+// Build vertex layout for input assembly (this is not required for a compute shader program)
+shaderProgram->BuildInputLayout(vertexFormat.GetAttributes());
 
 // Link shader program and check for errors
 if (!shaderProgram->LinkShaders()) {
