@@ -622,12 +622,15 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     auto targetIdx = static_cast<std::size_t>(target);
     auto targetGL = bufferTargetsMap[targetIdx];
     
+    #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Bind buffer array, but don't reset the currently bound buffer */
         glBindBuffersBase(targetGL, first, count, buffers);
     }
-    else if (count > 0)
+    else
+    #endif
+    if (count > 0)
     {
         /* Bind each individual buffer, and store last bound buffer */
         bufferState_.boundBuffers[targetIdx] = buffers[count - 1];
@@ -815,6 +818,7 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
 
 void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures)
 {
+    #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Store bound textures */
@@ -827,7 +831,9 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
         /* Bind all textures at once (if something has changed) */
         glBindTextures(first, count, textures);
     }
-    else if (count > 0)
+    else
+    #endif
+    if (count > 0)
     {
         /* Bind each texture layer individually */
         while (count-- > 0)
