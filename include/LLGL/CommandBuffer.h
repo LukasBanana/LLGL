@@ -213,14 +213,14 @@ class LLGL_EXPORT CommandBuffer
         \param[in] renderTarget Specifies the render target to set.
         \remarks Subsequent drawing operations will be rendered into the textures that are attached to the specified render target.
         \note If the specified render-target has not the same resolution as this render context, the viewports and scissor rectangles may be invalidated!
-        \see UnsetRenderTarget
+        \see SetRenderTarget(RenderContext&)
         */
         virtual void SetRenderTarget(RenderTarget& renderTarget) = 0;
 
         /**
         \brief Sets the back buffer (or rather swap-chain) of the specified render context as the new target for subsequent rendering commands.
         \remarks Subsequent drawing operations will be rendered into the main framebuffer, which can then be presented onto the screen.
-        \see SetRenderTarget
+        \see SetRenderTarget(RenderTarget&)
         */
         virtual void SetRenderTarget(RenderContext& renderContext) = 0;
 
