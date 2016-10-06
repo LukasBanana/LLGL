@@ -114,9 +114,8 @@ class DbgRenderSystem : public RenderSystem
 
     private:
 
+        //TODO: replace this by 'RendererInfo::rendererID'
         void DetermineRenderer(const std::string& rendererName);
-
-        bool OnMakeCurrent(RenderContext* renderContext) override;
 
         void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source);
         void DebugMipLevelLimit(int mipLevel, int mipLevelCount, const std::string& source);

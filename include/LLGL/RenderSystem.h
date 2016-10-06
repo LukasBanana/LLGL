@@ -155,15 +155,6 @@ class LLGL_EXPORT RenderSystem
         virtual void Release(RenderContext& renderContext) = 0;
 
         /**
-        \brief Makes the specified render context to the current one.
-        \param[in] renderContext Specifies the new current render context. If this is null, no render context is active.
-        \return True on success, otherwise false.
-        \remarks Never draw anything, while no render context is active!
-        \todo Replace this by the 'CommandBuffer::SetRenderTarget(RenderContext&)' function
-        */
-        bool MakeCurrent(RenderContext* renderContext);
-
-        /**
         \brief Returns the current render context. This may also be null.
         \todo Remove this
         */
@@ -370,12 +361,6 @@ class LLGL_EXPORT RenderSystem
     protected:
 
         RenderSystem() = default;
-
-        /**
-        \brief Callback when a new render context is about to be made the current one.
-        \remarks At this point, "GetCurrentContext" returns still the previous render context.
-        */
-        virtual bool OnMakeCurrent(RenderContext* renderContext);
 
         //! Sets the renderer information.
         void SetRendererInfo(const RendererInfo& info);

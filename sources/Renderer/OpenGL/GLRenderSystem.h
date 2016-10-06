@@ -137,8 +137,6 @@ class GLRenderSystem : public RenderSystem
 
     private:
 
-        bool OnMakeCurrent(RenderContext* renderContext) override;
-
         void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
         void SetDebugCallback(const DebugCallback& debugCallback);
 

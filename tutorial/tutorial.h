@@ -233,8 +233,10 @@ protected:
         // Create command buffer
         commands = renderer->CreateCommandBuffer();
 
-        // Set dark blue as default clear color
+        // Initialize command buffer
         commands->SetClearColor(defaultClearColor);
+        commands->SetRenderTarget(*context);
+        commands->SetViewport({ 0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y) });
 
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();

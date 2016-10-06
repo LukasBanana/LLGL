@@ -47,12 +47,10 @@ D3D11RenderSystem::~D3D11RenderSystem()
 
 RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    /* Create new render context and make it the current one */
-    auto renderContext = MakeUnique<D3D11RenderContext>(*this, *stateMngr_, context_, desc, window);
-    MakeCurrent(renderContext.get());
-
-    /* Take ownership and return new render context */
-    return TakeOwnership(renderContexts_, std::move(renderContext));
+    return TakeOwnership(
+        renderContexts_,
+        MakeUnique<D3D11RenderContext>(*this, *stateMngr_, context_, desc, window)
+    );
 }
 
 void D3D11RenderSystem::Release(RenderContext& renderContext)
@@ -60,9 +58,21 @@ void D3D11RenderSystem::Release(RenderContext& renderContext)
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
+/* ----- Command buffers ----- */
+
+CommandBuffer* D3D11RenderSystem::CreateCommandBuffer()
+{
+    return TakeOwnership(commandBuffers_, MakeUnique<D3D11CommandBuffer>(*stateMngr_, context_));
+}
+
+void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
+{
+    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
+}
+
 /* ----- Hardware Buffers ------ */
 
-std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
+static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Make respective buffer type */
     switch (desc.type)
@@ -321,22 +331,6 @@ void D3D11RenderSystem::QueryRenderingCaps()
     RenderingCaps caps;
     DXGetRenderingCaps(caps, GetFeatureLevel());
     SetRenderingCaps(caps);
-}
-
-bool D3D11RenderSystem::OnMakeCurrent(RenderContext* renderContext)
-{
-    if (renderContext)
-    {
-        /* Notify render context */
-        auto renderContextD3D = LLGL_CAST(D3D11RenderContext*, renderContext);
-        renderContextD3D->OnMakeCurrent();
-    }
-    else
-    {
-        /* Unset render targets */
-        context_->OMSetRenderTargets(0, nullptr, nullptr);
-    }
-    return true;
 }
 
 

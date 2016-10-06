@@ -45,7 +45,7 @@ RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor
 void GLRenderSystem::Release(RenderContext& renderContext)
 {
     if (GetCurrentContext() == &renderContext)
-        MakeCurrent(nullptr);
+        GLRenderContext::GLMakeCurrent(nullptr);
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
@@ -208,17 +208,6 @@ RenderContext* GLRenderSystem::AddRenderContext(
 /*
  * ======= Private: =======
  */
-
-bool GLRenderSystem::OnMakeCurrent(RenderContext* renderContext)
-{
-    if (renderContext)
-    {
-        auto renderContextGL = LLGL_CAST(GLRenderContext*, renderContext);
-        return GLRenderContext::GLMakeCurrent(renderContextGL);
-    }
-    else
-        return GLRenderContext::GLMakeCurrent(nullptr);
-}
 
 void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc)
 {

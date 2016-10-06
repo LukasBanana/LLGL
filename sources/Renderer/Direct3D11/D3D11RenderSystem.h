@@ -11,6 +11,8 @@
 
 #include <LLGL/RenderSystem.h>
 #include <LLGL/VideoAdapter.h>
+
+#include "D3D11CommandBuffer.h"
 #include "D3D11RenderContext.h"
 
 #include "Buffer/D3D11Buffer.h"
@@ -54,6 +56,12 @@ class D3D11RenderSystem : public RenderSystem
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
+
+        /* ----- Command buffers ----- */
+
+        CommandBuffer* CreateCommandBuffer() override;
+
+        void Release(CommandBuffer& commandBuffer) override;
 
         /* ----- Hardware Buffers ------ */
 
@@ -155,8 +163,6 @@ class D3D11RenderSystem : public RenderSystem
             const ImageDescriptor& imageDesc
         );
 
-        bool OnMakeCurrent(RenderContext* renderContext) override;
-
         /* ----- Common objects ----- */
 
         ComPtr<IDXGIFactory>                        factory_;
@@ -169,6 +175,7 @@ class D3D11RenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<D3D11RenderContext>       renderContexts_;
+        HWObjectContainer<D3D11CommandBuffer>       commandBuffers_;
         HWObjectContainer<D3D11Buffer>              buffers_;
         HWObjectContainer<D3D11BufferArray>         bufferArrays_;
         HWObjectContainer<D3D11Texture>             textures_;

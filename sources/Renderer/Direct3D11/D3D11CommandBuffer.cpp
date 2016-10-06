@@ -1,12 +1,12 @@
 /*
- * D3D11RenderContext.cpp
+ * D3D11CommandBuffer.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
+#include "D3D11CommandBuffer.h"
 #include "D3D11RenderContext.h"
-#include "D3D11RenderSystem.h"
 #include "D3D11Types.h"
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
@@ -25,6 +25,7 @@
 #include "Buffer/D3D11StorageBuffer.h"
 
 #include "Texture/D3D11Texture.h"
+#include "Texture/D3D11TextureArray.h"
 #include "Texture/D3D11Sampler.h"
 #include "Texture/D3D11RenderTarget.h"
 
@@ -33,109 +34,55 @@ namespace LLGL
 {
 
 
-D3D11RenderContext::D3D11RenderContext(
-    D3D11RenderSystem& renderSystem,
-    D3D11StateManager& stateMngr,
-    const ComPtr<ID3D11DeviceContext>& context,
-    RenderContextDescriptor desc,
-    const std::shared_ptr<Window>& window) :
-        renderSystem_   ( renderSystem ),
-        stateMngr_      ( stateMngr    ),
-        context_        ( context      ),
-        desc_           ( desc         )
+D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context) :
+    stateMngr_  ( stateMngr ),
+    context_    ( context   )
 {
-    /* Setup window for the render context */
-    SetWindow(window, desc_.videoMode, nullptr);
-
-    /* Create D3D objects */
-    CreateSwapChain();
-    CreateBackBuffer(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
-    SetDefaultRenderTargets();
-
-    /* Initialize viewport */
-    auto resolution = desc_.videoMode.resolution.Cast<float>();
-    SetViewport({ 0.0f, 0.0f, resolution.x, resolution.y });
-
-    /* Initialize v-sync */
-    SetVsync(desc_.vsync);
-}
-
-void D3D11RenderContext::Present()
-{
-    swapChain_->Present(swapChainInterval_, 0);
 }
 
 /* ----- Configuration ----- */
 
-void D3D11RenderContext::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+void D3D11CommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
 {
     // dummy
 }
 
-void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
-{
-    if (GetVideoMode() != videoModeDesc)
-    {
-        auto prevVideoMode = GetVideoMode();
-
-        /* Update window appearance and store new video mode in base function */
-        RenderContext::SetVideoMode(videoModeDesc);
-
-        /* Resize back buffer */
-        if (!Gs::Equals(prevVideoMode.resolution, videoModeDesc.resolution))
-        {
-            auto size = videoModeDesc.resolution.Cast<UINT>();
-            ResizeBackBuffer(size.x, size.y);
-        }
-
-        /* Switch fullscreen mode */
-        if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
-            swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
-    }
-}
-
-void D3D11RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
-{
-    desc_.vsync = vsyncDesc;
-    swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
-}
-
-void D3D11RenderContext::SetViewport(const Viewport& viewport)
+void D3D11CommandBuffer::SetViewport(const Viewport& viewport)
 {
     stateMngr_.SetViewports(1, &viewport);
 }
 
-void D3D11RenderContext::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
+void D3D11CommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
 {
     stateMngr_.SetViewports(numViewports, viewportArray);
 }
 
-void D3D11RenderContext::SetScissor(const Scissor& scissor)
+void D3D11CommandBuffer::SetScissor(const Scissor& scissor)
 {
     stateMngr_.SetScissors(1, &scissor);
 }
 
-void D3D11RenderContext::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
+void D3D11CommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
 {
     stateMngr_.SetScissors(numScissors, scissorArray);
 }
 
-void D3D11RenderContext::SetClearColor(const ColorRGBAf& color)
+void D3D11CommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
     clearState_.color = color;
 }
 
-void D3D11RenderContext::SetClearDepth(float depth)
+void D3D11CommandBuffer::SetClearDepth(float depth)
 {
     clearState_.depth = depth;
 }
 
-void D3D11RenderContext::SetClearStencil(int stencil)
+void D3D11CommandBuffer::SetClearStencil(int stencil)
 {
     clearState_.stencil = stencil;
 }
 
-void D3D11RenderContext::ClearBuffers(long flags)
+void D3D11CommandBuffer::ClearBuffers(long flags)
 {
     /* Clear color buffer */
     if ((flags & ClearBuffersFlags::Color) != 0)
@@ -158,7 +105,7 @@ void D3D11RenderContext::ClearBuffers(long flags)
 
 /* ----- Hardware Buffers ------ */
 
-void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
+void D3D11CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, buffer);
 
@@ -169,7 +116,7 @@ void D3D11RenderContext::SetVertexBuffer(Buffer& buffer)
     context_->IASetVertexBuffers(0, 1, buffers, strides, offsets);
 }
 
-void D3D11RenderContext::SetVertexBufferArray(BufferArray& bufferArray)
+void D3D11CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& vertexBufferArrayD3D = LLGL_CAST(D3D11VertexBufferArray&, bufferArray);
 
@@ -182,13 +129,13 @@ void D3D11RenderContext::SetVertexBufferArray(BufferArray& bufferArray)
     );
 }
 
-void D3D11RenderContext::SetIndexBuffer(Buffer& buffer)
+void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, buffer);
     context_->IASetIndexBuffer(indexBufferD3D.Get(), indexBufferD3D.GetFormat(), 0);
 }
 
-void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
     /* Set constant buffer resource to all shader stages */
     auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, buffer);
@@ -196,7 +143,7 @@ void D3D11RenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, lo
     SetConstantBuffersOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
-void D3D11RenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
 {
     /* Set constant buffer resource to all shader stages */
     auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
@@ -208,7 +155,7 @@ void D3D11RenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsign
     );
 }
 
-void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
     #if 0//INCOMPLETE
     auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
@@ -223,19 +170,9 @@ void D3D11RenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
     #endif
 }
 
-void* D3D11RenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
-{
-    return nullptr;//todo...
-}
-
-void D3D11RenderContext::UnmapBuffer(Buffer& buffer)
-{
-    //todo...
-}
-
 /* ----- Textures ----- */
 
-void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
+void D3D11CommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
 {
     /* Set texture resource to all shader stages */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
@@ -243,7 +180,7 @@ void D3D11RenderContext::SetTexture(Texture& texture, unsigned int slot, long sh
     SetShaderResourcesOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
-void D3D11RenderContext::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
+void D3D11CommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
 {
     /* Set texture resource to all shader stages */
     auto& textureArrayD3D = LLGL_CAST(D3D11TextureArray&, textureArray);
@@ -257,7 +194,7 @@ void D3D11RenderContext::SetTextureArray(TextureArray& textureArray, unsigned in
 
 /* ----- Sampler States ----- */
 
-void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
+void D3D11CommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
 {
     /* Set sampler state object to all shader stages */
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
@@ -268,20 +205,20 @@ void D3D11RenderContext::SetSampler(Sampler& sampler, unsigned int slot, long sh
 /* ----- Render Targets ----- */
 
 //private
-void D3D11RenderContext::ResolveBoundRenderTarget()
+void D3D11CommandBuffer::ResolveBoundRenderTarget()
 {
     if (boundRenderTarget_)
         boundRenderTarget_->ResolveSubresources(context_.Get());
 }
 
-void D3D11RenderContext::SetRenderTarget(RenderTarget& renderTarget)
+void D3D11CommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 {
+    auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
+
     /* Resolve previously bound render target (in case mutli-sampling is used) */
     ResolveBoundRenderTarget();
 
     /* Set RTV list and DSV in framebuffer view */
-    auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
-
     framebufferView_.rtvList    = renderTargetD3D.GetRenderTargetViews();
     framebufferView_.dsv        = renderTargetD3D.GetDepthStencilView();
 
@@ -291,13 +228,20 @@ void D3D11RenderContext::SetRenderTarget(RenderTarget& renderTarget)
     boundRenderTarget_ = &renderTargetD3D;
 }
 
-void D3D11RenderContext::UnsetRenderTarget()
+void D3D11CommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
+    auto& renderContextD3D = LLGL_CAST(D3D11RenderContext&, renderContext);
+
     /* Resolve previously bound render target (in case mutli-sampling is used) */
     ResolveBoundRenderTarget();
 
     /* Set default RTVs to OM-stage */
-    SetDefaultRenderTargets();
+    const auto& backBuffer = renderContextD3D.GetBackBuffer();
+
+    framebufferView_.rtvList    = { backBuffer.rtv.Get() };
+    framebufferView_.dsv        = backBuffer.dsv.Get();
+
+    SubmitFramebufferView();
 
     /* Reset reference to render target */
     boundRenderTarget_ = nullptr;
@@ -305,13 +249,13 @@ void D3D11RenderContext::UnsetRenderTarget()
 
 /* ----- Pipeline States ----- */
 
-void D3D11RenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void D3D11CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineD3D = LLGL_CAST(D3D11GraphicsPipeline&, graphicsPipeline);
     graphicsPipelineD3D.Bind(context_.Get());
 }
 
-void D3D11RenderContext::SetComputePipeline(ComputePipeline& computePipeline)
+void D3D11CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
     auto& computePipelineD3D = LLGL_CAST(D3D11ComputePipeline&, computePipeline);
     computePipelineD3D.Bind(context_.Get());
@@ -319,7 +263,7 @@ void D3D11RenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void D3D11RenderContext::BeginQuery(Query& query)
+void D3D11CommandBuffer::BeginQuery(Query& query)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
 
@@ -336,7 +280,7 @@ void D3D11RenderContext::BeginQuery(Query& query)
     }
 }
 
-void D3D11RenderContext::EndQuery(Query& query)
+void D3D11CommandBuffer::EndQuery(Query& query)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
 
@@ -353,7 +297,7 @@ void D3D11RenderContext::EndQuery(Query& query)
     }
 }
 
-bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
+bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
 
@@ -484,69 +428,69 @@ bool D3D11RenderContext::QueryResult(Query& query, std::uint64_t& result)
     return false;
 }
 
-void D3D11RenderContext::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+void D3D11CommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     auto& queryD3D = LLGL_CAST(D3D11Query&, query);
     context_->SetPredication(queryD3D.GetPredicateObject(), (mode >= RenderConditionMode::WaitInverted));
 }
 
-void D3D11RenderContext::EndRenderCondition()
+void D3D11CommandBuffer::EndRenderCondition()
 {
     context_->SetPredication(nullptr, FALSE);
 }
 
 /* ----- Drawing ----- */
 
-void D3D11RenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
+void D3D11CommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
     context_->Draw(numVertices, firstVertex);
 }
 
-void D3D11RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void D3D11CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
     context_->DrawIndexed(numVertices, firstIndex, 0);
 }
 
-void D3D11RenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
+void D3D11CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
     context_->DrawIndexed(numVertices, firstIndex, vertexOffset);
 }
 
-void D3D11RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
+void D3D11CommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
     context_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
-void D3D11RenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
+void D3D11CommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
     context_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
 }
 
-void D3D11RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
+void D3D11CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
     context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
 }
 
-void D3D11RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
+void D3D11CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
     context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
-void D3D11RenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
+void D3D11CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
     context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
 
-void D3D11RenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
+void D3D11CommandBuffer::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
 {
     context_->Dispatch(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
 }
 
 /* ----- Misc ----- */
 
-void D3D11RenderContext::SyncGPU()
+void D3D11CommandBuffer::SyncGPU()
 {
     context_->Flush();
 }
@@ -556,80 +500,7 @@ void D3D11RenderContext::SyncGPU()
  * ======= Private: =======
  */
 
-void D3D11RenderContext::CreateSwapChain()
-{
-    /* Create swap chain for window handle */
-    NativeHandle wndHandle;
-    GetWindow().GetNativeHandle(&wndHandle);
-
-    DXGI_SWAP_CHAIN_DESC swapChainDesc;
-    InitMemory(swapChainDesc);
-    {
-        swapChainDesc.BufferDesc.Width                      = desc_.videoMode.resolution.x;
-        swapChainDesc.BufferDesc.Height                     = desc_.videoMode.resolution.y;
-        swapChainDesc.BufferDesc.Format                     = DXGI_FORMAT_R8G8B8A8_UNORM;
-        swapChainDesc.BufferDesc.RefreshRate.Numerator      = desc_.vsync.refreshRate;
-        swapChainDesc.BufferDesc.RefreshRate.Denominator    = desc_.vsync.interval;
-        swapChainDesc.SampleDesc.Count                      = (desc_.sampling.enabled ? std::max(1u, desc_.sampling.samples) : 1);
-        swapChainDesc.SampleDesc.Quality                    = 0;
-        swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount                           = (desc_.videoMode.swapChainMode == SwapChainMode::TripleBuffering ? 2 : 1);
-        swapChainDesc.OutputWindow                          = wndHandle.window;
-        swapChainDesc.Windowed                              = (desc_.videoMode.fullscreen ? FALSE : TRUE);
-        swapChainDesc.SwapEffect                            = DXGI_SWAP_EFFECT_DISCARD;
-    }
-    swapChain_ = renderSystem_.CreateDXSwapChain(swapChainDesc);
-}
-
-void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
-{
-    /* Get back buffer from swap chain */
-    auto hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&backBuffer_.colorBuffer));
-    DXThrowIfFailed(hr, "failed to get back buffer from D3D11 swap chain");
-
-    /* Create back buffer RTV */
-    hr = renderSystem_.GetDevice()->CreateRenderTargetView(backBuffer_.colorBuffer.Get(), nullptr, &backBuffer_.rtv);
-    DXThrowIfFailed(hr, "failed to create render-target-view (RTV) for D3D11 back buffer");
-
-    /* Create depth-stencil and DSV */
-    renderSystem_.CreateDXDepthStencilAndDSV(
-        width,
-        height,
-        (desc_.sampling.enabled ? std::max(1u, desc_.sampling.samples) : 1),
-        DXGI_FORMAT_D24_UNORM_S8_UINT,
-        backBuffer_.depthStencil,
-        backBuffer_.dsv
-    );
-}
-
-void D3D11RenderContext::ResizeBackBuffer(UINT width, UINT height)
-{
-    /* Unset render targets */
-    context_->OMSetRenderTargets(0, nullptr, nullptr);
-
-    /* Release buffers */
-    backBuffer_.colorBuffer.Reset();
-    backBuffer_.rtv.Reset();
-    backBuffer_.depthStencil.Reset();
-    backBuffer_.dsv.Reset();
-
-    /* Resize swap-chain buffers, let DXGI find out the client area, and preserve buffer count and format */
-    auto hr = swapChain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
-    DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
-
-    /* Recreate back buffer and reset default render target */
-    CreateBackBuffer(width, height);
-    SetDefaultRenderTargets();
-}
-
-void D3D11RenderContext::SetDefaultRenderTargets()
-{
-    framebufferView_.rtvList    = { backBuffer_.rtv.Get() };
-    framebufferView_.dsv        = backBuffer_.dsv.Get();
-    SubmitFramebufferView();
-}
-
-void D3D11RenderContext::SubmitFramebufferView()
+void D3D11CommandBuffer::SubmitFramebufferView()
 {
     context_->OMSetRenderTargets(
         static_cast<UINT>(framebufferView_.rtvList.size()),
@@ -645,7 +516,7 @@ void D3D11RenderContext::SubmitFramebufferView()
 #define SHADERSTAGE_PS(FLAG) ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
 #define SHADERSTAGE_CS(FLAG) ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
 
-void D3D11RenderContext::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags)
+void D3D11CommandBuffer::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags)
 {
     if (SHADERSTAGE_VS(flags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
     if (SHADERSTAGE_HS(flags)) { context_->HSSetConstantBuffers(startSlot, count, buffers); }
@@ -655,7 +526,7 @@ void D3D11RenderContext::SetConstantBuffersOnStages(UINT startSlot, UINT count, 
     if (SHADERSTAGE_CS(flags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
 }
 
-void D3D11RenderContext::SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long flags)
+void D3D11CommandBuffer::SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long flags)
 {
     if (SHADERSTAGE_VS(flags)) { context_->VSSetShaderResources(startSlot, count, views); }
     if (SHADERSTAGE_HS(flags)) { context_->HSSetShaderResources(startSlot, count, views); }
@@ -665,7 +536,7 @@ void D3D11RenderContext::SetShaderResourcesOnStages(UINT startSlot, UINT count, 
     if (SHADERSTAGE_CS(flags)) { context_->CSSetShaderResources(startSlot, count, views); }
 }
 
-void D3D11RenderContext::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long flags)
+void D3D11CommandBuffer::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long flags)
 {
     if (SHADERSTAGE_VS(flags)) { context_->VSSetSamplers(startSlot, count, samplers); }
     if (SHADERSTAGE_HS(flags)) { context_->HSSetSamplers(startSlot, count, samplers); }

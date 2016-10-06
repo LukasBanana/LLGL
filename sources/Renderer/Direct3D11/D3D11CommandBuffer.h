@@ -1,16 +1,15 @@
 /*
- * D3D11RenderContext.h
+ * D3D11CommandBuffer.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D11_RENDER_CONTEXT_H__
-#define __LLGL_D3D11_RENDER_CONTEXT_H__
+#ifndef __LLGL_D3D11_COMMAND_BUFFER_H__
+#define __LLGL_D3D11_COMMAND_BUFFER_H__
 
 
-#include <LLGL/Window.h>
-#include <LLGL/RenderContext.h>
+#include <LLGL/CommandBuffer.h>
 #include <cstddef>
 #include "../ComPtr.h"
 #include "../DXCommon/DXCore.h"
@@ -23,43 +22,21 @@ namespace LLGL
 {
 
 
-// Container structure for all D3D11 back buffer objects.
-struct D3D11BackBuffer
-{
-    ComPtr<ID3D11Texture2D>         colorBuffer;
-    ComPtr<ID3D11RenderTargetView>  rtv;
-    ComPtr<ID3D11Texture2D>         depthStencil;
-    ComPtr<ID3D11DepthStencilView>  dsv;
-};
-
-
-class D3D11RenderSystem;
 class D3D11StateManager;
 class D3D11RenderTarget;
 
-class D3D11RenderContext : public RenderContext
+class D3D11CommandBuffer : public CommandBuffer
 {
 
     public:
 
         /* ----- Common ----- */
 
-        D3D11RenderContext(
-            D3D11RenderSystem& renderSystem,
-            D3D11StateManager& stateMngr,
-            const ComPtr<ID3D11DeviceContext>& context,
-            RenderContextDescriptor desc,
-            const std::shared_ptr<Window>& window
-        );
-
-        void Present() override;
+        D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context);
 
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
-
-        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void SetViewport(const Viewport& viewport) override;
         void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) override;
@@ -85,9 +62,6 @@ class D3D11RenderContext : public RenderContext
         
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
 
-        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
-        void UnmapBuffer(Buffer& buffer) override;
-
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
@@ -100,7 +74,7 @@ class D3D11RenderContext : public RenderContext
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;
-        void UnsetRenderTarget() override;
+        void SetRenderTarget(RenderContext& renderContext) override;
 
         /* ----- Pipeline States ----- */
 
@@ -139,13 +113,6 @@ class D3D11RenderContext : public RenderContext
 
         void SyncGPU() override;
 
-        /* ----- Extended internal functions ----- */
-
-        inline const D3D11BackBuffer& GetBackBuffer() const
-        {
-            return backBuffer_;
-        }
-
     private:
 
         struct D3D11FramebufferView
@@ -154,11 +121,6 @@ class D3D11RenderContext : public RenderContext
             ID3D11DepthStencilView*                 dsv = nullptr;
         };
 
-        void CreateSwapChain();
-        void CreateBackBuffer(UINT width, UINT height);
-        void ResizeBackBuffer(UINT width, UINT height);
-
-        void SetDefaultRenderTargets();
         void SubmitFramebufferView();
 
         void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags);
@@ -167,16 +129,10 @@ class D3D11RenderContext : public RenderContext
 
         void ResolveBoundRenderTarget();
 
-        D3D11RenderSystem&          renderSystem_;  // reference to its render system
         D3D11StateManager&          stateMngr_;
-        RenderContextDescriptor     desc_;
         
         ComPtr<ID3D11DeviceContext> context_;
 
-        ComPtr<IDXGISwapChain>      swapChain_;
-        UINT                        swapChainInterval_  = 0;
-
-        D3D11BackBuffer             backBuffer_;
         D3D11FramebufferView        framebufferView_;
 
         D3DClearState               clearState_;

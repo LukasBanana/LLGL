@@ -35,7 +35,7 @@ std::vector<std::string> RenderSystem::FindModules()
     const std::vector<std::string> knownModules
     {
         #ifdef _WIN32
-        "Direct3D12", "Direct3D11",
+        /*"Direct3D12", */"Direct3D11",
         #endif
         #ifdef __APPLE__
         "Metal",
@@ -110,17 +110,6 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
     return renderSystem;
 }
 
-bool RenderSystem::MakeCurrent(RenderContext* renderContext)
-{
-    if (currentContext_ != renderContext)
-    {
-        auto result = OnMakeCurrent(renderContext);
-        currentContext_ = renderContext;
-        return result;
-    }
-    return true;
-}
-
 void RenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 {
     config_ = config;
@@ -130,11 +119,6 @@ void RenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 /*
  * ======= Protected: =======
  */
-
-bool RenderSystem::OnMakeCurrent(RenderContext* renderContext)
-{
-    return true; // dummy
-}
 
 void RenderSystem::SetRendererInfo(const RendererInfo& info)
 {

@@ -370,6 +370,7 @@ void DbgRenderSystem::Release(Query& query)
  * ======= Private: =======
  */
 
+//TODO: replace this by 'RendererInfo::rendererID'
 void DbgRenderSystem::DetermineRenderer(const std::string& rendererName)
 {
     auto CompareSubStr = [](const std::string& lhs, const std::string& rhs)
@@ -384,11 +385,6 @@ void DbgRenderSystem::DetermineRenderer(const std::string& rendererName)
         renderer_.isDirect3D = true;
     else if (CompareSubStr(rendererName, "Vulkan"))
         renderer_.isVulkan = true;
-}
-
-bool DbgRenderSystem::OnMakeCurrent(RenderContext* renderContext)
-{
-    return instance_->MakeCurrent(renderContext);
 }
 
 void DbgRenderSystem::DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source)
