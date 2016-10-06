@@ -9,12 +9,8 @@
 #define __LLGL_D3D11_RENDER_CONTEXT_H__
 
 
-#include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
-#include <cstddef>
 #include "../ComPtr.h"
-#include "../DXCommon/DXCore.h"
-#include <vector>
 #include <d3d11.h>
 #include <dxgi.h>
 
@@ -32,10 +28,6 @@ struct D3D11BackBuffer
     ComPtr<ID3D11DepthStencilView>  dsv;
 };
 
-
-class D3D11RenderSystem;
-class D3D11StateManager;
-class D3D11RenderTarget;
 
 class D3D11RenderContext : public RenderContext
 {

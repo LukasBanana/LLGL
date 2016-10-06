@@ -14,8 +14,8 @@ static std::vector<Gs::Vector4f> GetTestVector(std::size_t size)
 
     for (unsigned int i = 0; i < size; ++i)
     {
-        auto f = static_cast<float>(i + 1);
-        vec[i] = Gs::Vector4f(1, f, 1.0f / f, 0.1f * f);
+        auto x = static_cast<float>(i + 1);
+        vec[i] = Gs::Vector4f(1, x, 1.0f / x, 0.1f * x);
     }
 
     return vec;
