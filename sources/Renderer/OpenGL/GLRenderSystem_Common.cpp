@@ -53,12 +53,18 @@ void GLRenderSystem::Release(RenderContext& renderContext)
 
 CommandBuffer* GLRenderSystem::CreateCommandBuffer()
 {
-    return nullptr;//todo...
+    /* Get state manager from shared render context */
+    auto sharedContext = GetSharedRenderContext();
+    if (!sharedContext)
+        throw std::runtime_error("can not create OpenGL command buffer without active render context");
+
+    /* Create command buffer */
+    return TakeOwnership(commandBuffers_, MakeUnique<GLCommandBuffer>(sharedContext->GetStateManager()));
 }
 
 void GLRenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    //todo...
+    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
 /* ----- Hardware Buffers ------ */

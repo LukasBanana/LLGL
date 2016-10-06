@@ -24,22 +24,36 @@ void GLRenderContext::Present()
 
 bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 {
+    static GLRenderContext* activeRenderContext = nullptr;
+
     if (renderContext)
     {
-        /* Update new active state manager */
+        /* Always update active state manager (a render target might have changed the render-target-height) */
         GLStateManager::active = renderContext->stateMngr_.get();
         GLStateManager::active->NotifyRenderTargetHeight(renderContext->contextHeight_);
 
-        /* Make this OpenGL context to the current one */
-        const auto& ctx = renderContext->context_;
-        return (wglMakeCurrent(ctx.hDC, ctx.hGLRC) == TRUE);
+        /* Make this OpenGL context to the current one (if not already done) */
+        if (activeRenderContext != renderContext)
+        {
+            activeRenderContext = renderContext;
+            const auto& ctx = renderContext->context_;
+            return (wglMakeCurrent(ctx.hDC, ctx.hGLRC) == TRUE);
+        }
     }
     else
     {
-        /* Unset active state manager and OpenGL context */
+        /* Always unset active state manager */
         GLStateManager::active = nullptr;
-        return (wglMakeCurrent(0, 0) == TRUE);
+
+        /* Unset active OpenGL context (if not already done) */
+        if (activeRenderContext != nullptr)
+        {
+            activeRenderContext = nullptr;
+            return (wglMakeCurrent(0, 0) == TRUE);
+        }
     }
+
+    return true;
 }
 
 

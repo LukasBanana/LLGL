@@ -173,18 +173,18 @@ private:
             samplerIndex = (samplerIndex + 1) % 5;
 
         // Clear color buffer
-        context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+        commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
         // Set graphics pipeline and vertex buffer
-        context->SetGraphicsPipeline(*pipeline);
-        context->SetVertexBuffer(*vertexBuffer);
+        commands->SetGraphicsPipeline(*pipeline);
+        commands->SetVertexBuffer(*vertexBuffer);
 
         // Set texture and sampler state on slot index 0
-        context->SetTextureArray(*textureArray, 0);
-        context->SetSampler(*sampler[samplerIndex], 0);
+        commands->SetTextureArray(*textureArray, 0);
+        commands->SetSampler(*sampler[samplerIndex], 0);
 
         // Draw fullscreen triangle
-        context->Draw(3, 0);
+        commands->Draw(3, 0);
 
         // Present result on the screen
         context->Present();

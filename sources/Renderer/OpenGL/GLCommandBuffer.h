@@ -1,49 +1,37 @@
 /*
- * DbgRenderContext.h
+ * GLCommandBuffer.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_DBG_RENDER_CONTEXT_H__
-#define __LLGL_DBG_RENDER_CONTEXT_H__
+#ifndef __LLGL_GL_COMMAND_BUFFER_H__
+#define __LLGL_GL_COMMAND_BUFFER_H__
 
 
-#include <LLGL/RenderContext.h>
-#include <LLGL/RenderingProfiler.h>
-#include <LLGL/RenderingDebugger.h>
-
-#include "DbgGraphicsPipeline.h"
+#include <LLGL/CommandBuffer.h>
+#include "OpenGL.h"
 
 
 namespace LLGL
 {
 
 
-class DbgBuffer;
+class GLRenderTarget;
+class GLStateManager;
 
-class DbgRenderContext : public RenderContext
+class GLCommandBuffer : public CommandBuffer
 {
 
     public:
 
         /* ----- Common ----- */
 
-        DbgRenderContext(
-            RenderContext& instance,
-            RenderingProfiler* profiler,
-            RenderingDebugger* debugger,
-            const RenderingCaps& caps
-        );
-
-        void Present() override;
+        GLCommandBuffer(const std::shared_ptr<GLStateManager>& stateManager);
 
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
-
-        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void SetViewport(const Viewport& viewport) override;
         void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) override;
@@ -69,22 +57,19 @@ class DbgRenderContext : public RenderContext
         
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
 
-        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
-        void UnmapBuffer(Buffer& buffer) override;
-
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTexture(Texture& texture, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetSampler(Sampler& sampler, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;
-        void UnsetRenderTarget() override;
+        void SetRenderTarget(RenderContext& renderContext) override;
 
         /* ----- Pipeline States ----- */
 
@@ -123,65 +108,22 @@ class DbgRenderContext : public RenderContext
 
         void SyncGPU() override;
 
-        /* ----- Debugging members ----- */
-
-        RenderContext& instance;
-
     private:
 
-        void DebugGraphicsPipelineSet(const std::string& source);
-        void DebugComputePipelineSet(const std::string& source);
-        void DebugVertexBufferSet(const std::string& source);
-        void DebugIndexBufferSet(const std::string& source);
-        void DebugVertexLayout(const std::string& source);
-
-        void DebugNumVertices(unsigned int numVertices, const std::string& source);
-        void DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset, const std::string& source);
-
-        void DebugDraw(
-            unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances,
-            unsigned int instanceOffset, const std::string& source
-        );
-        void DebugDrawIndexed(
-            unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex,
-            int vertexOffset, unsigned int instanceOffset, const std::string& source
-        );
-
-        void DebugInstancing(const std::string& source);
-        void DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source);
-        void DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source);
-
-        void DebugShaderStageFlags(long shaderStageFlags, const std::string& source);
-        void DebugBufferType(const BufferType bufferType, const BufferType compareType, const std::string& source);
-
-        void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);
-
-        /* ----- Common objects ----- */
-
-        RenderingProfiler*      profiler_       = nullptr;
-        RenderingDebugger*      debugger_       = nullptr;
-
-        const RenderingCaps&    caps_;
-
-        /* ----- Render states ----- */
-
-        PrimitiveTopology       topology_       = PrimitiveTopology::TriangleList;
-        VertexFormat            vertexFormat_;
-
-        struct Bindings
+        struct RenderState
         {
-            DbgBuffer*              vertexBuffer        = nullptr;
-            DbgBuffer*              indexBuffer         = nullptr;
-            DbgGraphicsPipeline*    graphicsPipeline    = nullptr;
-            ComputePipeline*        computePipeline     = nullptr;
-        }
-        bindings_;
+            GLenum      drawMode            = GL_TRIANGLES;
+            GLenum      indexBufferDataType = GL_UNSIGNED_INT;
+            GLintptr    indexBufferStride   = 4;
+        };
 
-        /*struct MetaInfo
-        {
-            bool viewportVisible = true;
-        }
-        metaInfo_;*/
+        // Blits the currently bound render target
+        void BlitBoundRenderTarget();
+
+        std::shared_ptr<GLStateManager> stateMngr_;
+        RenderState                     renderState_;
+
+        GLRenderTarget*                 boundRenderTarget_  = nullptr;
 
 };
 

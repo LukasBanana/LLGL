@@ -1,15 +1,16 @@
 /*
- * DbgRenderContext.cpp
+ * DbgCommandBuffer.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "DbgRenderContext.h"
+#include "DbgCommandBuffer.h"
 #include "DbgCore.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 
+#include "DbgRenderContext.h"
 #include "DbgBuffer.h"
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
@@ -21,45 +22,28 @@ namespace LLGL
 {
 
 
-DbgRenderContext::DbgRenderContext(
-    RenderContext& instance, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCaps& caps) :
+DbgCommandBuffer::DbgCommandBuffer(
+    CommandBuffer& instance, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCaps& caps) :
         instance    ( instance ),
         profiler_   ( profiler ),
         debugger_   ( debugger ),
         caps_       ( caps     )
 {
-    ShareWindowAndVideoMode(instance);
-}
-
-void DbgRenderContext::Present()
-{
-    instance.Present();
 }
 
 /* ----- Configuration ----- */
 
-void DbgRenderContext::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+void DbgCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
 {
     instance.SetGraphicsAPIDependentState(state);
 }
 
-void DbgRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
-{
-    instance.SetVideoMode(videoModeDesc);
-    RenderContext::SetVideoMode(videoModeDesc);
-}
-
-void DbgRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
-{
-    instance.SetVsync(vsyncDesc);
-}
-
-void DbgRenderContext::SetViewport(const Viewport& viewport)
+void DbgCommandBuffer::SetViewport(const Viewport& viewport)
 {
     instance.SetViewport(viewport);
 }
 
-void DbgRenderContext::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
+void DbgCommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
 {
     if (!viewportArray)
         LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "viewport array must not be a null pointer");
@@ -68,12 +52,12 @@ void DbgRenderContext::SetViewportArray(unsigned int numViewports, const Viewpor
     instance.SetViewportArray(numViewports, viewportArray);
 }
 
-void DbgRenderContext::SetScissor(const Scissor& scissor)
+void DbgCommandBuffer::SetScissor(const Scissor& scissor)
 {
     instance.SetScissor(scissor);
 }
 
-void DbgRenderContext::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
+void DbgCommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
 {
     if (!scissorArray)
         LLGL_DBG_ERROR_HERE(ErrorType::InvalidArgument, "scissor array must not be a null pointer");
@@ -82,29 +66,29 @@ void DbgRenderContext::SetScissorArray(unsigned int numScissors, const Scissor* 
     instance.SetScissorArray(numScissors, scissorArray);
 }
 
-void DbgRenderContext::SetClearColor(const ColorRGBAf& color)
+void DbgCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
     instance.SetClearColor(color);
 }
 
-void DbgRenderContext::SetClearDepth(float depth)
+void DbgCommandBuffer::SetClearDepth(float depth)
 {
     instance.SetClearDepth(depth);
 }
 
-void DbgRenderContext::SetClearStencil(int stencil)
+void DbgCommandBuffer::SetClearStencil(int stencil)
 {
     instance.SetClearStencil(stencil);
 }
 
-void DbgRenderContext::ClearBuffers(long flags)
+void DbgCommandBuffer::ClearBuffers(long flags)
 {
     instance.ClearBuffers(flags);
 }
 
 /* ----- Hardware Buffers ------ */
 
-void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
+void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     DebugBufferType(buffer.GetType(), BufferType::Vertex, __FUNCTION__);
 
@@ -118,13 +102,13 @@ void DbgRenderContext::SetVertexBuffer(Buffer& buffer)
     LLGL_DBG_PROFILER_DO(setVertexBuffer.Inc());
 }
 
-void DbgRenderContext::SetVertexBufferArray(BufferArray& bufferArray)
+void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     //todo...
     instance.SetVertexBufferArray(bufferArray);
 }
 
-void DbgRenderContext::SetIndexBuffer(Buffer& buffer)
+void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     DebugBufferType(buffer.GetType(), BufferType::Index, __FUNCTION__);
 
@@ -136,7 +120,7 @@ void DbgRenderContext::SetIndexBuffer(Buffer& buffer)
     LLGL_DBG_PROFILER_DO(setIndexBuffer.Inc());
 }
 
-void DbgRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
     DebugBufferType(buffer.GetType(), BufferType::Constant, __FUNCTION__);
     DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
@@ -148,7 +132,7 @@ void DbgRenderContext::SetConstantBuffer(Buffer& buffer, unsigned int slot, long
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
-void DbgRenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
 {
     DebugBufferType(bufferArray.GetType(), BufferType::Constant, __FUNCTION__);
     DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
@@ -158,7 +142,7 @@ void DbgRenderContext::SetConstantBufferArray(BufferArray& bufferArray, unsigned
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
-void DbgRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
     DebugBufferType(buffer.GetType(), BufferType::Storage, __FUNCTION__);
 
@@ -169,26 +153,9 @@ void DbgRenderContext::SetStorageBuffer(Buffer& buffer, unsigned int slot)
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
 
-void* DbgRenderContext::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
-{
-    void* result = nullptr;
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-    {
-        result = instance.MapBuffer(bufferDbg.instance, access);
-    }
-    LLGL_DBG_PROFILER_DO(mapBuffer.Inc());
-    return result;
-}
-
-void DbgRenderContext::UnmapBuffer(Buffer& buffer)
-{
-    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-    instance.UnmapBuffer(bufferDbg.instance);
-}
-
 /* ----- Textures ----- */
 
-void DbgRenderContext::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
+void DbgCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
 {
     DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
@@ -198,7 +165,7 @@ void DbgRenderContext::SetTexture(Texture& texture, unsigned int slot, long shad
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
-void DbgRenderContext::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
 {
     DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
     {
@@ -209,7 +176,7 @@ void DbgRenderContext::SetTextureArray(TextureArray& textureArray, unsigned int 
 
 /* ----- Sampler States ----- */
 
-void DbgRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
+void DbgCommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
 {
     DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
     {
@@ -220,7 +187,7 @@ void DbgRenderContext::SetSampler(Sampler& sampler, unsigned int slot, long shad
 
 /* ----- Render Targets ----- */
 
-void DbgRenderContext::SetRenderTarget(RenderTarget& renderTarget)
+void DbgCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 {
     auto& renderTargetDbg = LLGL_CAST(DbgRenderTarget&, renderTarget);
     {
@@ -229,15 +196,18 @@ void DbgRenderContext::SetRenderTarget(RenderTarget& renderTarget)
     LLGL_DBG_PROFILER_DO(setRenderTarget.Inc());
 }
 
-void DbgRenderContext::UnsetRenderTarget()
+void DbgCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
-    instance.UnsetRenderTarget();
+    auto& renderContextDbg = LLGL_CAST(DbgRenderContext&, renderContext);
+    {
+        instance.SetRenderTarget(renderContextDbg.instance);
+    }
     LLGL_DBG_PROFILER_DO(setRenderTarget.Inc());
 }
 
 /* ----- Pipeline States ----- */
 
-void DbgRenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
+void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineDbg = LLGL_CAST(DbgGraphicsPipeline&, graphicsPipeline);
     bindings_.graphicsPipeline = (&graphicsPipelineDbg);
@@ -248,7 +218,7 @@ void DbgRenderContext::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     LLGL_DBG_PROFILER_DO(setGraphicsPipeline.Inc());
 }
 
-void DbgRenderContext::SetComputePipeline(ComputePipeline& computePipeline)
+void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
     bindings_.computePipeline = (&computePipeline);
     {
@@ -259,7 +229,7 @@ void DbgRenderContext::SetComputePipeline(ComputePipeline& computePipeline)
 
 /* ----- Queries ----- */
 
-void DbgRenderContext::BeginQuery(Query& query)
+void DbgCommandBuffer::BeginQuery(Query& query)
 {
     auto& queryDbg = LLGL_CAST(DbgQuery&, query);
 
@@ -271,7 +241,7 @@ void DbgRenderContext::BeginQuery(Query& query)
     instance.BeginQuery(queryDbg.instance);
 }
 
-void DbgRenderContext::EndQuery(Query& query)
+void DbgCommandBuffer::EndQuery(Query& query)
 {
     auto& queryDbg = LLGL_CAST(DbgQuery&, query);
 
@@ -283,7 +253,7 @@ void DbgRenderContext::EndQuery(Query& query)
     instance.EndQuery(queryDbg.instance);
 }
 
-bool DbgRenderContext::QueryResult(Query& query, std::uint64_t& result)
+bool DbgCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 {
     auto& queryDbg = LLGL_CAST(DbgQuery&, query);
 
@@ -294,20 +264,20 @@ bool DbgRenderContext::QueryResult(Query& query, std::uint64_t& result)
     return instance.QueryResult(queryDbg.instance, result);
 }
 
-void DbgRenderContext::BeginRenderCondition(Query& query, const RenderConditionMode mode)
+void DbgCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     auto& queryDbg = LLGL_CAST(DbgQuery&, query);
     instance.BeginRenderCondition(queryDbg.instance, mode);
 }
 
-void DbgRenderContext::EndRenderCondition()
+void DbgCommandBuffer::EndRenderCondition()
 {
     instance.EndRenderCondition();
 }
 
 /* ----- Drawing ----- */
 
-void DbgRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
+void DbgCommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
     LLGL_DBG_DEBUGGER_DO(DebugDraw(numVertices, firstVertex, 1, 0, __FUNCTION__));
     {
@@ -316,7 +286,7 @@ void DbgRenderContext::Draw(unsigned int numVertices, unsigned int firstVertex)
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
-void DbgRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void DbgCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, 1, firstIndex, 0, 0, __FUNCTION__));
     {
@@ -325,7 +295,7 @@ void DbgRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstI
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
-void DbgRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
+void DbgCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, 1, firstIndex, vertexOffset, 0, __FUNCTION__));
     {
@@ -334,7 +304,7 @@ void DbgRenderContext::DrawIndexed(unsigned int numVertices, unsigned int firstI
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
-void DbgRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
+void DbgCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDraw(numVertices, firstVertex, numInstances, 0, __FUNCTION__));
@@ -344,7 +314,7 @@ void DbgRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firs
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
+void DbgCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDraw(numVertices, firstVertex, numInstances, instanceOffset, __FUNCTION__));
@@ -354,7 +324,7 @@ void DbgRenderContext::DrawInstanced(unsigned int numVertices, unsigned int firs
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
+void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, numInstances, firstIndex, 0, 0, __FUNCTION__));
@@ -364,7 +334,7 @@ void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned i
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
+void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, numInstances, firstIndex, vertexOffset, 0, __FUNCTION__));
@@ -374,7 +344,7 @@ void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned i
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
+void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
     DebugInstancing(__FUNCTION__);
     LLGL_DBG_DEBUGGER_DO(DebugDrawIndexed(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset, __FUNCTION__));
@@ -386,7 +356,7 @@ void DbgRenderContext::DrawIndexedInstanced(unsigned int numVertices, unsigned i
 
 /* ----- Compute ----- */
 
-void DbgRenderContext::DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source)
+void DbgCommandBuffer::DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source)
 {
     if (size > limit)
     {
@@ -398,7 +368,7 @@ void DbgRenderContext::DebugThreadGroupLimit(unsigned int size, unsigned int lim
     }
 }
 
-void DbgRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
+void DbgCommandBuffer::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
 {
     if (threadGroupSize.x*threadGroupSize.y*threadGroupSize.z == 0)
         LLGL_DBG_WARN_HERE(WarningType::PointlessOperation, "thread group size has volume of 0 units");
@@ -415,7 +385,7 @@ void DbgRenderContext::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
 
 /* ----- Misc ----- */
 
-void DbgRenderContext::SyncGPU()
+void DbgCommandBuffer::SyncGPU()
 {
     instance.SyncGPU();
 }
@@ -425,19 +395,19 @@ void DbgRenderContext::SyncGPU()
  * ======= Private: =======
  */
 
-void DbgRenderContext::DebugGraphicsPipelineSet(const std::string& source)
+void DbgCommandBuffer::DebugGraphicsPipelineSet(const std::string& source)
 {
     if (!bindings_.graphicsPipeline)
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound", source);
 }
 
-void DbgRenderContext::DebugComputePipelineSet(const std::string& source)
+void DbgCommandBuffer::DebugComputePipelineSet(const std::string& source)
 {
     if (!bindings_.computePipeline)
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound", source);
 }
 
-void DbgRenderContext::DebugVertexBufferSet(const std::string& source)
+void DbgCommandBuffer::DebugVertexBufferSet(const std::string& source)
 {
     if (!bindings_.vertexBuffer)
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no vertex buffer is bound", source);
@@ -445,7 +415,7 @@ void DbgRenderContext::DebugVertexBufferSet(const std::string& source)
         LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound", source);
 }
 
-void DbgRenderContext::DebugIndexBufferSet(const std::string& source)
+void DbgCommandBuffer::DebugIndexBufferSet(const std::string& source)
 {
     if (!bindings_.indexBuffer)
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no index buffer is bound", source);
@@ -453,7 +423,7 @@ void DbgRenderContext::DebugIndexBufferSet(const std::string& source)
         LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized index buffer is bound", source);
 }
 
-void DbgRenderContext::DebugVertexLayout(const std::string& source)
+void DbgCommandBuffer::DebugVertexLayout(const std::string& source)
 {
     if (bindings_.graphicsPipeline)
     {
@@ -472,7 +442,7 @@ void DbgRenderContext::DebugVertexLayout(const std::string& source)
     }
 }
 
-void DbgRenderContext::DebugNumVertices(unsigned int numVertices, const std::string& source)
+void DbgCommandBuffer::DebugNumVertices(unsigned int numVertices, const std::string& source)
 {
     if (numVertices == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no vertices will be generated", source);
@@ -542,13 +512,13 @@ void DbgRenderContext::DebugNumVertices(unsigned int numVertices, const std::str
     }
 }
 
-void DbgRenderContext::DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset, const std::string& source)
+void DbgCommandBuffer::DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset, const std::string& source)
 {
     if (numInstances == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no instances will be generated", source);
 }
 
-void DbgRenderContext::DebugDraw(
+void DbgCommandBuffer::DebugDraw(
     unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances,
     unsigned int instanceOffset, const std::string& source)
 {
@@ -562,7 +532,7 @@ void DbgRenderContext::DebugDraw(
         DebugVertexLimit(numVertices + firstVertex, static_cast<unsigned int>(bindings_.vertexBuffer->elements), source);
 }
 
-void DbgRenderContext::DebugDrawIndexed(
+void DbgCommandBuffer::DebugDrawIndexed(
     unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex,
     int vertexOffset, unsigned int instanceOffset, const std::string& source)
 {
@@ -577,13 +547,13 @@ void DbgRenderContext::DebugDrawIndexed(
         DebugVertexLimit(numVertices + firstIndex, static_cast<unsigned int>(bindings_.indexBuffer->elements), source);
 }
 
-void DbgRenderContext::DebugInstancing(const std::string& source)
+void DbgCommandBuffer::DebugInstancing(const std::string& source)
 {
     if (!caps_.hasInstancing)
         LLGL_DBG_ERROR_NOT_SUPPORTED("instancing", source);
 }
 
-void DbgRenderContext::DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source)
+void DbgCommandBuffer::DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source)
 {
     if (vertexCount > vertexLimit)
     {
@@ -596,7 +566,7 @@ void DbgRenderContext::DebugVertexLimit(unsigned int vertexCount, unsigned int v
     }
 }
 
-void DbgRenderContext::DebugShaderStageFlags(long shaderStageFlags, const std::string& source)
+void DbgCommandBuffer::DebugShaderStageFlags(long shaderStageFlags, const std::string& source)
 {
     if ((shaderStageFlags & ShaderStageFlags::AllStages) == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stage is specified", source);
@@ -604,13 +574,13 @@ void DbgRenderContext::DebugShaderStageFlags(long shaderStageFlags, const std::s
         LLGL_DBG_WARN(WarningType::PointlessOperation, "unknown shader stage flag is specified", source);
 }
 
-void DbgRenderContext::DebugBufferType(const BufferType bufferType, const BufferType compareType, const std::string& source)
+void DbgCommandBuffer::DebugBufferType(const BufferType bufferType, const BufferType compareType, const std::string& source)
 {
     if (bufferType != compareType)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type", source);
 }
 
-void DbgRenderContext::WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source)
+void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source)
 {
     std::string vertexSingularPlural = (unusedVertices > 1 ? "vertices" : "vertex");
 

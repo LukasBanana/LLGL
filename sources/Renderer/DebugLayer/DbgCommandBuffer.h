@@ -1,15 +1,15 @@
 /*
- * DbgRenderContext.h
+ * DbgCommandBuffer.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_DBG_RENDER_CONTEXT_H__
-#define __LLGL_DBG_RENDER_CONTEXT_H__
+#ifndef __LLGL_DBG_COMMAND_BUFFER_H__
+#define __LLGL_DBG_COMMAND_BUFFER_H__
 
 
-#include <LLGL/RenderContext.h>
+#include <LLGL/CommandBuffer.h>
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
 
@@ -22,28 +22,23 @@ namespace LLGL
 
 class DbgBuffer;
 
-class DbgRenderContext : public RenderContext
+class DbgCommandBuffer : public CommandBuffer
 {
 
     public:
 
         /* ----- Common ----- */
 
-        DbgRenderContext(
-            RenderContext& instance,
+        DbgCommandBuffer(
+            CommandBuffer& instance,
             RenderingProfiler* profiler,
             RenderingDebugger* debugger,
             const RenderingCaps& caps
         );
 
-        void Present() override;
-
         /* ----- Configuration ----- */
 
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
-
-        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void SetViewport(const Viewport& viewport) override;
         void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) override;
@@ -69,9 +64,6 @@ class DbgRenderContext : public RenderContext
         
         void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
 
-        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
-        void UnmapBuffer(Buffer& buffer) override;
-
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
@@ -84,7 +76,7 @@ class DbgRenderContext : public RenderContext
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;
-        void UnsetRenderTarget() override;
+        void SetRenderTarget(RenderContext& renderContext) override;
 
         /* ----- Pipeline States ----- */
 
@@ -125,7 +117,7 @@ class DbgRenderContext : public RenderContext
 
         /* ----- Debugging members ----- */
 
-        RenderContext& instance;
+        CommandBuffer& instance;
 
     private:
 
@@ -176,12 +168,6 @@ class DbgRenderContext : public RenderContext
             ComputePipeline*        computePipeline     = nullptr;
         }
         bindings_;
-
-        /*struct MetaInfo
-        {
-            bool viewportVisible = true;
-        }
-        metaInfo_;*/
 
 };
 

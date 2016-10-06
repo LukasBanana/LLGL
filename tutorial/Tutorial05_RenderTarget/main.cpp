@@ -187,13 +187,13 @@ private:
             rot1 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
 
         // Set common buffers and sampler states
-        context->SetIndexBuffer(*indexBuffer);
-        context->SetVertexBuffer(*vertexBuffer);
-        context->SetConstantBuffer(*constantBuffer, 0, shaderStages);
-        context->SetSampler(*samplerState, 0, shaderStages);
+        commands->SetIndexBuffer(*indexBuffer);
+        commands->SetVertexBuffer(*vertexBuffer);
+        commands->SetConstantBuffer(*constantBuffer, 0, shaderStages);
+        commands->SetSampler(*samplerState, 0, shaderStages);
 
         // Set graphics pipeline state
-        context->SetGraphicsPipeline(*pipeline);
+        commands->SetGraphicsPipeline(*pipeline);
 
         if (IsOpenGL())
         {
@@ -211,21 +211,21 @@ private:
             {
                 apiState.stateOpenGL.invertFrontFace = true;
             }
-            context->SetGraphicsAPIDependentState(apiState);
+            commands->SetGraphicsAPIDependentState(apiState);
         }
 
         // Draw scene into render-target
-        context->SetRenderTarget(*renderTarget);
+        commands->SetRenderTarget(*renderTarget);
         {
             // Set viewport for render target
-            context->SetViewport({ 0, 0, static_cast<float>(renderTargetSize.x), static_cast<float>(renderTargetSize.y) });
+            commands->SetViewport({ 0, 0, static_cast<float>(renderTargetSize.x), static_cast<float>(renderTargetSize.y) });
 
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            context->SetClearColor({ 0.2f, 0.7f, 0.1f });
-            context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+            commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
+            commands->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
             // Set color map texture
-            context->SetTexture(*colorMap, 0, shaderStages);
+            commands->SetTexture(*colorMap, 0, shaderStages);
 
             // Update model transformation with render-target projection
             UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
@@ -249,9 +249,9 @@ private:
             UpdateBuffer(constantBuffer, settings);
 
             // Draw scene
-            context->DrawIndexed(36, 0);
+            commands->DrawIndexed(36, 0);
         }
-        context->UnsetRenderTarget();
+        commands->SetRenderTarget(*context);
 
         // Generate MIP-maps again after texture has been written by the render-target
         renderer->GenerateMips(*renderTargetTex);
@@ -259,26 +259,26 @@ private:
         if (IsOpenGL())
         {
             // Reset graphics API dependent state
-            context->SetGraphicsAPIDependentState({});
+            commands->SetGraphicsAPIDependentState({});
         }
 
         // Reset viewport for the screen
         auto resolution = context->GetVideoMode().resolution.Cast<float>();
-        context->SetViewport({ 0, 0, resolution.x, resolution.y });
+        commands->SetViewport({ 0, 0, resolution.x, resolution.y });
 
         // Clear color and depth buffers of active framebuffer (i.e. the screen)
-        context->SetClearColor(defaultClearColor);
-        context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+        commands->SetClearColor(defaultClearColor);
+        commands->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
         
         // Set multi-sample render-target texture
-        context->SetTexture(*renderTargetTex, 1, shaderStages);
+        commands->SetTexture(*renderTargetTex, 1, shaderStages);
         
         #else
         
         // Set render-target texture
-        context->SetTexture(*renderTargetTex, 0, shaderStages);
+        commands->SetTexture(*renderTargetTex, 0, shaderStages);
 
         #endif
 
@@ -294,7 +294,7 @@ private:
         UpdateBuffer(constantBuffer, settings);
 
         // Draw scene
-        context->DrawIndexed(36, 0);
+        commands->DrawIndexed(36, 0);
 
         // Present result on the screen
         context->Present();

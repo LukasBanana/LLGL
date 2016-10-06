@@ -190,8 +190,15 @@ protected:
 
     const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
 
+    // Render system
     std::shared_ptr<LLGL::RenderSystem>         renderer;
+    
+    // Main render context
     LLGL::RenderContext*                        context     = nullptr;
+
+    // Main command buffer
+    LLGL::CommandBuffer*                        commands    = nullptr;
+
     std::shared_ptr<LLGL::Input>                input;
 
     std::unique_ptr<LLGL::Timer>                timer;
@@ -223,6 +230,12 @@ protected:
         }
         context = renderer->CreateRenderContext(contextDesc);
 
+        // Create command buffer
+        commands = renderer->CreateCommandBuffer();
+
+        // Set dark blue as default clear color
+        commands->SetClearColor(defaultClearColor);
+
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
 
@@ -233,29 +246,28 @@ protected:
         std::cout << "  shading language: " << info.shadingLanguageName << std::endl;
 
         // Set window title
+        auto& window = context->GetWindow();
+
         auto rendererName = renderer->GetName();
-        context->GetWindow().SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
+        window.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
 
         // Add input event listener to window
         input = std::make_shared<LLGL::Input>();
-        context->GetWindow().AddEventListener(input);
+        window.AddEventListener(input);
 
         // Change window descriptor to allow resizing
-        auto wndDesc = context->GetWindow().QueryDesc();
+        auto wndDesc = window.QueryDesc();
         wndDesc.resizable = true;
-        context->GetWindow().SetDesc(wndDesc);
+        window.SetDesc(wndDesc);
 
         // Add window resize listener
-        context->GetWindow().AddEventListener(std::make_shared<ResizeEventHandler>(context, projection));
+        window.AddEventListener(std::make_shared<ResizeEventHandler>(context, projection));
 
         // Initialize default projection matrix
         projection = Gs::ProjectionMatrix4f::Perspective(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
 
-        // Set dark blue as default clear color
-        context->SetClearColor(defaultClearColor);
-
         // Show window
-        context->GetWindow().Show();
+        window.Show();
     }
 
     struct TutorialShaderDescriptor

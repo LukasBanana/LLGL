@@ -11,8 +11,10 @@
 
 #include <LLGL/RenderSystem.h>
 #include "Ext/GLExtensionLoader.h"
-#include "GLRenderContext.h"
 #include "../ContainerTypes.h"
+
+#include "GLCommandBuffer.h"
+#include "GLRenderContext.h"
 
 #include "Buffer/GLBuffer.h"
 #include "Buffer/GLBufferArray.h"
@@ -168,6 +170,7 @@ class GLRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<GLRenderContext>      renderContexts_;
+        HWObjectContainer<GLCommandBuffer>      commandBuffers_;
         HWObjectContainer<GLBuffer>             buffers_;
         HWObjectContainer<GLBufferArray>        bufferArrays_;
         HWObjectContainer<GLTexture>            textures_;

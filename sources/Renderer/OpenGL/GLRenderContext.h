@@ -13,6 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include "OpenGL.h"
 #include "RenderState/GLStateManager.h"
+#include <memory>
 
 #if defined(_WIN32)
 #   include <LLGL/Platform/NativeHandle.h>
@@ -135,6 +136,11 @@ class GLRenderContext : public RenderContext
         /* ----- GLRenderContext specific functions ----- */
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);
+
+        inline const std::shared_ptr<GLStateManager>& GetStateManager() const
+        {
+            return stateMngr_;
+        }
 
     private:
 

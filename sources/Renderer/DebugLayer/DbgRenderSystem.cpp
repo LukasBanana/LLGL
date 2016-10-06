@@ -59,20 +59,21 @@ RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescripto
 
 void DbgRenderSystem::Release(RenderContext& renderContext)
 {
-    instance_->Release(renderContext);
-    RemoveFromUniqueSet(renderContexts_, &renderContext);
+    ReleaseDbg(renderContexts_, renderContext);
 }
 
 /* ----- Command buffers ----- */
 
 CommandBuffer* DbgRenderSystem::CreateCommandBuffer()
 {
-    return nullptr;//todo...
+    return TakeOwnership(commandBuffers_, MakeUnique<DbgCommandBuffer>(
+        *instance_->CreateCommandBuffer(), profiler_, debugger_, GetRenderingCaps()
+    ));
 }
 
 void DbgRenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    //todo...
+    ReleaseDbg(commandBuffers_, commandBuffer);
 }
 
 /* ----- Hardware Buffers ------ */
