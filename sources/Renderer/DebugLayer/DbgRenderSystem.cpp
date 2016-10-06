@@ -109,6 +109,9 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
                 LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "constant buffer size is out of pack alignment (alignment is 16 bytes)");
         }
         break;
+        
+        default:
+        break;
     }
 
     /* Create buffer object */

@@ -437,6 +437,8 @@ GLenum Map(const LogicOp logicOp)
 {
     switch (logicOp)
     {
+        case LogicOp::Keep:         break;
+        case LogicOp::Disabled:     break;
         case LogicOp::Clear:        return GL_CLEAR;
         case LogicOp::Set:          return GL_SET;
         case LogicOp::Copy:         return GL_COPY;
