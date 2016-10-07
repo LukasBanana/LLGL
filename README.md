@@ -114,4 +114,10 @@ Shows how to use buffer arrays, i.e. render with multiple vertex buffers simulta
 
 <p align="center"><img src="tutorial/Tutorial07_Array.png" width="400" height="300"/></p>
 
+### [Tutorial 08: Compute](tutorial/Tutorial08_Compute/main.cpp)
+
+Small example with a compute shader and a storage buffer.
+
+*No screenshot available*
+
 
