@@ -1,32 +1,22 @@
-// HLSL shader version 4.0 (for Direct3D 11/ 12)
+// HLSL compute shader
 
-struct InputVS
+struct DataBlock
 {
-	float2	position		: POSITION;
-	float3	color			: COLOR;
-	float3	instanceColor	: INSTANCECOLOR;
-	float2	instanceOffset	: INSTANCEOFFSET;
-	float	instanceScale	: INSTANCESCALE;
+	float3 position;
+	float3 color;
 };
 
-struct OutputVS
-{
-	float4 position	: SV_Position;
-	float3 color	: COLOR;
-};
+RWStructuredBuffer<DataBlock> container : register(u0);
 
-// Vertex shader main function
-OutputVS VS(InputVS inp)
+// Compute shader main function
+[numthreads(1, 1, 1)]
+void CS(uint3 threadID : SV_DispatchThreadID)
 {
-	OutputVS outp;
-	outp.position = float4(inp.position * inp.instanceScale + inp.instanceOffset, 0, 1);
-	outp.color = inp.instanceColor * inp.color;
-	return outp;
+	DataBlock data = container[threadID.x];
+	
+	data.position = float3(3, 2, 1);
+	data.color *= 3.0;
+	
+	container[threadID.x] = data;
 }
-
-// Pixel shader main function
-float4 PS(OutputVS inp) : SV_Target
-{
-	return float4(inp.color, 1);
-};
 

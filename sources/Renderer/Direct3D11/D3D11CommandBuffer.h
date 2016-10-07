@@ -123,9 +123,9 @@ class D3D11CommandBuffer : public CommandBuffer
 
         void SubmitFramebufferView();
 
-        void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags);
-        void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long flags);
-        void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long flags);
+        void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long shaderStageFlags);
+        void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long shaderStageFlags);
+        void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long shaderStageFlags);
 
         void ResolveBoundRenderTarget();
 

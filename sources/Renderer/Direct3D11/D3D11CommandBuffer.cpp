@@ -157,17 +157,25 @@ void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsign
 
 void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
-    #if 0//INCOMPLETE
     auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
 
-    ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
-    UINT auvCounts[] = { 0 };
+    if (storageBufferD3D.IsUAV())
+    {
+        /* Set UAVs to output merger */
+        ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
+        UINT auvCounts[] = { 0 };
 
-    context_->OMSetRenderTargetsAndUnorderedAccessViews(
-        D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
-        slot, 1, uavList, auvCounts
-    );
-    #endif
+        context_->OMSetRenderTargetsAndUnorderedAccessViews(
+            D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
+            slot, 1, uavList, auvCounts
+        );
+    }
+    else
+    {
+        /* Set SRVs to specified shader stages */
+        ID3D11ShaderResourceView* srvList[] = { storageBufferD3D.GetSRV() };
+        SetShaderResourcesOnStages(slot, 1, srvList, ShaderStageFlags::AllStages/*<---!!!*/);
+    }
 }
 
 /* ----- Textures ----- */
@@ -509,49 +517,49 @@ void D3D11CommandBuffer::SubmitFramebufferView()
     );
 }
 
-#define SHADERSTAGE_VS(FLAG) ( ((FLAG) & ShaderStageFlags::VertexStage        ) != 0 )
-#define SHADERSTAGE_HS(FLAG) ( ((FLAG) & ShaderStageFlags::TessControlStage   ) != 0 )
-#define SHADERSTAGE_DS(FLAG) ( ((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0 )
-#define SHADERSTAGE_GS(FLAG) ( ((FLAG) & ShaderStageFlags::GeometryStage      ) != 0 )
-#define SHADERSTAGE_PS(FLAG) ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
-#define SHADERSTAGE_CS(FLAG) ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
+#define VS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::VertexStage        ) != 0 )
+#define HS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::TessControlStage   ) != 0 )
+#define DS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0 )
+#define GS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::GeometryStage      ) != 0 )
+#define PS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
+#define CS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
 
-void D3D11CommandBuffer::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long flags)
+void D3D11CommandBuffer::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long shaderStageFlags)
 {
-    if (SHADERSTAGE_VS(flags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_HS(flags)) { context_->HSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_DS(flags)) { context_->DSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_GS(flags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_PS(flags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
-    if (SHADERSTAGE_CS(flags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
+    if (VS_STAGE(shaderStageFlags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
+    if (HS_STAGE(shaderStageFlags)) { context_->HSSetConstantBuffers(startSlot, count, buffers); }
+    if (DS_STAGE(shaderStageFlags)) { context_->DSSetConstantBuffers(startSlot, count, buffers); }
+    if (GS_STAGE(shaderStageFlags)) { context_->GSSetConstantBuffers(startSlot, count, buffers); }
+    if (PS_STAGE(shaderStageFlags)) { context_->PSSetConstantBuffers(startSlot, count, buffers); }
+    if (CS_STAGE(shaderStageFlags)) { context_->CSSetConstantBuffers(startSlot, count, buffers); }
 }
 
-void D3D11CommandBuffer::SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long flags)
+void D3D11CommandBuffer::SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long shaderStageFlags)
 {
-    if (SHADERSTAGE_VS(flags)) { context_->VSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_HS(flags)) { context_->HSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_DS(flags)) { context_->DSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_GS(flags)) { context_->GSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_PS(flags)) { context_->PSSetShaderResources(startSlot, count, views); }
-    if (SHADERSTAGE_CS(flags)) { context_->CSSetShaderResources(startSlot, count, views); }
+    if (VS_STAGE(shaderStageFlags)) { context_->VSSetShaderResources(startSlot, count, views); }
+    if (HS_STAGE(shaderStageFlags)) { context_->HSSetShaderResources(startSlot, count, views); }
+    if (DS_STAGE(shaderStageFlags)) { context_->DSSetShaderResources(startSlot, count, views); }
+    if (GS_STAGE(shaderStageFlags)) { context_->GSSetShaderResources(startSlot, count, views); }
+    if (PS_STAGE(shaderStageFlags)) { context_->PSSetShaderResources(startSlot, count, views); }
+    if (CS_STAGE(shaderStageFlags)) { context_->CSSetShaderResources(startSlot, count, views); }
 }
 
-void D3D11CommandBuffer::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long flags)
+void D3D11CommandBuffer::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long shaderStageFlags)
 {
-    if (SHADERSTAGE_VS(flags)) { context_->VSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_HS(flags)) { context_->HSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_DS(flags)) { context_->DSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_GS(flags)) { context_->GSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_PS(flags)) { context_->PSSetSamplers(startSlot, count, samplers); }
-    if (SHADERSTAGE_CS(flags)) { context_->CSSetSamplers(startSlot, count, samplers); }
+    if (VS_STAGE(shaderStageFlags)) { context_->VSSetSamplers(startSlot, count, samplers); }
+    if (HS_STAGE(shaderStageFlags)) { context_->HSSetSamplers(startSlot, count, samplers); }
+    if (DS_STAGE(shaderStageFlags)) { context_->DSSetSamplers(startSlot, count, samplers); }
+    if (GS_STAGE(shaderStageFlags)) { context_->GSSetSamplers(startSlot, count, samplers); }
+    if (PS_STAGE(shaderStageFlags)) { context_->PSSetSamplers(startSlot, count, samplers); }
+    if (CS_STAGE(shaderStageFlags)) { context_->CSSetSamplers(startSlot, count, samplers); }
 }
 
-#undef SHADERSTAGE_VS
-#undef SHADERSTAGE_HS
-#undef SHADERSTAGE_DS
-#undef SHADERSTAGE_GS
-#undef SHADERSTAGE_PS
-#undef SHADERSTAGE_CS
+#undef VS_STAGE
+#undef HS_STAGE
+#undef DS_STAGE
+#undef GS_STAGE
+#undef PS_STAGE
+#undef CS_STAGE
 
 
 } // /namespace LLGL

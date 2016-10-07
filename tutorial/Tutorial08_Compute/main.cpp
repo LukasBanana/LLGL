@@ -22,16 +22,19 @@ int main(int argc, char* argv[])
         }
         auto context = renderer->CreateRenderContext(contextDesc);
 
+        // Create command buffer
+        auto commands = renderer->CreateCommandBuffer();
+
         // Initialize buffer data
-        struct InputData
+        struct DataBlock
         {
             Gs::Vector3f    position;
             LLGL::ColorRGBf color;
         };
 
-        std::vector<InputData> inputData;
+        std::vector<DataBlock> inputData, outputData;
 
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < 10; ++i)
         {
             auto x = static_cast<float>(i + 1);
             inputData.push_back(
@@ -42,16 +45,18 @@ int main(int argc, char* argv[])
             );
         }
 
+        outputData.resize(inputData.size());
+
         // Create storage buffer for input
-        LLGL::BufferDescriptor inputBufferDesc;
+        LLGL::BufferDescriptor storageBufferDesc;
         {
-            inputBufferDesc.type                        = LLGL::BufferType::Storage;
-            inputBufferDesc.size                        = inputData.size() * sizeof(InputData);
-            inputBufferDesc.usage                       = LLGL::BufferUsage::Dynamic;
-            inputBufferDesc.storageBuffer.storageType   = LLGL::StorageBufferType::StructuredBuffer;
-            inputBufferDesc.storageBuffer.elements      = inputData.size();
+            storageBufferDesc.type                      = LLGL::BufferType::Storage;
+            storageBufferDesc.size                      = inputData.size() * sizeof(DataBlock);
+            storageBufferDesc.usage                     = LLGL::BufferUsage::Dynamic;
+            storageBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWStructuredBuffer;
+            storageBufferDesc.storageBuffer.elements    = inputData.size();
         }
-        auto inputBuffer = renderer->CreateBuffer(inputBufferDesc, inputData.data());
+        auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, inputData.data());
 
         // Create shaders
         auto computeShader = renderer->CreateShader(LLGL::ShaderType::Compute);
@@ -86,9 +91,26 @@ int main(int argc, char* argv[])
         // Create compute pipeline
         auto pipeline = renderer->CreateComputePipeline(shaderProgram);
 
-        //to be continued ...
+        // Set compute pipeline
+        commands->SetComputePipeline(*pipeline);
 
+        // Set storage buffer
+        commands->SetStorageBuffer(*storageBuffer, 0);
 
+        // Dispatch compute shader
+        commands->DispatchCompute({ inputData.size(), 1, 1 });
+
+        // Read reslut
+        commands->SyncGPU();
+        
+        auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
+        if (outputBuffer)
+        {
+            ::memcpy(outputData.data(), outputBuffer, sizeof(DataBlock) * outputData.size());
+            renderer->UnmapBuffer(*storageBuffer);
+        }
+
+        int x=0;
     }
     catch (const std::exception& e)
     {

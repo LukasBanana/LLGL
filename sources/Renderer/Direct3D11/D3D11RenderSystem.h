@@ -188,6 +188,8 @@ class D3D11RenderSystem : public RenderSystem
 
         std::vector<VideoAdapterDescriptor>         videoAdatperDescs_;
 
+        BufferCPUAccess                             mappedBufferCPUAccess_  = BufferCPUAccess::ReadOnly;
+
 };
 
 

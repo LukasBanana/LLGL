@@ -29,6 +29,9 @@ class D3D11Buffer : public Buffer
         virtual void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
         virtual void UpdateSubresource(ID3D11DeviceContext* context, const void* data);
 
+        virtual void* Map(ID3D11DeviceContext* context, const BufferCPUAccess access);
+        virtual void Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access);
+
         //! Returns the ID3D11Buffer object.
         inline ID3D11Buffer* Get() const
         {

@@ -6,6 +6,7 @@
  */
 
 #include "D3D11Buffer.h"
+#include "../D3D11Types.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../../Core/Helper.h"
 
@@ -34,6 +35,20 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
 void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data)
 {
     context->UpdateSubresource(buffer_.Get(), 0, nullptr, data, 0, 0);
+}
+
+void* D3D11Buffer::Map(ID3D11DeviceContext* context, const BufferCPUAccess access)
+{
+    /* Map D3D buffer resource */
+    D3D11_MAPPED_SUBRESOURCE mapppedSubresource;
+    auto hr = context->Map(Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+    return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
+}
+
+void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAccess /*access*/)
+{
+    /* Unmap D3D buffer resource */
+    context->Unmap(Get(), 0);
 }
 
 

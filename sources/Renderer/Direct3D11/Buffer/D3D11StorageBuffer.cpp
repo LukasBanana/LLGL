@@ -6,6 +6,7 @@
  */
 
 #include "D3D11StorageBuffer.h"
+#include "../D3D11Types.h"
 #include "../../../Core/Helper.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../Assertion.h"
@@ -42,6 +43,38 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
     /* Create CPU access buffer (if required) */
     //if (???)
         CreateCPUAccessBuffer(device, bufferDesc, D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE);
+}
+
+static bool HasReadAccess(const BufferCPUAccess access)
+{
+    return (access != BufferCPUAccess::WriteOnly);
+}
+
+static bool HasWriteAccess(const BufferCPUAccess access)
+{
+    return (access != BufferCPUAccess::ReadOnly);
+}
+
+void* D3D11StorageBuffer::Map(ID3D11DeviceContext* context, const BufferCPUAccess access)
+{
+    /* On read access -> copy storage buffer to CPU-access buffer */
+    if (HasReadAccess(access))
+        context->CopyResource(cpuAccessBuffer_.Get(), Get());
+
+    /* Map CPU-access buffer */
+    D3D11_MAPPED_SUBRESOURCE mapppedSubresource;
+    auto hr = context->Map(cpuAccessBuffer_.Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+    return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
+}
+
+void D3D11StorageBuffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access)
+{
+    /* Unmap CPU-access buffer */
+    context->Unmap(cpuAccessBuffer_.Get(), 0);
+
+    /* On write access -> copy CPU-access buffer to storage buffer */
+    if (HasWriteAccess(access))
+        context->CopyResource(Get(), cpuAccessBuffer_.Get());
 }
 
 bool D3D11StorageBuffer::IsUAV() const
