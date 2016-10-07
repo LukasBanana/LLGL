@@ -81,7 +81,14 @@ struct BufferDescriptor
         \brief Specifies the storage buffer type.
         \remarks In OpenGL there are only generic storage buffers (or rather "Shader Storage Buffer Objects").
         */
-        StorageBufferType storageType = StorageBufferType::Generic;
+        StorageBufferType   storageType = StorageBufferType::Generic;
+
+        /**
+        \brief Specifies the number of elements in the storage buffer.
+        \remarks For a storage buffer of the type StorageBufferType::StructuredBuffer for instance,
+        the number of elements in the number of structure entries within the buffer.
+        */
+        unsigned int        elements    = 0;
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.

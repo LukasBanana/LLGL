@@ -53,8 +53,7 @@ void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& 
     }
 
     /* Create new D3D11 hardware buffer */
-    buffer_.Reset();
-    auto hr = device->CreateBuffer(&desc, (initialData != nullptr ? &subresourceData : nullptr), &buffer_);
+    auto hr = device->CreateBuffer(&desc, (initialData != nullptr ? &subresourceData : nullptr), buffer_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 buffer");
 }
 

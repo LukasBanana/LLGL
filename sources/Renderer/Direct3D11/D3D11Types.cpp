@@ -249,6 +249,19 @@ D3D11_QUERY Map(const QueryDescriptor& queryDesc)
     DXTypes::MapFailed("QueryType", "D3D11_QUERY");
 }
 
+D3D11_MAP Map(const BufferCPUAccess cpuAccess)
+{
+    switch (cpuAccess)
+    {
+        case BufferCPUAccess::ReadOnly:     return D3D11_MAP_READ;
+        case BufferCPUAccess::WriteOnly:    return D3D11_MAP_WRITE;
+        case BufferCPUAccess::ReadWrite:    return D3D11_MAP_READ_WRITE;
+                                          /*return D3D11_MAP_WRITE_DISCARD;
+                                            return D3D11_MAP_WRITE_NO_OVERWRITE;*/
+    }
+    DXTypes::MapFailed("BufferCPUAccess", "D3D11_MAP");
+}
+
 TextureFormat Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);

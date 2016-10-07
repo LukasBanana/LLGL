@@ -39,8 +39,8 @@ class D3D11StorageBuffer : public D3D11Buffer
 
     private:
 
-        void CreateUAV(ID3D11Device* device);
-        void CreateSRV(ID3D11Device* device);
+        void CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements);
+        void CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements);
 
         StorageBufferType                   storageType_ = StorageBufferType::Buffer;
 

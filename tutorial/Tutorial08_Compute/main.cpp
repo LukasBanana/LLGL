@@ -15,8 +15,6 @@ int main(int argc, char* argv[])
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv));
 
-        std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
-
         // Create render context but do not show its window
         LLGL::RenderContextDescriptor contextDesc;
         {
@@ -38,8 +36,9 @@ int main(int argc, char* argv[])
         {
             inputBufferDesc.type                        = LLGL::BufferType::Storage;
             inputBufferDesc.size                        = inputData.size() * sizeof(InputData);
-            inputBufferDesc.usage                       = LLGL::BufferUsage::Static;
+            inputBufferDesc.usage                       = LLGL::BufferUsage::Dynamic;
             inputBufferDesc.storageBuffer.storageType   = LLGL::StorageBufferType::Generic;
+            inputBufferDesc.storageBuffer.elements      = inputData.size();
         }
         auto inputBuffer = renderer->CreateBuffer(inputBufferDesc, inputData.data());
 
