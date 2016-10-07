@@ -34,6 +34,13 @@ namespace LLGL
 {
 
 
+#define VS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::VertexStage        ) != 0 )
+#define HS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::TessControlStage   ) != 0 )
+#define DS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0 )
+#define GS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::GeometryStage      ) != 0 )
+#define PS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
+#define CS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
+
 D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context) :
     stateMngr_  ( stateMngr ),
     context_    ( context   )
@@ -157,24 +164,36 @@ void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsign
 
 void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot)
 {
+    long shaderStageFlags = ShaderStageFlags::AllStages; //<--- !!!
+
     auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
 
     if (storageBufferD3D.IsUAV())
     {
-        /* Set UAVs to output merger */
+        /* Get UAV list and initial counts */
         ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
-        UINT auvCounts[] = { 0 };
+        UINT auvCounts[] = { storageBufferD3D.GetInitialCount() };
 
-        context_->OMSetRenderTargetsAndUnorderedAccessViews(
-            D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
-            slot, 1, uavList, auvCounts
-        );
+        if (PS_STAGE(shaderStageFlags))
+        {
+            /* Set UAVs for pixel shader stage */
+            context_->OMSetRenderTargetsAndUnorderedAccessViews(
+                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
+                slot, 1, uavList, auvCounts
+            );
+        }
+
+        if (CS_STAGE(shaderStageFlags))
+        {
+            /* Set UAVs for compute shader stage */
+            context_->CSSetUnorderedAccessViews(slot, 1, uavList, auvCounts);
+        }
     }
     else
     {
         /* Set SRVs to specified shader stages */
         ID3D11ShaderResourceView* srvList[] = { storageBufferD3D.GetSRV() };
-        SetShaderResourcesOnStages(slot, 1, srvList, ShaderStageFlags::AllStages/*<---!!!*/);
+        SetShaderResourcesOnStages(slot, 1, srvList, shaderStageFlags);
     }
 }
 
@@ -516,13 +535,6 @@ void D3D11CommandBuffer::SubmitFramebufferView()
         framebufferView_.dsv
     );
 }
-
-#define VS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::VertexStage        ) != 0 )
-#define HS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::TessControlStage   ) != 0 )
-#define DS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0 )
-#define GS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::GeometryStage      ) != 0 )
-#define PS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
-#define CS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
 
 void D3D11CommandBuffer::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long shaderStageFlags)
 {

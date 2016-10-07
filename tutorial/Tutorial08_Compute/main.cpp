@@ -25,11 +25,11 @@ int main(int argc, char* argv[])
         // Create command buffer
         auto commands = renderer->CreateCommandBuffer();
 
-        // Initialize buffer data
+        // Initialize buffer data (16 byte pack alignment)
         struct DataBlock
         {
-            Gs::Vector3f    position;
-            LLGL::ColorRGBf color;
+            Gs::Vector4f        position;
+            LLGL::ColorRGBAf    color;
         };
 
         std::vector<DataBlock> inputData, outputData;
@@ -39,8 +39,8 @@ int main(int argc, char* argv[])
             auto x = static_cast<float>(i + 1);
             inputData.push_back(
                 {
-                    Gs::Vector3f(x, 1.0f / x, x*x),
-                    LLGL::ColorRGBf(x, x*2.0f, std::sqrt(x))
+                    Gs::Vector4f(x, 1.0f / x, x*x, 1.0f),
+                    LLGL::ColorRGBAf(x, x*2.0f, std::sqrt(x), 1.0f),
                 }
             );
         }
@@ -110,7 +110,15 @@ int main(int argc, char* argv[])
             renderer->UnmapBuffer(*storageBuffer);
         }
 
-        int x=0;
+        // Show input and output
+        std::cout << "input/output data:" << std::endl;
+
+        for (std::size_t i = 0, n = inputData.size(); i < n; ++i)
+        {
+            std::cout << "  in.position  = " << inputData[i].position << std::endl;
+            std::cout << "  out.position = " << outputData[i].position << std::endl;
+            std::cout << std::endl;
+        }
     }
     catch (const std::exception& e)
     {

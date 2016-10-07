@@ -46,6 +46,11 @@ class D3D11StorageBuffer : public D3D11Buffer
             return cpuAccessBuffer_.Get();
         }
 
+        inline UINT GetInitialCount() const
+        {
+            return initialCount_;
+        }
+
     private:
 
         UINT GetBindFlags() const;
@@ -56,12 +61,14 @@ class D3D11StorageBuffer : public D3D11Buffer
 
         void CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags);
 
-        StorageBufferType                   storageType_ = StorageBufferType::Buffer;
+        StorageBufferType                   storageType_        = StorageBufferType::Buffer;
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
 
         ComPtr<ID3D11Buffer>                cpuAccessBuffer_;
+
+        UINT                                initialCount_       = -1;
 
 };
 

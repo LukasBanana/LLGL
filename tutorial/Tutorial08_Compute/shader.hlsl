@@ -2,8 +2,8 @@
 
 struct DataBlock
 {
-	float3 position;
-	float3 color;
+	float4 position;
+	float4 color;
 };
 
 RWStructuredBuffer<DataBlock> container : register(u0);
@@ -14,7 +14,7 @@ void CS(uint3 threadID : SV_DispatchThreadID)
 {
 	DataBlock data = container[threadID.x];
 	
-	data.position = float3(3, 2, 1);
+	data.position *= 2.0;
 	data.color *= 3.0;
 	
 	container[threadID.x] = data;
