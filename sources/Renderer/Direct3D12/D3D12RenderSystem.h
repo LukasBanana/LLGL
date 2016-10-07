@@ -11,6 +11,8 @@
 
 #include <LLGL/RenderSystem.h>
 #include <LLGL/VideoAdapter.h>
+
+#include "D3D12CommandBuffer.h"
 #include "D3D12RenderContext.h"
 
 #include "Buffer/D3D12Buffer.h"
@@ -46,6 +48,12 @@ class D3D12RenderSystem : public RenderSystem
 
         void Release(RenderContext& renderContext) override;
 
+        /* ----- Command buffers ----- */
+
+        CommandBuffer* CreateCommandBuffer() override;
+
+        void Release(CommandBuffer& commandBuffer) override;
+
         /* ----- Hardware Buffers ------ */
 
         Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
@@ -55,6 +63,9 @@ class D3D12RenderSystem : public RenderSystem
         void Release(BufferArray& bufferArray) override;
         
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+
+        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
+        void UnmapBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */
 
@@ -141,8 +152,6 @@ class D3D12RenderSystem : public RenderSystem
 
     private:
         
-        bool OnMakeCurrent(RenderContext* renderContext) override;
-
         #ifdef LLGL_DEBUG
         void EnableDebugLayer();
         #endif
@@ -177,11 +186,10 @@ class D3D12RenderSystem : public RenderSystem
         //ComPtr<ID3D12InfoQueue>                     debugInfoQueue_;
         #endif
 
-        D3D12RenderContext*                         activeRenderContext_    = nullptr;
-
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<D3D12RenderContext>       renderContexts_;
+        HWObjectContainer<D3D12CommandBuffer>       commandBuffers_;
         HWObjectContainer<D3D12Buffer>              buffers_;
         //HWObjectContainer<D3D12Texture>             textures_;
         //HWObjectContainer<D3D12RenderTarget>        renderTargets_;

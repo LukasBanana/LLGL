@@ -56,17 +56,24 @@ D3D12RenderSystem::~D3D12RenderSystem()
 
 RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    /* Create new render context and make it the current one */
-    auto renderContext = MakeUnique<D3D12RenderContext>(*this, desc, window);
-    MakeCurrent(renderContext.get());
-
-    /* Take ownership and return new render context */
-    return TakeOwnership(renderContexts_, std::move(renderContext));
+    return TakeOwnership(renderContexts_, MakeUnique<D3D12RenderContext>(*this, desc, window));
 }
 
 void D3D12RenderSystem::Release(RenderContext& renderContext)
 {
     RemoveFromUniqueSet(renderContexts_, &renderContext);
+}
+
+/* ----- Command buffers ----- */
+
+CommandBuffer* D3D12RenderSystem::CreateCommandBuffer()
+{
+    return TakeOwnership(commandBuffers_, MakeUnique<D3D12CommandBuffer>(*this));
+}
+
+void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
+{
+    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
 /* ----- Hardware Buffers ------ */
@@ -143,6 +150,16 @@ void D3D12RenderSystem::Release(BufferArray& bufferArray)
 }
 
 void D3D12RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    //todo...
+}
+
+void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    return nullptr;//todo...
+}
+
+void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 {
     //todo...
 }
@@ -371,10 +388,7 @@ void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 
 void D3D12RenderSystem::SyncGPU()
 {
-    if (activeRenderContext_)
-        activeRenderContext_->SyncGPU();
-    else
-        SyncGPU(fenceValue_);
+    SyncGPU(fenceValue_);
 }
 
 void D3D12RenderSystem::SignalFenceValue(UINT64 fenceValue)
@@ -399,12 +413,6 @@ void D3D12RenderSystem::WaitForFenceValue(UINT64 fenceValue)
 /*
  * ======= Private: =======
  */
-
-bool D3D12RenderSystem::OnMakeCurrent(RenderContext* renderContext)
-{
-    activeRenderContext_ = LLGL_CAST(D3D12RenderContext*, renderContext);
-    return true;
-}
 
 #ifdef LLGL_DEBUG
 
