@@ -124,12 +124,20 @@ void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_
 
 void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
 {
-    return nullptr;//todo...
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+
+    /* Map D3D buffer resource */
+    D3D11_MAPPED_SUBRESOURCE mapppedSubresource;
+    auto hr = context_->Map(bufferD3D.Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+
+    return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
 }
 
 void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
 {
-    //todo...
+    /* Unmap D3D buffer resource */
+    auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
+    context_->Unmap(bufferD3D.Get(), 0);
 }
 
 /* ----- Sampler States ---- */
