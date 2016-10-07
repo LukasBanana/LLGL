@@ -27,20 +27,30 @@ int main(int argc, char* argv[])
         auto context1 = renderer->CreateRenderContext(contextDesc);
         auto context2 = renderer->CreateRenderContext(contextDesc);
 
+        // Create command buffer
+        auto commands = renderer->CreateCommandBuffer();
+
         // Create input handler
         auto input = std::make_shared<LLGL::Input>();
 
-        context1->GetWindow().AddEventListener(input);
-        context2->GetWindow().AddEventListener(input);
+        auto& window1 = context1->GetWindow();
+        auto& window2 = context2->GetWindow();
+
+        window1.AddEventListener(input);
+        window2.AddEventListener(input);
 
         // Set window titles
-        context1->GetWindow().SetTitle(L"LLGL Tutorial 06: Multi Context (1)");
-        context2->GetWindow().SetTitle(L"LLGL Tutorial 06: Multi Context (2)");
+        window1.SetTitle(L"LLGL Tutorial 06: Multi Context (1)");
+        window2.SetTitle(L"LLGL Tutorial 06: Multi Context (2)");
 
         // Set window positions
         auto desktopResolution = LLGL::Desktop::GetResolution();
-        context1->GetWindow().SetPosition({ desktopResolution.x/2 - 700, desktopResolution.y/2 - 480/2 });
-        context2->GetWindow().SetPosition({ desktopResolution.x/2 + 700 - 640, desktopResolution.y/2 - 480/2 });
+        window1.SetPosition({ desktopResolution.x/2 - 700, desktopResolution.y/2 - 480/2 });
+        window2.SetPosition({ desktopResolution.x/2 + 700 - 640, desktopResolution.y/2 - 480/2 });
+
+        // Show windows
+        window1.Show();
+        window2.Show();
 
         // Vertex data structure
         struct Vertex
@@ -157,48 +167,44 @@ int main(int argc, char* argv[])
         while ( ( context1->GetWindow().ProcessEvents() || context2->GetWindow().ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
         {
             // Draw content in 1st render context
+            commands->SetRenderTarget(*context1);
             {
-                // Make 1st render context to the current one
-                renderer->MakeCurrent(context1);
-
                 // Set viewport array
-                context1->SetViewportArray(2, viewports);
+                commands->SetViewportArray(2, viewports);
 
                 // Set graphics pipeline
-                context1->SetGraphicsPipeline(*pipeline);
+                commands->SetGraphicsPipeline(*pipeline);
 
                 // Set vertex buffer
-                context1->SetVertexBuffer(*vertexBuffer);
+                commands->SetVertexBuffer(*vertexBuffer);
 
                 // Clear color buffer
-                context1->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+                commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
                 // Draw triangle with 3 vertices
-                context1->Draw(3, 0);
+                commands->Draw(3, 0);
 
                 // Present the result on the screen
                 context1->Present();
             }
 
             // Draw content in 2nd render context
+            commands->SetRenderTarget(*context2);
             {
-                // Make 2nd render context to the current one
-                renderer->MakeCurrent(context2);
-
                 // Set viewport array
-                context2->SetViewportArray(2, viewports);
+                commands->SetViewportArray(2, viewports);
 
                 // Set graphics pipeline
-                context2->SetGraphicsPipeline(*pipeline);
+                commands->SetGraphicsPipeline(*pipeline);
 
                 // Set vertex buffer
-                context2->SetVertexBuffer(*vertexBuffer);
+                commands->SetVertexBuffer(*vertexBuffer);
 
                 // Clear color buffer
-                context2->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+                commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
                 // Draw quad with 4 vertices
-                context2->Draw(4, 3);
+                commands->Draw(4, 3);
 
                 // Present the result on the screen
                 context2->Present();

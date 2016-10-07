@@ -212,27 +212,27 @@ private:
     void DrawScene()
     {
         // Clear color- and depth buffers
-        context->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+        commands->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
         // Update constant buffer
         UpdateBuffer(constantBuffer, settings);
 
         // Set graphics pipeline with the shader
-        context->SetGraphicsPipeline(*pipeline[showWireframe ? 1 : 0]);
+        commands->SetGraphicsPipeline(*pipeline[showWireframe ? 1 : 0]);
 
         // Set hardware buffers to draw the model
-        context->SetVertexBuffer(*vertexBuffer);
-        context->SetIndexBuffer(*indexBuffer);
+        commands->SetVertexBuffer(*vertexBuffer);
+        commands->SetIndexBuffer(*indexBuffer);
 
         // Set constant buffer only to tessellation shader stages
         #ifdef _TEST_BUFFER_ARRAY_
-        context->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+        commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
         #else
-        context->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+        commands->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
         #endif
 
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
-        context->DrawIndexed(24, 0);
+        commands->DrawIndexed(24, 0);
 
         // Present result on the screen
         context->Present();

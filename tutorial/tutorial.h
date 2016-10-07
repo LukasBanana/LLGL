@@ -146,8 +146,9 @@ private:
 
         public:
 
-            ResizeEventHandler(LLGL::RenderContext* context, Gs::Matrix4f& projection) :
+            ResizeEventHandler(LLGL::RenderContext* context, LLGL::CommandBuffer* commands, Gs::Matrix4f& projection) :
                 context_    ( context    ),
+                commands_   ( commands   ),
                 projection_ ( projection )
             {
             }
@@ -159,6 +160,7 @@ private:
                 // Update video mode
                 videoMode.resolution = clientAreaSize;
                 context_->SetVideoMode(videoMode);
+                commands_->SetRenderTarget(*context_);
                 
                 // Update viewport
                 LLGL::Viewport viewport;
@@ -166,7 +168,7 @@ private:
                     viewport.width  = static_cast<float>(videoMode.resolution.x);
                     viewport.height = static_cast<float>(videoMode.resolution.y);
                 }
-                context_->SetViewport(viewport);
+                commands_->SetViewport(viewport);
 
                 // Update projection matrix
                 projection_ = Gs::ProjectionMatrix4f::Perspective(
@@ -177,6 +179,7 @@ private:
         private:
 
             LLGL::RenderContext*    context_;
+            LLGL::CommandBuffer*    commands_;
             Gs::Matrix4f&           projection_;
 
     };
@@ -190,8 +193,15 @@ protected:
 
     const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
 
+    // Render system
     std::shared_ptr<LLGL::RenderSystem>         renderer;
+    
+    // Main render context
     LLGL::RenderContext*                        context     = nullptr;
+
+    // Main command buffer
+    LLGL::CommandBuffer*                        commands    = nullptr;
+
     std::shared_ptr<LLGL::Input>                input;
 
     std::unique_ptr<LLGL::Timer>                timer;
@@ -223,6 +233,14 @@ protected:
         }
         context = renderer->CreateRenderContext(contextDesc);
 
+        // Create command buffer
+        commands = renderer->CreateCommandBuffer();
+
+        // Initialize command buffer
+        commands->SetClearColor(defaultClearColor);
+        commands->SetRenderTarget(*context);
+        commands->SetViewport({ 0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y) });
+
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
 
@@ -233,29 +251,28 @@ protected:
         std::cout << "  shading language: " << info.shadingLanguageName << std::endl;
 
         // Set window title
+        auto& window = context->GetWindow();
+
         auto rendererName = renderer->GetName();
-        context->GetWindow().SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
+        window.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");
 
         // Add input event listener to window
         input = std::make_shared<LLGL::Input>();
-        context->GetWindow().AddEventListener(input);
+        window.AddEventListener(input);
 
         // Change window descriptor to allow resizing
-        auto wndDesc = context->GetWindow().QueryDesc();
+        auto wndDesc = window.QueryDesc();
         wndDesc.resizable = true;
-        context->GetWindow().SetDesc(wndDesc);
+        window.SetDesc(wndDesc);
 
         // Add window resize listener
-        context->GetWindow().AddEventListener(std::make_shared<ResizeEventHandler>(context, projection));
+        window.AddEventListener(std::make_shared<ResizeEventHandler>(context, commands, projection));
 
         // Initialize default projection matrix
         projection = Gs::ProjectionMatrix4f::Perspective(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
 
-        // Set dark blue as default clear color
-        context->SetClearColor(defaultClearColor);
-
         // Show window
-        context->GetWindow().Show();
+        window.Show();
     }
 
     struct TutorialShaderDescriptor

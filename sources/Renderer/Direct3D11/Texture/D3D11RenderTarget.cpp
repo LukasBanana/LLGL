@@ -16,9 +16,9 @@ namespace LLGL
 {
 
 
-D3D11RenderTarget::D3D11RenderTarget(D3D11RenderSystem& renderSystem, unsigned int multiSamples) :
-    renderSystem_( renderSystem ),
-    multiSamples_( multiSamples )
+D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, unsigned int multiSamples) :
+    device_         ( device       ),
+    multiSamples_   ( multiSamples )
 {
 }
 
@@ -164,7 +164,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
             texDesc.MiscFlags           = 0;
         }
         ComPtr<ID3D11Texture2D> tex2DMS;
-        auto hr = renderSystem_.GetDevice()->CreateTexture2D(&texDesc, nullptr, tex2DMS.ReleaseAndGetAddressOf());
+        auto hr = device_->CreateTexture2D(&texDesc, nullptr, tex2DMS.ReleaseAndGetAddressOf());
         DXThrowIfFailed(hr, "failed to create D3D11 multi-sampled 2D-texture for render-target");
 
         /* Store multi-sampled texture, and reference to texture target */
@@ -256,16 +256,39 @@ void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
 
 void D3D11RenderTarget::CreateDepthStencilAndDSV(const Gs::Vector2ui& size, DXGI_FORMAT format)
 {
+    HRESULT hr = 0;
+
     /* Apply size to render target resolution, and create depth-stencil */
     ApplyResolution(size);
-    renderSystem_.CreateDXDepthStencilAndDSV(size.x, size.y, multiSamples_, format, depthStencil_, depthStencilView_);
+
+    /* Create depth stencil texture */
+    D3D11_TEXTURE2D_DESC texDesc;
+    {
+        texDesc.Width               = size.x;
+        texDesc.Height              = size.y;
+        texDesc.MipLevels           = 1;
+        texDesc.ArraySize           = 1;
+        texDesc.Format              = format;
+        texDesc.SampleDesc.Count    = std::max(1u, multiSamples_);
+        texDesc.SampleDesc.Quality  = 0;
+        texDesc.Usage               = D3D11_USAGE_DEFAULT;
+        texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
+        texDesc.CPUAccessFlags      = 0;
+        texDesc.MiscFlags           = 0;
+    }
+    hr = device_->CreateTexture2D(&texDesc, nullptr, depthStencil_.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 depth-texture for render-target");
+
+    /* Create DSV */
+    hr = device_->CreateDepthStencilView(depthStencil_.Get(), nullptr, depthStencilView_.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for render-target");
 }
 
 void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc)
 {
     ComPtr<ID3D11RenderTargetView> rtv;
 
-    auto hr = renderSystem_.GetDevice()->CreateRenderTargetView(resource, &rtvDesc, &rtv);
+    auto hr = device_->CreateRenderTargetView(resource, &rtvDesc, &rtv);
     DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV)");
 
     renderTargetViews_.push_back(rtv);

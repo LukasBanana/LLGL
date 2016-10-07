@@ -14,8 +14,8 @@ static std::vector<Gs::Vector4f> GetTestVector(std::size_t size)
 
     for (unsigned int i = 0; i < size; ++i)
     {
-        auto f = static_cast<float>(i + 1);
-        vec[i] = Gs::Vector4f(1, f, 1.0f / f, 0.1f * f);
+        auto x = static_cast<float>(i + 1);
+        vec[i] = Gs::Vector4f(1, x, 1.0f / x, 0.1f * x);
     }
 
     return vec;
@@ -38,6 +38,9 @@ int main()
 
         auto context = renderer->CreateRenderContext(contextDesc);
         
+        // Create command buffer
+        auto commands = renderer->CreateCommandBuffer();
+
         // Change window title
         auto title = "LLGL Test 4: Compute ( " + renderer->GetName() + " )";
         context->GetWindow().SetTitle(std::wstring(title.begin(), title.end()));
@@ -84,21 +87,21 @@ int main()
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
 
         // Set resources
-        context->SetStorageBuffer(*storageBuffer, 0);
-        context->SetComputePipeline(*pipeline);
+        commands->SetStorageBuffer(*storageBuffer, 0);
+        commands->SetComputePipeline(*pipeline);
 
         // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query
-        context->BeginQuery(*timerQuery);
+        commands->BeginQuery(*timerQuery);
         {
-            context->DispatchCompute({ 1, 1, 1 });
+            commands->DispatchCompute({ 1, 1, 1 });
         }
-        context->EndQuery(*timerQuery);
+        commands->EndQuery(*timerQuery);
 
         // Wait until the GPU has completed all work, to be sure we can evaluate the storage buffer
-        context->SyncGPU();
+        commands->SyncGPU();
 
         // Evaluate compute shader
-        auto mappedBuffer = context->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
+        auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
         {
             // Show result
             auto vecBuffer = reinterpret_cast<const Gs::Vector4f*>(mappedBuffer);
@@ -106,10 +109,10 @@ int main()
 
             // Show elapsed time from timer query
             std::uint64_t result = 0;
-            while (!context->QueryResult(*timerQuery, result)) { /* wait until the result is available */ }
+            while (!commands->QueryResult(*timerQuery, result)) { /* wait until the result is available */ }
             std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
-        context->UnmapBuffer(*storageBuffer);
+        renderer->UnmapBuffer(*storageBuffer);
 
     }
     catch (const std::exception& e)

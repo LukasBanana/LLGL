@@ -69,7 +69,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
     GLenum attachment = MakeColorAttachment();
 
     /* If this is a multi-sample render-target but the attachment is not a multi-sample texture, create a multi-sample FBO */
-    if (HasMultiSampling() && IsMultiSampleTexture(texture.GetType()))
+    if (HasMultiSampling() && !IsMultiSampleTexture(texture.GetType()))
         CreateOnceFrameBufferMS();
 
     /* Attach texture to frame buffer (via callback) */

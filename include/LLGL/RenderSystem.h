@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "RenderContext.h"
+#include "CommandBuffer.h"
 #include "RenderSystemFlags.h"
 #include "RenderingProfiler.h"
 #include "RenderingDebugger.h"
@@ -153,19 +154,16 @@ class LLGL_EXPORT RenderSystem
         //! Releases the specified render context. This will all release all resources, that are associated with this render context.
         virtual void Release(RenderContext& renderContext) = 0;
 
-        /**
-        \brief Makes the specified render context to the current one.
-        \param[in] renderContext Specifies the new current render context. If this is null, no render context is active.
-        \return True on success, otherwise false.
-        \remarks Never draw anything, while no render context is active!
-        */
-        bool MakeCurrent(RenderContext* renderContext);
+        /* ----- Command buffers ----- */
 
-        //! Returns the current render context. This may also be null.
-        inline RenderContext* GetCurrentContext() const
-        {
-            return currentContext_;
-        }
+        /**
+        \brief Creates a new command buffer.
+        \remarks Some render systems only support a single command buffer, such as OpenGL and Direct3D 11.
+        */
+        virtual CommandBuffer* CreateCommandBuffer() = 0;
+
+        //! Releases the specified command buffer.
+        virtual void Release(CommandBuffer& commandBuffer) = 0;
 
         /* ----- Buffers ------ */
 
@@ -208,6 +206,21 @@ class LLGL_EXPORT RenderSystem
         This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the buffer.
         */
         virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
+
+        /**
+        \brief Maps the specified buffer from GPU to CPU memory space.
+        \param[in] buffer Specifies the buffer which is to be mapped.
+        \param[in] access Specifies the CPU buffer access requirement, i.e. if the CPU can read and/or write the mapped memory.
+        \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
+        \see UnmapBuffer
+        */
+        virtual void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) = 0;
+
+        /**
+        \brief Unmaps the specified buffer.
+        \see MapBuffer
+        */
+        virtual void UnmapBuffer(Buffer& buffer) = 0;
 
         /* ----- Textures ----- */
 
@@ -355,12 +368,6 @@ class LLGL_EXPORT RenderSystem
 
         RenderSystem() = default;
 
-        /**
-        \brief Callback when a new render context is about to be made the current one.
-        \remarks At this point, "GetCurrentContext" returns still the previous render context.
-        */
-        virtual bool OnMakeCurrent(RenderContext* renderContext);
-
         //! Sets the renderer information.
         void SetRendererInfo(const RendererInfo& info);
 
@@ -382,8 +389,6 @@ class LLGL_EXPORT RenderSystem
     private:
 
         std::string                 name_;
-
-        RenderContext*              currentContext_ = nullptr;
 
         RendererInfo                info_;
         RenderingCaps               caps_;

@@ -39,14 +39,30 @@ GLRenderContext* GLRenderSystem::GetSharedRenderContext() const
 
 RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    return AddRenderContext(MakeUnique<GLRenderContext>(*this, desc, window, GetSharedRenderContext()), desc, window);
+    return AddRenderContext(MakeUnique<GLRenderContext>(desc, window, GetSharedRenderContext()), desc, window);
 }
 
 void GLRenderSystem::Release(RenderContext& renderContext)
 {
-    if (GetCurrentContext() == &renderContext)
-        MakeCurrent(nullptr);
     RemoveFromUniqueSet(renderContexts_, &renderContext);
+}
+
+/* ----- Command buffers ----- */
+
+CommandBuffer* GLRenderSystem::CreateCommandBuffer()
+{
+    /* Get state manager from shared render context */
+    auto sharedContext = GetSharedRenderContext();
+    if (!sharedContext)
+        throw std::runtime_error("can not create OpenGL command buffer without active render context");
+
+    /* Create command buffer */
+    return TakeOwnership(commandBuffers_, MakeUnique<GLCommandBuffer>(sharedContext->GetStateManager()));
+}
+
+void GLRenderSystem::Release(CommandBuffer& commandBuffer)
+{
+    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
 /* ----- Hardware Buffers ------ */
@@ -190,17 +206,6 @@ RenderContext* GLRenderSystem::AddRenderContext(
 /*
  * ======= Private: =======
  */
-
-bool GLRenderSystem::OnMakeCurrent(RenderContext* renderContext)
-{
-    if (renderContext)
-    {
-        auto renderContextGL = LLGL_CAST(GLRenderContext*, renderContext);
-        return GLRenderContext::GLMakeCurrent(renderContextGL);
-    }
-    else
-        return GLRenderContext::GLMakeCurrent(nullptr);
-}
 
 void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc)
 {

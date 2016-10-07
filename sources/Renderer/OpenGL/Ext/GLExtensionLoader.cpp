@@ -463,13 +463,17 @@ static bool Load_GL_EXT_draw_buffers2(bool usePlaceHolder)
 
 static const unsigned int g_numExtensions = static_cast<int>(GLExt::Count);
 
-static std::array<bool, g_numExtensions> g_extensionsEnabled { false };
+static std::array<bool, g_numExtensions> g_extensionsEnabled { { false } };
 static bool g_extAlreadyLoaded = false;
+
+#ifndef __APPLE__
 
 static void EnableExtensionSupport(GLExt extension)
 {
     g_extensionsEnabled[static_cast<std::size_t>(extension)] = true;
 }
+
+#endif
 
 
 /* --- Common extension loading functions --- */

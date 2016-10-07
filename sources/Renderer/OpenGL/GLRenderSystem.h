@@ -11,8 +11,10 @@
 
 #include <LLGL/RenderSystem.h>
 #include "Ext/GLExtensionLoader.h"
-#include "GLRenderContext.h"
 #include "../ContainerTypes.h"
+
+#include "GLCommandBuffer.h"
+#include "GLRenderContext.h"
 
 #include "Buffer/GLBuffer.h"
 #include "Buffer/GLBufferArray.h"
@@ -59,6 +61,12 @@ class GLRenderSystem : public RenderSystem
 
         void Release(RenderContext& renderContext) override;
 
+        /* ----- Command buffers ----- */
+
+        CommandBuffer* CreateCommandBuffer() override;
+
+        void Release(CommandBuffer& commandBuffer) override;
+
         /* ----- Hardware Buffers ------ */
 
         Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
@@ -68,6 +76,9 @@ class GLRenderSystem : public RenderSystem
         void Release(BufferArray& bufferArray) override;
         
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+
+        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
+        void UnmapBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */
 
@@ -129,8 +140,6 @@ class GLRenderSystem : public RenderSystem
 
     private:
 
-        bool OnMakeCurrent(RenderContext* renderContext) override;
-
         void LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc);
         void SetDebugCallback(const DebugCallback& debugCallback);
 
@@ -162,6 +171,7 @@ class GLRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<GLRenderContext>      renderContexts_;
+        HWObjectContainer<GLCommandBuffer>      commandBuffers_;
         HWObjectContainer<GLBuffer>             buffers_;
         HWObjectContainer<GLBufferArray>        bufferArrays_;
         HWObjectContainer<GLTexture>            textures_;

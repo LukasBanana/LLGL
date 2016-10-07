@@ -120,16 +120,16 @@ private:
     void OnDrawFrame() override
     {
         // Clear color and depth buffers
-        context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+        commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
         // Set buffer array
-        context->SetVertexBufferArray(*vertexBufferArray);
+        commands->SetVertexBufferArray(*vertexBufferArray);
 
         // Set graphics pipeline state
-        context->SetGraphicsPipeline(*pipeline);
+        commands->SetGraphicsPipeline(*pipeline);
 
         // Draw 4 instances of the triangle with 3 vertices each
-        context->DrawInstanced(3, 0, 4);
+        commands->DrawInstanced(3, 0, 4);
 
         // Present result on the screen
         context->Present();

@@ -53,7 +53,7 @@ float4 PS(OutputVS inp) : SV_Target
 		// Compute average of all samples
 		float4 c = (float4)0.0;
 		
-		for (int i = 0; i < numSamples; ++i)
+		for (uint i = 0; i < numSamples; ++i)
 			c += colorMapMS.Load(tc, i);
 		
 		c /= numSamples;

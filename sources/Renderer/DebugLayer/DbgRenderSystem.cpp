@@ -52,15 +52,26 @@ RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescripto
     SetRendererInfo(instance_->GetRendererInfo());
     SetRenderingCaps(instance_->GetRenderingCaps());
 
-    return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(
-        *renderContextInstance, profiler_, debugger_, GetRenderingCaps()
-    ));
+    return TakeOwnership(renderContexts_, MakeUnique<DbgRenderContext>(*renderContextInstance));
 }
 
 void DbgRenderSystem::Release(RenderContext& renderContext)
 {
-    instance_->Release(renderContext);
-    RemoveFromUniqueSet(renderContexts_, &renderContext);
+    ReleaseDbg(renderContexts_, renderContext);
+}
+
+/* ----- Command buffers ----- */
+
+CommandBuffer* DbgRenderSystem::CreateCommandBuffer()
+{
+    return TakeOwnership(commandBuffers_, MakeUnique<DbgCommandBuffer>(
+        *instance_->CreateCommandBuffer(), profiler_, debugger_, GetRenderingCaps()
+    ));
+}
+
+void DbgRenderSystem::Release(CommandBuffer& commandBuffer)
+{
+    ReleaseDbg(commandBuffers_, commandBuffer);
 }
 
 /* ----- Hardware Buffers ------ */
@@ -97,6 +108,9 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
             if (desc.size % packAlignment != 0)
                 LLGL_DBG_WARN_HERE(WarningType::ImproperArgument, "constant buffer size is out of pack alignment (alignment is 16 bytes)");
         }
+        break;
+        
+        default:
         break;
     }
 
@@ -153,6 +167,23 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t 
         instance_->WriteBuffer(bufferDbg.instance, data, dataSize, offset);
     }
     LLGL_DBG_PROFILER_DO(writeBuffer.Inc());
+}
+
+void* DbgRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    void* result = nullptr;
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    {
+        result = instance_->MapBuffer(bufferDbg.instance, access);
+    }
+    LLGL_DBG_PROFILER_DO(mapBuffer.Inc());
+    return result;
+}
+
+void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
+{
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    instance_->UnmapBuffer(bufferDbg.instance);
 }
 
 /* ----- Textures ----- */
@@ -357,6 +388,7 @@ void DbgRenderSystem::Release(Query& query)
  * ======= Private: =======
  */
 
+//TODO: replace this by 'RendererInfo::rendererID'
 void DbgRenderSystem::DetermineRenderer(const std::string& rendererName)
 {
     auto CompareSubStr = [](const std::string& lhs, const std::string& rhs)
@@ -371,11 +403,6 @@ void DbgRenderSystem::DetermineRenderer(const std::string& rendererName)
         renderer_.isDirect3D = true;
     else if (CompareSubStr(rendererName, "Vulkan"))
         renderer_.isVulkan = true;
-}
-
-bool DbgRenderSystem::OnMakeCurrent(RenderContext* renderContext)
-{
-    return instance_->MakeCurrent(renderContext);
 }
 
 void DbgRenderSystem::DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source)

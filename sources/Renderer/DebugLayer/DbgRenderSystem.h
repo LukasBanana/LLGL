@@ -11,6 +11,7 @@
 
 #include <LLGL/RenderSystem.h>
 #include "DbgRenderContext.h"
+#include "DbgCommandBuffer.h"
 
 #include "DbgBuffer.h"
 #include "DbgGraphicsPipeline.h"
@@ -45,6 +46,12 @@ class DbgRenderSystem : public RenderSystem
 
         void Release(RenderContext& renderContext) override;
 
+        /* ----- Command buffers ----- */
+
+        CommandBuffer* CreateCommandBuffer() override;
+
+        void Release(CommandBuffer& commandBuffer) override;
+
         /* ----- Hardware Buffers ------ */
 
         Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
@@ -54,6 +61,9 @@ class DbgRenderSystem : public RenderSystem
         void Release(BufferArray& bufferArray) override;
 
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+
+        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
+        void UnmapBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */
 
@@ -107,9 +117,8 @@ class DbgRenderSystem : public RenderSystem
 
     private:
 
+        //TODO: replace this by 'RendererInfo::rendererID'
         void DetermineRenderer(const std::string& rendererName);
-
-        bool OnMakeCurrent(RenderContext* renderContext) override;
 
         void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source);
         void DebugMipLevelLimit(int mipLevel, int mipLevelCount, const std::string& source);
@@ -140,6 +149,7 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<DbgRenderContext>     renderContexts_;
+        HWObjectContainer<DbgCommandBuffer>     commandBuffers_;
         HWObjectContainer<DbgBuffer>            buffers_;
         HWObjectContainer<DbgTexture>           textures_;
         HWObjectContainer<DbgRenderTarget>      renderTargets_;

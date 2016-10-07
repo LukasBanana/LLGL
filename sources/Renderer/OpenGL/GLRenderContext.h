@@ -13,6 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include "OpenGL.h"
 #include "RenderState/GLStateManager.h"
+#include <memory>
 
 #if defined(_WIN32)
 #   include <LLGL/Platform/NativeHandle.h>
@@ -37,104 +38,24 @@ class GLRenderContext : public RenderContext
 
         /* ----- Common ----- */
 
-        GLRenderContext(
-            GLRenderSystem& renderSystem,
-            RenderContextDescriptor desc,
-            const std::shared_ptr<Window>& window,
-            GLRenderContext* sharedRenderContext
-        );
+        GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext);
         ~GLRenderContext();
 
         void Present() override;
 
         /* ----- Configuration ----- */
 
-        void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
-
         void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         void SetVsync(const VsyncDescriptor& vsyncDesc) override;
-
-        void SetViewport(const Viewport& viewport) override;
-        void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) override;
-
-        void SetScissor(const Scissor& scissor) override;
-        void SetScissorArray(unsigned int numScissors, const Scissor* scissorArray) override;
-
-        void SetClearColor(const ColorRGBAf& color) override;
-        void SetClearDepth(float depth) override;
-        void SetClearStencil(int stencil) override;
-
-        void ClearBuffers(long flags) override;
-
-        /* ----- Hardware Buffers ------ */
-
-        void SetVertexBuffer(Buffer& buffer) override;
-        void SetVertexBufferArray(BufferArray& bufferArray) override;
-
-        void SetIndexBuffer(Buffer& buffer) override;
-        
-        void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        
-        void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
-
-        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
-        void UnmapBuffer(Buffer& buffer) override;
-
-        /* ----- Textures ----- */
-
-        void SetTexture(Texture& texture, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-
-        /* ----- Sampler States ----- */
-
-        void SetSampler(Sampler& sampler, unsigned int layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-
-        /* ----- Render Targets ----- */
-
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void UnsetRenderTarget() override;
-
-        /* ----- Pipeline States ----- */
-
-        void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;
-        void SetComputePipeline(ComputePipeline& computePipeline) override;
-
-        /* ----- Queries ----- */
-
-        void BeginQuery(Query& query) override;
-        void EndQuery(Query& query) override;
-
-        bool QueryResult(Query& query, std::uint64_t& result) override;
-
-        void BeginRenderCondition(Query& query, const RenderConditionMode mode) override;
-        void EndRenderCondition() override;
-
-        /* ----- Drawing ----- */
-
-        void Draw(unsigned int numVertices, unsigned int firstVertex) override;
-
-        void DrawIndexed(unsigned int numVertices, unsigned int firstIndex) override;
-        void DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset) override;
-
-        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) override;
-        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) override;
-
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex) override;
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset) override;
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset) override;
-
-        /* ----- Compute ----- */
-
-        void DispatchCompute(const Gs::Vector3ui& threadGroupSize) override;
-
-        /* ----- Misc ----- */
-
-        void SyncGPU() override;
 
         /* ----- GLRenderContext specific functions ----- */
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);
+
+        inline const std::shared_ptr<GLStateManager>& GetStateManager() const
+        {
+            return stateMngr_;
+        }
 
     private:
 
@@ -157,9 +78,6 @@ class GLRenderContext : public RenderContext
 
         bool SetupVsyncInterval();
 
-        // Blits the currently bound render target
-        void BlitBoundRenderTarget();
-
         #if defined(_WIN32)
 
         void DeleteGLContext(HGLRC& renderContext);
@@ -178,7 +96,8 @@ class GLRenderContext : public RenderContext
 
         #endif
 
-        GLRenderSystem&                 renderSystem_;  // reference to its render system
+        static GLRenderContext*         activeRenderContext_;
+
         RenderContextDescriptor         desc_;
 
         #ifndef __APPLE__

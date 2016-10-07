@@ -35,6 +35,12 @@ int main(int argc, char* argv[])
         context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
         context->GetWindow().Show();
 
+        // Create command buffer to submit subsequent graphics commands to the GPU
+        LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
+
+        // Sets render target to the render context
+        commands->SetRenderTarget(*context);
+
         // Vertex data structure
         struct Vertex
         {
@@ -127,21 +133,28 @@ int main(int argc, char* argv[])
             #endif
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        // Initialize viewport
+        Gs::Vector2f resolution = context->GetVideoMode().resolution.Cast<float>();
+        LLGL::Viewport viewport({ 0.0f, 0.0f, resolution.x, resolution.y });
         
         // Enter main loop
         while (context->GetWindow().ProcessEvents())
         {
+            // Set viewport
+            commands->SetViewport(viewport);
+
             // Clear color buffer
-            context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+            commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
             // Set graphics pipeline
-            context->SetGraphicsPipeline(*pipeline);
+            commands->SetGraphicsPipeline(*pipeline);
 
             // Set vertex buffer
-            context->SetVertexBuffer(*vertexBuffer);
+            commands->SetVertexBuffer(*vertexBuffer);
 
             // Draw triangle with 3 vertices
-            context->Draw(3, 0);
+            commands->Draw(3, 0);
 
             // Present the result on the screen
             context->Present();

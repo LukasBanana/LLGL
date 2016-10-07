@@ -47,12 +47,10 @@ D3D11RenderSystem::~D3D11RenderSystem()
 
 RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
 {
-    /* Create new render context and make it the current one */
-    auto renderContext = MakeUnique<D3D11RenderContext>(*this, *stateMngr_, context_, desc, window);
-    MakeCurrent(renderContext.get());
-
-    /* Take ownership and return new render context */
-    return TakeOwnership(renderContexts_, std::move(renderContext));
+    return TakeOwnership(
+        renderContexts_,
+        MakeUnique<D3D11RenderContext>(factory_.Get(), device_, context_, desc, window)
+    );
 }
 
 void D3D11RenderSystem::Release(RenderContext& renderContext)
@@ -60,9 +58,21 @@ void D3D11RenderSystem::Release(RenderContext& renderContext)
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
+/* ----- Command buffers ----- */
+
+CommandBuffer* D3D11RenderSystem::CreateCommandBuffer()
+{
+    return TakeOwnership(commandBuffers_, MakeUnique<D3D11CommandBuffer>(*stateMngr_, context_));
+}
+
+void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
+{
+    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
+}
+
 /* ----- Hardware Buffers ------ */
 
-std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
+static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     /* Make respective buffer type */
     switch (desc.type)
@@ -112,6 +122,16 @@ void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_
     bufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(offset));
 }
 
+void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+{
+    return nullptr;//todo...
+}
+
+void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
+{
+    //todo...
+}
+
 /* ----- Sampler States ---- */
 
 Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)
@@ -128,7 +148,7 @@ void D3D11RenderSystem::Release(Sampler& sampler)
 
 RenderTarget* D3D11RenderSystem::CreateRenderTarget(unsigned int multiSamples)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(*this, multiSamples));
+    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), multiSamples));
 }
 
 void D3D11RenderSystem::Release(RenderTarget& renderTarget)
@@ -190,46 +210,6 @@ Query* D3D11RenderSystem::CreateQuery(const QueryDescriptor& desc)
 void D3D11RenderSystem::Release(Query& query)
 {
     RemoveFromUniqueSet(queries_, &query);
-}
-
-
-/* ----- Extended internal functions ----- */
-
-ComPtr<IDXGISwapChain> D3D11RenderSystem::CreateDXSwapChain(DXGI_SWAP_CHAIN_DESC& desc)
-{
-    ComPtr<IDXGISwapChain> swapChain;
-
-    auto hr = factory_->CreateSwapChain(device_.Get(), &desc, &swapChain);
-    DXThrowIfFailed(hr, "failed to create DXGI swap chain");
-
-    return swapChain;
-}
-
-void D3D11RenderSystem::CreateDXDepthStencilAndDSV(
-    UINT width, UINT height, UINT sampleCount, DXGI_FORMAT format,
-    ComPtr<ID3D11Texture2D>& depthStencil, ComPtr<ID3D11DepthStencilView>& dsv)
-{
-    /* Create depth stencil texture */
-    D3D11_TEXTURE2D_DESC texDesc;
-    {
-        texDesc.Width               = width;
-        texDesc.Height              = height;
-        texDesc.MipLevels           = 1;
-        texDesc.ArraySize           = 1;
-        texDesc.Format              = format;
-        texDesc.SampleDesc.Count    = std::max(1u, sampleCount);
-        texDesc.SampleDesc.Quality  = 0;
-        texDesc.Usage               = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
-        texDesc.CPUAccessFlags      = 0;
-        texDesc.MiscFlags           = 0;
-    }
-    auto hr = device_->CreateTexture2D(&texDesc, nullptr, &depthStencil);
-    DXThrowIfFailed(hr, "failed to create texture 2D for D3D11 depth-stencil");
-
-    /* Create depth-stencil-view */
-    hr = device_->CreateDepthStencilView(depthStencil.Get(), nullptr, &dsv);
-    DXThrowIfFailed(hr, "failed to create depth-stencil-view (DSV) for D3D11 depth-stencil");
 }
 
 
@@ -321,22 +301,6 @@ void D3D11RenderSystem::QueryRenderingCaps()
     RenderingCaps caps;
     DXGetRenderingCaps(caps, GetFeatureLevel());
     SetRenderingCaps(caps);
-}
-
-bool D3D11RenderSystem::OnMakeCurrent(RenderContext* renderContext)
-{
-    if (renderContext)
-    {
-        /* Notify render context */
-        auto renderContextD3D = LLGL_CAST(D3D11RenderContext*, renderContext);
-        renderContextD3D->OnMakeCurrent();
-    }
-    else
-    {
-        /* Unset render targets */
-        context_->OMSetRenderTargets(0, nullptr, nullptr);
-    }
-    return true;
 }
 
 

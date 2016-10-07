@@ -11,6 +11,8 @@
 
 #include <LLGL/RenderSystem.h>
 #include <LLGL/VideoAdapter.h>
+
+#include "D3D11CommandBuffer.h"
 #include "D3D11RenderContext.h"
 
 #include "Buffer/D3D11Buffer.h"
@@ -55,6 +57,12 @@ class D3D11RenderSystem : public RenderSystem
 
         void Release(RenderContext& renderContext) override;
 
+        /* ----- Command buffers ----- */
+
+        CommandBuffer* CreateCommandBuffer() override;
+
+        void Release(CommandBuffer& commandBuffer) override;
+
         /* ----- Hardware Buffers ------ */
 
         Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
@@ -64,6 +72,9 @@ class D3D11RenderSystem : public RenderSystem
         void Release(BufferArray& bufferArray) override;
         
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
+
+        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
+        void UnmapBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */
 
@@ -117,13 +128,6 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
-        ComPtr<IDXGISwapChain> CreateDXSwapChain(DXGI_SWAP_CHAIN_DESC& desc);
-
-        void CreateDXDepthStencilAndDSV(
-            UINT width, UINT height, UINT sampleCount, DXGI_FORMAT format,
-            ComPtr<ID3D11Texture2D>& depthStencil, ComPtr<ID3D11DepthStencilView>& dsv
-        );
-
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
         {
             return featureLevel_;
@@ -155,8 +159,6 @@ class D3D11RenderSystem : public RenderSystem
             const ImageDescriptor& imageDesc
         );
 
-        bool OnMakeCurrent(RenderContext* renderContext) override;
-
         /* ----- Common objects ----- */
 
         ComPtr<IDXGIFactory>                        factory_;
@@ -169,6 +171,7 @@ class D3D11RenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<D3D11RenderContext>       renderContexts_;
+        HWObjectContainer<D3D11CommandBuffer>       commandBuffers_;
         HWObjectContainer<D3D11Buffer>              buffers_;
         HWObjectContainer<D3D11BufferArray>         bufferArrays_;
         HWObjectContainer<D3D11Texture>             textures_;
