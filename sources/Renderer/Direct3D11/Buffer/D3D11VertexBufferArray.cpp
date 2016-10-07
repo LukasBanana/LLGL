@@ -8,6 +8,7 @@
 #include "D3D11VertexBufferArray.h"
 #include "D3D11VertexBuffer.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
@@ -18,12 +19,13 @@ D3D11VertexBufferArray::D3D11VertexBufferArray(unsigned int numBuffers, Buffer* 
     D3D11BufferArray( BufferType::Vertex, numBuffers, bufferArray )
 {
     /* Store the pointer of each ID3D11Buffer inside the array */
-    for (strides_.reserve(numBuffers), offsets_.reserve(numBuffers); numBuffers > 0; --numBuffers)
+    strides_.reserve(numBuffers);
+    offsets_.reserve(numBuffers);
+
+    while (auto next = NextArrayResource<D3D11VertexBuffer>(numBuffers, bufferArray))
     {
-        auto vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer*, (*bufferArray));
-        strides_.push_back(vertexBufferD3D->GetStride());
-        offsets_.push_back(0);//vertexBufferD3D->GetOffset());
-        ++bufferArray;
+        strides_.push_back(next->GetStride());
+        offsets_.push_back(0);//next->GetOffset());
     }
 }
 
