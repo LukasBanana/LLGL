@@ -93,12 +93,15 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     DebugBufferType(buffer.GetType(), BufferType::Vertex, __FUNCTION__);
 
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
-    bindings_.vertexBuffer = (&bufferDbg);
-
-    vertexFormat_ = bufferDbg.desc.vertexBuffer.vertexFormat;
+    
+    if (debugger_)
     {
-        instance.SetVertexBuffer(bufferDbg.instance);
+        bindings_.vertexBuffer = (&bufferDbg);
+        vertexFormat_ = bufferDbg.desc.vertexBuffer.vertexFormat;
     }
+    
+    instance.SetVertexBuffer(bufferDbg.instance);
+    
     LLGL_DBG_PROFILER_DO(setVertexBuffer.Inc());
 }
 
