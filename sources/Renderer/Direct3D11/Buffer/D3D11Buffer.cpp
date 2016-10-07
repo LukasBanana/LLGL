@@ -57,6 +57,17 @@ void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& 
     DXThrowIfFailed(hr, "failed to create D3D11 buffer");
 }
 
+D3D11_USAGE D3D11Buffer::GetUsageForCPUAccessFlags(UINT cpuAccessFlags) const
+{
+    // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476106(v=vs.85).aspx
+    if ((cpuAccessFlags & D3D11_CPU_ACCESS_READ) != 0)
+        return D3D11_USAGE_STAGING;
+    else if ((cpuAccessFlags & D3D11_CPU_ACCESS_WRITE) != 0)
+        return D3D11_USAGE_DYNAMIC;
+    else
+        return D3D11_USAGE_DEFAULT;
+}
+
 
 } // /namespace LLGL
 

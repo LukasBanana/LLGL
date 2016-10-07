@@ -31,13 +31,24 @@ int main(int argc, char* argv[])
 
         std::vector<InputData> inputData;
 
+        for (int i = 0; i < 100; ++i)
+        {
+            auto x = static_cast<float>(i + 1);
+            inputData.push_back(
+                {
+                    Gs::Vector3f(x, 1.0f / x, x*x),
+                    LLGL::ColorRGBf(x, x*2.0f, std::sqrt(x))
+                }
+            );
+        }
+
         // Create storage buffer for input
         LLGL::BufferDescriptor inputBufferDesc;
         {
             inputBufferDesc.type                        = LLGL::BufferType::Storage;
             inputBufferDesc.size                        = inputData.size() * sizeof(InputData);
             inputBufferDesc.usage                       = LLGL::BufferUsage::Dynamic;
-            inputBufferDesc.storageBuffer.storageType   = LLGL::StorageBufferType::Generic;
+            inputBufferDesc.storageBuffer.storageType   = LLGL::StorageBufferType::StructuredBuffer;
             inputBufferDesc.storageBuffer.elements      = inputData.size();
         }
         auto inputBuffer = renderer->CreateBuffer(inputBufferDesc, inputData.data());

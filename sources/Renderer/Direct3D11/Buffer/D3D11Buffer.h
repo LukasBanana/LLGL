@@ -39,6 +39,9 @@ class D3D11Buffer : public Buffer
 
         void CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData = nullptr);
 
+        // Returns the suitable buffer usage for the specified CPU access flags.
+        D3D11_USAGE GetUsageForCPUAccessFlags(UINT cpuAccessFlags) const;
+
     private:
 
         ComPtr<ID3D11Buffer> buffer_;

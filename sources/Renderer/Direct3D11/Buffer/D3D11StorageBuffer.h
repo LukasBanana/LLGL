@@ -37,15 +37,28 @@ class D3D11StorageBuffer : public D3D11Buffer
             return uav_.Get();
         }
 
+        // Returns the buffer object which is used for GPU/CPU data transfer.
+        inline ID3D11Buffer* GetCPUAccessBuffer() const
+        {
+            return cpuAccessBuffer_.Get();
+        }
+
     private:
+
+        UINT GetBindFlags() const;
+        UINT GetMiscFlags() const;
 
         void CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements);
         void CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements);
+
+        void CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags);
 
         StorageBufferType                   storageType_ = StorageBufferType::Buffer;
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
+
+        ComPtr<ID3D11Buffer>                cpuAccessBuffer_;
 
 };
 

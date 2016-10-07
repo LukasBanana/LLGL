@@ -21,30 +21,27 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
 {
     storageType_ = desc.storageBuffer.storageType;
 
-    /* Setup descriptor and create storage buffer */
-    UINT bindFlags = (IsUAV() ? D3D11_BIND_UNORDERED_ACCESS : D3D11_BIND_SHADER_RESOURCE);
-
-    CD3D11_BUFFER_DESC bufferDesc(desc.size, bindFlags);
-
-    if (desc.usage == BufferUsage::Dynamic)
-    {
-        bufferDesc.Usage            = D3D11_USAGE_DYNAMIC;
-        bufferDesc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
-    }
-
-    if (IsStructured())
-        bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-    else if (IsByteAddressable())
-        bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-
     /* Create D3D hardware buffer */
+    D3D11_BUFFER_DESC bufferDesc;
+    {
+        bufferDesc.ByteWidth            = desc.size;
+        bufferDesc.Usage                = D3D11_USAGE_DEFAULT;
+        bufferDesc.BindFlags            = GetBindFlags();
+        bufferDesc.CPUAccessFlags       = 0;
+        bufferDesc.MiscFlags            = GetMiscFlags();
+        bufferDesc.StructureByteStride  = desc.size / desc.storageBuffer.elements;
+    }
     CreateResource(device, bufferDesc, initialData);
 
-    /* Create either SRV or UAV */
+    /* Create either UAV or SRV */
     if (IsUAV())
         CreateUAV(device, 0, desc.storageBuffer.elements);
     else
         CreateSRV(device, 0, desc.storageBuffer.elements);
+
+    /* Create CPU access buffer (if required) */
+    //if (???)
+        CreateCPUAccessBuffer(device, bufferDesc, D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE);
 }
 
 bool D3D11StorageBuffer::IsUAV() const
@@ -70,6 +67,21 @@ bool D3D11StorageBuffer::IsByteAddressable() const
 /*
  * ======= Private: =======
  */
+
+UINT D3D11StorageBuffer::GetBindFlags() const
+{
+    return (IsUAV() ? D3D11_BIND_UNORDERED_ACCESS : D3D11_BIND_SHADER_RESOURCE);
+}
+
+UINT D3D11StorageBuffer::GetMiscFlags() const
+{
+    if (IsStructured())
+        return D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    else if (IsByteAddressable())
+        return D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+    else
+        return 0;
+}
 
 void D3D11StorageBuffer::CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements)
 {
@@ -112,6 +124,21 @@ void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, UINT firstElement, UINT
     }
     auto hr = device->CreateShaderResourceView(Get(), &desc, &srv_);
     DXThrowIfFailed(hr, "failed to create D3D11 shader-resource-view (SRV) for storage buffer");
+}
+
+void D3D11StorageBuffer::CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags)
+{
+    D3D11_BUFFER_DESC desc;
+    {
+        desc.ByteWidth              = gpuBufferDesc.ByteWidth;
+        desc.Usage                  = GetUsageForCPUAccessFlags(cpuAccessFlags);
+        desc.BindFlags              = 0;
+        desc.CPUAccessFlags         = cpuAccessFlags;
+        desc.MiscFlags              = 0;
+        desc.StructureByteStride    = gpuBufferDesc.StructureByteStride;
+    }
+    auto hr = device->CreateBuffer(&desc, nullptr, cpuAccessBuffer_.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 CPU-access buffer for storage buffer");
 }
 
 
