@@ -65,7 +65,7 @@ struct LLGL_EXPORT VertexAttribute
     \brief Returns the size (in bytes) which is required for this vertex attribute.
     \return
     \code
-    DataTypeSize(dataType) * components.
+    VectorTypeSize(vectorType).
     \endcode
     */
     unsigned int GetSize() const;

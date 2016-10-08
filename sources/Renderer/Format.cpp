@@ -32,6 +32,15 @@ LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType)
     return 0;
 }
 
+LLGL_EXPORT unsigned int VectorTypeSize(const VectorType vectorType)
+{
+    DataType        dataType    = DataType::Float;
+    unsigned int    components  = 0;
+    VectorTypeFormat(vectorType, dataType, components);
+
+    return (DataTypeSize(dataType) * components);
+}
+
 LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, unsigned int& components)
 {
     /* Get data type and components by indexed vector type */

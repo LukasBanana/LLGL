@@ -30,11 +30,7 @@ VertexAttribute::VertexAttribute(
 
 unsigned int VertexAttribute::GetSize() const
 {
-    DataType        dataType    = DataType::Float;
-    unsigned int    components  = 0;
-    VectorTypeFormat(vectorType, dataType, components);
-
-    return (DataTypeSize(dataType) * components);
+    return VectorTypeSize(vectorType);
 }
 
 

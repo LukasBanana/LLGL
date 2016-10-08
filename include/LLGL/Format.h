@@ -86,6 +86,9 @@ enum class MatrixType
 //! Returns the size (in bytes) of the specified data type.
 LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType);
 
+//! Returns the size (in bytes) of the specified vector type.
+LLGL_EXPORT unsigned int VectorTypeSize(const VectorType vectorType);
+
 /**
 \brief Retrieves the format of the specified vector type.
 \param[in] vectorType Specifies the vector type whose format is to be retrieved.
