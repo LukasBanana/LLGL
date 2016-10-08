@@ -29,9 +29,9 @@ void UnmapFailed(const std::string& typeName, const std::string& dxTypeName)
     throw std::invalid_argument("failed to unmap '" + typeName + "' from '" + dxTypeName + "' parameter");
 }
 
-DXGI_FORMAT Map(const VertexAttribute& attrib)
+DXGI_FORMAT Map(const VectorType vectorType)
 {
-    switch (attrib.vectorType)
+    switch (vectorType)
     {
         case VectorType::Float:     return DXGI_FORMAT_R32_FLOAT;
         case VectorType::Float2:    return DXGI_FORMAT_R32G32_FLOAT;
@@ -46,7 +46,7 @@ DXGI_FORMAT Map(const VertexAttribute& attrib)
         case VectorType::UInt3:     return DXGI_FORMAT_R32G32B32_UINT;
         case VectorType::UInt4:     return DXGI_FORMAT_R32G32B32A32_UINT;
     }
-    MapFailed("VertexAttribute", "DXGI_FORMAT");
+    MapFailed("VectorType", "DXGI_FORMAT");
 }
 
 DXGI_FORMAT Map(const DataType dataType)

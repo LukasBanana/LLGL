@@ -31,7 +31,7 @@ void MapFailed(const std::string& typeName, const std::string& dxTypeName);
 void UnmapFailed(const std::string& typeName, const std::string& dxTypeName);
 
 
-DXGI_FORMAT             Map( const VertexAttribute&     attrib          );
+DXGI_FORMAT             Map( const VectorType           vectorType      );
 DXGI_FORMAT             Map( const DataType             dataType        );
 DXGI_FORMAT             Map( const TextureFormat        textureFormat   );
 D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology        );
