@@ -138,7 +138,7 @@ void GLCommandBuffer::ClearBuffers(long flags)
     glClear(mask);
 }
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 void GLCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
@@ -190,6 +190,13 @@ void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long /
     /* Bind storage buffer with BindBufferBase */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, slot, bufferGL.GetID());
+}
+
+void GLCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
+{
+    /* Bind stream-output buffer with BindBufferBase */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBufferBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, 0, bufferGL.GetID());
 }
 
 /* ----- Textures ----- */

@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 static GLenum GetGLBufferUsage(long flags)
 {

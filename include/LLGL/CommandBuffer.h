@@ -120,7 +120,7 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual void ClearBuffers(long flags) = 0;
 
-        /* ----- Hardware Buffers ------ */
+        /* ----- Buffers ------ */
 
         /**
         \brief Sets the specified vertex buffer for subsequent drawing operations.
@@ -171,17 +171,22 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.
-        \param[in] storageBuffer Specifies the storage buffer to set. This buffer must have been created with the buffer type: BufferType::Storage.
-        This must not be an unspecified storage buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateStorageBuffer"
-        function or with the "RenderSystem::WriteStorageBuffer" function.
+        \param[in] buffer Specifies the storage buffer to set. This buffer must have been created with the buffer type: BufferType::Storage.
         \param[in] slot Specifies the slot index where to put the storage buffer.
         \param[in] shaderStageFlags Specifies at which shader stages the storage buffer is to be set and which resource views are to be set.
         By default all shader stages and all resource views are affected.
-        \see RenderSystem::WriteBuffer
+        \see RenderSystem::MapBuffer
+        \see RenderSystem::UnmapBuffer
         */
         virtual void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
-        //virtual void SetStreamOutputBuffer(Buffer& buffer) = 0;
+        /**
+        \brief Sets the active stream-output buffer to the stream-output stage.
+        \param[in] buffer Specifies the stream-output buffer to set. This buffer must have been created with the buffer type: BufferType::StreamOutput.
+        \see RenderSystem::MapBuffer
+        \see RenderSystem::UnmapBuffer
+        */
+        virtual void SetStreamOutputBuffer(Buffer& buffer) = 0;
 
         /* ----- Textures ----- */
 

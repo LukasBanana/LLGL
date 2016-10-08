@@ -87,6 +87,7 @@ class LLGL_EXPORT RenderingProfiler
         Counter setIndexBuffer;         //!< Counter for index buffer bindings. \see CommandBuffer::SetIndexBuffer
         Counter setConstantBuffer;      //!< Counter for constant buffer bindings. \see CommandBuffer::SetConstantBuffer
         Counter setStorageBuffer;       //!< Counter for storage buffer bindings. \see CommandBuffer::SetStorageBuffer
+        Counter setStreamOutputBuffer;  //!< Counter for stream-output buffer bindings. \see CommandBuffer::SetStreamOutputBuffer
         Counter setGraphicsPipeline;    //!< Counter for graphics pipeline bindings. \see CommandBuffer::SetGraphicsPipeline
         Counter setComputePipeline;     //!< Counter for compute pipeline bindings. \see CommandBuffer::SetComputePipeline
         Counter setTexture;             //!< Counter for texture bindings. \see CommandBuffer::SetTexture

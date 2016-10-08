@@ -74,7 +74,7 @@ void DbgRenderSystem::Release(CommandBuffer& commandBuffer)
     ReleaseDbg(commandBuffers_, commandBuffer);
 }
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {

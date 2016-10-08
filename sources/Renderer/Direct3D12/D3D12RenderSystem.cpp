@@ -76,7 +76,7 @@ void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
     RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 // private
 std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const BufferDescriptor& desc, const void* initialData)

@@ -86,7 +86,7 @@ void DbgCommandBuffer::ClearBuffers(long flags)
     instance.ClearBuffers(flags);
 }
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
@@ -153,6 +153,17 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long 
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     {
         instance.SetStorageBuffer(bufferDbg.instance, slot, shaderStageFlags);
+    }
+    LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
+}
+
+void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
+{
+    DebugBufferType(buffer.GetType(), BufferType::StreamOutput, __FUNCTION__);
+
+    auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    {
+        instance.SetStreamOutputBuffer(bufferDbg.instance);
     }
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }

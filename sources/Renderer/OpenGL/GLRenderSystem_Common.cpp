@@ -65,7 +65,7 @@ void GLRenderSystem::Release(CommandBuffer& commandBuffer)
     RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 // --> see "GLRenderSystem_Buffers.cpp" file
 

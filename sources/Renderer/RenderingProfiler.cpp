@@ -21,6 +21,7 @@ void RenderingProfiler::ResetCounters()
     setIndexBuffer.Reset();
     setConstantBuffer.Reset();
     setStorageBuffer.Reset();
+    setStreamOutputBuffer.Reset();
     setGraphicsPipeline.Reset();
     setComputePipeline.Reset();
     setTexture.Reset();

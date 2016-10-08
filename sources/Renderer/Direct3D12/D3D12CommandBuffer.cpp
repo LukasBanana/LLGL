@@ -103,7 +103,7 @@ void D3D12CommandBuffer::ClearBuffers(long flags)
     }
 }
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
@@ -138,6 +138,11 @@ void D3D12CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsign
 }
 
 void D3D12CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+{
+    //todo...
+}
+
+void D3D12CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
     //todo...
 }

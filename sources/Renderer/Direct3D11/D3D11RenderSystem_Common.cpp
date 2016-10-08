@@ -71,7 +71,7 @@ void D3D11RenderSystem::Release(CommandBuffer& commandBuffer)
     RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData)
 {

@@ -23,6 +23,7 @@
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
+#include "Buffer/D3D11StreamOutputBuffer.h"
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11TextureArray.h"
@@ -111,7 +112,7 @@ void D3D11CommandBuffer::ClearBuffers(long flags)
         context_->ClearDepthStencilView(framebufferView_.dsv, dsvClearFlags, clearState_.depth, clearState_.stencil);
 }
 
-/* ----- Hardware Buffers ------ */
+/* ----- Buffers ------ */
 
 void D3D11CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
@@ -195,6 +196,17 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, lon
         SetShaderResourcesOnStages(slot, 1, srvList, shaderStageFlags);
     }
 }
+
+void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
+{
+    auto& streamOutputBufferD3D = LLGL_CAST(D3D11StreamOutputBuffer&, buffer);
+    
+    ID3D11Buffer* buffers[] = { streamOutputBufferD3D.Get() };
+    UINT offsets[] = { 0 };
+
+    context_->SOSetTargets(1, buffers, offsets);
+}
+
 
 /* ----- Textures ----- */
 

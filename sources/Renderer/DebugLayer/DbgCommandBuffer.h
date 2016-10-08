@@ -52,7 +52,7 @@ class DbgCommandBuffer : public CommandBuffer
 
         void ClearBuffers(long flags) override;
 
-        /* ----- Hardware Buffers ------ */
+        /* ----- Buffers ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
         void SetVertexBufferArray(BufferArray& bufferArray) override;
@@ -63,6 +63,8 @@ class DbgCommandBuffer : public CommandBuffer
         void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
         void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+
+        void SetStreamOutputBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */
 
