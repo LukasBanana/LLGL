@@ -133,48 +133,48 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(TextureFormat format, unsigne
 
 /* ----- BufferDescriptor utility functions ----- */
 
-LLGL_EXPORT BufferDescriptor VertexBufferDesc(unsigned int size, const VertexFormat& vertexFormat, const BufferUsage usage)
+LLGL_EXPORT BufferDescriptor VertexBufferDesc(unsigned int size, const VertexFormat& vertexFormat, long flags)
 {
     BufferDescriptor desc;
     {
         desc.type                       = BufferType::Vertex;
         desc.size                       = size;
-        desc.usage                      = usage;
+        desc.flags                      = flags;
         desc.vertexBuffer.vertexFormat  = vertexFormat;
     }
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor IndexBufferDesc(unsigned int size, const IndexFormat& indexFormat, const BufferUsage usage)
+LLGL_EXPORT BufferDescriptor IndexBufferDesc(unsigned int size, const IndexFormat& indexFormat, long flags)
 {
     BufferDescriptor desc;
     {
         desc.type                       = BufferType::Index;
         desc.size                       = size;
-        desc.usage                      = usage;
+        desc.flags                      = flags;
         desc.indexBuffer.indexFormat    = indexFormat;
     }
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor ConstantBufferDesc(unsigned int size, const BufferUsage usage)
+LLGL_EXPORT BufferDescriptor ConstantBufferDesc(unsigned int size, long flags)
 {
     BufferDescriptor desc;
     {
         desc.type   = BufferType::Constant;
         desc.size   = size;
-        desc.usage  = usage;
+        desc.flags  = flags;
     }
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType, unsigned int stride, const BufferUsage usage)
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType, unsigned int stride, long flags)
 {
     BufferDescriptor desc;
     {
         desc.type                       = BufferType::Storage;
         desc.size                       = size;
-        desc.usage                      = usage;
+        desc.flags                      = flags;
         desc.storageBuffer.storageType  = storageType;
         desc.storageBuffer.stride       = stride;
     }

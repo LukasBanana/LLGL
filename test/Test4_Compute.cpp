@@ -58,7 +58,7 @@ int main()
         {
             storageBufferDesc.type  = LLGL::BufferType::Storage;
             storageBufferDesc.size  = sizeof(Gs::Vector4f)*vecSize;
-            storageBufferDesc.usage = LLGL::BufferUsage::Dynamic;
+            storageBufferDesc.flags = LLGL::BufferFlags::DynamicUsage;
         }
         auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, vec.data());
 

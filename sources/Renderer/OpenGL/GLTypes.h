@@ -29,7 +29,6 @@ namespace GLTypes
 {
 
 
-GLenum Map( const BufferUsage           bufferUsage         );
 GLenum Map( const BufferCPUAccess       cpuAccess           );
 GLenum Map( const DataType              dataType            );
 GLenum Map( const PrimitiveTopology     topology            );

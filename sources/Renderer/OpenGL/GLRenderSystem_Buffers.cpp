@@ -20,6 +20,11 @@ namespace LLGL
 
 /* ----- Hardware Buffers ------ */
 
+static GLenum GetGLBufferUsage(long flags)
+{
+    return ((flags & BufferFlags::DynamicUsage) != 0 ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+}
+
 Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
     /* Create either base of sub-class GLBuffer object */
@@ -31,7 +36,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             auto bufferGL = MakeUnique<GLVertexBuffer>();
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
+                bufferGL->BufferData(initialData, desc.size, GetGLBufferUsage(desc.flags));
                 bufferGL->BuildVertexArray(desc.vertexBuffer.vertexFormat);
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
@@ -44,7 +49,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             auto bufferGL = MakeUnique<GLIndexBuffer>(desc.indexBuffer.indexFormat);
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
+                bufferGL->BufferData(initialData, desc.size, GetGLBufferUsage(desc.flags));
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
         }
@@ -56,7 +61,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             auto bufferGL = MakeUnique<GLBuffer>(desc.type);
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, desc.size, GLTypes::Map(desc.usage));
+                bufferGL->BufferData(initialData, desc.size, GetGLBufferUsage(desc.flags));
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
         }

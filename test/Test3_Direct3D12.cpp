@@ -69,9 +69,9 @@ int main()
 
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.type                           = LLGL::BufferType::Vertex;
-            vertexBufferDesc.size                           = sizeof(vertices);
-            vertexBufferDesc.usage                          = LLGL::BufferUsage::Static;
+            vertexBufferDesc.type                       = LLGL::BufferType::Vertex;
+            vertexBufferDesc.size                       = sizeof(vertices);
+            vertexBufferDesc.flags                      = LLGL::BufferFlags::DynamicUsage;
             vertexBufferDesc.vertexBuffer.vertexFormat  = vertexFormat;
         }
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
@@ -90,7 +90,7 @@ int main()
         {
             constantBufferDesc.type     = LLGL::BufferType::Constant;
             constantBufferDesc.size     = sizeof(matrices);
-            constantBufferDesc.usage    = LLGL::BufferUsage::Dynamic;
+            constantBufferDesc.flags    = LLGL::BufferFlags::DynamicUsage;
         }
         auto constantBuffer = renderer->CreateBuffer(constantBufferDesc, &matrices);
 

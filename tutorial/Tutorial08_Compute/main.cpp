@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
         {
             storageBufferDesc.type                      = LLGL::BufferType::Storage;
             storageBufferDesc.size                      = inputData.size() * sizeof(DataBlock);
-            storageBufferDesc.usage                     = LLGL::BufferUsage::Dynamic;
+            storageBufferDesc.flags                     = LLGL::BufferFlags::DynamicUsage | LLGL::BufferFlags::MapReadAccess;
             storageBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWStructuredBuffer;
             storageBufferDesc.storageBuffer.stride      = sizeof(DataBlock);
         }

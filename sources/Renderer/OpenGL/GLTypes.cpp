@@ -34,16 +34,6 @@ static void UnmapFailed(const std::string& typeName)
 
 /* ----- Map functions ----- */
 
-GLenum Map(const BufferUsage bufferUsage)
-{
-    switch (bufferUsage)
-    {
-        case BufferUsage::Static:   return GL_STATIC_DRAW;
-        case BufferUsage::Dynamic:  return GL_DYNAMIC_DRAW;
-    }
-    MapFailed("BufferUsage");
-}
-
 GLenum Map(const BufferCPUAccess cpuAccess)
 {
     switch (cpuAccess)

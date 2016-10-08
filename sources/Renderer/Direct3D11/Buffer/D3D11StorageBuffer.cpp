@@ -46,8 +46,9 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
         CreateUAV(device, 0, numElements);
 
     /* Create CPU access buffer (if required) */
-    //if (???)
-        CreateCPUAccessBuffer(device, bufferDesc, D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE);
+    auto cpuAccessFlags = GetCPUAccessFlags(desc.flags);
+    if (cpuAccessFlags != 0)
+        CreateCPUAccessBuffer(device, bufferDesc, cpuAccessFlags);
 }
 
 static bool HasReadAccess(const BufferCPUAccess access)
@@ -62,6 +63,9 @@ static bool HasWriteAccess(const BufferCPUAccess access)
 
 void* D3D11StorageBuffer::Map(ID3D11DeviceContext* context, const BufferCPUAccess access)
 {
+    if (!cpuAccessBuffer_)
+        throw std::runtime_error("failed to map storage buffer without CPU access");
+        
     /* On read access -> copy storage buffer to CPU-access buffer */
     if (HasReadAccess(access))
         context->CopyResource(cpuAccessBuffer_.Get(), Get());
@@ -74,6 +78,9 @@ void* D3D11StorageBuffer::Map(ID3D11DeviceContext* context, const BufferCPUAcces
 
 void D3D11StorageBuffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access)
 {
+    if (!cpuAccessBuffer_)
+        throw std::runtime_error("failed to unmap storage buffer without CPU access");
+        
     /* Unmap CPU-access buffer */
     context->Unmap(cpuAccessBuffer_.Get(), 0);
 
@@ -108,7 +115,12 @@ bool D3D11StorageBuffer::IsByteAddressable() const
 
 UINT D3D11StorageBuffer::GetBindFlags() const
 {
-    return (HasUAV() ? D3D11_BIND_UNORDERED_ACCESS : D3D11_BIND_SHADER_RESOURCE);
+    UINT flags = D3D11_BIND_SHADER_RESOURCE;
+    
+    if (HasUAV())
+        flags |= D3D11_BIND_UNORDERED_ACCESS;
+
+    return flags;
 }
 
 UINT D3D11StorageBuffer::GetMiscFlags() const
@@ -121,6 +133,18 @@ UINT D3D11StorageBuffer::GetMiscFlags() const
         return 0;
 }
 
+UINT D3D11StorageBuffer::GetCPUAccessFlags(long bufferFlags) const
+{
+    UINT flags = 0;
+
+    if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
+        flags |= D3D11_CPU_ACCESS_READ;
+    if ((bufferFlags & BufferFlags::MapWriteAccess) != 0)
+        flags |= D3D11_CPU_ACCESS_WRITE;
+
+    return flags;
+}
+
 void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements)
 {
     /* Initialize descriptor and create SRV */
@@ -131,7 +155,7 @@ void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, UINT firstElement, UINT
         desc.Buffer.FirstElement    = firstElement;
         desc.Buffer.NumElements     = numElements;
     }
-    auto hr = device->CreateShaderResourceView(Get(), &desc, &srv_);
+    auto hr = device->CreateShaderResourceView(Get(), &desc, srv_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 shader-resource-view (SRV) for storage buffer");
 }
 

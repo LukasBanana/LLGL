@@ -61,16 +61,16 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(TextureFormat format, unsigne
 /* ----- BufferDescriptor utility functions ----- */
 
 //! Returns a BufferDescriptor structure for a vertex buffer.
-LLGL_EXPORT BufferDescriptor VertexBufferDesc(unsigned int size, const VertexFormat& vertexFormat, const BufferUsage usage = BufferUsage::Static);
+LLGL_EXPORT BufferDescriptor VertexBufferDesc(unsigned int size, const VertexFormat& vertexFormat, long flags = 0);
 
 //! Returns a BufferDescriptor structure for an index buffer.
-LLGL_EXPORT BufferDescriptor IndexBufferDesc(unsigned int size, const IndexFormat& indexFormat, const BufferUsage usage = BufferUsage::Static);
+LLGL_EXPORT BufferDescriptor IndexBufferDesc(unsigned int size, const IndexFormat& indexFormat, long flags = 0);
 
 //! Returns a BufferDescriptor structure for a constant buffer.
-LLGL_EXPORT BufferDescriptor ConstantBufferDesc(unsigned int size, const BufferUsage usage = BufferUsage::Static);
+LLGL_EXPORT BufferDescriptor ConstantBufferDesc(unsigned int size, long flags = BufferFlags::DynamicUsage);
 
 //! Returns a BufferDescriptor structure for a storage buffer.
-LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType, unsigned int stride, const BufferUsage usage = BufferUsage::Static);
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType, unsigned int stride, long flags = BufferFlags::MapReadAccess | BufferFlags::MapWriteAccess);
 
 /** @} */
 

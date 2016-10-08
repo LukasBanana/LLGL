@@ -49,28 +49,6 @@ enum class StorageBufferType
 };
 
 /**
-\brief Hardware buffer usage enumeration.
-\remarks For OpenGL, the buffer usage is just a hint to the GL server.
-For Direct3D, the buffer usage is crucial during buffer creation.
-\see RenderSystem::CreateBuffer
-*/
-enum class BufferUsage
-{
-    /**
-    \brief The hardware buffer will be rarely changed by the client but often used by the hardware.
-    \remarks For Direct3D 11, a buffer can use the static buffer usage, if always the entire buffer will be updated.
-    Otherwise, the dynamic buffer usage must be used.
-    */
-    Static,
-
-    /**
-    \brief The hardware buffer will be often changed by the client (e.g. almost every frame).
-    \remarks For Direct3D 11, a buffer must use the dynamic buffer usage, if it will only partially be updated at any time.
-    */
-    Dynamic,
-};
-
-/**
 \brief Hardware buffer CPU acccess enumeration.
 \see RenderSystem::MapBuffer
 */
@@ -79,6 +57,32 @@ enum class BufferCPUAccess
     ReadOnly,   //!< CPU read access only.
     WriteOnly,  //!< CPU write access only.
     ReadWrite,  //!< CPU read and write access.
+};
+
+//! Buffer flags enumeration.
+struct BufferFlags
+{
+    enum
+    {
+        /**
+        \brief Buffer mapping with CPU read access is required.
+        \see RenderSystem::MapBuffer
+        */
+        MapReadAccess   = (1 << 0),
+
+        /**
+        \brief Buffer mapping with CPU write access is required.
+        \see RenderSystem::MapBuffer
+        */
+        MapWriteAccess  = (1 << 1),
+
+        /**
+        \brief Hint to the renderer that the buffer will be frequently updated from the CPU.
+        This is useful for a constant buffer for instance, that is updated by the host program every frame.
+        \see RenderSystem::WriteBuffer
+        */
+        DynamicUsage    = (1 << 2),
+    };
 };
 
 
@@ -133,8 +137,12 @@ struct BufferDescriptor
     */
     unsigned int            size    = 0;
 
-    //! Buffer usage. By default BufferUsage::Static.
-    BufferUsage             usage   = BufferUsage::Static;
+    /**
+    \brief Specifies the buffer creation flags. By default 0.
+    \remarks This can be bitwise OR combination of the entries of the BufferFlags enumeration.
+    \see BufferFlags
+    */
+    long                    flags   = 0;
 
     //! Vertex buffer type descriptor appendix.
     VertexBufferDescriptor  vertexBuffer;
