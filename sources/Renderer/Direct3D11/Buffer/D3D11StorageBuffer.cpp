@@ -38,12 +38,13 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
     CreateResource(device, bufferDesc, initialData);
 
     /* Create either UAV or SRV */
-    auto numElements = desc.size / desc.storageBuffer.stride;
+    auto format         = GetFormat(desc.storageBuffer.vectorType);
+    auto numElements    = desc.size / desc.storageBuffer.stride;
 
-    CreateSRV(device, 0, numElements);
+    CreateSRV(device, format, 0, numElements);
 
     if (HasUAV())
-        CreateUAV(device, 0, numElements);
+        CreateUAV(device, format, 0, numElements);
 
     /* Create CPU access buffer (if required) */
     auto cpuAccessFlags = GetCPUAccessFlags(desc.flags);
@@ -94,6 +95,12 @@ bool D3D11StorageBuffer::HasUAV() const
     return ( storageType_ >= StorageBufferType::RWBuffer );
 }
 
+bool D3D11StorageBuffer::IsTyped() const
+{
+    return ( storageType_ == StorageBufferType::Buffer ||
+             storageType_ == StorageBufferType::RWBuffer );
+}
+
 bool D3D11StorageBuffer::IsStructured() const
 {
     return ( storageType_ == StorageBufferType::StructuredBuffer       ||
@@ -133,12 +140,36 @@ UINT D3D11StorageBuffer::GetMiscFlags() const
         return 0;
 }
 
-void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements)
+UINT D3D11StorageBuffer::GetUAVFlags() const
+{
+    if (IsByteAddressable())
+        return D3D11_BUFFER_UAV_FLAG_RAW;
+    if (storageType_ == StorageBufferType::AppendStructuredBuffer)
+        return D3D11_BUFFER_UAV_FLAG_APPEND;
+    if (storageType_ == StorageBufferType::ConsumeStructuredBuffer)
+        return D3D11_BUFFER_UAV_FLAG_COUNTER;
+    return 0;
+}
+
+DXGI_FORMAT D3D11StorageBuffer::GetFormat(const VectorType vectorType) const
+{
+    /*
+    D3D11_BUFFER_UAV_FLAG_RAW buffer flag for ByteAddressBuffer requires the UAV to have the DXGI_FORMAT_R32_TYPELESS format.
+    -> see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476096(v=vs.85).aspx
+    */
+    if (IsTyped())
+        return D3D11Types::Map(vectorType);
+    if (IsByteAddressable())
+        return DXGI_FORMAT_R32_TYPELESS;
+    return DXGI_FORMAT_UNKNOWN;
+}
+
+void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements)
 {
     /* Initialize descriptor and create SRV */
     D3D11_SHADER_RESOURCE_VIEW_DESC desc;
     {
-        desc.Format                 = DXGI_FORMAT_UNKNOWN;
+        desc.Format                 = format;
         desc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFER;
         desc.Buffer.FirstElement    = firstElement;
         desc.Buffer.NumElements     = numElements;
@@ -147,30 +178,16 @@ void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, UINT firstElement, UINT
     DXThrowIfFailed(hr, "failed to create D3D11 shader-resource-view (SRV) for storage buffer");
 }
 
-void D3D11StorageBuffer::CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements)
+void D3D11StorageBuffer::CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements)
 {
     /* Initialize descriptor and create UAV */
     D3D11_UNORDERED_ACCESS_VIEW_DESC desc;
     {
-        desc.Format                 = DXGI_FORMAT_UNKNOWN;
+        desc.Format                 = format;
         desc.ViewDimension          = D3D11_UAV_DIMENSION_BUFFER;
         desc.Buffer.FirstElement    = firstElement;
         desc.Buffer.NumElements     = numElements;
-        desc.Buffer.Flags           = 0;
-
-        if (IsByteAddressable())
-        {
-            /*
-            D3D11_BUFFER_UAV_FLAG_RAW buffer flag for ByteAddressBuffer requires the UAV to have the DXGI_FORMAT_R32_TYPELESS format.
-            -> see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476096(v=vs.85).aspx
-            */
-            desc.Format = DXGI_FORMAT_R32_TYPELESS;
-            desc.Buffer.Flags |= D3D11_BUFFER_UAV_FLAG_RAW;
-        }
-        else if (storageType_ == StorageBufferType::AppendStructuredBuffer)
-            desc.Buffer.Flags |= D3D11_BUFFER_UAV_FLAG_APPEND;
-        else if (storageType_ == StorageBufferType::ConsumeStructuredBuffer)
-            desc.Buffer.Flags |= D3D11_BUFFER_UAV_FLAG_COUNTER;
+        desc.Buffer.Flags           = GetUAVFlags();
     }
     auto hr = device->CreateUnorderedAccessView(Get(), &desc, uav_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 unordered-acces-view (UAV) for storage buffer");

@@ -28,7 +28,13 @@ class D3D11StorageBuffer : public D3D11Buffer
 
         bool HasUAV() const;
 
+        // True, if storage type is: Buffer or RWBuffer.
+        bool IsTyped() const;
+
+        // True, if storage type is: StructuredBuffer, RWStructuredBuffer, AppendStructuredBuffer, or ConsumeStructuredBuffer.
         bool IsStructured() const;
+
+        // True, if storage type is: ByteAddressBuffer or RWByteAddressBuffer.
         bool IsByteAddressable() const;
 
         inline ID3D11ShaderResourceView* GetSRV() const
@@ -56,9 +62,12 @@ class D3D11StorageBuffer : public D3D11Buffer
 
         UINT GetBindFlags() const;
         UINT GetMiscFlags() const;
+        UINT GetUAVFlags() const;
 
-        void CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements);
-        void CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements);
+        DXGI_FORMAT GetFormat(const VectorType vectorType) const;
+
+        void CreateSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
+        void CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
 
         void CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags);
 

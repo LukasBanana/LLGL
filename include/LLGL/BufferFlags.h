@@ -117,8 +117,15 @@ struct BufferDescriptor
         /**
         \brief Specifies the storage buffer type. By defalut StorageBufferType::Buffer.
         \remarks In OpenGL there are only generic storage buffers (or rather "Shader Storage Buffer Objects").
+        \see vectorType
         */
         StorageBufferType   storageType = StorageBufferType::Buffer;
+
+        /**
+        \brief Specifies the vector type of a typed buffer.
+        \remarks This is only used if the storage type is either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
+        */
+        VectorType          vectorType  = VectorType::Float4;
 
         /**
         \brief Specifies the stride (in bytes) of each element in a storage buffer.
