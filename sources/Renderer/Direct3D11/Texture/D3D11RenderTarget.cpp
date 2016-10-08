@@ -288,7 +288,7 @@ void D3D11RenderTarget::CreateAndAppendRTV(ID3D11Resource* resource, const D3D11
 {
     ComPtr<ID3D11RenderTargetView> rtv;
 
-    auto hr = device_->CreateRenderTargetView(resource, &rtvDesc, &rtv);
+    auto hr = device_->CreateRenderTargetView(resource, &rtvDesc, rtv.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV)");
 
     renderTargetViews_.push_back(rtv);
