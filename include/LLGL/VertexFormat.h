@@ -10,7 +10,6 @@
 
 
 #include "Export.h"
-#include "Image.h"
 #include "VertexAttribute.h"
 #include <vector>
 
@@ -50,7 +49,7 @@ struct LLGL_EXPORT VertexFormat
     \brief Append all attributes of the specified vertex format.
     \remarks This can be used to build a vertex format for vertex buffer arrays.
     */
-    void AppendAttributes(const VertexFormat& vertexFormat);
+    void AppendAttributes(const VertexFormat& format);
 
     /**
     \brief Specifies the list of vertex attributes.

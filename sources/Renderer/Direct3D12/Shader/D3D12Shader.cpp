@@ -25,7 +25,7 @@ D3D12Shader::D3D12Shader(const ShaderType type) :
 bool D3D12Shader::Compile(const ShaderSource& shaderSource)
 {
     /* Get parameter from union */
-    const auto& sourceCode  = shaderSource.sourceHLSL.sourceCode;
+    const auto& sourceCode  = shaderSource.sourceCode;
     const auto& entryPoint  = shaderSource.sourceHLSL.entryPoint;
     const auto& target      = shaderSource.sourceHLSL.target;
     auto flags              = shaderSource.sourceHLSL.flags;

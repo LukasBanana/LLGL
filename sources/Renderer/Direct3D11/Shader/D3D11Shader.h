@@ -83,7 +83,7 @@ class D3D11Shader : public Shader
 
     private:
 
-        void CreateHardwareShader(ID3D11ClassLinkage* classLinkage);
+        void CreateHardwareShader(const ShaderSource& shaderSource, ID3D11ClassLinkage* classLinkage);
         void ReflectShader();
 
         ID3D11Device*                               device_             = nullptr;
@@ -95,7 +95,7 @@ class D3D11Shader : public Shader
 
         std::vector<VertexAttribute>                vertexAttributes_;
         std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
-        std::vector<StorageBufferViewDescriptor>        storageBufferDescs_;
+        std::vector<StorageBufferViewDescriptor>    storageBufferDescs_;
 
 };
 

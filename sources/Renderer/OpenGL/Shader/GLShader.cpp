@@ -31,7 +31,7 @@ GLShader::~GLShader()
 bool GLShader::Compile(const ShaderSource& shaderSource)
 {
     /* Setup shader source */
-    const GLchar* strings[] = { shaderSource.sourceGLSL.sourceCode.c_str() };
+    const GLchar* strings[] = { shaderSource.sourceCode.c_str() };
     glShaderSource(id_, 1, strings, nullptr);
 
     /* Compile shader */

@@ -66,9 +66,9 @@ void VertexFormat::AppendAttribute(const VertexAttribute& attrib, unsigned int o
         attr.inputSlot = 0;
 }
 
-void VertexFormat::AppendAttributes(const VertexFormat& vertexFormat)
+void VertexFormat::AppendAttributes(const VertexFormat& format)
 {
-    for (const auto& attr : vertexFormat.attributes)
+    for (const auto& attr : format.attributes)
         AppendAttribute(attr, attr.offset);
 }
 

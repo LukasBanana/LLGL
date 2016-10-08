@@ -10,12 +10,15 @@
 
 
 #include "Export.h"
+#include "StreamOutputFormat.h"
 #include <string>
 
 
 namespace LLGL
 {
 
+
+/* ----- Enumerations ----- */
 
 //! Shader type enumeration.
 enum class ShaderType
@@ -28,6 +31,8 @@ enum class ShaderType
     Compute,        //!< Compute shader type.
 };
 
+
+/* ----- Flags ----- */
 
 //! Shader compilation flags enumeration.
 struct ShaderCompileFlags
@@ -87,52 +92,79 @@ struct ShaderStageFlags
     };
 };
 
-//! Shader source code union.
-union ShaderSource
+
+/* ----- Structures ----- */
+
+//! Shader source code structure.
+struct ShaderSource
 {
     /**
-    \brief Specifies the shader source code GLSL.
+    \brief Constructor with shader source code for GLSL.
     \param[in] sourceCode Specifies the shader source code.
-    \note Only supported with: OpenGL (for GLSL).
+    \note Only supported with: OpenGL.
     */
-    ShaderSource(const std::string& sourceCode) :
-        sourceHLSL{ sourceCode, "", "", 0 }
+    inline ShaderSource(const std::string& sourceCode) :
+        sourceCode( sourceCode )
     {
     }
 
     /**
-    \brief Specifies the shader source code for HLSL.
+    \brief Constructor with shader source code for GLSL.
+    \param[in] sourceCode Specifies the shader source code with move semantic.
+    \note Only supported with: OpenGL.
+    */
+    inline ShaderSource(std::string&& sourceCode) :
+        sourceCode( std::move(sourceCode) )
+    {
+    }
+
+    /**
+    \brief Constructor with shader source code for HLSL.
     \param[in] sourceCode Specifies the shader source code.
     \param[in] entryPoint Specifies the shader entry point.
     \param[in] target Specifies the shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
     \param[in] flags Specifies optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries. By default 0.
-    \note Only supported with: Direct3D 11, Direct3D 12 (for HLSL).
+    \see ShaderCompileFlags
+    \note Only supported with: Direct3D 11, Direct3D 12.
     */
-    ShaderSource(const std::string& sourceCode, const std::string& entryPoint, const std::string& target, int flags = 0) :
-        sourceHLSL{ sourceCode, entryPoint, target, flags }
+    inline ShaderSource(const std::string& sourceCode, const std::string& entryPoint, const std::string& target, long flags = 0) :
+        sourceCode  { sourceCode                },
+        sourceHLSL  { entryPoint, target, flags }
     {
     }
 
-    ~ShaderSource()
+    /**
+    \brief Constructor with shader source code for HLSL.
+    \param[in] sourceCode Specifies the shader source code with move semantic.
+    \param[in] entryPoint Specifies the shader entry point.
+    \param[in] target Specifies the shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
+    \param[in] flags Specifies optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries. By default 0.
+    \see ShaderCompileFlags
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    */
+    inline ShaderSource(std::string&& sourceCode, const std::string& entryPoint, const std::string& target, long flags = 0) :
+        sourceCode  { std::move(sourceCode)     },
+        sourceHLSL  { entryPoint, target, flags }
     {
     }
 
-    //! Shader source descriptor for GLSL.
-    struct GLSL
+    //! Additional descripor for HLSL shader source.
+    struct SourceHLSL
     {
-        const std::string& sourceCode; //!< Shader source code string.
-    }
-    sourceGLSL;
-
-    //! Shader source descriptor for HLSL.
-    struct HLSL
-    {
-        const std::string&  sourceCode; //!< Shader source code string.
         std::string         entryPoint; //!< Shader entry point (this is the name of the shader main function).
         std::string         target;     //!< Shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
-        int                 flags;      //!< Optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries.
-    }
-    sourceHLSL;
+        long                flags;      //!< Optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries.
+    };
+
+    //! Additional descriptor for stream outputs.
+    struct StreamOutput
+    {
+        StreamOutputFormat  format;     //!< Stream-output buffer format.
+    };
+
+    std::string     sourceCode;     //!< Shader source code string.
+    SourceHLSL      sourceHLSL;     //!< Additional HLSL shader source descriptor.
+    StreamOutput    streamOutput;   //!< Optional stream output for a geometry shader.
 };
 
 

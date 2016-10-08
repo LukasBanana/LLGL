@@ -28,6 +28,9 @@ struct LLGL_EXPORT StreamOutputAttribute
     //! Vertex attribute name (for GLSL) or semantic name (for HLSL).
     std::string     name;
 
+    //! Zero-based stream number. By default 0.
+    unsigned int    stream          = 0;
+
     //! Start vector component index, which is to be written. Must be 0, 1, 2, or 3. By default 0.
     unsigned int    startComponent  = 0;
 
@@ -52,8 +55,8 @@ struct LLGL_EXPORT StreamOutputAttribute
 };
 
 
-//LLGL_EXPORT bool operator == (const StreamOutputAttribute& lhs, const StreamOutputAttribute& rhs);
-//LLGL_EXPORT bool operator != (const StreamOutputAttribute& lhs, const StreamOutputAttribute& rhs);
+LLGL_EXPORT bool operator == (const StreamOutputAttribute& lhs, const StreamOutputAttribute& rhs);
+LLGL_EXPORT bool operator != (const StreamOutputAttribute& lhs, const StreamOutputAttribute& rhs);
 
 
 } // /namespace LLGL

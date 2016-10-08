@@ -6,7 +6,7 @@
  */
 
 #include <LLGL/VideoAdapter.h>
-#include "HelperMacros.h"
+#include "../Core/HelperMacros.h"
 
 
 namespace LLGL
