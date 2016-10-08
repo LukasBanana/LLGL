@@ -9,12 +9,14 @@
 #define __LLGL_FORMAT_H__
 
 
-#include <Gauss/Vector2.h>
+#include "Export.h"
 
 
 namespace LLGL
 {
 
+
+/* ----- Enumerations ----- */
 
 //! Renderer data types enumeration.
 enum class DataType
@@ -77,6 +79,17 @@ enum class MatrixType
     Double4x2,  //!< 4x2 double precision floating-point matrix (dmat4x2 in GLSL, double4x2 in HLSL).
     Double4x3,  //!< 4x3 double precision floating-point matrix (dmat4x3 in GLSL, double4x3 in HLSL).
 };*/
+
+
+/* ----- Functions ----- */
+
+/**
+\brief Retrieves the format of the specified vector type.
+\param[in] vectorType Specifies the vector type whose format is to be retrieved.
+\param[out] dataType Specifies the output parameter for the resulting data type.
+\param[out] components Specifiefs the output parameter for the resulting number of vector components.
+*/
+LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, unsigned int& components);
 
 
 } // /namespace LLGL
