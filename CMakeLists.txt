@@ -168,6 +168,7 @@ set(FilesTutorial05 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial05_RenderTarget/main.
 set(FilesTutorial06 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial06_MultiContext/main.cpp)
 set(FilesTutorial07 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial07_Array/main.cpp)
 set(FilesTutorial08 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial08_Compute/main.cpp)
+set(FilesTutorial09 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial09_StreamOutput/main.cpp)
 
 
 # === Source group folders ===
@@ -356,6 +357,7 @@ if(LLGL_BUILD_TUTORIALS)
 	ADD_TEST_PROJECT(Tutorial06_MultiContext ${FilesTutorial06})
 	ADD_TEST_PROJECT(Tutorial07_Array ${FilesTutorial07})
 	ADD_TEST_PROJECT(Tutorial08_Compute ${FilesTutorial08})
+	ADD_TEST_PROJECT(Tutorial09_StreamOutput ${FilesTutorial09})
 endif()
 
 

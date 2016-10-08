@@ -93,15 +93,23 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 
+static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+{
+    auto type = (*bufferArray)->GetType();
+
+    switch (type)
+    {
+        case BufferType::Vertex:    return MakeUnique<D3D11VertexBufferArray>(numBuffers, bufferArray);
+        default:                    break;
+    }
+
+    return MakeUnique<D3D11BufferArray>(type, numBuffers, bufferArray);
+}
+
 BufferArray* D3D11RenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    auto type = (*bufferArray)->GetType();
-
-    if (type == BufferType::Vertex)
-        return TakeOwnership(bufferArrays_, MakeUnique<D3D11VertexBufferArray>(numBuffers, bufferArray));
-
-    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(type, numBuffers, bufferArray));
+    return TakeOwnership(bufferArrays_, MakeD3D11BufferArray(numBuffers, bufferArray));
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)

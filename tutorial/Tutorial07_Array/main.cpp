@@ -119,7 +119,7 @@ private:
 
     void OnDrawFrame() override
     {
-        // Clear color and depth buffers
+        // Clear color buffer
         commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
         // Set buffer array

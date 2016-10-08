@@ -301,7 +301,8 @@ protected:
 
     LLGL::ShaderProgram* LoadShaderProgram(
         const std::vector<TutorialShaderDescriptor>& shaderDescs,
-        const LLGL::VertexFormat& vertexFormat = {})
+        const LLGL::VertexFormat& vertexFormat = {},
+        const LLGL::StreamOutputFormat& streamOutputFormat = {})
     {
         // Create shader program
         LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
@@ -311,9 +312,14 @@ protected:
             // Read shader file
             auto shaderCode = ReadFileContent(desc.filename);
 
-            // Create shader and compile shader
+            // Create shader
             auto shader = renderer->CreateShader(desc.type);
-            shader->Compile(LLGL::ShaderSource(shaderCode, desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug));
+
+            // Compile shader
+            LLGL::ShaderSource shaderSource(shaderCode, desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug);
+            shaderSource.streamOutput.format = streamOutputFormat;
+
+            shader->Compile(shaderSource);
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
