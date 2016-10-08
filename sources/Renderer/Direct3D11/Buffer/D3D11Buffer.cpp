@@ -20,10 +20,10 @@ D3D11Buffer::D3D11Buffer(const BufferType type) :
 {
 }
 
-D3D11Buffer::D3D11Buffer(const BufferType type, ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData) :
+D3D11Buffer::D3D11Buffer(const BufferType type, ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData, long bufferFlags) :
     Buffer( type )
 {
-    CreateResource(device, desc, initialData);
+    CreateResource(device, desc, initialData, bufferFlags);
 }
 
 void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset)
@@ -93,7 +93,19 @@ void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAccess acce
  * ======= Protected: =======
  */
 
-void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData)
+static UINT GetCPUAccessFlags(long bufferFlags)
+{
+    UINT flags = 0;
+
+    if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
+        flags |= D3D11_CPU_ACCESS_READ;
+    if ((bufferFlags & BufferFlags::MapWriteAccess) != 0)
+        flags |= D3D11_CPU_ACCESS_WRITE;
+
+    return flags;
+}
+
+void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData, long bufferFlags)
 {
     /* Setup initial subresource data */
     D3D11_SUBRESOURCE_DATA subresourceData;
@@ -107,10 +119,27 @@ void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& 
     /* Create new D3D11 hardware buffer */
     auto hr = device->CreateBuffer(&desc, (initialData != nullptr ? &subresourceData : nullptr), buffer_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 buffer");
+
+    /* Create CPU access buffer (if required) */
+    auto cpuAccessFlags = GetCPUAccessFlags(bufferFlags);
+    if (cpuAccessFlags != 0)
+        CreateCPUAccessBuffer(device, desc, cpuAccessFlags);
+}
+
+static D3D11_USAGE GetUsageForCPUAccessFlags(UINT cpuAccessFlags)
+{
+    // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476106(v=vs.85).aspx
+    if ((cpuAccessFlags & D3D11_CPU_ACCESS_READ) != 0)
+        return D3D11_USAGE_STAGING;
+    else if ((cpuAccessFlags & D3D11_CPU_ACCESS_WRITE) != 0)
+        return D3D11_USAGE_DYNAMIC;
+    else
+        return D3D11_USAGE_DEFAULT;
 }
 
 void D3D11Buffer::CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags)
 {
+    /* Create new D3D11 hardware buffer (for CPU access) */
     D3D11_BUFFER_DESC desc;
     {
         desc.ByteWidth              = gpuBufferDesc.ByteWidth;
@@ -122,29 +151,6 @@ void D3D11Buffer::CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER
     }
     auto hr = device->CreateBuffer(&desc, nullptr, cpuAccessBuffer_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 CPU-access buffer for storage buffer");
-}
-
-D3D11_USAGE D3D11Buffer::GetUsageForCPUAccessFlags(UINT cpuAccessFlags) const
-{
-    // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476106(v=vs.85).aspx
-    if ((cpuAccessFlags & D3D11_CPU_ACCESS_READ) != 0)
-        return D3D11_USAGE_STAGING;
-    else if ((cpuAccessFlags & D3D11_CPU_ACCESS_WRITE) != 0)
-        return D3D11_USAGE_DYNAMIC;
-    else
-        return D3D11_USAGE_DEFAULT;
-}
-
-UINT D3D11Buffer::GetCPUAccessFlags(long bufferFlags) const
-{
-    UINT flags = 0;
-
-    if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
-        flags |= D3D11_CPU_ACCESS_READ;
-    if ((bufferFlags & BufferFlags::MapWriteAccess) != 0)
-        flags |= D3D11_CPU_ACCESS_WRITE;
-
-    return flags;
 }
 
 

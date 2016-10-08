@@ -35,7 +35,7 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
         bufferDesc.MiscFlags            = GetMiscFlags();
         bufferDesc.StructureByteStride  = desc.storageBuffer.stride;
     }
-    CreateResource(device, bufferDesc, initialData);
+    CreateResource(device, bufferDesc, initialData, desc.flags);
 
     /* Create either UAV or SRV */
     auto format         = GetFormat(desc.storageBuffer.vectorType);
@@ -45,11 +45,6 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
 
     if (HasUAV())
         CreateUAV(device, format, 0, numElements);
-
-    /* Create CPU access buffer (if required) */
-    auto cpuAccessFlags = GetCPUAccessFlags(desc.flags);
-    if (cpuAccessFlags != 0)
-        CreateCPUAccessBuffer(device, bufferDesc, cpuAccessFlags);
 }
 
 bool D3D11StorageBuffer::HasUAV() const

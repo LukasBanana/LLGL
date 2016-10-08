@@ -30,7 +30,7 @@ D3D11ConstantBuffer::D3D11ConstantBuffer(ID3D11Device* device, const BufferDescr
 
     usage_ = bufferDesc.Usage;
 
-    CreateResource(device, bufferDesc, initialData);
+    CreateResource(device, bufferDesc, initialData, desc.flags);
     bufferSize_ = desc.size;
 }
 
