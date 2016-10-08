@@ -29,8 +29,8 @@ class D3D11Buffer : public Buffer
         virtual void UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset);
         virtual void UpdateSubresource(ID3D11DeviceContext* context, const void* data);
 
-        virtual void* Map(ID3D11DeviceContext* context, const BufferCPUAccess access);
-        virtual void Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access);
+        void* Map(ID3D11DeviceContext* context, const BufferCPUAccess access);
+        void Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access);
 
         //! Returns the ID3D11Buffer object.
         inline ID3D11Buffer* Get() const
@@ -42,6 +42,8 @@ class D3D11Buffer : public Buffer
 
         void CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData = nullptr);
 
+        void CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags);
+
         // Returns the suitable buffer usage for the specified CPU access flags.
         D3D11_USAGE GetUsageForCPUAccessFlags(UINT cpuAccessFlags) const;
 
@@ -50,6 +52,7 @@ class D3D11Buffer : public Buffer
     private:
 
         ComPtr<ID3D11Buffer> buffer_;
+        ComPtr<ID3D11Buffer> cpuAccessBuffer_;
 
 };
 

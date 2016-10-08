@@ -52,44 +52,6 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
         CreateCPUAccessBuffer(device, bufferDesc, cpuAccessFlags);
 }
 
-static bool HasReadAccess(const BufferCPUAccess access)
-{
-    return (access != BufferCPUAccess::WriteOnly);
-}
-
-static bool HasWriteAccess(const BufferCPUAccess access)
-{
-    return (access != BufferCPUAccess::ReadOnly);
-}
-
-void* D3D11StorageBuffer::Map(ID3D11DeviceContext* context, const BufferCPUAccess access)
-{
-    if (!cpuAccessBuffer_)
-        throw std::runtime_error("failed to map storage buffer without CPU access");
-        
-    /* On read access -> copy storage buffer to CPU-access buffer */
-    if (HasReadAccess(access))
-        context->CopyResource(cpuAccessBuffer_.Get(), Get());
-
-    /* Map CPU-access buffer */
-    D3D11_MAPPED_SUBRESOURCE mapppedSubresource;
-    auto hr = context->Map(cpuAccessBuffer_.Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
-    return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
-}
-
-void D3D11StorageBuffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access)
-{
-    if (!cpuAccessBuffer_)
-        throw std::runtime_error("failed to unmap storage buffer without CPU access");
-        
-    /* Unmap CPU-access buffer */
-    context->Unmap(cpuAccessBuffer_.Get(), 0);
-
-    /* On write access -> copy CPU-access buffer to storage buffer */
-    if (HasWriteAccess(access))
-        context->CopyResource(Get(), cpuAccessBuffer_.Get());
-}
-
 bool D3D11StorageBuffer::HasUAV() const
 {
     return ( storageType_ >= StorageBufferType::RWBuffer );
@@ -191,21 +153,6 @@ void D3D11StorageBuffer::CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UIN
     }
     auto hr = device->CreateUnorderedAccessView(Get(), &desc, uav_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 unordered-acces-view (UAV) for storage buffer");
-}
-
-void D3D11StorageBuffer::CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags)
-{
-    D3D11_BUFFER_DESC desc;
-    {
-        desc.ByteWidth              = gpuBufferDesc.ByteWidth;
-        desc.Usage                  = GetUsageForCPUAccessFlags(cpuAccessFlags);
-        desc.BindFlags              = 0;
-        desc.CPUAccessFlags         = cpuAccessFlags;
-        desc.MiscFlags              = 0;
-        desc.StructureByteStride    = gpuBufferDesc.StructureByteStride;
-    }
-    auto hr = device->CreateBuffer(&desc, nullptr, cpuAccessBuffer_.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 CPU-access buffer for storage buffer");
 }
 
 

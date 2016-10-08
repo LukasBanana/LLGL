@@ -37,18 +37,55 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
     context->UpdateSubresource(buffer_.Get(), 0, nullptr, data, 0, 0);
 }
 
+static bool HasReadAccess(const BufferCPUAccess access)
+{
+    return (access != BufferCPUAccess::WriteOnly);
+}
+
+static bool HasWriteAccess(const BufferCPUAccess access)
+{
+    return (access != BufferCPUAccess::ReadOnly);
+}
+
 void* D3D11Buffer::Map(ID3D11DeviceContext* context, const BufferCPUAccess access)
 {
-    /* Map D3D buffer resource */
+    HRESULT hr = 0;
     D3D11_MAPPED_SUBRESOURCE mapppedSubresource;
-    auto hr = context->Map(Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+
+    if (cpuAccessBuffer_)
+    {
+        /* On read access -> copy storage buffer to CPU-access buffer */
+        if (HasReadAccess(access))
+            context->CopyResource(cpuAccessBuffer_.Get(), Get());
+
+        /* Map CPU-access buffer */
+        hr = context->Map(cpuAccessBuffer_.Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+    }
+    else
+    {
+        /* Map buffer */
+        hr = context->Map(Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+    }
+
     return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
 }
 
-void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAccess /*access*/)
+void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access)
 {
-    /* Unmap D3D buffer resource */
-    context->Unmap(Get(), 0);
+    if (cpuAccessBuffer_)
+    {
+        /* Unmap CPU-access buffer */
+        context->Unmap(cpuAccessBuffer_.Get(), 0);
+
+        /* On write access -> copy CPU-access buffer to storage buffer */
+        if (HasWriteAccess(access))
+            context->CopyResource(Get(), cpuAccessBuffer_.Get());
+    }
+    else
+    {
+        /* Unmap buffer */
+        context->Unmap(Get(), 0);
+    }
 }
 
 
@@ -70,6 +107,21 @@ void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& 
     /* Create new D3D11 hardware buffer */
     auto hr = device->CreateBuffer(&desc, (initialData != nullptr ? &subresourceData : nullptr), buffer_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 buffer");
+}
+
+void D3D11Buffer::CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags)
+{
+    D3D11_BUFFER_DESC desc;
+    {
+        desc.ByteWidth              = gpuBufferDesc.ByteWidth;
+        desc.Usage                  = GetUsageForCPUAccessFlags(cpuAccessFlags);
+        desc.BindFlags              = 0;
+        desc.CPUAccessFlags         = cpuAccessFlags;
+        desc.MiscFlags              = 0;
+        desc.StructureByteStride    = gpuBufferDesc.StructureByteStride;
+    }
+    auto hr = device->CreateBuffer(&desc, nullptr, cpuAccessBuffer_.ReleaseAndGetAddressOf());
+    DXThrowIfFailed(hr, "failed to create D3D11 CPU-access buffer for storage buffer");
 }
 
 D3D11_USAGE D3D11Buffer::GetUsageForCPUAccessFlags(UINT cpuAccessFlags) const

@@ -23,9 +23,6 @@ class D3D11StorageBuffer : public D3D11Buffer
 
         D3D11StorageBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
-        void* Map(ID3D11DeviceContext* context, const BufferCPUAccess access) override;
-        void Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access) override;
-
         bool HasUAV() const;
 
         // True, if storage type is: Buffer or RWBuffer.
@@ -47,12 +44,6 @@ class D3D11StorageBuffer : public D3D11Buffer
             return uav_.Get();
         }
 
-        // Returns the buffer object which is used for GPU/CPU data transfer.
-        inline ID3D11Buffer* GetCPUAccessBuffer() const
-        {
-            return cpuAccessBuffer_.Get();
-        }
-
         inline UINT GetInitialCount() const
         {
             return initialCount_;
@@ -69,14 +60,10 @@ class D3D11StorageBuffer : public D3D11Buffer
         void CreateSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
         void CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
 
-        void CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags);
-
         StorageBufferType                   storageType_        = StorageBufferType::Buffer;
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         ComPtr<ID3D11UnorderedAccessView>   uav_;
-
-        ComPtr<ID3D11Buffer>                cpuAccessBuffer_;
 
         UINT                                initialCount_       = -1;
 
