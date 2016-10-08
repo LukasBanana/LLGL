@@ -32,14 +32,14 @@ struct LLGL_EXPORT StreamOutputAttribute
     unsigned int    stream          = 0;
 
     //! Start vector component index, which is to be written. Must be 0, 1, 2, or 3. By default 0.
-    unsigned int    startComponent  = 0;
+    unsigned char   startComponent  = 0;
 
     /**
     \brief Number of vector components, which are to be written. Must be 1, 2, 3, or 4.
     \remarks The number of components plus the start component index (see 'startComponent') must not be larger than 4.
     \see startComponent
     */
-    unsigned int    components      = 4;
+    unsigned char   components      = 4;
 
     /**
     \brief Semantic index.
@@ -51,7 +51,7 @@ struct LLGL_EXPORT StreamOutputAttribute
     \brief Stream-output buffer output slot.
     \remarks This is used when multiple stream-output buffers are used simultaneously.
     */
-    unsigned int    outputSlot      = 0;
+    unsigned char   outputSlot      = 0;
 };
 
 
