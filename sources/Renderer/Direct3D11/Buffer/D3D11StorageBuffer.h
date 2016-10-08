@@ -26,7 +26,8 @@ class D3D11StorageBuffer : public D3D11Buffer
         void* Map(ID3D11DeviceContext* context, const BufferCPUAccess access) override;
         void Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access) override;
 
-        bool IsUAV() const;
+        bool HasUAV() const;
+
         bool IsStructured() const;
         bool IsByteAddressable() const;
 

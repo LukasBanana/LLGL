@@ -166,7 +166,7 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, lon
 {
     auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
 
-    if (storageBufferD3D.IsUAV())
+    if (storageBufferD3D.HasUAV())
     {
         /* Get UAV list and initial counts */
         ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };

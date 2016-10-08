@@ -54,9 +54,9 @@ struct ShaderDisassembleFlags
 /**
 \brief Shader stage flags.
 \remarks Specifies which shader stages are affected by a state change,
-e.g. at which shader stages a constant buffer is set.
+e.g. to which shader stages a constant buffer is set.
 For the render systems, which do not support these flags, always all shader stages are affected.
-\note Only supported with: Direct3D 11
+\note Only supported with: Direct3D 11, Direct3D 12
 */
 struct ShaderStageFlags
 {
@@ -68,6 +68,9 @@ struct ShaderStageFlags
         GeometryStage       = (1 << 3), //!< Specifies the geometry shader stage.
         FragmentStage       = (1 << 4), //!< Specifies the fragment shader stage (also "Pixel Shader").
         ComputeStage        = (1 << 5), //!< Specifies the compute shader stage.
+
+        //BindOnlySRV         = (1 << 6),
+        //BindOnlyUAV         = (1 << 7),
 
         //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
         AllTessStages       = (TessControlStage | TessEvaluationStage),

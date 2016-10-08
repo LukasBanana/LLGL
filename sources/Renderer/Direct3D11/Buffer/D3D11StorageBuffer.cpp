@@ -35,7 +35,7 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
     CreateResource(device, bufferDesc, initialData);
 
     /* Create either UAV or SRV */
-    if (IsUAV())
+    if (HasUAV())
         CreateUAV(device, 0, desc.storageBuffer.elements);
     else
         CreateSRV(device, 0, desc.storageBuffer.elements);
@@ -77,7 +77,7 @@ void D3D11StorageBuffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAcce
         context->CopyResource(Get(), cpuAccessBuffer_.Get());
 }
 
-bool D3D11StorageBuffer::IsUAV() const
+bool D3D11StorageBuffer::HasUAV() const
 {
     return ( storageType_ >= StorageBufferType::RWBuffer );
 }
@@ -103,7 +103,7 @@ bool D3D11StorageBuffer::IsByteAddressable() const
 
 UINT D3D11StorageBuffer::GetBindFlags() const
 {
-    return (IsUAV() ? D3D11_BIND_UNORDERED_ACCESS : D3D11_BIND_SHADER_RESOURCE);
+    return (HasUAV() ? D3D11_BIND_UNORDERED_ACCESS : D3D11_BIND_SHADER_RESOURCE);
 }
 
 UINT D3D11StorageBuffer::GetMiscFlags() const
@@ -141,7 +141,7 @@ void D3D11StorageBuffer::CreateUAV(ID3D11Device* device, UINT firstElement, UINT
         else if (storageType_ == StorageBufferType::ConsumeStructuredBuffer)
             desc.Buffer.Flags |= D3D11_BUFFER_UAV_FLAG_COUNTER;
     }
-    auto hr = device->CreateUnorderedAccessView(Get(), &desc, &uav_);
+    auto hr = device->CreateUnorderedAccessView(Get(), &desc, uav_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 unordered-acces-view (UAV) for storage buffer");
 }
 
