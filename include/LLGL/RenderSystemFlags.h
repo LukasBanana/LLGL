@@ -31,39 +31,6 @@ static const std::size_t maxThreadCount = ~0;
 /* ----- Enumerations ----- */
 
 /**
-\brief Hardware buffer usage enumeration.
-\remarks For OpenGL, the buffer usage is just a hint to the GL server.
-For Direct3D, the buffer usage is crucial during buffer creation.
-\see RenderSystem::CreateBuffer
-*/
-enum class BufferUsage
-{
-    /**
-    \brief The hardware buffer will be rarely changed by the client but often used by the hardware.
-    \remarks For Direct3D 11, a buffer can use the static buffer usage, if always the entire buffer will be updated.
-    Otherwise, the dynamic buffer usage must be used.
-    */
-    Static,
-
-    /**
-    \brief The hardware buffer will be often changed by the client (e.g. almost every frame).
-    \remarks For Direct3D 11, a buffer must use the dynamic buffer usage, if it will only partially be updated at any time.
-    */
-    Dynamic,
-};
-
-/**
-\brief Hardware buffer CPU acccess enumeration.
-\see RenderSystem::MapBuffer
-*/
-enum class BufferCPUAccess
-{
-    ReadOnly,   //!< CPU read access only.
-    WriteOnly,  //!< CPU write access only.
-    ReadWrite,  //!< CPU read and write access.
-};
-
-/**
 \brief Shading language version enumation.
 \remarks These enumeration entries can be casted to an integer to get the respective version number.
 GLSL versions range from 110 (v.1.10) to 450 (v.4.50),

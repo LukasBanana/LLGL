@@ -14,6 +14,7 @@
 #include <LLGL/RenderContextFlags.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/TextureFlags.h>
+#include <LLGL/BufferFlags.h>
 #include <LLGL/Query.h>
 #include <d3d11.h>
 

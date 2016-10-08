@@ -20,6 +20,8 @@ namespace LLGL
 {
 
 
+/* ----- Enumerations ----- */
+
 //! Hardware buffer type enumeration.
 enum class BufferType
 {
@@ -50,6 +52,41 @@ enum class StorageBufferType
     ConsumeStructuredBuffer,    //!< Consume structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
 };
 
+/**
+\brief Hardware buffer usage enumeration.
+\remarks For OpenGL, the buffer usage is just a hint to the GL server.
+For Direct3D, the buffer usage is crucial during buffer creation.
+\see RenderSystem::CreateBuffer
+*/
+enum class BufferUsage
+{
+    /**
+    \brief The hardware buffer will be rarely changed by the client but often used by the hardware.
+    \remarks For Direct3D 11, a buffer can use the static buffer usage, if always the entire buffer will be updated.
+    Otherwise, the dynamic buffer usage must be used.
+    */
+    Static,
+
+    /**
+    \brief The hardware buffer will be often changed by the client (e.g. almost every frame).
+    \remarks For Direct3D 11, a buffer must use the dynamic buffer usage, if it will only partially be updated at any time.
+    */
+    Dynamic,
+};
+
+/**
+\brief Hardware buffer CPU acccess enumeration.
+\see RenderSystem::MapBuffer
+*/
+enum class BufferCPUAccess
+{
+    ReadOnly,   //!< CPU read access only.
+    WriteOnly,  //!< CPU write access only.
+    ReadWrite,  //!< CPU read and write access.
+};
+
+
+/* ----- Structures ----- */
 
 //! Hardware buffer descriptor structure.
 struct BufferDescriptor
