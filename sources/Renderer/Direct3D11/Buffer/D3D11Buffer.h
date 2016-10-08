@@ -45,6 +45,8 @@ class D3D11Buffer : public Buffer
         // Returns the suitable buffer usage for the specified CPU access flags.
         D3D11_USAGE GetUsageForCPUAccessFlags(UINT cpuAccessFlags) const;
 
+        UINT GetCPUAccessFlags(long bufferFlags) const;
+
     private:
 
         ComPtr<ID3D11Buffer> buffer_;

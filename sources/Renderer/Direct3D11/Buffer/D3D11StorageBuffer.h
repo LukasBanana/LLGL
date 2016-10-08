@@ -56,7 +56,6 @@ class D3D11StorageBuffer : public D3D11Buffer
 
         UINT GetBindFlags() const;
         UINT GetMiscFlags() const;
-        UINT GetCPUAccessFlags(long bufferFlags) const;
 
         void CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements);
         void CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements);

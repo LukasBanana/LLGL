@@ -133,18 +133,6 @@ UINT D3D11StorageBuffer::GetMiscFlags() const
         return 0;
 }
 
-UINT D3D11StorageBuffer::GetCPUAccessFlags(long bufferFlags) const
-{
-    UINT flags = 0;
-
-    if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
-        flags |= D3D11_CPU_ACCESS_READ;
-    if ((bufferFlags & BufferFlags::MapWriteAccess) != 0)
-        flags |= D3D11_CPU_ACCESS_WRITE;
-
-    return flags;
-}
-
 void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements)
 {
     /* Initialize descriptor and create SRV */

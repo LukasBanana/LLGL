@@ -83,6 +83,18 @@ D3D11_USAGE D3D11Buffer::GetUsageForCPUAccessFlags(UINT cpuAccessFlags) const
         return D3D11_USAGE_DEFAULT;
 }
 
+UINT D3D11Buffer::GetCPUAccessFlags(long bufferFlags) const
+{
+    UINT flags = 0;
+
+    if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
+        flags |= D3D11_CPU_ACCESS_READ;
+    if ((bufferFlags & BufferFlags::MapWriteAccess) != 0)
+        flags |= D3D11_CPU_ACCESS_WRITE;
+
+    return flags;
+}
+
 
 } // /namespace LLGL
 
