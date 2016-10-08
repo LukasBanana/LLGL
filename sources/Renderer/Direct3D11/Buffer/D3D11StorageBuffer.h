@@ -57,8 +57,8 @@ class D3D11StorageBuffer : public D3D11Buffer
         UINT GetBindFlags() const;
         UINT GetMiscFlags() const;
 
-        void CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements);
         void CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements);
+        void CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements);
 
         void CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags);
 

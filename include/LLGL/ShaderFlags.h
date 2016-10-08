@@ -69,8 +69,12 @@ struct ShaderStageFlags
         FragmentStage       = (1 << 4), //!< Specifies the fragment shader stage (also "Pixel Shader").
         ComputeStage        = (1 << 5), //!< Specifies the compute shader stage.
 
-        //BindOnlySRV         = (1 << 6),
-        //BindOnlyUAV         = (1 << 7),
+        /**
+        \brief Specifies whether a resource is bound to the shader stages for reading only.
+        \remarks This can be used to set the shader-resource-view (SRV) of a storage buffer to the shader stages
+        instead of the unordered-access-view (UAV), which is the default, if the storage buffer has such a UAV.
+        */
+        ReadOnlyResource    = (1 << 6),
 
         //! Specifies all tessellation stages, i.e. tessellation-control-, tessellation-evaluation shader stages.
         AllTessStages       = (TessControlStage | TessEvaluationStage),

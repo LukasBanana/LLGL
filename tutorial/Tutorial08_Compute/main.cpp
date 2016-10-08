@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
             storageBufferDesc.size                      = inputData.size() * sizeof(DataBlock);
             storageBufferDesc.usage                     = LLGL::BufferUsage::Dynamic;
             storageBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWStructuredBuffer;
-            storageBufferDesc.storageBuffer.elements    = inputData.size();
+            storageBufferDesc.storageBuffer.stride      = sizeof(DataBlock);
         }
         auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, inputData.data());
 

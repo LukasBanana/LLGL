@@ -34,7 +34,7 @@ enum class BufferType
 
 /**
 \brief Storage buffer type enumeration.
-\remarks The generic type is for OpenGL, the others for Direct3D.
+\note Only supported with: Direct3D 11, Direct3D 12.
 */
 enum class StorageBufferType
 {
@@ -121,17 +121,20 @@ struct BufferDescriptor
         StorageBufferType   storageType = StorageBufferType::Generic;
 
         /**
-        \brief Specifies the number of elements in the storage buffer.
-        \remarks For a storage buffer of the type StorageBufferType::StructuredBuffer for instance,
-        the number of elements in the number of structure entries within the buffer.
+        \brief Specifies the stride (in bytes) of each element in a storage buffer.
+        \remarks If this value is zero, the behavior of the buffer creation is undefined.
         */
-        unsigned int        elements    = 0;
+        unsigned int        stride      = 0;
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.
     BufferType              type    = BufferType::Vertex;
 
-    //! Buffer size (in bytes). By default 0.
+    /**
+    \brief Buffer size (in bytes). By default 0.
+    \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage),
+    'size' must be a multiple of 'storageBuffer.stride'.
+    */
     unsigned int            size    = 0;
 
     //! Buffer usage. By default BufferUsage::Static.

@@ -34,12 +34,13 @@ namespace LLGL
 {
 
 
-#define VS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::VertexStage        ) != 0 )
-#define HS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::TessControlStage   ) != 0 )
-#define DS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0 )
-#define GS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::GeometryStage      ) != 0 )
-#define PS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
-#define CS_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
+#define VS_STAGE(FLAG)  ( ((FLAG) & ShaderStageFlags::VertexStage        ) != 0 )
+#define HS_STAGE(FLAG)  ( ((FLAG) & ShaderStageFlags::TessControlStage   ) != 0 )
+#define DS_STAGE(FLAG)  ( ((FLAG) & ShaderStageFlags::TessEvaluationStage) != 0 )
+#define GS_STAGE(FLAG)  ( ((FLAG) & ShaderStageFlags::GeometryStage      ) != 0 )
+#define PS_STAGE(FLAG)  ( ((FLAG) & ShaderStageFlags::FragmentStage      ) != 0 )
+#define CS_STAGE(FLAG)  ( ((FLAG) & ShaderStageFlags::ComputeStage       ) != 0 )
+#define SRV_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::ReadOnlyResource   ) != 0 )
 
 D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context) :
     stateMngr_  ( stateMngr ),
@@ -166,7 +167,7 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, lon
 {
     auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
 
-    if (storageBufferD3D.HasUAV())
+    if (storageBufferD3D.HasUAV() && !SRV_STAGE(shaderStageFlags))
     {
         /* Get UAV list and initial counts */
         ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
@@ -570,6 +571,7 @@ void D3D11CommandBuffer::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11S
 #undef GS_STAGE
 #undef PS_STAGE
 #undef CS_STAGE
+#undef SRV_STAGE
 
 
 } // /namespace LLGL

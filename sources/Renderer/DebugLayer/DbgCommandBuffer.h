@@ -143,7 +143,7 @@ class DbgCommandBuffer : public CommandBuffer
         void DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source);
         void DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source);
 
-        void DebugShaderStageFlags(long shaderStageFlags, const std::string& source);
+        void DebugShaderStageFlags(long shaderStageFlags, long validFlags, const std::string& source);
         void DebugBufferType(const BufferType bufferType, const BufferType compareType, const std::string& source);
 
         void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);

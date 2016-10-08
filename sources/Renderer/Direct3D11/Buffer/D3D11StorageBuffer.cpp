@@ -20,6 +20,9 @@ namespace LLGL
 D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
     D3D11Buffer( BufferType::Storage )
 {
+    if (desc.storageBuffer.stride == 0)
+        throw std::invalid_argument("storage buffer stride can not be zero for a D3D11 resource view");
+
     storageType_ = desc.storageBuffer.storageType;
 
     /* Create D3D hardware buffer */
@@ -30,15 +33,17 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
         bufferDesc.BindFlags            = GetBindFlags();
         bufferDesc.CPUAccessFlags       = 0;
         bufferDesc.MiscFlags            = GetMiscFlags();
-        bufferDesc.StructureByteStride  = desc.size / desc.storageBuffer.elements;
+        bufferDesc.StructureByteStride  = desc.storageBuffer.stride;
     }
     CreateResource(device, bufferDesc, initialData);
 
     /* Create either UAV or SRV */
+    auto numElements = desc.size / desc.storageBuffer.stride;
+
+    CreateSRV(device, 0, numElements);
+
     if (HasUAV())
-        CreateUAV(device, 0, desc.storageBuffer.elements);
-    else
-        CreateSRV(device, 0, desc.storageBuffer.elements);
+        CreateUAV(device, 0, numElements);
 
     /* Create CPU access buffer (if required) */
     //if (???)
@@ -116,6 +121,20 @@ UINT D3D11StorageBuffer::GetMiscFlags() const
         return 0;
 }
 
+void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements)
+{
+    /* Initialize descriptor and create SRV */
+    D3D11_SHADER_RESOURCE_VIEW_DESC desc;
+    {
+        desc.Format                 = DXGI_FORMAT_UNKNOWN;
+        desc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFER;
+        desc.Buffer.FirstElement    = firstElement;
+        desc.Buffer.NumElements     = numElements;
+    }
+    auto hr = device->CreateShaderResourceView(Get(), &desc, &srv_);
+    DXThrowIfFailed(hr, "failed to create D3D11 shader-resource-view (SRV) for storage buffer");
+}
+
 void D3D11StorageBuffer::CreateUAV(ID3D11Device* device, UINT firstElement, UINT numElements)
 {
     /* Initialize descriptor and create UAV */
@@ -143,20 +162,6 @@ void D3D11StorageBuffer::CreateUAV(ID3D11Device* device, UINT firstElement, UINT
     }
     auto hr = device->CreateUnorderedAccessView(Get(), &desc, uav_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 unordered-acces-view (UAV) for storage buffer");
-}
-
-void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, UINT firstElement, UINT numElements)
-{
-    /* Initialize descriptor and create SRV */
-    D3D11_SHADER_RESOURCE_VIEW_DESC desc;
-    {
-        desc.Format                 = DXGI_FORMAT_UNKNOWN;
-        desc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFER;
-        desc.Buffer.FirstElement    = firstElement;
-        desc.Buffer.NumElements     = numElements;
-    }
-    auto hr = device->CreateShaderResourceView(Get(), &desc, &srv_);
-    DXThrowIfFailed(hr, "failed to create D3D11 shader-resource-view (SRV) for storage buffer");
 }
 
 void D3D11StorageBuffer::CreateCPUAccessBuffer(ID3D11Device* device, const D3D11_BUFFER_DESC& gpuBufferDesc, UINT cpuAccessFlags)

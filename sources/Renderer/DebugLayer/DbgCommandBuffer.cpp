@@ -126,7 +126,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
 void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
     DebugBufferType(buffer.GetType(), BufferType::Constant, __FUNCTION__);
-    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+    DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages, __FUNCTION__);
 
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     {
@@ -138,7 +138,7 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long
 void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
 {
     DebugBufferType(bufferArray.GetType(), BufferType::Constant, __FUNCTION__);
-    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+    DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages, __FUNCTION__);
     {
         instance.SetConstantBufferArray(bufferArray, startSlot, shaderStageFlags);
     }
@@ -148,6 +148,7 @@ void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned
 void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
     DebugBufferType(buffer.GetType(), BufferType::Storage, __FUNCTION__);
+    DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages | ShaderStageFlags::ReadOnlyResource, __FUNCTION__);
 
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     {
@@ -160,7 +161,7 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long 
 
 void DbgCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
 {
-    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+    DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages, __FUNCTION__);
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
     {
         instance.SetTexture(textureDbg.instance, slot, shaderStageFlags);
@@ -170,7 +171,7 @@ void DbgCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shad
 
 void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
 {
-    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+    DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages, __FUNCTION__);
     {
         instance.SetTextureArray(textureArray, startSlot, shaderStageFlags);
     }
@@ -181,7 +182,7 @@ void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int 
 
 void DbgCommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
 {
-    DebugShaderStageFlags(shaderStageFlags, __FUNCTION__);
+    DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages, __FUNCTION__);
     {
         instance.SetSampler(sampler, slot, shaderStageFlags);
     }
@@ -569,11 +570,11 @@ void DbgCommandBuffer::DebugVertexLimit(unsigned int vertexCount, unsigned int v
     }
 }
 
-void DbgCommandBuffer::DebugShaderStageFlags(long shaderStageFlags, const std::string& source)
+void DbgCommandBuffer::DebugShaderStageFlags(long shaderStageFlags, long validFlags, const std::string& source)
 {
-    if ((shaderStageFlags & ShaderStageFlags::AllStages) == 0)
+    if ((shaderStageFlags & validFlags) == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stage is specified", source);
-    if ((shaderStageFlags & (~ShaderStageFlags::AllStages)) != 0)
+    if ((shaderStageFlags & (~validFlags)) != 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "unknown shader stage flag is specified", source);
 }
 
