@@ -38,10 +38,6 @@ enum class BufferType
 */
 enum class StorageBufferType
 {
-    /* ----- OpenGL's Shader Storage Buffer Object (SSBO) types ----- */
-    Generic,                    //!< Generic storage buffer type. \note Only supported with: OpenGL.
-
-    /* ----- Direct3D's Read/Write Buffer types ----- */
     Buffer,                     //!< Typed buffer. \note Only supported with: Direct3D 11, Direct3D 12.
     StructuredBuffer,           //!< Structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
     ByteAddressBuffer,          //!< Byte-address buffer. \note Only supported with: Direct3D 11, Direct3D 12.
@@ -115,10 +111,10 @@ struct BufferDescriptor
     struct StorageBufferDescriptor
     {
         /**
-        \brief Specifies the storage buffer type.
+        \brief Specifies the storage buffer type. By defalut StorageBufferType::Buffer.
         \remarks In OpenGL there are only generic storage buffers (or rather "Shader Storage Buffer Objects").
         */
-        StorageBufferType   storageType = StorageBufferType::Generic;
+        StorageBufferType   storageType = StorageBufferType::Buffer;
 
         /**
         \brief Specifies the stride (in bytes) of each element in a storage buffer.

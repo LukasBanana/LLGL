@@ -70,7 +70,7 @@ LLGL_EXPORT BufferDescriptor IndexBufferDesc(unsigned int size, const IndexForma
 LLGL_EXPORT BufferDescriptor ConstantBufferDesc(unsigned int size, const BufferUsage usage = BufferUsage::Static);
 
 //! Returns a BufferDescriptor structure for a storage buffer.
-LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType = StorageBufferType::Generic, const BufferUsage usage = BufferUsage::Static);
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType, unsigned int stride, const BufferUsage usage = BufferUsage::Static);
 
 /** @} */
 

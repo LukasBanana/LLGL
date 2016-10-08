@@ -168,7 +168,7 @@ LLGL_EXPORT BufferDescriptor ConstantBufferDesc(unsigned int size, const BufferU
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType, const BufferUsage usage)
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageBufferType storageType, unsigned int stride, const BufferUsage usage)
 {
     BufferDescriptor desc;
     {
@@ -176,6 +176,7 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(unsigned int size, const StorageB
         desc.size                       = size;
         desc.usage                      = usage;
         desc.storageBuffer.storageType  = storageType;
+        desc.storageBuffer.stride       = stride;
     }
     return desc;
 }
