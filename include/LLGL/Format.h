@@ -41,10 +41,10 @@ enum class VectorType
     Float2,     //!< 2-Dimensional single precision floating-point vector (vec2 in GLSL, float2 in HLSL).
     Float3,     //!< 3-Dimensional single precision floating-point vector (vec3 in GLSL, float3 in HLSL).
     Float4,     //!< 4-Dimensional single precision floating-point vector (vec4 in GLSL, float4 in HLSL).
-    Double,     //!< 1-Dimensional double precision floating-point vector (double in GLSL, float in HLSL).
-    Double2,    //!< 2-Dimensional double precision floating-point vector (dvec2 in GLSL, float2 in HLSL).
-    Double3,    //!< 3-Dimensional double precision floating-point vector (dvec3 in GLSL, float3 in HLSL).
-    Double4,    //!< 4-Dimensional double precision floating-point vector (dvec4 in GLSL, float4 in HLSL).
+    Double,     //!< 1-Dimensional double precision floating-point vector (double in GLSL, double in HLSL).
+    Double2,    //!< 2-Dimensional double precision floating-point vector (dvec2 in GLSL, double2 in HLSL).
+    Double3,    //!< 3-Dimensional double precision floating-point vector (dvec3 in GLSL, double3 in HLSL).
+    Double4,    //!< 4-Dimensional double precision floating-point vector (dvec4 in GLSL, double4 in HLSL).
     Int,        //!< 1-Dimensional signed integer vector (int in GLSL, int in HLSL).
     Int2,       //!< 2-Dimensional signed integer vector (ivec2 in GLSL, int2 in HLSL).
     Int3,       //!< 3-Dimensional signed integer vector (ivec3 in GLSL, int3 in HLSL).
@@ -82,6 +82,9 @@ enum class MatrixType
 
 
 /* ----- Functions ----- */
+
+//! Returns the size (in bytes) of the specified data type.
+LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType);
 
 /**
 \brief Retrieves the format of the specified vector type.

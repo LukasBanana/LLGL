@@ -10,7 +10,7 @@
 
 
 #include "Export.h"
-#include "Image.h"
+#include "Format.h"
 #include <string>
 
 
@@ -28,8 +28,7 @@ struct LLGL_EXPORT VertexAttribute
     /**
     \brief Constructs a vertex attribute with a specified name (used for GLSL).
     \param[in] name Specifies the attribute name (for GLSL).
-    \param[in] dataType Specifies the data type of the attribute components.
-    \param[in] components Specifies the number of attribute components. This must be 1, 2, 3, or 4.
+    \param[in] vectorType Specifies the vector type of the attribute.
     \param[in] instanceDivisor Specifies the divisor (or step rate) for instance data.
     If this is 0, this vertex attribute is considered to be per-vertex. By default 0.
     \remarks This is equivalent to:
@@ -39,8 +38,7 @@ struct LLGL_EXPORT VertexAttribute
     */
     VertexAttribute(
         const std::string& name,
-        const DataType dataType,
-        unsigned int components,
+        const VectorType vectorType,
         unsigned int instanceDivisor = 0
     );
 
@@ -48,8 +46,7 @@ struct LLGL_EXPORT VertexAttribute
     \brief Constructs a vertex attribute with a specified semantic (used for HLSL).
     \param[in] semanticName Specifies the semantic name (for HLSL).
     \param[in] semanticIndex Specifies the semantic index (for HLSL).
-    \param[in] dataType Specifies the data type of the attribute components.
-    \param[in] components Specifies the number of attribute components. This must be 1, 2, 3, or 4.
+    \param[in] vectorType Specifies the vector type of the attribute.
     \param[in] instanceDivisor Specifies the divisor (or step rate) for instance data.
     If this is 0, this vertex attribute is considered to be per-vertex. By default 0.
     \remarks This is equivalent to:
@@ -60,8 +57,7 @@ struct LLGL_EXPORT VertexAttribute
     VertexAttribute(
         const std::string& semanticName,
         unsigned int semanticIndex,
-        const DataType dataType,
-        unsigned int components,
+        const VectorType vectorType,
         unsigned int instanceDivisor = 0
     );
 
@@ -77,11 +73,12 @@ struct LLGL_EXPORT VertexAttribute
     //! Vertex attribute name (for GLSL) or semantic name (for HLSL).
     std::string     name;
 
-    //! Data type of the vertex attribute components. By default DataType::Float.
-    DataType        dataType        = DataType::Float;
-
-    //! Number of components: 1, 2, 3, or 4. By default 4.
-    unsigned int    components      = 4;
+    /**
+    \brief Vector type of the vertex attribute. By default VectorType::Float4.
+    \remarks The double types are only supported with OpenGL, i.e. the vector types:
+    VectorType::Double, VectorType::Double2, VectorType::Double3, and VectorType::Double4.
+    */
+    VectorType      vectorType      = VectorType::Float4;
 
     /**
     \brief Instance data divosor (or instance data step rate).

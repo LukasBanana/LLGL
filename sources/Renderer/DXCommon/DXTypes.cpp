@@ -31,121 +31,20 @@ void UnmapFailed(const std::string& typeName, const std::string& dxTypeName)
 
 DXGI_FORMAT Map(const VertexAttribute& attrib)
 {
-    switch (attrib.dataType)
+    switch (attrib.vectorType)
     {
-        case DataType::Int8:
-            if (attrib.conversion)
-            {
-                switch (attrib.components)
-                {
-                    case 1: return DXGI_FORMAT_R8_SNORM;
-                    case 2: return DXGI_FORMAT_R8G8_SNORM;
-                    case 4: return DXGI_FORMAT_R8G8B8A8_SNORM;
-                }
-            }
-            else
-            {
-                switch (attrib.components)
-                {
-                    case 1: return DXGI_FORMAT_R8_SINT;
-                    case 2: return DXGI_FORMAT_R8G8_SINT;
-                    case 4: return DXGI_FORMAT_R8G8B8A8_SINT;
-                }
-            }
-            break;
-        
-        case DataType::UInt8:
-            if (attrib.conversion)
-            {
-                switch (attrib.components)
-                {
-                    case 1: return DXGI_FORMAT_R8_UNORM;
-                    case 2: return DXGI_FORMAT_R8G8_UNORM;
-                    case 4: return DXGI_FORMAT_R8G8B8A8_UNORM;
-                }
-            }
-            else
-            {
-                switch (attrib.components)
-                {
-                    case 1: return DXGI_FORMAT_R8_UINT;
-                    case 2: return DXGI_FORMAT_R8G8_UINT;
-                    case 4: return DXGI_FORMAT_R8G8B8A8_UINT;
-                }
-            }
-            break;
-        
-        case DataType::Int16:
-            if (attrib.conversion)
-            {
-                switch (attrib.components)
-                {
-                    case 1: return DXGI_FORMAT_R16_SNORM;
-                    case 2: return DXGI_FORMAT_R16G16_SNORM;
-                    case 4: return DXGI_FORMAT_R16G16B16A16_SNORM;
-                }
-            }
-            else
-            {
-                switch (attrib.components)
-                {
-                    case 1: return DXGI_FORMAT_R16_SINT;
-                    case 2: return DXGI_FORMAT_R16G16_SINT;
-                    case 4: return DXGI_FORMAT_R16G16B16A16_SINT;
-                }
-            }
-            break;
-        
-        case DataType::UInt16:
-            if (attrib.conversion)
-            {
-                switch (attrib.components)
-                {
-                    case 1: return DXGI_FORMAT_R16_UNORM;
-                    case 2: return DXGI_FORMAT_R16G16_UNORM;
-                    case 4: return DXGI_FORMAT_R16G16B16A16_UNORM;
-                }
-            }
-            else
-            {
-                switch (attrib.components)
-                {
-                    case 1: return DXGI_FORMAT_R16_UINT;
-                    case 2: return DXGI_FORMAT_R16G16_UINT;
-                    case 4: return DXGI_FORMAT_R16G16B16A16_UINT;
-                }
-            }
-            break;
-        
-        case DataType::Int32:
-            switch (attrib.components)
-            {
-                case 1: return DXGI_FORMAT_R32_SINT;
-                case 2: return DXGI_FORMAT_R32G32_SINT;
-                case 3: return DXGI_FORMAT_R32G32B32_SINT;
-                case 4: return DXGI_FORMAT_R32G32B32A32_SINT;
-            }
-            break;
-
-        case DataType::UInt32:
-            switch (attrib.components)
-            {
-                case 1: return DXGI_FORMAT_R32_UINT;
-                case 2: return DXGI_FORMAT_R32G32_UINT;
-                case 3: return DXGI_FORMAT_R32G32B32_UINT;
-                case 4: return DXGI_FORMAT_R32G32B32A32_UINT;
-            }
-            break;
-
-        case DataType::Float:
-            switch (attrib.components)
-            {
-                case 1: return DXGI_FORMAT_R32_FLOAT;
-                case 2: return DXGI_FORMAT_R32G32_FLOAT;
-                case 3: return DXGI_FORMAT_R32G32B32_FLOAT;
-                case 4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
-            }
-            break;
+        case VectorType::Float:     return DXGI_FORMAT_R32_FLOAT;
+        case VectorType::Float2:    return DXGI_FORMAT_R32G32_FLOAT;
+        case VectorType::Float3:    return DXGI_FORMAT_R32G32B32_FLOAT;
+        case VectorType::Float4:    return DXGI_FORMAT_R32G32B32A32_FLOAT;
+        case VectorType::Int:       return DXGI_FORMAT_R32_SINT;
+        case VectorType::Int2:      return DXGI_FORMAT_R32G32_SINT;
+        case VectorType::Int3:      return DXGI_FORMAT_R32G32B32_SINT;
+        case VectorType::Int4:      return DXGI_FORMAT_R32G32B32A32_SINT;
+        case VectorType::UInt:      return DXGI_FORMAT_R32_UINT;
+        case VectorType::UInt2:     return DXGI_FORMAT_R32G32_UINT;
+        case VectorType::UInt3:     return DXGI_FORMAT_R32G32B32_UINT;
+        case VectorType::UInt4:     return DXGI_FORMAT_R32G32B32A32_UINT;
     }
     MapFailed("VertexAttribute", "DXGI_FORMAT");
 }

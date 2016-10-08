@@ -14,16 +14,15 @@ namespace LLGL
 
 
 VertexAttribute::VertexAttribute(
-    const std::string& name, const DataType dataType, unsigned int components, unsigned int instanceDivisor) :
-        VertexAttribute( name, 0, dataType, components, instanceDivisor )
+    const std::string& name, const VectorType vectorType, unsigned int instanceDivisor) :
+        VertexAttribute( name, 0, vectorType, instanceDivisor )
 {
 }
 
 VertexAttribute::VertexAttribute(
-    const std::string& semanticName, unsigned int semanticIndex, const DataType dataType, unsigned int components, unsigned int instanceDivisor) :
+    const std::string& semanticName, unsigned int semanticIndex, const VectorType vectorType, unsigned int instanceDivisor) :
         name            ( semanticName    ),
-        dataType        ( dataType        ),
-        components      ( components      ),
+        vectorType      ( vectorType      ),
         instanceDivisor ( instanceDivisor ),
         semanticIndex   ( semanticIndex   )
 {
@@ -31,6 +30,10 @@ VertexAttribute::VertexAttribute(
 
 unsigned int VertexAttribute::GetSize() const
 {
+    DataType        dataType    = DataType::Float;
+    unsigned int    components  = 0;
+    VectorTypeFormat(vectorType, dataType, components);
+
     return (DataTypeSize(dataType) * components);
 }
 
@@ -40,8 +43,7 @@ LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute&
     return
     (
         LLGL_COMPARE_MEMBER_EQ( name            ) &&
-        LLGL_COMPARE_MEMBER_EQ( dataType        ) &&
-        LLGL_COMPARE_MEMBER_EQ( components      ) &&
+        LLGL_COMPARE_MEMBER_EQ( vectorType      ) &&
         LLGL_COMPARE_MEMBER_EQ( instanceDivisor ) &&
         LLGL_COMPARE_MEMBER_EQ( conversion      ) &&
         LLGL_COMPARE_MEMBER_EQ( offset          ) &&

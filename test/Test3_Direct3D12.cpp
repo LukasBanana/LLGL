@@ -52,8 +52,8 @@ int main()
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "POSITION", LLGL::DataType::Float, 2 });
-        vertexFormat.AppendAttribute({ "COLOR", LLGL::DataType::Float, 3 });
+        vertexFormat.AppendAttribute({ "POSITION", LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "COLOR", LLGL::VectorType::Float3 });
 
         struct Vertex
         {

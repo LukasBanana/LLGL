@@ -12,6 +12,26 @@ namespace LLGL
 {
 
 
+LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType)
+{
+    switch (dataType)
+    {
+        case DataType::Int8:
+        case DataType::UInt8:
+            return 1;
+        case DataType::Int16:
+        case DataType::UInt16:
+            return 2;
+        case DataType::Int32:
+        case DataType::UInt32:
+        case DataType::Float:
+            return 4;
+        case DataType::Double:
+            return 8;
+    }
+    return 0;
+}
+
 LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, unsigned int& components)
 {
     /* Get data type and components by indexed vector type */

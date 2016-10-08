@@ -34,16 +34,21 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
     if (attribute.instanceDivisor > 0)
         glVertexAttribDivisor(index, attribute.instanceDivisor);
 
+    /* Get data type and components of vector type */
+    DataType        dataType    = DataType::Float;
+    unsigned int    components  = 0;
+    VectorTypeFormat(attribute.vectorType, dataType, components);
+
     /* Use currently bound VBO for VertexAttribPointer functions */
-    if (!attribute.conversion && attribute.dataType != DataType::Float && attribute.dataType != DataType::Double)
+    if (!attribute.conversion && dataType != DataType::Float && dataType != DataType::Double)
     {
         //if (!glVertexAttribIPointer)
         //    throw std::runtime_error("integral vertex attributes not supported by renderer");
 
         glVertexAttribIPointer(
             index,
-            attribute.components,
-            GLTypes::Map(attribute.dataType),
+            components,
+            GLTypes::Map(dataType),
             stride,
             reinterpret_cast<const void*>(attribute.offset)
         );
@@ -52,8 +57,8 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
     {
         glVertexAttribPointer(
             index,
-            attribute.components,
-            GLTypes::Map(attribute.dataType),
+            components,
+            GLTypes::Map(dataType),
             GL_FALSE,
             stride,
             reinterpret_cast<const void*>(attribute.offset)
