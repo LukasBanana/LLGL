@@ -1,7 +1,7 @@
 Low Level Graphics Library (LLGL)
 =================================
 
-<p align="center"><img src="docu/LLGL_Logo_512.png"/></p>
+<p align="center"><img src="docu/LLGL_Logo_256.png"/></p>
 
 License
 -------
