@@ -21,8 +21,8 @@ Progress
 
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
-| OpenGL | ~80% | |
-| Direct3D 11 | ~80% | |
+| OpenGL | ~80% | ToDo: Stream output buffers |
+| Direct3D 11 | ~85% | |
 | Direct3D 12 | ~5% | Experimental state |
 | Vulkan | 0% | Not started yet |
 
@@ -117,6 +117,12 @@ Shows how to use buffer arrays, i.e. render with multiple vertex buffers simulta
 ### [Tutorial 08: Compute](tutorial/Tutorial08_Compute/main.cpp)
 
 Small example with a compute shader and a storage buffer.
+
+*No screenshot available*
+
+### [Tutorial 09: StreamOutput](tutorial/Tutorial09_StreamOutput/main.cpp)
+
+Small example with a geometry shader and a stream-output buffer.
 
 *No screenshot available*
 
