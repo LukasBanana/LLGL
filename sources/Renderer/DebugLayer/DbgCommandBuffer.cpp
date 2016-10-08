@@ -97,7 +97,7 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     if (debugger_)
     {
         bindings_.vertexBuffer = (&bufferDbg);
-        vertexFormat_ = bufferDbg.desc.vertexBuffer.vertexFormat;
+        vertexFormat_ = bufferDbg.desc.vertexBuffer.format;
     }
     
     instance.SetVertexBuffer(bufferDbg.instance);

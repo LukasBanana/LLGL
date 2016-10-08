@@ -64,9 +64,9 @@ int main(int argc, char* argv[])
         // Create vertex buffer
         LLGL::BufferDescriptor vertexBufferDesc;
         {
-            vertexBufferDesc.type                       = LLGL::BufferType::Vertex;
-            vertexBufferDesc.size                       = sizeof(vertices);         // Size (in bytes) of the vertex buffer
-            vertexBufferDesc.vertexBuffer.vertexFormat  = vertexFormat;             // Vertex format layout
+            vertexBufferDesc.type                   = LLGL::BufferType::Vertex;
+            vertexBufferDesc.size                   = sizeof(vertices);         // Size (in bytes) of the vertex buffer
+            vertexBufferDesc.vertexBuffer.format    = vertexFormat;             // Vertex format layout
         }
         LLGL::Buffer* vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 

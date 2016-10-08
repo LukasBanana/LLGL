@@ -25,8 +25,6 @@
 #include "Sampler.h"
 #include "Query.h"
 
-#include <Gauss/Vector3.h>
-
 
 namespace LLGL
 {

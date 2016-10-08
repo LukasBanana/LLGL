@@ -137,10 +137,10 @@ LLGL_EXPORT BufferDescriptor VertexBufferDesc(unsigned int size, const VertexFor
 {
     BufferDescriptor desc;
     {
-        desc.type                       = BufferType::Vertex;
-        desc.size                       = size;
-        desc.flags                      = flags;
-        desc.vertexBuffer.vertexFormat  = vertexFormat;
+        desc.type                   = BufferType::Vertex;
+        desc.size                   = size;
+        desc.flags                  = flags;
+        desc.vertexBuffer.format    = vertexFormat;
     }
     return desc;
 }
@@ -149,10 +149,10 @@ LLGL_EXPORT BufferDescriptor IndexBufferDesc(unsigned int size, const IndexForma
 {
     BufferDescriptor desc;
     {
-        desc.type                       = BufferType::Index;
-        desc.size                       = size;
-        desc.flags                      = flags;
-        desc.indexBuffer.indexFormat    = indexFormat;
+        desc.type               = BufferType::Index;
+        desc.size               = size;
+        desc.flags              = flags;
+        desc.indexBuffer.format = indexFormat;
     }
     return desc;
 }

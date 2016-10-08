@@ -99,7 +99,7 @@ struct BufferDescriptor
         \remarks This is required to tell the renderer how the vertex attributes are stored inside the vertex buffer and
         it must be the same vertex format which is used for the respective graphics pipeline shader program.
         */
-        VertexFormat vertexFormat;
+        VertexFormat format;
     };
 
     struct IndexBufferDescriptor
@@ -109,7 +109,7 @@ struct BufferDescriptor
         \remarks The only valid format types for an index buffer are: DataType::UByte, DataType::UShort, and DataType::UInt.
         \see DataType
         */
-        IndexFormat indexFormat;
+        IndexFormat format;
     };
 
     struct StorageBufferDescriptor

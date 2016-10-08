@@ -18,7 +18,7 @@ D3D11IndexBuffer::D3D11IndexBuffer(ID3D11Device* device, const BufferDescriptor&
     D3D11Buffer( BufferType::Index )
 {
     CreateResource(device, CD3D11_BUFFER_DESC(desc.size, D3D11_BIND_INDEX_BUFFER), initialData, desc.flags);
-    format_ = D3D11Types::Map(desc.indexBuffer.indexFormat.GetDataType());
+    format_ = D3D11Types::Map(desc.indexBuffer.format.GetDataType());
 }
 
 
