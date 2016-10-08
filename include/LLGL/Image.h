@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "Format.h"
 #include "RenderSystemFlags.h"
 #include "TextureFlags.h"
 #include <memory>
@@ -32,22 +33,6 @@ using ByteBuffer = std::unique_ptr<char[]>;
 
 
 /* ----- Enumerations ----- */
-
-//! Renderer data types enumeration.
-enum class DataType
-{
-    Int8,   //!< 8-bit signed integer (char).
-    UInt8,  //!< 8-bit unsigned integer (unsigned char).
-
-    Int16,  //!< 16-bit signed integer (short).
-    UInt16, //!< 16-bit unsigned integer (unsigned short).
-
-    Int32,  //!< 32-bit signed integer (int).
-    UInt32, //!< 32-bit unsigned integer (unsiged int).
-    
-    Float,  //!< 32-bit floating-point (float).
-    Double, //!< 64-bit real type (double).
-};
 
 //! Image format used to write texture data.
 enum class ImageFormat
