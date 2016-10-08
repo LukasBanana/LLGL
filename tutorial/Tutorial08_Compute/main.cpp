@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
         commands->SetStorageBuffer(*storageBuffer, 0);
 
         // Dispatch compute shader
-        commands->DispatchCompute({ inputData.size(), 1, 1 });
+        commands->DispatchCompute(inputData.size(), 1, 1);
 
         // Read reslut
         commands->SyncGPU();

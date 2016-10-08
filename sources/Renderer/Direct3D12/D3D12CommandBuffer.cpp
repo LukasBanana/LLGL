@@ -263,9 +263,9 @@ void D3D12CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned
 
 /* ----- Compute ----- */
 
-void D3D12CommandBuffer::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
+void D3D12CommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
-    //todo
+    commandList_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }
 
 /* ----- Misc ----- */

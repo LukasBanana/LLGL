@@ -432,10 +432,10 @@ void GLCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned in
 
 /* ----- Compute ----- */
 
-void GLCommandBuffer::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
+void GLCommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
     #ifndef __APPLE__
-    glDispatchCompute(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
+    glDispatchCompute(groupSizeX, groupSizeY, groupSizeZ);
     #endif
 }
 

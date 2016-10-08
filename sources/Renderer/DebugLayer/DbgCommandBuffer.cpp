@@ -371,17 +371,17 @@ void DbgCommandBuffer::DebugThreadGroupLimit(unsigned int size, unsigned int lim
     }
 }
 
-void DbgCommandBuffer::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
+void DbgCommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
-    if (threadGroupSize.x*threadGroupSize.y*threadGroupSize.z == 0)
+    if (groupSizeX * groupSizeY * groupSizeZ == 0)
         LLGL_DBG_WARN_HERE(WarningType::PointlessOperation, "thread group size has volume of 0 units");
 
     DebugComputePipelineSet(__FUNCTION__);
-    DebugThreadGroupLimit(threadGroupSize.x, caps_.maxNumComputeShaderWorkGroups.x, __FUNCTION__);
-    DebugThreadGroupLimit(threadGroupSize.y, caps_.maxNumComputeShaderWorkGroups.y, __FUNCTION__);
-    DebugThreadGroupLimit(threadGroupSize.z, caps_.maxNumComputeShaderWorkGroups.z, __FUNCTION__);
+    DebugThreadGroupLimit(groupSizeX, caps_.maxNumComputeShaderWorkGroups.x, __FUNCTION__);
+    DebugThreadGroupLimit(groupSizeY, caps_.maxNumComputeShaderWorkGroups.y, __FUNCTION__);
+    DebugThreadGroupLimit(groupSizeZ, caps_.maxNumComputeShaderWorkGroups.z, __FUNCTION__);
     {
-        instance.DispatchCompute(threadGroupSize);
+        instance.DispatchCompute(groupSizeX, groupSizeY, groupSizeZ);
     }
     LLGL_DBG_PROFILER_DO(dispatchComputeCalls.Inc());
 }

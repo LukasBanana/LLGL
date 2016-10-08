@@ -93,7 +93,7 @@ int main()
         // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query
         commands->BeginQuery(*timerQuery);
         {
-            commands->DispatchCompute({ 1, 1, 1 });
+            commands->DispatchCompute(1, 1, 1);
         }
         commands->EndQuery(*timerQuery);
 

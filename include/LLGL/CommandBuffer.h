@@ -352,11 +352,13 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Dispachtes a compute command.
-        \param[in] threadGroupSize Specifies the number of thread groups,
-        where the number of threads per group is specified statically within the compute shader.
+        \param[in] groupSizeX Specifies the number of thread groups in the X-dimension.
+        \param[in] groupSizeY Specifies the number of thread groups in the Y-dimension.
+        \param[in] groupSizeZ Specifies the number of thread groups in the Z-dimension.
         \see SetComputePipeline
+        \see RenderingCaps::maxNumComputeShaderWorkGroups
         */
-        virtual void DispatchCompute(const Gs::Vector3ui& threadGroupSize) = 0;
+        virtual void DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ) = 0;
 
         /* ----- Misc ----- */
 

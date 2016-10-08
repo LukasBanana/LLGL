@@ -510,9 +510,9 @@ void D3D11CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned
 
 /* ----- Compute ----- */
 
-void D3D11CommandBuffer::DispatchCompute(const Gs::Vector3ui& threadGroupSize)
+void D3D11CommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
-    context_->Dispatch(threadGroupSize.x, threadGroupSize.y, threadGroupSize.z);
+    context_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }
 
 /* ----- Misc ----- */
