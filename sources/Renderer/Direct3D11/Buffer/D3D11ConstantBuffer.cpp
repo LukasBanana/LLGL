@@ -22,7 +22,7 @@ D3D11ConstantBuffer::D3D11ConstantBuffer(ID3D11Device* device, const BufferDescr
     /* Setup descriptor and create constant buffer */
     CD3D11_BUFFER_DESC bufferDesc(desc.size, D3D11_BIND_CONSTANT_BUFFER);
 
-    if (desc.usage == BufferUsage::Dynamic)
+    if ((desc.flags & BufferFlags::DynamicUsage) != 0)
     {
         bufferDesc.Usage            = D3D11_USAGE_DYNAMIC;
         bufferDesc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;

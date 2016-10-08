@@ -76,8 +76,8 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::DataType::Float, 3 });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::DataType::Float, 2 });
+        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float3 });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
 
         // Initialize vertices (scale texture-coordiantes a little bit, to show the texture border)
         auto vertices = GenerateTexturedCubeVertices();

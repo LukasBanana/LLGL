@@ -24,14 +24,6 @@ static void UpdateStride(VertexFormat& vertexFormat)
 
 void VertexFormat::AppendAttribute(const VertexAttribute& attrib, unsigned int offset)
 {
-    /* Validate input arguments */
-    if (attrib.components < 1 || attrib.components > 4)
-    {
-        std::stringstream s;
-        s << __FUNCTION__ << ": 'attrib.components' must be 1, 2, 3, or 4 (but " << attrib.components << " is specified)";
-        throw std::invalid_argument(s.str());
-    }
-
     /* Append attribute to the list */
     attributes.push_back(attrib);
 

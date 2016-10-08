@@ -73,52 +73,46 @@ std::string GLShaderProgram::QueryInfoLog()
     return "";
 }
 
-static void UnmapAttribType(GLenum type, DataType& dataType, unsigned int& rows, unsigned int& cols)
+static std::pair<VectorType, unsigned int> UnmapAttribType(GLenum type)
 {
-    auto Set = [&](DataType t, unsigned int r, unsigned int c)
-    {
-        dataType    = t;
-        rows        = r;
-        cols        = c;
-    };
-
     switch (type)
     {
-        case GL_FLOAT:              Set(DataType::Float,  1, 1); break;
-        case GL_FLOAT_VEC2:         Set(DataType::Float,  2, 1); break;
-        case GL_FLOAT_VEC3:         Set(DataType::Float,  3, 1); break;
-        case GL_FLOAT_VEC4:         Set(DataType::Float,  4, 1); break;
-        case GL_FLOAT_MAT2:         Set(DataType::Float,  2, 2); break;
-        case GL_FLOAT_MAT3:         Set(DataType::Float,  3, 3); break;
-        case GL_FLOAT_MAT4:         Set(DataType::Float,  4, 4); break;
-        case GL_FLOAT_MAT2x3:       Set(DataType::Float,  2, 3); break;
-        case GL_FLOAT_MAT2x4:       Set(DataType::Float,  2, 4); break;
-        case GL_FLOAT_MAT3x2:       Set(DataType::Float,  3, 2); break;
-        case GL_FLOAT_MAT3x4:       Set(DataType::Float,  3, 4); break;
-        case GL_FLOAT_MAT4x2:       Set(DataType::Float,  4, 2); break;
-        case GL_FLOAT_MAT4x3:       Set(DataType::Float,  4, 3); break;
-        case GL_INT:                Set(DataType::Int32,  1, 1); break;
-        case GL_INT_VEC2:           Set(DataType::Int32,  2, 1); break;
-        case GL_INT_VEC3:           Set(DataType::Int32,  3, 1); break;
-        case GL_INT_VEC4:           Set(DataType::Int32,  4, 1); break;
-        case GL_UNSIGNED_INT:       Set(DataType::UInt32, 1, 1); break;
-        case GL_UNSIGNED_INT_VEC2:  Set(DataType::UInt32, 2, 1); break;
-        case GL_UNSIGNED_INT_VEC3:  Set(DataType::UInt32, 3, 1); break;
-        case GL_UNSIGNED_INT_VEC4:  Set(DataType::UInt32, 4, 1); break;
-        case GL_DOUBLE:             Set(DataType::Double, 1, 1); break;
-        case GL_DOUBLE_VEC2:        Set(DataType::Double, 2, 1); break;
-        case GL_DOUBLE_VEC3:        Set(DataType::Double, 3, 1); break;
-        case GL_DOUBLE_VEC4:        Set(DataType::Double, 4, 1); break;
-        case GL_DOUBLE_MAT2:        Set(DataType::Double, 2, 2); break;
-        case GL_DOUBLE_MAT3:        Set(DataType::Double, 3, 3); break;
-        case GL_DOUBLE_MAT4:        Set(DataType::Double, 4, 4); break;
-        case GL_DOUBLE_MAT2x3:      Set(DataType::Double, 2, 3); break;
-        case GL_DOUBLE_MAT2x4:      Set(DataType::Double, 2, 4); break;
-        case GL_DOUBLE_MAT3x2:      Set(DataType::Double, 3, 2); break;
-        case GL_DOUBLE_MAT3x4:      Set(DataType::Double, 3, 4); break;
-        case GL_DOUBLE_MAT4x2:      Set(DataType::Double, 4, 2); break;
-        case GL_DOUBLE_MAT4x3:      Set(DataType::Double, 4, 3); break;
+        case GL_FLOAT:              return { VectorType::Float,   1 };
+        case GL_FLOAT_VEC2:         return { VectorType::Float2,  1 };
+        case GL_FLOAT_VEC3:         return { VectorType::Float3,  1 };
+        case GL_FLOAT_VEC4:         return { VectorType::Float4,  1 };
+        case GL_FLOAT_MAT2:         return { VectorType::Float2,  2 };
+        case GL_FLOAT_MAT3:         return { VectorType::Float3,  3 };
+        case GL_FLOAT_MAT4:         return { VectorType::Float4,  4 };
+        case GL_FLOAT_MAT2x3:       return { VectorType::Float3,  2 };
+        case GL_FLOAT_MAT2x4:       return { VectorType::Float4,  2 };
+        case GL_FLOAT_MAT3x2:       return { VectorType::Float2,  3 };
+        case GL_FLOAT_MAT3x4:       return { VectorType::Float4,  3 };
+        case GL_FLOAT_MAT4x2:       return { VectorType::Float2,  4 };
+        case GL_FLOAT_MAT4x3:       return { VectorType::Float3,  4 };
+        case GL_INT:                return { VectorType::Int,     1 };
+        case GL_INT_VEC2:           return { VectorType::Int2,    1 };
+        case GL_INT_VEC3:           return { VectorType::Int3,    1 };
+        case GL_INT_VEC4:           return { VectorType::Int4,    1 };
+        case GL_UNSIGNED_INT:       return { VectorType::UInt,    1 };
+        case GL_UNSIGNED_INT_VEC2:  return { VectorType::UInt2,   1 };
+        case GL_UNSIGNED_INT_VEC3:  return { VectorType::UInt3,   1 };
+        case GL_UNSIGNED_INT_VEC4:  return { VectorType::UInt4,   1 };
+        case GL_DOUBLE:             return { VectorType::Double,  1 };
+        case GL_DOUBLE_VEC2:        return { VectorType::Double2, 1 };
+        case GL_DOUBLE_VEC3:        return { VectorType::Double3, 1 };
+        case GL_DOUBLE_VEC4:        return { VectorType::Double4, 4 };
+        case GL_DOUBLE_MAT2:        return { VectorType::Double2, 2 };
+        case GL_DOUBLE_MAT3:        return { VectorType::Double3, 3 };
+        case GL_DOUBLE_MAT4:        return { VectorType::Double4, 4 };
+        case GL_DOUBLE_MAT2x3:      return { VectorType::Double3, 2 };
+        case GL_DOUBLE_MAT2x4:      return { VectorType::Double4, 2 };
+        case GL_DOUBLE_MAT3x2:      return { VectorType::Double2, 3 };
+        case GL_DOUBLE_MAT3x4:      return { VectorType::Double4, 3 };
+        case GL_DOUBLE_MAT4x2:      return { VectorType::Double2, 4 };
+        case GL_DOUBLE_MAT4x3:      return { VectorType::Double3, 4 };
     }
+    return { VectorType::Float, 0 };
 }
 
 std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
@@ -150,15 +144,12 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
         glGetActiveAttrib(id_, i, maxNameLength, &nameLength, &size, &type, attribName.data());
 
         /* Convert attribute information */
-        auto name       = std::string(attribName.data());
-        auto dataType   = DataType::Int8;
-
-        unsigned rows = 0, cols = 0;
-        UnmapAttribType(type, dataType, rows, cols);
-        auto components = rows*cols;
+        auto name = std::string(attribName.data());
+        auto attr = UnmapAttribType(type);
 
         /* Insert uniform block into list */
-        vertexFormat.AppendAttribute({ name, dataType, components });
+        while (attr.second-- > 0)
+            vertexFormat.AppendAttribute({ name, attr.first });
     }
 
     return vertexFormat.attributes;

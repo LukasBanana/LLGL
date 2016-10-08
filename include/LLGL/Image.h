@@ -99,9 +99,6 @@ struct LLGL_EXPORT ImageDescriptor
 
 /* ----- Functions ----- */
 
-//! Returns the size (in bytes) of the specified data type.
-LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType);
-
 /**
 \brief Returns the size (in number of components) of the specified image format.
 \param[in] imageFormat Specifies the image format.

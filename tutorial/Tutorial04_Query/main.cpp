@@ -51,7 +51,7 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::DataType::Float, 3 });
+        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float3 });
 
         // Create vertex, index, and constant buffer
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);

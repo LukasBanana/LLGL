@@ -18,9 +18,9 @@ namespace D3D11Types
 {
 
 
-DXGI_FORMAT Map(const VertexAttribute& attrib)
+DXGI_FORMAT Map(const VectorType vectorType)
 {
-    return DXTypes::Map(attrib);
+    return DXTypes::Map(vectorType);
 }
 
 DXGI_FORMAT Map(const DataType dataType)
