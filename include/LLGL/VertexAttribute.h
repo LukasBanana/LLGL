@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-//! Vertex attribute class.
+//! Vertex attribute structure.
 struct LLGL_EXPORT VertexAttribute
 {
     VertexAttribute() = default;
@@ -93,7 +93,10 @@ struct LLGL_EXPORT VertexAttribute
     //! Byte offset within each vertex. By default 0.
     unsigned int    offset          = 0;
 
-    //! Semantic index (only relevant for HLSL).
+    /**
+    \brief Semantic index.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    */
     unsigned int    semanticIndex   = 0;
 
     /**

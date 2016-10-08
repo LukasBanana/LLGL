@@ -110,6 +110,8 @@ void D3D11Shader::CreateHardwareShader(ID3D11ClassLinkage* classLinkage)
             break;
         case ShaderType::Geometry:
             hr = device_->CreateGeometryShader(byteCode_.data(), byteCode_.size(), classLinkage, &hardwareShader_.gs);
+
+            //hr = device_->CreateGeometryShaderWithStreamOutput(byteCode_.data(), byteCode_.size(), classLinkage, &hardwareShader_.gs);
             DXThrowIfFailed(hr, "failed to create D3D11 geometry shader");
             break;
         case ShaderType::Fragment:
