@@ -55,7 +55,7 @@ class GLCommandBuffer : public CommandBuffer
         void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
-        void SetStorageBuffer(Buffer& buffer, unsigned int slot) override;
+        void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags) override;
 
         /* ----- Textures ----- */
 

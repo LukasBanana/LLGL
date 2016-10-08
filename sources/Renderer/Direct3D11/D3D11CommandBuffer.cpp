@@ -162,10 +162,8 @@ void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsign
     );
 }
 
-void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
-    long shaderStageFlags = ShaderStageFlags::AllStages; //<--- !!!
-
     auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
 
     if (storageBufferD3D.IsUAV())

@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
         commands->SetComputePipeline(*pipeline);
 
         // Set storage buffer
-        commands->SetStorageBuffer(*storageBuffer, 0);
+        commands->SetStorageBuffer(*storageBuffer, 0, LLGL::ShaderStageFlags::ComputeStage);
 
         // Dispatch compute shader
         commands->DispatchCompute(inputData.size(), 1, 1);

@@ -175,9 +175,11 @@ class LLGL_EXPORT CommandBuffer
         This must not be an unspecified storage buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateStorageBuffer"
         function or with the "RenderSystem::WriteStorageBuffer" function.
         \param[in] slot Specifies the slot index where to put the storage buffer.
+        \param[in] shaderStageFlags Specifies at which shader stages the storage buffer is to be set and which resource views are to be set.
+        By default all shader stages and all resource views are affected.
         \see RenderSystem::WriteStorageBuffer
         */
-        virtual void SetStorageBuffer(Buffer& buffer, unsigned int slot) = 0;
+        virtual void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         //virtual void SetStreamOutputBuffer(Buffer& buffer) = 0;
 

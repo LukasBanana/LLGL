@@ -137,7 +137,7 @@ void D3D12CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsign
     //todo...
 }
 
-void D3D12CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+void D3D12CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
     //todo...
 }

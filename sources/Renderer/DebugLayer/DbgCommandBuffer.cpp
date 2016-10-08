@@ -145,13 +145,13 @@ void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
-void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
 {
     DebugBufferType(buffer.GetType(), BufferType::Storage, __FUNCTION__);
 
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     {
-        instance.SetStorageBuffer(bufferDbg.instance, slot);
+        instance.SetStorageBuffer(bufferDbg.instance, slot, shaderStageFlags);
     }
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }

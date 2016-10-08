@@ -185,7 +185,7 @@ void GLCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned 
     );
 }
 
-void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot)
+void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
 {
     /* Bind storage buffer with BindBufferBase */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
