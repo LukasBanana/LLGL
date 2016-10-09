@@ -137,8 +137,9 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 {
-    /* Setup shader state */
+    /* Bind shader program and discard rasterizer if there is no fragment shader */
     stateMngr.BindShaderProgram(shaderProgram_->GetID());
+    stateMngr.Set(GLState::RASTERIZER_DISCARD, !shaderProgram_->HasFragmentShader());
 
     /* Setup input-assembler state */
     if (patchVertices_ > 0)

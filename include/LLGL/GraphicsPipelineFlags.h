@@ -184,8 +184,11 @@ struct MultiSamplingDescriptor
     {
     }
 
-    bool            enabled = false;    //!< Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    unsigned int    samples = 1;        //!< Number of samples used for multi-sampling. By default 1.
+    //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
+    bool            enabled = false;
+
+    //! Number of samples used for multi-sampling. By default 1.
+    unsigned int    samples = 1;
 };
 
 //! Depth state descriptor structure.
@@ -207,10 +210,17 @@ struct DepthDescriptor
 //! Stencil face descriptor structure.
 struct StencilFaceDescriptor
 {
-    StencilOp       stencilFailOp   = StencilOp::Keep;  //!< Specifies the operation to take when the stencil test fails.
-    StencilOp       depthFailOp     = StencilOp::Keep;  //!< Specifies the operation to take when the stencil test passes but the depth test fails.
-    StencilOp       depthPassOp     = StencilOp::Keep;  //!< Specifies the operation to take when both the stencil test and the depth test pass.
-    CompareOp       compareOp       = CompareOp::Less;  //!< Specifies the stencil compare operation.
+    //! Specifies the operation to take when the stencil test fails.
+    StencilOp       stencilFailOp   = StencilOp::Keep;
+
+    //! Specifies the operation to take when the stencil test passes but the depth test fails.
+    StencilOp       depthFailOp     = StencilOp::Keep;
+
+    //! Specifies the operation to take when both the stencil test and the depth test pass.
+    StencilOp       depthPassOp     = StencilOp::Keep;
+
+    //! Specifies the stencil compare operation.
+    CompareOp       compareOp       = CompareOp::Less;
 
     /**
     \brief Specifies the portion of the depth-stencil buffer for reading stencil data. By default 0xffffffff.

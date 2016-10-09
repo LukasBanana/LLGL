@@ -44,10 +44,16 @@ class GLShaderProgram : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
-        //! Returns the shader program ID.
+        // Returns the shader program ID.
         inline GLuint GetID() const
         {
             return id_;
+        }
+
+        // Returns true if this shader program has a fragment shader.
+        inline bool HasFragmentShader() const
+        {
+            return hasFragmentShader_;
         }
 
     private:
@@ -55,6 +61,8 @@ class GLShaderProgram : public ShaderProgram
         GLuint          id_ = 0;
 
         GLShaderUniform uniform_;
+
+        bool            hasFragmentShader_ = false;
 
 };
 
