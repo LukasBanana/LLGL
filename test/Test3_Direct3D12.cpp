@@ -29,8 +29,8 @@ int main()
         contextDesc.videoMode.resolution    = { 800, 600 };
         //contextDesc.videoMode.fullscreen    = true;
 
-        //contextDesc.sampling.enabled        = true;
-        //contextDesc.sampling.samples        = 8;
+        //contextDesc.multiSampling.enabled   = true;
+        //contextDesc.multiSampling.samples   = 8;
 
         contextDesc.vsync.enabled           = true;
 
@@ -149,7 +149,7 @@ int main()
             //pipelineDesc.depth.writeEnabled     = true;
             //pipelineDesc.depth.compareOp        = LLGL::CompareOp::Less;
 
-            pipelineDesc.rasterizer.sampling    = contextDesc.sampling;
+            pipelineDesc.rasterizer.multiSampling    = contextDesc.multiSampling;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 

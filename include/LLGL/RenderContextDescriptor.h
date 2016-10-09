@@ -109,7 +109,7 @@ struct ProfileOpenGLDescriptor
 struct RenderContextDescriptor
 {
     VsyncDescriptor         vsync;          //!< Vertical-synchronization (Vsync) descriptor.
-    SamplingDescriptor      sampling;       //!< Sampling descriptor.
+    MultiSamplingDescriptor multiSampling;  //!< Sampling descriptor.
     VideoModeDescriptor     videoMode;      //!< Video mode descriptor.
     ProfileOpenGLDescriptor profileOpenGL;  //!< OpenGL profile descriptor (to switch between compatability or core profile).
     DebugCallback           debugCallback;  //!< Debuging callback descriptor.

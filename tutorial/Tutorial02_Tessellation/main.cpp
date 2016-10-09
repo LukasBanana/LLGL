@@ -131,24 +131,23 @@ public:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             // Set shader program
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.shaderProgram              = shaderProgram;
 
             // Set input-assembler state (draw pachtes with 4 control points)
-            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::Patches4;
+            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::Patches4;
 
             // Enable multi-sample anti-aliasing
             #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.sampling.enabled    = true;
-            pipelineDesc.rasterizer.sampling.samples    = 8;
+            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
 
             // Enable depth test and writing
-            pipelineDesc.depth.testEnabled              = true;
-            pipelineDesc.depth.writeEnabled             = true;
+            pipelineDesc.depth.testEnabled          = true;
+            pipelineDesc.depth.writeEnabled         = true;
 
             // Enable back-face culling
-            pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
-            pipelineDesc.rasterizer.frontCCW            = true;
+            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
+            pipelineDesc.rasterizer.frontCCW        = true;
         }
 
         // Create graphics pipelines

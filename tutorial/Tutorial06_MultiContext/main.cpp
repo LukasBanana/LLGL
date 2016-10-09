@@ -21,8 +21,7 @@ int main(int argc, char* argv[])
         LLGL::RenderContextDescriptor contextDesc;
         {
             contextDesc.videoMode.resolution    = { 640, 480 };
-            contextDesc.sampling.enabled        = true;
-            contextDesc.sampling.samples        = 8;
+            contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor(8);
         }
         auto context1 = renderer->CreateRenderContext(contextDesc);
         auto context2 = renderer->CreateRenderContext(contextDesc);
@@ -148,10 +147,9 @@ int main(int argc, char* argv[])
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.shaderProgram                  = shaderProgram;
-            pipelineDesc.rasterizer.sampling.enabled    = true;
-            pipelineDesc.rasterizer.sampling.samples    = 8;
+            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 

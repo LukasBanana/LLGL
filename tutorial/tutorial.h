@@ -228,8 +228,8 @@ protected:
         {
             contextDesc.videoMode.resolution    = resolution;
             contextDesc.vsync.enabled           = true;
-            contextDesc.sampling.enabled        = (multiSampling > 1);
-            contextDesc.sampling.samples        = multiSampling;
+            contextDesc.multiSampling.enabled   = (multiSampling > 1);
+            contextDesc.multiSampling.samples   = multiSampling;
         }
         context = renderer->CreateRenderContext(contextDesc);
 

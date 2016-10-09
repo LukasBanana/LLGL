@@ -98,14 +98,14 @@ public:
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.shaderProgram              = shaderProgram;
 
-            pipelineDesc.depth.testEnabled              = true;
-            pipelineDesc.depth.writeEnabled             = true;
+            pipelineDesc.depth.testEnabled          = true;
+            pipelineDesc.depth.writeEnabled         = true;
 
-            pipelineDesc.rasterizer.cullMode            = LLGL::CullMode::Back;
+            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
             #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.sampling.enabled    = true;
+            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);

@@ -34,13 +34,13 @@ int main()
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
 
-        contextDesc.videoMode.resolution    = { 800, 600 };
-        //contextDesc.videoMode.fullscreen    = true;
+        contextDesc.videoMode.resolution        = { 800, 600 };
+        //contextDesc.videoMode.fullscreen        = true;
 
-        contextDesc.sampling.enabled        = true;
-        contextDesc.sampling.samples        = 8;
+        contextDesc.multiSampling.enabled       = true;
+        contextDesc.multiSampling.samples       = 8;
 
-        contextDesc.vsync.enabled           = true;
+        contextDesc.vsync.enabled               = true;
 
         /*contextDesc.profileOpenGL.extProfile    = true;
         contextDesc.profileOpenGL.coreProfile   = true;
@@ -319,7 +319,7 @@ int main()
             pipelineDesc.shaderProgram          = &shaderProgram;
             pipelineDesc.primitiveTopology      = LLGL::PrimitiveTopology::TriangleFan;
 
-            pipelineDesc.rasterizer.sampling    = contextDesc.sampling;
+            pipelineDesc.rasterizer.multiSampling    = contextDesc.multiSampling;
 
             LLGL::BlendTargetDescriptor blendDesc;
             {

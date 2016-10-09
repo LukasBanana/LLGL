@@ -90,7 +90,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
         swapChainDesc.BufferDesc.Format                     = DXGI_FORMAT_R8G8B8A8_UNORM;
         swapChainDesc.BufferDesc.RefreshRate.Numerator      = desc_.vsync.refreshRate;
         swapChainDesc.BufferDesc.RefreshRate.Denominator    = desc_.vsync.interval;
-        swapChainDesc.SampleDesc.Count                      = (desc_.sampling.enabled ? std::max(1u, desc_.sampling.samples) : 1);
+        swapChainDesc.SampleDesc.Count                      = (desc_.multiSampling.enabled ? std::max(1u, desc_.multiSampling.samples) : 1);
         swapChainDesc.SampleDesc.Quality                    = 0;
         swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount                           = (desc_.videoMode.swapChainMode == SwapChainMode::TripleBuffering ? 2 : 1);
@@ -122,7 +122,7 @@ void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
         texDesc.MipLevels           = 1;
         texDesc.ArraySize           = 1;
         texDesc.Format              = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        texDesc.SampleDesc.Count    = (desc_.sampling.enabled ? std::max(1u, desc_.sampling.samples) : 1);
+        texDesc.SampleDesc.Count    = (desc_.multiSampling.enabled ? std::max(1u, desc_.multiSampling.samples) : 1);
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;

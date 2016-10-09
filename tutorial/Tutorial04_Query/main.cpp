@@ -66,12 +66,11 @@ public:
         // Create graphics pipeline for occlusion query
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.shaderProgram              = shaderProgram;
 
-            pipelineDesc.depth.testEnabled              = true;
+            pipelineDesc.depth.testEnabled          = true;
 
-            pipelineDesc.rasterizer.sampling.enabled    = true;
-            pipelineDesc.rasterizer.sampling.samples    = 8;
+            pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
 
             LLGL::BlendTargetDescriptor blendDesc;
             {

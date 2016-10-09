@@ -173,11 +173,19 @@ enum class CullMode
 
 /* ----- Structures ----- */
 
-//! (Multi-)sampling descriptor structure.
-struct SamplingDescriptor
+//! Multi-sampling descriptor structure.
+struct MultiSamplingDescriptor
 {
-    bool            enabled     = false;    //!< Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    unsigned int    samples     = 1;        //!< Number of samples used for multi-sampling. By default 1.
+    MultiSamplingDescriptor() = default;
+
+    inline MultiSamplingDescriptor(unsigned int samples) :
+        enabled( samples > 1 ),
+        samples( samples     )
+    {
+    }
+
+    bool            enabled = false;    //!< Specifies whether multi-sampling is enabled or disabled. By default disabled.
+    unsigned int    samples = 1;        //!< Number of samples used for multi-sampling. By default 1.
 };
 
 //! Depth state descriptor structure.
@@ -231,27 +239,27 @@ struct StencilDescriptor
 struct RasterizerDescriptor
 {
     //! Polygon render mode. By default PolygonMode::Fill.
-    PolygonMode         polygonMode                 = PolygonMode::Fill;
+    PolygonMode             polygonMode                 = PolygonMode::Fill;
 
     //! Polygon face culling mode. By default CullMode::Disabled.
-    CullMode            cullMode                    = CullMode::Disabled;
-    int                 depthBias                   = 0;
-    float               depthBiasClamp              = 0.0f;
-    float               slopeScaledDepthBias        = 0.0f;
+    CullMode                cullMode                    = CullMode::Disabled;
+    int                     depthBias                   = 0;
+    float                   depthBiasClamp              = 0.0f;
+    float                   slopeScaledDepthBias        = 0.0f;
 
     //! (Multi-)sampling descriptor.
-    SamplingDescriptor  sampling;
+    MultiSamplingDescriptor multiSampling;
 
     //! If true, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding.
-    bool                frontCCW                    = false;
+    bool                    frontCCW                    = false;
 
-    bool                depthClampEnabled           = false;
+    bool                    depthClampEnabled           = false;
 
     //! Specifies whether scissor test is enabled or disabled. By default disabled.
-    bool                scissorTestEnabled          = false;
+    bool                    scissorTestEnabled          = false;
 
     //! Specifies whether lines are rendered with or without anti-aliasing. By default disabled.
-    bool                antiAliasedLineEnabled      = false;
+    bool                    antiAliasedLineEnabled      = false;
 
     /**
     \brief If ture, conservative rasterization is enabled.
@@ -259,7 +267,7 @@ struct RasterizerDescriptor
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     */
-    bool                conservativeRasterization   = false;
+    bool                    conservativeRasterization   = false;
 };
 
 //! Blend target state descriptor structure.

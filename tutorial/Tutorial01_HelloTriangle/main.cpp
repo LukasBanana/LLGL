@@ -8,7 +8,7 @@
 #include "../tutorial.h"
 
 
-//#define ENABLE_MULTISAMPLING
+#define ENABLE_MULTISAMPLING
 
 int main(int argc, char* argv[])
 {
@@ -25,8 +25,8 @@ int main(int argc, char* argv[])
         {
             contextDesc.videoMode.resolution    = { 640, 480 };
             #ifdef ENABLE_MULTISAMPLING
-            contextDesc.sampling.enabled        = true;
-            contextDesc.sampling.samples        = 8;
+            contextDesc.multiSampling.enabled   = true;
+            contextDesc.multiSampling.samples   = 8;
             #endif
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
         // Create command buffer to submit subsequent graphics commands to the GPU
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
 
-        // Sets render target to the render context
+        // Sets the render context as the initial render target
         commands->SetRenderTarget(*context);
 
         // Vertex data structure
@@ -125,10 +125,9 @@ int main(int argc, char* argv[])
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.shaderProgram              = shaderProgram;
             #ifdef ENABLE_MULTISAMPLING
-            pipelineDesc.rasterizer.multiSampleEnabled  = true;
-            pipelineDesc.rasterizer.samples             = 8;
+            pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
             #endif
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
