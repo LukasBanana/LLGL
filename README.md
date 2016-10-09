@@ -128,4 +128,11 @@ Small example with a geometry shader and a stream-output buffer.
 
 *No screenshot available*
 
+### [Tutorial 10: Instancing](tutorial/Tutorial10_Instancing/main.cpp)
+
+Practical example of hardware instancing by rendering over 10000 instances of different textured plants.
+
+<p align="center"><img src="tutorial/Tutorial10_Instancing.png" width="400" height="300"/></p>
+
+
 

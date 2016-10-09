@@ -11,6 +11,7 @@
 class Tutorial10 : public Tutorial
 {
 
+    // Static configuration for this demo
     static const unsigned int   numPlantInstances   = 10000;
     static const unsigned int   numPlantImages      = 10;
     const float                 positionRange       = 40.0f;
