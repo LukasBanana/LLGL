@@ -144,6 +144,8 @@ private:
             std::vector<Gs::Vector4f> output(36*3);
             ::memcpy(output.data(), outputBuffer, sizeof(Gs::Vector4f)*36*3);
             renderer->UnmapBuffer(*streamOutputBuffer);
+
+            // print or debug data in "output" container ...
         }
 
         // Present result on the screen
