@@ -35,9 +35,17 @@ class GLShader : public Shader
             return id_;
         }
 
+    protected:
+
+        friend class GLShaderProgram;
+
+        bool MoveStreamOutputFormat(StreamOutputFormat& streamOutputFormat);
+
     private:
 
-        GLuint id_ = 0;
+        GLuint              id_ = 0;
+
+        StreamOutputFormat  streamOutputFormat_;
 
 };
 

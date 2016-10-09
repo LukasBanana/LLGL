@@ -34,8 +34,28 @@ GLShaderProgram::~GLShaderProgram()
 
 void GLShaderProgram::AttachShader(Shader& shader)
 {
-    const auto& shaderGL = LLGL_CAST(GLShader&, shader);
+    auto& shaderGL = LLGL_CAST(GLShader&, shader);
+
+    /* Attach shader to shader program */
     glAttachShader(id_, shaderGL.GetID());
+
+    /* Move stream-output format from shader to shader program */
+    StreamOutputFormat streamOutputFormat;
+    if (shaderGL.MoveStreamOutputFormat(streamOutputFormat))
+    {
+        /* Specify transform-feedback varyings */
+        const auto& soAttribs = streamOutputFormat.attributes;
+        if (!soAttribs.empty())
+        {
+            std::vector<const GLchar*> varyings;
+            varyings.reserve(soAttribs.size());
+
+            for (const auto& attr : soAttribs)
+                varyings.push_back(attr.name.c_str());
+
+            glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_SEPARATE_ATTRIBS);
+        }
+    }
 }
 
 bool GLShaderProgram::LinkShaders()
@@ -304,8 +324,9 @@ void GLShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
 
     for (const auto& attrib : vertexFormat.attributes)
     {
-        /* Bind attribute location */
-        glBindAttribLocation(id_, index, attrib.name.c_str());
+        /* Bind attribute location (matrices only use the column) */
+        if (attrib.semanticIndex == 0)
+            glBindAttribLocation(id_, index, attrib.name.c_str());
         ++index;
     }
 }

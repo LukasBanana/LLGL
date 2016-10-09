@@ -164,7 +164,7 @@ struct ShaderSource
 
     std::string     sourceCode;     //!< Shader source code string.
     SourceHLSL      sourceHLSL;     //!< Additional HLSL shader source descriptor.
-    StreamOutput    streamOutput;   //!< Optional stream output for a geometry shader.
+    StreamOutput    streamOutput;   //!< Optional stream output for a geometry shader (or a vertex shader when used with OpenGL).
 };
 
 

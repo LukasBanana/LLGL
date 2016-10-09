@@ -37,6 +37,9 @@ bool GLShader::Compile(const ShaderSource& shaderSource)
     /* Compile shader */
     glCompileShader(id_);
 
+    /* Store stream-output format */
+    streamOutputFormat_ = shaderSource.streamOutput.format;
+
     /* Query compilation status */
     GLint compileStatus = 0;
     glGetShaderiv(id_, GL_COMPILE_STATUS, &compileStatus);
@@ -65,6 +68,21 @@ std::string GLShader::QueryInfoLog()
     }
 
     return "";
+}
+
+
+/*
+ * ======= Protected: =======
+ */
+
+bool GLShader::MoveStreamOutputFormat(StreamOutputFormat& streamOutputFormat)
+{
+    if (!streamOutputFormat_.attributes.empty())
+    {
+        streamOutputFormat.attributes = std::move(streamOutputFormat_.attributes);
+        return true;
+    }
+    return false;
 }
 
 

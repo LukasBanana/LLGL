@@ -299,7 +299,14 @@ PFNGLDEBUGMESSAGECALLBACKPROC                           glDebugMessageCallback  
 /* GL_ARB_clip_control */
 
 PFNGLCLIPCONTROLPROC                                    glClipControl                                   = nullptr;
-    
+
+/* GL_EXT_transform_feedback */
+
+PFNGLBINDBUFFERRANGEPROC                                glBindBufferRange                               = nullptr;
+PFNGLBEGINTRANSFORMFEEDBACKPROC                         glBeginTransformFeedback                        = nullptr;
+PFNGLENDTRANSFORMFEEDBACKPROC                           glEndTransformFeedback                          = nullptr;
+PFNGLTRANSFORMFEEDBACKVARYINGSPROC                      glTransformFeedbackVaryings                     = nullptr;
+
 #endif // /ifndef(__APPLE__)
 
 

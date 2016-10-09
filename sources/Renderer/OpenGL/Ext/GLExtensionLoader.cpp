@@ -453,6 +453,15 @@ static bool Load_GL_EXT_draw_buffers2(bool usePlaceHolder)
     return true;
 }
 
+static bool Load_GL_EXT_transform_feedback(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glBindBufferRange           );
+    LOAD_GLPROC( glBeginTransformFeedback    );
+    LOAD_GLPROC( glEndTransformFeedback      );
+    LOAD_GLPROC( glTransformFeedbackVaryings );
+    return true;
+}
+
 #undef LOAD_GLPROC_SIMPLE
 #undef LOAD_GLPROC
     
@@ -621,6 +630,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
     LOAD_GLEXT( KHR_debug                        );
     LOAD_GLEXT( ARB_clip_control                 );
     LOAD_GLEXT( EXT_draw_buffers2                );
+    LOAD_GLEXT( EXT_transform_feedback           );
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );

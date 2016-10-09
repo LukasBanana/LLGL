@@ -51,6 +51,7 @@ enum class GLExt
     EXT_stencil_two_side,//ATI_separate_stencil,
     KHR_debug,
     ARB_clip_control,
+    EXT_transform_feedback,
 
     /* Extensions without procedures */
     ARB_texture_cube_map,

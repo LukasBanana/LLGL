@@ -12,7 +12,7 @@ class Tutorial10 : public Tutorial
 {
 
     // Static configuration for this demo
-    static const unsigned int   numPlantInstances   = 10000;
+    static const unsigned int   numPlantInstances   = 20000;
     static const unsigned int   numPlantImages      = 10;
     const float                 positionRange       = 40.0f;
 
@@ -108,14 +108,15 @@ private:
             { {  grassSize, 0,  grassSize }, { grassTexSize,            0 } },
         };
 
-        // Initialize per-instance data (
+        // Initialize per-instance data (use dynamic container to avoid a stack overflow)
         struct Instance
         {
             LLGL::ColorRGBf color;      // Instance color
             Gs::Matrix4f    wMatrix;    // World matrix
             float           arrayLayer; // Array texture layer
-        }
-        instanceData[numPlantInstances + 1];
+        };
+
+        std::vector<Instance> instanceData(numPlantInstances + 1);
 
         for (std::size_t i = 0; i < numPlantInstances; ++i)
         {
@@ -161,10 +162,10 @@ private:
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexData);
 
         // Create buffer for per-instance data
-        desc.size                   = sizeof(instanceData);
+        desc.size                   = sizeof(Instance) * instanceData.size();
         desc.vertexBuffer.format    = vertexFormatPerInstance;
 
-        vertexBuffers[1] = renderer->CreateBuffer(desc, instanceData);
+        vertexBuffers[1] = renderer->CreateBuffer(desc, instanceData.data());
 
         // Create vertex buffer array
         vertexBufferArray = renderer->CreateBufferArray(2, vertexBuffers);

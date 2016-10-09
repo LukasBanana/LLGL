@@ -305,6 +305,13 @@ extern PFNGLDEBUGMESSAGECALLBACKPROC                        glDebugMessageCallba
 /* GL_ARB_clip_control */
 
 extern PFNGLCLIPCONTROLPROC                                 glClipControl;
+
+/* GL_EXT_transform_feedback */
+
+extern PFNGLBINDBUFFERRANGEPROC                             glBindBufferRange;
+extern PFNGLBEGINTRANSFORMFEEDBACKPROC                      glBeginTransformFeedback;
+extern PFNGLENDTRANSFORMFEEDBACKPROC                        glEndTransformFeedback;
+extern PFNGLTRANSFORMFEEDBACKVARYINGSPROC                   glTransformFeedbackVaryings;
     
 #endif
 

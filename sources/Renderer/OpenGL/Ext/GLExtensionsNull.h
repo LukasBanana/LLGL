@@ -332,6 +332,13 @@ DECL_GLPROC(void, glDebugMessageCallback, (GLDEBUGPROC, const void*));
 /* GL_ARB_clip_control */
 
 DECL_GLPROC(void, glClipControl, (GLenum, GLenum));
+    
+/* GL_EXT_transform_feedback */
+
+DECL_GLPROC(void, glBindBufferRange, (GLenum, GLuint, GLuint, GLintptr, GLsizeiptr));
+DECL_GLPROC(void, glBeginTransformFeedback, (GLenum));
+DECL_GLPROC(void, glEndTransformFeedback, (void));
+DECL_GLPROC(void, glTransformFeedbackVaryings, (GLuint, GLsizei, const GLchar *const*, GLenum));
 
 #endif // /ifndef(__APPLE__)
 
