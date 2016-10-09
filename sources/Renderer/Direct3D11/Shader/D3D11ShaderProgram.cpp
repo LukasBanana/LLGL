@@ -89,10 +89,10 @@ bool D3D11ShaderProgram::LinkShaders()
     enum ShaderTypeMask
     {
         MaskVS = (1 << 0),
-        MaskPS = (1 << 1),
-        MaskDS = (1 << 2),
-        MaskHS = (1 << 3),
-        MaskGS = (1 << 4),
+        MaskDS = (1 << 1),
+        MaskHS = (1 << 2),
+        MaskGS = (1 << 3),
+        MaskPS = (1 << 4),
         MaskCS = (1 << 5),
     };
 
@@ -112,18 +112,22 @@ bool D3D11ShaderProgram::LinkShaders()
     };
 
     MarkShader(vs_, MaskVS);
-    MarkShader(ps_, MaskPS);
     MarkShader(ds_, MaskDS);
     MarkShader(hs_, MaskHS);
     MarkShader(gs_, MaskGS);
+    MarkShader(ps_, MaskPS);
     MarkShader(cs_, MaskCS);
 
     switch (flags)
     {
-        case (MaskVS | MaskPS):
-        case (MaskVS | MaskPS | MaskGS):
-        case (MaskVS | MaskPS | MaskDS | MaskHS):
-        case (MaskVS | MaskPS | MaskDS | MaskHS | MaskGS):
+        case (MaskVS                                    ):
+        case (MaskVS |                   MaskGS         ):
+        case (MaskVS | MaskDS | MaskHS                  ):
+        case (MaskVS | MaskDS | MaskHS | MaskGS         ):
+        case (MaskVS |                            MaskPS):
+        case (MaskVS |                   MaskGS | MaskPS):
+        case (MaskVS | MaskDS | MaskHS |          MaskPS):
+        case (MaskVS | MaskDS | MaskHS | MaskGS | MaskPS):
         case (MaskCS):
             break;
         default:

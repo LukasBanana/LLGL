@@ -191,9 +191,17 @@ struct MultiSamplingDescriptor
 //! Depth state descriptor structure.
 struct DepthDescriptor
 {
-    bool        testEnabled     = false;            //!< Specifies whether the depth test is enabled or disabled. By default disabled.
-    bool        writeEnabled    = false;            //!< Specifies whether writing to the depth buffer is enabled or disabled. By default disabled.
-    CompareOp   compareOp       = CompareOp::Less;  //!< Specifies the depth test comparison function. By default CompareOp::Less.
+    /**
+    \brief Specifies whether the depth test is enabled or disabled. By default disabled.
+    \remarks If no pixel shader is used in the graphics pipeline, the depth test must be disabled.
+    */
+    bool        testEnabled     = false;
+
+    //! Specifies whether writing to the depth buffer is enabled or disabled. By default disabled.
+    bool        writeEnabled    = false;
+
+    //! Specifies the depth test comparison function. By default CompareOp::Less.
+    CompareOp   compareOp       = CompareOp::Less;
 };
 
 //! Stencil face descriptor structure.
@@ -230,9 +238,17 @@ struct StencilFaceDescriptor
 //! Stencil state descriptor structure.
 struct StencilDescriptor
 {
-    bool                    testEnabled  = false;   //!< Specifies whether the stencil test is enabled or disabled.
-    StencilFaceDescriptor   front;                  //!< Specifies the front face settings for the stencil test.
-    StencilFaceDescriptor   back;                   //!< Specifies the back face settings for the stencil test.
+    /**
+    \brief Specifies whether the stencil test is enabled or disabled.
+    \remarks If no pixel shader is used in the graphics pipeline, the stencil test must be disabled.
+    */
+    bool                    testEnabled  = false;
+
+    //! Specifies the front face settings for the stencil test.
+    StencilFaceDescriptor   front;
+
+    //! Specifies the back face settings for the stencil test.
+    StencilFaceDescriptor   back;
 };
 
 //! Rasterizer state descriptor structure.
