@@ -12,6 +12,11 @@
 extern "C"
 {
 
+LLGL_EXPORT int LLGL_RenderSystem_BuildID()
+{
+    return LLGL_BUILD_ID;
+}
+
 LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
 {
     return new LLGL::GLRenderSystem();

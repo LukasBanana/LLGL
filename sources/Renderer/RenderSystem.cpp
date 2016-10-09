@@ -7,6 +7,7 @@
 
 #include "../Platform/Module.h"
 #include "../Core/Helper.h"
+#include "BuildID.h"
 
 #include <LLGL/RenderSystem.h>
 #include <array>
@@ -55,7 +56,19 @@ std::vector<std::string> RenderSystem::FindModules()
     
     return modules;
 }
-    
+
+static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFilename)
+{
+    /* Load "LLGL_RenderSystem_Alloc" procedure */
+    LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_BUILDID, (void));
+
+    auto RenderSystem_BuildID = reinterpret_cast<PFN_RENDERSYSTEM_BUILDID>(module.LoadProcedure("LLGL_RenderSystem_BuildID"));
+    if (!RenderSystem_BuildID)
+        throw std::runtime_error("failed to load \"LLGL_RenderSystem_BuildID\" procedure from module \"" + moduleFilename + "\"");
+
+    return (RenderSystem_BuildID() == LLGL_BUILD_ID);
+}
+
 static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename)
 {
     /* Load "LLGL_RenderSystem_Alloc" procedure */
@@ -90,6 +103,15 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(moduleName);
     auto module         = Module::Load(moduleFilename);
+
+    /*
+    Verify build ID from render system module to detect a module,
+    that has poptentially compiled with a different compiler (type, version, debug/release mode etc.)
+    */
+    if (!LoadRenderSystemBuildID(*module, moduleFilename))
+        throw std::runtime_error("build ID mismatch in render system module");
+
+    /* Allocate render system */
     auto renderSystem   = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
 
     #ifdef LLGL_ENABLE_DEBUG_LAYER
