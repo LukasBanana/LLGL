@@ -33,8 +33,10 @@ void GS(triangle OutputVS inp[3], inout TriangleStream<OutputVS> stream)
 {
 	OutputVS outp;
 	
+	// Generate 3 instances
 	for (int i = 0; i < 3; ++i)
 	{
+		// Generate 3 vertices for each triangle
 		for (int j = 0; j < 3; ++j)
 		{
 			outp = inp[j];

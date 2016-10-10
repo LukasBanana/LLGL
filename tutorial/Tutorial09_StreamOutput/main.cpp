@@ -53,7 +53,10 @@ public:
         // Specify stream-output format
         LLGL::StreamOutputAttribute soAttrib;
         {
-            soAttrib.name = "SV_POSITION";
+            if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+                soAttrib.name = "SV_Position";
+            else
+                soAttrib.name = "position";
         }
         streamOutputFormat.AppendAttribute(soAttrib);
 

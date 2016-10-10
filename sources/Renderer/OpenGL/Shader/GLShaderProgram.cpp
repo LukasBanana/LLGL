@@ -8,7 +8,9 @@
 #include "GLShaderProgram.h"
 #include "GLShader.h"
 #include "../Ext/GLExtensions.h"
+#include "../Ext/GLExtensionLoader.h"
 #include "../../CheckedCast.h"
+#include "../../../Core/Exception.h"
 #include "../RenderState/GLStateManager.h"
 #include "../GLTypes.h"
 #include <LLGL/Log.h>
@@ -365,17 +367,41 @@ void GLShaderProgram::UnlockShaderUniform()
 
 void GLShaderProgram::BuildStreamOutputLayout(const StreamOutputFormat& streamOutputFormat)
 {
-    /* Specify transform-feedback varyings */
     const auto& soAttribs = streamOutputFormat.attributes;
     if (!soAttribs.empty())
     {
-        std::vector<const GLchar*> varyings;
-        varyings.reserve(soAttribs.size());
+        /* Specify varying with extension specific function */
+        if (HasExtension(GLExt::EXT_transform_feedback))
+        {
+            /* Specify transform-feedback varyings by names */
+            std::vector<const GLchar*> varyings;
+            varyings.reserve(soAttribs.size());
 
-        for (const auto& attr : soAttribs)
-            varyings.push_back(attr.name.c_str());
+            for (const auto& attr : soAttribs)
+                varyings.push_back(attr.name.c_str());
 
-        glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
+            glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
+        }
+        else if (HasExtension(GLExt::NV_transform_feedback))
+        {
+            /* Specify transform-feedback varyings by locations */
+            std::vector<GLint> varyings;
+            varyings.reserve(soAttribs.size());
+
+            for (const auto& attr : soAttribs)
+            {
+                /* Get varying location by its name */
+                auto location = glGetVaryingLocationNV(id_, attr.name.c_str());
+                if (location >= 0)
+                    varyings.push_back(location);
+                else
+                    throw std::invalid_argument("stream-output attribute \"" + attr.name + "\" does not specify an active varying in GLSL shader program");
+            }
+
+            glTransformFeedbackVaryingsNV(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
+        }
+        else
+            ThrowNotSupported("stream-outputs");
     }
 }
 

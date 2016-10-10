@@ -340,6 +340,15 @@ DECL_GLPROC(void, glBeginTransformFeedback, (GLenum));
 DECL_GLPROC(void, glEndTransformFeedback, (void));
 DECL_GLPROC(void, glTransformFeedbackVaryings, (GLuint, GLsizei, const GLchar *const*, GLenum));
 
+/* GL_NV_transform_feedback */
+
+DECL_GLPROC(void, glBindBufferRangeNV, (GLenum, GLuint, GLuint, GLintptr, GLsizeiptr));
+DECL_GLPROC(void, glBeginTransformFeedbackNV, (GLenum));
+DECL_GLPROC(void, glEndTransformFeedbackNV, (void));
+DECL_GLPROC(void, glTransformFeedbackVaryingsNV, (GLuint, GLsizei, const GLint*, GLenum));
+DECL_GLPROC(GLint, glGetVaryingLocationNV, (GLuint, const GLchar*));
+DECL_GLPROC(void, glGetActiveVaryingNV, (GLuint, GLuint, GLsizei, GLsizei*, GLsizei*, GLenum*, GLchar*));
+
 #endif // /ifndef(__APPLE__)
 
 #undef DECL_GLPROC

@@ -12,6 +12,7 @@
 #include "Ext/GLExtensionLoader.h"
 #include "../Assertion.h"
 #include "../CheckedCast.h"
+#include "../../Core/Exception.h"
 
 #include "Shader/GLShaderProgram.h"
 #include "Texture/GLTexture.h"
@@ -201,12 +202,22 @@ void GLCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 
 void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 {
-    glBeginTransformFeedback(GLTypes::Map(primitiveType));
+    if (HasExtension(GLExt::EXT_transform_feedback))
+        glBeginTransformFeedback(GLTypes::Map(primitiveType));
+    else if (HasExtension(GLExt::NV_transform_feedback))
+        glBeginTransformFeedbackNV(GLTypes::Map(primitiveType));
+    else
+        ThrowNotSupported("stream-outputs");
 }
 
 void GLCommandBuffer::EndStreamOutput()
 {
-    glEndTransformFeedback();
+    if (HasExtension(GLExt::EXT_transform_feedback))
+        glEndTransformFeedback();
+    else if (HasExtension(GLExt::NV_transform_feedback))
+        glEndTransformFeedbackNV();
+    else
+        ThrowNotSupported("stream-outputs");
 }
 
 /* ----- Textures ----- */

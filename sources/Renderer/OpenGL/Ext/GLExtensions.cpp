@@ -307,6 +307,15 @@ PFNGLBEGINTRANSFORMFEEDBACKPROC                         glBeginTransformFeedback
 PFNGLENDTRANSFORMFEEDBACKPROC                           glEndTransformFeedback                          = nullptr;
 PFNGLTRANSFORMFEEDBACKVARYINGSPROC                      glTransformFeedbackVaryings                     = nullptr;
 
+/* GL_NV_transform_feedback */
+
+PFNGLBINDBUFFERRANGENVPROC                              glBindBufferRangeNV                             = nullptr;
+PFNGLBEGINTRANSFORMFEEDBACKNVPROC                       glBeginTransformFeedbackNV                      = nullptr;
+PFNGLENDTRANSFORMFEEDBACKNVPROC                         glEndTransformFeedbackNV                        = nullptr;
+PFNGLTRANSFORMFEEDBACKVARYINGSNVPROC                    glTransformFeedbackVaryingsNV                   = nullptr;
+PFNGLGETVARYINGLOCATIONNVPROC                           glGetVaryingLocationNV                          = nullptr;
+PFNGLGETACTIVEVARYINGNVPROC                             glGetActiveVaryingNV                            = nullptr;
+
 #endif // /ifndef(__APPLE__)
 
 

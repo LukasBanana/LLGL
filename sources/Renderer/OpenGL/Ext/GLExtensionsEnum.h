@@ -52,6 +52,7 @@ enum class GLExt
     KHR_debug,
     ARB_clip_control,
     EXT_transform_feedback,
+    NV_transform_feedback,
 
     /* Extensions without procedures */
     ARB_texture_cube_map,

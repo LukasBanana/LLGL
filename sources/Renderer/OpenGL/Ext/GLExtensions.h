@@ -312,6 +312,15 @@ extern PFNGLBINDBUFFERRANGEPROC                             glBindBufferRange;
 extern PFNGLBEGINTRANSFORMFEEDBACKPROC                      glBeginTransformFeedback;
 extern PFNGLENDTRANSFORMFEEDBACKPROC                        glEndTransformFeedback;
 extern PFNGLTRANSFORMFEEDBACKVARYINGSPROC                   glTransformFeedbackVaryings;
+
+/* GL_NV_transform_feedback */
+
+extern PFNGLBINDBUFFERRANGENVPROC                           glBindBufferRangeNV;
+extern PFNGLBEGINTRANSFORMFEEDBACKNVPROC                    glBeginTransformFeedbackNV;
+extern PFNGLENDTRANSFORMFEEDBACKNVPROC                      glEndTransformFeedbackNV;
+extern PFNGLTRANSFORMFEEDBACKVARYINGSNVPROC                 glTransformFeedbackVaryingsNV;
+extern PFNGLGETVARYINGLOCATIONNVPROC                        glGetVaryingLocationNV;
+extern PFNGLGETACTIVEVARYINGNVPROC                          glGetActiveVaryingNV;
     
 #endif
 
