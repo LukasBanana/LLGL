@@ -11,6 +11,7 @@
 #include "Ext/GLExtensions.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
+#include "../../Core/Exception.h"
 #include <LLGL/Desktop.h>
 
 
@@ -338,7 +339,8 @@ void GLRenderSystem::QueryRenderingCaps()
     caps.hasInstancing                  = HasExtension(GLExt::ARB_draw_instanced);
     caps.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);
     caps.hasViewportArrays              = HasExtension(GLExt::ARB_viewport_array);
-    caps.hasConservativeRasterization   = (HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization));
+    caps.hasConservativeRasterization   = ( HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization) );
+    caps.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
 
     /* Query integral attributes */
     auto GetInt = [](GLenum param)
@@ -439,7 +441,7 @@ void GLRenderSystem::AssertCap(bool supported, const std::string& memberName)
             feature = feature.substr(3);
 
         /* Throw descriptive error */
-        throw std::runtime_error(feature + " are not supported by the OpenGL renderer");
+        ThrowNotSupported(feature);
     }
 }
 

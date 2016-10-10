@@ -230,6 +230,13 @@ struct RenderingCaps
     */
     bool            hasConservativeRasterization    = false;
 
+    /**
+    \brief Specifies whether stream-output is supported.
+    \see ShaderSource::streamOutput
+    \see CommandBuffer::BeginStreamOutput
+    */
+    bool            hasStreamOutputs                = false;
+
     //! Specifies maximum number of texture array layers (for 1D-, 2D-, and cube textures).
     unsigned int    maxNumTextureArrayLayers        = 0;
 
