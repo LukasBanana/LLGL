@@ -133,7 +133,11 @@ private:
         commands->SetGraphicsPipeline(*pipeline);
 
         // Draw scene
-        commands->DrawIndexed(36, 0);
+        commands->BeginStreamOutput(LLGL::PrimitiveType::Triangles);
+        {
+            commands->DrawIndexed(36, 0);
+        }
+        commands->EndStreamOutput();
 
         // Read stream-output buffer
         commands->SyncGPU();

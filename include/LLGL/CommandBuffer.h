@@ -286,7 +286,7 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Queries the result of the specified Query object.
-        \param[in,out] query Specifies the Query object whose result is to be queried.
+        \param[in] query Specifies the Query object whose result is to be queried.
         \param[out] result Specifies the output result.
         \return True if the result is available, otherwise false in which case 'result' is not modified.
         */
