@@ -23,7 +23,7 @@ Progress
 
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
-| OpenGL | ~80% | ToDo: Stream output buffers |
+| OpenGL | ~85% | |
 | Direct3D 11 | ~85% | |
 | Direct3D 12 | ~5% | Experimental state |
 | Vulkan | 0% | Not started yet |
