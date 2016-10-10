@@ -147,6 +147,16 @@ void D3D12CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     //todo...
 }
 
+void D3D12CommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+{
+    // dummy
+}
+
+void D3D12CommandBuffer::EndStreamOutput()
+{
+    // dummy
+}
+
 /* ----- Textures ----- */
 
 void D3D12CommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)

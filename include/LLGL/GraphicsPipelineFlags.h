@@ -26,7 +26,41 @@ class IndexBuffer;
 
 /* ----- Enumerations ----- */
 
-//! \brief Primitive topology enumeration.
+/**
+\brief Primitive type enumeration.
+\remarks These entries are generic terms of a primitive topology.
+\see CommandBuffer::BeginStreamOutput
+*/
+enum class PrimitiveType
+{
+    /**
+    \brief Generic term for all point primitives.
+    \remarks This term refers to the following primitive topologies:
+    PrimitiveTopology::PointList.
+    */
+    Points,
+
+    /**
+    \brief Generic term for all line primitives.
+    \remarks This term refers to the following primitive topologies:
+    PrimitiveTopology::LineList, PrimitiveTopology::LineStrip, PrimitiveTopology::LineLoop,
+    PrimitiveTopology::LineListAdjacency, and PrimitiveTopology::LineStripAdjacency.
+    */
+    Lines,
+
+    /**
+    \brief Generic term for all triangle primitives.
+    \remarks This term refers to the following primitive topologies:
+    PrimitiveTopology::TriangleList, PrimitiveTopology::TriangleStrip, PrimitiveTopology::TriangleFan,
+    PrimitiveTopology::TriangleListAdjacency, and PrimitiveTopology::TriangleStripAdjacency.
+    */
+    Triangles,
+};
+
+/**
+\brief Primitive topology enumeration.
+\see GraphicsPipelineDescriptor::primitiveTopology
+*/
 enum class PrimitiveTopology
 {
     PointList,              //!< Point list.

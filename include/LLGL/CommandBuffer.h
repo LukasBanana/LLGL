@@ -186,6 +186,19 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual void SetStreamOutputBuffer(Buffer& buffer) = 0;
 
+        /**
+        \brief Begins with stream-output for subsequent draw calls.
+        \param[in] primitiveType Specifies the primitive output type of the last vertex processing shader stage (e.g. vertex- or geometry shader).
+        \see EndStreamOutput
+        */
+        virtual void BeginStreamOutput(const PrimitiveType primitiveType) = 0;
+
+        /**
+        \brief Ends the current stream-output.
+        \see BeginStreamOutput
+        */
+        virtual void EndStreamOutput() = 0;
+
         /* ----- Textures ----- */
 
         /**

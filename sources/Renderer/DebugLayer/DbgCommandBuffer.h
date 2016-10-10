@@ -66,6 +66,9 @@ class DbgCommandBuffer : public CommandBuffer
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
 
+        void BeginStreamOutput(const PrimitiveType primitiveType) override;
+        void EndStreamOutput() override;
+
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
@@ -166,10 +169,17 @@ class DbgCommandBuffer : public CommandBuffer
         {
             DbgBuffer*              vertexBuffer        = nullptr;
             DbgBuffer*              indexBuffer         = nullptr;
+            DbgBuffer*              streamOutput        = nullptr;
             DbgGraphicsPipeline*    graphicsPipeline    = nullptr;
             ComputePipeline*        computePipeline     = nullptr;
         }
         bindings_;
+
+        struct States
+        {
+            bool streamOutputBusy = false;
+        }
+        states_;
 
 };
 

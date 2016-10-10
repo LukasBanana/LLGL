@@ -64,6 +64,9 @@ class D3D11CommandBuffer : public CommandBuffer
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
 
+        void BeginStreamOutput(const PrimitiveType primitiveType) override;
+        void EndStreamOutput() override;
+
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;

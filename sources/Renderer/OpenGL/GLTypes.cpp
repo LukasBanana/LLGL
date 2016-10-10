@@ -61,9 +61,20 @@ GLenum Map(const DataType dataType)
     MapFailed("DataType");
 }
 
-GLenum Map(const PrimitiveTopology topology)
+GLenum Map(const PrimitiveType primitiveType)
 {
-    switch (topology)
+    switch (primitiveType)
+    {
+        case PrimitiveType::Points:     return GL_POINTS;
+        case PrimitiveType::Lines:      return GL_LINES;
+        case PrimitiveType::Triangles:  return GL_TRIANGLES;
+    }
+    MapFailed("PrimitiveType");
+}
+
+GLenum Map(const PrimitiveTopology primitiveTopology)
+{
+    switch (primitiveTopology)
     {
         case PrimitiveTopology::PointList:              return GL_POINTS;
         case PrimitiveTopology::LineList:               return GL_LINES;
@@ -77,7 +88,7 @@ GLenum Map(const PrimitiveTopology topology)
         case PrimitiveTopology::TriangleListAdjacency:  return GL_TRIANGLES_ADJACENCY;
         case PrimitiveTopology::TriangleStripAdjacency: return GL_TRIANGLE_STRIP_ADJACENCY;
         default:
-            if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
+            if (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32)
                 return GL_PATCHES;
             break;
     }

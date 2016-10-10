@@ -162,10 +162,31 @@ void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     DebugBufferType(buffer.GetType(), BufferType::StreamOutput, __FUNCTION__);
 
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
+    bindings_.streamOutput = (&bufferDbg);
     {
         instance.SetStreamOutputBuffer(bufferDbg.instance);
     }
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
+}
+
+void DbgCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+{
+    if (states_.streamOutputBusy)
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "stream-output is already busy");
+    if (!bindings_.streamOutput)
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "no stream-output buffer is bound");
+
+    instance.BeginStreamOutput(primitiveType);
+    states_.streamOutputBusy = true;
+}
+
+void DbgCommandBuffer::EndStreamOutput()
+{
+    if (!states_.streamOutputBusy)
+        LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "stream-output has not started");
+    
+    instance.EndStreamOutput();
+    states_.streamOutputBusy = false;
 }
 
 /* ----- Textures ----- */

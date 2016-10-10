@@ -199,6 +199,16 @@ void GLCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     stateMngr_->BindBufferBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, 0, bufferGL.GetID());
 }
 
+void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+{
+    glBeginTransformFeedback(GLTypes::Map(primitiveType));
+}
+
+void GLCommandBuffer::EndStreamOutput()
+{
+    glEndTransformFeedback();
+}
+
 /* ----- Textures ----- */
 
 void GLCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long /*shaderStageFlags*/)

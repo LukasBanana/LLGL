@@ -207,6 +207,16 @@ void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     context_->SOSetTargets(1, buffers, offsets);
 }
 
+void D3D11CommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
+{
+    // dummy
+}
+
+void D3D11CommandBuffer::EndStreamOutput()
+{
+    // dummy
+}
+
 
 /* ----- Textures ----- */
 
