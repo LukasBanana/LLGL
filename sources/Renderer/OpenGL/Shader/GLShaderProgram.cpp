@@ -46,20 +46,7 @@ void GLShaderProgram::AttachShader(Shader& shader)
     /* Move stream-output format from shader to shader program */
     StreamOutputFormat streamOutputFormat;
     if (shaderGL.MoveStreamOutputFormat(streamOutputFormat))
-    {
-        /* Specify transform-feedback varyings */
-        const auto& soAttribs = streamOutputFormat.attributes;
-        if (!soAttribs.empty())
-        {
-            std::vector<const GLchar*> varyings;
-            varyings.reserve(soAttribs.size());
-
-            for (const auto& attr : soAttribs)
-                varyings.push_back(attr.name.c_str());
-
-            glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_SEPARATE_ATTRIBS);
-        }
-    }
+        BuildStreamOutputLayout(streamOutputFormat);
 }
 
 bool GLShaderProgram::LinkShaders()
@@ -369,6 +356,27 @@ ShaderUniform* GLShaderProgram::LockShaderUniform()
 void GLShaderProgram::UnlockShaderUniform()
 {
     GLStateManager::active->PopShaderProgram();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLShaderProgram::BuildStreamOutputLayout(const StreamOutputFormat& streamOutputFormat)
+{
+    /* Specify transform-feedback varyings */
+    const auto& soAttribs = streamOutputFormat.attributes;
+    if (!soAttribs.empty())
+    {
+        std::vector<const GLchar*> varyings;
+        varyings.reserve(soAttribs.size());
+
+        for (const auto& attr : soAttribs)
+            varyings.push_back(attr.name.c_str());
+
+        glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
+    }
 }
 
 

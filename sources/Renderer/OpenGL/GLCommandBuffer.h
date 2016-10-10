@@ -114,7 +114,7 @@ class GLCommandBuffer : public CommandBuffer
 
         struct RenderState
         {
-            GLenum      drawMode            = GL_TRIANGLES;
+            GLenum      drawMode            = GL_TRIANGLES;     // Render mode for "glDraw*"
             GLenum      indexBufferDataType = GL_UNSIGNED_INT;
             GLintptr    indexBufferStride   = 4;
         };

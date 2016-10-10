@@ -58,6 +58,8 @@ class GLShaderProgram : public ShaderProgram
 
     private:
 
+        void BuildStreamOutputLayout(const StreamOutputFormat& streamOutputFormat);
+
         GLuint          id_ = 0;
 
         GLShaderUniform uniform_;

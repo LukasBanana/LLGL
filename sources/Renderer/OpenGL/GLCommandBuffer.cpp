@@ -278,9 +278,12 @@ void GLCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 
 void GLCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
+    /* Set graphics pipeline render states */
     auto& graphicsPipelineGL = LLGL_CAST(GLGraphicsPipeline&, graphicsPipeline);
-    renderState_.drawMode = graphicsPipelineGL.GetDrawMode();
     graphicsPipelineGL.Bind(*stateMngr_);
+
+    /* Store draw modes */
+    renderState_.drawMode = graphicsPipelineGL.GetDrawMode();
 }
 
 void GLCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
