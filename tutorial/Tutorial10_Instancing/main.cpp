@@ -55,6 +55,7 @@ public:
 
         // Show info
         std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
+        std::cout << "press R KEY to reload the shader program" << std::endl;
     }
 
 private:
@@ -326,11 +327,11 @@ private:
         // Set graphics pipeline state
         commands->SetGraphicsPipeline(*pipeline);
 
-        // Draw all plant instances with 4 vertices each
+        // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
         commands->SetSampler(*samplers[0], 0, LLGL::ShaderStageFlags::FragmentStage);
         commands->DrawInstanced(4, 0, numPlantInstances);
 
-        // Draw grass plane (last instance)
+        // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
         commands->SetSampler(*samplers[1], 0, LLGL::ShaderStageFlags::FragmentStage);
         commands->DrawInstanced(4, 4, 1, numPlantInstances);
 
