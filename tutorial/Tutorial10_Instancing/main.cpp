@@ -299,6 +299,16 @@ private:
 
         // Upload new data to the constant buffer on the GPU
         UpdateBuffer(constantBuffer, settings);
+
+        // Allow dynamic shader reloading (for debugging)
+        if (input->KeyDown(LLGL::Key::R))
+        {
+            if (ReloadShaderProgram(shaderProgram))
+            {
+                renderer->Release(*pipeline);
+                CreatePipelines();
+            }
+        }
     }
 
     void OnDrawFrame() override

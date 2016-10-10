@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <map>
 #include <type_traits>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -122,6 +123,32 @@ public:
         }
     }
 
+protected:
+
+    struct TutorialShaderDescriptor
+    {
+        TutorialShaderDescriptor(
+            LLGL::ShaderType type, const std::string& filename) :
+                type    ( type     ),
+                filename( filename )
+        {
+        }
+
+        TutorialShaderDescriptor(
+            LLGL::ShaderType type, const std::string& filename, const std::string& entryPoint, const std::string& target) :
+                type        ( type       ),
+                filename    ( filename   ),
+                entryPoint  ( entryPoint ),
+                target      ( target     )
+        {
+        }
+
+        LLGL::ShaderType    type;
+        std::string         filename;
+        std::string         entryPoint;
+        std::string         target;
+    };
+
 private:
 
     class Debugger : public LLGL::RenderingDebugger
@@ -184,8 +211,19 @@ private:
 
     };
 
+    struct ShaderProgramRecall
+    {
+        std::vector<TutorialShaderDescriptor>   shaderDescs;
+        std::vector<LLGL::Shader*>              shaders;
+        LLGL::VertexFormat                      vertexFormat;
+        LLGL::StreamOutputFormat                streamOutputFormat;
+    };
+
     std::unique_ptr<LLGL::RenderingProfiler>    profilerObj_;
     std::unique_ptr<LLGL::RenderingDebugger>    debuggerObj_;
+
+    std::map< LLGL::ShaderProgram*,
+              ShaderProgramRecall >             shaderPrograms_;
 
     static std::string                          rendererModule_;
 
@@ -281,30 +319,6 @@ protected:
         window.Show();
     }
 
-    struct TutorialShaderDescriptor
-    {
-        TutorialShaderDescriptor(
-            LLGL::ShaderType type, const std::string& filename) :
-                type    ( type     ),
-                filename( filename )
-        {
-        }
-
-        TutorialShaderDescriptor(
-            LLGL::ShaderType type, const std::string& filename, const std::string& entryPoint, const std::string& target) :
-                type        ( type       ),
-                filename    ( filename   ),
-                entryPoint  ( entryPoint ),
-                target      ( target     )
-        {
-        }
-
-        LLGL::ShaderType    type;
-        std::string         filename;
-        std::string         entryPoint;
-        std::string         target;
-    };
-
     LLGL::ShaderProgram* LoadShaderProgram(
         const std::vector<TutorialShaderDescriptor>& shaderDescs,
         const LLGL::VertexFormat& vertexFormat = {},
@@ -312,6 +326,10 @@ protected:
     {
         // Create shader program
         LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
+
+        ShaderProgramRecall recall;
+
+        recall.shaderDescs = shaderDescs;
 
         for (const auto& desc : shaderDescs)
         {
@@ -334,6 +352,9 @@ protected:
 
             // Attach vertex- and fragment shader to the shader program
             shaderProgram->AttachShader(*shader);
+
+            // Store shader in recall
+            recall.shaders.push_back(shader);
         }
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
@@ -344,7 +365,95 @@ protected:
         if (!shaderProgram->LinkShaders())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
 
+        // Store information in call
+        recall.vertexFormat = vertexFormat;
+        recall.streamOutputFormat = streamOutputFormat;
+        shaderPrograms_[shaderProgram] = recall;
+
         return shaderProgram;
+    }
+
+    // Reloads the specified shader program from the previously specified shader source files.
+    bool ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram)
+    {
+        std::cout << "reload shader program" << std::endl;
+
+        // Find shader program in the recall map
+        auto it = shaderPrograms_.find(shaderProgram);
+        if (it == shaderPrograms_.end())
+            return false;
+
+        auto& recall = it->second;
+        std::vector<LLGL::Shader*> shaders;
+
+        // Detach previous shaders
+        shaderProgram->DetachAll();
+
+        try
+        {
+            // Recompile all shaders
+            for (const auto& desc : recall.shaderDescs)
+            {
+                // Read shader file
+                auto shaderCode = ReadFileContent(desc.filename);
+
+                // Create shader
+                auto shader = renderer->CreateShader(desc.type);
+
+                // Compile shader
+                LLGL::ShaderSource shaderSource(shaderCode, desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug);
+                shaderSource.streamOutput.format = recall.streamOutputFormat;
+
+                shader->Compile(shaderSource);
+
+                // Print info log (warnings and errors)
+                std::string log = shader->QueryInfoLog();
+                if (!log.empty())
+                    std::cerr << log << std::endl;
+
+                // Attach vertex- and fragment shader to the shader program
+                shaderProgram->AttachShader(*shader);
+
+                // Store new shader
+                shaders.push_back(shader);
+            }
+
+            // Bind vertex attribute layout (this is not required for a compute shader program)
+            if (!recall.vertexFormat.attributes.empty())
+                shaderProgram->BuildInputLayout(recall.vertexFormat);
+
+            // Link shader program and check for errors
+            if (!shaderProgram->LinkShaders())
+                throw std::runtime_error(shaderProgram->QueryInfoLog());
+        }
+        catch (const std::exception& err)
+        {
+            // Print error message
+            std::cerr << err.what() << std::endl;
+
+            // Attach all previous shaders again
+            for (auto shader : recall.shaders)
+                shaderProgram->AttachShader(*shader);
+
+            // Bind vertex attribute layout (this is not required for a compute shader program)
+            if (!recall.vertexFormat.attributes.empty())
+                shaderProgram->BuildInputLayout(recall.vertexFormat);
+
+            // Link shader program and check for errors
+            if (!shaderProgram->LinkShaders())
+                throw std::runtime_error(shaderProgram->QueryInfoLog());
+
+            return false;
+        }
+
+        // Delete all previous shaders
+        for (auto shader : recall.shaders)
+            renderer->Release(*shader);
+
+        // Store new shaders in recall
+        recall.shaders = std::move(shaders);
+
+        return true;
     }
 
     // Load standard shader program (with vertex- and fragment shaders)
