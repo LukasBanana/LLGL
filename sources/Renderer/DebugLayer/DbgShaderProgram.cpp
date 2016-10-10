@@ -35,6 +35,9 @@ void DbgShaderProgram::DetachAll()
     /* Reset debug information */
     shaderAttachmentMask_   = 0;
     linked_                 = false;
+    shaderTypes_.clear();
+    vertexLayout_.attributes.clear();
+    vertexLayout_.bound = false;
 }
 
 bool DbgShaderProgram::LinkShaders()
