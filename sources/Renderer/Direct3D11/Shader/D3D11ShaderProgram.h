@@ -29,6 +29,7 @@ class D3D11ShaderProgram : public ShaderProgram
         D3D11ShaderProgram(ID3D11Device* device);
 
         void AttachShader(Shader& shader) override;
+        void DetachAll() override;
 
         bool LinkShaders() override;
 

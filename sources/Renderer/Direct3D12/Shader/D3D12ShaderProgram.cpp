@@ -73,6 +73,25 @@ void D3D12ShaderProgram::AttachShader(Shader& shader)
     InsertBufferDesc(storageBufferDescs_, shaderD3D->GetStorageBufferDescs());
 }
 
+void D3D12ShaderProgram::DetachAll()
+{
+    /* Reset all shader attributes */
+    inputElements_.clear();
+
+    vs_ = nullptr;
+    ds_ = nullptr;
+    hs_ = nullptr;
+    gs_ = nullptr;
+    ps_ = nullptr;
+    cs_ = nullptr;
+
+    vertexAttributes_.clear();
+    constantBufferDescs_.clear();
+    storageBufferDescs_.clear();
+
+    linkError_ = LinkError::NoError;
+}
+
 bool D3D12ShaderProgram::LinkShaders()
 {
     enum ShaderTypeMask

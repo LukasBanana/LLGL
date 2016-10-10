@@ -48,6 +48,13 @@ class LLGL_EXPORT ShaderProgram
         virtual void AttachShader(Shader& shader) = 0;
 
         /**
+        \brief Detaches all shaders from this shader program.
+        \remarks After this call, the link status will be invalid, and the shader program must be linked again.
+        \see LinkShaders
+        */
+        virtual void DetachAll() = 0;
+
+        /**
         \brief Links all attached shaders to the final shader program.
         \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
         \remarks Each attached shader must be compiled first!

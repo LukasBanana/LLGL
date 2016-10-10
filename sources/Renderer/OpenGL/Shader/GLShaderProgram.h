@@ -27,6 +27,7 @@ class GLShaderProgram : public ShaderProgram
         ~GLShaderProgram();
 
         void AttachShader(Shader& shader) override;
+        void DetachAll() override;
 
         bool LinkShaders() override;
 

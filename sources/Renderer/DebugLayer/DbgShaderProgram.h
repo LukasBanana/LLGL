@@ -34,6 +34,7 @@ class DbgShaderProgram : public ShaderProgram
         DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger);
 
         void AttachShader(Shader& shader) override;
+        void DetachAll() override;
 
         bool LinkShaders() override;
 

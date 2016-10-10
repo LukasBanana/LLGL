@@ -28,6 +28,15 @@ void DbgShaderProgram::AttachShader(Shader& shader)
     instance.AttachShader(shaderDbg.instance);
 }
 
+void DbgShaderProgram::DetachAll()
+{
+    instance.DetachAll();
+
+    /* Reset debug information */
+    shaderAttachmentMask_   = 0;
+    linked_                 = false;
+}
+
 bool DbgShaderProgram::LinkShaders()
 {
     DebugShaderComposition(__FUNCTION__);
@@ -134,11 +143,15 @@ void DbgShaderProgram::DebugShaderComposition(const std::string& source)
     /* Validate shader composition by shader attachment bit mask */
     switch (shaderAttachmentMask_)
     {
-        case (LLGL_VS_MASK | LLGL_PS_MASK):
-        case (LLGL_VS_MASK | LLGL_PS_MASK | LLGL_GS_MASK):
-        case (LLGL_VS_MASK | LLGL_PS_MASK | LLGL_HS_MASK | LLGL_DS_MASK):
-        case (LLGL_VS_MASK | LLGL_PS_MASK | LLGL_HS_MASK | LLGL_DS_MASK | LLGL_GS_MASK):
-        case (LLGL_CS_MASK):
+        case ( LLGL_VS_MASK                                                             ):
+        case ( LLGL_VS_MASK |                               LLGL_GS_MASK                ):
+        case ( LLGL_VS_MASK | LLGL_HS_MASK | LLGL_DS_MASK                               ):
+        case ( LLGL_VS_MASK | LLGL_HS_MASK | LLGL_DS_MASK | LLGL_GS_MASK                ):
+        case ( LLGL_VS_MASK |                                              LLGL_PS_MASK ):
+        case ( LLGL_VS_MASK |                               LLGL_GS_MASK | LLGL_PS_MASK ):
+        case ( LLGL_VS_MASK | LLGL_HS_MASK | LLGL_DS_MASK |                LLGL_PS_MASK ):
+        case ( LLGL_VS_MASK | LLGL_HS_MASK | LLGL_DS_MASK | LLGL_GS_MASK | LLGL_PS_MASK ):
+        case ( LLGL_CS_MASK ):
             break;
         default:
             LLGL_DBG_ERROR(ErrorType::InvalidState, "invalid shader composition", source);

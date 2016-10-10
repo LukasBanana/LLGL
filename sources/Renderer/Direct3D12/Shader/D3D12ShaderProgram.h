@@ -29,6 +29,7 @@ class D3D12ShaderProgram : public ShaderProgram
         D3D12ShaderProgram();
 
         void AttachShader(Shader& shader) override;
+        void DetachAll() override;
 
         bool LinkShaders() override;
 

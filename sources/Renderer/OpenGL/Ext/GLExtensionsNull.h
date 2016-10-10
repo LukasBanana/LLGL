@@ -244,6 +244,7 @@ DECL_GLPROC(void, glGetActiveAttrib, (GLuint, GLuint, GLsizei, GLsizei*, GLint*,
 DECL_GLPROC(GLint, glGetAttribLocation, (GLuint, const GLchar*));
 DECL_GLPROC(void, glGetActiveUniform, (GLhandleARB, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLcharARB*));
 DECL_GLPROC(GLint, glGetUniformLocation, (GLuint, const GLchar*));
+DECL_GLPROC(void, glGetAttachedShaders, (GLuint, GLsizei, GLsizei*, GLuint*));
 DECL_GLPROC(void, glUniform1fv, (GLint, GLsizei, const GLfloat*));
 DECL_GLPROC(void, glUniform2fv, (GLint, GLsizei, const GLfloat*));
 DECL_GLPROC(void, glUniform3fv, (GLint, GLsizei, const GLfloat*));

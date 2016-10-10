@@ -49,6 +49,22 @@ void GLShaderProgram::AttachShader(Shader& shader)
     shaderGL.MoveStreamOutputFormat(streamOutputFormat_);
 }
 
+void GLShaderProgram::DetachAll()
+{
+    /* Retrieve all attached shaders from program */
+    GLsizei numShaders = 0;
+    GLuint shaders[6] = { 0 };
+    glGetAttachedShaders(id_, 6, &numShaders, shaders);
+
+    /* Detach all shaders */
+    for (GLsizei i = 0; i < numShaders; ++i)
+        glDetachShader(id_, shaders[i]);
+
+    /* Reset shader attributes */
+    hasFragmentShader_ = false;
+    streamOutputFormat_.attributes.clear();
+}
+
 bool GLShaderProgram::LinkShaders()
 {
     /* Check if transform-feedback varyings must be specified (before or after shader linking) */

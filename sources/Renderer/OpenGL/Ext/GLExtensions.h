@@ -217,6 +217,7 @@ extern PFNGLGETACTIVEATTRIBPROC                             glGetActiveAttrib;
 extern PFNGLGETATTRIBLOCATIONPROC                           glGetAttribLocation;
 extern PFNGLGETACTIVEUNIFORMARBPROC                         glGetActiveUniform;
 extern PFNGLGETUNIFORMLOCATIONPROC                          glGetUniformLocation;
+extern PFNGLGETATTACHEDSHADERSPROC                          glGetAttachedShaders;
 extern PFNGLUNIFORM1FVPROC                                  glUniform1fv;
 extern PFNGLUNIFORM2FVPROC                                  glUniform2fv;
 extern PFNGLUNIFORM3FVPROC                                  glUniform3fv;

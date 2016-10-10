@@ -84,6 +84,25 @@ void D3D11ShaderProgram::AttachShader(Shader& shader)
         desc.index = bufferIdx++;
 }
 
+void D3D11ShaderProgram::DetachAll()
+{
+    /* Reset all shader attributes */
+    inputLayout_.Reset();
+
+    vs_ = nullptr;
+    ds_ = nullptr;
+    hs_ = nullptr;
+    gs_ = nullptr;
+    ps_ = nullptr;
+    cs_ = nullptr;
+
+    vertexAttributes_.clear();
+    constantBufferDescs_.clear();
+    storageBufferDescs_.clear();
+
+    linkError_ = LinkError::NoError;
+}
+
 bool D3D11ShaderProgram::LinkShaders()
 {
     enum ShaderTypeMask
