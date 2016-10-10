@@ -275,6 +275,8 @@ private:
         // Update view rotation by user input
         if (input->KeyPressed(LLGL::Key::RButton) || input->KeyPressed(LLGL::Key::LButton))
             viewRotation += static_cast<float>(input->GetMouseMotion().x) * 0.005f;
+        else
+            viewRotation += 0.002f;
 
         // Set view-projection matrix
         Gs::Matrix4f vMatrix;

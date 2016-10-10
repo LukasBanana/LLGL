@@ -213,21 +213,27 @@ protected:
 
     Tutorial(
         const std::wstring& title,
-        const LLGL::Size& resolution = { 800, 600 },
-        unsigned int multiSampling = 8) :
+        const LLGL::Size&   resolution      = { 800, 600 },
+        unsigned int        multiSampling   = 8,
+        bool                vsync           = true,
+        bool                debugger        = true) :
             profilerObj_( new LLGL::RenderingProfiler() ),
             debuggerObj_( new Debugger()                ),
             timer       ( LLGL::Timer::Create()         ),
             profiler    ( *profilerObj_                 )
     {
         // Create render system
-        renderer = LLGL::RenderSystem::Load(rendererModule_, profilerObj_.get(), debuggerObj_.get());
+        renderer = LLGL::RenderSystem::Load(
+            rendererModule_,
+            (debugger ? profilerObj_.get() : nullptr),
+            (debugger ? debuggerObj_.get() : nullptr)
+        );
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
         {
             contextDesc.videoMode.resolution    = resolution;
-            contextDesc.vsync.enabled           = true;
+            contextDesc.vsync.enabled           = vsync;
             contextDesc.multiSampling.enabled   = (multiSampling > 1);
             contextDesc.multiSampling.samples   = multiSampling;
         }
