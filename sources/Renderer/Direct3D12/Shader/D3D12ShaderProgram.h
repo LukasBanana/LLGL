@@ -35,6 +35,7 @@ class D3D12ShaderProgram : public ShaderProgram
         std::string QueryInfoLog() override;
 
         std::vector<VertexAttribute> QueryVertexAttributes() const override;
+        std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const override;
         std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const override;
         std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;

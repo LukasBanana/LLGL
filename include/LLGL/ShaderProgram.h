@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "Shader.h"
 #include "VertexFormat.h"
+#include "StreamOutputFormat.h"
 #include "BufferFlags.h"
 #include "ShaderUniform.h"
 #include <string>
@@ -59,6 +60,9 @@ class LLGL_EXPORT ShaderProgram
 
         //! Returns a list of vertex attributes, which describe all vertex attributes within this shader program.
         virtual std::vector<VertexAttribute> QueryVertexAttributes() const = 0;
+
+        //! Returns a list of stream-output attributes, which describes all stream-output attributes within this shader program.
+        virtual std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const = 0;
 
         /**
         \brief Returns a list of constant buffer view descriptors, which describe all constant buffers within this shader program.

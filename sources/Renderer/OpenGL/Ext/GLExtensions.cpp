@@ -306,6 +306,7 @@ PFNGLBINDBUFFERRANGEPROC                                glBindBufferRange       
 PFNGLBEGINTRANSFORMFEEDBACKPROC                         glBeginTransformFeedback                        = nullptr;
 PFNGLENDTRANSFORMFEEDBACKPROC                           glEndTransformFeedback                          = nullptr;
 PFNGLTRANSFORMFEEDBACKVARYINGSPROC                      glTransformFeedbackVaryings                     = nullptr;
+PFNGLGETTRANSFORMFEEDBACKVARYINGPROC                    glGetTransformFeedbackVarying                   = nullptr;
 
 /* GL_NV_transform_feedback */
 

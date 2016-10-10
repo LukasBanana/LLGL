@@ -455,10 +455,11 @@ static bool Load_GL_EXT_draw_buffers2(bool usePlaceHolder)
 
 static bool Load_GL_EXT_transform_feedback(bool usePlaceHolder)
 {
-    LOAD_GLPROC( glBindBufferRange           );
-    LOAD_GLPROC( glBeginTransformFeedback    );
-    LOAD_GLPROC( glEndTransformFeedback      );
-    LOAD_GLPROC( glTransformFeedbackVaryings );
+    LOAD_GLPROC( glBindBufferRange             );
+    LOAD_GLPROC( glBeginTransformFeedback      );
+    LOAD_GLPROC( glEndTransformFeedback        );
+    LOAD_GLPROC( glTransformFeedbackVaryings   );
+    LOAD_GLPROC( glGetTransformFeedbackVarying );
     return true;
 }
 

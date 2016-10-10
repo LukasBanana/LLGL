@@ -45,6 +45,11 @@ std::vector<VertexAttribute> DbgShaderProgram::QueryVertexAttributes() const
     return instance.QueryVertexAttributes();
 }
 
+std::vector<StreamOutputAttribute> DbgShaderProgram::QueryStreamOutputAttributes() const
+{
+    return instance.QueryStreamOutputAttributes();
+}
+
 std::vector<ConstantBufferViewDescriptor> DbgShaderProgram::QueryConstantBuffers() const
 {
     return instance.QueryConstantBuffers();

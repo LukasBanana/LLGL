@@ -142,6 +142,11 @@ std::vector<VertexAttribute> D3D12ShaderProgram::QueryVertexAttributes() const
     return vertexAttributes_;
 }
 
+std::vector<StreamOutputAttribute> D3D12ShaderProgram::QueryStreamOutputAttributes() const
+{
+    return {};// todo...
+}
+
 std::vector<ConstantBufferViewDescriptor> D3D12ShaderProgram::QueryConstantBuffers() const
 {
     return constantBufferDescs_;

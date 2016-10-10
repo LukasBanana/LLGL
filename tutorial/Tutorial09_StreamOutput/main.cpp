@@ -56,7 +56,7 @@ public:
             if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
                 soAttrib.name = "SV_Position";
             else
-                soAttrib.name = "position";
+                soAttrib.name = "gl_Position";
         }
         streamOutputFormat.AppendAttribute(soAttrib);
 

@@ -45,22 +45,33 @@ void GLShaderProgram::AttachShader(Shader& shader)
     if (shader.GetType() == ShaderType::Fragment)
         hasFragmentShader_ = true;
 
-    /* Move stream-output format from shader to shader program */
-    StreamOutputFormat streamOutputFormat;
-    if (shaderGL.MoveStreamOutputFormat(streamOutputFormat))
-        BuildStreamOutputLayout(streamOutputFormat);
+    /* Move stream-output format from shader to shader program (if available) */
+    shaderGL.MoveStreamOutputFormat(streamOutputFormat_);
 }
 
 bool GLShaderProgram::LinkShaders()
 {
-    /* Link shader program */
-    glLinkProgram(id_);
+    /* Check if transform-feedback varyings must be specified (before or after shader linking) */
+    if (!streamOutputFormat_.attributes.empty())
+    {
+        /* For GL_EXT_transform_feedback the varyings must be specified BEFORE linking */
+        if (HasExtension(GLExt::EXT_transform_feedback))
+        {
+            SpecifyTransformFeedbackVaryingsEXT(streamOutputFormat_.attributes);
+            return LinkShaderProgram();
+        }
 
-    /* Query linking status */
-    GLint linkStatus = 0;
-    glGetProgramiv(id_, GL_LINK_STATUS, &linkStatus);
+        /* For GL_NV_transform_feedback (Vendor specific) the varyings must be specified AFTER linking */
+        if (HasExtension(GLExt::NV_transform_feedback))
+        {
+            auto result = LinkShaderProgram();
+            SpecifyTransformFeedbackVaryingsNV(streamOutputFormat_.attributes);
+            return result;
+        }
+    }
 
-    return (linkStatus != GL_FALSE);
+    /* Just link shader program */
+    return LinkShaderProgram();
 }
 
 std::string GLShaderProgram::QueryInfoLog()
@@ -133,9 +144,9 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
     VertexFormat vertexFormat;
 
     /* Query number of vertex attributes */
-    GLint numVertexAttribs = 0;
-    glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &numVertexAttribs);
-    if (numVertexAttribs <= 0)
+    GLint numAttribs = 0;
+    glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &numAttribs);
+    if (numAttribs <= 0)
         return vertexFormat.attributes;
 
     /* Query maximal name length of all vertex attributes */
@@ -147,7 +158,7 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
     std::vector<char> attribName(maxNameLength, 0);
 
     /* Iterate over all vertex attributes */
-    for (GLuint i = 0; i < static_cast<GLuint>(numVertexAttribs); ++i)
+    for (GLuint i = 0; i < static_cast<GLuint>(numAttribs); ++i)
     {
         /* Query attribute information */
         GLint   size        = 0;
@@ -160,12 +171,101 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
         auto name = std::string(attribName.data());
         auto attr = UnmapAttribType(type);
 
-        /* Insert uniform block into list */
+        /* Insert vertex attribute into list */
         while (attr.second-- > 0)
             vertexFormat.AppendAttribute({ name, attr.first });
     }
 
     return vertexFormat.attributes;
+}
+
+std::vector<StreamOutputAttribute> GLShaderProgram::QueryStreamOutputAttributes() const
+{
+    StreamOutputFormat streamOutputFormat;
+    StreamOutputAttribute soAttrib;
+
+    if (HasExtension(GLExt::EXT_transform_feedback))
+    {
+        /* Query number of vertex attributes */
+        GLint numVaryings = 0;
+        glGetProgramiv(id_, GL_TRANSFORM_FEEDBACK_VARYINGS, &numVaryings);
+        if (numVaryings <= 0)
+            return streamOutputFormat.attributes;
+
+        /* Query maximal name length of all vertex attributes */
+        GLint maxNameLength = 0;
+        glGetProgramiv(id_, GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, &maxNameLength);
+        if (maxNameLength <= 0)
+            return streamOutputFormat.attributes;
+
+        std::vector<char> attribName(maxNameLength, 0);
+
+        /* Iterate over all vertex attributes */
+        for (GLuint i = 0; i < static_cast<GLuint>(numVaryings); ++i)
+        {
+            /* Query attribute information */
+            GLint   size        = 0;
+            GLenum  type        = 0;
+            GLsizei nameLength  = 0;
+
+            glGetTransformFeedbackVarying(id_, i, maxNameLength, &nameLength, &size, &type, attribName.data());
+
+            /* Convert attribute information */
+            soAttrib.name = std::string(attribName.data());
+            //auto attr = UnmapAttribType(type);
+
+            /* Insert stream-output attribute into list */
+            #if 0
+            while (attr.second-- > 0)
+                streamOutputFormat.AppendAttribute(soAttrib);
+            #else
+            streamOutputFormat.AppendAttribute(soAttrib);
+            #endif
+        }
+    }
+    else if (HasExtension(GLExt::NV_transform_feedback))
+    {
+        /* Query number of vertex attributes */
+        GLint numVaryings = 0;
+        glGetProgramiv(id_, GL_ACTIVE_VARYINGS_NV, &numVaryings);
+        if (numVaryings <= 0)
+            return streamOutputFormat.attributes;
+
+        /* Query maximal name length of all vertex attributes */
+        GLint maxNameLength = 0;
+        glGetProgramiv(id_, GL_ACTIVE_VARYING_MAX_LENGTH_NV, &maxNameLength);
+        if (maxNameLength <= 0)
+            return streamOutputFormat.attributes;
+
+        std::vector<char> attribName(maxNameLength, 0);
+
+        /* Iterate over all vertex attributes */
+        for (GLuint i = 0; i < static_cast<GLuint>(numVaryings); ++i)
+        {
+            /* Query attribute information */
+            GLint   size        = 0;
+            GLenum  type        = 0;
+            GLsizei nameLength  = 0;
+
+            glGetActiveVaryingNV(id_, i, maxNameLength, &nameLength, &size, &type, attribName.data());
+
+            /* Convert attribute information */
+            soAttrib.name = std::string(attribName.data());
+            //auto attr = UnmapAttribType(type);
+
+            /* Insert stream-output attribute into list */
+            #if 0
+            while (attr.second-- > 0)
+                streamOutputFormat.AppendAttribute(soAttrib);
+            #else
+            streamOutputFormat.AppendAttribute(soAttrib);
+            #endif
+        }
+    }
+    else
+        ThrowNotSupported("stream-outputs");
+
+    return streamOutputFormat.attributes;
 }
 
 std::vector<ConstantBufferViewDescriptor> GLShaderProgram::QueryConstantBuffers() const
@@ -365,44 +465,47 @@ void GLShaderProgram::UnlockShaderUniform()
  * ======= Private: =======
  */
 
-void GLShaderProgram::BuildStreamOutputLayout(const StreamOutputFormat& streamOutputFormat)
+bool GLShaderProgram::LinkShaderProgram()
 {
-    const auto& soAttribs = streamOutputFormat.attributes;
-    if (!soAttribs.empty())
+    /* Link shader program */
+    glLinkProgram(id_);
+
+    /* Query linking status */
+    GLint linkStatus = 0;
+    glGetProgramiv(id_, GL_LINK_STATUS, &linkStatus);
+
+    return (linkStatus != GL_FALSE);
+}
+
+void GLShaderProgram::SpecifyTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes)
+{
+    /* Specify transform-feedback varyings by names */
+    std::vector<const GLchar*> varyings;
+    varyings.reserve(attributes.size());
+
+    for (const auto& attr : attributes)
+        varyings.push_back(attr.name.c_str());
+
+    glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
+}
+
+void GLShaderProgram::SpecifyTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes)
+{
+    /* Specify transform-feedback varyings by locations */
+    std::vector<GLint> varyings;
+    varyings.reserve(attributes.size());
+
+    for (const auto& attr : attributes)
     {
-        /* Specify varying with extension specific function */
-        if (HasExtension(GLExt::EXT_transform_feedback))
-        {
-            /* Specify transform-feedback varyings by names */
-            std::vector<const GLchar*> varyings;
-            varyings.reserve(soAttribs.size());
-
-            for (const auto& attr : soAttribs)
-                varyings.push_back(attr.name.c_str());
-
-            glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
-        }
-        else if (HasExtension(GLExt::NV_transform_feedback))
-        {
-            /* Specify transform-feedback varyings by locations */
-            std::vector<GLint> varyings;
-            varyings.reserve(soAttribs.size());
-
-            for (const auto& attr : soAttribs)
-            {
-                /* Get varying location by its name */
-                auto location = glGetVaryingLocationNV(id_, attr.name.c_str());
-                if (location >= 0)
-                    varyings.push_back(location);
-                else
-                    throw std::invalid_argument("stream-output attribute \"" + attr.name + "\" does not specify an active varying in GLSL shader program");
-            }
-
-            glTransformFeedbackVaryingsNV(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
-        }
+        /* Get varying location by its name */
+        auto location = glGetVaryingLocationNV(id_, attr.name.c_str());
+        if (location >= 0)
+            varyings.push_back(location);
         else
-            ThrowNotSupported("stream-outputs");
+            throw std::invalid_argument("stream-output attribute \"" + attr.name + "\" does not specify an active varying in GLSL shader program");
     }
+
+    glTransformFeedbackVaryingsNV(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS_NV);
 }
 
 

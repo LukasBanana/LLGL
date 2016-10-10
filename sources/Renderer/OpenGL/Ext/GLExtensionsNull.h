@@ -339,6 +339,7 @@ DECL_GLPROC(void, glBindBufferRange, (GLenum, GLuint, GLuint, GLintptr, GLsizeip
 DECL_GLPROC(void, glBeginTransformFeedback, (GLenum));
 DECL_GLPROC(void, glEndTransformFeedback, (void));
 DECL_GLPROC(void, glTransformFeedbackVaryings, (GLuint, GLsizei, const GLchar *const*, GLenum));
+DECL_GLPROC(void, glGetTransformFeedbackVarying, (GLuint, GLuint, GLsizei, GLsizei*, GLsizei*, GLenum*, GLchar*));
 
 /* GL_NV_transform_feedback */
 

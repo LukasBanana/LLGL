@@ -33,6 +33,7 @@ class GLShaderProgram : public ShaderProgram
         std::string QueryInfoLog() override;
 
         std::vector<VertexAttribute> QueryVertexAttributes() const override;
+        std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const override;
         std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const override;
         std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
@@ -58,13 +59,18 @@ class GLShaderProgram : public ShaderProgram
 
     private:
 
-        void BuildStreamOutputLayout(const StreamOutputFormat& streamOutputFormat);
+        bool LinkShaderProgram();
 
-        GLuint          id_ = 0;
+        void SpecifyTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
+        void SpecifyTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
 
-        GLShaderUniform uniform_;
+        GLuint              id_ = 0;
 
-        bool            hasFragmentShader_ = false;
+        GLShaderUniform     uniform_;
+
+        bool                hasFragmentShader_ = false;
+
+        StreamOutputFormat  streamOutputFormat_;
 
 };
 
