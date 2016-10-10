@@ -59,10 +59,15 @@ class GLShaderProgram : public ShaderProgram
 
     private:
 
+        bool QueryActiveAttribs(
+            GLenum attribCountType, GLenum attribNameLengthType,
+            GLint& numAttribs, GLint& maxNameLength, std::vector<char>& nameBuffer
+        ) const;
+
         bool LinkShaderProgram();
 
-        void SpecifyTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
-        void SpecifyTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
+        void BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
+        void BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
 
         GLuint              id_ = 0;
 

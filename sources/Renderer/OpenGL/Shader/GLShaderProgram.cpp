@@ -57,7 +57,7 @@ bool GLShaderProgram::LinkShaders()
         /* For GL_EXT_transform_feedback the varyings must be specified BEFORE linking */
         if (HasExtension(GLExt::EXT_transform_feedback))
         {
-            SpecifyTransformFeedbackVaryingsEXT(streamOutputFormat_.attributes);
+            BuildTransformFeedbackVaryingsEXT(streamOutputFormat_.attributes);
             return LinkShaderProgram();
         }
 
@@ -65,7 +65,7 @@ bool GLShaderProgram::LinkShaders()
         if (HasExtension(GLExt::NV_transform_feedback))
         {
             auto result = LinkShaderProgram();
-            SpecifyTransformFeedbackVaryingsNV(streamOutputFormat_.attributes);
+            BuildTransformFeedbackVaryingsNV(streamOutputFormat_.attributes);
             return result;
         }
     }
@@ -143,19 +143,11 @@ std::vector<VertexAttribute> GLShaderProgram::QueryVertexAttributes() const
 {
     VertexFormat vertexFormat;
 
-    /* Query number of vertex attributes */
-    GLint numAttribs = 0;
-    glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &numAttribs);
-    if (numAttribs <= 0)
-        return vertexFormat.attributes;
-
-    /* Query maximal name length of all vertex attributes */
-    GLint maxNameLength = 0;
-    glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxNameLength);
-    if (maxNameLength <= 0)
-        return vertexFormat.attributes;
-
-    std::vector<char> attribName(maxNameLength, 0);
+    /* Query active vertex attributes */
+    std::vector<char> attribName;
+    GLint numAttribs = 0, maxNameLength = 0;
+    if (!QueryActiveAttribs(GL_ACTIVE_ATTRIBUTES, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, numAttribs, maxNameLength, attribName))
+        return {};
 
     /* Iterate over all vertex attributes */
     for (GLuint i = 0; i < static_cast<GLuint>(numAttribs); ++i)
@@ -186,19 +178,11 @@ std::vector<StreamOutputAttribute> GLShaderProgram::QueryStreamOutputAttributes(
 
     if (HasExtension(GLExt::EXT_transform_feedback))
     {
-        /* Query number of vertex attributes */
-        GLint numVaryings = 0;
-        glGetProgramiv(id_, GL_TRANSFORM_FEEDBACK_VARYINGS, &numVaryings);
-        if (numVaryings <= 0)
-            return streamOutputFormat.attributes;
-
-        /* Query maximal name length of all vertex attributes */
-        GLint maxNameLength = 0;
-        glGetProgramiv(id_, GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, &maxNameLength);
-        if (maxNameLength <= 0)
-            return streamOutputFormat.attributes;
-
-        std::vector<char> attribName(maxNameLength, 0);
+        /* Query active varyings */
+        std::vector<char> attribName;
+        GLint numVaryings = 0, maxNameLength = 0;
+        if (!QueryActiveAttribs(GL_TRANSFORM_FEEDBACK_VARYINGS, GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, numVaryings, maxNameLength, attribName))
+            return {};
 
         /* Iterate over all vertex attributes */
         for (GLuint i = 0; i < static_cast<GLuint>(numVaryings); ++i)
@@ -225,19 +209,11 @@ std::vector<StreamOutputAttribute> GLShaderProgram::QueryStreamOutputAttributes(
     }
     else if (HasExtension(GLExt::NV_transform_feedback))
     {
-        /* Query number of vertex attributes */
-        GLint numVaryings = 0;
-        glGetProgramiv(id_, GL_ACTIVE_VARYINGS_NV, &numVaryings);
-        if (numVaryings <= 0)
-            return streamOutputFormat.attributes;
-
-        /* Query maximal name length of all vertex attributes */
-        GLint maxNameLength = 0;
-        glGetProgramiv(id_, GL_ACTIVE_VARYING_MAX_LENGTH_NV, &maxNameLength);
-        if (maxNameLength <= 0)
-            return streamOutputFormat.attributes;
-
-        std::vector<char> attribName(maxNameLength, 0);
+        /* Query active varyings */
+        std::vector<char> attribName;
+        GLint numVaryings = 0, maxNameLength = 0;
+        if (!QueryActiveAttribs(GL_ACTIVE_VARYINGS_NV, GL_ACTIVE_VARYING_MAX_LENGTH_NV, numVaryings, maxNameLength, attribName))
+            return {};
 
         /* Iterate over all vertex attributes */
         for (GLuint i = 0; i < static_cast<GLuint>(numVaryings); ++i)
@@ -272,19 +248,11 @@ std::vector<ConstantBufferViewDescriptor> GLShaderProgram::QueryConstantBuffers(
 {
     std::vector<ConstantBufferViewDescriptor> descList;
 
-    /* Query number of uniform blocks */
-    GLint numUniformBlocks = 0;
-    glGetProgramiv(id_, GL_ACTIVE_UNIFORM_BLOCKS, &numUniformBlocks);
-    if (numUniformBlocks <= 0)
-        return descList;
-
-    /* Query maximal name length of all uniform blocks */
-    GLint maxNameLength = 0;
-    glGetProgramiv(id_, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &maxNameLength);
-    if (maxNameLength <= 0)
-        return descList;
-
-    std::vector<char> blockName(maxNameLength, 0);
+    /* Query active uniform blocks */
+    std::vector<char> blockName;
+    GLint numUniformBlocks = 0, maxNameLength = 0;
+    if (!QueryActiveAttribs(GL_ACTIVE_UNIFORM_BLOCKS, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, numUniformBlocks, maxNameLength, blockName))
+        return {};
 
     /* Iterate over all uniform blocks */
     for (GLuint i = 0; i < static_cast<GLuint>(numUniformBlocks); ++i)
@@ -355,22 +323,13 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
 {
     std::vector<UniformDescriptor> descList;
 
-    /* Query number of uniforms */
-    GLint numUniforms = 0;
-    glGetProgramiv(id_, GL_ACTIVE_UNIFORMS, &numUniforms);
-    if (numUniforms <= 0)
-        return descList;
+    /* Query active uniforms */
+    std::vector<char> uniformName;
+    GLint numUniforms = 0, maxNameLength = 0;
+    if (!QueryActiveAttribs(GL_ACTIVE_UNIFORMS, GL_ACTIVE_UNIFORM_MAX_LENGTH, numUniforms, maxNameLength, uniformName))
+        return {};
 
-    /* Query maximal name length of all uniforms */
-    GLint maxNameLength = 0;
-    glGetProgramiv(id_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLength);
-    if (maxNameLength <= 0)
-        return descList;
-
-    std::vector<char> blockName;
-    blockName.resize(maxNameLength);
-
-    /* Iterate over all uniform blocks */
+    /* Iterate over all uniforms */
     for (GLuint i = 0; i < static_cast<GLuint>(numUniforms); ++i)
     {
         try
@@ -382,10 +341,10 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
             GLint   size        = 0;
             GLenum  type        = 0;
         
-            glGetActiveUniform(id_, i, maxNameLength, &nameLength, &size, &type, blockName.data());
+            glGetActiveUniform(id_, i, maxNameLength, &nameLength, &size, &type, uniformName.data());
 
-            desc.name       = std::string(blockName.data());
-            desc.location   = glGetUniformLocation(id_, blockName.data());
+            desc.name       = std::string(uniformName.data());
+            desc.location   = glGetUniformLocation(id_, uniformName.data());
             desc.size       = static_cast<unsigned int>(size);
 
             GLTypes::Unmap(desc.type, type);
@@ -465,6 +424,25 @@ void GLShaderProgram::UnlockShaderUniform()
  * ======= Private: =======
  */
 
+bool GLShaderProgram::QueryActiveAttribs(
+    GLenum attribCountType, GLenum attribNameLengthType,
+    GLint& numAttribs, GLint& maxNameLength, std::vector<char>& nameBuffer) const
+{
+    /* Query number of active attributes */
+    glGetProgramiv(id_, attribCountType, &numAttribs);
+    if (numAttribs <= 0)
+        return false;
+
+    /* Query maximal name length of all attributes */
+    glGetProgramiv(id_, attribNameLengthType, &maxNameLength);
+    if (maxNameLength <= 0)
+        return false;
+
+    nameBuffer.resize(maxNameLength, '\0');
+
+    return true;
+}
+
 bool GLShaderProgram::LinkShaderProgram()
 {
     /* Link shader program */
@@ -477,7 +455,7 @@ bool GLShaderProgram::LinkShaderProgram()
     return (linkStatus != GL_FALSE);
 }
 
-void GLShaderProgram::SpecifyTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes)
+void GLShaderProgram::BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes)
 {
     /* Specify transform-feedback varyings by names */
     std::vector<const GLchar*> varyings;
@@ -489,7 +467,7 @@ void GLShaderProgram::SpecifyTransformFeedbackVaryingsEXT(const std::vector<Stre
     glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
 }
 
-void GLShaderProgram::SpecifyTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes)
+void GLShaderProgram::BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes)
 {
     /* Specify transform-feedback varyings by locations */
     std::vector<GLint> varyings;
