@@ -36,7 +36,7 @@ std::vector<std::string> RenderSystem::FindModules()
     const std::vector<std::string> knownModules
     {
         #ifdef _WIN32
-        /*"Direct3D12", */"Direct3D11",
+        "Direct3D11",
         #endif
         #ifdef __APPLE__
         "Metal",
