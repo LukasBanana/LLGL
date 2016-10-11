@@ -142,6 +142,7 @@ class GLStateManager
         /* ----- Sampler binding ----- */
 
         void BindSampler(unsigned int layer, GLuint sampler);
+        void BindSamplers(unsigned int first, unsigned int count, const GLuint* samplers);
 
         /* ----- Shader binding ----- */
 
@@ -165,14 +166,14 @@ class GLStateManager
 
         /* ----- Constants ----- */
 
-        static const std::size_t numTextureLayers       = 32;
-        static const std::size_t numStates              = (static_cast<std::size_t>(GLState::PROGRAM_POINT_SIZE) + 1);
-        static const std::size_t numBufferTargets       = (static_cast<std::size_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
-        static const std::size_t numFrameBufferTargets  = (static_cast<std::size_t>(GLFrameBufferTarget::READ_FRAMEBUFFER) + 1);
-        static const std::size_t numTextureTargets      = (static_cast<std::size_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+        static const unsigned int numTextureLayers      = 32;
+        static const unsigned int numStates             = (static_cast<unsigned int>(GLState::PROGRAM_POINT_SIZE) + 1);
+        static const unsigned int numBufferTargets      = (static_cast<unsigned int>(GLBufferTarget::UNIFORM_BUFFER) + 1);
+        static const unsigned int numFrameBufferTargets = (static_cast<unsigned int>(GLFrameBufferTarget::READ_FRAMEBUFFER) + 1);
+        static const unsigned int numTextureTargets     = (static_cast<unsigned int>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        static const std::size_t numStatesExt           = (static_cast<std::size_t>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
+        static const unsigned int numStatesExt          = (static_cast<unsigned int>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
         #endif
 
         /* ----- Structure ----- */

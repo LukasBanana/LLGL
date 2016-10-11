@@ -828,12 +828,11 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
             textureState_.layers[i].boundTextures[targetIdx] = textures[i];
         }
 
-        /* Bind all textures at once (if something has changed) */
+        /* Bind all textures at once */
         glBindTextures(first, count, textures);
     }
     else
     #endif
-    if (count > 0)
     {
         /* Bind each texture layer individually */
         while (count-- > 0)
@@ -894,6 +893,27 @@ void GLStateManager::BindSampler(unsigned int layer, GLuint sampler)
     {
         samplerState_.boundSamplers[layer] = sampler;
         glBindSampler(layer, sampler);
+    }
+}
+
+void GLStateManager::BindSamplers(unsigned int first, unsigned int count, const GLuint* samplers)
+{
+    #ifndef __APPLE__
+    if (HasExtension(GLExt::ARB_multi_bind))
+    {
+        /* Bind all samplers at once */
+        glBindSamplers(first, static_cast<GLsizei>(count), samplers);
+
+        /* Store bound textures */
+        for (GLsizei i = 0; i < count; ++i)
+            samplerState_.boundSamplers[i] = samplers[i];
+    }
+    else
+    #endif
+    {
+        /* Bind each sampler individually */
+        for (unsigned int i = 0; i < count; ++i)
+            BindSampler(first + i, samplers[i]);
     }
 }
 
