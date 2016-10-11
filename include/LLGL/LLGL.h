@@ -16,11 +16,12 @@
 #include "ColorRGB.h"
 #include "ColorRGBA.h"
 #include "Desktop.h"
+#include "Version.h"
 
 
 //DOXYGEN MAIN PAGE
 /**
- * \mainpage LLGL 1.00 Alpha Documentation
+ * \mainpage LLGL 0.01 Beta Documentation
  * 
  * LLGL (Low Level Graphics Library)
  * =================================
@@ -28,15 +29,15 @@
  * Overview
  * --------
  * 
- * - **Version**: 1.00 Alpha
+ * - **Version**: 0.01 Beta
  * - **License**: [3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
  * 
  * 
  * Progress
  * --------
  * 
- * - **OpenGL Renderer**: ~80% done
- * - **Direct3D 11 Renderer**: ~70% done
+ * - **OpenGL Renderer**: ~85% done
+ * - **Direct3D 11 Renderer**: ~85% done
  * - **Direct3D 12 Renderer**: ~5% done
  * - **Vulkan Renderer**: not started yet
  * 

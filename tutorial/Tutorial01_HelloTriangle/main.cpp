@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 
         // Create command buffer to submit subsequent graphics commands to the GPU
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
-
+        
         // Set the render context as the initial render target
         commands->SetRenderTarget(*context);
         
