@@ -625,7 +625,10 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_multi_bind))
     {
-        /* Bind buffer array, but don't reset the currently bound buffer */
+        /*
+        Bind buffer array, but don't reset the currently bound buffer.
+        The spec. of GL_ARB_multi_bind says, that the generic binding point is not modified by this function!
+        */
         glBindBuffersBase(targetGL, first, count, buffers);
     }
     else
@@ -828,7 +831,10 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
             textureState_.layers[i].boundTextures[targetIdx] = textures[i];
         }
 
-        /* Bind all textures at once */
+        /*
+        Bind all textures at once, but don't reset the currently active texture layer.
+        The spec. of GL_ARB_multi_bind says, that the active texture slot is not modified by this function!
+        */
         glBindTextures(first, count, textures);
     }
     else
@@ -905,7 +911,7 @@ void GLStateManager::BindSamplers(unsigned int first, unsigned int count, const 
         glBindSamplers(first, static_cast<GLsizei>(count), samplers);
 
         /* Store bound textures */
-        for (GLsizei i = 0; i < count; ++i)
+        for (unsigned int i = 0; i < count; ++i)
             samplerState_.boundSamplers[i] = samplers[i];
     }
     else
