@@ -23,7 +23,9 @@
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
+#include "Buffer/D3D11StorageBufferArray.h"
 #include "Buffer/D3D11StreamOutputBuffer.h"
+#include "Buffer/D3D11StreamOutputBufferArray.h"
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11TextureArray.h"
@@ -185,7 +187,29 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, lon
 
 void D3D11CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
 {
-    //todo...
+    auto& stroageBufferArrayD3D = LLGL_CAST(D3D11StorageBufferArray&, bufferArray);
+
+    if (stroageBufferArrayD3D.HasUAV() && !SRV_STAGE(shaderStageFlags))
+    {
+        /* Set UAVs to specified shader stages */
+        SetUnorderedAccessViewsOnStages(
+            startSlot,
+            static_cast<UINT>(stroageBufferArrayD3D.GetUnorderedViews().size()),
+            stroageBufferArrayD3D.GetUnorderedViews().data(),
+            stroageBufferArrayD3D.GetInitialCounts().data(),
+            shaderStageFlags
+        );
+    }
+    else
+    {
+        /* Set SRVs to specified shader stages */
+        SetShaderResourcesOnStages(
+            startSlot,
+            static_cast<UINT>(stroageBufferArrayD3D.GetResourceViews().size()),
+            stroageBufferArrayD3D.GetResourceViews().data(),
+            shaderStageFlags
+        );
+    }
 }
 
 void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
@@ -200,7 +224,13 @@ void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 
 void D3D11CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
 {
-    //todo...
+    auto& streamOutputBufferArrayD3D = LLGL_CAST(D3D11StreamOutputBufferArray&, bufferArray);
+
+    context_->SOSetTargets(
+        static_cast<UINT>(streamOutputBufferArrayD3D.GetBuffers().size()),
+        streamOutputBufferArrayD3D.GetBuffers().data(),
+        streamOutputBufferArrayD3D.GetOffsets().data()
+    );
 }
 
 void D3D11CommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)

@@ -23,6 +23,16 @@ class D3D11StreamOutputBuffer : public D3D11Buffer
 
         D3D11StreamOutputBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
+        // Returns the offset of this stream-output buffer.
+        inline UINT GetOffset() const
+        {
+            return offset_;
+        }
+
+    private:
+
+        UINT offset_ = 0;
+
 };
 
 

@@ -23,6 +23,7 @@ class D3D11StorageBuffer : public D3D11Buffer
 
         D3D11StorageBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData = nullptr);
 
+        // True, if this storage buffer has a UAV object.
         bool HasUAV() const;
 
         // True, if storage type is: Buffer or RWBuffer.

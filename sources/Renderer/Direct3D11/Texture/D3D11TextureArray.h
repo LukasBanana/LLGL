@@ -27,7 +27,7 @@ class D3D11TextureArray : public TextureArray
 
         D3D11TextureArray(unsigned int numTextures, Texture* const * textureArray);
 
-        //! Returns the array of SRV objects.
+        // Returns the array of SRV objects.
         inline const std::vector<ID3D11ShaderResourceView*>& GetResourceViews() const
         {
             return resourceViews_;

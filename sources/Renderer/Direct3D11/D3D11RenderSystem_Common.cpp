@@ -20,7 +20,9 @@
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
+#include "Buffer/D3D11StorageBufferArray.h"
 #include "Buffer/D3D11StreamOutputBuffer.h"
+#include "Buffer/D3D11StreamOutputBufferArray.h"
 
 
 namespace LLGL
@@ -99,11 +101,14 @@ static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(unsigned int numBu
 
     switch (type)
     {
-        case BufferType::Vertex:    return MakeUnique<D3D11VertexBufferArray>(numBuffers, bufferArray);
-        default:                    break;
+        case BufferType::Vertex:        return MakeUnique<D3D11VertexBufferArray>(numBuffers, bufferArray);
+        case BufferType::Constant:      return MakeUnique<D3D11BufferArray>(type, numBuffers, bufferArray);
+        case BufferType::Storage:       return MakeUnique<D3D11StorageBufferArray>(numBuffers, bufferArray);
+        case BufferType::StreamOutput:  return MakeUnique<D3D11StreamOutputBufferArray>(numBuffers, bufferArray);
+        default:                        break;
     }
 
-    return MakeUnique<D3D11BufferArray>(type, numBuffers, bufferArray);
+    return nullptr;
 }
 
 BufferArray* D3D11RenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)

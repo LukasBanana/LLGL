@@ -18,7 +18,7 @@ namespace LLGL
 D3D11VertexBufferArray::D3D11VertexBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) :
     D3D11BufferArray( BufferType::Vertex, numBuffers, bufferArray )
 {
-    /* Store the pointer of each ID3D11Buffer inside the array */
+    /* Store the strides and offests of each D3D11VertexBuffer inside the arrays */
     strides_.reserve(numBuffers);
     offsets_.reserve(numBuffers);
 
