@@ -99,7 +99,7 @@ This project is still in its early steps. Here is a short overview of its progre
 	Windows 10 is the main development environment of the author, so this platform has the best support.
 	
 	\item \textbf{MacOS} \\
-	MacOS is currently not supported, but it's part of the plan ;-)
+	MacOS is currently only supported by the base library, but not by the OpenGL renderer.
 	
 	\item \textbf{Linux} \\
 	Kubuntu 16 (GNU/Linux) is used inside a virtual machine by the author to develop the linux port.
@@ -109,16 +109,16 @@ This project is still in its early steps. Here is a short overview of its progre
 \subsection*{Renderers}
 \begin{itemize}
 	\item \textbf{OpenGL} \\
-	OpenGL renderer is \textasciitilde 80\% complete
+	OpenGL renderer is almost done (\textasciitilde 85\% complete).
 	
 	\item \textbf{Direct3D 11} \\
-	Direct3D 11 renderer is \textasciitilde 70\% complete
+	Direct3D 11 renderer is almost done (\textasciitilde 85\% complete).
 	
 	\item \textbf{Direct3D 12} \\
-	Direct3D 12 renderer is \textasciitilde 5\% complete
+	Direct3D 12 renderer is only in an experimental state (\textasciitilde 5\% complete).
 	
 	\item \textbf{Vulkan} \\
-	Vulkan renderer is not supported yet
+	Vulkan renderer is scheduled, but not supported yet.
 \end{itemize}
 
 
@@ -152,10 +152,10 @@ or add the include path later in your build settings.
 Since VisualStudio 2013, the DirectX framework (of which Direct3D is a part of) is included within
 the VisualStudio setup, so no further SDK needs to be installed.
 
-\subsubsection*{Vulkan}
+%\subsubsection*{Vulkan}
 
-To build the Vulkan render system you need the \href{https://lunarg.com/vulkan-sdk/}{Vulkan SDK},
-and of course a graphics driver which supports at least Vulkan 1.0.
+%To build the Vulkan render system you need the \href{https://lunarg.com/vulkan-sdk/}{Vulkan SDK},
+%and of course a graphics driver which supports at least Vulkan 1.0.
 
 \subsection*{Build Tool}
 
@@ -184,9 +184,20 @@ Then your project files should be located in the build directory you just set up
 There are a few options you can switch on and off, which will enable or disable the respective macro
 when you compile the project:
 \begin{itemize}
+	\item \texttt{LLGL\_BUILD\_(TESTS/TUTORIALS/RENDERER\_\dots)} \\
+	Specifies whether to include all test, all tutorials, or the repsective renderer projects.
+	
+	\item \texttt{LLGL\_ENABLE\_CHECKED\_CAST} \\
+	Specifies whether to enable or disable dynamic checked casts.
+	This is only available in debug mode.
+	
 	\item \texttt{LLGL\_ENABLE\_DEBUG\_LAYER} \\
-	Specifies whether to enable or disabled the debug layer.
+	Specifies whether to enable or disable the debug layer.
 	This is a wrapper around the render system and all other render objects for effective debugging.
+	
+	\item \texttt{LLGL\_ENABLE\_UTILITY} \\
+	Specifies whether to enable or disable utility functions, which can be used to easily initialize descriptor structures.
+	They must be included separately with the \texttt{LLGL/Utility.h} header file.
 	
 	\item \texttt{LLGL\_GL\_ENABLE\_EXT\_PLACEHOLDERS} \\
 	Specifies whether OpenGL extensions should be replaced by placeholder procedures
@@ -211,12 +222,13 @@ when you compile the project:
 LLGL has a very simple and unified API design.
 For object creation, there is commonly a ``\texttt{\dots Descriptor}'' structure (e.g. \texttt{LLGL::ImageDescriptor}),
 which contains all necessary information to describe the object which is to be created.
-There are two main interfaces: \emph{RenderSystem} which is mainly used for object creation,
-and \emph{RenderContext} which is used to configure and draw primitives for each framebuffer.
+There are three major interfaces: \emph{RenderSystem} is mainly used for object creation and memory read/write operations,
+\emph{RenderContext} is used to configure each framebuffer and its back buffer (or rather swap chain),
+and \emph{CommandBuffer} which is used to set render states, draw primitives, and dispatch compute commands.
 
 \subsection*{RenderSystem}
 
-In the RenderSystem interface there are many functions of the following form:
+In the RenderSystem interface there are several functions of the following form:
 \begin{lstlisting}
 // Create a new object
 Create...
@@ -224,25 +236,34 @@ Create...
 // Update the data of an object
 Write...
 
+// Read the data from an object
+Read...
+
+// Map the memory of an object from GPU to CPU memory space
+Map...
+
+// Unmap the memory from an object
+Unmap...
+
 // Release the object
 Release
 \end{lstlisting}
 
-\subsection*{RenderContext}
+\subsection*{CommandBuffer}
 
 There are several overloaded functions for drawing operations with the naming convention
 ``\texttt{Draw}'', ``\texttt{DrawIndexed}'', ``\texttt{DrawInstanced}'', or ``\texttt{DrawIndexedInstanced}''.
 The most other functions are used to configure the command buffer of the graphics API, which have the following form:
 \begin{lstlisting}
-// Set a hardware buffer
+// Set a hardware buffer/ texture/ sampler etc.
 Set...
 
-// Unset a hardware buffer
-Unset...
-
-// Begin and always end a state
+// Begin and always end a state (e.g. BeginQuery/ EndQuery)
 Begin...
 End...
+
+// Draw primitives
+Draw...
 \end{lstlisting}
 
 
@@ -273,7 +294,6 @@ to read the shader files, and \texttt{Gauss/Gauss.h} for some matrix classes:
 #include <iostream>
 #include <fstream>
 \end{lstlisting}
-
 Next we define the C++ main function and wrap the entire example code into a large \texttt{try-catch} block,
 to quit the application with a meaningful error message if any failure happens:
 \begin{lstlisting}
@@ -286,7 +306,6 @@ int main() {
     return 0;
 }
 \end{lstlisting}
-
 To create an \LLGL renderer instance in our main function, we load a renderer module
 (a \textit{module} here denotes a dynamic shared library)
 from the static \texttt{Load} function of the \texttt{RenderSystem} interface:
@@ -318,12 +337,12 @@ This is done by the \texttt{CreateRenderContext} function which takes a descript
 \begin{lstlisting}
 LLGL::RenderContextDescriptor contextDesc;
 {
-    contextDesc.videoMode.resolution = { 800, 600 };
+    contextDesc.videoMode.resolution = { 640, 480 };
 }
 LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
 \end{lstlisting}
 This is a minimal example for the render context descriptor. There are much more attributes
-to specify anti-aliasing, vertical-synchronisation, etc.
+to specify multi-sampled anti-aliasing, vertical-synchronisation, etc.
 See the API documentation for more information about these attributes.
 
 This render context will create its own window, but we could also specifiy our own one.
@@ -356,8 +375,8 @@ Vertex vertices[] = {
 
 // Vertex format
 LLGL::VertexFormat vertexFormat;
-vertexFormat.AddAttribute("position", LLGL::DataType::Float, 2); // position has 2 float components
-vertexFormat.AddAttribute("color",    LLGL::DataType::Float, 3); // color has 3 float components
+vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 }); // position has 2D float vector
+vertexFormat.AppendAttribute({ "color",    LLGL::VectorType::Float3 }); // color has 3D float vector
 \end{lstlisting}
 The \texttt{AddAttribute} function adds the attributes to the vertex format.
 The order of these function calls determines the location in the vertex data, so they must match
@@ -369,12 +388,11 @@ to the \texttt{initialData} parameter:
 LLGL::BufferDescriptor bufferDesc;
 
 // Set the common buffer attributes
-bufferDesc.type  = LLGL::BufferType::Vertex;  // Buffer type
-bufferDesc.size  = sizeof(vertices);          // Size (in bytes) of the buffer
-bufferDesc.usage = LLGL::BufferUsage::Static, // Staitc, because we won't write it frequently
+bufferDesc.type = LLGL::BufferType::Vertex; // Buffer type
+bufferDesc.size = sizeof(vertices);         // Size (in bytes) of the buffer
 
-// Set the vertex buffer specific attributes
-bufferDesc.vertexBufferDesc.vertexFormat = vertexFormat; // Copy the vertex format
+// Set vertex buffer specific attributes
+bufferDesc.vertexBuffer.format = vertexFormat; // Copy the vertex format
 
 LLGL::Buffer* vertexBuffer = renderer->CreateBuffer(bufferDesc, vertices);
 \end{lstlisting}
@@ -437,7 +455,7 @@ shaderProgram->AttachShader(*vertexShader);
 shaderProgram->AttachShader(*fragmentShader);
 
 // Build vertex layout for input assembly (this is not required for a compute shader program)
-shaderProgram->BuildInputLayout(vertexFormat.GetAttributes());
+shaderProgram->BuildInputLayout(vertexFormat);
 
 // Link shader program and check for errors
 if (!shaderProgram->LinkShaders()) {
@@ -504,6 +522,14 @@ LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc
 In our example we can use all default settings of the graphics pipeline descriptor except the shader program,
 which must always be set by the client programmer.
 
+Before we start with the render main loop, we need a command buffer which can send render state and draw commands to the GPU:
+\begin{lstlisting}
+// Create command buffer to submit subsequent graphics commands to the GPU
+LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
+
+// Set the render context as the initial render target
+commands->SetRenderTarget(*context);
+\end{lstlisting}
 We now have all render objects, so we can start with the main loop:
 \begin{lstlisting}
 // Run main loop until the main window is closed
@@ -516,17 +542,20 @@ The rest of the code is pretty simple, since the most work is done during initia
 What we need to do is to clear the color buffer of the previous frame,
 set the graphics pipeline, set the vertex buffer, draw the primitives, and present the result on the frame buffer:
 \begin{lstlisting}
+// Set viewport
+commands->SetViewport({ 0, 0, 640, 480 });
+
 // Clear color buffer
-context->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
 
 // Bind graphics pipeline
-context->SetGraphicsPipeline(*pipeline);
+commands->SetGraphicsPipeline(*pipeline);
 
 // Bind vertex buffer
-context->SetVertexBuffer(*vertexBuffer);
+commands->SetVertexBuffer(*vertexBuffer);
 
-// Draw triangle with 3 vertices
-context->Draw(3, 0);
+// Generate 3 vertices to draw a triangle
+commands->Draw(3, 0);
 
 // Present the result on the frame buffer (or rather on the screen)
 context->Present();
