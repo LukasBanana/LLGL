@@ -170,24 +170,10 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, lon
 
     if (storageBufferD3D.HasUAV() && !SRV_STAGE(shaderStageFlags))
     {
-        /* Get UAV list and initial counts */
+        /* Set UAVs to specified shader stages */
         ID3D11UnorderedAccessView* uavList[] = { storageBufferD3D.GetUAV() };
         UINT auvCounts[] = { storageBufferD3D.GetInitialCount() };
-
-        if (PS_STAGE(shaderStageFlags))
-        {
-            /* Set UAVs for pixel shader stage */
-            context_->OMSetRenderTargetsAndUnorderedAccessViews(
-                D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
-                slot, 1, uavList, auvCounts
-            );
-        }
-
-        if (CS_STAGE(shaderStageFlags))
-        {
-            /* Set UAVs for compute shader stage */
-            context_->CSSetUnorderedAccessViews(slot, 1, uavList, auvCounts);
-        }
+        SetUnorderedAccessViewsOnStages(slot, 1, uavList, auvCounts, shaderStageFlags);
     }
     else
     {
@@ -195,6 +181,11 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, lon
         ID3D11ShaderResourceView* srvList[] = { storageBufferD3D.GetSRV() };
         SetShaderResourcesOnStages(slot, 1, srvList, shaderStageFlags);
     }
+}
+
+void D3D11CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+{
+    //todo...
 }
 
 void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
@@ -205,6 +196,11 @@ void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     UINT offsets[] = { 0 };
 
     context_->SOSetTargets(1, buffers, offsets);
+}
+
+void D3D11CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
+{
+    //todo...
 }
 
 void D3D11CommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
@@ -585,6 +581,25 @@ void D3D11CommandBuffer::SetSamplersOnStages(UINT startSlot, UINT count, ID3D11S
     if (GS_STAGE(shaderStageFlags)) { context_->GSSetSamplers(startSlot, count, samplers); }
     if (PS_STAGE(shaderStageFlags)) { context_->PSSetSamplers(startSlot, count, samplers); }
     if (CS_STAGE(shaderStageFlags)) { context_->CSSetSamplers(startSlot, count, samplers); }
+}
+
+void D3D11CommandBuffer::SetUnorderedAccessViewsOnStages(
+    UINT startSlot, UINT count, ID3D11UnorderedAccessView* const* views, const UINT* initialCounts, long shaderStageFlags)
+{
+    if (PS_STAGE(shaderStageFlags))
+    {
+        /* Set UAVs for pixel shader stage */
+        context_->OMSetRenderTargetsAndUnorderedAccessViews(
+            D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, nullptr, nullptr,
+            startSlot, count, views, initialCounts
+        );
+    }
+
+    if (CS_STAGE(shaderStageFlags))
+    {
+        /* Set UAVs for compute shader stage */
+        context_->CSSetUnorderedAccessViews(startSlot, count, views, initialCounts);
+    }
 }
 
 #undef VS_STAGE

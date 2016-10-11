@@ -61,8 +61,10 @@ class D3D11CommandBuffer : public CommandBuffer
         void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
         void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
+        void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
 
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
@@ -131,6 +133,7 @@ class D3D11CommandBuffer : public CommandBuffer
         void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long shaderStageFlags);
         void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long shaderStageFlags);
         void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long shaderStageFlags);
+        void SetUnorderedAccessViewsOnStages(UINT startSlot, UINT count, ID3D11UnorderedAccessView* const* views, const UINT* initialCounts, long shaderStageFlags);
 
         void ResolveBoundRenderTarget();
 

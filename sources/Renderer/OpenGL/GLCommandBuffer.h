@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandBuffer.h>
+#include "RenderState/GLState.h"
 #include "OpenGL.h"
 
 
@@ -55,9 +56,11 @@ class GLCommandBuffer : public CommandBuffer
         void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
-        void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags) override;
+        void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
+        void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
 
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
@@ -121,6 +124,9 @@ class GLCommandBuffer : public CommandBuffer
             GLenum      indexBufferDataType = GL_UNSIGNED_INT;
             GLintptr    indexBufferStride   = 4;
         };
+
+        void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, unsigned int slot);
+        void SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, unsigned int startSlot);
 
         // Blits the currently bound render target
         void BlitBoundRenderTarget();

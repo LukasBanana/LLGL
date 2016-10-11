@@ -163,6 +163,8 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Sets the active array of constant buffers at the specified start slot index.
+        \param[in] bufferArray Specifies the constant buffer array to set.
+        \see RenderSystem::CreateBufferArray
         \see SetConstantBuffer
         */
         virtual void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
@@ -179,12 +181,28 @@ class LLGL_EXPORT CommandBuffer
         virtual void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
+        \brief Sets the active array of storage buffers at the specified start slot index.
+        \param[in] bufferArray Specifies the storage buffer array to set.
+        \see RenderSystem::CreateBufferArray
+        \see SetStorageBuffer
+        */
+        virtual void SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+
+        /**
         \brief Sets the active stream-output buffer to the stream-output stage.
         \param[in] buffer Specifies the stream-output buffer to set. This buffer must have been created with the buffer type: BufferType::StreamOutput.
         \see RenderSystem::MapBuffer
         \see RenderSystem::UnmapBuffer
         */
         virtual void SetStreamOutputBuffer(Buffer& buffer) = 0;
+
+        /**
+        \brief Sets the active array of stream-output buffers.
+        \param[in] bufferArray Specifies the stream-output buffer array to set.
+        \see RenderSystem::CreateBufferArray
+        \see SetStreamOutputBuffer
+        */
+        virtual void SetStreamOutputBufferArray(BufferArray& bufferArray) = 0;
 
         /**
         \brief Begins with stream-output for subsequent draw calls.

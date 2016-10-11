@@ -142,7 +142,17 @@ void D3D12CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, lon
     //todo...
 }
 
+void D3D12CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+{
+    //todo...
+}
+
 void D3D12CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
+{
+    //todo...
+}
+
+void D3D12CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
 {
     //todo...
 }

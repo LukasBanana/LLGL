@@ -157,6 +157,16 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long 
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
 
+void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+{
+    DebugBufferType(bufferArray.GetType(), BufferType::Storage, __FUNCTION__);
+    DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages, __FUNCTION__);
+    {
+        instance.SetStorageBufferArray(bufferArray, startSlot, shaderStageFlags);
+    }
+    LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
+}
+
 void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
     DebugBufferType(buffer.GetType(), BufferType::StreamOutput, __FUNCTION__);
@@ -166,7 +176,16 @@ void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     {
         instance.SetStreamOutputBuffer(bufferDbg.instance);
     }
-    LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
+    LLGL_DBG_PROFILER_DO(setStreamOutputBuffer.Inc());
+}
+
+void DbgCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
+{
+    DebugBufferType(bufferArray.GetType(), BufferType::StreamOutput, __FUNCTION__);
+    {
+        instance.SetStreamOutputBufferArray(bufferArray);
+    }
+    LLGL_DBG_PROFILER_DO(setStreamOutputBuffer.Inc());
 }
 
 void DbgCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)

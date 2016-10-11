@@ -63,8 +63,10 @@ class DbgCommandBuffer : public CommandBuffer
         void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
         void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
+        void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
 
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;

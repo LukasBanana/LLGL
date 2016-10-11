@@ -169,35 +169,32 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
 
 void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
 {
-    /* Bind constant buffer with BindBufferBase */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBufferBase(GLBufferTarget::UNIFORM_BUFFER, slot, bufferGL.GetID());
+    SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
 }
 
 void GLCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long /*shaderStageFlags*/)
 {
-    /* Bind constant buffers with BindBuffersBase */
-    auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
-    stateMngr_->BindBuffersBase(
-        GLBufferTarget::UNIFORM_BUFFER,
-        startSlot,
-        static_cast<GLsizei>(bufferArrayGL.GetIDArray().size()),
-        bufferArrayGL.GetIDArray().data()
-    );
+    SetGenericBufferArray(GLBufferTarget::UNIFORM_BUFFER, bufferArray, startSlot);
 }
 
 void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
 {
-    /* Bind storage buffer with BindBufferBase */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBufferBase(GLBufferTarget::SHADER_STORAGE_BUFFER, slot, bufferGL.GetID());
+    SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
+}
+
+void GLCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long /*shaderStageFlags*/)
+{
+    SetGenericBufferArray(GLBufferTarget::SHADER_STORAGE_BUFFER, bufferArray, startSlot);
 }
 
 void GLCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
-    /* Bind stream-output buffer with BindBufferBase */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    stateMngr_->BindBufferBase(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, 0, bufferGL.GetID());
+    SetGenericBuffer(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, buffer, 0);
+}
+
+void GLCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
+{
+    SetGenericBufferArray(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, bufferArray, 0);
 }
 
 void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
@@ -475,6 +472,30 @@ void GLCommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int grou
 void GLCommandBuffer::SyncGPU()
 {
     glFinish();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLCommandBuffer::SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, unsigned int slot)
+{
+    /* Bind buffer with BindBufferBase */
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    stateMngr_->BindBufferBase(bufferTarget, slot, bufferGL.GetID());
+}
+
+void GLCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, unsigned int startSlot)
+{
+    /* Bind buffers with BindBuffersBase */
+    auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
+    stateMngr_->BindBuffersBase(
+        bufferTarget,
+        startSlot,
+        static_cast<GLsizei>(bufferArrayGL.GetIDArray().size()),
+        bufferArrayGL.GetIDArray().data()
+    );
 }
 
 
