@@ -16,17 +16,10 @@ Documentation
 - [LLGL Reference Manual](https://github.com/LukasBanana/LLGL/blob/master/docu/refman.pdf) (PDF)
 
 
-Progress
---------
+Release Branch
+--------------
 
 - **Version**: 0.01 Beta
-
-| Renderer | Progress | Remarks |
-|----------|:--------:|---------|
-| OpenGL | ~85% | |
-| Direct3D 11 | ~85% | |
-| Direct3D 12 | ~5% | Experimental state |
-| Vulkan | 0% | Not started yet |
 
 
 Thin Abstraction Layer
