@@ -98,7 +98,6 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
 static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     auto type = (*bufferArray)->GetType();
-
     switch (type)
     {
         case BufferType::Vertex:        return MakeUnique<D3D11VertexBufferArray>(numBuffers, bufferArray);
@@ -107,7 +106,6 @@ static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(unsigned int numBu
         case BufferType::StreamOutput:  return MakeUnique<D3D11StreamOutputBufferArray>(numBuffers, bufferArray);
         default:                        break;
     }
-
     return nullptr;
 }
 
