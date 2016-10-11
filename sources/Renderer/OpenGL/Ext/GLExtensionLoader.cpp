@@ -127,7 +127,6 @@ static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceHolder)
     LOAD_GLPROC( glEnableVertexAttribArray  );
     LOAD_GLPROC( glDisableVertexAttribArray );
     LOAD_GLPROC( glVertexAttribPointer      );
-    LOAD_GLPROC( glVertexAttribIPointer     );
     LOAD_GLPROC( glBindAttribLocation       );
     #endif
     return true;
@@ -284,6 +283,14 @@ static bool Load_GL_ARB_program_interface_query(bool usePlaceHolder)
     LOAD_GLPROC( glGetProgramResourceiv            );
     LOAD_GLPROC( glGetProgramResourceLocation      );
     LOAD_GLPROC( glGetProgramResourceLocationIndex );
+    return true;
+}
+
+static bool Load_GL_EXT_gpu_shader4(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glVertexAttribIPointer );
+    LOAD_GLPROC( glBindFragDataLocation );
+    LOAD_GLPROC( glGetFragDataLocation  );
     return true;
 }
 
@@ -617,6 +624,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
     LOAD_GLEXT( ARB_compute_shader               );
     LOAD_GLEXT( ARB_get_program_binary           );
     LOAD_GLEXT( ARB_program_interface_query      );
+    LOAD_GLEXT( EXT_gpu_shader4                  );
 
     /* Load texture extensions */
     LOAD_GLEXT( ARB_multitexture                 );

@@ -7,6 +7,8 @@
 
 #include "GLVertexArrayObject.h"
 #include "../Ext/GLExtensions.h"
+#include "../Ext/GLExtensionLoader.h"
+#include "../../../Core/Exception.h"
 #include "../RenderState/GLStateManager.h"
 #include "../GLTypes.h"
 
@@ -42,8 +44,8 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
     /* Use currently bound VBO for VertexAttribPointer functions */
     if (!attribute.conversion && dataType != DataType::Float && dataType != DataType::Double)
     {
-        //if (!glVertexAttribIPointer)
-        //    throw std::runtime_error("integral vertex attributes not supported by renderer");
+        if (!HasExtension(GLExt::EXT_gpu_shader4))
+            ThrowNotSupported("integral vertex attributes");
 
         glVertexAttribIPointer(
             index,

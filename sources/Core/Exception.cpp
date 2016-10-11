@@ -16,7 +16,7 @@ namespace LLGL
 [[noreturn]]
 LLGL_EXPORT void ThrowNotSupported(const std::string& featureName)
 {
-    throw std::runtime_error("renderer does not supported " + featureName);
+    throw std::runtime_error("renderer does not support " + featureName);
 }
 
 [[noreturn]]

@@ -53,6 +53,7 @@ enum class GLExt
     ARB_clip_control,
     EXT_transform_feedback,
     NV_transform_feedback,
+    EXT_gpu_shader4,
 
     /* Extensions without procedures */
     ARB_texture_cube_map,

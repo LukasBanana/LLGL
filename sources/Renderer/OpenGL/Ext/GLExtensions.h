@@ -142,8 +142,13 @@ extern PFNGLUNMAPBUFFERPROC                                 glUnmapBuffer;
 extern PFNGLENABLEVERTEXATTRIBARRAYPROC                     glEnableVertexAttribArray;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC                    glDisableVertexAttribArray;
 extern PFNGLVERTEXATTRIBPOINTERPROC                         glVertexAttribPointer;
-extern PFNGLVERTEXATTRIBIPOINTERPROC                        glVertexAttribIPointer;
 extern PFNGLBINDATTRIBLOCATIONPROC                          glBindAttribLocation;
+
+/* GL_EXT_gpu_shader4 */
+
+extern PFNGLVERTEXATTRIBIPOINTERPROC                        glVertexAttribIPointer;
+extern PFNGLBINDFRAGDATALOCATIONPROC                        glBindFragDataLocation;
+extern PFNGLGETFRAGDATALOCATIONPROC                         glGetFragDataLocation;
 
 /* GL_ARB_instanced_arrays */
 

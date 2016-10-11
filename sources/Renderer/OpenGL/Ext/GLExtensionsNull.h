@@ -169,8 +169,13 @@ DECL_GLPROC(GLboolean, glUnmapBuffer, (GLenum));
 DECL_GLPROC(void, glEnableVertexAttribArray, (GLuint));
 DECL_GLPROC(void, glDisableVertexAttribArray, (GLuint));
 DECL_GLPROC(void, glVertexAttribPointer, (GLuint, GLint, GLenum, GLboolean, GLsizei, const void*));
-DECL_GLPROC(void, glVertexAttribIPointer, (GLuint, GLint, GLenum, GLsizei, const void*));
 DECL_GLPROC(void, glBindAttribLocation, (GLuint, GLuint, const GLchar*));
+
+/* GL_EXT_gpu_shader4 */
+
+DECL_GLPROC(void, glVertexAttribIPointer, (GLuint, GLint, GLenum, GLsizei, const void*));
+DECL_GLPROC(void, glBindFragDataLocation, (GLuint, GLuint, const GLchar*));
+DECL_GLPROC(GLint, glGetFragDataLocation, (GLuint, const GLchar*));
 
 /* GL_ARB_instanced_arrays */
 
