@@ -94,28 +94,29 @@ void GLRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
+static GLBuffer& BindAndGetGLBuffer(Buffer& buffer)
+{
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+    GLStateManager::active->BindBuffer(bufferGL);
+    return bufferGL;
+}
+
 void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
     /* Bind and update buffer sub-data */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    GLStateManager::active->BindBuffer(bufferGL);
-    bufferGL.BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
+    BindAndGetGLBuffer(buffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
 void* GLRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
 {
-    /* Get, bind, and map buffer */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    GLStateManager::active->BindBuffer(bufferGL);
-    return bufferGL.MapBuffer(GLTypes::Map(access));
+    /* Bind and map buffer */
+    return BindAndGetGLBuffer(buffer).MapBuffer(GLTypes::Map(access));
 }
 
 void GLRenderSystem::UnmapBuffer(Buffer& buffer)
 {
-    /* Get, bind, and unmap buffer */
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    GLStateManager::active->BindBuffer(bufferGL);
-    bufferGL.UnmapBuffer();
+    /* Bind and unmap buffer */
+    BindAndGetGLBuffer(buffer).UnmapBuffer();
 }
 
 
