@@ -69,14 +69,13 @@ option(LLGL_ENABLE_UTILITY "Enable Utility Functions (LLGL/Utility.h)" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable Vendor Specific OpenGL Extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL Extension Placeholders" ON)
 
-option(LLGL_BUILD_TESTS "Include Test Projects" ON)
+option(LLGL_BUILD_TESTS "Include Test Projects" OFF)
 option(LLGL_BUILD_TUTORIALS "Include Tutorial Projects" ON)
 
 option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL Renderer Project" ON)
 
 if(WIN32)
 	option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 Renderer Project" ON)
-	option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 Renderer Project (Experimental)" OFF)
 endif()
 
 if(LLGL_ENABLE_CHECKED_CAST)
@@ -143,13 +142,6 @@ elseif(UNIX)
 	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/Linux/*.*)
 endif()
 
-# Direct3D12 renderer files
-file(GLOB FilesRendererD3D12				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
-file(GLOB FilesRendererD3D12Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/*.*)
-file(GLOB FilesRendererD3D12Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Buffer/*.*)
-#file(GLOB FilesRendererD3D12Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Texture/*.*)
-file(GLOB FilesRendererD3D12RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/RenderState/*.*)
-
 # Direct3D11 renderer files
 file(GLOB FilesRendererD3D11				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/*.*)
 file(GLOB FilesRendererD3D11Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/*.*)
@@ -163,7 +155,6 @@ file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*
 # Test files
 set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/Test1_Window.cpp)
 set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
-set(FilesTest3 ${PROJECT_SOURCE_DIR}/test/Test3_Direct3D12.cpp)
 set(FilesTest4 ${PROJECT_SOURCE_DIR}/test/Test4_Compute.cpp)
 
 # Tutorial files
@@ -341,23 +332,12 @@ if(WIN32)
 		target_link_libraries(LLGL_Direct3D11 LLGL d3d11 dxgi D3DCompiler)
 		target_compile_features(LLGL_Direct3D11 PRIVATE cxx_range_for)
 	endif()
-	
-	if(LLGL_BUILD_RENDERER_DIRECT3D12)
-		# Direct3D 12 Renderer
-		add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
-		set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-		target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi D3DCompiler)
-		target_compile_features(LLGL_Direct3D12 PRIVATE cxx_range_for)
-	endif()
 endif()
 
 # Test Projects
 if(LLGL_BUILD_TESTS)
 	ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
 	ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
-	if(WIN32)
-		ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
-	endif()
 	ADD_TEST_PROJECT(Test4_Compute ${FilesTest4})
 endif()
 

@@ -9,17 +9,17 @@ License
 [3-Clause BSD License](https://github.com/LukasBanana/LLGL/blob/master/LICENSE.txt)
 
 
+Release Branch
+--------------
+
+- **Version**: 0.01 Beta
+
+
 Documentation
 -------------
 
 - [Getting Started with LLGL](https://github.com/LukasBanana/LLGL/blob/master/docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
 - [LLGL Reference Manual](https://github.com/LukasBanana/LLGL/blob/master/docu/refman.pdf) (PDF)
-
-
-Release Branch
---------------
-
-- **Version**: 0.01 Beta
 
 
 Thin Abstraction Layer
