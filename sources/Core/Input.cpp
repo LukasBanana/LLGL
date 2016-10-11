@@ -113,7 +113,7 @@ void Input::OnDoubleClick(Window& sender, Key keyCode)
 
 void Input::OnChar(Window& sender, wchar_t chr)
 {
-    chars_+= chr;
+    chars_ += chr;
 }
 
 void Input::OnWheelMotion(Window& sender, int motion)

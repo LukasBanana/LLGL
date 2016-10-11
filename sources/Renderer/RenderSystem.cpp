@@ -59,7 +59,7 @@ std::vector<std::string> RenderSystem::FindModules()
 
 static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFilename)
 {
-    /* Load "LLGL_RenderSystem_Alloc" procedure */
+    /* Load "LLGL_RenderSystem_BuildID" procedure */
     LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_BUILDID, (void));
 
     auto RenderSystem_BuildID = reinterpret_cast<PFN_RENDERSYSTEM_BUILDID>(module.LoadProcedure("LLGL_RenderSystem_BuildID"));
@@ -106,7 +106,7 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
 
     /*
     Verify build ID from render system module to detect a module,
-    that has poptentially compiled with a different compiler (type, version, debug/release mode etc.)
+    that has compiled with a different compiler (type, version, debug/release mode etc.)
     */
     if (!LoadRenderSystemBuildID(*module, moduleFilename))
         throw std::runtime_error("build ID mismatch in render system module");
@@ -167,7 +167,7 @@ static void AssertCreateResourceArrayCommon(unsigned int numResources, void* con
 {
     /* Validate number of buffers */
     if (numResources == 0)
-        throw std::invalid_argument("can not " + resourceName + " buffer array with zero " + resourceName + "s");
+        throw std::invalid_argument("can not create " + resourceName + " array with zero " + resourceName + "s");
 
     /* Validate array pointer */
     if (resourceArray == nullptr)

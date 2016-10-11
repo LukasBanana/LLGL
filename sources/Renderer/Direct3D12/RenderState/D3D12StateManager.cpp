@@ -22,7 +22,7 @@ void D3D12StateManager::SetViewports(unsigned int numViewports, const Viewport* 
 {
     viewports_.resize(numViewports);
     
-    /* Check (at compile time) if D3D12_VIEWPORT and Viewport structures can be safly reinterpret-casted */
+    /* Check (at compile time) if D3D12_VIEWPORT and Viewport structures can be safely reinterpret-casted */
     if ( sizeof(D3D12_VIEWPORT)             == sizeof(Viewport)             &&
          offsetof(D3D12_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
          offsetof(D3D12_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&
