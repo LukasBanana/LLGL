@@ -72,6 +72,13 @@ option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL Extension Placeholders" ON
 option(LLGL_BUILD_TESTS "Include Test Projects" ON)
 option(LLGL_BUILD_TUTORIALS "Include Tutorial Projects" ON)
 
+option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL Renderer Project" ON)
+
+if(WIN32)
+	option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 Renderer Project" ON)
+	option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 Renderer Project (Experimental)" OFF)
+endif()
+
 if(LLGL_ENABLE_CHECKED_CAST)
 	ADD_DEBUG_DEFINE(LLGL_ENABLE_CHECKED_CAST)
 endif()
@@ -312,30 +319,36 @@ endif()
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 target_compile_features(LLGL PRIVATE cxx_range_for)
 
-# OpenGL Renderer
-find_package(OpenGL)
-if(OpenGL_FOUND)
-	include_directories(${OPENGL_INCLUDE_DIR})
-	add_library(LLGL_OpenGL SHARED ${FilesGL})
-	set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-	target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
-	target_compile_features(LLGL_OpenGL PRIVATE cxx_range_for)
-else()
-	message("Missing OpenGL -> LLGL_OpenGL renderer will be excluded from project")
+if(LLGL_BUILD_RENDERER_OPENGL)
+	# OpenGL Renderer
+	find_package(OpenGL)
+	if(OpenGL_FOUND)
+		include_directories(${OPENGL_INCLUDE_DIR})
+		add_library(LLGL_OpenGL SHARED ${FilesGL})
+		set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
+		target_compile_features(LLGL_OpenGL PRIVATE cxx_range_for)
+	else()
+		message("Missing OpenGL -> LLGL_OpenGL renderer will be excluded from project")
+	endif()
 endif()
 
 if(WIN32)
-	# Direct3D 12 Renderer
-	add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
-	set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-	target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi D3DCompiler)
-	target_compile_features(LLGL_Direct3D12 PRIVATE cxx_range_for)
+	if(LLGL_BUILD_RENDERER_DIRECT3D11)
+		# Direct3D 11 Renderer
+		add_library(LLGL_Direct3D11 SHARED ${FilesD3D11})
+		set_target_properties(LLGL_Direct3D11 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(LLGL_Direct3D11 LLGL d3d11 dxgi D3DCompiler)
+		target_compile_features(LLGL_Direct3D11 PRIVATE cxx_range_for)
+	endif()
 	
-	# Direct3D 11 Renderer
-	add_library(LLGL_Direct3D11 SHARED ${FilesD3D11})
-	set_target_properties(LLGL_Direct3D11 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-	target_link_libraries(LLGL_Direct3D11 LLGL d3d11 dxgi D3DCompiler)
-	target_compile_features(LLGL_Direct3D11 PRIVATE cxx_range_for)
+	if(LLGL_BUILD_RENDERER_DIRECT3D12)
+		# Direct3D 12 Renderer
+		add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
+		set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi D3DCompiler)
+		target_compile_features(LLGL_Direct3D12 PRIVATE cxx_range_for)
+	endif()
 endif()
 
 # Test Projects
