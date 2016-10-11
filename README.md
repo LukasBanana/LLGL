@@ -19,7 +19,7 @@ Documentation
 Progress
 --------
 
-- **Version**: 1.00 Alpha
+- **Version**: 0.01 Beta
 
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
