@@ -594,7 +594,7 @@ void DbgCommandBuffer::DebugIndexBufferSet()
 
 void DbgCommandBuffer::DebugVertexLayout()
 {
-    if (bindings_.graphicsPipeline)
+    if (bindings_.graphicsPipeline && bindings_.vertexBuffer)
     {
         auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, bindings_.graphicsPipeline->desc.shaderProgram);
         const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
