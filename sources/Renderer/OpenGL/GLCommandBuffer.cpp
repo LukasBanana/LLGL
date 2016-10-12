@@ -199,22 +199,30 @@ void GLCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
 
 void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 {
+    #ifdef __APPLE__
+    glBeginTransformFeedback(GLTypes::Map(primitiveType));
+    #else
     if (HasExtension(GLExt::EXT_transform_feedback))
         glBeginTransformFeedback(GLTypes::Map(primitiveType));
     else if (HasExtension(GLExt::NV_transform_feedback))
         glBeginTransformFeedbackNV(GLTypes::Map(primitiveType));
     else
         ThrowNotSupported("stream-outputs");
+    #endif
 }
 
 void GLCommandBuffer::EndStreamOutput()
 {
+    #ifdef __APPLE__
+    glEndTransformFeedback();
+    #else
     if (HasExtension(GLExt::EXT_transform_feedback))
         glEndTransformFeedback();
     else if (HasExtension(GLExt::NV_transform_feedback))
         glEndTransformFeedbackNV();
     else
         ThrowNotSupported("stream-outputs");
+    #endif
 }
 
 /* ----- Textures ----- */

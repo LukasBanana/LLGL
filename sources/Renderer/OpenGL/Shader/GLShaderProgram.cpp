@@ -71,12 +71,15 @@ bool GLShaderProgram::LinkShaders()
     if (!streamOutputFormat_.attributes.empty())
     {
         /* For GL_EXT_transform_feedback the varyings must be specified BEFORE linking */
+        #ifndef __APPLE__
         if (HasExtension(GLExt::EXT_transform_feedback))
+        #endif
         {
             BuildTransformFeedbackVaryingsEXT(streamOutputFormat_.attributes);
             return LinkShaderProgram();
         }
 
+        #ifndef __APPLE__
         /* For GL_NV_transform_feedback (Vendor specific) the varyings must be specified AFTER linking */
         if (HasExtension(GLExt::NV_transform_feedback))
         {
@@ -84,6 +87,7 @@ bool GLShaderProgram::LinkShaders()
             BuildTransformFeedbackVaryingsNV(streamOutputFormat_.attributes);
             return result;
         }
+        #endif
     }
 
     /* Just link shader program */
@@ -192,7 +196,9 @@ std::vector<StreamOutputAttribute> GLShaderProgram::QueryStreamOutputAttributes(
     StreamOutputFormat streamOutputFormat;
     StreamOutputAttribute soAttrib;
 
+    #ifndef __APPLE__
     if (HasExtension(GLExt::EXT_transform_feedback))
+    #endif
     {
         /* Query active varyings */
         std::vector<char> attribName;
@@ -223,6 +229,7 @@ std::vector<StreamOutputAttribute> GLShaderProgram::QueryStreamOutputAttributes(
             #endif
         }
     }
+    #ifndef __APPLE__
     else if (HasExtension(GLExt::NV_transform_feedback))
     {
         /* Query active varyings */
@@ -256,6 +263,7 @@ std::vector<StreamOutputAttribute> GLShaderProgram::QueryStreamOutputAttributes(
     }
     else
         ThrowNotSupported("stream-outputs");
+    #endif
 
     return streamOutputFormat.attributes;
 }
@@ -483,6 +491,8 @@ void GLShaderProgram::BuildTransformFeedbackVaryingsEXT(const std::vector<Stream
     glTransformFeedbackVaryings(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS);
 }
 
+#ifndef __APPLE__
+
 void GLShaderProgram::BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes)
 {
     /* Specify transform-feedback varyings by locations */
@@ -501,6 +511,8 @@ void GLShaderProgram::BuildTransformFeedbackVaryingsNV(const std::vector<StreamO
 
     glTransformFeedbackVaryingsNV(id_, static_cast<GLsizei>(varyings.size()), varyings.data(), GL_INTERLEAVED_ATTRIBS_NV);
 }
+
+#endif
 
 
 } // /namespace LLGL
