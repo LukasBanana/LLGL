@@ -18,7 +18,7 @@ extern "C"
 
 /*
 Returns the build ID number of the render system.
-This depends on the type and the version of used the compiler, the debug/release mode, and an internal build version.
+This depends on the type and version of the used compiler, the debug/release mode, and an internal build version.
 The returned value must be equal to the value of the LLGL_BUILD_ID macro.
 Otherwise the render system might not be loaded correctly.
 */
