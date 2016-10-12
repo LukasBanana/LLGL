@@ -61,8 +61,8 @@ class DbgShaderProgram : public ShaderProgram
 
     private:
 
-        void DebugShaderAttachment(DbgShader& shaderDbg, const std::string& source);
-        void DebugShaderComposition(const std::string& source);
+        void DebugShaderAttachment(DbgShader& shaderDbg);
+        void DebugShaderComposition();
 
         RenderingDebugger*      debugger_               = nullptr;
         bool                    linked_                 = false;

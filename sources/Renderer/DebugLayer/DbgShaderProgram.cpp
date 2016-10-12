@@ -24,7 +24,13 @@ DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* d
 void DbgShaderProgram::AttachShader(Shader& shader)
 {
     auto& shaderDbg = LLGL_CAST(DbgShader&, shader);
-    DebugShaderAttachment(shaderDbg, __FUNCTION__);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        DebugShaderAttachment(shaderDbg);
+    }
+
     instance.AttachShader(shaderDbg.instance);
 }
 
@@ -42,8 +48,14 @@ void DbgShaderProgram::DetachAll()
 
 bool DbgShaderProgram::LinkShaders()
 {
-    DebugShaderComposition(__FUNCTION__);
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        DebugShaderComposition();
+    }
+
     linked_ = instance.LinkShaders();
+
     return linked_;
 }
 
@@ -98,8 +110,13 @@ void DbgShaderProgram::BindStorageBuffer(const std::string& name, unsigned int b
 ShaderUniform* DbgShaderProgram::LockShaderUniform()
 {
     auto shaderUniform = instance.LockShaderUniform();
-    if (!shaderUniform)
-        LLGL_DBG_WARN_HERE(WarningType::PointlessOperation, "renderer does not support individual shader uniforms");
+
+    if (debugger_ && !shaderUniform)
+    {
+        LLGL_DBG_SOURCE;
+        LLGL_DBG_WARN(WarningType::PointlessOperation, "renderer does not support individual shader uniforms");
+    }
+
     return shaderUniform;
 }
 
@@ -121,17 +138,17 @@ void DbgShaderProgram::UnlockShaderUniform()
 #define LLGL_GS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Geometry)
 #define LLGL_CS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Compute)
 
-void DbgShaderProgram::DebugShaderAttachment(DbgShader& shaderDbg, const std::string& source)
+void DbgShaderProgram::DebugShaderAttachment(DbgShader& shaderDbg)
 {
     /* Check compilation state */
     if (!shaderDbg.IsCompiled())
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to attach uncompiled shader to shader program", source);
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to attach uncompiled shader to shader program");
 
     /* Check if shader type already has been attached */
     for (auto other : shaderTypes_)
     {
         if (other == shaderDbg.GetType())
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "duplicate shader type attachments in shader program", source);
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "duplicate shader type attachments in shader program");
     }
 
     /* Add shader type to list */
@@ -141,7 +158,7 @@ void DbgShaderProgram::DebugShaderAttachment(DbgShader& shaderDbg, const std::st
     shaderAttachmentMask_ |= LLGL_SHADERTYPE_MASK(shaderDbg.GetType());
 }
 
-void DbgShaderProgram::DebugShaderComposition(const std::string& source)
+void DbgShaderProgram::DebugShaderComposition()
 {
     /* Validate shader composition by shader attachment bit mask */
     switch (shaderAttachmentMask_)
@@ -157,7 +174,7 @@ void DbgShaderProgram::DebugShaderComposition(const std::string& source)
         case ( LLGL_CS_MASK ):
             break;
         default:
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "invalid shader composition", source);
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "invalid shader composition");
             break;
     }
 }

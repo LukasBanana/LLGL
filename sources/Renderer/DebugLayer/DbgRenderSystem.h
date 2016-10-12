@@ -117,16 +117,13 @@ class DbgRenderSystem : public RenderSystem
 
     private:
 
-        //TODO: replace this by 'RendererInfo::rendererID'
-        void DetermineRenderer(const std::string& rendererName);
+        void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
+        void DebugMipLevelLimit(int mipLevel, int mipLevelCount);
 
-        void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset, const std::string& source);
-        void DebugMipLevelLimit(int mipLevel, int mipLevelCount, const std::string& source);
-
-        void DebugTextureDescriptor(const TextureDescriptor& desc, const std::string& source);
-        void DebugTextureSize(unsigned int size, const std::string& source);
-        void WarnTextureLayersGreaterOne(const std::string& source);
-        void ErrTextureLayersEqualZero(const std::string& source);
+        void DebugTextureDescriptor(const TextureDescriptor& desc);
+        void DebugTextureSize(unsigned int size);
+        void WarnTextureLayersGreaterOne();
+        void ErrTextureLayersEqualZero();
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
@@ -137,14 +134,6 @@ class DbgRenderSystem : public RenderSystem
 
         RenderingProfiler*                      profiler_   = nullptr;
         RenderingDebugger*                      debugger_   = nullptr;
-
-        struct Renderer
-        {
-            bool isOpenGL   = false;
-            bool isDirect3D = false;
-            bool isVulkan   = false;
-        }
-        renderer_;
 
         /* ----- Hardware object containers ----- */
 

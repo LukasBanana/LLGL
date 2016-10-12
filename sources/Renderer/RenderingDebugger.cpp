@@ -16,7 +16,12 @@ RenderingDebugger::~RenderingDebugger()
 {
 }
 
-void RenderingDebugger::PostError(ErrorType type, const std::string& message, const std::string& source)
+void RenderingDebugger::SetSource(const char* source)
+{
+    source_ = (source != nullptr ? source : "");
+}
+
+void RenderingDebugger::PostError(const ErrorType type, const std::string& message)
 {
     auto it = errors_.find(message);
     if (it != errors_.end())
@@ -29,12 +34,12 @@ void RenderingDebugger::PostError(ErrorType type, const std::string& message, co
     }
     else
     {
-        errors_[message] = Message(message, source);
+        errors_[message] = Message(message, source_);
         OnError(type, errors_[message]);
     }
 }
 
-void RenderingDebugger::PostWarning(WarningType type, const std::string& message, const std::string& source)
+void RenderingDebugger::PostWarning(const WarningType type, const std::string& message)
 {
     auto it = warnings_.find(message);
     if (it != warnings_.end())
@@ -47,7 +52,7 @@ void RenderingDebugger::PostWarning(WarningType type, const std::string& message
     }
     else
     {
-        warnings_[message] = Message(message, source);
+        warnings_[message] = Message(message, source_);
         OnWarning(type, warnings_[message]);
     }
 }

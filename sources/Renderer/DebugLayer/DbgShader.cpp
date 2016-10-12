@@ -28,7 +28,11 @@ bool DbgShader::Compile(const ShaderSource& shaderSource)
 
 std::string DbgShader::Disassemble(int flags)
 {
-    LLGL_DBG_ERROR_HERE(ErrorType::InvalidState, "attempt to disassemble uncompiled shader code");
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to disassemble uncompiled shader code");
+    }
     return instance.Disassemble(flags);
 }
 

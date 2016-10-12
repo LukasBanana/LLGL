@@ -128,32 +128,26 @@ class DbgCommandBuffer : public CommandBuffer
 
     private:
 
-        void DebugGraphicsPipelineSet(const std::string& source);
-        void DebugComputePipelineSet(const std::string& source);
-        void DebugVertexBufferSet(const std::string& source);
-        void DebugIndexBufferSet(const std::string& source);
-        void DebugVertexLayout(const std::string& source);
+        void DebugGraphicsPipelineSet();
+        void DebugComputePipelineSet();
+        void DebugVertexBufferSet();
+        void DebugIndexBufferSet();
+        void DebugVertexLayout();
 
-        void DebugNumVertices(unsigned int numVertices, const std::string& source);
-        void DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset, const std::string& source);
+        void DebugNumVertices(unsigned int numVertices);
+        void DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset);
 
-        void DebugDraw(
-            unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances,
-            unsigned int instanceOffset, const std::string& source
-        );
-        void DebugDrawIndexed(
-            unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex,
-            int vertexOffset, unsigned int instanceOffset, const std::string& source
-        );
+        void DebugDraw(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset);
+        void DebugDrawIndexed(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset);
 
-        void DebugInstancing(const std::string& source);
-        void DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit, const std::string& source);
-        void DebugThreadGroupLimit(unsigned int size, unsigned int limit, const std::string& source);
+        void DebugInstancing();
+        void DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit);
+        void DebugThreadGroupLimit(unsigned int size, unsigned int limit);
 
-        void DebugShaderStageFlags(long shaderStageFlags, long validFlags, const std::string& source);
-        void DebugBufferType(const BufferType bufferType, const BufferType compareType, const std::string& source);
+        void DebugShaderStageFlags(long shaderStageFlags, long validFlags);
+        void DebugBufferType(const BufferType bufferType, const BufferType compareType);
 
-        void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices, const std::string& source);
+        void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices);
 
         /* ----- Common objects ----- */
 

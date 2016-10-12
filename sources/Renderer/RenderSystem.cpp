@@ -7,6 +7,7 @@
 
 #include "../Platform/Module.h"
 #include "../Core/Helper.h"
+#include <LLGL/Log.h>
 #include "BuildID.h"
 
 #include <LLGL/RenderSystem.h>
@@ -114,13 +115,19 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
     /* Allocate render system */
     auto renderSystem   = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
 
-    #ifdef LLGL_ENABLE_DEBUG_LAYER
-    
-    /* Create debug layer render system */
     if (profiler != nullptr || debugger != nullptr)
+    {
+        #ifdef LLGL_ENABLE_DEBUG_LAYER
+
+        /* Create debug layer render system */
         renderSystem = std::make_shared<DbgRenderSystem>(renderSystem, profiler, debugger);
 
-    #endif
+        #else
+
+        Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
+
+        #endif
+    }
 
     renderSystem->name_ = LoadRenderSystemName(*module);
 

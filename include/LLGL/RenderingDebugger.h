@@ -45,13 +45,16 @@ class LLGL_EXPORT RenderingDebugger
 
         virtual ~RenderingDebugger();
         
+        //! Sets the new source function name.
+        void SetSource(const char* source);
+
         /**
         \brief Posts an error message.
         \param[in] type Specifies the type of error.
         \param[in] message Specifies the string which describes the failure.
         \param[in] source Specifies the string which describes the source (typically the function where the failure happend).
         */
-        void PostError(ErrorType type, const std::string& message, const std::string& source);
+        void PostError(const ErrorType type, const std::string& message);
 
         /**
         \brief Posts a warning message.
@@ -59,7 +62,7 @@ class LLGL_EXPORT RenderingDebugger
         \param[in] message Specifies the string which describes the warning.
         \param[in] source Specifies the string which describes the source (typically the function where the failure happend).
         */
-        void PostWarning(WarningType type, const std::string& message, const std::string& source);
+        void PostWarning(const WarningType type, const std::string& message);
 
     protected:
 
@@ -75,25 +78,31 @@ class LLGL_EXPORT RenderingDebugger
 
                 Message(const std::string& text, const std::string& source);
 
+                //! Blocks further occurrences of this message.
                 void Block();
 
+                //! Blocks further occurrences of this message after the specified amount of messages have been occurred.
                 void BlockAfter(std::size_t occurrences);
 
+                //! Returns the message text.
                 inline const std::string& GetText() const
                 {
                     return text_;
                 }
 
+                //! Returns the source function where this message occurred.
                 inline const std::string& GetSource() const
                 {
                     return source_;
                 }
 
+                //! Returns the number of occurrences of this message.
                 inline std::size_t GetOccurrences() const
                 {
                     return occurrences_;
                 }
 
+                //! Returns true if this message has already been blocked.
                 inline bool IsBlocked() const
                 {
                     return blocked_;
@@ -122,8 +131,9 @@ class LLGL_EXPORT RenderingDebugger
 
     private:
 
-        std::map<std::string, Message> errors_;
-        std::map<std::string, Message> warnings_;
+        std::map<std::string, Message>  errors_;
+        std::map<std::string, Message>  warnings_;
+        const char*                     source_     = "";
 
 };
 
