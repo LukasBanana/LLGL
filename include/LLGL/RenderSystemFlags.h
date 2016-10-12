@@ -107,6 +107,18 @@ struct RendererID
     static const unsigned int Direct3D11    = 0x00000002; //!< ID number for the Direct3D 11 renderer.
     static const unsigned int Direct3D12    = 0x00000003; //!< ID number for the Direct3D 12 renderer.
     static const unsigned int Vulkan        = 0x00000004; //!< ID number for the Vulkan renderer.
+
+    static const unsigned int Reserved5     = 0x00000005; //!< ID number for a reserved future renderer.
+    static const unsigned int Reserved6     = 0x00000006; //!< ID number for a reserved future renderer.
+    static const unsigned int Reserved7     = 0x00000007; //!< ID number for a reserved future renderer.
+    static const unsigned int Reserved8     = 0x00000008; //!< ID number for a reserved future renderer.
+    static const unsigned int Reserved9     = 0x00000009; //!< ID number for a reserved future renderer.
+    static const unsigned int ReservedA     = 0x0000000a; //!< ID number for a reserved future renderer.
+    static const unsigned int ReservedB     = 0x0000000b; //!< ID number for a reserved future renderer.
+    static const unsigned int ReservedC     = 0x0000000c; //!< ID number for a reserved future renderer.
+    static const unsigned int ReservedD     = 0x0000000d; //!< ID number for a reserved future renderer.
+    static const unsigned int ReservedE     = 0x0000000e; //!< ID number for a reserved future renderer.
+    static const unsigned int ReservedF     = 0x0000000f; //!< ID number for a reserved future renderer.
 };
 
 //! Renderer basic information structure.
@@ -119,7 +131,7 @@ struct RendererInfo
 
     /**
     \brief Rendering API identification number.
-    \remarks This can be value of the RendererID entries.
+    \remarks This can be a value of the RendererID entries.
     Since the render system is modular, a new render system can use its own ID number.
     \see RendererID
     */
