@@ -18,11 +18,13 @@
 #include "BufferArray.h"
 #include "Texture.h"
 #include "TextureArray.h"
+#include "Sampler.h"
+#include "SamplerArray.h"
+
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
-#include "Sampler.h"
 #include "Query.h"
 
 
@@ -241,6 +243,12 @@ class LLGL_EXPORT CommandBuffer
         \see RenderSystem::CreateSampler
         */
         virtual void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+
+        /**
+        \brief Sets the active array of samplers at the specified start slot index.
+        \see SetSampler
+        */
+        virtual void SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /* ----- Render Targets ----- */
 

@@ -303,6 +303,19 @@ void DbgCommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long shad
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
 
+void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags)
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+    }
+    
+    instance.SetSamplerArray(samplerArray, startSlot, shaderStageFlags);
+    
+    LLGL_DBG_PROFILER_DO(setSampler.Inc());
+}
+
 /* ----- Render Targets ----- */
 
 void DbgCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)

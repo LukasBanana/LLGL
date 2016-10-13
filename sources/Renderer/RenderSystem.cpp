@@ -217,6 +217,12 @@ void RenderSystem::AssertCreateTextureArray(unsigned int numTextures, Texture* c
     AssertCreateResourceArrayCommon(numTextures, reinterpret_cast<void* const*>(textureArray), "texture");
 }
 
+void RenderSystem::AssertCreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+{
+    /* Validate common resource array parameters */
+    AssertCreateResourceArrayCommon(numSamplers, reinterpret_cast<void* const*>(samplerArray), "sampler");
+}
+
 
 } // /namespace LLGL
 

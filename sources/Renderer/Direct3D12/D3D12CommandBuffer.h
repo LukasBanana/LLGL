@@ -77,6 +77,7 @@ class D3D12CommandBuffer : public CommandBuffer
         /* ----- Sampler States ----- */
 
         void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Render Targets ----- */
 

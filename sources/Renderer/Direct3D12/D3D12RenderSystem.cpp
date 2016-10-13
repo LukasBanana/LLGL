@@ -220,9 +220,19 @@ Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return nullptr;//todo
 }
 
+SamplerArray* D3D12RenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+{
+    return nullptr;//todo
+}
+
 void D3D12RenderSystem::Release(Sampler& sampler)
 {
     //RemoveFromUniqueSet(samplers_, &sampler);
+}
+
+void D3D12RenderSystem::Release(SamplerArray& samplerArray)
+{
+    //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Render Targets ----- */

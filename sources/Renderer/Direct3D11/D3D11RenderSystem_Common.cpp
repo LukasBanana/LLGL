@@ -144,6 +144,10 @@ void D3D11RenderSystem::UnmapBuffer(Buffer& buffer)
     bufferD3D.Unmap(context_.Get(), mappedBufferCPUAccess_);
 }
 
+/* ----- Textures ----- */
+
+// --> see "D3D11RenderSystem_Textures.cpp" file
+
 /* ----- Sampler States ---- */
 
 Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)
@@ -151,9 +155,20 @@ Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, MakeUnique<D3D11Sampler>(device_.Get(), desc));
 }
 
+SamplerArray* D3D11RenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+{
+    AssertCreateSamplerArray(numSamplers, samplerArray);
+    return TakeOwnership(samplerArrays_, MakeUnique<D3D11SamplerArray>(numSamplers, samplerArray));
+}
+
 void D3D11RenderSystem::Release(Sampler& sampler)
 {
     RemoveFromUniqueSet(samplers_, &sampler);
+}
+
+void D3D11RenderSystem::Release(SamplerArray& samplerArray)
+{
+    RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Render Targets ----- */

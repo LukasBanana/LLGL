@@ -17,17 +17,17 @@
 #include "RenderingDebugger.h"
 
 #include "Buffer.h"
+#include "BufferArray.h"
 #include "Texture.h"
+#include "TextureArray.h"
+#include "Sampler.h"
+#include "SamplerArray.h"
+
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
-#include "Sampler.h"
 #include "Query.h"
-
-#include "BufferArray.h"
-#include "TextureArray.h"
-//#include "QueryArray.h"
 
 #include <string>
 #include <memory>
@@ -162,7 +162,7 @@ class LLGL_EXPORT RenderSystem
         */
         virtual CommandBuffer* CreateCommandBuffer() = 0;
 
-        //! Releases the specified command buffer.
+        //! Releases the specified command buffer. After this call, the specified object must no longer be used.
         virtual void Release(CommandBuffer& commandBuffer) = 0;
 
         /* ----- Buffers ------ */
@@ -180,7 +180,7 @@ class LLGL_EXPORT RenderSystem
         /**
         \brief Creates a new buffer array.
         \param[in] numBuffers Specifies the number of buffers in the array. This must be greater than 0.
-        \param[in] bufferArray Pointer to an array of Buffer object pointers. Thist must not be null.
+        \param[in] bufferArray Pointer to an array of Buffer object pointers. This must not be null.
         \remarks This array can only contain buffers which are all from the same type, like an array of vertex buffers for instance.
         The buffers inside this array must persist as long as this buffer array is used,
         and the individual buffers are still required to read and write its data from and to the GPU.
@@ -190,10 +190,10 @@ class LLGL_EXPORT RenderSystem
         */
         virtual BufferArray* CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) = 0;
 
-        //! Releases the specified buffer object.
+        //! Releases the specified buffer object. After this call, the specified object must no longer be used.
         virtual void Release(Buffer& buffer) = 0;
 
-        //! Releases the specified buffer array object.
+        //! Releases the specified buffer array object. After this call, the specified object must no longer be used.
         virtual void Release(BufferArray& bufferArray) = 0;
         
         /**
@@ -238,8 +238,8 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new texture array.
-        \param[in] numBuffers Specifies the number of buffers in the array. This must be greater than 0.
-        \param[in] bufferArray Pointer to an array of Buffer object pointers. Thist must not be null.
+        \param[in] numTextures Specifies the number of textures in the array. This must be greater than 0.
+        \param[in] textureArray Pointer to an array of Texture object pointers. This must not be null.
         \remarks This texture array is not an "array texture" (like TextureType::Texture2DArray for instance).
         It is just a container of multiple texture objects, which can be used to bind several hardware textures at once, to improve performance.
         \throws std::invalid_argument If 'numTextures' is 0, if 'textureArray' is null,
@@ -247,10 +247,10 @@ class LLGL_EXPORT RenderSystem
         */
         virtual TextureArray* CreateTextureArray(unsigned int numTextures, Texture* const * textureArray) = 0;
 
-        //! Releases the specified texture object.
+        //! Releases the specified texture object. After this call, the specified object must no longer be used.
         virtual void Release(Texture& texture) = 0;
 
-        //! Releases the specified texture array object.
+        //! Releases the specified texture array object. After this call, the specified object must no longer be used.
         virtual void Release(TextureArray& textureArray) = 0;
 
         /**
@@ -302,8 +302,20 @@ class LLGL_EXPORT RenderSystem
         */
         virtual Sampler* CreateSampler(const SamplerDescriptor& desc) = 0;
 
+        /**
+        \brief Creates a new sampler array.
+        \param[in] numSamplers Specifies the number of samplers in the array. This must be greater than 0.
+        \param[in] samplerArray Pointer to an array of Sampler object pointers. This must not be null.
+        \throws std::invalid_argument If 'numSamplers' is 0, if 'samplerArray' is null,
+        or if any of the pointers in the array are null.
+        */
+        virtual SamplerArray* CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray) = 0;
+
         //! Releases the specified Sampler object. After this call, the specified object must no longer be used.
         virtual void Release(Sampler& sampler) = 0;
+
+        //! Releases the specified sampler array object. After this call, the specified object must no longer be used.
+        virtual void Release(SamplerArray& samplerArray) = 0;
 
         /* ----- Render Targets ----- */
 
@@ -332,7 +344,10 @@ class LLGL_EXPORT RenderSystem
         */
         virtual ShaderProgram* CreateShaderProgram() = 0;
 
+        //! Releases the specified Shader object. After this call, the specified object must no longer be used.
         virtual void Release(Shader& shader) = 0;
+
+        //! Releases the specified ShaderProgram object. After this call, the specified object must no longer be used.
         virtual void Release(ShaderProgram& shaderProgram) = 0;
 
         /* ----- Pipeline States ----- */
@@ -354,7 +369,10 @@ class LLGL_EXPORT RenderSystem
         */
         virtual ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) = 0;
 
+        //! Releases the specified GraphicsPipeline object. After this call, the specified object must no longer be used.
         virtual void Release(GraphicsPipeline& graphicsPipeline) = 0;
+
+        //! Releases the specified ComputePipeline object. After this call, the specified object must no longer be used.
         virtual void Release(ComputePipeline& computePipeline) = 0;
 
         /* ----- Queries ----- */
@@ -362,6 +380,7 @@ class LLGL_EXPORT RenderSystem
         //! Creates a new query.
         virtual Query* CreateQuery(const QueryDescriptor& desc) = 0;
 
+        //! Releases the specified Query object. After this call, the specified object must no longer be used.
         virtual void Release(Query& query) = 0;
 
     protected:
@@ -385,6 +404,9 @@ class LLGL_EXPORT RenderSystem
 
         //! Validates the specified arguments to be used for texture array creation.
         void AssertCreateTextureArray(unsigned int numTextures, Texture* const * textureArray);
+
+        //! Validates the specified arguments to be used for sampler array creation.
+        void AssertCreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray);
 
     private:
 

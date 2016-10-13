@@ -186,6 +186,11 @@ void D3D12CommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long sh
     //todo
 }
 
+void D3D12CommandBuffer::SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags)
+{
+    //todo
+}
+
 /* ----- Render Targets ----- */
 
 void D3D12CommandBuffer::SetRenderTarget(RenderTarget& renderTarget)

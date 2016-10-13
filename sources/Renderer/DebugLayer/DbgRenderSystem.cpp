@@ -283,10 +283,22 @@ Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     //return TakeOwnership(samplers_, MakeUnique<DbgSampler>());
 }
 
+SamplerArray* DbgRenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+{
+    AssertCreateSamplerArray(numSamplers, samplerArray);
+    return instance_->CreateSamplerArray(numSamplers, samplerArray);
+}
+
 void DbgRenderSystem::Release(Sampler& sampler)
 {
     instance_->Release(sampler);
     //RemoveFromUniqueSet(samplers_, &sampler);
+}
+
+void DbgRenderSystem::Release(SamplerArray& samplerArray)
+{
+    instance_->Release(samplerArray);
+    //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Render Targets ----- */

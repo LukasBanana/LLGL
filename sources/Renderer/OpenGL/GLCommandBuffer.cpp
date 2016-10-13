@@ -15,13 +15,17 @@
 #include "../../Core/Exception.h"
 
 #include "Shader/GLShaderProgram.h"
+
 #include "Texture/GLTexture.h"
 #include "Texture/GLTextureArray.h"
-#include "Texture/GLRenderTarget.h"
 #include "Texture/GLSampler.h"
+#include "Texture/GLSamplerArray.h"
+#include "Texture/GLRenderTarget.h"
+
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
 #include "Buffer/GLVertexBufferArray.h"
+
 #include "RenderState/GLStateManager.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
@@ -253,6 +257,16 @@ void GLCommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long /*sha
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     stateMngr_->BindSampler(slot, samplerGL.GetID());
+}
+
+void GLCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long /*shaderStageFlags*/)
+{
+    auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
+    stateMngr_->BindSamplers(
+        startSlot,
+        static_cast<unsigned int>(samplerArrayGL.GetIDArray().size()),
+        samplerArrayGL.GetIDArray().data()
+    );
 }
 
 /* ----- Render Targets ----- */

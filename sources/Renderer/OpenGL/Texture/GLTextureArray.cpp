@@ -7,7 +7,6 @@
 
 #include "GLTextureArray.h"
 #include "GLTexture.h"
-#include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 
 

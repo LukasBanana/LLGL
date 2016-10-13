@@ -24,8 +24,9 @@
 
 #include "Texture/GLTexture.h"
 #include "Texture/GLTextureArray.h"
-#include "Texture/GLRenderTarget.h"
 #include "Texture/GLSampler.h"
+#include "Texture/GLSamplerArray.h"
+#include "Texture/GLRenderTarget.h"
 
 #include "RenderState/GLQuery.h"
 #include "RenderState/GLGraphicsPipeline.h"
@@ -99,8 +100,10 @@ class GLRenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
+        SamplerArray* CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
+        void Release(SamplerArray& samplerArray) override;
 
         /* ----- Render Targets ----- */
 
@@ -176,12 +179,13 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLBufferArray>        bufferArrays_;
         HWObjectContainer<GLTexture>            textures_;
         HWObjectContainer<GLTextureArray>       textureArrays_;
+        HWObjectContainer<GLSampler>            samplers_;
+        HWObjectContainer<GLSamplerArray>       samplerArrays_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;
         HWObjectContainer<GLShader>             shaders_;
         HWObjectContainer<GLShaderProgram>      shaderPrograms_;
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<GLComputePipeline>    computePipelines_;
-        HWObjectContainer<GLSampler>            samplers_;
         HWObjectContainer<GLQuery>              queries_;
 
 };

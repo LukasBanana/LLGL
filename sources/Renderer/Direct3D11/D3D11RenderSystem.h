@@ -29,6 +29,7 @@
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11TextureArray.h"
 #include "Texture/D3D11Sampler.h"
+#include "Texture/D3D11SamplerArray.h"
 #include "Texture/D3D11RenderTarget.h"
 
 #include "../ContainerTypes.h"
@@ -95,8 +96,10 @@ class D3D11RenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
+        SamplerArray* CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
+        void Release(SamplerArray& samplerArray) override;
 
         /* ----- Render Targets ----- */
 
@@ -176,12 +179,13 @@ class D3D11RenderSystem : public RenderSystem
         HWObjectContainer<D3D11BufferArray>         bufferArrays_;
         HWObjectContainer<D3D11Texture>             textures_;
         HWObjectContainer<D3D11TextureArray>        textureArrays_;
+        HWObjectContainer<D3D11Sampler>             samplers_;
+        HWObjectContainer<D3D11SamplerArray>        samplerArrays_;
         HWObjectContainer<D3D11RenderTarget>        renderTargets_;
         HWObjectContainer<D3D11Shader>              shaders_;
         HWObjectContainer<D3D11ShaderProgram>       shaderPrograms_;
         HWObjectContainer<D3D11GraphicsPipeline>    graphicsPipelines_;
         HWObjectContainer<D3D11ComputePipeline>     computePipelines_;
-        HWObjectContainer<D3D11Sampler>             samplers_;
         HWObjectContainer<D3D11Query>               queries_;
 
         /* ----- Other members ----- */

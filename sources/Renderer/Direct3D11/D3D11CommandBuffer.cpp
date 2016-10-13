@@ -30,6 +30,7 @@
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11TextureArray.h"
 #include "Texture/D3D11Sampler.h"
+#include "Texture/D3D11SamplerArray.h"
 #include "Texture/D3D11RenderTarget.h"
 
 
@@ -274,6 +275,18 @@ void D3D11CommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long sh
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
     auto resource = samplerD3D.GetSamplerState();
     SetSamplersOnStages(slot, 1, &resource, shaderStageFlags);
+}
+
+void D3D11CommandBuffer::SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags)
+{
+    /* Set sampler state object to all shader stages */
+    auto& samplerArrayD3D = LLGL_CAST(D3D11SamplerArray&, samplerArray);
+    SetSamplersOnStages(
+        startSlot,
+        static_cast<UINT>(samplerArrayD3D.GetSamplerStates().size()),
+        samplerArrayD3D.GetSamplerStates().data(),
+        shaderStageFlags
+    );
 }
 
 /* ----- Render Targets ----- */

@@ -86,8 +86,10 @@ class D3D12RenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
+        SamplerArray* CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
+        void Release(SamplerArray& samplerArray) override;
 
         /* ----- Render Targets ----- */
 
