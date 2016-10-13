@@ -27,11 +27,8 @@ namespace LLGL
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem) :
     renderSystem_( renderSystem )
 {
-    /* Create command allocator and graphics command list */
-    commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
-    commandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
-
-    InitStateManager();
+    CreateDevices();
+    CreateStateManager();
 }
 
 /* ----- Configuration ----- */
@@ -314,7 +311,27 @@ void D3D12CommandBuffer::SyncGPU()
  * ======= Private: =======
  */
 
-void D3D12CommandBuffer::InitStateManager()
+void D3D12CommandBuffer::CreateDevices()
+{
+    /* Create command allocator and graphics command list */
+    commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
+    commandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
+
+    /* Create RTV descriptor heap */
+    D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
+    InitMemory(descHeapDesc);
+    {
+        descHeapDesc.NumDescriptors = numFrames_;
+        descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+        descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    }
+    rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
+    rtvDescHeap_->SetName(L"render target view descriptor heap");
+
+    rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+}
+
+void D3D12CommandBuffer::CreateStateManager()
 {
     /* Create state manager */
     stateMngr_ = MakeUnique<D3D12StateManager>(commandList_);
@@ -338,7 +355,7 @@ void D3D12CommandBuffer::SetBackBufferRTV()
 
 void D3D12CommandBuffer::ExecuteCommandList()
 {
-    renderSystem_.CloseAndExecuteCommandList(commandList_.Get());
+    renderSystem_.ExecuteCommandList(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SubmitConsistentStates()

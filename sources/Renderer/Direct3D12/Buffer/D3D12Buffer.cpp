@@ -41,7 +41,7 @@ void D3D12Buffer::UpdateStaticSubresource(
         IID_PPV_ARGS(&bufferUpload)
     );
 
-    DXThrowIfFailed(hr, "failed to create comitted resource for D3D12 upload buffer");
+    DXThrowIfFailed(hr, "failed to create D3D12 committed resource for upload buffer");
 
     /* Copy data into upload buffer */
     void* dest = nullptr;

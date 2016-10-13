@@ -128,9 +128,10 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<ID3D12PipelineState> CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
         ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
 
-        void CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList);
+        // Close, execute, and reset command list.
+        void ExecuteCommandList(ID3D12GraphicsCommandList* commandList);
 
-        //! Waits until the GPU has done all previous work.
+        // Waits until the GPU has done all previous work.
         void SyncGPU(UINT64& fenceValue);
         void SyncGPU();
 
