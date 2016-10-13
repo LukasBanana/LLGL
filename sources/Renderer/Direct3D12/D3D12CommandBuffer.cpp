@@ -27,6 +27,10 @@ namespace LLGL
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem) :
     renderSystem_( renderSystem )
 {
+    /* Create command allocator and graphics command list */
+    commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
+    commandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
+
     InitStateManager();
 }
 

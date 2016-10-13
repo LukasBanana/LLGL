@@ -135,18 +135,18 @@ class D3D12CommandBuffer : public CommandBuffer
 
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
 
-        std::unique_ptr<D3D12StateManager>  stateMngr_;
-
-        ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;
-        UINT                                rtvDescSize_                    = 0;
-
-        UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
-
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
-        UINT                                numFrames_                      = 0;
-        UINT                                currentFrame_                   = 0;
+        std::unique_ptr<D3D12StateManager>  stateMngr_;
+
+        ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;
+        UINT                                rtvDescSize_                = 0;
+
+        UINT64                              fenceValues_[maxNumBuffers] = { 0 };
+
+        UINT                                numFrames_                  = 0;
+        UINT                                currentFrame_               = 0;
 
         D3DClearState                       clearState_;
 
