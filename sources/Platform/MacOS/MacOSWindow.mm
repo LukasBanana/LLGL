@@ -14,24 +14,31 @@
 
 
 @interface AppDelegate : NSObject
-{
-    BOOL quit_;
-}
-- (id) initApp;
+
+- (id) initWithWindow:(LLGL::MacOSWindow*)window;
 - (BOOL) isQuit;
+
 @end
 
 @implementation AppDelegate
+{
+    LLGL::MacOSWindow*  window_;
+    BOOL                quit_;
+}
 
-- (id) initApp
+- (id) initWithWindow:(LLGL::MacOSWindow*)window
 {
     self = [super init];
+    
+    window_ = window;
     quit_ = FALSE;
+    
     return (self);
 }
 
 - (void) windowWillClose:(id)sender
 {
+    window_->PostQuit();
     quit_ = TRUE;
 }
 
@@ -174,8 +181,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     /* Initialize Cocoa framework */
     [[NSAutoreleasePool alloc] init];
     [NSApplication sharedApplication];
-    [NSApp setDelegate:[[[AppDelegate alloc] initApp] autorelease]];
-    [NSBundle loadNibNamed:@"MainMenu" owner:[NSApp delegate]];
+    [NSApp setDelegate:(id<NSApplicationDelegate>)[[[AppDelegate alloc] initWithWindow:this] autorelease]];
     [NSApp finishLaunching];
     
     /* Create NSWindow object */
@@ -250,9 +256,6 @@ void MacOSWindow::ProcessSystemEvents()
         
         [event release];
     }
-    
-    if ([[NSApp delegate] isQuit])
-        PostQuit();
 }
 
 void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
