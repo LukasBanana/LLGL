@@ -15,31 +15,48 @@
 
 @interface AppDelegate : NSObject
 
-- (id) initWithWindow:(LLGL::MacOSWindow*)window;
-- (BOOL) isQuit;
+- (id)initWithWindow:(LLGL::MacOSWindow*)window isResizable:(BOOL)resizable;
+- (BOOL)isQuit;
 
 @end
 
 @implementation AppDelegate
 {
     LLGL::MacOSWindow*  window_;
+    BOOL                resizable_;
     BOOL                quit_;
 }
 
-- (id) initWithWindow:(LLGL::MacOSWindow*)window
+- (id)initWithWindow:(LLGL::MacOSWindow*)window isResizable:(BOOL)resizable
 {
     self = [super init];
     
-    window_ = window;
-    quit_ = FALSE;
+    window_     = window;
+    resizable_  = resizable;
+    quit_       = FALSE;
     
     return (self);
 }
 
-- (void) windowWillClose:(id)sender
+- (void)windowWillClose:(id)sender
 {
     window_->PostQuit();
     quit_ = TRUE;
+}
+
+- (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)frameSize
+{
+    if (resizable_)
+        return frameSize;
+    else
+        return [sender frame].size;
+}
+
+- (void)windowDidResize:(NSNotification*)notification
+{
+    NSWindow* sender = [notification object];
+    NSRect frame = [sender frame];
+    window_->PostResize({ (int)frame.size.width, (int)frame.size.height });
 }
 
 - (BOOL) isQuit
@@ -181,7 +198,12 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     /* Initialize Cocoa framework */
     [[NSAutoreleasePool alloc] init];
     [NSApplication sharedApplication];
-    [NSApp setDelegate:(id<NSApplicationDelegate>)[[[AppDelegate alloc] initWithWindow:this] autorelease]];
+    
+    [NSApp setDelegate:(id<NSApplicationDelegate>)[
+        [[AppDelegate alloc] initWithWindow:this isResizable:(BOOL)desc.resizable]
+        autorelease
+    ]];
+    
     [NSApp finishLaunching];
     
     /* Create NSWindow object */
