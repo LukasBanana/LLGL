@@ -12,6 +12,15 @@
 #include <sstream>
 
 
+class WindowEventHandler : public LLGL::Window::EventListener
+{
+public:
+    void OnResize(LLGL::Window& sender, const LLGL::Size& size) override
+    {
+        std::cout << "OnResize: " << size.x << " x " << size.y << std::endl;
+    }
+};
+
 int main()
 {
     try
@@ -29,6 +38,8 @@ int main()
 
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
+        
+        window->AddEventListener(std::make_shared<WindowEventHandler>());
 
         auto timer = LLGL::Timer::Create();
 
