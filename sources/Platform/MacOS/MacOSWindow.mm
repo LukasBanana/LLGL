@@ -180,7 +180,7 @@ void MacOSWindow::GetNativeHandle(void* nativeHandle) const
  * ======= Private: =======
  */
 
-static NSUInteger GetWindowStyleMask(const WindowDescriptor& desc)
+static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
 {
     if (desc.borderless)
         return NSBorderlessWindowMask;
@@ -209,7 +209,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     /* Create NSWindow object */
     NSWindow* wnd = [[NSWindow alloc]
         initWithContentRect:NSMakeRect(0, 0, (CGFloat)desc.size.x, (CGFloat)desc.size.y)
-        styleMask:GetWindowStyleMask(desc)
+        styleMask:GetNSWindowStyleMask(desc)
         backing:NSBackingStoreBuffered
         defer:FALSE
     ];
