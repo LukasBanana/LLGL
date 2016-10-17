@@ -64,7 +64,7 @@ class GLRenderContext : public RenderContext
         void InitRenderStates();
         void UpdateSwapInterval();
 
-        #ifndef __APPLE__
+        #ifdef __linux__
         void GetNativeContextHandle(NativeContextHandle& windowContext);
         #endif
 

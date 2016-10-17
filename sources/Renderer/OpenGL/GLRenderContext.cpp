@@ -7,10 +7,6 @@
 
 #include "GLRenderContext.h"
 
-#ifndef __APPLE__
-#include <LLGL/Platform/NativeHandle.h>
-#endif
-
 
 namespace LLGL
 {
@@ -21,15 +17,15 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
     contextHeight_  ( desc.videoMode.resolution.y )
 {
     /* Setup window for the render context */
-    #ifdef __APPLE__
-
-    SetWindow(window, desc.videoMode, nullptr);
-
-    #else
+    #ifdef __linux__
 
     NativeContextHandle windowContext;
     GetNativeContextHandle(windowContext);
     SetWindow(window, desc.videoMode, &windowContext);
+
+    #else
+
+    SetWindow(window, desc.videoMode, nullptr);
 
     #endif
 
