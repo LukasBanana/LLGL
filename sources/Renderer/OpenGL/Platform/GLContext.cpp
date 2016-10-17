@@ -14,6 +14,19 @@ namespace LLGL
 
 static GLContext* g_activeGLContext = nullptr;
 
+GLContext::GLContext(GLContext* sharedContext)
+{
+    if (sharedContext)
+        stateMngr_ = sharedContext->stateMngr_;
+    else
+        stateMngr_ = std::make_shared<GLStateManager>();
+}
+
+GLContext::~GLContext()
+{
+    // dummy
+}
+
 bool GLContext::MakeCurrent(GLContext* context)
 {
     bool result = true;

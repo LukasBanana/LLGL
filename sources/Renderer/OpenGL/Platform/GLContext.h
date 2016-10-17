@@ -12,6 +12,7 @@
 #include <LLGL/Window.h>
 #include <LLGL/RenderContextDescriptor.h>
 #include <memory>
+#include "../RenderState/GLStateManager.h"
 
 
 namespace LLGL
@@ -23,9 +24,7 @@ class GLContext
 
     public:
 
-        virtual ~GLContext()
-        {
-        }
+        virtual ~GLContext();
 
         static std::unique_ptr<GLContext> Create(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext);
 
@@ -37,9 +36,20 @@ class GLContext
 
         virtual bool SwapBuffers() = 0;
 
+        inline const std::shared_ptr<GLStateManager>& GetStateManager() const
+        {
+            return stateMngr_;
+        }
+
     protected:
 
+        GLContext(GLContext* sharedContext);
+
         virtual bool Activate(bool activate) = 0;
+
+    private:
+
+        std::shared_ptr<GLStateManager> stateMngr_;
 
 };
 

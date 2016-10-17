@@ -23,18 +23,25 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
     desc_           ( desc                        ),
     contextHeight_  ( desc.videoMode.resolution.y )
 {
-    #ifndef __APPLE__
     /* Setup window for the render context */
+    #ifdef __APPLE__
+
+    SetWindow(window, desc.videoMode, nullptr);
+
+    #else
+
     NativeContextHandle windowContext;
     GetNativeContextHandle(windowContext);
     SetWindow(window, desc.videoMode, &windowContext);
-    #endif
 
-    /* Acquire state manager to efficiently change render states */
-    AcquireStateManager(sharedRenderContext);
+    #endif
 
     /* Create platform dependent OpenGL context */
     context_ = GLContext::Create(desc_, GetWindow(), (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr));
+
+    /* Get state manager and notify about the current render context */
+    stateMngr_ = context_->GetStateManager();
+    stateMngr_->NotifyRenderTargetHeight(contextHeight_);
 
     /* Initialize render states for the first time */
     if (!sharedRenderContext)
@@ -79,23 +86,6 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 /*
  * ======= Private: =======
  */
-
-void GLRenderContext::AcquireStateManager(GLRenderContext* sharedRenderContext)
-{
-    if (sharedRenderContext)
-    {
-        /* Share state manager with shared render context */
-        stateMngr_ = sharedRenderContext->stateMngr_;
-    }
-    else
-    {
-        /* Create a new shared state manager */
-        stateMngr_ = std::make_shared<GLStateManager>();
-    }
-
-    /* Notify state manager about the current render context */
-    stateMngr_->NotifyRenderTargetHeight(contextHeight_);
-}
 
 void GLRenderContext::InitRenderStates()
 {

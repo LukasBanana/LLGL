@@ -16,12 +16,8 @@
 #include "Platform/GLContext.h"
 #include <memory>
 
-#if defined(_WIN32)
-#   include <LLGL/Platform/NativeHandle.h>
-#   include "Platform/Win32/Win32GLPlatformContext.h"
-#elif defined(__linux__)
-#   include <LLGL/Platform/NativeHandle.h>
-#   include "Platform/Linux/LinuxGLPlatformContext.h"
+#ifndef __APPLE__
+#include <LLGL/Platform/NativeHandle.h>
 #endif
 
 
@@ -29,7 +25,6 @@ namespace LLGL
 {
 
 
-class GLRenderSystem;
 class GLRenderTarget;
 
 class GLRenderContext : public RenderContext
@@ -66,42 +61,11 @@ class GLRenderContext : public RenderContext
             GLintptr    indexBufferStride   = 4;
         };
 
-        void AcquireStateManager(GLRenderContext* sharedRenderContext);
         void InitRenderStates();
 
         #ifndef __APPLE__
         void GetNativeContextHandle(NativeContextHandle& windowContext);
         #endif
-
-        /*void CreateContext(GLRenderContext* sharedRenderContext);
-        void DeleteContext();
-
-        bool SetupVsyncInterval();
-
-        #if defined(_WIN32)
-
-        void DeleteGLContext(HGLRC& renderContext);
-
-        HGLRC CreateGLContext(bool useExtProfile, GLRenderContext* sharedRenderContextGL = nullptr);
-        HGLRC CreateStdContextProfile();
-        HGLRC CreateExtContextProfile(HGLRC sharedGLRC = nullptr);
-
-        void SetupDeviceContextAndPixelFormat();
-
-        void SelectPixelFormat();
-        bool SetupAntiAliasing();
-        void CopyPixelFormat(GLRenderContext& sourceContext);
-
-        void RecreateWindow();
-
-        #endif
-
-        #ifndef __APPLE__
-        GLPlatformContext               context_;
-        #endif
-
-        //! Specifies whether this context uses a shared GL render context (true) or has its own hardware context (false).
-        bool                            hasSharedContext_   = false;*/
 
         RenderContextDescriptor         desc_;
 

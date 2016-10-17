@@ -35,8 +35,9 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Wind
  */
 
 Win32GLContext::Win32GLContext(RenderContextDescriptor& desc, Window& window, Win32GLContext* sharedContext) :
-    desc_   ( desc   ),
-    window_ ( window )
+    GLContext   ( sharedContext ),
+    desc_       ( desc          ),
+    window_     ( window        )
 {
     if (sharedContext)
     {
