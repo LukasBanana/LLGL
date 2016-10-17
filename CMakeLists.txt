@@ -131,6 +131,7 @@ file(GLOB FilesRendererGLExt				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Ex
 file(GLOB FilesRendererGLBuffer				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/*.*)
 file(GLOB FilesRendererGLTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/*.*)
 file(GLOB FilesRendererGLRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/RenderState/*.*)
+file(GLOB FilesRendererGLPlatformBase		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/*.*)
 
 if(WIN32)
 	file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
@@ -213,6 +214,7 @@ source_group(
 
 source_group(
 	"Sources\\Renderer\\Platform" FILES
+	${FilesRendererGLPlatformBase}
 	${FilesRendererGLPlatform}
 )
 
@@ -279,6 +281,7 @@ set(
 	FilesGL
 	${FilesRendererGL}
 	${FilesRendererGLExt}
+	${FilesRendererGLPlatformBase}
 	${FilesRendererGLPlatform}
 	${FilesRendererGLShader}
 	${FilesRendererGLBuffer}
