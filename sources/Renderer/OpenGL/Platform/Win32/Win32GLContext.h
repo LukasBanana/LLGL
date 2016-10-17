@@ -33,17 +33,6 @@ class Win32GLContext : public GLContext
 
     private:
 
-        struct GLPlatformContext
-        {
-            static const UINT   maxNumPixelFormatsMS    = 8;
-
-            int                 pixelFormat             = 0;    //!< Standard pixel format.
-            std::vector<int>    pixelFormatsMS;                 //!< Multi-sampled pixel formats.
-
-            HDC                 hDC                     = 0;    //!< Device context handle.
-            HGLRC               hGLRC                   = 0;    //!< OpenGL render context handle.
-        };
-
         bool Activate(bool activate) override;
 
         void CreateContext(Win32GLContext* sharedContext);
@@ -63,10 +52,16 @@ class Win32GLContext : public GLContext
 
         void RecreateWindow();
 
+        static const UINT           maxNumPixelFormatsMS_   = 8;
+
+        int                         pixelFormat_            = 0;    //!< Standard pixel format.
+        std::vector<int>            pixelFormatsMS_;                 //!< Multi-sampled pixel formats.
+
+        HDC                         hDC_                    = 0;    //!< Device context handle.
+        HGLRC                       hGLRC_                  = 0;    //!< OpenGL render context handle.
+
         RenderContextDescriptor&    desc_;
         Window&                     window_;
-
-        GLPlatformContext           context_;
 
         bool                        hasSharedContext_   = false;
 

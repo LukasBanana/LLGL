@@ -34,9 +34,15 @@ bool GLContext::MakeCurrent(GLContext* context)
     if (g_activeGLContext != context)
     {
         if (context)
+        {
+            GLStateManager::active = context->stateMngr_.get();
             result = context->Activate(true);
+        }
         else if (g_activeGLContext)
+        {
+            GLStateManager::active = nullptr;
             result = g_activeGLContext->Activate(false);
+        }
         else
             result = false;
 

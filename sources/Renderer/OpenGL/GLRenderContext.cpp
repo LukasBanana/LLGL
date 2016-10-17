@@ -76,7 +76,15 @@ void GLRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 
 bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 {
-    return GLContext::MakeCurrent(renderContext != nullptr ? renderContext->context_.get() : nullptr);
+    if (renderContext)
+    {
+        /* Make OpenGL context of the specified render contex current and notify the state manager */
+        auto result = GLContext::MakeCurrent(renderContext->context_.get());
+        GLStateManager::active->NotifyRenderTargetHeight(renderContext->contextHeight_);
+        return result;
+    }
+    else
+        return GLContext::MakeCurrent(nullptr);
 }
 
 
