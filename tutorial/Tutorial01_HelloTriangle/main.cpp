@@ -97,8 +97,13 @@ int main(int argc, char* argv[])
         }
         else
         {
+            #ifdef __APPLE__
+            CompileShader(vertexShader, ReadFileContent("vertex.140core.glsl"));
+            CompileShader(fragmentShader, ReadFileContent("fragment.140core.glsl"));
+            #else
             CompileShader(vertexShader, ReadFileContent("vertex.glsl"));
             CompileShader(fragmentShader, ReadFileContent("fragment.glsl"));
+            #endif
         }
 
         // Create shader program which is used as composite

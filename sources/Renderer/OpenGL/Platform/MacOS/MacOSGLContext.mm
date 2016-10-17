@@ -69,7 +69,7 @@ void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
         //NSOpenGLPFANoRecovery,
         NSOpenGLPFAAccelerated,
         NSOpenGLPFADoubleBuffer,
-        //NSOpenGLPFAOpenGLProfile,   NSOpenGLProfileVersion4_1Core,
+        NSOpenGLPFAOpenGLProfile,   NSOpenGLProfileVersion3_2Core,
         NSOpenGLPFADepthSize,       24,
         NSOpenGLPFAStencilSize,     8,
         NSOpenGLPFAColorSize,       24,
