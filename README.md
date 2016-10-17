@@ -32,7 +32,7 @@ Progress
 |----------|:--------:|---------|
 | Win32 | 100% | |
 | Linux | 50% | Anti-aliasing is currently not supported |
-| MacOS | 10% | A few tutorials are already running on MacOS (macOS Sierra) |
+| MacOS | 10% | Only a few tutorials are running (Tested on *macOS Sierra*) |
 
 
 Thin Abstraction Layer
