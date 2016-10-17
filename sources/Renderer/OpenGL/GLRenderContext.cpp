@@ -36,6 +36,9 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
     /* Create platform dependent OpenGL context */
     context_ = GLContext::Create(desc_, GetWindow(), (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr));
 
+    /* Setup swap interval (for v-sync) */
+    UpdateSwapInterval();
+
     /* Get state manager and notify about the current render context */
     stateMngr_ = context_->GetStateManager();
     stateMngr_->NotifyRenderTargetHeight(contextHeight_);
@@ -70,7 +73,7 @@ void GLRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     if (desc_.vsync != vsyncDesc)
     {
         desc_.vsync = vsyncDesc;
-        context_->SetSwapInterval(desc_.vsync.enabled ? static_cast<int>(desc_.vsync.interval) : 0);
+        UpdateSwapInterval();
     }
 }
 
@@ -106,6 +109,11 @@ void GLRenderContext::InitRenderStates()
     This is required so that texture formats like RGB (which is not word-aligned) can be used.
     */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+}
+
+void GLRenderContext::UpdateSwapInterval()
+{
+    context_->SetSwapInterval(desc_.vsync.enabled ? static_cast<int>(desc_.vsync.interval) : 0);
 }
 
 

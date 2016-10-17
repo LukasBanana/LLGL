@@ -191,9 +191,6 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
 
     /* Query GL version of final render context */
     //QueryGLVersion();
-
-    /* Setup v-sync interval */
-    SetSwapInterval(desc_.vsync.enabled ? static_cast<int>(desc_.vsync.interval) : 0);
 }
 
 void Win32GLContext::DeleteContext()
