@@ -13,6 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include "OpenGL.h"
 #include "RenderState/GLStateManager.h"
+#include "Platform/GLContext.h"
 #include <memory>
 
 #if defined(_WIN32)
@@ -39,7 +40,6 @@ class GLRenderContext : public RenderContext
         /* ----- Common ----- */
 
         GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext);
-        ~GLRenderContext();
 
         void Present() override;
 
@@ -66,15 +66,15 @@ class GLRenderContext : public RenderContext
             GLintptr    indexBufferStride   = 4;
         };
 
+        void AcquireStateManager(GLRenderContext* sharedRenderContext);
+        void InitRenderStates();
+
         #ifndef __APPLE__
         void GetNativeContextHandle(NativeContextHandle& windowContext);
         #endif
 
-        void CreateContext(GLRenderContext* sharedRenderContext);
+        /*void CreateContext(GLRenderContext* sharedRenderContext);
         void DeleteContext();
-
-        void AcquireStateManager(GLRenderContext* sharedRenderContext);
-        void InitRenderStates();
 
         bool SetupVsyncInterval();
 
@@ -96,16 +96,16 @@ class GLRenderContext : public RenderContext
 
         #endif
 
-        static GLRenderContext*         activeRenderContext_;
-
-        RenderContextDescriptor         desc_;
-
         #ifndef __APPLE__
         GLPlatformContext               context_;
         #endif
 
         //! Specifies whether this context uses a shared GL render context (true) or has its own hardware context (false).
-        bool                            hasSharedContext_   = false;
+        bool                            hasSharedContext_   = false;*/
+
+        RenderContextDescriptor         desc_;
+
+        std::unique_ptr<GLContext>      context_;
 
         std::shared_ptr<GLStateManager> stateMngr_;
         RenderState                     renderState_;

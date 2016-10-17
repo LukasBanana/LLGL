@@ -19,8 +19,6 @@ namespace LLGL
 {
 
 
-GLRenderContext* GLRenderContext::activeRenderContext_ = nullptr;
-
 GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
     desc_           ( desc                        ),
     contextHeight_  ( desc.videoMode.resolution.y )
@@ -36,21 +34,16 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
     AcquireStateManager(sharedRenderContext);
 
     /* Create platform dependent OpenGL context */
-    CreateContext(sharedRenderContext);
+    context_ = GLContext::Create(desc_, GetWindow(), (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr));
 
     /* Initialize render states for the first time */
     if (!sharedRenderContext)
         InitRenderStates();
 }
 
-GLRenderContext::~GLRenderContext()
+void GLRenderContext::Present()
 {
-    /* Unset the current OpenGL render context if this is the active one */
-    if (activeRenderContext_ == this)
-        GLRenderContext::GLMakeCurrent(nullptr);
-
-    /* Delete OpenGL render context */
-    DeleteContext();
+    context_->SwapBuffers();
 }
 
 /* ----- Configuration ----- */
@@ -73,8 +66,13 @@ void GLRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
     if (desc_.vsync != vsyncDesc)
     {
         desc_.vsync = vsyncDesc;
-        SetupVsyncInterval();
+        context_->SetSwapInterval(desc_.vsync.enabled ? static_cast<int>(desc_.vsync.interval) : 0);
     }
+}
+
+bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
+{
+    return GLContext::MakeCurrent(renderContext != nullptr ? renderContext->context_.get() : nullptr);
 }
 
 

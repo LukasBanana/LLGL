@@ -9,6 +9,7 @@
 #include "../../Ext/GLExtensions.h"
 #include "../../Ext/GLExtensionLoader.h"
 #include "../../../CheckedCast.h"
+#include "../../../../Core/Helper.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
 #include <algorithm>
@@ -18,7 +19,22 @@ namespace LLGL
 {
 
 
-Win32GLContext::Win32GLContext(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext) :
+/*
+ * GLContext class
+ */
+
+std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext)
+{
+    Win32GLContext* sharedContextWGL = (sharedContext != nullptr ? LLGL_CAST(Win32GLContext*, sharedContext) : nullptr);
+    return MakeUnique<Win32GLContext>(desc, window, sharedContextWGL);
+}
+
+
+/*
+ * Win32GLContext class
+ */
+
+Win32GLContext::Win32GLContext(RenderContextDescriptor& desc, Window& window, Win32GLContext* sharedContext) :
     desc_   ( desc   ),
     window_ ( window )
 {
@@ -34,14 +50,6 @@ Win32GLContext::Win32GLContext(RenderContextDescriptor& desc, Window& window, GL
 Win32GLContext::~Win32GLContext()
 {
     DeleteContext();
-}
-
-bool Win32GLContext::Activate(bool activate)
-{
-    if (activate)
-        return (wglMakeCurrent(context_.hDC, context_.hGLRC) == TRUE);
-    else
-        return (wglMakeCurrent(0, 0) == TRUE);
 }
 
 bool Win32GLContext::SetSwapInterval(int interval)
@@ -63,14 +71,17 @@ bool Win32GLContext::SwapBuffers()
  * ======= Private: =======
  */
 
+bool Win32GLContext::Activate(bool activate)
+{
+    if (activate)
+        return (wglMakeCurrent(context_.hDC, context_.hGLRC) == TRUE);
+    else
+        return (wglMakeCurrent(0, 0) == TRUE);
+}
+
 static void ErrAntiAliasingNotSupported()
 {
     Log::StdErr() << "multi-sample anti-aliasing is not supported" << std::endl;
-}
-
-void Win32GLContext::GetNativeContextHandle(NativeContextHandle& windowContext)
-{
-    windowContext.parentWindow = 0;
 }
 
 /*
@@ -189,7 +200,9 @@ void Win32GLContext::DeleteContext()
     if (!hasSharedContext_)
     {
         /* Deactivate context before deletion */
-        //Deactivate();
+        if (GLContext::Active() == this)
+            Activate(false);
+
         DeleteGLContext(context_.hGLRC);
     }
 }

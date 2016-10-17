@@ -10,8 +10,6 @@
 
 
 #include "../GLContext.h"
-#include <LLGL/Window.h>
-#include <LLGL/RenderContextDescriptor.h>
 #include "../../OpenGL.h"
 #include "Win32GLPlatformContext.h"
 #include <LLGL/Platform/NativeHandle.h>
@@ -26,10 +24,8 @@ class Win32GLContext : public GLContext
 
     public:
 
-        Win32GLContext(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext);
+        Win32GLContext(RenderContextDescriptor& desc, Window& window, Win32GLContext* sharedContext);
         ~Win32GLContext();
-
-        bool Activate(bool activate) override;
 
         bool SetSwapInterval(int interval) override;
 
@@ -37,10 +33,10 @@ class Win32GLContext : public GLContext
 
     private:
 
+        bool Activate(bool activate) override;
+
         void CreateContext(Win32GLContext* sharedContext);
         void DeleteContext();
-
-        void GetNativeContextHandle(NativeContextHandle& windowContext);
 
         void DeleteGLContext(HGLRC& renderContext);
 
