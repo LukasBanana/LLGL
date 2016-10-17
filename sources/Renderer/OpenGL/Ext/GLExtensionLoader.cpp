@@ -495,14 +495,10 @@ static const unsigned int g_numExtensions = static_cast<int>(GLExt::Count);
 static std::array<bool, g_numExtensions> g_extensionsEnabled { { false } };
 static bool g_extAlreadyLoaded = false;
 
-#ifndef __APPLE__
-
 static void EnableExtensionSupport(GLExt extension)
 {
     g_extensionsEnabled[static_cast<std::size_t>(extension)] = true;
 }
-
-#endif
 
 
 /* --- Common extension loading functions --- */
@@ -562,12 +558,78 @@ GLExtensionList QueryExtensions(bool coreProfile)
 
 void LoadAllExtensions(GLExtensionList& extensions)
 {
-    #ifndef __APPLE__
-    
     /* Only load GL extensions once */
     if (g_extAlreadyLoaded)
         return;
-
+    
+    #ifdef __APPLE__
+    
+    /* Enable OpenGL extension support by host MacOS version */
+    #define ENABLE_GLEXT(NAME) \
+        EnableExtensionSupport(GLExt::NAME)
+    
+    /* Enable hardware buffer extensions */
+    ENABLE_GLEXT( ARB_vertex_buffer_object         );
+    ENABLE_GLEXT( ARB_vertex_array_object          );
+    ENABLE_GLEXT( ARB_framebuffer_object           );
+    ENABLE_GLEXT( ARB_uniform_buffer_object        );
+    ENABLE_GLEXT( ARB_shader_storage_buffer_object );
+    
+    /* Enable drawing extensions */
+    ENABLE_GLEXT( ARB_draw_buffers                 );
+    ENABLE_GLEXT( ARB_draw_instanced               );
+    ENABLE_GLEXT( ARB_base_instance                );
+    ENABLE_GLEXT( ARB_draw_elements_base_vertex    );
+    
+    /* Enable shader extensions */
+    ENABLE_GLEXT( ARB_shader_objects               );
+    ENABLE_GLEXT( ARB_instanced_arrays             );
+    ENABLE_GLEXT( ARB_tessellation_shader          );
+    ENABLE_GLEXT( ARB_compute_shader               );
+    ENABLE_GLEXT( ARB_get_program_binary           );
+    ENABLE_GLEXT( ARB_program_interface_query      );
+    ENABLE_GLEXT( EXT_gpu_shader4                  );
+    
+    /* Enable texture extensions */
+    ENABLE_GLEXT( ARB_multitexture                 );
+    ENABLE_GLEXT( EXT_texture3D                    );
+    ENABLE_GLEXT( ARB_clear_texture                );
+    ENABLE_GLEXT( ARB_texture_compression          );
+    ENABLE_GLEXT( ARB_texture_multisample          );
+    ENABLE_GLEXT( ARB_sampler_objects              );
+    
+    /* Enable blending extensions */
+    ENABLE_GLEXT( EXT_blend_minmax                 );
+    ENABLE_GLEXT( EXT_blend_func_separate          );
+    ENABLE_GLEXT( EXT_blend_equation_separate      );
+    ENABLE_GLEXT( EXT_blend_color                  );
+    ENABLE_GLEXT( ARB_draw_buffers_blend           );
+    
+    /* Enable misc extensions */
+    ENABLE_GLEXT( ARB_viewport_array               );
+    ENABLE_GLEXT( ARB_occlusion_query              );
+    ENABLE_GLEXT( NV_conditional_render            );
+    ENABLE_GLEXT( ARB_timer_query                  );
+    ENABLE_GLEXT( ARB_multi_bind                   );
+    ENABLE_GLEXT( EXT_stencil_two_side             );
+    ENABLE_GLEXT( KHR_debug                        );
+    ENABLE_GLEXT( ARB_clip_control                 );
+    ENABLE_GLEXT( EXT_draw_buffers2                );
+    ENABLE_GLEXT( EXT_transform_feedback           );
+    ENABLE_GLEXT( NV_transform_feedback            );
+    
+    /* Enable extensions without procedures */
+    ENABLE_GLEXT( ARB_texture_cube_map             );
+    ENABLE_GLEXT( EXT_texture_array                );
+    ENABLE_GLEXT( ARB_texture_cube_map_array       );
+    ENABLE_GLEXT( ARB_geometry_shader4             );
+    ENABLE_GLEXT( NV_conservative_raster           );
+    ENABLE_GLEXT( INTEL_conservative_rasterization );
+    
+    #undef ENABLE_GLEXT
+    
+    #else
+    
     auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc, GLExt viewerExt) -> void
     {
         /* Try to load OpenGL extension */
@@ -662,11 +724,12 @@ void LoadAllExtensions(GLExtensionList& extensions)
     ENABLE_GLEXT( NV_conservative_raster           );
     ENABLE_GLEXT( INTEL_conservative_rasterization );
 
-    g_extAlreadyLoaded = true;
-
     #undef LOAD_GLEXT
+    #undef ENABLE_GLEXT
     
     #endif
+    
+    g_extAlreadyLoaded = true;
 }
 
 bool AreExtensionsLoaded()
