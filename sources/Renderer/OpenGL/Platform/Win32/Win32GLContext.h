@@ -63,7 +63,7 @@ class Win32GLContext : public GLContext
         RenderContextDescriptor&    desc_;
         Window&                     window_;
 
-        bool                        hasSharedContext_   = false;
+        bool                        hasSharedContext_       = false;
 
 };
 
