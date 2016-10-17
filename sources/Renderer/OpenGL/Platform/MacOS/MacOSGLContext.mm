@@ -66,15 +66,16 @@ void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
 {
     NSOpenGLPixelFormatAttribute attribs[] =
     {
-        NSOpenGLPFANoRecovery,
+        //NSOpenGLPFANoRecovery,
         NSOpenGLPFAAccelerated,
         NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFADepthSize,       32,
+        //NSOpenGLPFAOpenGLProfile,   NSOpenGLProfileVersion4_1Core,
+        NSOpenGLPFADepthSize,       24,
+        NSOpenGLPFAStencilSize,     8,
         NSOpenGLPFAColorSize,       24,
         NSOpenGLPFAAlphaSize,       8,
-        NSOpenGLPFASampleBuffers,   1,
-        NSOpenGLPFASamples,         (desc.multiSampling.enabled ? std::max(1u, desc.multiSampling.samples) : 1),
-        NSOpenGLPFAStencilSize,     1,
+        NSOpenGLPFASampleBuffers,   0,
+        //NSOpenGLPFASamples,         0,//(desc.multiSampling.enabled ? std::max(1u, desc.multiSampling.samples) : 1),
         //NSOpenGLPFAFullScreen,
         0
     };
@@ -102,10 +103,15 @@ void MacOSGLContext::CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGL
     ctx_ = [[NSOpenGLContext alloc] initWithFormat:pixelFormat_ shareContext:sharedNSGLCtx];
     if (!ctx_)
         throw std::runtime_error("failed to create NSOpenGLContext");
+    
+    /* Make current and set view to specified window */
+    [ctx_ makeCurrentContext];
+    [ctx_ setView:[nativeHandle.window contentView]];
 }
 
 void MacOSGLContext::DeleteNSGLContext()
 {
+    [pixelFormat_ release];
     [ctx_ makeCurrentContext];
     [ctx_ clearDrawable];
     [ctx_ release];
