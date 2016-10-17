@@ -316,9 +316,17 @@ void MacOSWindow::ProcessMouseKeyEvent(Key key, bool down)
 
 void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
 {
-    NSPoint pos = [event locationInWindow];
+    NSPoint nativePos = [event locationInWindow];
     
-    PostLocalMotion({ static_cast<int>(pos.x), desc_.size.y - static_cast<int>(pos.y) });
+    Gs::Vector2f pos(nativePos.x, static_cast<float>(desc_.size.y) - nativePos.y);
+    
+    PostLocalMotion(pos.Cast<int>());
+    
+    #if 0//TODO: process this by another event!
+    static Gs::Vector2f lastPos;
+    PostGlobalMotion(((pos - lastPos)*10.0f).Cast<int>());
+    lastPos = pos;
+    #endif
 }
 
 void MacOSWindow::ProcessMouseWheelEvent(NSEvent* event)
