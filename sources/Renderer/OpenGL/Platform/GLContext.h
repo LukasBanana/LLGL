@@ -29,11 +29,9 @@ class GLContext
         static std::unique_ptr<GLContext> Create(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext);
 
         static bool MakeCurrent(GLContext* context);
-
         static GLContext* Active();
 
         virtual bool SetSwapInterval(int interval) = 0;
-
         virtual bool SwapBuffers() = 0;
 
         inline const std::shared_ptr<GLStateManager>& GetStateManager() const

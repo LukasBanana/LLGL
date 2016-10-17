@@ -16,7 +16,7 @@
 #include "Platform/GLContext.h"
 #include <memory>
 
-#ifndef __APPLE__
+#ifdef __linux__
 #include <LLGL/Platform/NativeHandle.h>
 #endif
 

@@ -28,7 +28,6 @@ class LinuxGLContext : public GLContext
         ~LinuxGLContext();
 
         bool SetSwapInterval(int interval) override;
-
         bool SwapBuffers() override;
 
     private:

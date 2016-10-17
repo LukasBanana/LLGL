@@ -28,7 +28,6 @@ class Win32GLContext : public GLContext
         ~Win32GLContext();
 
         bool SetSwapInterval(int interval) override;
-
         bool SwapBuffers() override;
 
     private:
