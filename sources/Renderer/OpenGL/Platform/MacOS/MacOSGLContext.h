@@ -11,7 +11,6 @@
 
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/OpenGL.h>
-#import <OpenGL/gl.h>
 #import <AppKit/NSOpenGL.h>
 
 #include <LLGL/Platform/NativeHandle.h>

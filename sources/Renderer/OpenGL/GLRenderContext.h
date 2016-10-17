@@ -75,8 +75,6 @@ class GLRenderContext : public RenderContext
         std::shared_ptr<GLStateManager> stateMngr_;
         RenderState                     renderState_;
 
-        GLRenderTarget*                 boundRenderTarget_  = nullptr;
-
         GLint                           contextHeight_      = 0;
 
 };
