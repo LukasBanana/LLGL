@@ -11,8 +11,8 @@
 
 #include "../GLContext.h"
 #include "../../OpenGL.h"
-#include "Win32GLPlatformContext.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <vector>
 
 
 namespace LLGL
@@ -32,6 +32,17 @@ class Win32GLContext : public GLContext
         bool SwapBuffers() override;
 
     private:
+
+        struct GLPlatformContext
+        {
+            static const UINT   maxNumPixelFormatsMS    = 8;
+
+            int                 pixelFormat             = 0;    //!< Standard pixel format.
+            std::vector<int>    pixelFormatsMS;                 //!< Multi-sampled pixel formats.
+
+            HDC                 hDC                     = 0;    //!< Device context handle.
+            HGLRC               hGLRC                   = 0;    //!< OpenGL render context handle.
+        };
 
         bool Activate(bool activate) override;
 

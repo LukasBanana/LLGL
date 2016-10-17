@@ -6,9 +6,6 @@
  */
 
 #include "GLRenderContext.h"
-#include "GLRenderSystem.h"
-#include "Ext/GLExtensions.h"
-#include "../Assertion.h"
 
 #ifndef __APPLE__
 #include <LLGL/Platform/NativeHandle.h>
