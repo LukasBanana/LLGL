@@ -28,6 +28,12 @@ Progress
 | Direct3D 12 | ~5% | Experimental state |
 | Vulkan | 0% | Not started yet |
 
+| Platform | Progress | Remarks |
+|----------|:--------:|---------|
+| Win32 | 100% | |
+| Linux | 50% | Anti-aliasing is currently not supported |
+| MacOS | 10% | A few tutorials are already running on MacOS (macOS Sierra) |
+
 
 Thin Abstraction Layer
 ----------------------
