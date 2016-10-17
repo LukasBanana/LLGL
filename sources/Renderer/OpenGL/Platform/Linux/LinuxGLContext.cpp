@@ -25,7 +25,7 @@ namespace LLGL
 std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext)
 {
     LinuxGLContext* sharedContextGLX = (sharedContext != nullptr ? LLGL_CAST(LinuxGLContext*, sharedContext) : nullptr);
-    return MakeUnique<LinuxGLContext>(desc, window, sharedContextWGL);
+    return MakeUnique<LinuxGLContext>(desc, window, sharedContextGLX);
 }
 
 
@@ -34,8 +34,7 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Wind
  */
 
 LinuxGLContext::LinuxGLContext(RenderContextDescriptor& desc, Window& window, LinuxGLContext* sharedContext) :
-    GLContext   ( sharedContext ),
-    desc_       ( desc          )
+    GLContext( sharedContext )
 {
     NativeHandle nativeHandle;
     window.GetNativeHandle(&nativeHandle);
@@ -95,7 +94,7 @@ void LinuxGLContext::CreateContext(const NativeHandle& nativeHandle, LinuxGLCont
         throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
     
     /* Create OpenGL context with X11 lib */
-    context_.glc = glXCreateContext(display_, visual_, glcShared, GL_TRUE);
+    glc_ = glXCreateContext(display_, visual_, glcShared, GL_TRUE);
     
     /* Make new OpenGL context current */
     if (glXMakeCurrent(display_, wnd_, glc_) != True)
