@@ -26,22 +26,29 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Wind
 MacOSGLContext::MacOSGLContext(RenderContextDescriptor& desc, Window& window, MacOSGLContext* sharedContext) :
     LLGL::GLContext( sharedContext )
 {
+    CreatePixelFormat(desc);
+    
+    NativeHandle nativeHandle;
+    window.GetNativeHandle(&nativeHandle);
+    
+    CreateNSGLContext(nativeHandle, sharedContext);
 }
 
 MacOSGLContext::~MacOSGLContext()
 {
+    DeleteNSGLContext();
 }
 
 bool MacOSGLContext::SetSwapInterval(int interval)
 {
-    //GLint sync = (desc_.vsync.enabled ? std::max(1, std::min(static_cast<GLint>(desc_.vsync.interval), 4)) : 0);
-    //CGLSetParameter(ctx, kCGLCPSwapInterval, &sync);
-    return false;
+    [ctx_ setValues:&interval forParameter:NSOpenGLCPSwapInterval];
+    return true;
 }
 
 bool MacOSGLContext::SwapBuffers()
 {
-    return false;
+    [ctx_ flushBuffer];
+    return true;
 }
 
 
@@ -51,15 +58,57 @@ bool MacOSGLContext::SwapBuffers()
 
 bool MacOSGLContext::Activate(bool activate)
 {
-    return false;
+    [ctx_ makeCurrentContext];
+    return true;
 }
 
-void MacOSGLContext::CreateContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext)
+void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
 {
+    NSOpenGLPixelFormatAttribute attribs[] =
+    {
+        NSOpenGLPFANoRecovery,
+        NSOpenGLPFAAccelerated,
+        NSOpenGLPFADoubleBuffer,
+        NSOpenGLPFADepthSize,       32,
+        NSOpenGLPFAColorSize,       24,
+        NSOpenGLPFAAlphaSize,       8,
+        NSOpenGLPFASampleBuffers,   1,
+        NSOpenGLPFASamples,         (desc.multiSampling.enabled ? std::max(1u, desc.multiSampling.samples) : 1),
+        NSOpenGLPFAStencilSize,     1,
+        //NSOpenGLPFAFullScreen,
+        0
+    };
+    
+    while (true)
+    {
+        /* Allocate NS-OpenGL pixel format */
+        pixelFormat_ = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
+        if (pixelFormat_)
+            break;
+        
+        /* Find best suitable pixel format */
+        //todo...
+        
+        throw std::runtime_error("failed to find suitable OpenGL pixel format");
+    }
 }
 
-void MacOSGLContext::DeleteContext()
+void MacOSGLContext::CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext)
 {
+    /* Get shared NS-OpenGL context */
+    auto sharedNSGLCtx = (sharedContext != nullptr ? sharedContext->ctx_ : nullptr);
+    
+    /* Create NS-OpenGL context */
+    ctx_ = [[NSOpenGLContext alloc] initWithFormat:pixelFormat_ shareContext:sharedNSGLCtx];
+    if (!ctx_)
+        throw std::runtime_error("failed to create NSOpenGLContext");
+}
+
+void MacOSGLContext::DeleteNSGLContext()
+{
+    [ctx_ makeCurrentContext];
+    [ctx_ clearDrawable];
+    [ctx_ release];
 }
 
 

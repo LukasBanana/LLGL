@@ -35,12 +35,14 @@ class MacOSGLContext : public GLContext
     private:
         
         bool Activate(bool activate) override;
-        
-        void CreateContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext);
-        void DeleteContext();
     
-        NSOpenGLPixelFormat*    pixelFormat_ = nullptr;
-        CGLContextObj           ctx_;
+        void CreatePixelFormat(const RenderContextDescriptor& desc);
+        
+        void CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext);
+        void DeleteNSGLContext();
+    
+        NSOpenGLPixelFormat*    pixelFormat_    = nullptr;
+        NSOpenGLContext*        ctx_            = nullptr;
     
 };
     
