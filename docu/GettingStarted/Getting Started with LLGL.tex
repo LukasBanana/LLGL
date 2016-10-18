@@ -379,7 +379,7 @@ LLGL::VertexFormat vertexFormat;
 vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 }); // position has 2D float vector
 vertexFormat.AppendAttribute({ "color",    LLGL::VectorType::Float3 }); // color has 3D float vector
 \end{lstlisting}
-The \texttt{AddAttribute} function adds the attributes to the vertex format.
+The \texttt{AppendAttribute} function adds the attributes to the vertex format.
 The order of these function calls determines the location in the vertex data, so they must match
 the order of the member fields in the vertex data structure (here ``\texttt{struct Vertex}'').
 
@@ -463,7 +463,7 @@ if (!shaderProgram->LinkShaders()) {
     throw std::runtime_error(shaderProgram->QueryInfoLog());
 }
 \end{lstlisting}
-The ``\texttt{BindVertexAttributes}'' function binds the vertex layout to the shader program.
+The ``\texttt{BuildInputLayout}'' function binds the vertex attributes to the shader program.
 This must be called after shader attachment but before shader linking (except a compute shader program is used).
 
 Before we continue with the C++ code, we first take a look at the shader code:
