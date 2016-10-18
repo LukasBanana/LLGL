@@ -328,7 +328,7 @@ because only a single renderer can be loaded at a time.
 When this shared object expires, all objects allocated by this renderer will be deleted automatically.
 
 If loading the renderer failed, an \texttt{std::runtime\_error} exception will be thrown,
-which can be cached to show an erorr message and/or load another renderer module instead.
+which can be cached to show an error message and/or load another renderer module instead.
 This can be very handy if a specific Direct3D version is not installed on the host Windows platform,
 so another Direct3D version or OpenGL renderer can be loaded as fallback
 without disturbing the user with akward error messages and program crashes.
@@ -349,7 +349,7 @@ See the API documentation for more information about these attributes.
 This render context will create its own window, but we could also specifiy our own one.
 However, in this example we keep it simple. To access this window and change the title,
 we use the \texttt{GetWindow} function of the \texttt{RenderContext} interface
-which returns a constant reference to its window:
+which returns a reference to its window:
 \begin{lstlisting}
 context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
 \end{lstlisting}
