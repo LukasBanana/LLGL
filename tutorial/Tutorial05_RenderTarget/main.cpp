@@ -9,7 +9,7 @@
 
 
 // Enable multi-sampling
-#define ENABLE_MULTISAMPLING
+//#define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
 //#define ENABLE_CUSTOM_MULTISAMPLING
@@ -61,7 +61,7 @@ public:
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram(vertexFormat);
+        LoadShaders(vertexFormat);
         CreatePipelines();
         CreateColorMap();
         CreateRenderTarget();
@@ -91,6 +91,37 @@ public:
         constantBuffer = CreateConstantBuffer(settings);
 
         return vertexFormat;
+    }
+    
+    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
+    {
+        {
+            // Load shader program
+            if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+            {
+                shaderProgram = LoadShaderProgram(
+                    {
+                        { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
+                        { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
+                    },
+                    vertexFormat
+                );
+            }
+            else
+            {
+                shaderProgram = LoadShaderProgram(
+                    {
+                        { LLGL::ShaderType::Vertex, "vertex.glsl" },
+                        #ifdef __APPLE__
+                        { LLGL::ShaderType::Fragment, "fragment.410core.glsl" }
+                        #else
+                        { LLGL::ShaderType::Fragment, "fragment.glsl" }
+                        #endif
+                    },
+                    vertexFormat
+                );
+            }
+        }
     }
 
     void CreatePipelines()
