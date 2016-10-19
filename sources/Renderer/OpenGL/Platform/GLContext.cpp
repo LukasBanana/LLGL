@@ -35,17 +35,18 @@ bool GLContext::MakeCurrent(GLContext* context)
     {
         if (context)
         {
+            /* Activate new GL context: MakeCurrent(context) */
             GLStateManager::active = context->stateMngr_.get();
             result = context->Activate(true);
         }
         else if (g_activeGLContext)
         {
+            /* Deactivate previous GL context: MakeCurrent(null) */
             GLStateManager::active = nullptr;
             result = g_activeGLContext->Activate(false);
         }
-        else
-            result = false;
 
+        /* Store pointer to new GL context */
         g_activeGLContext = context;
     }
 
