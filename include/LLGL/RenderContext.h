@@ -84,6 +84,15 @@ class LLGL_EXPORT RenderContext
 
         RenderContext() = default;
 
+        /**
+        \brief Sets the render context window or creates one if 'window' is null.
+        \param[in] window Optional shared pointer to a window which will be used as main render target.
+        If this is null, a new window is created for this render context.
+        \param[in,out] videoModeDesc Specifies the video mode descriptor. This is used for reading only if 'window' is null,
+        otherwise it is used for writing only and the 'resolution' field will be set to the size of the specified window.
+        \param[in] Optional pointer to a NativeContextHandle structure.
+        \see WindowDescriptor::windowContext
+        */
         void SetOrCreateWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext);
 
         /**
