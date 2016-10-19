@@ -84,7 +84,7 @@ class LLGL_EXPORT RenderContext
 
         RenderContext() = default;
 
-        void SetWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext);
+        void SetOrCreateWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext);
 
         /**
         \brief Shares the window and video mode with another render context.

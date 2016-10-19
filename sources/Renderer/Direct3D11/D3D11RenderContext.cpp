@@ -26,7 +26,7 @@ D3D11RenderContext::D3D11RenderContext(
         desc_   ( desc    )
 {
     /* Setup window for the render context */
-    SetWindow(window, desc_.videoMode, nullptr);
+    SetOrCreateWindow(window, desc_.videoMode, nullptr);
 
     /* Create D3D objects */
     CreateSwapChain(factory);

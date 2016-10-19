@@ -48,7 +48,7 @@ void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
  * ======= Protected: =======
  */
 
-void RenderContext::SetWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext)
+void RenderContext::SetOrCreateWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext)
 {
     window_ = window;
 

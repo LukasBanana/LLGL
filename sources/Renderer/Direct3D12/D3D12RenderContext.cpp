@@ -32,7 +32,7 @@ D3D12RenderContext::D3D12RenderContext(
         desc_           ( desc         )
 {
     /* Setup window for the render context */
-    SetWindow(window, desc_.videoMode, nullptr);
+    SetOrCreateWindow(window, desc_.videoMode, nullptr);
     CreateWindowSizeDependentResources();
 
     /* Initialize v-sync */

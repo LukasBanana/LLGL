@@ -21,11 +21,11 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
 
     NativeContextHandle windowContext;
     GetNativeContextHandle(windowContext);
-    SetWindow(window, desc.videoMode, &windowContext);
+    SetOrCreateWindow(window, desc.videoMode, &windowContext);
 
     #else
 
-    SetWindow(window, desc.videoMode, nullptr);
+    SetOrCreateWindow(window, desc.videoMode, nullptr);
 
     #endif
 
