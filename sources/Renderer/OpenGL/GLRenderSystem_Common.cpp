@@ -370,7 +370,7 @@ void GLRenderSystem::QueryRenderingCaps()
     auto GetUIntIdx = [](GLenum param, GLuint index)
     {
         GLint attr = 0;
-        //if (glGetIntegeri_v)
+        if (HasExtension(GLExt::EXT_draw_buffers2))
             glGetIntegeri_v(param, index, &attr);
         return static_cast<unsigned int>(attr);
     };
