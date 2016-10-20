@@ -1,0 +1,246 @@
+\documentclass{article}
+\title{Coding Conventions for LLGL}
+\author{Lukas Hermanns}
+\date{\today}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{pxfonts}
+\usepackage{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{xspace}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{pdfpages}
+
+\geometry{
+	a4paper,
+	left=15mm,
+	right=15mm,
+	top=20mm,
+	bottom=20mm
+}
+
+\begin{document}
+
+\definecolor{brightBlueColor}{rgb}{0.5, 0.5, 1.0}
+\definecolor{darkBlueColor}{rgb}{0.0, 0.0, 0.5}
+
+\def\LLGL{\textcolor{darkBlueColor}{LLGL}\xspace}
+
+\lstset{
+	language = C++,
+	basicstyle = \footnotesize\ttfamily,
+	commentstyle = \itshape\color{brightBlueColor},
+	keywordstyle = \bfseries\color{darkBlueColor},
+	stringstyle = \color{red},
+	frame = single,
+	tabsize = 4,
+	showstringspaces=false,
+	numbers=none
+}
+
+\maketitle
+
+
+%----------------------------------------------------------------------------------------
+%	INTRRODUCTION
+%----------------------------------------------------------------------------------------
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.5\textwidth]{../LLGL_Logo.pdf}
+\end{figure}
+
+\section*{Introduction}
+
+This is the document to describe the major C++ coding conventions for the \LLGL (Low Level Graphics Library) project.
+While the coding conventions in programming languages such as Java and C\# are globally defined and commonly acknowledged,
+the coding conventions in C++ vary from project to project.
+
+If you want to contribute to this project, please comply to the coding style which is described in this document.
+Of course there are exceptions, but they should be well documented to avoid confusion.
+In the following sections there is always an example of a desired and an undesired coding style.
+
+
+%----------------------------------------------------------------------------------------
+%	SYNTAX
+%----------------------------------------------------------------------------------------
+
+\newpage
+\section*{Syntax}
+
+\subsection*{Names}
+
+We start with the syntax styles in LLGL. This is similar to C\#.
+All \textbf{classes}, \textbf{structures}, \textbf{enumerations}, \textbf{type-aliases},
+and \textbf{namespaces} begin with an upper-case letter, underscores are not allowed,
+and each sub name (or acronym) begins again with an upper-case letter (except for data type acronyms like `f' for float):
+\begin{lstlisting}
+// Desired
+class RenderSystem
+struct RenderContextDescriptor
+enum class BlendOp
+using ColorRGBf
+namespace LLGL
+\end{lstlisting}
+\begin{lstlisting}
+// Undesired
+class renderSystem
+struct RenderContext_Descriptor
+enum class blend_op
+using ColorRgbf
+namespace llgl
+\end{lstlisting}
+All \textbf{variables} and \textbf{parameters} begin with a lower-case letter, underscores are not allowed,
+and each sub name (or acronym) begins again with an upper-case letter:
+\begin{lstlisting}
+// Desired
+float viewSize
+ColorRGBf borderColor
+Vector2f viewportSize
+\end{lstlisting}
+\begin{lstlisting}
+// Undesired
+float ViewSize
+ColorRGBf bordercolor
+Vector2f viewport_Size
+\end{lstlisting}
+Moreover, the \textbf{naming convention} should be uniform as well. For a graphics object \texttt{Foo}
+there is almost always a descriptor structure named \texttt{FooDescriptor} for instance,
+and the respective parameter name is \texttt{fooDesc}:
+\begin{lstlisting}
+// Desired
+class Buffer
+struct BufferDescriptor
+Buffer* CreateBuffer(const BufferDescriptor& bufferDesc)
+\end{lstlisting}
+\begin{lstlisting}
+// Undesired
+class Buffer
+struct BufferDesc
+Buffer* AllocBuffer(const BufferDesc& descriptor)
+\end{lstlisting}
+
+\subsection*{Indentation and Braces}
+
+For \textbf{indentation} 4 spaces are used.
+Do not use tab characters because their size vary between the platforms and IDE settings.
+For all embraced code blocks a new indentation level is added, except for namespaces,
+because they typically always embrace the entire code file.
+The \textbf{braces} are written like in C\#, too. An open brace has its own line (except for very small lambda functions):
+\begin{lstlisting}
+// Desired
+namespace LLGL
+{
+
+namespace InnerNamespace
+{
+
+
+void Func(int& i)
+{
+	auto verySmallLambda = [](int x) { return x*x; };
+	if (i > 10)
+	{
+		Foo();
+		Bar();
+	}
+	else if (i == 5)
+		i = verySmallLambda(2);
+}
+
+
+} // /namespace InnerNamespace
+
+} // /namespace LLGL
+\end{lstlisting}
+\begin{lstlisting}
+// Undesired
+namespace LLGL {
+	namespace InnerNamespace {
+		void Func(int& i)
+		{
+			auto verySmallLambda = [](int x) {
+				return x*x;
+			};
+			if (i > 10) { Foo();
+						  Bar(); }
+			else if (i == 5)
+				i = verySmallLambda(2);
+		}
+	}
+}
+\end{lstlisting}
+The \texttt{switch}-statement is an exception for each case block:
+\begin{lstlisting}
+// Desired
+switch (x)
+{
+	case 1:
+		Foo();
+		break;
+	case 2:
+		Bar();
+		break;
+}
+
+switch (y)
+{
+	case 1:
+	{
+		int x = y*2;
+		Foo(x);
+	}
+	break;
+	
+	case 2:
+	{
+		Bar();
+	}
+	break;
+}
+
+switch (z)
+{
+	case GL_INT:	return Types::Int;
+	case GL_FLOAT:	return Types::Float;
+	case GL_DOUBLE:	return Types::Double;
+}
+\end{lstlisting}
+
+\subsection*{Code Documentation}
+
+For the code documentation \emph{doxygen} is used, i.e. the doxygen syntax is required in the commentaries of the interfaces.
+The following order and syntax for the doxygen commands is used:
+\begin{lstlisting}
+// Desired
+/**
+\brief Does something useful.
+\param[in] count Specifies the number of foos.
+\param[in,out] bar Specifies the resulting bars.
+\param[in] ptr Specifies an optional pointer.
+\return A meaningful result.
+\throw std::runtime_error If something went wrong.
+\remarks This function does something useful, and returns something even more useful.
+\note Only supported with: OpenGL.
+\see Bar
+*/
+int Foo(int count, int& bar, int* ptr = nullptr);
+\end{lstlisting}
+
+
+
+
+\newpage
+\emph{to be continued \dots}
+
+
+
+
+
+
+
+
+\end{document}
