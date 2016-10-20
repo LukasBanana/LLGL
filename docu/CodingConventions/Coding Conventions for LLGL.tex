@@ -74,7 +74,7 @@ In the following sections there is always an example of a desired and an undesir
 \subsection*{Names}
 
 We start with the syntax styles in LLGL. This is similar to C\#.
-All \textbf{classes}, \textbf{structures}, \textbf{enumerations}, \textbf{type-aliases},
+All \textbf{classes}, \textbf{structures}, \textbf{enumerations}, \textbf{functions}, \textbf{type-aliases},
 and \textbf{namespaces} begin with an upper-case letter, underscores are not allowed,
 and each sub name (or acronym) begins again with an upper-case letter (except for data type acronyms like `f' for float):
 \begin{lstlisting}
@@ -82,6 +82,7 @@ and each sub name (or acronym) begins again with an upper-case letter (except fo
 class RenderSystem
 struct RenderContextDescriptor
 enum class BlendOp
+void Foo()
 using ColorRGBf
 namespace LLGL
 \end{lstlisting}
@@ -90,6 +91,7 @@ namespace LLGL
 class renderSystem
 struct RenderContext_Descriptor
 enum class blend_op
+void foo()
 using ColorRgbf
 namespace llgl
 \end{lstlisting}
