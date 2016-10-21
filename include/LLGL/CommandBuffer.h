@@ -118,7 +118,7 @@ class LLGL_EXPORT CommandBuffer
         \see SetClearDepth
         \see SetClearStencil
         */
-        virtual void ClearBuffers(long flags) = 0;
+        virtual void Clear(long flags) = 0;
 
         /* ----- Buffers ------ */
 

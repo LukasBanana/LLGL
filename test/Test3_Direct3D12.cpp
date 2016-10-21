@@ -159,7 +159,7 @@ int main()
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
-            commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+            commands->Clear(LLGL::ClearBuffersFlags::Color);
 
             commands->SetViewport(LLGL::Viewport(0, 0, 800, 600));
             commands->SetScissor(LLGL::Scissor(0, 0, 800, 600));

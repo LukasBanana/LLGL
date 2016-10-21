@@ -77,7 +77,7 @@ void D3D12CommandBuffer::SetClearStencil(int stencil)
     clearState_.stencil = stencil;
 }
 
-void D3D12CommandBuffer::ClearBuffers(long flags)
+void D3D12CommandBuffer::Clear(long flags)
 {
     /* Get RTV descriptor handle for current frame */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(

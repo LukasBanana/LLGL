@@ -94,7 +94,7 @@ void D3D11CommandBuffer::SetClearStencil(int stencil)
     clearState_.stencil = stencil;
 }
 
-void D3D11CommandBuffer::ClearBuffers(long flags)
+void D3D11CommandBuffer::Clear(long flags)
 {
     /* Clear color buffer */
     if ((flags & ClearBuffersFlags::Color) != 0)

@@ -379,7 +379,7 @@ int main()
                 profiler->ResetCounters();
 
             commands->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
-            commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+            commands->Clear(LLGL::ClearBuffersFlags::Color);
 
             auto uniformSetter = shaderProgram.LockShaderUniform();
             if (uniformSetter)
@@ -399,7 +399,7 @@ int main()
             {
                 commands->SetRenderTarget(*renderTarget);
                 commands->SetClearColor({ 1, 1, 1, 1 });
-                commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+                commands->Clear(LLGL::ClearBuffersFlags::Color);
             }
 
             #ifndef __linux__

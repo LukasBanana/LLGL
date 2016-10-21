@@ -118,7 +118,7 @@ void GLCommandBuffer::SetClearStencil(int stencil)
     glClearStencil(stencil);
 }
 
-void GLCommandBuffer::ClearBuffers(long flags)
+void GLCommandBuffer::Clear(long flags)
 {
     GLbitfield mask = 0;
 

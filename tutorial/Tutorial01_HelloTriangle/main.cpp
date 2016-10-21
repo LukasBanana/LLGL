@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
             commands->SetViewport({ 0, 0, 640, 480 });
 
             // Clear color buffer
-            commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+            commands->Clear(LLGL::ClearBuffersFlags::Color);
 
             // Set graphics pipeline
             commands->SetGraphicsPipeline(*pipeline);

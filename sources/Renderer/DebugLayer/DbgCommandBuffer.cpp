@@ -91,9 +91,9 @@ void DbgCommandBuffer::SetClearStencil(int stencil)
     instance.SetClearStencil(stencil);
 }
 
-void DbgCommandBuffer::ClearBuffers(long flags)
+void DbgCommandBuffer::Clear(long flags)
 {
-    instance.ClearBuffers(flags);
+    instance.Clear(flags);
 }
 
 /* ----- Buffers ------ */

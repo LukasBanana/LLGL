@@ -149,7 +149,7 @@ private:
         Gs::RotateFree(settings.wvpMatrix, Gs::Vector3f(1).Normalized(), anim*3);
 
         // Clear color and depth buffers
-        commands->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+        commands->Clear(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
         // Set buffers
         commands->SetVertexBuffer(*vertexBuffer);

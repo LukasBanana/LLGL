@@ -253,7 +253,7 @@ private:
 
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
             commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
-            commands->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+            commands->Clear(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
             // Set color map texture
             commands->SetTexture(*colorMap, 0, shaderStages);
@@ -299,7 +299,7 @@ private:
 
         // Clear color and depth buffers of active framebuffer (i.e. the screen)
         commands->SetClearColor(defaultClearColor);
-        commands->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+        commands->Clear(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
         

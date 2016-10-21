@@ -69,7 +69,7 @@ enum class LogicOp
 
 /**
 \brief Render context clear buffer flags.
-\see RenderContext::ClearBuffers
+\see RenderContext::Clear
 */
 struct ClearBuffersFlags
 {

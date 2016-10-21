@@ -120,7 +120,7 @@ private:
     void OnDrawFrame() override
     {
         // Clear color buffer
-        commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+        commands->Clear(LLGL::ClearBuffersFlags::Color);
 
         // Set buffer array
         commands->SetVertexBufferArray(*vertexBufferArray);

@@ -115,7 +115,7 @@ private:
     void OnDrawFrame() override
     {
         // Clear color and depth buffers
-        commands->ClearBuffers(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+        commands->Clear(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
 
         // Update constant buffer
         static float rotation;

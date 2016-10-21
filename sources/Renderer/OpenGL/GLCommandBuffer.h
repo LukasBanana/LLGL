@@ -44,7 +44,7 @@ class GLCommandBuffer : public CommandBuffer
         void SetClearDepth(float depth) override;
         void SetClearStencil(int stencil) override;
 
-        void ClearBuffers(long flags) override;
+        void Clear(long flags) override;
 
         /* ----- Buffers ------ */
 
