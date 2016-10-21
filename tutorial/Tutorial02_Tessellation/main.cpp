@@ -211,7 +211,7 @@ private:
     void DrawScene()
     {
         // Clear color- and depth buffers
-        commands->Clear(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+        commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
 
         // Update constant buffer
         UpdateBuffer(constantBuffer, settings);

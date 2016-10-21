@@ -173,7 +173,7 @@ private:
             samplerIndex = (samplerIndex + 1) % 5;
 
         // Clear color buffer
-        commands->Clear(LLGL::ClearBuffersFlags::Color);
+        commands->Clear(LLGL::ClearFlags::Color);
 
         // Set graphics pipeline and vertex buffer
         commands->SetGraphicsPipeline(*pipeline);

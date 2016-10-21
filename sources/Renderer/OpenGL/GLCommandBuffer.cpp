@@ -122,19 +122,19 @@ void GLCommandBuffer::Clear(long flags)
 {
     GLbitfield mask = 0;
 
-    if ((flags & ClearBuffersFlags::Color) != 0)
+    if ((flags & ClearFlags::Color) != 0)
     {
         //stateMngr_->SetColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         mask |= GL_COLOR_BUFFER_BIT;
     }
     
-    if ((flags & ClearBuffersFlags::Depth) != 0)
+    if ((flags & ClearFlags::Depth) != 0)
     {
         stateMngr_->SetDepthMask(GL_TRUE);
         mask |= GL_DEPTH_BUFFER_BIT;
     }
 
-    if ((flags & ClearBuffersFlags::Stencil) != 0)
+    if ((flags & ClearFlags::Stencil) != 0)
     {
         //stateMngr_->SetStencilMask(GL_TRUE);
         mask |= GL_STENCIL_BUFFER_BIT;

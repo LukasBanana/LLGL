@@ -97,7 +97,7 @@ void D3D11CommandBuffer::SetClearStencil(int stencil)
 void D3D11CommandBuffer::Clear(long flags)
 {
     /* Clear color buffer */
-    if ((flags & ClearBuffersFlags::Color) != 0)
+    if ((flags & ClearFlags::Color) != 0)
     {
         for (auto rtv : framebufferView_.rtvList)
             context_->ClearRenderTargetView(rtv, clearState_.color.Ptr());
@@ -106,9 +106,9 @@ void D3D11CommandBuffer::Clear(long flags)
     /* Clear depth-stencil buffer */
     int dsvClearFlags = 0;
 
-    if ((flags & ClearBuffersFlags::Depth) != 0)
+    if ((flags & ClearFlags::Depth) != 0)
         dsvClearFlags |= D3D11_CLEAR_DEPTH;
-    if ((flags & ClearBuffersFlags::Stencil) != 0)
+    if ((flags & ClearFlags::Stencil) != 0)
         dsvClearFlags |= D3D11_CLEAR_STENCIL;
         
     if (dsvClearFlags && framebufferView_.dsv != nullptr)

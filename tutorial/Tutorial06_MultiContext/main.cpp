@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
                 commands->SetVertexBuffer(*vertexBuffer);
 
                 // Clear color buffer
-                commands->Clear(LLGL::ClearBuffersFlags::Color);
+                commands->Clear(LLGL::ClearFlags::Color);
 
                 // Draw triangle with 3 vertices
                 commands->Draw(3, 0);
@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
                 commands->SetVertexBuffer(*vertexBuffer);
 
                 // Clear color buffer
-                commands->Clear(LLGL::ClearBuffersFlags::Color);
+                commands->Clear(LLGL::ClearFlags::Color);
 
                 // Draw quad with 4 vertices
                 commands->Draw(4, 3);

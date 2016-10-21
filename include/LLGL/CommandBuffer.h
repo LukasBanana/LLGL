@@ -111,9 +111,9 @@ class LLGL_EXPORT CommandBuffer
         /**
         \brief Clears the specified frame buffers of the active render target.
         \param[in] flags Specifies the clear buffer flags.
-        This can be a bitwise OR combination of the "ClearBuffersFlags" enumeration entries.
+        This can be a bitwise OR combination of the "ClearFlags" enumeration entries.
         \remarks To specify the clear values for each buffer use the respective "SetClear..." function
-        \see ClearBuffersFlags
+        \see ClearFlags
         \see SetClearColor
         \see SetClearDepth
         \see SetClearStencil

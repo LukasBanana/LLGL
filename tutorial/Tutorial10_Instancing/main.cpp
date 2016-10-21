@@ -317,7 +317,7 @@ private:
         UpdateAnimation();
 
         // Clear color- and depth buffers
-        commands->Clear(LLGL::ClearBuffersFlags::Color | LLGL::ClearBuffersFlags::Depth);
+        commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
 
         // Set buffer array, texture, and sampler
         commands->SetVertexBufferArray(*vertexBufferArray);

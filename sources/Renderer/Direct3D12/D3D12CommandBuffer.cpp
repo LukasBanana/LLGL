@@ -85,15 +85,15 @@ void D3D12CommandBuffer::Clear(long flags)
     );
 
     /* Clear color buffer */
-    if ((flags & ClearBuffersFlags::Color) != 0)
+    if ((flags & ClearFlags::Color) != 0)
         commandList_->ClearRenderTargetView(rtvHandle, clearState_.color.Ptr(), 0, nullptr);
     
     /* Clear depth-stencil buffer */
     int dsvClearFlags = 0;
 
-    if ((flags & ClearBuffersFlags::Depth) != 0)
+    if ((flags & ClearFlags::Depth) != 0)
         dsvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
-    if ((flags & ClearBuffersFlags::Stencil) != 0)
+    if ((flags & ClearFlags::Stencil) != 0)
         dsvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
         
     if (dsvClearFlags)
