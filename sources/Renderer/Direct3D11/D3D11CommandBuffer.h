@@ -115,7 +115,7 @@ class D3D11CommandBuffer : public CommandBuffer
 
         /* ----- Compute ----- */
 
-        void DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ) override;
+        void Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ) override;
 
         /* ----- Misc ----- */
 

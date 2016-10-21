@@ -294,7 +294,7 @@ void D3D12CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned
 
 /* ----- Compute ----- */
 
-void D3D12CommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
+void D3D12CommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
     commandList_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }

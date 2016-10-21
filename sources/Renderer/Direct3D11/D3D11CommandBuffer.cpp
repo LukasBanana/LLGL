@@ -570,7 +570,7 @@ void D3D11CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned
 
 /* ----- Compute ----- */
 
-void D3D11CommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
+void D3D11CommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
     context_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }

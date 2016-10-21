@@ -281,7 +281,7 @@ struct RenderingCaps
 
     /**
     \brief Specifies maximum number of work groups in a compute shader.
-    \see RenderContext::DispatchCompute
+    \see RenderContext::Dispatch
     */
     Gs::Vector3ui   maxNumComputeShaderWorkGroups;
     

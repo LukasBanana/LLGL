@@ -545,7 +545,7 @@ void DbgCommandBuffer::DebugThreadGroupLimit(unsigned int size, unsigned int lim
     }
 }
 
-void DbgCommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
+void DbgCommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
     if (debugger_)
     {
@@ -560,7 +560,7 @@ void DbgCommandBuffer::DispatchCompute(unsigned int groupSizeX, unsigned int gro
         DebugThreadGroupLimit(groupSizeZ, caps_.maxNumComputeShaderWorkGroups.z);
     }
     
-    instance.DispatchCompute(groupSizeX, groupSizeY, groupSizeZ);
+    instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
     
     LLGL_DBG_PROFILER_DO(dispatchComputeCalls.Inc());
 }

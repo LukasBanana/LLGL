@@ -402,7 +402,7 @@ class LLGL_EXPORT CommandBuffer
         \see SetComputePipeline
         \see RenderingCaps::maxNumComputeShaderWorkGroups
         */
-        virtual void DispatchCompute(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ) = 0;
+        virtual void Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ) = 0;
 
         /* ----- Misc ----- */
 

@@ -102,7 +102,7 @@ class LLGL_EXPORT RenderingProfiler
         \see CommandBuffer.DrawIndexedInstanced
         */
         Counter drawCalls;
-        Counter dispatchComputeCalls;   //!< Counter for dispatch compute calls. \see CommandBuffer::DispatchCompute
+        Counter dispatchComputeCalls;   //!< Counter for dispatch compute calls. \see CommandBuffer::Dispatch
 
         Counter renderedPoints;         //!< Counter for rendered point primitives.
         Counter renderedLines;          //!< Counter for rendered line primitives.
