@@ -68,16 +68,16 @@ enum class LogicOp
 /* ----- Structures ----- */
 
 /**
-\brief Render context clear buffer flags.
-\see RenderContext::Clear
+\brief Command buffer clear flags.
+\see CommandBuffer::Clear
 */
 struct ClearFlags
 {
     enum
     {
-        Color   = (1 << 0),
-        Depth   = (1 << 1),
-        Stencil = (1 << 2),
+        Color   = (1 << 0), //!< Clears the color buffer.
+        Depth   = (1 << 1), //!< Clears the depth buffer.
+        Stencil = (1 << 2), //!< Clears the stencil buffer.
     };
 };
 
