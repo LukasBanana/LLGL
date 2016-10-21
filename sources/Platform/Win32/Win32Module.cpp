@@ -21,10 +21,26 @@ std::string Module::GetModuleFilename(std::string moduleName)
     return "LLGL_" + moduleName + ".dll";
 }
 
+// Call Win32 function 'LoadLibrary' but with dialog error messages disabled
+static HMODULE LoadLibrarySafe(LPCSTR filename)
+{
+    /* Disable dialog error messages */
+    UINT prevMode = SetErrorMode(0);
+    SetErrorMode(prevMode | SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+
+    /* Load library */
+    HMODULE module = LoadLibraryA(filename);
+
+    /* Reset previous error mode */
+    SetErrorMode(prevMode);
+
+    return module;
+}
+
 bool Module::IsAvailable(const std::string& moduleFilename)
 {
     /* Check if Win32 dynamic link library can be loaded properly */
-    auto handle = LoadLibraryA(moduleFilename.c_str());
+    auto handle = LoadLibrarySafe(moduleFilename.c_str());
     if (handle)
     {
         FreeLibrary(handle);
@@ -41,7 +57,7 @@ std::unique_ptr<Module> Module::Load(const std::string& moduleFilename)
 Win32Module::Win32Module(const std::string& moduleFilename)
 {
     /* Open Win32 dynamic link library (DLL) */
-    handle_ = LoadLibraryA(moduleFilename.c_str());
+    handle_ = LoadLibrarySafe(moduleFilename.c_str());
 
     /* Check if loading has failed */
     if (!handle_)
