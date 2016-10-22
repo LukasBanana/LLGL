@@ -251,6 +251,10 @@ void GLRenderTarget::AttachRenderBuffer(const Gs::Vector2ui& size, GLenum intern
         /* Setup render buffer storage */
         InitRenderBufferStorage(*renderBuffer_, internalFormat);
 
+        //TODO: the MS-framebuffer must be created not later than here!
+        //if (HasMultiSampling())
+        //    CreateOnceFrameBufferMS();
+        
         /* Attach render buffer to frame buffer (or multi-sample frame buffer if multi-sampling is used) */
         GLenum status = 0;
 
