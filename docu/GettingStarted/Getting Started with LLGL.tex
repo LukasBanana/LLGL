@@ -549,11 +549,11 @@ The rest of the code is pretty simple, since the most work is done during initia
 What we need to do is to clear the color buffer of the previous frame,
 set the graphics pipeline, set the vertex buffer, draw the primitives, and present the result on the frame buffer:
 \begin{lstlisting}
-// Set viewport
+// Set viewport (left: 0, top: 0, width: 640, height: 480)
 commands->SetViewport({ 0, 0, 640, 480 });
 
 // Clear color buffer
-commands->ClearBuffers(LLGL::ClearBuffersFlags::Color);
+commands->Clear(LLGL::ClearFlags::Color);
 
 // Bind graphics pipeline
 commands->SetGraphicsPipeline(*pipeline);
