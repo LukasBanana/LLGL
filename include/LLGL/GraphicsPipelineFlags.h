@@ -218,6 +218,15 @@ struct MultiSamplingDescriptor
     {
     }
 
+    /**
+    \brief Returns the sample count for the state of this multi-sampling descriptor.
+    \return max{ 1, samples } if multi-sampling is enabled, otherwise 1.
+    */
+    inline unsigned int SampleCount() const
+    {
+        return (enabled && samples > 1 ? samples : 1);
+    }
+
     //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
     bool            enabled = false;
 
