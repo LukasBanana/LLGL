@@ -12,7 +12,7 @@
 #define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
-#define ENABLE_CUSTOM_MULTISAMPLING
+//#define ENABLE_CUSTOM_MULTISAMPLING
 
 
 #ifndef ENABLE_MULTISAMPLING
@@ -216,10 +216,15 @@ private:
         // Update scene animation (simple rotation)
         static float rot0, rot1;
 
+        #ifdef __APPLE__ // Workaround for currently unsupported mouse movement events
+        rot0 += 0.0025f;
+        rot1 += 0.005f;
+        #else
         if (input->KeyPressed(LLGL::Key::LButton))
             rot0 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
         if (input->KeyPressed(LLGL::Key::RButton))
             rot1 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
+        #endif
 
         // Set common buffers and sampler states
         commands->SetIndexBuffer(*indexBuffer);
