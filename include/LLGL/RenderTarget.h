@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "TextureFlags.h"
+#include "GraphicsPipelineFlags.h"
 #include <Gauss/Vector2.h>
 
 
@@ -41,6 +42,22 @@ struct RenderTargetAttachmentDescriptor
     \remarks This is only used for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
     */
     AxisDirection   cubeFace    = AxisDirection::XPos;
+};
+
+//! Render target descriptor structure.
+struct RenderTargetDescriptor
+{
+    //! Sampling descriptor.
+    MultiSamplingDescriptor multiSampling;
+
+    /**
+    \brief Specifies whether custom multi-sampling is used or not. By default false.
+    \remarks If this is true, only multi-sampled textures can be attached to a render-target,
+    i.e. textures of the following types: Texture2DMS, Texture2DMSArray.
+    If this is false, only non-multi-sampled textures can be attached to a render-target.
+    This field will be ignored if multi-sampling is disabled.
+    */
+    bool                    customMultiSampling = false;
 };
 
 class Texture;

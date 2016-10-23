@@ -237,9 +237,9 @@ void D3D12RenderSystem::Release(SamplerArray& samplerArray)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* D3D12RenderSystem::CreateRenderTarget(unsigned int multiSamples)
+RenderTarget* D3D12RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
-    return nullptr;//TakeOwnership(renderTargets_, MakeUnique<D3D12RenderTarget>(multiSamples));
+    return nullptr;//TakeOwnership(renderTargets_, MakeUnique<D3D12RenderTarget>(desc));
 }
 
 void D3D12RenderSystem::Release(RenderTarget& renderTarget)

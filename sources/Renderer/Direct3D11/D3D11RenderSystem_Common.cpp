@@ -173,9 +173,9 @@ void D3D11RenderSystem::Release(SamplerArray& samplerArray)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* D3D11RenderSystem::CreateRenderTarget(unsigned int multiSamples)
+RenderTarget* D3D11RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), multiSamples));
+    return TakeOwnership(renderTargets_, MakeUnique<D3D11RenderTarget>(device_.Get(), desc));
 }
 
 void D3D11RenderSystem::Release(RenderTarget& renderTarget)

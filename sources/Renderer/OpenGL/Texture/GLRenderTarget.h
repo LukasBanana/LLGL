@@ -27,7 +27,7 @@ class GLRenderTarget : public RenderTarget
 
     public:
 
-        GLRenderTarget(unsigned int multiSamples);
+        GLRenderTarget(const RenderTargetDescriptor& desc);
 
         void AttachDepthBuffer(const Gs::Vector2ui& size) override;
         void AttachStencilBuffer(const Gs::Vector2ui& size) override;
@@ -65,6 +65,7 @@ class GLRenderTarget : public RenderTarget
         void CreateOnceFrameBufferMS();
 
         bool HasMultiSampling() const;
+        bool HasCustomMultiSampling() const;
 
         GLFrameBuffer                                   frameBuffer_;
 

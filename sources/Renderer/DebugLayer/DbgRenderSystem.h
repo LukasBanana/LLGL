@@ -91,7 +91,7 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Render Targets ----- */
 
-        RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) override;
+        RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;
 
         void Release(RenderTarget& renderTarget) override;
 

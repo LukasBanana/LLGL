@@ -18,9 +18,11 @@ namespace LLGL
 {
 
 
-GLRenderTarget::GLRenderTarget(unsigned int multiSamples) :
-    multiSamples_( static_cast<GLsizei>(multiSamples) )
+GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
+    multiSamples_( static_cast<GLsizei>(desc.multiSampling.SampleCount()) )
 {
+    if (HasMultiSampling() && !desc.customMultiSampling)
+        CreateOnceFrameBufferMS();
 }
 
 void GLRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
@@ -67,10 +69,6 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
 
     GLenum status = 0;
     GLenum attachment = MakeColorAttachment();
-
-    /* If this is a multi-sample render-target but the attachment is not a multi-sample texture, create a multi-sample FBO */
-    if (HasMultiSampling() && !IsMultiSampleTexture(texture.GetType()))
-        CreateOnceFrameBufferMS();
 
     /* Attach texture to frame buffer (via callback) */
     frameBuffer_.Bind();
@@ -152,7 +150,9 @@ void GLRenderTarget::DetachAll()
     frameBuffer_.Recreate();
 
     renderBuffer_.reset();
-    frameBufferMS_.reset();
+
+    if (frameBufferMS_)
+        frameBufferMS_->Recreate();
 
     colorAttachments_.clear();
     renderBuffersMS_.clear();
@@ -251,10 +251,6 @@ void GLRenderTarget::AttachRenderBuffer(const Gs::Vector2ui& size, GLenum intern
         /* Setup render buffer storage */
         InitRenderBufferStorage(*renderBuffer_, internalFormat);
 
-        //TODO: the MS-framebuffer must be created not later than here!
-        //if (HasMultiSampling())
-        //    CreateOnceFrameBufferMS();
-        
         /* Attach render buffer to frame buffer (or multi-sample frame buffer if multi-sampling is used) */
         GLenum status = 0;
 
@@ -309,6 +305,11 @@ void GLRenderTarget::CreateOnceFrameBufferMS()
 bool GLRenderTarget::HasMultiSampling() const
 {
     return (multiSamples_ > 1);
+}
+
+bool GLRenderTarget::HasCustomMultiSampling() const
+{
+    return (frameBufferMS_ == nullptr);
 }
 
 

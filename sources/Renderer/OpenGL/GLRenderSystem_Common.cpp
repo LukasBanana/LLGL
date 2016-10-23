@@ -103,10 +103,10 @@ void GLRenderSystem::Release(SamplerArray& samplerArray)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* GLRenderSystem::CreateRenderTarget(unsigned int multiSamples)
+RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
     LLGL_ASSERT_CAP(hasRenderTargets);
-    return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(multiSamples));
+    return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(desc));
 }
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)

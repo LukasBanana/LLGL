@@ -12,7 +12,7 @@
 #define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
-//#define ENABLE_CUSTOM_MULTISAMPLING
+#define ENABLE_CUSTOM_MULTISAMPLING
 
 
 #ifndef ENABLE_MULTISAMPLING
@@ -161,18 +161,22 @@ public:
     void CreateRenderTarget()
     {
         // Create render-target with multi-sampling
-        #ifdef ENABLE_MULTISAMPLING
-        unsigned int multiSamples = 8;
-        #else
-        unsigned int multiSamples = 0;
-        #endif
-        renderTarget = renderer->CreateRenderTarget(multiSamples);
+        LLGL::RenderTargetDescriptor renderTargetDesc;
+        {
+            #ifdef ENABLE_MULTISAMPLING
+            renderTargetDesc.multiSampling          = LLGL::MultiSamplingDescriptor(8);
+            #   ifdef ENABLE_CUSTOM_MULTISAMPLING
+            renderTargetDesc.customMultiSampling    = true;
+            #   endif
+            #endif
+        }
+        renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
 
         // Create empty render-target texture
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
         
         renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA, renderTargetSize.x, renderTargetSize.y, multiSamples)
+            LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA, renderTargetSize.x, renderTargetSize.y, renderTargetDesc.multiSampling.samples)
         );
         
         #else

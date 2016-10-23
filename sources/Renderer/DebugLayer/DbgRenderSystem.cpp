@@ -303,9 +303,9 @@ void DbgRenderSystem::Release(SamplerArray& samplerArray)
 
 /* ----- Render Targets ----- */
 
-RenderTarget* DbgRenderSystem::CreateRenderTarget(unsigned int multiSamples)
+RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<DbgRenderTarget>(*instance_->CreateRenderTarget(multiSamples), multiSamples));
+    return TakeOwnership(renderTargets_, MakeUnique<DbgRenderTarget>(*instance_->CreateRenderTarget(desc), debugger_, desc));
 }
 
 void DbgRenderSystem::Release(RenderTarget& renderTarget)

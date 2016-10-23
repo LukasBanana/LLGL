@@ -28,7 +28,7 @@ class D3D11RenderTarget : public RenderTarget
 
     public:
 
-        D3D11RenderTarget(ID3D11Device* device, unsigned int multiSamples);
+        D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
 
         void AttachDepthBuffer(const Gs::Vector2ui& size) override;
         void AttachStencilBuffer(const Gs::Vector2ui& size) override;
@@ -60,7 +60,7 @@ class D3D11RenderTarget : public RenderTarget
 
         bool HasMultiSampling() const;
 
-        ID3D11Device*                               device_                 = nullptr;
+        ID3D11Device*                               device_                     = nullptr;
 
         std::vector<ComPtr<ID3D11RenderTargetView>> renderTargetViews_;
         std::vector<ID3D11RenderTargetView*>        renderTargetViewsRef_;
@@ -77,7 +77,7 @@ class D3D11RenderTarget : public RenderTarget
             DXGI_FORMAT             format;
         };
 
-        UINT                                        multiSamples_ = 0;
+        UINT                                        multiSamples_               = 0;
         std::vector<MultiSampledAttachment>         multiSampledAttachments_;
 
 };

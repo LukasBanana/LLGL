@@ -16,12 +16,14 @@ namespace LLGL
 {
 
 
+class RenderingDebugger;
+
 class DbgRenderTarget : public RenderTarget
 {
 
     public:
 
-        DbgRenderTarget(RenderTarget& instance, unsigned int multiSamples);
+        DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc);
 
         void AttachDepthBuffer(const Gs::Vector2ui& size) override;
         void AttachStencilBuffer(const Gs::Vector2ui& size) override;
@@ -31,7 +33,12 @@ class DbgRenderTarget : public RenderTarget
 
         void DetachAll() override;
 
-        RenderTarget& instance;
+        RenderTarget&           instance;
+
+    private:
+
+        RenderingDebugger*      debugger_   = nullptr;
+        RenderTargetDescriptor  desc_;
 
 };
 

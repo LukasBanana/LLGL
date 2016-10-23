@@ -320,10 +320,10 @@ class LLGL_EXPORT RenderSystem
         /* ----- Render Targets ----- */
 
         /**
-        \brief Creates a new RenderTarget object with the specified number of samples.
+        \brief Creates a new RenderTarget object.
         \throws std::runtime_error If the renderer does not support RenderTarget objects (e.g. if OpenGL 2.1 or lower is used).
         */
-        virtual RenderTarget* CreateRenderTarget(unsigned int multiSamples = 0) = 0;
+        virtual RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) = 0;
 
         //! Releases the specified RenderTarget object. After this call, the specified object must no longer be used.
         virtual void Release(RenderTarget& renderTarget) = 0;
@@ -331,7 +331,7 @@ class LLGL_EXPORT RenderSystem
         /* ----- Shader ----- */
 
         /**
-        \brief Creates a new and empty shader.
+        \brief Creates a new and empty Shader object of the specified type.
         \param[in] type Specifies the type of the shader, i.e. if it is either a vertex or fragment shader or the like.
         \see Shader
         */
