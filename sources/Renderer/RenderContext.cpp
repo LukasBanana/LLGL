@@ -50,10 +50,9 @@ void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 
 void RenderContext::SetOrCreateWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext)
 {
-    window_ = window;
-
-    if (!window_)
+    if (!window)
     {
+        /* Create new window for this render context */
         WindowDescriptor windowDesc;
         {
             windowDesc.size             = videoModeDesc.resolution;
@@ -64,8 +63,13 @@ void RenderContext::SetOrCreateWindow(const std::shared_ptr<Window>& window, Vid
         window_ = Window::Create(windowDesc);
     }
     else
-        videoModeDesc.resolution = window_->GetSize();
+    {
+        /* Get and output resolution from specified window */
+        videoModeDesc.resolution = window->GetSize();
+        window_ = window;
+    }
 
+    /* Store video mode settings */
     videoModeDesc_ = videoModeDesc;
 }
 
