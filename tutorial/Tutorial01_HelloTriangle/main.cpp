@@ -70,7 +70,12 @@ int main(int argc, char* argv[])
         // Define the lambda function to read an entire text file
         auto ReadFileContent = [](const std::string& filename)
         {
+            // Read file and check for failure
             std::ifstream file(filename);
+
+            if (!file.good())
+                throw std::runtime_error("failed to read file: \"" + filename + "\"");
+
             return std::string(
                 ( std::istreambuf_iterator<char>(file) ),
                 ( std::istreambuf_iterator<char>() )
