@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_RENDERING_PROFILER_H__
-#define __LLGL_RENDERING_PROFILER_H__
+#ifndef LLGL_RENDERING_PROFILER_H
+#define LLGL_RENDERING_PROFILER_H
 
 
 #include "Export.h"

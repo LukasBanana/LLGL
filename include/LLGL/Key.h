@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_KEY_H__
-#define __LLGL_KEY_H__
+#ifndef LLGL_KEY_H
+#define LLGL_KEY_H
 
 
 namespace LLGL

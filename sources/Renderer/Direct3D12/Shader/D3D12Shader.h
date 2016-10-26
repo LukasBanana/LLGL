@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D12_SHADER_H__
-#define __LLGL_D3D12_SHADER_H__
+#ifndef LLGL_D3D12_SHADER_H
+#define LLGL_D3D12_SHADER_H
 
 
 #include <LLGL/Shader.h>

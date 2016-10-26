@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_RENDER_CONTEXT_H__
-#define __LLGL_GL_RENDER_CONTEXT_H__
+#ifndef LLGL_GL_RENDER_CONTEXT_H
+#define LLGL_GL_RENDER_CONTEXT_H
 
 
 #include <LLGL/Window.h>

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_SHADER_FLAGS_H__
-#define __LLGL_SHADER_FLAGS_H__
+#ifndef LLGL_SHADER_FLAGS_H
+#define LLGL_SHADER_FLAGS_H
 
 
 #include "Export.h"

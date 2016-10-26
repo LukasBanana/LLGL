@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_COM_PTR_H__
-#define __LLGL_COM_PTR_H__
+#ifndef LLGL_COM_PTR_H
+#define LLGL_COM_PTR_H
 
 
 #include <Windows.h>

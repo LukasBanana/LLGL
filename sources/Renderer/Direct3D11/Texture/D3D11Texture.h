@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D11_TEXTURE_H__
-#define __LLGL_D3D11_TEXTURE_H__
+#ifndef LLGL_D3D11_TEXTURE_H
+#define LLGL_D3D11_TEXTURE_H
 
 
 #include <LLGL/Texture.h>

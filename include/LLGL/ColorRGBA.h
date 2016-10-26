@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_COLOR_RGBA_H__
-#define __LLGL_COLOR_RGBA_H__
+#ifndef LLGL_COLOR_RGBA_H
+#define LLGL_COLOR_RGBA_H
 
 
 #include "Color.h"

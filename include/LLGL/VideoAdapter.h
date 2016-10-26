@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_VIDEO_ADAPTER_H__
-#define __LLGL_VIDEO_ADAPTER_H__
+#ifndef LLGL_VIDEO_ADAPTER_H
+#define LLGL_VIDEO_ADAPTER_H
 
 
 #include "Export.h"

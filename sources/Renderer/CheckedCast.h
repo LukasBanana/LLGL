@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_CHECKED_CAST_H__
-#define __LLGL_CHECKED_CAST_H__
+#ifndef LLGL_CHECKED_CAST_H
+#define LLGL_CHECKED_CAST_H
 
 
 #ifdef LLGL_ENABLE_CHECKED_CAST

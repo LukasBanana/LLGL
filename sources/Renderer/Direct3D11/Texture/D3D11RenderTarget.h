@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D11_RENDER_TARGET_H__
-#define __LLGL_D3D11_RENDER_TARGET_H__
+#ifndef LLGL_D3D11_RENDER_TARGET_H
+#define LLGL_D3D11_RENDER_TARGET_H
 
 
 #include <LLGL/RenderTarget.h>

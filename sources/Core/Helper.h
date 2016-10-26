@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_HELPER_H__
-#define __LLGL_HELPER_H__
+#ifndef LLGL_HELPER_H
+#define LLGL_HELPER_H
 
 
 #include "../Renderer/CheckedCast.h"

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_INDEX_FORMAT_H__
-#define __LLGL_INDEX_FORMAT_H__
+#ifndef LLGL_INDEX_FORMAT_H
+#define LLGL_INDEX_FORMAT_H
 
 
 #include "Export.h"

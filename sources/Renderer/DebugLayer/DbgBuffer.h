@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_DBG_BUFFER_H__
-#define __LLGL_DBG_BUFFER_H__
+#ifndef LLGL_DBG_BUFFER_H
+#define LLGL_DBG_BUFFER_H
 
 
 #include <LLGL/Buffer.h>

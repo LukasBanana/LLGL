@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_DESKTOP_H__
-#define __LLGL_DESKTOP_H__
+#ifndef LLGL_DESKTOP_H
+#define LLGL_DESKTOP_H
 
 
 #include "Export.h"

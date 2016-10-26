@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_VERTEX_ARRAY_OBJECT_H__
-#define __LLGL_GL_VERTEX_ARRAY_OBJECT_H__
+#ifndef LLGL_GL_VERTEX_ARRAY_OBJECT_H
+#define LLGL_GL_VERTEX_ARRAY_OBJECT_H
 
 
 #include <LLGL/VertexFormat.h>

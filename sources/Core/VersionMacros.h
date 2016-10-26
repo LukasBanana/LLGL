@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_VERSION_MACROS_H__
-#define __LLGL_VERSION_MACROS_H__
+#ifndef LLGL_VERSION_MACROS_H
+#define LLGL_VERSION_MACROS_H
 
 
 #define LLGL_VERSION_MAJOR      0

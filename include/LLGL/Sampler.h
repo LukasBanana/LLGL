@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_SAMPLER_H__
-#define __LLGL_SAMPLER_H__
+#ifndef LLGL_SAMPLER_H
+#define LLGL_SAMPLER_H
 
 
 #include "Export.h"

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_DBG_RENDER_TARGET_H__
-#define __LLGL_DBG_RENDER_TARGET_H__
+#ifndef LLGL_DBG_RENDER_TARGET_H
+#define LLGL_DBG_RENDER_TARGET_H
 
 
 #include <LLGL/RenderTarget.h>

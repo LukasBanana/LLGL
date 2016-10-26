@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_TYPES_H__
-#define __LLGL_TYPES_H__
+#ifndef LLGL_TYPES_H
+#define LLGL_TYPES_H
 
 
 #include <Gauss/Vector2.h>

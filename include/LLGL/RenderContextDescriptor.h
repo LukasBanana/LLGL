@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_RENDER_CONTEXT_DESCRIPTOR_H__
-#define __LLGL_RENDER_CONTEXT_DESCRIPTOR_H__
+#ifndef LLGL_RENDER_CONTEXT_DESCRIPTOR_H
+#define LLGL_RENDER_CONTEXT_DESCRIPTOR_H
 
 
 #include "Export.h"

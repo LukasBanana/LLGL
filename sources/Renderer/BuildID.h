@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_BUILD_ID_H__
-#define __LLGL_BUILD_ID_H__
+#ifndef LLGL_BUILD_ID_H
+#define LLGL_BUILD_ID_H
 
 
 // Increment this number when the interface of LLGL changes in any way

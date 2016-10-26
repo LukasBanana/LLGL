@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_DBG_TEXTURE_H__
-#define __LLGL_DBG_TEXTURE_H__
+#ifndef LLGL_DBG_TEXTURE_H
+#define LLGL_DBG_TEXTURE_H
 
 
 #include <LLGL/Texture.h>

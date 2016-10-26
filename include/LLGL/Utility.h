@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_UTILITY_H__
-#define __LLGL_UTILITY_H__
+#ifndef LLGL_UTILITY_H
+#define LLGL_UTILITY_H
 
 #ifdef LLGL_ENABLE_UTILITY
 

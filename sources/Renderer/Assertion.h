@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_ASSERTION_H__
-#define __LLGL_ASSERTION_H__
+#ifndef LLGL_ASSERTION_H
+#define LLGL_ASSERTION_H
 
 
 #include <stdexcept>

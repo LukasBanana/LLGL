@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_MODULE_H__
-#define __LLGL_MODULE_H__
+#ifndef LLGL_MODULE_H
+#define LLGL_MODULE_H
 
 
 #include <memory>

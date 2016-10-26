@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_QUERY_FLAGS_H__
-#define __LLGL_QUERY_FLAGS_H__
+#ifndef LLGL_QUERY_FLAGS_H
+#define LLGL_QUERY_FLAGS_H
 
 
 namespace LLGL

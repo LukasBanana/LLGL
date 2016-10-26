@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_SHADER_UNIFORM_H__
-#define __LLGL_GL_SHADER_UNIFORM_H__
+#ifndef LLGL_GL_SHADER_UNIFORM_H
+#define LLGL_GL_SHADER_UNIFORM_H
 
 
 #include <LLGL/ShaderUniform.h>

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GRAPHICS_PIPELINE_H__
-#define __LLGL_GRAPHICS_PIPELINE_H__
+#ifndef LLGL_GRAPHICS_PIPELINE_H
+#define LLGL_GRAPHICS_PIPELINE_H
 
 
 #include "Export.h"

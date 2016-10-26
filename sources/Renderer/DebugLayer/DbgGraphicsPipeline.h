@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_DBG_GRAPHICS_PIPELINE_H__
-#define __LLGL_DBG_GRAPHICS_PIPELINE_H__
+#ifndef LLGL_DBG_GRAPHICS_PIPELINE_H
+#define LLGL_DBG_GRAPHICS_PIPELINE_H
 
 
 #include <LLGL/GraphicsPipeline.h>

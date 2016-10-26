@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D11_BUFFER_H__
-#define __LLGL_D3D11_BUFFER_H__
+#ifndef LLGL_D3D11_BUFFER_H
+#define LLGL_D3D11_BUFFER_H
 
 
 #include <LLGL/Buffer.h>

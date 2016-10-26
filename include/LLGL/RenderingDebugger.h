@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_RENDERING_DEBUGGER_H__
-#define __LLGL_RENDERING_DEBUGGER_H__
+#ifndef LLGL_RENDERING_DEBUGGER_H
+#define LLGL_RENDERING_DEBUGGER_H
 
 
 #include "Export.h"

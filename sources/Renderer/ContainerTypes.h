@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_CONTAINER_TYPES_H__
-#define __LLGL_CONTAINER_TYPES_H__
+#ifndef LLGL_CONTAINER_TYPES_H
+#define LLGL_CONTAINER_TYPES_H
 
 
 #include <set>

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_COMPUTE_PIPELINE_H__
-#define __LLGL_GL_COMPUTE_PIPELINE_H__
+#ifndef LLGL_GL_COMPUTE_PIPELINE_H
+#define LLGL_GL_COMPUTE_PIPELINE_H
 
 
 #include <LLGL/ComputePipeline.h>

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_NATIVE_HANDLE_H__
-#define __LLGL_NATIVE_HANDLE_H__
+#ifndef LLGL_NATIVE_HANDLE_H
+#define LLGL_NATIVE_HANDLE_H
 
 
 #if defined(_WIN32)

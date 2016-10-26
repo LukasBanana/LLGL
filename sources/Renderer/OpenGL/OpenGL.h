@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_OPENGL_H__
-#define __LLGL_OPENGL_H__
+#ifndef LLGL_OPENGL_H
+#define LLGL_OPENGL_H
 
 
 #if defined(WIN32)

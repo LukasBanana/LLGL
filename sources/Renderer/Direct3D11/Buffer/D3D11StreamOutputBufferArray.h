@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D11_STREAM_OUTPUT_BUFFER_ARRAY_H__
-#define __LLGL_D3D11_STREAM_OUTPUT_BUFFER_ARRAY_H__
+#ifndef LLGL_D3D11_STREAM_OUTPUT_BUFFER_ARRAY_H
+#define LLGL_D3D11_STREAM_OUTPUT_BUFFER_ARRAY_H
 
 
 #include "D3D11BufferArray.h"

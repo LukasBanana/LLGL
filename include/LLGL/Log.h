@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_LOG_H__
-#define __LLGL_LOG_H__
+#ifndef LLGL_LOG_H
+#define LLGL_LOG_H
 
 
 #include "Export.h"

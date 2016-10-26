@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_VENDOR_H__
-#define __LLGL_VENDOR_H__
+#ifndef LLGL_VENDOR_H
+#define LLGL_VENDOR_H
 
 
 #include <LLGL/Export.h>

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_IMAGE_H__
-#define __LLGL_IMAGE_H__
+#ifndef LLGL_IMAGE_H
+#define LLGL_IMAGE_H
 
 
 #include "Export.h"

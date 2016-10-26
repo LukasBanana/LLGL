@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_SHADER_PROGRAM_H__
-#define __LLGL_GL_SHADER_PROGRAM_H__
+#ifndef LLGL_GL_SHADER_PROGRAM_H
+#define LLGL_GL_SHADER_PROGRAM_H
 
 
 #include <LLGL/ShaderProgram.h>

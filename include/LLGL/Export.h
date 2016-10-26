@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_EXPORT_H__
-#define __LLGL_EXPORT_H__
+#ifndef LLGL_EXPORT_H
+#define LLGL_EXPORT_H
 
 
 #ifdef _MSC_VER

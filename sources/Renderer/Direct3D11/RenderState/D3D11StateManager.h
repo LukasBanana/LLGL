@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D11_STATE_MANAGER_H__
-#define __LLGL_D3D11_STATE_MANAGER_H__
+#ifndef LLGL_D3D11_STATE_MANAGER_H
+#define LLGL_D3D11_STATE_MANAGER_H
 
 
 #include "../../ComPtr.h"

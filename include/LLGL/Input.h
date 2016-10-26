@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_INPUT_H__
-#define __LLGL_INPUT_H__
+#ifndef LLGL_INPUT_H
+#define LLGL_INPUT_H
 
 
 #include <LLGL/Window.h>

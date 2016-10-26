@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_INCLUDE_H__
-#define __LLGL_INCLUDE_H__
+#ifndef LLGL_INCLUDE_H
+#define LLGL_INCLUDE_H
 
 
 #include "Window.h"

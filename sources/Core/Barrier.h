@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_BARRIER_H__
-#define __LLGL_BARRIER_H__
+#ifndef LLGL_BARRIER_H
+#define LLGL_BARRIER_H
 
 
 #include <thread>

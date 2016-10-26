@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_WIN32_MODULE_H__
-#define __LLGL_WIN32_MODULE_H__
+#ifndef LLGL_WIN32_MODULE_H
+#define LLGL_WIN32_MODULE_H
 
 
 #include "../Module.h"

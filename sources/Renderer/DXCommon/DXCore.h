@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_DX_CORE_H__
-#define __LLGL_DX_CORE_H__
+#ifndef LLGL_DX_CORE_H
+#define LLGL_DX_CORE_H
 
 
 #include <LLGL/ColorRGBA.h>

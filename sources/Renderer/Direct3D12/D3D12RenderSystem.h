@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D12_RENDER_SYSTEM_H__
-#define __LLGL_D3D12_RENDER_SYSTEM_H__
+#ifndef LLGL_D3D12_RENDER_SYSTEM_H
+#define LLGL_D3D12_RENDER_SYSTEM_H
 
 
 #include <LLGL/RenderSystem.h>

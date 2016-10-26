@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_RENDER_SYSTEM_FLAGS_H__
-#define __LLGL_RENDER_SYSTEM_FLAGS_H__
+#ifndef LLGL_RENDER_SYSTEM_FLAGS_H
+#define LLGL_RENDER_SYSTEM_FLAGS_H
 
 
 #include <Gauss/Vector3.h>

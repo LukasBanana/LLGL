@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_TIMER_H__
-#define __LLGL_TIMER_H__
+#ifndef LLGL_TIMER_H
+#define LLGL_TIMER_H
 
 
 #include <LLGL/Export.h>

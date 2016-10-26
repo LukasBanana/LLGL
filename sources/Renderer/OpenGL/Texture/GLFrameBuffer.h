@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_FRAME_BUFFER_H__
-#define __LLGL_GL_FRAME_BUFFER_H__
+#ifndef LLGL_GL_FRAME_BUFFER_H
+#define LLGL_GL_FRAME_BUFFER_H
 
 
 #include "GLTexture.h"

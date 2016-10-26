@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_EXCEPTION_H__
-#define __LLGL_EXCEPTION_H__
+#ifndef LLGL_EXCEPTION_H
+#define LLGL_EXCEPTION_H
 
 
 #include <LLGL/Export.h>

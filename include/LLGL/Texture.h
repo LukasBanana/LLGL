@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_TEXTURE_H__
-#define __LLGL_TEXTURE_H__
+#ifndef LLGL_TEXTURE_H
+#define LLGL_TEXTURE_H
 
 
 #include "Export.h"

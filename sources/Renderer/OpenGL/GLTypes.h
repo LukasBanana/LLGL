@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_GL_TYPES_H__
-#define __LLGL_GL_TYPES_H__
+#ifndef LLGL_GL_TYPES_H
+#define LLGL_GL_TYPES_H
 
 
 #include "OpenGL.h"

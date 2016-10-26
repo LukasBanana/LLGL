@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_BUFFER_FLAG_H__
-#define __LLGL_BUFFER_FLAG_H__
+#ifndef LLGL_BUFFER_FLAG_H
+#define LLGL_BUFFER_FLAG_H
 
 
 #include "Export.h"

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_D3D12_TYPES_H__
-#define __LLGL_D3D12_TYPES_H__
+#ifndef LLGL_D3D12_TYPES_H
+#define LLGL_D3D12_TYPES_H
 
 
 #include <LLGL/VertexAttribute.h>
