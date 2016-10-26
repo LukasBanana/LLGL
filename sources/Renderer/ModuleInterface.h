@@ -27,7 +27,7 @@ LLGL_EXPORT int LLGL_RenderSystem_BuildID();
 // Returns a raw pointer to the allocated render system (allocated with "new" keyword)
 LLGL_EXPORT void* LLGL_RenderSystem_Alloc();
 
-// Returns the name of this audio system module.
+// Returns the name of this render system module.
 LLGL_EXPORT const char* LLGL_RenderSystem_Name();
 
 }
