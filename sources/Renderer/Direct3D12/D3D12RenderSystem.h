@@ -124,7 +124,7 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
         ComPtr<ID3D12CommandQueue> CreateDXCommandQueue();
         ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator();
-        ComPtr<ID3D12GraphicsCommandList> CreateDXCommandList(ID3D12CommandAllocator* commandAlloc);
+        ComPtr<ID3D12GraphicsCommandList> CreateDXCommandList(ID3D12CommandAllocator* commandAlloc = nullptr);
         ComPtr<ID3D12PipelineState> CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
         ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
 

@@ -6,7 +6,7 @@
  */
 
 #include "D3D12CommandBuffer.h"
-//#include "D3D12RenderContext.h"
+#include "D3D12RenderContext.h"
 #include "D3D12RenderSystem.h"
 #include "D3D12Types.h"
 #include "../CheckedCast.h"
@@ -313,9 +313,8 @@ void D3D12CommandBuffer::SyncGPU()
 
 void D3D12CommandBuffer::CreateDevices()
 {
-    /* Create command allocator and graphics command list */
-    commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
-    commandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
+    /* Create graphics command list */
+    commandList_ = renderSystem_.CreateDXCommandList();
 }
 
 void D3D12CommandBuffer::CreateStateManager()
@@ -349,11 +348,6 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
 
     commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
 }
-
-/*void D3D12CommandBuffer::ExecuteCommandList()
-{
-    renderSystem_.ExecuteCommandList(commandList_.Get());
-}*/
 
 void D3D12CommandBuffer::SubmitConsistentStates()
 {

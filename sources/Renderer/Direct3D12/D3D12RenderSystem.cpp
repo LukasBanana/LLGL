@@ -40,7 +40,7 @@ D3D12RenderSystem::D3D12RenderSystem()
     /* Create command queue, command allocator, and graphics command list */
     commandQueue_   = CreateDXCommandQueue();
     commandAlloc_   = CreateDXCommandAllocator();
-    commandList_    = CreateDXCommandList(commandAlloc_.Get());
+    commandList_    = CreateDXCommandList();
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -343,6 +343,9 @@ ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator()
 
 ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXCommandList(ID3D12CommandAllocator* commandAlloc)
 {
+    if (!commandAlloc)
+        commandAlloc = commandAlloc_.Get();
+
     ComPtr<ID3D12GraphicsCommandList> commandList;
 
     auto hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc, nullptr, IID_PPV_ARGS(&commandList));
@@ -456,9 +459,9 @@ void D3D12RenderSystem::CreateFactory()
 {
     /* Create DXGI factory 1.4 */
     #ifdef LLGL_DEBUG
-    auto hr = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&factory_));
+    auto hr = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
     #else
-    auto hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory_));
+    auto hr = CreateDXGIFactory1(IID_PPV_ARGS(factory_.ReleaseAndGetAddressOf()));
     #endif
 
     DXThrowIfFailed(hr, "failed to create DXGI factor 1.4");
@@ -469,7 +472,7 @@ void D3D12RenderSystem::QueryVideoAdapters()
     /* Enumerate over all video adapters */
     ComPtr<IDXGIAdapter> adapter;
 
-    for (UINT i = 0; factory_->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i)
+    for (UINT i = 0; factory_->EnumAdapters(i, adapter.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND; ++i)
     {
         /* Add adapter to the list and release handle */
         videoAdatperDescs_.push_back(DXGetVideoAdapterDesc(adapter.Get()));
@@ -499,7 +502,7 @@ bool D3D12RenderSystem::CreateDevice(HRESULT& hr, IDXGIAdapter* adapter, const s
     for (auto level : featureLevels)
     {
         /* Try to create D3D12 device with current feature level */
-        hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(&device_));
+        hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(device_.ReleaseAndGetAddressOf()));
         if (SUCCEEDED(hr))
         {
             /* Store final feature level */
@@ -514,7 +517,7 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
 {
     /* Create D3D12 fence */
     UINT64 initialFenceValue = 0;
-    auto hr = device_->CreateFence(initialFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
+    auto hr = device_->CreateFence(initialFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 fence");
     
     /* Create Win32 event */

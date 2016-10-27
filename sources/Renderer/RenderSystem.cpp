@@ -36,15 +36,18 @@ std::vector<std::string> RenderSystem::FindModules()
     /* Iterate over all known modules and return those that are availale on the current platform */
     const std::vector<std::string> knownModules
     {
-        #ifdef _WIN32
-        /*"Direct3D12", */"Direct3D11",
-        #endif
+        "OpenGL",
+        
         #ifdef __APPLE__
         "Metal",
         #else
         "Vulkan",
         #endif
-        "OpenGL"
+
+        #ifdef _WIN32
+        "Direct3D11",
+        "Direct3D12",
+        #endif
     };
     
     std::vector<std::string> modules;

@@ -69,12 +69,6 @@ void D3D12RenderContext::Present()
 
     hr = commandList_->Reset(commandAllocs_[currentFrame_].Get(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 command list");
-
-    /* Set current back buffer as new render target view */
-    //SetBackBufferRTV();
-
-    /* Re-submit consistent states */
-    //SubmitConsistentStates();
 }
 
 void D3D12RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
@@ -135,7 +129,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         swapChainDesc.Height                = static_cast<UINT>(desc_.videoMode.resolution.y);
         swapChainDesc.Format                = DXGI_FORMAT_B8G8R8A8_UNORM;
         swapChainDesc.Stereo                = false;
-        swapChainDesc.SampleDesc.Count      = (desc_.multiSampling.enabled ? desc_.multiSampling.samples : 1);
+        swapChainDesc.SampleDesc.Count      = 1;//(desc_.multiSampling.enabled ? desc_.multiSampling.samples : 1);
         swapChainDesc.SampleDesc.Quality    = 0;
         swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount           = numFrames_;
