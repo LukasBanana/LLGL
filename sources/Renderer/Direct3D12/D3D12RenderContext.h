@@ -60,6 +60,8 @@ class D3D12RenderContext : public RenderContext
         //void SetupSwapChainInterval(const VsyncDescriptor& desc);
 
         void MoveToNextFrame();
+
+        void ResolveRenderTarget();
         
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
         RenderContextDescriptor             desc_;
@@ -72,6 +74,7 @@ class D3D12RenderContext : public RenderContext
 
         ComPtr<ID3D12CommandAllocator>      commandAllocs_[maxNumBuffers];
         ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];
+        ComPtr<ID3D12Resource>              renderTargetsMS_[maxNumBuffers];
         UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
 
         ID3D12GraphicsCommandList*          commandList_                    = nullptr;

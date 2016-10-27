@@ -53,6 +53,10 @@ void D3D12RenderContext::Present()
 
     commandList_->ResourceBarrier(1, &resourceBarrier);
 
+    /* Resolve current render target if multi-sampling is used */
+    if (desc_.multiSampling.enabled)
+        ResolveRenderTarget();
+
     /* Execute pending command list */
     renderSystem_.CloseAndExecuteCommandList(commandList_);
 
@@ -92,12 +96,19 @@ void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 
 ID3D12Resource* D3D12RenderContext::GetCurrentRenderTarget()
 {
-    return renderTargets_[currentFrame_].Get();
+    if (desc_.multiSampling.enabled)
+        return renderTargetsMS_[currentFrame_].Get();
+    else
+        return renderTargets_[currentFrame_].Get();
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCurrentRTVDescHandle() const
 {
-    return CD3DX12_CPU_DESCRIPTOR_HANDLE(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), currentFrame_, rtvDescSize_);
+    return CD3DX12_CPU_DESCRIPTOR_HANDLE(
+        rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(),
+        (desc_.multiSampling.enabled ? (numFrames_ + currentFrame_) : currentFrame_),
+        rtvDescSize_
+    );
 }
 
 void D3D12RenderContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
@@ -112,6 +123,8 @@ void D3D12RenderContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
 
 void D3D12RenderContext::CreateWindowSizeDependentResources()
 {
+    auto device = renderSystem_.GetDevice();
+
     /* Wait until all previous GPU work is complete */
     //SyncGPU();
 
@@ -129,7 +142,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         swapChainDesc.Height                = static_cast<UINT>(desc_.videoMode.resolution.y);
         swapChainDesc.Format                = DXGI_FORMAT_B8G8R8A8_UNORM;
         swapChainDesc.Stereo                = false;
-        swapChainDesc.SampleDesc.Count      = 1;//(desc_.multiSampling.enabled ? desc_.multiSampling.samples : 1);
+        swapChainDesc.SampleDesc.Count      = 1; // always 1 because D3D12 does not allow (directly) multi-sampled swap-chains
         swapChainDesc.SampleDesc.Quality    = 0;
         swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount           = numFrames_;
@@ -146,14 +159,14 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
     InitMemory(descHeapDesc);
     {
-        descHeapDesc.NumDescriptors = numFrames_;
+        descHeapDesc.NumDescriptors = numFrames_;//(desc_.multiSampling.enabled ? numFrames_ * 2 : numFrames_);
         descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     }
     rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
     rtvDescHeap_->SetName(L"render target view descriptor heap");
 
-    rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    rtvDescSize_ = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     /* Create render targets */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
@@ -161,17 +174,47 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     for (UINT i = 0; i < numFrames_; ++i)
     {
         /* Get render target resource from swap-chain buffer */
-        auto hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(&renderTargets_[i]));
-        DXThrowIfFailed(hr, "failed to get D3D12 render target view " + std::to_string(i) + "/" + std::to_string(numFrames_) + " from swap chain");
+        auto hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(renderTargets_[i].ReleaseAndGetAddressOf()));
+        DXThrowIfFailed(hr, "failed to get D3D12 render target " + std::to_string(i) + "/" + std::to_string(numFrames_) + " from swap chain");
 
         /* Create render target view (RTV) */
-        /*D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
-        rtvDesc.Format          = DXGI_FORMAT_R8G8B8A8_UNORM;
-        rtvDesc.ViewDimension   = D3D12_RTV_DIMENSION_TEXTURE2DMS;*/
-
-        renderSystem_.GetDevice()->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDescHandle);
+        device->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDescHandle);
 
         rtvDescHandle.Offset(1, rtvDescSize_);
+    }
+
+    if (desc_.multiSampling.enabled)
+    {
+        /* Create multi-sampled render targets */
+        auto texture2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+            DXGI_FORMAT_R8G8B8A8_UNORM,
+            swapChainDesc.Width,
+            swapChainDesc.Height,
+            1, // arraySize
+            1, // mipLevels 
+            std::max(1u, desc_.multiSampling.samples),
+            0,
+            D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+        );
+
+        for (UINT i = 0; i < numFrames_; ++i)
+        {
+            /* Create render target resource */
+            auto hr = device->CreateCommittedResource(
+                &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+                D3D12_HEAP_FLAG_NONE,
+                &texture2DMSDesc,
+                D3D12_RESOURCE_STATE_COMMON,
+                nullptr,
+                IID_PPV_ARGS(renderTargetsMS_[i].ReleaseAndGetAddressOf())
+            );
+            DXThrowIfFailed(hr, "failed to create D3D12 multi-sampled render target " + std::to_string(i) + "/" + std::to_string(numFrames_) + " for swap chain");
+
+            /* Create render target view (RTV) */
+            device->CreateRenderTargetView(renderTargetsMS_[i].Get(), nullptr, rtvDescHandle);
+
+            rtvDescHandle.Offset(1, rtvDescSize_);
+        }
     }
 
     /* Update tracked fence values */
@@ -197,6 +240,15 @@ void D3D12RenderContext::MoveToNextFrame()
 
     /* Set fence value for next frame */
     fenceValues_[currentFrame_] = currentFenceValue + 1;
+}
+
+void D3D12RenderContext::ResolveRenderTarget()
+{
+    commandList_->ResolveSubresource(
+        renderTargets_[currentFrame_].Get(), 0,
+        renderTargetsMS_[currentFrame_].Get(), 0,
+        DXGI_FORMAT_R8G8B8A8_UNORM
+    );
 }
 
 

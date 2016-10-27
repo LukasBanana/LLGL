@@ -29,7 +29,7 @@ int main()
         contextDesc.videoMode.resolution    = { 800, 600 };
         //contextDesc.videoMode.fullscreen    = true;
 
-        contextDesc.multiSampling.enabled   = true;
+        contextDesc.multiSampling.enabled   = !true;
         contextDesc.multiSampling.samples   = 8;
 
         contextDesc.vsync.enabled           = true;

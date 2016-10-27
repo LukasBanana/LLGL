@@ -325,7 +325,7 @@ ComPtr<ID3D12CommandQueue> D3D12RenderSystem::CreateDXCommandQueue()
         queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
         queueDesc.Type  = D3D12_COMMAND_LIST_TYPE_DIRECT;
     }
-    auto hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&cmdQueue));
+    auto hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(cmdQueue.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 command queue");
 
     return cmdQueue;
@@ -335,7 +335,7 @@ ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator()
 {
     ComPtr<ID3D12CommandAllocator> commandAlloc;
 
-    auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAlloc));
+    auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(commandAlloc.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 command allocator");
 
     return commandAlloc;
@@ -348,7 +348,7 @@ ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXCommandList(ID3D12C
 
     ComPtr<ID3D12GraphicsCommandList> commandList;
 
-    auto hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc, nullptr, IID_PPV_ARGS(&commandList));
+    auto hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc, nullptr, IID_PPV_ARGS(commandList.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 graphics command list");
 
     return commandList;
@@ -358,7 +358,7 @@ ComPtr<ID3D12PipelineState> D3D12RenderSystem::CreateDXGfxPipelineState(const D3
 {
     ComPtr<ID3D12PipelineState> pipelineState;
 
-    auto hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState));
+    auto hr = device_->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 graphics pipeline state");
 
     return pipelineState;
@@ -368,7 +368,7 @@ ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D
 {
     ComPtr<ID3D12DescriptorHeap> descHeap;
 
-    auto hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descHeap));
+    auto hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(descHeap.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap");
 
     return descHeap;
@@ -443,12 +443,12 @@ void D3D12RenderSystem::WaitForFenceValue(UINT64 fenceValue)
 void D3D12RenderSystem::EnableDebugLayer()
 {
     ComPtr<ID3D12Debug> debugController0;
-    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController0))))
+    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(debugController0.ReleaseAndGetAddressOf()))))
     {
         debugController0->EnableDebugLayer();
 
         ComPtr<ID3D12Debug1> debugController1;
-        if (SUCCEEDED(debugController0->QueryInterface(IID_PPV_ARGS(&debugController1))))
+        if (SUCCEEDED(debugController0->QueryInterface(IID_PPV_ARGS(debugController1.ReleaseAndGetAddressOf()))))
             debugController1->SetEnableGPUBasedValidation(TRUE);
     }
 }
@@ -483,16 +483,16 @@ void D3D12RenderSystem::QueryVideoAdapters()
 void D3D12RenderSystem::CreateDevice()
 {
     /* Use default adapter (null) and try all feature levels */
-    IDXGIAdapter* adapter = nullptr;
+    ComPtr<IDXGIAdapter> adapter;
     auto featureLevels = DXGetFeatureLevels(D3D_FEATURE_LEVEL_12_1);
 
     /* Try to create a feature level with an hardware adapter */
     HRESULT hr = 0;
-    if (!CreateDevice(hr, adapter, featureLevels))
+    if (!CreateDevice(hr, adapter.Get(), featureLevels))
     {
         /* Use software adapter as fallback */
-        factory_->EnumWarpAdapter(IID_PPV_ARGS(&adapter));
-        if (!CreateDevice(hr, adapter, featureLevels))
+        factory_->EnumWarpAdapter(IID_PPV_ARGS(adapter.ReleaseAndGetAddressOf()));
+        if (!CreateDevice(hr, adapter.Get(), featureLevels))
             DXThrowIfFailed(hr, "failed to create D3D12 device");
     }
 }

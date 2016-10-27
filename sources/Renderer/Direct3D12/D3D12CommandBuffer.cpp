@@ -313,8 +313,9 @@ void D3D12CommandBuffer::SyncGPU()
 
 void D3D12CommandBuffer::CreateDevices()
 {
-    /* Create graphics command list */
-    commandList_ = renderSystem_.CreateDXCommandList();
+    /* Create command allocator and graphics command list */
+    commandAlloc_   = renderSystem_.CreateDXCommandAllocator();
+    commandList_    = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
 }
 
 void D3D12CommandBuffer::CreateStateManager()
