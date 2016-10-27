@@ -44,9 +44,6 @@ void D3D12RenderContext::Present()
     if (!commandAlloc_ || !commandList_)
         throw std::runtime_error("can not present framebuffer without D3D12 command allocator and/or command list");
 
-    /* Execute pending command list */
-    //ExecuteCommandList();
-
     /* Indicate that the render target will now be used to present when the command list is done executing */
     auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         GetCurrentRenderTarget(),
@@ -55,6 +52,9 @@ void D3D12RenderContext::Present()
     );
 
     commandList_->ResourceBarrier(1, &resourceBarrier);
+
+    /* Execute pending command list */
+    renderSystem_.CloseAndExecuteCommandList(commandList_);
 
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
@@ -68,7 +68,7 @@ void D3D12RenderContext::Present()
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
     hr = commandList_->Reset(commandAlloc_, nullptr);
-    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+    DXThrowIfFailed(hr, "failed to reset D3D12 command list");
 
     /* Set current back buffer as new render target view */
     //SetBackBufferRTV();

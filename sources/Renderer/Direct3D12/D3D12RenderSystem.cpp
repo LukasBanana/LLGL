@@ -121,7 +121,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
     }
 
     /* Execute upload commands and wait for GPU to finish execution */
-    ExecuteCommandList(commandList_.Get());
+    ExecuteCommandList();
     SyncGPU();
 
     return buffer;
@@ -371,7 +371,18 @@ ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D
     return descHeap;
 }
 
-void D3D12RenderSystem::ExecuteCommandList(ID3D12GraphicsCommandList* commandList)
+//private
+void D3D12RenderSystem::ExecuteCommandList()
+{
+    /* Close and execute command list */
+    CloseAndExecuteCommandList(commandList_.Get());
+
+    /* Reset command list */
+    auto hr = commandList_->Reset(commandAlloc_.Get(), nullptr);
+    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
+}
+
+void D3D12RenderSystem::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList)
 {
     /* Close graphics command list */
     auto hr = commandList->Close();
@@ -380,10 +391,6 @@ void D3D12RenderSystem::ExecuteCommandList(ID3D12GraphicsCommandList* commandLis
     /* Execute command list */
     ID3D12CommandList* cmdLists[] = { commandList };
     commandQueue_->ExecuteCommandLists(1, cmdLists);
-
-    /* Reset command list */
-    hr = commandList_->Reset(commandAlloc_.Get(), nullptr);
-    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 }
 
 void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)

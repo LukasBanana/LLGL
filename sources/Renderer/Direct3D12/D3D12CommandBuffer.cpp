@@ -354,10 +354,10 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
 }
 
-void D3D12CommandBuffer::ExecuteCommandList()
+/*void D3D12CommandBuffer::ExecuteCommandList()
 {
     renderSystem_.ExecuteCommandList(commandList_.Get());
-}
+}*/
 
 void D3D12CommandBuffer::SubmitConsistentStates()
 {

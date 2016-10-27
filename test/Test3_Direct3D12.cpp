@@ -47,8 +47,6 @@ int main()
         // Create command buffer
         auto commands = renderer->CreateCommandBuffer();
 
-        commands->SetRenderTarget(*context);
-
         // Setup input controller
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
@@ -162,6 +160,8 @@ int main()
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            commands->SetRenderTarget(*context);
+
             commands->Clear(LLGL::ClearFlags::Color);
 
             commands->SetViewport(LLGL::Viewport(0, 0, 800, 600));

@@ -132,7 +132,7 @@ class D3D12CommandBuffer : public CommandBuffer
         // Sets the current back buffer as render target view.
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
 
-        void ExecuteCommandList();
+        //void ExecuteCommandList();
         void SubmitConsistentStates();
 
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
