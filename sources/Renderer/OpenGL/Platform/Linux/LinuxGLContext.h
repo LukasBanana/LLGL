@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_LINUX_GL_CONTEXT_H__
-#define __LLGL_LINUX_GL_CONTEXT_H__
+#ifndef LLGL_LINUX_GL_CONTEXT_H
+#define LLGL_LINUX_GL_CONTEXT_H
 
 
 #include "../GLContext.h"

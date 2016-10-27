@@ -28,7 +28,7 @@ namespace LLGL
 {
 
 
-#ifdef __LLGL_DEF_GL_DUMMY_PROCS__
+#ifdef LLGL_DEF_GL_DUMMY_PROCS
 
 #define DECL_GLPROC(RTYPE, NAME, ARGS)                                                              \
     RTYPE APIENTRY Dummy_##NAME ARGS                                                                \

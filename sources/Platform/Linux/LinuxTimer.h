@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_LINUX_WINDOW_H__
-#define __LLGL_LINUX_WINDOW_H__
+#ifndef LLGL_LINUX_WINDOW_H
+#define LLGL_LINUX_WINDOW_H
 
 
 #include <LLGL/Timer.h>

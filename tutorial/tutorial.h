@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_TUTORIAL_H__
-#define __LLGL_TUTORIAL_H__
+#ifndef LLGL_TUTORIAL_H
+#define LLGL_TUTORIAL_H
 
 
 #include <LLGL/LLGL.h>

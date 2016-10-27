@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_TEST_HELPER_H__
-#define __LLGL_TEST_HELPER_H__
+#ifndef LLGL_TEST_HELPER_H
+#define LLGL_TEST_HELPER_H
 
 
 #include <LLGL/LLGL.h>

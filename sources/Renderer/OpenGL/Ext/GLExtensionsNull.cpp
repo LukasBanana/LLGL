@@ -8,11 +8,11 @@
 #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
 
 
-#define __LLGL_DEF_GL_DUMMY_PROCS__
+#define LLGL_DEF_GL_DUMMY_PROCS
 
 #include "GLExtensionsNull.h"
 
-#undef __LLGL_DEF_GL_DUMMY_PROCS__
+#undef LLGL_DEF_GL_DUMMY_PROCS
 
 
 #endif

@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_MACOS_NATIVE_HANDLE_H__
-#define __LLGL_MACOS_NATIVE_HANDLE_H__
+#ifndef LLGL_MACOS_NATIVE_HANDLE_H
+#define LLGL_MACOS_NATIVE_HANDLE_H
 
 
 #include <Cocoa/Cocoa.h>

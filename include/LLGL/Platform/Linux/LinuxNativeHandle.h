@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_LINUX_NATIVE_HANDLE_H__
-#define __LLGL_LINUX_NATIVE_HANDLE_H__
+#ifndef LLGL_LINUX_NATIVE_HANDLE_H
+#define LLGL_LINUX_NATIVE_HANDLE_H
 
 
 #include <X11/Xlib.h>

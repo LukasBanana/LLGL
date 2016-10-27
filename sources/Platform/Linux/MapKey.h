@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_MAP_KEY_H__
-#define __LLGL_MAP_KEY_H__
+#ifndef LLGL_MAP_KEY_H
+#define LLGL_MAP_KEY_H
 
 
 #include <LLGL/Key.h>
