@@ -142,13 +142,9 @@ class D3D12CommandBuffer : public CommandBuffer
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
-        UINT                                rtvDescSize_                = 0;
         D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_;
 
-        UINT64                              fenceValues_[maxNumBuffers] = { 0 };
-
-        UINT                                numFrames_                  = 0;
-        UINT                                currentFrame_               = 0;
+        //UINT64                              fenceValues_[maxNumBuffers] = { 0 };
 
         D3DClearState                       clearState_;
 

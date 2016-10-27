@@ -17,8 +17,8 @@ int main()
         std::shared_ptr<LLGL::RenderingProfiler> profiler;
         std::shared_ptr<LLGL::RenderingDebugger> debugger;
 
-        profiler = std::make_shared<LLGL::RenderingProfiler>();
-        debugger = std::make_shared<TestDebugger>();
+        //profiler = std::make_shared<LLGL::RenderingProfiler>();
+        //debugger = std::make_shared<TestDebugger>();
 
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("Direct3D12", profiler.get(), debugger.get());

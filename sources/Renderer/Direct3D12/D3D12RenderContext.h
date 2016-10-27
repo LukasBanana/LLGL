@@ -47,10 +47,9 @@ class D3D12RenderContext : public RenderContext
 
         ID3D12Resource* GetCurrentRenderTarget();
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetRTVDescHandle() const;
-        UINT GetRTVDescSize() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescHandle() const;
 
-        void SetCommandAllocatorAndList(ID3D12CommandAllocator* commandAlloc, ID3D12GraphicsCommandList* commandList);
+        void SetCommandList(ID3D12GraphicsCommandList* commandList);
 
     private:
 
@@ -71,10 +70,10 @@ class D3D12RenderContext : public RenderContext
         ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;
         UINT                                rtvDescSize_                    = 0;
 
+        ComPtr<ID3D12CommandAllocator>      commandAllocs_[maxNumBuffers];
         ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];
         UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
 
-        ID3D12CommandAllocator*             commandAlloc_                   = nullptr;
         ID3D12GraphicsCommandList*          commandList_                    = nullptr;
 
         UINT                                numFrames_                      = 0;

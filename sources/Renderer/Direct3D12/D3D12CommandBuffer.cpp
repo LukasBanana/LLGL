@@ -79,12 +79,9 @@ void D3D12CommandBuffer::SetClearStencil(int stencil)
 
 void D3D12CommandBuffer::Clear(long flags)
 {
-    /* Get RTV descriptor handle for current frame */
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescHandle_, currentFrame_, rtvDescSize_);
-
     /* Clear color buffer */
     if ((flags & ClearFlags::Color) != 0)
-        commandList_->ClearRenderTargetView(rtvHandle, clearState_.color.Ptr(), 0, nullptr);
+        commandList_->ClearRenderTargetView(rtvDescHandle_, clearState_.color.Ptr(), 0, nullptr);
     
     /* Clear depth-stencil buffer */
     int dsvClearFlags = 0;
@@ -97,7 +94,7 @@ void D3D12CommandBuffer::Clear(long flags)
     if (dsvClearFlags)
     {
         commandList_->ClearDepthStencilView(
-            rtvHandle, static_cast<D3D12_CLEAR_FLAGS>(dsvClearFlags), clearState_.depth, clearState_.stencil, 0, nullptr
+            rtvDescHandle_, static_cast<D3D12_CLEAR_FLAGS>(dsvClearFlags), clearState_.depth, clearState_.stencil, 0, nullptr
         );
     }
 }
@@ -202,7 +199,7 @@ void D3D12CommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
     auto& renderContextD3D = LLGL_CAST(D3D12RenderContext&, renderContext);
 
-    renderContextD3D.SetCommandAllocatorAndList(commandAlloc_.Get(), commandList_.Get());
+    renderContextD3D.SetCommandList(commandList_.Get());
 
     SetBackBufferRTV(renderContextD3D);
 }
@@ -306,7 +303,7 @@ void D3D12CommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSiz
 
 void D3D12CommandBuffer::SyncGPU()
 {
-    renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
+    //renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
 }
 
 
@@ -348,8 +345,7 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     commandList_->ResourceBarrier(1, &resourceBarrier);
 
     /* Set current back buffer as RTV */
-    rtvDescHandle_  = renderContextD3D.GetRTVDescHandle();
-    rtvDescSize_    = renderContextD3D.GetRTVDescSize();
+    rtvDescHandle_  = renderContextD3D.GetCurrentRTVDescHandle();
 
     commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
 }
