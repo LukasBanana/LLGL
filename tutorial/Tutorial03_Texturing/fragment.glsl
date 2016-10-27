@@ -12,5 +12,5 @@ out vec4 fragColor;
 // Fragment shader main function
 void main()
 {
-	fragColor = texture2D(colorMap, vTexCoord);
+	fragColor = texture(colorMap, vTexCoord);
 }
