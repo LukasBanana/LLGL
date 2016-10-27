@@ -44,18 +44,17 @@ void D3D12RenderContext::Present()
     if (!commandList_)
         throw std::runtime_error("can not present framebuffer without D3D12 command allocator and/or command list");
 
-    /* Indicate that the render target will now be used to present when the command list is done executing */
-    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        GetCurrentRenderTarget(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        D3D12_RESOURCE_STATE_PRESENT
-    );
-
-    commandList_->ResourceBarrier(1, &resourceBarrier);
-
     /* Resolve current render target if multi-sampling is used */
     if (desc_.multiSampling.enabled)
         ResolveRenderTarget();
+    else
+    {
+        /* Indicate that the render target will now be used to present when the command list is done executing */
+        TransitionRenderTarget(
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_PRESENT
+        );
+    }
 
     /* Execute pending command list */
     renderSystem_.CloseAndExecuteCommandList(commandList_);
@@ -116,6 +115,21 @@ void D3D12RenderContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
     commandList_ = commandList;
 }
 
+void D3D12RenderContext::TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
+{
+    /* Indicate a transition in the render-target usage and synchronize with the resource barrier */
+    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        renderTargets_[currentFrame_].Get(),
+        stateBefore, stateAfter
+    );
+    commandList_->ResourceBarrier(1, &resourceBarrier);
+}
+
+bool D3D12RenderContext::HasMultiSampling() const
+{
+    return desc_.multiSampling.enabled;
+}
+
 
 /*
  * ======= Private: =======
@@ -159,7 +173,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
     InitMemory(descHeapDesc);
     {
-        descHeapDesc.NumDescriptors = numFrames_;//(desc_.multiSampling.enabled ? numFrames_ * 2 : numFrames_);
+        descHeapDesc.NumDescriptors = (desc_.multiSampling.enabled ? numFrames_ * 2 : numFrames_);
         descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     }
@@ -244,11 +258,40 @@ void D3D12RenderContext::MoveToNextFrame()
 
 void D3D12RenderContext::ResolveRenderTarget()
 {
+    /* Prepare render-target for resolving */
+    D3D12_RESOURCE_BARRIER resourceBarriersBefore[2] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTargets_[currentFrame_].Get(),
+            D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST
+        ),
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTargetsMS_[currentFrame_].Get(),
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE
+        ),
+    };
+    commandList_->ResourceBarrier(2, resourceBarriersBefore);
+
+    /* Resolve multi-sampled render targets */
     commandList_->ResolveSubresource(
         renderTargets_[currentFrame_].Get(), 0,
         renderTargetsMS_[currentFrame_].Get(), 0,
         DXGI_FORMAT_R8G8B8A8_UNORM
     );
+
+    /* Prepare render-targets for presenting */
+    D3D12_RESOURCE_BARRIER resourceBarriersAfter[2] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTargets_[currentFrame_].Get(),
+            D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT
+        ),
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            renderTargetsMS_[currentFrame_].Get(),
+            D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
+        ),
+    };
+    commandList_->ResourceBarrier(2, resourceBarriersAfter);
 }
 
 

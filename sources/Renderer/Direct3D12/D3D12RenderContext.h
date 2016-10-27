@@ -51,6 +51,10 @@ class D3D12RenderContext : public RenderContext
 
         void SetCommandList(ID3D12GraphicsCommandList* commandList);
 
+        void TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
+
+        bool HasMultiSampling() const;
+
     private:
 
         static const UINT maxNumBuffers = 3;

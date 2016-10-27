@@ -335,14 +335,14 @@ void D3D12CommandBuffer::CreateStateManager()
 
 void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
 {
-    /* Indicate that the back buffer will be used as render target */
-    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        renderContextD3D.GetCurrentRenderTarget(),
-        D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_RENDER_TARGET
-    );
-
-    commandList_->ResourceBarrier(1, &resourceBarrier);
+    if (!renderContextD3D.HasMultiSampling())
+    {
+        /* Indicate that the back buffer will be used as render target */
+        renderContextD3D.TransitionRenderTarget(
+            D3D12_RESOURCE_STATE_PRESENT,
+            D3D12_RESOURCE_STATE_RENDER_TARGET
+        );
+    }
 
     /* Set current back buffer as RTV */
     rtvDescHandle_  = renderContextD3D.GetCurrentRTVDescHandle();
