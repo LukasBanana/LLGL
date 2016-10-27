@@ -80,9 +80,7 @@ void D3D12CommandBuffer::SetClearStencil(int stencil)
 void D3D12CommandBuffer::Clear(long flags)
 {
     /* Get RTV descriptor handle for current frame */
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
-        rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), currentFrame_, rtvDescSize_
-    );
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescHandle_, currentFrame_, rtvDescSize_);
 
     /* Clear color buffer */
     if ((flags & ClearFlags::Color) != 0)
@@ -199,9 +197,14 @@ void D3D12CommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
     //todo
 }
 
+//INCOMPLETE
 void D3D12CommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
-    //todo
+    auto& renderContextD3D = LLGL_CAST(D3D12RenderContext&, renderContext);
+
+    renderContextD3D.SetCommandAllocatorAndList(commandAlloc_.Get(), commandList_.Get());
+
+    SetBackBufferRTV(renderContextD3D);
 }
 
 /* ----- Pipeline States ----- */
@@ -316,19 +319,6 @@ void D3D12CommandBuffer::CreateDevices()
     /* Create command allocator and graphics command list */
     commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
     commandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
-
-    /* Create RTV descriptor heap */
-    D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
-    InitMemory(descHeapDesc);
-    {
-        descHeapDesc.NumDescriptors = numFrames_;
-        descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    }
-    rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
-    rtvDescHeap_->SetName(L"render target view descriptor heap");
-
-    rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 }
 
 void D3D12CommandBuffer::CreateStateManager()
@@ -346,11 +336,22 @@ void D3D12CommandBuffer::CreateStateManager()
     stateMngr_->SetScissors(1, &scissor);*/
 }
 
-void D3D12CommandBuffer::SetBackBufferRTV()
+void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
 {
+    /* Indicate that the back buffer will be used as render target */
+    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        renderContextD3D.GetCurrentRenderTarget(),
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+
+    commandList_->ResourceBarrier(1, &resourceBarrier);
+
     /* Set current back buffer as RTV */
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDesc(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(), currentFrame_, rtvDescSize_);
-    commandList_->OMSetRenderTargets(1, &rtvDesc, FALSE, nullptr);
+    rtvDescHandle_  = renderContextD3D.GetRTVDescHandle();
+    rtvDescSize_    = renderContextD3D.GetRTVDescSize();
+
+    commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
 }
 
 void D3D12CommandBuffer::ExecuteCommandList()

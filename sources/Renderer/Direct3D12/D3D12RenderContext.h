@@ -43,6 +43,15 @@ class D3D12RenderContext : public RenderContext
         void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         void SetVsync(const VsyncDescriptor& vsyncDesc) override;
 
+        /* --- Extended functions --- */
+
+        ID3D12Resource* GetCurrentRenderTarget();
+
+        D3D12_CPU_DESCRIPTOR_HANDLE GetRTVDescHandle() const;
+        UINT GetRTVDescSize() const;
+
+        void SetCommandAllocatorAndList(ID3D12CommandAllocator* commandAlloc, ID3D12GraphicsCommandList* commandList);
+
     private:
 
         static const UINT maxNumBuffers = 3;
@@ -65,8 +74,8 @@ class D3D12RenderContext : public RenderContext
         ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];
         UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
 
-        ComPtr<ID3D12CommandAllocator>      commandAlloc_;
-        ComPtr<ID3D12GraphicsCommandList>   commandList_;
+        ID3D12CommandAllocator*             commandAlloc_                   = nullptr;
+        ID3D12GraphicsCommandList*          commandList_                    = nullptr;
 
         UINT                                numFrames_                      = 0;
         UINT                                currentFrame_                   = 0;

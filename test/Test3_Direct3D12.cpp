@@ -40,11 +40,14 @@ int main()
 
         auto title = "LLGL Test 3 ( " + renderer->GetName() + " )";
         window->SetTitle(std::wstring(title.begin(), title.end()));
+        window->Show();
 
         auto renderCaps = renderer->GetRenderingCaps();
 
         // Create command buffer
         auto commands = renderer->CreateCommandBuffer();
+
+        commands->SetRenderTarget(*context);
 
         // Setup input controller
         auto input = std::make_shared<LLGL::Input>();

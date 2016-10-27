@@ -41,12 +41,15 @@ D3D12RenderContext::D3D12RenderContext(
 
 void D3D12RenderContext::Present()
 {
+    if (!commandAlloc_ || !commandList_)
+        throw std::runtime_error("can not present framebuffer without D3D12 command allocator and/or command list");
+
     /* Execute pending command list */
     //ExecuteCommandList();
 
     /* Indicate that the render target will now be used to present when the command list is done executing */
     auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        renderTargets_[currentFrame_].Get(),
+        GetCurrentRenderTarget(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PRESENT
     );
@@ -64,7 +67,7 @@ void D3D12RenderContext::Present()
     hr = commandAlloc_->Reset();
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
-    hr = commandList_->Reset(commandAlloc_.Get(), nullptr);
+    hr = commandList_->Reset(commandAlloc_, nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 
     /* Set current back buffer as new render target view */
@@ -89,6 +92,29 @@ void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 {
     desc_.vsync = vsyncDesc;
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
+}
+
+/* --- Extended functions --- */
+
+ID3D12Resource* D3D12RenderContext::GetCurrentRenderTarget()
+{
+    return renderTargets_[currentFrame_].Get();
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetRTVDescHandle() const
+{
+    return rtvDescHeap_->GetCPUDescriptorHandleForHeapStart();
+}
+
+UINT D3D12RenderContext::GetRTVDescSize() const
+{
+    return rtvDescSize_;
+}
+
+void D3D12RenderContext::SetCommandAllocatorAndList(ID3D12CommandAllocator* commandAlloc, ID3D12GraphicsCommandList* commandList)
+{
+    commandAlloc_   = commandAlloc;
+    commandList_    = commandList;
 }
 
 
@@ -142,7 +168,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     /* Create render targets */
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(GetRTVDescHandle());
 
     for (UINT i = 0; i < numFrames_; ++i)
     {
@@ -164,13 +190,15 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     for (UINT i = 0; i < numFrames_; ++i)
         fenceValues_[i] = fenceValues_[currentFrame_];
 
+    #if 0
     /* Create command allocator and graphics command list */
     commandAlloc_ = renderSystem_.CreateDXCommandAllocator();
     commandList_ = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
 
     /* Set initial render target view */
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescInit(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
-    commandList_->OMSetRenderTargets(1, &rtvDescInit, FALSE, nullptr);
+    //CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescInit(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
+    //commandList_->OMSetRenderTargets(1, &rtvDescInit, FALSE, nullptr);
+    #endif
 }
 
 void D3D12RenderContext::MoveToNextFrame()

@@ -24,6 +24,7 @@ namespace LLGL
 
 
 class D3D12RenderSystem;
+class D3D12RenderContext;
 
 class D3D12CommandBuffer : public CommandBuffer
 {
@@ -129,7 +130,7 @@ class D3D12CommandBuffer : public CommandBuffer
         void CreateStateManager();
 
         // Sets the current back buffer as render target view.
-        void SetBackBufferRTV();
+        void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
 
         void ExecuteCommandList();
         void SubmitConsistentStates();
@@ -141,8 +142,8 @@ class D3D12CommandBuffer : public CommandBuffer
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
-        ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;
         UINT                                rtvDescSize_                = 0;
+        D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_;
 
         UINT64                              fenceValues_[maxNumBuffers] = { 0 };
 
