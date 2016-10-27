@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_MACOS_GL_EXT_H__
-#define __LLGL_MACOS_GL_EXT_H__
+#ifndef LLGL_MACOS_GL_EXT_H
+#define LLGL_MACOS_GL_EXT_H
 
 
 #ifndef GL_MIRROR_CLAMP_TO_EDGE

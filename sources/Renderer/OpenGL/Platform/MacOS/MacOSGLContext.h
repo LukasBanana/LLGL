@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_MACOS_GL_CONTEXT_H__
-#define __LLGL_MACOS_GL_CONTEXT_H__
+#ifndef LLGL_MACOS_GL_CONTEXT_H
+#define LLGL_MACOS_GL_CONTEXT_H
 
 
 #import <Cocoa/Cocoa.h>

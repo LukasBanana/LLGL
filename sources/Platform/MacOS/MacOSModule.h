@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef __LLGL_MACOS_MODULE_H__
-#define __LLGL_MACOS_MODULE_H__
+#ifndef LLGL_MACOS_MODULE_H
+#define LLGL_MACOS_MODULE_H
 
 
 #include "../Module.h"
