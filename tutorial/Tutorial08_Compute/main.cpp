@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
         // Dispatch compute shader
         commands->Dispatch(inputData.size(), 1, 1);
 
-        // Read reslut
+        // Read result
         commands->SyncGPU();
         
         auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
