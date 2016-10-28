@@ -182,6 +182,18 @@ int main()
         }
         auto texture = renderer->CreateTexture(texDesc, &imageDesc);
 
+        //INTERFACE DRAFT
+        #if 0
+
+        LLGL::ResourceViewHeap* resourceViewHeap = renderer->CreateResourceViewHeap();
+        {
+            resourceViewHeap->AppendResourceView(*constantBuffer);
+            resourceViewHeap->AppendResourceView(*texture);
+        }
+        commands->SetResourceViewHeaps(1, resourceViewHeap);
+
+        #endif
+
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
@@ -194,6 +206,7 @@ int main()
 
             commands->SetGraphicsPipeline(*pipeline);
             commands->SetVertexBuffer(*vertexBuffer);
+
             commands->SetConstantBuffer(*constantBuffer, 0);
             //commands->SetTexture(*texture, 0);
 

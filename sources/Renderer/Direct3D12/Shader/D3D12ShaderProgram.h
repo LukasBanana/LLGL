@@ -98,7 +98,7 @@ class D3D12ShaderProgram : public ShaderProgram
 
         LinkError                                   linkError_              = LinkError::NoError;
 
-        UINT                                        numSRV_                 = 0;
+        UINT                                        numSRV_                 = 0;//TODO: use "TextureViewDescriptor" or the like
 
 };
 
