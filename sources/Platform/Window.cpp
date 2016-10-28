@@ -83,7 +83,7 @@ bool Window::ProcessEvents()
 {
     FOREACH_LISTENER_CALL( OnProcessEvents(*this) );
 
-    ProcessSystemEvents();
+    OnProcessEvents();
 
     return (!quit_);
 }

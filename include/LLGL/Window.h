@@ -123,10 +123,14 @@ class LLGL_EXPORT Window
         \brief Returns the native window handle.
         \remarks This must be casted to a platform specific structure:
         \code
+        // Example for a custom Win32 window class
         #include <LLGL/Platform/NativeHandle.h>
         //...
-        LLGL::NativeHandle handle;
-        window.GetNativeHandle(&handle);
+        void YourWindowClass::GetNativeHandle(void* nativeHandle)
+        {
+            auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
+            //handle->window = 'some HWND window handle';
+        }
         \endcode
         */
         virtual void GetNativeHandle(void* nativeHandle) const = 0;
@@ -166,7 +170,12 @@ class LLGL_EXPORT Window
 
     protected:
 
-        virtual void ProcessSystemEvents() = 0;
+        /**
+        \briefs Called inside the "ProcessEvents" function after all event listeners received the same event.
+        \see ProcessEvents
+        \see EventListener::OnProcessEvents
+        */
+        virtual void OnProcessEvents() = 0;
 
     private:
 

@@ -109,7 +109,7 @@ void LinuxWindow::GetNativeHandle(void* nativeHandle) const
     handle.visual   = visual_;
 }
 
-void LinuxWindow::ProcessSystemEvents()
+void LinuxWindow::OnProcessEvents()
 {
     XEvent event;
 

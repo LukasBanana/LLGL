@@ -229,7 +229,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     return wnd;
 }
 
-void MacOSWindow::ProcessSystemEvents()
+void MacOSWindow::OnProcessEvents()
 {
     NSEvent* event = nil;
     

@@ -47,7 +47,7 @@ class Win32Window : public Window
 
     private:
         
-        void ProcessSystemEvents() override;
+        void OnProcessEvents() override;
 
         HWND CreateWindowHandle(const WindowDescriptor& desc);
 

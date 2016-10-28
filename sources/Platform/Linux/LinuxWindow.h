@@ -47,7 +47,7 @@ class LinuxWindow : public Window
         
     private:
 
-        void ProcessSystemEvents() override;
+        void OnProcessEvents() override;
 
         void OpenWindow();
 

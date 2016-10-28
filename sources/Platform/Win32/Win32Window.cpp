@@ -291,7 +291,7 @@ void Win32Window::GetNativeHandle(void* nativeHandle) const
     handle->window = wnd_;
 }
 
-void Win32Window::ProcessSystemEvents()
+void Win32Window::OnProcessEvents()
 {
     /* Peek all queued messages */
     MSG message;
