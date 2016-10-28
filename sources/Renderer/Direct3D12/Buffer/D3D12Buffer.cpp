@@ -22,7 +22,7 @@ D3D12Buffer::D3D12Buffer(const BufferType type) :
 }
 
 void D3D12Buffer::UpdateStaticSubresource(
-    ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
+    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
     const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState)
 {
     if (offset + bufferSize > bufferSize_)
@@ -38,7 +38,7 @@ void D3D12Buffer::UpdateStaticSubresource(
         &bufferDesc,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
-        IID_PPV_ARGS(&bufferUpload)
+        IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())
     );
 
     DXThrowIfFailed(hr, "failed to create D3D12 committed resource for upload buffer");
@@ -46,21 +46,21 @@ void D3D12Buffer::UpdateStaticSubresource(
     /* Copy data into upload buffer */
     void* dest = nullptr;
     
-    hr = bufferUpload->Map(0, nullptr, &dest);
+    hr = uploadBuffer->Map(0, nullptr, &dest);
     DXThrowIfFailed(hr, "failed to map D3D12 resource");
     {
         ::memcpy(dest, data, bufferSize);
     }
-    bufferUpload->Unmap(0, nullptr);
+    uploadBuffer->Unmap(0, nullptr);
 
     /* Upload memory to GPU */
-    gfxCommandList->CopyBufferRegion(resource_.Get(), 0, bufferUpload.Get(), 0, bufferSize);
+    commandList->CopyBufferRegion(resource_.Get(), 0, uploadBuffer.Get(), 0, bufferSize);
     
-    CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, uploadState
     );
     
-    gfxCommandList->ResourceBarrier(1, &resourceBarrier);
+    commandList->ResourceBarrier(1, &resourceBarrier);
 }
 
 void D3D12Buffer::UpdateDynamicSubresource(const void* data, UINT bufferSize, UINT64 offset)

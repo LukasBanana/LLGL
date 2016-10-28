@@ -148,7 +148,7 @@ endif()
 file(GLOB FilesRendererD3D12				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
 file(GLOB FilesRendererD3D12Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/*.*)
 file(GLOB FilesRendererD3D12Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Buffer/*.*)
-#file(GLOB FilesRendererD3D12Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Texture/*.*)
+file(GLOB FilesRendererD3D12Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Texture/*.*)
 file(GLOB FilesRendererD3D12RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/RenderState/*.*)
 
 # Direct3D11 renderer files
@@ -240,7 +240,7 @@ source_group(
 source_group(
 	"Sources\\Renderer\\Texture" FILES
 	${FilesRendererGLTexture}
-#	${FilesRendererD3D12Texture}
+	${FilesRendererD3D12Texture}
 	${FilesRendererD3D11Texture}
 )
 
@@ -294,7 +294,7 @@ set(
 	${FilesRendererD3D12}
 	${FilesRendererD3D12Shader}
 	${FilesRendererD3D12Buffer}
-#	${FilesRendererD3D12Texture}
+	${FilesRendererD3D12Texture}
 	${FilesRendererD3D12RenderState}
 	${FilesRendererDXCommon}
 )

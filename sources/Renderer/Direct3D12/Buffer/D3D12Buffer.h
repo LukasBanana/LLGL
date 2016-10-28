@@ -24,7 +24,7 @@ class D3D12Buffer : public Buffer
     public:
 
         void UpdateStaticSubresource(
-            ID3D12Device* device, ID3D12GraphicsCommandList* gfxCommandList, ComPtr<ID3D12Resource>& bufferUpload,
+            ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
             const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState
         );
 
