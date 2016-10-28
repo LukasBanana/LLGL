@@ -43,32 +43,42 @@
 
 \maketitle
 
-
-%----------------------------------------------------------------------------------------
-%	INTRRODUCTION
-%----------------------------------------------------------------------------------------
-
 \begin{figure}[ht]
 	\centering
 	\includegraphics[width=0.5\textwidth]{../LLGL_Logo.pdf}
 \end{figure}
 
-\section*{Introduction}
+\newpage
 
-\LLGL (Low Level Graphics Library) is a thin abstraction layer for graphics APIs such as
-OpenGL, Direct3D, and Vulkan. It is meant to abstract these rendering technologies to one uniform interface.
-The library is written entirely in C++11, so you'll
-need a modern C++ compiler, i.e. at least \textbf{VisualC++ 2013} for Windows,
-\textbf{g++ 4.8} for Linux, or \textbf{Clang 3.1} for MacOS.
+
+%----------------------------------------------------------------------------------------
+%	CONTENTS
+%----------------------------------------------------------------------------------------
+
+\tableofcontents
+
+\newpage
+
+
+%----------------------------------------------------------------------------------------
+%	INTRRODUCTION
+%----------------------------------------------------------------------------------------
+
+\part{Introduction}
 
 
 %----------------------------------------------------------------------------------------
 %	PREREQUISITES
 %----------------------------------------------------------------------------------------
 
-\section*{Prerequisites}
+\section{Prerequisites}
 
-To use this library you should be familiar with these subjects:
+\LLGL (Low Level Graphics Library) is a thin abstraction layer for graphics APIs such as
+OpenGL, Direct3D, and Vulkan. It is meant to abstract these rendering technologies to one uniform interface.
+The library is written entirely in C++11, so you'll
+need a modern C++ compiler, i.e. at least \textbf{VisualC++ 2013} for Windows,
+\textbf{g++ 4.8} for Linux, or \textbf{Clang 3.1} for MacOS.
+To work this library you should be familiar with these subjects:
 \begin{itemize}
 	\item \textbf{Basic C++11 Programming} \\
 	Since the library is written in C++11, you should know something about \emph{smart pointers},
@@ -95,11 +105,11 @@ To use this library you should be familiar with these subjects:
 %----------------------------------------------------------------------------------------
 
 \newpage
-\section*{Progress}
+\section{Progress}
 
 This project is still in its early steps. Here is a short overview of its progress:
 
-\subsection*{Platforms}
+\subsection{Platforms}
 \begin{itemize}
 	\item \textbf{Windows} \\
 	Windows 10 is the main development environment of the author, so this platform has the best support.
@@ -113,7 +123,7 @@ This project is still in its early steps. Here is a short overview of its progre
 	This platform is partially supported (i.e. anti-aliasing or other features are not complete on this platform).
 \end{itemize}
 	
-\subsection*{Renderers}
+\subsection{Renderers}
 \begin{itemize}
 	\item \textbf{OpenGL} \\
 	OpenGL renderer is almost done (\textasciitilde 85\% complete).
@@ -134,17 +144,17 @@ This project is still in its early steps. Here is a short overview of its progre
 %----------------------------------------------------------------------------------------
 
 \newpage
-\section*{Build Process}
+\section{Build Process}
 
-\subsection*{Dependencies}
+\subsection{Dependencies}
 
-\subsubsection*{GaussianLib}
+\subsubsection{GaussianLib}
 
 The only required dependency is the header-only library
 \href{https://github.com/LukasBanana/GaussianLib}{\textsc{GaussianLib}},
 which is used for basic linear algebra computations with vectors and matrices.
 
-\subsubsection*{OpenGL}
+\subsubsection{OpenGL}
 
 To build the OpenGL render system you need the OpenGL extension header files and an up-to-date graphics driver.
 For Windows the header files \texttt{glext.h} and \texttt{wglext.h} are required.
@@ -154,17 +164,17 @@ You can find the header files at the \href{https://www.opengl.org/registry/#head
 Place the header files in the \texttt{include/GL/} folder of your compiler environment
 or add the include path later in your build settings.
 
-\subsubsection*{Direct3D}
+\subsubsection{Direct3D}
 
 Since VisualStudio 2013, the DirectX framework (of which Direct3D is a part of) is included within
 the VisualStudio setup, so no further SDK needs to be installed.
 
-%\subsubsection*{Vulkan}
+%\subsubsection{Vulkan}
 
 %To build the Vulkan render system you need the \href{https://lunarg.com/vulkan-sdk/}{Vulkan SDK},
 %and of course a graphics driver which supports at least Vulkan 1.0.
 
-\subsection*{Build Tool}
+\subsection{Build Tool}
 
 To build the \LLGL project files you need the build tool \href{https://cmake.org/}{CMake 2.8} or later.
 The build process is now demonstrated with the CMake GUI on Windows, but it can also be configured
@@ -224,18 +234,22 @@ when you compile the project:
 
 \newpage
 
-\section*{API Overview}
+\section{API Overview}
 
 LLGL has a very simple and unified API design.
 For object creation, there is commonly a ``\texttt{\dots Descriptor}'' structure (e.g. \texttt{LLGL::BufferDescriptor}),
 which contains all necessary information to describe the object which is to be created.
-There are three major interfaces: \emph{RenderSystem} is mainly used for object creation and memory read/write operations,
+
+\subsection{Rendering Interfaces}
+
+There are three major interfaces for rendering:
+\emph{RenderSystem} is mainly used for object creation and memory read/write operations,
 \emph{RenderContext} is used to configure each framebuffer and its back buffer (or rather swap chain),
 and \emph{CommandBuffer} which is used to set render states, draw primitives, and dispatch compute commands.
 
-\subsection*{RenderSystem}
+\subsubsection{RenderSystem}
 
-In the RenderSystem interface there are several functions of the following form:
+In the \texttt{RenderSystem} interface there are several functions of the following form:
 \begin{lstlisting}
 // Create a new object
 Create...
@@ -252,11 +266,27 @@ Map...
 // Unmap the memory from an object
 Unmap...
 
-// Release the object
+// Release an object
 Release
 \end{lstlisting}
 
-\subsection*{CommandBuffer}
+\subsubsection{RenderContext}
+
+The most important function in the \texttt{RenderContext} interface is \texttt{Present},
+to show the content of the back buffer on the screen.
+There are a few other functions to access the context window and change the video mode:
+\begin{lstlisting}
+// Access context window
+GetWindow
+
+// Set video mode (i.e. resolution, fullscreen/windowed mode etc.)
+SetVideoMode
+
+// Set vertical synchronization (Vsync) for swap-chain
+SetVsync
+\end{lstlisting}
+
+\subsubsection{CommandBuffer}
 
 There are several overloaded functions for drawing operations with the naming convention
 ``\texttt{Draw}'', ``\texttt{DrawIndexed}'', ``\texttt{DrawInstanced}'', or ``\texttt{DrawIndexedInstanced}''.
@@ -273,6 +303,13 @@ End...
 Draw...
 \end{lstlisting}
 
+\subsection{Windowing System}
+
+LLGL has the \texttt{Window} interface for a very basic but platform independent windowing system.
+Use its static function \texttt{Create} to create an instance of this interface for the host platform.
+A custom implementation of this interface can also be written and used for any renderer.
+In section \ref{sec:custom_window} an example of a custom implementation with \href{http://www.glfw.org/}{GLFW} is shown.
+
 
 %----------------------------------------------------------------------------------------
 %	HELLO TRIANGLE
@@ -280,7 +317,9 @@ Draw...
 
 \newpage
 
-\section*{Hello Triangle}
+\part{Tutorials}
+
+\section{Hello Triangle}
 
 After we have set up and build the library, we can start rendering some geometry.
 Our example will consist of a single C++ source file (e.g. ``\texttt{main.cpp}'') and two shader files
@@ -361,8 +400,6 @@ context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
 \end{lstlisting}
 Since some platforms (such as Win32) support Unicode window titles, our string literal starts with the `L' token.
 
-\newpage
-\noindent
 Next we create a vertex buffer to store our geometry. For this example we give up an index buffer,
 since we only draw a single triangle and no complex models. At first we define our vertex data and the vertex format,
 which is required to tell the rendering API how the vertex attributes are located within the vertex buffer:
@@ -429,8 +466,6 @@ std::string vertexShaderCode = ReadFileContent("vertex.glsl");
 std::string fragmentShaderCode = ReadFileContent("fragment.glsl");
 \end{lstlisting}
 
-\newpage
-\noindent
 After reading the shader code into strings we can compile the shaders:
 \begin{lstlisting}
 auto CompileShader = [](LLGL::Shader* shader, const std::string& code) {
@@ -491,9 +526,6 @@ void main() {
 }
 \end{lstlisting}
 This simple vertex shader only passes the vertex position and color (with default interpolation) to the fragment shader.
-
-\newpage
-\noindent
 And here is the fragment shader:
 \begin{lstlisting}[title={\texttt{fragment.glsl}}]
 // GLSL shader version 1.30 (for OpenGL 3.1)
@@ -577,6 +609,223 @@ and program start (set working directory to \texttt{tutorial/Tutorial01\_HelloTr
 \end{figure}
 
 
+%----------------------------------------------------------------------------------------
+%	CUSTOM WINDOW CLASS
+%----------------------------------------------------------------------------------------
+
+\newpage
+
+\part{Extensibility}
+
+\section{Custom Window Class}
+\label{sec:custom_window}
+
+In this example a simple custom implementation of the \texttt{Window} interface is demonstrated,
+to show how LLGL can be used with other windowing system libraries.
+Here we will use the popular cross-platform library \href{http://www.glfw.org/}{GLFW}.
+
+We start the include files of GLFW and LLGL:
+\begin{lstlisting}
+// Include GLFW library (in this example we use the Win32 platform)
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
+// Include LLGL and also the native handle structures
+#include <LLGL/LLGL.h>
+#include <LLGL/Platform/NativeHandle.h>
+\end{lstlisting}
+Now we declare our custom window class and override all necessary interface functions.
+We will keep a few secondary functions empty for simplicity:
+\begin{lstlisting}
+class CustomWindow : public LLGL::Window
+{
+public:
+	CustomWindow(const LLGL::Size& size, const std::string& title);
+	
+	void SetPosition(const LLGL::Point& position) override;
+	LLGL::Point GetPosition() const override;
+	
+	void SetSize(const LLGL::Size& size, bool useClientArea = true) override;
+	LLGL::Size GetSize(bool useClientArea = true) const override;
+	
+	void SetTitle(const std::wstring& title) override;
+	std::wstring GetTitle() const override;
+	
+	void Show(bool show = true) override;
+	bool IsShown() const override;
+	
+	LLGL::WindowDescriptor QueryDesc() const override;
+	void SetDesc(const LLGL::WindowDescriptor& desc) override;
+	
+	void Recreate(const LLGL::WindowDescriptor& desc) override;
+	
+	void GetNativeHandle(void* nativeHandle) const override;
+	
+private:
+	void OnProcessEvents() override;
+	
+	GLFWwindow* CreateGLFWWindow();
+	
+	LLGL::Size  size_;
+	std::string title_;
+	GLFWwindow* wnd_ = nullptr; // GLFW window pointer
+	
+};
+\end{lstlisting}
+This is an example of a minimal interface implementation.
+It looks like a lot of work for a small example but the most functions are straight forward.
+We start implementing the constructor and the \texttt{CreateGLFWWindow} function:
+\begin{lstlisting}
+CustomWindow::CustomWindow(const LLGL::Size& size, const std::string& title) :
+	size_ ( size               ),
+	title_( title              ),
+	wnd_  ( CreateGLFWWindow() )
+{
+}
+
+GLFWwindow* CustomWindow::CreateGLFWWindow()
+{
+	// Create GLFW window and stored parameters
+	wnd_ = glfwCreateWindow(size_.x, size_.y, title_.c_str(), nullptr, nullptr);
+	if (!wnd_)
+		throw std::runtime_error("failed to create GLFW window");
+}
+\end{lstlisting}
+The next functions we implement are very simple and used to set and get the position, size, visibility, and title.
+They are actually not required for a functioning custom window class, but we also implement them for demonstration purposes:
+\begin{lstlisting}
+void CustomWindow::SetPosition(const LLGL::Point& position)
+{
+	// Set GLFW window position
+	glfwSetWindowPos(wnd_, position.x, position.y);
+}
+
+LLGL::Point CustomWindow::GetPosition() const
+{
+	// Get position from GLFW window
+	LLGL::Point pos;
+	glfwGetWindowPos(wnd_, &pos.x, &pos.y);
+	return pos;
+}
+
+void CustomWindow::SetSize(const LLGL::Size& size, bool useClientArea)
+{
+	// Set GLFW window size
+	glfwSetWindowSize(wnd_, size.x, size.y);
+}
+
+LLGL::Size CustomWindow::GetSize(bool useClientArea) const
+{
+	// Get size from GLFW window
+	LLGL::Size size;
+	glfwGetWindowSize(wnd_, &size.x, &size.y);
+	return size;
+}
+
+void CustomWindow::Show(bool show)
+{
+	// Show or hide GLFW window
+	if (show)
+		glfwShowWindow(wnd_);
+	else
+		glfwHideWindow(wnd_);
+}
+
+bool CustomWindow::IsShown() const
+{
+	// Check if GLFW window is visible
+	return (glfwGetWindowAttrib(wnd_, GLFW_VISIBLE) != 0);
+}
+
+void CustomWindow::SetTitle(const std::wstring& title)
+{
+	// Convert title form UTF16 to UTF8, and set GLFW window title with "glfwSetWindowTitle"
+	title_ = std::string(title.begin(), title.end());
+	glfwSetWindowTitle(wnd_, title_.c_str());
+}
+
+std::wstring CustomWindow::GetTitle() const
+{
+	// Return stored title because there is no "glfwGetWindowTitle", and convert from UTF8 to UTF16
+	return std::wstring(title_.begin(), title_.end());
+}
+\end{lstlisting}
+We keep the following functions empty for simplicity since they are rarely used:
+\begin{lstlisting}
+LLGL::WindowDescriptor CustomWindow::QueryDesc() const
+{
+	// Determine or restore window descriptor ...
+	return {};
+}
+
+void CustomWindow::SetDesc(const LLGL::WindowDescriptor& desc)
+{
+	// Recreate GLFW window with new window descriptor ...
+}
+\end{lstlisting}
+Now we cross over to the major functions in the Window interface. The first one is \texttt{Recreate}.
+It is mainly used by the OpenGL renderer when a multi-sampled render context is created.
+In our custom class we merely destroy the GLFW window and create a new one:
+\begin{lstlisting}
+void CustomWindow::Recreate(const LLGL::WindowDescriptor& desc)
+{
+	// Destroy and recreate GLFW window
+	glfwDestroyWindow(wnd_);
+	wnd_ = CreateGLFWWindow();
+}
+\end{lstlisting}
+Next we implement the \texttt{GetNativeHandle} function. This is also very important,
+because any renderer needs access to the native window handle.
+On MS/Windows this is from the type \texttt{HWND} from the Win32 API.
+On GNU/Linux we need to pass three parameters: \texttt{Display*} from the X11 lib,
+\texttt{::Window} from the X11 lib (unfortunately the same name but in the global scope),
+and \texttt{XVisualInfo*} from GLX.
+On MacOS its is from the type \texttt{NSWindow*} from the Cocoa API.
+In this example we only implement it for Win32:
+\begin{lstlisting}
+void CustomWindow::GetNativeHandle(void* nativeHandle) const
+{
+	// This function must always return a valid native handle!
+	auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
+	handle->window = glfwGetWin32Window(wnd_);
+}
+\end{lstlisting}
+The last function we have to implement is the private function \texttt{OnProcessEvents} which is called
+by the non-virtual interface function \texttt{Window::ProcessEvents} after all event listeners
+have received the same event. Here we poll all window events from GLFW:
+\begin{lstlisting}
+void CustomWindow::GetNativeHandle(void* nativeHandle) const
+{
+	// Poll events from GLFW windowing system
+	glfwPollEvents();
+	
+	// Check if user pressed the close button
+	if (glfwWindowShouldClose(wnd_))
+		this->PostQuit();
+}
+\end{lstlisting}
+Finally we are done with our custom window class :-) Now we can start using it with a render context in our main function:
+\begin{lstlisting}
+// Initialize GLFW
+if (!glfwInit())
+	return -1;
+
+// Create an instance of our custom window class
+auto window = std::make_shared<CustomWindow>(LLGL::Size(640, 480), L"LLGL test with GLFW");
+
+// Create render context and pass the custom window
+LLGL::RenderContextDescriptor contextDesc;
+{
+	contextDesc.videoMode.resolution = { 640, 480 };
+}
+LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc, window);
+
+//...
+\end{lstlisting}
+That's all folks. The rest can be seen in the tutorials.
+
+
 
 
 %----------------------------------------------------------------------------------------
@@ -585,7 +834,7 @@ and program start (set working directory to \texttt{tutorial/Tutorial01\_HelloTr
 
 %\newpage
 
-%\section*{Appendix}
+%\section{Appendix}
 
 %Foo bar ...
 
