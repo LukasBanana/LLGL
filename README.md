@@ -12,7 +12,8 @@ License
 Documentation
 -------------
 
-- [Getting Started with LLGL](https://github.com/LukasBanana/LLGL/blob/master/docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF) with Introduction, Hello Triangle Tutorial, and Extensibility Example with GLFW
+- [Getting Started with LLGL](https://github.com/LukasBanana/LLGL/blob/master/docu/GettingStarted/Getting%20Started%20with%20LLGL.pdf) (PDF)
+with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](https://github.com/LukasBanana/LLGL/blob/master/docu/refman.pdf) (PDF)
 - [LLGL Coding Conventions](https://github.com/LukasBanana/LLGL/blob/master/docu/CodingConventions/Coding%20Conventions%20for%20LLGL.pdf) (PDF)
 
