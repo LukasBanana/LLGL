@@ -59,12 +59,17 @@ class D3D12ShaderProgram : public ShaderProgram
         inline D3D12Shader* GetGS() const { return gs_; }
         inline D3D12Shader* GetCS() const { return cs_; }
 
-        inline UINT GetNumConstantBuffers() const
+        inline UINT GetNumSRV() const
+        {
+            return numSRV_;
+        }
+
+        inline UINT GetNumCBV() const
         {
             return static_cast<UINT>(constantBufferDescs_.size());
         }
 
-        inline UINT GetNumStorageBuffers() const
+        inline UINT GetNumUAV() const
         {
             return static_cast<UINT>(storageBufferDescs_.size());
         }
@@ -92,6 +97,8 @@ class D3D12ShaderProgram : public ShaderProgram
         std::vector<StorageBufferViewDescriptor>    storageBufferDescs_;
 
         LinkError                                   linkError_              = LinkError::NoError;
+
+        UINT                                        numSRV_                 = 0;
 
 };
 

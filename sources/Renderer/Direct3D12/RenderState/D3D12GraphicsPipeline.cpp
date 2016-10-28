@@ -65,8 +65,9 @@ void D3D12GraphicsPipeline::CreateRootSignature(
         }
     };
 
-    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, shaderProgram.GetNumConstantBuffers());
-    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, shaderProgram.GetNumStorageBuffers());
+    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, shaderProgram.GetNumSRV());
+    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, shaderProgram.GetNumCBV());
+    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, shaderProgram.GetNumUAV());
 
     CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
     if (!signatureRange.empty())

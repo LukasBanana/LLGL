@@ -25,7 +25,7 @@ D3D12ConstantBuffer::D3D12ConstantBuffer(ID3D12Device* device, const BufferDescr
         cbvHeapDesc.Flags           = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         cbvHeapDesc.NodeMask        = 0;
     }
-    auto hr = device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&descHeap_));
+    auto hr = device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(descHeap_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap for constant-buffer-view (CBV)");
 
     /* Create resource and put view */

@@ -19,6 +19,8 @@
 #include "Buffer/D3D12ConstantBuffer.h"
 #include "Buffer/D3D12StorageBuffer.h"
 
+#include "Texture/D3D12Texture.h"
+
 
 namespace LLGL
 {
@@ -123,7 +125,7 @@ void D3D12CommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, lo
     auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, buffer);
 
     /* Set CBV descriptor heap */
-    ID3D12DescriptorHeap* descHeaps[] = { constantBufferD3D.GetDescriptorHeap() };
+    ID3D12DescriptorHeap* descHeaps[1] = { constantBufferD3D.GetDescriptorHeap() };
     commandList_->SetDescriptorHeaps(1, descHeaps);
     commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
@@ -167,7 +169,12 @@ void D3D12CommandBuffer::EndStreamOutput()
 
 void D3D12CommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
 {
-    //todo
+    auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
+
+    /* Set CBV descriptor heap */
+    ID3D12DescriptorHeap* descHeaps[1] = { textureD3D.GetDescriptorHeap() };
+    commandList_->SetDescriptorHeaps(1, descHeaps);
+    commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
 
 void D3D12CommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)

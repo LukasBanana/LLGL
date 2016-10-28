@@ -129,8 +129,8 @@ void D3D12Texture::CreateResource(
     /* Create descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc;
     {
-        srvHeapDesc.NumDescriptors  = 1;
         srvHeapDesc.Type            = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        srvHeapDesc.NumDescriptors  = 1;
         srvHeapDesc.Flags           = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         srvHeapDesc.NodeMask        = 0;
     }
