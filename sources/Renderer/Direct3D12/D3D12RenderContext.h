@@ -38,6 +38,8 @@ class D3D12RenderContext : public RenderContext
             const std::shared_ptr<Window>& window
         );
 
+        ~D3D12RenderContext();
+
         void Present() override;
 
         void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;

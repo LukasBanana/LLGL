@@ -84,7 +84,12 @@ void D3D12GraphicsPipeline::CreateRootSignature(
     ComPtr<ID3DBlob>    signature;
     ComPtr<ID3DBlob>    error;
 
-    hr = D3D12SerializeRootSignature(&signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+    hr = D3D12SerializeRootSignature(
+        &signatureDesc,
+        D3D_ROOT_SIGNATURE_VERSION_1,
+        signature.ReleaseAndGetAddressOf(),
+        error.ReleaseAndGetAddressOf()
+    );
     
     if (FAILED(hr) && error)
     {
@@ -95,7 +100,13 @@ void D3D12GraphicsPipeline::CreateRootSignature(
     DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
 
     /* Create actual root signature */
-    hr = renderSystem.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature_));
+    hr = renderSystem.GetDevice()->CreateRootSignature(
+        0,
+        signature->GetBufferPointer(),
+        signature->GetBufferSize(),
+        IID_PPV_ARGS(rootSignature_.ReleaseAndGetAddressOf())
+    );
+
     DXThrowIfFailed(hr, "failed to create D3D12 root signature");
 }
 
@@ -242,7 +253,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = UINT_MAX;
     stateDesc.NumRenderTargets      = 1;//8;
-    stateDesc.SampleDesc.Count      = std::max(1u, desc.rasterizer.multiSampling.samples);
+    stateDesc.SampleDesc.Count      = desc.rasterizer.multiSampling.SampleCount();
     
     for (UINT i = 0; i < 8u; ++i)
         stateDesc.RTVFormats[i] = (i < stateDesc.NumRenderTargets ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_UNKNOWN);

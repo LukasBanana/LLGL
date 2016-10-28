@@ -39,6 +39,12 @@ D3D12RenderContext::D3D12RenderContext(
     SetVsync(desc_.vsync);
 }
 
+D3D12RenderContext::~D3D12RenderContext()
+{
+    /* Ensure the GPU is no longer referencing resources that are about to be released */
+    MoveToNextFrame();
+}
+
 void D3D12RenderContext::Present()
 {
     if (!commandList_)

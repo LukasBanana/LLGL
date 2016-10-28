@@ -49,6 +49,12 @@ D3D12RenderSystem::D3D12RenderSystem()
 
 D3D12RenderSystem::~D3D12RenderSystem()
 {
+    /*
+    Release render targets first, to ensure the GPU is no longer
+    referencing resources that are about to be released
+    */
+    renderContexts_.clear();
+
     CloseHandle(fenceEvent_);
 }
 

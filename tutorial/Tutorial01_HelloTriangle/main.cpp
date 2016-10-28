@@ -8,7 +8,7 @@
 #include "../tutorial.h"
 
 
-#define ENABLE_MULTISAMPLING
+//#define ENABLE_MULTISAMPLING
 
 int main(int argc, char* argv[])
 {
