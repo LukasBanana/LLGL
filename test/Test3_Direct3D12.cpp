@@ -157,6 +157,31 @@ int main()
         commands->SetClearColor({ 0.2f, 0.2f, 0.7f });
         //context->SetClearColor({ 0, 0, 0 });
 
+        // Create texture
+        LLGL::ColorRGBAub imageData[4] =
+        {
+            { 255,   0,   0, 255 },
+            {   0, 255,   0, 255 },
+            {   0,   0, 255, 255 },
+            { 255, 255,   0, 255 },
+        };
+
+        LLGL::TextureDescriptor texDesc;
+        {
+            texDesc.type                = LLGL::TextureType::Texture2D;
+            texDesc.format              = LLGL::TextureFormat::RGBA;
+            texDesc.texture2D.width     = 2;
+            texDesc.texture2D.height    = 2;
+            texDesc.texture2D.layers    = 1;
+        }
+        LLGL::ImageDescriptor imageDesc;
+        {
+            imageDesc.buffer    = imageData;
+            imageDesc.dataType  = LLGL::DataType::UInt8;
+            imageDesc.format    = LLGL::ImageFormat::RGBA;
+        }
+        auto texture = renderer->CreateTexture(texDesc, &imageDesc);
+
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {

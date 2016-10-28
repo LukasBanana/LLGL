@@ -16,6 +16,7 @@
 #include "D3D12RenderContext.h"
 
 #include "Buffer/D3D12Buffer.h"
+#include "Texture/D3D12Texture.h"
 
 #include "RenderState/D3D12GraphicsPipeline.h"
 
@@ -197,7 +198,7 @@ class D3D12RenderSystem : public RenderSystem
         HWObjectContainer<D3D12RenderContext>       renderContexts_;
         HWObjectContainer<D3D12CommandBuffer>       commandBuffers_;
         HWObjectContainer<D3D12Buffer>              buffers_;
-        //HWObjectContainer<D3D12Texture>             textures_;
+        HWObjectContainer<D3D12Texture>             textures_;
         //HWObjectContainer<D3D12RenderTarget>        renderTargets_;
         HWObjectContainer<D3D12Shader>              shaders_;
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;

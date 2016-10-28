@@ -88,7 +88,7 @@ void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const BufferDescriptor& desc, const void* initialData)
 {
     std::unique_ptr<D3D12Buffer> buffer;
-    ComPtr<ID3D12Resource> bufferUpload;
+    ComPtr<ID3D12Resource> uploadBuffer;
 
     /* Create buffer and upload data to GPU */
     switch (desc.type)
@@ -96,7 +96,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
         case BufferType::Vertex:
         {
             auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer>(device_.Get(), desc);
-            vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, desc.size);
+            vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, initialData, desc.size);
             buffer = std::move(vertexBufferD3D);
         }
         break;
@@ -104,7 +104,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
         case BufferType::Index:
         {
             auto indexBufferD3D = MakeUnique<D3D12IndexBuffer>(device_.Get(), desc);
-            indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), bufferUpload, initialData, desc.size);
+            indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, initialData, desc.size);
             buffer = std::move(indexBufferD3D);
         }
         break;
@@ -174,7 +174,30 @@ void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
 {
-    return nullptr;//TakeOwnership(textures_, MakeUnique<D3D12Texture>());
+    auto textureD3D = MakeUnique<D3D12Texture>(device_.Get(), textureDesc);
+
+    /* Upload image data */
+    ComPtr<ID3D12Resource> uploadBuffer;
+
+    if (imageDesc)
+    {
+        auto texWidth   = textureDesc.texture1D.width;
+        auto texHeight  = (textureDesc.type == TextureType::Texture1D || textureDesc.type == TextureType::Texture1DArray ? 1 : textureDesc.texture2D.height);
+
+        D3D12_SUBRESOURCE_DATA subresourceData;
+        {
+            subresourceData.pData       = imageDesc->buffer;
+            subresourceData.RowPitch    = ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType) * texWidth;
+            subresourceData.SlicePitch  = subresourceData.RowPitch * texHeight;
+        }
+        textureD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, subresourceData);
+    }
+
+    /* Execute upload commands and wait for GPU to finish execution */
+    ExecuteCommandList();
+    SyncGPU();
+
+    return TakeOwnership(textures_, std::move(textureD3D));
 }
 
 TextureArray* D3D12RenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)

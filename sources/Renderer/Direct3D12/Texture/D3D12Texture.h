@@ -23,13 +23,11 @@ class D3D12Texture : public Texture
 
     public:
 
-        D3D12Texture(const TextureType type);
+        D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc);
 
         Gs::Vector3ui QueryMipLevelSize(unsigned int mipLevel) const override;
 
         /* ----- Extended internal functions ---- */
-
-        void CreateResource(ID3D12Device* device, const D3D12_RESOURCE_DESC& desc, const D3D12_SHADER_RESOURCE_VIEW_DESC& srvDesc);
 
         void UpdateSubresource(
             ID3D12Device* device, ID3D12GraphicsCommandList* commandList,
@@ -61,6 +59,10 @@ class D3D12Texture : public Texture
         }
 
     private:
+
+        void CreateResource(
+            ID3D12Device* device, const D3D12_RESOURCE_DESC& desc, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
+        );
 
         ComPtr<ID3D12Resource>          resource_;
         ComPtr<ID3D12DescriptorHeap>    descHeap_; // descriptor heap for shader resource views (SRV)
