@@ -287,8 +287,8 @@ void Win32Window::Recreate(const WindowDescriptor& desc)
 
 void Win32Window::GetNativeHandle(void* nativeHandle) const
 {
-    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-    handle.window = wnd_;
+    auto handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+    handle->window = wnd_;
 }
 
 void Win32Window::ProcessSystemEvents()
