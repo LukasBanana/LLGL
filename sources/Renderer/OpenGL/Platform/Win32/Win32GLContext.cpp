@@ -317,9 +317,16 @@ HGLRC Win32GLContext::CreateExtContextProfile(HGLRC sharedGLRC)
 
 void Win32GLContext::SetupDeviceContextAndPixelFormat()
 {
-    /* Get device context from window */
+    /* Get native window handle */
     NativeHandle nativeHandle;
+    nativeHandle.window = 0;
+
     window_.GetNativeHandle(&nativeHandle);
+
+    if (!nativeHandle.window)
+        throw std::runtime_error("invalid native Win32 window handle");
+
+    /* Get device context from window */
     hDC_ = GetDC(nativeHandle.window);
 
     /* Select suitable pixel format */
