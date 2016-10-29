@@ -101,6 +101,17 @@ class LLGL_EXPORT RenderSystem
             RenderingDebugger* debugger = nullptr
         );
 
+        /**
+        \brief Rendering API identification number.
+        \remarks This can be a value of the RendererID entries.
+        Since the render system is modular, a new render system can have its own ID number.
+        \see RendererID
+        */
+        inline int GetRendererID() const
+        {
+            return rendererID_;
+        }
+
         //! Returns the name of this render system.
         inline const std::string& GetName() const
         {
@@ -410,6 +421,7 @@ class LLGL_EXPORT RenderSystem
 
     private:
 
+        int                         rendererID_ = 0;
         std::string                 name_;
 
         RendererInfo                info_;

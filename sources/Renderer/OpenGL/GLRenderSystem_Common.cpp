@@ -320,7 +320,6 @@ void GLRenderSystem::QueryRendererInfo()
     info.deviceName             = GLGetString(GL_RENDERER);
     info.vendorName             = GLGetString(GL_VENDOR);
     info.shadingLanguageName    = "GLSL " + GLGetString(GL_SHADING_LANGUAGE_VERSION);
-    info.rendererID             = RendererID::OpenGL;
 
     SetRendererInfo(info);
 }

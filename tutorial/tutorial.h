@@ -666,7 +666,7 @@ protected:
     // Returns ture if OpenGL is used as rendering API.
     bool IsOpenGL() const
     {
-        return (renderer->GetRendererInfo().rendererID == LLGL::RendererID::OpenGL);
+        return (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
     }
 
 };

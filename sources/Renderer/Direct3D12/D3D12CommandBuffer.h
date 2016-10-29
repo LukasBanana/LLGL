@@ -80,6 +80,10 @@ class D3D12CommandBuffer : public CommandBuffer
         void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
+        /* ----- Resource Views ----- */
+
+        //void SetResourceViewHeaps(unsigned int numHeaps, ResourceViewHeap* const * heapArray);
+
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;

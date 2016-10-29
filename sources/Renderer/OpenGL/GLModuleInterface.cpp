@@ -17,14 +17,19 @@ LLGL_EXPORT int LLGL_RenderSystem_BuildID()
     return LLGL_BUILD_ID;
 }
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
+LLGL_EXPORT int LLGL_RenderSystem_RendererID()
 {
-    return new LLGL::GLRenderSystem();
+    return LLGL::RendererID::OpenGL;
 }
 
 LLGL_EXPORT const char* LLGL_RenderSystem_Name()
 {
     return "OpenGL";
+}
+
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
+{
+    return new LLGL::GLRenderSystem();
 }
 
 }

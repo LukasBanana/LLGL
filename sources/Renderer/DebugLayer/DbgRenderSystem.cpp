@@ -348,7 +348,7 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
         if (desc.blend.targets.size() > 8)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "too many blend state targets (limit is 8)");
 
-        if (GetRendererInfo().rendererID != RendererID::OpenGL)
+        if (GetRendererID() != RendererID::OpenGL)
         {
             switch (desc.primitiveTopology)
             {

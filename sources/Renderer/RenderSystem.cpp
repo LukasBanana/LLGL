@@ -73,6 +73,30 @@ static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFil
     return (RenderSystem_BuildID() == LLGL_BUILD_ID);
 }
 
+static int LoadRenderSystemRendererID(Module& module)
+{
+    /* Load "LLGL_RenderSystem_RendererID" procedure */
+    LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_RENDERERID, (void));
+
+    auto RenderSystem_RendererID = reinterpret_cast<PFN_RENDERSYSTEM_RENDERERID>(module.LoadProcedure("LLGL_RenderSystem_RendererID"));
+    if (RenderSystem_RendererID)
+        return RenderSystem_RendererID();
+
+    return RendererID::Undefined;
+}
+
+static std::string LoadRenderSystemName(Module& module)
+{
+    /* Load "LLGL_RenderSystem_Name" procedure */
+    LLGL_PROC_INTERFACE(const char*, PFN_RENDERSYSTEM_NAME, (void));
+
+    auto RenderSystem_Name = reinterpret_cast<PFN_RENDERSYSTEM_NAME>(module.LoadProcedure("LLGL_RenderSystem_Name"));
+    if (RenderSystem_Name)
+        return std::string(RenderSystem_Name());
+
+    return "";
+}
+
 static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename)
 {
     /* Load "LLGL_RenderSystem_Alloc" procedure */
@@ -83,18 +107,6 @@ static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleF
         throw std::runtime_error("failed to load \"LLGL_RenderSystem_Alloc\" procedure from module \"" + moduleFilename + "\"");
 
     return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc());
-}
-
-static std::string LoadRenderSystemName(Module& module)
-{
-    /* Load "LLGL_RenderSystem_Name" procedure and store its value in the name field */
-    LLGL_PROC_INTERFACE(const char*, PFN_RENDERSYSTEM_NAME, (void));
-
-    auto RenderSystem_Name = reinterpret_cast<PFN_RENDERSYSTEM_NAME>(module.LoadProcedure("LLGL_RenderSystem_Name"));
-    if (RenderSystem_Name)
-        return std::string(RenderSystem_Name());
-
-    return "";
 }
 
 std::shared_ptr<RenderSystem> RenderSystem::Load(
@@ -132,7 +144,8 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
         #endif
     }
 
-    renderSystem->name_ = LoadRenderSystemName(*module);
+    renderSystem->name_         = LoadRenderSystemName(*module);
+    renderSystem->rendererID_   = LoadRenderSystemRendererID(*module);
 
     /* Store new module globally */
     g_renderSystemModule    = std::move(module);
