@@ -34,32 +34,32 @@ static const std::size_t maxThreadCount = ~0;
 \brief Shading language version enumation.
 \remarks These enumeration entries can be casted to an integer to get the respective version number.
 GLSL versions range from 110 (v.1.10) to 450 (v.4.50),
-and HLSL version range from 100200 (v.2.0) to 100500 (v.5.0).
+and HLSL versions range from 100200 (v.2.0) to 100500 (v.5.0).
 */
 enum class ShadingLanguage
 {
-    Unsupported = 0,        //!< Enumeration entry if shaders are not supported.
+    Unsupported = 0,        //!< Enumeration entry if shaders are not supported. Value is 0.
 
-    GLSL_110    = 110,      //!< GLSL 1.10 (since OpenGL 2.0).
-    GLSL_120    = 120,      //!< GLSL 1.20 (since OpenGL 2.1).
-    GLSL_130    = 130,      //!< GLSL 1.30 (since OpenGL 3.0).
-    GLSL_140    = 140,      //!< GLSL 1.40 (since OpenGL 3.1).
-    GLSL_150    = 150,      //!< GLSL 1.50 (since OpenGL 3.2).
-    GLSL_330    = 330,      //!< GLSL 3.30 (since OpenGL 3.3).
-    GLSL_400    = 400,      //!< GLSL 4.00 (since OpenGL 4.0).
-    GLSL_410    = 410,      //!< GLSL 4.10 (since OpenGL 4.1).
-    GLSL_420    = 420,      //!< GLSL 4.20 (since OpenGL 4.2).
-    GLSL_430    = 430,      //!< GLSL 4.30 (since OpenGL 4.3).
-    GLSL_440    = 440,      //!< GLSL 4.40 (since OpenGL 4.4).
-    GLSL_450    = 450,      //!< GLSL 4.50 (since OpenGL 4.5).
+    GLSL_110    = 110,      //!< GLSL 1.10 (since OpenGL 2.0). Value is 110.
+    GLSL_120    = 120,      //!< GLSL 1.20 (since OpenGL 2.1). Value is 120.
+    GLSL_130    = 130,      //!< GLSL 1.30 (since OpenGL 3.0). Value is 130.
+    GLSL_140    = 140,      //!< GLSL 1.40 (since OpenGL 3.1). Value is 140.
+    GLSL_150    = 150,      //!< GLSL 1.50 (since OpenGL 3.2). Value is 150.
+    GLSL_330    = 330,      //!< GLSL 3.30 (since OpenGL 3.3). Value is 330.
+    GLSL_400    = 400,      //!< GLSL 4.00 (since OpenGL 4.0). Value is 400.
+    GLSL_410    = 410,      //!< GLSL 4.10 (since OpenGL 4.1). Value is 410.
+    GLSL_420    = 420,      //!< GLSL 4.20 (since OpenGL 4.2). Value is 420.
+    GLSL_430    = 430,      //!< GLSL 4.30 (since OpenGL 4.3). Value is 430.
+    GLSL_440    = 440,      //!< GLSL 4.40 (since OpenGL 4.4). Value is 440.
+    GLSL_450    = 450,      //!< GLSL 4.50 (since OpenGL 4.5). Value is 450.
 
-    HLSL_2_0    = 100200,   //!< HLSL 2.0 (since Direct3D 9).
-    HLSL_2_0a   = 100201,   //!< HLSL 2.0a (since Direct3D 9a).
-    HLSL_2_0b   = 100202,   //!< HLSL 2.0b (since Direct3D 9b).
-    HLSL_3_0    = 100300,   //!< HLSL 3.0 (since Direct3D 9c).
-    HLSL_4_0    = 100400,   //!< HLSL 4.0 (since Direct3D 10).
-    HLSL_4_1    = 100410,   //!< HLSL 4.1 (since Direct3D 10.1).
-    HLSL_5_0    = 100500,   //!< HLSL 5.0 (since Direct3D 11).
+    HLSL_2_0    = 100200,   //!< HLSL 2.0 (since Direct3D 9). Value is 100200.
+    HLSL_2_0a   = 100201,   //!< HLSL 2.0a (since Direct3D 9a). Value is 100201.
+    HLSL_2_0b   = 100202,   //!< HLSL 2.0b (since Direct3D 9b). Value is 100202.
+    HLSL_3_0    = 100300,   //!< HLSL 3.0 (since Direct3D 9c). Value is 100300.
+    HLSL_4_0    = 100400,   //!< HLSL 4.0 (since Direct3D 10). Value is 100400.
+    HLSL_4_1    = 100410,   //!< HLSL 4.1 (since Direct3D 10.1). Value is 100410.
+    HLSL_5_0    = 100500,   //!< HLSL 5.0 (since Direct3D 11). Value is 100500.
 };
 
 //! Screen coordinate system origin enumeration.
@@ -99,26 +99,24 @@ struct RenderSystemConfiguration
 
 /**
 \brief Renderer identification number enumeration.
+\remarks There are several IDs for reserved future renderes, which are currently not supported (and maybe never supported).
+You can use an ID greater than 'RendererID::Reserved' (which has a value of 0x000000ff).
 \see RendererInfo::rendererID
 */
 struct RendererID
 {
-    static const unsigned int OpenGL        = 0x00000001; //!< ID number for the OpenGL renderer.
-    static const unsigned int Direct3D11    = 0x00000002; //!< ID number for the Direct3D 11 renderer.
-    static const unsigned int Direct3D12    = 0x00000003; //!< ID number for the Direct3D 12 renderer.
-    static const unsigned int Vulkan        = 0x00000004; //!< ID number for the Vulkan renderer.
+    static const unsigned int OpenGL        = 0x00000001; //!< ID number for an OpenGL renderer.
+    static const unsigned int OpenGLES1     = 0x00000002; //!< ID number for an OpenGL ES 1 renderer.
+    static const unsigned int OpenGLES2     = 0x00000003; //!< ID number for an OpenGL ES 2 renderer.
+    static const unsigned int OpenGLES3     = 0x00000004; //!< ID number for an OpenGL ES 3 renderer.
+    static const unsigned int Direct3D9     = 0x00000005; //!< ID number for a Direct3D 9 renderer.
+    static const unsigned int Direct3D10    = 0x00000006; //!< ID number for a Direct3D 10 renderer.
+    static const unsigned int Direct3D11    = 0x00000007; //!< ID number for a Direct3D 11 renderer.
+    static const unsigned int Direct3D12    = 0x00000008; //!< ID number for a Direct3D 12 renderer.
+    static const unsigned int Vulkan        = 0x00000009; //!< ID number for a Vulkan renderer.
+    static const unsigned int Metal         = 0x0000000a; //!< ID number for a Metal renderer.
 
-    static const unsigned int Reserved5     = 0x00000005; //!< ID number for a reserved future renderer.
-    static const unsigned int Reserved6     = 0x00000006; //!< ID number for a reserved future renderer.
-    static const unsigned int Reserved7     = 0x00000007; //!< ID number for a reserved future renderer.
-    static const unsigned int Reserved8     = 0x00000008; //!< ID number for a reserved future renderer.
-    static const unsigned int Reserved9     = 0x00000009; //!< ID number for a reserved future renderer.
-    static const unsigned int ReservedA     = 0x0000000a; //!< ID number for a reserved future renderer.
-    static const unsigned int ReservedB     = 0x0000000b; //!< ID number for a reserved future renderer.
-    static const unsigned int ReservedC     = 0x0000000c; //!< ID number for a reserved future renderer.
-    static const unsigned int ReservedD     = 0x0000000d; //!< ID number for a reserved future renderer.
-    static const unsigned int ReservedE     = 0x0000000e; //!< ID number for a reserved future renderer.
-    static const unsigned int ReservedF     = 0x0000000f; //!< ID number for a reserved future renderer.
+    static const unsigned int Reserved      = 0x000000ff; //!< Highest ID number for reserved future renderers. Value is 0x000000ff.
 };
 
 //! Renderer basic information structure.
