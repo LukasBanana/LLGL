@@ -336,8 +336,6 @@ void Win32GLContext::SetupDeviceContextAndPixelFormat()
 void Win32GLContext::SelectPixelFormat()
 {
     /* Setup pixel format attributes */
-    const auto colorDepth = static_cast<BYTE>(desc_.videoMode.colorDepth);
-
     PIXELFORMATDESCRIPTOR formatDesc
     {
         sizeof(PIXELFORMATDESCRIPTOR),  // Structure size
@@ -347,14 +345,14 @@ void Win32GLContext::SelectPixelFormat()
           PFD_DOUBLEBUFFER   |          // Must support double buffering
           PFD_SWAP_EXCHANGE ),          // Hint to the driver to exchange the back- with the front buffer
         PFD_TYPE_RGBA,                  // Request an RGBA format
-        colorDepth,                     // Select color bit depth (cColorBits)
+        32,                             // Select color bit depth (cColorBits)
         0, 0, 0, 0, 0, 0,               // Color bits ignored
         8,                              // Request an alpha buffer of 8 bits (cAlphaBits)
         0,                              // Shift bit ignored
         0,                              // No accumulation buffer
         0, 0, 0, 0,                     // Accumulation bits ignored
         24,                             // Z-Buffer bits (cDepthBits)
-        1,                              // Stencil buffer bits (cStencilBits)
+        8,                              // Stencil buffer bits (cStencilBits)
         0,                              // No auxiliary buffer
         0,                              // Main drawing layer (No longer used)
         0,                              // Reserved
@@ -427,10 +425,10 @@ bool Win32GLContext::SetupAntiAliasing()
             WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
             WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
             WGL_ACCELERATION_ARB,   WGL_FULL_ACCELERATION_ARB,
-            WGL_COLOR_BITS_ARB,     desc_.videoMode.colorDepth,
+            WGL_COLOR_BITS_ARB,     24,
             WGL_ALPHA_BITS_ARB,     8,
             WGL_DEPTH_BITS_ARB,     24,
-            WGL_STENCIL_BITS_ARB,   1,
+            WGL_STENCIL_BITS_ARB,   8,
             WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
             WGL_SAMPLE_BUFFERS_ARB, (desc_.multiSampling.enabled ? GL_TRUE : GL_FALSE),
             WGL_SAMPLES_ARB,        static_cast<int>(desc_.multiSampling.samples),
