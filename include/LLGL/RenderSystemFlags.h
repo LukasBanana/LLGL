@@ -100,7 +100,8 @@ struct RenderSystemConfiguration
 /**
 \brief Renderer identification number enumeration.
 \remarks There are several IDs for reserved future renderes, which are currently not supported (and maybe never supported).
-You can use an ID greater than 'RendererID::Reserved' (which has a value of 0x000000ff).
+You can use an ID greater than 'RendererID::Reserved' (which has a value of 0x000000ff) for your own renderer.
+Or use one of the pre-defined IDs if you want to implement your own OpenGL/ Direct3D or whatever renderer.
 \see RendererInfo::rendererID
 */
 struct RendererID
