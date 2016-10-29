@@ -14,7 +14,6 @@
 #include "RenderContextDescriptor.h"
 #include "RenderContextFlags.h"
 #include "RenderSystemFlags.h"
-#include "ColorRGBA.h"
 
 #include "Buffer.h"
 #include "BufferArray.h"
