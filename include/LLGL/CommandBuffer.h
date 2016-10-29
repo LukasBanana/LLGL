@@ -37,6 +37,9 @@ class RenderContext;
 /**
 \brief Command buffer interface.
 \remarks This is the main interface to commit graphics and compute commands to the GPU.
+For older graphics APIs (such as OpenGL and Direct3D 11) it makes not much sense to create multiple command buffers,
+but for recent graphics APIs (such as Vulkan and Direct3D 12) it might be sensible to have more than one command buffer,
+to maximize CPU utilization with several worker threads and one command buffer for each thread.
 */
 class LLGL_EXPORT CommandBuffer
 {
@@ -406,7 +409,7 @@ class LLGL_EXPORT CommandBuffer
 
         /* ----- Misc ----- */
 
-        //! Synchronizes the GPU, i.e. waits until the GPU has completed all pending commands.
+        //! Synchronizes the GPU, i.e. waits until the GPU has completed all pending commands from this command buffer.
         virtual void SyncGPU() = 0;
 
     protected:

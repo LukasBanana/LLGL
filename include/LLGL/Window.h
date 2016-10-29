@@ -163,10 +163,14 @@ class LLGL_EXPORT Window
         //! Returns true if this window is visible.
         virtual bool IsShown() const = 0;
 
-        //! Queries a window descriptor, which describes the current state of this window.
+        //! Queries a window descriptor, which describes the attributes of this window.
         virtual WindowDescriptor QueryDesc() const = 0;
 
-        //! Sets the window attributes according to the specified window descriptor.
+        /**
+        \brief Sets the window attributes according to the specified window descriptor.
+        \remarks This is used by the RenderContext interface when the video mode is about to change.
+        \see RenderContext::SetVideoMode
+        */
         virtual void SetDesc(const WindowDescriptor& desc) = 0;
 
         /**

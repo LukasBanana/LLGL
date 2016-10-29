@@ -66,8 +66,8 @@ class LLGL_EXPORT RenderContext
         /**
         \brief Sets the new video mode for this render context.
         \remarks This may invalidate the currently set render target if the back buffer is required,
-        so a subsequent call to "CommandBuffer::SetRenderContext" is required!
-        \see CommandBuffer::SetRenderContext(RenderContext&)
+        so a subsequent call to "CommandBuffer::SetRenderTarget" is necessary!
+        \see CommandBuffer::SetRenderTarget(RenderContext&)
         */
         virtual void SetVideoMode(const VideoModeDescriptor& videoModeDesc);
 
