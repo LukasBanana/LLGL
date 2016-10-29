@@ -37,8 +37,29 @@
 	stringstyle = \color{red},
 	frame = single,
 	tabsize = 4,
-	showstringspaces=false,
-	numbers=none
+	showstringspaces = false,
+	numbers = none
+}
+
+\lstdefinelanguage{cmakeLanguage}
+{
+	morekeywords = {
+		ADD_LIBRARY,
+		SHARED,
+		IF,
+		ELSE,
+		ELSEIF,
+		ENDIF,
+		FIND_PACKAGE,
+		INCLUDE_DIRECTORIES,
+		SET_TARGET_PROPERTIES,
+		TARGET_LINK_LIBRARIES,
+		TARGET_COMPILE_FEATURES,
+		MESSAGE,
+	},
+	sensitive = false,
+	morecomment = [l]{\#},
+	morestring = [b]"
 }
 
 \maketitle
@@ -233,7 +254,6 @@ when you compile the project:
 %----------------------------------------------------------------------------------------
 
 \newpage
-
 \section{API Overview}
 
 LLGL has a very simple and unified API design.
@@ -316,7 +336,6 @@ In section \ref{sec:custom_window} an example of a custom implementation with \h
 %----------------------------------------------------------------------------------------
 
 \newpage
-
 \part{Tutorials}
 
 \section{Hello Triangle}
@@ -614,7 +633,6 @@ and program start (set working directory to \texttt{tutorial/Tutorial01\_HelloTr
 %----------------------------------------------------------------------------------------
 
 \newpage
-
 \part{Extensibility}
 
 \section{Custom Window Class}
@@ -624,7 +642,7 @@ In this example a simple custom implementation of the \texttt{Window} interface 
 to show how LLGL can be used with other windowing system libraries.
 Here we will use the popular cross-platform library \href{http://www.glfw.org/}{GLFW}.
 
-We start the include files of GLFW and LLGL:
+We start with the include files of GLFW and LLGL:
 \begin{lstlisting}
 // Include GLFW library (in this example we use the Win32 platform)
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -686,7 +704,7 @@ CustomWindow::CustomWindow(const LLGL::Size& size, const std::string& title) :
 
 GLFWwindow* CustomWindow::CreateGLFWWindow()
 {
-	// Create GLFW window and stored parameters
+	// Create GLFW window with class members
 	wnd_ = glfwCreateWindow(size_.x, size_.y, title_.c_str(), nullptr, nullptr);
 	if (!wnd_)
 		throw std::runtime_error("failed to create GLFW window");
@@ -761,10 +779,10 @@ LLGL::WindowDescriptor CustomWindow::QueryDesc() const
 
 void CustomWindow::SetDesc(const LLGL::WindowDescriptor& desc)
 {
-	// Recreate GLFW window with new window descriptor ...
+	// Recreate GLFW window according to the new window descriptor ...
 }
 \end{lstlisting}
-Now we cross over to the major functions in the Window interface. The first one is \texttt{Recreate}.
+Now we cross over to the major functions in the \texttt{Window} interface. The first one is \texttt{Recreate}.
 It is mainly used by the OpenGL renderer when a multi-sampled render context is created.
 In our custom class we merely destroy the GLFW window and create a new one:
 \begin{lstlisting}
@@ -781,7 +799,7 @@ On MS/Windows this is from the type \texttt{HWND} from the Win32 API.
 On GNU/Linux we need to pass three parameters: \texttt{Display*} from the X11 lib,
 \texttt{::Window} from the X11 lib (unfortunately the same name but in the global scope),
 and \texttt{XVisualInfo*} from GLX.
-On MacOS its is from the type \texttt{NSWindow*} from the Cocoa API.
+On MacOS it is from the type \texttt{NSWindow*} from the Cocoa API.
 In this example we only implement it for Win32:
 \begin{lstlisting}
 void CustomWindow::GetNativeHandle(void* nativeHandle) const
@@ -826,6 +844,99 @@ LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc, window
 That's all folks. The rest can be seen in the tutorials.
 
 
+%----------------------------------------------------------------------------------------
+%	CUSTOM RENDER SYSTEM
+%----------------------------------------------------------------------------------------
+
+\newpage
+\section{Custom Render System}
+\label{sec:custom_renderer}
+
+This is only a very short explanation on how to implement your own render system with LLGL,
+since it will take a lot of familiarization time anyways.
+
+First of all you have to extend the \texttt{CMakeLists.txt} file in your local LLGL repository for a new library.
+Here is an example on how it could look for a custom OpenGL renderer:
+\begin{lstlisting}[language=cmakeLanguage]
+# Find OpenGL headers and libraries
+FIND_PACKAGE(OpenGL)
+
+IF(OpenGL_FOUND)
+	# Add OpenGL include path
+	INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
+	
+	# Add "LLGL_CustomOpenGL" library project to the solution,
+	# where "FilesGL" denotes the variable containing all filenames for this render system.
+	# The render system can later be loaded with the name "CustomOpenGL".
+	ADD_LIBRARY(LLGL_CustomOpenGL SHARED "${FilesGL}")
+	
+	# Add "D" postfix to debug mode (this is required so that LLGL loads the correct module)
+	SET_TARGET_PROPERTIES(
+		LLGL_CustomOpenGL PROPERTIES
+		LINKER_LANGUAGE CXX # CXX is for C++
+		DEBUG_POSTFIX "D" # Postfix "D" for debug mode
+	)
+	
+	# Add library dependencies (On Win32 this is LLGL.lib and opengl32.lib)
+	TARGET_LINK_LIBRARIES(LLGL_CustomOpenGL LLGL "${OPENGL_LIBRARIES}")
+	
+	# Tell CMake to build a project with C++11 support
+	TARGET_COMPILE_FEATURES(LLGL_CustomOpenGL PRIVATE cxx_range_for)
+ELSE()
+	MESSAGE("Missing OpenGL -> LLGL_CustomOpenGL renderer will be excluded from project")
+ENDIF()
+\end{lstlisting}
+After you integrated your source files into the LLGL project solution,
+you have to implement a few module interface functions.
+They are the only functions that need to be exported from the shared library,
+and they need to be exported as \texttt{extern "C"} functions:
+\begin{lstlisting}
+// Include the "ModuleInterface.h" file and your custom render system
+#include "sources/Renderer/ModuleInterface.h"
+#include "CustomOpenGLRenderSystem.h"
+
+// Declare the following functions to be exported as "C" functions
+extern "C"
+{
+
+// This function must always return "LLGL_BUILD_ID" to ensure a library,
+// which is about to be loaded, has been compiled with the same compiler toolchain.
+LLGL_EXPORT int LLGL_RenderSystem_BuildID()
+{
+	return LLGL_BUILD_ID;
+}
+
+// Here you can return your own renderer ID or one of the pre-defined values
+LLGL_EXPORT int LLGL_RenderSystem_RendererID()
+{
+	return LLGL::RendererID::OpenGL;
+}
+
+// Here you can return the name of your renderer
+LLGL_EXPORT const char* LLGL_RenderSystem_Name()
+{
+	return "Custom OpenGL";
+}
+
+// Here you have to return a raw pointer of your custom implementation of the
+// LLGL::RenderSystem interface, where the instance must be allocated with "new",
+// so it can be moved into an std::shared_ptr.
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
+{
+	return new CustomOpenGLRenderSystem();
+}
+
+} // /extern "C"
+\end{lstlisting}
+That's all you have to do, except of implementing the entire \texttt{RenderSystem} interface
+in your \texttt{CustomOpenGLRenderSystem} class ;-).
+After that, you can load your render system like this:
+\begin{lstlisting}
+// Load custom render system (library name is "LLGL_CustomOpenGL", so the passed name is "CustomOpenGL")
+std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("CustomOpenGL");
+
+// Start using the custom renderer ...
+\end{lstlisting}
 
 
 %----------------------------------------------------------------------------------------
