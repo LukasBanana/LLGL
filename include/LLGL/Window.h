@@ -24,15 +24,34 @@ namespace LLGL
 //! Window descriptor structure.
 struct WindowDescriptor
 {
+    //! Window title as UTF16 string.
     std::wstring    title;
-    Point           position;                       //!< Window position (relative to the client area).
-    Size            size;                           //!< Client area size.
 
+    //! Window position (relative to the client area).
+    Point           position;
+
+    //! Window size (this should be the client area size).
+    Size            size;
+
+    //! Specifies whether the window is visible at creation time.
     bool            visible             = false;
+
+    //! Specifies whether the window is borderless. This is required for a fullscreen render context.
     bool            borderless          = false;
+
+    //! Specifies whether the window can be resized.
     bool            resizable           = false;
+
+    //! Specifies whether the window allows that files can be draged-and-droped onto the window.
     bool            acceptDropFiles     = false;
+
+    /**
+    \brief Specifies whether the 
+    \note Only supported on: MS/Windows.
+    */
     bool            preventForPowerSafe = false;
+
+    //! Specifies whether the window is centered within the desktop screen.
     bool            centered            = false;
 
     /**
@@ -50,7 +69,12 @@ struct WindowDescriptor
 };
 
 
-// Interface for a Window class (also named Canvas)
+/**
+\brief Interface for a Window class.
+\remarks This is the main interface for the windowing system in LLGL.
+To implement a custom window (and use GLFW for instance) you have to
+derive from this class and implement all pure virtual functions.
+*/
 class LLGL_EXPORT Window
 {
 
@@ -68,23 +92,42 @@ class LLGL_EXPORT Window
 
                 friend class Window;
 
+                /**
+                \brief Send when the window events are about to be polled. The event listeners receive this event before the window itself.
+                \see Window::OnProcessEvents
+                */
                 virtual void OnProcessEvents(Window& sender);
 
+                //! Send when a key (from keyboard or mouse) has been pushed.
                 virtual void OnKeyDown(Window& sender, Key keyCode);
+
+                //! Send when a key (from keyboard or mouse) has been released.
                 virtual void OnKeyUp(Window& sender, Key keyCode);
 
+                //! Send when a mouse button has been double clicked.
                 virtual void OnDoubleClick(Window& sender, Key keyCode);
                 
+                //! Send when a character specific key has been typed on the sender window. This will repeat depending on the OS keyboard settings.
                 virtual void OnChar(Window& sender, wchar_t chr);
 
+                //! Send when the mouse wheel has been moved on the sender window.
                 virtual void OnWheelMotion(Window& sender, int motion);
 
+                //! Send when the mouse has been moved on the sender window.
                 virtual void OnLocalMotion(Window& sender, const Point& position);
+
+                //! Send when the global mouse position has changed. This is a raw input and independent of the screen resolution.
                 virtual void OnGlobalMotion(Window& sender, const Point& motion);
 
+                //! Send when the window has been resized.
                 virtual void OnResize(Window& sender, const Size& clientAreaSize);
 
-                //! Returns true if the specified window can quit, i.e. "ProcessEvents" returns false from now on.
+                /**
+                \brief Send when the window is about to be quit.
+                \return True if the sender window can quit. In this case "ProcessEvents" returns false from now on.
+                Otherwise the quit can be prevented. Returns true by default.
+                \see Window::ProcessEvents
+                */
                 virtual bool OnQuit(Window& sender);
 
         };
@@ -93,28 +136,42 @@ class LLGL_EXPORT Window
 
         virtual ~Window();
 
+        //! Creates a platform specific instance of the Window interface.
         static std::unique_ptr<Window> Create(const WindowDescriptor& desc);
 
+        //! Sets the window position relative to its parent.
         virtual void SetPosition(const Point& position) = 0;
+
+        //! Returns the window position relative to its parent.
         virtual Point GetPosition() const = 0;
 
+        //! Sets the either the overall window size or the client area size. By default the client area size is set.
         virtual void SetSize(const Size& size, bool useClientArea = true) = 0;
+
+        //! Returns either the overall window size or the client area size. By default the client area size is returned.
         virtual Size GetSize(bool useClientArea = true) const = 0;
 
+        //! Sets the window title as UTF16 string. If the OS does not support UTF16 window title, it will be converted to UTF8.
         virtual void SetTitle(const std::wstring& title) = 0;
+
+        //! Returns the window title as UTF16 string.
         virtual std::wstring GetTitle() const = 0;
 
+        //! Shows or hides the window.
         virtual void Show(bool show = true) = 0;
+
+        //! Returns true if this window is visible.
         virtual bool IsShown() const = 0;
 
-        //! Query a window descriptor, which describes the current state of this window.
+        //! Queries a window descriptor, which describes the current state of this window.
         virtual WindowDescriptor QueryDesc() const = 0;
 
-        //! Sets the new window descriptor.
+        //! Sets the window attributes according to the specified window descriptor.
         virtual void SetDesc(const WindowDescriptor& desc) = 0;
 
         /**
         \brief Recreates the internal window object. This may invalidate the native handle previously returned by "GetNativeHandle".
+        \remarks This function is mainly used by the OpenGL renderer on Win32 when a multi-sampled swap-chain is created.
         \see GetNativeHandle
         */
         virtual void Recreate(const WindowDescriptor& desc) = 0;
@@ -144,27 +201,47 @@ class LLGL_EXPORT Window
 
         /* --- Event handling --- */
 
+        //! Adds a new event listener to this window.
         void AddEventListener(const std::shared_ptr<EventListener>& eventListener);
+
+        //! Removes the specified event listener from this window.
         void RemoveEventListener(const EventListener* eventListener);
 
+        /**
+        \brief Posts a 'KeyDown' event to all event listeners.
+        \remarks For a window created with "Window::Create", and events will be posted automatically by the "ProcessEvents" function.
+        \see EventListener::OnKeyDown
+        \see ProcessEvents
+        */
         void PostKeyDown(Key keyCode);
+
+        //! \see PostKeyDown
         void PostKeyUp(Key keyCode);
 
+        //! \see PostKeyDown
         void PostDoubleClick(Key keyCode);
         
+        //! \see PostKeyDown
         void PostChar(wchar_t chr);
         
+        //! \see PostKeyDown
         void PostWheelMotion(int motion);
         
+        //! \see PostKeyDown
         void PostLocalMotion(const Point& position);
+
+        //! \see PostKeyDown
         void PostGlobalMotion(const Point& motion);
 
+        //! \see PostKeyDown
         void PostResize(const Size& clientAreaSize);
 
         /**
-        \brief Posts the 'OnQuit' event to all event listeners.
+        \brief Posts a 'Quit' event to all event listeners.
         \remarks If at least one event listener returns false within the "OnQuit" callback, the window will not quit.
         If all event listener return true within the "OnQuit" callback, "ProcessEvents" will returns false from now on.
+        \see EventListener::OnQuit
+        \see ProcessEvents
         */
         void PostQuit();
 
@@ -181,7 +258,7 @@ class LLGL_EXPORT Window
 
         std::vector<std::shared_ptr<EventListener>> eventListeners_;
 
-        bool quit_ = false;
+        bool                                        quit_           = false;
 
 };
 
