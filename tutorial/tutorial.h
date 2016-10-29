@@ -625,7 +625,7 @@ protected:
     LLGL::Buffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
     {
         return renderer->CreateBuffer(
-            LLGL::VertexBufferDesc(vertices.size() * sizeof(VertexType), vertexFormat),
+            LLGL::VertexBufferDesc(static_cast<unsigned int>(vertices.size() * sizeof(VertexType)), vertexFormat),
             vertices.data()
         );
     }
@@ -634,7 +634,7 @@ protected:
     LLGL::Buffer* CreateIndexBuffer(const std::vector<IndexType>& indices, const LLGL::IndexFormat& indexFormat)
     {
         return renderer->CreateBuffer(
-            LLGL::IndexBufferDesc(indices.size() * sizeof(IndexType), indexFormat),
+            LLGL::IndexBufferDesc(static_cast<unsigned int>(indices.size() * sizeof(IndexType)), indexFormat),
             indices.data()
         );
     }

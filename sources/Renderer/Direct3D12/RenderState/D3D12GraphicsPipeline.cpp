@@ -73,7 +73,7 @@ void D3D12GraphicsPipeline::CreateRootSignature(
     if (!signatureRange.empty())
     {
         CD3DX12_ROOT_PARAMETER signatureParam;
-        signatureParam.InitAsDescriptorTable(signatureRange.size(), signatureRange.data(), D3D12_SHADER_VISIBILITY_ALL);
+        signatureParam.InitAsDescriptorTable(static_cast<UINT>(signatureRange.size()), signatureRange.data(), D3D12_SHADER_VISIBILITY_ALL);
 
         signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
     }

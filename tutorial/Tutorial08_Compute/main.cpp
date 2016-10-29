@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         LLGL::BufferDescriptor storageBufferDesc;
         {
             storageBufferDesc.type                      = LLGL::BufferType::Storage;
-            storageBufferDesc.size                      = inputData.size() * sizeof(DataBlock);
+            storageBufferDesc.size                      = static_cast<unsigned int>(inputData.size() * sizeof(DataBlock));
             storageBufferDesc.flags                     = LLGL::BufferFlags::DynamicUsage | LLGL::BufferFlags::MapReadAccess;
             storageBufferDesc.storageBuffer.storageType = LLGL::StorageBufferType::RWStructuredBuffer;
             storageBufferDesc.storageBuffer.stride      = sizeof(DataBlock);
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
         commands->SetStorageBuffer(*storageBuffer, 0, LLGL::ShaderStageFlags::ComputeStage);
 
         // Dispatch compute shader
-        commands->Dispatch(inputData.size(), 1, 1);
+        commands->Dispatch(static_cast<unsigned int>(inputData.size()), 1, 1);
 
         // Read result
         commands->SyncGPU();

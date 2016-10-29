@@ -163,7 +163,7 @@ private:
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexData);
 
         // Create buffer for per-instance data
-        desc.size                   = sizeof(Instance) * instanceData.size();
+        desc.size                   = static_cast<unsigned int>(sizeof(Instance) * instanceData.size());
         desc.vertexBuffer.format    = vertexFormatPerInstance;
 
         vertexBuffers[1] = renderer->CreateBuffer(desc, instanceData.data());

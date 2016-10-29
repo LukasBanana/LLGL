@@ -41,6 +41,9 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
     unsigned int    components  = 0;
     VectorTypeFormat(attribute.vectorType, dataType, components);
 
+    /* Convert offset to pointer sized type (for 32- and 64 bit builds */
+    std::size_t offsetPtrSized = attribute.offset;
+
     /* Use currently bound VBO for VertexAttribPointer functions */
     if (!attribute.conversion && dataType != DataType::Float && dataType != DataType::Double)
     {
@@ -52,7 +55,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
             components,
             GLTypes::Map(dataType),
             stride,
-            reinterpret_cast<const void*>(attribute.offset)
+            reinterpret_cast<const void*>(offsetPtrSized)
         );
     }
     else
@@ -63,7 +66,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
             GLTypes::Map(dataType),
             GL_FALSE,
             stride,
-            reinterpret_cast<const void*>(attribute.offset)
+            reinterpret_cast<const void*>(offsetPtrSized)
         );
     }
 }
