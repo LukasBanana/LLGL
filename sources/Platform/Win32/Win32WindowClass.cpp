@@ -8,6 +8,7 @@
 #include "Win32WindowClass.h"
 #include "Win32WindowCallback.h"
 #include "../../Core/Helper.h"
+#include <LLGL/Platform/Platform.h>
 
 #include <string>
 #include <exception>
@@ -28,7 +29,11 @@ Win32WindowClass::Win32WindowClass()
     wc.lpfnWndProc      = reinterpret_cast<WNDPROC>(Win32WindowCallback);
     wc.hIcon            = LoadIcon(0, IDI_APPLICATION);
     wc.hCursor          = LoadCursor(0, IDC_ARROW);
+    #ifdef LLGL_ARCH_ARM
+    wc.hbrBackground    = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
+    #else
     wc.hbrBackground    = reinterpret_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
+    #endif
     wc.cbClsExtra       = 0;
     wc.cbWndExtra       = 0;
     wc.lpszMenuName     = nullptr;

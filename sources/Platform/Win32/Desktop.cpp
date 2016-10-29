@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/Desktop.h>
+#include <LLGL/Platform/Platform.h>
 #include <Windows.h>
 
 
@@ -24,6 +25,12 @@ LLGL_EXPORT Size GetResolution()
 
 LLGL_EXPORT int GetColorDepth()
 {
+    #ifdef LLGL_ARCH_ARM
+
+    return 24;
+
+    #else
+
     HWND wnd    = GetDesktopWindow();
     HDC dc      = GetDC(wnd);
 
@@ -34,6 +41,8 @@ LLGL_EXPORT int GetColorDepth()
         bpp = (1 << planes);
 
     return bpp;
+
+    #endif
 }
 
 LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode)

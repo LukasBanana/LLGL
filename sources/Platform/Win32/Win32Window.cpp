@@ -8,6 +8,7 @@
 #include "Win32Window.h"
 #include "Win32WindowClass.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/Platform/Platform.h>
 #include <Gauss/Equals.h>
 
 
@@ -342,9 +343,11 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     if (!wnd)
         throw std::runtime_error("failed to create window");
 
+    #ifndef LLGL_ARCH_ARM
     /* Set additional flags */
     if (desc.acceptDropFiles)
         DragAcceptFiles(wnd, TRUE);
+    #endif
 
     /* Set reference of this object to the window user-data */
     SetUserData(wnd, this);
