@@ -16,21 +16,22 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
     desc_           ( desc                        ),
     contextHeight_  ( desc.videoMode.resolution.y )
 {
-    /* Setup window for the render context */
     #ifdef __linux__
 
+    /* Setup surface for the render context and pass native context handle */
     NativeContextHandle windowContext;
     GetNativeContextHandle(windowContext);
-    SetOrCreateWindow(window, desc.videoMode, &windowContext);
+    SetOrCreateSurface(window, desc.videoMode, &windowContext);
 
     #else
 
-    SetOrCreateWindow(window, desc.videoMode, nullptr);
+    /* Setup surface for the render context */
+    SetOrCreateSurface(window, desc.videoMode, nullptr);
 
     #endif
 
     /* Create platform dependent OpenGL context */
-    context_ = GLContext::Create(desc_, GetWindow(), (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr));
+    context_ = GLContext::Create(desc_, GetSurface(), (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr));
 
     /* Setup swap interval (for v-sync) */
     UpdateSwapInterval();

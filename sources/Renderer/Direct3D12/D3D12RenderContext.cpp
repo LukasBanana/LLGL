@@ -36,8 +36,8 @@ D3D12RenderContext::D3D12RenderContext(
     desc_.multiSampling.samples = 1;
     #endif
 
-    /* Setup window for the render context */
-    SetOrCreateWindow(window, desc_.videoMode, nullptr);
+    /* Setup surface for the render context */
+    SetOrCreateSurface(window, desc_.videoMode, nullptr);
     CreateWindowSizeDependentResources();
     CreateDeviceResources();
 
@@ -202,7 +202,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
 
         /* Create swap chain for window handle */
         NativeHandle wndHandle;
-        GetWindow().GetNativeHandle(&wndHandle);
+        GetSurface().GetNativeHandle(&wndHandle);
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
         InitMemory(swapChainDesc);

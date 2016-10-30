@@ -10,6 +10,7 @@
 
 
 #include "Window.h"
+#include "Canvas.h"
 #include "Input.h"
 #include "Timer.h"
 #include "RenderSystem.h"

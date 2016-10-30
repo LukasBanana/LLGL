@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "Types.h"
 
 
 namespace LLGL
@@ -56,6 +57,13 @@ class LLGL_EXPORT Surface
         \see GetNativeHandle
         */
         virtual void Recreate() = 0;
+
+        /**
+        \brief Returns the size of the surface context (or rather the drawing area).
+        \remarks For the Window interface this is equivalent of calling "Window::GetSize(true)" for instance.
+        \see Window::GetSize
+        */
+        virtual Size GetContentSize() const = 0;
 
 };
 

@@ -132,6 +132,12 @@ void Win32Window::Recreate()
     wnd_ = CreateWindowHandle(desc);
 }
 
+Size Win32Window::GetContentSize() const
+{
+    /* Return the size of the client area */
+    return GetSize(true);
+}
+
 void Win32Window::SetPosition(const Point& position)
 {
     SetWindowPos(wnd_, HWND_TOP, position.x, position.y, 0, 0, (SWP_NOSIZE | SWP_NOZORDER));

@@ -6,6 +6,9 @@
  */
 
 #include <LLGL/RenderContext.h>
+#include <LLGL/Window.h>
+#include <LLGL/Canvas.h>
+#include "CheckedCast.h"
 
 
 namespace LLGL
@@ -20,8 +23,16 @@ void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     if (videoModeDesc_ != videoModeDesc)
     {
+        #ifdef LLGL_MOBILE_PLATFORM
+
+        //TODO...
+
+        #else
+
+        auto& window = LLGL_CAST(Window&, GetSurface());
+
         /* Update window appearance */
-        auto windowDesc = GetWindow().QueryDesc();
+        auto windowDesc = window.QueryDesc();
 
         windowDesc.size = videoModeDesc.resolution;
 
@@ -36,7 +47,9 @@ void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
             windowDesc.centered     = true;
         }
 
-        GetWindow().SetDesc(windowDesc);
+        window.SetDesc(windowDesc);
+
+        #endif
 
         /* Store new video mode */
         videoModeDesc_ = videoModeDesc;
@@ -48,10 +61,21 @@ void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
  * ======= Protected: =======
  */
 
-void RenderContext::SetOrCreateWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext)
+void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, VideoModeDescriptor& videoModeDesc, const void* windowContext)
 {
-    if (!window)
+    if (!surface)
     {
+        #ifdef LLGL_MOBILE_PLATFORM
+
+        /* Create new canvas for this render context */
+        CanvasDescriptor canvasDesc;
+        {
+            canvasDesc.borderless = videoModeDesc.fullscreen;
+        }
+        surface_ = Canvas::Create(canvasDesc);
+
+        #else
+
         /* Create new window for this render context */
         WindowDescriptor windowDesc;
         {
@@ -60,22 +84,24 @@ void RenderContext::SetOrCreateWindow(const std::shared_ptr<Window>& window, Vid
             windowDesc.centered         = !videoModeDesc.fullscreen;
             windowDesc.windowContext    = windowContext;
         }
-        window_ = Window::Create(windowDesc);
+        surface_ = Window::Create(windowDesc);
+
+        #endif
     }
     else
     {
         /* Get and output resolution from specified window */
-        videoModeDesc.resolution = window->GetSize();
-        window_ = window;
+        videoModeDesc.resolution = surface->GetContentSize();
+        surface_ = surface;
     }
 
     /* Store video mode settings */
     videoModeDesc_ = videoModeDesc;
 }
 
-void RenderContext::ShareWindowAndVideoMode(RenderContext& other)
+void RenderContext::ShareSurfaceAndVideoMode(RenderContext& other)
 {
-    window_         = other.window_;
+    surface_        = other.surface_;
     videoModeDesc_  = other.videoModeDesc_;
 }
 

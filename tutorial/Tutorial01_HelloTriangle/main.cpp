@@ -31,8 +31,10 @@ int main(int argc, char* argv[])
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
 
         // Set window title and show window
-        context->GetWindow().SetTitle(L"LLGL Tutorial 01: Hello Triangle");
-        context->GetWindow().Show();
+        auto& window = static_cast<LLGL::Window&>(context->GetSurface());
+
+        window.SetTitle(L"LLGL Tutorial 01: Hello Triangle");
+        window.Show();
 
         // Vertex data structure
         struct Vertex
@@ -143,7 +145,7 @@ int main(int argc, char* argv[])
         commands->SetScissor({ 0, 0, 640, 480 });
 
         // Enter main loop
-        while (context->GetWindow().ProcessEvents())
+        while (window.ProcessEvents())
         {
             // Set the render context as the initial render target
             commands->SetRenderTarget(*context);

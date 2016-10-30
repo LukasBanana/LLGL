@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
         // Create input handler
         auto input = std::make_shared<LLGL::Input>();
 
-        auto& window1 = context1->GetWindow();
-        auto& window2 = context2->GetWindow();
+        auto& window1 = static_cast<LLGL::Window&>(context1->GetSurface());
+        auto& window2 = static_cast<LLGL::Window&>(context2->GetSurface());
 
         window1.AddEventListener(input);
         window2.AddEventListener(input);
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
         commands->SetScissorArray(2, scissors);
         
         // Enter main loop
-        while ( ( context1->GetWindow().ProcessEvents() || context2->GetWindow().ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
+        while ( ( window1.ProcessEvents() || window2.ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
         {
             // Draw content in 1st render context
             commands->SetRenderTarget(*context1);

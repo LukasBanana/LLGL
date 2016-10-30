@@ -10,7 +10,8 @@
 
 
 #include "Export.h"
-#include "Window.h"
+#include "Surface.h"
+#include "Window.h"//TODO: remove this include directive!
 #include "RenderContextDescriptor.h"
 #include "RenderContextFlags.h"
 #include "RenderSystemFlags.h"
@@ -54,10 +55,10 @@ class LLGL_EXPORT RenderContext
         //! Presents the back buffer on this render context.
         virtual void Present() = 0;
 
-        //! Returns the window which is used to draw all content.
-        inline Window& GetWindow() const
+        //! Returns the surface which is used to present the content on the screen.
+        inline Surface& GetSurface() const
         {
-            return *window_;
+            return *surface_;
         }
 
         /* ----- Configuration ----- */
@@ -84,26 +85,26 @@ class LLGL_EXPORT RenderContext
         RenderContext() = default;
 
         /**
-        \brief Sets the render context window or creates one if 'window' is null.
-        \param[in] window Optional shared pointer to a window which will be used as main render target.
-        If this is null, a new window is created for this render context.
-        \param[in,out] videoModeDesc Specifies the video mode descriptor. This is used for reading only if 'window' is null,
-        otherwise it is used for writing only and the 'resolution' field will be set to the size of the specified window.
-        \param[in] Optional pointer to a NativeContextHandle structure.
+        \brief Sets the render context surface or creates one if 'surface' is null.
+        \param[in] surface Optional shared pointer to a surface which will be used as main render target.
+        If this is null, a new surface is created for this render context.
+        \param[in,out] videoModeDesc Specifies the video mode descriptor. This is used for reading only if 'surface' is null,
+        otherwise it is used for writing only and the 'resolution' field will be set to the size of the specified surface.
+        \param[in] Optional pointer to a NativeContextHandle structure. This is only used for desktop platforms.
         \see WindowDescriptor::windowContext
         */
-        void SetOrCreateWindow(const std::shared_ptr<Window>& window, VideoModeDescriptor& videoModeDesc, const void* windowContext);
+        void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, VideoModeDescriptor& videoModeDesc, const void* windowContext);
 
         /**
-        \brief Shares the window and video mode with another render context.
+        \brief Shares the surface and video mode with another render context.
         \note This is only used by the renderer debug layer.
         */
-        void ShareWindowAndVideoMode(RenderContext& other);
+        void ShareSurfaceAndVideoMode(RenderContext& other);
 
     private:
 
-        std::shared_ptr<Window> window_;
-        VideoModeDescriptor     videoModeDesc_;
+        std::shared_ptr<Surface>    surface_;
+        VideoModeDescriptor         videoModeDesc_;
 
 };
 

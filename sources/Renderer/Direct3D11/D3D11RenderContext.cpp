@@ -25,8 +25,8 @@ D3D11RenderContext::D3D11RenderContext(
         context_( context ),
         desc_   ( desc    )
 {
-    /* Setup window for the render context */
-    SetOrCreateWindow(window, desc_.videoMode, nullptr);
+    /* Setup surface for the render context */
+    SetOrCreateSurface(window, desc_.videoMode, nullptr);
 
     /* Create D3D objects */
     CreateSwapChain(factory);
@@ -80,7 +80,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
 {
     /* Create swap chain for window handle */
     NativeHandle wndHandle;
-    GetWindow().GetNativeHandle(&wndHandle);
+    GetSurface().GetNativeHandle(&wndHandle);
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     InitMemory(swapChainDesc);

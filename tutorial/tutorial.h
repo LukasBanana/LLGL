@@ -116,7 +116,8 @@ public:
 
     void Run()
     {
-        while (context->GetWindow().ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        auto& window = static_cast<LLGL::Window&>(context->GetSurface());
+        while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             profilerObj_->ResetCounters();
             OnDrawFrame();
@@ -299,7 +300,7 @@ protected:
         std::cout << "  shading language: " << info.shadingLanguageName << std::endl;
 
         // Set window title
-        auto& window = context->GetWindow();
+        auto& window = static_cast<LLGL::Window&>(context->GetSurface());
 
         auto rendererName = renderer->GetName();
         window.SetTitle(title + L" ( " + std::wstring(rendererName.begin(), rendererName.end()) + L" )");

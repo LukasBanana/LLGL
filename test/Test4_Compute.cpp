@@ -43,7 +43,9 @@ int main()
 
         // Change window title
         auto title = "LLGL Test 4: Compute ( " + renderer->GetName() + " )";
-        context->GetWindow().SetTitle(std::wstring(title.begin(), title.end()));
+
+        auto& window = static_cast<LLGL::Window&>(context->GetSurface());
+        window.SetTitle(std::wstring(title.begin(), title.end()));
 
         // Quit if compute shaders are not supported
         const auto& renderCaps = renderer->GetRenderingCaps();
