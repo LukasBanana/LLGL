@@ -26,6 +26,7 @@ Progress
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
 | OpenGL | ~85% | |
+| OpenGL ES 2 | 0% | Not started yet |
 | Direct3D 11 | ~85% | |
 | Direct3D 12 | ~5% | Experimental state; Tutorials working: 01, 06, 07 |
 | Vulkan | 0% | Not started yet |
@@ -35,6 +36,7 @@ Progress
 | Win32 | 100% | Tested on *Windows 10* |
 | Linux | 50% | Tested on *Kubuntu 16*; Anti-aliasing is currently not supported |
 | MacOS | 50% | Tested on *macOS Sierra*; Not all tutorials are running |
+| iOS | 1% | Currently not compilable |
 
 
 Thin Abstraction Layer
