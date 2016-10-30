@@ -15,7 +15,7 @@
 #define ENABLE_MULTISAMPLING
 
 // Test constant buffer array
-#define _TEST_BUFFER_ARRAY_
+//#define _TEST_BUFFER_ARRAY_
 
 
 class Tutorial02 : public Tutorial

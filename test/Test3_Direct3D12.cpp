@@ -194,15 +194,15 @@ int main()
 
         #endif
 
+        commands->SetViewport(LLGL::Viewport(0, 0, 800, 600));
+        commands->SetScissor(LLGL::Scissor(0, 0, 800, 600));
+
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             commands->SetRenderTarget(*context);
 
             commands->Clear(LLGL::ClearFlags::Color);
-
-            commands->SetViewport(LLGL::Viewport(0, 0, 800, 600));
-            commands->SetScissor(LLGL::Scissor(0, 0, 800, 600));
 
             commands->SetGraphicsPipeline(*pipeline);
             commands->SetVertexBuffer(*vertexBuffer);

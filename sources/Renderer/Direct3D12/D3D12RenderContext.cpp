@@ -31,6 +31,11 @@ D3D12RenderContext::D3D12RenderContext(
         renderSystem_   ( renderSystem ),
         desc_           ( desc         )
 {
+    #if 1 //TODO: multi-sampling currently not supported!
+    desc_.multiSampling.enabled = false;
+    desc_.multiSampling.samples = 1;
+    #endif
+
     /* Setup window for the render context */
     SetOrCreateWindow(window, desc_.videoMode, nullptr);
     CreateWindowSizeDependentResources();
@@ -75,12 +80,13 @@ void D3D12RenderContext::Present()
     /* Advance frame counter */
     MoveToNextFrame();
 
-    /* Reset command allocator */
-    hr = commandAllocs_[currentFrame_]->Reset();
+    /* Reset command allocator and command list*/
+    auto commandAlloc = commandAllocs_[currentFrame_].Get();
+
+    hr = commandAlloc->Reset();
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
-    /* Reset command list */
-    commandBuffer_->ResetCommandList(commandAllocs_[currentFrame_].Get(), nullptr);
+    commandBuffer_->ResetCommandList(commandAlloc, nullptr);
 }
 
 void D3D12RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
@@ -187,7 +193,10 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     }
     rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
-    rtvDescHeap_->SetName(L"render target view descriptor heap");
+
+    #ifdef LLGL_DEBUG
+    rtvDescHeap_->SetName(L"D3D12RenderContext::rtvDescHeap");
+    #endif
 
     rtvDescSize_ = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -202,6 +211,11 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
 
         /* Create render target view (RTV) */
         device->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDescHandle);
+
+        #ifdef LLGL_DEBUG
+        std::wstring name = L"RenderContext::renderTargets[" + std::to_wstring(i) + L"]";
+        renderTargets_[i]->SetName(name.c_str());
+        #endif
 
         rtvDescHandle.Offset(1, rtvDescSize_);
     }

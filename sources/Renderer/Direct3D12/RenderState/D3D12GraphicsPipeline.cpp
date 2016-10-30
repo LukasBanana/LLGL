@@ -40,7 +40,7 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(
 }
 
 void D3D12GraphicsPipeline::CreateRootSignature(
-    D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc)
+    D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& /*desc*/)
 {
     /* Setup root signature flags */
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
@@ -232,7 +232,11 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBiasClamp;
     stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.slopeScaledDepthBias;
     stateDesc.RasterizerState.DepthClipEnable       = (desc.rasterizer.depthClampEnabled ? TRUE : FALSE);
+    #if 1//TODO: currently not supported
+    stateDesc.RasterizerState.MultisampleEnable     = FALSE; //!!!
+    #else
     stateDesc.RasterizerState.MultisampleEnable     = (desc.rasterizer.multiSampling.enabled ? TRUE : FALSE);
+    #endif
     stateDesc.RasterizerState.AntialiasedLineEnable = (desc.rasterizer.antiAliasedLineEnabled ? TRUE : FALSE);
     stateDesc.RasterizerState.ForcedSampleCount     = 0; // no forced sample count
     stateDesc.RasterizerState.ConservativeRaster    = GetConservativeRaster(desc.rasterizer.conservativeRasterization);
@@ -254,7 +258,11 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.PrimitiveTopologyType = GetPrimitiveToplogyType(desc.primitiveTopology);
     stateDesc.SampleMask            = UINT_MAX;
     stateDesc.NumRenderTargets      = 1;//8;
+    #if 1//TODO: currently not supported
+    stateDesc.SampleDesc.Count      = 1; //!!!
+    #else
     stateDesc.SampleDesc.Count      = desc.rasterizer.multiSampling.SampleCount();
+    #endif
     
     for (UINT i = 0; i < 8u; ++i)
         stateDesc.RTVFormats[i] = (i < stateDesc.NumRenderTargets ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_UNKNOWN);
