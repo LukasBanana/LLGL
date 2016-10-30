@@ -95,7 +95,11 @@ option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL Extension Placeholders" ON
 option(LLGL_BUILD_TESTS "Include Test Projects" ON)
 option(LLGL_BUILD_TUTORIALS "Include Tutorial Projects" ON)
 
-option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL Renderer Project" ON)
+if(DEFINED IOS_PLATFORM)
+	option(LLGL_BUILD_RENDERER_OPENGLES2 "Include OpenGL ES 2 Renderer Project" ON)
+else()
+	option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL Renderer Project" ON)
+endif()
 
 if(WIN32)
 	option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 Renderer Project" ON)
@@ -321,6 +325,19 @@ set(
 	${FilesRendererGLRenderState}
 )
 
+#TODO: replace ...GL variables by ...GLES2 variables
+set(
+	FilesGLES2
+	${FilesRendererGL}
+	${FilesRendererGLExt}
+	${FilesRendererGLPlatformBase}
+	${FilesRendererGLPlatform}
+	${FilesRendererGLShader}
+	${FilesRendererGLBuffer}
+	${FilesRendererGLTexture}
+	${FilesRendererGLRenderState}
+)
+
 set(
 	FilesD3D12
 	${FilesRendererD3D12}
@@ -358,34 +375,40 @@ endif()
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 ENABLE_CXX11(LLGL)
 
-if(LLGL_BUILD_RENDERER_OPENGL)
-	if(DEFINED IOS_PLATFORM)
+if(LLGL_BUILD_RENDERER_OPENGLES2)
 		# OpenGLES Renderer
 		include(cmake/FindOpenGLES.cmake)
 		if(OPENGLES_FOUND)
 			ADD_DEFINE(LLGL_GL_OPENGLES)
+			
 			include_directories(${OPENGLES_INCLUDE_DIR})
-			add_library(LLGL_OpenGLES SHARED ${FilesGL})
-			set_target_properties(LLGL_OpenGLES PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-			target_link_libraries(LLGL_OpenGLES LLGL ${OPENGLES_LIBRARIES})
-			ADD_FRAMEWORK(LLGL_OpenGLES UIKit)
-			ADD_FRAMEWORK(LLGL_OpenGLES QuartzCore)
-			ADD_FRAMEWORK(LLGL_OpenGLES OpenGLES)
+			add_library(LLGL_OpenGLES2 SHARED ${FilesGLES2})
+			set_target_properties(LLGL_OpenGLES2 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+			target_link_libraries(LLGL_OpenGLES2 LLGL ${OPENGLES_LIBRARIES})
+			
+			if(DEFINED IOS_PLATFORM)
+				ADD_FRAMEWORK(LLGL_OpenGLES2 UIKit)
+				ADD_FRAMEWORK(LLGL_OpenGLES2 QuartzCore)
+				ADD_FRAMEWORK(LLGL_OpenGLES2 OpenGLES)
+			else()
+				ENABLE_CXX11(LLGL_OpenGLES2)
+			endif()
 		else()
-			message("Missing OpenGL ES -> LLGL_OpenGLES renderer will be excluded from project")
+			message("Missing OpenGL ES -> LLGL_OpenGLES2 renderer will be excluded from project")
 		endif()
+endif()
+
+if(LLGL_BUILD_RENDERER_OPENGL)
+	# OpenGL Renderer
+	find_package(OpenGL)
+	if(OpenGL_FOUND)
+		include_directories(${OPENGL_INCLUDE_DIR})
+		add_library(LLGL_OpenGL SHARED ${FilesGL})
+		set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
+		ENABLE_CXX11(LLGL_OpenGL)
 	else()
-		# OpenGL Renderer
-		find_package(OpenGL)
-		if(OpenGL_FOUND)
-			include_directories(${OPENGL_INCLUDE_DIR})
-			add_library(LLGL_OpenGL SHARED ${FilesGL})
-			set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-			target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
-			ENABLE_CXX11(LLGL_OpenGL)
-		else()
-			message("Missing OpenGL -> LLGL_OpenGL renderer will be excluded from project")
-		endif()
+		message("Missing OpenGL -> LLGL_OpenGL renderer will be excluded from project")
 	endif()
 endif()
 

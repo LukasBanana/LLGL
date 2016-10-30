@@ -34,11 +34,11 @@ RenderSystem::~RenderSystem()
 
 std::vector<std::string> RenderSystem::FindModules()
 {
-    /* Iterate over all known modules and return those that are availale on the current platform */
+    /* Iterate over all known modules and return those that are available on the current platform */
     const std::vector<std::string> knownModules
     {
         #if defined(LLGL_OS_IOS) || defined(LLGL_OS_ANDROID)
-        "OpenGLES",
+        "OpenGLES2",
         #else
         "OpenGL",
         #endif

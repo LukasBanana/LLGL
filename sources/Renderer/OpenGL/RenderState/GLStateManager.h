@@ -182,16 +182,14 @@ class GLStateManager
         {
             GLenum      depthFunc       = GL_LESS;
             GLStencil   stencil[2];
+            GLenum      polygonMode     = GL_FILL;
             GLenum      cullFace        = GL_BACK;
             GLenum      frontFace       = GL_CCW;
             GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
             GLboolean   depthMask       = GL_TRUE;
             GLint       patchVertices_  = 0;
             ColorRGBAf  blendColor      = { 0.0f, 0.0f, 0.0f, 0.0f };
-            #ifndef LLGL_GL_OPENGLES
-            GLenum      polygonMode     = GL_FILL;
             GLenum      logicOpCode     = GL_COPY;
-            #endif
         };
 
         struct GLRenderState
