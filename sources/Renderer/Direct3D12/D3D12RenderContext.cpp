@@ -27,7 +27,7 @@ namespace LLGL
 D3D12RenderContext::D3D12RenderContext(
     D3D12RenderSystem& renderSystem,
     RenderContextDescriptor desc,
-    const std::shared_ptr<Window>& window) :
+    const std::shared_ptr<Surface>& surface) :
         renderSystem_   ( renderSystem ),
         desc_           ( desc         )
 {
@@ -37,7 +37,7 @@ D3D12RenderContext::D3D12RenderContext(
     #endif
 
     /* Setup surface for the render context */
-    SetOrCreateSurface(window, desc_.videoMode, nullptr);
+    SetOrCreateSurface(surface, desc_.videoMode, nullptr);
     CreateWindowSizeDependentResources();
     CreateDeviceResources();
 

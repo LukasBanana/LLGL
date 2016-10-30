@@ -42,7 +42,7 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Render Context ------ */
 
-        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
+        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
 

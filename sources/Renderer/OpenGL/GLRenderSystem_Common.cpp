@@ -38,9 +38,9 @@ GLRenderContext* GLRenderSystem::GetSharedRenderContext() const
     return (!renderContexts_.empty() ? renderContexts_.begin()->get() : nullptr);
 }
 
-RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
+RenderContext* GLRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return AddRenderContext(MakeUnique<GLRenderContext>(desc, window, GetSharedRenderContext()), desc, window);
+    return AddRenderContext(MakeUnique<GLRenderContext>(desc, surface, GetSharedRenderContext()), desc);
 }
 
 void GLRenderSystem::Release(RenderContext& renderContext)
@@ -193,8 +193,7 @@ void GLRenderSystem::Release(Query& query)
  * ======= Protected: =======
  */
 
-RenderContext* GLRenderSystem::AddRenderContext(
-    std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
+RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc)
 {
     /* Switch to fullscreen mode (if enabled) */
     if (desc.videoMode.fullscreen)

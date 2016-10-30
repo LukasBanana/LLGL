@@ -70,7 +70,7 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Returns the list of all available render system modules for the current platform
-        (e.g. on Windows this might be { "OpenGL", "Direct3D11", "Direct3D12" }, but on MacOS it might be only { "OpenGL" }).
+        (e.g. on Win32 this might be { "OpenGL", "Direct3D11", "Direct3D12" }, but on MacOS it might be only { "OpenGL" }).
         */
         static std::vector<std::string> FindModules();
 
@@ -158,9 +158,13 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new render context and returns the raw pointer.
+        \param[in] desc Specifies the render context descriptor, which contains the video mode, vsync, multi-sampling settings etc.
+        \param[in] surface Optional shared pointer to a surface for the render context.
+        If this is null, the render context will create its own platform specific surface, which can be accessed by "RenderContext::GetSurface".
         \remarks The render system takes the ownership of this object. All render contexts are deleted in the destructor of this render system.
+        \see RenderContext::GetSurface
         */
-        virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) = 0;
+        virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) = 0;
 
         //! Releases the specified render context. This will all release all resources, that are associated with this render context.
         virtual void Release(RenderContext& renderContext) = 0;

@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext) :
+GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext) :
     desc_           ( desc                        ),
     contextHeight_  ( desc.videoMode.resolution.y )
 {
@@ -21,12 +21,12 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
     /* Setup surface for the render context and pass native context handle */
     NativeContextHandle windowContext;
     GetNativeContextHandle(windowContext);
-    SetOrCreateSurface(window, desc.videoMode, &windowContext);
+    SetOrCreateSurface(surface, desc.videoMode, &windowContext);
 
     #else
 
     /* Setup surface for the render context */
-    SetOrCreateSurface(window, desc.videoMode, nullptr);
+    SetOrCreateSurface(surface, desc.videoMode, nullptr);
 
     #endif
 

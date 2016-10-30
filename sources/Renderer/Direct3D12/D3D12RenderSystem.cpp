@@ -61,9 +61,9 @@ D3D12RenderSystem::~D3D12RenderSystem()
 
 /* ----- Render Context ----- */
 
-RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
+RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(renderContexts_, MakeUnique<D3D12RenderContext>(*this, desc, window));
+    return TakeOwnership(renderContexts_, MakeUnique<D3D12RenderContext>(*this, desc, surface));
 }
 
 void D3D12RenderSystem::Release(RenderContext& renderContext)

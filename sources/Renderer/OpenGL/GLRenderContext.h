@@ -34,7 +34,7 @@ class GLRenderContext : public RenderContext
 
         /* ----- Common ----- */
 
-        GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Window>& window, GLRenderContext* sharedRenderContext);
+        GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext);
 
         void Present() override;
 

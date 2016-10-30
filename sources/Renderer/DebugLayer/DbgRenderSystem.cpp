@@ -44,9 +44,9 @@ void DbgRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 
 /* ----- Render Context ----- */
 
-RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
+RenderContext* DbgRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    auto renderContextInstance = instance_->CreateRenderContext(desc, window);
+    auto renderContextInstance = instance_->CreateRenderContext(desc, surface);
 
     SetRendererInfo(instance_->GetRendererInfo());
     SetRenderingCaps(instance_->GetRenderingCaps());

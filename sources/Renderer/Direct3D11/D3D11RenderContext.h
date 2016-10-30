@@ -41,7 +41,7 @@ class D3D11RenderContext : public RenderContext
             const ComPtr<ID3D11Device>& device,
             const ComPtr<ID3D11DeviceContext>& context,
             const RenderContextDescriptor& desc,
-            const std::shared_ptr<Window>& window
+            const std::shared_ptr<Surface>& surface
         );
 
         void Present() override;

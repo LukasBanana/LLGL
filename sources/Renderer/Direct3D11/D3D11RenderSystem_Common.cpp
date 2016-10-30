@@ -48,11 +48,11 @@ D3D11RenderSystem::~D3D11RenderSystem()
 
 /* ----- Render Context ----- */
 
-RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window)
+RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
     return TakeOwnership(
         renderContexts_,
-        MakeUnique<D3D11RenderContext>(factory_.Get(), device_, context_, desc, window)
+        MakeUnique<D3D11RenderContext>(factory_.Get(), device_, context_, desc, surface)
     );
 }
 

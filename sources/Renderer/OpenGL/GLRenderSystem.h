@@ -58,7 +58,7 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Render Context ----- */
 
-        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Window>& window = nullptr) override;
+        RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
 
@@ -135,11 +135,7 @@ class GLRenderSystem : public RenderSystem
 
     protected:
 
-        RenderContext* AddRenderContext(
-            std::unique_ptr<GLRenderContext>&& renderContext,
-            const RenderContextDescriptor& desc,
-            const std::shared_ptr<Window>& window
-        );
+        RenderContext* AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc);
 
     private:
 

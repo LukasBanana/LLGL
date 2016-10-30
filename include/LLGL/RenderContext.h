@@ -11,7 +11,6 @@
 
 #include "Export.h"
 #include "Surface.h"
-#include "Window.h"//TODO: remove this include directive!
 #include "RenderContextDescriptor.h"
 #include "RenderContextFlags.h"
 #include "RenderSystemFlags.h"
@@ -38,7 +37,7 @@ namespace LLGL
 
 /**
 \brief Render context interface.
-\remarks Each render context has its own window and back buffer (or rather swap-chain) to draw into.
+\remarks Each render context has its own surface and back buffer (or rather swap-chain) to draw into.
 */
 class LLGL_EXPORT RenderContext
 {

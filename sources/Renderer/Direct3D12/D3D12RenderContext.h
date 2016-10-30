@@ -36,7 +36,7 @@ class D3D12RenderContext : public RenderContext
         D3D12RenderContext(
             D3D12RenderSystem& renderSystem,
             RenderContextDescriptor desc,
-            const std::shared_ptr<Window>& window
+            const std::shared_ptr<Surface>& surface
         );
 
         ~D3D12RenderContext();
