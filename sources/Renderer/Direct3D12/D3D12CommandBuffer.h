@@ -130,16 +130,13 @@ class D3D12CommandBuffer : public CommandBuffer
 
         static const UINT maxNumBuffers = 3;
 
-        void CreateDevices();
-        void CreateStateManager();
+        void CreateDevices(D3D12RenderSystem& renderSystem);
+        void InitStateManager(int initialViewportWidth, int initialViewportHeight);
 
         // Sets the current back buffer as render target view.
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
 
         void SubmitPersistentStates();
-
-        D3D12RenderSystem&                  renderSystem_;  // reference to its render system
-        std::unique_ptr<D3D12StateManager>  stateMngr_;
 
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
@@ -148,6 +145,7 @@ class D3D12CommandBuffer : public CommandBuffer
 
         //UINT64                              fenceValues_[maxNumBuffers] = { 0 };
 
+        D3D12StateManager                   stateMngr_;
         D3DClearState                       clearState_;
 
 };

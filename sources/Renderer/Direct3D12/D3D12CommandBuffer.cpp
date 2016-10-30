@@ -26,11 +26,10 @@ namespace LLGL
 {
 
 
-D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem) :
-    renderSystem_( renderSystem )
+D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
 {
-    CreateDevices();
-    CreateStateManager();
+    CreateDevices(renderSystem);
+    //InitStateManager();
 }
 
 /* ----- Configuration ----- */
@@ -42,26 +41,26 @@ void D3D12CommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependent
 
 void D3D12CommandBuffer::SetViewport(const Viewport& viewport)
 {
-    stateMngr_->SetViewports(1, &viewport);
-    stateMngr_->SubmitViewports(commandList_.Get());
+    stateMngr_.SetViewports(1, &viewport);
+    stateMngr_.SubmitViewports(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
 {
-    stateMngr_->SetViewports(numViewports, viewportArray);
-    stateMngr_->SubmitViewports(commandList_.Get());
+    stateMngr_.SetViewports(numViewports, viewportArray);
+    stateMngr_.SubmitViewports(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
 {
-    stateMngr_->SetScissors(1, &scissor);
-    stateMngr_->SubmitScissors(commandList_.Get());
+    stateMngr_.SetScissors(1, &scissor);
+    stateMngr_.SubmitScissors(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
 {
-    stateMngr_->SetScissors(numScissors, scissorArray);
-    stateMngr_->SubmitScissors(commandList_.Get());
+    stateMngr_.SetScissors(numScissors, scissorArray);
+    stateMngr_.SubmitScissors(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SetClearColor(const ColorRGBAf& color)
@@ -171,7 +170,7 @@ void D3D12CommandBuffer::SetTexture(Texture& texture, unsigned int slot, long sh
 {
     auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
 
-    /* Set CBV descriptor heap */
+    /* Set SRV descriptor heap */
     ID3D12DescriptorHeap* descHeaps[1] = { textureD3D.GetDescriptorHeap() };
     commandList_->SetDescriptorHeaps(1, descHeaps);
     commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
@@ -201,7 +200,6 @@ void D3D12CommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
     //todo
 }
 
-//INCOMPLETE
 void D3D12CommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
     auto& renderContextD3D = LLGL_CAST(D3D12RenderContext&, renderContext);
@@ -318,26 +316,21 @@ void D3D12CommandBuffer::SyncGPU()
  * ======= Private: =======
  */
 
-void D3D12CommandBuffer::CreateDevices()
+void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 {
     /* Create command allocator and graphics command list */
-    commandAlloc_   = renderSystem_.CreateDXCommandAllocator();
-    commandList_    = renderSystem_.CreateDXCommandList(commandAlloc_.Get());
+    commandAlloc_   = renderSystem.CreateDXCommandAllocator();
+    commandList_    = renderSystem.CreateDXCommandList(commandAlloc_.Get());
 }
 
-void D3D12CommandBuffer::CreateStateManager()
+void D3D12CommandBuffer::InitStateManager(int initialViewportWidth, int initialViewportHeight)
 {
-    /* Create state manager */
-    stateMngr_ = MakeUnique<D3D12StateManager>();
+    /* Initialize persistent viewport and scissor states */
+    Viewport viewport(0.0f, 0.0f, static_cast<float>(initialViewportWidth), static_cast<float>(initialViewportHeight));
+    stateMngr_.SetViewports(1, &viewport);
 
-    /* Initialize states */
-    /*auto resolution = desc_.videoMode.resolution;
-
-    Viewport viewport(0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y));
-    stateMngr_->SetViewports(1, &viewport);
-
-    Scissor scissor(0, 0, resolution.x, resolution.y);
-    stateMngr_->SetScissors(1, &scissor);*/
+    Scissor scissor(0, 0, initialViewportWidth, initialViewportHeight);
+    stateMngr_.SetScissors(1, &scissor);
 }
 
 void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
@@ -360,8 +353,8 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
 void D3D12CommandBuffer::SubmitPersistentStates()
 {
     /* Submit all constistent states: viewports, scissors */
-    stateMngr_->SubmitViewports(commandList_.Get());
-    stateMngr_->SubmitScissors(commandList_.Get());
+    stateMngr_.SubmitViewports(commandList_.Get());
+    stateMngr_.SubmitScissors(commandList_.Get());
 }
 
 
