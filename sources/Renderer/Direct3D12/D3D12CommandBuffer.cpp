@@ -15,6 +15,7 @@
 #include "D3DX12/d3dx12.h"
 
 #include "Buffer/D3D12VertexBuffer.h"
+#include "Buffer/D3D12VertexBufferArray.h"
 #include "Buffer/D3D12IndexBuffer.h"
 #include "Buffer/D3D12ConstantBuffer.h"
 #include "Buffer/D3D12StorageBuffer.h"
@@ -110,7 +111,12 @@ void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
 
 void D3D12CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    //todo...
+    auto& vertexBufferArrayD3D = LLGL_CAST(D3D12VertexBufferArray&, bufferArray);
+    commandList_->IASetVertexBuffers(
+        0,
+        static_cast<UINT>(vertexBufferArrayD3D.GetViews().size()),
+        vertexBufferArrayD3D.GetViews().data()
+    );
 }
 
 void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer)

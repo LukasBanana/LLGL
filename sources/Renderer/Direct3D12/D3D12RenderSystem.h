@@ -198,6 +198,7 @@ class D3D12RenderSystem : public RenderSystem
         HWObjectContainer<D3D12RenderContext>       renderContexts_;
         HWObjectContainer<D3D12CommandBuffer>       commandBuffers_;
         HWObjectContainer<D3D12Buffer>              buffers_;
+        HWObjectContainer<BufferArray>              bufferArrays_;
         HWObjectContainer<D3D12Texture>             textures_;
         //HWObjectContainer<D3D12RenderTarget>        renderTargets_;
         HWObjectContainer<D3D12Shader>              shaders_;

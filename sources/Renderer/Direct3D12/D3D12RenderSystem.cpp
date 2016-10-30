@@ -16,6 +16,7 @@
 //#include "RenderState/D3D12StateManager.h"
 
 #include "Buffer/D3D12VertexBuffer.h"
+#include "Buffer/D3D12VertexBufferArray.h"
 #include "Buffer/D3D12IndexBuffer.h"
 #include "Buffer/D3D12ConstantBuffer.h"
 #include "Buffer/D3D12StorageBuffer.h"
@@ -139,10 +140,24 @@ Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeBufferAndInitialize(desc, initialData));
 }
 
+static std::unique_ptr<BufferArray> MakeD3D12BufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+{
+    auto type = (*bufferArray)->GetType();
+    switch (type)
+    {
+        case BufferType::Vertex:        return MakeUnique<D3D12VertexBufferArray>(numBuffers, bufferArray);
+      /*case BufferType::Constant:      return MakeUnique<D3D12BufferArray>(type, numBuffers, bufferArray);
+        case BufferType::Storage:       return MakeUnique<D3D12StorageBufferArray>(numBuffers, bufferArray);
+        case BufferType::StreamOutput:  return MakeUnique<D3D12StreamOutputBufferArray>(numBuffers, bufferArray);*/
+        default:                        break;
+    }
+    return nullptr;
+}
+
 BufferArray* D3D12RenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return nullptr;//todo
+    return TakeOwnership(bufferArrays_, MakeD3D12BufferArray(numBuffers, bufferArray));
 }
 
 void D3D12RenderSystem::Release(Buffer& buffer)
@@ -152,7 +167,7 @@ void D3D12RenderSystem::Release(Buffer& buffer)
 
 void D3D12RenderSystem::Release(BufferArray& bufferArray)
 {
-    //RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
 void D3D12RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
