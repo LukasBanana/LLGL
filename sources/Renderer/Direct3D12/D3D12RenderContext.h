@@ -58,13 +58,15 @@ class D3D12RenderContext : public RenderContext
 
         bool HasMultiSampling() const;
 
+        void SyncGPU();
+
     private:
 
         static const UINT maxNumBuffers = 3;
 
         void CreateWindowSizeDependentResources();
-
-        //void SetupSwapChainInterval(const VsyncDescriptor& desc);
+        void CreateDeviceResources();
+        void UpdateFenceValues();
 
         void MoveToNextFrame();
 
@@ -81,9 +83,10 @@ class D3D12RenderContext : public RenderContext
         ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;
         UINT                                rtvDescSize_                    = 0;
 
-        ComPtr<ID3D12CommandAllocator>      commandAllocs_[maxNumBuffers];
         ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];
         ComPtr<ID3D12Resource>              renderTargetsMS_[maxNumBuffers];
+
+        ComPtr<ID3D12CommandAllocator>      commandAllocs_[maxNumBuffers];
         UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
 
         UINT                                numFrames_                      = 0;

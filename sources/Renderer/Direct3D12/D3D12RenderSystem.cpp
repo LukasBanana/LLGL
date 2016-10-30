@@ -355,7 +355,7 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
     ComPtr<IDXGISwapChain1> swapChain;
 
     auto hr = factory_->CreateSwapChainForHwnd(commandQueue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
-    DXThrowIfFailed(hr, "failed to create D3D12 swap chain");
+    DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
 }

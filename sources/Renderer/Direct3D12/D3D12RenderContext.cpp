@@ -39,6 +39,7 @@ D3D12RenderContext::D3D12RenderContext(
     /* Setup window for the render context */
     SetOrCreateWindow(window, desc_.videoMode, nullptr);
     CreateWindowSizeDependentResources();
+    CreateDeviceResources();
 
     /* Initialize v-sync */
     SetVsync(desc_.vsync);
@@ -75,7 +76,7 @@ void D3D12RenderContext::Present()
 
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
-    DXThrowIfFailed(hr, "failed to present D3D12 swap-chain");
+    DXThrowIfFailed(hr, "failed to present DXGI swap chain");
 
     /* Advance frame counter */
     MoveToNextFrame();
@@ -93,10 +94,18 @@ void D3D12RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     if (GetVideoMode() != videoModeDesc)
     {
-        //todo
+        auto prevVideoMode = GetVideoMode();
 
         /* Update window appearance and store new video mode in base function */
         RenderContext::SetVideoMode(videoModeDesc);
+
+        /* Re-create resource that depend on the window size */
+        if (!Gs::Equals(prevVideoMode.resolution, videoModeDesc.resolution))
+            CreateWindowSizeDependentResources();
+
+        /* Switch fullscreen mode */
+        if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
+            swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
     }
 }
 
@@ -145,6 +154,11 @@ bool D3D12RenderContext::HasMultiSampling() const
     return desc_.multiSampling.enabled;
 }
 
+void D3D12RenderContext::SyncGPU()
+{
+    renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
+}
+
 
 /*
  * ======= Private: =======
@@ -152,37 +166,64 @@ bool D3D12RenderContext::HasMultiSampling() const
 
 void D3D12RenderContext::CreateWindowSizeDependentResources()
 {
-    auto device = renderSystem_.GetDevice();
-
     /* Wait until all previous GPU work is complete */
-    //SyncGPU();
+    SyncGPU();
 
-    /* Setup swap chain meta data */
-    numFrames_ = static_cast<UINT>(desc_.videoMode.swapChainMode);
-
-    /* Create swap chain for window handle */
-    NativeHandle wndHandle;
-    GetWindow().GetNativeHandle(&wndHandle);
-
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
-    InitMemory(swapChainDesc);
+    /* Release previous window size dependent resources */
+    for (UINT i = 0; i < numFrames_; ++i)
     {
-        swapChainDesc.Width                 = static_cast<UINT>(desc_.videoMode.resolution.x);
-        swapChainDesc.Height                = static_cast<UINT>(desc_.videoMode.resolution.y);
-        swapChainDesc.Format                = DXGI_FORMAT_B8G8R8A8_UNORM;
-        swapChainDesc.Stereo                = false;
-        swapChainDesc.SampleDesc.Count      = 1; // always 1 because D3D12 does not allow (directly) multi-sampled swap-chains
-        swapChainDesc.SampleDesc.Quality    = 0;
-        swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount           = numFrames_;
-        swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swapChainDesc.Flags                 = 0;
-        swapChainDesc.Scaling               = DXGI_SCALING_NONE;
-        swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
+        renderTargets_[i].Reset();
+        renderTargetsMS_[i].Reset();
     }
-    auto swapChain = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
 
-    swapChain.As(swapChain_);
+    rtvDescHeap_.Reset();
+
+    /* Get framebuffer size */
+    auto framebufferWidth   = static_cast<UINT>(desc_.videoMode.resolution.x);
+    auto framebufferHeight  = static_cast<UINT>(desc_.videoMode.resolution.y);
+
+    if (swapChain_)
+    {
+        /* Resize swap chain */
+        auto hr = swapChain_->ResizeBuffers(numFrames_, framebufferWidth, framebufferHeight, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+
+        if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
+        {
+            /* Do not continue execution of this method, device resources will be destroyed and re-created */
+            return;
+        }
+        else
+            DXThrowIfFailed(hr, "failed to resize DXGI swap chain buffers");
+    }
+    else
+    {
+        /* Setup swap chain meta data */
+        numFrames_ = static_cast<UINT>(desc_.videoMode.swapChainMode);
+
+        /* Create swap chain for window handle */
+        NativeHandle wndHandle;
+        GetWindow().GetNativeHandle(&wndHandle);
+
+        DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
+        InitMemory(swapChainDesc);
+        {
+            swapChainDesc.Width                 = framebufferWidth;
+            swapChainDesc.Height                = framebufferHeight;
+            swapChainDesc.Format                = DXGI_FORMAT_B8G8R8A8_UNORM;
+            swapChainDesc.Stereo                = false;
+            swapChainDesc.SampleDesc.Count      = 1; // always 1 because D3D12 does not allow (directly) multi-sampled swap-chains
+            swapChainDesc.SampleDesc.Quality    = 0;
+            swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            swapChainDesc.BufferCount           = numFrames_;
+            swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+            swapChainDesc.Flags                 = 0;
+            swapChainDesc.Scaling               = DXGI_SCALING_NONE;
+            swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
+        }
+        auto swapChain = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
+
+        swapChain.As(swapChain_);
+    }
 
     /* Create RTV descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
@@ -197,6 +238,8 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     #ifdef LLGL_DEBUG
     rtvDescHeap_->SetName(L"LLGL::D3D12RenderContext::rtvDescHeap");
     #endif
+
+    auto device = renderSystem_.GetDevice();
 
     rtvDescSize_ = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -225,8 +268,8 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         /* Create multi-sampled render targets */
         auto texture2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
             DXGI_FORMAT_R8G8B8A8_UNORM,
-            swapChainDesc.Width,
-            swapChainDesc.Height,
+            framebufferWidth,
+            framebufferHeight,
             1, // arraySize
             1, // mipLevels 
             std::max(1u, desc_.multiSampling.samples),
@@ -254,13 +297,25 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         }
     }
 
-    /* Update tracked fence values */
-    for (UINT i = 0; i < numFrames_; ++i)
-        fenceValues_[i] = fenceValues_[currentFrame_];
+    /*
+    All pending GPU work was already finished;
+    now update tracked fence values to the last value signaled
+    */
+    UpdateFenceValues();
+}
 
+void D3D12RenderContext::CreateDeviceResources()
+{
     /* Create command allocators */
     for (UINT i = 0; i < numFrames_; ++i)
         commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
+}
+
+void D3D12RenderContext::UpdateFenceValues()
+{
+    /* Update tracked fence values to the last value signaled */
+    for (UINT i = 0; i < numFrames_; ++i)
+        fenceValues_[i] = fenceValues_[currentFrame_];
 }
 
 void D3D12RenderContext::MoveToNextFrame()

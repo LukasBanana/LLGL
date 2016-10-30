@@ -364,7 +364,7 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     }
 
     /* Set current back buffer as RTV */
-    rtvDescHandle_  = renderContextD3D.GetCurrentRTVDescHandle();
+    rtvDescHandle_ = renderContextD3D.GetCurrentRTVDescHandle();
 
     commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
 }
