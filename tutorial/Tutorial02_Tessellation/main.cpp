@@ -210,6 +210,9 @@ private:
 
     void DrawScene()
     {
+        // Set the render context as the initial render target
+        commands->SetRenderTarget(*context);
+
         // Clear color- and depth buffers
         commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
 

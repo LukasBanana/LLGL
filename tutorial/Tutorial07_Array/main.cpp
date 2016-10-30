@@ -119,6 +119,9 @@ private:
 
     void OnDrawFrame() override
     {
+        // Set the render context as the initial render target
+        commands->SetRenderTarget(*context);
+
         // Clear color buffer
         commands->Clear(LLGL::ClearFlags::Color);
 

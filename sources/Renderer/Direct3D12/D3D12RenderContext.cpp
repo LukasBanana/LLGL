@@ -195,7 +195,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
 
     #ifdef LLGL_DEBUG
-    rtvDescHeap_->SetName(L"D3D12RenderContext::rtvDescHeap");
+    rtvDescHeap_->SetName(L"LLGL::D3D12RenderContext::rtvDescHeap");
     #endif
 
     rtvDescSize_ = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -213,7 +213,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         device->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDescHandle);
 
         #ifdef LLGL_DEBUG
-        std::wstring name = L"RenderContext::renderTargets[" + std::to_wstring(i) + L"]";
+        std::wstring name = L"LLGL::D3D12RenderContext::renderTargets[" + std::to_wstring(i) + L"]";
         renderTargets_[i]->SetName(name.c_str());
         #endif
 
@@ -258,7 +258,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     for (UINT i = 0; i < numFrames_; ++i)
         fenceValues_[i] = fenceValues_[currentFrame_];
 
-    /* Create command allocator and graphics command list */
+    /* Create command allocators */
     for (UINT i = 0; i < numFrames_; ++i)
         commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
 }
