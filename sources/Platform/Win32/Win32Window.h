@@ -25,6 +25,9 @@ class Win32Window : public Window
         Win32Window(const WindowDescriptor& desc);
         ~Win32Window();
 
+        void GetNativeHandle(void* nativeHandle) const override;
+        void Recreate() override;
+
         void SetPosition(const Point& position) override;
         Point GetPosition() const override;
 
@@ -40,10 +43,6 @@ class Win32Window : public Window
         WindowDescriptor QueryDesc() const override;
 
         void SetDesc(const WindowDescriptor& desc) override;
-
-        void Recreate() override;
-
-        void GetNativeHandle(void* nativeHandle) const override;
 
     private:
         

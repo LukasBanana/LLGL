@@ -38,6 +38,19 @@ LinuxWindow::~LinuxWindow()
     XCloseDisplay(display_);
 }
 
+void LinuxWindow::GetNativeHandle(void* nativeHandle) const
+{
+    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+    handle.display  = display_;
+    handle.window   = wnd_;
+    handle.visual   = visual_;
+}
+
+void LinuxWindow::Recreate()
+{
+    //todo...
+}
+
 void LinuxWindow::SetPosition(const Point& position)
 {
     XMoveWindow(display_, wnd_, position.x, position.y);
@@ -94,19 +107,6 @@ WindowDescriptor LinuxWindow::QueryDesc() const
 void LinuxWindow::SetDesc(const WindowDescriptor& desc)
 {
     //todo...
-}
-
-void LinuxWindow::Recreate(const WindowDescriptor& desc)
-{
-    //todo...
-}
-
-void LinuxWindow::GetNativeHandle(void* nativeHandle) const
-{
-    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-    handle.display  = display_;
-    handle.window   = wnd_;
-    handle.visual   = visual_;
 }
 
 void LinuxWindow::OnProcessEvents()

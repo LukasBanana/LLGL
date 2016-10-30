@@ -25,6 +25,9 @@ class MacOSWindow : public Window
         MacOSWindow(const WindowDescriptor& desc);
         ~MacOSWindow();
 
+        void GetNativeHandle(void* nativeHandle) const override;
+        void Recreate() override;
+
         void SetPosition(const Point& position) override;
         Point GetPosition() const override;
 
@@ -40,10 +43,6 @@ class MacOSWindow : public Window
         WindowDescriptor QueryDesc() const override;
 
         void SetDesc(const WindowDescriptor& desc) override;
-
-        void Recreate(const WindowDescriptor& desc) override;
-
-        void GetNativeHandle(void* nativeHandle) const override;
 
     private:
         

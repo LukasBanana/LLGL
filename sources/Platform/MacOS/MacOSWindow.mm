@@ -95,6 +95,17 @@ MacOSWindow::~MacOSWindow()
 {
 }
 
+void MacOSWindow::GetNativeHandle(void* nativeHandle) const
+{
+    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
+    handle.window = wnd_;
+}
+
+void MacOSWindow::Recreate()
+{
+    //todo...
+}
+
 void MacOSWindow::SetPosition(const Point& position)
 {
     desc_.position = position;
@@ -162,17 +173,6 @@ WindowDescriptor MacOSWindow::QueryDesc() const
 void MacOSWindow::SetDesc(const WindowDescriptor& desc)
 {
     //todo...
-}
-
-void MacOSWindow::Recreate(const WindowDescriptor& desc)
-{
-    //todo...
-}
-
-void MacOSWindow::GetNativeHandle(void* nativeHandle) const
-{
-    auto& handle = *reinterpret_cast<NativeHandle*>(nativeHandle);
-    handle.window = wnd_;
 }
 
 

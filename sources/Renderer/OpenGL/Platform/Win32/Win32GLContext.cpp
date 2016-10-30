@@ -496,7 +496,7 @@ void Win32GLContext::CopyPixelFormat(Win32GLContext& sourceContext)
 void Win32GLContext::RecreateWindow()
 {
     /* Recreate window with current descriptor, then update device context and pixel format */
-    window_.Recreate();//window_.QueryDesc());
+    window_.Recreate();
     SetupDeviceContextAndPixelFormat();
 }
 

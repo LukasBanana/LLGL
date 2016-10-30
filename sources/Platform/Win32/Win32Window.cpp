@@ -118,6 +118,20 @@ Win32Window::~Win32Window()
         DestroyWindow(wnd_);
 }
 
+void Win32Window::GetNativeHandle(void* nativeHandle) const
+{
+    auto handle = reinterpret_cast<NativeHandle*>(nativeHandle);
+    handle->window = wnd_;
+}
+
+void Win32Window::Recreate()
+{
+    /* Destroy previous window handle and create a new one with current descriptor settings */
+    auto desc = QueryDesc();
+    DestroyWindow(wnd_);
+    wnd_ = CreateWindowHandle(desc);
+}
+
 void Win32Window::SetPosition(const Point& position)
 {
     SetWindowPos(wnd_, HWND_TOP, position.x, position.y, 0, 0, (SWP_NOSIZE | SWP_NOZORDER));
@@ -277,20 +291,6 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
         /* Reset user data */
         SetUserData(wnd_, this);
     }
-}
-
-void Win32Window::Recreate()
-{
-    /* Destroy previous window handle and create a new one with current descriptor settings */
-    auto desc = QueryDesc();
-    DestroyWindow(wnd_);
-    wnd_ = CreateWindowHandle(desc);
-}
-
-void Win32Window::GetNativeHandle(void* nativeHandle) const
-{
-    auto handle = reinterpret_cast<NativeHandle*>(nativeHandle);
-    handle->window = wnd_;
 }
 
 void Win32Window::OnProcessEvents()
