@@ -33,8 +33,10 @@ static const std::size_t maxThreadCount = ~0;
 /**
 \brief Shading language version enumation.
 \remarks These enumeration entries can be casted to an integer to get the respective version number.
-GLSL versions range from 110 (v.1.10) to 450 (v.4.50),
-and HLSL versions range from 100200 (v.2.0) to 100500 (v.5.0).
+GLSL versions range from 110 (ver. 1.10) to 450 (ver. 4.50),
+GLSL ES versions range from 100100 (ver. 1.00) to 100320 (ver. 3.20),
+HLSL versions range from 200200 (ver. 2.0) to 200510 (ver. 5.1).
+and Metal versions range from 300100 (ver. 1.0) to 300120 (ver. 1.2).
 */
 enum class ShadingLanguage
 {
