@@ -132,6 +132,7 @@ static unsigned int GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
 // Returns the HLSL version for the specified Direct3D feature level.
 static ShadingLanguage DXGetHLSLVersion(D3D_FEATURE_LEVEL featureLevel)
 {
+    if (featureLevel >= D3D_FEATURE_LEVEL_12_0) return ShadingLanguage::HLSL_5_1;
     if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return ShadingLanguage::HLSL_5_0;
     if (featureLevel >= D3D_FEATURE_LEVEL_10_1) return ShadingLanguage::HLSL_4_1;
     if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return ShadingLanguage::HLSL_4_0;
