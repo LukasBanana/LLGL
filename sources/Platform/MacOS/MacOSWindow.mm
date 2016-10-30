@@ -193,18 +193,25 @@ static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
     return mask;
 }
 
+static bool g_appDelegateCreated = false;
+
 NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 {
-    /* Initialize Cocoa framework */
-    [[NSAutoreleasePool alloc] init];
-    [NSApplication sharedApplication];
-    
-    [NSApp setDelegate:(id<NSApplicationDelegate>)[
-        [[AppDelegate alloc] initWithWindow:this isResizable:(BOOL)desc.resizable]
-        autorelease
-    ]];
-    
-    [NSApp finishLaunching];
+    if (!g_appDelegateCreated)
+    {
+        /* Initialize Cocoa framework */
+        [[NSAutoreleasePool alloc] init];
+        [NSApplication sharedApplication];
+        
+        [NSApp setDelegate:(id<NSApplicationDelegate>)[
+            [[AppDelegate alloc] initWithWindow:this isResizable:(BOOL)desc.resizable]
+            autorelease
+        ]];
+        
+        [NSApp finishLaunching];
+        
+        g_appDelegateCreated = true;
+    }
     
     /* Create NSWindow object */
     NSWindow* wnd = [[NSWindow alloc]

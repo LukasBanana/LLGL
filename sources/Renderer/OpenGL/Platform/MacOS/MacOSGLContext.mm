@@ -59,6 +59,7 @@ bool MacOSGLContext::SwapBuffers()
 bool MacOSGLContext::Activate(bool activate)
 {
     [ctx_ makeCurrentContext];
+    [ctx_ setView:[wnd_ contentView]];
     return true;
 }
 
@@ -74,8 +75,8 @@ void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
         NSOpenGLPFAStencilSize,     8,
         NSOpenGLPFAColorSize,       24,
         NSOpenGLPFAAlphaSize,       8,
-        NSOpenGLPFASampleBuffers,   0,
-        //NSOpenGLPFASamples,         0,//(desc.multiSampling.enabled ? std::max(1u, desc.multiSampling.samples) : 1),
+        NSOpenGLPFASampleBuffers,   (desc.multiSampling.enabled ? 1u : 0u),
+        NSOpenGLPFASamples,         desc.multiSampling.SampleCount(),
         //NSOpenGLPFAFullScreen,
         0
     };
@@ -99,14 +100,24 @@ void MacOSGLContext::CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGL
     /* Get shared NS-OpenGL context */
     auto sharedNSGLCtx = (sharedContext != nullptr ? sharedContext->ctx_ : nullptr);
     
-    /* Create NS-OpenGL context */
-    ctx_ = [[NSOpenGLContext alloc] initWithFormat:pixelFormat_ shareContext:sharedNSGLCtx];
-    if (!ctx_)
-        throw std::runtime_error("failed to create NSOpenGLContext");
+    if (sharedNSGLCtx/* && if not create custom GL context */)
+    {
+        /* Share this NS-OpenGL context */
+        ctx_ = sharedNSGLCtx;
+    }
+    else
+    {
+        /* Create new NS-OpenGL context */
+        ctx_ = [[NSOpenGLContext alloc] initWithFormat:pixelFormat_ shareContext:sharedNSGLCtx];
+        if (!ctx_)
+            throw std::runtime_error("failed to create NSOpenGLContext");
+    }
+    
+    /* Store native window handle */
+    wnd_ = nativeHandle.window;
     
     /* Make current and set view to specified window */
-    [ctx_ makeCurrentContext];
-    [ctx_ setView:[nativeHandle.window contentView]];
+    Activate(true);
 }
 
 void MacOSGLContext::DeleteNSGLContext()

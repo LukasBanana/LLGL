@@ -42,6 +42,7 @@ class MacOSGLContext : public GLContext
     
         NSOpenGLPixelFormat*    pixelFormat_    = nullptr;
         NSOpenGLContext*        ctx_            = nullptr;
+        NSWindow*               wnd_            = nullptr;
     
 };
     
