@@ -79,6 +79,16 @@ Window::~Window()
 {
 }
 
+#ifdef LLGL_MOBILE_PLATFORM
+
+std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
+{
+    /* For mobile platforms this function always returns null */
+    return nullptr;
+}
+
+#endif
+
 bool Window::ProcessEvents()
 {
     FOREACH_LISTENER_CALL( OnProcessEvents(*this) );

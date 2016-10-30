@@ -9,12 +9,12 @@
 #define LLGL_WINDOW_H
 
 
+#include "Export.h"
+#include "Types.h"
+#include "Key.h"
 #include <string>
 #include <memory>
 #include <vector>
-#include <LLGL/Export.h>
-#include <LLGL/Key.h>
-#include <LLGL/Types.h>
 
 
 namespace LLGL
@@ -70,17 +70,19 @@ struct WindowDescriptor
 
 
 /**
-\brief Interface for a Window class.
+\brief Window interface for desktop platforms.
 \remarks This is the main interface for the windowing system in LLGL.
 To implement a custom window (and use GLFW for instance) you have to
 derive from this class and implement all pure virtual functions.
+The couterpart is the Canvas interface for mobile platforms.
+\see Canvas
 */
 class LLGL_EXPORT Window
 {
 
     public:
 
-        // Interface for all window listeners
+        //! Interface for all window event listeners.
         class LLGL_EXPORT EventListener
         {
 
@@ -136,7 +138,13 @@ class LLGL_EXPORT Window
 
         virtual ~Window();
 
-        //! Creates a platform specific instance of the Window interface.
+        /**
+        \brief Creates a platform specific instance of the Window interface.
+        \return Unique pointer to a new instance of the platform specific Window interface or
+        null if the platform does not support windows (such as Android and iOS).
+        \remarks For mobile platforms the interface Canvas can be used.
+        \see Canvas
+        */
         static std::unique_ptr<Window> Create(const WindowDescriptor& desc);
 
         //! Sets the window position relative to its parent.

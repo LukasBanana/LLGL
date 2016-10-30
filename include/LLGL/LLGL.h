@@ -39,7 +39,6 @@
  * - **OpenGL Renderer**: ~85% done
  * - **Direct3D 11 Renderer**: ~85% done
  * - **Direct3D 12 Renderer**: ~5% done
- * - **Vulkan Renderer**: not started yet
  * 
  * 
  * Getting Started
