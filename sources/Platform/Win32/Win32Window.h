@@ -41,7 +41,7 @@ class Win32Window : public Window
 
         void SetDesc(const WindowDescriptor& desc) override;
 
-        void Recreate(const WindowDescriptor& desc) override;
+        void Recreate() override;
 
         void GetNativeHandle(void* nativeHandle) const override;
 

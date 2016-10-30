@@ -9,7 +9,7 @@
 #define LLGL_CANVAS_H
 
 
-#include "Export.h"
+#include "Surface.h"
 #include "Types.h"
 #include "Key.h"
 #include <string>
@@ -37,7 +37,7 @@ struct CanvasDescriptor
 The couterpart is the Window interface for desktop platforms.
 \see Window
 */
-class LLGL_EXPORT Canvas
+class LLGL_EXPORT Canvas : public Surface
 {
 
     public:
@@ -80,12 +80,6 @@ class LLGL_EXPORT Canvas
 
         //! Returns the canvas title as UTF16 string.
         virtual std::wstring GetTitle() const = 0;
-
-        /**
-        \brief Returns the native canvas handle.
-        \remarks This must be casted to a platform specific structure.
-        */
-        virtual void GetNativeHandle(void* nativeHandle) const = 0;
 
         //! Processes the events for this canvas (i.e. touch input, key presses etc.).
         void ProcessEvents();

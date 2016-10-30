@@ -279,9 +279,10 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
     }
 }
 
-void Win32Window::Recreate(const WindowDescriptor& desc)
+void Win32Window::Recreate()
 {
-    /* Destroy previous window handle and create a new one */
+    /* Destroy previous window handle and create a new one with current descriptor settings */
+    auto desc = QueryDesc();
     DestroyWindow(wnd_);
     wnd_ = CreateWindowHandle(desc);
 }

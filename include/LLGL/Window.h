@@ -9,7 +9,7 @@
 #define LLGL_WINDOW_H
 
 
-#include "Export.h"
+#include "Surface.h"
 #include "Types.h"
 #include "Key.h"
 #include <string>
@@ -77,7 +77,7 @@ derive from this class and implement all pure virtual functions.
 The couterpart is the Canvas interface for mobile platforms.
 \see Canvas
 */
-class LLGL_EXPORT Window
+class LLGL_EXPORT Window : public Surface
 {
 
     public:
@@ -180,29 +180,6 @@ class LLGL_EXPORT Window
         \see RenderContext::SetVideoMode
         */
         virtual void SetDesc(const WindowDescriptor& desc) = 0;
-
-        /**
-        \brief Recreates the internal window object. This may invalidate the native handle previously returned by "GetNativeHandle".
-        \remarks This function is mainly used by the OpenGL renderer on Win32 when a multi-sampled swap-chain is created.
-        \see GetNativeHandle
-        */
-        virtual void Recreate(const WindowDescriptor& desc) = 0;
-
-        /**
-        \brief Returns the native window handle.
-        \remarks This must be casted to a platform specific structure:
-        \code
-        // Example for a custom Win32 window class
-        #include <LLGL/Platform/NativeHandle.h>
-        //...
-        void YourWindowClass::GetNativeHandle(void* nativeHandle)
-        {
-            auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
-            //handle->window = 'some HWND window handle';
-        }
-        \endcode
-        */
-        virtual void GetNativeHandle(void* nativeHandle) const = 0;
 
         /**
         \brief Processes the events for this window (i.e. mouse movement, key presses etc.).
