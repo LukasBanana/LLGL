@@ -27,7 +27,7 @@ Progress
 |----------|:--------:|---------|
 | OpenGL | ~85% | |
 | Direct3D 11 | ~85% | |
-| Direct3D 12 | ~5% | Experimental state |
+| Direct3D 12 | ~5% | Experimental state; Tutorials working: 01, 06, 07 |
 | Vulkan | 0% | Not started yet |
 
 | Platform | Progress | Remarks |
