@@ -136,7 +136,7 @@ class D3D12CommandBuffer : public CommandBuffer
         // Sets the current back buffer as render target view.
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
 
-        void SubmitConsistentStates();
+        void SubmitPersistentStates();
 
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
         std::unique_ptr<D3D12StateManager>  stateMngr_;

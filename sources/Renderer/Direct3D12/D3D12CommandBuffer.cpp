@@ -43,25 +43,25 @@ void D3D12CommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependent
 void D3D12CommandBuffer::SetViewport(const Viewport& viewport)
 {
     stateMngr_->SetViewports(1, &viewport);
-    stateMngr_->SubmitViewports();
+    stateMngr_->SubmitViewports(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
 {
     stateMngr_->SetViewports(numViewports, viewportArray);
-    stateMngr_->SubmitViewports();
+    stateMngr_->SubmitViewports(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
 {
     stateMngr_->SetScissors(1, &scissor);
-    stateMngr_->SubmitScissors();
+    stateMngr_->SubmitScissors(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
 {
     stateMngr_->SetScissors(numScissors, scissorArray);
-    stateMngr_->SubmitScissors();
+    stateMngr_->SubmitScissors(commandList_.Get());
 }
 
 void D3D12CommandBuffer::SetClearColor(const ColorRGBAf& color)
@@ -328,7 +328,7 @@ void D3D12CommandBuffer::CreateDevices()
 void D3D12CommandBuffer::CreateStateManager()
 {
     /* Create state manager */
-    stateMngr_ = MakeUnique<D3D12StateManager>(commandList_);
+    stateMngr_ = MakeUnique<D3D12StateManager>();
 
     /* Initialize states */
     /*auto resolution = desc_.videoMode.resolution;
@@ -357,11 +357,11 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
 }
 
-void D3D12CommandBuffer::SubmitConsistentStates()
+void D3D12CommandBuffer::SubmitPersistentStates()
 {
     /* Submit all constistent states: viewports, scissors */
-    stateMngr_->SubmitViewports();
-    stateMngr_->SubmitScissors();
+    stateMngr_->SubmitViewports(commandList_.Get());
+    stateMngr_->SubmitScissors(commandList_.Get());
 }
 
 

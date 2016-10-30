@@ -13,11 +13,6 @@ namespace LLGL
 {
 
 
-D3D12StateManager::D3D12StateManager(ComPtr<ID3D12GraphicsCommandList>& commandList) :
-    commandList_( commandList )
-{
-}
-
 void D3D12StateManager::SetViewports(unsigned int numViewports, const Viewport* viewportArray)
 {
     viewports_.resize(numViewports);
@@ -52,10 +47,10 @@ void D3D12StateManager::SetViewports(unsigned int numViewports, const Viewport* 
     }
 }
 
-void D3D12StateManager::SubmitViewports()
+void D3D12StateManager::SubmitViewports(ID3D12GraphicsCommandList* commandList)
 {
     if (!viewports_.empty())
-        commandList_->RSSetViewports(static_cast<UINT>(viewports_.size()), viewports_.data());
+        commandList->RSSetViewports(static_cast<UINT>(viewports_.size()), viewports_.data());
 }
 
 void D3D12StateManager::SetScissors(unsigned int numScissors, const Scissor* scissorArray)
@@ -74,10 +69,10 @@ void D3D12StateManager::SetScissors(unsigned int numScissors, const Scissor* sci
     }
 }
 
-void D3D12StateManager::SubmitScissors()
+void D3D12StateManager::SubmitScissors(ID3D12GraphicsCommandList* commandList)
 {
     if (!scissors_.empty())
-        commandList_->RSSetScissorRects(static_cast<UINT>(scissors_.size()), scissors_.data());
+        commandList->RSSetScissorRects(static_cast<UINT>(scissors_.size()), scissors_.data());
 }
 
 
