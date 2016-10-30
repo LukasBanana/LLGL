@@ -159,6 +159,18 @@ int main(int argc, char* argv[])
             LLGL::Viewport(0, 0, 320, 480),
             LLGL::Viewport(320, 0, 320, 480),
         };
+
+        // Set viewport array
+        commands->SetViewportArray(2, viewports);
+
+        // For Direct3D12
+        LLGL::Scissor scissors[2] =
+        {
+            LLGL::Scissor(0, 0, 320, 480),
+            LLGL::Scissor(320, 0, 320, 480),
+        };
+
+        commands->SetScissorArray(2, scissors);
         
         // Enter main loop
         while ( ( context1->GetWindow().ProcessEvents() || context2->GetWindow().ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
@@ -166,9 +178,6 @@ int main(int argc, char* argv[])
             // Draw content in 1st render context
             commands->SetRenderTarget(*context1);
             {
-                // Set viewport array
-                commands->SetViewportArray(2, viewports);
-
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);
 
@@ -188,9 +197,6 @@ int main(int argc, char* argv[])
             // Draw content in 2nd render context
             commands->SetRenderTarget(*context2);
             {
-                // Set viewport array
-                commands->SetViewportArray(2, viewports);
-
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);
 
