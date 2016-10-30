@@ -26,7 +26,10 @@ class MacOSWindow : public Window
         ~MacOSWindow();
 
         void GetNativeHandle(void* nativeHandle) const override;
+
         void Recreate() override;
+
+        Size GetContentSize() const override;
 
         void SetPosition(const Point& position) override;
         Point GetPosition() const override;

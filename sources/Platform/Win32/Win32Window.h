@@ -26,7 +26,9 @@ class Win32Window : public Window
         ~Win32Window();
 
         void GetNativeHandle(void* nativeHandle) const override;
+
         void Recreate() override;
+
         Size GetContentSize() const override;
 
         void SetPosition(const Point& position) override;

@@ -51,6 +51,12 @@ void LinuxWindow::Recreate()
     //todo...
 }
 
+Size LinuxWindow::GetContentSize() const
+{
+    /* Return the size of the client area */
+    return GetSize(true);
+}
+
 void LinuxWindow::SetPosition(const Point& position)
 {
     XMoveWindow(display_, wnd_, position.x, position.y);
@@ -58,7 +64,7 @@ void LinuxWindow::SetPosition(const Point& position)
 
 Point LinuxWindow::GetPosition() const
 {
-    return Point();
+    return Point(); //TODO
 }
 
 void LinuxWindow::SetSize(const Size& size, bool useClientArea)
@@ -68,7 +74,7 @@ void LinuxWindow::SetSize(const Size& size, bool useClientArea)
 
 Size LinuxWindow::GetSize(bool useClientArea) const
 {
-    return Size();
+    return Size(); //TODO
 }
 
 void LinuxWindow::SetTitle(const std::wstring& title)

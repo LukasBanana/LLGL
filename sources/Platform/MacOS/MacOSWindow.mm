@@ -106,6 +106,12 @@ void MacOSWindow::Recreate()
     //todo...
 }
 
+Size MacOSWindow::GetContentSize() const
+{
+    /* Return the size of the client area */
+    return GetSize(true);
+}
+
 void MacOSWindow::SetPosition(const Point& position)
 {
     desc_.position = position;
