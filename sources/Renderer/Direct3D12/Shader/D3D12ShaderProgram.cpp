@@ -205,7 +205,7 @@ void D3D12ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
             elementDesc.SemanticName            = attrib.name.c_str();
             elementDesc.SemanticIndex           = attrib.semanticIndex;
             elementDesc.Format                  = GetInputElementFormat(attrib);
-            elementDesc.InputSlot               = 0;
+            elementDesc.InputSlot               = attrib.inputSlot;
             elementDesc.AlignedByteOffset       = attrib.offset;
             elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
             elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
