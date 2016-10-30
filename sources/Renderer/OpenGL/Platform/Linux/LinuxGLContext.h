@@ -24,7 +24,7 @@ class LinuxGLContext : public GLContext
 
     public:
 
-        LinuxGLContext(RenderContextDescriptor& desc, Window& window, LinuxGLContext* sharedContext);
+        LinuxGLContext(RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext);
         ~LinuxGLContext();
 
         bool SetSwapInterval(int interval) override;

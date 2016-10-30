@@ -25,7 +25,7 @@ class MacOSGLContext : public GLContext
     
     public:
         
-        MacOSGLContext(RenderContextDescriptor& desc, Window& window, MacOSGLContext* sharedContext);
+        MacOSGLContext(RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext);
         ~MacOSGLContext();
         
         bool SetSwapInterval(int interval) override;

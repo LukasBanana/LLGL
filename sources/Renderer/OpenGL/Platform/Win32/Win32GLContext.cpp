@@ -23,10 +23,10 @@ namespace LLGL
  * GLContext class
  */
 
-std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
 {
     Win32GLContext* sharedContextWGL = (sharedContext != nullptr ? LLGL_CAST(Win32GLContext*, sharedContext) : nullptr);
-    return MakeUnique<Win32GLContext>(desc, window, sharedContextWGL);
+    return MakeUnique<Win32GLContext>(desc, surface, sharedContextWGL);
 }
 
 
@@ -34,10 +34,10 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Wind
  * Win32GLContext class
  */
 
-Win32GLContext::Win32GLContext(RenderContextDescriptor& desc, Window& window, Win32GLContext* sharedContext) :
+Win32GLContext::Win32GLContext(RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext) :
     GLContext   ( sharedContext ),
     desc_       ( desc          ),
-    window_     ( window        )
+    surface_    ( surface       )
 {
     if (sharedContext)
     {
@@ -321,7 +321,7 @@ void Win32GLContext::SetupDeviceContextAndPixelFormat()
     NativeHandle nativeHandle;
     nativeHandle.window = 0;
 
-    window_.GetNativeHandle(&nativeHandle);
+    surface_.GetNativeHandle(&nativeHandle);
 
     if (!nativeHandle.window)
         throw std::runtime_error("invalid native Win32 window handle");
@@ -496,7 +496,7 @@ void Win32GLContext::CopyPixelFormat(Win32GLContext& sourceContext)
 void Win32GLContext::RecreateWindow()
 {
     /* Recreate window with current descriptor, then update device context and pixel format */
-    window_.Recreate();
+    surface_.Recreate();
     SetupDeviceContextAndPixelFormat();
 }
 

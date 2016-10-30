@@ -17,19 +17,19 @@ namespace LLGL
 {
 
 
-std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
 {
     MacOSGLContext* sharedContextGLNS = (sharedContext != nullptr ? LLGL_CAST(MacOSGLContext*, sharedContext) : nullptr);
-    return MakeUnique<MacOSGLContext>(desc, window, sharedContextGLNS);
+    return MakeUnique<MacOSGLContext>(desc, surface, sharedContextGLNS);
 }
 
-MacOSGLContext::MacOSGLContext(RenderContextDescriptor& desc, Window& window, MacOSGLContext* sharedContext) :
+MacOSGLContext::MacOSGLContext(RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext) :
     LLGL::GLContext( sharedContext )
 {
     CreatePixelFormat(desc);
     
     NativeHandle nativeHandle;
-    window.GetNativeHandle(&nativeHandle);
+    surface.GetNativeHandle(&nativeHandle);
     
     CreateNSGLContext(nativeHandle, sharedContext);
 }

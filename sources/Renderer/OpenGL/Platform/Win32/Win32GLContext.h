@@ -24,7 +24,7 @@ class Win32GLContext : public GLContext
 
     public:
 
-        Win32GLContext(RenderContextDescriptor& desc, Window& window, Win32GLContext* sharedContext);
+        Win32GLContext(RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext);
         ~Win32GLContext();
 
         bool SetSwapInterval(int interval) override;
@@ -60,7 +60,7 @@ class Win32GLContext : public GLContext
         HGLRC                       hGLRC_                  = 0;    //!< OpenGL render context handle.
 
         RenderContextDescriptor&    desc_;
-        Window&                     window_;
+        Surface&                    surface_;
 
         bool                        hasSharedContext_       = false;
 

@@ -9,7 +9,7 @@
 #define LLGL_GL_CONTEXT_H
 
 
-#include <LLGL/Window.h>
+#include <LLGL/Surface.h>
 #include <LLGL/RenderContextDescriptor.h>
 #include <memory>
 #include "../RenderState/GLStateManager.h"
@@ -27,7 +27,7 @@ class GLContext
         virtual ~GLContext();
 
         // Creates a platform specific GLContext instance.
-        static std::unique_ptr<GLContext> Create(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext);
+        static std::unique_ptr<GLContext> Create(RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext);
 
         // Makes the specified GLContext current. If null, the current context will be deactivated.
         static bool MakeCurrent(GLContext* context);

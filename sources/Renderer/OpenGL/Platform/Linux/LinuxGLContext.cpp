@@ -22,10 +22,10 @@ namespace LLGL
  * GLContext class
  */
 
-std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Window& window, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
 {
     LinuxGLContext* sharedContextGLX = (sharedContext != nullptr ? LLGL_CAST(LinuxGLContext*, sharedContext) : nullptr);
-    return MakeUnique<LinuxGLContext>(desc, window, sharedContextGLX);
+    return MakeUnique<LinuxGLContext>(desc, surface, sharedContextGLX);
 }
 
 
@@ -33,11 +33,11 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Wind
  * LinuxGLContext class
  */
 
-LinuxGLContext::LinuxGLContext(RenderContextDescriptor& desc, Window& window, LinuxGLContext* sharedContext) :
+LinuxGLContext::LinuxGLContext(RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext) :
     GLContext( sharedContext )
 {
     NativeHandle nativeHandle;
-    window.GetNativeHandle(&nativeHandle);
+    surface.GetNativeHandle(&nativeHandle);
     
     if (sharedContext)
     {
