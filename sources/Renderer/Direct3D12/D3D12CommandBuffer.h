@@ -126,6 +126,15 @@ class D3D12CommandBuffer : public CommandBuffer
 
         void SyncGPU() override;
 
+        /* ----- Extended functions ----- */
+
+        inline ID3D12GraphicsCommandList* GetCommandList() const
+        {
+            return commandList_.Get();
+        }
+
+        void ResetCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState);
+
     private:
 
         static const UINT maxNumBuffers = 3;
@@ -147,6 +156,8 @@ class D3D12CommandBuffer : public CommandBuffer
 
         D3D12StateManager                   stateMngr_;
         D3DClearState                       clearState_;
+
+        bool                                disableAutoStateSubmission_ = false;
 
 };
 

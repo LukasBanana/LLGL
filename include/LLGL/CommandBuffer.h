@@ -62,14 +62,15 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Sets a few low-level graphics API dependent states.
-        \remarks This is mainly used to work around uniform render target behavior between different
-        low-level graphics APIs such as OpenGL and Direct3D.
+        \remarks This can be used to work around several differences between the low-level graphics APIs
+        (e.g. for a uniform render target behavior between OpenGL and Direct3D).
         */
         virtual void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) = 0;
 
         /**
         \brief Sets a single viewport.
         \remarks Similar to SetViewportArray but only a single viewport is set.
+        \note This state is guaranteed to be persistent.
         \see SetViewportArray
         */
         virtual void SetViewport(const Viewport& viewport) = 0;
@@ -82,6 +83,7 @@ class LLGL_EXPORT CommandBuffer
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each viewport is on the upper-left (like for all other render systems).
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each viewport is on the lower-left.
+        \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
         */
         virtual void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) = 0;
@@ -89,6 +91,7 @@ class LLGL_EXPORT CommandBuffer
         /**
         \brief Sets a single scissor rectangle.
         \remarks Similar to SetScissorArray but only a single scissor rectangle is set.
+        \note This state is guaranteed to be persistent.
         \see SetScissorArray
         */
         virtual void SetScissor(const Scissor& scissor) = 0;
@@ -101,6 +104,7 @@ class LLGL_EXPORT CommandBuffer
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each scissor rectangle is on the upper-left (like for all other render systems).
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each scissor rectangle is on the lower-left.
+        \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
         */
         virtual void SetScissorArray(unsigned int numScissors, const Scissor* scissorArray) = 0;

@@ -197,6 +197,9 @@ private:
                 }
                 commands_->SetViewport(viewport);
 
+                // Update scissor
+                commands_->SetScissor({ 0, 0, videoMode.resolution.x, videoMode.resolution.y });
+
                 // Update projection matrix
                 projection_ = Gs::ProjectionMatrix4f::Perspective(
                     viewport.width / viewport.height, 0.1f, 100.0f, Gs::Deg2Rad(45.0f)
@@ -284,6 +287,7 @@ protected:
         commands->SetClearColor(defaultClearColor);
         commands->SetRenderTarget(*context);
         commands->SetViewport({ 0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y) });
+        commands->SetScissor({ 0, 0, resolution.x, resolution.y });
 
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();

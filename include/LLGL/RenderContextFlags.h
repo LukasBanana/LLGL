@@ -152,10 +152,12 @@ union GraphicsAPIDependentStateDescriptor
 {
     GraphicsAPIDependentStateDescriptor()
     {
-        stateOpenGL.screenSpaceOriginLowerLeft  = false;
-        stateOpenGL.invertFrontFace             = false;
-        stateOpenGL.logicOp                     = LogicOp::Keep;
-        stateOpenGL.lineWidth                   = 0.0f;
+        stateOpenGL.screenSpaceOriginLowerLeft      = false;
+        stateOpenGL.invertFrontFace                 = false;
+        stateOpenGL.logicOp                         = LogicOp::Keep;
+        stateOpenGL.lineWidth                       = 0.0f;
+
+        stateDirect3D12.disableAutoStateSubmission  = false;
     }
 
     struct StateOpenGLDescriptor
@@ -188,6 +190,21 @@ union GraphicsAPIDependentStateDescriptor
         float       lineWidth;
     }
     stateOpenGL;
+
+    struct StateDirect3D12Descriptor
+    {
+        /**
+        \brief Specifies whether persistent states are automatically submitted to the command buffer or not. By default false.
+        \remarks If this is true, "SetViewport" or "SetViewportArray", and "SetScissor" or "SetScissorArray" of the CommandBuffer interface
+        must be called every time after the command buffer has been submitted to the command queue (e.g. after the "RenderContext::Present" function has been called).
+        \see CommandBuffer::SetViewport
+        \see CommandBuffer::SetViewportArray
+        \see CommandBuffer::SetScissor
+        \see CommandBuffer::SetScissorArray
+        */
+        bool        disableAutoStateSubmission;
+    }
+    stateDirect3D12;
 };
 
 

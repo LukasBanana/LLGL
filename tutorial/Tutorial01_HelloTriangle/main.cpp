@@ -138,15 +138,15 @@ int main(int argc, char* argv[])
         // Create command buffer to submit subsequent graphics commands to the GPU
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
         
+        // Set viewport (this guaranteed to be a persistent state)
+        commands->SetViewport({ 0, 0, 640, 480 });
+        commands->SetScissor({ 0, 0, 640, 480 });
+
         // Enter main loop
         while (context->GetWindow().ProcessEvents())
         {
             // Set the render context as the initial render target
             commands->SetRenderTarget(*context);
-
-            // Set viewport and scissor (currently required for D3D12 to be set every frame)
-            commands->SetViewport({ 0, 0, 640, 480 });
-            commands->SetScissor({ 0, 0, 640, 480 });
 
             // Clear color buffer
             commands->Clear(LLGL::ClearFlags::Color);

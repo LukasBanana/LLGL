@@ -47,12 +47,15 @@ D3D12RenderContext::~D3D12RenderContext()
 
 void D3D12RenderContext::Present()
 {
-    if (!commandList_)
+    /* Get command list from command buffer object */
+    if (!commandBuffer_)
         throw std::runtime_error("can not present framebuffer without D3D12 command allocator and/or command list");
+
+    auto commandList = commandBuffer_->GetCommandList();
 
     /* Resolve current render target if multi-sampling is used */
     if (desc_.multiSampling.enabled)
-        ResolveRenderTarget();
+        ResolveRenderTarget(commandList);
     else
     {
         /* Indicate that the render target will now be used to present when the command list is done executing */
@@ -63,7 +66,7 @@ void D3D12RenderContext::Present()
     }
 
     /* Execute pending command list */
-    renderSystem_.CloseAndExecuteCommandList(commandList_);
+    renderSystem_.CloseAndExecuteCommandList(commandList);
 
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
@@ -76,8 +79,8 @@ void D3D12RenderContext::Present()
     hr = commandAllocs_[currentFrame_]->Reset();
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
-    hr = commandList_->Reset(commandAllocs_[currentFrame_].Get(), nullptr);
-    DXThrowIfFailed(hr, "failed to reset D3D12 command list");
+    /* Reset command list */
+    commandBuffer_->ResetCommandList(commandAllocs_[currentFrame_].Get(), nullptr);
 }
 
 void D3D12RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
@@ -116,9 +119,9 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCurrentRTVDescHandle() const
     );
 }
 
-void D3D12RenderContext::SetCommandList(ID3D12GraphicsCommandList* commandList)
+void D3D12RenderContext::SetCommandBuffer(D3D12CommandBuffer* commandBuffer)
 {
-    commandList_ = commandList;
+    commandBuffer_ = commandBuffer;
 }
 
 void D3D12RenderContext::TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
@@ -128,7 +131,7 @@ void D3D12RenderContext::TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefor
         renderTargets_[currentFrame_].Get(),
         stateBefore, stateAfter
     );
-    commandList_->ResourceBarrier(1, &resourceBarrier);
+    commandBuffer_->GetCommandList()->ResourceBarrier(1, &resourceBarrier);
 }
 
 bool D3D12RenderContext::HasMultiSampling() const
@@ -262,7 +265,7 @@ void D3D12RenderContext::MoveToNextFrame()
     fenceValues_[currentFrame_] = currentFenceValue + 1;
 }
 
-void D3D12RenderContext::ResolveRenderTarget()
+void D3D12RenderContext::ResolveRenderTarget(ID3D12GraphicsCommandList* commandList)
 {
     /* Prepare render-target for resolving */
     D3D12_RESOURCE_BARRIER resourceBarriersBefore[2] =
@@ -276,10 +279,10 @@ void D3D12RenderContext::ResolveRenderTarget()
             D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE
         ),
     };
-    commandList_->ResourceBarrier(2, resourceBarriersBefore);
+    commandList->ResourceBarrier(2, resourceBarriersBefore);
 
     /* Resolve multi-sampled render targets */
-    commandList_->ResolveSubresource(
+    commandList->ResolveSubresource(
         renderTargets_[currentFrame_].Get(), 0,
         renderTargetsMS_[currentFrame_].Get(), 0,
         DXGI_FORMAT_R8G8B8A8_UNORM
@@ -297,7 +300,7 @@ void D3D12RenderContext::ResolveRenderTarget()
             D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
         ),
     };
-    commandList_->ResourceBarrier(2, resourceBarriersAfter);
+    commandList->ResourceBarrier(2, resourceBarriersAfter);
 }
 
 

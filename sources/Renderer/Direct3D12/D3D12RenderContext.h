@@ -26,6 +26,7 @@ namespace LLGL
 
 
 class D3D12RenderSystem;
+class D3D12CommandBuffer;
 
 class D3D12RenderContext : public RenderContext
 {
@@ -51,7 +52,7 @@ class D3D12RenderContext : public RenderContext
 
         D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescHandle() const;
 
-        void SetCommandList(ID3D12GraphicsCommandList* commandList);
+        void SetCommandBuffer(D3D12CommandBuffer* commandBuffer);
 
         void TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
 
@@ -67,9 +68,11 @@ class D3D12RenderContext : public RenderContext
 
         void MoveToNextFrame();
 
-        void ResolveRenderTarget();
+        void ResolveRenderTarget(ID3D12GraphicsCommandList* commandList);
         
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
+        D3D12CommandBuffer*                 commandBuffer_                  = nullptr;
+
         RenderContextDescriptor             desc_;
 
         ComPtr<IDXGISwapChain3>             swapChain_;
@@ -82,8 +85,6 @@ class D3D12RenderContext : public RenderContext
         ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];
         ComPtr<ID3D12Resource>              renderTargetsMS_[maxNumBuffers];
         UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
-
-        ID3D12GraphicsCommandList*          commandList_                    = nullptr;
 
         UINT                                numFrames_                      = 0;
         UINT                                currentFrame_                   = 0;

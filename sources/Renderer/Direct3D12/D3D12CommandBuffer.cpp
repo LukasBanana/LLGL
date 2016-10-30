@@ -37,7 +37,7 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
 
 void D3D12CommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
 {
-    // dummy
+    disableAutoStateSubmission_ = state.stateDirect3D12.disableAutoStateSubmission;
 }
 
 void D3D12CommandBuffer::SetViewport(const Viewport& viewport)
@@ -210,7 +210,7 @@ void D3D12CommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
     auto& renderContextD3D = LLGL_CAST(D3D12RenderContext&, renderContext);
 
-    renderContextD3D.SetCommandList(commandList_.Get());
+    renderContextD3D.SetCommandBuffer(this);
 
     SetBackBufferRTV(renderContextD3D);
 }
@@ -315,6 +315,19 @@ void D3D12CommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSiz
 void D3D12CommandBuffer::SyncGPU()
 {
     //renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
+}
+
+/* ----- Extended functions ----- */
+
+void D3D12CommandBuffer::ResetCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState)
+{
+    /* Reset commanb list with command allocator and pipeline state */
+    auto hr = commandList_->Reset(commandAlloc, pipelineState);
+    DXThrowIfFailed(hr, "failed to reset D3D12 command list");
+
+    /* If not disabled, re-submit persistent states (viewport and scissor) */
+    if (!disableAutoStateSubmission_)
+        SubmitPersistentStates();
 }
 
 
