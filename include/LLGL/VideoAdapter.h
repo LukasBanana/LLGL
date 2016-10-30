@@ -24,7 +24,7 @@ namespace LLGL
 struct VideoDisplayMode
 {
     unsigned int width          = 0; //!< Display resolution width (in pixels).
-    unsigned int height         = 0; //!< Display resolution width (in height).
+    unsigned int height         = 0; //!< Display resolution height (in pixels).
     unsigned int refreshRate    = 0; //!< Refresh reate (in Hz).
 };
 
