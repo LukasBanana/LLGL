@@ -37,12 +37,20 @@ void GLBuffer::BufferSubData(const void* data, GLsizeiptr size, GLintptr offset)
 
 void* GLBuffer::MapBuffer(GLenum access)
 {
+    #ifdef LLGL_GL_OPENGLES
+    return glMapBufferOES(GetTarget(), access);
+    #else
     return glMapBuffer(GetTarget(), access);
+    #endif
 }
 
 GLboolean GLBuffer::UnmapBuffer()
 {
+    #ifdef LLGL_GL_OPENGLES
+    return glUnmapBufferOES(GetTarget());
+    #else
     return glUnmapBuffer(GetTarget());
+    #endif
 }
 
 

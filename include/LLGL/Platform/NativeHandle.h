@@ -9,12 +9,16 @@
 #define LLGL_NATIVE_HANDLE_H
 
 
-#if defined(_WIN32)
+#include "Platform.h"
+
+#if defined(LLGL_OS_WIN32)
 #   include "Win32/Win32NativeHandle.h"
-#elif defined(__APPLE__)
+#elif defined(LLGL_OS_MACOS)
 #   include "MacOS/MacOSNativeHandle.h"
-#elif defined(__linux__)
+#elif defined(LLGL_OS_LINUX)
 #   include "Linux/LinuxNativeHandle.h"
+#elif defined(LLGL_OS_IOS)
+#   include "IOS/IOSNativeHandle.h"
 #endif
 
 

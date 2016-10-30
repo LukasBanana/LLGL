@@ -7,6 +7,7 @@
 
 #include "../Platform/Module.h"
 #include "../Core/Helper.h"
+#include <LLGL/Platform/Platform.h>
 #include <LLGL/Log.h>
 #include "BuildID.h"
 
@@ -36,15 +37,19 @@ std::vector<std::string> RenderSystem::FindModules()
     /* Iterate over all known modules and return those that are availale on the current platform */
     const std::vector<std::string> knownModules
     {
+        #if defined(LLGL_OS_IOS) || defined(LLGL_OS_ANDROID)
+        "OpenGLES",
+        #else
         "OpenGL",
+        #endif
         
-        #ifdef __APPLE__
+        #if defined(LLGL_OS_MACOS) || defined(LLGL_OS_IOS)
         "Metal",
         #else
         "Vulkan",
         #endif
 
-        #ifdef _WIN32
+        #ifdef LLGL_OS_WIN32
         "Direct3D11",
         "Direct3D12",
         #endif

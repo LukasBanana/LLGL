@@ -116,8 +116,13 @@ struct GLViewport
 
 struct GLDepthRange
 {
+    #ifdef LLGL_GL_OPENGLES
+    GLclampf minDepth;
+    GLclampf maxDepth;
+    #else
     GLdouble minDepth;
     GLdouble maxDepth;
+    #endif
 };
 
 struct GLScissor

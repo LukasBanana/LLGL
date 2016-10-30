@@ -22,6 +22,8 @@
 #   endif
 #elif defined(__linux__)
 #   define LLGL_OS_LINUX
+#elif defined(__ANDROID__)
+#   define LLGL_OS_ANDROID
 #endif
 
 
