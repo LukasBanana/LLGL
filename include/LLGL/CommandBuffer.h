@@ -40,6 +40,9 @@ class RenderContext;
 For older graphics APIs (such as OpenGL and Direct3D 11) it makes not much sense to create multiple command buffers,
 but for recent graphics APIs (such as Vulkan and Direct3D 12) it might be sensible to have more than one command buffer,
 to maximize CPU utilization with several worker threads and one command buffer for each thread.
+Note that especially for recent graphics APIs most states in the command buffer are NOT persistent,
+i.e. they need to be reset every frame (e.g. the viewports and scissor rectangles).
+Assume that all states that can be changed with a setter function are not persistent except the opposite is mentioned.
 */
 class LLGL_EXPORT CommandBuffer
 {
@@ -102,13 +105,22 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual void SetScissorArray(unsigned int numScissors, const Scissor* scissorArray) = 0;
 
-        //! Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
+        /**
+        \brief Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
+        \note This state is guaranteed to be persistent.
+        */
         virtual void SetClearColor(const ColorRGBAf& color) = 0;
 
-        //! Sets the new value to clear the depth buffer with. By default 1.0.
+        /**
+        \brief Sets the new value to clear the depth buffer with. By default 1.0.
+        \note This state is guaranteed to be persistent.
+        */
         virtual void SetClearDepth(float depth) = 0;
 
-        //! Sets the new value to clear the stencil buffer. By default 0.
+        /**
+        \brief Sets the new value to clear the stencil buffer. By default 0.
+        \note This state is guaranteed to be persistent.
+        */
         virtual void SetClearStencil(int stencil) = 0;
 
         /**
