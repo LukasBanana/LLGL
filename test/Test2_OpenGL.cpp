@@ -57,7 +57,7 @@ int main()
         
         auto context = renderer->CreateRenderContext(contextDesc);
         
-        auto window = &(context->GetWindow());
+        auto window = static_cast<LLGL::Window*>(&(context->GetSurface()));
 
         #else
         
