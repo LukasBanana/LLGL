@@ -14,7 +14,12 @@
 #if defined(_WIN32)
 #   define LLGL_OS_WIN32
 #elif defined(__APPLE__)
-#   define LLGL_OS_MACOS
+#   include "TargetConditionals.h"
+#   if defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)
+#       define LLGL_OS_IOS
+#   else
+#       define LLGL_OS_MACOS
+#   endif
 #elif defined(__linux__)
 #   define LLGL_OS_LINUX
 #endif
