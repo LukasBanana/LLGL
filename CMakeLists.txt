@@ -474,7 +474,7 @@ if(LLGL_BUILD_TUTORIALS)
 endif()
 
 # Summary Information
-message("Build Summary:")
-message("- Target Platform: ${SUMMARY_TARGET_PLATFORM}")
+message("~~~ Build Summary ~~~")
+message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
 
 
