@@ -635,10 +635,10 @@ and program start (set working directory to \texttt{tutorial/Tutorial01\_HelloTr
 \newpage
 \part{Extensibility}
 
-\section{Custom Window Class}
-\label{sec:custom_window}
+\section{Custom Surface Class}
+\label{sec:custom_surface}
 
-In this example a simple custom implementation of the \texttt{Window} interface is demonstrated,
+In this example a simple custom implementation of the \texttt{Surface} interface is demonstrated,
 to show how LLGL can be used with other windowing system libraries.
 Here we will use the popular cross-platform library \href{http://www.glfw.org/}{GLFW}.
 
@@ -653,140 +653,64 @@ We start with the include files of GLFW and LLGL:
 #include <LLGL/LLGL.h>
 #include <LLGL/Platform/NativeHandle.h>
 \end{lstlisting}
-Now we declare our custom window class and override all necessary interface functions.
-We will keep a few secondary functions empty for simplicity:
+Now we declare our custom surface class and override all necessary interface functions.
+We could also inherit from the \texttt{Window} interface but this is not really meaningful here:
 \begin{lstlisting}
-class CustomWindow : public LLGL::Window
+class CustomSurface : public LLGL::Surface
 {
 public:
-	CustomWindow(const LLGL::Size& size, const std::string& title);
+	// Constructor and destructor
+	CustomSurface(const LLGL::Size& size, const std::string& title);
+	~CustomSurface();
 	
-	void SetPosition(const LLGL::Point& position) override;
-	LLGL::Point GetPosition() const override;
-	
-	void SetSize(const LLGL::Size& size, bool useClientArea = true) override;
-	LLGL::Size GetSize(bool useClientArea = true) const override;
-	
-	void SetTitle(const std::wstring& title) override;
-	std::wstring GetTitle() const override;
-	
-	void Show(bool show = true) override;
-	bool IsShown() const override;
-	
-	LLGL::WindowDescriptor QueryDesc() const override;
-	void SetDesc(const LLGL::WindowDescriptor& desc) override;
-	
-	void Recreate(const LLGL::WindowDescriptor& desc) override;
-	
+	// Interface implementation
 	void GetNativeHandle(void* nativeHandle) const override;
+	void Recreate(const LLGL::WindowDescriptor& desc) override;
+	LLGL::Size GetContentSize() const override;
+	bool AdaptForVideoMode(LLGL::VideoModeDescriptor& videoModeDesc) override;
+	
+	// Additional class functions
+	void PollEvents();
 	
 private:
-	void OnProcessEvents() override;
-	
 	GLFWwindow* CreateGLFWWindow();
 	
-	LLGL::Size  size_;
 	std::string title_;
+	LLGL::Size  size_;
 	GLFWwindow* wnd_ = nullptr; // GLFW window pointer
 	
 };
 \end{lstlisting}
 This is an example of a minimal interface implementation.
-It looks like a lot of work for a small example but the most functions are straight forward.
-We start implementing the constructor and the \texttt{CreateGLFWWindow} function:
+We start implementing the constructor, destructor, and the \texttt{CreateGLFWWindow} function:
 \begin{lstlisting}
-CustomWindow::CustomWindow(const LLGL::Size& size, const std::string& title) :
-	size_ ( size               ),
+CustomSurface::CustomSurface(const LLGL::Size& size, const std::string& title) :
 	title_( title              ),
+	size_ ( size               ),
 	wnd_  ( CreateGLFWWindow() )
 {
 }
 
-GLFWwindow* CustomWindow::CreateGLFWWindow()
+CustomSurface::~CustomSurface()
+{
+	// Destroy GLFW window
+	glfwDestroyWindow(wnd_);
+}
+
+GLFWwindow* CustomSurface::CreateGLFWWindow()
 {
 	// Create GLFW window with class members
-	wnd_ = glfwCreateWindow(size_.x, size_.y, title_.c_str(), nullptr, nullptr);
-	if (!wnd_)
+	auto wnd = glfwCreateWindow(size_.x, size_.y, title_.c_str(), nullptr, nullptr);
+	if (!wnd)
 		throw std::runtime_error("failed to create GLFW window");
+	return wnd;
 }
 \end{lstlisting}
-The next functions we implement are very simple and used to set and get the position, size, visibility, and title.
-They are actually not required for a functioning custom window class, but we also implement them for demonstration purposes:
-\begin{lstlisting}
-void CustomWindow::SetPosition(const LLGL::Point& position)
-{
-	// Set GLFW window position
-	glfwSetWindowPos(wnd_, position.x, position.y);
-}
-
-LLGL::Point CustomWindow::GetPosition() const
-{
-	// Get position from GLFW window
-	LLGL::Point pos;
-	glfwGetWindowPos(wnd_, &pos.x, &pos.y);
-	return pos;
-}
-
-void CustomWindow::SetSize(const LLGL::Size& size, bool useClientArea)
-{
-	// Set GLFW window size
-	glfwSetWindowSize(wnd_, size.x, size.y);
-}
-
-LLGL::Size CustomWindow::GetSize(bool useClientArea) const
-{
-	// Get size from GLFW window
-	LLGL::Size size;
-	glfwGetWindowSize(wnd_, &size.x, &size.y);
-	return size;
-}
-
-void CustomWindow::Show(bool show)
-{
-	// Show or hide GLFW window
-	if (show)
-		glfwShowWindow(wnd_);
-	else
-		glfwHideWindow(wnd_);
-}
-
-bool CustomWindow::IsShown() const
-{
-	// Check if GLFW window is visible
-	return (glfwGetWindowAttrib(wnd_, GLFW_VISIBLE) != 0);
-}
-
-void CustomWindow::SetTitle(const std::wstring& title)
-{
-	// Convert title form UTF16 to UTF8, and set GLFW window title with "glfwSetWindowTitle"
-	title_ = std::string(title.begin(), title.end());
-	glfwSetWindowTitle(wnd_, title_.c_str());
-}
-
-std::wstring CustomWindow::GetTitle() const
-{
-	// Return stored title because there is no "glfwGetWindowTitle", and convert from UTF8 to UTF16
-	return std::wstring(title_.begin(), title_.end());
-}
-\end{lstlisting}
-We keep the following functions empty for simplicity since they are rarely used:
-\begin{lstlisting}
-LLGL::WindowDescriptor CustomWindow::QueryDesc() const
-{
-	// Determine or restore window descriptor ...
-	return {};
-}
-
-void CustomWindow::SetDesc(const LLGL::WindowDescriptor& desc)
-{
-	// Recreate GLFW window according to the new window descriptor ...
-}
-\end{lstlisting}
-Now we cross over to the major functions in the \texttt{Window} interface. The first one is \texttt{Recreate}.
-It is mainly used by the OpenGL renderer when a multi-sampled render context is created.
+Now we cross over to the major functions in the \texttt{Surface} interface. The first one is \texttt{Recreate}.
+It is mainly used by the OpenGL renderer when a multi-sampled render context is created on Win32.
 In our custom class we merely destroy the GLFW window and create a new one:
 \begin{lstlisting}
-void CustomWindow::Recreate(const LLGL::WindowDescriptor& desc)
+void CustomSurface::Recreate()
 {
 	// Destroy and recreate GLFW window
 	glfwDestroyWindow(wnd_);
@@ -802,25 +726,42 @@ and \texttt{XVisualInfo*} from GLX.
 On MacOS it is from the type \texttt{NSWindow*} from the Cocoa API.
 In this example we only implement it for Win32:
 \begin{lstlisting}
-void CustomWindow::GetNativeHandle(void* nativeHandle) const
+void CustomSurface::GetNativeHandle(void* nativeHandle) const
 {
 	// This function must always return a valid native handle!
 	auto handle = reinterpret_cast<LLGL::NativeHandle*>(nativeHandle);
 	handle->window = glfwGetWin32Window(wnd_);
 }
 \end{lstlisting}
-The last function we have to implement is the private function \texttt{OnProcessEvents} which is called
-by the non-virtual interface function \texttt{Window::ProcessEvents} after all event listeners
-have received the same event. Here we poll all window events from GLFW:
+There are two (rather secondary) interface functions left.
+They are used inside the \texttt{RenderContext} class, to update or query the video mode suitable for the surface:
 \begin{lstlisting}
-void CustomWindow::GetNativeHandle(void* nativeHandle) const
+LLGL::Size CustomSurface::GetContentSize() const
+{
+	// Actually the client-area size of the window must be returned,
+	// but for this example the entire window size is sufficient.
+	return size_;
+}
+
+bool CustomSurface::AdaptForVideoMode(LLGL::VideoModeDescriptor& videoModeDesc)
+{
+	// Resize GLFW window for the new video mode resolution.
+	size_ = videoModeDesc.resolution;
+	glfwSetWindowSize(wnd_, size_.x, size_.y);
+	return true;
+}
+\end{lstlisting}
+The last function we have to implement is the additional class function \texttt{PollEvents}.
+Here we poll all window events from GLFW and return false when the user
+clicked the close button to terminate the application:
+\begin{lstlisting}
+bool CustomSurface::PollEvents()
 {
 	// Poll events from GLFW windowing system
 	glfwPollEvents();
 	
-	// Check if user pressed the close button
-	if (glfwWindowShouldClose(wnd_))
-		this->PostQuit();
+	// Return true until the user pressed the close button
+	return !glfwWindowShouldClose(wnd_);
 }
 \end{lstlisting}
 Finally we are done with our custom window class :-) Now we can start using it with a render context in our main function:
@@ -830,16 +771,16 @@ if (!glfwInit())
 	return -1;
 
 // Create an instance of our custom window class
-auto window = std::make_shared<CustomWindow>(LLGL::Size(640, 480), L"LLGL test with GLFW");
+auto surface = std::make_shared<CustomSurface>(LLGL::Size(640, 480), L"LLGL test with GLFW");
 
 // Create render context and pass the custom window
 LLGL::RenderContextDescriptor contextDesc;
-{
-	contextDesc.videoMode.resolution = { 640, 480 };
-}
-LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc, window);
+contextDesc.videoMode.resolution = { 640, 480 };
+LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc, surface);
 
-//...
+// Scene construction ...
+
+while (surface->PollEvents()) { /* Rendering ... */ }
 \end{lstlisting}
 That's all folks. The rest can be seen in the tutorials.
 
