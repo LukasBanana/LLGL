@@ -22,18 +22,18 @@
 
 @implementation AppDelegate
 {
-    LLGL::MacOSWindow*  window_;
-    BOOL                resizable_;
-    BOOL                quit_;
+    LLGL::MacOSWindow*              window_;
+    const LLGL::WindowDescriptor*   windowDescRef_;
+    BOOL                            quit_;
 }
 
-- (id)initWithWindow:(LLGL::MacOSWindow*)window isResizable:(BOOL)resizable
+- (id)initWithWindow:(LLGL::MacOSWindow*)window windowDesc:(const LLGL::WindowDescriptor*)windowDescRef
 {
     self = [super init];
     
-    window_     = window;
-    resizable_  = resizable;
-    quit_       = FALSE;
+    window_         = window;
+    windowDescRef_  = windowDescRef;
+    quit_           = FALSE;
     
     return (self);
 }
@@ -46,7 +46,7 @@
 
 - (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)frameSize
 {
-    if (resizable_)
+    if (windowDescRef_->resizable)
         return frameSize;
     else
         return [sender frame].size;
@@ -79,15 +79,28 @@ static NSString* ToNSString(const wchar_t* s)
         encoding:NSUTF32LittleEndianStringEncoding
     ];
 }
+
+static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
+{
+    if (desc.borderless)
+        return NSBorderlessWindowMask;
     
+    NSUInteger mask = (NSTitledWindowMask + NSClosableWindowMask + NSMiniaturizableWindowMask);
+    
+    if (desc.resizable)
+        mask += NSResizableWindowMask;
+    
+    return mask;
+}
+
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
     return std::unique_ptr<Window>(new MacOSWindow(desc));
 }
 
 MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
-    desc_   ( desc                 ),
-    wnd_    ( CreateNSWindow(desc) )
+    desc_   ( desc             ),
+    wnd_    ( CreateNSWindow() )
 {
 }
 
@@ -171,14 +184,13 @@ bool MacOSWindow::IsShown() const
 
 void MacOSWindow::SetDesc(const WindowDescriptor& desc)
 {
-    //todo...
+    desc_ = desc;
+    [wnd_ setStyleMask:GetNSWindowStyleMask(desc)];
 }
 
 WindowDescriptor MacOSWindow::GetDesc() const
 {
-    WindowDescriptor desc;
-    //todo...
-    return desc;
+    return desc_;
 }
 
 
@@ -186,22 +198,9 @@ WindowDescriptor MacOSWindow::GetDesc() const
  * ======= Private: =======
  */
 
-static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
-{
-    if (desc.borderless)
-        return NSBorderlessWindowMask;
-    
-    NSUInteger mask = (NSTitledWindowMask + NSClosableWindowMask + NSMiniaturizableWindowMask);
-    
-    if (desc.resizable)
-        mask += NSResizableWindowMask;
-    
-    return mask;
-}
-
 static bool g_appDelegateCreated = false;
 
-NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
+NSWindow* MacOSWindow::CreateNSWindow()
 {
     if (!g_appDelegateCreated)
     {
@@ -210,7 +209,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
         [NSApplication sharedApplication];
         
         [NSApp setDelegate:(id<NSApplicationDelegate>)[
-            [[AppDelegate alloc] initWithWindow:this isResizable:(BOOL)desc.resizable]
+            [[AppDelegate alloc] initWithWindow:this windowDesc:(&desc_)]
             autorelease
         ]];
         
@@ -221,8 +220,8 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     
     /* Create NSWindow object */
     NSWindow* wnd = [[NSWindow alloc]
-        initWithContentRect:NSMakeRect(0, 0, (CGFloat)desc.size.x, (CGFloat)desc.size.y)
-        styleMask:GetNSWindowStyleMask(desc)
+        initWithContentRect:NSMakeRect(0, 0, (CGFloat)desc_.size.x, (CGFloat)desc_.size.y)
+        styleMask:GetNSWindowStyleMask(desc_)
         backing:NSBackingStoreBuffered
         defer:FALSE
     ];
@@ -234,10 +233,10 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     [wnd setAcceptsMouseMovedEvents:TRUE];
     [wnd makeKeyAndOrderFront:nil];
     
-    if (desc.visible)
+    if (desc_.visible)
         [wnd setIsVisible:TRUE];
     
-    [wnd setTitle:ToNSString(desc.title.c_str())];
+    [wnd setTitle:ToNSString(desc_.title.c_str())];
     
     return wnd;
 }

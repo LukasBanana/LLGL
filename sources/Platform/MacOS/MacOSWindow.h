@@ -55,7 +55,7 @@ class MacOSWindow : public Window
         void ProcessMouseMoveEvent(NSEvent* event);
         void ProcessMouseWheelEvent(NSEvent* event);
 
-        NSWindow* CreateNSWindow(const WindowDescriptor& desc);
+        NSWindow* CreateNSWindow();
 
         WindowDescriptor    desc_;
 
