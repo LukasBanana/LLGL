@@ -97,7 +97,7 @@ void IOSCanvas::GetNativeHandle(void* nativeHandle) const
     //handle.window = wnd_;
 }
 
-void IOSCanvas::Recreate(const WindowDescriptor& desc)
+void IOSCanvas::Recreate()
 {
     //todo...
 }
