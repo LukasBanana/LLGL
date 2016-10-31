@@ -67,6 +67,11 @@ bool Win32GLContext::SwapBuffers()
     return (::SwapBuffers(hDC_) == TRUE);
 }
 
+void Win32GLContext::Resize(const Size& resolution)
+{
+    // do nothing (WGL context does not need to be resized)
+}
+
 
 /*
  * ======= Private: =======

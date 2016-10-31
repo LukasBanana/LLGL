@@ -68,6 +68,11 @@ bool LinuxGLContext::SwapBuffers()
     return true;
 }
 
+void LinuxGLContext::Resize(const Size& resolution)
+{
+    //TODO...
+}
+
 
 /*
  * ======= Private: =======
