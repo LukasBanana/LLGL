@@ -81,6 +81,9 @@ class LLGL_EXPORT Canvas : public Surface
         //! Returns the canvas title as UTF16 string.
         virtual std::wstring GetTitle() const = 0;
 
+        //! This default implementation ignores the video mode descriptor completely and always return false.
+        bool AdaptForVideoMode(VideoModeDescriptor& videoModeDesc) override;
+
         //! Processes the events for this canvas (i.e. touch input, key presses etc.).
         void ProcessEvents();
 

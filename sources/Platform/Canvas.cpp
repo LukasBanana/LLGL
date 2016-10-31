@@ -44,6 +44,12 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 
 #endif
 
+bool Canvas::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
+{
+    /* Defualt implementation of this function always return false for the Canvas class */
+    return false;
+}
+
 void Canvas::ProcessEvents()
 {
     FOREACH_LISTENER_CALL( OnProcessEvents(*this) );

@@ -23,36 +23,11 @@ void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     if (videoModeDesc_ != videoModeDesc)
     {
-        #ifdef LLGL_MOBILE_PLATFORM
-
-        //TODO...
-
-        #else
-
-        auto& window = LLGL_CAST(Window&, GetSurface());
-
-        /* Update window appearance */
-        auto windowDesc = window.QueryDesc();
-
-        windowDesc.size = videoModeDesc.resolution;
-
-        if (videoModeDesc.fullscreen)
-        {
-            windowDesc.borderless   = true;
-            windowDesc.position     = { 0, 0 };
-        }
-        else
-        {
-            windowDesc.borderless   = false;
-            windowDesc.centered     = true;
-        }
-
-        window.SetDesc(windowDesc);
-
-        #endif
-
         /* Store new video mode */
         videoModeDesc_ = videoModeDesc;
+
+        /* Adapt surface for the new video mode */
+        GetSurface().AdaptForVideoMode(videoModeDesc_);
     }
 }
 

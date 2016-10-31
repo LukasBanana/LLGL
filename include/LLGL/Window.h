@@ -182,6 +182,14 @@ class LLGL_EXPORT Window : public Surface
         virtual void SetDesc(const WindowDescriptor& desc) = 0;
 
         /**
+        \brief Adapts the window for the specified video mode.
+        \remarks This is a default implementation of the base class function and makes use of "QueryDesc" and "SetDesc".
+        \see QueryDesc
+        \see SetDesc
+        */
+        bool AdaptForVideoMode(VideoModeDescriptor& videoModeDesc) override;
+
+        /**
         \brief Processes the events for this window (i.e. mouse movement, key presses etc.).
         \return Once the "PostQuit" function was called on this window object, this function returns false.
         This will happend, when the user clicks on the close button.

@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "Types.h"
+#include "RenderContextDescriptor.h"
 
 
 namespace LLGL
@@ -64,6 +65,14 @@ class LLGL_EXPORT Surface
         \see Window::GetSize
         */
         virtual Size GetContentSize() const = 0;
+
+        /**
+        \brief Adapts the surface to fits the needs for the specified video mode descriptor.
+        \param[in,out] videoModeDesc Specifies the input and output video mode descriptor.
+        \return If the video mode descriptor has been accepted with no modifications and surface has been updated the return value is true.
+        Otherwise the video mode descriptor has been modified to the value the surface supports and the return value is false.
+        */
+        virtual bool AdaptForVideoMode(VideoModeDescriptor& videoModeDesc) = 0;
 
 };
 
