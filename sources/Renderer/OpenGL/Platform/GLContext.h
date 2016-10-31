@@ -41,6 +41,9 @@ class GLContext
         // Swaps the back buffer with the front buffer (Win32: ::SwapBuffers, X11: glXSwapBuffers).
         virtual bool SwapBuffers() = 0;
 
+        // Resizes the GL context. This is called after the context surface has been resized.
+        virtual void Resize(const Size& resolution) = 0;
+
         inline const std::shared_ptr<GLStateManager>& GetStateManager() const
         {
             return stateMngr_;

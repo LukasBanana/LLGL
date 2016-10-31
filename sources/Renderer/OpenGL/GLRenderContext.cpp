@@ -62,6 +62,9 @@ void GLRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 
         /* Update window appearance and store new video mode in base function */
         RenderContext::SetVideoMode(videoModeDesc);
+        
+        /* Notify GL context of a resize */
+        context_->Resize(videoModeDesc.resolution);
     }
 }
 

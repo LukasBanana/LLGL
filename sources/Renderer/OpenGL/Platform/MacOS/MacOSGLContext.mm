@@ -51,6 +51,11 @@ bool MacOSGLContext::SwapBuffers()
     return true;
 }
 
+void MacOSGLContext::Resize(const Size& resolution)
+{
+    [ctx_ update];
+}
+
 
 /*
  * ======= Private: =======

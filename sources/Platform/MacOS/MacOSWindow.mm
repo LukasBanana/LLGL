@@ -257,6 +257,8 @@ void MacOSWindow::OnProcessEvents()
                 ProcessKeyEvent(event, false);
                 break;
                 
+            case NSLeftMouseDragged:
+            case NSRightMouseDragged:
             case NSMouseMoved:
                 ProcessMouseMoveEvent(event);
                 break;
@@ -334,9 +336,9 @@ void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
     
     PostLocalMotion(pos.Cast<int>());
     
-    #if 0//TODO: process this by another event!
+    #if 1//TODO: process this by another event!
     static Gs::Vector2f lastPos;
-    PostGlobalMotion(((pos - lastPos)*10.0f).Cast<int>());
+    PostGlobalMotion((pos - lastPos).Cast<int>());
     lastPos = pos;
     #endif
 }
