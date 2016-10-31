@@ -137,6 +137,11 @@ if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
 endif()
 
 
+# === Initialize summary variables ===
+
+set(SUMMARY_TARGET_PLATFORM "Unknown")
+
+
 # === Global files ===
 
 # Common files
@@ -177,17 +182,21 @@ file(GLOB FilesRendererGLPlatformBase		${PROJECT_SOURCE_DIR}/sources/Renderer/Op
 if(WIN32)
 	file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
 	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/Win32/*.*)
+	set(SUMMARY_TARGET_PLATFORM "Win32")
 elseif(APPLE)
 	if(MOBILE_PLATFORM)
 		file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES/Platform/IOS/*.*)
 		file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/IOS/*.*)
+		set(SUMMARY_TARGET_PLATFORM "iOS")
 	else()
 		file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/MacOS/*.*)
 		file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/MacOS/*.*)
+		set(SUMMARY_TARGET_PLATFORM "macOS")
 	endif()
 elseif(UNIX)
 	file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Linux/*.*)
 	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/Linux/*.*)
+	set(SUMMARY_TARGET_PLATFORM "Linux")
 endif()
 
 # Direct3D12 renderer files
@@ -386,26 +395,26 @@ set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 ENABLE_CXX11(LLGL)
 
 if(LLGL_BUILD_RENDERER_OPENGLES2)
-		# OpenGLES Renderer
-		include(cmake/FindOpenGLES.cmake)
-		if(OPENGLES_FOUND)
-			ADD_DEFINE(LLGL_GL_OPENGLES)
-			
-			include_directories(${OPENGLES_INCLUDE_DIR})
-			add_library(LLGL_OpenGLES2 SHARED ${FilesGLES2})
-			set_target_properties(LLGL_OpenGLES2 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-			target_link_libraries(LLGL_OpenGLES2 LLGL ${OPENGLES_LIBRARIES})
-			
-			if(MOBILE_PLATFORM)
-				ADD_FRAMEWORK(LLGL_OpenGLES2 UIKit)
-				ADD_FRAMEWORK(LLGL_OpenGLES2 QuartzCore)
-				ADD_FRAMEWORK(LLGL_OpenGLES2 OpenGLES)
-			else()
-				ENABLE_CXX11(LLGL_OpenGLES2)
-			endif()
+	# OpenGLES Renderer
+	include(cmake/FindOpenGLES.cmake)
+	if(OPENGLES_FOUND)
+		ADD_DEFINE(LLGL_GL_OPENGLES)
+		
+		include_directories(${OPENGLES_INCLUDE_DIR})
+		add_library(LLGL_OpenGLES2 SHARED ${FilesGLES2})
+		set_target_properties(LLGL_OpenGLES2 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(LLGL_OpenGLES2 LLGL ${OPENGLES_LIBRARIES})
+		
+		if(MOBILE_PLATFORM)
+			ADD_FRAMEWORK(LLGL_OpenGLES2 UIKit)
+			ADD_FRAMEWORK(LLGL_OpenGLES2 QuartzCore)
+			ADD_FRAMEWORK(LLGL_OpenGLES2 OpenGLES)
 		else()
-			message("Missing OpenGL ES -> LLGL_OpenGLES2 renderer will be excluded from project")
+			ENABLE_CXX11(LLGL_OpenGLES2)
 		endif()
+	else()
+		message("Missing OpenGL ES -> LLGL_OpenGLES2 renderer will be excluded from project")
+	endif()
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGL)
@@ -463,5 +472,9 @@ if(LLGL_BUILD_TUTORIALS)
 	ADD_TEST_PROJECT(Tutorial09_StreamOutput ${FilesTutorial09})
 	ADD_TEST_PROJECT(Tutorial10_Instancing ${FilesTutorial10})
 endif()
+
+# Summary Information
+message("Build Summary:")
+message("- Target Platform: ${SUMMARY_TARGET_PLATFORM}")
 
 
