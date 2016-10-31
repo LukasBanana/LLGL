@@ -92,7 +92,7 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 bool Window::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
 {
     /* Query current window descriptor */
-    auto windowDesc = QueryDesc();
+    auto windowDesc = GetDesc();
 
     /* Adapt window size and position */
     windowDesc.size = videoModeDesc.resolution;

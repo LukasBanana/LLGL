@@ -169,16 +169,16 @@ bool MacOSWindow::IsShown() const
     return ([wnd_ isVisible] != FALSE);
 }
 
-WindowDescriptor MacOSWindow::QueryDesc() const
+void MacOSWindow::SetDesc(const WindowDescriptor& desc)
+{
+    //todo...
+}
+
+WindowDescriptor MacOSWindow::GetDesc() const
 {
     WindowDescriptor desc;
     //todo...
     return desc;
-}
-
-void MacOSWindow::SetDesc(const WindowDescriptor& desc)
-{
-    //todo...
 }
 
 

@@ -127,7 +127,7 @@ void Win32Window::GetNativeHandle(void* nativeHandle) const
 void Win32Window::Recreate()
 {
     /* Destroy previous window handle and create a new one with current descriptor settings */
-    auto desc = QueryDesc();
+    auto desc = GetDesc();
     DestroyWindow(wnd_);
     wnd_ = CreateWindowHandle(desc);
 }
@@ -199,7 +199,7 @@ bool Win32Window::IsShown() const
     return (IsWindowVisible(wnd_) ? true : false);
 }
 
-WindowDescriptor Win32Window::QueryDesc() const
+WindowDescriptor Win32Window::GetDesc() const
 {
     /* Get window flags and other information for comparision */
     auto windowFlags    = GetWindowLong(wnd_, GWL_STYLE);

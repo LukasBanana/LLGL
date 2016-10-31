@@ -105,14 +105,14 @@ bool LinuxWindow::IsShown() const
     return false;
 }
 
-WindowDescriptor LinuxWindow::QueryDesc() const
-{
-    return desc_; //todo...
-}
-
 void LinuxWindow::SetDesc(const WindowDescriptor& desc)
 {
     //todo...
+}
+
+WindowDescriptor LinuxWindow::GetDesc() const
+{
+    return desc_; //todo...
 }
 
 void LinuxWindow::OnProcessEvents()

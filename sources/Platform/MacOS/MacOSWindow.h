@@ -43,9 +43,8 @@ class MacOSWindow : public Window
         void Show(bool show = true) override;
         bool IsShown() const override;
 
-        WindowDescriptor QueryDesc() const override;
-
         void SetDesc(const WindowDescriptor& desc) override;
+        WindowDescriptor GetDesc() const override;
 
     private:
         

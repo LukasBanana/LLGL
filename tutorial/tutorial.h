@@ -310,7 +310,7 @@ protected:
         window.AddEventListener(input);
 
         // Change window descriptor to allow resizing
-        auto wndDesc = window.QueryDesc();
+        auto wndDesc = window.GetDesc();
         wndDesc.resizable = true;
         window.SetDesc(wndDesc);
 
