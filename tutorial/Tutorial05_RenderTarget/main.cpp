@@ -65,7 +65,7 @@ public:
         CreatePipelines();
         CreateColorMap();
         CreateRenderTarget();
-
+        
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
         std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube" << std::endl;

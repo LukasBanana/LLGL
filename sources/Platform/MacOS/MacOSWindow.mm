@@ -11,7 +11,7 @@
 #include "MacOSWindow.h"
 #include "MapKey.h"
 #include <LLGL/Platform/NativeHandle.h>
-
+#include <iostream>//!!!
 
 @interface AppDelegate : NSObject
 
@@ -54,9 +54,15 @@
 
 - (void)windowDidResize:(NSNotification*)notification
 {
+    /* Get size of the NSWindow's content view */
     NSWindow* sender = [notification object];
-    NSRect frame = [sender frame];
-    window_->PostResize({ (int)frame.size.width, (int)frame.size.height });
+    NSRect frame = [[sender contentView] frame];
+    
+    auto w = static_cast<int>(frame.size.width);
+    auto h = static_cast<int>(frame.size.height);
+    
+    /* Notify event listeners about resize */
+    window_->PostResize({ w, h });
 }
 
 - (BOOL) isQuit
@@ -102,6 +108,8 @@ MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
     desc_   ( desc             ),
     wnd_    ( CreateNSWindow() )
 {
+    if (!desc_.centered)
+        SetPosition(desc_.position);
 }
 
 MacOSWindow::~MacOSWindow()
@@ -144,13 +152,26 @@ void MacOSWindow::SetPosition(const Point& position)
 
 Point MacOSWindow::GetPosition() const
 {
+    //[wnd_ frame].origin;
     return desc_.position;
 }
 
 void MacOSWindow::SetSize(const Size& size, bool useClientArea)
 {
     desc_.size = size;
-    [wnd_ setContentSize:NSMakeSize((CGFloat)size.x, (CGFloat)size.y)];
+    
+    // Set either content or frame size
+    auto w = static_cast<GLfloat>(size.x);
+    auto h = static_cast<GLfloat>(size.y);
+    
+    if (useClientArea)
+        [wnd_ setContentSize:NSMakeSize(w, h)];
+    else
+    {
+        NSRect frame = [wnd_ frame];
+        frame.size = NSMakeSize(w, h);
+        [wnd_ setFrame:frame display:YES animate:NO];
+    }
     
     // Update position due to different coordinate space between Windows and MacOS
     SetPosition(GetPosition());
@@ -184,8 +205,11 @@ bool MacOSWindow::IsShown() const
 
 void MacOSWindow::SetDesc(const WindowDescriptor& desc)
 {
+    /* Update NSWindow style, position, and size */
     desc_ = desc;
     [wnd_ setStyleMask:GetNSWindowStyleMask(desc)];
+    //SetPosition(desc_.position);
+    //SetSize(desc_.size);
 }
 
 WindowDescriptor MacOSWindow::GetDesc() const

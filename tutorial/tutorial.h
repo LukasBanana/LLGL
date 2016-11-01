@@ -174,10 +174,15 @@ private:
 
         public:
 
-            ResizeEventHandler(LLGL::RenderContext* context, LLGL::CommandBuffer* commands, Gs::Matrix4f& projection) :
-                context_    ( context    ),
-                commands_   ( commands   ),
-                projection_ ( projection )
+            ResizeEventHandler(
+                Tutorial& tutorial,
+                LLGL::RenderContext* context,
+                LLGL::CommandBuffer* commands,
+                Gs::Matrix4f& projection) :
+                    tutorial_   ( tutorial   ),
+                    context_    ( context    ),
+                    commands_   ( commands   ),
+                    projection_ ( projection )
             {
             }
 
@@ -205,10 +210,14 @@ private:
                 projection_ = Gs::ProjectionMatrix4f::Perspective(
                     viewport.width / viewport.height, 0.1f, 100.0f, Gs::Deg2Rad(45.0f)
                 ).ToMatrix4();
+                
+                // Re-draw frame
+                tutorial_.OnDrawFrame();
             }
 
         private:
 
+            Tutorial&               tutorial_;
             LLGL::RenderContext*    context_;
             LLGL::CommandBuffer*    commands_;
             Gs::Matrix4f&           projection_;
@@ -233,6 +242,8 @@ private:
 
 protected:
 
+    friend class ResizeEventHandler;
+    
     const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
 
     // Render system
@@ -315,7 +326,7 @@ protected:
         window.SetDesc(wndDesc);
 
         // Add window resize listener
-        window.AddEventListener(std::make_shared<ResizeEventHandler>(context, commands, projection));
+        window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, context, commands, projection));
 
         // Initialize default projection matrix
         projection = Gs::ProjectionMatrix4f::Perspective(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
