@@ -15,7 +15,7 @@
 
 @interface AppDelegate : NSObject
 
-- (id)initWithWindow:(LLGL::MacOSWindow*)window isResizable:(BOOL)resizable;
+- (id)initWithWindow:(LLGL::MacOSWindow*)window windowDesc:(const LLGL::WindowDescriptor*)windowDescRef;
 - (BOOL)isQuit;
 
 @end

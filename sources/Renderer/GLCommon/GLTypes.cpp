@@ -420,6 +420,7 @@ GLenum Map(const ShaderType shaderType)
         #if defined(GL_VERSION_4_3) || defined(GL_ES_VERSION_3_1)
         case ShaderType::Compute:           return GL_COMPUTE_SHADER;
         #endif
+        default:                            break;
     }
     MapFailed("ShaderType");
 }
