@@ -216,6 +216,13 @@ private:
                     tutorial_.OnDrawFrame();
             }
 
+            void OnTimer(LLGL::Window& sender, unsigned int timerID) override
+            {
+                // Re-draw frame
+                if (tutorial_.IsLoadingDone())
+                    tutorial_.OnDrawFrame();
+            }
+
         private:
 
             Tutorial&               tutorial_;
@@ -327,6 +334,12 @@ protected:
         auto wndDesc = window.GetDesc();
         wndDesc.resizable = true;
         window.SetDesc(wndDesc);
+
+        // Change window behavior
+        auto behavior = window.GetBehavior();
+        behavior.disableClearOnResize = true;
+        behavior.moveAndResizeTimerID = 1;
+        window.SetBehavior(behavior);
 
         // Add window resize listener
         window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, context, commands, projection));

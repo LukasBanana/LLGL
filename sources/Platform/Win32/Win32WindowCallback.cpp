@@ -351,10 +351,51 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_ERASEBKGND:
         {
             /* Do not erase background to avoid flickering when user resizes the window */
-            //auto window = GetWindowFromUserData(wnd);
-            //if (window)
+            auto window = GetWindowFromUserData(wnd);
+            if (window && window->GetBehavior().disableClearOnResize)
                 return 0;
         }
+        break;
+
+        case WM_ENTERSIZEMOVE:
+        {
+            auto window = GetWindowFromUserData(wnd);
+            if (window)
+            {
+                auto timerID = window->GetBehavior().moveAndResizeTimerID;
+                if (timerID != invalidWindowTimerID)
+                {
+                    /* Start timer */
+                    SetTimer(wnd, timerID, USER_TIMER_MINIMUM, nullptr);
+                }
+            }
+        }
+        break;
+
+        case WM_EXITSIZEMOVE:
+        {
+            auto window = GetWindowFromUserData(wnd);
+            if (window)
+            {
+                auto timerID = window->GetBehavior().moveAndResizeTimerID;
+                if (timerID != invalidWindowTimerID)
+                {
+                    /* Stop timer */
+                    KillTimer(wnd, timerID);
+                }
+            }
+        }
+        break;
+
+        case WM_TIMER:
+        {
+            auto window = GetWindowFromUserData(wnd);
+            if (window)
+            {
+                auto timerID = static_cast<unsigned int>(wParam);
+                window->PostTimer(timerID);
+            }
+        };
         break;
     }
 

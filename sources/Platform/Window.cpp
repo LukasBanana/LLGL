@@ -69,6 +69,11 @@ bool Window::EventListener::OnQuit(Window& sender)
     return true; // dummy
 }
 
+void Window::EventListener::OnTimer(Window& sender, unsigned int timerID)
+{
+    // dummy
+}
+
 
 /* ----- Window class ----- */
 
@@ -88,6 +93,11 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 #endif
+
+void Window::SetBehavior(const WindowBehavior& behavior)
+{
+    behavior_ = behavior;
+}
 
 bool Window::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
 {
@@ -183,6 +193,11 @@ void Window::PostQuit()
             return;
     }
     quit_ = true;
+}
+
+void Window::PostTimer(unsigned int timerID)
+{
+    FOREACH_LISTENER_CALL( OnTimer(*this, timerID) );
 }
 
 #undef FOREACH_LISTENER_CALL
