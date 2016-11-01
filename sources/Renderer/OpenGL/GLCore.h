@@ -9,7 +9,7 @@
 #define LLGL_GL_CORE_H
 
 
-#include "OpenGL.h"
+#include "../GLCommon/OpenGL.h"
 #include <string>
 
 

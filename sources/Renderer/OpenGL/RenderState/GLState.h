@@ -9,7 +9,7 @@
 #define LLGL_GL_STATE_H
 
 
-#include "../OpenGL.h"
+#include "../../GLCommon/OpenGL.h"
 #include <LLGL/ColorRGBA.h>
 
 

@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Shader.h>
-#include "../OpenGL.h"
+#include "../../GLCommon/OpenGL.h"
 
 
 namespace LLGL

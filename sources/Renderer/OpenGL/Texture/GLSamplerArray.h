@@ -10,7 +10,7 @@
 
 
 #include <LLGL/SamplerArray.h>
-#include "../OpenGL.h"
+#include "../../GLCommon/OpenGL.h"
 #include <vector>
 
 

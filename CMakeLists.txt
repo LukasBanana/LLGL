@@ -155,8 +155,6 @@ if(LLGL_ENABLE_DEBUG_LAYER)
 	file(GLOB FilesRendererDbg				${PROJECT_SOURCE_DIR}/sources/Renderer/DebugLayer/*.*)
 endif()
 
-file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
-
 if(WIN32)
 	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/Win32/*.*)
 elseif(APPLE)
@@ -169,6 +167,10 @@ elseif(APPLE)
 elseif(UNIX)
 	file(GLOB FilesPlatform					${PROJECT_SOURCE_DIR}/sources/Platform/Linux/*.*)
 endif()
+
+# OpenGL common renderer files
+file(GLOB FilesRendererGLCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/GLCommon/*.*)
+file(GLOB FilesRendererGLCommonTexture		${PROJECT_SOURCE_DIR}/sources/Renderer/GLCommon/Texture/*.*)
 
 # OpenGL renderer files
 file(GLOB FilesRendererGL					${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
@@ -198,6 +200,12 @@ elseif(UNIX)
 	file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/Linux/*.*)
 	set(SUMMARY_TARGET_PLATFORM "Linux")
 endif()
+
+# OpenGLES2 renderer files
+file(GLOB FilesRendererGLES2				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES2/*.*)
+
+# Direct3D common renderer files
+file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
 
 # Direct3D12 renderer files
 file(GLOB FilesRendererD3D12				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
@@ -263,8 +271,18 @@ if(LLGL_ENABLE_DEBUG_LAYER)
 endif()
 
 source_group(
-	"Sources\\Renderer\\DXCommon" FILES
+	"Sources\\DXCommon" FILES
 	${FilesRendererDXCommon}
+)
+
+source_group(
+	"Sources\\GLCommon" FILES
+	${FilesRendererGLCommon}
+)
+
+source_group(
+	"Sources\\GLCommon\\Texture" FILES
+	${FilesRendererGLCommonTexture}
 )
 
 source_group(
@@ -342,19 +360,15 @@ set(
 	${FilesRendererGLBuffer}
 	${FilesRendererGLTexture}
 	${FilesRendererGLRenderState}
+	${FilesRendererGLCommon}
+	${FilesRendererGLCommonTexture}
 )
 
-#TODO: replace ...GL variables by ...GLES2 variables
 set(
 	FilesGLES2
-	${FilesRendererGL}
-	${FilesRendererGLExt}
-	${FilesRendererGLPlatformBase}
-	${FilesRendererGLPlatform}
-	${FilesRendererGLShader}
-	${FilesRendererGLBuffer}
-	${FilesRendererGLTexture}
-	${FilesRendererGLRenderState}
+	${FilesRendererGLES2}
+	${FilesRendererGLCommon}
+	${FilesRendererGLCommonTexture}
 )
 
 set(

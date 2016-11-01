@@ -9,7 +9,7 @@
 #define LLGL_GL_EXTENSIONS_H
 
 
-#include "../OpenGL.h"
+#include "../../GLCommon/OpenGL.h"
 
 
 namespace LLGL

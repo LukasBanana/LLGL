@@ -9,7 +9,7 @@
 #define LLGL_GL_SAMPLER_H
 
 
-#include "../OpenGL.h"
+#include "../../GLCommon/OpenGL.h"
 #include <LLGL/Sampler.h>
 
 

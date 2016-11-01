@@ -11,7 +11,7 @@
 
 #include <LLGL/CommandBuffer.h>
 #include "RenderState/GLState.h"
-#include "OpenGL.h"
+#include "../GLCommon/OpenGL.h"
 
 
 namespace LLGL

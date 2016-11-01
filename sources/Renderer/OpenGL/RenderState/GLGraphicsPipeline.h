@@ -9,7 +9,7 @@
 #define LLGL_GL_GRAPHICS_PIPELINE_H
 
 
-#include "../OpenGL.h"
+#include "../../GLCommon/OpenGL.h"
 #include "GLStateManager.h"
 #include "../Shader/GLShaderProgram.h"
 #include <LLGL/GraphicsPipeline.h>
