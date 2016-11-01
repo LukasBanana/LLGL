@@ -21,6 +21,8 @@ static std::vector<ColorRGBAub> GenImageDataRGBAub(int numPixels, const ColorRGB
     return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), color);
 }
 
+#ifdef LLGL_OPENGL
+
 static void GLTexImage1DBase(
     GLenum target, const TextureFormat internalFormat, unsigned int width,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize)
@@ -42,6 +44,8 @@ static void GLTexImage1DBase(
         );
     }
 }
+
+#endif
 
 static void GLTexImage2DBase(
     GLenum target, const TextureFormat internalFormat, unsigned int width, unsigned int height,
@@ -93,6 +97,8 @@ static void GLTexImage3DBase(
     }
 }
 
+#ifdef LLGL_OPENGL
+
 static void GLTexImage2DMultisampleBase(
     GLenum target, unsigned int samples, const TextureFormat internalFormat, unsigned int width, unsigned int height, bool fixedSamples)
 {
@@ -127,6 +133,8 @@ static void GLTexImage1D(
     GLTexImage1DBase(GL_TEXTURE_1D, internalFormat, width, format, type, data, compressedSize);
 }
 
+#endif
+
 static void GLTexImage2D(
     const TextureFormat internalFormat, unsigned int width, unsigned int height,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
@@ -148,6 +156,8 @@ static void GLTexImageCube(
     GLTexImage2DBase(GLTypes::Map(cubeFace), internalFormat, width, height, format, type, data, compressedSize);
 }
 
+#ifdef LLGL_OPENGL
+
 static void GLTexImage1DArray(
     const TextureFormat internalFormat, unsigned int width, unsigned int layers,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
@@ -155,12 +165,16 @@ static void GLTexImage1DArray(
     GLTexImage2DBase(GL_TEXTURE_1D_ARRAY, internalFormat, width, layers, format, type, data, compressedSize);
 }
 
+#endif
+
 static void GLTexImage2DArray(
     const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int layers,
     GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
 {
     GLTexImage3DBase(GL_TEXTURE_2D_ARRAY, internalFormat, width, height, layers, format, type, data, compressedSize);
 }
+
+#ifdef LLGL_OPENGL
 
 static void GLTexImageCubeArray(
     const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int layers,
@@ -216,6 +230,8 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         );
     }
 }
+
+#endif
 
 void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
@@ -354,6 +370,8 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
     }
 }
 
+#ifdef LLGL_OPENGL
+
 void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     if (imageDesc)
@@ -390,6 +408,8 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
     }
 }
 
+#endif
+
 void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     if (imageDesc)
@@ -425,6 +445,8 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         );
     }
 }
+
+#ifdef LLGL_OPENGL
 
 void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
@@ -481,6 +503,8 @@ void GLTexImage2DMSArray(const TextureDescriptor& desc)
         desc.texture2DMS.fixedSamples
     );
 }
+
+#endif
 
 
 } // /namespace LLGL

@@ -10,7 +10,7 @@
 
 
 #ifdef LLGL_MOBILE_PLATFORM
-#   include "../OpenGLES2/OpenGLES2.h"
+#   include "../OpenGLES3/OpenGLES3.h"
 #else
 #   include "../OpenGL/OpenGL.h"
 #endif

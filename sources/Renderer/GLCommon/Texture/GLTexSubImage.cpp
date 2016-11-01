@@ -16,6 +16,8 @@ namespace LLGL
 {
 
 
+#ifdef LLGL_OPENGL
+
 static void GLTexSubImage1DBase(
     GLenum target, unsigned int mipLevel, unsigned int x, unsigned int width, const ImageDescriptor& imageDesc)
 {
@@ -44,6 +46,8 @@ static void GLTexSubImage1DBase(
         );
     }
 }
+
+#endif
 
 static void GLTexSubImage2DBase(
     GLenum target, unsigned int mipLevel, unsigned int x, unsigned int y,
@@ -116,11 +120,15 @@ static void GLTexSubImage3DBase(
     }
 }
 
+#ifdef LLGL_OPENGL
+
 static void GLTexSubImage1D(
     unsigned int mipLevel, unsigned int x, unsigned int width, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage1DBase(GL_TEXTURE_1D, mipLevel, x, width, imageDesc);
 }
+
+#endif
 
 static void GLTexSubImage2D(
     unsigned int mipLevel, unsigned int x, unsigned int y,
@@ -143,6 +151,8 @@ static void GLTexSubImageCube(
     GLTexSubImage2DBase(GLTypes::Map(cubeFace), mipLevel, x, y, width, height, imageDesc);
 }
 
+#ifdef LLGL_OPENGL
+
 static void GLTexSubImage1DArray(
     unsigned int mipLevel, unsigned int x, unsigned int layerOffset,
     unsigned int width, unsigned int layers, const ImageDescriptor& imageDesc)
@@ -150,12 +160,16 @@ static void GLTexSubImage1DArray(
     GLTexSubImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevel, x, layerOffset, width, layers, imageDesc);
 }
 
+#endif
+
 static void GLTexSubImage2DArray(
     int mipLevel, int x, int y, unsigned int layerOffset,
     int width, int height, unsigned int layers, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevel, x, y, layerOffset, width, height, layers, imageDesc);
 }
+
+#ifdef LLGL_OPENGL
 
 static void GLTexSubImageCubeArray(
     unsigned int mipLevel, unsigned int x, unsigned int y, unsigned int layerOffset, AxisDirection cubeFaceOffset,
@@ -169,6 +183,8 @@ void GLTexSubImage1D(const SubTextureDescriptor& desc, const ImageDescriptor& im
 {
     GLTexSubImage1D(desc.mipLevel, desc.texture1D.x, desc.texture1D.width, imageDesc);
 }
+
+#endif
 
 void GLTexSubImage2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
@@ -194,6 +210,8 @@ void GLTexSubImageCube(const SubTextureDescriptor& desc, const ImageDescriptor& 
     );
 }
 
+#ifdef LLGL_OPENGL
+
 void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage1DArray(
@@ -201,6 +219,8 @@ void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const ImageDescripto
         desc.texture1D.width, desc.texture1D.layers, imageDesc
     );
 }
+
+#endif
 
 void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
@@ -210,6 +230,8 @@ void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const ImageDescripto
     );
 }
 
+#ifdef LLGL_OPENGL
+
 void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImageCubeArray(
@@ -217,6 +239,8 @@ void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const ImageDescrip
         desc.textureCube.width, desc.textureCube.height, desc.textureCube.cubeFaces, imageDesc
     );
 }
+
+#endif
 
 
 } // /namespace LLGL

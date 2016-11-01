@@ -370,8 +370,6 @@ if(LLGL_BUILD_RENDERER_OPENGLES3)
 	# OpenGLES Renderer
 	include(cmake/FindOpenGLES.cmake)
 	if(OPENGLES_FOUND)
-		ADD_DEFINE(LLGL_GL_OPENGLES)
-		
 		include_directories(${OPENGLES_INCLUDE_DIR})
 		add_library(LLGL_OpenGLES3 SHARED ${FilesGLES3})
 		set_target_properties(LLGL_OpenGLES3 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")

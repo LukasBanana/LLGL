@@ -292,6 +292,8 @@ GLenum Map(const BlendOp blendOp)
         case BlendOp::InvSrc1Color:     return GL_ONE_MINUS_SRC1_COLOR;
         case BlendOp::Src1Alpha:        return GL_SRC1_ALPHA;
         case BlendOp::InvSrc1Alpha:     return GL_ONE_MINUS_SRC1_ALPHA;
+        #else
+        default:                        break;
         #endif
     }
     MapFailed("BlendOp");
@@ -358,6 +360,8 @@ GLenum Map(const TextureWrap textureWrap)
         #ifdef LLGL_OPENGL
         case TextureWrap::Border:       return GL_CLAMP_TO_BORDER;
         case TextureWrap::MirrorOnce:   return GL_MIRROR_CLAMP_TO_EDGE;
+        #else
+        default:                        break;
         #endif
     }
     MapFailed("TextureWrap");

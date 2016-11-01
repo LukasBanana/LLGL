@@ -7,6 +7,7 @@
 
 #include "../ModuleInterface.h"
 //#include "GLES3RenderSystem.h"
+#include <LLGL/RenderSystemFlags.h>
 
 
 extern "C"
