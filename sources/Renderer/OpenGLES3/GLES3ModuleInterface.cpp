@@ -6,7 +6,7 @@
  */
 
 #include "../ModuleInterface.h"
-#include "GLES3RenderSystem.h"
+//#include "GLES3RenderSystem.h"
 
 
 extern "C"
@@ -29,7 +29,7 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
 
 LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
 {
-    return new LLGL::GLES2RenderSystem();
+    return nullptr;//new LLGL::GLES3RenderSystem();
 }
 
 }

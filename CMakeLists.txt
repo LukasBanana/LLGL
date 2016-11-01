@@ -111,7 +111,7 @@ option(LLGL_BUILD_TESTS "Include Test Projects" ON)
 option(LLGL_BUILD_TUTORIALS "Include Tutorial Projects" ON)
 
 if(MOBILE_PLATFORM)
-	option(LLGL_BUILD_RENDERER_OPENGLES2 "Include OpenGL ES 2 Renderer Project" ON)
+	option(LLGL_BUILD_RENDERER_OPENGLES3 "Include OpenGL ES 3 Renderer Project" ON)
 else()
 	option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL Renderer Project" ON)
 endif()
@@ -201,8 +201,8 @@ elseif(UNIX)
 	set(SUMMARY_TARGET_PLATFORM "Linux")
 endif()
 
-# OpenGLES2 renderer files
-file(GLOB FilesRendererGLES2				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES2/*.*)
+# OpenGLES3 renderer files
+file(GLOB FilesRendererGLES3				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES3/*.*)
 
 # Direct3D common renderer files
 file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
@@ -266,7 +266,7 @@ source_group("Sources\\OpenGL\\RenderState" FILES ${FilesRendererGLRenderState})
 source_group("Sources\\OpenGL\\Shader" FILES ${FilesRendererGLShader})
 source_group("Sources\\OpenGL\\Texture" FILES ${FilesRendererGLTexture})
 
-source_group("Sources\\OpenGLES2" FILES ${FilesRendererGLES2})
+source_group("Sources\\OpenGLES3" FILES ${FilesRendererGLES3})
 
 source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
@@ -323,8 +323,8 @@ set(
 )
 
 set(
-	FilesGLES2
-	${FilesRendererGLES2}
+	FilesGLES3
+	${FilesRendererGLES3}
 	${FilesRendererGLCommon}
 	${FilesRendererGLCommonTexture}
 )
@@ -366,26 +366,26 @@ endif()
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 ENABLE_CXX11(LLGL)
 
-if(LLGL_BUILD_RENDERER_OPENGLES2)
+if(LLGL_BUILD_RENDERER_OPENGLES3)
 	# OpenGLES Renderer
 	include(cmake/FindOpenGLES.cmake)
 	if(OPENGLES_FOUND)
 		ADD_DEFINE(LLGL_GL_OPENGLES)
 		
 		include_directories(${OPENGLES_INCLUDE_DIR})
-		add_library(LLGL_OpenGLES2 SHARED ${FilesGLES2})
-		set_target_properties(LLGL_OpenGLES2 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
-		target_link_libraries(LLGL_OpenGLES2 LLGL ${OPENGLES_LIBRARIES})
+		add_library(LLGL_OpenGLES3 SHARED ${FilesGLES3})
+		set_target_properties(LLGL_OpenGLES3 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES})
 		
 		if(MOBILE_PLATFORM)
-			ADD_FRAMEWORK(LLGL_OpenGLES2 UIKit)
-			ADD_FRAMEWORK(LLGL_OpenGLES2 QuartzCore)
-			ADD_FRAMEWORK(LLGL_OpenGLES2 OpenGLES)
+			ADD_FRAMEWORK(LLGL_OpenGLES3 UIKit)
+			ADD_FRAMEWORK(LLGL_OpenGLES3 QuartzCore)
+			ADD_FRAMEWORK(LLGL_OpenGLES3 OpenGLES)
 		else()
-			ENABLE_CXX11(LLGL_OpenGLES2)
+			ENABLE_CXX11(LLGL_OpenGLES3)
 		endif()
 	else()
-		message("Missing OpenGL ES -> LLGL_OpenGLES2 renderer will be excluded from project")
+		message("Missing OpenGL ES -> LLGL_OpenGLES3 renderer will be excluded from project")
 	endif()
 endif()
 
@@ -454,8 +454,8 @@ if(LLGL_BUILD_RENDERER_OPENGL)
 	message("Build Renderer: OpenGL")
 endif()
 
-if(LLGL_BUILD_RENDERER_OPENGLES2)
-	message("Build Renderer: OpenGL ES 2")
+if(LLGL_BUILD_RENDERER_OPENGLES3)
+	message("Build Renderer: OpenGL ES 3")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
