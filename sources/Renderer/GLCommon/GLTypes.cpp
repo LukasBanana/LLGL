@@ -37,16 +37,13 @@ static void UnmapFailed(const std::string& typeName)
 GLenum Map(const BufferCPUAccess cpuAccess)
 {
     #ifdef LLGL_OPENGL
-
     switch (cpuAccess)
     {
         case BufferCPUAccess::ReadOnly:     return GL_READ_ONLY;
         case BufferCPUAccess::WriteOnly:    return GL_WRITE_ONLY;
         case BufferCPUAccess::ReadWrite:    return GL_READ_WRITE;
     }
-    
     #endif
-    
     MapFailed("BufferCPUAccess");
 }
 
@@ -113,7 +110,6 @@ GLenum Map(const PrimitiveTopology primitiveTopology)
 GLenum Map(const TextureType textureType)
 {
     #ifdef LLGL_OPENGL
-    
     switch (textureType)
     {
         case TextureType::Texture1D:        return GL_TEXTURE_1D;
@@ -126,9 +122,7 @@ GLenum Map(const TextureType textureType)
         case TextureType::Texture2DMS:      return GL_TEXTURE_2D_MULTISAMPLE;
         case TextureType::Texture2DMSArray: return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
     }
-    
     #else
-    
     switch (textureType)
     {
         case TextureType::Texture2D:        return GL_TEXTURE_2D;
@@ -137,9 +131,7 @@ GLenum Map(const TextureType textureType)
         case TextureType::Texture2DArray:   return GL_TEXTURE_2D_ARRAY;
         default:                            break;
     }
-    
     #endif
-    
     MapFailed("TextureType");
 }
 
