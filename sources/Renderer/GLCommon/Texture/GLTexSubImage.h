@@ -17,13 +17,13 @@ namespace LLGL
 {
 
 
-void GLWriteTexture1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLWriteTexture2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLWriteTexture3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLWriteTextureCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLWriteTexture1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLWriteTexture2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLWriteTextureCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImageCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
 
 
 } // /namespace LLGL

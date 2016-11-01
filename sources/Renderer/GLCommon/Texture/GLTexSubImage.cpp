@@ -165,12 +165,12 @@ static void GLTexSubImageCubeArray(
     GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, layerOffset, width, height, cubeFaces, imageDesc);
 }
 
-void GLWriteTexture1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
+void GLTexSubImage1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage1D(desc.mipLevel, desc.texture1D.x, desc.texture1D.width, imageDesc);
 }
 
-void GLWriteTexture2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
+void GLTexSubImage2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage2D(
         desc.mipLevel, desc.texture2D.x, desc.texture2D.y,
@@ -178,7 +178,7 @@ void GLWriteTexture2D(const SubTextureDescriptor& desc, const ImageDescriptor& i
     );
 }
 
-void GLWriteTexture3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
+void GLTexSubImage3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage3D(
         desc.mipLevel, desc.texture3D.x, desc.texture3D.y, desc.texture3D.z,
@@ -186,7 +186,7 @@ void GLWriteTexture3D(const SubTextureDescriptor& desc, const ImageDescriptor& i
     );
 }
 
-void GLWriteTextureCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
+void GLTexSubImageCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImageCube(
         desc.mipLevel, desc.textureCube.x, desc.textureCube.y,
@@ -194,7 +194,7 @@ void GLWriteTextureCube(const SubTextureDescriptor& desc, const ImageDescriptor&
     );
 }
 
-void GLWriteTexture1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
+void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage1DArray(
         desc.mipLevel, desc.texture1D.x, desc.texture1D.layerOffset,
@@ -202,7 +202,7 @@ void GLWriteTexture1DArray(const SubTextureDescriptor& desc, const ImageDescript
     );
 }
 
-void GLWriteTexture2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
+void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage2DArray(
         desc.mipLevel, desc.texture2D.x, desc.texture2D.y, desc.texture2D.layerOffset,
@@ -210,7 +210,7 @@ void GLWriteTexture2DArray(const SubTextureDescriptor& desc, const ImageDescript
     );
 }
 
-void GLWriteTextureCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
+void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc)
 {
     GLTexSubImageCubeArray(
         desc.mipLevel, desc.textureCube.x, desc.textureCube.y, desc.textureCube.layerOffset, desc.textureCube.cubeFaceOffset,

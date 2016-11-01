@@ -37,46 +37,46 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     switch (textureDesc.type)
     {
         case TextureType::Texture1D:
-            GLBuildTexture1D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage1D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
             break;
 
         case TextureType::Texture2D:
-            GLBuildTexture2D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage2D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
             break;
 
         case TextureType::Texture3D:
             LLGL_ASSERT_CAP(has3DTextures);
-            GLBuildTexture3D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage3D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
             break;
 
         case TextureType::TextureCube:
             LLGL_ASSERT_CAP(hasCubeTextures);
-            GLBuildTextureCube(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImageCube(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
             break;
 
         case TextureType::Texture1DArray:
             LLGL_ASSERT_CAP(hasTextureArrays);
-            GLBuildTexture1DArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage1DArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
             break;
 
         case TextureType::Texture2DArray:
             LLGL_ASSERT_CAP(hasTextureArrays);
-            GLBuildTexture2DArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage2DArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
             break;
 
         case TextureType::TextureCubeArray:
             LLGL_ASSERT_CAP(hasCubeTextureArrays);
-            GLBuildTextureCubeArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImageCubeArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
             break;
 
         case TextureType::Texture2DMS:
             LLGL_ASSERT_CAP(hasMultiSampleTextures);
-            GLBuildTexture2DMS(textureDesc);
+            GLTexImage2DMS(textureDesc);
             break;
 
         case TextureType::Texture2DMSArray:
             LLGL_ASSERT_CAP(hasMultiSampleTextures);
-            GLBuildTexture2DMSArray(textureDesc);
+            GLTexImage2DMSArray(textureDesc);
             break;
 
         default:
@@ -149,36 +149,36 @@ void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& 
     switch (texture.GetType())
     {
         case TextureType::Texture1D:
-            GLWriteTexture1D(subTextureDesc, imageDesc);
+            GLTexSubImage1D(subTextureDesc, imageDesc);
             break;
 
         case TextureType::Texture2D:
-            GLWriteTexture2D(subTextureDesc, imageDesc);
+            GLTexSubImage2D(subTextureDesc, imageDesc);
             break;
 
         case TextureType::Texture3D:
             LLGL_ASSERT_CAP(has3DTextures);
-            GLWriteTexture3D(subTextureDesc, imageDesc);
+            GLTexSubImage3D(subTextureDesc, imageDesc);
             break;
 
         case TextureType::TextureCube:
             LLGL_ASSERT_CAP(hasCubeTextures);
-            GLWriteTextureCube(subTextureDesc, imageDesc);
+            GLTexSubImageCube(subTextureDesc, imageDesc);
             break;
 
         case TextureType::Texture1DArray:
             LLGL_ASSERT_CAP(hasTextureArrays);
-            GLWriteTexture1DArray(subTextureDesc, imageDesc);
+            GLTexSubImage1DArray(subTextureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DArray:
             LLGL_ASSERT_CAP(hasTextureArrays);
-            GLWriteTexture2DArray(subTextureDesc, imageDesc);
+            GLTexSubImage2DArray(subTextureDesc, imageDesc);
             break;
 
         case TextureType::TextureCubeArray:
             LLGL_ASSERT_CAP(hasCubeTextureArrays);
-            GLWriteTextureCubeArray(subTextureDesc, imageDesc);
+            GLTexSubImageCubeArray(subTextureDesc, imageDesc);
             break;
 
         default:

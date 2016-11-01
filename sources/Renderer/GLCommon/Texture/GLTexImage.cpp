@@ -181,7 +181,7 @@ static void GLTexImage2DMultisampleArray(
     GLTexImage3DMultisampleBase(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, depth, fixedSamples);
 }
 
-void GLBuildTexture1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     if (imageDesc)
     {
@@ -217,7 +217,7 @@ void GLBuildTexture1D(const TextureDescriptor& desc, const ImageDescriptor* imag
     }
 }
 
-void GLBuildTexture2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     if (imageDesc)
     {
@@ -253,7 +253,7 @@ void GLBuildTexture2D(const TextureDescriptor& desc, const ImageDescriptor* imag
     }
 }
 
-void GLBuildTexture3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     if (imageDesc)
     {
@@ -289,7 +289,7 @@ void GLBuildTexture3D(const TextureDescriptor& desc, const ImageDescriptor* imag
     }
 }
 
-void GLBuildTextureCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     const std::array<AxisDirection, 6> cubeFaces
     {{
@@ -354,7 +354,7 @@ void GLBuildTextureCube(const TextureDescriptor& desc, const ImageDescriptor* im
     }
 }
 
-void GLBuildTexture1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     if (imageDesc)
     {
@@ -390,7 +390,7 @@ void GLBuildTexture1DArray(const TextureDescriptor& desc, const ImageDescriptor*
     }
 }
 
-void GLBuildTexture2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     if (imageDesc)
     {
@@ -426,7 +426,7 @@ void GLBuildTexture2DArray(const TextureDescriptor& desc, const ImageDescriptor*
     }
 }
 
-void GLBuildTextureCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
 {
     if (imageDesc)
     {
@@ -462,7 +462,7 @@ void GLBuildTextureCubeArray(const TextureDescriptor& desc, const ImageDescripto
     }
 }
 
-void GLBuildTexture2DMS(const TextureDescriptor& desc)
+void GLTexImage2DMS(const TextureDescriptor& desc)
 {
     /* Setup multi-sampled texture storage from descriptor */
     GLTexImage2DMultisample(
@@ -472,7 +472,7 @@ void GLBuildTexture2DMS(const TextureDescriptor& desc)
     );
 }
 
-void GLBuildTexture2DMSArray(const TextureDescriptor& desc)
+void GLTexImage2DMSArray(const TextureDescriptor& desc)
 {
     /* Setup multi-sampled array texture storage from descriptor */
     GLTexImage2DMultisampleArray(
