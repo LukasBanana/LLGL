@@ -18,17 +18,22 @@ namespace LLGL
 
 
 #ifdef LLGL_OPENGL
+
 void GLTexSubImage1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-#endif
 void GLTexSubImage2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
 void GLTexSubImage3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
 void GLTexSubImageCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-#ifdef LLGL_OPENGL
 void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-#endif
 void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-#ifdef LLGL_OPENGL
 void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+
+#else
+
+void GLTexSubImage2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImageCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+
 #endif
 
 
