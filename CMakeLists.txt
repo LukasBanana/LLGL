@@ -93,6 +93,11 @@ if(MOBILE_PLATFORM)
 endif()
 
 
+# === Initialize summary variables ===
+
+set(SUMMARY_TARGET_PLATFORM "Unknown")
+
+
 # === Options ===
 
 option(LLGL_ENABLE_CHECKED_CAST "Enable Dynamic Checked Cast (only in Debug mode)" ON)
@@ -135,11 +140,6 @@ endif()
 if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
 	ADD_DEFINE(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
 endif()
-
-
-# === Initialize summary variables ===
-
-set(SUMMARY_TARGET_PLATFORM "Unknown")
 
 
 # === Global files ===
@@ -185,12 +185,12 @@ if(WIN32)
 	set(SUMMARY_TARGET_PLATFORM "Win32")
 elseif(APPLE)
 	if(MOBILE_PLATFORM)
-		file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES/Platform/IOS/*.*)
-		file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/IOS/*.*)
+		file(GLOB FilesRendererGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES/Platform/IOS/*.*)
+		file(GLOB FilesIncludePlatform		${PROJECT_INCLUDE_DIR}/LLGL/Platform/IOS/*.*)
 		set(SUMMARY_TARGET_PLATFORM "iOS")
 	else()
-		file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/MacOS/*.*)
-		file(GLOB FilesIncludePlatform			${PROJECT_INCLUDE_DIR}/LLGL/Platform/MacOS/*.*)
+		file(GLOB FilesRendererGLPlatform	${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/MacOS/*.*)
+		file(GLOB FilesIncludePlatform		${PROJECT_INCLUDE_DIR}/LLGL/Platform/MacOS/*.*)
 		set(SUMMARY_TARGET_PLATFORM "macOS")
 	endif()
 elseif(UNIX)
@@ -475,6 +475,23 @@ endif()
 
 # Summary Information
 message("~~~ Build Summary ~~~")
+
 message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
+
+if(LLGL_BUILD_RENDERER_OPENGL)
+	message("Build Renderer: OpenGL")
+endif()
+
+if(LLGL_BUILD_RENDERER_OPENGLES2)
+	message("Build Renderer: OpenGL ES 2")
+endif()
+
+if(LLGL_BUILD_RENDERER_DIRECT3D11)
+	message("Build Renderer: Direct3D 11")
+endif()
+
+if(LLGL_BUILD_RENDERER_DIRECT3D12)
+	message("Build Renderer: Direct3D 12")
+endif()
 
 
