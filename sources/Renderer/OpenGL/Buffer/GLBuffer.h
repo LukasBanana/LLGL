@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Buffer.h>
-#include "../../GLCommon/OpenGL.h"
+#include "../OpenGL.h"
 
 
 namespace LLGL

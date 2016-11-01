@@ -1,18 +1,18 @@
 /*
- * OpenGLExt.h
+ * GLImport.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_OPENGL_EXT_H
-#define LLGL_OPENGL_EXT_H
+#ifndef LLGL_GL_IMPORT_H
+#define LLGL_GL_IMPORT_H
 
 
 #ifdef LLGL_MOBILE_PLATFORM
-//#   include "../OpenGLES2/Ext/GLExtensions.h"
+#   include "../OpenGLES2/OpenGLES2.h"
 #else
-#   include "../OpenGL/Ext/GLExtensions.h"
+#   include "../OpenGL/OpenGL.h"
 #endif
 
 

@@ -222,7 +222,7 @@ file(GLOB FilesRendererD3D11Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Dir
 file(GLOB FilesRendererD3D11RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/RenderState/*.*)
 
 # Vulkan renderer files
-file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
+#file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
 
 # Test files
 set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/Test1_Window.cpp)
@@ -246,83 +246,41 @@ set(FilesTutorial10 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial10_Instancing/main.cp
 # === Source group folders ===
 
 source_group("Include" FILES ${FilesInclude})
-source_group("Include\\Platform" FILES ${FilesIncludePlatformBase} ${FilesIncludePlatform})
 source_group("Sources\\Core" FILES ${FilesCore})
-
-source_group(
-	"Sources\\Platform" FILES
-	${FilesPlatformBase} ${FilesPlatform}
-)
-
-source_group(
-	"Sources\\Renderer" FILES
-	${FilesRenderer}
-	${FilesRendererGL}
-	${FilesRendererD3D12}
-	${FilesRendererD3D11}
-	${FilesRendererVulkan}
-)
+source_group("Include\\Platform" FILES ${FilesIncludePlatformBase} ${FilesIncludePlatform})
+source_group("Sources\\Platform" FILES ${FilesPlatformBase} ${FilesPlatform})
+source_group("Sources\\Renderer" FILES ${FilesRenderer})
 
 if(LLGL_ENABLE_DEBUG_LAYER)
-	source_group(
-		"Sources\\Renderer\\DebugLayer" FILES
-		${FilesRendererDbg}
-	)
+	source_group("Sources\\Renderer\\DebugLayer" FILES ${FilesRendererDbg})
 endif()
 
-source_group(
-	"Sources\\DXCommon" FILES
-	${FilesRendererDXCommon}
-)
+source_group("Sources\\GLCommon" FILES ${FilesRendererGLCommon})
+source_group("Sources\\GLCommon\\Texture" FILES ${FilesRendererGLCommonTexture})
 
-source_group(
-	"Sources\\GLCommon" FILES
-	${FilesRendererGLCommon}
-)
+source_group("Sources\\OpenGL" FILES ${FilesRendererGL})
+source_group("Sources\\OpenGL\\Buffer" FILES ${FilesRendererGLBuffer})
+source_group("Sources\\OpenGL\\Ext" FILES ${FilesRendererGLExt})
+source_group("Sources\\OpenGL\\Platform" FILES ${FilesRendererGLPlatformBase} ${FilesRendererGLPlatform})
+source_group("Sources\\OpenGL\\RenderState" FILES ${FilesRendererGLRenderState})
+source_group("Sources\\OpenGL\\Shader" FILES ${FilesRendererGLShader})
+source_group("Sources\\OpenGL\\Texture" FILES ${FilesRendererGLTexture})
 
-source_group(
-	"Sources\\GLCommon\\Texture" FILES
-	${FilesRendererGLCommonTexture}
-)
+source_group("Sources\\OpenGLES2" FILES ${FilesRendererGLES2})
 
-source_group(
-	"Sources\\Renderer\\Platform" FILES
-	${FilesRendererGLPlatformBase}
-	${FilesRendererGLPlatform}
-)
+source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
-source_group(
-	"Sources\\Renderer\\Ext" FILES
-	${FilesRendererGLExt}
-)
+source_group("Sources\\Direct3D11" FILES ${FilesRendererD3D11})
+source_group("Sources\\Direct3D11\\Buffer" FILES ${FilesRendererD3D11Buffer})
+source_group("Sources\\Direct3D11\\Shader" FILES ${FilesRendererD3D11Shader})
+source_group("Sources\\Direct3D11\\Texture" FILES ${FilesRendererD3D11Texture})
+source_group("Sources\\Direct3D11\\RenderState" FILES ${FilesRendererD3D11RenderState})
 
-source_group(
-	"Sources\\Renderer\\Shader" FILES
-	${FilesRendererGLShader}
-	${FilesRendererD3D12Shader}
-	${FilesRendererD3D11Shader}
-)
-
-source_group(
-	"Sources\\Renderer\\Buffer" FILES
-	${FilesRendererGLBuffer}
-	${FilesRendererD3D12Buffer}
-	${FilesRendererD3D11Buffer}
-)
-
-source_group(
-	"Sources\\Renderer\\Texture" FILES
-	${FilesRendererGLTexture}
-	${FilesRendererD3D12Texture}
-	${FilesRendererD3D11Texture}
-)
-
-source_group(
-	"Sources\\Renderer\\RenderState" FILES
-	${FilesRendererGLRenderState}
-	${FilesRendererD3D12RenderState}
-	${FilesRendererD3D11RenderState}
-)
+source_group("Sources\\Direct3D12" FILES ${FilesRendererD3D12})
+source_group("Sources\\Direct3D12\\Shader" FILES ${FilesRendererD3D12Shader})
+source_group("Sources\\Direct3D12\\Buffer" FILES ${FilesRendererD3D12Buffer})
+source_group("Sources\\Direct3D12\\Texture" FILES ${FilesRendererD3D12Texture})
+source_group("Sources\\Direct3D12\\RenderState" FILES ${FilesRendererD3D12RenderState})
 
 
 # === Include directories ===

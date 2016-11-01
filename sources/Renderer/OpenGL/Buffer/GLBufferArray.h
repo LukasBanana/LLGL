@@ -10,7 +10,7 @@
 
 
 #include <LLGL/BufferArray.h>
-#include "../../GLCommon/OpenGL.h"
+#include "../OpenGL.h"
 #include <vector>
 
 

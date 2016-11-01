@@ -11,7 +11,7 @@
 
 #include <LLGL/TextureArray.h>
 #include "../RenderState/GLStateManager.h"
-#include "../../GLCommon/OpenGL.h"
+#include "../OpenGL.h"
 #include <vector>
 
 

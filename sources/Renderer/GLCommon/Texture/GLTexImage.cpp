@@ -7,8 +7,8 @@
 
 #include "GLTexImage.h"
 #include "../GLTypes.h"
-#include "../OpenGL.h"
-#include "../OpenGLExt.h"
+#include "../GLImport.h"
+#include "../GLImportExt.h"
 #include <array>
 
 

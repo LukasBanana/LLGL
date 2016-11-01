@@ -11,7 +11,7 @@
 
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
-#include "../GLCommon/OpenGL.h"
+#include "OpenGL.h"
 #include "RenderState/GLStateManager.h"
 #include "Platform/GLContext.h"
 #include <memory>

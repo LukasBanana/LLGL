@@ -11,7 +11,7 @@
 
 #include <LLGL/ShaderProgram.h>
 #include "GLShaderUniform.h"
-#include "../../GLCommon/OpenGL.h"
+#include "../OpenGL.h"
 
 
 namespace LLGL

@@ -24,12 +24,8 @@
 #   include <OpenGL/gl3.h>
 #   include <OpenGL/glext.h>
 #   include "Platform/MacOS/MacOSGLExt.h"
-#elif defined(LLGL_OS_IOS)
-#   include <OpenGLES/ES2/gl.h>
-#   include <OpenGLES/ES2/glext.h>
-#elif defined(LLGL_OS_ANDROID)
-#   include <GLES2/gl2.h>
-#   include <GLES2/gl2ext.h>
+#else
+#   error "Unsupported platform for OpenGL"
 #endif
 
 

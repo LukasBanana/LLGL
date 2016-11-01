@@ -21,7 +21,7 @@ unsupported GL extension.
 
 
 #include <stdexcept>
-#include "../../GLCommon/OpenGL.h"
+#include "../OpenGL.h"
 
 
 namespace LLGL

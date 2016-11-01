@@ -10,7 +10,7 @@
 
 
 #include "../GLContext.h"
-#include "../../../GLCommon/OpenGL.h"
+#include "../../OpenGL.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <vector>
 
