@@ -212,7 +212,8 @@ private:
                 ).ToMatrix4();
                 
                 // Re-draw frame
-                tutorial_.OnDrawFrame();
+                if (tutorial_.IsLoadingDone())
+                    tutorial_.OnDrawFrame();
             }
 
         private:
@@ -237,6 +238,8 @@ private:
 
     std::map< LLGL::ShaderProgram*,
               ShaderProgramRecall >             shaderPrograms_;
+
+    bool                                        loadingDone_    = false;
 
     static std::string                          rendererModule_;
 
@@ -333,6 +336,9 @@ protected:
 
         // Show window
         window.Show();
+
+        // Store information that loading is done
+        loadingDone_ = true;
     }
 
     LLGL::ShaderProgram* LoadShaderProgram(
@@ -683,6 +689,12 @@ protected:
     bool IsOpenGL() const
     {
         return (renderer->GetRendererID() == LLGL::RendererID::OpenGL);
+    }
+
+    // Used by the window resize handler
+    bool IsLoadingDone() const
+    {
+        return loadingDone_;
     }
 
 };

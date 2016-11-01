@@ -347,6 +347,15 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
             PostGlobalMouseMotion(wnd, lParam);
         }
         return 0;
+
+        case WM_ERASEBKGND:
+        {
+            /* Do not erase background to avoid flickering when user resizes the window */
+            //auto window = GetWindowFromUserData(wnd);
+            //if (window)
+                return 0;
+        }
+        break;
     }
 
     return DefWindowProc(wnd, msg, wParam, lParam);
