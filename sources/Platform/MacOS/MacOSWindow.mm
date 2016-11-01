@@ -11,7 +11,7 @@
 #include "MacOSWindow.h"
 #include "MapKey.h"
 #include <LLGL/Platform/NativeHandle.h>
-#include <iostream>//!!!
+
 
 @interface AppDelegate : NSObject
 
@@ -69,6 +69,33 @@
 {
     return (quit_);
 }
+
+//INCOMPLETE
+#if 1
+- (NSApplicationPresentationOptions)window:(NSWindow *)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
+{
+    return
+        NSApplicationPresentationFullScreen |
+        NSApplicationPresentationAutoHideMenuBar |
+        //NSApplicationPresentationAutoHideToolbar |
+        NSApplicationPresentationAutoHideDock;
+}
+
+- (void)windowWillEnterFullScreen:(NSNotification*)notification
+{
+    [[NSApplication sharedApplication] setPresentationOptions:
+        ( NSApplicationPresentationFullScreen |
+          NSApplicationPresentationAutoHideMenuBar |
+          //NSApplicationPresentationAutoHideToolbar |
+          NSApplicationPresentationAutoHideDock )
+    ];
+}
+
+- (void)windowDidExitFullScreen:(NSNotification*)notification
+{
+    [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationDefault];
+}
+#endif
 
 @end
 
