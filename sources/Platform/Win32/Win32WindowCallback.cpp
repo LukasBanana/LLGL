@@ -348,6 +348,8 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         }
         return 0;
 
+        /* --- Misc events --- */
+
         case WM_ERASEBKGND:
         {
             /* Do not erase background to avoid flickering when user resizes the window */
