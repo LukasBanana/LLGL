@@ -7,7 +7,7 @@
 
 #include "GLQuery.h"
 #include "../Ext/GLExtensions.h"
-#include "../GLTypes.h"
+#include "../../GLCommon/GLTypes.h"
 
 
 namespace LLGL

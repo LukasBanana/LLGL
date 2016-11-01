@@ -10,7 +10,7 @@
 #include "../Ext/GLExtensionLoader.h"
 #include "../../../Core/Exception.h"
 #include "../RenderState/GLStateManager.h"
-#include "../GLTypes.h"
+#include "../../GLCommon/GLTypes.h"
 
 
 namespace LLGL

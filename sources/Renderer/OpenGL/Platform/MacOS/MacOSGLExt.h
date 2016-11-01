@@ -61,14 +61,6 @@
 #define GL_MAX_COMPUTE_WORK_GROUP_SIZE 0x91BF
 #endif
 
-#ifndef GL_STACK_OVERFLOW
-#define GL_STACK_OVERFLOW 0x0503
-#endif
-
-#ifndef GL_STACK_UNDERFLOW
-#define GL_STACK_UNDERFLOW 0x0504
-#endif
-
 
 #endif
 

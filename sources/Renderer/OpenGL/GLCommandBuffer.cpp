@@ -7,7 +7,7 @@
 
 #include "GLCommandBuffer.h"
 #include "GLRenderContext.h"
-#include "GLTypes.h"
+#include "../GLCommon/GLTypes.h"
 #include "Ext/GLExtensions.h"
 #include "Ext/GLExtensionLoader.h"
 #include "../Assertion.h"

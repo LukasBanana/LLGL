@@ -7,8 +7,8 @@
 
 #include "GLGraphicsPipeline.h"
 #include "../Ext/GLExtensions.h"
-#include "../GLTypes.h"
-#include "../GLCore.h"
+#include "../../GLCommon/GLTypes.h"
+#include "../../GLCommon/GLCore.h"
 #include "../../CheckedCast.h"
 
 

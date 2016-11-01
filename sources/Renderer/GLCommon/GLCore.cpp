@@ -7,7 +7,6 @@
 
 #include "GLCore.h"
 #include "../../Core/HelperMacros.h"
-#include "Platform/MacOS/MacOSGLExt.h"
 #include <sstream>
 
 
@@ -25,8 +24,10 @@ std::string GLErrorToStr(const GLenum errorCode)
         LLGL_CASE_TO_STR( GL_INVALID_OPERATION );
         LLGL_CASE_TO_STR( GL_INVALID_FRAMEBUFFER_OPERATION );
         LLGL_CASE_TO_STR( GL_OUT_OF_MEMORY );
+        #ifndef __APPLE__
         LLGL_CASE_TO_STR( GL_STACK_OVERFLOW );
         LLGL_CASE_TO_STR( GL_STACK_UNDERFLOW );
+        #endif
         LLGL_CASE_TO_STR( GL_FRAMEBUFFER_UNDEFINED );
         LLGL_CASE_TO_STR( GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT );
         LLGL_CASE_TO_STR( GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT );

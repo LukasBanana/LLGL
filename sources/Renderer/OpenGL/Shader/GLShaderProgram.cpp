@@ -12,7 +12,7 @@
 #include "../../CheckedCast.h"
 #include "../../../Core/Exception.h"
 #include "../RenderState/GLStateManager.h"
-#include "../GLTypes.h"
+#include "../../GLCommon/GLTypes.h"
 #include <LLGL/Log.h>
 #include <LLGL/VertexFormat.h>
 #include <vector>

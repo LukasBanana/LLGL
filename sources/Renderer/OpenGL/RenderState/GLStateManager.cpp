@@ -11,7 +11,7 @@
 #include "../Ext/GLExtensions.h"
 #include "../../../Core/Helper.h"
 #include "../../Assertion.h"
-#include "../GLTypes.h"
+#include "../../GLCommon/GLTypes.h"
 
 
 namespace LLGL

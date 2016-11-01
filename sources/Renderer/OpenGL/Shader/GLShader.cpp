@@ -7,7 +7,7 @@
 
 #include "GLShader.h"
 #include "../Ext/GLExtensions.h"
-#include "../GLTypes.h"
+#include "../../GLCommon/GLTypes.h"
 #include <vector>
 #include <sstream>
 #include <stdexcept>

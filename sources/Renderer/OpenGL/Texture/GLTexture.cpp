@@ -7,7 +7,7 @@
 
 #include "GLTexture.h"
 #include "../RenderState/GLStateManager.h"
-#include "../GLTypes.h"
+#include "../../GLCommon/GLTypes.h"
 
 
 namespace LLGL

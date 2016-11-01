@@ -8,7 +8,7 @@
 #include "GLRenderSystem.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
-#include "GLTypes.h"
+#include "../GLCommon/GLTypes.h"
 #include "Buffer/GLVertexBuffer.h"
 #include "Buffer/GLIndexBuffer.h"
 #include "Buffer/GLVertexBufferArray.h"
