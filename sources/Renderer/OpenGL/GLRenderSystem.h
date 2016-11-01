@@ -147,24 +147,6 @@ class GLRenderSystem : public RenderSystem
 
         void AssertCap(bool supported, const std::string& memberName);
 
-        void BuildTexture1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildTexture2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildTexture3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildTextureCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildTexture1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildTexture2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildTextureCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildTexture2DMS(const TextureDescriptor& desc);
-        void BuildTexture2DMSArray(const TextureDescriptor& desc);
-
-        void WriteTexture1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-        void WriteTexture2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-        void WriteTexture3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-        void WriteTextureCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-        void WriteTexture1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-        void WriteTexture2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-        void WriteTextureCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-
         GLRenderContext* GetSharedRenderContext() const;
 
         /* ----- Hardware object containers ----- */

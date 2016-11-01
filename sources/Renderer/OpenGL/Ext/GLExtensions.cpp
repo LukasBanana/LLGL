@@ -12,11 +12,11 @@ namespace LLGL
 {
 
     
-#ifndef __APPLE__
+#ifndef LLGL_OS_MACOS
 
 /* Platform specific GL extensions */
 
-#if defined(_WIN32)
+#if defined(LLGL_OS_WIN32)
 
 // WGL_EXT_swap_control
 PFNWGLSWAPINTERVALEXTPROC                               wglSwapIntervalEXT                              = nullptr;
@@ -24,7 +24,7 @@ PFNWGLCHOOSEPIXELFORMATARBPROC                          wglChoosePixelFormatARB 
 PFNWGLCREATECONTEXTATTRIBSARBPROC                       wglCreateContextAttribsARB                      = nullptr;
 PFNWGLGETEXTENSIONSSTRINGARBPROC                        wglGetExtensionsStringARB                       = nullptr;
 
-#elif defined(__linux__)
+#elif defined(LLGL_OS_LINUX)
 
 // GLX_SGI_swap_control
 PFNGLXSWAPINTERVALSGIPROC                               glXSwapIntervalSGI                              = nullptr;

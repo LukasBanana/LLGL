@@ -9,6 +9,7 @@
 #define LLGL_GL_EXTENSIONS_H
 
 
+#include <LLGL/Platform/Platform.h>
 #include "../../GLCommon/OpenGL.h"
 
 
@@ -18,24 +19,20 @@ namespace LLGL
 
 /* Platform specific GL extensions */
 
-#if defined(_WIN32)
+#if defined(LLGL_OS_WIN32)
 
 extern PFNWGLSWAPINTERVALEXTPROC                            wglSwapIntervalEXT;
 extern PFNWGLCHOOSEPIXELFORMATARBPROC                       wglChoosePixelFormatARB;
 extern PFNWGLCREATECONTEXTATTRIBSARBPROC                    wglCreateContextAttribsARB;
 extern PFNWGLGETEXTENSIONSSTRINGARBPROC                     wglGetExtensionsStringARB;
 
-#elif defined(__linux__)
+#elif defined(LLGL_OS_LINUX)
 
 extern PFNGLXSWAPINTERVALSGIPROC                            glXSwapIntervalSGI;
 
 #endif
-    
-#ifdef __APPLE__
-    
-//...
-    
-#else
+
+#ifndef LLGL_OS_MACOS
 
 #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
 
