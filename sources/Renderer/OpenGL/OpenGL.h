@@ -11,6 +11,8 @@
 
 #include <LLGL/Platform/Platform.h>
 
+#define LLGL_OPENGL
+
 #if defined(LLGL_OS_WIN32)
 #   include <Windows.h>
 #   include <gl/GL.h>

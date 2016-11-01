@@ -36,12 +36,17 @@ static void UnmapFailed(const std::string& typeName)
 
 GLenum Map(const BufferCPUAccess cpuAccess)
 {
+    #ifdef LLGL_OPENGL
+
     switch (cpuAccess)
     {
         case BufferCPUAccess::ReadOnly:     return GL_READ_ONLY;
         case BufferCPUAccess::WriteOnly:    return GL_WRITE_ONLY;
         case BufferCPUAccess::ReadWrite:    return GL_READ_WRITE;
     }
+    
+    #endif
+    
     MapFailed("BufferCPUAccess");
 }
 
@@ -56,7 +61,11 @@ GLenum Map(const DataType dataType)
         case DataType::Int32:   return GL_INT;
         case DataType::UInt32:  return GL_UNSIGNED_INT;
         case DataType::Float:   return GL_FLOAT;
+        #ifdef LLGL_OPENGL
         case DataType::Double:  return GL_DOUBLE;
+        #else
+        default:                break;
+        #endif
     }
     MapFailed("DataType");
 }
@@ -80,16 +89,22 @@ GLenum Map(const PrimitiveTopology primitiveTopology)
         case PrimitiveTopology::LineList:               return GL_LINES;
         case PrimitiveTopology::LineStrip:              return GL_LINE_STRIP;
         case PrimitiveTopology::LineLoop:               return GL_LINE_LOOP;
+        #ifdef LLGL_OPENGL
         case PrimitiveTopology::LineListAdjacency:      return GL_LINES_ADJACENCY;
         case PrimitiveTopology::LineStripAdjacency:     return GL_LINE_STRIP_ADJACENCY;
+        #endif
         case PrimitiveTopology::TriangleList:           return GL_TRIANGLES;
         case PrimitiveTopology::TriangleStrip:          return GL_TRIANGLE_STRIP;
         case PrimitiveTopology::TriangleFan:            return GL_TRIANGLE_FAN;
+        #ifdef LLGL_OPENGL
         case PrimitiveTopology::TriangleListAdjacency:  return GL_TRIANGLES_ADJACENCY;
         case PrimitiveTopology::TriangleStripAdjacency: return GL_TRIANGLE_STRIP_ADJACENCY;
+        #endif
         default:
+            #ifdef LLGL_OPENGL
             if (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32)
                 return GL_PATCHES;
+            #endif
             break;
     }
     MapFailed("PrimitiveTopology");
@@ -97,6 +112,8 @@ GLenum Map(const PrimitiveTopology primitiveTopology)
 
 GLenum Map(const TextureType textureType)
 {
+    #ifdef LLGL_OPENGL
+    
     switch (textureType)
     {
         case TextureType::Texture1D:        return GL_TEXTURE_1D;
@@ -109,6 +126,20 @@ GLenum Map(const TextureType textureType)
         case TextureType::Texture2DMS:      return GL_TEXTURE_2D_MULTISAMPLE;
         case TextureType::Texture2DMSArray: return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
     }
+    
+    #else
+    
+    switch (textureType)
+    {
+        case TextureType::Texture2D:        return GL_TEXTURE_2D;
+        case TextureType::Texture3D:        return GL_TEXTURE_3D;
+        case TextureType::TextureCube:      return GL_TEXTURE_CUBE_MAP;
+        case TextureType::Texture2DArray:   return GL_TEXTURE_2D_ARRAY;
+        default:                            break;
+    }
+    
+    #endif
+    
     MapFailed("TextureType");
 }
 
@@ -130,8 +161,10 @@ GLenum Map(const TextureFormat textureFormat)
         case TextureFormat::R8:             return GL_R8;
         case TextureFormat::R8Sgn:          return GL_R8_SNORM;
 
+        #ifdef LLGL_OPENGL
         case TextureFormat::R16:            return GL_R16;
         case TextureFormat::R16Sgn:         return GL_R16_SNORM;
+        #endif
         case TextureFormat::R16Float:       return GL_R16F;
 
         case TextureFormat::R32UInt:        return GL_R32I;
@@ -141,8 +174,10 @@ GLenum Map(const TextureFormat textureFormat)
         case TextureFormat::RG8:            return GL_RG8;
         case TextureFormat::RG8Sgn:         return GL_RG8_SNORM;
 
+        #ifdef LLGL_OPENGL
         case TextureFormat::RG16:           return GL_RG16;
         case TextureFormat::RG16Sgn:        return GL_RG16_SNORM;
+        #endif
         case TextureFormat::RG16Float:      return GL_RG16F;
 
         case TextureFormat::RG32UInt:       return GL_RG32UI;
@@ -152,8 +187,10 @@ GLenum Map(const TextureFormat textureFormat)
         case TextureFormat::RGB8:           return GL_RGB8;
         case TextureFormat::RGB8Sgn:        return GL_RGB8_SNORM;
 
+        #ifdef LLGL_OPENGL
         case TextureFormat::RGB16:          return GL_RGB16;
         case TextureFormat::RGB16Sgn:       return GL_RGB16_SNORM;
+        #endif
         case TextureFormat::RGB16Float:     return GL_RGB16F;
 
         case TextureFormat::RGB32UInt:      return GL_RGB32UI;
@@ -163,19 +200,25 @@ GLenum Map(const TextureFormat textureFormat)
         case TextureFormat::RGBA8:          return GL_RGBA8;
         case TextureFormat::RGBA8Sgn:       return GL_RGBA8_SNORM;
 
+        #ifdef LLGL_OPENGL
         case TextureFormat::RGBA16:         return GL_RGBA16;
         case TextureFormat::RGBA16Sgn:      return GL_RGBA16_SNORM;
+        #endif
         case TextureFormat::RGBA16Float:    return GL_RGBA16F;
 
         case TextureFormat::RGBA32UInt:     return GL_RGBA32UI;
         case TextureFormat::RGBA32SInt:     return GL_RGBA32I;
         case TextureFormat::RGBA32Float:    return GL_RGBA32F;
 
+        #ifdef LLGL_OPENGL
         /* --- Compressed formats --- */
         case TextureFormat::RGB_DXT1:       return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
         case TextureFormat::RGBA_DXT1:      return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
         case TextureFormat::RGBA_DXT3:      return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
         case TextureFormat::RGBA_DXT5:      return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        #endif
+        
+        default:                            break;
     }
     MapFailed("TextureFormat");
 }
@@ -187,13 +230,18 @@ GLenum Map(const ImageFormat colorFormat)
         case ImageFormat::R:                return GL_RED;
         case ImageFormat::RG:               return GL_RG;
         case ImageFormat::RGB:              return GL_RGB;
+        #ifdef LLGL_OPENGL
         case ImageFormat::BGR:              return GL_BGR;
+        #endif
         case ImageFormat::RGBA:             return GL_RGBA;
         case ImageFormat::BGRA:             return GL_BGRA;
         case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;  
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
+        #ifdef LLGL_OPENGL
         case ImageFormat::CompressedRGB:    return GL_COMPRESSED_RGB;
         case ImageFormat::CompressedRGBA:   return GL_COMPRESSED_RGBA;
+        #endif
+        default:                            break;
     }
     MapFailed("ImageFormat");
 }
@@ -247,10 +295,12 @@ GLenum Map(const BlendOp blendOp)
         case BlendOp::SrcAlphaSaturate: return GL_SRC_ALPHA_SATURATE;
         case BlendOp::BlendFactor:      return GL_CONSTANT_COLOR;
         case BlendOp::InvBlendFactor:   return GL_ONE_MINUS_CONSTANT_COLOR;
+        #ifdef LLGL_OPENGL
         case BlendOp::Src1Color:        return GL_SRC1_COLOR;
         case BlendOp::InvSrc1Color:     return GL_ONE_MINUS_SRC1_COLOR;
         case BlendOp::Src1Alpha:        return GL_SRC1_ALPHA;
         case BlendOp::InvSrc1Alpha:     return GL_ONE_MINUS_SRC1_ALPHA;
+        #endif
     }
     MapFailed("BlendOp");
 }
@@ -270,12 +320,14 @@ GLenum Map(const BlendArithmetic blendArithmetic)
 
 GLenum Map(const PolygonMode polygonMode)
 {
+    #ifdef LLGL_OPENGL
     switch (polygonMode)
     {
         case PolygonMode::Fill:         return GL_FILL;
         case PolygonMode::Wireframe:    return GL_LINE;
         case PolygonMode::Points:       return GL_POINT;
     }
+    #endif
     MapFailed("PolygonMode");
 }
 
@@ -311,8 +363,10 @@ GLenum Map(const TextureWrap textureWrap)
         case TextureWrap::Repeat:       return GL_REPEAT;
         case TextureWrap::Mirror:       return GL_MIRRORED_REPEAT;
         case TextureWrap::Clamp:        return GL_CLAMP_TO_EDGE;
+        #ifdef LLGL_OPENGL
         case TextureWrap::Border:       return GL_CLAMP_TO_BORDER;
         case TextureWrap::MirrorOnce:   return GL_MIRROR_CLAMP_TO_EDGE;
+        #endif
     }
     MapFailed("TextureWrap");
 }
@@ -355,11 +409,17 @@ GLenum Map(const ShaderType shaderType)
     switch (shaderType)
     {
         case ShaderType::Vertex:            return GL_VERTEX_SHADER;
+        #if defined(GL_VERSION_3_2) || defined(GL_ES_VERSION_3_2)
         case ShaderType::Geometry:          return GL_GEOMETRY_SHADER;
+        #endif
+        #if defined(GL_VERSION_4_0) || defined(GL_ES_VERSION_3_2)
         case ShaderType::TessControl:       return GL_TESS_CONTROL_SHADER;
         case ShaderType::TessEvaluation:    return GL_TESS_EVALUATION_SHADER;
+        #endif
         case ShaderType::Fragment:          return GL_FRAGMENT_SHADER;
+        #if defined(GL_VERSION_4_3) || defined(GL_ES_VERSION_3_1)
         case ShaderType::Compute:           return GL_COMPUTE_SHADER;
+        #endif
     }
     MapFailed("ShaderType");
 }
@@ -370,11 +430,15 @@ GLenum Map(const QueryType queryType)
 {
     switch (queryType)
     {
+        #ifdef LLGL_OPENGL
         case QueryType::SamplesPassed:                      return GL_SAMPLES_PASSED;
+        #endif
         case QueryType::AnySamplesPassed:                   return GL_ANY_SAMPLES_PASSED;
         case QueryType::AnySamplesPassedConservative:       return GL_ANY_SAMPLES_PASSED_CONSERVATIVE;
+        #ifdef LLGL_OPENGL
         case QueryType::PrimitivesGenerated:                return GL_PRIMITIVES_GENERATED;
         case QueryType::TimeElapsed:                        return GL_TIME_ELAPSED;
+        #endif
         case QueryType::StreamOutPrimitivesWritten:         return GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN;
 
         #ifdef GL_ARB_transform_feedback_overflow_query
@@ -408,14 +472,18 @@ GLenum Map(const BufferType bufferType)
         case BufferType::Vertex:        return GL_ARRAY_BUFFER;
         case BufferType::Index:         return GL_ELEMENT_ARRAY_BUFFER;
         case BufferType::Constant:      return GL_UNIFORM_BUFFER;
+        #ifdef LLGL_OPENGL
         case BufferType::Storage:       return GL_SHADER_STORAGE_BUFFER;
+        #endif
         case BufferType::StreamOutput:  return GL_TRANSFORM_FEEDBACK_BUFFER;
+        default:                        break;
     }
     MapFailed("BufferType");
 }
 
 GLenum Map(const RenderConditionMode renderConditionMode)
 {
+    #ifdef LLGL_OPENGL
     switch (renderConditionMode)
     {
         case RenderConditionMode::Wait:                     return GL_QUERY_WAIT;
@@ -431,11 +499,13 @@ GLenum Map(const RenderConditionMode renderConditionMode)
         default:                                            break;
         #endif
     }
+    #endif
     MapFailed("RenderConditionMode");
 }
 
 GLenum Map(const LogicOp logicOp)
 {
+    #ifdef LLGL_OPENGL
     switch (logicOp)
     {
         case LogicOp::Keep:         break;
@@ -457,6 +527,7 @@ GLenum Map(const LogicOp logicOp)
         case LogicOp::ReverseOR:    return GL_OR_REVERSE;
         case LogicOp::InvertedOR:   return GL_OR_INVERTED;
     }
+    #endif
     MapFailed("RenderConditionMode");
 }
 
@@ -465,6 +536,47 @@ GLenum Map(const LogicOp logicOp)
 
 static UniformType UnmapUniformType(const GLenum uniformType)
 {
+    #ifdef LLGL_OPENGLES3
+    
+    switch (uniformType)
+    {
+        case GL_FLOAT:
+            return UniformType::Float;
+        case GL_FLOAT_VEC2:
+            return UniformType::Float2;
+        case GL_FLOAT_VEC3:
+            return UniformType::Float3;
+        case GL_FLOAT_VEC4:
+            return UniformType::Float4;
+        case GL_SAMPLER_2D:
+        case GL_SAMPLER_3D:
+        case GL_SAMPLER_CUBE:
+        case GL_SAMPLER_2D_SHADOW:
+        case GL_SAMPLER_2D_ARRAY:
+        case GL_SAMPLER_2D_ARRAY_SHADOW:
+        case GL_SAMPLER_CUBE_SHADOW:
+        case GL_INT_SAMPLER_2D:
+        case GL_INT_SAMPLER_3D:
+        case GL_INT_SAMPLER_CUBE:
+        case GL_INT_SAMPLER_2D_ARRAY:
+        case GL_INT:
+            return UniformType::Int;
+        case GL_INT_VEC2:
+            return UniformType::Int2;
+        case GL_INT_VEC3:
+            return UniformType::Int3;
+        case GL_INT_VEC4:
+            return UniformType::Int4;
+        case GL_FLOAT_MAT2:
+            return UniformType::Float2x2;
+        case GL_FLOAT_MAT3:
+            return UniformType::Float3x3;
+        case GL_FLOAT_MAT4:
+            return UniformType::Float4x4;
+    }
+    
+    #else
+    
     switch (uniformType)
     {
         case GL_FLOAT:
@@ -595,6 +707,9 @@ static UniformType UnmapUniformType(const GLenum uniformType)
         case GL_DOUBLE_MAT4x2:
         case GL_DOUBLE_MAT4x3:*/
     }
+    
+    #endif
+    
     UnmapFailed("UniformType");
 }
 
@@ -619,8 +734,10 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_R8:                             return TextureFormat::R8;
         case GL_R8_SNORM:                       return TextureFormat::R8Sgn;
 
+        #ifdef LLGL_OPENGL
         case GL_R16:                            return TextureFormat::R16;
         case GL_R16_SNORM:                      return TextureFormat::R16Sgn;
+        #endif
         case GL_R16F:                           return TextureFormat::R16Float;
 
         case GL_R32I:                           return TextureFormat::R32UInt;
@@ -630,8 +747,10 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_RG8:                            return TextureFormat::RG8;
         case GL_RG8_SNORM:                      return TextureFormat::RG8Sgn;
 
+        #ifdef LLGL_OPENGL
         case GL_RG16:                           return TextureFormat::RG16;
         case GL_RG16_SNORM:                     return TextureFormat::RG16Sgn;
+        #endif
         case GL_RG16F:                          return TextureFormat::RG16Float;
 
         case GL_RG32UI:                         return TextureFormat::RG32UInt;
@@ -641,8 +760,10 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_RGB8:                           return TextureFormat::RGB8;
         case GL_RGB8_SNORM:                     return TextureFormat::RGB8Sgn;
 
+        #ifdef LLGL_OPENGL
         case GL_RGB16:                          return TextureFormat::RGB16;
         case GL_RGB16_SNORM:                    return TextureFormat::RGB16Sgn;
+        #endif
         case GL_RGB16F:                         return TextureFormat::RGB16Float;
 
         case GL_RGB32UI:                        return TextureFormat::RGB32UInt;
@@ -652,19 +773,25 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_RGBA8:                          return TextureFormat::RGBA8;
         case GL_RGBA8_SNORM:                    return TextureFormat::RGBA8Sgn;
 
+        #ifdef LLGL_OPENGL
         case GL_RGBA16:                         return TextureFormat::RGBA16;
         case GL_RGBA16_SNORM:                   return TextureFormat::RGBA16Sgn;
+        #endif
         case GL_RGBA16F:                        return TextureFormat::RGBA16Float;
 
         case GL_RGBA32UI:                       return TextureFormat::RGBA32UInt;
         case GL_RGBA32I:                        return TextureFormat::RGBA32SInt;
         case GL_RGBA32F:                        return TextureFormat::RGBA32Float;
 
+        #ifdef LLGL_OPENGL
         /* --- Compressed formats --- */
         case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:   return TextureFormat::RGB_DXT1;
         case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:  return TextureFormat::RGBA_DXT1;
         case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:  return TextureFormat::RGBA_DXT3;
         case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:  return TextureFormat::RGBA_DXT5;
+        #endif
+        
+        default:                                break;
     }
     return TextureFormat::Unknown;
 }

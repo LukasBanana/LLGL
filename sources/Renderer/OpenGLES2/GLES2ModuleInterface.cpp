@@ -1,12 +1,12 @@
 /*
- * GLES2ModuleInterface.h
+ * GLES3ModuleInterface.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
 #include "../ModuleInterface.h"
-#include "GLES2RenderSystem.h"
+#include "GLES3RenderSystem.h"
 
 
 extern "C"
@@ -19,7 +19,7 @@ LLGL_EXPORT int LLGL_RenderSystem_BuildID()
 
 LLGL_EXPORT int LLGL_RenderSystem_RendererID()
 {
-    return LLGL::RendererID::OpenGLES2;
+    return LLGL::RendererID::OpenGLES3;
 }
 
 LLGL_EXPORT const char* LLGL_RenderSystem_Name()
