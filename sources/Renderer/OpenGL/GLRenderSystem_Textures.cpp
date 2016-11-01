@@ -6,7 +6,7 @@
  */
 
 #include "GLRenderSystem.h"
-#include "GLTypes.h"
+#include "../GLCommon/GLTypes.h"
 #include "Ext/GLExtensions.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
