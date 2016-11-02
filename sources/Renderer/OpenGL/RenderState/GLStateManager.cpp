@@ -437,9 +437,7 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
 
 void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled)
 {
-    #ifndef __APPLE__
     if (HasExtension(GLExt::ARB_draw_buffers_blend))
-    #endif
     {
         glColorMaski(drawBuffer, state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
 
@@ -449,7 +447,6 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
             glBlendEquationSeparatei(drawBuffer, state.funcColor, state.funcAlpha);
         }
     }
-    #ifndef __APPLE__
     else
     {
         glDrawBuffer(drawBuffer);
@@ -461,7 +458,6 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
             glBlendEquationSeparate(state.funcColor, state.funcAlpha);
         }
     }
-    #endif
 }
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
@@ -621,7 +617,7 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     auto targetIdx = static_cast<std::size_t>(target);
     auto targetGL = bufferTargetsMap[targetIdx];
     
-    #ifndef __APPLE__
+    #ifdef GL_ARB_multi_bind
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /*
@@ -820,7 +816,7 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
 
 void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures)
 {
-    #ifndef __APPLE__
+    #ifdef GL_ARB_multi_bind
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Store bound textures */
@@ -903,7 +899,7 @@ void GLStateManager::BindSampler(unsigned int layer, GLuint sampler)
 
 void GLStateManager::BindSamplers(unsigned int first, unsigned int count, const GLuint* samplers)
 {
-    #ifndef __APPLE__
+    #ifdef GL_ARB_multi_bind
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Bind all samplers at once */
