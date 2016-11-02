@@ -69,8 +69,8 @@ enum class GLExt
 };
 
 
-// Enables the specified OpenGL extension.
-void EnableExtensionSupport(GLExt extension);
+// Registers the specified OpenGL extension support.
+void RegisterExtension(GLExt extension);
 
 // Returns true if the specified OpenGL extension is supported.
 bool HasExtension(const GLExt extension);

@@ -556,7 +556,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
     
     /* Enable OpenGL extension support by host MacOS version */
     #define ENABLE_GLEXT(NAME) \
-        EnableExtensionSupport(GLExt::NAME)
+        RegisterExtension(GLExt::NAME)
     
     /* Enable hardware buffer extensions */
     ENABLE_GLEXT( ARB_vertex_buffer_object         );
@@ -639,7 +639,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
         else if (it != extensions.end())
         {
             /* Enable extension in viewer */
-            EnableExtensionSupport(viewerExt);
+            RegisterExtension(viewerExt);
         }
     };
 
@@ -647,7 +647,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
     {
         /* Try to enable OpenGL extension */
         if (extensions.find(extName) != extensions.end())
-            EnableExtensionSupport(viewerExt);
+            RegisterExtension(viewerExt);
     };
 
     #define LOAD_GLEXT(NAME) \

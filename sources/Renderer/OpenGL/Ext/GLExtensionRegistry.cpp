@@ -13,18 +13,16 @@ namespace LLGL
 {
 
 
-static const unsigned int g_numExtensions = static_cast<int>(GLExt::Count);
+static std::array<bool, static_cast<std::size_t>(GLExt::Count)> g_registeredExtensions { { false } };
 
-static std::array<bool, g_numExtensions> g_extensionsEnabled { { false } };
-
-void EnableExtensionSupport(GLExt extension)
+void RegisterExtension(GLExt extension)
 {
-    g_extensionsEnabled[static_cast<std::size_t>(extension)] = true;
+    g_registeredExtensions[static_cast<std::size_t>(extension)] = true;
 }
 
 bool HasExtension(const GLExt extension)
 {
-    return g_extensionsEnabled[static_cast<std::size_t>(extension)];
+    return g_registeredExtensions[static_cast<std::size_t>(extension)];
 }
 
 
