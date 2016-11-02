@@ -114,19 +114,9 @@ class GLStateManager
 
         void BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer);
 
-        #if 1//UNUSED
-        void PushBoundFramebuffer(GLFramebufferTarget target);
-        void PopBoundFramebuffer();
-        #endif
-
         /* ----- Renderbuffer ----- */
 
         void BindRenderbuffer(GLuint renderbuffer);
-
-        #if 1//UNUSED
-        void PushBoundRenderbuffer();
-        void PopBoundRenderbuffer();
-        #endif
 
         /* ----- Texture ----- */
 
@@ -237,25 +227,17 @@ class GLStateManager
 
         struct GLFramebufferState
         {
-            struct StackEntry
-            {
-                GLFramebufferTarget target;
-                GLuint              buffer;
-            };
-
-            std::array<GLuint, numFramebufferTargets>   boundFramebuffers;
-            std::stack<StackEntry>                      boundFramebufferStack;
+            std::array<GLuint, numFramebufferTargets> boundFramebuffers;
         };
 
         struct GLRenderbufferState
         {
-            GLuint              boundRenderbuffer       = 0;
-            std::stack<GLuint>  boundRenderbufferStack;
+            GLuint boundRenderbuffer = 0;
         };
 
         struct GLTextureLayer
         {
-            std::array<GLuint, numTextureTargets>   boundTextures;
+            std::array<GLuint, numTextureTargets> boundTextures;
         };
 
         struct GLTextureState

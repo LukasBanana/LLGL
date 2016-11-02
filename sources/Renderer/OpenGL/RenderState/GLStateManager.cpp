@@ -310,7 +310,6 @@ bool GLStateManager::IsEnabled(GLStateExt state) const
 
 #endif
 
-
 /* ----- Common states ----- */
 
 //private
@@ -590,7 +589,7 @@ void GLStateManager::SetLogicOp(GLenum opcode)
     }
 }
 
-/* ----- Buffer binding ----- */
+/* ----- Buffer ----- */
 
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 {
@@ -715,7 +714,7 @@ void GLStateManager::BindBuffer(const GLBuffer& buffer)
     BindBuffer(GetGLBufferTarget(buffer.GetType()), buffer.GetID());
 }
 
-/* ----- Framebuffer binding ----- */
+/* ----- Framebuffer ----- */
 
 void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
@@ -728,28 +727,7 @@ void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuf
     }
 }
 
-#if 1//UNUSED
-void GLStateManager::PushBoundFramebuffer(GLFramebufferTarget target)
-{
-    framebufferState_.boundFramebufferStack.push(
-        {
-            target,
-            framebufferState_.boundFramebuffers[static_cast<std::size_t>(target)]
-        }
-    );
-}
-
-void GLStateManager::PopBoundFramebuffer()
-{
-    const auto& state = framebufferState_.boundFramebufferStack.top();
-    {
-        BindFramebuffer(state.target, state.buffer);
-    }
-    framebufferState_.boundFramebufferStack.pop();
-}
-#endif
-
-/* ----- Renderbuffer binding ----- */
+/* ----- Renderbuffer ----- */
 
 void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 {
@@ -760,20 +738,7 @@ void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
     }
 }
 
-#if 1//UNUSED
-void GLStateManager::PushBoundRenderbuffer()
-{
-    renderbufferState_.boundRenderbufferStack.push(renderbufferState_.boundRenderbuffer);
-}
-
-void GLStateManager::PopBoundRenderbuffer()
-{
-    BindRenderbuffer(renderbufferState_.boundRenderbufferStack.top());
-    renderbufferState_.boundRenderbufferStack.pop();
-}
-#endif
-
-/* ----- Texture binding ----- */
+/* ----- Texture ----- */
 
 GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
 {
@@ -886,7 +851,7 @@ void GLStateManager::BindTexture(const GLTexture& texture)
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
-/* ----- Sampler binding ----- */
+/* ----- Sampler ----- */
 
 void GLStateManager::BindSampler(unsigned int layer, GLuint sampler)
 {
