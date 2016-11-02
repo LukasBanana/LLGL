@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLFrameBuffer.h"
-#include "GLRenderBuffer.h"
+#include "GLFramebuffer.h"
+#include "GLRenderbuffer.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 

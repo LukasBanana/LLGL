@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "GLRenderBuffer.h"
+#include "GLRenderbuffer.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 

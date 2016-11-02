@@ -10,8 +10,8 @@
 
 
 #include <LLGL/RenderTarget.h>
-#include "GLFrameBuffer.h"
-#include "GLRenderBuffer.h"
+#include "GLFramebuffer.h"
+#include "GLRenderbuffer.h"
 #include "GLTexture.h"
 #include <functional>
 #include <vector>
