@@ -81,7 +81,7 @@ enum class GLBufferTarget
     UNIFORM_BUFFER,
 };
 
-enum class GLFrameBufferTarget
+enum class GLFramebufferTarget
 {
     FRAMEBUFFER = 0,
     DRAW_FRAMEBUFFER,

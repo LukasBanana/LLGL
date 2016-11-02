@@ -285,7 +285,7 @@ void GLCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 
     /* Bind framebuffer object */
     auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
-    stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFrameBuffer().GetID());
+    stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFrameBuffer().GetID());
 
     /* Notify state manager about new render target height */
     stateMngr_->NotifyRenderTargetHeight(renderTarget.GetResolution().y);
@@ -302,7 +302,7 @@ void GLCommandBuffer::SetRenderTarget(RenderContext& renderContext)
     BlitBoundRenderTarget();
 
     /* Unbind framebuffer object */
-    stateMngr_->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);
+    stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
 
     /*
     Ensure the specified render context is the active one,

@@ -1,12 +1,12 @@
 /*
- * GLRenderBuffer.h
+ * GLRenderbuffer.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_RENDER_BUFFER_H
-#define LLGL_GL_RENDER_BUFFER_H
+#ifndef LLGL_GL_RENDERBUFFER_H
+#define LLGL_GL_RENDERBUFFER_H
 
 
 #include "GLTexture.h"
@@ -17,16 +17,16 @@ namespace LLGL
 {
 
 
-class GLRenderBuffer
+class GLRenderbuffer
 {
 
     public:
 
-        GLRenderBuffer(const GLRenderBuffer&) = delete;
-        GLRenderBuffer& operator = (const GLRenderBuffer&) = delete;
+        GLRenderbuffer(const GLRenderbuffer&) = delete;
+        GLRenderbuffer& operator = (const GLRenderbuffer&) = delete;
 
-        GLRenderBuffer();
-        ~GLRenderBuffer();
+        GLRenderbuffer();
+        ~GLRenderbuffer();
 
         void Bind() const;
         void Unbind() const;

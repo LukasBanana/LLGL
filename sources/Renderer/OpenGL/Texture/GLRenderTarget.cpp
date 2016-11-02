@@ -27,19 +27,19 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
 
 void GLRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
 {
-    AttachRenderBuffer(size, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
+    AttachRenderbuffer(size, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
     blitMask_ |= GL_DEPTH_BUFFER_BIT;
 }
 
 void GLRenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
 {
-    AttachRenderBuffer(size, GL_STENCIL_INDEX, GL_STENCIL_ATTACHMENT);
+    AttachRenderbuffer(size, GL_STENCIL_INDEX, GL_STENCIL_ATTACHMENT);
     blitMask_ |= GL_STENCIL_BUFFER_BIT;
 }
 
 void GLRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
 {
-    AttachRenderBuffer(size, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL_ATTACHMENT);
+    AttachRenderbuffer(size, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL_ATTACHMENT);
     blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
@@ -76,31 +76,31 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
         switch (texture.GetType())
         {
             case TextureType::Texture1D:
-                GLFrameBuffer::AttachTexture1D(attachment, textureGL, GL_TEXTURE_1D, mipLevel);
+                GLFramebuffer::AttachTexture1D(attachment, textureGL, GL_TEXTURE_1D, mipLevel);
                 break;
             case TextureType::Texture2D:
-                GLFrameBuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D, mipLevel);
+                GLFramebuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D, mipLevel);
                 break;
             case TextureType::Texture3D:
-                GLFrameBuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_3D, mipLevel, attachmentDesc.layer);
+                GLFramebuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_3D, mipLevel, attachmentDesc.layer);
                 break;
             case TextureType::TextureCube:
-                GLFrameBuffer::AttachTexture2D(attachment, textureGL, GLTypes::Map(attachmentDesc.cubeFace), mipLevel);
+                GLFramebuffer::AttachTexture2D(attachment, textureGL, GLTypes::Map(attachmentDesc.cubeFace), mipLevel);
                 break;
             case TextureType::Texture1DArray:
-                GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer);
+                GLFramebuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer);
                 break;
             case TextureType::Texture2DArray:
-                GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer);
+                GLFramebuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer);
                 break;
             case TextureType::TextureCubeArray:
-                GLFrameBuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
+                GLFramebuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
                 break;
             case TextureType::Texture2DMS:
-                GLFrameBuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D_MULTISAMPLE, 0);
+                GLFramebuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D_MULTISAMPLE, 0);
                 break;
             case TextureType::Texture2DMSArray:
-                GLFrameBuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 0, attachmentDesc.layer);
+                GLFramebuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 0, attachmentDesc.layer);
                 break;
         }
 
@@ -117,7 +117,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
     /* Create render buffer for attachment if multi-sample frame buffer is used */
     if (frameBufferMS_)
     {
-        auto renderBuffer = MakeUnique<GLRenderBuffer>();
+        auto renderBuffer = MakeUnique<GLRenderbuffer>();
         {
             /* Setup render buffer storage by texture's internal format */
             InitRenderBufferStorage(*renderBuffer, GetTexInternalFormat(textureGL));
@@ -125,7 +125,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
             /* Attach render buffer to multi-sample frame buffer */
             frameBufferMS_->Bind();
             {
-                GLFrameBuffer::AttachRenderBuffer(attachment, *renderBuffer);
+                GLFramebuffer::AttachRenderbuffer(attachment, *renderBuffer);
                 status = CheckDrawFramebufferStatus();
                 
                 /* Set draw buffers for this frame buffer is multi-sampling is enabled */
@@ -170,19 +170,19 @@ void GLRenderTarget::BlitOntoFrameBuffer()
 {
     if (frameBufferMS_)
     {
-        frameBuffer_.Bind(GLFrameBufferTarget::DRAW_FRAMEBUFFER);
-        frameBufferMS_->Bind(GLFrameBufferTarget::READ_FRAMEBUFFER);
+        frameBuffer_.Bind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+        frameBufferMS_->Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
 
         for (auto attachment : colorAttachments_)
         {
             glReadBuffer(attachment);
             glDrawBuffer(attachment);
 
-            GLFrameBuffer::Blit(GetResolution().Cast<int>(), blitMask_);
+            GLFramebuffer::Blit(GetResolution().Cast<int>(), blitMask_);
         }
 
-        frameBufferMS_->Unbind(GLFrameBufferTarget::READ_FRAMEBUFFER);
-        frameBuffer_.Unbind(GLFrameBufferTarget::DRAW_FRAMEBUFFER);
+        frameBufferMS_->Unbind(GLFramebufferTarget::READ_FRAMEBUFFER);
+        frameBuffer_.Unbind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
     }
 }
 
@@ -194,19 +194,19 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
 {
     if (colorAttachmentIndex < colorAttachments_.size())
     {
-        GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::DRAW_FRAMEBUFFER, 0);
-        GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::READ_FRAMEBUFFER, GetFrameBuffer().GetID());
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFrameBuffer().GetID());
         {
             glReadBuffer(colorAttachments_[colorAttachmentIndex]);
             glDrawBuffer(GL_BACK);
 
-            GLFrameBuffer::Blit(GetResolution().Cast<int>(), blitMask_);
+            GLFramebuffer::Blit(GetResolution().Cast<int>(), blitMask_);
         }
-        GLStateManager::active->BindFrameBuffer(GLFrameBufferTarget::READ_FRAMEBUFFER, 0);
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
     }
 }
 
-const GLFrameBuffer& GLRenderTarget::GetFrameBuffer() const
+const GLFramebuffer& GLRenderTarget::GetFrameBuffer() const
 {
     return (frameBufferMS_ != nullptr ? *frameBufferMS_ : frameBuffer_);
 }
@@ -216,22 +216,22 @@ const GLFrameBuffer& GLRenderTarget::GetFrameBuffer() const
  * ======= Private: =======
  */
 
-void GLRenderTarget::InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat)
+void GLRenderTarget::InitRenderBufferStorage(GLRenderbuffer& renderBuffer, GLenum internalFormat)
 {
     renderBuffer.Bind();
     {
-        GLRenderBuffer::Storage(internalFormat, GetResolution().Cast<int>(), multiSamples_);
+        GLRenderbuffer::Storage(internalFormat, GetResolution().Cast<int>(), multiSamples_);
     }
     renderBuffer.Unbind();
 }
 
-GLenum GLRenderTarget::AttachDefaultRenderBuffer(GLFrameBuffer& frameBuffer, GLenum attachment)
+GLenum GLRenderTarget::AttachDefaultRenderBuffer(GLFramebuffer& frameBuffer, GLenum attachment)
 {
     GLenum status = 0;
 
     frameBuffer.Bind();
     {
-        GLFrameBuffer::AttachRenderBuffer(attachment, *renderBuffer_);
+        GLFramebuffer::AttachRenderbuffer(attachment, *renderBuffer_);
         status = CheckDrawFramebufferStatus();
     }
     frameBuffer.Unbind();
@@ -239,11 +239,11 @@ GLenum GLRenderTarget::AttachDefaultRenderBuffer(GLFrameBuffer& frameBuffer, GLe
     return status;
 }
 
-void GLRenderTarget::AttachRenderBuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment)
+void GLRenderTarget::AttachRenderbuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment)
 {
     if (!renderBuffer_)
     {
-        renderBuffer_ = MakeUnique<GLRenderBuffer>();
+        renderBuffer_ = MakeUnique<GLRenderbuffer>();
 
         /* Apply size to frame buffer resolution */
         ApplyResolution(size);
@@ -299,7 +299,7 @@ void GLRenderTarget::CheckFrameBufferStatus(GLenum status, const std::string& in
 void GLRenderTarget::CreateOnceFrameBufferMS()
 {
     if (!frameBufferMS_)
-        frameBufferMS_ = MakeUnique<GLFrameBuffer>();
+        frameBufferMS_ = MakeUnique<GLFramebuffer>();
 }
 
 bool GLRenderTarget::HasMultiSampling() const

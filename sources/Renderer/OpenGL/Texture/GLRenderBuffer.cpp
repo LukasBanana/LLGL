@@ -1,5 +1,5 @@
 /*
- * GLRenderBuffer.cpp
+ * GLRenderbuffer.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -14,34 +14,34 @@ namespace LLGL
 {
 
 
-GLRenderBuffer::GLRenderBuffer()
+GLRenderbuffer::GLRenderbuffer()
 {
     glGenRenderbuffers(1, &id_);
 }
 
-GLRenderBuffer::~GLRenderBuffer()
+GLRenderbuffer::~GLRenderbuffer()
 {
     glDeleteRenderbuffers(1, &id_);
 }
 
-void GLRenderBuffer::Bind() const
+void GLRenderbuffer::Bind() const
 {
-    GLStateManager::active->BindRenderBuffer(id_);
+    GLStateManager::active->BindRenderbuffer(id_);
 }
 
-void GLRenderBuffer::Unbind() const
+void GLRenderbuffer::Unbind() const
 {
-    GLStateManager::active->BindRenderBuffer(0);
+    GLStateManager::active->BindRenderbuffer(0);
 }
 
-void GLRenderBuffer::Recreate()
+void GLRenderbuffer::Recreate()
 {
     /* Delete previous renderbuffer and create a new one */
     glDeleteRenderbuffers(1, &id_);
     glGenRenderbuffers(1, &id_);
 }
 
-void GLRenderBuffer::Storage(GLenum internalFormat, const Gs::Vector2i& size, GLsizei samples)
+void GLRenderbuffer::Storage(GLenum internalFormat, const Gs::Vector2i& size, GLsizei samples)
 {
     if (samples > 0)
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, internalFormat, size.x, size.y);

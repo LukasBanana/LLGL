@@ -1,12 +1,12 @@
 /*
- * GLFrameBuffer.h
+ * GLFramebuffer.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_FRAME_BUFFER_H
-#define LLGL_GL_FRAME_BUFFER_H
+#ifndef LLGL_GL_FRAMEBUFFER_H
+#define LLGL_GL_FRAMEBUFFER_H
 
 
 #include "GLTexture.h"
@@ -18,21 +18,21 @@ namespace LLGL
 {
 
 
-class GLRenderBuffer;
+class GLRenderbuffer;
 
-class GLFrameBuffer
+class GLFramebuffer
 {
 
     public:
 
-        GLFrameBuffer(const GLFrameBuffer&) = delete;
-        GLFrameBuffer& operator = (const GLFrameBuffer&) = delete;
+        GLFramebuffer(const GLFramebuffer&) = delete;
+        GLFramebuffer& operator = (const GLFramebuffer&) = delete;
 
-        GLFrameBuffer();
-        ~GLFrameBuffer();
+        GLFramebuffer();
+        ~GLFramebuffer();
 
-        void Bind(const GLFrameBufferTarget target = GLFrameBufferTarget::FRAMEBUFFER) const;
-        void Unbind(const GLFrameBufferTarget target = GLFrameBufferTarget::FRAMEBUFFER) const;
+        void Bind(const GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
+        void Unbind(const GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
 
         //! Recreates the internal framebuffer object. This will invalidate the previous buffer ID.
         void Recreate();
@@ -42,7 +42,7 @@ class GLFrameBuffer
         static void AttachTexture3D(GLenum attachment, GLTexture& texture, GLenum textureTarget, GLint mipLevel, GLint zOffset);
         static void AttachTextureLayer(GLenum attachment, GLTexture& texture, GLint mipLevel, GLint layer);
         
-        static void AttachRenderBuffer(GLenum attachment, GLRenderBuffer& renderBuffer);
+        static void AttachRenderbuffer(GLenum attachment, GLRenderbuffer& renderbuffer);
 
         static void Blit(const Gs::Vector2i& size, GLenum mask);
         

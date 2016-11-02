@@ -112,7 +112,7 @@ GLStateManager::GLStateManager()
     /* Initialize all states with zero */
     Fill(renderState_.values, false);
     Fill(bufferState_.boundBuffers, 0);
-    Fill(frameBufferState_.boundFrameBuffers, 0);
+    Fill(framebufferState_.boundFramebuffers, 0);
     Fill(samplerState_.boundSamplers, 0);
 
     for (auto& layer : textureState_.layers)
@@ -717,57 +717,61 @@ void GLStateManager::BindBuffer(const GLBuffer& buffer)
 
 /* ----- Framebuffer binding ----- */
 
-void GLStateManager::BindFrameBuffer(GLFrameBufferTarget target, GLuint framebuffer)
+void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer)
 {
     /* Only bind framebuffer if the framebuffer has changed */
     auto targetIdx = static_cast<std::size_t>(target);
-    if (frameBufferState_.boundFrameBuffers[targetIdx] != framebuffer)
+    if (framebufferState_.boundFramebuffers[targetIdx] != framebuffer)
     {
-        frameBufferState_.boundFrameBuffers[targetIdx] = framebuffer;
+        framebufferState_.boundFramebuffers[targetIdx] = framebuffer;
         glBindFramebuffer(framebufferTargetsMap[targetIdx], framebuffer);
     }
 }
 
-void GLStateManager::PushBoundFrameBuffer(GLFrameBufferTarget target)
+#if 1//UNUSED
+void GLStateManager::PushBoundFramebuffer(GLFramebufferTarget target)
 {
-    frameBufferState_.boundFrameBufferStack.push(
+    framebufferState_.boundFramebufferStack.push(
         {
             target,
-            frameBufferState_.boundFrameBuffers[static_cast<std::size_t>(target)]
+            framebufferState_.boundFramebuffers[static_cast<std::size_t>(target)]
         }
     );
 }
 
-void GLStateManager::PopBoundFrameBuffer()
+void GLStateManager::PopBoundFramebuffer()
 {
-    const auto& state = frameBufferState_.boundFrameBufferStack.top();
+    const auto& state = framebufferState_.boundFramebufferStack.top();
     {
-        BindFrameBuffer(state.target, state.buffer);
+        BindFramebuffer(state.target, state.buffer);
     }
-    frameBufferState_.boundFrameBufferStack.pop();
+    framebufferState_.boundFramebufferStack.pop();
 }
+#endif
 
 /* ----- Renderbuffer binding ----- */
 
-void GLStateManager::BindRenderBuffer(GLuint renderbuffer)
+void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 {
-    if (renderBufferState_.boundRenderBuffer != renderbuffer)
+    if (renderbufferState_.boundRenderbuffer != renderbuffer)
     {
-        renderBufferState_.boundRenderBuffer = renderbuffer;
+        renderbufferState_.boundRenderbuffer = renderbuffer;
         glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
     }
 }
 
-void GLStateManager::PushBoundRenderBuffer()
+#if 1//UNUSED
+void GLStateManager::PushBoundRenderbuffer()
 {
-    renderBufferState_.boundRenderBufferStack.push(renderBufferState_.boundRenderBuffer);
+    renderbufferState_.boundRenderbufferStack.push(renderbufferState_.boundRenderbuffer);
 }
 
-void GLStateManager::PopBoundRenderBuffer()
+void GLStateManager::PopBoundRenderbuffer()
 {
-    BindRenderBuffer(renderBufferState_.boundRenderBufferStack.top());
-    renderBufferState_.boundRenderBufferStack.pop();
+    BindRenderbuffer(renderbufferState_.boundRenderbufferStack.top());
+    renderbufferState_.boundRenderbufferStack.pop();
 }
+#endif
 
 /* ----- Texture binding ----- */
 

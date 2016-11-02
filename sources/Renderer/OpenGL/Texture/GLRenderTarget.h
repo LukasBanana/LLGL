@@ -46,14 +46,14 @@ class GLRenderTarget : public RenderTarget
         void BlitOntoScreen(std::size_t colorAttachmentIndex);
 
         //! Returns the active frame buffer (i.e. either the default frame buffer or the multi-sample frame buffer).
-        const GLFrameBuffer& GetFrameBuffer() const;
+        const GLFramebuffer& GetFrameBuffer() const;
 
     private:
 
-        void InitRenderBufferStorage(GLRenderBuffer& renderBuffer, GLenum internalFormat);
-        GLenum AttachDefaultRenderBuffer(GLFrameBuffer& frameBuffer, GLenum attachment);
+        void InitRenderBufferStorage(GLRenderbuffer& renderBuffer, GLenum internalFormat);
+        GLenum AttachDefaultRenderBuffer(GLFramebuffer& frameBuffer, GLenum attachment);
 
-        void AttachRenderBuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment);
+        void AttachRenderbuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment);
 
         GLenum MakeColorAttachment();
 
@@ -67,22 +67,22 @@ class GLRenderTarget : public RenderTarget
         bool HasMultiSampling() const;
         bool HasCustomMultiSampling() const;
 
-        GLFrameBuffer                                   frameBuffer_;
+        GLFramebuffer                                   frameBuffer_;
 
-        std::unique_ptr<GLRenderBuffer>                 renderBuffer_;
+        std::unique_ptr<GLRenderbuffer>                 renderBuffer_;
 
         /**
         Multi-sampled frame buffer; required since we cannot
         directly draw into a texture when using multi-sampling.
         */
-        std::unique_ptr<GLFrameBuffer>                  frameBufferMS_;
+        std::unique_ptr<GLFramebuffer>                  frameBufferMS_;
 
         /**
         For multi-sampled render targets we also need a render buffer for each attached texture.
         Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
         which is only supported since OpenGL 3.2+, but render buffers are supported since OpenGL 3.0+.
         */
-        std::vector<std::unique_ptr<GLRenderBuffer>>    renderBuffersMS_;
+        std::vector<std::unique_ptr<GLRenderbuffer>>    renderBuffersMS_;
 
         std::vector<GLenum>                             colorAttachments_;
 
