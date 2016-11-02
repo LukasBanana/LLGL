@@ -6,11 +6,11 @@
  */
 
 #include "GLStateManager.h"
-#include "../Ext/GLExtensions.h"
-#include "../Ext/GLExtensionRegistry.h"
+#include "../../GLCommon/GLImportExt.h"
+#include "../../GLCommon/GLExtensionRegistry.h"
+#include "../../GLCommon/GLTypes.h"
 #include "../../Assertion.h"
 #include "../../../Core/Helper.h"
-#include "../../GLCommon/GLTypes.h"
 
 
 namespace LLGL
