@@ -91,7 +91,7 @@ class GLStateManager
         void SetBlendColor(const ColorRGBAf& color);
         void SetLogicOp(GLenum opcode);
 
-        /* ----- Buffer binding ----- */
+        /* ----- Buffer ----- */
 
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
@@ -110,21 +110,21 @@ class GLStateManager
 
         void BindBuffer(const GLBuffer& buffer);
 
-        /* ----- Framebuffer binding ----- */
+        /* ----- Framebuffer ----- */
 
         void BindFrameBuffer(GLFrameBufferTarget target, GLuint framebuffer);
 
         void PushBoundFrameBuffer(GLFrameBufferTarget target);
         void PopBoundFrameBuffer();
 
-        /* ----- Renderbuffer binding ----- */
+        /* ----- Renderbuffer ----- */
 
         void BindRenderBuffer(GLuint renderbuffer);
 
         void PushBoundRenderBuffer();
         void PopBoundRenderBuffer();
 
-        /* ----- Texture binding ----- */
+        /* ----- Texture ----- */
 
         static GLTextureTarget GetTextureTarget(const TextureType type);
 
@@ -139,12 +139,12 @@ class GLStateManager
 
         void BindTexture(const GLTexture& texture);
 
-        /* ----- Sampler binding ----- */
+        /* ----- Sampler ----- */
 
         void BindSampler(unsigned int layer, GLuint sampler);
         void BindSamplers(unsigned int first, unsigned int count, const GLuint* samplers);
 
-        /* ----- Shader binding ----- */
+        /* ----- Shader ----- */
 
         void BindShaderProgram(GLuint program);
 
