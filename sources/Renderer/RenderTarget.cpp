@@ -55,7 +55,7 @@ void RenderTarget::ApplyResolution(const Gs::Vector2ui& resolution)
 
 void RenderTarget::ApplyMipResolution(Texture& texture, unsigned int mipLevel)
 {
-    /* Apply texture size to frame buffer resolution */
+    /* Apply texture size to render target resolution */
     auto size = texture.QueryMipLevelSize(mipLevel);
     ApplyResolution({ size.x, size.y });
 }

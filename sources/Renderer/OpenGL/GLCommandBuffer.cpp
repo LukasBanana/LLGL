@@ -306,7 +306,7 @@ void GLCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 
     /*
     Ensure the specified render context is the active one,
-    and notify the state manager about new render target (the default frame buffer) height
+    and notify the state manager about new render target (the default framebuffer) height
     */
     GLRenderContext::GLMakeCurrent(&renderContextGL);
 

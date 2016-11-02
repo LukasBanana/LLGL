@@ -110,7 +110,7 @@ class LLGL_EXPORT RenderTarget
         virtual void DetachAll() = 0;
 
         /**
-        \brief Returns the frame buffer resolution.
+        \brief Returns the render target resolution.
         \remarks This will be determined by the first texture attachment. Every further attachment must have the same size.
         */
         inline const Gs::Vector2ui& GetResolution() const

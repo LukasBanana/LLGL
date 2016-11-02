@@ -158,7 +158,7 @@ struct RenderingCaps
     //! Latest suppported shading language.
     ShadingLanguage shadingLanguage                 = ShadingLanguage::Unsupported;
 
-    //! Specifies whether render targets (also "frame buffer objects") are supported.
+    //! Specifies whether render targets (also "framebuffer objects") are supported.
     bool            hasRenderTargets                = false;
 
     /**
