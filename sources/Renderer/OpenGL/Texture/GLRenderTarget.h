@@ -39,50 +39,47 @@ class GLRenderTarget : public RenderTarget
 
         /* ----- Extended Internal Functions ----- */
 
-        //! Blits the multi-sample frame buffer onto the default frame buffer.
+        // Blits the multi-sample framebuffer onto the default framebuffer.
         void BlitOntoFrameBuffer();
 
-        //! Blits the specified color attachment from the frame buffer onto the screen.
+        // Blits the specified color attachment from the framebuffer onto the screen.
         void BlitOntoScreen(std::size_t colorAttachmentIndex);
 
-        //! Returns the active frame buffer (i.e. either the default frame buffer or the multi-sample frame buffer).
-        const GLFramebuffer& GetFrameBuffer() const;
+        // Returns the active framebuffer (i.e. either the default framebuffer or the multi-sample framebuffer).
+        const GLFramebuffer& GetFramebuffer() const;
 
     private:
 
-        void InitRenderBufferStorage(GLRenderbuffer& renderBuffer, GLenum internalFormat);
-        GLenum AttachDefaultRenderBuffer(GLFramebuffer& frameBuffer, GLenum attachment);
+        void InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat);
+        GLenum AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLenum attachment);
 
         void AttachRenderbuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment);
 
         GLenum MakeColorAttachment();
 
-        //! Sets the draw buffers for the currently bound FBO.
+        // Sets the draw buffers for the currently bound FBO.
         void SetDrawBuffers();
 
-        void CheckFrameBufferStatus(GLenum status, const std::string& info);
+        void CheckFramebufferStatus(GLenum status, const std::string& info);
 
-        void CreateOnceFrameBufferMS();
+        void CreateOnceFramebufferMS();
 
         bool HasMultiSampling() const;
         bool HasCustomMultiSampling() const;
 
-        GLFramebuffer                                   frameBuffer_;
+        GLFramebuffer                                   framebuffer_;
 
-        std::unique_ptr<GLRenderbuffer>                 renderBuffer_;
+        std::unique_ptr<GLRenderbuffer>                 renderbuffer_;
 
-        /**
-        Multi-sampled frame buffer; required since we cannot
-        directly draw into a texture when using multi-sampling.
-        */
-        std::unique_ptr<GLFramebuffer>                  frameBufferMS_;
+        // Multi-sampled framebuffer; required since we cannot directly draw into a texture when using multi-sampling.
+        std::unique_ptr<GLFramebuffer>                  framebufferMS_;
 
-        /**
-        For multi-sampled render targets we also need a render buffer for each attached texture.
+        /*
+        For multi-sampled render targets we also need a renderbuffer for each attached texture.
         Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
-        which is only supported since OpenGL 3.2+, but render buffers are supported since OpenGL 3.0+.
+        which is only supported since OpenGL 3.2+, but renderbuffers are supported since OpenGL 3.0+.
         */
-        std::vector<std::unique_ptr<GLRenderbuffer>>    renderBuffersMS_;
+        std::vector<std::unique_ptr<GLRenderbuffer>>    renderbuffersMS_;
 
         std::vector<GLenum>                             colorAttachments_;
 

@@ -22,7 +22,7 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
     multiSamples_( static_cast<GLsizei>(desc.multiSampling.SampleCount()) )
 {
     if (HasMultiSampling() && !desc.customMultiSampling)
-        CreateOnceFrameBufferMS();
+        CreateOnceFramebufferMS();
 }
 
 void GLRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
@@ -70,8 +70,8 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
     GLenum status = 0;
     GLenum attachment = MakeColorAttachment();
 
-    /* Attach texture to frame buffer (via callback) */
-    frameBuffer_.Bind();
+    /* Attach texture to framebuffer (via callback) */
+    framebuffer_.Bind();
     {
         switch (texture.GetType())
         {
@@ -106,36 +106,36 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
 
         status = CheckDrawFramebufferStatus();
         
-        /* Set draw buffers for this frame buffer if multi-sampling is disabled */
-        if (!frameBufferMS_)
+        /* Set draw buffers for this framebuffer if multi-sampling is disabled */
+        if (!framebufferMS_)
             SetDrawBuffers();
     }
-    frameBuffer_.Unbind();
+    framebuffer_.Unbind();
 
-    CheckFrameBufferStatus(status, "color attachment to frame buffer object (FBO)");
+    CheckFramebufferStatus(status, "color attachment to framebuffer object (FBO)");
 
-    /* Create render buffer for attachment if multi-sample frame buffer is used */
-    if (frameBufferMS_)
+    /* Create renderbuffer for attachment if multi-sample framebuffer is used */
+    if (framebufferMS_)
     {
-        auto renderBuffer = MakeUnique<GLRenderbuffer>();
+        auto renderbuffer = MakeUnique<GLRenderbuffer>();
         {
-            /* Setup render buffer storage by texture's internal format */
-            InitRenderBufferStorage(*renderBuffer, GetTexInternalFormat(textureGL));
+            /* Setup renderbuffer storage by texture's internal format */
+            InitRenderbufferStorage(*renderbuffer, GetTexInternalFormat(textureGL));
 
-            /* Attach render buffer to multi-sample frame buffer */
-            frameBufferMS_->Bind();
+            /* Attach renderbuffer to multi-sample framebuffer */
+            framebufferMS_->Bind();
             {
-                GLFramebuffer::AttachRenderbuffer(attachment, *renderBuffer);
+                GLFramebuffer::AttachRenderbuffer(attachment, *renderbuffer);
                 status = CheckDrawFramebufferStatus();
                 
-                /* Set draw buffers for this frame buffer is multi-sampling is enabled */
+                /* Set draw buffers for this framebuffer is multi-sampling is enabled */
                 SetDrawBuffers();
             }
-            frameBufferMS_->Unbind();
+            framebufferMS_->Unbind();
 
-            CheckFrameBufferStatus(status, "color attachment to multi-sample frame buffer object (FBO)");
+            CheckFramebufferStatus(status, "color attachment to multi-sample framebuffer object (FBO)");
         }
-        renderBuffersMS_.emplace_back(std::move(renderBuffer));
+        renderbuffersMS_.emplace_back(std::move(renderbuffer));
     }
 
     /* Add color buffer bit to blit mask */
@@ -144,18 +144,18 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
 
 void GLRenderTarget::DetachAll()
 {
-    /* Resets frame buffer and render buffer objects */
+    /* Resets framebuffer and renderbuffer objects */
     ResetResolution();
 
-    frameBuffer_.Recreate();
+    framebuffer_.Recreate();
 
-    renderBuffer_.reset();
+    renderbuffer_.reset();
 
-    if (frameBufferMS_)
-        frameBufferMS_->Recreate();
+    if (framebufferMS_)
+        framebufferMS_->Recreate();
 
     colorAttachments_.clear();
-    renderBuffersMS_.clear();
+    renderbuffersMS_.clear();
 
     blitMask_ = 0;
 }
@@ -164,14 +164,14 @@ void GLRenderTarget::DetachAll()
 
 /*
 Blit (or rather copy) each multi-sample attachment from the
-multi-sample frame buffer (read) into the main frame buffer (draw)
+multi-sample framebuffer (read) into the main framebuffer (draw)
 */
 void GLRenderTarget::BlitOntoFrameBuffer()
 {
-    if (frameBufferMS_)
+    if (framebufferMS_)
     {
-        frameBuffer_.Bind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
-        frameBufferMS_->Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
+        framebuffer_.Bind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+        framebufferMS_->Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
 
         for (auto attachment : colorAttachments_)
         {
@@ -181,21 +181,21 @@ void GLRenderTarget::BlitOntoFrameBuffer()
             GLFramebuffer::Blit(GetResolution().Cast<int>(), blitMask_);
         }
 
-        frameBufferMS_->Unbind(GLFramebufferTarget::READ_FRAMEBUFFER);
-        frameBuffer_.Unbind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+        framebufferMS_->Unbind(GLFramebufferTarget::READ_FRAMEBUFFER);
+        framebuffer_.Unbind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
     }
 }
 
 /*
 Blit (or rather copy) each multi-sample attachment from the
-multi-sample frame buffer (read) into the back buffer (draw)
+multi-sample framebuffer (read) into the back buffer (draw)
 */
 void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
 {
     if (colorAttachmentIndex < colorAttachments_.size())
     {
         GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFrameBuffer().GetID());
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFramebuffer().GetID());
         {
             glReadBuffer(colorAttachments_[colorAttachmentIndex]);
             glDrawBuffer(GL_BACK);
@@ -206,9 +206,9 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
     }
 }
 
-const GLFramebuffer& GLRenderTarget::GetFrameBuffer() const
+const GLFramebuffer& GLRenderTarget::GetFramebuffer() const
 {
-    return (frameBufferMS_ != nullptr ? *frameBufferMS_ : frameBuffer_);
+    return (framebufferMS_ != nullptr ? *framebufferMS_ : framebuffer_);
 }
 
 
@@ -216,53 +216,53 @@ const GLFramebuffer& GLRenderTarget::GetFrameBuffer() const
  * ======= Private: =======
  */
 
-void GLRenderTarget::InitRenderBufferStorage(GLRenderbuffer& renderBuffer, GLenum internalFormat)
+void GLRenderTarget::InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat)
 {
-    renderBuffer.Bind();
+    renderbuffer.Bind();
     {
         GLRenderbuffer::Storage(internalFormat, GetResolution().Cast<int>(), multiSamples_);
     }
-    renderBuffer.Unbind();
+    renderbuffer.Unbind();
 }
 
-GLenum GLRenderTarget::AttachDefaultRenderBuffer(GLFramebuffer& frameBuffer, GLenum attachment)
+GLenum GLRenderTarget::AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLenum attachment)
 {
     GLenum status = 0;
 
-    frameBuffer.Bind();
+    framebuffer.Bind();
     {
-        GLFramebuffer::AttachRenderbuffer(attachment, *renderBuffer_);
+        GLFramebuffer::AttachRenderbuffer(attachment, *renderbuffer_);
         status = CheckDrawFramebufferStatus();
     }
-    frameBuffer.Unbind();
+    framebuffer.Unbind();
 
     return status;
 }
 
 void GLRenderTarget::AttachRenderbuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment)
 {
-    if (!renderBuffer_)
+    if (!renderbuffer_)
     {
-        renderBuffer_ = MakeUnique<GLRenderbuffer>();
+        renderbuffer_ = MakeUnique<GLRenderbuffer>();
 
-        /* Apply size to frame buffer resolution */
+        /* Apply size to framebuffer resolution */
         ApplyResolution(size);
 
-        /* Setup render buffer storage */
-        InitRenderBufferStorage(*renderBuffer_, internalFormat);
+        /* Setup renderbuffer storage */
+        InitRenderbufferStorage(*renderbuffer_, internalFormat);
 
-        /* Attach render buffer to frame buffer (or multi-sample frame buffer if multi-sampling is used) */
+        /* Attach renderbuffer to framebuffer (or multi-sample framebuffer if multi-sampling is used) */
         GLenum status = 0;
 
-        if (frameBufferMS_)
+        if (framebufferMS_)
         {
-            status = AttachDefaultRenderBuffer(*frameBufferMS_, attachment);
-            CheckFrameBufferStatus(status, "depth- or depth-stencil attachment to multi-sample frame buffer object (FBO)");
+            status = AttachDefaultRenderbuffer(*framebufferMS_, attachment);
+            CheckFramebufferStatus(status, "depth- or depth-stencil attachment to multi-sample framebuffer object (FBO)");
         }
         else
         {
-            status = AttachDefaultRenderBuffer(frameBuffer_, attachment);
-            CheckFrameBufferStatus(status, "depth- or depth-stencil attachment to frame buffer object (FBO)");
+            status = AttachDefaultRenderbuffer(framebuffer_, attachment);
+            CheckFramebufferStatus(status, "depth- or depth-stencil attachment to framebuffer object (FBO)");
         }
     }
     else
@@ -290,16 +290,16 @@ void GLRenderTarget::SetDrawBuffers()
         glDrawBuffers(static_cast<GLsizei>(colorAttachments_.size()), colorAttachments_.data());
 }
 
-void GLRenderTarget::CheckFrameBufferStatus(GLenum status, const std::string& info)
+void GLRenderTarget::CheckFramebufferStatus(GLenum status, const std::string& info)
 {
     if (status != GL_FRAMEBUFFER_COMPLETE)
         throw std::runtime_error(info + " failed (error code = " + GLErrorToStr(status) + ")");
 }
 
-void GLRenderTarget::CreateOnceFrameBufferMS()
+void GLRenderTarget::CreateOnceFramebufferMS()
 {
-    if (!frameBufferMS_)
-        frameBufferMS_ = MakeUnique<GLFramebuffer>();
+    if (!framebufferMS_)
+        framebufferMS_ = MakeUnique<GLFramebuffer>();
 }
 
 bool GLRenderTarget::HasMultiSampling() const
@@ -309,7 +309,7 @@ bool GLRenderTarget::HasMultiSampling() const
 
 bool GLRenderTarget::HasCustomMultiSampling() const
 {
-    return (frameBufferMS_ == nullptr);
+    return (framebufferMS_ == nullptr);
 }
 
 
