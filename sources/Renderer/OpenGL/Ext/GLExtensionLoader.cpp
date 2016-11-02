@@ -488,19 +488,6 @@ static bool Load_GL_NV_transform_feedback(bool usePlaceHolder)
 #endif
 
 
-/* --- Internal members --- */
-
-static const unsigned int g_numExtensions = static_cast<int>(GLExt::Count);
-
-static std::array<bool, g_numExtensions> g_extensionsEnabled { { false } };
-static bool g_extAlreadyLoaded = false;
-
-static void EnableExtensionSupport(GLExt extension)
-{
-    g_extensionsEnabled[static_cast<std::size_t>(extension)] = true;
-}
-
-
 /* --- Common extension loading functions --- */
 
 GLExtensionList QueryExtensions(bool coreProfile)
@@ -555,6 +542,9 @@ GLExtensionList QueryExtensions(bool coreProfile)
 
     return extensions;
 }
+
+// Global member to store if the extension have already been loaded
+static bool g_extAlreadyLoaded = false;
 
 void LoadAllExtensions(GLExtensionList& extensions)
 {
@@ -735,11 +725,6 @@ void LoadAllExtensions(GLExtensionList& extensions)
 bool AreExtensionsLoaded()
 {
     return g_extAlreadyLoaded;
-}
-
-bool HasExtension(const GLExt extension)
-{
-    return g_extensionsEnabled[static_cast<std::size_t>(extension)];
 }
 
 

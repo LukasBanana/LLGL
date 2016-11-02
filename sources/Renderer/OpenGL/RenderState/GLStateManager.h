@@ -22,6 +22,7 @@ namespace LLGL
 {
 
 
+// OpenGL state machine manager that tries to reduce GL state changes.
 class GLStateManager
 {
 
@@ -31,6 +32,7 @@ class GLStateManager
 
         GLStateManager();
 
+        // Active state manager. Each GL context has its own states, thus its own state manager.
         static GLStateManager* active;
 
         void DetermineExtensions();

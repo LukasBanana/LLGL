@@ -9,7 +9,7 @@
 #define LLGL_GL_EXTENSION_LOADER_H
 
 
-#include "GLExtensionsEnum.h"
+#include "GLExtensionRegistry.h"
 #include <string>
 #include <array>
 #include <set>
@@ -43,9 +43,6 @@ void LoadAllExtensions(GLExtensionList& extensions);
 
 //! Returns true if all available extensions have been loaded.
 bool AreExtensionsLoaded();
-
-//! Returns true if the specified OpenGL extension is supported.
-bool HasExtension(const GLExt extension);
 
 /* --- Common GL extensions --- */
 

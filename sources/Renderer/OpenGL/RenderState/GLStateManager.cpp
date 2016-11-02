@@ -7,7 +7,7 @@
 
 #include "GLStateManager.h"
 #include "../Ext/GLExtensions.h"
-#include "../Ext/GLExtensionLoader.h"
+#include "../Ext/GLExtensionRegistry.h"
 #include "../../Assertion.h"
 #include "../../../Core/Helper.h"
 #include "../../GLCommon/GLTypes.h"

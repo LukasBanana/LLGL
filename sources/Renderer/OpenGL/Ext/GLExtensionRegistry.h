@@ -1,18 +1,19 @@
 /*
- * GLExtensionsEnum.h
+ * GLExtensionRegistry.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_EXTENSIONS_ENUM_H
-#define LLGL_GL_EXTENSIONS_ENUM_H
+#ifndef LLGL_GL_EXTENSION_REGISTRY_H
+#define LLGL_GL_EXTENSION_REGISTRY_H
 
 
 namespace LLGL
 {
 
 
+// OpenGL extension enumeration.
 enum class GLExt
 {
     /* Common extensions */
@@ -66,6 +67,13 @@ enum class GLExt
     /* Enumeration entry counter */
     Count,
 };
+
+
+// Enables the specified OpenGL extension.
+void EnableExtensionSupport(GLExt extension);
+
+// Returns true if the specified OpenGL extension is supported.
+bool HasExtension(const GLExt extension);
 
 
 } // /namespace LLGL
