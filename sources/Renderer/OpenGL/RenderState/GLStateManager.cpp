@@ -6,11 +6,10 @@
  */
 
 #include "GLStateManager.h"
-#include "../GLRenderContext.h"
-#include "../GLRenderSystem.h"
 #include "../Ext/GLExtensions.h"
-#include "../../../Core/Helper.h"
+#include "../Ext/GLExtensionLoader.h"
 #include "../../Assertion.h"
+#include "../../../Core/Helper.h"
 #include "../../GLCommon/GLTypes.h"
 
 

@@ -22,8 +22,6 @@ namespace LLGL
 {
 
 
-class GLRenderSystem;
-
 class GLStateManager
 {
 
