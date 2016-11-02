@@ -6,7 +6,6 @@
  */
 
 #include "GLFramebuffer.h"
-#include "GLRenderbuffer.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 
@@ -42,29 +41,29 @@ void GLFramebuffer::Recreate()
     glGenFramebuffers(1, &id_);
 }
 
-void GLFramebuffer::AttachTexture1D(GLenum attachment, const GLTexture& texture, GLenum textureTarget, GLint mipLevel)
+void GLFramebuffer::AttachTexture1D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel)
 {
-    glFramebufferTexture1D(GL_FRAMEBUFFER, attachment, textureTarget, texture.GetID(), mipLevel);
+    glFramebufferTexture1D(GL_FRAMEBUFFER, attachment, textureTarget, textureID, mipLevel);
 }
 
-void GLFramebuffer::AttachTexture2D(GLenum attachment, const GLTexture& texture, GLenum textureTarget, GLint mipLevel)
+void GLFramebuffer::AttachTexture2D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel)
 {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, textureTarget, texture.GetID(), mipLevel);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, textureTarget, textureID, mipLevel);
 }
 
-void GLFramebuffer::AttachTexture3D(GLenum attachment, const GLTexture& texture, GLenum textureTarget, GLint mipLevel, GLint zOffset)
+void GLFramebuffer::AttachTexture3D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel, GLint zOffset)
 {
-    glFramebufferTexture3D(GL_FRAMEBUFFER, attachment, textureTarget, texture.GetID(), mipLevel, zOffset);
+    glFramebufferTexture3D(GL_FRAMEBUFFER, attachment, textureTarget, textureID, mipLevel, zOffset);
 }
 
-void GLFramebuffer::AttachTextureLayer(GLenum attachment, const GLTexture& texture, GLint mipLevel, GLint layer)
+void GLFramebuffer::AttachTextureLayer(GLenum attachment, GLuint textureID, GLint mipLevel, GLint layer)
 {
-    glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, texture.GetID(), mipLevel, layer);
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, textureID, mipLevel, layer);
 }
 
-void GLFramebuffer::AttachRenderbuffer(GLenum attachment, const GLRenderbuffer& renderbuffer)
+void GLFramebuffer::AttachRenderbuffer(GLenum attachment, GLuint renderbufferID)
 {
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderbuffer.GetID());
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderbufferID);
 }
 
 void GLFramebuffer::Blit(const Gs::Vector2i& size, GLenum mask)

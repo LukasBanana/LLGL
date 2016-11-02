@@ -62,6 +62,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
 {
     /* Get OpenGL texture object */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    auto textureID = textureGL.GetID();
 
     /* Apply resolution for MIP-map level */
     auto mipLevel = attachmentDesc.mipLevel;
@@ -76,31 +77,31 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
         switch (texture.GetType())
         {
             case TextureType::Texture1D:
-                GLFramebuffer::AttachTexture1D(attachment, textureGL, GL_TEXTURE_1D, mipLevel);
+                GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, mipLevel);
                 break;
             case TextureType::Texture2D:
-                GLFramebuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D, mipLevel);
+                GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, mipLevel);
                 break;
             case TextureType::Texture3D:
-                GLFramebuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_3D, mipLevel, attachmentDesc.layer);
+                GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, mipLevel, attachmentDesc.layer);
                 break;
             case TextureType::TextureCube:
-                GLFramebuffer::AttachTexture2D(attachment, textureGL, GLTypes::Map(attachmentDesc.cubeFace), mipLevel);
+                GLFramebuffer::AttachTexture2D(attachment, GLTypes::Map(attachmentDesc.cubeFace), textureID, mipLevel);
                 break;
             case TextureType::Texture1DArray:
-                GLFramebuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer);
+                GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer);
                 break;
             case TextureType::Texture2DArray:
-                GLFramebuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer);
+                GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer);
                 break;
             case TextureType::TextureCubeArray:
-                GLFramebuffer::AttachTextureLayer(attachment, textureGL, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
+                GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
                 break;
             case TextureType::Texture2DMS:
-                GLFramebuffer::AttachTexture2D(attachment, textureGL, GL_TEXTURE_2D_MULTISAMPLE, 0);
+                GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
                 break;
             case TextureType::Texture2DMSArray:
-                GLFramebuffer::AttachTexture3D(attachment, textureGL, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 0, attachmentDesc.layer);
+                GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, textureID, 0, attachmentDesc.layer);
                 break;
         }
 
@@ -125,7 +126,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
             /* Attach renderbuffer to multi-sample framebuffer */
             framebufferMS_->Bind();
             {
-                GLFramebuffer::AttachRenderbuffer(attachment, *renderbuffer);
+                GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer->GetID());
                 status = CheckDrawFramebufferStatus();
                 
                 /* Set draw buffers for this framebuffer is multi-sampling is enabled */
@@ -231,7 +232,7 @@ GLenum GLRenderTarget::AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLe
 
     framebuffer.Bind();
     {
-        GLFramebuffer::AttachRenderbuffer(attachment, *renderbuffer_);
+        GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer_->GetID());
         status = CheckDrawFramebufferStatus();
     }
     framebuffer.Unbind();
