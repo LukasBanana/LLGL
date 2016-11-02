@@ -145,7 +145,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
 
 void GLRenderTarget::DetachAll()
 {
-    /* Resets framebuffer and renderbuffer objects */
+    /* Reset framebuffer and renderbuffer objects */
     ResetResolution();
 
     framebuffer_.Recreate();

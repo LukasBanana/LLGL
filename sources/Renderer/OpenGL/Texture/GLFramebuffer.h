@@ -17,6 +17,7 @@ namespace LLGL
 {
 
 
+// Wrapper class for GL framebuffer objects (FBOs).
 class GLFramebuffer
 {
 

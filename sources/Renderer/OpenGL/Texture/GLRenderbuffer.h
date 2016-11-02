@@ -9,7 +9,7 @@
 #define LLGL_GL_RENDERBUFFER_H
 
 
-#include "GLTexture.h"
+#include "../OpenGL.h"
 #include <Gauss/Vector2.h>
 
 
@@ -17,6 +17,7 @@ namespace LLGL
 {
 
 
+// Wrapper class for GL renderbuffer objects (RBOs).
 class GLRenderbuffer
 {
 
@@ -31,12 +32,12 @@ class GLRenderbuffer
         void Bind() const;
         void Unbind() const;
 
-        //! Recreates the internal renderbuffer object. This will invalidate the previous buffer ID.
+        // Recreates the internal renderbuffer object. This will invalidate the previous buffer ID.
         void Recreate();
 
         static void Storage(GLenum internalFormat, const Gs::Vector2i& size, GLsizei samples);
 
-        //! Returns the hardware buffer ID.
+        // Returns the hardware buffer ID.
         inline GLuint GetID() const
         {
             return id_;
