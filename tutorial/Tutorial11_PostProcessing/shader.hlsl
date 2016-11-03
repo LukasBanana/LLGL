@@ -7,7 +7,9 @@ cbuffer SceneSettings : register(b0)
 {
 	float4x4	wvpMatrix;
 	float4x4	wMatrix;
+	float4		diffuse;
 	float4		glossiness;
+	float		intensity;
 };
 
 struct InputVScene
@@ -45,7 +47,7 @@ OutputPScene PScene(InputVScene inp)
 	float3 normal = normalize(inp.normal);
 	
 	float NdotL = max(0.4, dot(lightDir, normal));
-	outp.color = float4((float3)NdotL, 1);
+	outp.color = diffuse * float4((float3)NdotL, 1);
 	
 	// Write glossiness out into 2nd render target
 	outp.gloss = glossiness;
@@ -91,10 +93,11 @@ Texture2D glossMap : register(t1);
 SamplerState colorMapSampler : register(s0);
 SamplerState glossMapSampler : register(s1);
 
-#define GAUSSIAN_KERNEL_1 0.00598
-#define GAUSSIAN_KERNEL_2 0.060626
-#define GAUSSIAN_KERNEL_3 0.241843
-#define GAUSSIAN_KERNEL_4 0.383103
+#define GAUSSIAN_KERNEL_1 0.019959
+#define GAUSSIAN_KERNEL_2 0.057223
+#define GAUSSIAN_KERNEL_3 0.121403
+#define GAUSSIAN_KERNEL_4 0.190631
+#define GAUSSIAN_KERNEL_5 0.221569
 
 float4 PBlur(OutputVPP inp) : SV_Target
 {
@@ -102,11 +105,13 @@ float4 PBlur(OutputVPP inp) : SV_Target
 	// see http://dev.theomader.com/gaussian-kernel-calculator/
 	float4 c = (float4)0;
 	
-	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*3) * GAUSSIAN_KERNEL_1;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*2) * GAUSSIAN_KERNEL_2;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift  ) * GAUSSIAN_KERNEL_3;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord              ) * GAUSSIAN_KERNEL_4;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift  ) * GAUSSIAN_KERNEL_3;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*4) * GAUSSIAN_KERNEL_1;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*3) * GAUSSIAN_KERNEL_2;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*2) * GAUSSIAN_KERNEL_3;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift  ) * GAUSSIAN_KERNEL_4;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord              ) * GAUSSIAN_KERNEL_5;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift  ) * GAUSSIAN_KERNEL_4;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*2) * GAUSSIAN_KERNEL_3;
 	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*2) * GAUSSIAN_KERNEL_2;
 	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*3) * GAUSSIAN_KERNEL_1;
 	
@@ -118,7 +123,7 @@ float4 PFinal(OutputVPP inp) : SV_Target
 	// Show final result with color and gloss map
 	return
 		colorMap.Sample(colorMapSampler, inp.texCoord) +
-		glossMap.Sample(glossMapSampler, inp.texCoord);
+		glossMap.Sample(glossMapSampler, inp.texCoord) * intensity;
 };
 
 

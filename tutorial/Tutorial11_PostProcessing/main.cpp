@@ -11,7 +11,7 @@
 class Tutorial11 : public Tutorial
 {
 
-    const LLGL::ColorRGBAf  glowColor           = { 1, 1, 1, 1 };
+    const LLGL::ColorRGBAf  glowColor           = { 0.9f, 0.7f, 0.3f, 1.0f };
 
     LLGL::ShaderProgram*    shaderProgramScene  = nullptr;
     LLGL::ShaderProgram*    shaderProgramBlur   = nullptr;
@@ -31,24 +31,26 @@ class Tutorial11 : public Tutorial
     LLGL::Buffer*           constantBufferScene = nullptr;
     LLGL::Buffer*           constantBufferBlur  = nullptr;
 
-    LLGL::Texture*          colorMap            = nullptr;
-    LLGL::Texture*          glossMap            = nullptr;
-
     LLGL::Sampler*          colorMapSampler     = nullptr;
     LLGL::Sampler*          glossMapSampler     = nullptr;
+
+    LLGL::Texture*          colorMap            = nullptr;
+    LLGL::Texture*          glossMap            = nullptr;
+    LLGL::Texture*          glossMapBlurX       = nullptr;
+    LLGL::Texture*          glossMapBlurY       = nullptr;
 
     LLGL::RenderTarget*     renderTargetScene   = nullptr;
     LLGL::RenderTarget*     renderTargetBlurX   = nullptr;
     LLGL::RenderTarget*     renderTargetBlurY   = nullptr;
 
-    LLGL::Texture*          glossMapBlurX       = nullptr;
-    LLGL::Texture*          glossMapBlurY       = nullptr;
-
     struct SceneSettings
     {
         Gs::Matrix4f        wvpMatrix;
         Gs::Matrix4f        wMatrix;
+        LLGL::ColorRGBAf    diffuse;
         LLGL::ColorRGBAf    glossiness;
+        float               intensity           = 1.0f;
+        float               _pad0[3];
     }
     sceneSettings;
 
@@ -68,8 +70,13 @@ public:
         CreateBuffers();
         LoadShaders();
         CreatePipelines();
+        CreateSamplers();
         CreateTextures();
         CreateRenderTargets();
+        
+        // Show some information
+        std::cout << "press LEFT MOUSE BUTTON and move the mouse to rotate the outer box" << std::endl;
+        std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the glow intensity" << std::endl;
     }
 
     void CreateBuffers()
@@ -158,70 +165,87 @@ public:
         pipelineBlur = renderer->CreateGraphicsPipeline(pipelineDescPP);
 
         // Create graphics pipeline for final post-processor
+        LLGL::GraphicsPipelineDescriptor pipelineDescFinal;
         {
-            pipelineDescPP.shaderProgram = shaderProgramFinal;
+            pipelineDescFinal.shaderProgram = shaderProgramFinal;
         }
-        pipelineFinal = renderer->CreateGraphicsPipeline(pipelineDescPP);
+        pipelineFinal = renderer->CreateGraphicsPipeline(pipelineDescFinal);
+    }
+
+    void CreateSamplers()
+    {
+        // Create sampler states for all textures
+        LLGL::SamplerDescriptor samplerDesc;
+        {
+            samplerDesc.mipMapping = false;
+        }
+        colorMapSampler = renderer->CreateSampler(samplerDesc);
+        glossMapSampler = renderer->CreateSampler(samplerDesc);
     }
 
     void CreateTextures()
     {
-        // Release previous textures
-        //renderer->Release(*colorMap);
-        //renderer->Release(*glossMap);
-        //renderer->Release(*glossMapBlurX);
-        //renderer->Release(*glossMapBlurY);
-
         // Create empty color and gloss map
         auto resolution = context->GetVideoMode().resolution.Cast<unsigned int>();
-
         colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
         glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
+
+        // Create empty blur pass maps (in quarter resolution)
+        resolution /= 4;
         glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
         glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
-
-        // Create sampler states for all textures
-        LLGL::SamplerDescriptor samplerDesc;
-        {
-            samplerDesc.minFilter   = LLGL::TextureFilter::Nearest;
-            samplerDesc.magFilter   = LLGL::TextureFilter::Nearest;
-            samplerDesc.mipMapping  = false;
-        }
-        colorMapSampler = renderer->CreateSampler(samplerDesc);
-        glossMapSampler = renderer->CreateSampler(samplerDesc);
     }
 
     void CreateRenderTargets()
     {
         auto resolution = context->GetVideoMode().resolution.Cast<unsigned int>();
 
-        // Release previous render target
-        /*renderer->Release(*renderTargetScene);
-        renderer->Release(*renderTargetBlurX);
-        renderer->Release(*renderTargetBlurY);*/
-
-        // Create render-target for scene rendering
         LLGL::RenderTargetDescriptor renderTargetDesc;
-        {
-            renderTargetDesc.multiSampling = LLGL::MultiSamplingDescriptor(8);
-        }
-        renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
+        renderTargetDesc.multiSampling = LLGL::MultiSamplingDescriptor(8);
+        
+        // Create render-target for scene rendering
+        if (renderTargetScene)
+            renderTargetScene->DetachAll();
+        else
+            renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
+
         renderTargetScene->AttachDepthBuffer(resolution);
         renderTargetScene->AttachTexture(*colorMap, {});
         renderTargetScene->AttachTexture(*glossMap, {});
 
         // Create render-target for horizontal blur pass (no depth buffer needed)
-        renderTargetBlurX = renderer->CreateRenderTarget(renderTargetDesc);
+        if (renderTargetBlurX)
+            renderTargetBlurX->DetachAll();
+        else
+            renderTargetBlurX = renderer->CreateRenderTarget(renderTargetDesc);
+
         renderTargetBlurX->AttachTexture(*glossMapBlurX, {});
 
         // Create render-target for vertical blur pass (no depth buffer needed)
-        renderTargetBlurY = renderer->CreateRenderTarget(renderTargetDesc);
+        if (renderTargetBlurY)
+            renderTargetBlurY->DetachAll();
+        else
+            renderTargetBlurY = renderer->CreateRenderTarget(renderTargetDesc);
+
         renderTargetBlurY->AttachTexture(*glossMapBlurY, {});
+    }
+
+    void UpdateScreenSize()
+    {
+        // Release previous textures
+        renderer->Release(*colorMap);
+        renderer->Release(*glossMap);
+        renderer->Release(*glossMapBlurX);
+        renderer->Release(*glossMapBlurY);
+
+        // Recreate objects
+        CreateTextures();
+        CreateRenderTargets();
     }
 
 private:
 
-    void UpdateSceneSettings(float pitch, float yaw, bool innerModel)
+    void SetSceneSettings(float pitch, float yaw, bool innerModel)
     {
         // Transform scene mesh
         sceneSettings.wMatrix.LoadIdentity();
@@ -229,17 +253,25 @@ private:
 
         if (innerModel)
         {
+            // Rotate model around the (1, 1, 1) axis
             static float rotAnim;
             rotAnim += 0.01f;
             Gs::RotateFree(sceneSettings.wMatrix, Gs::Vector3f(1).Normalized(), rotAnim);
             Gs::Scale(sceneSettings.wMatrix, Gs::Vector3f(0.5f));
-            sceneSettings.glossiness = glowColor;
+
+            // Set colors
+            sceneSettings.diffuse       = glowColor;
+            sceneSettings.glossiness    = glowColor;
         }
         else
         {
-            Gs::RotateFree(sceneSettings.wMatrix, { 1, 0, 0 }, pitch);
+            // Rotate model around X and Y axes
+            Gs::RotateFree(sceneSettings.wMatrix, { 1, 0, 0 }, -pitch);
             Gs::RotateFree(sceneSettings.wMatrix, { 0, 1, 0 }, yaw);
-            sceneSettings.glossiness = { 0, 0, 0, 0 };
+
+            // Set colors
+            sceneSettings.diffuse       = { 0.6f, 0.6f, 0.6f, 1.0f };
+            sceneSettings.glossiness    = { 0, 0, 0, 0 };
         }
 
         sceneSettings.wvpMatrix = projection;
@@ -249,6 +281,13 @@ private:
         UpdateBuffer(constantBufferScene, sceneSettings);
     }
 
+    void SetBlurSettings(const Gs::Vector2f& blurShift)
+    {
+        // Update constant buffer for blur pass
+        blurSettings.blurShift = blurShift;
+        UpdateBuffer(constantBufferBlur, blurSettings);
+    }
+
     void OnDrawFrame() override
     {
         static const auto shaderStages = LLGL::ShaderStageFlags::VertexStage | LLGL::ShaderStageFlags::FragmentStage;
@@ -256,12 +295,38 @@ private:
         // Update scene animation (simple rotation)
         static float pitch, yaw;
 
+        auto mouseMotion = input->GetMouseMotion().Cast<float>();
+
         if (input->KeyPressed(LLGL::Key::LButton))
         {
-            auto rot = input->GetMouseMotion().Cast<float>()*0.005f;
+            auto rot = mouseMotion*0.005f;
             pitch   += rot.y;
             yaw     += rot.x;
         }
+
+        // Update effect intensity animation
+        if (input->KeyPressed(LLGL::Key::RButton))
+        {
+            float delta = mouseMotion.x*0.01f;
+            sceneSettings.intensity = std::max(0.0f, std::min(sceneSettings.intensity + delta, 3.0f));
+            std::cout << "glow intensity: " << static_cast<int>(sceneSettings.intensity*100.0f) << "%    \r";
+            std::flush(std::cout);
+        }
+
+        // Check if screen size has changed (this could also be done with an event listener)
+        static LLGL::Size screenSize { 800, 600 };
+
+        if (screenSize != context->GetVideoMode().resolution)
+        {
+            screenSize = context->GetVideoMode().resolution;
+            UpdateScreenSize();
+        }
+
+        // Initialize viewports
+        auto resolution = screenSize.Cast<float>();
+
+        const LLGL::Viewport viewportFull(0.0f, 0.0f, resolution.x, resolution.y);
+        const LLGL::Viewport viewportQuarter(0.0f, 0.0f, resolution.x / 4.0f, resolution.y / 4.0f);
 
         // Set common buffers and sampler states
         commands->SetConstantBuffer(*constantBufferScene, 0, shaderStages);
@@ -273,47 +338,63 @@ private:
         // Set graphics pipeline, vertex buffer, and render target for scene rendering
         commands->SetGraphicsPipeline(*pipelineScene);
         commands->SetVertexBuffer(*vertexBufferScene);
-        //commands->SetRenderTarget(*renderTargetScene);
-        commands->SetRenderTarget(*context);
+        commands->SetRenderTarget(*renderTargetScene);
         {
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
+            commands->SetClearColor({ 0, 0, 0, 0 });
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             // Draw outer scene model
-            UpdateSceneSettings(pitch, yaw, false);
+            SetSceneSettings(pitch, yaw, false);
             commands->Draw(numSceneVertices, 0);
 
             // Draw inner scene model
-            UpdateSceneSettings(pitch, yaw, true);
+            SetSceneSettings(pitch, yaw, true);
             commands->Draw(numSceneVertices, 0);
         }
 
-        #if 0
-        // Draw horizontal blur pass
-        commands->SetGraphicsPipeline(*pipelineBlur);
-        commands->SetVertexBuffer(*vertexBufferNull);
-        commands->SetRenderTarget(*renderTargetBlurX);
+        // Draw blur passes in quarter resolution
+        commands->SetViewport(viewportQuarter);
         {
-            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            commands->Draw(3, 0);
-        }
+            // Set graphics pipeline and vertex buffer for post-processors
+            commands->SetGraphicsPipeline(*pipelineBlur);
+            commands->SetVertexBuffer(*vertexBufferNull);
 
-        // Draw vertical blur pass
-        commands->SetRenderTarget(*renderTargetBlurY);
-        {
-            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            commands->Draw(3, 0);
+            // Draw horizontal blur pass
+            commands->SetRenderTarget(*renderTargetBlurX);
+            {
+                // Set gloss map from scene rendering
+                commands->SetTexture(*glossMap, 1, LLGL::ShaderStageFlags::FragmentStage);
+
+                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                SetBlurSettings({ 4.0f / resolution.x, 0.0f });
+                commands->Draw(3, 0);
+            }
+
+            // Draw vertical blur pass
+            commands->SetRenderTarget(*renderTargetBlurY);
+            {
+                // Set gloss map from previous blur pass (Blur X)
+                commands->SetTexture(*glossMapBlurX, 1, LLGL::ShaderStageFlags::FragmentStage);
+
+                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                SetBlurSettings({ 0.0f, 4.0f / resolution.y });
+                commands->Draw(3, 0);
+            }
         }
+        commands->SetViewport(viewportFull);
 
         // Draw final post-processing pass
         commands->SetGraphicsPipeline(*pipelineFinal);
         commands->SetRenderTarget(*context);
         {
+            // Set color map and gloss map from previous blur pass (Blur Y)
+            commands->SetTexture(*colorMap, 0, LLGL::ShaderStageFlags::FragmentStage);
+            commands->SetTexture(*glossMapBlurY, 1, LLGL::ShaderStageFlags::FragmentStage);
+
             // Draw fullscreen triangle (triangle is spanned in the vertex shader)
             commands->Draw(3, 0);
         }
-        #endif
 
         // Present result on the screen
         context->Present();
