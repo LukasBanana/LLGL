@@ -200,14 +200,17 @@ public:
     {
         auto resolution = context->GetVideoMode().resolution.Cast<unsigned int>();
 
-        LLGL::RenderTargetDescriptor renderTargetDesc;
-        renderTargetDesc.multiSampling = LLGL::MultiSamplingDescriptor(8);
-        
         // Create render-target for scene rendering
         if (renderTargetScene)
             renderTargetScene->DetachAll();
         else
+        {
+            LLGL::RenderTargetDescriptor renderTargetDesc;
+            {
+                renderTargetDesc.multiSampling = LLGL::MultiSamplingDescriptor(8);
+            }
             renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
+        }
 
         renderTargetScene->AttachDepthBuffer(resolution);
         renderTargetScene->AttachTexture(*colorMap, {});
@@ -217,7 +220,7 @@ public:
         if (renderTargetBlurX)
             renderTargetBlurX->DetachAll();
         else
-            renderTargetBlurX = renderer->CreateRenderTarget(renderTargetDesc);
+            renderTargetBlurX = renderer->CreateRenderTarget({});
 
         renderTargetBlurX->AttachTexture(*glossMapBlurX, {});
 
@@ -225,7 +228,7 @@ public:
         if (renderTargetBlurY)
             renderTargetBlurY->DetachAll();
         else
-            renderTargetBlurY = renderer->CreateRenderTarget(renderTargetDesc);
+            renderTargetBlurY = renderer->CreateRenderTarget({});
 
         renderTargetBlurY->AttachTexture(*glossMapBlurY, {});
     }
