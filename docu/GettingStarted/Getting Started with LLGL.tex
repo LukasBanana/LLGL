@@ -328,7 +328,7 @@ Draw...
 LLGL has the \texttt{Window} interface for a very basic but platform independent windowing system.
 Use its static function \texttt{Create} to create an instance of this interface for the host platform.
 A custom implementation of this interface can also be written and used for any renderer.
-In section \ref{sec:custom_window} an example of a custom implementation with \href{http://www.glfw.org/}{GLFW} is shown.
+In section \ref{sec:custom_surface} an example of a custom implementation with \href{http://www.glfw.org/}{GLFW} is shown.
 
 
 %----------------------------------------------------------------------------------------
@@ -665,7 +665,7 @@ public:
 	
 	// Interface implementation
 	void GetNativeHandle(void* nativeHandle) const override;
-	void Recreate(const LLGL::WindowDescriptor& desc) override;
+	void Recreate() override;
 	LLGL::Size GetContentSize() const override;
 	bool AdaptForVideoMode(LLGL::VideoModeDescriptor& videoModeDesc) override;
 	
