@@ -142,5 +142,11 @@ Practical example of hardware instancing by rendering tens of thousands of diffe
 
 <p align="center"><img src="tutorial/Tutorial10_Instancing.png" width="400" height="300"/></p>
 
+### [Tutorial 11: PostProcessing](tutorial/Tutorial11_Instancing/main.cpp)
+
+Practical example of a glow effect with post-processing and the usage of several shaders, render targets and graphics pipelines.
+
+<p align="center"><img src="tutorial/Tutorial11_PostProcessing.png" width="400" height="300"/></p>
+
 
 
