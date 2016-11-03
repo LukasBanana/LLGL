@@ -90,7 +90,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
             {
                 /* Validate buffer size for specified vertex format */
                 formatSize = desc.vertexBuffer.format.stride;
-                if (desc.size % formatSize != 0)
+                if (formatSize > 0 && desc.size % formatSize != 0)
                     LLGL_DBG_WARN(WarningType::ImproperArgument, "improper vertex buffer size with vertex format of " + std::to_string(formatSize) + " bytes");
             }
             break;
@@ -99,7 +99,7 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
             {
                 /* Validate buffer size for specified index format */
                 formatSize = desc.indexBuffer.format.GetFormatSize();
-                if (desc.size % formatSize != 0)
+                if (formatSize > 0 && desc.size % formatSize != 0)
                     LLGL_DBG_WARN(WarningType::ImproperArgument, "improper index buffer size with index format of " + std::to_string(formatSize) + " bytes");
             }
             break;
