@@ -252,6 +252,18 @@ private:
 
 protected:
 
+    struct VertexPositionNormal
+    {
+        Gs::Vector3f position;
+        Gs::Vector3f normal;
+    };
+
+    struct VertexPositionTexCoord
+    {
+        Gs::Vector3f position;
+        Gs::Vector2f texCoord;
+    };
+
     friend class ResizeEventHandler;
     
     const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
@@ -582,6 +594,62 @@ protected:
         return true;
     }
 
+    // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
+    std::vector<VertexPositionNormal> LoadObjModel(const std::string& filename)
+    {
+        // Read obj file
+        std::ifstream file(filename);
+        if (!file.good())
+            throw std::runtime_error("failed to load model from file: \"" + filename + "\"");
+
+        std::vector<Gs::Vector3f> coords, normals;
+        std::vector<VertexPositionNormal> vertices;
+
+        while (!file.eof())
+        {
+            // Read each line
+            std::string line;
+            std::getline(file, line);
+
+            std::stringstream s;
+            s << line;
+
+            // Parse line
+            std::string mode;
+            s >> mode;
+
+            if (mode == "v")
+            {
+                Gs::Vector3f v;
+                s >> v.x;
+                s >> v.y;
+                s >> v.z;
+                coords.push_back(v);
+            }
+            else if (mode == "vn")
+            {
+                Gs::Vector3f n;
+                s >> n.x;
+                s >> n.y;
+                s >> n.z;
+                normals.push_back(n);
+            }
+            else if (mode == "f")
+            {
+                unsigned int v = 0, vn = 0;
+
+                for (int i = 0; i < 3; ++i)
+                {
+                    s >> v;
+                    s >> vn;
+                    vertices.push_back({ coords[v], normals[vn] });
+                }
+            }
+        }
+
+        return vertices;
+    }
+
     // Generates eight vertices for a unit cube.
     std::vector<Gs::Vector3f> GenerateCubeVertices()
     {
@@ -621,12 +689,6 @@ protected:
             7, 6, 4, 5, // back
         };
     }
-
-    struct VertexPositionTexCoord
-    {
-        Gs::Vector3f position;
-        Gs::Vector2f texCoord;
-    };
 
     // Generates 24 vertices for a unit cube with texture coordinates.
     std::vector<VertexPositionTexCoord> GenerateTexturedCubeVertices()
