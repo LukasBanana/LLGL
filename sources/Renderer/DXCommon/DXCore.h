@@ -26,6 +26,7 @@ namespace LLGL
 
 /* ----- Structure ----- */
 
+// D3D clear view state structure (with color and depth-stencil clear values).
 struct D3DClearState
 {
     ColorRGBAf  color   = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -33,6 +34,7 @@ struct D3DClearState
     UINT8       stencil = 0;
 };
 
+// Small descriptor structure for internal D3D texture format.
 struct D3DTextureFormatDescriptor
 {
     ImageFormat format;

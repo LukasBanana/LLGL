@@ -20,8 +20,6 @@ namespace LLGL
 
 
 class ShaderProgram;
-class VertexBuffer;
-class IndexBuffer;
 
 
 /* ----- Enumerations ----- */
