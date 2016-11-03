@@ -95,32 +95,30 @@ public:
     
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
+        // Load shader program
+        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
         {
-            // Load shader program
-            if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
-            {
-                shaderProgram = LoadShaderProgram(
-                    {
-                        { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
-                        { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
-                    },
-                    vertexFormat
-                );
-            }
-            else
-            {
-                shaderProgram = LoadShaderProgram(
-                    {
-                        { LLGL::ShaderType::Vertex, "vertex.glsl" },
-                        #ifdef __APPLE__
-                        { LLGL::ShaderType::Fragment, "fragment.410core.glsl" }
-                        #else
-                        { LLGL::ShaderType::Fragment, "fragment.glsl" }
-                        #endif
-                    },
-                    vertexFormat
-                );
-            }
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
+                    { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
+                },
+                vertexFormat
+            );
+        }
+        else
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "vertex.glsl" },
+                    #ifdef __APPLE__
+                    { LLGL::ShaderType::Fragment, "fragment.410core.glsl" }
+                    #else
+                    { LLGL::ShaderType::Fragment, "fragment.glsl" }
+                    #endif
+                },
+                vertexFormat
+            );
         }
     }
 
