@@ -641,8 +641,9 @@ protected:
                 for (int i = 0; i < 3; ++i)
                 {
                     s >> v;
+                    s.ignore(2);
                     s >> vn;
-                    vertices.push_back({ coords[v], normals[vn] });
+                    vertices.push_back({ coords[v - 1], normals[vn - 1] });
                 }
             }
         }

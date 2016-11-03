@@ -241,6 +241,7 @@ set(FilesTutorial07 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial07_Array/main.cpp)
 set(FilesTutorial08 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial08_Compute/main.cpp)
 set(FilesTutorial09 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial09_StreamOutput/main.cpp)
 set(FilesTutorial10 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial10_Instancing/main.cpp)
+set(FilesTutorial11 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial11_PostProcessing/main.cpp)
 
 
 # === Source group folders ===
@@ -441,6 +442,7 @@ if(LLGL_BUILD_TUTORIALS)
 	ADD_TEST_PROJECT(Tutorial08_Compute ${FilesTutorial08})
 	ADD_TEST_PROJECT(Tutorial09_StreamOutput ${FilesTutorial09})
 	ADD_TEST_PROJECT(Tutorial10_Instancing ${FilesTutorial10})
+	ADD_TEST_PROJECT(Tutorial11_PostProcessing ${FilesTutorial11})
 endif()
 
 # Summary Information

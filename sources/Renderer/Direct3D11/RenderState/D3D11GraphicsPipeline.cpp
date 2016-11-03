@@ -30,8 +30,8 @@ D3D11GraphicsPipeline::D3D11GraphicsPipeline(
     auto shaderProgramD3D = LLGL_CAST(D3D11ShaderProgram*, desc.shaderProgram);
     GetShaderObjects(*shaderProgramD3D);
 
-    if (!shaderProgramD3D->GetInputLayout())
-        throw std::runtime_error("can not create graphics pipeline while shader program has no D3D11 input layout");
+    //if (!shaderProgramD3D->GetInputLayout())
+    //    throw std::runtime_error("can not create graphics pipeline while shader program has no D3D11 input layout");
 
     inputLayout_ = shaderProgramD3D->GetInputLayout();
 
