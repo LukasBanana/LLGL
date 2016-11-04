@@ -88,12 +88,9 @@ DECL_GLPROC(void, glBlendColor, (GLfloat, GLfloat, GLfloat, GLfloat));
 
 DECL_GLPROC(void, glBlendEquationSeparate, (GLenum, GLenum));
 
-/* GL_ARB_draw_buffers_blend */
+/* GL_ARB_draw_buffers */
 
-DECL_GLPROC(void, glBlendEquationi, (GLuint, GLenum));
-DECL_GLPROC(void, glBlendEquationSeparatei, (GLuint, GLenum, GLenum));
-DECL_GLPROC(void, glBlendFunci, (GLuint, GLenum, GLenum));
-DECL_GLPROC(void, glBlendFuncSeparatei, (GLuint, GLenum, GLenum, GLenum, GLenum));
+DECL_GLPROC(void, glDrawBuffers, (GLsizei, const GLenum*));
 
 /* GL_EXT_draw_buffers2 */
 
@@ -103,6 +100,13 @@ DECL_GLPROC(void, glGetIntegeri_v, (GLenum, GLuint, GLint*));
 DECL_GLPROC(void, glEnablei, (GLenum, GLuint));
 DECL_GLPROC(void, glDisablei, (GLenum, GLuint));
 DECL_GLPROC(GLboolean, glIsEnabledi, (GLenum, GLuint));
+
+/* GL_ARB_draw_buffers_blend */
+
+DECL_GLPROC(void, glBlendEquationi, (GLuint, GLenum));
+DECL_GLPROC(void, glBlendEquationSeparatei, (GLuint, GLenum, GLenum));
+DECL_GLPROC(void, glBlendFunci, (GLuint, GLenum, GLenum));
+DECL_GLPROC(void, glBlendFuncSeparatei, (GLuint, GLenum, GLenum, GLenum, GLenum));
 
 /* GL_ARB_multitexture */
 
@@ -181,10 +185,6 @@ DECL_GLPROC(GLint, glGetFragDataLocation, (GLuint, const GLchar*));
 
 DECL_GLPROC(void, glVertexAttribDivisor, (GLuint, GLuint));
 
-/* GL_ARB_draw_buffers */
-
-DECL_GLPROC(void, glDrawBuffers, (GLsizei, const GLenum*));
-
 /* GL_ARB_vertex_array_object */
 
 DECL_GLPROC(void, glGenVertexArrays, (GLsizei, GLuint*));
@@ -211,6 +211,10 @@ DECL_GLPROC(void, glFramebufferRenderbuffer, (GLenum, GLenum, GLenum, GLuint));
 DECL_GLPROC(void, glGetFramebufferAttachmentParameteriv, (GLenum, GLenum, GLenum, GLint*));
 DECL_GLPROC(void, glBlitFramebuffer, (GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum));
 DECL_GLPROC(void, glGenerateMipmap, (GLenum));
+
+#if 1 //WHICH EXTENSION???
+DECL_GLPROC(void, glClearBufferfv, (GLenum, GLint, const GLfloat*));
+#endif
 
 /* GL_ARB_draw_instanced */
 

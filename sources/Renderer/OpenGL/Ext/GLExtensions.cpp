@@ -55,12 +55,9 @@ PFNGLBLENDCOLORPROC                                     glBlendColor            
 
 PFNGLBLENDEQUATIONSEPARATEPROC                          glBlendEquationSeparate                         = nullptr;
 
-/* GL_ARB_draw_buffers_blend */
+/* GL_ARB_draw_buffers */
 
-PFNGLBLENDEQUATIONIPROC                                 glBlendEquationi                                = nullptr;
-PFNGLBLENDEQUATIONSEPARATEIPROC                         glBlendEquationSeparatei                        = nullptr;
-PFNGLBLENDFUNCIPROC                                     glBlendFunci                                    = nullptr;
-PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
+PFNGLDRAWBUFFERSPROC                                    glDrawBuffers                                   = nullptr;
 
 /* GL_EXT_draw_buffers2 */
 
@@ -70,6 +67,13 @@ PFNGLGETINTEGERI_VPROC                                  glGetIntegeri_v         
 PFNGLENABLEIPROC                                        glEnablei                                       = nullptr;
 PFNGLDISABLEIPROC                                       glDisablei                                      = nullptr;
 PFNGLISENABLEDIPROC                                     glIsEnabledi                                    = nullptr;
+
+/* GL_ARB_draw_buffers_blend */
+
+PFNGLBLENDEQUATIONIPROC                                 glBlendEquationi                                = nullptr;
+PFNGLBLENDEQUATIONSEPARATEIPROC                         glBlendEquationSeparatei                        = nullptr;
+PFNGLBLENDFUNCIPROC                                     glBlendFunci                                    = nullptr;
+PFNGLBLENDFUNCSEPARATEIPROC                             glBlendFuncSeparatei                            = nullptr;
 
 /* GL_ARB_multitexture */
 
@@ -148,10 +152,6 @@ PFNGLGETFRAGDATALOCATIONPROC                            glGetFragDataLocation   
 
 PFNGLVERTEXATTRIBDIVISORPROC                            glVertexAttribDivisor                           = nullptr;
 
-/* GL_ARB_draw_buffers */
-
-PFNGLDRAWBUFFERSPROC                                    glDrawBuffers                                   = nullptr;
-
 /* GL_ARB_vertex_array_object */
 
 PFNGLGENVERTEXARRAYSPROC                                glGenVertexArrays                               = nullptr;
@@ -178,6 +178,10 @@ PFNGLFRAMEBUFFERRENDERBUFFERPROC                        glFramebufferRenderbuffe
 PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC            glGetFramebufferAttachmentParameteriv           = nullptr;
 PFNGLBLITFRAMEBUFFERPROC                                glBlitFramebuffer                               = nullptr;
 PFNGLGENERATEMIPMAPPROC                                 glGenerateMipmap                                = nullptr;
+
+#if 1 //WHICH EXTENSION???
+PFNGLCLEARBUFFERFVPROC                                  glClearBufferfv                                 = nullptr;
+#endif
 
 /* GL_ARB_draw_instanced */
 

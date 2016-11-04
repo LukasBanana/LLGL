@@ -151,7 +151,7 @@ static bool Load_GL_ARB_framebuffer_object(bool usePlaceHolder)
     LOAD_GLPROC( glDeleteFramebuffers                  );
     LOAD_GLPROC( glBindFramebuffer                     );
     LOAD_GLPROC( glCheckFramebufferStatus              );
-    LOAD_GLPROC( glFramebufferTexture                  );
+    LOAD_GLPROC( glFramebufferTexture                  ); // <--- other extension! (but which one???)
     LOAD_GLPROC( glFramebufferTexture1D                );
     LOAD_GLPROC( glFramebufferTexture2D                );
     LOAD_GLPROC( glFramebufferTexture3D                );
@@ -160,6 +160,7 @@ static bool Load_GL_ARB_framebuffer_object(bool usePlaceHolder)
     LOAD_GLPROC( glGetFramebufferAttachmentParameteriv );
     LOAD_GLPROC( glBlitFramebuffer                     );
     LOAD_GLPROC( glGenerateMipmap                      );
+    LOAD_GLPROC( glClearBufferfv                       ); // <--- other extension! (but which one???)
     return true;
 }
 
@@ -180,12 +181,6 @@ static bool Load_GL_ARB_shader_storage_buffer_object(bool usePlaceHolder)
 }
 
 /* --- Drawing extensions --- */
-
-static bool Load_GL_ARB_draw_buffers(bool usePlaceHolder)
-{
-    LOAD_GLPROC( glDrawBuffers );
-    return true;
-}
 
 static bool Load_GL_ARB_draw_instanced(bool usePlaceHolder)
 {
@@ -450,6 +445,12 @@ static bool Load_GL_ARB_clip_control(bool usePlaceHolder)
     return true;
 }
 
+static bool Load_GL_ARB_draw_buffers(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glDrawBuffers );
+    return true;
+}
+
 static bool Load_GL_EXT_draw_buffers2(bool usePlaceHolder)
 {
     LOAD_GLPROC( glColorMaski    );
@@ -566,7 +567,6 @@ void LoadAllExtensions(GLExtensionList& extensions)
     ENABLE_GLEXT( ARB_shader_storage_buffer_object );
     
     /* Enable drawing extensions */
-    ENABLE_GLEXT( ARB_draw_buffers                 );
     ENABLE_GLEXT( ARB_draw_instanced               );
     ENABLE_GLEXT( ARB_base_instance                );
     ENABLE_GLEXT( ARB_draw_elements_base_vertex    );
@@ -604,6 +604,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
     ENABLE_GLEXT( EXT_stencil_two_side             );
     ENABLE_GLEXT( KHR_debug                        );
     ENABLE_GLEXT( ARB_clip_control                 );
+    ENABLE_GLEXT( ARB_draw_buffers                 );
     ENABLE_GLEXT( EXT_draw_buffers2                );
     ENABLE_GLEXT( EXT_transform_feedback           );
     ENABLE_GLEXT( NV_transform_feedback            );
@@ -664,7 +665,6 @@ void LoadAllExtensions(GLExtensionList& extensions)
     LOAD_GLEXT( ARB_shader_storage_buffer_object );
 
     /* Load drawing extensions */
-    LOAD_GLEXT( ARB_draw_buffers                 );
     LOAD_GLEXT( ARB_draw_instanced               );
     LOAD_GLEXT( ARB_base_instance                );
     LOAD_GLEXT( ARB_draw_elements_base_vertex    );
@@ -702,6 +702,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
     LOAD_GLEXT( EXT_stencil_two_side             );
     LOAD_GLEXT( KHR_debug                        );
     LOAD_GLEXT( ARB_clip_control                 );
+    LOAD_GLEXT( ARB_draw_buffers                 );
     LOAD_GLEXT( EXT_draw_buffers2                );
     LOAD_GLEXT( EXT_transform_feedback           );
     LOAD_GLEXT( NV_transform_feedback            );

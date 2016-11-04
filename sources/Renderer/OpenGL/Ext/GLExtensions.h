@@ -58,12 +58,9 @@ extern PFNGLBLENDCOLORPROC                                  glBlendColor;
 
 extern PFNGLBLENDEQUATIONSEPARATEPROC                       glBlendEquationSeparate;
 
-/* GL_ARB_draw_buffers_blend */
+/* GL_ARB_draw_buffers */
 
-extern PFNGLBLENDEQUATIONIPROC                              glBlendEquationi;
-extern PFNGLBLENDEQUATIONSEPARATEIPROC                      glBlendEquationSeparatei;
-extern PFNGLBLENDFUNCIPROC                                  glBlendFunci;
-extern PFNGLBLENDFUNCSEPARATEIPROC                          glBlendFuncSeparatei;
+extern PFNGLDRAWBUFFERSPROC                                 glDrawBuffers;
 
 /* GL_EXT_draw_buffers2 */
 
@@ -73,6 +70,13 @@ extern PFNGLGETINTEGERI_VPROC                               glGetIntegeri_v;
 extern PFNGLENABLEIPROC                                     glEnablei;
 extern PFNGLDISABLEIPROC                                    glDisablei;
 extern PFNGLISENABLEDIPROC                                  glIsEnabledi;
+
+/* GL_ARB_draw_buffers_blend */
+
+extern PFNGLBLENDEQUATIONIPROC                              glBlendEquationi;
+extern PFNGLBLENDEQUATIONSEPARATEIPROC                      glBlendEquationSeparatei;
+extern PFNGLBLENDFUNCIPROC                                  glBlendFunci;
+extern PFNGLBLENDFUNCSEPARATEIPROC                          glBlendFuncSeparatei;
 
 /* GL_ARB_multitexture */
 
@@ -151,10 +155,6 @@ extern PFNGLGETFRAGDATALOCATIONPROC                         glGetFragDataLocatio
 
 extern PFNGLVERTEXATTRIBDIVISORPROC                         glVertexAttribDivisor;
 
-/* GL_ARB_draw_buffers */
-
-extern PFNGLDRAWBUFFERSPROC                                 glDrawBuffers;
-
 /* GL_ARB_vertex_array_object */
 
 extern PFNGLGENVERTEXARRAYSPROC                             glGenVertexArrays;
@@ -181,6 +181,10 @@ extern PFNGLFRAMEBUFFERRENDERBUFFERPROC                     glFramebufferRenderb
 extern PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC         glGetFramebufferAttachmentParameteriv;
 extern PFNGLBLITFRAMEBUFFERPROC                             glBlitFramebuffer;
 extern PFNGLGENERATEMIPMAPPROC                              glGenerateMipmap;
+
+#if 1 //WHICH EXTENSION???
+extern PFNGLCLEARBUFFERFVPROC                               glClearBufferfv;
+#endif
 
 /* GL_ARB_draw_instanced */
 
