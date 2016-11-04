@@ -345,9 +345,10 @@ private:
         // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
         commands->SetRenderTarget(*renderTargetScene);
         {
-            // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            commands->SetClearColor({ 0, 0, 0, 0 });
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
+            // Clear individual buffers in render target (color, glossiness, depth)
+            commands->ClearTarget(0, defaultClearColor);
+            commands->ClearTarget(1, { 0, 0, 0, 0 });
+            commands->Clear(LLGL::ClearFlags::Depth);
 
             // Draw outer scene model
             SetSceneSettings(pitch, yaw, false);
