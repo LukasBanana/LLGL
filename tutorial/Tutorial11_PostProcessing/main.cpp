@@ -269,7 +269,7 @@ private:
         else
         {
             // Rotate model around X and Y axes
-            Gs::RotateFree(sceneSettings.wMatrix, { 1, 0, 0 }, -pitch);
+            Gs::RotateFree(sceneSettings.wMatrix, { 1, 0, 0 }, pitch);
             Gs::RotateFree(sceneSettings.wMatrix, { 0, 1, 0 }, yaw);
 
             // Set colors
@@ -338,9 +338,11 @@ private:
         commands->SetSampler(*colorMapSampler, 0, LLGL::ShaderStageFlags::FragmentStage);
         commands->SetSampler(*glossMapSampler, 1, LLGL::ShaderStageFlags::FragmentStage);
 
-        // Set graphics pipeline, vertex buffer, and render target for scene rendering
+        // Set graphics pipeline and vertex buffer for scene rendering
         commands->SetGraphicsPipeline(*pipelineScene);
         commands->SetVertexBuffer(*vertexBufferScene);
+
+        // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
         commands->SetRenderTarget(*renderTargetScene);
         {
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
@@ -356,41 +358,42 @@ private:
             commands->Draw(numSceneVertices, 0);
         }
 
-        // Draw blur passes in quarter resolution
-        commands->SetViewport(viewportQuarter);
+        // Set graphics pipeline and vertex buffer for post-processors
+        commands->SetGraphicsPipeline(*pipelineBlur);
+        commands->SetVertexBuffer(*vertexBufferNull);
+
+        // Draw horizontal blur pass
+        commands->SetRenderTarget(*renderTargetBlurX);
         {
-            // Set graphics pipeline and vertex buffer for post-processors
-            commands->SetGraphicsPipeline(*pipelineBlur);
-            commands->SetVertexBuffer(*vertexBufferNull);
+            // Draw blur passes in quarter resolution
+            commands->SetViewport(viewportQuarter);
 
-            // Draw horizontal blur pass
-            commands->SetRenderTarget(*renderTargetBlurX);
-            {
-                // Set gloss map from scene rendering
-                commands->SetTexture(*glossMap, 1, LLGL::ShaderStageFlags::FragmentStage);
+            // Set gloss map from scene rendering
+            commands->SetTexture(*glossMap, 1, LLGL::ShaderStageFlags::FragmentStage);
 
-                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                SetBlurSettings({ 4.0f / resolution.x, 0.0f });
-                commands->Draw(3, 0);
-            }
-
-            // Draw vertical blur pass
-            commands->SetRenderTarget(*renderTargetBlurY);
-            {
-                // Set gloss map from previous blur pass (Blur X)
-                commands->SetTexture(*glossMapBlurX, 1, LLGL::ShaderStageFlags::FragmentStage);
-
-                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-                SetBlurSettings({ 0.0f, 4.0f / resolution.y });
-                commands->Draw(3, 0);
-            }
+            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+            SetBlurSettings({ 4.0f / resolution.x, 0.0f });
+            commands->Draw(3, 0);
         }
-        commands->SetViewport(viewportFull);
+
+        // Draw vertical blur pass
+        commands->SetRenderTarget(*renderTargetBlurY);
+        {
+            // Set gloss map from previous blur pass (Blur X)
+            commands->SetTexture(*glossMapBlurX, 1, LLGL::ShaderStageFlags::FragmentStage);
+
+            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+            SetBlurSettings({ 0.0f, 4.0f / resolution.y });
+            commands->Draw(3, 0);
+        }
 
         // Draw final post-processing pass
         commands->SetGraphicsPipeline(*pipelineFinal);
         commands->SetRenderTarget(*context);
         {
+            // Set viewport back to full resolution
+            commands->SetViewport(viewportFull);
+
             // Set color map and gloss map from previous blur pass (Blur Y)
             commands->SetTexture(*colorMap, 0, LLGL::ShaderStageFlags::FragmentStage);
             commands->SetTexture(*glossMapBlurY, 1, LLGL::ShaderStageFlags::FragmentStage);

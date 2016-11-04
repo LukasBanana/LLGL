@@ -49,7 +49,7 @@ OutputPScene PScene(InputVScene inp)
 	float NdotL = max(0.4, dot(lightDir, normal));
 	outp.color = diffuse * float4((float3)NdotL, 1);
 	
-	// Write glossiness out into 2nd render target
+	// Write glossiness into 2nd render target
 	outp.gloss = glossiness;
 	
 	return outp;
@@ -58,11 +58,28 @@ OutputPScene PScene(InputVScene inp)
 
 // POST-PROCESSING SHADERS
 
+/*
+This function generates the coordinates for a fullscreen triangle with its vertex IDs:
+
+(-1,+3)
+   *
+   | \
+   |   \
+   |     \
+   |       \
+(-1,+1)    (+1,+1)
+   *----------*\
+   |          |  \
+   |  screen  |    \
+   |          |      \
+   *----------*--------*
+(-1,-1)    (+1,-1)  (+3,-1)
+*/
 float4 GetFullscreenTriangleVertex(uint id)
 {
 	return float4(
-		(id == 2 ?  3.0 : -1.0),
-		(id == 0 ? -3.0 :  1.0),
+		(id == 2 ? 3.0 : -1.0),
+		(id == 0 ? 3.0 : -1.0),
 		1.0,
 		1.0
 	);
@@ -82,8 +99,13 @@ struct OutputVPP
 OutputVPP VPP(uint id : SV_VertexID)
 {
 	OutputVPP outp;
+	
+	// Generate coorindate for fullscreen triangle
 	outp.position = GetFullscreenTriangleVertex(id);
-	outp.texCoord = outp.position.xy * 0.5 + 0.5;
+	
+	// Get texture-coordinate from vertex position
+	outp.texCoord = outp.position.xy * float2(0.5, -0.5) + 0.5;
+	
 	return outp;
 }
 
@@ -93,27 +115,31 @@ Texture2D glossMap : register(t1);
 SamplerState colorMapSampler : register(s0);
 SamplerState glossMapSampler : register(s1);
 
-#define GAUSSIAN_KERNEL_1 0.019959
-#define GAUSSIAN_KERNEL_2 0.057223
-#define GAUSSIAN_KERNEL_3 0.121403
-#define GAUSSIAN_KERNEL_4 0.190631
-#define GAUSSIAN_KERNEL_5 0.221569
+// Static values for the 1-dimensional gaussian kernel (sigma = 2.2, size = 11)
+// see http://dev.theomader.com/gaussian-kernel-calculator/
+#define GAUSSIAN_KERNEL_1 0.014374
+#define GAUSSIAN_KERNEL_2 0.035855
+#define GAUSSIAN_KERNEL_3 0.072994
+#define GAUSSIAN_KERNEL_4 0.121281
+#define GAUSSIAN_KERNEL_5 0.164472
+#define GAUSSIAN_KERNEL_6 0.182049
 
 float4 PBlur(OutputVPP inp) : SV_Target
 {
-	// Accumulate the samples with the gaussian kernel (sigma = 1.0, size = 7)
-	// see http://dev.theomader.com/gaussian-kernel-calculator/
+	// Accumulate the samples with the gaussian kernel
 	float4 c = (float4)0;
 	
-	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*4) * GAUSSIAN_KERNEL_1;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*3) * GAUSSIAN_KERNEL_2;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*2) * GAUSSIAN_KERNEL_3;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift  ) * GAUSSIAN_KERNEL_4;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord              ) * GAUSSIAN_KERNEL_5;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift  ) * GAUSSIAN_KERNEL_4;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*2) * GAUSSIAN_KERNEL_3;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*2) * GAUSSIAN_KERNEL_2;
-	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*3) * GAUSSIAN_KERNEL_1;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*5) * GAUSSIAN_KERNEL_1;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*4) * GAUSSIAN_KERNEL_2;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*3) * GAUSSIAN_KERNEL_3;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift*2) * GAUSSIAN_KERNEL_4;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord - blurShift  ) * GAUSSIAN_KERNEL_5;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord              ) * GAUSSIAN_KERNEL_6;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift  ) * GAUSSIAN_KERNEL_5;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*2) * GAUSSIAN_KERNEL_4;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*3) * GAUSSIAN_KERNEL_3;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*4) * GAUSSIAN_KERNEL_2;
+	c += glossMap.Sample(glossMapSampler, inp.texCoord + blurShift*5) * GAUSSIAN_KERNEL_1;
 	
 	return c;
 }
