@@ -138,7 +138,32 @@ public:
         }
         else
         {
-            //todo...
+            // Load scene shader program
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "scene.vertex.glsl" },
+                    { LLGL::ShaderType::Fragment, "scene.fragment.glsl" }
+                },
+                vertexFormatScene
+            );
+
+            // Load blur shader program
+            shaderProgramBlur = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "postprocess.vertex.glsl" },
+                    { LLGL::ShaderType::Fragment, "blur.fragment.glsl" }
+                },
+                {} // empty vertex format
+            );
+
+            // Load final shader program
+            shaderProgramFinal = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "postprocess.vertex.glsl" },
+                    { LLGL::ShaderType::Fragment, "final.fragment.glsl" }
+                },
+                {} // empty vertex format
+            );
         }
     }
 

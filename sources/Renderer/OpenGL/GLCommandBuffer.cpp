@@ -147,7 +147,7 @@ void GLCommandBuffer::Clear(long flags)
 void GLCommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
 {
     /* Clear target color buffer */
-    glClearBufferfv(GL_COLOR, GL_DRAW_BUFFER0 + targetIndex, color.Ptr());
+    glClearBufferfv(GL_COLOR, targetIndex, color.Ptr());
 }
 
 /* ----- Buffers ------ */
