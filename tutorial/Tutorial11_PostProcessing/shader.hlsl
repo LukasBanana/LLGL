@@ -27,8 +27,8 @@ struct OutputVScene
 OutputVScene VScene(InputVScene inp)
 {
 	OutputVScene outp;
-	outp.position = mul(wvpMatrix, float4(inp.position, 1));
-	outp.normal = mul(wMatrix, float4(inp.normal, 0)).xyz;
+	outp.position	= mul(wvpMatrix, float4(inp.position, 1));
+	outp.normal		= mul(wMatrix, float4(inp.normal, 0)).xyz;
 	return outp;
 }
 
@@ -38,7 +38,7 @@ struct OutputPScene
 	float4 gloss : SV_Target1;
 };
 
-OutputPScene PScene(InputVScene inp)
+OutputPScene PScene(OutputVScene inp)
 {
 	OutputPScene outp;
 	

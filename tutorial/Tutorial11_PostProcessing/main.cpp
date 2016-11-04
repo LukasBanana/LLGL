@@ -49,7 +49,7 @@ class Tutorial11 : public Tutorial
         Gs::Matrix4f        wMatrix;
         LLGL::ColorRGBAf    diffuse;
         LLGL::ColorRGBAf    glossiness;
-        float               intensity           = 1.0f;
+        float               intensity           = 3.0f;
         float               _pad0[3];
     }
     sceneSettings;
