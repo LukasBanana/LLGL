@@ -120,6 +120,7 @@ void GLCommandBuffer::SetClearStencil(int stencil)
 
 void GLCommandBuffer::Clear(long flags)
 {
+    /* Setup GL clear mask and clear respective buffer */
     GLbitfield mask = 0;
 
     if ((flags & ClearFlags::Color) != 0)
@@ -141,6 +142,12 @@ void GLCommandBuffer::Clear(long flags)
     }
 
     glClear(mask);
+}
+
+void GLCommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
+{
+    /* Clear target color buffer */
+    glClearBufferfv(GL_COLOR, GL_DRAW_BUFFER0 + targetIndex, color.Ptr());
 }
 
 /* ----- Buffers ------ */

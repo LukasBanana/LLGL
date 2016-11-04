@@ -112,18 +112,21 @@ class LLGL_EXPORT CommandBuffer
         /**
         \brief Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
         \note This state is guaranteed to be persistent.
+        \see Clear
         */
         virtual void SetClearColor(const ColorRGBAf& color) = 0;
 
         /**
         \brief Sets the new value to clear the depth buffer with. By default 1.0.
         \note This state is guaranteed to be persistent.
+        \see Clear
         */
         virtual void SetClearDepth(float depth) = 0;
 
         /**
         \brief Sets the new value to clear the stencil buffer. By default 0.
         \note This state is guaranteed to be persistent.
+        \see Clear
         */
         virtual void SetClearStencil(int stencil) = 0;
 
@@ -131,13 +134,26 @@ class LLGL_EXPORT CommandBuffer
         \brief Clears the specified framebuffers of the active render target.
         \param[in] flags Specifies the clear buffer flags.
         This can be a bitwise OR combination of the "ClearFlags" enumeration entries.
-        \remarks To specify the clear values for each buffer use the respective "SetClear..." function
+        \remarks To specify the clear values for each buffer type, use the respective "SetClear..." function.
+        To clear only a specific render-target color buffer, use the "ClearTarget" function.
         \see ClearFlags
         \see SetClearColor
         \see SetClearDepth
         \see SetClearStencil
+        \see ClearTarget
         */
         virtual void Clear(long flags) = 0;
+
+        /**
+        \brief Clears the specified color buffer of the active render target.
+        \param[in] targetIndex Specifies the zero-based index of the color target which is to be cleared.
+        If this value is greater than or equal to the number of color attachments
+        in the active render target, the behavior of this function is undefined.
+        \param[in] color Specifies the color to clear the color buffer with.
+        \remarks To clear all color buffers with the same value, use the "Clear" function.
+        \see Clear
+        */
+        virtual void ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color) = 0;
 
         /* ----- Buffers ------ */
 

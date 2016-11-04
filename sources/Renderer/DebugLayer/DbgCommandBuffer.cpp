@@ -96,6 +96,11 @@ void DbgCommandBuffer::Clear(long flags)
     instance.Clear(flags);
 }
 
+void DbgCommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
+{
+    instance.ClearTarget(targetIndex, color);
+}
+
 /* ----- Buffers ------ */
 
 void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)

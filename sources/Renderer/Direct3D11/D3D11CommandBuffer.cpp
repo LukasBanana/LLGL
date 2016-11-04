@@ -115,6 +115,13 @@ void D3D11CommandBuffer::Clear(long flags)
         context_->ClearDepthStencilView(framebufferView_.dsv, dsvClearFlags, clearState_.depth, clearState_.stencil);
 }
 
+void D3D11CommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
+{
+    /* Clear target color buffer */
+    if (targetIndex < framebufferView_.rtvList.size())
+        context_->ClearRenderTargetView(framebufferView_.rtvList[targetIndex], color.Ptr());
+}
+
 /* ----- Buffers ------ */
 
 void D3D11CommandBuffer::SetVertexBuffer(Buffer& buffer)

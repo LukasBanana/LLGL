@@ -45,6 +45,7 @@ class GLCommandBuffer : public CommandBuffer
         void SetClearStencil(int stencil) override;
 
         void Clear(long flags) override;
+        void ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color) override;
 
         /* ----- Buffers ------ */
 

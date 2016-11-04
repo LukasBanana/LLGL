@@ -101,6 +101,13 @@ void D3D12CommandBuffer::Clear(long flags)
     }
 }
 
+void D3D12CommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
+{
+    //TODO...
+    //CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescHandle_, targetIndex, rtvDescHandleSize_);
+    //commandList_->ClearRenderTargetView(rtvDescHandle_, clearState_.color.Ptr(), 0, nullptr);
+}
+
 /* ----- Buffers ------ */
 
 void D3D12CommandBuffer::SetVertexBuffer(Buffer& buffer)
