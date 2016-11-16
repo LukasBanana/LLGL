@@ -129,7 +129,7 @@ struct ShaderSource
     */
     inline ShaderSource(const std::string& sourceCode, const std::string& entryPoint, const std::string& target, long flags = 0) :
         sourceCode  { sourceCode                },
-        sourceHLSL  { entryPoint, target, flags }
+        sourceHLSL  { entryPoint, target, flags } // <-- braced initializer for default initialization of 'struct SourceHLSL'
     {
     }
 
@@ -144,7 +144,7 @@ struct ShaderSource
     */
     inline ShaderSource(std::string&& sourceCode, const std::string& entryPoint, const std::string& target, long flags = 0) :
         sourceCode  { std::move(sourceCode)     },
-        sourceHLSL  { entryPoint, target, flags }
+        sourceHLSL  { entryPoint, target, flags } // <-- braced initializer for default initialization of 'struct SourceHLSL'
     {
     }
 
