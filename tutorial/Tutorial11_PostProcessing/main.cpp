@@ -273,37 +273,44 @@ public:
 
 private:
 
-    void SetSceneSettings(float pitch, float yaw, bool innerModel)
+    void SetSceneSettingsInnerModel(float rotation)
     {
         // Transform scene mesh
         sceneSettings.wMatrix.LoadIdentity();
         Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 });
 
-        if (innerModel)
-        {
-            // Rotate model around the (1, 1, 1) axis
-            static float rotAnim;
-            rotAnim += 0.01f;
-            Gs::RotateFree(sceneSettings.wMatrix, Gs::Vector3f(1).Normalized(), rotAnim);
-            Gs::Scale(sceneSettings.wMatrix, Gs::Vector3f(0.5f));
+        // Rotate model around the (1, 1, 1) axis
+        Gs::RotateFree(sceneSettings.wMatrix, Gs::Vector3f(1).Normalized(), rotation);
+        Gs::Scale(sceneSettings.wMatrix, Gs::Vector3f(0.5f));
 
-            // Set colors
-            sceneSettings.diffuse       = glowColor;
-            sceneSettings.glossiness    = glowColor;
-        }
-        else
-        {
-            // Rotate model around X and Y axes
-            Gs::RotateFree(sceneSettings.wMatrix, { 1, 0, 0 }, pitch);
-            Gs::RotateFree(sceneSettings.wMatrix, { 0, 1, 0 }, yaw);
+        // Set colors and matrix
+        sceneSettings.diffuse       = glowColor;
+        sceneSettings.glossiness    = glowColor;
+        sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
-            // Set colors
-            sceneSettings.diffuse       = { 0.6f, 0.6f, 0.6f, 1.0f };
-            sceneSettings.glossiness    = { 0, 0, 0, 0 };
-        }
+        // Update constant buffer for scene settings
+        UpdateBuffer(constantBufferScene, sceneSettings);
+    }
 
-        sceneSettings.wvpMatrix = projection;
-        sceneSettings.wvpMatrix *= sceneSettings.wMatrix;
+    void SetSceneSettingsOuterModel(float deltaPitch, float deltaYaw)
+    {
+        // Rotate model around X and Y axes
+        static Gs::Matrix4f rotation;
+
+        Gs::Matrix4f deltaRotation;
+        Gs::RotateFree(deltaRotation, { 1, 0, 0 }, deltaPitch);
+        Gs::RotateFree(deltaRotation, { 0, 1, 0 }, deltaYaw);
+        rotation = deltaRotation * rotation;
+
+        // Transform scene mesh
+        sceneSettings.wMatrix.LoadIdentity();
+        Gs::Translate(sceneSettings.wMatrix, { 0, 0, 5 });
+        sceneSettings.wMatrix *= rotation;
+
+        // Set colors and matrix
+        sceneSettings.diffuse       = { 0.6f, 0.6f, 0.6f, 1.0f };
+        sceneSettings.glossiness    = { 0, 0, 0, 0 };
+        sceneSettings.wvpMatrix     = projection * sceneSettings.wMatrix;
 
         // Update constant buffer for scene settings
         UpdateBuffer(constantBufferScene, sceneSettings);
@@ -320,17 +327,16 @@ private:
     {
         static const auto shaderStages = LLGL::ShaderStageFlags::VertexStage | LLGL::ShaderStageFlags::FragmentStage;
 
-        // Update scene animation (simple rotation)
-        static float pitch, yaw;
+        // Update rotation of inner model
+        static float innerModelRotation;
+        innerModelRotation += 0.01f;
 
+        // Update rotation of outer model
         auto mouseMotion = input->GetMouseMotion().Cast<float>();
 
+        Gs::Vector2f outerModelDeltaRotation;
         if (input->KeyPressed(LLGL::Key::LButton))
-        {
-            auto rot = mouseMotion*0.005f;
-            pitch   += rot.y;
-            yaw     += rot.x;
-        }
+            outerModelDeltaRotation = mouseMotion*0.005f;
 
         // Update effect intensity animation
         if (input->KeyPressed(LLGL::Key::RButton))
@@ -376,11 +382,11 @@ private:
             commands->Clear(LLGL::ClearFlags::Depth);
 
             // Draw outer scene model
-            SetSceneSettings(pitch, yaw, false);
+            SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
             commands->Draw(numSceneVertices, 0);
 
             // Draw inner scene model
-            SetSceneSettings(pitch, yaw, true);
+            SetSceneSettingsInnerModel(innerModelRotation);
             commands->Draw(numSceneVertices, 0);
         }
 
