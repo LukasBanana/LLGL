@@ -55,10 +55,10 @@ enum class ShadingLanguage
     GLSL_440    = 440,      //!< GLSL 4.40 (since OpenGL 4.4). Value is 440.
     GLSL_450    = 450,      //!< GLSL 4.50 (since OpenGL 4.5). Value is 450.
 
-    GLSL_ES_100 = 100100,    //!< GLSL ES 1.00 (since OpenGL ES 2.0). Values is 100100.
-    GLSL_ES_300 = 100300,    //!< GLSL ES 3.00 (since OpenGL ES 3.0). Values is 100300.
-    GLSL_ES_310 = 100310,    //!< GLSL ES 3.10 (since OpenGL ES 3.1). Values is 100310.
-    GLSL_ES_320 = 100320,    //!< GLSL ES 3.20 (since OpenGL ES 3.2). Values is 100320.
+    GLSL_ES_100 = 100100,   //!< GLSL ES 1.00 (since OpenGL ES 2.0). Values is 100100.
+    GLSL_ES_300 = 100300,   //!< GLSL ES 3.00 (since OpenGL ES 3.0). Values is 100300.
+    GLSL_ES_310 = 100310,   //!< GLSL ES 3.10 (since OpenGL ES 3.1). Values is 100310.
+    GLSL_ES_320 = 100320,   //!< GLSL ES 3.20 (since OpenGL ES 3.2). Values is 100320.
 
     HLSL_2_0    = 200200,   //!< HLSL 2.0 (since Direct3D 9). Value is 200200.
     HLSL_2_0a   = 200201,   //!< HLSL 2.0a (since Direct3D 9a). Value is 200201.
@@ -69,9 +69,9 @@ enum class ShadingLanguage
     HLSL_5_0    = 200500,   //!< HLSL 5.0 (since Direct3D 11). Value is 200500.
     HLSL_5_1    = 200510,   //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3). Value is 200510.
 
-    Metal_1_0   = 300100,   //!< Metal shading language (since iOS 8.0). Value is 300100.
-    Metal_1_1   = 300110,   //!< Metal shading language (since iOS 9.0 and OS X 10.11). Value is 300110.
-    Metal_1_2   = 300120,   //!< Metal shading language (since iOS 10.0 and macOS 10.12). Value is 300120.
+    Metal_1_0   = 300100,   //!< Metal shading language 1.0 (since iOS 8.0). Value is 300100.
+    Metal_1_1   = 300110,   //!< Metal shading language 1.1 (since iOS 9.0 and OS X 10.11). Value is 300110.
+    Metal_1_2   = 300120,   //!< Metal shading language 1.2 (since iOS 10.0 and macOS 10.12). Value is 300120.
 };
 
 //! Screen coordinate system origin enumeration.
