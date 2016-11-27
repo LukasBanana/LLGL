@@ -17,7 +17,7 @@ layout(std140) uniform Settings
 // Input and output attributes
 in vec3 vPosition[];
 out vec3 tcPosition[];
- 
+
 // Tessellation control shader main function
 void main()
 {
