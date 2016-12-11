@@ -168,8 +168,10 @@ struct LLGL_EXPORT TextureDescriptor
         texture2DMS.samples         = 0;
         texture2DMS.fixedSamples    = true;
     }
+
     ~TextureDescriptor()
     {
+        // Dummy
     }
 
     TextureType                 type;           //!< Texture type. By default TextureType::Texture1D.
