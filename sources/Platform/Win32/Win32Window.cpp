@@ -51,7 +51,9 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
 {
     DWORD style = (WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
     
-    if (desc.borderless)
+    if (desc.windowContext)
+        style |= WS_CHILD;
+    else if (desc.borderless)
         style |= WS_POPUP;
     else
     {
@@ -147,6 +149,7 @@ Point Win32Window::GetPosition() const
 {
     RECT rc;
     GetWindowRect(wnd_, &rc);
+    MapWindowPoints(HWND_DESKTOP, GetParent(wnd_), reinterpret_cast<LPPOINT>(&rc), 2);
     return { rc.left, rc.top };
 }
 
@@ -220,7 +223,7 @@ WindowDescriptor Win32Window::GetDesc() const
     desc.preventForPowerSafe    = false; //todo...
     desc.centered               = (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y);
 
-    desc.windowContext          = nullptr; //todo...
+    desc.windowContext          = (&contextHandle_);
 
     return desc;
 }
@@ -328,8 +331,9 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
 
     if (desc.windowContext)
     {
-        auto& nativeContext = *reinterpret_cast<const NativeContextHandle*>(desc.windowContext);
-        parentWnd = nativeContext.parentWindow;
+        auto nativeContext = reinterpret_cast<const NativeContextHandle*>(desc.windowContext);
+        parentWnd = nativeContext->parentWindow;
+        contextHandle_ = *nativeContext;
     }
 
     /* Create frame window object */

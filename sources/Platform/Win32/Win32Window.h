@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Window.h>
-#include <Windows.h>
+#include <LLGL/Platform/NativeHandle.h>
 
 
 namespace LLGL
@@ -56,6 +56,8 @@ class Win32Window : public Window
         WindowDescriptor    desc_;
 
         HWND                wnd_    = nullptr;
+
+        NativeContextHandle contextHandle_;
 
 };
 
