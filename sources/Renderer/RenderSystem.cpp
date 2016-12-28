@@ -13,6 +13,7 @@
 
 #include <LLGL/RenderSystem.h>
 #include <array>
+#include <map>
 
 #ifdef LLGL_ENABLE_DEBUG_LAYER
 #   include "DebugLayer/DbgRenderSystem.h"
@@ -25,8 +26,7 @@ namespace LLGL
 
 /* ----- Render system ----- */
 
-static std::weak_ptr<RenderSystem>  g_renderSystemRef;
-static std::unique_ptr<Module>      g_renderSystemModule;
+static std::map<RenderSystem*, std::unique_ptr<Module>> g_renderSystemModules;
 
 RenderSystem::~RenderSystem()
 {
@@ -114,13 +114,9 @@ static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleF
     return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc());
 }
 
-std::shared_ptr<RenderSystem> RenderSystem::Load(
+std::unique_ptr<RenderSystem> RenderSystem::Load(
     const std::string& moduleName, RenderingProfiler* profiler, RenderingDebugger* debugger)
 {
-    /* Check if previous module can be safely released (i.e. the previous render system has been deleted) */
-    if (!g_renderSystemRef.expired())
-        throw std::runtime_error("failed to load render system (only a single instance can be loaded at a time)");
-
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(moduleName);
     auto module         = Module::Load(moduleFilename);
@@ -133,14 +129,14 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
         throw std::runtime_error("build ID mismatch in render system module");
 
     /* Allocate render system */
-    auto renderSystem   = std::shared_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
+    auto renderSystem   = std::unique_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
 
     if (profiler != nullptr || debugger != nullptr)
     {
         #ifdef LLGL_ENABLE_DEBUG_LAYER
 
         /* Create debug layer render system */
-        renderSystem = std::make_shared<DbgRenderSystem>(renderSystem, profiler, debugger);
+        renderSystem = MakeUnique<DbgRenderSystem>(std::move(renderSystem), profiler, debugger);
 
         #else
 
@@ -152,12 +148,21 @@ std::shared_ptr<RenderSystem> RenderSystem::Load(
     renderSystem->name_         = LoadRenderSystemName(*module);
     renderSystem->rendererID_   = LoadRenderSystemRendererID(*module);
 
-    /* Store new module globally */
-    g_renderSystemModule    = std::move(module);
-    g_renderSystemRef       = renderSystem;
+    /* Store new module inside internal map */
+    g_renderSystemModules[renderSystem.get()] = std::move(module);
 
     /* Return new render system and unique pointer */
     return renderSystem;
+}
+
+void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)
+{
+    auto it = g_renderSystemModules.find(renderSystem.get());
+    if (it != g_renderSystemModules.end())
+    {
+        renderSystem.release();
+        g_renderSystemModules.erase(it);
+    }
 }
 
 void RenderSystem::SetConfiguration(const RenderSystemConfiguration& config)

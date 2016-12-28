@@ -86,20 +86,21 @@ class LLGL_EXPORT RenderSystem
         This is only supported if LLGL was compiled with the "LLGL_ENABLE_DEBUG_LAYER" flag.
         \param[in] debugger Optional pointer to a rendering debugger.
         This is only supported if LLGL was compiled with the "LLGL_ENABLE_DEBUG_LAYER" flag.
-        \remarks Usually the return type is a std::unique_ptr, but LLGL needs to keep track
-        of the existance of this render system because only a single instance can be loaded at a time.
-        So a std::weak_ptr is stored internally to check if it has been expired
-        (see http://en.cppreference.com/w/cpp/memory/weak_ptr/expired),
-        and this type can only refer to a std::shared_ptr.
         \throws std::runtime_error If loading the render system from the specified module failed.
         \throws std::runtime_error If there is already a loaded instance of a render system
         (make sure there are no more shared pointer references to the previous render system!)
         */
-        static std::shared_ptr<RenderSystem> Load(
+        static std::unique_ptr<RenderSystem> Load(
             const std::string& moduleName,
             RenderingProfiler* profiler = nullptr,
             RenderingDebugger* debugger = nullptr
         );
+
+        /**
+        \brief Unloads the specified render system and the internal module.
+        \remarks After this call, the specified render system and all the objects associated to it must no longer be used!
+        */
+        static void Unload(std::unique_ptr<RenderSystem>&& renderSystem);
 
         /**
         \brief Rendering API identification number.
