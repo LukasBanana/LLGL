@@ -150,7 +150,7 @@ protected:
         std::string         target;
     };
 
-private:
+public:
 
     class Debugger : public LLGL::RenderingDebugger
     {
@@ -168,6 +168,8 @@ private:
         }
 
     };
+
+private:
 
     class ResizeEventHandler : public LLGL::Window::EventListener
     {
@@ -250,7 +252,7 @@ private:
 
     static std::string                          rendererModule_;
 
-protected:
+public:
 
     struct VertexPositionNormal
     {
@@ -263,6 +265,8 @@ protected:
         Gs::Vector3f position;
         Gs::Vector2f texCoord;
     };
+
+protected:
 
     friend class ResizeEventHandler;
     
@@ -529,8 +533,10 @@ protected:
         }
     }
 
+public:
+
     // Load image from file, create texture, upload image into texture, and generate MIP-maps.
-    LLGL::Texture* LoadTexture(const std::string& filename)
+    static LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std::string& filename)
     {
         // Load image data from file (using STBI library, see https://github.com/nothings/stb)
         int width = 0, height = 0, components = 0;
@@ -553,14 +559,14 @@ protected:
         }
 
         // Create texture and upload image data onto hardware texture
-        auto tex = renderer->CreateTexture(
+        auto tex = renderSys.CreateTexture(
             LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, width, height), &imageDesc
         );
 
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping
         // see http://whatis.techtarget.com/definition/MIP-map
-        renderer->GenerateMips(*tex);
+        renderSys.GenerateMips(*tex);
 
         // Release image data
         stbi_image_free(imageBuffer);
@@ -571,15 +577,25 @@ protected:
         return tex;
     }
 
+protected:
+
+    // Load image from file, create texture, upload image into texture, and generate MIP-maps.
+    LLGL::Texture* LoadTexture(const std::string& filename)
+    {
+        return LoadTextureWithRenderer(*renderer, filename);
+    }
+
+public:
+
     // Save texture image to a PNG file.
-    bool SaveTexture(LLGL::Texture& texture, const std::string& filename, unsigned int mipLevel = 0)
+    static bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, unsigned int mipLevel = 0)
     {
         // Get texture dimension
         auto texSize = texture.QueryMipLevelSize(0).Cast<int>();
 
         // Read texture image data
         std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.x*texSize.y);
-        renderer->ReadTexture(texture, mipLevel, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, imageBuffer.data());
+        renderSys.ReadTexture(texture, mipLevel, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, imageBuffer.data());
 
         // Save image data to file (using STBI library, see https://github.com/nothings/stb)
         if (!stbi_write_png(filename.c_str(), texSize.x, texSize.y, 4, imageBuffer.data(), texSize.x*4))
@@ -594,8 +610,18 @@ protected:
         return true;
     }
 
+protected:
+
+    // Save texture image to a PNG file.
+    bool SaveTexture(LLGL::Texture& texture, const std::string& filename, unsigned int mipLevel = 0)
+    {
+        return SaveTextureWithRenderer(*renderer, texture, filename, mipLevel);
+    }
+
+public:
+
     // Loads the vertices with position and normal from the specified Wavefront OBJ model file.
-    std::vector<VertexPositionNormal> LoadObjModel(const std::string& filename)
+    static std::vector<VertexPositionNormal> LoadObjModel(const std::string& filename)
     {
         // Read obj file
         std::ifstream file(filename);
@@ -652,7 +678,7 @@ protected:
     }
 
     // Generates eight vertices for a unit cube.
-    std::vector<Gs::Vector3f> GenerateCubeVertices()
+    static std::vector<Gs::Vector3f> GenerateCubeVertices()
     {
         return
         {
@@ -663,7 +689,7 @@ protected:
 
     // Generates 36 indices for a unit cube of 8 vertices
     // (36 = 3 indices per triangle * 2 triangles per cube face * 6 faces).
-    std::vector<std::uint32_t> GenerateCubeTriangleIndices()
+    static std::vector<std::uint32_t> GenerateCubeTriangleIndices()
     {
         return
         {
@@ -678,7 +704,7 @@ protected:
 
     // Generates 24 indices for a unit cube of 8 vertices.
     // (24 = 4 indices per quad * 1 quad per cube face * 6 faces)
-    std::vector<std::uint32_t> GenerateCubeQuadlIndices()
+    static std::vector<std::uint32_t> GenerateCubeQuadlIndices()
     {
         return
         {
@@ -692,7 +718,7 @@ protected:
     }
 
     // Generates 24 vertices for a unit cube with texture coordinates.
-    std::vector<VertexPositionTexCoord> GenerateTexturedCubeVertices()
+    static std::vector<VertexPositionTexCoord> GenerateTexturedCubeVertices()
     {
         return
         {
@@ -706,7 +732,7 @@ protected:
     }
 
     // Generates 36 indices for a unit cube of 24 vertices
-    std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices()
+    static std::vector<std::uint32_t> GenerateTexturedCubeTriangleIndices()
     {
         return
         {
@@ -718,6 +744,8 @@ protected:
             20, 21, 22, 20, 22, 23, // back
         };
     }
+
+protected:
 
     template <typename VertexType>
     LLGL::Buffer* CreateVertexBuffer(const std::vector<VertexType>& vertices, const LLGL::VertexFormat& vertexFormat)
