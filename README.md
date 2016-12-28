@@ -148,5 +148,11 @@ Practical example of a glow effect with post-processing and the usage of several
 
 <p align="center"><img src="tutorial/Tutorial11_PostProcessing.png" width="400" height="300"/></p>
 
+### [Tutorial 12: MultiRenderer](tutorial/Tutorial12_MultiRenderer/main.cpp)
+
+Experimental example of using multiple renderers at once (only supported on Win32 platform).
+
+<p align="center"><img src="tutorial/Tutorial12_MultiRenderer.png" width="400" height="300"/></p>
+
 
 
