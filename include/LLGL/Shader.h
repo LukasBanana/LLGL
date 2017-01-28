@@ -36,6 +36,8 @@ class LLGL_EXPORT Shader
         */
         virtual bool Compile(const ShaderSource& shaderSource) = 0;
 
+        //virtual bool CompileBinary(const void* binarySource, unsigned int binarySourceLength) = 0;
+
         /**
         \brief Disassembles the previously compiled shader byte code.
         \param[in] flags Specifies optional disassemble flags. This can be a bitwise OR combination of the 'ShaderDisassembleFlags' enumeration entries. By default 0.

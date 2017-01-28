@@ -60,10 +60,10 @@ class D3D12Shader : public Shader
 
         void ReflectShader();
 
-        std::vector<char>                       byteCode_;
-        ComPtr<ID3DBlob>                        errors_;
+        std::vector<char>                           byteCode_;
+        ComPtr<ID3DBlob>                            errors_;
 
-        std::vector<VertexAttribute>            vertexAttributes_;
+        std::vector<VertexAttribute>                vertexAttributes_;
         std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
         std::vector<StorageBufferViewDescriptor>    storageBufferDescs_;
 
