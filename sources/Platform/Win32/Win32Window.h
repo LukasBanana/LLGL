@@ -55,9 +55,9 @@ class Win32Window : public Window
 
         WindowDescriptor    desc_;
 
-        HWND                wnd_    = nullptr;
+        NativeContextHandle contextHandle_;             // Must be initialized before "wnd_" member!
 
-        NativeContextHandle contextHandle_;
+        HWND                wnd_            = nullptr;
 
 };
 

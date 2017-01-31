@@ -51,7 +51,7 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
 {
     DWORD style = (WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
     
-    if (desc.windowContext)
+    if (desc.windowContext != nullptr && reinterpret_cast<const NativeContextHandle*>(desc.windowContext)->parentWindow != 0)
         style |= WS_CHILD;
     else if (desc.borderless)
         style |= WS_POPUP;
@@ -110,7 +110,8 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 Win32Window::Win32Window(const WindowDescriptor& desc) :
-    wnd_( CreateWindowHandle(desc) )
+    contextHandle_  { 0                        },
+    wnd_            { CreateWindowHandle(desc) }
 {
 }
 
@@ -223,7 +224,7 @@ WindowDescriptor Win32Window::GetDesc() const
     desc.preventForPowerSafe    = false; //todo...
     desc.centered               = (centerPoint.x == desc.position.x && centerPoint.y == desc.position.y);
 
-    desc.windowContext          = (&contextHandle_);
+    desc.windowContext          = (contextHandle_.parentWindow != 0 ? (&contextHandle_) : nullptr);
 
     return desc;
 }
@@ -329,11 +330,13 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
     /* Get parent window */
     HWND parentWnd = HWND_DESKTOP;
 
-    if (desc.windowContext)
+    if (auto nativeContext = reinterpret_cast<const NativeContextHandle*>(desc.windowContext))
     {
-        auto nativeContext = reinterpret_cast<const NativeContextHandle*>(desc.windowContext);
-        parentWnd = nativeContext->parentWindow;
-        contextHandle_ = *nativeContext;
+        if (nativeContext->parentWindow)
+        {
+            parentWnd = nativeContext->parentWindow;
+            contextHandle_ = *nativeContext;
+        }
     }
 
     /* Create frame window object */

@@ -16,13 +16,19 @@ namespace LLGL
 {
 
 
-//! Win32 native handle structure.
+/**
+\brief Win32 native handle structure.
+\remarks This must be a POD (Plain-Old-Data) structure, so no default initialization is provided!
+*/
 struct NativeHandle
 {
     HWND window;
 };
 
-//! Win32 native context handle structure.
+/**
+\brief Win32 native context handle structure.
+\remarks This must be a POD (Plain-Old-Data) structure, so no default initialization is provided!
+*/
 struct NativeContextHandle
 {
     HWND parentWindow;
