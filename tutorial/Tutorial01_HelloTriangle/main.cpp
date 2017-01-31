@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
         std::string rendererModule = GetSelectedRendererModule(argc, argv);
 
         // Load render system module
-        std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load(rendererModule);
+        std::unique_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load(rendererModule);
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
