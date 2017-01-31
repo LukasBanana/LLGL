@@ -231,7 +231,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.RasterizerState.DepthBias             = desc.rasterizer.depthBias;
     stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBiasClamp;
     stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.slopeScaledDepthBias;
-    stateDesc.RasterizerState.DepthClipEnable       = (desc.rasterizer.depthClampEnabled ? TRUE : FALSE);
+    stateDesc.RasterizerState.DepthClipEnable       = (desc.rasterizer.depthClampEnabled ? FALSE : TRUE);
     #if 1//TODO: currently not supported
     stateDesc.RasterizerState.MultisampleEnable     = FALSE; //!!!
     #else

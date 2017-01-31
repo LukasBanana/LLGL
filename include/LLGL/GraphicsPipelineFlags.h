@@ -317,9 +317,10 @@ struct RasterizerDescriptor
     //! (Multi-)sampling descriptor.
     MultiSamplingDescriptor multiSampling;
 
-    //! If true, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding.
+    //! If enabled, front facing polygons are in counter-clock-wise winding, otherwise in clock-wise winding.
     bool                    frontCCW                    = false;
 
+    //! If enabled, there is effectively no near and far clipping plane. By default disabled.
     bool                    depthClampEnabled           = false;
 
     //! Specifies whether scissor test is enabled or disabled. By default disabled.
