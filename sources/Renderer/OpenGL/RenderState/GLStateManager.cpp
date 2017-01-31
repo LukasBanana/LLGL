@@ -461,10 +461,14 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
 
 void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
 {
-    /*if (HasExtension(GLExt::ARB_clip_control))
+    #if 0
+    if (HasExtension(GLExt::ARB_clip_control))
         glClipControl(origin, depth);
-    else*/
+    else
         emulateClipControl_ = (origin == GL_UPPER_LEFT);
+    #else
+    emulateClipControl_ = (origin == GL_UPPER_LEFT);
+    #endif
 }
 
 void GLStateManager::SetDepthFunc(GLenum func)
