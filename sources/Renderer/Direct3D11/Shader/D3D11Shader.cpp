@@ -52,7 +52,7 @@ bool D3D11Shader::Compile(const ShaderSource& shaderSource)
     if (code)
     {
         byteCode_ = DXGetBlobData(code.Get());
-        CreateHardwareShader(shaderSource, nullptr);
+        CreateHardwareShader(shaderSource.streamOutput, nullptr);
     }
 
     if (FAILED(hr))
@@ -88,7 +88,7 @@ std::string D3D11Shader::QueryInfoLog()
  * ======= Private: =======
  */
 
-void D3D11Shader::CreateHardwareShader(const ShaderSource& shaderSource, ID3D11ClassLinkage* classLinkage)
+void D3D11Shader::CreateHardwareShader(const ShaderSource::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage)
 {
     hardwareShader_.vs.Reset();
 
@@ -119,7 +119,7 @@ void D3D11Shader::CreateHardwareShader(const ShaderSource& shaderSource, ID3D11C
 
         case ShaderType::Geometry:
         {
-            const auto& streamOutputFormat = shaderSource.streamOutput.format;
+            const auto& streamOutputFormat = streamOutputDesc.format;
             if (!streamOutputFormat.attributes.empty())
             {
                 /* Initialize output elements for geometry shader with stream-output */

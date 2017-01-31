@@ -83,7 +83,7 @@ class D3D11Shader : public Shader
 
     private:
 
-        void CreateHardwareShader(const ShaderSource& shaderSource, ID3D11ClassLinkage* classLinkage);
+        void CreateHardwareShader(const ShaderSource::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage);
         void ReflectShader();
 
         ID3D11Device*                               device_             = nullptr;
