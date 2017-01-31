@@ -198,9 +198,17 @@ int main(int argc, char* argv[])
         commandsGL->SetViewport({ 0, 0, 800, 600 });
         commandsD3D->SetViewport({ -400, 0, 800, 600 });
 
-        // Initialize matrices
-        Gs::Matrix4f projMatrix, viewMatrix, worldMatrix;
-        projMatrix = Gs::ProjectionMatrix4f::Perspective(800.0f / 600.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f), Gs::ProjectionFlags::Direct3DPreset).ToMatrix4();
+        // Initialize matrices (OpenGL needs a unit-cube NDC-space)
+        Gs::Matrix4f projMatrixGL, projMatrixD3D, viewMatrix, worldMatrix;
+        
+        const float aspectRatio = static_cast<float>(mainWindowDesc.size.x) / static_cast<float>(mainWindowDesc.size.y);
+        const float nearPlane   = 0.1f;
+        const float farPlane    = 100.0f;
+        const float fieldOfView = 45.0f;
+
+        projMatrixGL  = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fieldOfView), Gs::ProjectionFlags::UnitCube).ToMatrix4();
+        projMatrixD3D = Gs::ProjectionMatrix4f::Perspective(aspectRatio, nearPlane, farPlane, Gs::Deg2Rad(fieldOfView)).ToMatrix4();
+
         Gs::Translate(viewMatrix, Gs::Vector3f(0, 0, 5));
 
         // Enter main loop
@@ -208,10 +216,12 @@ int main(int argc, char* argv[])
         {
             // Update scene transformation
             Gs::RotateFree(worldMatrix, Gs::Vector3f(0, 1, 0), Gs::Deg2Rad(0.005f));
-            matrices.wvpMatrix = projMatrix * viewMatrix * worldMatrix;
 
             // Draw scene for OpenGL
             {
+                // Set transformation matrix for OpenGL
+                matrices.wvpMatrix = projMatrixGL * viewMatrix * worldMatrix;
+
                 // Clear color buffer
                 commandsGL->Clear(LLGL::ClearFlags::ColorDepth);
 
@@ -235,6 +245,9 @@ int main(int argc, char* argv[])
 
             // Draw scene for Direct3D
             {
+                // Set transformation matrix for Direct3D
+                matrices.wvpMatrix = projMatrixD3D * viewMatrix * worldMatrix;
+
                 // Clear color buffer
                 commandsD3D->Clear(LLGL::ClearFlags::ColorDepth);
 

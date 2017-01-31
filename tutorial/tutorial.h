@@ -209,9 +209,7 @@ private:
                 commands_->SetScissor({ 0, 0, videoMode.resolution.x, videoMode.resolution.y });
 
                 // Update projection matrix
-                projection_ = Gs::ProjectionMatrix4f::Perspective(
-                    viewport.width / viewport.height, 0.1f, 100.0f, Gs::Deg2Rad(45.0f)
-                ).ToMatrix4();
+                projection_ = tutorial_.PerspectiveProjection(viewport.width / viewport.height, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
                 
                 // Re-draw frame
                 if (tutorial_.IsLoadingDone())
@@ -273,7 +271,7 @@ protected:
     const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
 
     // Render system
-    std::shared_ptr<LLGL::RenderSystem>         renderer;
+    std::unique_ptr<LLGL::RenderSystem>         renderer;
     
     // Main render context
     LLGL::RenderContext*                        context     = nullptr;
@@ -361,7 +359,7 @@ protected:
         window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, context, commands, projection));
 
         // Initialize default projection matrix
-        projection = Gs::ProjectionMatrix4f::Perspective(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f)).ToMatrix4();
+        projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
 
         // Show window
         window.Show();
@@ -799,6 +797,12 @@ protected:
     bool IsLoadingDone() const
     {
         return loadingDone_;
+    }
+
+    Gs::Matrix4f PerspectiveProjection(float aspectRatio, float near, float far, float fov)
+    {
+        int flags = (IsOpenGL() ? Gs::ProjectionFlags::UnitCube : 0);
+        return Gs::ProjectionMatrix4f::Perspective(aspectRatio, near, far, fov, flags).ToMatrix4();
     }
 
 };
