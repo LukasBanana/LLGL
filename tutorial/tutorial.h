@@ -389,10 +389,10 @@ protected:
             auto shader = renderer->CreateShader(desc.type);
 
             // Compile shader
-            LLGL::ShaderSource shaderSource(shaderCode, desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug);
-            shaderSource.streamOutput.format = streamOutputFormat;
+            LLGL::ShaderDescriptor shaderDesc{ desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug };
+            shaderDesc.streamOutput.format = streamOutputFormat;
 
-            shader->Compile(shaderSource);
+            shader->Compile(shaderCode, shaderDesc);
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
@@ -450,10 +450,10 @@ protected:
                 auto shader = renderer->CreateShader(desc.type);
 
                 // Compile shader
-                LLGL::ShaderSource shaderSource(shaderCode, desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug);
-                shaderSource.streamOutput.format = recall.streamOutputFormat;
+                LLGL::ShaderDescriptor shaderDesc(desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug);
+                shaderDesc.streamOutput.format = recall.streamOutputFormat;
 
-                shader->Compile(shaderSource);
+                shader->Compile(shaderCode, shaderDesc);
 
                 // Print info log (warnings and errors)
                 std::string log = shader->QueryInfoLog();

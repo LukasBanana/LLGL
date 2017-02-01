@@ -62,10 +62,10 @@ int main(int argc, char* argv[])
         auto computeShader = renderer->CreateShader(LLGL::ShaderType::Compute);
 
         // Load compute shader code from file
-        auto CompileShader = [](LLGL::Shader* shader, const LLGL::ShaderSource& code)
+        auto CompileShader = [](LLGL::Shader* shader, const std::string& source, const LLGL::ShaderDescriptor& shaderDesc = {})
         {
             // Compile shader
-            shader->Compile(code);
+            shader->Compile(source, shaderDesc);
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
         };
 
         if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
-            CompileShader(computeShader, LLGL::ShaderSource(ReadFileContent("shader.hlsl"), "CS", "cs_5_0"));
+            CompileShader(computeShader, ReadFileContent("shader.hlsl"), { "CS", "cs_5_0" });
         else
             CompileShader(computeShader, ReadFileContent("compute.glsl"));
 

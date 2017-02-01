@@ -95,76 +95,46 @@ struct ShaderStageFlags
 
 /* ----- Structures ----- */
 
-//! Shader source code structure.
-struct ShaderSource
+//! Shader source and binary code descriptor structure.
+struct ShaderDescriptor
 {
-    /**
-    \brief Constructor with shader source code for GLSL.
-    \param[in] sourceCode Specifies the shader source code.
-    \note Only supported with: OpenGL.
-    */
-    inline ShaderSource(const std::string& sourceCode) :
-        sourceCode( sourceCode )
+    ShaderDescriptor() = default;
+
+    ShaderDescriptor(const std::string& entryPoint, const std::string& target, long flags = 0) :
+        entryPoint  { entryPoint },
+        target      { target     }
     {
     }
-
-    /**
-    \brief Constructor with shader source code for GLSL.
-    \param[in] sourceCode Specifies the shader source code with move semantic.
-    \note Only supported with: OpenGL.
-    */
-    inline ShaderSource(std::string&& sourceCode) :
-        sourceCode( std::move(sourceCode) )
-    {
-    }
-
-    /**
-    \brief Constructor with shader source code for HLSL.
-    \param[in] sourceCode Specifies the shader source code.
-    \param[in] entryPoint Specifies the shader entry point.
-    \param[in] target Specifies the shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
-    \param[in] flags Specifies optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries. By default 0.
-    \see ShaderCompileFlags
-    \note Only supported with: Direct3D 11, Direct3D 12.
-    */
-    inline ShaderSource(const std::string& sourceCode, const std::string& entryPoint, const std::string& target, long flags = 0) :
-        sourceCode  { sourceCode                },
-        sourceHLSL  { entryPoint, target, flags } // <-- braced initializer for default initialization of 'struct SourceHLSL'
-    {
-    }
-
-    /**
-    \brief Constructor with shader source code for HLSL.
-    \param[in] sourceCode Specifies the shader source code with move semantic.
-    \param[in] entryPoint Specifies the shader entry point.
-    \param[in] target Specifies the shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
-    \param[in] flags Specifies optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries. By default 0.
-    \see ShaderCompileFlags
-    \note Only supported with: Direct3D 11, Direct3D 12.
-    */
-    inline ShaderSource(std::string&& sourceCode, const std::string& entryPoint, const std::string& target, long flags = 0) :
-        sourceCode  { std::move(sourceCode)     },
-        sourceHLSL  { entryPoint, target, flags } // <-- braced initializer for default initialization of 'struct SourceHLSL'
-    {
-    }
-
-    //! Additional descripor for HLSL shader source.
-    struct SourceHLSL
-    {
-        std::string         entryPoint; //!< Shader entry point (this is the name of the shader main function).
-        std::string         target;     //!< Shader version target (see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx).
-        long                flags;      //!< Optional compilation flags. This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries.
-    };
 
     //! Additional descriptor for stream outputs.
     struct StreamOutput
     {
-        StreamOutputFormat  format;     //!< Stream-output buffer format.
+        StreamOutputFormat format;  //!< Stream-output buffer format.
     };
 
-    std::string     sourceCode;     //!< Shader source code string.
-    SourceHLSL      sourceHLSL;     //!< Additional HLSL shader source descriptor.
-    StreamOutput    streamOutput;   //!< Optional stream output for a geometry shader (or a vertex shader when used with OpenGL).
+    /**
+    \brief Shader entry point (shader main function).
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    */
+    std::string     entryPoint;
+
+    /*
+    \brief Shader target profile (e.g. "vs_5_0" for vertex shader model 5.0).
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    \see https://msdn.microsoft.com/en-us/library/windows/desktop/jj215820(v=vs.85).aspx
+    */
+    std::string     target;
+
+    /**
+    \brief Optional compilation flags. By default 0.
+    \remarks This can be a bitwise OR combination of the 'ShaderCompileFlags' enumeration entries.
+    \note Only supported with: Direct3D 11, Direct3D 12.
+    \see ShaderCompileFlags
+    */
+    long            flags           = 0;
+
+    //! Optional stream output descriptor for a geometry shader (or a vertex shader when used with OpenGL).
+    StreamOutput    streamOutput;
 };
 
 

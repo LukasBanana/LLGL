@@ -12,10 +12,10 @@
 #include <LLGL/Platform/NativeHandle.h>
 
 
-static void CompileShader(LLGL::Shader* shader, const LLGL::ShaderSource& code)
+static void CompileShader(LLGL::Shader* shader, const std::string& source, const LLGL::ShaderDescriptor& shaderDesc = {})
 {
     // Compile shader
-    shader->Compile(code);
+    shader->Compile(source, shaderDesc);
 
     // Print info log (warnings and errors)
     std::string log = shader->QueryInfoLog();
@@ -121,8 +121,8 @@ int main(int argc, char* argv[])
             if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
             {
                 auto shaderCode = ReadFileContent("shader.hlsl");
-                CompileShader(vertShader, LLGL::ShaderSource(shaderCode, "VS", "vs_4_0"));
-                CompileShader(fragShader, LLGL::ShaderSource(shaderCode, "PS", "ps_4_0"));
+                CompileShader(vertShader, shaderCode, { "VS", "vs_4_0" });
+                CompileShader(fragShader, shaderCode, { "PS", "ps_4_0" });
             }
             else
             {

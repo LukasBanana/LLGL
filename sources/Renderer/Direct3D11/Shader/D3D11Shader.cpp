@@ -23,13 +23,12 @@ D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderType type) :
 }
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
-bool D3D11Shader::Compile(const ShaderSource& shaderSource)
+bool D3D11Shader::Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc)
 {
     /* Get parameter from union */
-    const auto& sourceCode  = shaderSource.sourceCode;
-    const auto& entryPoint  = shaderSource.sourceHLSL.entryPoint;
-    const auto& target      = shaderSource.sourceHLSL.target;
-    auto flags              = shaderSource.sourceHLSL.flags;
+    const auto& entry   = shaderDesc.entryPoint;
+    const auto& target  = shaderDesc.target;
+    auto flags          = shaderDesc.flags;
 
     /* Compile shader code */
     ComPtr<ID3DBlob> code;
@@ -37,22 +36,22 @@ bool D3D11Shader::Compile(const ShaderSource& shaderSource)
     auto hr = D3DCompile(
         sourceCode.data(),
         sourceCode.size(),
-        nullptr,                                                // LPCSTR               pSourceName
-        nullptr,                                                // D3D_SHADER_MACRO*    pDefines
-        nullptr,                                                // ID3DInclude*         pInclude
-        (entryPoint.empty() ? nullptr : entryPoint.c_str()),    // LPCSTR               pEntrypoint
-        target.c_str(),                                         // LPCSTR               pTarget
-        DXGetCompilerFlags(flags),                              // UINT                 Flags1
-        0,                                                      // UINT                 Flags2 (recommended to always be 0)
-        code.ReleaseAndGetAddressOf(),                          // ID3DBlob**           ppCode
-        errors_.ReleaseAndGetAddressOf()                        // ID3DBlob**           ppErrorMsgs
+        nullptr,                                    // LPCSTR               pSourceName
+        nullptr,                                    // D3D_SHADER_MACRO*    pDefines
+        nullptr,                                    // ID3DInclude*         pInclude
+        (entry.empty() ? nullptr : entry.c_str()),  // LPCSTR               pEntrypoint
+        target.c_str(),                             // LPCSTR               pTarget
+        DXGetCompilerFlags(flags),                  // UINT                 Flags1
+        0,                                          // UINT                 Flags2 (recommended to always be 0)
+        code.ReleaseAndGetAddressOf(),              // ID3DBlob**           ppCode
+        errors_.ReleaseAndGetAddressOf()            // ID3DBlob**           ppErrorMsgs
     );
 
     /* Get byte code from blob */
     if (code)
     {
         byteCode_ = DXGetBlobData(code.Get());
-        CreateHardwareShader(shaderSource.streamOutput, nullptr);
+        CreateHardwareShader(shaderDesc.streamOutput, nullptr);
     }
 
     if (FAILED(hr))
@@ -62,6 +61,19 @@ bool D3D11Shader::Compile(const ShaderSource& shaderSource)
     ReflectShader();
 
     return true;
+}
+
+bool D3D11Shader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
+{
+    if (!binaryCode.empty())
+    {
+        /* Move binary code into byte code container, create hardware shader, and perform code reflection */
+        byteCode_ = std::move(binaryCode);
+        CreateHardwareShader(shaderDesc.streamOutput, nullptr);
+        ReflectShader();
+        return true;
+    }
+    return false;
 }
 
 std::string D3D11Shader::Disassemble(int flags)
@@ -88,7 +100,7 @@ std::string D3D11Shader::QueryInfoLog()
  * ======= Private: =======
  */
 
-void D3D11Shader::CreateHardwareShader(const ShaderSource::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage)
+void D3D11Shader::CreateHardwareShader(const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage)
 {
     hardwareShader_.vs.Reset();
 

@@ -24,7 +24,9 @@ class DbgShader : public Shader
 
         DbgShader(Shader& instance, const ShaderType type, RenderingDebugger* debugger);
 
-        bool Compile(const ShaderSource& shaderSource) override;
+        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
+
+        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
 
         std::string Disassemble(int flags = 0) override;
 

@@ -48,7 +48,9 @@ class D3D11Shader : public Shader
 
         D3D11Shader(ID3D11Device* device, const ShaderType type);
 
-        bool Compile(const ShaderSource& shaderSource) override;
+        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
+
+        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
 
         std::string Disassemble(int flags = 0) override;
 
@@ -83,7 +85,7 @@ class D3D11Shader : public Shader
 
     private:
 
-        void CreateHardwareShader(const ShaderSource::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage);
+        void CreateHardwareShader(const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage);
         void ReflectShader();
 
         ID3D11Device*                               device_             = nullptr;

@@ -21,11 +21,6 @@ Shader::~Shader()
 {
 }
 
-std::string Shader::Disassemble(int flags)
-{
-    return ""; // dummy
-}
-
 
 } // /namespace LLGL
 

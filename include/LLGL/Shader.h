@@ -30,21 +30,33 @@ class LLGL_EXPORT Shader
 
         /**
         \brief Compiles the specified shader source.
-        \param[in] shaderSource Specifies the shader source code.
+        \remarks The input source code must be one of the high level shading languages the respective renderer supports (e.g. GLSL, HLSL, or Metal).
+        \param[in] sourceCode Specifies the shader source code which is to be compiled.
+        \param[in] shaderDesc Specifies the shader descriptor.
         \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
         \see QueryInfoLog
+        \see ShaderDescriptor
         */
-        virtual bool Compile(const ShaderSource& shaderSource) = 0;
+        virtual bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) = 0;
 
-        //virtual bool CompileBinary(const void* binarySource, unsigned int binarySourceLength) = 0;
+        /**
+        \brief Loads the specified binary code into the shader object.
+        \param[in] binaryCode Binary shader code container.
+        \param[in] shaderDesc Specifies the shader descriptor. Only the optional stream output format is used here.
+        \note Only supported with: Direct3D 11, Direct3D 12.
+        \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
+        \see QueryInfoLog
+        \see ShaderDescriptor
+        */
+        virtual bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) = 0;
 
         /**
         \brief Disassembles the previously compiled shader byte code.
         \param[in] flags Specifies optional disassemble flags. This can be a bitwise OR combination of the 'ShaderDisassembleFlags' enumeration entries. By default 0.
         \return Disassembled assembler code or an empty string if disassembling was not possible.
-        \note Only supported with: Direct3D 11, Direct3D 12 (for HLSL).
+        \note Only supported with: Direct3D 11, Direct3D 12.
         */
-        virtual std::string Disassemble(int flags = 0);
+        virtual std::string Disassemble(int flags = 0) = 0;
 
         //! Returns the information log after the shader compilation.
         virtual std::string QueryInfoLog() = 0;

@@ -104,10 +104,10 @@ int main(int argc, char* argv[])
         };
 
         // Load vertex - and fragment shader code from file
-        auto CompileShader = [](LLGL::Shader* shader, const LLGL::ShaderSource& code)
+        auto CompileShader = [](LLGL::Shader* shader, const std::string& source, const LLGL::ShaderDescriptor& shaderDesc = {})
         {
             // Compile shader
-            shader->Compile(code);
+            shader->Compile(source, shaderDesc);
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
@@ -118,9 +118,9 @@ int main(int argc, char* argv[])
         if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
         {
             auto shaderCode = ReadFileContent("shader.hlsl");
-            CompileShader(vertexShader, LLGL::ShaderSource(shaderCode, "VS", "vs_4_0"));
-            CompileShader(geometryShader, LLGL::ShaderSource(shaderCode, "GS", "gs_4_0"));
-            CompileShader(fragmentShader, LLGL::ShaderSource(shaderCode, "PS", "ps_4_0"));
+            CompileShader(vertexShader, shaderCode, { "VS", "vs_4_0" });
+            CompileShader(geometryShader, shaderCode, { "GS", "gs_4_0" });
+            CompileShader(fragmentShader, shaderCode, { "PS", "ps_4_0" });
         }
         else
         {

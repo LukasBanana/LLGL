@@ -25,7 +25,11 @@ class GLShader : public Shader
         GLShader(const ShaderType type);
         ~GLShader();
 
-        bool Compile(const ShaderSource& shaderSource) override;
+        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
+
+        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
+
+        std::string Disassemble(int flags = 0) override;
 
         std::string QueryInfoLog() override;
 

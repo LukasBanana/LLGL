@@ -28,23 +28,34 @@ GLShader::~GLShader()
     glDeleteShader(id_);
 }
 
-bool GLShader::Compile(const ShaderSource& shaderSource)
+bool GLShader::Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc)
 {
     /* Setup shader source */
-    const GLchar* strings[] = { shaderSource.sourceCode.c_str() };
+    const GLchar* strings[] = { sourceCode.c_str() };
     glShaderSource(id_, 1, strings, nullptr);
 
     /* Compile shader */
     glCompileShader(id_);
 
     /* Store stream-output format */
-    streamOutputFormat_ = shaderSource.streamOutput.format;
+    streamOutputFormat_ = shaderDesc.streamOutput.format;
 
     /* Query compilation status */
     GLint compileStatus = 0;
     glGetShaderiv(id_, GL_COMPILE_STATUS, &compileStatus);
 
     return (compileStatus != GL_FALSE);
+}
+
+
+bool GLShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
+{
+    return false; // dummy
+}
+
+std::string GLShader::Disassemble(int flags)
+{
+    return ""; // dummy
 }
 
 std::string GLShader::QueryInfoLog()
