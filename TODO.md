@@ -7,7 +7,8 @@ Common
 
 | Subject | Progress | Priority | Remarks |
 |---------|:--------:|:--------:|---------|
-| Mobile Window | 0% | High | Maybe a special interface for mobile platforms is required (instead of "Window" interface) |
+| Depth textures | 0% | High | Depth buffers from render targets can currently not be used as textures |
+| Mobile surface | 50% | High | Special interface for mobile platforms is required (`Surface`->`Canvas`/`Window` interfaces) |
 | Stream outputs | 90% | High | An interface for stream outputs (transform feedback) is required |
 | Copy functions | 0% | Medium | Functions for Buffer and Texture copying are required |
 | Query arrays | 0% | Low | Queries shall be grouped to arrays with a "QueryArray" interface |
