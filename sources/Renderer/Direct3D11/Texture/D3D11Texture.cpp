@@ -36,7 +36,7 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(unsigned int mipLevel) const
                 hardwareTexture_.tex1D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width << mipLevel), 1, 1);
+                    size = Gs::Vector3ui((desc.Width >> mipLevel), 1, 1);
             }
             break;
 
@@ -47,7 +47,7 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(unsigned int mipLevel) const
                 hardwareTexture_.tex2D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width << mipLevel), (desc.Height << mipLevel), 1);
+                    size = Gs::Vector3ui((desc.Width >> mipLevel), (desc.Height >> mipLevel), 1);
             }
             break;
 
@@ -58,7 +58,7 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(unsigned int mipLevel) const
                 hardwareTexture_.tex3D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width << mipLevel), (desc.Height << mipLevel), (desc.Depth << mipLevel));
+                    size = Gs::Vector3ui((desc.Width >> mipLevel), (desc.Height >> mipLevel), (desc.Depth >> mipLevel));
             }
             break;
         }
