@@ -15,7 +15,7 @@ namespace LLGL
 #define KEY(c) Key::c
 #define DUMMY KEY(Pause) // <-- any key, a dummy will never be used
 
-static Key win32KeyCodeMap[256] =
+static const Key win32KeyCodeMap[256] =
 {
     DUMMY,                     // 0x00
     KEY(LButton             ), // 0x01
