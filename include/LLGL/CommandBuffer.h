@@ -41,7 +41,7 @@ For older graphics APIs (such as OpenGL and Direct3D 11) it makes not much sense
 but for recent graphics APIs (such as Vulkan and Direct3D 12) it might be sensible to have more than one command buffer,
 to maximize CPU utilization with several worker threads and one command buffer for each thread.
 Note that especially for recent graphics APIs most states in the command buffer are NOT persistent,
-i.e. they need to be reset every frame (e.g. the viewports and scissor rectangles).
+i.e. they need to be reset every frame (e.g. bound vertex buffers).
 Assume that all states that can be changed with a setter function are not persistent except the opposite is mentioned.
 */
 class LLGL_EXPORT CommandBuffer
