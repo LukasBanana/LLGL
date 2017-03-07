@@ -19,7 +19,7 @@ Common
 |-----------------|:---------:|---------|
 | OpenGL ES 2 | High | Since GL and GLES share portions of their API, porting to GLES2 should be quite easily |
 | OpenGL ES 3 | High | Same as for GLES2 |
-| Vulkan | High | The platform indenpendent competitor to D3D12 is highly desired |
+| Vulkan | High | The platform independent competitor to D3D12 is highly desired |
 | Android | High | The most common mobile OS is highly desired |
 | Metal | Middle | The macOS and iOS platform restricted competitor to D3D12 and Vulkan has a secondary relevance |
 | Direct3D 9 | Middle | D3D11 is only supported on WinVista+, D3D9 is supported on WinXP+, so it's also worth considering |
