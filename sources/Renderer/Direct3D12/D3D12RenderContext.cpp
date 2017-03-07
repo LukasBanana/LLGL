@@ -222,7 +222,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
         }
         auto swapChain = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
 
-        swapChain.As(swapChain_);
+        swapChain.As(&swapChain_);
     }
 
     /* Create RTV descriptor heap */
