@@ -146,6 +146,7 @@ class D3D11RenderSystem : public RenderSystem
         void CreateFactory();
         void QueryVideoAdapters();
         void CreateDevice(IDXGIAdapter* adapter);
+        bool CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels, UINT flags, HRESULT& hr);
         void InitStateManager();
 
         void QueryRendererInfo();

@@ -269,12 +269,25 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
     /* Use default adapter (null) and try all feature levels */
     auto    featureLevels   = DXGetFeatureLevels(D3D_FEATURE_LEVEL_11_1);
     HRESULT hr              = 0;
-    UINT    flags           = 0;
 
     #ifdef LLGL_DEBUG
-    flags |= D3D11_CREATE_DEVICE_DEBUG;
+
+    /* Try to create device with debug layer (only supported if Windows 8.1 SDK is installed) */
+    if (!CreateDeviceWithFlags(adapter, featureLevels, D3D11_CREATE_DEVICE_DEBUG, hr))
+        CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
+    
+    #else
+    
+    /* Create device without debug layer */
+    CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
+
     #endif
 
+    DXThrowIfFailed(hr, "failed to create D3D11 device");
+}
+
+bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels, UINT flags, HRESULT& hr)
+{
     for (D3D_DRIVER_TYPE driver : { D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_WARP, D3D_DRIVER_TYPE_SOFTWARE })
     {
         hr = D3D11CreateDevice(
@@ -291,10 +304,10 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
         );
 
         if (SUCCEEDED(hr))
-            break;
+            return true;
     }
 
-    DXThrowIfFailed(hr, "failed to create D3D11 device");
+    return false;
 }
 
 void D3D11RenderSystem::InitStateManager()
