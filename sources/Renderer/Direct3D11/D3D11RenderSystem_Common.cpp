@@ -277,7 +277,7 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
 
     for (D3D_DRIVER_TYPE driver : { D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_WARP, D3D_DRIVER_TYPE_SOFTWARE })
     {
-        auto hr = D3D11CreateDevice(
+        hr = D3D11CreateDevice(
             adapter,                                    // Video adapter
             driver,                                     // Driver type
             0,                                          // Software rasterizer module (none)
