@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)
+[![Build status](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/project/LukasBanana/llgl)
 
 Low Level Graphics Library (LLGL)
 =================================
