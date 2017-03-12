@@ -1,7 +1,6 @@
 version: 1.0.{build}
 before_build:
 - git clone https://github.com/LukasBanana/GaussianLib.git
-- echo "Running cmake ..."
-- cmake -G "Visual Studio 14 2015" -DGaussianLib_INCLUDE_DIR:STRING=include
+- cmake -G "Visual Studio 14 2015" -DGaussianLib_INCLUDE_DIR:STRING="GaussianLib/include"
 build:
   project: LLGL.sln
