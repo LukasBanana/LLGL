@@ -15,7 +15,7 @@
 
 #if defined(LLGL_OS_WIN32)
 #   include <Windows.h>
-#   include <gl/GL.h>
+#   include <GL/GL.h>
 #   include <GL/glext.h>
 #   include <GL/wglext.h>
 #elif defined(LLGL_OS_LINUX)
