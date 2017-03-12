@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)](https://ci.appveyor.com/api/projects/status/j09x8n07u3byfky0?svg=true)
+
 Low Level Graphics Library (LLGL)
 =================================
 
@@ -21,7 +23,7 @@ with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW
 Progress
 --------
 
-- **Version**: 0.01 Beta
+* **Version**: 0.01 Beta
 
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
