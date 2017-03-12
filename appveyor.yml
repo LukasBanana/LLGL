@@ -7,4 +7,3 @@ before_build:
 - cmake -G "Visual Studio 14 2015" -DGaussianLib_INCLUDE_DIR:STRING=include
 build:
   project: build\LLGL.sln
-verbosity: minimal
