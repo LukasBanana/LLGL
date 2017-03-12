@@ -1,0 +1,10 @@
+version: 1.0.{build}
+os:
+- Visual Studio 2015 Update 3
+before_build:
+- git clone https://github.com/LukasBanana/GaussianLib.git
+- echo "Running cmake ..."
+- cmake -G "Visual Studio 14 2015" -DGaussianLib_INCLUDE_DIR:STRING=include
+build:
+  project: build\LLGL.sln
+verbosity: minimal
