@@ -49,30 +49,30 @@ CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex);
 // OpenGL Implementation:
 void GLCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-	glDrawElements(
-		renderState_.drawMode,
-		static_cast<GLsizei>(numVertices),
-		renderState_.indexBufferDataType,
-		(reinterpret_cast<const GLvoid*>(firstIndex * renderState_.indexBufferStride))
-	);
+    glDrawElements(
+        renderState_.drawMode,
+        static_cast<GLsizei>(numVertices),
+        renderState_.indexBufferDataType,
+        (reinterpret_cast<const GLvoid*>(firstIndex * renderState_.indexBufferStride))
+    );
 }
 
 // Direct3D 11 Implementation
 void D3D11CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-	context_->DrawIndexed(numVertices, firstIndex, 0);
+    context_->DrawIndexed(numVertices, firstIndex, 0);
 }
 
 // Direct3D 12 Implementation
 void D3D12CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-	commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
+    commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
 }
 
 // Vulkan Implementation
 void VKCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-	vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, 0, 0);
+    vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, 0, 0);
 }
 ```
 
