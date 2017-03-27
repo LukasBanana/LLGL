@@ -237,6 +237,7 @@ set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/Test1_Window.cpp)
 set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
 set(FilesTest3 ${PROJECT_SOURCE_DIR}/test/Test3_Direct3D12.cpp)
 set(FilesTest4 ${PROJECT_SOURCE_DIR}/test/Test4_Compute.cpp)
+set(FilesTest5 ${PROJECT_SOURCE_DIR}/test/Test5_Vulkan.cpp)
 
 # Tutorial files
 set(FilesTutorial01 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial01_HelloTriangle/main.cpp)
@@ -458,10 +459,13 @@ endif()
 if(LLGL_BUILD_TESTS)
 	ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
 	ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
-	if(WIN32)
+	if(LLGL_BUILD_RENDERER_DIRECT3D12)
 		ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
 	endif()
 	ADD_TEST_PROJECT(Test4_Compute ${FilesTest4})
+	if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
+		ADD_TEST_PROJECT(Test5_Vulkan ${FilesTest5})
+	endif()
 endif()
 
 # Tutorial Projects
