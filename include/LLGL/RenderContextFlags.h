@@ -47,21 +47,21 @@ enum class LogicOp
 
     /* Logical operation entries */
     Clear,          //!< Resulting operation: 0.
-    Set,            //!< Resulting operation: 1
-    Copy,           //!< Resulting operation: src
-    InvertedCopy,   //!< Resulting operation: ~src
-    Noop,           //!< Resulting operation: dest
-    Invert,         //!< Resulting operation: ~dest
-    AND,            //!< Resulting operation: src & dest
-    NAND,           //!< Resulting operation: ~(src & dest)
-    OR,             //!< Resulting operation: src | dest
-    NOR,            //!< Resulting operation: ~(src | dest)
-    XOR,            //!< Resulting operation: src ^ dest
-    Equiv,          //!< Resulting operation: ~(src ^ dest)
-    ReverseAND,     //!< Resulting operation: src & ~dest
-    InvertedAND,    //!< Resulting operation: ~src & dest
-    ReverseOR,      //!< Resulting operation: src | ~dest
-    InvertedOR,     //!< Resulting operation: ~src | dest
+    Set,            //!< Resulting operation: 1.
+    Copy,           //!< Resulting operation: src.
+    InvertedCopy,   //!< Resulting operation: ~src.
+    Noop,           //!< Resulting operation: dest.
+    Invert,         //!< Resulting operation: ~dest.
+    AND,            //!< Resulting operation: src & dest.
+    NAND,           //!< Resulting operation: ~(src & dest).
+    OR,             //!< Resulting operation: src | dest.
+    NOR,            //!< Resulting operation: ~(src | dest).
+    XOR,            //!< Resulting operation: src ^ dest.
+    Equiv,          //!< Resulting operation: ~(src ^ dest).
+    ReverseAND,     //!< Resulting operation: src & ~dest.
+    InvertedAND,    //!< Resulting operation: ~src & dest.
+    ReverseOR,      //!< Resulting operation: src | ~dest.
+    InvertedOR,     //!< Resulting operation: ~src | dest.
 };
 
 
