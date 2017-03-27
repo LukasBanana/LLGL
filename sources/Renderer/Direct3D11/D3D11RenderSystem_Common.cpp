@@ -1,7 +1,7 @@
 /*
  * D3D11RenderSystem_Common.cpp
  * 
- * This file is part of the "LLGL" project (Copyright (c) 2015 by Lukas Hermanns)
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2017 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
