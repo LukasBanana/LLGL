@@ -5,11 +5,11 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../DXCommon/DXCore.h"
+#include "DXCore.h"
+#include "ComPtr.h"
 #include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
 #include "../../Core/Vendor.h"
-#include "../ComPtr.h"
 #include <LLGL/Shader.h>
 #include <stdexcept>
 #include <algorithm>

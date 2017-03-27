@@ -24,7 +24,7 @@
 #include "Shader/D3D12ShaderProgram.h"
 
 #include "../ContainerTypes.h"
-#include "../ComPtr.h"
+#include "../DXCommon/ComPtr.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>
 

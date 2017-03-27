@@ -10,7 +10,7 @@
 
 
 #include <LLGL/RenderContext.h>
-#include "../ComPtr.h"
+#include "../DXCommon/ComPtr.h"
 #include <d3d11.h>
 #include <dxgi.h>
 

@@ -11,7 +11,7 @@
 
 #include <LLGL/CommandBuffer.h>
 #include <cstddef>
-#include "../ComPtr.h"
+#include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 #include <vector>
 #include <d3d11.h>

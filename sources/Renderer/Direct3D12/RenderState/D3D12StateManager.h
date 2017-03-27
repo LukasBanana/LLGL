@@ -9,7 +9,7 @@
 #define LLGL_D3D12_STATE_MANAGER_H
 
 
-#include "../../ComPtr.h"
+#include "../../DXCommon/ComPtr.h"
 #include <LLGL/RenderContextFlags.h>
 #include <vector>
 #include <d3d12.h>

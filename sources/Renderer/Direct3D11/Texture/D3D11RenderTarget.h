@@ -10,7 +10,7 @@
 
 
 #include <LLGL/RenderTarget.h>
-#include "../../ComPtr.h"
+#include "../../DXCommon/ComPtr.h"
 #include <vector>
 #include <functional>
 #include <d3d11.h>

@@ -12,7 +12,7 @@
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
 #include <cstddef>
-#include "../ComPtr.h"
+#include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 
 #include "RenderState/D3D12StateManager.h"

@@ -11,7 +11,7 @@
 
 #include <LLGL/Sampler.h>
 #include <d3d11.h>
-#include "../../ComPtr.h"
+#include "../../DXCommon/ComPtr.h"
 
 
 namespace LLGL

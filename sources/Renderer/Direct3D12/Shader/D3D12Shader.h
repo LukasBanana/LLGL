@@ -12,7 +12,7 @@
 #include <LLGL/Shader.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/BufferFlags.h>
-#include "../../ComPtr.h"
+#include "../../DXCommon/ComPtr.h"
 #include <vector>
 #include <d3d12.h>
 

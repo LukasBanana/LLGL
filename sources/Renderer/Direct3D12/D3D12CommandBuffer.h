@@ -11,7 +11,7 @@
 
 #include <LLGL/CommandBuffer.h>
 #include <cstddef>
-#include "../ComPtr.h"
+#include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 #include "RenderState/D3D12StateManager.h"
 

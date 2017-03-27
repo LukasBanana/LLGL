@@ -33,7 +33,7 @@
 #include "Texture/D3D11RenderTarget.h"
 
 #include "../ContainerTypes.h"
-#include "../ComPtr.h"
+#include "../DXCommon/ComPtr.h"
 #include <d3d11.h>
 #include <dxgi.h>
 
