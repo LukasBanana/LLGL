@@ -117,6 +117,10 @@ else()
 	option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL renderer project" ON)
 endif()
 
+if(NOT APPLE)
+	option(LLGL_BUILD_RENDERER_VULKAN "Include Vulkan renderer project (experimental)" OFF)
+endif()
+
 if(WIN32)
 	option(LLGL_BUILD_RENDERER_DIRECT3D11 "Include Direct3D11 renderer project" ON)
 	option(LLGL_BUILD_RENDERER_DIRECT3D12 "Include Direct3D12 renderer project (experimental)" OFF)
@@ -205,6 +209,9 @@ endif()
 # OpenGLES3 renderer files
 file(GLOB FilesRendererGLES3				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES3/*.*)
 
+# Vulkan renderer files
+file(GLOB FilesRendererVK					${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
+
 # Direct3D common renderer files
 file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
 
@@ -271,6 +278,8 @@ source_group("Sources\\OpenGL\\Texture" FILES ${FilesRendererGLTexture})
 
 source_group("Sources\\OpenGLES3" FILES ${FilesRendererGLES3})
 
+source_group("Sources\\Vulkan" FILES ${FilesRendererVK})
+
 source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
 source_group("Sources\\Direct3D11" FILES ${FilesRendererD3D11})
@@ -330,6 +339,11 @@ set(
 	${FilesRendererGLES3}
 	${FilesRendererGLCommon}
 	${FilesRendererGLCommonTexture}
+)
+
+set(
+	FilesVK
+	${FilesRendererVK}
 )
 
 set(
@@ -407,6 +421,20 @@ if(LLGL_BUILD_RENDERER_OPENGL)
 	endif()
 endif()
 
+if(LLGL_BUILD_RENDERER_VULKAN)
+	# Vulkan Renderer
+	include(cmake/FindVulkan.cmake)
+	if(VULKAN_FOUND)
+		include_directories(${VULKAN_INCLUDE_DIR})
+		add_library(LLGL_Vulkan SHARED ${FilesVK})
+		set_target_properties(LLGL_Vulkan PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(LLGL_Vulkan LLGL ${VULKAN_LIBRARY})
+		ENABLE_CXX11(LLGL_Vulkan)
+	else()
+		message("Missing Vulkan -> LLGL_Vulkan renderer will be excluded from project")
+	endif()
+endif()
+
 if(WIN32)
 	if(LLGL_BUILD_RENDERER_DIRECT3D11)
 		# Direct3D 11 Renderer
@@ -457,12 +485,16 @@ message("~~~ Build Summary ~~~")
 
 message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
 
-if(LLGL_BUILD_RENDERER_OPENGL)
+if(LLGL_BUILD_RENDERER_OPENGL AND OpenGL_FOUND)
 	message("Build Renderer: OpenGL")
 endif()
 
-if(LLGL_BUILD_RENDERER_OPENGLES3)
+if(LLGL_BUILD_RENDERER_OPENGLES3 AND OPENGLES_FOUND)
 	message("Build Renderer: OpenGL ES 3")
+endif()
+
+if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
+	message("Build Renderer: Vulkan")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)

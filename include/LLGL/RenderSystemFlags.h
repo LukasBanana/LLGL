@@ -143,6 +143,18 @@ struct RendererInfo
     std::string shadingLanguageName;    //!< Shading language version (e.g. "GLSL 4.50").
 };
 
+/**
+\brief Application descriptor structure.
+\remarks This is currently only used for the Vulkan renderer, when a debug or validation layer is enabled.
+*/
+struct ApplicationDescriptor
+{
+    std::string     applicationName;    //!< Descriptive string of the application.
+    std::uint32_t   applicationVersion; //!< Version number of the application.
+    std::string     engineName;         //!< Descriptive string of the engine or middleware.
+    std::uint32_t   engineVersion;      //!< Version number of the engine or middleware.
+};
+
 //! Rendering capabilities structure.
 struct RenderingCaps
 {
