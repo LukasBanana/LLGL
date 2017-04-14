@@ -54,7 +54,7 @@ template <typename Dst, typename Src>
 inline Dst CastColorValue(const Src& value)
 {
     /* Use double as intermediate type, if either source or destination type is double */
-    using T = std::conditional
+    using T = typename std::conditional
         <
             (std::is_same<Src, double>::value || std::is_same<Dst, double>::value),
             double,
