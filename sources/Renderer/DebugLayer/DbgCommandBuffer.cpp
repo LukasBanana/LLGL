@@ -348,11 +348,9 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     auto& graphicsPipelineDbg = LLGL_CAST(DbgGraphicsPipeline&, graphicsPipeline);
 
     if (debugger_)
-    {
         bindings_.graphicsPipeline = (&graphicsPipelineDbg);
-        topology_ = graphicsPipelineDbg.desc.primitiveTopology;
-    }
 
+    topology_ = graphicsPipelineDbg.desc.primitiveTopology;
     instance.SetGraphicsPipeline(graphicsPipelineDbg.instance);
     
     LLGL_DBG_PROFILER_DO(setGraphicsPipeline.Inc());
