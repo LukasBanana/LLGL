@@ -141,39 +141,25 @@ class Color<T, 3u>
             return *((&r) + component);
         }
 
+        //! Returns this RGB color as RGBA color.
+        Color<T, 4> ToRGBA() const
+        {
+            return Color<T, 4>(r, g, b);
+        }
+
         /**
         \brief Returns a type casted instance of this color.
         \remarks All color components will be scaled to the range of the new color type.
-        \tparam C Specifies the static cast type.
+        \tparam Dst Specifies the destination type.
         */
-        template <typename C>
-        Color<C, 3> Cast() const
+        template <typename Dst>
+        Color<Dst, 3> Cast() const
         {
-            if (MaxColorValue<T>() != MaxColorValue<C>())
-            {
-                /* Transform color components */
-                auto oldRange = static_cast<double>(MaxColorValue<T>());
-                auto newRange = static_cast<double>(MaxColorValue<C>());
-
-                auto newR = static_cast<double>(r) * newRange / oldRange;
-                auto newG = static_cast<double>(g) * newRange / oldRange;
-                auto newB = static_cast<double>(b) * newRange / oldRange;
-
-                return Color<C, 3>(
-                    static_cast<C>(newR),
-                    static_cast<C>(newG),
-                    static_cast<C>(newB)
-                );
-            }
-            else
-            {
-                /* Cast the color untransformed */
-                return Color<C, 3>(
-                    static_cast<C>(r),
-                    static_cast<C>(g),
-                    static_cast<C>(b)
-                );
-            }
+            return Color<Dst, 3>(
+                CastColorValue<Dst>(r),
+                CastColorValue<Dst>(g),
+                CastColorValue<Dst>(b)
+            );
         }
 
         //! Returns a pointer to the first element of this color.

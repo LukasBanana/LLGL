@@ -15,6 +15,7 @@
 #include <Gauss/Equals.h>
 
 #include <algorithm>
+#include <type_traits>
 
 
 namespace LLGL
@@ -43,6 +44,58 @@ template <>
 inline bool MaxColorValue<bool>()
 {
     return true;
+}
+
+/**
+\brief Casts the specified color value and transforms it from the source data type range to the destination data type range.
+\see MaxColorValue
+*/
+template <typename Dst, typename Src>
+inline Dst CastColorValue(const Src& value)
+{
+    /* Use double as intermediate type, if either source or destination type is double */
+    using T = std::conditional
+        <
+            (std::is_same<Src, double>::value || std::is_same<Dst, double>::value),
+            double,
+            float
+        >
+        ::type;
+
+    /* Get data type ranges */
+    const auto srcRange = static_cast<T>(MaxColorValue<Src>());
+    const auto dstRange = static_cast<T>(MaxColorValue<Dst>());
+
+    /* Transform input value into new range */
+    return static_cast<Dst>(static_cast<T>(value) * dstRange / srcRange);
+}
+
+//! Specialized template which merely passes the input value as output.
+template <>
+inline bool CastColorValue<bool, bool>(const bool& value)
+{
+    return value;
+}
+
+//! Specialized template which merely passes the input value as output.
+template <>
+inline float CastColorValue<float, float>(const float& value)
+{
+    return value;
+}
+
+//! Specialized template which merely passes the input value as output.
+template <>
+inline double CastColorValue<double, double>(const double& value)
+{
+    return value;
+}
+
+//! Specialized template which merely passes the input value as output.
+template <>
+inline unsigned char CastColorValue<unsigned char, unsigned char>(const unsigned char& value)
+{
+    return value;
 }
 
 
@@ -155,28 +208,15 @@ class Color
         /**
         \brief Returns a type casted instance of this color.
         \remarks All color components will be scaled to the range of the new color type.
-        \tparam C Specifies the static cast type.
+        \tparam Dst Specifies the destination type.
         */
-        template <typename C>
-        Color<C, N> Cast() const
+        template <typename Dst>
+        Color<Dst, N> Cast() const
         {
-            Color<C, N> result(Gs::UninitializeTag{});
+            Color<Dst, N> result(Gs::UninitializeTag{});
 
-            if (MaxColorValue<T>() != MaxColorValue<C>())
-            {
-                /* Transform color components */
-                auto oldRange = static_cast<double>(MaxColorValue<T>());
-                auto newRange = static_cast<double>(MaxColorValue<C>());
-
-                for (std::size_t i = 0; i < N; ++i)
-                    result[i] = static_cast<C>(static_cast<double>(v_[i]) * newRange / oldRange);
-            }
-            else
-            {
-                /* Cast the color untransformed */
-                for (std::size_t i = 0; i < N; ++i)
-                    result[i] = static_cast<C>(v_[i]);
-            }
+            for (std::size_t i = 0; i < N; ++i)
+                result[i] = CastColorValue<Dst>(v_[i]);
 
             return result;
         }

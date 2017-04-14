@@ -159,42 +159,26 @@ class Color<T, 4u>
             return *((&r) + component);
         }
 
+        //! Returns this RGBA color as RGB color.
+        Color<T, 3> ToRGB() const
+        {
+            return Color<T, 3>(r, g, b);
+        }
+
         /**
         \brief Returns a type casted instance of this color.
         \remarks All color components will be scaled to the range of the new color type.
-        \tparam C Specifies the static cast type.
+        \tparam Dst Specifies the destination type.
         */
-        template <typename C>
-        Color<C, 4> Cast() const
+        template <typename Dst>
+        Color<Dst, 4> Cast() const
         {
-            if (MaxColorValue<T>() != MaxColorValue<C>())
-            {
-                /* Transform color components */
-                auto oldRange = static_cast<double>(MaxColorValue<T>());
-                auto newRange = static_cast<double>(MaxColorValue<C>());
-
-                auto newR = static_cast<double>(r) * newRange / oldRange;
-                auto newG = static_cast<double>(g) * newRange / oldRange;
-                auto newB = static_cast<double>(b) * newRange / oldRange;
-                auto newA = static_cast<double>(a) * newRange / oldRange;
-
-                return Color<C, 4>(
-                    static_cast<C>(newR),
-                    static_cast<C>(newG),
-                    static_cast<C>(newB),
-                    static_cast<C>(newA)
-                );
-            }
-            else
-            {
-                /* Cast the color untransformed */
-                return Color<C, 4>(
-                    static_cast<C>(r),
-                    static_cast<C>(g),
-                    static_cast<C>(b),
-                    static_cast<C>(a)
-                );
-            }
+            return Color<Dst, 4>(
+                CastColorValue<Dst>(r),
+                CastColorValue<Dst>(g),
+                CastColorValue<Dst>(b),
+                CastColorValue<Dst>(a)
+            );
         }
 
         //! Returns a pointer to the first element of this color.
