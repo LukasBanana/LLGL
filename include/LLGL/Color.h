@@ -153,7 +153,8 @@ class Color
         }
 
         /**
-        Returns a type casted instance of this vector.
+        \brief Returns a type casted instance of this color.
+        \remarks All color components will be scaled to the range of the new color type.
         \tparam C Specifies the static cast type.
         */
         template <typename C>
@@ -161,8 +162,21 @@ class Color
         {
             Color<C, N> result(Gs::UninitializeTag{});
 
-            for (std::size_t i = 0; i < N; ++i)
-                result[i] = static_cast<C>(v_[i]);
+            if (MaxColorValue<T>() != MaxColorValue<C>())
+            {
+                /* Transform color components */
+                auto oldRange = static_cast<double>(MaxColorValue<T>());
+                auto newRange = static_cast<double>(MaxColorValue<C>());
+
+                for (std::size_t i = 0; i < N; ++i)
+                    result[i] = static_cast<C>(static_cast<double>(v_[i]) * newRange / oldRange);
+            }
+            else
+            {
+                /* Cast the color untransformed */
+                for (std::size_t i = 0; i < N; ++i)
+                    result[i] = static_cast<C>(v_[i]);
+            }
 
             return result;
         }
