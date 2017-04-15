@@ -152,6 +152,12 @@ class LLGL_EXPORT Window : public Surface
                 //! Send when the window has been resized.
                 virtual void OnResize(Window& sender, const Size& clientAreaSize);
 
+                //! Send when the window gets the keyboard focus.
+                virtual void OnGetFocus(Window& sender);
+
+                //! Send when the window loses the keyboard focus.
+                virtual void OnLoseFocus(Window& sender);
+
                 /**
                 \brief Send when the window is about to be quit.
                 \return True if the sender window can quit. In this case "ProcessEvents" returns false from now on.
@@ -272,6 +278,12 @@ class LLGL_EXPORT Window : public Surface
 
         //! \see PostKeyDown
         void PostResize(const Size& clientAreaSize);
+
+        //! Posts a 'GetFocus' event to all event listeners.
+        void PostGetFocus();
+
+        //! Posts a 'LoseFocus' event to all event listeners.
+        void PostLoseFocus();
 
         /**
         \brief Posts a 'Quit' event to all event listeners.

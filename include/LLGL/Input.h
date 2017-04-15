@@ -95,6 +95,8 @@ class LLGL_EXPORT Input : public Window::EventListener
         void OnLocalMotion(Window& sender, const Point& position) override;
         void OnGlobalMotion(Window& sender, const Point& motion) override;
 
+        void OnLoseFocus(Window& sender) override;
+
         KeyStateArray       keyPressed_;
         KeyStateArray       keyDown_;
         KeyStateArray       keyUp_;

@@ -131,6 +131,17 @@ void Input::OnGlobalMotion(Window& sender, const Point& motion)
     mouseMotion_ += motion;
 }
 
+void Input::OnLoseFocus(Window& sender)
+{
+    /* Reset all 'key-pressed' states */
+    InitArray(keyPressed_);
+}
+
+
+/*
+ * KeyTracker structure
+ */
+
 void Input::KeyTracker::Add(Key keyCode)
 {
     if (resetCount < maxCount)

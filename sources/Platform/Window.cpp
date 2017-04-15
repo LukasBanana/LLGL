@@ -64,6 +64,16 @@ void Window::EventListener::OnResize(Window& sender, const Size& clientAreaSize)
     // dummy
 }
 
+void Window::EventListener::OnGetFocus(Window& sender)
+{
+    // dummy
+}
+
+void Window::EventListener::OnLoseFocus(Window& sender)
+{
+    // dummy
+}
+
 bool Window::EventListener::OnQuit(Window& sender)
 {
     return true; // dummy
@@ -183,6 +193,16 @@ void Window::PostGlobalMotion(const Point& motion)
 void Window::PostResize(const Size& clientAreaSize)
 {
     FOREACH_LISTENER_CALL( OnResize(*this, clientAreaSize) );
+}
+
+void Window::PostGetFocus()
+{
+    FOREACH_LISTENER_CALL( OnGetFocus(*this) );
+}
+
+void Window::PostLoseFocus()
+{
+    FOREACH_LISTENER_CALL( OnLoseFocus(*this) );
 }
 
 void Window::PostQuit()

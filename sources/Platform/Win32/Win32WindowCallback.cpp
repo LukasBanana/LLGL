@@ -44,8 +44,7 @@ static void PostKeyEvent(Window& window, Key keyCode, bool isDown)
 static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
 {
     /* Get window object from window handle */
-    auto window = GetWindowFromUserData(wnd);
-    if (window)
+    if (auto window = GetWindowFromUserData(wnd))
     {
         /* Extract key code */
         auto keyCodeSys = static_cast<unsigned int>(wParam);
@@ -84,13 +83,21 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
 
 /* --- Mouse events --- */
 
-static int mouseCaptureCounter = 0;
+static int g_mouseCaptureCounter = 0;
+
+static void ReleaseMouseCapture()
+{
+    if (g_mouseCaptureCounter > 0)
+    {
+        g_mouseCaptureCounter = 0;
+        ReleaseCapture();
+    }
+}
 
 static void CaptureMouseButton(HWND wnd, Key keyCode, bool doubleClick = false)
 {
     /* Get window object from window handle */
-    auto window = GetWindowFromUserData(wnd);
-    if (window)
+    if (auto window = GetWindowFromUserData(wnd))
     {
         /* Post key events and capture mouse */
         window->PostKeyDown(keyCode);
@@ -98,7 +105,7 @@ static void CaptureMouseButton(HWND wnd, Key keyCode, bool doubleClick = false)
         if (doubleClick)
             window->PostDoubleClick(keyCode);
 
-        if (++mouseCaptureCounter == 1)
+        if (++g_mouseCaptureCounter == 1)
             SetCapture(wnd);
     }
 }
@@ -106,21 +113,20 @@ static void CaptureMouseButton(HWND wnd, Key keyCode, bool doubleClick = false)
 static void ReleaseMouseButton(HWND wnd, Key keyCode)
 {
     /* Get window object from window handle */
-    auto window = GetWindowFromUserData(wnd);
-    if (window)
+    if (auto window = GetWindowFromUserData(wnd))
     {
         /* Post key event and release mouse capture */
         window->PostKeyUp(keyCode);
 
-        if (--mouseCaptureCounter == 0)
+        if (--g_mouseCaptureCounter == 0)
             ReleaseCapture();
     
-        if (mouseCaptureCounter < 0)
+        if (g_mouseCaptureCounter < 0)
         {
             #ifdef LLGL_DEBUG
             //warning!!!
             #endif
-            mouseCaptureCounter = 0;
+            g_mouseCaptureCounter = 0;
         }
     }
 }
@@ -128,8 +134,7 @@ static void ReleaseMouseButton(HWND wnd, Key keyCode)
 static void PostLocalMouseMotion(HWND wnd, LPARAM lParam)
 {
     /* Get window object from window handle */
-    auto window = GetWindowFromUserData(wnd);
-    if (window)
+    if (auto window = GetWindowFromUserData(wnd))
     {
         /* Extract mouse position from event parameter */
         int x = GET_X_LPARAM(lParam);
@@ -143,8 +148,7 @@ static void PostLocalMouseMotion(HWND wnd, LPARAM lParam)
 static void PostGlobalMouseMotion(HWND wnd, LPARAM lParam)
 {
     /* Get window object from window handle */
-    auto window = GetWindowFromUserData(wnd);
-    if (window)
+    if (auto window = GetWindowFromUserData(wnd))
     {
         RAWINPUT raw;
         UINT rawSize = sizeof(raw);
@@ -196,8 +200,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_SIZE:
         {
             /* Post resize event to window */
-            auto window = GetWindowFromUserData(wnd);
-            if (window)
+            if (auto window = GetWindowFromUserData(wnd))
             {
                 WORD width = LOWORD(lParam);
                 WORD height = HIWORD(lParam);
@@ -209,40 +212,48 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_CLOSE:
         {
             /* Post close event to window */
-            auto window = GetWindowFromUserData(wnd);
-            if (window)
+            if (auto window = GetWindowFromUserData(wnd))
                 window->PostQuit();
         }
         break;
 
         case WM_SYSCOMMAND:
         {
-#if 0
+            #if 0
             switch (wParam & 0xfff0)
             {
                 case SC_SCREENSAVE:
                 case SC_MONITORPOWER:
                 {
-                    auto window = GetWindowFromUserData(wnd);
-
-                    if (window && window->GetDesc().preventForPowerSafe)
+                    if (auto window = GetWindowFromUserData(wnd))
                     {
-                        /* Prevent for a powersave mode of monitor or the screensaver */
-                        return 0;
+                        if (window->GetDesc().preventForPowerSafe)
+                        {
+                            /* Prevent for a powersave mode of monitor or the screensaver */
+                            return 0;
+                        }
                     }
                 }
                 break;
             }
-#endif
+            #endif
         }
         break;
 
-        /*case WM_KILLFOCUS:
+        case WM_SETFOCUS:
         {
-            //clear keyboard and mouse input states ...
-            ReleaseCapture();
+            if (auto window = GetWindowFromUserData(wnd))
+                window->PostGetFocus();
         }
-        return 0;*/
+        break;
+
+        case WM_KILLFOCUS:
+        {
+            ReleaseMouseCapture();
+            if (auto window = GetWindowFromUserData(wnd))
+                window->PostLoseFocus();
+        }
+        break;
 
         /* --- Keyboard events --- */
 
@@ -260,8 +271,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_CHAR:
         {
-            auto window = GetWindowFromUserData(wnd);
-            if (window)
+            if (auto window = GetWindowFromUserData(wnd))
                 window->PostChar(static_cast<wchar_t>(wParam));
         }
         return 0;
@@ -330,8 +340,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_MOUSEWHEEL:
         {
-            auto window = GetWindowFromUserData(wnd);
-            if (window)
+            if (auto window = GetWindowFromUserData(wnd))
                 window->PostWheelMotion(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
         }
         return 0;
@@ -353,16 +362,17 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         case WM_ERASEBKGND:
         {
             /* Do not erase background to avoid flickering when user resizes the window */
-            auto window = GetWindowFromUserData(wnd);
-            if (window && window->GetBehavior().disableClearOnResize)
-                return 0;
+            if (auto window = GetWindowFromUserData(wnd))
+            {
+                if (window->GetBehavior().disableClearOnResize)
+                    return 0;
+            }
         }
         break;
 
         case WM_ENTERSIZEMOVE:
         {
-            auto window = GetWindowFromUserData(wnd);
-            if (window)
+            if (auto window = GetWindowFromUserData(wnd))
             {
                 auto timerID = window->GetBehavior().moveAndResizeTimerID;
                 if (timerID != invalidWindowTimerID)
@@ -376,8 +386,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_EXITSIZEMOVE:
         {
-            auto window = GetWindowFromUserData(wnd);
-            if (window)
+            if (auto window = GetWindowFromUserData(wnd))
             {
                 auto timerID = window->GetBehavior().moveAndResizeTimerID;
                 if (timerID != invalidWindowTimerID)
@@ -391,8 +400,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_TIMER:
         {
-            auto window = GetWindowFromUserData(wnd);
-            if (window)
+            if (auto window = GetWindowFromUserData(wnd))
             {
                 auto timerID = static_cast<unsigned int>(wParam);
                 window->PostTimer(timerID);
