@@ -54,8 +54,8 @@ class D3D12ShaderProgram : public ShaderProgram
 
         inline D3D12Shader* GetVS() const { return vs_; }
         inline D3D12Shader* GetPS() const { return ps_; }
-        inline D3D12Shader* GetDS() const { return ds_; }
         inline D3D12Shader* GetHS() const { return hs_; }
+        inline D3D12Shader* GetDS() const { return ds_; }
         inline D3D12Shader* GetGS() const { return gs_; }
         inline D3D12Shader* GetCS() const { return cs_; }
 
@@ -86,10 +86,10 @@ class D3D12ShaderProgram : public ShaderProgram
         std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
 
         D3D12Shader*                                vs_                     = nullptr;
-        D3D12Shader*                                ps_                     = nullptr;
-        D3D12Shader*                                ds_                     = nullptr;
         D3D12Shader*                                hs_                     = nullptr;
+        D3D12Shader*                                ds_                     = nullptr;
         D3D12Shader*                                gs_                     = nullptr;
+        D3D12Shader*                                ps_                     = nullptr;
         D3D12Shader*                                cs_                     = nullptr;
 
         std::vector<VertexAttribute>                vertexAttributes_;

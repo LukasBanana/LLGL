@@ -56,8 +56,8 @@ class D3D11ShaderProgram : public ShaderProgram
         }
 
         inline D3D11Shader* GetVS() const { return vs_; }
-        inline D3D11Shader* GetDS() const { return ds_; }
         inline D3D11Shader* GetHS() const { return hs_; }
+        inline D3D11Shader* GetDS() const { return ds_; }
         inline D3D11Shader* GetGS() const { return gs_; }
         inline D3D11Shader* GetPS() const { return ps_; }
         inline D3D11Shader* GetCS() const { return cs_; }
@@ -76,8 +76,8 @@ class D3D11ShaderProgram : public ShaderProgram
         ComPtr<ID3D11InputLayout>                   inputLayout_;
 
         D3D11Shader*                                vs_                     = nullptr;
-        D3D11Shader*                                ds_                     = nullptr;
         D3D11Shader*                                hs_                     = nullptr;
+        D3D11Shader*                                ds_                     = nullptr;
         D3D11Shader*                                gs_                     = nullptr;
         D3D11Shader*                                ps_                     = nullptr;
         D3D11Shader*                                cs_                     = nullptr;

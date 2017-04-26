@@ -57,10 +57,10 @@ void D3D11ShaderProgram::AttachShader(Shader& shader)
             ps_ = shaderD3D;
             break;
         case ShaderType::TessControl:
-            ds_ = shaderD3D;
+            hs_ = shaderD3D;
             break;
         case ShaderType::TessEvaluation:
-            hs_ = shaderD3D;
+            ds_ = shaderD3D;
             break;
         case ShaderType::Geometry:
             gs_ = shaderD3D;
@@ -90,8 +90,8 @@ void D3D11ShaderProgram::DetachAll()
     inputLayout_.Reset();
 
     vs_ = nullptr;
-    ds_ = nullptr;
     hs_ = nullptr;
+    ds_ = nullptr;
     gs_ = nullptr;
     ps_ = nullptr;
     cs_ = nullptr;
@@ -108,8 +108,8 @@ bool D3D11ShaderProgram::LinkShaders()
     enum ShaderTypeMask
     {
         MaskVS = (1 << 0),
-        MaskDS = (1 << 1),
-        MaskHS = (1 << 2),
+        MaskHS = (1 << 1),
+        MaskDS = (1 << 2),
         MaskGS = (1 << 3),
         MaskPS = (1 << 4),
         MaskCS = (1 << 5),
@@ -131,8 +131,8 @@ bool D3D11ShaderProgram::LinkShaders()
     };
 
     MarkShader(vs_, MaskVS);
-    MarkShader(ds_, MaskDS);
     MarkShader(hs_, MaskHS);
+    MarkShader(ds_, MaskDS);
     MarkShader(gs_, MaskGS);
     MarkShader(ps_, MaskPS);
     MarkShader(cs_, MaskCS);
