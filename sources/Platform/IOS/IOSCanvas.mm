@@ -82,8 +82,8 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 }
 
 IOSCanvas::IOSCanvas(const CanvasDescriptor& desc) :
-    desc_( desc                 )/*,
-    view_( CreateUIView(desc) )*/
+    desc_ { desc               }/*,
+    view_ { CreateUIView(desc) }*/
 {
 }
 

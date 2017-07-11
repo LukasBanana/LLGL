@@ -34,7 +34,7 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surf
  */
 
 LinuxGLContext::LinuxGLContext(RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext) :
-    GLContext( sharedContext )
+    GLContext { sharedContext }
 {
     NativeHandle nativeHandle;
     surface.GetNativeHandle(&nativeHandle);
