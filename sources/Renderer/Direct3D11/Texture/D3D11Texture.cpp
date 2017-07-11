@@ -14,7 +14,7 @@ namespace LLGL
 
 
 D3D11Texture::D3D11Texture(const TextureType type) :
-    Texture( type )
+    Texture { type }
 {
 }
 

@@ -47,8 +47,8 @@ namespace LLGL
 #define SRV_STAGE(FLAG) ( ((FLAG) & ShaderStageFlags::ReadOnlyResource   ) != 0 )
 
 D3D11CommandBuffer::D3D11CommandBuffer(D3D11StateManager& stateMngr, const ComPtr<ID3D11DeviceContext>& context) :
-    stateMngr_  ( stateMngr ),
-    context_    ( context   )
+    stateMngr_ { stateMngr },
+    context_   { context   }
 {
 }
 

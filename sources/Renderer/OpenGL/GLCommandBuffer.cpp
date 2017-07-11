@@ -37,7 +37,7 @@ namespace LLGL
 
 
 GLCommandBuffer::GLCommandBuffer(const std::shared_ptr<GLStateManager>& stateMngr) :
-    stateMngr_( stateMngr )
+    stateMngr_ { stateMngr }
 {
 }
 

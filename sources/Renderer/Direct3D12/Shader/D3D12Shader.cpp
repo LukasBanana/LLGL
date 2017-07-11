@@ -17,7 +17,7 @@ namespace LLGL
 
 
 D3D12Shader::D3D12Shader(const ShaderType type) :
-    Shader( type )
+    Shader { type }
 {
 }
 

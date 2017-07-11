@@ -22,7 +22,7 @@ class Tutorial03 : public Tutorial
 public:
 
     Tutorial03() :
-        Tutorial( L"LLGL Tutorial 03: Texturing" )
+        Tutorial { L"LLGL Tutorial 03: Texturing" }
     {
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();

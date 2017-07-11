@@ -21,7 +21,7 @@ namespace LLGL
 union D3D11HardwareQuery
 {
     D3D11HardwareQuery() :
-        query( nullptr )
+        query { nullptr }
     {
     }
     ~D3D11HardwareQuery()

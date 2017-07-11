@@ -24,10 +24,10 @@ namespace LLGL
 
 DbgCommandBuffer::DbgCommandBuffer(
     CommandBuffer& instance, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCaps& caps) :
-        instance    ( instance ),
-        profiler_   ( profiler ),
-        debugger_   ( debugger ),
-        caps_       ( caps     )
+        instance  { instance },
+        profiler_ { profiler },
+        debugger_ { debugger },
+        caps_     { caps     }
 {
 }
 

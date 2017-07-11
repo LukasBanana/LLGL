@@ -15,7 +15,7 @@ namespace LLGL
 
 
 GLTexture::GLTexture(const TextureType type) :
-    Texture( type )
+    Texture { type }
 {
     glGenTextures(1, &id_);
 }

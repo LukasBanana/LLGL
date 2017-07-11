@@ -14,7 +14,7 @@ namespace LLGL
 
 
 D3D11StateManager::D3D11StateManager(ComPtr<ID3D11DeviceContext>& context) :
-    context_( context )
+    context_ { context }
 {
 }
 

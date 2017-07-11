@@ -78,8 +78,8 @@ void RenderingDebugger::OnWarning(WarningType type, Message& message)
  */
 
 RenderingDebugger::Message::Message(const std::string& text, const std::string& source) :
-    text_   ( text   ),
-    source_ ( source )
+    text_   { text   },
+    source_ { source }
 {
 }
 

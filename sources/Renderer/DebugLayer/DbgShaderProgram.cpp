@@ -16,8 +16,8 @@ namespace LLGL
 
 
 DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger) :
-    instance    ( instance ),
-    debugger_   ( debugger )
+    instance  { instance },
+    debugger_ { debugger }
 {
 }
 

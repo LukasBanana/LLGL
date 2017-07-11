@@ -93,8 +93,8 @@ int main()
         {
         public:
             ResizeEventHandler(LLGL::RenderContext* context, LLGL::CommandBuffer* commands) :
-                context_    ( context  ),
-                commands_   ( commands )
+                context_  { context  },
+                commands_ { commands }
             {
             }
             void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override

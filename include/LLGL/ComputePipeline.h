@@ -23,7 +23,7 @@ struct ComputePipelineDescriptor
 {
     ComputePipelineDescriptor() = default;
     ComputePipelineDescriptor(ShaderProgram* shaderProgram) :
-        shaderProgram( shaderProgram )
+        shaderProgram { shaderProgram }
     {
     }
 

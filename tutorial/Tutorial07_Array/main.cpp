@@ -21,7 +21,7 @@ class Tutorial07 : public Tutorial
 public:
 
     Tutorial07() :
-        Tutorial( L"LLGL Tutorial 07: Array" )
+        Tutorial { L"LLGL Tutorial 07: Array" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

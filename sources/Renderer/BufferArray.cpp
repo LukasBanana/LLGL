@@ -13,7 +13,7 @@ namespace LLGL
 
 
 BufferArray::BufferArray(const BufferType type) :
-    type_( type )
+    type_ { type }
 {
 }
 

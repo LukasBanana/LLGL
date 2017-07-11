@@ -22,8 +22,8 @@ class DbgGraphicsPipeline : public GraphicsPipeline
     public:
 
         DbgGraphicsPipeline(GraphicsPipeline& instance, const GraphicsPipelineDescriptor& desc) :
-            instance( instance ),
-            desc    ( desc     )
+            instance { instance },
+            desc     { desc     }
         {
         }
 

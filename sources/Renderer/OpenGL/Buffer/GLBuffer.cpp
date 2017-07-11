@@ -15,7 +15,7 @@ namespace LLGL
 
 
 GLBuffer::GLBuffer(const BufferType type) :
-    Buffer( type )
+    Buffer { type }
 {
     glGenBuffers(1, &id_);
 }

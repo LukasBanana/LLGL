@@ -44,7 +44,7 @@ class Tutorial10 : public Tutorial
 public:
 
     Tutorial10() :
-        Tutorial( L"LLGL Tutorial 10: Instancing" )
+        Tutorial { L"LLGL Tutorial 10: Instancing" }
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();

@@ -16,9 +16,9 @@ namespace LLGL
 
 
 DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc) :
-    instance    ( instance ),
-    debugger_   ( debugger ),
-    desc_       ( desc     )
+    instance  { instance },
+    debugger_ { debugger },
+    desc_     { desc     }
 {
 }
 

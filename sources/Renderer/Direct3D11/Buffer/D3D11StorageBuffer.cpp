@@ -18,7 +18,7 @@ namespace LLGL
 
 
 D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
-    D3D11Buffer( BufferType::Storage )
+    D3D11Buffer { BufferType::Storage }
 {
     if (desc.storageBuffer.stride == 0)
         throw std::invalid_argument("storage buffer stride can not be zero for a D3D11 resource view");

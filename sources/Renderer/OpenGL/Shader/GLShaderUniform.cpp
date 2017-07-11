@@ -14,7 +14,7 @@ namespace LLGL
 
 
 GLShaderUniform::GLShaderUniform(GLuint program) :
-    program_( program )
+    program_ { program }
 {
 }
 

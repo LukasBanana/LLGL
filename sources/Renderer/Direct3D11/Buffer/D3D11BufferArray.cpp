@@ -16,7 +16,7 @@ namespace LLGL
 
 
 D3D11BufferArray::D3D11BufferArray(const BufferType type, unsigned int numBuffers, Buffer* const * bufferArray) :
-    BufferArray( type )
+    BufferArray { type }
 {
     /* Store the pointer of each ID3D11Buffer inside the array */
     buffers_.reserve(numBuffers);

@@ -21,9 +21,9 @@ D3D11RenderContext::D3D11RenderContext(
     const ComPtr<ID3D11DeviceContext>& context,
     const RenderContextDescriptor& desc,
     const std::shared_ptr<Surface>& surface) :
-        device_ ( device  ),
-        context_( context ),
-        desc_   ( desc    )
+        device_  { device  },
+        context_ { context },
+        desc_    { desc    }
 {
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, desc_.videoMode, nullptr);

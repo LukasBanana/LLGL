@@ -34,7 +34,7 @@ static D3D12_RESOURCE_DIMENSION GetResourceDimension(const TextureType type)
 }
 
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
-    Texture( desc.type )
+    Texture { desc.type }
 {
     /* Setup resource descriptor by texture descriptor */
     D3D12_RESOURCE_DESC resDesc;

@@ -21,7 +21,7 @@ namespace LLGL
 
 
 D3D11ShaderProgram::D3D11ShaderProgram(ID3D11Device* device) :
-    device_( device )
+    device_ { device }
 {
 }
 

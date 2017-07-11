@@ -14,7 +14,7 @@ namespace LLGL
 
 
 GLVertexBuffer::GLVertexBuffer() :
-    GLBuffer( BufferType::Vertex )
+    GLBuffer { BufferType::Vertex }
 {
 }
 

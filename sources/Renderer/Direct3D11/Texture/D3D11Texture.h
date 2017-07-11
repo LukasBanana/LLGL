@@ -21,7 +21,7 @@ namespace LLGL
 union D3D11HardwareTexture
 {
     D3D11HardwareTexture() :
-        resource( nullptr )
+        resource { nullptr }
     {
     }
     ~D3D11HardwareTexture()

@@ -33,9 +33,9 @@ class Color<T, 3u>
 
         #ifndef GS_DISABLE_AUTO_INIT
         Color() :
-            r( MaxColorValue<T>() ),
-            g( MaxColorValue<T>() ),
-            b( MaxColorValue<T>() )
+            r { MaxColorValue<T>() },
+            g { MaxColorValue<T>() },
+            b { MaxColorValue<T>() }
         {
         }
         #else
@@ -43,23 +43,23 @@ class Color<T, 3u>
         #endif
 
         Color(const Color<T, 3>& rhs) :
-            r( rhs.r ),
-            g( rhs.g ),
-            b( rhs.b )
+            r { rhs.r },
+            g { rhs.g },
+            b { rhs.b }
         {
         }
 
         explicit Color(const T& scalar) :
-            r( scalar ),
-            g( scalar ),
-            b( scalar )
+            r { scalar },
+            g { scalar },
+            b { scalar }
         {
         }
 
         Color(const T& r, const T& g, const T& b) :
-            r( r ),
-            g( g ),
-            b( b )
+            r { r },
+            g { g },
+            b { b }
         {
         }
 

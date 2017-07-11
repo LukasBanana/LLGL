@@ -17,7 +17,7 @@ namespace LLGL
 
 
 D3D12Buffer::D3D12Buffer(const BufferType type) :
-    Buffer( type )
+    Buffer { type }
 {
 }
 

@@ -25,7 +25,7 @@ namespace LLGL
 union D3D11HardwareShader
 {
     D3D11HardwareShader() :
-        vs( nullptr )
+        vs { nullptr }
     {
     }
     ~D3D11HardwareShader()

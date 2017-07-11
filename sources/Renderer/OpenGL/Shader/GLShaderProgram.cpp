@@ -24,8 +24,8 @@ namespace LLGL
 
 
 GLShaderProgram::GLShaderProgram() :
-    id_     ( glCreateProgram() ),
-    uniform_( id_               )
+    id_      { glCreateProgram() },
+    uniform_ { id_               }
 {
 }
 

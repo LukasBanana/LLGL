@@ -15,7 +15,7 @@ namespace LLGL
 
 
 D3D12ConstantBuffer::D3D12ConstantBuffer(ID3D12Device* device, const BufferDescriptor& desc) :
-    D3D12Buffer( BufferType::Constant )
+    D3D12Buffer { BufferType::Constant }
 {
     /* Create descriptor heap for constant buffer */
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;

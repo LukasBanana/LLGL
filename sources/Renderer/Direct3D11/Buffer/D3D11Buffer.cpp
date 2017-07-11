@@ -16,12 +16,12 @@ namespace LLGL
 
 
 D3D11Buffer::D3D11Buffer(const BufferType type) :
-    Buffer( type )
+    Buffer { type }
 {
 }
 
 D3D11Buffer::D3D11Buffer(const BufferType type, ID3D11Device* device, const D3D11_BUFFER_DESC& desc, const void* initialData, long bufferFlags) :
-    Buffer( type )
+    Buffer { type }
 {
     CreateResource(device, desc, initialData, bufferFlags);
 }

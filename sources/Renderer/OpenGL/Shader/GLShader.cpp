@@ -18,7 +18,7 @@ namespace LLGL
 
 
 GLShader::GLShader(const ShaderType type) :
-    Shader( type )
+    Shader { type }
 {
     id_ = glCreateShader(GLTypes::Map(type));
 }
