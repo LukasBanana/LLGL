@@ -27,7 +27,7 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 LinuxWindow::LinuxWindow(const WindowDescriptor& desc) :
-    desc_( desc )
+    desc_ { desc }
 {
     OpenWindow();
 }

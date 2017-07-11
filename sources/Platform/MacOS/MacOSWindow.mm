@@ -132,8 +132,8 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
-    desc_   ( desc             ),
-    wnd_    ( CreateNSWindow() )
+    desc_ { desc             },
+    wnd_  { CreateNSWindow() }
 {
     if (!desc_.centered)
         SetPosition(desc_.position);

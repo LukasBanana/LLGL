@@ -24,7 +24,7 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surf
 }
 
 MacOSGLContext::MacOSGLContext(RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext) :
-    LLGL::GLContext( sharedContext )
+    LLGL::GLContext { sharedContext }
 {
     CreatePixelFormat(desc);
     
