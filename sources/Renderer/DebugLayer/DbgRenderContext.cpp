@@ -13,7 +13,7 @@ namespace LLGL
 
 
 DbgRenderContext::DbgRenderContext(RenderContext& instance) :
-    instance( instance )
+    instance { instance }
 {
     ShareSurfaceAndVideoMode(instance);
 }

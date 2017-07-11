@@ -13,8 +13,8 @@ namespace LLGL
 
 
 Barrier::Barrier(std::size_t threadCount) :
-    threadCount_( threadCount ),
-    counter_    ( threadCount )
+    threadCount_ { threadCount },
+    counter_     { threadCount }
 {
 }
 

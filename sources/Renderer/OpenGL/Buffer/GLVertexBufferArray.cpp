@@ -16,7 +16,7 @@ namespace LLGL
 
 
 GLVertexBufferArray::GLVertexBufferArray() :
-    GLBufferArray( BufferType::Vertex )
+    GLBufferArray { BufferType::Vertex }
 {
 }
 

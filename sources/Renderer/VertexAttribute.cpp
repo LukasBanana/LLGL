@@ -15,16 +15,16 @@ namespace LLGL
 
 VertexAttribute::VertexAttribute(
     const std::string& name, const VectorType vectorType, unsigned int instanceDivisor) :
-        VertexAttribute( name, 0, vectorType, instanceDivisor )
+        VertexAttribute { name, 0, vectorType, instanceDivisor }
 {
 }
 
 VertexAttribute::VertexAttribute(
     const std::string& semanticName, unsigned int semanticIndex, const VectorType vectorType, unsigned int instanceDivisor) :
-        name            ( semanticName    ),
-        vectorType      ( vectorType      ),
-        instanceDivisor ( instanceDivisor ),
-        semanticIndex   ( semanticIndex   )
+        name            { semanticName    },
+        vectorType      { vectorType      },
+        instanceDivisor { instanceDivisor },
+        semanticIndex   { semanticIndex   }
 {
 }
 

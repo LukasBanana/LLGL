@@ -15,7 +15,7 @@ namespace LLGL
 
 
 D3D12IndexBuffer::D3D12IndexBuffer(ID3D12Device* device, const BufferDescriptor& desc) :
-    D3D12Buffer( BufferType::Index )
+    D3D12Buffer { BufferType::Index }
 {
     /* Create resource and initialize buffer view */
     CreateResource(device, desc.size);

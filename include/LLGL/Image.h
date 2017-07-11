@@ -67,17 +67,17 @@ struct LLGL_EXPORT ImageDescriptor
 
     // Constructor for uncompressed image data.
     inline ImageDescriptor(ImageFormat format, DataType dataType, const void* buffer) :
-        format  ( format   ),
-        dataType( dataType ),
-        buffer  ( buffer   )
+        format   { format   },
+        dataType { dataType },
+        buffer   { buffer   }
     {
     }
 
     //! Constructor for compressed image data.
     inline ImageDescriptor(ImageFormat format, const void* buffer, unsigned int compressedSize) :
-        format          ( format         ),
-        buffer          ( buffer         ),
-        compressedSize  ( compressedSize )
+        format         { format         },
+        buffer         { buffer         },
+        compressedSize { compressedSize }
     {
     }
 

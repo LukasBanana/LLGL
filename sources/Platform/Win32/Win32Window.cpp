@@ -73,8 +73,11 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
 
 static Point GetScreenCenteredPosition(const Size& size)
 {
-    return { GetSystemMetrics(SM_CXSCREEN)/2 - size.x/2,
-             GetSystemMetrics(SM_CYSCREEN)/2 - size.y/2 };
+    return
+    {
+        GetSystemMetrics(SM_CXSCREEN)/2 - size.x/2,
+        GetSystemMetrics(SM_CYSCREEN)/2 - size.y/2
+    };
 }
 
 static WindowAppearance GetWindowAppearance(const WindowDescriptor& desc)
@@ -110,8 +113,8 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 Win32Window::Win32Window(const WindowDescriptor& desc) :
-    contextHandle_  { 0                        },
-    wnd_            { CreateWindowHandle(desc) }
+    contextHandle_ { 0                        },
+    wnd_           { CreateWindowHandle(desc) }
 {
 }
 

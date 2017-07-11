@@ -28,8 +28,8 @@ D3D12RenderContext::D3D12RenderContext(
     D3D12RenderSystem& renderSystem,
     RenderContextDescriptor desc,
     const std::shared_ptr<Surface>& surface) :
-        renderSystem_   ( renderSystem ),
-        desc_           ( desc         )
+        renderSystem_ { renderSystem },
+        desc_         { desc         }
 {
     #if 1 //TODO: multi-sampling currently not supported!
     desc_.multiSampling.enabled = false;

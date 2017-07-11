@@ -14,7 +14,7 @@ namespace LLGL
 
 
 D3D12VertexBuffer::D3D12VertexBuffer(ID3D12Device* device, const BufferDescriptor& desc) :
-    D3D12Buffer( BufferType::Vertex )
+    D3D12Buffer { BufferType::Vertex }
 {
     /* Create resource and initialize buffer view */
     CreateResource(device, desc.size);

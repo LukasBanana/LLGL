@@ -26,9 +26,9 @@ All the actual render system objects are stored in the members named "instance",
 
 DbgRenderSystem::DbgRenderSystem(
     const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
-        instance_( instance ),
-        profiler_( profiler ),
-        debugger_( debugger )
+        instance_ { instance },
+        profiler_ { profiler },
+        debugger_ { debugger }
 {
 }
 

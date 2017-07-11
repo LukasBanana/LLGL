@@ -17,7 +17,7 @@ namespace LLGL
 
 
 D3D11ConstantBuffer::D3D11ConstantBuffer(ID3D11Device* device, const BufferDescriptor& desc, const void* initialData) :
-    D3D11Buffer( BufferType::Constant )
+    D3D11Buffer { BufferType::Constant }
 {
     /* Setup descriptor and create constant buffer */
     CD3D11_BUFFER_DESC bufferDesc(desc.size, D3D11_BIND_CONSTANT_BUFFER);

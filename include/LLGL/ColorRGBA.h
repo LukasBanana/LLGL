@@ -33,10 +33,10 @@ class Color<T, 4u>
 
         #ifndef GS_DISABLE_AUTO_INIT
         Color() :
-            r( MaxColorValue<T>() ),
-            g( MaxColorValue<T>() ),
-            b( MaxColorValue<T>() ),
-            a( MaxColorValue<T>() )
+            r { MaxColorValue<T>() },
+            g { MaxColorValue<T>() },
+            b { MaxColorValue<T>() },
+            a { MaxColorValue<T>() }
         {
         }
         #else
@@ -44,34 +44,34 @@ class Color<T, 4u>
         #endif
 
         Color(const Color<T, 4>& rhs) :
-            r( rhs.r ),
-            g( rhs.g ),
-            b( rhs.b ),
-            a( rhs.a )
+            r { rhs.r },
+            g { rhs.g },
+            b { rhs.b },
+            a { rhs.a }
         {
         }
 
         explicit Color(const T& brightness) :
-            r( brightness         ),
-            g( brightness         ),
-            b( brightness         ),
-            a( MaxColorValue<T>() )
+            r { brightness         },
+            g { brightness         },
+            b { brightness         },
+            a { MaxColorValue<T>() }
         {
         }
 
         Color(const T& r, const T& g, const T& b) :
-            r( r                  ),
-            g( g                  ),
-            b( b                  ),
-            a( MaxColorValue<T>() )
+            r { r                  },
+            g { g                  },
+            b { b                  },
+            a { MaxColorValue<T>() }
         {
         }
 
         Color(const T& r, const T& g, const T& b, const T& a) :
-            r( r ),
-            g( g ),
-            b( b ),
-            a( a )
+            r { r },
+            g { g },
+            b { b },
+            a { a }
         {
         }
 

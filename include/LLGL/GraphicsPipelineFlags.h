@@ -211,8 +211,8 @@ struct MultiSamplingDescriptor
     MultiSamplingDescriptor() = default;
 
     inline MultiSamplingDescriptor(unsigned int samples) :
-        enabled( samples > 1 ),
-        samples( samples     )
+        enabled { samples > 1 },
+        samples { samples     }
     {
     }
 

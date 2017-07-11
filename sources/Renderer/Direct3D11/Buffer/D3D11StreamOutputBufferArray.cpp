@@ -16,7 +16,7 @@ namespace LLGL
 
 
 D3D11StreamOutputBufferArray::D3D11StreamOutputBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) :
-    D3D11BufferArray( BufferType::StreamOutput, numBuffers, bufferArray )
+    D3D11BufferArray { BufferType::StreamOutput, numBuffers, bufferArray }
 {
     /* Store the offsets of each D3D11StreamOutputBuffer inside the array */
     offsets_.reserve(numBuffers);

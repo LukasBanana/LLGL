@@ -31,8 +31,8 @@ static ComPtr<ID3D11Predicate> DXCreatePredicate(ID3D11Device* device, const D3D
 }
 
 D3D11Query::D3D11Query(ID3D11Device* device, const QueryDescriptor& desc) :
-    Query           ( desc.type             ),
-    queryObjectType_( D3D11Types::Map(desc) )
+    Query            { desc.type             },
+    queryObjectType_ { D3D11Types::Map(desc) }
 {
     /* Create D3D query object */
     D3D11_QUERY_DESC queryDesc;

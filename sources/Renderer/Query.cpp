@@ -13,7 +13,7 @@ namespace LLGL
 
 
 Query::Query(const QueryType type) :
-    type_( type )
+    type_ { type }
 {
 }
 

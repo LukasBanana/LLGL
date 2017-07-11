@@ -94,21 +94,21 @@ struct Viewport
     Viewport() = default;
     Viewport(const Viewport&) = default;
     
-    Viewport(float x, float y, float width, float height) :
-        x       ( x      ),
-        y       ( y      ),
-        width   ( width  ),
-        height  ( height )
+    inline Viewport(float x, float y, float width, float height) :
+        x      { x      },
+        y      { y      },
+        width  { width  },
+        height { height }
     {
     }
     
-    Viewport(float x, float y, float width, float height, float minDepth, float maxDepth) :
-        x       ( x        ),
-        y       ( y        ),
-        width   ( width    ),
-        height  ( height   ),
-        minDepth( minDepth ),
-        maxDepth( maxDepth )
+    inline Viewport(float x, float y, float width, float height, float minDepth, float maxDepth) :
+        x        { x        },
+        y        { y        },
+        width    { width    },
+        height   { height   },
+        minDepth { minDepth },
+        maxDepth { maxDepth }
     {
     }
 
@@ -129,11 +129,11 @@ struct Scissor
     Scissor() = default;
     Scissor(const Scissor&) = default;
 
-    Scissor(int x, int y, int width, int height) :
-        x       ( x      ),
-        y       ( y      ),
-        width   ( width  ),
-        height  ( height )
+    inline Scissor(int x, int y, int width, int height) :
+        x      { x      },
+        y      { y      },
+        width  { width  },
+        height { height }
     {
     }
 

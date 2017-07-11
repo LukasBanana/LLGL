@@ -22,9 +22,9 @@ class DbgTexture : public Texture
     public:
 
         DbgTexture(Texture& instance, const TextureDescriptor& desc) :
-            Texture ( desc.type ),
-            instance( instance  ),
-            desc    ( desc      )
+            Texture  { desc.type },
+            instance { instance  },
+            desc     { desc      }
         {
         }
 

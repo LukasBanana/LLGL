@@ -17,8 +17,8 @@ namespace LLGL
 
 
 D3D11Shader::D3D11Shader(ID3D11Device* device, const ShaderType type) :
-    Shader  ( type   ),
-    device_ ( device )
+    Shader  { type   },
+    device_ { device }
 {
 }
 

@@ -13,8 +13,8 @@ namespace LLGL
 
 
 GLIndexBuffer::GLIndexBuffer(const IndexFormat& indexFormat) :
-    GLBuffer    ( BufferType::Index ),
-    indexFormat_( indexFormat       )
+    GLBuffer     { BufferType::Index },
+    indexFormat_ { indexFormat       }
 {
 }
 

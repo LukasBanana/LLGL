@@ -19,8 +19,8 @@ namespace Log
 struct LogState
 {
     LogState() :
-        stdOut( &(std::cout) ),
-        stdErr( &(std::cerr) )
+        stdOut { &(std::cout) },
+        stdErr { &(std::cerr) }
     {
     }
 

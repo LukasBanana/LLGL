@@ -16,12 +16,12 @@ namespace LLGL
 
 
 GLBufferArray::GLBufferArray(const BufferType type) :
-    BufferArray( type )
+    BufferArray { type }
 {
 }
 
 GLBufferArray::GLBufferArray(const BufferType type, unsigned int numBuffers, Buffer* const * bufferArray) :
-    BufferArray( type )
+    BufferArray { type }
 {
     BuildArray(numBuffers, bufferArray);
 }

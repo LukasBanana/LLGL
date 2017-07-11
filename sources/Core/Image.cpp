@@ -43,7 +43,7 @@ union Variant
 union VariantBuffer
 {
     VariantBuffer(void* raw) :
-        raw( raw )
+        raw { raw }
     {
     }
 
@@ -61,7 +61,7 @@ union VariantBuffer
 union VariantConstBuffer
 {
     VariantConstBuffer(const void* raw) :
-        raw( raw )
+        raw { raw }
     {
     }
 

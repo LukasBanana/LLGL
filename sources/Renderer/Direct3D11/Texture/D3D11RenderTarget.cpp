@@ -17,8 +17,8 @@ namespace LLGL
 
 
 D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc) :
-    device_         ( device                           ),
-    multiSamples_   ( desc.multiSampling.SampleCount() )
+    device_       { device                           },
+    multiSamples_ { desc.multiSampling.SampleCount() }
 {
 }
 

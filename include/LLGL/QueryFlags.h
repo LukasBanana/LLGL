@@ -43,8 +43,8 @@ struct QueryDescriptor
     QueryDescriptor() = default;
 
     QueryDescriptor(QueryType type, bool renderCondition = false) :
-        type            ( type            ),
-        renderCondition ( renderCondition )
+        type            { type            },
+        renderCondition { renderCondition }
     {
     }
 

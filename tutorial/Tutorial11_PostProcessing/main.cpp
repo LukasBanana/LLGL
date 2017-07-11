@@ -64,7 +64,7 @@ class Tutorial11 : public Tutorial
 public:
 
     Tutorial11() :
-        Tutorial( L"LLGL Tutorial 11: PostProcessing", { 800, 600 }, 0 )
+        Tutorial { L"LLGL Tutorial 11: PostProcessing", { 800, 600 }, 0 }
     {
         // Create all graphics objects
         CreateBuffers();

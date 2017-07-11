@@ -13,8 +13,8 @@ namespace LLGL
 
 
 GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext) :
-    desc_           ( desc                        ),
-    contextHeight_  ( desc.videoMode.resolution.y )
+    desc_          { desc                        },
+    contextHeight_ { desc.videoMode.resolution.y }
 {
     #ifdef __linux__
 

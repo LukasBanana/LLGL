@@ -13,7 +13,7 @@ namespace LLGL
 
 
 Shader::Shader(const ShaderType type) :
-    type_( type )
+    type_ { type }
 {
 }
 

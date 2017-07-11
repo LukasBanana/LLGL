@@ -29,7 +29,7 @@ class Tutorial09 : public Tutorial
 public:
 
     Tutorial09() :
-        Tutorial( L"LLGL Tutorial 09: StreamOutput" )
+        Tutorial { L"LLGL Tutorial 09: StreamOutput" }
     {
         // Create all graphics objects
         LLGL::VertexFormat vertexFormat;

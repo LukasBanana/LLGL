@@ -29,8 +29,8 @@ class DbgQuery : public Query
         };
 
         DbgQuery(Query& instance, const QueryDescriptor& desc) :
-            Query   ( desc.type ),
-            instance( instance  )
+            Query    { desc.type },
+            instance { instance  }
         {
         }
 

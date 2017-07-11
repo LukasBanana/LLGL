@@ -13,7 +13,7 @@ namespace LLGL
 
 
 Texture::Texture(const TextureType type) :
-    type_( type )
+    type_ { type }
 {
 }
 

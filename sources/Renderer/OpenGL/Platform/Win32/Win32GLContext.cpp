@@ -35,9 +35,9 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surf
  */
 
 Win32GLContext::Win32GLContext(RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext) :
-    GLContext   ( sharedContext ),
-    desc_       ( desc          ),
-    surface_    ( surface       )
+    GLContext { sharedContext },
+    desc_     { desc          },
+    surface_  { surface       }
 {
     if (sharedContext)
     {
