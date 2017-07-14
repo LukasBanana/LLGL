@@ -128,31 +128,40 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     if (!LoadRenderSystemBuildID(*module, moduleFilename))
         throw std::runtime_error("build ID mismatch in render system module");
 
-    /* Allocate render system */
-    auto renderSystem   = std::unique_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
-
-    if (profiler != nullptr || debugger != nullptr)
+    try
     {
-        #ifdef LLGL_ENABLE_DEBUG_LAYER
+        /* Allocate render system */
+        auto renderSystem   = std::unique_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
 
-        /* Create debug layer render system */
-        renderSystem = MakeUnique<DbgRenderSystem>(std::move(renderSystem), profiler, debugger);
+        if (profiler != nullptr || debugger != nullptr)
+        {
+            #ifdef LLGL_ENABLE_DEBUG_LAYER
 
-        #else
+            /* Create debug layer render system */
+            renderSystem = MakeUnique<DbgRenderSystem>(std::move(renderSystem), profiler, debugger);
 
-        Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
+            #else
 
-        #endif
+            Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
+
+            #endif
+        }
+
+        renderSystem->name_         = LoadRenderSystemName(*module);
+        renderSystem->rendererID_   = LoadRenderSystemRendererID(*module);
+
+        /* Store new module inside internal map */
+        g_renderSystemModules[renderSystem.get()] = std::move(module);
+
+        /* Return new render system and unique pointer */
+        return renderSystem;
     }
-
-    renderSystem->name_         = LoadRenderSystemName(*module);
-    renderSystem->rendererID_   = LoadRenderSystemRendererID(*module);
-
-    /* Store new module inside internal map */
-    g_renderSystemModules[renderSystem.get()] = std::move(module);
-
-    /* Return new render system and unique pointer */
-    return renderSystem;
+    catch (const std::exception&)
+    {
+        /* Keep module, otherwise the exception 's vtable might be corrupted because it's part of the module */
+        g_renderSystemModules[nullptr] = std::move(module);
+        throw;
+    }
 }
 
 void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)
