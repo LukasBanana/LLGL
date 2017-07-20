@@ -279,6 +279,13 @@ i.e. either TextureFormat::RGB_DXT1, TextureFormat::RGBA_DXT1, TextureFormat::RG
 LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format);
 
 /**
+\brief Returns true if the specified texture format is a depth or depth-stencil format,
+i.e. either TextureFormat::DepthComponent, or TextureFormat::DepthStencil.
+\see TextureFormat
+*/
+LLGL_EXPORT bool IsDepthStencilFormat(const TextureFormat format);
+
+/**
 \brief Returns true if the specified texture type is an array texture.
 \return True if 'type' is . either TextureType::Texture1DArray, TextureType::Texture2DArray,
 TextureType::TextureCubeArray, or TextureType::Texture2DMSArray.

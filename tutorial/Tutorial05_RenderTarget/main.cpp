@@ -14,6 +14,9 @@
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
 //#define ENABLE_CUSTOM_MULTISAMPLING
 
+// Enable depth texture instead of depth buffer for render target
+#define ENABLE_DEPTH_TEXTURE
+
 
 #ifndef ENABLE_MULTISAMPLING
 #undef ENABLE_CUSTOM_MULTISAMPLING
@@ -22,23 +25,27 @@
 class Tutorial05 : public Tutorial
 {
 
-    LLGL::ShaderProgram*    shaderProgram       = nullptr;
+    LLGL::ShaderProgram*    shaderProgram           = nullptr;
 
-    LLGL::GraphicsPipeline* pipeline            = nullptr;
+    LLGL::GraphicsPipeline* pipeline                = nullptr;
 
-    LLGL::Buffer*           vertexBuffer        = nullptr;
-    LLGL::Buffer*           indexBuffer         = nullptr;
-    LLGL::Buffer*           constantBuffer      = nullptr;
+    LLGL::Buffer*           vertexBuffer            = nullptr;
+    LLGL::Buffer*           indexBuffer             = nullptr;
+    LLGL::Buffer*           constantBuffer          = nullptr;
 
-    LLGL::Texture*          colorMap            = nullptr;
-    LLGL::Sampler*          samplerState        = nullptr;
+    LLGL::Texture*          colorMap                = nullptr;
+    LLGL::Sampler*          samplerState            = nullptr;
 
-    LLGL::RenderTarget*     renderTarget        = nullptr;
-    LLGL::Texture*          renderTargetTex     = nullptr;
+    LLGL::RenderTarget*     renderTarget            = nullptr;
+    LLGL::Texture*          renderTargetTex         = nullptr;
+
+    #ifdef ENABLE_DEPTH_TEXTURE
+    LLGL::Texture*          renderTargetDepthTex    = nullptr;
+    #endif
 
     Gs::Matrix4f            renderTargetProj;
 
-    const Gs::Vector2ui     renderTargetSize    = Gs::Vector2ui(
+    const Gs::Vector2ui     renderTargetSize        = Gs::Vector2ui(
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
         64
         #else
@@ -132,7 +139,7 @@ public:
             pipelineDesc.depth.testEnabled          = true;
             pipelineDesc.depth.writeEnabled         = true;
 
-            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
+            //pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
@@ -184,12 +191,25 @@ public:
         );
 
         #endif
+        
+        #ifdef ENABLE_DEPTH_TEXTURE
+
+        // Create depth texture
+        renderTargetDepthTex = renderer->CreateTexture(
+            LLGL::Texture2DDesc(LLGL::TextureFormat::DepthComponent, renderTargetSize.x, renderTargetSize.y)
+        );
+
+        #endif
 
         // Generate all MIP-map levels
         renderer->GenerateMips(*renderTargetTex);
 
-        // Attach depth buffer to render-target
+        // Attach depth-texture or depth-buffer to render-target
+        #ifdef ENABLE_DEPTH_TEXTURE
+        renderTarget->AttachTexture(*renderTargetDepthTex, {});
+        #else
         renderTarget->AttachDepthBuffer(renderTargetSize);
+        #endif
 
         // Attach texture (first MIP-map level) to render-target
         renderTarget->AttachTexture(*renderTargetTex, {});

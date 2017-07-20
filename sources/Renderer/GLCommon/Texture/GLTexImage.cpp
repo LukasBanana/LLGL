@@ -21,6 +21,17 @@ static std::vector<ColorRGBAub> GenImageDataRGBAub(int numPixels, const ColorRGB
     return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), color);
 }
 
+static std::vector<float> GenImageDataRf(int numPixels, float value)
+{
+    return std::vector<float>(static_cast<std::size_t>(numPixels), value);
+}
+
+[[noreturn]]
+void ErrIllegalUseOfDepthFormat()
+{
+    throw std::runtime_error("depth-stencil format can only be used for 2D textures");
+}
+
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1DBase(
@@ -215,6 +226,11 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
     }
+    else if (IsDepthStencilFormat(desc.format))
+    {
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
     else
     {
         /* Initialize texture image with default color */
@@ -253,6 +269,20 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
     }
+    else if (IsDepthStencilFormat(desc.format))
+    {
+        /* Initialize texture image with default depth */
+        auto image = GenImageDataRf(
+            desc.texture2D.width * desc.texture2D.height,
+            1.0f
+        );
+
+        GLTexImage2D(
+            desc.format,
+            desc.texture2D.width, desc.texture2D.height,
+            GL_DEPTH_COMPONENT, GL_FLOAT, image.data()
+        );
+    }
     else
     {
         /* Initialize texture image with default color */
@@ -288,6 +318,11 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
+    }
+    else if (IsDepthStencilFormat(desc.format))
+    {
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
     }
     else
     {
@@ -351,6 +386,11 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
             );
         }
     }
+    else if (IsDepthStencilFormat(desc.format))
+    {
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
     else
     {
         /* Initialize texture image cube-faces with default color */
@@ -392,6 +432,11 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
     }
+    else if (IsDepthStencilFormat(desc.format))
+    {
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
     else
     {
         /* Initialize texture image with default color */
@@ -430,6 +475,11 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
     }
+    else if (IsDepthStencilFormat(desc.format))
+    {
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
     else
     {
         /* Initialize texture image with default color */
@@ -467,6 +517,11 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
             desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
+    }
+    else if (IsDepthStencilFormat(desc.format))
+    {
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
     }
     else
     {

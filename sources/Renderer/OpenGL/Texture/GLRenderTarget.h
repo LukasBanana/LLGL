@@ -55,7 +55,7 @@ class GLRenderTarget : public RenderTarget
 
         void AttachRenderbuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment);
 
-        GLenum MakeColorAttachment();
+        GLenum MakeFramebufferAttachment(GLint internalFormat);
 
         // Sets the draw buffers for the currently bound FBO.
         void SetDrawBuffers();
@@ -66,6 +66,9 @@ class GLRenderTarget : public RenderTarget
 
         bool HasMultiSampling() const;
         bool HasCustomMultiSampling() const;
+        bool HasDepthAttachment() const;
+
+        /* === Members === */
 
         GLFramebuffer                                   framebuffer_;
 
