@@ -37,36 +37,36 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     switch (textureDesc.type)
     {
         case TextureType::Texture1D:
-            GLTexImage1D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage1D(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture2D:
-            GLTexImage2D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage2D(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture3D:
             LLGL_ASSERT_CAP(has3DTextures);
-            GLTexImage3D(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage3D(textureDesc, imageDesc);
             break;
 
         case TextureType::TextureCube:
             LLGL_ASSERT_CAP(hasCubeTextures);
-            GLTexImageCube(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImageCube(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture1DArray:
             LLGL_ASSERT_CAP(hasTextureArrays);
-            GLTexImage1DArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage1DArray(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DArray:
             LLGL_ASSERT_CAP(hasTextureArrays);
-            GLTexImage2DArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImage2DArray(textureDesc, imageDesc);
             break;
 
         case TextureType::TextureCubeArray:
             LLGL_ASSERT_CAP(hasCubeTextureArrays);
-            GLTexImageCubeArray(textureDesc, imageDesc, GetConfiguration().defaultImageColor);
+            GLTexImageCubeArray(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DMS:

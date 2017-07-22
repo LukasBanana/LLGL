@@ -8,6 +8,7 @@
 #include "GLRenderSystem.h"
 #include "../GLCommon/GLTypes.h"
 #include "../GLCommon/GLCore.h"
+#include "../GLCommon/Texture/GLTexImage.h"
 #include "Ext/GLExtensions.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
@@ -28,6 +29,14 @@ GLRenderSystem::GLRenderSystem()
 GLRenderSystem::~GLRenderSystem()
 {
     Desktop::ResetVideoMode();
+}
+
+void GLRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
+{
+    RenderSystem::SetConfiguration(config);
+    GLTexImageDefault(config.defaultImageEnabled);
+    GLTexImageDefaultColor(config.defaultImageColor);
+    GLTexImageDefaultDepth(config.defaultImageDepth);
 }
 
 /* ----- Render Context ----- */

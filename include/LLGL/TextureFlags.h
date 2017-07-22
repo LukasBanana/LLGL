@@ -228,7 +228,7 @@ struct LLGL_EXPORT SubTextureDescriptor
         unsigned int    layerOffset;    //!< Zero-based layer offset.
         unsigned int    width;          //!< Sub-texture width.
         unsigned int    height;         //!< Sub-texture height.
-        unsigned int    cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be a N*6.
+        unsigned int    cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be N*6.
         AxisDirection   cubeFaceOffset; //!< First cube face in the current layer.
     };
 
