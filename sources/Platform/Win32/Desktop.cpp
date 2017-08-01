@@ -77,27 +77,41 @@ LLGL_EXPORT bool ResetVideoMode()
     return (ChangeDisplaySettings(nullptr, 0) == DISP_CHANGE_SUCCESSFUL);
 }
 
+static bool IsCursorVisible(bool& visible)
+{
+    CURSORINFO info;
+    info.cbSize = sizeof(CURSORINFO);
+    if (::GetCursorInfo(&info))
+    {
+        visible = ((info.flags & CURSOR_SHOWING) != 0);
+        return true;
+    }
+    return false;
+}
+
 LLGL_EXPORT void ShowCursor(bool show)
 {
-    if (IsCursorShown())
+    bool visible = false;
+    if (IsCursorVisible(visible))
     {
-        if (!show)
-            ::ShowCursor(FALSE);
-    }
-    else
-    {
-        if (show)
-            ::ShowCursor(TRUE);
+        if (visible)
+        {
+            if (!show)
+                ::ShowCursor(FALSE);
+        }
+        else
+        {
+            if (show)
+                ::ShowCursor(TRUE);
+        }
     }
 }
 
 LLGL_EXPORT bool IsCursorShown()
 {
-    CURSORINFO info;
-    if (::GetCursorInfo(&info))
-        return ((info.flags & CURSOR_SHOWING) != 0);
-    else
-        return false;
+    bool visible = false;
+    IsCursorVisible(visible);
+    return visible;
 }
 
 
