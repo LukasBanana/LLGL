@@ -70,14 +70,10 @@ std::vector<std::string> RenderSystem::FindModules()
     return modules;
 }
 
+#ifndef LLGL_BUILD_STATIC_LIB
+
 static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFilename)
 {
-    #ifdef LLGL_BUILD_STATIC_LIB
-
-    return (LLGL_RenderSystem_BuildID() == LLGL_BUILD_ID);
-
-    #else
-
     /* Load "LLGL_RenderSystem_BuildID" procedure */
     LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_BUILDID, (void));
 
@@ -86,18 +82,10 @@ static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFil
         throw std::runtime_error("failed to load \"LLGL_RenderSystem_BuildID\" procedure from module \"" + moduleFilename + "\"");
 
     return (RenderSystem_BuildID() == LLGL_BUILD_ID);
-
-    #endif
 }
 
 static int LoadRenderSystemRendererID(Module& module)
 {
-    #ifdef LLGL_BUILD_STATIC_LIB
-
-    return LLGL_RenderSystem_RendererID();
-
-    #else
-
     /* Load "LLGL_RenderSystem_RendererID" procedure */
     LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_RENDERERID, (void));
 
@@ -106,18 +94,10 @@ static int LoadRenderSystemRendererID(Module& module)
         return RenderSystem_RendererID();
 
     return RendererID::Undefined;
-
-    #endif
 }
 
 static std::string LoadRenderSystemName(Module& module)
 {
-    #ifdef LLGL_BUILD_STATIC_LIB
-
-    return std::string(LLGL_RenderSystem_Name());
-
-    #else
-
     /* Load "LLGL_RenderSystem_Name" procedure */
     LLGL_PROC_INTERFACE(const char*, PFN_RENDERSYSTEM_NAME, (void));
 
@@ -126,18 +106,10 @@ static std::string LoadRenderSystemName(Module& module)
         return std::string(RenderSystem_Name());
 
     return "";
-
-    #endif
 }
 
 static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename)
 {
-    #ifdef LLGL_BUILD_STATIC_LIB
-
-    return reinterpret_cast<RenderSystem*>(LLGL_RenderSystem_Alloc());
-
-    #else
-
     /* Load "LLGL_RenderSystem_Alloc" procedure */
     LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (void));
 
@@ -146,13 +118,47 @@ static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleF
         throw std::runtime_error("failed to load \"LLGL_RenderSystem_Alloc\" procedure from module \"" + moduleFilename + "\"");
 
     return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc());
-
-    #endif
 }
+
+#endif
 
 std::unique_ptr<RenderSystem> RenderSystem::Load(
     const std::string& moduleName, RenderingProfiler* profiler, RenderingDebugger* debugger)
 {
+    #ifdef LLGL_BUILD_STATIC_LIB
+
+    /*
+    Verify build ID from render system module to detect a module,
+    that has compiled with a different compiler (type, version, debug/release mode etc.)
+    */
+    if (LLGL_RenderSystem_BuildID() != LLGL_BUILD_ID)
+        throw std::runtime_error("build ID mismatch in render system module");
+
+    /* Allocate render system */
+    auto renderSystem   = std::unique_ptr<RenderSystem>(reinterpret_cast<RenderSystem*>(LLGL_RenderSystem_Alloc()));
+
+    if (profiler != nullptr || debugger != nullptr)
+    {
+        #ifdef LLGL_ENABLE_DEBUG_LAYER
+
+        /* Create debug layer render system */
+        renderSystem = MakeUnique<DbgRenderSystem>(std::move(renderSystem), profiler, debugger);
+
+        #else
+
+        Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
+
+        #endif
+    }
+
+    renderSystem->name_         = LLGL_RenderSystem_Name();
+    renderSystem->rendererID_   = LLGL_RenderSystem_RendererID();
+
+    /* Return new render system and unique pointer */
+    return renderSystem;
+
+    #else
+
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(moduleName);
     auto module         = Module::Load(moduleFilename);
@@ -198,6 +204,8 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
         g_renderSystemModules[nullptr] = std::move(module);
         throw;
     }
+
+    #endif
 }
 
 void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)
