@@ -33,7 +33,7 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name();
 // Returns a raw pointer to the allocated render system (allocated with "new" keyword)
 LLGL_EXPORT void* LLGL_RenderSystem_Alloc();
 
-}
+} // /extern "C"
 
 
 #endif

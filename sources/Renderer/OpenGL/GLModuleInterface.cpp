@@ -32,7 +32,7 @@ LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
     return new LLGL::GLRenderSystem();
 }
 
-}
+} // /extern "C"
 
 
 

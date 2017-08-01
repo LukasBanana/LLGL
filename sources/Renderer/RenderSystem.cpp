@@ -19,6 +19,10 @@
 #   include "DebugLayer/DbgRenderSystem.h"
 #endif
 
+#ifdef LLGL_BUILD_STATIC_LIB
+#   include "ModuleInterface.h"
+#endif
+
 
 namespace LLGL
 {
@@ -68,6 +72,12 @@ std::vector<std::string> RenderSystem::FindModules()
 
 static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFilename)
 {
+    #ifdef LLGL_BUILD_STATIC_LIB
+
+    return (LLGL_RenderSystem_BuildID() == LLGL_BUILD_ID);
+
+    #else
+
     /* Load "LLGL_RenderSystem_BuildID" procedure */
     LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_BUILDID, (void));
 
@@ -76,10 +86,18 @@ static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFil
         throw std::runtime_error("failed to load \"LLGL_RenderSystem_BuildID\" procedure from module \"" + moduleFilename + "\"");
 
     return (RenderSystem_BuildID() == LLGL_BUILD_ID);
+
+    #endif
 }
 
 static int LoadRenderSystemRendererID(Module& module)
 {
+    #ifdef LLGL_BUILD_STATIC_LIB
+
+    return LLGL_RenderSystem_RendererID();
+
+    #else
+
     /* Load "LLGL_RenderSystem_RendererID" procedure */
     LLGL_PROC_INTERFACE(int, PFN_RENDERSYSTEM_RENDERERID, (void));
 
@@ -88,10 +106,18 @@ static int LoadRenderSystemRendererID(Module& module)
         return RenderSystem_RendererID();
 
     return RendererID::Undefined;
+
+    #endif
 }
 
 static std::string LoadRenderSystemName(Module& module)
 {
+    #ifdef LLGL_BUILD_STATIC_LIB
+
+    return std::string(LLGL_RenderSystem_Name());
+
+    #else
+
     /* Load "LLGL_RenderSystem_Name" procedure */
     LLGL_PROC_INTERFACE(const char*, PFN_RENDERSYSTEM_NAME, (void));
 
@@ -100,10 +126,18 @@ static std::string LoadRenderSystemName(Module& module)
         return std::string(RenderSystem_Name());
 
     return "";
+
+    #endif
 }
 
 static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename)
 {
+    #ifdef LLGL_BUILD_STATIC_LIB
+
+    return reinterpret_cast<RenderSystem*>(LLGL_RenderSystem_Alloc());
+
+    #else
+
     /* Load "LLGL_RenderSystem_Alloc" procedure */
     LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (void));
 
@@ -112,6 +146,8 @@ static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleF
         throw std::runtime_error("failed to load \"LLGL_RenderSystem_Alloc\" procedure from module \"" + moduleFilename + "\"");
 
     return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc());
+
+    #endif
 }
 
 std::unique_ptr<RenderSystem> RenderSystem::Load(
