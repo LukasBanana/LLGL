@@ -188,6 +188,8 @@ enum class Key
     NoName,
     PA1,
     OEMClear,
+
+    Any,                //!< Refers to any key
 };
 
 

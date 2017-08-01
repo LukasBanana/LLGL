@@ -44,8 +44,7 @@ static void PostKeyEvent(Window& window, Key keyCode, bool isDown)
 static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
 {
     /* Get window object from window handle */
-    auto window = GetWindowFromUserData(wnd);
-    if (window)
+    if (auto window = GetWindowFromUserData(wnd))
     {
         /* Extract key code */
         auto keyCodeSys = static_cast<unsigned int>(wParam);
@@ -89,8 +88,7 @@ static int mouseCaptureCounter = 0;
 static void CaptureMouseButton(HWND wnd, Key keyCode, bool doubleClick = false)
 {
     /* Get window object from window handle */
-    auto window = GetWindowFromUserData(wnd);
-    if (window)
+    if (auto window = GetWindowFromUserData(wnd))
     {
         /* Post key events and capture mouse */
         window->PostKeyDown(keyCode);
@@ -106,8 +104,7 @@ static void CaptureMouseButton(HWND wnd, Key keyCode, bool doubleClick = false)
 static void ReleaseMouseButton(HWND wnd, Key keyCode)
 {
     /* Get window object from window handle */
-    auto window = GetWindowFromUserData(wnd);
-    if (window)
+    if (auto window = GetWindowFromUserData(wnd))
     {
         /* Post key event and release mouse capture */
         window->PostKeyUp(keyCode);

@@ -77,9 +77,18 @@ void Input::OnKeyDown(Window& sender, Key keyCode)
 {
     auto idx = KEY_IDX(keyCode);
 
-    /* Store key hit state */
     if (!keyPressed_[idx])
     {
+        /* Increase 'any'-key counter and store key state */
+        if (anyKeyCount_++ == 0)
+        {
+            /* Store key state for 'any'-key */
+            keyDown_[KEY_IDX(Key::Any)] = true;
+            keyDownTracker_.Add(Key::Any);
+            keyPressed_[KEY_IDX(Key::Any)] = true;
+        }
+
+        /* Store key hit state */
         keyDown_[idx] = true;
         keyDownTracker_.Add(keyCode);
     }
@@ -90,14 +99,23 @@ void Input::OnKeyDown(Window& sender, Key keyCode)
 
 void Input::OnKeyUp(Window& sender, Key keyCode)
 {
-    auto idx = KEY_IDX(keyCode);
-
     /* Store key released state */
-    keyUp_[idx] = true;
+    keyUp_[KEY_IDX(keyCode)] = true;
     keyUpTracker_.Add(keyCode);
 
+    /* Store key released state for 'any'-key */
+    keyUp_[KEY_IDX(Key::Any)] = true;
+    keyUpTracker_.Add(Key::Any);
+
+    /* Increase 'any'-key counter and store key state */
+    if (anyKeyCount_ > 0)
+    {
+        if (--anyKeyCount_ == 0)
+            keyPressed_[KEY_IDX(Key::Any)] = false;
+    }
+
     /* Reset key pressed state */
-    keyPressed_[idx] = false;
+    keyPressed_[KEY_IDX(keyCode)] = false;
 }
 
 void Input::OnDoubleClick(Window& sender, Key keyCode)
