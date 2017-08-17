@@ -7,11 +7,29 @@
 
 #include "LinuxModule.h"
 #include <dlfcn.h>
+#include <unistd.h>
 
 
 namespace LLGL
 {
 
+
+static std::string GetProgramPath()
+{
+    /* Get filename of running program */
+    static const std::size_t bufLen = 1024;
+    char buf[bufLen] = { 0 };
+    readlink("/proc/self/exe", buf, bufLen);
+    
+    /* Get path from program */
+    std::string path = buf;
+    
+    auto pathEnd = path.find_last_of('/');
+    if (pathEnd != std::string::npos)
+        path.resize(pathEnd + 1);
+    
+    return path;
+}
 
 std::string Module::GetModuleFilename(std::string moduleName)
 {
@@ -19,14 +37,15 @@ std::string Module::GetModuleFilename(std::string moduleName)
     #ifdef AC_DEBUG
     moduleName += "D";
     #endif
-    return "libLLGL_" + moduleName + ".so";
+    
+    /* Return module filename with absolute path */
+    return GetProgramPath() + "libLLGL_" + moduleName + ".so";
 }
 
 bool Module::IsAvailable(const std::string& moduleFilename)
 {
     /* Check if Linux shared library can be loaded properly */
-    auto handle = dlopen(moduleFilename.c_str(), RTLD_LAZY);
-    if (handle)
+    if (auto handle = dlopen(moduleFilename.c_str(), RTLD_LAZY))
     {
         dlclose(handle);
         return true;
