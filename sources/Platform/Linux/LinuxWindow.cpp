@@ -148,6 +148,10 @@ void LinuxWindow::OnProcessEvents()
             case DestroyNotify:
                 PostQuit();
                 break;
+                
+            case ClientMessage:
+                ProcessClientMessage(event.xclient);
+                break;
         }
     }
 }
@@ -240,6 +244,10 @@ void LinuxWindow::OpenWindow()
         XGrabKeyboard(display_, wnd_, True, GrabModeAsync, GrabModeAsync, CurrentTime);
         XGrabPointer(display_, wnd_, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, wnd_, None, CurrentTime);
     }
+    
+    /* Enable WM_DELETE_WINDOW protocol */
+    closeWndAtom_ = XInternAtom(display_, "WM_DELETE_WINDOW", False); 
+    XSetWMProtocols(display_, wnd_, &closeWndAtom_, 1);
 }
 
 void LinuxWindow::ProcessKeyEvent(XKeyEvent& event, bool down)
@@ -276,6 +284,13 @@ void LinuxWindow::ProcessMouseKeyEvent(XButtonEvent& event, bool down)
 void LinuxWindow::ProcessResizeRequestEvent(XResizeRequestEvent& event)
 {
     PostResize({ event.width, event.height });
+}
+
+void LinuxWindow::ProcessClientMessage(XClientMessageEvent& event)
+{
+    Atom atom = static_cast<Atom>(event.data.l[0]);
+    if (atom == closeWndAtom_)
+        PostQuit();
 }
 
 void LinuxWindow::PostMouseKeyEvent(Key key, bool down)
