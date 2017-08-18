@@ -313,6 +313,12 @@ protected:
             contextDesc.vsync.enabled           = vsync;
             contextDesc.multiSampling.enabled   = (multiSampling > 1);
             contextDesc.multiSampling.samples   = multiSampling;
+            
+            #if 0
+            contextDesc.profileOpenGL.extProfile = true;
+            contextDesc.profileOpenGL.coreProfile = true;
+            contextDesc.profileOpenGL.version = LLGL::OpenGLVersion::OpenGL_3_3;
+            #endif
         }
         context = renderer->CreateRenderContext(contextDesc);
 

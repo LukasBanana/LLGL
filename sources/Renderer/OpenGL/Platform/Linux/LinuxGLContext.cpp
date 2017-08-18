@@ -18,6 +18,17 @@ namespace LLGL
 {
 
 
+#ifndef GLX_CONTEXT_MAJOR_VERSION_ARB
+#define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
+#endif
+
+#ifndef GLX_CONTEXT_MINOR_VERSION_ARB
+#define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
+#endif
+
+typedef GLXContext (*GXLCREATECONTEXTATTRIBARBPROC)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+
+
 /*
  * GLContext class
  */
@@ -99,7 +110,67 @@ void LinuxGLContext::CreateContext(const NativeHandle& nativeHandle, LinuxGLCont
         throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
     
     /* Create OpenGL context with X11 lib */
-    glc_ = glXCreateContext(display_, visual_, glcShared, GL_TRUE);
+    #if 0 // ~~~~~~~~~~~~~~~~~~~ TESTING ~~~~~~~~~~~~~~~~~~~
+    GXLCREATECONTEXTATTRIBARBPROC glXCreateContextAttribsARB = nullptr;
+    glXCreateContextAttribsARB = (GXLCREATECONTEXTATTRIBARBPROC)glXGetProcAddressARB(reinterpret_cast<const GLubyte*>("glXCreateContextAttribsARB"));
+
+    if (glXCreateContextAttribsARB != nullptr)
+    {
+        /* Create core profile */
+        const int fbAttribs[] =
+        {
+            GLX_X_RENDERABLE,   True,
+            GLX_DRAWABLE_TYPE,  GLX_WINDOW_BIT,
+            GLX_RENDER_TYPE,    GLX_RGBA_BIT,
+            GLX_X_VISUAL_TYPE,  GLX_TRUE_COLOR,
+            GLX_RED_SIZE,       8,
+            GLX_GREEN_SIZE,     8,
+            GLX_BLUE_SIZE,      8,
+            GLX_ALPHA_SIZE,     8,
+            GLX_DEPTH_SIZE,     24,
+            GLX_STENCIL_SIZE,   8,
+            GLX_DOUBLEBUFFER,   True,
+            //GLX_SAMPLE_BUFFERS, 1,
+            //GLX_SAMPLES,        1,//static_cast<int>(desc_.multiSampling.samples),
+            None
+        };
+        
+        int attribs[100];
+        memcpy(attribs, fbAttribs, sizeof(fbAttribs));
+        
+        int screen = DefaultScreen(display_);
+        
+        int fbCount = 0;
+        GLXFBConfig* fbcList = glXChooseFBConfig(display_, screen, attribs, &fbCount);
+        
+        if (fbcList != nullptr)
+        {
+            int contextAttribs[] =
+            {
+                GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+                GLX_CONTEXT_MINOR_VERSION_ARB, 3,
+                //GLX_CONTEXT_FLAGS_ARB      , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+                None
+            };
+            
+            glc_ = glXCreateContextAttribsARB(display_, fbcList[0], nullptr, True, contextAttribs);
+            
+            XFree(fbcList);
+        }
+        else
+        {
+            Log::StdErr() << "failed to create OpenGL core profile" << std::endl;
+            
+            /* Create compatibility profile */
+            glc_ = glXCreateContext(display_, visual_, glcShared, GL_TRUE);
+        }
+    }
+    else
+    #endif // ~~~~~~~~~~~~~~~~~~~ /TESTING ~~~~~~~~~~~~~~~~~~~
+    {
+        /* Create compatibility profile */
+        glc_ = glXCreateContext(display_, visual_, glcShared, GL_TRUE);
+    }
     
     /* Make new OpenGL context current */
     if (glXMakeCurrent(display_, wnd_, glc_) != True)
