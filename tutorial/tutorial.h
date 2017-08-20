@@ -130,17 +130,17 @@ protected:
     {
         TutorialShaderDescriptor(
             LLGL::ShaderType type, const std::string& filename) :
-                type    ( type     ),
-                filename( filename )
+                type     { type     },
+                filename { filename }
         {
         }
 
         TutorialShaderDescriptor(
             LLGL::ShaderType type, const std::string& filename, const std::string& entryPoint, const std::string& target) :
-                type        ( type       ),
-                filename    ( filename   ),
-                entryPoint  ( entryPoint ),
-                target      ( target     )
+                type       { type       },
+                filename   { filename   },
+                entryPoint { entryPoint },
+                target     { target     }
         {
         }
 
@@ -181,10 +181,10 @@ private:
                 LLGL::RenderContext* context,
                 LLGL::CommandBuffer* commands,
                 Gs::Matrix4f& projection) :
-                    tutorial_   ( tutorial   ),
-                    context_    ( context    ),
-                    commands_   ( commands   ),
-                    projection_ ( projection )
+                    tutorial_   { tutorial   },
+                    context_    { context    },
+                    commands_   { commands   },
+                    projection_ { projection }
             {
             }
 
@@ -294,10 +294,10 @@ protected:
         unsigned int        multiSampling   = 8,
         bool                vsync           = true,
         bool                debugger        = true) :
-            profilerObj_( new LLGL::RenderingProfiler() ),
-            debuggerObj_( new Debugger()                ),
-            timer       ( LLGL::Timer::Create()         ),
-            profiler    ( *profilerObj_                 )
+            profilerObj_ { new LLGL::RenderingProfiler() },
+            debuggerObj_ { new Debugger()                },
+            timer        { LLGL::Timer::Create()         },
+            profiler     { *profilerObj_                 }
     {
         // Create render system
         renderer = LLGL::RenderSystem::Load(
@@ -314,10 +314,10 @@ protected:
             contextDesc.multiSampling.enabled   = (multiSampling > 1);
             contextDesc.multiSampling.samples   = multiSampling;
             
-            #if 0
-            contextDesc.profileOpenGL.extProfile = true;
-            contextDesc.profileOpenGL.coreProfile = true;
-            contextDesc.profileOpenGL.version = LLGL::OpenGLVersion::OpenGL_3_3;
+            #ifdef __linux__
+            contextDesc.profileOpenGL.extProfile    = true;
+            contextDesc.profileOpenGL.coreProfile   = true;
+            contextDesc.profileOpenGL.version       = LLGL::OpenGLVersion::OpenGL_3_3;
             #endif
         }
         context = renderer->CreateRenderContext(contextDesc);

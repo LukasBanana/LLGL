@@ -53,10 +53,10 @@ LinuxGLContext::LinuxGLContext(RenderContextDescriptor& desc, Surface& surface, 
     if (sharedContext)
     {
         auto sharedContextGLX = LLGL_CAST(LinuxGLContext*, sharedContext);
-        CreateContext(nativeHandle, sharedContextGLX);
+        CreateContext(desc, nativeHandle, sharedContextGLX);
     }
     else
-        CreateContext(nativeHandle, nullptr);
+        CreateContext(desc, nativeHandle, nullptr);
 }
 
 LinuxGLContext::~LinuxGLContext()
@@ -97,7 +97,7 @@ bool LinuxGLContext::Activate(bool activate)
         return glXMakeCurrent(nullptr, 0, 0);
 }
 
-void LinuxGLContext::CreateContext(const NativeHandle& nativeHandle, LinuxGLContext* sharedContext)
+void LinuxGLContext::CreateContext(const RenderContextDescriptor& contextDesc, const NativeHandle& nativeHandle, LinuxGLContext* sharedContext)
 {
     GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
     
@@ -110,7 +110,33 @@ void LinuxGLContext::CreateContext(const NativeHandle& nativeHandle, LinuxGLCont
         throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
     
     /* Create OpenGL context with X11 lib */
-    #if 0 // ~~~~~~~~~~~~~~~~~~~ TESTING ~~~~~~~~~~~~~~~~~~~
+    const auto& profileDesc = contextDesc.profileOpenGL;
+    
+    if (profileDesc.extProfile && profileDesc.coreProfile)
+    {
+        /* Create core profile */
+        glc_ = CreateContextCoreProfile(glcShared, 3, 3);
+    }
+    
+    if (!glc_)
+    {
+        /* Create compatibility profile */
+        glc_ = CreateContextCompatibilityProfile(glcShared);
+    }
+    
+    /* Make new OpenGL context current */
+    if (glXMakeCurrent(display_, wnd_, glc_) != True)
+        Log::StdErr() << "failed to make OpenGL render context current (glXMakeCurrent)" << std::endl;
+}
+
+void LinuxGLContext::DeleteContext()
+{
+    glXDestroyContext(display_, glc_);
+}
+
+GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int major, int minor)
+{
+    /* Load GL extension to create core profile */
     GXLCREATECONTEXTATTRIBARBPROC glXCreateContextAttribsARB = nullptr;
     glXCreateContextAttribsARB = (GXLCREATECONTEXTATTRIBARBPROC)glXGetProcAddressARB(reinterpret_cast<const GLubyte*>("glXCreateContextAttribsARB"));
 
@@ -147,39 +173,31 @@ void LinuxGLContext::CreateContext(const NativeHandle& nativeHandle, LinuxGLCont
         {
             int contextAttribs[] =
             {
-                GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-                GLX_CONTEXT_MINOR_VERSION_ARB, 3,
+                GLX_CONTEXT_MAJOR_VERSION_ARB, major,
+                GLX_CONTEXT_MINOR_VERSION_ARB, minor,
+                GLX_CONTEXT_PROFILE_MASK_ARB,  GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
                 //GLX_CONTEXT_FLAGS_ARB      , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
                 None
             };
             
-            glc_ = glXCreateContextAttribsARB(display_, fbcList[0], nullptr, True, contextAttribs);
+            auto glc = glXCreateContextAttribsARB(display_, fbcList[0], nullptr, True, contextAttribs);
             
             XFree(fbcList);
-        }
-        else
-        {
-            Log::StdErr() << "failed to create OpenGL core profile" << std::endl;
             
-            /* Create compatibility profile */
-            glc_ = glXCreateContext(display_, visual_, glcShared, GL_TRUE);
+            return glc;
         }
-    }
-    else
-    #endif // ~~~~~~~~~~~~~~~~~~~ /TESTING ~~~~~~~~~~~~~~~~~~~
-    {
-        /* Create compatibility profile */
-        glc_ = glXCreateContext(display_, visual_, glcShared, GL_TRUE);
     }
     
-    /* Make new OpenGL context current */
-    if (glXMakeCurrent(display_, wnd_, glc_) != True)
-        Log::StdErr() << "failed to make OpenGL render context current (glXMakeCurrent)" << std::endl;
+    /* Context creation failed */
+    Log::StdErr() << "failed to create OpenGL core profile" << std::endl;
+    
+    return nullptr;
 }
 
-void LinuxGLContext::DeleteContext()
+GLXContext LinuxGLContext::CreateContextCompatibilityProfile(GLXContext glcShared)
 {
-    glXDestroyContext(display_, glc_);
+    /* Create compatibility profile */
+    return glXCreateContext(display_, visual_, glcShared, GL_TRUE);
 }
 
 
