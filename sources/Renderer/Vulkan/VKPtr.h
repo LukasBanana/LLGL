@@ -10,7 +10,7 @@
 
 
 #include <functional>
-#include <vulkan/vulkan.h>
+#include "Vulkan.h"
 
 
 namespace LLGL
@@ -25,7 +25,7 @@ class VKPtr
     public:
 
         VKPtr() throw() :
-            VKPtr([](T, VkAllocationCallbacks*) {})
+            VKPtr { [](T, VkAllocationCallbacks*) {} }
         {
         }
 

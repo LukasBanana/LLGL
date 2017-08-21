@@ -9,7 +9,7 @@
 #define LLGL_VK_CORE_H
 
 
-#include <vulkan/vulkan.h>
+#include "Vulkan.h"
 #include <string>
 
 

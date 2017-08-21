@@ -10,6 +10,7 @@
 
 
 #include <LLGL/RenderSystem.h>
+#include "Vulkan.h"
 #include "VKPtr.h"
 
 //#include "VKCommandBuffer.h"
@@ -31,7 +32,6 @@
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"*/
 
-#include <vulkan/vulkan.h>
 #include <string>
 #include <memory>
 #include <vector>
@@ -135,6 +135,9 @@ class VKRenderSystem : public RenderSystem
         std::vector<VkExtensionProperties> QueryInstanceExtensionProperties();
 
         void CreateInstance(const ApplicationDescriptor& appDesc);
+
+        bool IsLayerRequired(const std::string& name) const;
+        bool IsExtensionRequired(const std::string& name) const;
 
         VKPtr<VkInstance>                       instance_;
 

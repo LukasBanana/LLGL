@@ -5,6 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
+#include <LLGL/Platform/Platform.h>
 #include "VKRenderSystem.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
@@ -274,50 +275,79 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
     appInfo.apiVersion          = VK_API_VERSION_1_0;
 
     /* Query instance layer properties */
-    #ifdef LLGL_DEBUG
-    
     auto layerProperties = QueryInstanceLayerProperties();
-    
     std::vector<const char*> layerNames;
-    layerNames.reserve(layerProperties.size());
 
     for (const auto& prop : layerProperties)
-        layerNames.push_back(prop.layerName);
-
-    #endif
+    {
+        if (IsLayerRequired(prop.layerName))
+            layerNames.push_back(prop.layerName);
+    }
 
     /* Query instance extension properties */
     auto extensionProperties = QueryInstanceExtensionProperties();
-
     std::vector<const char*> extensionNames;
-    extensionNames.reserve(extensionProperties.size());
 
     for (const auto& prop : extensionProperties)
-        extensionNames.push_back(prop.extensionName);
+    {
+        if (IsExtensionRequired(prop.extensionName))
+            extensionNames.push_back(prop.extensionName);
+    }
 
     /* Setup Vulkan instance descriptor */
     VkInstanceCreateInfo instanceInfo;
     
-    instanceInfo.sType                      = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    instanceInfo.pNext                      = nullptr;
-    instanceInfo.flags                      = 0;
-    instanceInfo.pApplicationInfo           = (&appInfo);
+    instanceInfo.sType                          = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    instanceInfo.pNext                          = nullptr;
+    instanceInfo.flags                          = 0;
+    instanceInfo.pApplicationInfo               = (&appInfo);
 
-    #ifdef LLGL_DEBUG
-    instanceInfo.enabledLayerCount          = static_cast<uint32_t>(layerNames.size());
-    instanceInfo.ppEnabledLayerNames        = layerNames.data();
-    #else
-    instanceInfo.enabledLayerCount          = 0;
-    instanceInfo.ppEnabledLayerNames        = nullptr;
-    #endif
+    if (layerNames.empty())
+    {
+        instanceInfo.enabledLayerCount          = 0;
+        instanceInfo.ppEnabledLayerNames        = nullptr;
+    }
+    else
+    {
+        instanceInfo.enabledLayerCount          = static_cast<uint32_t>(layerNames.size());
+        instanceInfo.ppEnabledLayerNames        = layerNames.data();
+    }
 
-    instanceInfo.enabledExtensionCount      = static_cast<uint32_t>(extensionNames.size());
-    instanceInfo.ppEnabledExtensionNames    = extensionNames.data();
-    
+    if (extensionNames.empty())
+    {
+        instanceInfo.enabledExtensionCount      = 0;
+        instanceInfo.ppEnabledExtensionNames    = nullptr;
+    }
+    else
+    {
+        instanceInfo.enabledExtensionCount      = static_cast<uint32_t>(extensionNames.size());
+        instanceInfo.ppEnabledExtensionNames    = extensionNames.data();
+    }
+
     /* Create Vulkan instance */
     VkResult result = vkCreateInstance(&instanceInfo, nullptr, instance_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan instance");
 }
+
+bool VKRenderSystem::IsLayerRequired(const std::string& name) const
+{
+    return false;
+}
+
+bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
+{
+    return
+    (
+        name == VK_KHR_SURFACE_EXTENSION_NAME
+        #ifdef LLGL_OS_WIN32
+        || name == VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+        #endif
+        #ifdef LLGL_OS_LINUX
+        || name == VK_KHR_XLIB_SURFACE_EXTENSION_NAME
+        #endif
+    );
+}
+ 
 
 
 } // /namespace LLGL

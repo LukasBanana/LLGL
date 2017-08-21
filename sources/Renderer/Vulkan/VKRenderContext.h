@@ -12,7 +12,7 @@
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
 #include <memory>
-#include <vulkan/vulkan.h>
+#include "Vulkan.h"
 
 
 namespace LLGL
