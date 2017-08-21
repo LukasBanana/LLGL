@@ -56,7 +56,7 @@ LLGL_EXPORT int GetMajorVersion(const OpenGLVersion version)
 
 LLGL_EXPORT int GetMinorVersion(const OpenGLVersion version)
 {
-    return static_cast<int>(version) % 100;
+    return (static_cast<int>(version) / 10) % 10;
 }
 
 
