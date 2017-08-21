@@ -65,6 +65,12 @@ class LLGL_EXPORT Input : public Window::EventListener
             return chars_;
         }
 
+        //! Returns the number of any keys being pressed.
+        inline std::size_t GetAnyKeyCount() const
+        {
+            return anyKeyCount_;
+        }
+
     private:
 
         using KeyStateArray = std::array<bool, 256>;
@@ -112,6 +118,8 @@ class LLGL_EXPORT Input : public Window::EventListener
         std::array<bool, 3> doubleClick_;
 
         std::wstring        chars_;
+
+        std::size_t         anyKeyCount_    = 0;
 
 };
 

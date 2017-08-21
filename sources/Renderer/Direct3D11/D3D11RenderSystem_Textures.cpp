@@ -372,9 +372,18 @@ void D3D11RenderSystem::BuildGenericTexture2D(
             subImageDesc.buffer = reinterpret_cast<const char*>(subImageDesc.buffer) + subImageStride;
         }
     }
-    else
+    else if (GetConfiguration().defaultImageEnabled)
     {
-        //TODO -> fill texture with default data
+        if (IsDepthStencilFormat(descD3D.format))
+        {
+            //TODO -> fill texture with default depth
+            //GetConfiguration().defaultImageColor
+        }
+        else
+        {
+            //TODO -> fill texture with default color
+            //GetConfiguration().defaultImageDepth
+        }
     }
 }
 

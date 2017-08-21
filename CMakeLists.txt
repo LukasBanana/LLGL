@@ -45,14 +45,13 @@ macro(ENABLE_CXX11 PROJECT_NAME)
 	endif()
 endmacro()
 
-macro(ADD_TEST_PROJECT TEST_NAME TEST_FILES)
+macro(ADD_TEST_PROJECT TEST_NAME TEST_FILES LIB_FILES)
 	if(APPLE)
 		add_executable(${TEST_NAME} MACOSX_BUNDLE ${TEST_FILES})
 	else()
 		add_executable(${TEST_NAME} ${TEST_FILES})
 	endif()
-
-	target_link_libraries(${TEST_NAME} LLGL)
+	target_link_libraries(${TEST_NAME} ${LIB_FILES})
 	set_target_properties(${TEST_NAME} PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 	ENABLE_CXX11(${TEST_NAME})
 endmacro()
@@ -96,6 +95,7 @@ endif()
 # === Initialize summary variables ===
 
 set(SUMMARY_TARGET_PLATFORM "Unknown")
+set(SUMMARY_LIBRARY_TYPE "Unknown")
 
 
 # === Options ===
@@ -108,6 +108,7 @@ option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g.
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL extension placeholders" ON)
 option(LLGL_GL_INCLUDE_EXTERNAL "Includes additional OpenGL header files from 'external' folder" ON)
 
+option(LLGL_BUILD_STATIC_LIB "Build LLGL as static lib (Only allows a single render system!)" OFF)
 option(LLGL_BUILD_TESTS "Include test projects" ON)
 option(LLGL_BUILD_TUTORIALS "Include tutorial projects" ON)
 
@@ -144,6 +145,10 @@ endif()
 
 if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
 	ADD_DEFINE(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
+endif()
+
+if(LLGL_BUILD_STATIC_LIB)
+	ADD_DEFINE(LLGL_BUILD_STATIC_LIB)
 endif()
 
 
@@ -368,7 +373,13 @@ set(
 )
 
 # Base project
-add_library(LLGL SHARED ${FilesLLGL})
+if(LLGL_BUILD_STATIC_LIB)
+	set(SUMMARY_LIBRARY_TYPE "Static")
+	add_library(LLGL STATIC ${FilesLLGL})
+else()
+	set(SUMMARY_LIBRARY_TYPE "Shared")
+	add_library(LLGL SHARED ${FilesLLGL})
+endif()
 
 if(APPLE)
 	if(MOBILE_PLATFORM)
@@ -384,12 +395,21 @@ endif()
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 ENABLE_CXX11(LLGL)
 
+set(TEST_PROJECT_LIBS LLGL)
+
 if(LLGL_BUILD_RENDERER_OPENGLES3)
 	# OpenGLES Renderer
 	include(cmake/FindOpenGLES.cmake)
 	if(OPENGLES_FOUND)
 		include_directories(${OPENGLES_INCLUDE_DIR})
-		add_library(LLGL_OpenGLES3 SHARED ${FilesGLES3})
+		
+		if(LLGL_BUILD_STATIC_LIB)
+			add_library(LLGL_OpenGLES3 STATIC ${FilesGLES3})
+			set(TEST_PROJECT_LIBS LLGL_OpenGLES3)
+		else()
+			add_library(LLGL_OpenGLES3 SHARED ${FilesGLES3})
+		endif()
+		
 		set_target_properties(LLGL_OpenGLES3 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 		target_link_libraries(LLGL_OpenGLES3 LLGL ${OPENGLES_LIBRARIES})
 		
@@ -410,10 +430,18 @@ if(LLGL_BUILD_RENDERER_OPENGL)
 	find_package(OpenGL)
 	if(OpenGL_FOUND)
 		include_directories(${OPENGL_INCLUDE_DIR})
+		
 		if(LLGL_GL_INCLUDE_EXTERNAL)
 			include_directories(${PROJECT_SOURCE_DIR}/external)
 		endif()
-		add_library(LLGL_OpenGL SHARED ${FilesGL})
+		
+		if(LLGL_BUILD_STATIC_LIB)
+			add_library(LLGL_OpenGL STATIC ${FilesGL})
+			set(TEST_PROJECT_LIBS LLGL_OpenGL)
+		else()
+			add_library(LLGL_OpenGL SHARED ${FilesGL})
+		endif()
+		
 		set_target_properties(LLGL_OpenGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 		target_link_libraries(LLGL_OpenGL LLGL ${OPENGL_LIBRARIES})
 		ENABLE_CXX11(LLGL_OpenGL)
@@ -439,7 +467,13 @@ endif()
 if(WIN32)
 	if(LLGL_BUILD_RENDERER_DIRECT3D11)
 		# Direct3D 11 Renderer
-		add_library(LLGL_Direct3D11 SHARED ${FilesD3D11})
+		if(LLGL_BUILD_STATIC_LIB)
+			add_library(LLGL_Direct3D11 STATIC ${FilesD3D11})
+			set(TEST_PROJECT_LIBS LLGL_Direct3D11)
+		else()
+			add_library(LLGL_Direct3D11 SHARED ${FilesD3D11})
+		endif()
+		
 		set_target_properties(LLGL_Direct3D11 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 		target_link_libraries(LLGL_Direct3D11 LLGL d3d11 dxgi D3DCompiler)
 		ENABLE_CXX11(LLGL_Direct3D11)
@@ -447,7 +481,13 @@ if(WIN32)
 	
 	if(LLGL_BUILD_RENDERER_DIRECT3D12)
 		# Direct3D 12 Renderer
-		add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
+		if(LLGL_BUILD_STATIC_LIB)
+			add_library(LLGL_Direct3D12 STATIC ${FilesD3D12})
+			set(TEST_PROJECT_LIBS LLGL_Direct3D12)
+		else()
+			add_library(LLGL_Direct3D12 SHARED ${FilesD3D12})
+		endif()
+		
 		set_target_properties(LLGL_Direct3D12 PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
 		target_link_libraries(LLGL_Direct3D12 LLGL d3d12 dxgi D3DCompiler)
 		target_compile_definitions(LLGL_Direct3D12 PUBLIC -DLLGL_DX_ENABLE_D3D12)
@@ -457,44 +497,49 @@ endif()
 
 # Test Projects
 if(LLGL_BUILD_TESTS)
-	ADD_TEST_PROJECT(Test1_Window ${FilesTest1})
-	ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2})
-	if(LLGL_BUILD_RENDERER_DIRECT3D12)
-		ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3})
+	ADD_TEST_PROJECT(Test1_Window ${FilesTest1} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2} ${TEST_PROJECT_LIBS})
+	if(WIN32)
+		ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3} ${TEST_PROJECT_LIBS})
 	endif()
-	ADD_TEST_PROJECT(Test4_Compute ${FilesTest4})
+	ADD_TEST_PROJECT(Test4_Compute ${FilesTest4} ${TEST_PROJECT_LIBS})
 	if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
-		ADD_TEST_PROJECT(Test5_Vulkan ${FilesTest5})
+		ADD_TEST_PROJECT(Test5_Vulkan ${FilesTest5} ${TEST_PROJECT_LIBS})
 	endif()
 endif()
 
 # Tutorial Projects
 if(LLGL_BUILD_TUTORIALS)
-	ADD_TEST_PROJECT(Tutorial01_HelloTriangle ${FilesTutorial01})
-	ADD_TEST_PROJECT(Tutorial02_Tessellation ${FilesTutorial02})
-	ADD_TEST_PROJECT(Tutorial03_Texturing ${FilesTutorial03})
-	ADD_TEST_PROJECT(Tutorial04_Query ${FilesTutorial04})
-	ADD_TEST_PROJECT(Tutorial05_RenderTarget ${FilesTutorial05})
-	ADD_TEST_PROJECT(Tutorial06_MultiContext ${FilesTutorial06})
-	ADD_TEST_PROJECT(Tutorial07_Array ${FilesTutorial07})
-	ADD_TEST_PROJECT(Tutorial08_Compute ${FilesTutorial08})
-	ADD_TEST_PROJECT(Tutorial09_StreamOutput ${FilesTutorial09})
-	ADD_TEST_PROJECT(Tutorial10_Instancing ${FilesTutorial10})
-	ADD_TEST_PROJECT(Tutorial11_PostProcessing ${FilesTutorial11})
-	ADD_TEST_PROJECT(Tutorial12_MultiRenderer ${FilesTutorial12})
+	ADD_TEST_PROJECT(Tutorial01_HelloTriangle ${FilesTutorial01} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial02_Tessellation ${FilesTutorial02} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial03_Texturing ${FilesTutorial03} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial04_Query ${FilesTutorial04} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial05_RenderTarget ${FilesTutorial05} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial06_MultiContext ${FilesTutorial06} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial07_Array ${FilesTutorial07} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial08_Compute ${FilesTutorial08} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial09_StreamOutput ${FilesTutorial09} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial10_Instancing ${FilesTutorial10} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial11_PostProcessing ${FilesTutorial11} ${TEST_PROJECT_LIBS})
+	ADD_TEST_PROJECT(Tutorial12_MultiRenderer ${FilesTutorial12} ${TEST_PROJECT_LIBS})
 endif()
 
 # Summary Information
 message("~~~ Build Summary ~~~")
 
 message("Target Platform: ${SUMMARY_TARGET_PLATFORM}")
+message("Library Type: ${SUMMARY_LIBRARY_TYPE}")
+
+set(RENDERER_COUNT 0)
 
 if(LLGL_BUILD_RENDERER_OPENGL AND OpenGL_FOUND)
 	message("Build Renderer: OpenGL")
+	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 
 if(LLGL_BUILD_RENDERER_OPENGLES3 AND OPENGLES_FOUND)
 	message("Build Renderer: OpenGL ES 3")
+	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 
 if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
@@ -503,10 +548,16 @@ endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
 	message("Build Renderer: Direct3D 11")
+	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
 	message("Build Renderer: Direct3D 12")
+	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
+endif()
+
+if(LLGL_BUILD_STATIC_LIB AND NOT(${RENDERER_COUNT} EQUAL 1))
+	message(SEND_ERROR "Static library only supports one single render backend, but multiple are specified!")
 endif()
 
 

@@ -33,6 +33,17 @@ LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode);
 //! Restes the standard video mode for the desktop.
 LLGL_EXPORT bool ResetVideoMode();
 
+/**
+\brief Shows or hides the cursor for the running application.
+\param[in] show Specifies whether to show or hide the cursor.
+\remarks In contrast to the Win32 API, this function only shows or hides the cursor,
+while the Win32 API function with the same name either increments or decrements an internal visibility counter for the cursor.
+*/
+LLGL_EXPORT void ShowCursor(bool show);
+
+//! Returns true if the cursor is currently being shown.
+LLGL_EXPORT bool IsCursorShown();
+
 
 } // /namespace Desktop
 

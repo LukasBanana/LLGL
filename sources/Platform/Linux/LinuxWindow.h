@@ -55,16 +55,19 @@ class LinuxWindow : public Window
         void ProcessKeyEvent(XKeyEvent& event, bool down);
         void ProcessMouseKeyEvent(XButtonEvent& event, bool down);
         void ProcessResizeRequestEvent(XResizeRequestEvent& event);
+        void ProcessClientMessage(XClientMessageEvent& event);
 
         void PostMouseKeyEvent(Key key, bool down);
         
         WindowDescriptor    desc_;
 
-        ::Display*          display_    = nullptr;
+        ::Display*          display_        = nullptr;
         //::Colormap          colorMap_;
         ::Window            wnd_;
         //::Cursor            cursor_;
-        XVisualInfo*        visual_     = nullptr;
+        XVisualInfo*        visual_         = nullptr;
+        
+        ::Atom              closeWndAtom_;
 
 };
 

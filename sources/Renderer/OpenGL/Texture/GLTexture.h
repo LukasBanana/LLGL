@@ -27,10 +27,10 @@ class GLTexture : public Texture
 
         Gs::Vector3ui QueryMipLevelSize(unsigned int mipLevel) const override;
 
-        //! Recreates the internal texture object. This will invalidate the previous texture ID.
+        // Recreates the internal texture object. This will invalidate the previous texture ID.
         void Recreate();
 
-        //! Returns the hardware texture ID.
+        // Returns the hardware texture ID.
         inline GLuint GetID() const
         {
             return id_;

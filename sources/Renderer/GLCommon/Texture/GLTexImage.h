@@ -17,24 +17,28 @@ namespace LLGL
 {
 
 
+void GLTexImageDefault(bool enable);
+void GLTexImageDefaultColor(const ColorRGBAub& color);
+void GLTexImageDefaultDepth(float depth);
+
 #ifdef LLGL_OPENGL
 
-void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
+void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
 void GLTexImage2DMS(const TextureDescriptor& desc);
 void GLTexImage2DMSArray(const TextureDescriptor& desc);
 
 #else
 
-void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
-void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor);
+void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
 
 #endif
 

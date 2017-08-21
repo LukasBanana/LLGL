@@ -35,13 +35,16 @@ class LinuxGLContext : public GLContext
 
         bool Activate(bool activate) override;
 
-        void CreateContext(const NativeHandle& nativeHandle, LinuxGLContext* sharedContext);
+        void CreateContext(const RenderContextDescriptor& contextDesc, const NativeHandle& nativeHandle, LinuxGLContext* sharedContext);
         void DeleteContext();
+        
+        GLXContext CreateContextCoreProfile(GLXContext glcShared, int major, int minor);
+        GLXContext CreateContextCompatibilityProfile(GLXContext glcShared);
 
-        ::Display*      display_;
-        ::Window        wnd_;
-        XVisualInfo*    visual_;
-        GLXContext      glc_;
+        ::Display*      display_    = nullptr;
+        ::Window        wnd_        = 0;
+        XVisualInfo*    visual_     = nullptr;
+        GLXContext      glc_        = nullptr;
 
 };
 

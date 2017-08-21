@@ -16,9 +16,44 @@ namespace LLGL
 {
 
 
+struct TexImageDefault
+{
+    bool        enabled { true };
+    ColorRGBAub color   { 0, 0, 0, 0 };
+    float       depth   { 0.0f };
+};
+
+static TexImageDefault g_texImageDefault;
+
+void GLTexImageDefault(bool enable)
+{
+    g_texImageDefault.enabled = enable;
+}
+
+void GLTexImageDefaultColor(const ColorRGBAub& color)
+{
+    g_texImageDefault.color = color;
+}
+
+void GLTexImageDefaultDepth(float depth)
+{
+    g_texImageDefault.depth = depth;
+}
+
 static std::vector<ColorRGBAub> GenImageDataRGBAub(int numPixels, const ColorRGBAub& color)
 {
     return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), color);
+}
+
+static std::vector<float> GenImageDataRf(int numPixels, float value)
+{
+    return std::vector<float>(static_cast<std::size_t>(numPixels), value);
+}
+
+[[noreturn]]
+void ErrIllegalUseOfDepthFormat()
+{
+    throw std::runtime_error("illegal use of depth-stencil format for texture");
 }
 
 #ifdef LLGL_OPENGL
@@ -195,7 +230,7 @@ static void GLTexImage2DMultisampleArray(
     GLTexImage3DMultisampleBase(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, depth, fixedSamples);
 }
 
-void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -206,9 +241,14 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
         );
     }
-    else if (IsCompressedFormat(desc.format))
+    else if (IsDepthStencilFormat(desc.format))
     {
-        /* Initialize compressed texture image with null pointer */
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
+    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    {
+        /* Allocate texture without initial data */
         GLTexImage1D(
             desc.format,
             desc.texture1D.width,
@@ -220,7 +260,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture1D.width,
-            defaultImageColor
+            g_texImageDefault.color
         );
 
         GLTexImage1D(
@@ -233,7 +273,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
 
 #endif
 
-void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -244,9 +284,35 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
         );
     }
-    else if (IsCompressedFormat(desc.format))
+    else if (IsDepthStencilFormat(desc.format))
     {
-        /* Initialize compressed texture image with null pointer */
+        if (g_texImageDefault.enabled)
+        {
+            /* Initialize depth texture image with default depth */
+            auto image = GenImageDataRf(
+                desc.texture2D.width * desc.texture2D.height,
+                g_texImageDefault.depth
+            );
+
+            GLTexImage2D(
+                desc.format,
+                desc.texture2D.width, desc.texture2D.height,
+                GL_DEPTH_COMPONENT, GL_FLOAT, image.data()
+            );
+        }
+        else
+        {
+            /* Allocate depth texture image without initial data */
+            GLTexImage2D(
+                desc.format,
+                desc.texture2D.width, desc.texture2D.height,
+                GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+            );
+        }
+    }
+    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    {
+        /* Allocate texture without initial data */
         GLTexImage2D(
             desc.format,
             desc.texture2D.width, desc.texture2D.height,
@@ -258,7 +324,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture2D.width * desc.texture2D.height,
-            defaultImageColor
+            g_texImageDefault.color
         );
 
         GLTexImage2D(
@@ -269,7 +335,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     }
 }
 
-void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -280,9 +346,14 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
         );
     }
-    else if (IsCompressedFormat(desc.format))
+    else if (IsDepthStencilFormat(desc.format))
     {
-        /* Initialize compressed texture image with null pointer */
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
+    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    {
+        /* Allocate texture without initial data */
         GLTexImage3D(
             desc.format,
             desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
@@ -294,7 +365,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture3D.width * desc.texture3D.height * desc.texture3D.depth,
-            defaultImageColor
+            g_texImageDefault.color
         );
 
         GLTexImage3D(
@@ -305,7 +376,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     }
 }
 
-void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     const std::array<AxisDirection, 6> cubeFaces
     {{
@@ -339,9 +410,14 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
             imageFace += imageFaceStride;
         }
     }
-    else if (IsCompressedFormat(desc.format))
+    else if (IsDepthStencilFormat(desc.format))
     {
-        /* Initialize compressed texture image with null pointer */
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
+    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    {
+        /* Allocate texture without initial data */
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
@@ -356,7 +432,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAub(
             desc.textureCube.width * desc.textureCube.height,
-            defaultImageColor
+            g_texImageDefault.color
         );
 
         for (auto face : cubeFaces)
@@ -372,7 +448,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
 
 #ifdef LLGL_OPENGL
 
-void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -383,9 +459,14 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
         );
     }
-    else if (IsCompressedFormat(desc.format))
+    else if (IsDepthStencilFormat(desc.format))
     {
-        /* Initialize compressed texture image with null pointer */
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
+    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    {
+        /* Allocate texture without initial data */
         GLTexImage1DArray(
             desc.format,
             desc.texture1D.width, desc.texture1D.layers,
@@ -397,7 +478,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture1D.width * static_cast<int>(desc.texture1D.layers),
-            defaultImageColor
+            g_texImageDefault.color
         );
 
         GLTexImage1DArray(
@@ -410,7 +491,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
 
 #endif
 
-void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -421,9 +502,35 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
         );
     }
-    else if (IsCompressedFormat(desc.format))
+    else if (IsDepthStencilFormat(desc.format))
     {
-        /* Initialize compressed texture image with null pointer */
+        if (g_texImageDefault.enabled)
+        {
+            /* Initialize depth texture image with default depth */
+            auto image = GenImageDataRf(
+                desc.texture2D.width * desc.texture2D.height * static_cast<int>(desc.texture2D.layers),
+                g_texImageDefault.depth
+            );
+
+            GLTexImage2DArray(
+                desc.format,
+                desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
+                GL_DEPTH_COMPONENT, GL_FLOAT, image.data()
+            );
+        }
+        else
+        {
+            /* Allocate depth texture image without initial data */
+            GLTexImage2DArray(
+                desc.format,
+                desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
+                GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+            );
+        }
+    }
+    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    {
+        /* Allocate texture without initial data */
         GLTexImage2DArray(
             desc.format,
             desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
@@ -435,7 +542,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture2D.width * desc.texture2D.height * static_cast<int>(desc.texture2D.layers),
-            defaultImageColor
+            g_texImageDefault.color
         );
 
         GLTexImage2DArray(
@@ -448,7 +555,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
 
 #ifdef LLGL_OPENGL
 
-void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc, const ColorRGBAub& defaultImageColor)
+void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -459,9 +566,14 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
         );
     }
-    else if (IsCompressedFormat(desc.format))
+    else if (IsDepthStencilFormat(desc.format))
     {
-        /* Initialize compressed texture image with null pointer */
+        /* Throw runtime error for illegal use of depth-stencil format */
+        ErrIllegalUseOfDepthFormat();
+    }
+    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    {
+        /* Allocate texture without initial data */
         GLTexImageCubeArray(
             desc.format,
             desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
@@ -473,7 +585,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAub(
             desc.textureCube.width * desc.textureCube.height * static_cast<int>(desc.textureCube.layers*6),
-            defaultImageColor
+            g_texImageDefault.color
         );
 
         GLTexImageCubeArray(

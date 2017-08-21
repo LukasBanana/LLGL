@@ -178,7 +178,7 @@ static void ConvertImageBufferDataTypeWorker(
 }
 
 // Minimal number of entries each worker thread shall process
-static const std::size_t threadMinWorkSize = 64;
+static const std::size_t g_threadMinWorkSize = 64;
 
 static ByteBuffer ConvertImageBufferDataType(
     DataType    srcDataType,
@@ -196,7 +196,7 @@ static ByteBuffer ConvertImageBufferDataType(
     VariantConstBuffer src(srcBuffer);
     VariantBuffer dst(dstBuffer.get());
     
-    threadCount = std::min(threadCount, imageSize / threadMinWorkSize);
+    threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
 
     if (threadCount > 1)
     {
@@ -364,6 +364,18 @@ void TransferRGBAFormattedVariantColor(
             CopyTypedVariant(dataType, buffer, idx + 2, value.r);
             CopyTypedVariant(dataType, buffer, idx + 3, value.a);
             break;
+        case ImageFormat::ARGB:
+            CopyTypedVariant(dataType, buffer, idx    , value.a);
+            CopyTypedVariant(dataType, buffer, idx + 1, value.r);
+            CopyTypedVariant(dataType, buffer, idx + 2, value.g);
+            CopyTypedVariant(dataType, buffer, idx + 3, value.b);
+            break;
+        case ImageFormat::ABGR:
+            CopyTypedVariant(dataType, buffer, idx    , value.a);
+            CopyTypedVariant(dataType, buffer, idx + 1, value.b);
+            CopyTypedVariant(dataType, buffer, idx + 2, value.g);
+            CopyTypedVariant(dataType, buffer, idx + 3, value.r);
+            break;
         default:
             break;
     }
@@ -432,7 +444,7 @@ static ByteBuffer ConvertImageBufferFormat(
     VariantConstBuffer src(srcBuffer);
     VariantBuffer dst(dstBuffer.get());
 
-    threadCount = std::min(threadCount, imageSize / threadMinWorkSize);
+    threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
 
     if (threadCount > 1)
     {
@@ -493,6 +505,8 @@ LLGL_EXPORT unsigned int ImageFormatSize(const ImageFormat imageFormat)
         case ImageFormat::BGR:              return 3;
         case ImageFormat::RGBA:             return 4;
         case ImageFormat::BGRA:             return 4;
+        case ImageFormat::ARGB:             return 4;
+        case ImageFormat::ABGR:             return 4;
         case ImageFormat::Depth:            return 1;
         case ImageFormat::DepthStencil:     return 2;
         case ImageFormat::CompressedRGB:    return 0;

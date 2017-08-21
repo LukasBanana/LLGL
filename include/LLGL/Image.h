@@ -44,6 +44,8 @@ enum class ImageFormat
     BGR,            //!< Three color components: Blue, Green, Red.
     RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
     BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
+    ARGB,           //!< Four color components: Alpha, Red, Green, Blue. Old format, mainly used in Direct3D 9.
+    ABGR,           //!< Four color components: Alpha, Blue, Green, Red. Old format, mainly used in Direct3D 9.
 
     /* Depth-stencil formats */
     Depth,          //!< 32-bit depth component.
@@ -115,7 +117,7 @@ i.e. either ImageFormat::CompressedRGB, or ImageFormat::CompressedRGBA.
 LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format);
 
 /**
-\brief Returns true if the specified color foramt is a depth-stencil format,
+\brief Returns true if the specified color format is a depth-stencil format,
 i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
 */
 LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);

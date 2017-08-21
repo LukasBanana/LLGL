@@ -19,6 +19,10 @@
 #   include "DebugLayer/DbgRenderSystem.h"
 #endif
 
+#ifdef LLGL_BUILD_STATIC_LIB
+#   include "ModuleInterface.h"
+#endif
+
 
 namespace LLGL
 {
@@ -65,6 +69,8 @@ std::vector<std::string> RenderSystem::FindModules()
     
     return modules;
 }
+
+#ifndef LLGL_BUILD_STATIC_LIB
 
 static bool LoadRenderSystemBuildID(Module& module, const std::string& moduleFilename)
 {
@@ -114,9 +120,45 @@ static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleF
     return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc());
 }
 
+#endif
+
 std::unique_ptr<RenderSystem> RenderSystem::Load(
     const std::string& moduleName, RenderingProfiler* profiler, RenderingDebugger* debugger)
 {
+    #ifdef LLGL_BUILD_STATIC_LIB
+
+    /*
+    Verify build ID from render system module to detect a module,
+    that has compiled with a different compiler (type, version, debug/release mode etc.)
+    */
+    if (LLGL_RenderSystem_BuildID() != LLGL_BUILD_ID)
+        throw std::runtime_error("build ID mismatch in render system module");
+
+    /* Allocate render system */
+    auto renderSystem   = std::unique_ptr<RenderSystem>(reinterpret_cast<RenderSystem*>(LLGL_RenderSystem_Alloc()));
+
+    if (profiler != nullptr || debugger != nullptr)
+    {
+        #ifdef LLGL_ENABLE_DEBUG_LAYER
+
+        /* Create debug layer render system */
+        renderSystem = MakeUnique<DbgRenderSystem>(std::move(renderSystem), profiler, debugger);
+
+        #else
+
+        Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
+
+        #endif
+    }
+
+    renderSystem->name_         = LLGL_RenderSystem_Name();
+    renderSystem->rendererID_   = LLGL_RenderSystem_RendererID();
+
+    /* Return new render system and unique pointer */
+    return renderSystem;
+
+    #else
+
     /* Load render system module */
     auto moduleFilename = Module::GetModuleFilename(moduleName);
     auto module         = Module::Load(moduleFilename);
@@ -162,6 +204,8 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
         g_renderSystemModules[nullptr] = std::move(module);
         throw;
     }
+
+    #endif
 }
 
 void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)

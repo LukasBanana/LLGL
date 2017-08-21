@@ -33,7 +33,7 @@ LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
     return nullptr;//new LLGL::GLES3RenderSystem();
 }
 
-}
+} // /extern "C"
 
 
 

@@ -656,6 +656,11 @@ void LoadAllExtensions(GLExtensionList& extensions)
 
     #define ENABLE_GLEXT(NAME) \
         EnableExtension("GL_" + std::string(#NAME), GLExt::NAME)
+        
+    #ifdef __linux__
+    extensions.insert("GL_ARB_vertex_buffer_object");
+    extensions.insert("GL_EXT_texture3D");
+    #endif
 
     /* Load hardware buffer extensions */
     LOAD_GLEXT( ARB_vertex_buffer_object         );

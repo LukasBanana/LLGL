@@ -9,7 +9,7 @@
 #define LLGL_EXPORT_H
 
 
-#ifdef _MSC_VER
+#if defined _MSC_VER && !defined LLGL_BUILD_STATIC_LIB
 #   define LLGL_EXPORT __declspec(dllexport)
 #else
 #   define LLGL_EXPORT
