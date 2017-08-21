@@ -53,6 +53,7 @@ enum class OpenGLVersion
     OpenGL_4_3      = 430, //!< OpenGL 4.3, released in Aug, 2012.
     OpenGL_4_4      = 440, //!< OpenGL 4.4, released in Jul, 2013.
     OpenGL_4_5      = 450, //!< OpenGL 4.5, released in Aug, 2014.
+    OpenGL_4_6      = 460, //!< OpenGL 4.6, released in Jul, 2017.
 };
 
 //! Swap chain mode enumeration.
@@ -123,6 +124,15 @@ LLGL_EXPORT bool operator != (const VsyncDescriptor& lhs, const VsyncDescriptor&
 
 LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
 LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
+
+
+/* ----- Functions ----- */
+
+//! Returns the major number of the specified OpenGL version.
+LLGL_EXPORT int GetMajorVersion(const OpenGLVersion version);
+
+//! Returns the minor number of the specified OpenGL version.
+LLGL_EXPORT int GetMinorVersion(const OpenGLVersion version);
 
 
 } // /namespace LLGL

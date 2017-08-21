@@ -13,6 +13,8 @@ namespace LLGL
 {
 
 
+/* ----- Operators ----- */
+
 LLGL_EXPORT bool operator == (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs)
 {
     return
@@ -42,6 +44,19 @@ LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDes
 LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs)
 {
     return !(lhs == rhs);
+}
+
+
+/* ----- Functions ----- */
+
+LLGL_EXPORT int GetMajorVersion(const OpenGLVersion version)
+{
+    return static_cast<int>(version) / 100;
+}
+
+LLGL_EXPORT int GetMinorVersion(const OpenGLVersion version)
+{
+    return static_cast<int>(version) % 100;
 }
 
 

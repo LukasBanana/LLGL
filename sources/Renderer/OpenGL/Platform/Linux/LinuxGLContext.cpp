@@ -115,7 +115,9 @@ void LinuxGLContext::CreateContext(const RenderContextDescriptor& contextDesc, c
     if (profileDesc.extProfile && profileDesc.coreProfile)
     {
         /* Create core profile */
-        glc_ = CreateContextCoreProfile(glcShared, 3, 3);
+        int major = GetMajorVersion(profileDesc.version);
+        int minor = GetMinorVersion(profileDesc.version);
+        glc_ = CreateContextCoreProfile(glcShared, major, minor);
     }
     
     if (!glc_)

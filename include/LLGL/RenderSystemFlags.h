@@ -54,6 +54,7 @@ enum class ShadingLanguage
     GLSL_430    = 430,      //!< GLSL 4.30 (since OpenGL 4.3). Value is 430.
     GLSL_440    = 440,      //!< GLSL 4.40 (since OpenGL 4.4). Value is 440.
     GLSL_450    = 450,      //!< GLSL 4.50 (since OpenGL 4.5). Value is 450.
+    GLSL_460    = 460,      //!< GLSL 4.60 (since OpenGL 4.6). Value is 460.
 
     GLSL_ES_100 = 100100,   //!< GLSL ES 1.00 (since OpenGL ES 2.0). Values is 100100.
     GLSL_ES_300 = 100300,   //!< GLSL ES 3.00 (since OpenGL ES 3.0). Values is 100300.
