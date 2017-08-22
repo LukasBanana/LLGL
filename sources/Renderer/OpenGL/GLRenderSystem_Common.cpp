@@ -15,6 +15,8 @@
 #include "../../Core/Exception.h"
 #include <LLGL/Desktop.h>
 
+#include <LLGL/Log.h>
+
 
 namespace LLGL
 {
@@ -237,7 +239,7 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
 
         /* Query extensions and load all of them */
         auto extensions = QueryExtensions(coreProfile);
-        LoadAllExtensions(extensions);
+        LoadAllExtensions(extensions, coreProfile);
 
         /* Query and store all renderer information and capabilities */
         QueryRendererInfo();

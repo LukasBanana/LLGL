@@ -269,28 +269,13 @@ HGLRC Win32GLContext::CreateStdContextProfile()
     return wglCreateContext(hDC_);
 }
 
-static void ConvertGLVersion(const OpenGLVersion version, GLint& major, GLint& minor)
-{
-    if (version == OpenGLVersion::OpenGL_Latest)
-    {
-        major = 4;
-        minor = 5;
-    }
-    else
-    {
-        auto ver = static_cast<int>(version);
-        major = ver / 100;
-        minor = (ver % 100) / 10;
-    }
-}
-
 HGLRC Win32GLContext::CreateExtContextProfile(HGLRC sharedGLRC)
 {
     bool useCoreProfile = desc_.profileOpenGL.coreProfile;
     
     /* Initialize GL version number */
-    GLint major = 0, minor = 0;
-    ConvertGLVersion(desc_.profileOpenGL.version, major, minor);
+    int major = GetMajorVersion(desc_.profileOpenGL.version);
+    int minor = GetMinorVersion(desc_.profileOpenGL.version);
 
     /* Setup extended attributes to select the OpenGL profile */
     const int attribList[] =

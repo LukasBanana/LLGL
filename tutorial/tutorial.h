@@ -317,10 +317,11 @@ protected:
             #if 0
             contextDesc.profileOpenGL.extProfile    = true;
             contextDesc.profileOpenGL.coreProfile   = true;
-            contextDesc.debugCallback = [](const std::string& type, const std::string& message)
+            contextDesc.profileOpenGL.version       = LLGL::OpenGLVersion::OpenGL_3_3;
+            /*contextDesc.debugCallback = [](const std::string& type, const std::string& message)
             {
                 std::cout << type << " -- " << message << std::endl;
-            };
+            };*/
             #endif
 
             #ifdef __linux__
