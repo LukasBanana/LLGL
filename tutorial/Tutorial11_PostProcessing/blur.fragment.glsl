@@ -1,13 +1,13 @@
 // GLSL blur fragment shader
 
-#version 420
+#version 140
 
-layout(std140, binding=1) uniform BlurSettings
+layout(std140) uniform BlurSettings
 {
 	vec2 blurShift;
 };
 
-layout(binding=1) uniform sampler2D glossMap;
+uniform sampler2D glossMap;
 
 in vec2 vTexCoord;
 

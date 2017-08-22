@@ -165,6 +165,22 @@ public:
                 {} // empty vertex format
             );
         }
+        
+        // Set shader uniforms (only required for GLSL until 4.10)
+        shaderProgramBlur->BindConstantBuffer("BlurSettings", 1);
+        
+        if (auto uniforms = shaderProgramBlur->LockShaderUniform())
+        {
+            uniforms->SetUniform("glossMap", 1);
+            shaderProgramBlur->UnlockShaderUniform();
+        }
+        
+        if (auto uniforms = shaderProgramFinal->LockShaderUniform())
+        {
+            uniforms->SetUniform("colorMap", 0);
+            uniforms->SetUniform("glossMap", 1);
+            shaderProgramFinal->UnlockShaderUniform();
+        }
     }
 
     void CreatePipelines()
