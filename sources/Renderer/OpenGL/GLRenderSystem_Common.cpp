@@ -270,11 +270,13 @@ void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
 {
     #if defined(LLGL_DEBUG) && !defined(__APPLE__)
 
-    if (debugCallback)
+    debugCallback_ = debugCallback;
+
+    if (debugCallback_)
     {
         GLStateManager::active->Enable(GLState::DEBUG_OUTPUT);
         GLStateManager::active->Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(GLDebugCallback, &debugCallback);
+        glDebugMessageCallback(GLDebugCallback, &debugCallback_);
     }
     else
     {

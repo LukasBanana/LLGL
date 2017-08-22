@@ -168,6 +168,8 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLComputePipeline>    computePipelines_;
         HWObjectContainer<GLQuery>              queries_;
 
+        DebugCallback                           debugCallback_;
+
 };
 
 
