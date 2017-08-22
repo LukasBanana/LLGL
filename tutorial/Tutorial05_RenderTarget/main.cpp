@@ -15,7 +15,7 @@
 //#define ENABLE_CUSTOM_MULTISAMPLING
 
 // Enable depth texture instead of depth buffer for render target
-#define ENABLE_DEPTH_TEXTURE
+//#define ENABLE_DEPTH_TEXTURE
 
 
 #ifndef ENABLE_MULTISAMPLING
