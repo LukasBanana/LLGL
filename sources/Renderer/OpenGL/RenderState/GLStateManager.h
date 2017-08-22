@@ -133,6 +133,8 @@ class GLStateManager
 
         void BindTexture(const GLTexture& texture);
 
+        void NotifyTextureRelease(GLTextureTarget target, GLuint texture);
+
         /* ----- Sampler ----- */
 
         void BindSampler(unsigned int layer, GLuint sampler);

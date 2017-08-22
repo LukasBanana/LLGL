@@ -95,11 +95,26 @@ TextureArray* GLRenderSystem::CreateTextureArray(unsigned int numTextures, Textu
 
 void GLRenderSystem::Release(Texture& texture)
 {
+    /* Notify state manager about texture release */
+    auto& textureGL = LLGL_CAST(const GLTexture&, texture);
+    GLStateManager::active->NotifyTextureRelease(GLStateManager::GetTextureTarget(textureGL.GetType()), textureGL.GetID());
+
+    /* Release object */
     RemoveFromUniqueSet(textures_, &texture);
 }
 
 void GLRenderSystem::Release(TextureArray& textureArray)
 {
+    /* Notify state manager about texture release */
+    auto& textureArrayGL = LLGL_CAST(const GLTextureArray&, textureArray);
+
+    const auto& texIDs      = textureArrayGL.GetIDArray();
+    const auto& texTargets  = textureArrayGL.GetTargetArray();
+
+    for (std::size_t i = 0, n = texIDs.size(); i < n; ++i)
+        GLStateManager::active->NotifyTextureRelease(texTargets[i], texIDs[i]);
+
+    /* Release object */
     RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
