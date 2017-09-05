@@ -44,11 +44,13 @@ int main(int argc, char* argv[])
         };
 
         // Vertex data (3 vertices for our triangle)
+        const float s = 0.5f;
+
         Vertex vertices[] =
         {
-            { {  0,  1 }, { 1, 0, 0 } }, // 1st vertex: center-top, red
-            { {  1, -1 }, { 0, 1, 0 } }, // 2nd vertex: right-bottom, green
-            { { -1, -1 }, { 0, 0, 1 } }, // 3rd vertex: left-bottom, blue
+            { {  0,  s }, { 1, 0, 0 } }, // 1st vertex: center-top, red
+            { {  s, -s }, { 0, 1, 0 } }, // 2nd vertex: right-bottom, green
+            { { -s, -s }, { 0, 0, 1 } }, // 3rd vertex: left-bottom, blue
         };
 
         // Vertex format
