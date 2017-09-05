@@ -111,6 +111,7 @@ void GLRenderSystem::Release(TextureArray& textureArray)
     const auto& texIDs      = textureArrayGL.GetIDArray();
     const auto& texTargets  = textureArrayGL.GetTargetArray();
 
+    //TODO: must be done for ALL state managers!!!
     for (std::size_t i = 0, n = texIDs.size(); i < n; ++i)
         GLStateManager::active->NotifyTextureRelease(texTargets[i], texIDs[i]);
 

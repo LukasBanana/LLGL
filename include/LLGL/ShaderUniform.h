@@ -52,10 +52,10 @@ enum class UniformType
 //! Shader uniform descriptor structure.
 struct UniformDescriptor
 {
-    std::string     name;
-    UniformType     type        = UniformType::Float;
-    int             location    = 0;
-    unsigned int    size        = 0;
+    std::string     name;                               //!< Name of the uniform inside the shader.
+    UniformType     type        = UniformType::Float;   //!< Data type of the uniform.
+    int             location    = 0;                    //!< Internal location of the uniform within a shader program.
+    unsigned int    size        = 0;                    //!< Array size of the uniform.
 };
 
 
