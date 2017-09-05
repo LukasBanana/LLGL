@@ -13,6 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include <memory>
 #include "Vulkan.h"
+#include "VKPtr.h"
 
 
 namespace LLGL
@@ -26,7 +27,11 @@ class VKRenderContext : public RenderContext
 
         /* ----- Common ----- */
 
-        VKRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface);
+        VKRenderContext(
+            const VKPtr<VkInstance>& instance,
+            RenderContextDescriptor desc,
+            const std::shared_ptr<Surface>& surface
+        );
 
         void Present() override;
 
@@ -37,7 +42,12 @@ class VKRenderContext : public RenderContext
 
     private:
 
-        //TODO...
+        void CreateVkSurface();
+        
+        /* ----- Common objects ----- */
+
+        VkInstance          instance_;
+        VKPtr<VkSurfaceKHR> surface_;
 
 };
 

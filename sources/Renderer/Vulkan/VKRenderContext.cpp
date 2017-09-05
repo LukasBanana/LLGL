@@ -14,9 +14,12 @@ namespace LLGL
 
 /* ----- Common ----- */
 
-VKRenderContext::VKRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface)
+VKRenderContext::VKRenderContext(const VKPtr<VkInstance>& instance, RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface) :
+    instance_ { instance                      },
+    surface_  { instance, vkDestroySurfaceKHR }
 {
-    //todo
+    SetOrCreateSurface(surface, desc.videoMode, nullptr);
+    CreateVkSurface();
 }
 
 void VKRenderContext::Present()
@@ -34,6 +37,17 @@ void VKRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 void VKRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 {
     //todo
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void VKRenderContext::CreateVkSurface()
+{
+
+
 }
 
 

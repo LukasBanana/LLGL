@@ -131,20 +131,40 @@ class VKRenderSystem : public RenderSystem
 
     private:
 
-        std::vector<VkLayerProperties> QueryInstanceLayerProperties();
-        std::vector<VkExtensionProperties> QueryInstanceExtensionProperties();
+        struct QueueFamilyIndices
+        {
+            int graphicsFamily  = -1;
+            int presentFamily   = -1;
+
+            inline bool Complete() const
+            {
+                return (graphicsFamily >= 0 && presentFamily >= 0);
+            }
+        };
 
         void CreateInstance(const ApplicationDescriptor& appDesc);
+        void PickPhysicalDevice();
+
+        std::vector<VkLayerProperties> QueryInstanceLayerProperties();
+        std::vector<VkExtensionProperties> QueryInstanceExtensionProperties();
+        std::vector<VkPhysicalDevice> QueryPhysicalDevices();
+        std::vector<VkQueueFamilyProperties> QueryQueueFamilyPeroperties(VkPhysicalDevice device);
+
+        QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, const VkQueueFlags flags);
 
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
+        bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
+
+        /* ----- Common objects ----- */
 
         VKPtr<VkInstance>                       instance_;
+        VkPhysicalDevice                        physicalDevice_     = VK_NULL_HANDLE;
 
         /* ----- Hardware object containers ----- */
 
-        /*HWObjectContainer<VKRenderContext>      renderContexts_;
-        HWObjectContainer<VKCommandBuffer>      commandBuffers_;
+        HWObjectContainer<VKRenderContext>      renderContexts_;
+        /*HWObjectContainer<VKCommandBuffer>      commandBuffers_;
         HWObjectContainer<VKBuffer>             buffers_;
         HWObjectContainer<VKBufferArray>        bufferArrays_;
         HWObjectContainer<VKTexture>            textures_;
