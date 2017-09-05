@@ -111,7 +111,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
                 GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
                 break;
             case TextureType::Texture2DMSArray:
-                GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_2D_MULTISAMPLE_ARRAY, textureID, 0, attachmentDesc.layer);
+                GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, attachmentDesc.layer);
                 break;
         }
 
