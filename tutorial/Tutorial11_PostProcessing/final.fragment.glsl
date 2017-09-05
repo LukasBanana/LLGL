@@ -1,6 +1,6 @@
 // GLSL final fragment shader
 
-#version 420
+#version 140
 
 layout(std140) uniform Settings
 {
@@ -11,8 +11,8 @@ layout(std140) uniform Settings
 	float	intensity;
 };
 
-layout(binding=0) uniform sampler2D colorMap;
-layout(binding=1) uniform sampler2D glossMap;
+uniform sampler2D colorMap;
+uniform sampler2D glossMap;
 
 in vec2 vTexCoord;
 

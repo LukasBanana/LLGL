@@ -12,7 +12,7 @@
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include <string>
 #include <array>
-#include <set>
+#include <map>
 
 
 namespace LLGL
@@ -20,7 +20,7 @@ namespace LLGL
 
 
 //! OpenGL extension map type.
-using GLExtensionList = std::set<std::string>;
+using GLExtensionList = std::map<std::string, bool>;
 
 /* --- Common extension loading functions --- */
 
@@ -34,12 +34,11 @@ GLExtensionList QueryExtensions(bool coreProfile);
 /**
 Loads all available extensions and prints errors if an extension is available,
 but their respective functions could not be loaded.
-\param[in,out] extMap Specifies the extension map. This can be queried by the "QueryExtensions" function.
-If an extension is available but some of their respective functions could not be loaded,
-the respective entry in the map will be invalidated (set to 'false').
+\param[in,out] extensions Specifies the extension map. This can be queried by the "QueryExtensions" function.
+The respective entry will be set to true if all its functions have been loaded successfully.
 \see QueryExtensions
 */
-void LoadAllExtensions(GLExtensionList& extensions);
+void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile);
 
 //! Returns true if all available extensions have been loaded.
 bool AreExtensionsLoaded();

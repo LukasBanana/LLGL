@@ -15,6 +15,8 @@
 #include "../../Core/Exception.h"
 #include <LLGL/Desktop.h>
 
+#include <LLGL/Log.h>
+
 
 namespace LLGL
 {
@@ -237,7 +239,7 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
 
         /* Query extensions and load all of them */
         auto extensions = QueryExtensions(coreProfile);
-        LoadAllExtensions(extensions);
+        LoadAllExtensions(extensions, coreProfile);
 
         /* Query and store all renderer information and capabilities */
         QueryRendererInfo();
@@ -270,11 +272,13 @@ void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
 {
     #if defined(LLGL_DEBUG) && !defined(__APPLE__)
 
-    if (debugCallback)
+    debugCallback_ = debugCallback;
+
+    if (debugCallback_)
     {
         GLStateManager::active->Enable(GLState::DEBUG_OUTPUT);
         GLStateManager::active->Enable(GLState::DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(GLDebugCallback, &debugCallback);
+        glDebugMessageCallback(GLDebugCallback, &debugCallback_);
     }
     else
     {

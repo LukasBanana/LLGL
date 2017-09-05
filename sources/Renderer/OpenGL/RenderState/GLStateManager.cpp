@@ -855,6 +855,19 @@ void GLStateManager::BindTexture(const GLTexture& texture)
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
+void GLStateManager::NotifyTextureRelease(GLTextureTarget target, GLuint texture)
+{
+    auto targetIdx = static_cast<std::size_t>(target);
+
+    /* Search texture on all layers */
+    for (auto& layer : textureState_.layers)
+    {
+        /* Invalidate texture binding memory for this texture */
+        if (layer.boundTextures[targetIdx] == texture)
+            layer.boundTextures[targetIdx] = ~0;
+    }
+}
+
 /* ----- Sampler ----- */
 
 void GLStateManager::BindSampler(unsigned int layer, GLuint sampler)

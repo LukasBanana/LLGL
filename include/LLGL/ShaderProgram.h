@@ -92,14 +92,17 @@ class LLGL_EXPORT ShaderProgram
         /**
         \brief Builds the input layout with the specified vertex format for this shader program.
         \param[in] vertexFormat Specifies the input vertex format.
-        \remarks This is only required for a shader program, which has an attached vertex shader.
-        Moreover, this can only be called after shader compilation but before shader program linkage!
+        \remarks Can only be used for a shader program which has a successfully compiled vertex shader attached.
+        If this is called after the shader program has been linked, the shader program might be re-linked again.
         \see AttachShader(VertexShader&)
         \see Shader::Compile
         \see LinkShaders
         \throws std::invalid_argument If the name of an vertex attribute is invalid or the maximal number of available vertex attributes is exceeded.
         */
         virtual void BuildInputLayout(const VertexFormat& vertexFormat) = 0;
+
+        //TODO: add FragmentFormat structure to provide CPU side fragment binding for OpenGL
+        //virtual void BuildOutputLayout(const FragmentFormat& fragmentFormat) = 0;
 
         /**
         \brief Binds the specified constant buffer to this shader.

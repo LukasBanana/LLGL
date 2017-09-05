@@ -44,7 +44,7 @@ bool LoadGLProc(T& procAddr, const char* procName)
     return true;
 }
 
-static void ExtractExtensionsFromString(std::set<std::string>& extensions, const std::string& extString)
+static void ExtractExtensionsFromString(GLExtensionList& extensions, const std::string& extString)
 {
     size_t first = 0, last = 0;
     
@@ -53,7 +53,7 @@ static void ExtractExtensionsFromString(std::set<std::string>& extensions, const
     {
         /* Store current extension name in hash-map */
         auto name = extString.substr(first, last - first);
-        extensions.insert(name);
+        extensions[name] = false;
         first = last + 1;
     }
 }
@@ -515,7 +515,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
                 /* Get current extension string */
                 extString = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, i));
                 if (extString)
-                    extensions.insert(std::string(extString));
+                    extensions[extString] = false;
             }
         }
         
@@ -547,7 +547,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
 // Global member to store if the extension have already been loaded
 static bool g_extAlreadyLoaded = false;
 
-void LoadAllExtensions(GLExtensionList& extensions)
+void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
 {
     /* Only load GL extensions once */
     if (g_extAlreadyLoaded)
@@ -627,8 +627,8 @@ void LoadAllExtensions(GLExtensionList& extensions)
         auto it = extensions.find(extName);
         if (it != extensions.end() && !extLoadingProc(false))
         {
+            /* Loading extension failed */
             Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
-            extensions.erase(it);
         }
         #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
         else if (it == extensions.end())
@@ -641,6 +641,7 @@ void LoadAllExtensions(GLExtensionList& extensions)
         {
             /* Enable extension in viewer */
             RegisterExtension(viewerExt);
+            it->second = true;
         }
     };
 
@@ -657,10 +658,13 @@ void LoadAllExtensions(GLExtensionList& extensions)
     #define ENABLE_GLEXT(NAME) \
         EnableExtension("GL_" + std::string(#NAME), GLExt::NAME)
         
-    #ifdef __linux__
-    extensions.insert("GL_ARB_vertex_buffer_object");
-    extensions.insert("GL_EXT_texture3D");
-    #endif
+    /* Add standard extensions */
+    if (coreProfile)
+    {
+        extensions["GL_ARB_shader_objects"] = false;
+        extensions["GL_ARB_vertex_buffer_object"] = false;
+        extensions["GL_EXT_texture3D"] = false;
+    }
 
     /* Load hardware buffer extensions */
     LOAD_GLEXT( ARB_vertex_buffer_object         );

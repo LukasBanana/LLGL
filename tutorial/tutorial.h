@@ -314,6 +314,16 @@ protected:
             contextDesc.multiSampling.enabled   = (multiSampling > 1);
             contextDesc.multiSampling.samples   = multiSampling;
             
+            #if 0
+            contextDesc.profileOpenGL.extProfile    = true;
+            contextDesc.profileOpenGL.coreProfile   = true;
+            contextDesc.profileOpenGL.version       = LLGL::OpenGLVersion::OpenGL_3_3;
+            /*contextDesc.debugCallback = [](const std::string& type, const std::string& message)
+            {
+                std::cout << type << " -- " << message << std::endl;
+            };*/
+            #endif
+
             #ifdef __linux__
             contextDesc.profileOpenGL.extProfile    = true;
             contextDesc.profileOpenGL.coreProfile   = true;

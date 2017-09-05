@@ -77,7 +77,8 @@ class GLShaderProgram : public ShaderProgram
 
         GLShaderUniform     uniform_;
 
-        bool                hasFragmentShader_ = false;
+        bool                hasFragmentShader_  = false;
+        bool                isLinked_           = false;
 
         StreamOutputFormat  streamOutputFormat_;
 

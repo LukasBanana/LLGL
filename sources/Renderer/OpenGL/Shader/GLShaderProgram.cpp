@@ -364,7 +364,7 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
             GLsizei nameLength  = 0;
             GLint   size        = 0;
             GLenum  type        = 0;
-        
+
             glGetActiveUniform(id_, i, maxNameLength, &nameLength, &size, &type, uniformName.data());
 
             desc.name       = std::string(uniformName.data());
@@ -405,6 +405,10 @@ void GLShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
             glBindAttribLocation(id_, index, attrib.name.c_str());
         ++index;
     }
+
+    /* Re-link shader program if the shader has already been linked */
+    if (isLinked_)
+        LinkShaderProgram();
 }
 
 void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
@@ -476,7 +480,10 @@ bool GLShaderProgram::LinkShaderProgram()
     GLint linkStatus = 0;
     glGetProgramiv(id_, GL_LINK_STATUS, &linkStatus);
 
-    return (linkStatus != GL_FALSE);
+    /* Store if program is linked successful */
+    isLinked_ = (linkStatus != GL_FALSE);
+
+    return isLinked_;
 }
 
 void GLShaderProgram::BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes)
