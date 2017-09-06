@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include "Vulkan.h"
 #include "VKPtr.h"
+#include "../ContainerTypes.h"
 
 //#include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
@@ -148,7 +149,9 @@ class VKRenderSystem : public RenderSystem
         std::vector<VkLayerProperties> QueryInstanceLayerProperties();
         std::vector<VkExtensionProperties> QueryInstanceExtensionProperties();
         std::vector<VkPhysicalDevice> QueryPhysicalDevices();
-        std::vector<VkQueueFamilyProperties> QueryQueueFamilyPeroperties(VkPhysicalDevice device);
+        std::vector<VkQueueFamilyProperties> QueryQueueFamilyProperties(VkPhysicalDevice device);
+
+        void QueryDeviceProperties();
 
         QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, const VkQueueFlags flags);
 

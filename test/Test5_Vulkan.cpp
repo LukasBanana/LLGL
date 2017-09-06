@@ -31,8 +31,20 @@ int main()
 
         contextDesc.vsync.enabled               = true;
 
+        auto context = renderer->CreateRenderContext(contextDesc);
 
+        // Print renderer information
+        const auto& info = renderer->GetRendererInfo();
+        const auto& caps = renderer->GetRenderingCaps();
 
+        std::cout << "Renderer: " << info.rendererName << std::endl;
+        std::cout << "Device: " << info.deviceName << std::endl;
+        std::cout << "Vendor: " << info.vendorName << std::endl;
+        std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
+
+        #ifdef _WIN32
+        system("pause");
+        #endif
     }
     catch (const std::exception& e)
     {

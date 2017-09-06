@@ -54,6 +54,26 @@ void VKThrowIfFailed(const VkResult errorCode, const std::string& info)
         throw std::runtime_error(info + " (error code = " + VKErrorToStr(errorCode) + ")");
 }
 
+// see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#fundamentals-versionnum
+std::string VKApiVersionToString(std::uint32_t version)
+{
+    union VKVersion
+    {
+        std::uint32_t ver;
+        struct
+        {
+            std::uint32_t patch : 12;
+            std::uint32_t minor : 10;
+            std::uint32_t major : 10;
+        };
+    }
+    versionBits;
+
+    versionBits.ver = version;
+
+    return std::to_string(versionBits.major) + "." + std::to_string(versionBits.minor) + "." + std::to_string(versionBits.patch);
+}
+
 
 } // /namespace LLGL
 

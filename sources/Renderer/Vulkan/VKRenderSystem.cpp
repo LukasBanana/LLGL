@@ -9,6 +9,7 @@
 #include "VKRenderSystem.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
+#include "../../Core/Vendor.h"
 #include "../GLCommon/GLTypes.h"
 #include "VKCore.h"
 
@@ -31,6 +32,7 @@ VKRenderSystem::VKRenderSystem() :
 
     CreateInstance(appDesc);
     PickPhysicalDevice();
+    QueryDeviceProperties();
 }
 
 VKRenderSystem::~VKRenderSystem()
@@ -41,7 +43,7 @@ VKRenderSystem::~VKRenderSystem()
 
 RenderContext* VKRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(renderContexts_, MakeUnique<VKRenderContext>(desc, surface));
+    return TakeOwnership(renderContexts_, MakeUnique<VKRenderContext>(instance_, desc, surface));
 }
 
 void VKRenderSystem::Release(RenderContext& renderContext)
@@ -357,7 +359,7 @@ std::vector<VkPhysicalDevice> VKRenderSystem::QueryPhysicalDevices()
     return devices;
 }
 
-std::vector<VkQueueFamilyProperties> VKRenderSystem::QueryQueueFamilyPeroperties(VkPhysicalDevice device)
+std::vector<VkQueueFamilyProperties> VKRenderSystem::QueryQueueFamilyProperties(VkPhysicalDevice device)
 {
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -368,11 +370,68 @@ std::vector<VkQueueFamilyProperties> VKRenderSystem::QueryQueueFamilyPeroperties
     return queueFamilies;
 }
 
+void VKRenderSystem::QueryDeviceProperties()
+{
+    /* Query properties of selected physical device */
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(physicalDevice_, &properties);
+
+    /* Map properties to output renderer info */
+    RendererInfo info;
+
+    info.rendererName           = "Vulkan " + VKApiVersionToString(properties.apiVersion);
+    info.deviceName             = std::string(properties.deviceName);
+    info.vendorName             = GetVendorByID(properties.vendorID);
+    info.shadingLanguageName    = "SPIR-V";
+
+    SetRendererInfo(info);
+
+    /* Map limits to output rendering capabilites */
+    const auto& limits = properties.limits;
+
+    RenderingCaps caps;
+
+    caps.screenOrigin                   = ScreenOrigin::UpperLeft;
+    caps.clippingRange                  = ClippingRange::ZeroToOne;
+    caps.shadingLanguage                = ShadingLanguage::SPIRV_100;
+    caps.hasRenderTargets               = true;
+    caps.has3DTextures                  = true;
+    caps.hasCubeTextures                = true;
+    caps.hasTextureArrays               = true;
+    caps.hasCubeTextureArrays           = true;
+    caps.hasMultiSampleTextures         = true;
+    caps.hasSamplers                    = true;
+    caps.hasConstantBuffers             = true;
+    caps.hasStorageBuffers              = true;
+    caps.hasUniforms                    = true;
+    caps.hasGeometryShaders             = true;
+    caps.hasTessellationShaders         = true;
+    caps.hasComputeShaders              = true;
+    caps.hasInstancing                  = true;
+    caps.hasOffsetInstancing            = true;
+    caps.hasViewportArrays              = true;
+    caps.hasConservativeRasterization   = true;
+    caps.hasStreamOutputs               = true;
+    caps.maxNumTextureArrayLayers       = limits.maxImageArrayLayers;
+    caps.maxNumRenderTargetAttachments  = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
+    caps.maxConstantBufferSize          = 0; //???
+    caps.maxPatchVertices               = limits.maxTessellationPatchSize;
+    caps.max1DTextureSize               = limits.maxImageDimension1D;
+    caps.max2DTextureSize               = limits.maxImageDimension2D;
+    caps.max3DTextureSize               = limits.maxImageDimension3D;
+    caps.maxCubeTextureSize             = limits.maxImageDimensionCube;
+    caps.maxAnisotropy                  = static_cast<int>(limits.maxSamplerAnisotropy);
+    caps.maxNumComputeShaderWorkGroups  = { limits.maxComputeWorkGroupCount[0], limits.maxComputeWorkGroupCount[1], limits.maxComputeWorkGroupCount[2] };
+    caps.maxComputeShaderWorkGroupSize  = { limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupSize[1], limits.maxComputeWorkGroupSize[2] };
+
+    SetRenderingCaps(caps);
+}
+
 VKRenderSystem::QueueFamilyIndices VKRenderSystem::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, const VkQueueFlags flags)
 {
     QueueFamilyIndices indices;
 
-    auto queueFamilies = QueryQueueFamilyPeroperties(device);
+    auto queueFamilies = QueryQueueFamilyProperties(device);
 
     int i = 0;
     for (const auto& family : queueFamilies)
@@ -428,7 +487,6 @@ bool VKRenderSystem::IsPhysicalDeviceSuitable(VkPhysicalDevice device) const
 
     return true;
 }
- 
 
 
 } // /namespace LLGL

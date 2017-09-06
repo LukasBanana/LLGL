@@ -73,6 +73,8 @@ enum class ShadingLanguage
     Metal_1_0   = 300100,   //!< Metal shading language 1.0 (since iOS 8.0). Value is 300100.
     Metal_1_1   = 300110,   //!< Metal shading language 1.1 (since iOS 9.0 and OS X 10.11). Value is 300110.
     Metal_1_2   = 300120,   //!< Metal shading language 1.2 (since iOS 10.0 and macOS 10.12). Value is 300120.
+
+    SPIRV_100   = 400100,   //!< SPIR-V shading language 1.0. Value is 400100.
 };
 
 //! Screen coordinate system origin enumeration.
