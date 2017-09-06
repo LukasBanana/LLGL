@@ -558,9 +558,9 @@ void DbgCommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY
             LLGL_DBG_WARN(WarningType::PointlessOperation, "thread group size has volume of 0 units");
 
         DebugComputePipelineSet();
-        DebugThreadGroupLimit(groupSizeX, caps_.maxNumComputeShaderWorkGroups.x);
-        DebugThreadGroupLimit(groupSizeY, caps_.maxNumComputeShaderWorkGroups.y);
-        DebugThreadGroupLimit(groupSizeZ, caps_.maxNumComputeShaderWorkGroups.z);
+        DebugThreadGroupLimit(groupSizeX, caps_.maxNumComputeShaderWorkGroups[0]);
+        DebugThreadGroupLimit(groupSizeY, caps_.maxNumComputeShaderWorkGroups[1]);
+        DebugThreadGroupLimit(groupSizeZ, caps_.maxNumComputeShaderWorkGroups[2]);
     }
     
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);

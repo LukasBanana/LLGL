@@ -9,9 +9,9 @@
 #define LLGL_RENDER_SYSTEM_FLAGS_H
 
 
-#include <Gauss/Vector3.h>
 #include "ColorRGBA.h"
 #include <cstddef>
+#include <cstdint>
 #include <string>
 
 
@@ -285,43 +285,43 @@ struct RenderingCaps
     bool            hasStreamOutputs                = false;
 
     //! Specifies maximum number of texture array layers (for 1D-, 2D-, and cube textures).
-    unsigned int    maxNumTextureArrayLayers        = 0;
+    std::uint32_t   maxNumTextureArrayLayers        = 0;
 
     //! Specifies maximum number of attachment points for each render target.
-    unsigned int    maxNumRenderTargetAttachments   = 0;
+    std::uint32_t   maxNumRenderTargetAttachments   = 0;
     
     //! Specifies maximum size (in bytes) of each constant buffer.
-    unsigned int    maxConstantBufferSize           = 0;
+    std::uint32_t   maxConstantBufferSize           = 0;
 
     //! Specifies maximum number of patch control points.
-    int             maxPatchVertices                = 0;
+    std::uint32_t   maxPatchVertices                = 0;
 
     //! Specifies maximum size of each 1D texture.
-    int             max1DTextureSize                = 0;
+    std::uint32_t   max1DTextureSize                = 0;
 
     //! Specifies maximum size of each 2D texture (for width and height).
-    int             max2DTextureSize                = 0;
+    std::uint32_t   max2DTextureSize                = 0;
 
     //! Specifies maximum size of each 3D texture (for width, height, and depth).
-    int             max3DTextureSize                = 0;
+    std::uint32_t   max3DTextureSize                = 0;
 
     //! Specifies maximum size of each cube texture (for width and height).
-    int             maxCubeTextureSize              = 0;
+    std::uint32_t   maxCubeTextureSize              = 0;
 
     /**
     \brief Specifies maximum anisotropy texture filter.
     \see SamplerDescriptor::maxAnisotropy
     */
-    int             maxAnisotropy                   = 0;
+    std::uint32_t   maxAnisotropy                   = 0;
 
     /**
     \brief Specifies maximum number of work groups in a compute shader.
     \see RenderContext::Dispatch
     */
-    Gs::Vector3ui   maxNumComputeShaderWorkGroups;
+    std::uint32_t   maxNumComputeShaderWorkGroups[3] { 0, 0, 0 };
     
     //! Specifies maximum work group size in a compute shader.
-    Gs::Vector3ui   maxComputeShaderWorkGroupSize;
+    std::uint32_t   maxComputeShaderWorkGroupSize[3] { 0, 0, 0 };
 };
 
 

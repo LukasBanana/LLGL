@@ -391,38 +391,42 @@ void VKRenderSystem::QueryDeviceProperties()
 
     RenderingCaps caps;
 
-    caps.screenOrigin                   = ScreenOrigin::UpperLeft;
-    caps.clippingRange                  = ClippingRange::ZeroToOne;
-    caps.shadingLanguage                = ShadingLanguage::SPIRV_100;
-    caps.hasRenderTargets               = true;
-    caps.has3DTextures                  = true;
-    caps.hasCubeTextures                = true;
-    caps.hasTextureArrays               = true;
-    caps.hasCubeTextureArrays           = true;
-    caps.hasMultiSampleTextures         = true;
-    caps.hasSamplers                    = true;
-    caps.hasConstantBuffers             = true;
-    caps.hasStorageBuffers              = true;
-    caps.hasUniforms                    = true;
-    caps.hasGeometryShaders             = true;
-    caps.hasTessellationShaders         = true;
-    caps.hasComputeShaders              = true;
-    caps.hasInstancing                  = true;
-    caps.hasOffsetInstancing            = true;
-    caps.hasViewportArrays              = true;
-    caps.hasConservativeRasterization   = true;
-    caps.hasStreamOutputs               = true;
-    caps.maxNumTextureArrayLayers       = limits.maxImageArrayLayers;
-    caps.maxNumRenderTargetAttachments  = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
-    caps.maxConstantBufferSize          = 0; //???
-    caps.maxPatchVertices               = limits.maxTessellationPatchSize;
-    caps.max1DTextureSize               = limits.maxImageDimension1D;
-    caps.max2DTextureSize               = limits.maxImageDimension2D;
-    caps.max3DTextureSize               = limits.maxImageDimension3D;
-    caps.maxCubeTextureSize             = limits.maxImageDimensionCube;
-    caps.maxAnisotropy                  = static_cast<int>(limits.maxSamplerAnisotropy);
-    caps.maxNumComputeShaderWorkGroups  = { limits.maxComputeWorkGroupCount[0], limits.maxComputeWorkGroupCount[1], limits.maxComputeWorkGroupCount[2] };
-    caps.maxComputeShaderWorkGroupSize  = { limits.maxComputeWorkGroupSize[0], limits.maxComputeWorkGroupSize[1], limits.maxComputeWorkGroupSize[2] };
+    caps.screenOrigin                       = ScreenOrigin::UpperLeft;
+    caps.clippingRange                      = ClippingRange::ZeroToOne;
+    caps.shadingLanguage                    = ShadingLanguage::SPIRV_100;
+    caps.hasRenderTargets                   = true;
+    caps.has3DTextures                      = true;
+    caps.hasCubeTextures                    = true;
+    caps.hasTextureArrays                   = true;
+    caps.hasCubeTextureArrays               = true;
+    caps.hasMultiSampleTextures             = true;
+    caps.hasSamplers                        = true;
+    caps.hasConstantBuffers                 = true;
+    caps.hasStorageBuffers                  = true;
+    caps.hasUniforms                        = true;
+    caps.hasGeometryShaders                 = true;
+    caps.hasTessellationShaders             = true;
+    caps.hasComputeShaders                  = true;
+    caps.hasInstancing                      = true;
+    caps.hasOffsetInstancing                = true;
+    caps.hasViewportArrays                  = true;
+    caps.hasConservativeRasterization       = true;
+    caps.hasStreamOutputs                   = true;
+    caps.maxNumTextureArrayLayers           = limits.maxImageArrayLayers;
+    caps.maxNumRenderTargetAttachments      = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
+    caps.maxConstantBufferSize              = 0; //???
+    caps.maxPatchVertices                   = limits.maxTessellationPatchSize;
+    caps.max1DTextureSize                   = limits.maxImageDimension1D;
+    caps.max2DTextureSize                   = limits.maxImageDimension2D;
+    caps.max3DTextureSize                   = limits.maxImageDimension3D;
+    caps.maxCubeTextureSize                 = limits.maxImageDimensionCube;
+    caps.maxAnisotropy                      = static_cast<std::uint32_t>(limits.maxSamplerAnisotropy);
+    caps.maxNumComputeShaderWorkGroups[0]   = limits.maxComputeWorkGroupCount[0];
+    caps.maxNumComputeShaderWorkGroups[1]   = limits.maxComputeWorkGroupCount[1];
+    caps.maxNumComputeShaderWorkGroups[2]   = limits.maxComputeWorkGroupCount[2];
+    caps.maxComputeShaderWorkGroupSize[0]   = limits.maxComputeWorkGroupSize[0];
+    caps.maxComputeShaderWorkGroupSize[1]   = limits.maxComputeWorkGroupSize[1];
+    caps.maxComputeShaderWorkGroupSize[2]   = limits.maxComputeWorkGroupSize[2];
 
     SetRenderingCaps(caps);
 }

@@ -13,6 +13,7 @@
 #include "GraphicsPipelineFlags.h"
 #include "ColorRGBA.h"
 #include <cstddef>
+#include <cstdint>
 
 
 namespace LLGL
@@ -56,7 +57,7 @@ struct LLGL_EXPORT SamplerDescriptor
     float           mipMapLODBias   = 0.0f;                         //!< MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.
     float           minLOD          = 0.0f;                         //!< Lower end of the MIP-map range. By default 0.
     float           maxLOD          = 1000.0f;                      //!< Upper end of the MIP-map range. Must be greater than or equal to "minLOD". By default 1000.
-    unsigned int    maxAnisotropy   = 1;                            //!< Maximal anisotropy in the range [1, 16].
+    std::uint32_t   maxAnisotropy   = 1;                            //!< Maximal anisotropy in the range [1, 16].
 
     bool            depthCompare    = false;                        //!< Specifies whether the compare operation for depth textures is to be used or not. By default false.
     CompareOp       compareOp       = CompareOp::Less;              //!< Compare operation for depth textures. By default CompareOp::Less.

@@ -366,16 +366,11 @@ void GLRenderSystem::QueryRenderingCaps()
     caps.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
 
     /* Query integral attributes */
-    auto GetInt = [](GLenum param)
+    auto GetUInt = [&](GLenum param)
     {
         GLint attr = 0;
         glGetIntegerv(param, &attr);
-        return attr;
-    };
-
-    auto GetUInt = [&](GLenum param)
-    {
-        return static_cast<unsigned int>(GetInt(param));
+        return static_cast<std::uint32_t>(attr);
     };
 
     auto GetUIntIdx = [](GLenum param, GLuint index)
@@ -383,71 +378,83 @@ void GLRenderSystem::QueryRenderingCaps()
         GLint attr = 0;
         if (HasExtension(GLExt::EXT_draw_buffers2))
             glGetIntegeri_v(param, index, &attr);
-        return static_cast<unsigned int>(attr);
+        return static_cast<std::uint32_t>(attr);
     };
 
     caps.maxNumTextureArrayLayers           = GetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
     caps.maxNumRenderTargetAttachments      = GetUInt(GL_MAX_DRAW_BUFFERS);
     caps.maxConstantBufferSize              = GetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
-    caps.maxPatchVertices                   = GetInt(GL_MAX_PATCH_VERTICES);
-    caps.maxAnisotropy                      = 16;
+    caps.maxPatchVertices                   = GetUInt(GL_MAX_PATCH_VERTICES);
+    caps.maxAnisotropy                      = 16; //TODO: glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT)
     
-    caps.maxNumComputeShaderWorkGroups.x    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
-    caps.maxNumComputeShaderWorkGroups.y    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
-    caps.maxNumComputeShaderWorkGroups.z    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
+    caps.maxNumComputeShaderWorkGroups[0]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
+    caps.maxNumComputeShaderWorkGroups[1]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
+    caps.maxNumComputeShaderWorkGroups[2]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
 
-    caps.maxComputeShaderWorkGroupSize.x    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
-    caps.maxComputeShaderWorkGroupSize.y    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
-    caps.maxComputeShaderWorkGroupSize.z    = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
+    caps.maxComputeShaderWorkGroupSize[0]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
+    caps.maxComputeShaderWorkGroupSize[1]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
+    caps.maxComputeShaderWorkGroupSize[2]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
 
     /* Query maximum texture dimensions */
     GLint querySizeBase = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &querySizeBase);
 
     /* Query 1D texture max size */
+    GLint texSize = 0;
     auto querySize = querySizeBase;
 
-    while (caps.max1DTextureSize == 0 && querySize > 0)
+    while (texSize == 0 && querySize > 0)
     {
         glTexImage1D(GL_PROXY_TEXTURE_1D, 0, GL_RGBA, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_1D, 0, GL_TEXTURE_WIDTH, &(caps.max1DTextureSize));
+        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_1D, 0, GL_TEXTURE_WIDTH, &texSize);
         querySize /= 2;
     }
+
+    caps.max1DTextureSize = static_cast<std::uint32_t>(texSize);
 
     /* Query 2D texture max size */
+    texSize = 0;
     querySize = querySizeBase;
 
-    while (caps.max2DTextureSize == 0 && querySize > 0)
+    while (texSize == 0 && querySize > 0)
     {
         glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &(caps.max2DTextureSize));
+        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texSize);
         querySize /= 2;
     }
+
+    caps.max2DTextureSize = static_cast<std::uint32_t>(texSize);
 
     /* Query 3D texture max size */
     if (caps.has3DTextures)
     {
+        texSize = 0;
         querySize = querySizeBase;
 
-        while (caps.max3DTextureSize == 0 && querySize > 0)
+        while (texSize == 0 && querySize > 0)
         {
             glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, querySize, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &(caps.max3DTextureSize));
+            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &texSize);
             querySize /= 2;
         }
+
+        caps.max3DTextureSize = static_cast<std::uint32_t>(texSize);
     }
 
     /* Query cube texture max size */
     if (caps.hasCubeTextures)
     {
+        texSize = 0;
         querySize = querySizeBase;
 
-        while (caps.maxCubeTextureSize == 0 && querySize > 0)
+        while (texSize == 0 && querySize > 0)
         {
             glTexImage2D(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_TEXTURE_WIDTH, &(caps.maxCubeTextureSize));
+            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_TEXTURE_WIDTH, &texSize);
             querySize /= 2;
         }
+
+        caps.maxCubeTextureSize = static_cast<std::uint32_t>(texSize);
     }
 
     /* Finally store queried rendering capabilities */
