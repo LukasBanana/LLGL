@@ -14,6 +14,8 @@ namespace LLGL
 {
 
 
+/* ----- Basic Functions ----- */
+
 std::string VKErrorToStr(const VkResult errorCode)
 {
     // see https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkResult.html
@@ -72,6 +74,97 @@ std::string VKApiVersionToString(std::uint32_t version)
     versionBits.ver = version;
 
     return std::to_string(versionBits.major) + "." + std::to_string(versionBits.minor) + "." + std::to_string(versionBits.patch);
+}
+
+
+/* ----- Query Functions ----- */
+
+
+std::vector<VkLayerProperties> VKQueryInstanceLayerProperties()
+{
+    std::uint32_t propertyCount = 0;
+    VkResult result = vkEnumerateInstanceLayerProperties(&propertyCount, nullptr);
+    VKThrowIfFailed(result, "failed to query number of Vulkan instance layer properties");
+
+    std::vector<VkLayerProperties> properties(propertyCount);
+    result = vkEnumerateInstanceLayerProperties(&propertyCount, properties.data());
+    VKThrowIfFailed(result, "failed to query Vulkan instance layer properties");
+
+    return properties;
+}
+
+std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties()
+{
+    std::uint32_t propertyCount = 0;
+    VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, nullptr);
+    VKThrowIfFailed(result, "failed to query number of Vulkan instance extension properties");
+
+    std::vector<VkExtensionProperties> properties(propertyCount);
+    result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, properties.data());
+    VKThrowIfFailed(result, "failed to query Vulkan instance extension properties");
+
+    return properties;
+}
+
+std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance)
+{
+    std::uint32_t deviceCount = 0;
+    VkResult result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+    VKThrowIfFailed(result, "failed to query number of Vulkan physical devices");
+
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    result = vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+    VKThrowIfFailed(result, "failed to query Vulkan physical devices");
+
+    return devices;
+}
+
+std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device)
+{
+    std::uint32_t propertyCount = 0;
+    VkResult result = vkEnumerateDeviceExtensionProperties(device, nullptr, &propertyCount, nullptr);
+    VKThrowIfFailed(result, "failed to query number of Vulkan device extension properties");
+
+    std::vector<VkExtensionProperties> properties(propertyCount);
+    result = vkEnumerateDeviceExtensionProperties(device, nullptr, &propertyCount, properties.data());
+    VKThrowIfFailed(result, "failed to query Vulkan device extension properties");
+
+    return properties;
+}
+
+SwapChainSupportDetails VKQuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
+{
+    SwapChainSupportDetails details;
+
+    /* Query surface capabilities */
+    VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.caps);
+    VKThrowIfFailed(result, "failed to query Vulkan surface capabilities");
+
+    /* Query surface formats */
+    std::uint32_t formatCount;
+    result = vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+    VKThrowIfFailed(result, "failed to query number of Vulkan surface formats");
+
+    if (formatCount > 0)
+    {
+        details.formats.resize(formatCount);
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+        VKThrowIfFailed(result, "failed to query Vulkan surface formats");
+    }
+
+    /* Query surface present modes */
+    std::uint32_t presentModeCount;
+    result = vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+    VKThrowIfFailed(result, "failed to query number of Vulkan surface present modes");
+
+    if (presentModeCount > 0)
+    {
+        details.presentModes.resize(presentModeCount);
+        result = vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+        VKThrowIfFailed(result, "failed to query Vulkan surface present modes");
+    }
+
+    return details;
 }
 
 

@@ -216,6 +216,7 @@ file(GLOB FilesRendererGLES3				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES3
 
 # Vulkan renderer files
 file(GLOB FilesRendererVK					${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
+file(GLOB FilesRendererVKExt				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Ext/*.*)
 
 # Direct3D common renderer files
 file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
@@ -285,6 +286,7 @@ source_group("Sources\\OpenGL\\Texture" FILES ${FilesRendererGLTexture})
 source_group("Sources\\OpenGLES3" FILES ${FilesRendererGLES3})
 
 source_group("Sources\\Vulkan" FILES ${FilesRendererVK})
+source_group("Sources\\Vulkan\\Ext" FILES ${FilesRendererVKExt})
 
 source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
@@ -350,6 +352,7 @@ set(
 set(
 	FilesVK
 	${FilesRendererVK}
+	${FilesRendererVKExt}
 )
 
 set(

@@ -31,7 +31,15 @@ int main()
 
         contextDesc.vsync.enabled               = true;
 
-        auto context = renderer->CreateRenderContext(contextDesc);
+        LLGL::WindowDescriptor windowDesc;
+        {
+            windowDesc.size     = contextDesc.videoMode.resolution;
+            windowDesc.centered = true;
+            windowDesc.visible  = true;
+        }
+        auto window = std::shared_ptr<LLGL::Window>(std::move(LLGL::Window::Create(windowDesc)));
+
+        auto context = renderer->CreateRenderContext(contextDesc, window);
 
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
@@ -42,9 +50,15 @@ int main()
         std::cout << "Vendor: " << info.vendorName << std::endl;
         std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
 
-        #ifdef _WIN32
-        system("pause");
-        #endif
+        auto input = std::make_shared<LLGL::Input>();
+        window->AddEventListener(input);
+
+        while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
+        {
+
+
+            context->Present();
+        }
     }
     catch (const std::exception& e)
     {

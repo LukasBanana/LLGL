@@ -7,6 +7,8 @@
 
 #include <LLGL/Platform/Platform.h>
 #include "VKRenderSystem.h"
+#include "Ext/VKExtensionLoader.h"
+#include "Ext/VKExtensions.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
@@ -20,6 +22,11 @@ namespace LLGL
 
 /* ----- Common ----- */
 
+static const std::vector<const char*> g_deviceExtensions
+{
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
 VKRenderSystem::VKRenderSystem() :
     instance_ { vkDestroyInstance }
 {
@@ -31,7 +38,9 @@ VKRenderSystem::VKRenderSystem() :
     appDesc.engineVersion       = 1;
 
     CreateInstance(appDesc);
-    PickPhysicalDevice();
+    LoadExtensions();
+    if (!PickPhysicalDevice())
+        throw std::runtime_error("failed to pick Vulkan physical device");
     QueryDeviceProperties();
 }
 
@@ -251,7 +260,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
     appInfo.apiVersion          = VK_API_VERSION_1_0;
 
     /* Query instance layer properties */
-    auto layerProperties = QueryInstanceLayerProperties();
+    auto layerProperties = VKQueryInstanceLayerProperties();
     std::vector<const char*> layerNames;
 
     for (const auto& prop : layerProperties)
@@ -261,7 +270,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
     }
 
     /* Query instance extension properties */
-    auto extensionProperties = QueryInstanceExtensionProperties();
+    auto extensionProperties = VKQueryInstanceExtensionProperties();
     std::vector<const char*> extensionNames;
 
     for (const auto& prop : extensionProperties)
@@ -285,7 +294,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
     }
     else
     {
-        instanceInfo.enabledLayerCount          = static_cast<uint32_t>(layerNames.size());
+        instanceInfo.enabledLayerCount          = static_cast<std::uint32_t>(layerNames.size());
         instanceInfo.ppEnabledLayerNames        = layerNames.data();
     }
 
@@ -296,7 +305,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
     }
     else
     {
-        instanceInfo.enabledExtensionCount      = static_cast<uint32_t>(extensionNames.size());
+        instanceInfo.enabledExtensionCount      = static_cast<std::uint32_t>(extensionNames.size());
         instanceInfo.ppEnabledExtensionNames    = extensionNames.data();
     }
 
@@ -305,69 +314,26 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
     VKThrowIfFailed(result, "failed to create Vulkan instance");
 }
 
-void VKRenderSystem::PickPhysicalDevice()
+void VKRenderSystem::LoadExtensions()
+{
+    LoadAllExtensions(instance_);
+}
+
+bool VKRenderSystem::PickPhysicalDevice()
 {
     /* Query all physical devices and pick suitable */
-    auto devices = QueryPhysicalDevices();
+    auto devices = VKQueryPhysicalDevices(instance_);
 
     for (const auto& dev : devices)
     {
         if (IsPhysicalDeviceSuitable(dev))
         {
             physicalDevice_ = dev;
-            break;
+            return true;
         }
     }
-}
 
-std::vector<VkLayerProperties> VKRenderSystem::QueryInstanceLayerProperties()
-{
-    uint32_t propertyCount = 0;
-    VkResult result = vkEnumerateInstanceLayerProperties(&propertyCount, nullptr);
-    VKThrowIfFailed(result, "failed to query number of Vulkan instance layer properties");
-
-    std::vector<VkLayerProperties> properties(propertyCount);
-    result = vkEnumerateInstanceLayerProperties(&propertyCount, properties.data());
-    VKThrowIfFailed(result, "failed to query Vulkan instance layer properties");
-
-    return properties;
-}
-
-std::vector<VkExtensionProperties> VKRenderSystem::QueryInstanceExtensionProperties()
-{
-    uint32_t propertyCount = 0;
-    VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, nullptr);
-    VKThrowIfFailed(result, "failed to query number of Vulkan instance extension properties");
-
-    std::vector<VkExtensionProperties> properties(propertyCount);
-    result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, properties.data());
-    VKThrowIfFailed(result, "failed to query Vulkan instance extension properties");
-
-    return properties;
-}
-
-std::vector<VkPhysicalDevice> VKRenderSystem::QueryPhysicalDevices()
-{
-    uint32_t deviceCount = 0;
-    VkResult result = vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
-    VKThrowIfFailed(result, "failed to query number of Vulkan physical devices");
-
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    result = vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
-    VKThrowIfFailed(result, "failed to query Vulkan physical devices");
-
-    return devices;
-}
-
-std::vector<VkQueueFamilyProperties> VKRenderSystem::QueryQueueFamilyProperties(VkPhysicalDevice device)
-{
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-    return queueFamilies;
+    return false;
 }
 
 void VKRenderSystem::QueryDeviceProperties()
@@ -431,36 +397,6 @@ void VKRenderSystem::QueryDeviceProperties()
     SetRenderingCaps(caps);
 }
 
-VKRenderSystem::QueueFamilyIndices VKRenderSystem::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, const VkQueueFlags flags)
-{
-    QueueFamilyIndices indices;
-
-    auto queueFamilies = QueryQueueFamilyProperties(device);
-
-    int i = 0;
-    for (const auto& family : queueFamilies)
-    {
-        /* Get graphics family index */
-        if (family.queueCount > 0 && (family.queueFlags & flags) != 0)
-            indices.graphicsFamily = i;
-
-        /* Get present family index */
-        VkBool32 presentSupport = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-
-        if (family.queueCount > 0 && presentSupport)
-            indices.presentFamily = i;
-
-        /* Check if queue family is complete */
-        if (indices.Complete())
-            break;
-
-        ++i;
-    }
-
-    return indices;
-}
-
 bool VKRenderSystem::IsLayerRequired(const std::string& name) const
 {
     return false;
@@ -482,14 +418,25 @@ bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
 
 bool VKRenderSystem::IsPhysicalDeviceSuitable(VkPhysicalDevice device) const
 {
-    /*VkPhysicalDeviceFeatures features;
-    InitMemory(features);
-    vkGetPhysicalDeviceFeatures(device, &features);*/
+    if (CheckDeviceExtensionSupport(device, g_deviceExtensions))
+    {
+        //TODO...
+        return true;
+    }
+    return false;
+}
 
-    //auto indices = FindQueueFamilies(device, VK_QUEUE_GRAPHICS_BIT);
+bool VKRenderSystem::CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const
+{
+    /* Check if device supports all required extensions */
+    auto availableExtensions = VKQueryDeviceExtensionProperties(device);
 
+    std::set<std::string> requiredExtensions(extensionNames.begin(), extensionNames.end());
 
-    return true;
+    for (const auto& ext : availableExtensions)
+        requiredExtensions.erase(ext.extensionName);
+
+    return requiredExtensions.empty();
 }
 
 

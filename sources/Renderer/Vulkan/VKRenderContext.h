@@ -12,7 +12,8 @@
 #include <LLGL/Window.h>
 #include <LLGL/RenderContext.h>
 #include <memory>
-#include "Vulkan.h"
+#include <vector>
+#include "VKCore.h"
 #include "VKPtr.h"
 
 
@@ -43,10 +44,15 @@ class VKRenderContext : public RenderContext
     private:
 
         void CreateVkSurface();
+
+        std::vector<VkQueueFamilyProperties> QueryQueueFamilyProperties(VkPhysicalDevice device);
+
+        QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, const VkQueueFlags flags);
         
         /* ----- Common objects ----- */
 
-        VkInstance          instance_;
+        VkInstance          instance_       = VK_NULL_HANDLE;
+        VkPhysicalDevice    physicalDevice_ = VK_NULL_HANDLE;
         VKPtr<VkSurfaceKHR> surface_;
 
 };

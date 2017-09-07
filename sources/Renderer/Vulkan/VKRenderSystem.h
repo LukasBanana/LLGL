@@ -132,32 +132,15 @@ class VKRenderSystem : public RenderSystem
 
     private:
 
-        struct QueueFamilyIndices
-        {
-            int graphicsFamily  = -1;
-            int presentFamily   = -1;
-
-            inline bool Complete() const
-            {
-                return (graphicsFamily >= 0 && presentFamily >= 0);
-            }
-        };
-
         void CreateInstance(const ApplicationDescriptor& appDesc);
-        void PickPhysicalDevice();
-
-        std::vector<VkLayerProperties> QueryInstanceLayerProperties();
-        std::vector<VkExtensionProperties> QueryInstanceExtensionProperties();
-        std::vector<VkPhysicalDevice> QueryPhysicalDevices();
-        std::vector<VkQueueFamilyProperties> QueryQueueFamilyProperties(VkPhysicalDevice device);
-
+        void LoadExtensions();
+        bool PickPhysicalDevice();
         void QueryDeviceProperties();
-
-        QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, const VkQueueFlags flags);
 
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
         bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
+        bool CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const;
 
         /* ----- Common objects ----- */
 
