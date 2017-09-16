@@ -39,8 +39,10 @@ VKRenderSystem::VKRenderSystem() :
 
     CreateInstance(appDesc);
     LoadExtensions();
+
     if (!PickPhysicalDevice())
         throw std::runtime_error("failed to pick Vulkan physical device");
+
     QueryDeviceProperties();
 }
 
@@ -52,7 +54,7 @@ VKRenderSystem::~VKRenderSystem()
 
 RenderContext* VKRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(renderContexts_, MakeUnique<VKRenderContext>(instance_, desc, surface));
+    return TakeOwnership(renderContexts_, MakeUnique<VKRenderContext>(instance_, physicalDevice_, desc, surface));
 }
 
 void VKRenderSystem::Release(RenderContext& renderContext)

@@ -24,12 +24,12 @@ class VKPtr
 
     public:
 
-        VKPtr() throw() :
+        VKPtr() :
             VKPtr { [](T, VkAllocationCallbacks*) {} }
         {
         }
 
-        VKPtr(const std::function<void(T, VkAllocationCallbacks*)>& deleter) throw()
+        VKPtr(const std::function<void(T, VkAllocationCallbacks*)>& deleter)
         {
             deleter_ = [=](T obj)
             {
@@ -37,7 +37,7 @@ class VKPtr
             };
         }
 
-        VKPtr(const VKPtr<VkInstance>& instance, const std::function<void(VkInstance, T, VkAllocationCallbacks*)>& deleter) throw()
+        VKPtr(const VKPtr<VkInstance>& instance, const std::function<void(VkInstance, T, VkAllocationCallbacks*)>& deleter)
         {
             deleter_ = [&instance, deleter](T obj)
             {
@@ -45,7 +45,7 @@ class VKPtr
             };
         }
 
-        VKPtr(const VKPtr<VkDevice>& device, const std::function<void(VkDevice, T, VkAllocationCallbacks*)>& deleter) throw() :
+        VKPtr(const VKPtr<VkDevice>& device, const std::function<void(VkDevice, T, VkAllocationCallbacks*)>& deleter)
         {
             deleter_ = [&device, deleter](T obj)
             {
@@ -58,7 +58,7 @@ class VKPtr
             Release();
         }
 
-        const T* operator & () const throw()
+        const T* operator & () const
         {
             return &object_;
         }
@@ -69,7 +69,7 @@ class VKPtr
             return &object_;
         }
 
-        operator T () const throw()
+        operator T () const
         {
             return object_;
         }
@@ -82,7 +82,7 @@ class VKPtr
         }
 
         template <typename U>
-        bool operator == (const U& rhs) const throw()
+        bool operator == (const U& rhs) const
         {
             return (object_ == rhs);
         }
