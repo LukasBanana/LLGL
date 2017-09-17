@@ -12,6 +12,7 @@
 #include "Vulkan.h"
 #include <string>
 #include <vector>
+#include <cstdint>
 
 
 namespace LLGL
@@ -22,12 +23,14 @@ namespace LLGL
 
 struct QueueFamilyIndices
 {
-    int graphicsFamily  = -1;
-    int presentFamily   = -1;
+    static const uint32_t invalidIndex = 0xffffffff;
+
+    uint32_t graphicsFamily = invalidIndex;
+    uint32_t presentFamily  = invalidIndex;
 
     inline bool Complete() const
     {
-        return (graphicsFamily >= 0 && presentFamily >= 0);
+        return (graphicsFamily != invalidIndex && presentFamily != invalidIndex);
     }
 };
 

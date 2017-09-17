@@ -41,6 +41,11 @@ int main()
 
         auto context = renderer->CreateRenderContext(contextDesc, window);
 
+        // create command buffer
+        auto commands = renderer->CreateCommandBuffer();
+
+        commands->SetClearColor({ 0.0f, 1.0f, 0.0f, 1.0f });
+
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
         const auto& caps = renderer->GetRenderingCaps();
@@ -55,6 +60,10 @@ int main()
 
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            commands->SetRenderTarget(*context);
+
+            commands->Clear(LLGL::ClearFlags::ColorDepth);
+
 
 
             context->Present();

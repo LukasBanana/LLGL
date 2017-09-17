@@ -6,6 +6,7 @@
  */
 
 #include "VKRenderContext.h"
+#include "VKCommandBuffer.h"
 #include "VKCore.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
@@ -39,11 +40,53 @@ VKRenderContext::VKRenderContext(
     CreateSwapChainImageViews();
     CreateSwapChainRenderPass();
     CreateSwapChainFramebuffers();
+    CreatePresentSemaphorse();
 }
 
 void VKRenderContext::Present()
 {
-    //todo
+    /* Get next image for presentation */
+    uint32_t imageIndex;
+    vkAcquireNextImageKHR(device_, swapChain_, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore_, VK_NULL_HANDLE, &imageIndex);
+
+    /* Initialize semaphorse */
+    VkSemaphore waitSemaphorse[] = { imageAvailableSemaphore_ };
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    VkSemaphore signalSemaphorse[] = { renderFinishedSemaphore_ };
+    VkCommandBuffer commandBuffers[] = { commandBuffer_->GetCommandBuffer(imageIndex) };
+
+    /* Submit command buffer to graphics queue */
+    VkSubmitInfo submitInfo;
+
+    submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pNext                = nullptr;
+    submitInfo.waitSemaphoreCount   = 1;
+    submitInfo.pWaitSemaphores      = waitSemaphorse;
+    submitInfo.pWaitDstStageMask    = waitStages;
+    submitInfo.commandBufferCount   = 1;
+    submitInfo.pCommandBuffers      = commandBuffers;
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores    = signalSemaphorse;
+
+    VkResult result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
+    VKThrowIfFailed(result, "failed to submit Vulkan graphics queue");
+
+    /* Present result on screen */
+    VkSwapchainKHR swapChains[] = { swapChain_ };
+
+    VkPresentInfoKHR presentInfo;
+
+    presentInfo.sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.pNext               = nullptr;
+    presentInfo.waitSemaphoreCount  = 1;
+    presentInfo.pWaitSemaphores     = signalSemaphorse;
+    presentInfo.swapchainCount      = 1;
+    presentInfo.pSwapchains         = swapChains;
+    presentInfo.pImageIndices       = &imageIndex;
+    presentInfo.pResults            = nullptr;
+
+    result = vkQueuePresentKHR(presentQueue_, &presentInfo);
+    VKThrowIfFailed(result, "failed to present Vulkan graphics queue");
 }
 
 /* ----- Configuration ----- */
@@ -56,6 +99,13 @@ void VKRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 void VKRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 {
     //todo
+}
+
+/* --- Extended functions --- */
+
+void VKRenderContext::SetPresentCommandBuffer(VKCommandBuffer* commandBuffer)
+{
+    commandBuffer_ = commandBuffer;
 }
 
 
@@ -89,10 +139,10 @@ void VKRenderContext::CreateVkSurface()
 void VKRenderContext::CreateLogicalDevice()
 {
     /* Initialize queue create description */
-    auto indices = FindQueueFamilies(physicalDevice_, surface_, VK_QUEUE_GRAPHICS_BIT);
+    queueFamilyIndices_ = FindQueueFamilies(physicalDevice_, surface_, VK_QUEUE_GRAPHICS_BIT);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<int> uniqueQueueFamilies = { indices.graphicsFamily, indices.presentFamily };
+    std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices_.graphicsFamily, queueFamilyIndices_.presentFamily };
 
     float queuePriority = 1.0f;
     for (auto family : uniqueQueueFamilies)
@@ -119,17 +169,21 @@ void VKRenderContext::CreateLogicalDevice()
     createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
-    createInfo.queueCreateInfoCount     = static_cast<std::uint32_t>(queueCreateInfos.size());
+    createInfo.queueCreateInfoCount     = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos        = queueCreateInfos.data();
     createInfo.enabledLayerCount        = 0;
     createInfo.ppEnabledLayerNames      = nullptr;
-    createInfo.enabledExtensionCount    = static_cast<std::uint32_t>(g_deviceExtensions.size());
+    createInfo.enabledExtensionCount    = static_cast<uint32_t>(g_deviceExtensions.size());
     createInfo.ppEnabledExtensionNames  = g_deviceExtensions.data();
     createInfo.pEnabledFeatures         = &deviceFeatures;
 
     /* Create logical device */
     VkResult result = vkCreateDevice(physicalDevice_, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan logical device");
+
+    /* Get device queues for graphics and presentation */
+    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+    vkGetDeviceQueue(device_, queueFamilyIndices_.presentFamily, 0, &presentQueue_);
 }
 
 void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
@@ -140,21 +194,17 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
     /* Pick surface format, present mode, and extent */
     auto surfaceFormat  = PickSwapSurfaceFormat(swapChainSupport.formats);
     auto presentMode    = PickSwapPresentMode(swapChainSupport.presentModes);
-    auto extent         = PickSwapExtent(swapChainSupport.caps, static_cast<std::uint32_t>(desc.resolution.x), static_cast<std::uint32_t>(desc.resolution.y));
+    auto extent         = PickSwapExtent(swapChainSupport.caps, static_cast<uint32_t>(desc.resolution.x), static_cast<uint32_t>(desc.resolution.y));
 
     /* Determine required image count for swap-chain */
-    std::uint32_t imageCount = swapChainSupport.caps.minImageCount;
+    uint32_t imageCount = swapChainSupport.caps.minImageCount;
     if (swapChainSupport.caps.maxImageCount > 0)
         imageCount = std::min(imageCount, swapChainSupport.caps.maxImageCount);
 
     /* Find queue family indices */
     auto indices = FindQueueFamilies(physicalDevice_, surface_, VK_QUEUE_GRAPHICS_BIT);
     
-    const std::uint32_t queueFamilyIndices[] =
-    {
-        static_cast<std::uint32_t>(indices.graphicsFamily),
-        static_cast<std::uint32_t>(indices.presentFamily)
-    };
+    const uint32_t queueFamilyIndices[] = { indices.graphicsFamily, indices.presentFamily };
     
     /* Initialize swap-chain descriptor */
     VkSwapchainCreateInfoKHR createInfo;
@@ -320,9 +370,29 @@ void VKRenderContext::CreateSwapChainFramebuffers()
     }
 }
 
+void VKRenderContext::CreateVkSemaphore(VKPtr<VkSemaphore>& semaphore)
+{
+    /* Create semaphore (no flags) */
+    VkSemaphoreCreateInfo createInfo;
+
+    createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
+
+    VkResult result = vkCreateSemaphore(device_, &createInfo, nullptr, semaphore.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan semaphore");
+}
+
+void VKRenderContext::CreatePresentSemaphorse()
+{
+    /* Create presentation semaphorse */
+    CreateVkSemaphore(imageAvailableSemaphore_);
+    CreateVkSemaphore(renderFinishedSemaphore_);
+}
+
 std::vector<VkQueueFamilyProperties> VKRenderContext::QueryQueueFamilyProperties(VkPhysicalDevice device)
 {
-    std::uint32_t queueFamilyCount = 0;
+    uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
@@ -337,7 +407,7 @@ QueueFamilyIndices VKRenderContext::FindQueueFamilies(VkPhysicalDevice device, V
 
     auto queueFamilies = QueryQueueFamilyProperties(device);
 
-    int i = 0;
+    uint32_t i = 0;
     for (const auto& family : queueFamilies)
     {
         /* Get graphics family index */
@@ -388,9 +458,9 @@ VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresen
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const
+VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, uint32_t width, uint32_t height) const
 {
-    if (surfaceCaps.currentExtent.width == std::numeric_limits<std::uint32_t>::max())
+    if (surfaceCaps.currentExtent.width == std::numeric_limits<uint32_t>::max())
     {
         return VkExtent2D
         {

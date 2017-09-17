@@ -59,19 +59,23 @@ RenderContext* VKRenderSystem::CreateRenderContext(const RenderContextDescriptor
 
 void VKRenderSystem::Release(RenderContext& renderContext)
 {
-    //todo
+    RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
 /* ----- Command buffers ----- */
 
 CommandBuffer* VKRenderSystem::CreateCommandBuffer()
 {
-    return nullptr;//todo
+    auto mainContext = renderContexts_.begin()->get();
+    return TakeOwnership(
+        commandBuffers_,
+        MakeUnique<VKCommandBuffer>(mainContext->GetLogicalDevice(), mainContext->GetSwapChainSize(), mainContext->GetQueueFamilyIndices())
+    );
 }
 
 void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    //todo
+    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
 /* ----- Buffers ------ */

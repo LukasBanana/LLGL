@@ -14,7 +14,7 @@
 #include "VKPtr.h"
 #include "../ContainerTypes.h"
 
-//#include "VKCommandBuffer.h"
+#include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 
 /*#include "Buffer/VKBuffer.h"
@@ -150,8 +150,8 @@ class VKRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<VKRenderContext>      renderContexts_;
-        /*HWObjectContainer<VKCommandBuffer>      commandBuffers_;
-        HWObjectContainer<VKBuffer>             buffers_;
+        HWObjectContainer<VKCommandBuffer>      commandBuffers_;
+        /*HWObjectContainer<VKBuffer>             buffers_;
         HWObjectContainer<VKBufferArray>        bufferArrays_;
         HWObjectContainer<VKTexture>            textures_;
         HWObjectContainer<VKTextureArray>       textureArrays_;
