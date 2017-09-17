@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
         {
-            contextDesc.videoMode.resolution    = { 640, 480 };
+            contextDesc.videoMode.resolution    = { 800, 600 };
             #ifdef ENABLE_MULTISAMPLING
             contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor(8);
             #endif
@@ -143,8 +143,8 @@ int main(int argc, char* argv[])
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
         
         // Set viewport (this guaranteed to be a persistent state)
-        commands->SetViewport({ 0, 0, 640, 480 });
-        commands->SetScissor({ 0, 0, 640, 480 });
+        commands->SetViewport({ 0, 0, 800, 600 });
+        commands->SetScissor({ 0, 0, 800, 600 });
 
         // Enter main loop
         while (window.ProcessEvents())
