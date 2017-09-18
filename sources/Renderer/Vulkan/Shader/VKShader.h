@@ -33,6 +33,8 @@ class VKShader : public Shader
 
         std::string QueryInfoLog() override;
 
+        void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const;
+
         // Returns the Vulkan shader module.
         inline const VKPtr<VkShaderModule>& GetShaderModule() const
         {
@@ -50,6 +52,8 @@ class VKShader : public Shader
         VkDevice                device_             = VK_NULL_HANDLE;
         VKPtr<VkShaderModule>   shaderModule_;
         LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Success;
+
+        std::string             entryPoint_;
 
 };
 

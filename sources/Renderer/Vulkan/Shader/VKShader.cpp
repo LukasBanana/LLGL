@@ -7,6 +7,7 @@
 
 #include "VKShader.h"
 #include "../VKCore.h"
+#include "../VKTypes.h"
 
 
 namespace LLGL
@@ -34,6 +35,12 @@ bool VKShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor
         loadBinaryResult_ = LoadBinaryResult::InvalidCodeSize;
         return false;
     }
+
+    /* Store shader entry point (by default "main" for GLSL) */
+    if (shaderDesc.entryPoint.empty())
+        entryPoint_ = "main";
+    else
+        entryPoint_ = shaderDesc.entryPoint;
 
     /* Create shader module */
     VkShaderModuleCreateInfo createInfo;
@@ -67,6 +74,17 @@ std::string VKShader::QueryInfoLog()
             break;
     }
     return "";
+}
+
+void VKShader::FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const
+{
+    createInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    createInfo.pNext                = nullptr;
+    createInfo.flags                = 0;
+    createInfo.stage                = VKTypes::Map(GetType());
+    createInfo.module               = shaderModule_;
+    createInfo.pName                = entryPoint_.c_str();
+    createInfo.pSpecializationInfo  = nullptr;
 }
 
 

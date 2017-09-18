@@ -30,12 +30,13 @@ VKShaderProgram::~VKShaderProgram()
 
 void VKShaderProgram::AttachShader(Shader& shader)
 {
-    //todo
+    auto shaderVK = LLGL_CAST(VKShader*, (&shader));
+    shaders_.push_back(shaderVK);
 }
 
 void VKShaderProgram::DetachAll()
 {
-    //todo
+    shaders_.clear();
 }
 
 bool VKShaderProgram::LinkShaders()
@@ -97,6 +98,17 @@ ShaderUniform* VKShaderProgram::LockShaderUniform()
 void VKShaderProgram::UnlockShaderUniform()
 {
     // dummy
+}
+
+std::vector<VkPipelineShaderStageCreateInfo> VKShaderProgram::GetShaderStageCreateInfos() const
+{
+    auto shaderCount = shaders_.size();
+    std::vector<VkPipelineShaderStageCreateInfo> createInfos(shaderCount);
+
+    for (size_t i = 0; i < shaderCount; ++i)
+        shaders_[i]->FillShaderStageCreateInfo(createInfos[i]);
+
+    return createInfos;
 }
 
 

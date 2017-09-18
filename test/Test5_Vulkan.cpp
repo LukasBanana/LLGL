@@ -46,6 +46,37 @@ int main()
 
         commands->SetClearColor({ 0.0f, 1.0f, 0.0f, 1.0f });
 
+        // load shaders
+        auto LoadSPIRVModule = [](const std::string& filename)
+        {
+            std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+            if (!file.good())
+                throw std::runtime_error("failed to read file: \"" + filename + "\"");
+
+            auto fileSize = static_cast<size_t>(file.tellg());
+            std::vector<char> buffer(fileSize);
+
+            file.seekg(0);
+            file.read(buffer.data(), fileSize);
+
+            return buffer;
+        };
+
+        auto shaderVert = renderer->CreateShader(LLGL::ShaderType::Vertex);
+        auto shaderFrag = renderer->CreateShader(LLGL::ShaderType::Fragment);
+
+        shaderVert->LoadBinary(LoadSPIRVModule("Triangle.vert.spv"));
+        shaderFrag->LoadBinary(LoadSPIRVModule("Triangle.frag.spv"));
+
+        // create shader program
+        auto shaderProgram = renderer->CreateShaderProgram();
+
+        shaderProgram->AttachShader(*shaderVert);
+        shaderProgram->AttachShader(*shaderFrag);
+
+        shaderProgram->LinkShaders();
+
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
         const auto& caps = renderer->GetRenderingCaps();

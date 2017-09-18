@@ -197,22 +197,22 @@ void VKRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* VKRenderSystem::CreateShader(const ShaderType type)
 {
-    return nullptr;//todo
+    return TakeOwnership(shaders_, MakeUnique<VKShader>(device_, type));
 }
 
 ShaderProgram* VKRenderSystem::CreateShaderProgram()
 {
-    return nullptr;//todo
+    return TakeOwnership(shaderPrograms_, MakeUnique<VKShaderProgram>());
 }
 
 void VKRenderSystem::Release(Shader& shader)
 {
-    //todo
+    RemoveFromUniqueSet(shaders_, &shader);
 }
 
 void VKRenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    //todo
+    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
 /* ----- Pipeline States ----- */

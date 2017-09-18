@@ -12,6 +12,7 @@
 #include <LLGL/ShaderProgram.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
+#include <vector>
 
 
 namespace LLGL
@@ -46,8 +47,11 @@ class VKShaderProgram : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
+        std::vector<VkPipelineShaderStageCreateInfo> GetShaderStageCreateInfos() const;
+
     private:
 
+        std::vector<VKShader*> shaders_;
 
 };
 
