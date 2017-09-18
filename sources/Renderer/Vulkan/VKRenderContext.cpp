@@ -25,21 +25,24 @@ static const std::vector<const char*> g_deviceExtensions
 };
 
 VKRenderContext::VKRenderContext(
-    const VKPtr<VkInstance>& instance, VkPhysicalDevice physicalDevice, RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface) :
-        instance_            { instance                       },
-        physicalDevice_      { physicalDevice                 },
-        device_              { vkDestroyDevice                },
-        surface_             { instance, vkDestroySurfaceKHR  },
-        swapChain_           { device_, vkDestroySwapchainKHR },
-        swapChainRenderPass_ { device_, vkDestroyRenderPass   }
+    const VKPtr<VkInstance>& instance,
+    VkPhysicalDevice physicalDevice,
+    const VKPtr<VkDevice>& device,
+    RenderContextDescriptor desc,
+    const std::shared_ptr<Surface>& surface) :
+        instance_            { instance                      },
+        physicalDevice_      { physicalDevice                },
+        device_              { device                        },
+        surface_             { instance, vkDestroySurfaceKHR },
+        swapChain_           { device, vkDestroySwapchainKHR },
+        swapChainRenderPass_ { device, vkDestroyRenderPass   }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
     CreateVkSurface();
-    CreateLogicalDevice();
     CreateSwapChain(desc.videoMode);
-    CreateSwapChainImageViews();
+    CreateSwapChainImageViews(device);
     CreateSwapChainRenderPass();
-    CreateSwapChainFramebuffers();
+    CreateSwapChainFramebuffers(device);
     CreatePresentSemaphorse();
 }
 
@@ -136,60 +139,17 @@ void VKRenderContext::CreateVkSurface()
     #endif
 }
 
-void VKRenderContext::CreateLogicalDevice()
-{
-    /* Initialize queue create description */
-    queueFamilyIndices_ = FindQueueFamilies(physicalDevice_, surface_, VK_QUEUE_GRAPHICS_BIT);
-
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices_.graphicsFamily, queueFamilyIndices_.presentFamily };
-
-    float queuePriority = 1.0f;
-    for (auto family : uniqueQueueFamilies)
-    {
-        VkDeviceQueueCreateInfo info;
-        {
-            info.sType              = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            info.pNext              = nullptr;
-            info.flags              = 0;
-            info.queueFamilyIndex   = family;
-            info.queueCount         = 1;
-            info.pQueuePriorities   = &queuePriority;
-        }
-        queueCreateInfos.push_back(info);
-    }
-
-    /* Initialize device features */
-    VkPhysicalDeviceFeatures deviceFeatures;
-    InitMemory(deviceFeatures);
-
-    /* Initialize create descriptor for logical device */
-    VkDeviceCreateInfo createInfo;
-
-    createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pNext                    = nullptr;
-    createInfo.flags                    = 0;
-    createInfo.queueCreateInfoCount     = static_cast<uint32_t>(queueCreateInfos.size());
-    createInfo.pQueueCreateInfos        = queueCreateInfos.data();
-    createInfo.enabledLayerCount        = 0;
-    createInfo.ppEnabledLayerNames      = nullptr;
-    createInfo.enabledExtensionCount    = static_cast<uint32_t>(g_deviceExtensions.size());
-    createInfo.ppEnabledExtensionNames  = g_deviceExtensions.data();
-    createInfo.pEnabledFeatures         = &deviceFeatures;
-
-    /* Create logical device */
-    VkResult result = vkCreateDevice(physicalDevice_, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan logical device");
-
-    /* Get device queues for graphics and presentation */
-    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
-    vkGetDeviceQueue(device_, queueFamilyIndices_.presentFamily, 0, &presentQueue_);
-}
-
 void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
 {
     /* Query swap-chain support for physics device and surface  */
     auto swapChainSupport = VKQuerySwapChainSupport(physicalDevice_, surface_);
+
+    /* Find queue families */
+    auto queueFamilyIndices = VKFindQueueFamilies(physicalDevice_, VK_QUEUE_GRAPHICS_BIT);
+
+    /* Get device queues for graphics and presentation */
+    vkGetDeviceQueue(device_, queueFamilyIndices.graphicsFamily, 0, &graphicsQueue_);
+    vkGetDeviceQueue(device_, queueFamilyIndices.presentFamily, 0, &presentQueue_);
 
     /* Pick surface format, present mode, and extent */
     auto surfaceFormat  = PickSwapSurfaceFormat(swapChainSupport.formats);
@@ -201,11 +161,6 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
     if (swapChainSupport.caps.maxImageCount > 0)
         imageCount = std::min(imageCount, swapChainSupport.caps.maxImageCount);
 
-    /* Find queue family indices */
-    auto indices = FindQueueFamilies(physicalDevice_, surface_, VK_QUEUE_GRAPHICS_BIT);
-    
-    const uint32_t queueFamilyIndices[] = { indices.graphicsFamily, indices.presentFamily };
-    
     /* Initialize swap-chain descriptor */
     VkSwapchainCreateInfoKHR createInfo;
 
@@ -220,11 +175,11 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
     createInfo.imageArrayLayers             = 1;
     createInfo.imageUsage                   = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     
-    if (indices.graphicsFamily != indices.presentFamily)
+    if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily)
     {
         createInfo.imageSharingMode         = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount    = 2;
-        createInfo.pQueueFamilyIndices      = queueFamilyIndices;
+        createInfo.pQueueFamilyIndices      = queueFamilyIndices.indices;
     }
     else
     {
@@ -256,9 +211,9 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
     swapChainExtent_ = extent;
 }
 
-void VKRenderContext::CreateSwapChainImageViews()
+void VKRenderContext::CreateSwapChainImageViews(const VKPtr<VkDevice>& device)
 {
-    swapChainImageViews_.resize(swapChainImages_.size(), VKPtr<VkImageView>{ device_, vkDestroyImageView });
+    swapChainImageViews_.resize(swapChainImages_.size(), VKPtr<VkImageView>{ device, vkDestroyImageView });
 
     for (std::size_t i = 0, n = swapChainImages_.size(); i < n; ++i)
     {
@@ -345,9 +300,9 @@ void VKRenderContext::CreateSwapChainRenderPass()
     VKThrowIfFailed(result, "failed to create Vulkan swap-chain render pass");
 }
 
-void VKRenderContext::CreateSwapChainFramebuffers()
+void VKRenderContext::CreateSwapChainFramebuffers(const VKPtr<VkDevice>& device)
 {
-    swapChainFramebuffers_.resize(swapChainImageViews_.size(), VKPtr<VkFramebuffer>{ device_, vkDestroyFramebuffer });
+    swapChainFramebuffers_.resize(swapChainImageViews_.size(), VKPtr<VkFramebuffer>{ device, vkDestroyFramebuffer });
 
     for (std::size_t i = 0, n = swapChainImageViews_.size(); i < n; ++i)
     {
@@ -388,47 +343,6 @@ void VKRenderContext::CreatePresentSemaphorse()
     /* Create presentation semaphorse */
     CreateVkSemaphore(imageAvailableSemaphore_);
     CreateVkSemaphore(renderFinishedSemaphore_);
-}
-
-std::vector<VkQueueFamilyProperties> VKRenderContext::QueryQueueFamilyProperties(VkPhysicalDevice device)
-{
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-    return queueFamilies;
-}
-
-QueueFamilyIndices VKRenderContext::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, const VkQueueFlags flags)
-{
-    QueueFamilyIndices indices;
-
-    auto queueFamilies = QueryQueueFamilyProperties(device);
-
-    uint32_t i = 0;
-    for (const auto& family : queueFamilies)
-    {
-        /* Get graphics family index */
-        if (family.queueCount > 0 && (family.queueFlags & flags) != 0)
-            indices.graphicsFamily = i;
-
-        /* Get present family index */
-        VkBool32 presentSupport = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-
-        if (family.queueCount > 0 && presentSupport)
-            indices.presentFamily = i;
-
-        /* Check if queue family is complete */
-        if (indices.Complete())
-            break;
-
-        ++i;
-    }
-
-    return indices;
 }
 
 VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const

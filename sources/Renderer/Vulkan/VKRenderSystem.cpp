@@ -28,7 +28,8 @@ static const std::vector<const char*> g_deviceExtensions
 };
 
 VKRenderSystem::VKRenderSystem() :
-    instance_ { vkDestroyInstance }
+    instance_ { vkDestroyInstance },
+    device_   { vkDestroyDevice   }
 {
     //TODO: get application descriptor from client programmer
     ApplicationDescriptor appDesc;
@@ -41,9 +42,10 @@ VKRenderSystem::VKRenderSystem() :
     LoadExtensions();
 
     if (!PickPhysicalDevice())
-        throw std::runtime_error("failed to pick Vulkan physical device");
+        throw std::runtime_error("failed to find physical device with Vulkan support");
 
     QueryDeviceProperties();
+    CreateLogicalDevice();
 }
 
 VKRenderSystem::~VKRenderSystem()
@@ -54,7 +56,7 @@ VKRenderSystem::~VKRenderSystem()
 
 RenderContext* VKRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(renderContexts_, MakeUnique<VKRenderContext>(instance_, physicalDevice_, desc, surface));
+    return TakeOwnership(renderContexts_, MakeUnique<VKRenderContext>(instance_, physicalDevice_, device_, desc, surface));
 }
 
 void VKRenderSystem::Release(RenderContext& renderContext)
@@ -69,7 +71,7 @@ CommandBuffer* VKRenderSystem::CreateCommandBuffer()
     auto mainContext = renderContexts_.begin()->get();
     return TakeOwnership(
         commandBuffers_,
-        MakeUnique<VKCommandBuffer>(mainContext->GetLogicalDevice(), mainContext->GetSwapChainSize(), mainContext->GetQueueFamilyIndices())
+        MakeUnique<VKCommandBuffer>(device_, mainContext->GetSwapChainSize(), queueFamilyIndices_)
     );
 }
 
@@ -401,6 +403,52 @@ void VKRenderSystem::QueryDeviceProperties()
     caps.maxComputeShaderWorkGroupSize[2]   = limits.maxComputeWorkGroupSize[2];
 
     SetRenderingCaps(caps);
+}
+
+void VKRenderSystem::CreateLogicalDevice()
+{
+    /* Initialize queue create description */
+    queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice_, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
+
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices_.graphicsFamily, queueFamilyIndices_.presentFamily };
+
+    float queuePriority = 1.0f;
+    for (auto family : uniqueQueueFamilies)
+    {
+        VkDeviceQueueCreateInfo info;
+        {
+            info.sType              = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            info.pNext              = nullptr;
+            info.flags              = 0;
+            info.queueFamilyIndex   = family;
+            info.queueCount         = 1;
+            info.pQueuePriorities   = &queuePriority;
+        }
+        queueCreateInfos.push_back(info);
+    }
+
+    /* Initialize device features */
+    VkPhysicalDeviceFeatures deviceFeatures;
+    InitMemory(deviceFeatures);
+
+    /* Initialize create descriptor for logical device */
+    VkDeviceCreateInfo createInfo;
+
+    createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pNext                    = nullptr;
+    createInfo.flags                    = 0;
+    createInfo.queueCreateInfoCount     = static_cast<uint32_t>(queueCreateInfos.size());
+    createInfo.pQueueCreateInfos        = queueCreateInfos.data();
+    createInfo.enabledLayerCount        = 0;
+    createInfo.ppEnabledLayerNames      = nullptr;
+    createInfo.enabledExtensionCount    = static_cast<uint32_t>(g_deviceExtensions.size());
+    createInfo.ppEnabledExtensionNames  = g_deviceExtensions.data();
+    createInfo.pEnabledFeatures         = &deviceFeatures;
+
+    /* Create logical device */
+    VkResult result = vkCreateDevice(physicalDevice_, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan logical device");
 }
 
 bool VKRenderSystem::IsLayerRequired(const std::string& name) const

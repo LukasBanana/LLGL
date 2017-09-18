@@ -25,8 +25,22 @@ struct QueueFamilyIndices
 {
     static const uint32_t invalidIndex = 0xffffffff;
 
-    uint32_t graphicsFamily = invalidIndex;
-    uint32_t presentFamily  = invalidIndex;
+    QueueFamilyIndices() :
+        graphicsFamily { invalidIndex },
+        presentFamily  { invalidIndex }
+    {
+    }
+
+    union
+    {
+        uint32_t indices[2];
+        struct
+        {
+            uint32_t graphicsFamily;
+            uint32_t presentFamily;
+            //uint32_t transferFamily;
+        };
+    };
 
     inline bool Complete() const
     {
@@ -60,8 +74,10 @@ std::vector<VkLayerProperties> VKQueryInstanceLayerProperties();
 std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties();
 std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance);
 std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device);
+std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevice device);
 
 SwapChainSupportDetails VKQuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags);
 
 
 } // /namespace LLGL

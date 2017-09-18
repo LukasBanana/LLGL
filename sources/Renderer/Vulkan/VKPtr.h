@@ -63,6 +63,11 @@ class VKPtr
             return &object_;
         }
 
+        T* operator & ()
+        {
+            return &object_;
+        }
+
         T* ReleaseAndGetAddressOf()
         {
             Release();

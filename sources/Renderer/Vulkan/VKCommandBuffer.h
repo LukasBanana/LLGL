@@ -135,7 +135,7 @@ class VKCommandBuffer : public CommandBuffer
         std::vector<VkCommandBuffer>    commandBufferList_;
         VkCommandBuffer                 commandBuffer_;
 
-        VkClearValue                    clearColor_         = { 0.0f, 0.0f, 0.0f, 0.0f };
+        VkClearValue                    clearValue_         = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 };
 

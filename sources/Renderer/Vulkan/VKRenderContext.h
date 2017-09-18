@@ -33,6 +33,7 @@ class VKRenderContext : public RenderContext
         VKRenderContext(
             const VKPtr<VkInstance>& instance,
             VkPhysicalDevice physicalDevice,
+            const VKPtr<VkDevice>& device,
             RenderContextDescriptor desc,
             const std::shared_ptr<Surface>& surface
         );
@@ -48,19 +49,9 @@ class VKRenderContext : public RenderContext
 
         void SetPresentCommandBuffer(VKCommandBuffer* commandBuffer);
 
-        inline const VKPtr<VkDevice>& GetLogicalDevice() const
-        {
-            return device_;
-        }
-
         inline const VKPtr<VkRenderPass>& GetSwapChainRenderPass() const
         {
             return swapChainRenderPass_;
-        }
-
-        inline const QueueFamilyIndices& GetQueueFamilyIndices() const
-        {
-            return queueFamilyIndices_;
         }
 
         inline size_t GetSwapChainSize() const
@@ -71,17 +62,12 @@ class VKRenderContext : public RenderContext
     private:
 
         void CreateVkSurface();
-        void CreateLogicalDevice();
         void CreateSwapChain(const VideoModeDescriptor& desc);
-        void CreateSwapChainImageViews();
+        void CreateSwapChainImageViews(const VKPtr<VkDevice>& device);
         void CreateSwapChainRenderPass();
-        void CreateSwapChainFramebuffers();
+        void CreateSwapChainFramebuffers(const VKPtr<VkDevice>& device);
         void CreateVkSemaphore(VKPtr<VkSemaphore>& semaphore);
         void CreatePresentSemaphorse();
-
-        std::vector<VkQueueFamilyProperties> QueryQueueFamilyProperties(VkPhysicalDevice device);
-
-        QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface, const VkQueueFlags flags);
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
         VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes) const;
@@ -91,9 +77,9 @@ class VKRenderContext : public RenderContext
 
         VkInstance                          instance_                   = VK_NULL_HANDLE;
         VkPhysicalDevice                    physicalDevice_             = VK_NULL_HANDLE;
-        VKPtr<VkDevice>                     device_;
+        VkDevice                            device_                     = VK_NULL_HANDLE;
+
         VKPtr<VkSurfaceKHR>                 surface_;
-        QueueFamilyIndices                  queueFamilyIndices_;
 
         VKPtr<VkSwapchainKHR>               swapChain_;
         VKPtr<VkRenderPass>                 swapChainRenderPass_;

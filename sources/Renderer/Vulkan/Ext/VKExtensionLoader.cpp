@@ -21,10 +21,7 @@ namespace LLGL
 template <typename T>
 bool LoadVKProc(VkInstance instance, T& procAddr, const char* procName)
 {
-    /*
-    Load OpenGL procedure address
-    -> Make an exception with platform dependent code here, because we use a template function.
-    */
+    /* Load Vulkan procedure address */
     procAddr = reinterpret_cast<T>(vkGetInstanceProcAddr(instance, procName));
     
     /* Check for errors */

@@ -33,6 +33,7 @@ class LLGL_EXPORT Shader
         \remarks The input source code must be one of the high level shading languages the respective renderer supports (e.g. GLSL, HLSL, or Metal).
         \param[in] sourceCode Specifies the shader source code which is to be compiled.
         \param[in] shaderDesc Specifies the shader descriptor.
+        \note Only supported with: Direct3D 11, Direct3D 12, OpenGL.
         \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
         \see QueryInfoLog
         \see ShaderDescriptor
@@ -43,7 +44,7 @@ class LLGL_EXPORT Shader
         \brief Loads the specified binary code into the shader object.
         \param[in] binaryCode Binary shader code container.
         \param[in] shaderDesc Specifies the shader descriptor. Only the optional stream output format is used here.
-        \note Only supported with: Direct3D 11, Direct3D 12.
+        \note Only supported with: Direct3D 11, Direct3D 12, Vulkan.
         \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
         \see QueryInfoLog
         \see ShaderDescriptor

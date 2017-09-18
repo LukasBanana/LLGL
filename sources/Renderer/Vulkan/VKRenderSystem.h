@@ -18,12 +18,12 @@
 #include "VKRenderContext.h"
 
 /*#include "Buffer/VKBuffer.h"
-#include "Buffer/VKBufferArray.h"
+#include "Buffer/VKBufferArray.h"*/
 
 #include "Shader/VKShader.h"
 #include "Shader/VKShaderProgram.h"
 
-#include "Texture/VKTexture.h"
+/*#include "Texture/VKTexture.h"
 #include "Texture/VKTextureArray.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
@@ -136,6 +136,7 @@ class VKRenderSystem : public RenderSystem
         void LoadExtensions();
         bool PickPhysicalDevice();
         void QueryDeviceProperties();
+        void CreateLogicalDevice();
 
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
@@ -146,6 +147,9 @@ class VKRenderSystem : public RenderSystem
 
         VKPtr<VkInstance>                       instance_;
         VkPhysicalDevice                        physicalDevice_     = VK_NULL_HANDLE;
+        VKPtr<VkDevice>                         device_;
+
+        QueueFamilyIndices                      queueFamilyIndices_;
 
         /* ----- Hardware object containers ----- */
 
@@ -157,10 +161,10 @@ class VKRenderSystem : public RenderSystem
         HWObjectContainer<VKTextureArray>       textureArrays_;
         HWObjectContainer<VKSampler>            samplers_;
         HWObjectContainer<VKSamplerArray>       samplerArrays_;
-        HWObjectContainer<VKRenderTarget>       renderTargets_;
+        HWObjectContainer<VKRenderTarget>       renderTargets_;*/
         HWObjectContainer<VKShader>             shaders_;
         HWObjectContainer<VKShaderProgram>      shaderPrograms_;
-        HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
+        /*HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<VKComputePipeline>    computePipelines_;
         HWObjectContainer<VKQuery>              queries_;*/
 

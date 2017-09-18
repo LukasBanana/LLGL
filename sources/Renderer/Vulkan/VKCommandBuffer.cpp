@@ -51,20 +51,20 @@ void VKCommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* s
 
 void VKCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
-    clearColor_.color.float32[0] = color.r;
-    clearColor_.color.float32[1] = color.g;
-    clearColor_.color.float32[2] = color.b;
-    clearColor_.color.float32[3] = color.a;
+    clearValue_.color.float32[0] = color.r;
+    clearValue_.color.float32[1] = color.g;
+    clearValue_.color.float32[2] = color.b;
+    clearValue_.color.float32[3] = color.a;
 }
 
 void VKCommandBuffer::SetClearDepth(float depth)
 {
-    //todo
+    clearValue_.depthStencil.depth = depth;
 }
 
 void VKCommandBuffer::SetClearStencil(int stencil)
 {
-    //todo
+    clearValue_.depthStencil.stencil = static_cast<uint32_t>(stencil);
 }
 
 void VKCommandBuffer::Clear(long flags)
