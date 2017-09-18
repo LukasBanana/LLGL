@@ -94,8 +94,8 @@ enum class ClippingRange
 
 /* ----- Structures ----- */
 
-//! Render system configuration structure.
-struct RenderSystemConfiguration
+//! Structure of image initialization for textures without initial image data.
+struct ImageInitialization
 {
     /**
     \brief Enables or disables the default initialization of texture images. By default enabled.
@@ -104,19 +104,26 @@ struct RenderSystemConfiguration
     \see defaultImageColor
     \see defaultImageDepth
     */
-    bool        defaultImageEnabled = true;
+    bool        enabled { true };
 
     /**
     \brief Specifies the default color for uninitialized textures. The default value is black (0, 0, 0, 0).
     \remarks This will be used when a texture is created and no initial image data is specified.
     */
-    ColorRGBAub defaultImageColor { 0, 0, 0, 0 };
+    ColorRGBAub color   { 0, 0, 0, 0 };
 
     /**
     \brief Specifies the default depth value for uninitialized depth textures. The default value is 0.
     \remarks This will be used when a depth texture is created and no initial image data is specified.
     */
-    float       defaultImageDepth   = 0.0f;
+    float       depth   { 0.0f };
+};
+
+//! Render system configuration structure.
+struct RenderSystemConfiguration
+{
+    //! Image initialization for textures without initial image data.
+    ImageInitialization imageInitialization;
 
     /**
     \brief Specifies the number of threads that will be used internally by the render system. By default maxThreadCount.
@@ -124,7 +131,7 @@ struct RenderSystemConfiguration
     to convert the image data into the respective hardware texture format. OpenGL does this automatically.
     \see maxThreadCount
     */
-    std::size_t threadCount         = maxThreadCount;
+    size_t              threadCount         { maxThreadCount };
 };
 
 /**

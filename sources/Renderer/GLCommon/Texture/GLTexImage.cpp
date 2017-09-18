@@ -16,28 +16,11 @@ namespace LLGL
 {
 
 
-struct TexImageDefault
-{
-    bool        enabled { true };
-    ColorRGBAub color   { 0, 0, 0, 0 };
-    float       depth   { 0.0f };
-};
+static ImageInitialization g_imageInitialization;
 
-static TexImageDefault g_texImageDefault;
-
-void GLTexImageDefault(bool enable)
+void GLTexImageInitialization(const ImageInitialization& imageInitialization)
 {
-    g_texImageDefault.enabled = enable;
-}
-
-void GLTexImageDefaultColor(const ColorRGBAub& color)
-{
-    g_texImageDefault.color = color;
-}
-
-void GLTexImageDefaultDepth(float depth)
-{
-    g_texImageDefault.depth = depth;
+    g_imageInitialization = imageInitialization;
 }
 
 static std::vector<ColorRGBAub> GenImageDataRGBAub(int numPixels, const ColorRGBAub& color)
@@ -246,7 +229,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {
         /* Allocate texture without initial data */
         GLTexImage1D(
@@ -260,7 +243,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture1D.width,
-            g_texImageDefault.color
+            g_imageInitialization.color
         );
 
         GLTexImage1D(
@@ -286,12 +269,12 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     }
     else if (IsDepthStencilFormat(desc.format))
     {
-        if (g_texImageDefault.enabled)
+        if (g_imageInitialization.enabled)
         {
             /* Initialize depth texture image with default depth */
             auto image = GenImageDataRf(
                 desc.texture2D.width * desc.texture2D.height,
-                g_texImageDefault.depth
+                g_imageInitialization.depth
             );
 
             GLTexImage2D(
@@ -310,7 +293,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             );
         }
     }
-    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {
         /* Allocate texture without initial data */
         GLTexImage2D(
@@ -324,7 +307,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture2D.width * desc.texture2D.height,
-            g_texImageDefault.color
+            g_imageInitialization.color
         );
 
         GLTexImage2D(
@@ -351,7 +334,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {
         /* Allocate texture without initial data */
         GLTexImage3D(
@@ -365,7 +348,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture3D.width * desc.texture3D.height * desc.texture3D.depth,
-            g_texImageDefault.color
+            g_imageInitialization.color
         );
 
         GLTexImage3D(
@@ -415,7 +398,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {
         /* Allocate texture without initial data */
         for (auto face : cubeFaces)
@@ -432,7 +415,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAub(
             desc.textureCube.width * desc.textureCube.height,
-            g_texImageDefault.color
+            g_imageInitialization.color
         );
 
         for (auto face : cubeFaces)
@@ -464,7 +447,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {
         /* Allocate texture without initial data */
         GLTexImage1DArray(
@@ -478,7 +461,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture1D.width * static_cast<int>(desc.texture1D.layers),
-            g_texImageDefault.color
+            g_imageInitialization.color
         );
 
         GLTexImage1DArray(
@@ -504,12 +487,12 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
     }
     else if (IsDepthStencilFormat(desc.format))
     {
-        if (g_texImageDefault.enabled)
+        if (g_imageInitialization.enabled)
         {
             /* Initialize depth texture image with default depth */
             auto image = GenImageDataRf(
                 desc.texture2D.width * desc.texture2D.height * static_cast<int>(desc.texture2D.layers),
-                g_texImageDefault.depth
+                g_imageInitialization.depth
             );
 
             GLTexImage2DArray(
@@ -528,7 +511,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
             );
         }
     }
-    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {
         /* Allocate texture without initial data */
         GLTexImage2DArray(
@@ -542,7 +525,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAub(
             desc.texture2D.width * desc.texture2D.height * static_cast<int>(desc.texture2D.layers),
-            g_texImageDefault.color
+            g_imageInitialization.color
         );
 
         GLTexImage2DArray(
@@ -571,7 +554,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
         /* Throw runtime error for illegal use of depth-stencil format */
         ErrIllegalUseOfDepthFormat();
     }
-    else if (IsCompressedFormat(desc.format) || !g_texImageDefault.enabled)
+    else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {
         /* Allocate texture without initial data */
         GLTexImageCubeArray(
@@ -585,7 +568,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAub(
             desc.textureCube.width * desc.textureCube.height * static_cast<int>(desc.textureCube.layers*6),
-            g_texImageDefault.color
+            g_imageInitialization.color
         );
 
         GLTexImageCubeArray(

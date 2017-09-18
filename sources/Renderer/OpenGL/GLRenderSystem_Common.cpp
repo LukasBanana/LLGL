@@ -36,9 +36,7 @@ GLRenderSystem::~GLRenderSystem()
 void GLRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 {
     RenderSystem::SetConfiguration(config);
-    GLTexImageDefault(config.defaultImageEnabled);
-    GLTexImageDefaultColor(config.defaultImageColor);
-    GLTexImageDefaultDepth(config.defaultImageDepth);
+    GLTexImageInitialization(config.imageInitialization);
 }
 
 /* ----- Render Context ----- */

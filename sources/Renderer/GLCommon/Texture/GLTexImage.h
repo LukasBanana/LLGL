@@ -11,15 +11,14 @@
 
 #include <LLGL/Image.h>
 #include <LLGL/TextureFlags.h>
+#include <LLGL/RenderSystemFlags.h>
 
 
 namespace LLGL
 {
 
 
-void GLTexImageDefault(bool enable);
-void GLTexImageDefaultColor(const ColorRGBAub& color);
-void GLTexImageDefaultDepth(float depth);
+void GLTexImageInitialization(const ImageInitialization& imageInitialization);
 
 #ifdef LLGL_OPENGL
 
