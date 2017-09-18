@@ -372,7 +372,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(
             subImageDesc.buffer = reinterpret_cast<const char*>(subImageDesc.buffer) + subImageStride;
         }
     }
-    else if (GetConfiguration().defaultImageEnabled)
+    else if (GetConfiguration().imageInitialization.enabled)
     {
         if (IsDepthStencilFormat(descD3D.format))
         {
