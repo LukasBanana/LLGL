@@ -8,12 +8,11 @@
 #include "VKShaderProgram.h"
 #include "VKShader.h"
 #include "../../CheckedCast.h"
-//#include "../../../Core/Exception.h"
-//#include "../VKTypes.h"
+#include "../VKTypes.h"
 #include <LLGL/Log.h>
 #include <LLGL/VertexFormat.h>
 #include <vector>
-#include <stdexcept>
+#include <set>
 
 
 namespace LLGL
@@ -77,7 +76,62 @@ std::vector<UniformDescriptor> VKShaderProgram::QueryUniforms() const
 
 void VKShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
 {
-    //todo
+    /* Initialize vertex input attribute descriptors */
+    const auto& formatAttribs = vertexFormat.attributes;
+    const auto attribCount = formatAttribs.size();
+
+    vertexAttribDescs_.resize(attribCount);
+
+    for (size_t i = 0; i < attribCount; ++i)
+    {
+        const auto& attrib = formatAttribs[i];
+        auto& desc = vertexAttribDescs_[i];
+
+        desc.location   = static_cast<uint32_t>(i);
+        desc.binding    = attrib.inputSlot;
+        desc.format     = VKTypes::Map(attrib.vectorType);
+        desc.offset     = attrib.offset;
+    }
+
+    /* Initialize vertex input binding descriptors */
+    uint32_t prevSlot = 0, stride = 0;
+    VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    for (auto it = formatAttribs.begin(), itEnd = formatAttribs.end(); true; ++it)
+    {
+        /* Check if new input slot begins */
+        if (it == itEnd || prevSlot != it->inputSlot)
+        {
+            if (stride > 0)
+            {
+                /* Append description to list */
+                VkVertexInputBindingDescription desc;
+                {
+                    desc.binding    = prevSlot;
+                    desc.stride     = stride;
+                    desc.inputRate  = inputRate;
+                }
+                vertexBindingDescs_.push_back(desc);
+
+                stride = 0;
+            }
+
+            /* Store next input slot */
+            prevSlot = it->inputSlot;
+        }
+
+        if (it == itEnd)
+            break;
+        
+        /* Increment vertex stride */
+        stride += it->GetSize();
+
+        /* Store vertex rate */
+        if (it->instanceDivisor > 0)
+            inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+        else
+            inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    }
 }
 
 void VKShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
@@ -109,6 +163,12 @@ std::vector<VkPipelineShaderStageCreateInfo> VKShaderProgram::GetShaderStageCrea
         shaders_[i]->FillShaderStageCreateInfo(createInfos[i]);
 
     return createInfos;
+}
+
+void VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const
+{
+
+
 }
 
 

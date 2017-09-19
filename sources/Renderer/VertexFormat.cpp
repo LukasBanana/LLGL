@@ -22,7 +22,7 @@ static void UpdateStride(VertexFormat& vertexFormat)
         vertexFormat.stride = std::max(vertexFormat.stride, attr.offset + attr.GetSize());
 }
 
-void VertexFormat::AppendAttribute(const VertexAttribute& attrib, unsigned int offset)
+void VertexFormat::AppendAttribute(const VertexAttribute& attrib, uint32_t offset)
 {
     /* Append attribute to the list */
     attributes.push_back(attrib);

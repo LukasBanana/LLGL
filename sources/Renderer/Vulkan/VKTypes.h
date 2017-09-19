@@ -11,6 +11,8 @@
 
 #include "Vulkan.h"
 #include <LLGL/ShaderFlags.h>
+#include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/Format.h>
 
 
 namespace LLGL
@@ -20,7 +22,9 @@ namespace VKTypes
 {
 
 
-VkShaderStageFlagBits Map( const ShaderType shaderType );
+VkShaderStageFlagBits Map( const ShaderType        shaderType        );
+VkFormat              Map( const VectorType        vectorType        );
+VkPrimitiveTopology   Map( const PrimitiveTopology primitiveTopology );
 
 
 } // /namespace VKTypes

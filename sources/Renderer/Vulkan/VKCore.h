@@ -65,7 +65,7 @@ std::string VKErrorToStr(const VkResult errorCode);
 void VKThrowIfFailed(const VkResult errorCode, const std::string& info);
 
 // Converts the specified Vulkan API version into a string (e.g. "1.0.100").
-std::string VKApiVersionToString(std::uint32_t version);
+std::string VKApiVersionToString(uint32_t version);
 
 
 /* ----- Query Functions ----- */

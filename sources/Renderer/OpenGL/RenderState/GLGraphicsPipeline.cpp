@@ -90,17 +90,19 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     /* Convert input-assembler state */
     drawMode_ = GLTypes::Map(desc.primitiveTopology);
 
-    if (desc.primitiveTopology >= PrimitiveTopology::Patches1 && desc.primitiveTopology <= PrimitiveTopology::Patches32)
+    if (IsPrimitiveTopologyPatches(desc.primitiveTopology))
     {
         /* Store patch vertices and check limit */
-        patchVertices_ = static_cast<GLint>(desc.primitiveTopology) - static_cast<GLint>(PrimitiveTopology::Patches1) + 1;
-        if (patchVertices_ > renderCaps.maxPatchVertices)
+        const auto patchSize = GetPrimitiveTopologyPatchSize(desc.primitiveTopology);
+        if (patchSize > renderCaps.maxPatchVertices)
         {
             throw std::runtime_error(
                 "renderer does not support " + std::to_string(patchVertices_) +
                 " control points for patches (limit is " + std::to_string(renderCaps.maxPatchVertices) + ")"
             );
         }
+        else
+            patchVertices_ = static_cast<GLint>(patchSize);
     }
     else
         patchVertices_ = 0;

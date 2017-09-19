@@ -19,6 +19,8 @@ namespace LLGL
 {
 
 
+class VKShader;
+
 class VKShaderProgram : public ShaderProgram
 {
 
@@ -49,9 +51,14 @@ class VKShaderProgram : public ShaderProgram
 
         std::vector<VkPipelineShaderStageCreateInfo> GetShaderStageCreateInfos() const;
 
+        void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
+
     private:
 
-        std::vector<VKShader*> shaders_;
+        std::vector<VKShader*>                          shaders_;
+
+        std::vector<VkVertexInputAttributeDescription>  vertexAttribDescs_;
+        std::vector<VkVertexInputBindingDescription>    vertexBindingDescs_;
 
 };
 

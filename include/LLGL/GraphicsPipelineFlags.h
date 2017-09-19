@@ -210,7 +210,7 @@ struct MultiSamplingDescriptor
 {
     MultiSamplingDescriptor() = default;
 
-    inline MultiSamplingDescriptor(unsigned int samples) :
+    inline MultiSamplingDescriptor(uint32_t samples) :
         enabled { samples > 1 },
         samples { samples     }
     {
@@ -220,16 +220,16 @@ struct MultiSamplingDescriptor
     \brief Returns the sample count for the state of this multi-sampling descriptor.
     \return max{ 1, samples } if multi-sampling is enabled, otherwise 1.
     */
-    inline unsigned int SampleCount() const
+    inline uint32_t SampleCount() const
     {
         return (enabled && samples > 1 ? samples : 1);
     }
 
     //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    bool            enabled = false;
+    bool        enabled = false;
 
     //! Number of samples used for multi-sampling. By default 1.
-    unsigned int    samples = 1;
+    uint32_t    samples = 1;
 };
 
 //! Depth state descriptor structure.
@@ -252,30 +252,30 @@ struct DepthDescriptor
 struct StencilFaceDescriptor
 {
     //! Specifies the operation to take when the stencil test fails.
-    StencilOp       stencilFailOp   = StencilOp::Keep;
+    StencilOp   stencilFailOp   = StencilOp::Keep;
 
     //! Specifies the operation to take when the stencil test passes but the depth test fails.
-    StencilOp       depthFailOp     = StencilOp::Keep;
+    StencilOp   depthFailOp     = StencilOp::Keep;
 
     //! Specifies the operation to take when both the stencil test and the depth test pass.
-    StencilOp       depthPassOp     = StencilOp::Keep;
+    StencilOp   depthPassOp     = StencilOp::Keep;
 
     //! Specifies the stencil compare operation.
-    CompareOp       compareOp       = CompareOp::Less;
+    CompareOp   compareOp       = CompareOp::Less;
 
     /**
     \brief Specifies the portion of the depth-stencil buffer for reading stencil data. By default 0xffffffff.
     \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (readMask & 0xff) of the read mask value of the front face will be used.
     \see StencilDescriptor::front
     */
-    std::uint32_t   readMask        = ~0;
+    uint32_t    readMask        = ~0;
 
     /**
     \brief Specifies the portion of the depth-stencil buffer for writing stencil data. By default 0xffffffff.
     \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (writeMask & 0xff) of the write mask value of the front face will be used.
     \see StencilDescriptor::front
     */
-    std::uint32_t   writeMask       = ~0;
+    uint32_t    writeMask       = ~0;
 
     /**
     \brief Specifies the stencil reference value.
@@ -283,7 +283,7 @@ struct StencilFaceDescriptor
     \note For Direct3D 11 and Direct3D 12, only the stencil reference value of the front face will be used.
     \see StencilDescriptor::front
     */
-    std::uint32_t   reference       = 0;
+    uint32_t    reference       = 0;
 };
 
 //! Stencil state descriptor structure.
@@ -414,6 +414,15 @@ struct GraphicsPipelineDescriptor
     //! Specifies the blending state descriptor.
     BlendDescriptor         blend;
 };
+
+
+/* ----- Functions ----- */
+
+//! Returns true if the specified primitive topology is a patch list.
+LLGL_EXPORT bool IsPrimitiveTopologyPatches(const PrimitiveTopology primitiveTopology);
+
+//! Returns the number of patch control points of the specified primitive topology (in range [1, 32]), or 0 if the topology is not a patch list.
+LLGL_EXPORT uint32_t GetPrimitiveTopologyPatchSize(const PrimitiveTopology primitiveTopology);
 
 
 } // /namespace LLGL

@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include <cstdint>
 
 
 namespace LLGL
@@ -84,10 +85,10 @@ enum class MatrixType
 /* ----- Functions ----- */
 
 //! Returns the size (in bytes) of the specified data type.
-LLGL_EXPORT unsigned int DataTypeSize(const DataType dataType);
+LLGL_EXPORT uint32_t DataTypeSize(const DataType dataType);
 
 //! Returns the size (in bytes) of the specified vector type.
-LLGL_EXPORT unsigned int VectorTypeSize(const VectorType vectorType);
+LLGL_EXPORT uint32_t VectorTypeSize(const VectorType vectorType);
 
 /**
 \brief Retrieves the format of the specified vector type.
@@ -95,7 +96,7 @@ LLGL_EXPORT unsigned int VectorTypeSize(const VectorType vectorType);
 \param[out] dataType Specifies the output parameter for the resulting data type.
 \param[out] components Specifiefs the output parameter for the resulting number of vector components.
 */
-LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, unsigned int& components);
+LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, uint32_t& components);
 
 
 } // /namespace LLGL
