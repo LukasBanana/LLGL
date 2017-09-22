@@ -189,7 +189,7 @@ enum class PolygonMode
     Wireframe,  //!< Draw triangle edges only.
     /**
     \brief Draw vertex points only.
-    \note Only supported with: OpenGL.
+    \note Only supported with: OpenGL, Vulkan.
     */
     Points,
 };
@@ -200,6 +200,32 @@ enum class CullMode
     Disabled,   //!< No culling.
     Front,      //!< Front face culling.
     Back,       //!< Back face culling.
+};
+
+/**
+\brief Logical pixel operation enumeration.
+\remarks These logical pixel operations are bitwise operations.
+\note Only supported with: OpenGL, Vulkan.
+*/
+enum class LogicOp
+{
+    Disabled,       //!< No logical pixel operation.
+    Clear,          //!< Resulting operation: 0.
+    Set,            //!< Resulting operation: 1.
+    Copy,           //!< Resulting operation: src.
+    CopyInverted,   //!< Resulting operation: ~src.
+    NoOp,           //!< Resulting operation: dest.
+    Invert,         //!< Resulting operation: ~dest.
+    AND,            //!< Resulting operation: src & dest.
+    ANDReverse,     //!< Resulting operation: src & ~dest.
+    ANDInverted,    //!< Resulting operation: ~src & dest.
+    NAND,           //!< Resulting operation: ~(src & dest).
+    OR,             //!< Resulting operation: src | dest.
+    ORReverse,      //!< Resulting operation: src | ~dest.
+    ORInverted,     //!< Resulting operation: ~src | dest.
+    NOR,            //!< Resulting operation: ~(src | dest).
+    XOR,            //!< Resulting operation: src ^ dest.
+    Equiv,          //!< Resulting operation: ~(src ^ dest).
 };
 
 
@@ -369,14 +395,14 @@ struct RasterizerDescriptor
     //! Polygon face culling mode. By default CullMode::Disabled.
     CullMode                cullMode                    = CullMode::Disabled;
 
-    //! \todo DOCUMENT ME!
-    int                     depthBias                   = 0;
+    //! Specifies a scalar factor controlling the constant depth value added to each fragment.
+    float                   depthBiasConstantFactor     = 0;
 
-    //! \todo DOCUMENT ME!
+    //! Specifies a scalar factor applied to a fragment's slope in depth bias calculations.
+    float                   depthBiasSlopeFactor        = 0.0f;
+
+    //! Specifies the maximum (or minimum) depth bias of a fragment.
     float                   depthBiasClamp              = 0.0f;
-
-    //! \todo DOCUMENT ME!
-    float                   slopeScaledDepthBias        = 0.0f;
 
     //! (Multi-)sampling descriptor.
     MultiSamplingDescriptor multiSampling;
@@ -400,6 +426,12 @@ struct RasterizerDescriptor
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     */
     bool                    conservativeRasterization   = false;
+
+    /**
+    \brief Specifies the width of all generated line primitives. By default 1.0.
+    \note Only supported with: OpenGL, Vulkan.
+    */
+    float                   lineWidth                   = 1.0f;
 };
 
 //! Blend target state descriptor structure.
@@ -440,6 +472,12 @@ struct BlendDescriptor
     \see BlendOp::InvBlendFactor
     */
     ColorRGBAf                          blendFactor { 0.0f, 0.0f, 0.0f, 0.0f };
+
+    /**
+    \brief Specifies the logical fragment operation. By default LogicOp::Disabled.
+    \note Only supported with: OpenGL, Vulkan.
+    */
+    LogicOp                             logicOp         = LogicOp::Disabled;
 
     //! Render-target blend states. A maximum of 8 targets is supported. Further targets will be ignored.
     std::vector<BlendTargetDescriptor>  targets;

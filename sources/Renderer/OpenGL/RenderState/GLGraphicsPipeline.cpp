@@ -170,6 +170,7 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 
     /* Setup rasterizer state */
     stateMngr.SetPolygonMode(polygonMode_);
+    //TODO: stateMngr.SetPolygonOffset(scaleFactor_, constantFactor_);
     stateMngr.SetFrontFace(frontFace_);
 
     if (cullFace_ != 0)

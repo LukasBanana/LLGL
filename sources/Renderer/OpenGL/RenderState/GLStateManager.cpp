@@ -174,6 +174,7 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
     if (updateFrontFace)
         SetFrontFace(commonState_.frontFaceAct);
 
+    #if 0//TODO: replace this by graphics pipeline state
     /* Set logical operation */
     if (state.stateOpenGL.logicOp != LogicOp::Keep)
     {
@@ -185,6 +186,7 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
         else
             Disable(GLState::COLOR_LOGIC_OP);
     }
+    #endif
 
     /* Set line width */
     if (state.stateOpenGL.lineWidth > 0.0f)

@@ -228,9 +228,9 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.RasterizerState.FillMode              = D3D12Types::Map(desc.rasterizer.polygonMode);
     stateDesc.RasterizerState.CullMode              = D3D12Types::Map(desc.rasterizer.cullMode);
     stateDesc.RasterizerState.FrontCounterClockwise = (desc.rasterizer.frontCCW ? TRUE : FALSE);
-    stateDesc.RasterizerState.DepthBias             = desc.rasterizer.depthBias;
+    stateDesc.RasterizerState.DepthBias             = static_cast<INT>(desc.rasterizer.depthBiasConstantFactor);
     stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBiasClamp;
-    stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.slopeScaledDepthBias;
+    stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.depthBiasSlopeFactor;
     stateDesc.RasterizerState.DepthClipEnable       = (desc.rasterizer.depthClampEnabled ? FALSE : TRUE);
     #if 1//TODO: currently not supported
     stateDesc.RasterizerState.MultisampleEnable     = FALSE; //!!!

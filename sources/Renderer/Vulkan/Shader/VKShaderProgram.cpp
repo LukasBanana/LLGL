@@ -154,6 +154,8 @@ void VKShaderProgram::UnlockShaderUniform()
     // dummy
 }
 
+/* --- Extended functions --- */
+
 std::vector<VkPipelineShaderStageCreateInfo> VKShaderProgram::GetShaderStageCreateInfos() const
 {
     auto shaderCount = shaders_.size();
@@ -167,8 +169,17 @@ std::vector<VkPipelineShaderStageCreateInfo> VKShaderProgram::GetShaderStageCrea
 
 void VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const
 {
+    //todo...
+}
 
-
+bool VKShaderProgram::HasFragmentShader() const
+{
+    for (auto shader : shaders_)
+    {
+        if (shader->GetType() == ShaderType::Fragment)
+            return true;
+    }
+    return false;
 }
 
 

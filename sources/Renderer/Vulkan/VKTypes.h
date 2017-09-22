@@ -22,9 +22,16 @@ namespace VKTypes
 {
 
 
-VkShaderStageFlagBits Map( const ShaderType        shaderType        );
-VkFormat              Map( const VectorType        vectorType        );
-VkPrimitiveTopology   Map( const PrimitiveTopology primitiveTopology );
+VkShaderStageFlagBits   Map( const ShaderType        shaderType        );
+VkFormat                Map( const VectorType        vectorType        );
+VkPrimitiveTopology     Map( const PrimitiveTopology primitiveTopology );
+VkPolygonMode           Map( const PolygonMode       polygonMode       );
+VkCullModeFlags         Map( const CullMode          cullMode          );
+VkCompareOp             Map( const CompareOp         compareOp         );
+VkStencilOp             Map( const StencilOp         stencilOp         );
+VkLogicOp               Map( const LogicOp           logicOp           );
+VkBlendFactor           Map( const BlendOp           blendOp           );
+VkBlendOp               Map( const BlendArithmetic   blendArithmetic   );
 
 
 } // /namespace VKTypes

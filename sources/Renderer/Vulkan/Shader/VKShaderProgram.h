@@ -49,9 +49,13 @@ class VKShaderProgram : public ShaderProgram
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;
 
+        /* --- Extended functions --- */
+
         std::vector<VkPipelineShaderStageCreateInfo> GetShaderStageCreateInfos() const;
 
         void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
+
+        bool HasFragmentShader() const;
 
     private:
 

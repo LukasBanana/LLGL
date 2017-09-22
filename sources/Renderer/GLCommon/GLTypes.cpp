@@ -505,27 +505,26 @@ GLenum Map(const LogicOp logicOp)
     #ifdef LLGL_OPENGL
     switch (logicOp)
     {
-        case LogicOp::Keep:         break;
         case LogicOp::Disabled:     break;
         case LogicOp::Clear:        return GL_CLEAR;
         case LogicOp::Set:          return GL_SET;
         case LogicOp::Copy:         return GL_COPY;
-        case LogicOp::InvertedCopy: return GL_COPY_INVERTED;
-        case LogicOp::Noop:         return GL_NOOP;
+        case LogicOp::CopyInverted: return GL_COPY_INVERTED;
+        case LogicOp::NoOp:         return GL_NOOP;
         case LogicOp::Invert:       return GL_INVERT;
         case LogicOp::AND:          return GL_AND;
+        case LogicOp::ANDReverse:   return GL_AND_REVERSE;
+        case LogicOp::ANDInverted:  return GL_AND_INVERTED;
         case LogicOp::NAND:         return GL_NAND;
         case LogicOp::OR:           return GL_OR;
+        case LogicOp::ORReverse:    return GL_OR_REVERSE;
+        case LogicOp::ORInverted:   return GL_OR_INVERTED;
         case LogicOp::NOR:          return GL_NOR;
         case LogicOp::XOR:          return GL_XOR;
         case LogicOp::Equiv:        return GL_EQUIV;
-        case LogicOp::ReverseAND:   return GL_AND_REVERSE;
-        case LogicOp::InvertedAND:  return GL_AND_INVERTED;
-        case LogicOp::ReverseOR:    return GL_OR_REVERSE;
-        case LogicOp::InvertedOR:   return GL_OR_INVERTED;
     }
     #endif
-    MapFailed("RenderConditionMode");
+    MapFailed("LogicOp");
 }
 
 
