@@ -59,6 +59,16 @@ class VKRenderContext : public RenderContext
             return swapChainImages_.size();
         }
 
+        inline VkFramebuffer GetSwapChainFramebuffer() const
+        {
+            return swapChainFramebuffers_[presentImageIndex_].Get();
+        }
+
+        inline const VkExtent2D& GetSwapChainExtent() const
+        {
+            return swapChainExtent_;
+        }
+
     private:
 
         void CreateVkSurface();
@@ -72,6 +82,8 @@ class VKRenderContext : public RenderContext
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
         VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes) const;
         VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, uint32_t width, uint32_t height) const;
+
+        void AcquireNextPresentImage();
 
         /* ----- Common objects ----- */
 
@@ -88,6 +100,7 @@ class VKRenderContext : public RenderContext
         std::vector<VkImage>                swapChainImages_;
         std::vector<VKPtr<VkImageView>>     swapChainImageViews_;
         std::vector<VKPtr<VkFramebuffer>>   swapChainFramebuffers_;
+        uint32_t                            presentImageIndex_          = 0;
 
         VkQueue                             graphicsQueue_              = VK_NULL_HANDLE;
         VkQueue                             presentQueue_               = VK_NULL_HANDLE;

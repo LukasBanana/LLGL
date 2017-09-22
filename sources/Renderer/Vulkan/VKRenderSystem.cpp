@@ -248,7 +248,7 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
         throw std::runtime_error("cannot create graphics pipeline without a render context");
 
     auto renderContext = renderContexts_.begin()->get();
-    auto renderPassVK = renderContext->GetSwapChainRenderPass();
+    auto renderPassVK = renderContext->GetSwapChainRenderPass().Get();
 
     return TakeOwnership(graphicsPipelines_, MakeUnique<VKGraphicsPipeline>(device_, renderPassVK, desc));
 }

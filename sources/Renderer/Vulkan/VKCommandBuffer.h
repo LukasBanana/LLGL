@@ -120,9 +120,17 @@ class VKCommandBuffer : public CommandBuffer
 
         /* --- Extended functions --- */
 
-        inline VkCommandBuffer GetCommandBuffer(size_t idx) const
+        void SetPresentIndex(uint32_t idx);
+
+        void BeginCommandBuffer();
+        void EndCommandBuffer();
+
+        void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
+        void EndRenderPass();
+
+        inline VkCommandBuffer GetBufferObject() const
         {
-            return commandBufferList_[idx];
+            return commandBuffer_;
         }
 
     private:

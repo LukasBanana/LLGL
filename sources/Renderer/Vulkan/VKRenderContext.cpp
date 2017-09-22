@@ -44,19 +44,23 @@ VKRenderContext::VKRenderContext(
     CreateSwapChainRenderPass();
     CreateSwapChainFramebuffers(device);
     CreatePresentSemaphorse();
+    AcquireNextPresentImage();
 }
 
 void VKRenderContext::Present()
 {
-    /* Get next image for presentation */
-    uint32_t imageIndex;
-    vkAcquireNextImageKHR(device_, swapChain_, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore_, VK_NULL_HANDLE, &imageIndex);
+    if (!commandBuffer_)
+        throw std::runtime_error("no command buffer set to present render context");
+
+    /* End command buffer and render pass */
+    commandBuffer_->EndRenderPass();
+    commandBuffer_->EndCommandBuffer();
 
     /* Initialize semaphorse */
     VkSemaphore waitSemaphorse[] = { imageAvailableSemaphore_ };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     VkSemaphore signalSemaphorse[] = { renderFinishedSemaphore_ };
-    VkCommandBuffer commandBuffers[] = { commandBuffer_->GetCommandBuffer(imageIndex) };
+    VkCommandBuffer commandBuffers[] = { commandBuffer_->GetBufferObject() };
 
     /* Submit command buffer to graphics queue */
     VkSubmitInfo submitInfo;
@@ -85,11 +89,14 @@ void VKRenderContext::Present()
     presentInfo.pWaitSemaphores     = signalSemaphorse;
     presentInfo.swapchainCount      = 1;
     presentInfo.pSwapchains         = swapChains;
-    presentInfo.pImageIndices       = &imageIndex;
+    presentInfo.pImageIndices       = &presentImageIndex_;
     presentInfo.pResults            = nullptr;
 
     result = vkQueuePresentKHR(presentQueue_, &presentInfo);
     VKThrowIfFailed(result, "failed to present Vulkan graphics queue");
+
+    /* Get image index for next presentation */
+    AcquireNextPresentImage();
 }
 
 /* ----- Configuration ----- */
@@ -109,6 +116,7 @@ void VKRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
 void VKRenderContext::SetPresentCommandBuffer(VKCommandBuffer* commandBuffer)
 {
     commandBuffer_ = commandBuffer;
+    commandBuffer_->SetPresentIndex(presentImageIndex_);
 }
 
 
@@ -383,6 +391,12 @@ VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfa
         };
     }
     return surfaceCaps.currentExtent;
+}
+
+void VKRenderContext::AcquireNextPresentImage()
+{
+    /* Get next image for presentation */
+    vkAcquireNextImageKHR(device_, swapChain_, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore_, VK_NULL_HANDLE, &presentImageIndex_);
 }
 
 

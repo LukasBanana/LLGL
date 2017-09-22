@@ -7,6 +7,7 @@
 
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
+#include "RenderState/VKGraphicsPipeline.h"
 #include "../CheckedCast.h"
 
 
@@ -167,20 +168,26 @@ void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 
 void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
+    /* Get render context object */
     auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderContext);
-
-    const auto& renderPass = renderContextVK.GetSwapChainRenderPass();
-
     renderContextVK.SetPresentCommandBuffer(this);
 
-    //todo
+    /* Get swap chain objects */
+    auto renderPass = renderContextVK.GetSwapChainRenderPass().Get();
+    auto framebuffer = renderContextVK.GetSwapChainFramebuffer();
+
+    /* Begin command buffer and render pass */
+    BeginCommandBuffer();
+    BeginRenderPass(renderPass, framebuffer, renderContextVK.GetSwapChainExtent());
 }
+
 
 /* ----- Pipeline States ----- */
 
 void VKCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    //todo
+    auto& graphicsPipelineVK = LLGL_CAST(VKGraphicsPipeline&, graphicsPipeline);
+    vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineVK.Get());
 }
 
 void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
@@ -220,42 +227,42 @@ void VKCommandBuffer::EndRenderCondition()
 
 void VKCommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
 {
-    //todo
+    vkCmdDraw(commandBuffer_, numVertices, 1, firstVertex, 0);
 }
 
 void VKCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
 {
-    //todo
+    vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, 0, 0);
 }
 
 void VKCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
 {
-    //todo
+    vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, vertexOffset, 0);
 }
 
 void VKCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
 {
-    //todo
+    vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, 0);
 }
 
 void VKCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
 {
-    //todo
+    vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, instanceOffset);
 }
 
 void VKCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
 {
-    //todo
+    vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, 0, 0);
 }
 
 void VKCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
 {
-    //todo
+    vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
 void VKCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
 {
-    //todo
+    vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
@@ -270,6 +277,53 @@ void VKCommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY,
 void VKCommandBuffer::SyncGPU()
 {
     //todo
+}
+
+/* --- Extended functions --- */
+
+void VKCommandBuffer::SetPresentIndex(uint32_t idx)
+{
+    commandBuffer_ = commandBufferList_[idx];
+}
+
+void VKCommandBuffer::BeginCommandBuffer()
+{
+    VkCommandBufferBeginInfo beginInfo;
+
+    beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.pNext             = nullptr;
+    beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    beginInfo.pInheritanceInfo  = nullptr;
+
+    VkResult result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
+    VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
+}
+
+void VKCommandBuffer::EndCommandBuffer()
+{
+    VkResult result = vkEndCommandBuffer(commandBuffer_);
+    VKThrowIfFailed(result, "failed to end Vulkan command buffer");
+}
+
+void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
+{
+    VkRenderPassBeginInfo beginInfo;
+
+    beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    beginInfo.pNext             = nullptr;
+    beginInfo.renderPass        = renderPass;
+    beginInfo.framebuffer       = framebuffer;
+    beginInfo.renderArea.offset = { 0, 0 };
+    beginInfo.renderArea.extent = extent;
+    beginInfo.clearValueCount   = 1;
+    beginInfo.pClearValues      = (&clearValue_);
+
+    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void VKCommandBuffer::EndRenderPass()
+{
+    vkCmdEndRenderPass(commandBuffer_);
 }
 
 
@@ -293,9 +347,7 @@ void VKCommandBuffer::CreateCommandPool(uint32_t queueFamilyIndex)
 
 void VKCommandBuffer::CreateCommandBuffers(size_t bufferCount)
 {
-    /* Allocate command buffers */
-    commandBufferList_.resize(bufferCount);
-
+    /* Initialize command buffer descriptor */
     VkCommandBufferAllocateInfo allocInfo;
 
     allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -304,8 +356,13 @@ void VKCommandBuffer::CreateCommandBuffers(size_t bufferCount)
     allocInfo.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount    = static_cast<uint32_t>(bufferCount);
 
+    /* Allocate command buffers */
+    commandBufferList_.resize(bufferCount);
+
     VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferList_.data());
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
+
+    commandBuffer_ = commandBufferList_.front();
 }
 
 

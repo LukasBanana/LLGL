@@ -169,7 +169,31 @@ std::vector<VkPipelineShaderStageCreateInfo> VKShaderProgram::GetShaderStageCrea
 
 void VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const
 {
-    //todo...
+    createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
+
+    if (vertexBindingDescs_.empty())
+    {
+        createInfo.vertexBindingDescriptionCount    = 0;
+        createInfo.pVertexBindingDescriptions       = nullptr;
+    }
+    else
+    {
+        createInfo.vertexBindingDescriptionCount    = static_cast<uint32_t>(vertexBindingDescs_.size());
+        createInfo.pVertexBindingDescriptions       = vertexBindingDescs_.data();
+    }
+
+    if (vertexAttribDescs_.empty())
+    {
+        createInfo.vertexAttributeDescriptionCount  = 0;
+        createInfo.pVertexAttributeDescriptions     = nullptr;
+    }
+    else
+    {
+        createInfo.vertexAttributeDescriptionCount  = static_cast<uint32_t>(vertexAttribDescs_.size());
+        createInfo.pVertexAttributeDescriptions     = vertexAttribDescs_.data();
+    }
 }
 
 bool VKShaderProgram::HasFragmentShader() const

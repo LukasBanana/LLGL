@@ -74,6 +74,11 @@ class VKPtr
             return &object_;
         }
 
+        inline T Get() const
+        {
+            return object_;
+        }
+
         operator T () const
         {
             return object_;

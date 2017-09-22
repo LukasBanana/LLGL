@@ -27,6 +27,11 @@ class VKGraphicsPipeline : public GraphicsPipeline
 
         VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPass renderPass, const GraphicsPipelineDescriptor& desc);
 
+        inline VkPipeline Get() const
+        {
+            return pipeline_.Get();
+        }
+
     private:
 
         void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc);

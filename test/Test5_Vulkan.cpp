@@ -44,8 +44,6 @@ int main()
         // create command buffer
         auto commands = renderer->CreateCommandBuffer();
 
-        commands->SetClearColor({ 0.0f, 1.0f, 0.0f, 1.0f });
-
         // load shaders
         auto LoadSPIRVModule = [](const std::string& filename)
         {
@@ -104,11 +102,13 @@ int main()
 
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            commands->SetClearColor({ 0.0f, 1.0f, 0.0f, 1.0f });
+
             commands->SetRenderTarget(*context);
 
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
-
+            commands->SetGraphicsPipeline(*pipeline);
 
             context->Present();
         }

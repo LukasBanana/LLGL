@@ -61,8 +61,8 @@ class VKShaderProgram : public ShaderProgram
 
         std::vector<VKShader*>                          shaders_;
 
-        std::vector<VkVertexInputAttributeDescription>  vertexAttribDescs_;
         std::vector<VkVertexInputBindingDescription>    vertexBindingDescs_;
+        std::vector<VkVertexInputAttributeDescription>  vertexAttribDescs_;
 
 };
 
