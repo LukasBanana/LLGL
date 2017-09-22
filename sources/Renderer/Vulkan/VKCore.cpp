@@ -76,6 +76,11 @@ std::string VKApiVersionToString(uint32_t version)
     return std::to_string(versionBits.major) + "." + std::to_string(versionBits.minor) + "." + std::to_string(versionBits.patch);
 }
 
+VkBool32 VKBoolean(bool value)
+{
+    return (value ? VK_TRUE : VK_FALSE);
+}
+
 
 /* ----- Query Functions ----- */
 

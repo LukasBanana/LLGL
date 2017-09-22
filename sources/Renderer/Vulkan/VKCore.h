@@ -67,6 +67,10 @@ void VKThrowIfFailed(const VkResult errorCode, const std::string& info);
 // Converts the specified Vulkan API version into a string (e.g. "1.0.100").
 std::string VKApiVersionToString(uint32_t version);
 
+//! Converts the boolean value into a VkBool322 value.
+VkBool32 VKBoolean(bool value);
+
+
 
 /* ----- Query Functions ----- */
 

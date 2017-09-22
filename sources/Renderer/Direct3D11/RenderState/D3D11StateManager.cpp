@@ -20,7 +20,7 @@ D3D11StateManager::D3D11StateManager(ComPtr<ID3D11DeviceContext>& context) :
 
 void D3D11StateManager::SetViewports(unsigned int numViewports, const Viewport* viewportArray)
 {
-    /* Check (at compile time) if D3D11_VIEWPORT and Viewport structures can be safly reinterpret-casted */
+    /* Check if D3D11_VIEWPORT and Viewport structures can be safly reinterpret-casted */
     if ( sizeof(D3D11_VIEWPORT)             == sizeof(Viewport)             &&
          offsetof(D3D11_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
          offsetof(D3D11_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&

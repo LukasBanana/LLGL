@@ -29,9 +29,9 @@
 #include "Texture/VKSamplerArray.h"
 #include "Texture/VKRenderTarget.h"
 
-#include "RenderState/VKQuery.h"
+#include "RenderState/VKQuery.h"*/
 #include "RenderState/VKGraphicsPipeline.h"
-#include "RenderState/VKComputePipeline.h"*/
+//#include "RenderState/VKComputePipeline.h"
 
 #include <string>
 #include <memory>
@@ -164,8 +164,8 @@ class VKRenderSystem : public RenderSystem
         HWObjectContainer<VKRenderTarget>       renderTargets_;*/
         HWObjectContainer<VKShader>             shaders_;
         HWObjectContainer<VKShaderProgram>      shaderPrograms_;
-        /*HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
-        HWObjectContainer<VKComputePipeline>    computePipelines_;
+        HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
+        /*HWObjectContainer<VKComputePipeline>    computePipelines_;
         HWObjectContainer<VKQuery>              queries_;*/
 
 };

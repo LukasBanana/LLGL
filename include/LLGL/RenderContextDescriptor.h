@@ -13,6 +13,7 @@
 #include "Types.h"
 #include "GraphicsPipelineFlags.h"
 #include <functional>
+#include <cstdint>
 
 
 namespace LLGL
@@ -70,9 +71,9 @@ enum class SwapChainMode
 //! Vertical-synchronization (Vsync) descriptor structure.
 struct VsyncDescriptor
 {
-    bool            enabled     = false;    //!< Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
-    unsigned int    refreshRate = 60;       //!< Refresh rate (in Hz). By default 60.
-    unsigned int    interval    = 1;        //!< Synchronisation interval. Can be 1, 2, 3, or 4. If Vsync is disabled, this value is implicit zero.
+    bool        enabled     = false;    //!< Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
+    uint32_t    refreshRate = 60;       //!< Refresh rate (in Hz). By default 60.
+    uint32_t    interval    = 1;        //!< Synchronisation interval. Can be 1, 2, 3, or 4. If Vsync is disabled, this value is implicit zero.
 };
 
 //! Video mode descriptor structure.

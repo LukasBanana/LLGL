@@ -10,7 +10,7 @@
 
 
 #include "../../DXCommon/ComPtr.h"
-#include <LLGL/RenderContextFlags.h>
+#include <LLGL/GraphicsPipelineFlags.h>
 #include <vector>
 #include <d3d11.h>
 

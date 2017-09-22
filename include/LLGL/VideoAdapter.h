@@ -12,6 +12,7 @@
 #include "Export.h"
 #include <vector>
 #include <string>
+#include <cstdint>
 
 
 namespace LLGL
@@ -23,9 +24,9 @@ namespace LLGL
 //! Video display mode structure.
 struct VideoDisplayMode
 {
-    unsigned int width          = 0; //!< Display resolution width (in pixels).
-    unsigned int height         = 0; //!< Display resolution height (in pixels).
-    unsigned int refreshRate    = 0; //!< Refresh reate (in Hz).
+    uint32_t width          = 0; //!< Display resolution width (in pixels).
+    uint32_t height         = 0; //!< Display resolution height (in pixels).
+    uint32_t refreshRate    = 0; //!< Refresh reate (in Hz).
 };
 
 //! Video output structure.
@@ -39,7 +40,7 @@ struct VideoAdapterDescriptor
 {
     std::wstring                name;               //!< Hardware adapter name (name of the GPU).
     std::string                 vendor;             //!< Vendor name.
-    unsigned long long          videoMemory = 0;    //!< Video memory size (in bytes).
+    uint64_t                    videoMemory = 0;    //!< Video memory size (in bytes).
     std::vector<VideoOutput>    outputs;            //!< Adapter outputs.
 };
 

@@ -205,6 +205,64 @@ enum class CullMode
 
 /* ----- Structures ----- */
 
+/**
+\brief Viewport dimensions.
+\remarks A viewport is in screen coordinates where the origin is in the left-top corner.
+*/
+struct Viewport
+{
+    Viewport() = default;
+    Viewport(const Viewport&) = default;
+    
+    inline Viewport(float x, float y, float width, float height) :
+        x      { x      },
+        y      { y      },
+        width  { width  },
+        height { height }
+    {
+    }
+    
+    inline Viewport(float x, float y, float width, float height, float minDepth, float maxDepth) :
+        x        { x        },
+        y        { y        },
+        width    { width    },
+        height   { height   },
+        minDepth { minDepth },
+        maxDepth { maxDepth }
+    {
+    }
+
+    float x         = 0.0f; //!< Left-top X coordinate.
+    float y         = 0.0f; //!< Left-top Y coordinate.
+    float width     = 0.0f; //!< Right-bottom width.
+    float height    = 0.0f; //!< Right-bottom height.
+    float minDepth  = 0.0f; //!< Minimal depth range.
+    float maxDepth  = 1.0f; //!< Maximal depth range.
+};
+
+/**
+\brief Scissor dimensions.
+\remarks A scissor is in screen coordinates where the origin is in the left-top corner.
+*/
+struct Scissor
+{
+    Scissor() = default;
+    Scissor(const Scissor&) = default;
+
+    inline Scissor(int32_t x, int32_t y, int32_t width, int32_t height) :
+        x      { x      },
+        y      { y      },
+        width  { width  },
+        height { height }
+    {
+    }
+
+    int32_t x       = 0;
+    int32_t y       = 0;
+    int32_t width   = 0;
+    int32_t height  = 0;
+};
+
 //! Multi-sampling descriptor structure.
 struct MultiSamplingDescriptor
 {
@@ -310,8 +368,14 @@ struct RasterizerDescriptor
 
     //! Polygon face culling mode. By default CullMode::Disabled.
     CullMode                cullMode                    = CullMode::Disabled;
+
+    //! \todo DOCUMENT ME!
     int                     depthBias                   = 0;
+
+    //! \todo DOCUMENT ME!
     float                   depthBiasClamp              = 0.0f;
+
+    //! \todo DOCUMENT ME!
     float                   slopeScaledDepthBias        = 0.0f;
 
     //! (Multi-)sampling descriptor.
@@ -401,6 +465,15 @@ struct GraphicsPipelineDescriptor
     \see PrimitiveTopology
     */
     PrimitiveTopology       primitiveTopology   = PrimitiveTopology::TriangleList;
+
+    //! Specifies the viewport list. If empty, the render context resolution is used as single viewport.
+    std::vector<Viewport>   viewports;
+
+    /**
+    \brief Specifies the scissor list. If empty, the render context resolution is used as single scissor.
+    \remarks The number of elements in this list will be resized to the number of viewports, when a graphics pipeline is created.
+    */
+    std::vector<Scissor>    scissors;
 
     //! Specifies the depth state descriptor.
     DepthDescriptor         depth;

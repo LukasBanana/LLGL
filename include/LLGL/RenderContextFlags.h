@@ -86,64 +86,6 @@ struct ClearFlags
 };
 
 /**
-\brief Viewport dimensions.
-\remarks A viewport is in screen coordinates where the origin is in the left-top corner.
-*/
-struct Viewport
-{
-    Viewport() = default;
-    Viewport(const Viewport&) = default;
-    
-    inline Viewport(float x, float y, float width, float height) :
-        x      { x      },
-        y      { y      },
-        width  { width  },
-        height { height }
-    {
-    }
-    
-    inline Viewport(float x, float y, float width, float height, float minDepth, float maxDepth) :
-        x        { x        },
-        y        { y        },
-        width    { width    },
-        height   { height   },
-        minDepth { minDepth },
-        maxDepth { maxDepth }
-    {
-    }
-
-    float x         = 0.0f; //!< Left-top X coordinate.
-    float y         = 0.0f; //!< Left-top Y coordinate.
-    float width     = 0.0f; //!< Right-bottom width.
-    float height    = 0.0f; //!< Right-bottom height.
-    float minDepth  = 0.0f; //!< Minimal depth range.
-    float maxDepth  = 1.0f; //!< Maximal depth range.
-};
-
-/**
-\brief Scissor dimensions.
-\remarks A scissor is in screen coordinates where the origin is in the left-top corner.
-*/
-struct Scissor
-{
-    Scissor() = default;
-    Scissor(const Scissor&) = default;
-
-    inline Scissor(int x, int y, int width, int height) :
-        x      { x      },
-        y      { y      },
-        width  { width  },
-        height { height }
-    {
-    }
-
-    int x       = 0;
-    int y       = 0;
-    int width   = 0;
-    int height  = 0;
-};
-
-/**
 \brief Low-level graphics API dependent state descriptor union.
 \remarks This descriptor is used to compensate a few differences between OpenGL and Direct3D.
 \see RenderContext::SetGraphicsAPIDependentState
@@ -191,6 +133,7 @@ union GraphicsAPIDependentStateDescriptor
     }
     stateOpenGL;
 
+    //! \todo Remove this as soon as SetViewport and SetScissor are replaced by graphics pipeline states.
     struct StateDirect3D12Descriptor
     {
         /**

@@ -219,7 +219,8 @@ void VKRenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return nullptr;//todo
+    //return TakeOwnership(graphicsPipelines_, MakeUnique<VKGraphicsPipeline>(device_, , desc));
+    return nullptr;
 }
 
 ComputePipeline* VKRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)

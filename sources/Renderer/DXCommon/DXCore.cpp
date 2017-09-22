@@ -303,7 +303,7 @@ VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
 
     videoAdapterDesc.name           = std::wstring(desc.Description);
     videoAdapterDesc.vendor         = GetVendorByID(desc.VendorId);
-    videoAdapterDesc.videoMemory    = desc.DedicatedVideoMemory;
+    videoAdapterDesc.videoMemory    = static_cast<uint64_t>(desc.DedicatedVideoMemory);
 
     /* Enumerate over all adapter outputs */
     for (UINT j = 0; adapter->EnumOutputs(j, &output) != DXGI_ERROR_NOT_FOUND; ++j)
