@@ -246,24 +246,24 @@ std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixel
 void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc)
 {
     if (desc.type < BufferType::Vertex || desc.type > BufferType::StreamOutput)
-        throw std::invalid_argument("can not create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
+        throw std::invalid_argument("cannot create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
 }
 
 static void AssertCreateResourceArrayCommon(unsigned int numResources, void* const * resourceArray, const std::string& resourceName)
 {
     /* Validate number of buffers */
     if (numResources == 0)
-        throw std::invalid_argument("can not create " + resourceName + " array with zero " + resourceName + "s");
+        throw std::invalid_argument("cannot create " + resourceName + " array with zero " + resourceName + "s");
 
     /* Validate array pointer */
     if (resourceArray == nullptr)
-        throw std::invalid_argument("can not create " + resourceName + " array with invalid array pointer");
+        throw std::invalid_argument("cannot create " + resourceName + " array with invalid array pointer");
     
     /* Validate pointers in array */
     for (unsigned int i = 0; i < numResources; ++i)
     {
         if (resourceArray[i] == nullptr)
-            throw std::invalid_argument("can not create " + resourceName + " array with invalid pointer in array");
+            throw std::invalid_argument("cannot create " + resourceName + " array with invalid pointer in array");
     }
 }
 
@@ -277,7 +277,7 @@ void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* cons
     for (unsigned int i = 1; i < numBuffers; ++i)
     {
         if (bufferArray[i]->GetType() != refType)
-            throw std::invalid_argument("can not create buffer array with type mismatch");
+            throw std::invalid_argument("cannot create buffer array with type mismatch");
     }
 
     /* Validate buffer array type */

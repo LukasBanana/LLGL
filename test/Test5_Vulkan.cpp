@@ -77,6 +77,19 @@ int main()
 
         shaderProgram->LinkShaders();
 
+        // create graphics pipeline
+        LLGL::GraphicsPipelineDescriptor pipelineDesc;
+
+        const auto resolution = contextDesc.videoMode.resolution;
+        const auto viewportSize = resolution.Cast<float>();
+
+        pipelineDesc.shaderProgram = shaderProgram;
+        pipelineDesc.viewports.push_back(LLGL::Viewport(0.0f, 0.0f, viewportSize.x, viewportSize.y));
+        pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, resolution.x, resolution.y));
+        pipelineDesc.blend.targets.push_back({});
+
+        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
         const auto& caps = renderer->GetRenderingCaps();

@@ -135,7 +135,7 @@ If this is less than 2, no multi-threading is used. If this is 'maxThreadCount',
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
-\remarks Compressed images and depth-stencil images can not be converted.
+\remarks Compressed images and depth-stencil images cannot be converted.
 \throw std::invalid_argument If a compressed image format is specified either as source or destination,
 if a depth-stencil format is specified either as source or destination,
 if the source buffer size is not a multiple of the source data type size times the image format size,

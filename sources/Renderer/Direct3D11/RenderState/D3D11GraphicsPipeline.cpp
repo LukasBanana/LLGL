@@ -31,7 +31,7 @@ D3D11GraphicsPipeline::D3D11GraphicsPipeline(
     GetShaderObjects(*shaderProgramD3D);
 
     //if (!shaderProgramD3D->GetInputLayout())
-    //    throw std::runtime_error("can not create graphics pipeline while shader program has no D3D11 input layout");
+    //    throw std::runtime_error("cannot create graphics pipeline while shader program has no D3D11 input layout");
 
     inputLayout_ = shaderProgramD3D->GetInputLayout();
 

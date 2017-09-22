@@ -55,7 +55,7 @@ void D3D12RenderContext::Present()
 {
     /* Get command list from command buffer object */
     if (!commandBuffer_)
-        throw std::runtime_error("can not present framebuffer without D3D12 command allocator and/or command list");
+        throw std::runtime_error("cannot present framebuffer without D3D12 command allocator and/or command list");
 
     auto commandList = commandBuffer_->GetCommandList();
 

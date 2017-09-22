@@ -14,10 +14,30 @@
 #include "../../Core/Vendor.h"
 #include "../GLCommon/GLTypes.h"
 #include "VKCore.h"
+#include <LLGL/Log.h>
 
 
 namespace LLGL
 {
+
+
+/* ----- Internal functions ----- */
+
+static VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* createInfo, const VkAllocationCallbacks* allocator, VkDebugReportCallbackEXT* callback)
+{
+    auto func = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
+    if (func != nullptr)
+        return func(instance, createInfo, allocator, callback);
+    else
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+}
+
+static void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* allocator)
+{
+    auto func = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
+    if (func != nullptr)
+        func(instance, callback, allocator);
+}
 
 
 /* ----- Common ----- */
@@ -28,8 +48,9 @@ static const std::vector<const char*> g_deviceExtensions
 };
 
 VKRenderSystem::VKRenderSystem() :
-    instance_ { vkDestroyInstance },
-    device_   { vkDestroyDevice   }
+    instance_            { vkDestroyInstance                        },
+    device_              { vkDestroyDevice                          },
+    debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
 {
     //TODO: get application descriptor from client programmer
     ApplicationDescriptor appDesc;
@@ -37,6 +58,10 @@ VKRenderSystem::VKRenderSystem() :
     appDesc.applicationVersion  = 1;
     appDesc.engineName          = "LLGL";
     appDesc.engineVersion       = 1;
+
+    #ifdef LLGL_DEBUG
+    debugLayerEnabled_ = true;
+    #endif
 
     CreateInstance(appDesc);
     LoadExtensions();
@@ -219,8 +244,13 @@ void VKRenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    //return TakeOwnership(graphicsPipelines_, MakeUnique<VKGraphicsPipeline>(device_, , desc));
-    return nullptr;
+    if (renderContexts_.empty())
+        throw std::runtime_error("cannot create graphics pipeline without a render context");
+
+    auto renderContext = renderContexts_.begin()->get();
+    auto renderPassVK = renderContext->GetSwapChainRenderPass();
+
+    return TakeOwnership(graphicsPipelines_, MakeUnique<VKGraphicsPipeline>(device_, renderPassVK, desc));
 }
 
 ComputePipeline* VKRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -230,7 +260,7 @@ ComputePipeline* VKRenderSystem::CreateComputePipeline(const ComputePipelineDesc
 
 void VKRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 {
-    //todo
+    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
 }
 
 void VKRenderSystem::Release(ComputePipeline& computePipeline)
@@ -321,6 +351,35 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
     /* Create Vulkan instance */
     VkResult result = vkCreateInstance(&instanceInfo, nullptr, instance_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan instance");
+
+    if (debugLayerEnabled_)
+        CreateDebugReportCallback();
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
+    VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType,
+    uint64_t object, size_t location, int32_t messageCode,
+    const char* layerPrefix, const char* message, void* userData)
+{
+    //auto renderSystemVK = reinterpret_cast<VKRenderSystem*>(userData);
+    Log::StdErr() << message << std::endl;
+    return VK_FALSE;
+}
+
+void VKRenderSystem::CreateDebugReportCallback()
+{
+    /* Initialize debug report callback descriptor */
+    VkDebugReportCallbackCreateInfoEXT createInfo;
+
+    createInfo.sType        = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+    createInfo.pNext        = nullptr;
+    createInfo.flags        = 0;
+    createInfo.pfnCallback  = VKDebugCallback;
+    createInfo.pUserData    = reinterpret_cast<void*>(this);
+
+    /* Create report callback */
+    VkResult result = CreateDebugReportCallbackEXT(instance_, &createInfo, nullptr, debugReportCallback_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan debug report callback");
 }
 
 void VKRenderSystem::LoadExtensions()
@@ -454,7 +513,7 @@ void VKRenderSystem::CreateLogicalDevice()
 
 bool VKRenderSystem::IsLayerRequired(const std::string& name) const
 {
-    return false;
+    return (name == "VK_LAYER_NV_optimus");
 }
 
 bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
@@ -468,6 +527,7 @@ bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
         #ifdef LLGL_OS_LINUX
         || name == VK_KHR_XLIB_SURFACE_EXTENSION_NAME
         #endif
+        || (debugLayerEnabled_ && name == VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
     );
 }
 

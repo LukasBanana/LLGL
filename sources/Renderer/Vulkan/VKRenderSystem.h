@@ -133,6 +133,7 @@ class VKRenderSystem : public RenderSystem
     private:
 
         void CreateInstance(const ApplicationDescriptor& appDesc);
+        void CreateDebugReportCallback();
         void LoadExtensions();
         bool PickPhysicalDevice();
         void QueryDeviceProperties();
@@ -146,10 +147,13 @@ class VKRenderSystem : public RenderSystem
         /* ----- Common objects ----- */
 
         VKPtr<VkInstance>                       instance_;
-        VkPhysicalDevice                        physicalDevice_     = VK_NULL_HANDLE;
+        VkPhysicalDevice                        physicalDevice_         = VK_NULL_HANDLE;
         VKPtr<VkDevice>                         device_;
+        VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 
         QueueFamilyIndices                      queueFamilyIndices_;
+
+        bool                                    debugLayerEnabled_      = false;
 
         /* ----- Hardware object containers ----- */
 

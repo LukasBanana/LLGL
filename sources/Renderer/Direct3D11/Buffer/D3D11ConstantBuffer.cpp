@@ -56,7 +56,7 @@ void D3D11ConstantBuffer::UpdateSubresource(ID3D11DeviceContext* context, const 
         if (dataSize == bufferSize_)
             D3D11Buffer::UpdateSubresource(context, data);
         else
-            throw std::out_of_range(LLGL_ASSERT_INFO("can not update D3D11 buffer partially when it is created with static usage"));
+            throw std::out_of_range(LLGL_ASSERT_INFO("cannot update D3D11 buffer partially when it is created with static usage"));
     }
 }
 

@@ -538,9 +538,9 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     LLGL_ASSERT_PTR(srcBuffer);
 
     if (IsCompressedFormat(srcFormat) || IsCompressedFormat(dstFormat))
-        throw std::invalid_argument("can not convert compressed image formats");
+        throw std::invalid_argument("cannot convert compressed image formats");
     if (IsDepthStencilFormat(srcFormat) || IsDepthStencilFormat(dstFormat))
-        throw std::invalid_argument("can not convert depth-stencil image formats");
+        throw std::invalid_argument("cannot convert depth-stencil image formats");
     if (srcBufferSize % (DataTypeSize(srcDataType) * ImageFormatSize(srcFormat)) != 0)
         throw std::invalid_argument("source buffer size is not a multiple of the source data type size");
 

@@ -134,7 +134,7 @@ enum class CompareOp
     Greater,        //!< Comparison passes if the source data is greater than the right-hand-side.
     NotEqual,       //!< Comparison passes if the source data is not equal to the right-hand-side.
     GreaterEqual,   //!< Comparison passes if the source data is greater than or equal to the right-hand-side.
-    Ever,           //!< Comparison always passes. (Can not be called "Always" due to conflict with X11 lib on Linux).
+    Ever,           //!< Comparison always passes. (Cannot be called "Always" due to conflict with X11 lib on Linux).
 };
 
 //! Stencil operations enumeration.

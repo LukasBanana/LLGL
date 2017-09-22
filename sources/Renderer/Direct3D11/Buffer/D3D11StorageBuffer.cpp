@@ -21,7 +21,7 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
     D3D11Buffer { BufferType::Storage }
 {
     if (desc.storageBuffer.stride == 0)
-        throw std::invalid_argument("storage buffer stride can not be zero for a D3D11 resource view");
+        throw std::invalid_argument("storage buffer stride cannot be zero for a D3D11 resource view");
 
     storageType_ = desc.storageBuffer.storageType;
 
