@@ -102,13 +102,15 @@ int main()
 
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
-            commands->SetClearColor({ 0.0f, 1.0f, 0.0f, 1.0f });
+            commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
 
             commands->SetRenderTarget(*context);
 
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             commands->SetGraphicsPipeline(*pipeline);
+
+            commands->Draw(3, 0);
 
             context->Present();
         }
