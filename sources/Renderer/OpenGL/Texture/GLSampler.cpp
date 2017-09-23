@@ -44,7 +44,7 @@ void GLSampler::SetDesc(const SamplerDescriptor& desc)
     glSamplerParameterf(id_, GL_TEXTURE_LOD_BIAS, desc.mipMapLODBias);
 
     /* Set compare operation */
-    if (desc.depthCompare)
+    if (desc.compareEnabled)
     {
         glSamplerParameteri(id_, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
         glSamplerParameteri(id_, GL_TEXTURE_COMPARE_FUNC, Map(desc.compareOp));

@@ -188,22 +188,22 @@ void VKRenderSystem::GenerateMips(Texture& texture)
 
 Sampler* VKRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(samplers_, MakeUnique<VKSampler>(device_, desc));
 }
 
 SamplerArray* VKRenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
 {
-    return nullptr;//todo
+    return TakeOwnership(samplerArrays_, MakeUnique<VKSamplerArray>(numSamplers, samplerArray));
 }
 
 void VKRenderSystem::Release(Sampler& sampler)
 {
-    //todo
+    RemoveFromUniqueSet(samplers_, &sampler);
 }
 
 void VKRenderSystem::Release(SamplerArray& samplerArray)
 {
-    //todo
+    RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Render Targets ----- */

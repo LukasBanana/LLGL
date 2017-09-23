@@ -8,6 +8,8 @@
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 #include "RenderState/VKGraphicsPipeline.h"
+#include "Texture/VKSampler.h"
+#include "Texture/VKSamplerArray.h"
 #include "../CheckedCast.h"
 
 
@@ -21,6 +23,11 @@ VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, size_t bufferCou
 {
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
     CreateCommandBuffers(bufferCount);
+}
+
+VKCommandBuffer::~VKCommandBuffer()
+{
+    vkFreeCommandBuffers(device_, commandPool_, static_cast<uint32_t>(commandBufferList_.size()), commandBufferList_.data());
 }
 
 /* ----- Configuration ----- */

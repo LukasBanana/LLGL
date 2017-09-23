@@ -39,6 +39,8 @@ int main()
         }
         auto window = std::shared_ptr<LLGL::Window>(std::move(LLGL::Window::Create(windowDesc)));
 
+        window->SetTitle(L"LLGL Vulkan Test");
+
         auto context = renderer->CreateRenderContext(contextDesc, window);
 
         // create command buffer

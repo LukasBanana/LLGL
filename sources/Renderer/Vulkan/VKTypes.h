@@ -13,6 +13,7 @@
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/Format.h>
+#include <LLGL/SamplerFlags.h>
 
 
 namespace LLGL
@@ -32,6 +33,7 @@ VkStencilOp             Map( const StencilOp         stencilOp         );
 VkLogicOp               Map( const LogicOp           logicOp           );
 VkBlendFactor           Map( const BlendOp           blendOp           );
 VkBlendOp               Map( const BlendArithmetic   blendArithmetic   );
+VkSamplerAddressMode    Map( const TextureWrap       textureWrap       );
 
 
 } // /namespace VKTypes

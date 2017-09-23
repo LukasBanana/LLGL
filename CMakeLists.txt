@@ -219,6 +219,7 @@ file(GLOB FilesRendererVK					${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
 file(GLOB FilesRendererVKExt				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Ext/*.*)
 file(GLOB FilesRendererVKRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/RenderState/*.*)
 file(GLOB FilesRendererVKShader				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Shader/*.*)
+file(GLOB FilesRendererVKTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Texture/*.*)
 
 # Direct3D common renderer files
 file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
@@ -291,6 +292,7 @@ source_group("Sources\\Vulkan" FILES ${FilesRendererVK})
 source_group("Sources\\Vulkan\\Ext" FILES ${FilesRendererVKExt})
 source_group("Sources\\Vulkan\\RenderState" FILES ${FilesRendererVKRenderState})
 source_group("Sources\\Vulkan\\Shader" FILES ${FilesRendererVKShader})
+source_group("Sources\\Vulkan\\Texture" FILES ${FilesRendererVKTexture})
 
 source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
@@ -359,6 +361,7 @@ set(
 	${FilesRendererVKExt}
 	${FilesRendererVKRenderState}
 	${FilesRendererVKShader}
+	${FilesRendererVKTexture}
 )
 
 set(

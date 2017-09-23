@@ -206,6 +206,19 @@ VkBlendOp Map(const BlendArithmetic blendArithmetic)
     MapFailed("BlendArithmetic", "VkBlendOp");
 }
 
+VkSamplerAddressMode Map(const TextureWrap textureWrap)
+{
+    switch (textureWrap)
+    {
+        case TextureWrap::Repeat:       return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        case TextureWrap::Mirror:       return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case TextureWrap::Clamp:        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case TextureWrap::Border:       return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        case TextureWrap::MirrorOnce:   return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+    }
+    MapFailed("TextureWrap", "VkSamplerAddressMode");
+}
+
 
 } // /namespace VKTypes
 

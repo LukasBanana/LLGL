@@ -17,19 +17,19 @@
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 
-/*#include "Buffer/VKBuffer.h"
-#include "Buffer/VKBufferArray.h"*/
+//#include "Buffer/VKBuffer.h"
+//#include "Buffer/VKBufferArray.h"
 
 #include "Shader/VKShader.h"
 #include "Shader/VKShaderProgram.h"
 
-/*#include "Texture/VKTexture.h"
-#include "Texture/VKTextureArray.h"
+//#include "Texture/VKTexture.h"
+//#include "Texture/VKTextureArray.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
-#include "Texture/VKRenderTarget.h"
+//#include "Texture/VKRenderTarget.h"
 
-#include "RenderState/VKQuery.h"*/
+//#include "RenderState/VKQuery.h"
 #include "RenderState/VKGraphicsPipeline.h"
 //#include "RenderState/VKComputePipeline.h"
 
@@ -162,10 +162,10 @@ class VKRenderSystem : public RenderSystem
         /*HWObjectContainer<VKBuffer>             buffers_;
         HWObjectContainer<VKBufferArray>        bufferArrays_;
         HWObjectContainer<VKTexture>            textures_;
-        HWObjectContainer<VKTextureArray>       textureArrays_;
+        HWObjectContainer<VKTextureArray>       textureArrays_;*/
         HWObjectContainer<VKSampler>            samplers_;
         HWObjectContainer<VKSamplerArray>       samplerArrays_;
-        HWObjectContainer<VKRenderTarget>       renderTargets_;*/
+        //HWObjectContainer<VKRenderTarget>       renderTargets_;
         HWObjectContainer<VKShader>             shaders_;
         HWObjectContainer<VKShaderProgram>      shaderPrograms_;
         HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;

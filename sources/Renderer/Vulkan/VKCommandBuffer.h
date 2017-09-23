@@ -29,6 +29,7 @@ class VKCommandBuffer : public CommandBuffer
         /* ----- Common ----- */
 
         VKCommandBuffer(const VKPtr<VkDevice>& device, size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices);
+        ~VKCommandBuffer();
 
         /* ----- Configuration ----- */
 

@@ -21,6 +21,7 @@
 #include <sstream>
 #include <iomanip>
 #include <functional>
+#include <cstdint>
 
 
 namespace LLGL
@@ -153,7 +154,7 @@ std::string ToHex(T value)
 'resourceArray' is points to the location after the last entry, and 'numResources' is 0.
 */
 template <typename TSub, typename TBase>
-TSub* NextArrayResource(unsigned int& numResources, TBase* const * & resourceArray)
+TSub* NextArrayResource(uint32_t& numResources, TBase* const * & resourceArray)
 {
     if (numResources > 0)
     {
