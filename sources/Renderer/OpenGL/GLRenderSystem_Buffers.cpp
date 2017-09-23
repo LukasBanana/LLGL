@@ -27,6 +27,8 @@ static GLenum GetGLBufferUsage(long flags)
 
 Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
+    AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<GLsizeiptr>::max()));
+
     /* Create either base of sub-class GLBuffer object */
     switch (desc.type)
     {
@@ -36,7 +38,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             auto bufferGL = MakeUnique<GLVertexBuffer>();
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, desc.size, GetGLBufferUsage(desc.flags));
+                bufferGL->BufferData(initialData, static_cast<GLsizeiptr>(desc.size), GetGLBufferUsage(desc.flags));
                 bufferGL->BuildVertexArray(desc.vertexBuffer.format);
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
@@ -49,7 +51,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             auto bufferGL = MakeUnique<GLIndexBuffer>(desc.indexBuffer.format);
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, desc.size, GetGLBufferUsage(desc.flags));
+                bufferGL->BufferData(initialData, static_cast<GLsizeiptr>(desc.size), GetGLBufferUsage(desc.flags));
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
         }
@@ -61,7 +63,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             auto bufferGL = MakeUnique<GLBuffer>(desc.type);
             {
                 GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, desc.size, GetGLBufferUsage(desc.flags));
+                bufferGL->BufferData(initialData, static_cast<GLsizeiptr>(desc.size), GetGLBufferUsage(desc.flags));
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
         }

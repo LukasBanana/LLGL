@@ -184,12 +184,12 @@ file(GLOB FilesRendererGLCommonTexture		${PROJECT_SOURCE_DIR}/sources/Renderer/G
 
 # OpenGL renderer files
 file(GLOB FilesRendererGL					${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/*.*)
-file(GLOB FilesRendererGLShader				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
-file(GLOB FilesRendererGLExt				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Ext/*.*)
 file(GLOB FilesRendererGLBuffer				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Buffer/*.*)
-file(GLOB FilesRendererGLTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/*.*)
-file(GLOB FilesRendererGLRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/RenderState/*.*)
+file(GLOB FilesRendererGLExt				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Ext/*.*)
 file(GLOB FilesRendererGLPlatformBase		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/*.*)
+file(GLOB FilesRendererGLRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/RenderState/*.*)
+file(GLOB FilesRendererGLShader				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Shader/*.*)
+file(GLOB FilesRendererGLTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Texture/*.*)
 
 if(WIN32)
 	file(GLOB FilesRendererGLPlatform		${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGL/Platform/Win32/*.*)
@@ -216,6 +216,7 @@ file(GLOB FilesRendererGLES3				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES3
 
 # Vulkan renderer files
 file(GLOB FilesRendererVK					${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
+file(GLOB FilesRendererVKBuffer				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Buffer/*.*)
 file(GLOB FilesRendererVKExt				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Ext/*.*)
 file(GLOB FilesRendererVKRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/RenderState/*.*)
 file(GLOB FilesRendererVKShader				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Shader/*.*)
@@ -226,17 +227,17 @@ file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXComm
 
 # Direct3D12 renderer files
 file(GLOB FilesRendererD3D12				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/*.*)
-file(GLOB FilesRendererD3D12Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/*.*)
 file(GLOB FilesRendererD3D12Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Buffer/*.*)
-file(GLOB FilesRendererD3D12Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Texture/*.*)
 file(GLOB FilesRendererD3D12RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/RenderState/*.*)
+file(GLOB FilesRendererD3D12Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Shader/*.*)
+file(GLOB FilesRendererD3D12Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D12/Texture/*.*)
 
 # Direct3D11 renderer files
 file(GLOB FilesRendererD3D11				${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/*.*)
-file(GLOB FilesRendererD3D11Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/*.*)
 file(GLOB FilesRendererD3D11Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Buffer/*.*)
-file(GLOB FilesRendererD3D11Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Texture/*.*)
 file(GLOB FilesRendererD3D11RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/RenderState/*.*)
+file(GLOB FilesRendererD3D11Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/*.*)
+file(GLOB FilesRendererD3D11Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Texture/*.*)
 
 # Vulkan renderer files
 #file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
@@ -289,6 +290,7 @@ source_group("Sources\\OpenGL\\Texture" FILES ${FilesRendererGLTexture})
 source_group("Sources\\OpenGLES3" FILES ${FilesRendererGLES3})
 
 source_group("Sources\\Vulkan" FILES ${FilesRendererVK})
+source_group("Sources\\Vulkan\\Buffer" FILES ${FilesRendererVKBuffer})
 source_group("Sources\\Vulkan\\Ext" FILES ${FilesRendererVKExt})
 source_group("Sources\\Vulkan\\RenderState" FILES ${FilesRendererVKRenderState})
 source_group("Sources\\Vulkan\\Shader" FILES ${FilesRendererVKShader})
@@ -298,15 +300,15 @@ source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
 source_group("Sources\\Direct3D11" FILES ${FilesRendererD3D11})
 source_group("Sources\\Direct3D11\\Buffer" FILES ${FilesRendererD3D11Buffer})
+source_group("Sources\\Direct3D11\\RenderState" FILES ${FilesRendererD3D11RenderState})
 source_group("Sources\\Direct3D11\\Shader" FILES ${FilesRendererD3D11Shader})
 source_group("Sources\\Direct3D11\\Texture" FILES ${FilesRendererD3D11Texture})
-source_group("Sources\\Direct3D11\\RenderState" FILES ${FilesRendererD3D11RenderState})
 
 source_group("Sources\\Direct3D12" FILES ${FilesRendererD3D12})
-source_group("Sources\\Direct3D12\\Shader" FILES ${FilesRendererD3D12Shader})
 source_group("Sources\\Direct3D12\\Buffer" FILES ${FilesRendererD3D12Buffer})
-source_group("Sources\\Direct3D12\\Texture" FILES ${FilesRendererD3D12Texture})
 source_group("Sources\\Direct3D12\\RenderState" FILES ${FilesRendererD3D12RenderState})
+source_group("Sources\\Direct3D12\\Shader" FILES ${FilesRendererD3D12Shader})
+source_group("Sources\\Direct3D12\\Texture" FILES ${FilesRendererD3D12Texture})
 
 
 # === Include directories ===
@@ -337,15 +339,15 @@ endif()
 set(
 	FilesGL
 	${FilesRendererGL}
-	${FilesRendererGLExt}
-	${FilesRendererGLPlatformBase}
-	${FilesRendererGLPlatform}
-	${FilesRendererGLShader}
 	${FilesRendererGLBuffer}
-	${FilesRendererGLTexture}
-	${FilesRendererGLRenderState}
 	${FilesRendererGLCommon}
 	${FilesRendererGLCommonTexture}
+	${FilesRendererGLExt}
+	${FilesRendererGLPlatform}
+	${FilesRendererGLPlatformBase}
+	${FilesRendererGLRenderState}
+	${FilesRendererGLShader}
+	${FilesRendererGLTexture}
 )
 
 set(
@@ -358,6 +360,7 @@ set(
 set(
 	FilesVK
 	${FilesRendererVK}
+	${FilesRendererVKBuffer}
 	${FilesRendererVKExt}
 	${FilesRendererVKRenderState}
 	${FilesRendererVKShader}
@@ -367,20 +370,20 @@ set(
 set(
 	FilesD3D12
 	${FilesRendererD3D12}
-	${FilesRendererD3D12Shader}
 	${FilesRendererD3D12Buffer}
-	${FilesRendererD3D12Texture}
+	${FilesRendererD3D12Shader}
 	${FilesRendererD3D12RenderState}
+	${FilesRendererD3D12Texture}
 	${FilesRendererDXCommon}
 )
 
 set(
 	FilesD3D11
 	${FilesRendererD3D11}
-	${FilesRendererD3D11Shader}
 	${FilesRendererD3D11Buffer}
-	${FilesRendererD3D11Texture}
+	${FilesRendererD3D11Shader}
 	${FilesRendererD3D11RenderState}
+	${FilesRendererD3D11Texture}
 	${FilesRendererDXCommon}
 )
 

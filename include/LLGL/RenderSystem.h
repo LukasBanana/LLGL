@@ -413,7 +413,7 @@ class LLGL_EXPORT RenderSystem
         std::vector<ColorRGBAub> GetDefaultTextureImageRGBAub(int numPixels) const;
 
         //! Validates the specified buffer descriptor to be used for buffer creation.
-        void AssertCreateBuffer(const BufferDescriptor& desc);
+        void AssertCreateBuffer(const BufferDescriptor& desc, uint64_t maxSize);
 
         //! Validates the specified arguments to be used for buffer array creation.
         void AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray);

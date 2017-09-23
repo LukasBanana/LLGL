@@ -131,7 +131,7 @@ struct BufferDescriptor
         \brief Specifies the stride (in bytes) of each element in a storage buffer.
         \remarks If this value is zero, the behavior of the buffer creation is undefined.
         */
-        unsigned int        stride      = 0;
+        uint32_t            stride      = 0;
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.
@@ -142,7 +142,7 @@ struct BufferDescriptor
     \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage),
     'size' must be a multiple of 'storageBuffer.stride'.
     */
-    unsigned int            size    = 0;
+    uint64_t                size    = 0;
 
     /**
     \brief Specifies the buffer creation flags. By default 0.

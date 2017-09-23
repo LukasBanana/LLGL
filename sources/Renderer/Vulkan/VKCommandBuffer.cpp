@@ -296,35 +296,35 @@ void VKCommandBuffer::SetPresentIndex(uint32_t idx)
 void VKCommandBuffer::BeginCommandBuffer()
 {
     VkCommandBufferBeginInfo beginInfo;
-
-    beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.pNext             = nullptr;
-    beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    beginInfo.pInheritanceInfo  = nullptr;
-
-    VkResult result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        beginInfo.pInheritanceInfo  = nullptr;
+    }
+    auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
 }
 
 void VKCommandBuffer::EndCommandBuffer()
 {
-    VkResult result = vkEndCommandBuffer(commandBuffer_);
+    auto result = vkEndCommandBuffer(commandBuffer_);
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
 }
 
 void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
 {
     VkRenderPassBeginInfo beginInfo;
-
-    beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    beginInfo.pNext             = nullptr;
-    beginInfo.renderPass        = renderPass;
-    beginInfo.framebuffer       = framebuffer;
-    beginInfo.renderArea.offset = { 0, 0 };
-    beginInfo.renderArea.extent = extent;
-    beginInfo.clearValueCount   = 1;
-    beginInfo.pClearValues      = (&clearValue_);
-
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.renderPass        = renderPass;
+        beginInfo.framebuffer       = framebuffer;
+        beginInfo.renderArea.offset = { 0, 0 };
+        beginInfo.renderArea.extent = extent;
+        beginInfo.clearValueCount   = 1;
+        beginInfo.pClearValues      = (&clearValue_);
+    }
     vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
@@ -342,31 +342,30 @@ void VKCommandBuffer::CreateCommandPool(uint32_t queueFamilyIndex)
 {
     /* Create command pool */
     VkCommandPoolCreateInfo createInfo;
-
-    createInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    createInfo.pNext            = nullptr;
-    createInfo.flags            = 0;
-    createInfo.queueFamilyIndex = queueFamilyIndex;
-
-    VkResult result = vkCreateCommandPool(device_, &createInfo, nullptr, commandPool_.ReleaseAndGetAddressOf());
+    {
+        createInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        createInfo.pNext            = nullptr;
+        createInfo.flags            = 0;
+        createInfo.queueFamilyIndex = queueFamilyIndex;
+    }
+    auto result = vkCreateCommandPool(device_, &createInfo, nullptr, commandPool_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan command pool");
 }
 
 void VKCommandBuffer::CreateCommandBuffers(size_t bufferCount)
 {
-    /* Initialize command buffer descriptor */
-    VkCommandBufferAllocateInfo allocInfo;
-
-    allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.pNext                 = nullptr;
-    allocInfo.commandPool           = commandPool_;
-    allocInfo.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount    = static_cast<uint32_t>(bufferCount);
-
     /* Allocate command buffers */
     commandBufferList_.resize(bufferCount);
 
-    VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferList_.data());
+    VkCommandBufferAllocateInfo allocInfo;
+    {
+        allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.pNext                 = nullptr;
+        allocInfo.commandPool           = commandPool_;
+        allocInfo.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount    = static_cast<uint32_t>(bufferCount);
+    }
+    auto result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferList_.data());
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
 
     commandBuffer_ = commandBufferList_.front();

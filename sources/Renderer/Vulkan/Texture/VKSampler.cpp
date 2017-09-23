@@ -39,29 +39,28 @@ static VkBorderColor GetBorderColor(const ColorRGBAf& color)
 VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc) :
     sampler_ { device, vkDestroySampler }
 {
-    /* Initialize sampler state descriptor */
-    VkSamplerCreateInfo createInfo;
-
-    createInfo.sType                    = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    createInfo.pNext                    = nullptr;
-    createInfo.flags                    = 0;
-    createInfo.magFilter                = GetMinMagFilter(desc.magFilter);
-    createInfo.minFilter                = GetMinMagFilter(desc.minFilter);
-    createInfo.mipmapMode               = GetMipMapMode(desc.mipMapFilter);
-    createInfo.addressModeU             = VKTypes::Map(desc.textureWrapU);
-    createInfo.addressModeV             = VKTypes::Map(desc.textureWrapV);
-    createInfo.addressModeW             = VKTypes::Map(desc.textureWrapW);
-    createInfo.mipLodBias               = desc.mipMapLODBias;
-    createInfo.anisotropyEnable         = VKBoolean(desc.maxAnisotropy > 1);
-    createInfo.maxAnisotropy            = static_cast<float>(desc.maxAnisotropy);
-    createInfo.compareEnable            = VKBoolean(desc.compareEnabled);
-    createInfo.compareOp                = VKTypes::Map(desc.compareOp);
-    createInfo.minLod                   = desc.minLOD;
-    createInfo.maxLod                   = desc.maxLOD;
-    createInfo.borderColor              = GetBorderColor(desc.borderColor);
-    createInfo.unnormalizedCoordinates  = VK_FALSE;
-
     /* Create sampler state */
+    VkSamplerCreateInfo createInfo;
+    {
+        createInfo.sType                    = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        createInfo.pNext                    = nullptr;
+        createInfo.flags                    = 0;
+        createInfo.magFilter                = GetMinMagFilter(desc.magFilter);
+        createInfo.minFilter                = GetMinMagFilter(desc.minFilter);
+        createInfo.mipmapMode               = GetMipMapMode(desc.mipMapFilter);
+        createInfo.addressModeU             = VKTypes::Map(desc.textureWrapU);
+        createInfo.addressModeV             = VKTypes::Map(desc.textureWrapV);
+        createInfo.addressModeW             = VKTypes::Map(desc.textureWrapW);
+        createInfo.mipLodBias               = desc.mipMapLODBias;
+        createInfo.anisotropyEnable         = VKBoolean(desc.maxAnisotropy > 1);
+        createInfo.maxAnisotropy            = static_cast<float>(desc.maxAnisotropy);
+        createInfo.compareEnable            = VKBoolean(desc.compareEnabled);
+        createInfo.compareOp                = VKTypes::Map(desc.compareOp);
+        createInfo.minLod                   = desc.minLOD;
+        createInfo.maxLod                   = desc.maxLOD;
+        createInfo.borderColor              = GetBorderColor(desc.borderColor);
+        createInfo.unnormalizedCoordinates  = VK_FALSE;
+    }
     VkResult result = vkCreateSampler(device, &createInfo, nullptr, sampler_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan sampler");
 }

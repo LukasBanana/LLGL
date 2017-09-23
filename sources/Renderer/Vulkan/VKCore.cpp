@@ -88,7 +88,7 @@ VkBool32 VKBoolean(bool value)
 std::vector<VkLayerProperties> VKQueryInstanceLayerProperties()
 {
     uint32_t propertyCount = 0;
-    VkResult result = vkEnumerateInstanceLayerProperties(&propertyCount, nullptr);
+    auto result = vkEnumerateInstanceLayerProperties(&propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan instance layer properties");
 
     std::vector<VkLayerProperties> properties(propertyCount);
@@ -101,7 +101,7 @@ std::vector<VkLayerProperties> VKQueryInstanceLayerProperties()
 std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties()
 {
     uint32_t propertyCount = 0;
-    VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, nullptr);
+    auto result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan instance extension properties");
 
     std::vector<VkExtensionProperties> properties(propertyCount);
@@ -114,7 +114,7 @@ std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties()
 std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance)
 {
     uint32_t deviceCount = 0;
-    VkResult result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+    auto result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan physical devices");
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -127,7 +127,7 @@ std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance)
 std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device)
 {
     uint32_t propertyCount = 0;
-    VkResult result = vkEnumerateDeviceExtensionProperties(device, nullptr, &propertyCount, nullptr);
+    auto result = vkEnumerateDeviceExtensionProperties(device, nullptr, &propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan device extension properties");
 
     std::vector<VkExtensionProperties> properties(propertyCount);
@@ -153,7 +153,7 @@ SwapChainSupportDetails VKQuerySwapChainSupport(VkPhysicalDevice device, VkSurfa
     SwapChainSupportDetails details;
 
     /* Query surface capabilities */
-    VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.caps);
+    auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.caps);
     VKThrowIfFailed(result, "failed to query Vulkan surface capabilities");
 
     /* Query surface formats */

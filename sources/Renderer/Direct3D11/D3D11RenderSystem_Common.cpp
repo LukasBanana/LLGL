@@ -91,7 +91,7 @@ static std::unique_ptr<D3D11Buffer> MakeD3D11Buffer(ID3D11Device* device, const 
 
 Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    AssertCreateBuffer(desc);
+    AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<UINT>::max()));
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 

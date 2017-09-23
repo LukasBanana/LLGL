@@ -25,10 +25,10 @@ class D3D12Buffer : public Buffer
 
         void UpdateStaticSubresource(
             ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
-            const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState
+            const void* data, UINT64 bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState
         );
 
-        void UpdateDynamicSubresource(const void* data, UINT bufferSize, UINT64 offset);
+        void UpdateDynamicSubresource(const void* data, UINT64 bufferSize, UINT64 offset);
 
         //! Returns the ID3D12Resource object.
         inline ID3D12Resource* Get() const
@@ -37,7 +37,7 @@ class D3D12Buffer : public Buffer
         }
 
         //! Returns the size (in bytes) of the hardware buffer.
-        inline UINT GetBufferSize() const
+        inline UINT64 GetBufferSize() const
         {
             return bufferSize_;
         }
@@ -46,13 +46,13 @@ class D3D12Buffer : public Buffer
 
         D3D12Buffer(const BufferType type);
 
-        void CreateResource(ID3D12Device* device, UINT bufferSize, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState);
-        void CreateResource(ID3D12Device* device, UINT bufferSize);
+        void CreateResource(ID3D12Device* device, UINT64 bufferSize, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState);
+        void CreateResource(ID3D12Device* device, UINT64 bufferSize);
 
     private:
 
         ComPtr<ID3D12Resource>  resource_;
-        UINT                    bufferSize_ = 0;
+        UINT64                    bufferSize_ = 0;
 
 };
 

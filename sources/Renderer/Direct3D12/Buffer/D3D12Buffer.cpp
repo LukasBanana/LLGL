@@ -23,7 +23,7 @@ D3D12Buffer::D3D12Buffer(const BufferType type) :
 
 void D3D12Buffer::UpdateStaticSubresource(
     ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
-    const void* data, UINT bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState)
+    const void* data, UINT64 bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState)
 {
     if (offset + bufferSize > bufferSize_)
         throw std::out_of_range(LLGL_ASSERT_INFO("'bufferSize' and/or 'offset' are out of range"));
@@ -49,7 +49,7 @@ void D3D12Buffer::UpdateStaticSubresource(
     hr = uploadBuffer->Map(0, nullptr, &dest);
     DXThrowIfFailed(hr, "failed to map D3D12 resource");
     {
-        ::memcpy(dest, data, bufferSize);
+        ::memcpy(dest, data, static_cast<size_t>(bufferSize));
     }
     uploadBuffer->Unmap(0, nullptr);
 
@@ -63,14 +63,14 @@ void D3D12Buffer::UpdateStaticSubresource(
     commandList->ResourceBarrier(1, &resourceBarrier);
 }
 
-void D3D12Buffer::UpdateDynamicSubresource(const void* data, UINT bufferSize, UINT64 offset)
+void D3D12Buffer::UpdateDynamicSubresource(const void* data, UINT64 bufferSize, UINT64 offset)
 {
     void* dest = nullptr;
     
     auto hr = resource_->Map(0, nullptr, &dest);
     DXThrowIfFailed(hr, "failed to map D3D12 resource");
     {
-        ::memcpy((reinterpret_cast<char*>(dest) + offset), data, bufferSize);
+        ::memcpy((reinterpret_cast<char*>(dest) + offset), data, static_cast<size_t>(bufferSize));
     }
     resource_->Unmap(0, nullptr);
 }
@@ -80,7 +80,7 @@ void D3D12Buffer::UpdateDynamicSubresource(const void* data, UINT bufferSize, UI
  * ======= Protected: =======
  */
 
-void D3D12Buffer::CreateResource(ID3D12Device* device, UINT bufferSize, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState)
+void D3D12Buffer::CreateResource(ID3D12Device* device, UINT64 bufferSize, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState)
 {
     bufferSize_ = bufferSize;
 
@@ -100,7 +100,7 @@ void D3D12Buffer::CreateResource(ID3D12Device* device, UINT bufferSize, D3D12_HE
     DXThrowIfFailed(hr, "failed to create comitted resource for D3D12 hardware buffer");
 }
 
-void D3D12Buffer::CreateResource(ID3D12Device* device, UINT bufferSize)
+void D3D12Buffer::CreateResource(ID3D12Device* device, UINT64 bufferSize)
 {
     CreateResource(device, bufferSize, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COPY_DEST);
 }

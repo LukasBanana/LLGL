@@ -6,6 +6,7 @@
  */
 
 #include "Helper.h"
+#include <LLGL/Utility.h>
 
 
 //#define TEST_RENDER_TARGET
@@ -19,6 +20,15 @@ int main()
     {
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("Vulkan");
+
+        // Print renderer information
+        const auto& info = renderer->GetRendererInfo();
+        const auto& caps = renderer->GetRenderingCaps();
+
+        std::cout << "Renderer:         " << info.rendererName << std::endl;
+        std::cout << "Device:           " << info.deviceName << std::endl;
+        std::cout << "Vendor:           " << info.vendorName << std::endl;
+        std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
 
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
@@ -43,10 +53,10 @@ int main()
 
         auto context = renderer->CreateRenderContext(contextDesc, window);
 
-        // create command buffer
+        // Create command buffer
         auto commands = renderer->CreateCommandBuffer();
 
-        // load shaders
+        // Load shaders
         auto LoadSPIRVModule = [](const std::string& filename)
         {
             std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -69,7 +79,7 @@ int main()
         shaderVert->LoadBinary(LoadSPIRVModule("Triangle.vert.spv"));
         shaderFrag->LoadBinary(LoadSPIRVModule("Triangle.frag.spv"));
 
-        // create shader program
+        // Create shader program
         auto shaderProgram = renderer->CreateShaderProgram();
 
         shaderProgram->AttachShader(*shaderVert);
@@ -77,7 +87,32 @@ int main()
 
         shaderProgram->LinkShaders();
 
-        // create graphics pipeline
+        // Create vertex data
+        struct Vertex
+        {
+            Gs::Vector2f    coord;
+            LLGL::ColorRGBf color;
+        }
+        vertices[] =
+        {
+            { {  0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
+            { { +0.5f, +0.5f }, { 0.0f, 1.0f, 0.0f } },
+            { { -0.5f, +0.5f }, { 0.0f, 0.0f, 1.0f } },
+        };
+
+        // Create vertex format
+        LLGL::VertexFormat vertexFormat;
+
+        vertexFormat.AppendAttribute({ "coord", LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "color", LLGL::VectorType::Float3 });
+
+        shaderProgram->BuildInputLayout(vertexFormat);
+
+        // Create vertex buffer
+        //auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
+        auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(400, vertexFormat));
+
+        // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
 
         const auto resolution = contextDesc.videoMode.resolution;
@@ -90,20 +125,14 @@ int main()
 
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
-        // Print renderer information
-        const auto& info = renderer->GetRendererInfo();
-        const auto& caps = renderer->GetRenderingCaps();
-
-        std::cout << "Renderer: " << info.rendererName << std::endl;
-        std::cout << "Device: " << info.deviceName << std::endl;
-        std::cout << "Vendor: " << info.vendorName << std::endl;
-        std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
-
+        // Add input event listener
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
 
+        // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            // Render scene
             commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
 
             commands->SetRenderTarget(*context);

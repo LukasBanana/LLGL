@@ -116,12 +116,13 @@ void VKShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
                 stride = 0;
             }
 
+            /* Break iteration */
+            if (it == itEnd)
+                break;
+
             /* Store next input slot */
             prevSlot = it->inputSlot;
         }
-
-        if (it == itEnd)
-            break;
         
         /* Increment vertex stride */
         stride += it->GetSize();

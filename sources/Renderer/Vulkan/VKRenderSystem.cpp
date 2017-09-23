@@ -9,6 +9,7 @@
 #include "VKRenderSystem.h"
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
+#include "Buffer/VKVertexBuffer.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
@@ -109,7 +110,32 @@ void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    return nullptr;//todo
+    AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
+
+    switch (desc.type)
+    {
+        case BufferType::Vertex:
+        {
+            /* Create vertex buffer */
+            VkBufferCreateInfo createInfo;
+            {
+                createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+                createInfo.pNext                    = nullptr;
+                createInfo.flags                    = 0;
+                createInfo.size                     = static_cast<VkDeviceSize>(desc.size);
+                createInfo.usage                    = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+                createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
+                createInfo.queueFamilyIndexCount    = 0;
+                createInfo.pQueueFamilyIndices      = nullptr;
+            }
+            return TakeOwnership(buffers_, MakeUnique<VKVertexBuffer>(device_, createInfo));
+        }
+        break;
+
+        default:
+        break;
+    }
+    return nullptr;
 }
 
 BufferArray* VKRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
@@ -406,6 +432,9 @@ bool VKRenderSystem::PickPhysicalDevice()
 
 void VKRenderSystem::QueryDeviceProperties()
 {
+    /* Query physical memory propertiers */
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryPropertiers_);
+
     /* Query properties of selected physical device */
     VkPhysicalDeviceProperties properties;
     vkGetPhysicalDeviceProperties(physicalDevice_, &properties);

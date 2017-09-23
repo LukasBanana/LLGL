@@ -42,7 +42,7 @@ std::vector<std::string> RenderSystem::FindModules()
     const std::vector<std::string> knownModules
     {
         #if defined(LLGL_OS_IOS) || defined(LLGL_OS_ANDROID)
-        "OpenGLES2",
+        "OpenGLES3",
         #else
         "OpenGL",
         #endif
@@ -200,7 +200,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     }
     catch (const std::exception&)
     {
-        /* Keep module, otherwise the exception 's vtable might be corrupted because it's part of the module */
+        /* Keep module, otherwise the exception's vtable might be corrupted because it's part of the module */
         g_renderSystemModules[nullptr] = std::move(module);
         throw;
     }
@@ -243,10 +243,12 @@ std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixel
     return std::vector<ColorRGBAub>(static_cast<size_t>(numPixels), GetConfiguration().imageInitialization.color);
 }
 
-void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc)
+void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, uint64_t maxSize)
 {
     if (desc.type < BufferType::Vertex || desc.type > BufferType::StreamOutput)
         throw std::invalid_argument("cannot create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
+    if (desc.size > maxSize)
+        throw std::runtime_error("cannot create buffer with size of " + std::to_string(desc.size) + " bytes (limit is " + std::to_string(maxSize) + " bytes)");
 }
 
 static void AssertCreateResourceArrayCommon(unsigned int numResources, void* const * resourceArray, const std::string& resourceName)

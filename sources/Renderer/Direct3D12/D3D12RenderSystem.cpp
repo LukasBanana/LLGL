@@ -136,7 +136,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
 
 Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    AssertCreateBuffer(desc);
+    AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<UINT64>::max()));
     return TakeOwnership(buffers_, MakeBufferAndInitialize(desc, initialData));
 }
 

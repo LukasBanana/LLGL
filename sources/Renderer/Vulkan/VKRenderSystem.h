@@ -17,7 +17,7 @@
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 
-//#include "Buffer/VKBuffer.h"
+#include "Buffer/VKBuffer.h"
 //#include "Buffer/VKBufferArray.h"
 
 #include "Shader/VKShader.h"
@@ -152,6 +152,7 @@ class VKRenderSystem : public RenderSystem
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 
         QueueFamilyIndices                      queueFamilyIndices_;
+        VkPhysicalDeviceMemoryProperties        memoryPropertiers_;
 
         bool                                    debugLayerEnabled_      = false;
 
@@ -159,8 +160,8 @@ class VKRenderSystem : public RenderSystem
 
         HWObjectContainer<VKRenderContext>      renderContexts_;
         HWObjectContainer<VKCommandBuffer>      commandBuffers_;
-        /*HWObjectContainer<VKBuffer>             buffers_;
-        HWObjectContainer<VKBufferArray>        bufferArrays_;
+        HWObjectContainer<VKBuffer>             buffers_;
+        /*HWObjectContainer<VKBufferArray>        bufferArrays_;
         HWObjectContainer<VKTexture>            textures_;
         HWObjectContainer<VKTextureArray>       textureArrays_;*/
         HWObjectContainer<VKSampler>            samplers_;
