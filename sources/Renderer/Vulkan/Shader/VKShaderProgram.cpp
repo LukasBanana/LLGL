@@ -40,7 +40,7 @@ void VKShaderProgram::DetachAll()
 
 bool VKShaderProgram::LinkShaders()
 {
-    return false; //todo
+    return true; //todo
 }
 
 std::string VKShaderProgram::QueryInfoLog()

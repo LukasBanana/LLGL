@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-VKGraphicsPipeline::VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPass renderPass, const GraphicsPipelineDescriptor& desc) :
+VKGraphicsPipeline::VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPass renderPass, const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent) :
     device_         { device                          },
     renderPass_     { renderPass                      },
     pipelineLayout_ { device, vkDestroyPipelineLayout },
@@ -30,7 +30,7 @@ VKGraphicsPipeline::VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPa
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
 
     /* Create graphics pipeline states */
-    CreateGraphicsPipeline(desc);
+    CreateGraphicsPipeline(desc, extent);
 }
 
 
@@ -81,7 +81,9 @@ static void Convert(VkRect2D& dst, const Viewport& src)
     dst.extent.height   = static_cast<uint32_t>(src.height);
 }
 
-static void CreateViewportState(const GraphicsPipelineDescriptor& desc, VkPipelineViewportStateCreateInfo& createInfo, std::vector<VkViewport>& viewportsVK, std::vector<VkRect2D>& scissorsVK)
+static void CreateViewportState(
+    const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent,
+    VkPipelineViewportStateCreateInfo& createInfo, std::vector<VkViewport>& viewportsVK, std::vector<VkRect2D>& scissorsVK)
 {
     const auto numViewports = desc.viewports.size();
     const auto numScissors = desc.scissors.size();
@@ -91,42 +93,64 @@ static void CreateViewportState(const GraphicsPipelineDescriptor& desc, VkPipeli
     createInfo.flags = 0;
 
     /* Initialize viewports */
-    createInfo.viewportCount = static_cast<uint32_t>(numViewports);
-
-    /* Check if VkViewpport and Viewport structures can be safely reinterpret-casted */
-    if ( sizeof(VkViewport)             == sizeof(Viewport)             &&
-         offsetof(VkViewport, x)        == offsetof(Viewport, x       ) &&
-         offsetof(VkViewport, y)        == offsetof(Viewport, y       ) &&
-         offsetof(VkViewport, width   ) == offsetof(Viewport, width   ) &&
-         offsetof(VkViewport, height  ) == offsetof(Viewport, height  ) &&
-         offsetof(VkViewport, minDepth) == offsetof(Viewport, minDepth) &&
-         offsetof(VkViewport, maxDepth) == offsetof(Viewport, maxDepth) )
+    if (numViewports > 0)
     {
-        /* Use viewport descritpors directly */
-        createInfo.pViewports = reinterpret_cast<const VkViewport*>(desc.viewports.data());
+        createInfo.viewportCount = static_cast<uint32_t>(numViewports);
+
+        /* Check if VkViewpport and Viewport structures can be safely reinterpret-casted */
+        if ( sizeof(VkViewport)             == sizeof(Viewport)             &&
+             offsetof(VkViewport, x)        == offsetof(Viewport, x       ) &&
+             offsetof(VkViewport, y)        == offsetof(Viewport, y       ) &&
+             offsetof(VkViewport, width   ) == offsetof(Viewport, width   ) &&
+             offsetof(VkViewport, height  ) == offsetof(Viewport, height  ) &&
+             offsetof(VkViewport, minDepth) == offsetof(Viewport, minDepth) &&
+             offsetof(VkViewport, maxDepth) == offsetof(Viewport, maxDepth) )
+        {
+            /* Use viewport descritpors directly */
+            createInfo.pViewports = reinterpret_cast<const VkViewport*>(desc.viewports.data());
+        }
+        else
+        {
+            /* Convert viewports to Vulkan structure */
+            viewportsVK.resize(numViewports);
+
+            for (size_t i = 0; i < numViewports; ++i)
+                Convert(viewportsVK[i], desc.viewports[i]);
+
+            createInfo.pViewports = viewportsVK.data();
+        }
     }
     else
     {
-        /* Convert viewports to Vulkan structure */
-        viewportsVK.resize(numViewports);
+        /* Create default viewport */
+        createInfo.viewportCount = 1;
+        viewportsVK.resize(1);
 
-        for (size_t i = 0; i < numViewports; ++i)
-            Convert(viewportsVK[i], desc.viewports[i]);
+        Convert(viewportsVK[0], Viewport(0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f));
 
         createInfo.pViewports = viewportsVK.data();
     }
 
     /* Convert scissors to Vulkan structure */
-    createInfo.scissorCount = static_cast<uint32_t>(numViewports);
-
-    scissorsVK.resize(numViewports);
-
-    for (size_t i = 0; i < numViewports; ++i)
+    if (numViewports > 0)
     {
-        if (i < numScissors)
-            Convert(scissorsVK[i], desc.scissors[i]);
-        else
-            Convert(scissorsVK[i], desc.viewports[i]);
+        createInfo.scissorCount = static_cast<uint32_t>(numViewports);
+        scissorsVK.resize(numViewports);
+
+        for (size_t i = 0; i < numViewports; ++i)
+        {
+            if (i < numScissors)
+                Convert(scissorsVK[i], desc.scissors[i]);
+            else
+                Convert(scissorsVK[i], desc.viewports[i]);
+        }
+    }
+    else
+    {
+        /* Create default scissor */
+        createInfo.scissorCount = 1;
+        scissorsVK.resize(1);
+        Convert(scissorsVK[0], Scissor(0, 0, extent.width, extent.height));
     }
 
     createInfo.pScissors = scissorsVK.data();
@@ -247,13 +271,22 @@ static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBl
         createInfo.logicOp          = VK_LOGIC_OP_NO_OP;
     }
 
-    /* Convert blend targets to Vulkan structure */
-    const auto numAttachments = desc.targets.size();
+    auto numAttachments = desc.targets.size();
 
-    attachmentStatesVK.resize(numAttachments);
-
-    for (size_t i = 0; i < numAttachments; ++i)
-        CreateColorBlendAttachmentState(attachmentStatesVK[i], desc.targets[i], VKBoolean(desc.blendEnabled));
+    if (numAttachments > 0)
+    {
+        /* Convert blend targets to Vulkan structure */
+        attachmentStatesVK.resize(numAttachments);
+        for (size_t i = 0; i < numAttachments; ++i)
+            CreateColorBlendAttachmentState(attachmentStatesVK[i], desc.targets[i], VKBoolean(desc.blendEnabled));
+    }
+    else
+    {
+        /* Use default values for a single attachment */
+        numAttachments = 1;
+        attachmentStatesVK.resize(1);
+        CreateColorBlendAttachmentState(attachmentStatesVK[0], {}, VKBoolean(desc.blendEnabled));
+    }
 
     createInfo.attachmentCount      = static_cast<uint32_t>(numAttachments);
     createInfo.pAttachments         = attachmentStatesVK.data();
@@ -262,10 +295,9 @@ static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBl
     createInfo.blendConstants[1]    = desc.blendFactor.g;
     createInfo.blendConstants[2]    = desc.blendFactor.b;
     createInfo.blendConstants[3]    = desc.blendFactor.a;
-
 }
 
-void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
+void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent)
 {
     /* Get shader stages */
     auto shaderStageCreateInfos = shaderProgram_->GetShaderStageCreateInfos();
@@ -286,7 +318,7 @@ void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor
     std::vector<VkViewport> viewportsVK;
     std::vector<VkRect2D> scissorsVK;
     VkPipelineViewportStateCreateInfo viewportState;
-    CreateViewportState(desc, viewportState, viewportsVK, scissorsVK);
+    CreateViewportState(desc, extent, viewportState, viewportsVK, scissorsVK);
 
     /* Initialize rasterizer state */
     VkPipelineRasterizationStateCreateInfo rasterizerState;

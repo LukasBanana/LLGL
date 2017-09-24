@@ -23,6 +23,9 @@ namespace VKTypes
 {
 
 
+[[noreturn]]
+void MapFailed(const std::string& typeName, const std::string& vknTypeName);
+
 VkShaderStageFlagBits   Map( const ShaderType        shaderType        );
 VkFormat                Map( const VectorType        vectorType        );
 VkPrimitiveTopology     Map( const PrimitiveTopology primitiveTopology );

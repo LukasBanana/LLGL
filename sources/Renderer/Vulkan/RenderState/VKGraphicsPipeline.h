@@ -25,7 +25,7 @@ class VKGraphicsPipeline : public GraphicsPipeline
 
     public:
 
-        VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPass renderPass, const GraphicsPipelineDescriptor& desc);
+        VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPass renderPass, const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent);
 
         inline VkPipeline Get() const
         {
@@ -34,7 +34,7 @@ class VKGraphicsPipeline : public GraphicsPipeline
 
     private:
 
-        void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc);
+        void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent);
 
         VkDevice                device_         = VK_NULL_HANDLE;
         VkRenderPass            renderPass_     = VK_NULL_HANDLE;

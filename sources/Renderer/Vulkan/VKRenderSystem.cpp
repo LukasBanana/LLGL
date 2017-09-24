@@ -10,6 +10,7 @@
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
 #include "Buffer/VKDeviceMemory.h"
+#include "Buffer/VKIndexBuffer.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
@@ -275,7 +276,7 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
     auto renderContext = renderContexts_.begin()->get();
     auto renderPassVK = renderContext->GetSwapChainRenderPass().Get();
 
-    return TakeOwnership(graphicsPipelines_, MakeUnique<VKGraphicsPipeline>(device_, renderPassVK, desc));
+    return TakeOwnership(graphicsPipelines_, MakeUnique<VKGraphicsPipeline>(device_, renderPassVK, desc, renderContext->GetSwapChainExtent()));
 }
 
 ComputePipeline* VKRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -594,23 +595,39 @@ uint32_t VKRenderSystem::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFla
 
 VKBuffer* VKRenderSystem::CreateBufferObject(const BufferDescriptor& desc)
 {
+    /* Initialize buffer descriptor with common data */
+    VkBufferCreateInfo createInfo;
+    {
+        createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        createInfo.pNext                    = nullptr;
+        createInfo.flags                    = 0;
+        createInfo.size                     = static_cast<VkDeviceSize>(desc.size);
+        createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
+        createInfo.queueFamilyIndexCount    = 0;
+        createInfo.pQueueFamilyIndices      = nullptr;
+    }
+
+    /* Create hardware buffer */
     switch (desc.type)
     {
         case BufferType::Vertex:
         {
-            /* Create vertex buffer */
-            VkBufferCreateInfo createInfo;
-            {
-                createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-                createInfo.pNext                    = nullptr;
-                createInfo.flags                    = 0;
-                createInfo.size                     = static_cast<VkDeviceSize>(desc.size);
-                createInfo.usage                    = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-                createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
-                createInfo.queueFamilyIndexCount    = 0;
-                createInfo.pQueueFamilyIndices      = nullptr;
-            }
+            createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Vertex, device_, createInfo));
+        }
+        break;
+
+        case BufferType::Index:
+        {
+            createInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+            return TakeOwnership(buffers_, MakeUnique<VKIndexBuffer>(device_, createInfo, desc.indexBuffer.format));
+        }
+        break;
+
+        case BufferType::Constant:
+        {
+            createInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Constant, device_, createInfo));
         }
         break;
 

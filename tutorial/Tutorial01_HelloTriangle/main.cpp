@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
         LLGL::Shader* fragmentShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
 
         // Define the lambda function to read an entire text file
-        auto ReadFileContent = [](const std::string& filename)
+        auto ReadTextFile = [](const std::string& filename)
         {
             // Read file and check for failure
             std::ifstream file(filename);
@@ -86,11 +86,31 @@ int main(int argc, char* argv[])
             );
         };
 
+        auto ReadBinaryFile = [](const std::string& filename)
+        {
+            // Read file and for failure
+            std::ifstream file(filename, std::ios_base::binary | std::ios_base::ate);
+
+            if (!file.good())
+                throw std::runtime_error("failed to read file: \"" + filename + "\"");
+
+            const auto fileSize = static_cast<size_t>(file.tellg());
+            std::vector<char> buffer(fileSize);
+
+            file.seekg(0);
+            file.read(buffer.data(), fileSize);
+
+            return buffer;
+        };
+
         // Load vertex - and fragment shader code from file
-        auto CompileShader = [](LLGL::Shader* shader, const std::string& source, const LLGL::ShaderDescriptor& shaderDesc = {})
+        auto CompileShader = [](LLGL::Shader* shader, const std::string& source, std::vector<char> byteCode = {}, const LLGL::ShaderDescriptor& shaderDesc = {})
         {
             // Compile shader
-            shader->Compile(source, shaderDesc);
+            if (byteCode.empty())
+                shader->Compile(source, shaderDesc);
+            else
+                shader->LoadBinary(std::move(byteCode), shaderDesc);
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
@@ -98,20 +118,27 @@ int main(int argc, char* argv[])
                 std::cerr << log << std::endl;
         };
 
-        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+        const auto shadingLang = renderer->GetRenderingCaps().shadingLanguage;
+
+        if (shadingLang >= LLGL::ShadingLanguage::HLSL_2_0 && shadingLang <= LLGL::ShadingLanguage::HLSL_5_1)
         {
-            auto shaderCode = ReadFileContent("shader.hlsl");
-            CompileShader(vertexShader, shaderCode, LLGL::ShaderDescriptor("VS", "vs_4_0"));
-            CompileShader(fragmentShader, shaderCode, LLGL::ShaderDescriptor("PS", "ps_4_0"));
+            auto shaderCode = ReadTextFile("shader.hlsl");
+            CompileShader(vertexShader, shaderCode, {}, LLGL::ShaderDescriptor("VS", "vs_4_0"));
+            CompileShader(fragmentShader, shaderCode, {}, LLGL::ShaderDescriptor("PS", "ps_4_0"));
+        }
+        else if (shadingLang == LLGL::ShadingLanguage::SPIRV_100)
+        {
+            CompileShader(vertexShader, "", ReadBinaryFile("vertex.450core.spv"));
+            CompileShader(fragmentShader, "", ReadBinaryFile("fragment.450core.spv"));
         }
         else
         {
             #ifdef __APPLE__
-            CompileShader(vertexShader, ReadFileContent("vertex.140core.glsl"));
-            CompileShader(fragmentShader, ReadFileContent("fragment.140core.glsl"));
+            CompileShader(vertexShader, ReadTextFile("vertex.140core.glsl"));
+            CompileShader(fragmentShader, ReadTextFile("fragment.140core.glsl"));
             #else
-            CompileShader(vertexShader, ReadFileContent("vertex.glsl"));
-            CompileShader(fragmentShader, ReadFileContent("fragment.glsl"));
+            CompileShader(vertexShader, ReadTextFile("vertex.glsl"));
+            CompileShader(fragmentShader, ReadTextFile("fragment.glsl"));
             #endif
         }
 
@@ -135,6 +162,14 @@ int main(int argc, char* argv[])
             pipelineDesc.shaderProgram              = shaderProgram;
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
+            #endif
+
+            #if 1
+            const auto resolution = contextDesc.videoMode.resolution;
+            const auto viewportSize = resolution.Cast<float>();
+            pipelineDesc.viewports.push_back(LLGL::Viewport(0.0f, 0.0f, viewportSize.x, viewportSize.y));
+            pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, resolution.x, resolution.y));
+            pipelineDesc.blend.targets.push_back({});
             #endif
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);

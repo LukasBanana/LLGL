@@ -105,7 +105,8 @@ void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 
 void VKCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
-    //todo
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    vkCmdBindIndexBuffer(commandBuffer_, bufferVK.Get(), 0, VK_INDEX_TYPE_UINT32);
 }
 
 void VKCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
