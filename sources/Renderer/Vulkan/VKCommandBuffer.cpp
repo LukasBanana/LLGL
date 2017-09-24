@@ -10,6 +10,7 @@
 #include "RenderState/VKGraphicsPipeline.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
+#include "Buffer/VKBuffer.h"
 #include "../CheckedCast.h"
 
 
@@ -89,7 +90,12 @@ void VKCommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGB
 
 void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
-    //todo
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+
+    VkBuffer buffers[] = { bufferVK.Get() };
+    VkDeviceSize offsets[] = { 0 };
+
+    vkCmdBindVertexBuffers(commandBuffer_, 0, 1, buffers, offsets);
 }
 
 void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)

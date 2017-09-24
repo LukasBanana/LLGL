@@ -9,7 +9,7 @@
 #include "VKRenderSystem.h"
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
-#include "Buffer/VKVertexBuffer.h"
+#include "Buffer/VKDeviceMemory.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
@@ -112,30 +112,29 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 {
     AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
 
-    switch (desc.type)
-    {
-        case BufferType::Vertex:
-        {
-            /* Create vertex buffer */
-            VkBufferCreateInfo createInfo;
-            {
-                createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-                createInfo.pNext                    = nullptr;
-                createInfo.flags                    = 0;
-                createInfo.size                     = static_cast<VkDeviceSize>(desc.size);
-                createInfo.usage                    = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-                createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
-                createInfo.queueFamilyIndexCount    = 0;
-                createInfo.pQueueFamilyIndices      = nullptr;
-            }
-            return TakeOwnership(buffers_, MakeUnique<VKVertexBuffer>(device_, createInfo));
-        }
-        break;
+    /* Create buffer object */
+    auto buffer = CreateBufferObject(desc);
+    
+    /* Allocate device memory */
+    const auto& requirements = buffer->GetRequirements();
+    const auto memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-        default:
-        break;
+    auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, memoryTypeIndex);
+
+    /* Bind buffer to device memory */
+    buffer->BindToMemory(device_, deviceMemory, 0);
+
+    /* Copy initial data to buffer memory */
+    if (initialData != nullptr)
+    {
+        if (auto memory = buffer->Map(device_))
+        {
+            ::memcpy(memory, initialData, static_cast<size_t>(desc.size));
+            buffer->Unmap(device_);
+        }
     }
-    return nullptr;
+
+    return buffer;
 }
 
 BufferArray* VKRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
@@ -581,6 +580,44 @@ bool VKRenderSystem::CheckDeviceExtensionSupport(VkPhysicalDevice device, const 
         requiredExtensions.erase(ext.extensionName);
 
     return requiredExtensions.empty();
+}
+
+uint32_t VKRenderSystem::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+{
+    for (uint32_t i = 0; i < memoryPropertiers_.memoryTypeCount; ++i)
+    {
+        if ((typeFilter & (1 << i)) != 0 && (memoryPropertiers_.memoryTypes[i].propertyFlags & properties) == properties)
+            return i;
+    }
+    throw std::runtime_error("failed to find suitable Vulkan memory type");
+}
+
+VKBuffer* VKRenderSystem::CreateBufferObject(const BufferDescriptor& desc)
+{
+    switch (desc.type)
+    {
+        case BufferType::Vertex:
+        {
+            /* Create vertex buffer */
+            VkBufferCreateInfo createInfo;
+            {
+                createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+                createInfo.pNext                    = nullptr;
+                createInfo.flags                    = 0;
+                createInfo.size                     = static_cast<VkDeviceSize>(desc.size);
+                createInfo.usage                    = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+                createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
+                createInfo.queueFamilyIndexCount    = 0;
+                createInfo.pQueueFamilyIndices      = nullptr;
+            }
+            return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Vertex, device_, createInfo));
+        }
+        break;
+
+        default:
+        break;
+    }
+    return nullptr;
 }
 
 

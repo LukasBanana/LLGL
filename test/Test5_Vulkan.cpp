@@ -76,7 +76,7 @@ int main()
         auto shaderVert = renderer->CreateShader(LLGL::ShaderType::Vertex);
         auto shaderFrag = renderer->CreateShader(LLGL::ShaderType::Fragment);
 
-        shaderVert->LoadBinary(LoadSPIRVModule("Triangle.vert.spv"));
+        shaderVert->LoadBinary(LoadSPIRVModule("Triangle2.vert.spv"));
         shaderFrag->LoadBinary(LoadSPIRVModule("Triangle.frag.spv"));
 
         // Create shader program
@@ -95,7 +95,7 @@ int main()
         }
         vertices[] =
         {
-            { {  0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
+            { { -0.3f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
             { { +0.5f, +0.5f }, { 0.0f, 1.0f, 0.0f } },
             { { -0.5f, +0.5f }, { 0.0f, 0.0f, 1.0f } },
         };
@@ -109,8 +109,7 @@ int main()
         shaderProgram->BuildInputLayout(vertexFormat);
 
         // Create vertex buffer
-        //auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
-        auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(400, vertexFormat));
+        auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -140,6 +139,8 @@ int main()
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             commands->SetGraphicsPipeline(*pipeline);
+
+            commands->SetVertexBuffer(*vertexBuffer);
 
             commands->Draw(3, 0);
 
