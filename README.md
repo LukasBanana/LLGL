@@ -27,10 +27,10 @@ Progress
 
 | Renderer | Progress | Remarks |
 |----------|:--------:|---------|
-| OpenGL | ~85% | |
-| Direct3D 11 | ~85% | |
+| OpenGL | ~90% | |
+| Direct3D 11 | ~85% | Depth-textures are incomplete |
 | Direct3D 12 | ~5% | Experimental state; Tutorials working: 01, 06, 07 |
-| Vulkan | ~1% | Experimental state |
+| Vulkan | ~2% | Experimental state; Tutorials working: 01 |
 
 | Platform | Progress | Remarks |
 |----------|:--------:|---------|
