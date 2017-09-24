@@ -430,7 +430,7 @@ void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const 
         texDesc.ArraySize           = descD3D.texture2DMS.layers;
         texDesc.Format              = D3D11Types::Map(descD3D.format);
         texDesc.SampleDesc.Count    = descD3D.texture2DMS.samples;
-        texDesc.SampleDesc.Quality  = 0;
+        texDesc.SampleDesc.Quality  = 0;//(descD3D.texture2DMS.fixedSamples ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
         texDesc.CPUAccessFlags      = 0;

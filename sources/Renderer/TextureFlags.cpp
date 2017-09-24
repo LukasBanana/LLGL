@@ -13,10 +13,10 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT unsigned int NumMipLevels(unsigned int width, unsigned int height, unsigned int depth)
+LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height, std::uint32_t depth)
 {
     auto maxSize = std::max({ width, height, depth });
-    auto log2Size = static_cast<unsigned int>(std::log2(maxSize));
+    auto log2Size = static_cast<std::uint32_t>(std::log2(maxSize));
     return (1 + log2Size);
 }
 

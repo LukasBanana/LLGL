@@ -12,6 +12,7 @@
 #include "Export.h"
 #include <Gauss/Vector3.h>
 #include <cstddef>
+#include <cstdint>
 
 
 namespace LLGL
@@ -124,37 +125,37 @@ struct LLGL_EXPORT TextureDescriptor
 {
     struct Texture1DDescriptor
     {
-        unsigned int    width;          //!< Texture width.
-        unsigned int    layers;         //!< Number of texture array layers.
+        std::uint32_t   width;          //!< Texture width.
+        std::uint32_t   layers;         //!< Number of texture array layers.
     };
 
     struct Texture2DDescriptor
     {
-        unsigned int    width;          //!< Texture width.
-        unsigned int    height;         //!< Texture height.
-        unsigned int    layers;         //!< Number of texture array layers.
+        std::uint32_t   width;          //!< Texture width.
+        std::uint32_t   height;         //!< Texture height.
+        std::uint32_t   layers;         //!< Number of texture array layers.
     };
 
     struct Texture3DDescriptor
     {
-        unsigned int    width;          //!< Texture width.
-        unsigned int    height;         //!< Texture height.
-        unsigned int    depth;          //!< Texture depth.
+        std::uint32_t   width;          //!< Texture width.
+        std::uint32_t   height;         //!< Texture height.
+        std::uint32_t   depth;          //!< Texture depth.
     };
 
     struct TextureCubeDescriptor
     {
-        unsigned int    width;          //!< Texture width.
-        unsigned int    height;         //!< Texture height.
-        unsigned int    layers;         //!< Number of texture array layers (internally it will be a multiple of 6).
+        std::uint32_t   width;          //!< Texture width.
+        std::uint32_t   height;         //!< Texture height.
+        std::uint32_t   layers;         //!< Number of texture array layers (internally it will be a multiple of 6).
     };
 
     struct Texture2DMSDescriptor
     {
-        unsigned int    width;          //!< Texture width.
-        unsigned int    height;         //!< Texture height.
-        unsigned int    layers;         //!< Number of texture array layers.
-        unsigned int    samples;        //!< Number of samples.
+        std::uint32_t   width;          //!< Texture width.
+        std::uint32_t   height;         //!< Texture height.
+        std::uint32_t   layers;         //!< Number of texture array layers.
+        std::uint32_t   samples;        //!< Number of samples.
         bool            fixedSamples;   //!< Specifies whether the sample locations are fixed or not. By default true. \note Only supported with: OpenGL.
     };
     
@@ -195,41 +196,41 @@ struct LLGL_EXPORT SubTextureDescriptor
 {
     struct Texture1DDescriptor
     {
-        unsigned int    x;              //!< Sub-texture X-axis offset.
-        unsigned int    layerOffset;    //!< Zero-based layer offset.
-        unsigned int    width;          //!< Sub-texture width.
-        unsigned int    layers;         //!< Number of texture array layers.
+        std::uint32_t x;              //!< Sub-texture X-axis offset.
+        std::uint32_t layerOffset;    //!< Zero-based layer offset.
+        std::uint32_t width;          //!< Sub-texture width.
+        std::uint32_t layers;         //!< Number of texture array layers.
     };
 
     struct Texture2DDescriptor
     {
-        unsigned int    x;              //!< Sub-texture X-axis offset.
-        unsigned int    y;              //!< Sub-texture Y-axis offset.
-        unsigned int    layerOffset;    //!< Zero-based layer offset.
-        unsigned int    width;          //!< Sub-texture width.
-        unsigned int    height;         //!< Sub-texture height.
-        unsigned int    layers;         //!< Number of texture array layers.
+        std::uint32_t x;              //!< Sub-texture X-axis offset.
+        std::uint32_t y;              //!< Sub-texture Y-axis offset.
+        std::uint32_t layerOffset;    //!< Zero-based layer offset.
+        std::uint32_t width;          //!< Sub-texture width.
+        std::uint32_t height;         //!< Sub-texture height.
+        std::uint32_t layers;         //!< Number of texture array layers.
     };
 
     struct Texture3DDescriptor
     {
-        unsigned int    x;              //!< Sub-texture X-axis offset.
-        unsigned int    y;              //!< Sub-texture Y-axis offset.
-        unsigned int    z;              //!< Sub-texture Z-axis offset.
-        unsigned int    width;          //!< Sub-texture width.
-        unsigned int    height;         //!< Sub-texture height.
-        unsigned int    depth;          //!< Number of texture array layers.
+        std::uint32_t x;              //!< Sub-texture X-axis offset.
+        std::uint32_t y;              //!< Sub-texture Y-axis offset.
+        std::uint32_t z;              //!< Sub-texture Z-axis offset.
+        std::uint32_t width;          //!< Sub-texture width.
+        std::uint32_t height;         //!< Sub-texture height.
+        std::uint32_t depth;          //!< Number of texture array layers.
     };
 
     struct TextureCubeDescriptor
     {
-        unsigned int    x;              //!< Sub-texture X-axis offset.
-        unsigned int    y;              //!< Sub-texture Y-axis offset.
-        unsigned int    layerOffset;    //!< Zero-based layer offset.
-        unsigned int    width;          //!< Sub-texture width.
-        unsigned int    height;         //!< Sub-texture height.
-        unsigned int    cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be N*6.
-        AxisDirection   cubeFaceOffset; //!< First cube face in the current layer.
+        std::uint32_t x;              //!< Sub-texture X-axis offset.
+        std::uint32_t y;              //!< Sub-texture Y-axis offset.
+        std::uint32_t layerOffset;    //!< Zero-based layer offset.
+        std::uint32_t width;          //!< Sub-texture width.
+        std::uint32_t height;         //!< Sub-texture height.
+        std::uint32_t cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be N*6.
+        AxisDirection cubeFaceOffset; //!< First cube face in the current layer.
     };
 
     SubTextureDescriptor()
@@ -247,7 +248,7 @@ struct LLGL_EXPORT SubTextureDescriptor
     {
     }
 
-    unsigned int                mipLevel;       //!< MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
+    std::uint32_t               mipLevel;       //!< MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
 
     union
     {
@@ -269,7 +270,7 @@ struct LLGL_EXPORT SubTextureDescriptor
 \remarks The height and depth are optional parameters, so this function can be easily used for 1D, 2D, and 3D textures.
 \return 1 + floor(log2(max{ x, y, z })).
 */
-LLGL_EXPORT unsigned int NumMipLevels(unsigned int width, unsigned int height = 1, unsigned int depth = 1);
+LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height = 1, std::uint32_t depth = 1);
 
 /**
 \brief Returns true if the specified texture format is a compressed format,

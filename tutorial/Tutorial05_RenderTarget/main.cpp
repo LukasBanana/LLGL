@@ -12,7 +12,7 @@
 #define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
-//#define ENABLE_CUSTOM_MULTISAMPLING
+#define ENABLE_CUSTOM_MULTISAMPLING
 
 // Enable depth texture instead of depth buffer for render target
 //#define ENABLE_DEPTH_TEXTURE
