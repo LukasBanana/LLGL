@@ -57,16 +57,16 @@ void VKThrowIfFailed(const VkResult errorCode, const std::string& info)
 }
 
 // see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#fundamentals-versionnum
-std::string VKApiVersionToString(uint32_t version)
+std::string VKApiVersionToString(std::uint32_t version)
 {
     union VKVersion
     {
-        uint32_t ver;
+        std::uint32_t ver;
         struct
         {
-            uint32_t patch : 12;
-            uint32_t minor : 10;
-            uint32_t major : 10;
+            std::uint32_t patch : 12;
+            std::uint32_t minor : 10;
+            std::uint32_t major : 10;
         };
     }
     versionBits;
@@ -87,7 +87,7 @@ VkBool32 VKBoolean(bool value)
 
 std::vector<VkLayerProperties> VKQueryInstanceLayerProperties()
 {
-    uint32_t propertyCount = 0;
+    std::uint32_t propertyCount = 0;
     auto result = vkEnumerateInstanceLayerProperties(&propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan instance layer properties");
 
@@ -100,7 +100,7 @@ std::vector<VkLayerProperties> VKQueryInstanceLayerProperties()
 
 std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties()
 {
-    uint32_t propertyCount = 0;
+    std::uint32_t propertyCount = 0;
     auto result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan instance extension properties");
 
@@ -113,7 +113,7 @@ std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties()
 
 std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance)
 {
-    uint32_t deviceCount = 0;
+    std::uint32_t deviceCount = 0;
     auto result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan physical devices");
 
@@ -126,7 +126,7 @@ std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance)
 
 std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device)
 {
-    uint32_t propertyCount = 0;
+    std::uint32_t propertyCount = 0;
     auto result = vkEnumerateDeviceExtensionProperties(device, nullptr, &propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan device extension properties");
 
@@ -139,7 +139,7 @@ std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDe
 
 std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevice device)
 {
-    uint32_t queueFamilyCount = 0;
+    std::uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
@@ -157,7 +157,7 @@ SwapChainSupportDetails VKQuerySwapChainSupport(VkPhysicalDevice device, VkSurfa
     VKThrowIfFailed(result, "failed to query Vulkan surface capabilities");
 
     /* Query surface formats */
-    uint32_t formatCount;
+    std::uint32_t formatCount;
     result = vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan surface formats");
 
@@ -169,7 +169,7 @@ SwapChainSupportDetails VKQuerySwapChainSupport(VkPhysicalDevice device, VkSurfa
     }
 
     /* Query surface present modes */
-    uint32_t presentModeCount;
+    std::uint32_t presentModeCount;
     result = vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan surface present modes");
 
@@ -189,7 +189,7 @@ QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFla
 
     auto queueFamilies = VKQueryQueueFamilyProperties(device);
 
-    uint32_t i = 0;
+    std::uint32_t i = 0;
     for (const auto& family : queueFamilies)
     {
         /* Get graphics family index */

@@ -121,7 +121,7 @@ class VKCommandBuffer : public CommandBuffer
 
         /* --- Extended functions --- */
 
-        void SetPresentIndex(uint32_t idx);
+        void SetPresentIndex(std::uint32_t idx);
 
         void BeginCommandBuffer();
         void EndCommandBuffer();
@@ -136,8 +136,8 @@ class VKCommandBuffer : public CommandBuffer
 
     private:
 
-        void CreateCommandPool(uint32_t queueFamilyIndex);
-        void CreateCommandBuffers(size_t bufferCount);
+        void CreateCommandPool(std::uint32_t queueFamilyIndex);
+        void CreateCommandBuffers(std::size_t bufferCount);
 
         VkDevice                        device_;
         VKPtr<VkCommandPool>            commandPool_;

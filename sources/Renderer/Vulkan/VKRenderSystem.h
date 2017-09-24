@@ -144,7 +144,7 @@ class VKRenderSystem : public RenderSystem
         bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
         bool CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const;
 
-        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+        std::uint32_t FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
         VKBuffer* CreateBufferObject(const BufferDescriptor& desc);
 

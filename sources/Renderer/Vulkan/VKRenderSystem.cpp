@@ -500,7 +500,7 @@ void VKRenderSystem::CreateLogicalDevice()
     queueFamilyIndices_ = VKFindQueueFamilies(physicalDevice_, (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT));
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices_.graphicsFamily, queueFamilyIndices_.presentFamily };
+    std::set<std::uint32_t> uniqueQueueFamilies = { queueFamilyIndices_.graphicsFamily, queueFamilyIndices_.presentFamily };
 
     float queuePriority = 1.0f;
     for (auto family : uniqueQueueFamilies)
@@ -527,11 +527,11 @@ void VKRenderSystem::CreateLogicalDevice()
     createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
-    createInfo.queueCreateInfoCount     = static_cast<uint32_t>(queueCreateInfos.size());
+    createInfo.queueCreateInfoCount     = static_cast<std::uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos        = queueCreateInfos.data();
     createInfo.enabledLayerCount        = 0;
     createInfo.ppEnabledLayerNames      = nullptr;
-    createInfo.enabledExtensionCount    = static_cast<uint32_t>(g_deviceExtensions.size());
+    createInfo.enabledExtensionCount    = static_cast<std::uint32_t>(g_deviceExtensions.size());
     createInfo.ppEnabledExtensionNames  = g_deviceExtensions.data();
     createInfo.pEnabledFeatures         = &deviceFeatures;
 
@@ -583,9 +583,9 @@ bool VKRenderSystem::CheckDeviceExtensionSupport(VkPhysicalDevice device, const 
     return requiredExtensions.empty();
 }
 
-uint32_t VKRenderSystem::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const
 {
-    for (uint32_t i = 0; i < memoryPropertiers_.memoryTypeCount; ++i)
+    for (std::uint32_t i = 0; i < memoryPropertiers_.memoryTypeCount; ++i)
     {
         if ((typeFilter & (1 << i)) != 0 && (memoryPropertiers_.memoryTypes[i].propertyFlags & properties) == properties)
             return i;

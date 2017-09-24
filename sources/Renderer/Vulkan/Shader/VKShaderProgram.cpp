@@ -87,14 +87,14 @@ void VKShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
         const auto& attrib = formatAttribs[i];
         auto& desc = vertexAttribDescs_[i];
 
-        desc.location   = static_cast<uint32_t>(i);
+        desc.location   = static_cast<std::uint32_t>(i);
         desc.binding    = attrib.inputSlot;
         desc.format     = VKTypes::Map(attrib.vectorType);
         desc.offset     = attrib.offset;
     }
 
     /* Initialize vertex input binding descriptors */
-    uint32_t prevSlot = 0, stride = 0;
+    std::uint32_t prevSlot = 0, stride = 0;
     VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     for (auto it = formatAttribs.begin(), itEnd = formatAttribs.end(); true; ++it)
@@ -181,7 +181,7 @@ void VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateC
     }
     else
     {
-        createInfo.vertexBindingDescriptionCount    = static_cast<uint32_t>(vertexBindingDescs_.size());
+        createInfo.vertexBindingDescriptionCount    = static_cast<std::uint32_t>(vertexBindingDescs_.size());
         createInfo.pVertexBindingDescriptions       = vertexBindingDescs_.data();
     }
 
@@ -192,7 +192,7 @@ void VKShaderProgram::FillVertexInputStateCreateInfo(VkPipelineVertexInputStateC
     }
     else
     {
-        createInfo.vertexAttributeDescriptionCount  = static_cast<uint32_t>(vertexAttribDescs_.size());
+        createInfo.vertexAttributeDescriptionCount  = static_cast<std::uint32_t>(vertexAttribDescs_.size());
         createInfo.pVertexAttributeDescriptions     = vertexAttribDescs_.data();
     }
 }

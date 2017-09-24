@@ -275,7 +275,7 @@ struct Scissor
     Scissor() = default;
     Scissor(const Scissor&) = default;
 
-    inline Scissor(int32_t x, int32_t y, int32_t width, int32_t height) :
+    inline Scissor(std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height) :
         x      { x      },
         y      { y      },
         width  { width  },
@@ -283,10 +283,10 @@ struct Scissor
     {
     }
 
-    int32_t x       = 0;
-    int32_t y       = 0;
-    int32_t width   = 0;
-    int32_t height  = 0;
+    std::int32_t x       = 0;
+    std::int32_t y       = 0;
+    std::int32_t width   = 0;
+    std::int32_t height  = 0;
 };
 
 //! Multi-sampling descriptor structure.
@@ -294,7 +294,7 @@ struct MultiSamplingDescriptor
 {
     MultiSamplingDescriptor() = default;
 
-    inline MultiSamplingDescriptor(uint32_t samples) :
+    inline MultiSamplingDescriptor(std::uint32_t samples) :
         enabled { samples > 1 },
         samples { samples     }
     {
@@ -304,16 +304,16 @@ struct MultiSamplingDescriptor
     \brief Returns the sample count for the state of this multi-sampling descriptor.
     \return max{ 1, samples } if multi-sampling is enabled, otherwise 1.
     */
-    inline uint32_t SampleCount() const
+    inline std::uint32_t SampleCount() const
     {
         return (enabled && samples > 1 ? samples : 1);
     }
 
     //! Specifies whether multi-sampling is enabled or disabled. By default disabled.
-    bool        enabled = false;
+    bool            enabled = false;
 
     //! Number of samples used for multi-sampling. By default 1.
-    uint32_t    samples = 1;
+    std::uint32_t   samples = 1;
 };
 
 //! Depth state descriptor structure.
@@ -336,30 +336,30 @@ struct DepthDescriptor
 struct StencilFaceDescriptor
 {
     //! Specifies the operation to take when the stencil test fails.
-    StencilOp   stencilFailOp   = StencilOp::Keep;
+    StencilOp       stencilFailOp   = StencilOp::Keep;
 
     //! Specifies the operation to take when the stencil test passes but the depth test fails.
-    StencilOp   depthFailOp     = StencilOp::Keep;
+    StencilOp       depthFailOp     = StencilOp::Keep;
 
     //! Specifies the operation to take when both the stencil test and the depth test pass.
-    StencilOp   depthPassOp     = StencilOp::Keep;
+    StencilOp       depthPassOp     = StencilOp::Keep;
 
     //! Specifies the stencil compare operation.
-    CompareOp   compareOp       = CompareOp::Less;
+    CompareOp       compareOp       = CompareOp::Less;
 
     /**
     \brief Specifies the portion of the depth-stencil buffer for reading stencil data. By default 0xffffffff.
     \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (readMask & 0xff) of the read mask value of the front face will be used.
     \see StencilDescriptor::front
     */
-    uint32_t    readMask        = ~0;
+    std::uint32_t   readMask        = ~0;
 
     /**
     \brief Specifies the portion of the depth-stencil buffer for writing stencil data. By default 0xffffffff.
     \note For Direct3D 11 and Direct3D 12, only the first 8 least significant bits (writeMask & 0xff) of the write mask value of the front face will be used.
     \see StencilDescriptor::front
     */
-    uint32_t    writeMask       = ~0;
+    std::uint32_t   writeMask       = ~0;
 
     /**
     \brief Specifies the stencil reference value.
@@ -367,7 +367,7 @@ struct StencilFaceDescriptor
     \note For Direct3D 11 and Direct3D 12, only the stencil reference value of the front face will be used.
     \see StencilDescriptor::front
     */
-    uint32_t    reference       = 0;
+    std::uint32_t   reference       = 0;
 };
 
 //! Stencil state descriptor structure.
@@ -533,7 +533,7 @@ struct GraphicsPipelineDescriptor
 LLGL_EXPORT bool IsPrimitiveTopologyPatches(const PrimitiveTopology primitiveTopology);
 
 //! Returns the number of patch control points of the specified primitive topology (in range [1, 32]), or 0 if the topology is not a patch list.
-LLGL_EXPORT uint32_t GetPrimitiveTopologyPatchSize(const PrimitiveTopology primitiveTopology);
+LLGL_EXPORT std::uint32_t GetPrimitiveTopologyPatchSize(const PrimitiveTopology primitiveTopology);
 
 
 } // /namespace LLGL

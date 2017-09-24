@@ -44,14 +44,14 @@ bool VKShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor
 
     /* Create shader module */
     VkShaderModuleCreateInfo createInfo;
-
-    createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.pNext    = nullptr;
-    createInfo.flags    = 0;
-    createInfo.codeSize = binaryCode.size();
-    createInfo.pCode    = reinterpret_cast<const uint32_t*>(binaryCode.data());
-
-    VkResult result = vkCreateShaderModule(device_, &createInfo, nullptr, shaderModule_.ReleaseAndGetAddressOf());
+    {
+        createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.pNext    = nullptr;
+        createInfo.flags    = 0;
+        createInfo.codeSize = binaryCode.size();
+        createInfo.pCode    = reinterpret_cast<const std::uint32_t*>(binaryCode.data());
+    }
+    auto result = vkCreateShaderModule(device_, &createInfo, nullptr, shaderModule_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan shader module");
 
     loadBinaryResult_ = LoadBinaryResult::Success;

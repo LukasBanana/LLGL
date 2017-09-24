@@ -40,7 +40,7 @@ struct LLGL_EXPORT VertexAttribute
     VertexAttribute(
         const std::string& name,
         const VectorType vectorType,
-        uint32_t instanceDivisor = 0
+        std::uint32_t instanceDivisor = 0
     );
 
     /**
@@ -57,9 +57,9 @@ struct LLGL_EXPORT VertexAttribute
     */
     VertexAttribute(
         const std::string& semanticName,
-        uint32_t semanticIndex,
+        std::uint32_t semanticIndex,
         const VectorType vectorType,
-        uint32_t instanceDivisor = 0
+        std::uint32_t instanceDivisor = 0
     );
 
     /**
@@ -69,42 +69,42 @@ struct LLGL_EXPORT VertexAttribute
     VectorTypeSize(vectorType).
     \endcode
     */
-    uint32_t GetSize() const;
+    std::uint32_t GetSize() const;
 
     //! Vertex attribute name (for GLSL) or semantic name (for HLSL).
-    std::string name;
+    std::string     name;
 
     /**
     \brief Vector type of the vertex attribute. By default VectorType::Float4.
     \remarks The double types are only supported with OpenGL, i.e. the vector types:
     VectorType::Double, VectorType::Double2, VectorType::Double3, and VectorType::Double4.
     */
-    VectorType  vectorType      = VectorType::Float4;
+    VectorType      vectorType      = VectorType::Float4;
 
     /**
     \brief Instance data divisor (or instance data step rate).
     \remarks If this is 0, this attribute is considered to be stored per vertex.
     If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
     */
-    uint32_t    instanceDivisor = 0;
+    std::uint32_t   instanceDivisor = 0;
 
     //! Specifies whether non-floating-point data types are to be converted to floating-points. By default false.
-    bool        conversion      = false;
+    bool            conversion      = false;
 
     //! Byte offset within each vertex. By default 0.
-    uint32_t    offset          = 0;
+    std::uint32_t   offset          = 0;
 
     /**
     \brief Semantic index.
     \note Only supported with: Direct3D 11, Direct3D 12.
     */
-    uint32_t    semanticIndex   = 0;
+    std::uint32_t   semanticIndex   = 0;
 
     /**
     \brief Vertex buffer input slot.
     \remarks This is used when multiple vertex buffers are used simultaneously.
     */
-    uint32_t    inputSlot       = 0;
+    std::uint32_t   inputSlot       = 0;
 };
 
 

@@ -81,7 +81,7 @@ class VKRenderContext : public RenderContext
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
         VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes) const;
-        VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, uint32_t width, uint32_t height) const;
+        VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const;
 
         void AcquireNextPresentImage();
 
@@ -100,7 +100,7 @@ class VKRenderContext : public RenderContext
         std::vector<VkImage>                swapChainImages_;
         std::vector<VKPtr<VkImageView>>     swapChainImageViews_;
         std::vector<VKPtr<VkFramebuffer>>   swapChainFramebuffers_;
-        uint32_t                            presentImageIndex_          = 0;
+        std::uint32_t                       presentImageIndex_          = 0;
 
         VkQueue                             graphicsQueue_              = VK_NULL_HANDLE;
         VkQueue                             presentQueue_               = VK_NULL_HANDLE;

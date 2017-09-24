@@ -28,7 +28,7 @@ VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, size_t bufferCou
 
 VKCommandBuffer::~VKCommandBuffer()
 {
-    vkFreeCommandBuffers(device_, commandPool_, static_cast<uint32_t>(commandBufferList_.size()), commandBufferList_.data());
+    vkFreeCommandBuffers(device_, commandPool_, static_cast<std::uint32_t>(commandBufferList_.size()), commandBufferList_.data());
 }
 
 /* ----- Configuration ----- */
@@ -73,7 +73,7 @@ void VKCommandBuffer::SetClearDepth(float depth)
 
 void VKCommandBuffer::SetClearStencil(int stencil)
 {
-    clearValue_.depthStencil.stencil = static_cast<uint32_t>(stencil);
+    clearValue_.depthStencil.stencil = static_cast<std::uint32_t>(stencil);
 }
 
 void VKCommandBuffer::Clear(long flags)
@@ -283,7 +283,7 @@ void VKCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned in
 
 void VKCommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
 {
-    //todo
+    vkCmdDispatch(commandBuffer_, groupSizeX, groupSizeY, groupSizeZ);
 }
 
 /* ----- Misc ----- */
@@ -295,7 +295,7 @@ void VKCommandBuffer::SyncGPU()
 
 /* --- Extended functions --- */
 
-void VKCommandBuffer::SetPresentIndex(uint32_t idx)
+void VKCommandBuffer::SetPresentIndex(std::uint32_t idx)
 {
     commandBuffer_ = commandBufferList_[idx];
 }
@@ -345,7 +345,7 @@ void VKCommandBuffer::EndRenderPass()
  * ======= Private: =======
  */
 
-void VKCommandBuffer::CreateCommandPool(uint32_t queueFamilyIndex)
+void VKCommandBuffer::CreateCommandPool(std::uint32_t queueFamilyIndex)
 {
     /* Create command pool */
     VkCommandPoolCreateInfo createInfo;
@@ -359,7 +359,7 @@ void VKCommandBuffer::CreateCommandPool(uint32_t queueFamilyIndex)
     VKThrowIfFailed(result, "failed to create Vulkan command pool");
 }
 
-void VKCommandBuffer::CreateCommandBuffers(size_t bufferCount)
+void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
 {
     /* Allocate command buffers */
     commandBufferList_.resize(bufferCount);
@@ -370,7 +370,7 @@ void VKCommandBuffer::CreateCommandBuffers(size_t bufferCount)
         allocInfo.pNext                 = nullptr;
         allocInfo.commandPool           = commandPool_;
         allocInfo.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount    = static_cast<uint32_t>(bufferCount);
+        allocInfo.commandBufferCount    = static_cast<std::uint32_t>(bufferCount);
     }
     auto result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferList_.data());
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");

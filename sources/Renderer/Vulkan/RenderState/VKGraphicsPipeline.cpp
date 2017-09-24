@@ -69,16 +69,16 @@ static void Convert(VkRect2D& dst, const Scissor& src)
 {
     dst.offset.x        = src.x;
     dst.offset.y        = src.y;
-    dst.extent.width    = static_cast<uint32_t>(src.width);
-    dst.extent.height   = static_cast<uint32_t>(src.height);
+    dst.extent.width    = static_cast<std::uint32_t>(src.width);
+    dst.extent.height   = static_cast<std::uint32_t>(src.height);
 }
 
 static void Convert(VkRect2D& dst, const Viewport& src)
 {
-    dst.offset.x        = static_cast<int32_t>(src.x);
-    dst.offset.y        = static_cast<int32_t>(src.y);
-    dst.extent.width    = static_cast<uint32_t>(src.width);
-    dst.extent.height   = static_cast<uint32_t>(src.height);
+    dst.offset.x        = static_cast<std::int32_t>(src.x);
+    dst.offset.y        = static_cast<std::int32_t>(src.y);
+    dst.extent.width    = static_cast<std::uint32_t>(src.width);
+    dst.extent.height   = static_cast<std::uint32_t>(src.height);
 }
 
 static void CreateViewportState(
@@ -95,7 +95,7 @@ static void CreateViewportState(
     /* Initialize viewports */
     if (numViewports > 0)
     {
-        createInfo.viewportCount = static_cast<uint32_t>(numViewports);
+        createInfo.viewportCount = static_cast<std::uint32_t>(numViewports);
 
         /* Check if VkViewpport and Viewport structures can be safely reinterpret-casted */
         if ( sizeof(VkViewport)             == sizeof(Viewport)             &&
@@ -134,7 +134,7 @@ static void CreateViewportState(
     /* Convert scissors to Vulkan structure */
     if (numViewports > 0)
     {
-        createInfo.scissorCount = static_cast<uint32_t>(numViewports);
+        createInfo.scissorCount = static_cast<std::uint32_t>(numViewports);
         scissorsVK.resize(numViewports);
 
         for (size_t i = 0; i < numViewports; ++i)
@@ -288,7 +288,7 @@ static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBl
         CreateColorBlendAttachmentState(attachmentStatesVK[0], {}, VKBoolean(desc.blendEnabled));
     }
 
-    createInfo.attachmentCount      = static_cast<uint32_t>(numAttachments);
+    createInfo.attachmentCount      = static_cast<std::uint32_t>(numAttachments);
     createInfo.pAttachments         = attachmentStatesVK.data();
 
     createInfo.blendConstants[0]    = desc.blendFactor.r;
@@ -343,7 +343,7 @@ void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor
     createInfo.sType                        = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     createInfo.pNext                        = nullptr;
     createInfo.flags                        = 0;
-    createInfo.stageCount                   = static_cast<uint32_t>(shaderStageCreateInfos.size());
+    createInfo.stageCount                   = static_cast<std::uint32_t>(shaderStageCreateInfos.size());
     createInfo.pStages                      = shaderStageCreateInfos.data();
     createInfo.pVertexInputState            = (&vertexInputCreateInfo);
     createInfo.pInputAssemblyState          = (&inputAssembly);

@@ -20,7 +20,7 @@ D3D12VertexBuffer::D3D12VertexBuffer(ID3D12Device* device, const BufferDescripto
     CreateResource(device, desc.size);
 
     view_.BufferLocation    = Get()->GetGPUVirtualAddress();
-    view_.SizeInBytes       = GetBufferSize();
+    view_.SizeInBytes       = static_cast<UINT>(GetBufferSize());
     view_.StrideInBytes     = desc.vertexBuffer.format.stride;
 }
 

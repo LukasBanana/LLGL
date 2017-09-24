@@ -52,7 +52,7 @@ class D3D12Buffer : public Buffer
     private:
 
         ComPtr<ID3D12Resource>  resource_;
-        UINT64                    bufferSize_ = 0;
+        UINT64                  bufferSize_ = 0;
 
 };
 

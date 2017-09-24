@@ -22,7 +22,7 @@ class VKDeviceMemory
 
     public:
 
-        VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size, uint32_t memoryTypeIndex);
+        VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size, std::uint32_t memoryTypeIndex);
 
         // Returns the hardware buffer object.
         inline VkDeviceMemory Get() const

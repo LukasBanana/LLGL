@@ -29,7 +29,7 @@ struct LLGL_EXPORT VertexFormat
     \brief Offset value to determine the offset automatically, so that a vertex attribute is appended at the end of a vertex format.
     \see AppendAttribute
     */
-    static const uint32_t OffsetAppend = ~0;
+    static const std::uint32_t OffsetAppend = ~0;
 
     /**
     \brief Appends the specified vertex attribute to this vertex format.
@@ -44,7 +44,7 @@ struct LLGL_EXPORT VertexFormat
     \see VertexAttribute::offset
     \see VertexAttribute::inputSlot
     */
-    void AppendAttribute(const VertexAttribute& attrib, uint32_t offset = OffsetAppend);
+    void AppendAttribute(const VertexAttribute& attrib, std::uint32_t offset = OffsetAppend);
 
     /**
     \brief Append all attributes of the specified vertex format.
@@ -63,7 +63,7 @@ struct LLGL_EXPORT VertexFormat
     \remarks This is updated automatically everytime "AppendAttribute" or "AppendAttributes" is called,
     but it can also modified manually. It is commonly the size of all vertex attributes.
     */
-    uint32_t                        stride = 0;
+    std::uint32_t                   stride = 0;
 };
 
 

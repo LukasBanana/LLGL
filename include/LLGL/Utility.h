@@ -70,7 +70,7 @@ LLGL_EXPORT BufferDescriptor IndexBufferDesc(uint64_t size, const IndexFormat& i
 LLGL_EXPORT BufferDescriptor ConstantBufferDesc(uint64_t size, long flags = BufferFlags::DynamicUsage);
 
 //! Returns a BufferDescriptor structure for a storage buffer.
-LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBufferType storageType, uint32_t stride, long flags = BufferFlags::MapReadAccess | BufferFlags::MapWriteAccess);
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBufferType storageType, std::uint32_t stride, long flags = BufferFlags::MapReadAccess | BufferFlags::MapWriteAccess);
 
 /** @} */
 

@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <type_traits>
+#include <cstdint>
 
 
 namespace LLGL
@@ -34,7 +35,7 @@ inline T MaxColorValue()
 
 //! Specialized version. For unsigned 8-bit integers, the return value is 255.
 template <>
-inline unsigned char MaxColorValue<unsigned char>()
+inline std::uint8_t MaxColorValue<std::uint8_t>()
 {
     return 255;
 }
@@ -93,7 +94,7 @@ inline double CastColorValue<double, double>(const double& value)
 
 //! Specialized template which merely passes the input value as output.
 template <>
-inline unsigned char CastColorValue<unsigned char, unsigned char>(const unsigned char& value)
+inline std::uint8_t CastColorValue<std::uint8_t, std::uint8_t>(const std::uint8_t& value)
 {
     return value;
 }

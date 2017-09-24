@@ -14,13 +14,13 @@ namespace LLGL
 
 
 VertexAttribute::VertexAttribute(
-    const std::string& name, const VectorType vectorType, uint32_t instanceDivisor) :
+    const std::string& name, const VectorType vectorType, std::uint32_t instanceDivisor) :
         VertexAttribute { name, 0, vectorType, instanceDivisor }
 {
 }
 
 VertexAttribute::VertexAttribute(
-    const std::string& semanticName, uint32_t semanticIndex, const VectorType vectorType, uint32_t instanceDivisor) :
+    const std::string& semanticName, std::uint32_t semanticIndex, const VectorType vectorType, std::uint32_t instanceDivisor) :
         name            { semanticName    },
         vectorType      { vectorType      },
         instanceDivisor { instanceDivisor },
@@ -28,7 +28,7 @@ VertexAttribute::VertexAttribute(
 {
 }
 
-uint32_t VertexAttribute::GetSize() const
+std::uint32_t VertexAttribute::GetSize() const
 {
     return VectorTypeSize(vectorType);
 }

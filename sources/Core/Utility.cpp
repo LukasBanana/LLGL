@@ -133,7 +133,7 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(TextureFormat format, unsigne
 
 /* ----- BufferDescriptor utility functions ----- */
 
-LLGL_EXPORT BufferDescriptor VertexBufferDesc(uint64_t size, const VertexFormat& vertexFormat, long flags)
+LLGL_EXPORT BufferDescriptor VertexBufferDesc(std::uint64_t size, const VertexFormat& vertexFormat, long flags)
 {
     BufferDescriptor desc;
     {
@@ -145,7 +145,7 @@ LLGL_EXPORT BufferDescriptor VertexBufferDesc(uint64_t size, const VertexFormat&
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor IndexBufferDesc(uint64_t size, const IndexFormat& indexFormat, long flags)
+LLGL_EXPORT BufferDescriptor IndexBufferDesc(std::uint64_t size, const IndexFormat& indexFormat, long flags)
 {
     BufferDescriptor desc;
     {
@@ -157,7 +157,7 @@ LLGL_EXPORT BufferDescriptor IndexBufferDesc(uint64_t size, const IndexFormat& i
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor ConstantBufferDesc(uint64_t size, long flags)
+LLGL_EXPORT BufferDescriptor ConstantBufferDesc(std::uint64_t size, long flags)
 {
     BufferDescriptor desc;
     {
@@ -168,7 +168,7 @@ LLGL_EXPORT BufferDescriptor ConstantBufferDesc(uint64_t size, long flags)
     return desc;
 }
 
-LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBufferType storageType, uint32_t stride, long flags)
+LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const StorageBufferType storageType, std::uint32_t stride, long flags)
 {
     BufferDescriptor desc;
     {

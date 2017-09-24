@@ -97,7 +97,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
         case BufferType::Vertex:
         {
             auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer>(device_.Get(), desc);
-            vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, initialData, desc.size);
+            vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, initialData, static_cast<UINT>(desc.size));
             buffer = std::move(vertexBufferD3D);
         }
         break;
@@ -105,7 +105,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
         case BufferType::Index:
         {
             auto indexBufferD3D = MakeUnique<D3D12IndexBuffer>(device_.Get(), desc);
-            indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, initialData, desc.size);
+            indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, initialData, static_cast<UINT>(desc.size));
             buffer = std::move(indexBufferD3D);
         }
         break;
@@ -113,7 +113,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
         case BufferType::Constant:
         {
             auto constantBufferD3D = MakeUnique<D3D12ConstantBuffer>(device_.Get(), desc);
-            constantBufferD3D->UpdateSubresource(initialData, desc.size);
+            constantBufferD3D->UpdateSubresource(initialData, static_cast<UINT>(desc.size));
             buffer = std::move(constantBufferD3D);
         }
         break;

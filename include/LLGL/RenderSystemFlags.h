@@ -131,7 +131,7 @@ struct RenderSystemConfiguration
     to convert the image data into the respective hardware texture format. OpenGL does this automatically.
     \see maxThreadCount
     */
-    size_t              threadCount         { maxThreadCount };
+    std::size_t         threadCount         { maxThreadCount };
 };
 
 /**

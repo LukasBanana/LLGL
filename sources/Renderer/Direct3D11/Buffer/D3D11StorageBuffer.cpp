@@ -28,7 +28,7 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
     /* Create D3D hardware buffer */
     D3D11_BUFFER_DESC bufferDesc;
     {
-        bufferDesc.ByteWidth            = desc.size;
+        bufferDesc.ByteWidth            = static_cast<UINT>(desc.size);
         bufferDesc.Usage                = D3D11_USAGE_DEFAULT;
         bufferDesc.BindFlags            = GetBindFlags();
         bufferDesc.CPUAccessFlags       = 0;
@@ -39,7 +39,7 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
 
     /* Create either UAV or SRV */
     auto format         = GetFormat(desc.storageBuffer.vectorType);
-    auto numElements    = desc.size / desc.storageBuffer.stride;
+    auto numElements    = static_cast<UINT>(desc.size) / desc.storageBuffer.stride;
 
     CreateSRV(device, format, 0, numElements);
 

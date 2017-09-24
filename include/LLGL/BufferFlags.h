@@ -14,6 +14,7 @@
 #include "IndexFormat.h"
 #include "RenderSystemFlags.h"
 #include <string>
+#include <cstdint>
 
 
 namespace LLGL
@@ -131,7 +132,7 @@ struct BufferDescriptor
         \brief Specifies the stride (in bytes) of each element in a storage buffer.
         \remarks If this value is zero, the behavior of the buffer creation is undefined.
         */
-        uint32_t            stride      = 0;
+        std::uint32_t       stride      = 0;
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.
@@ -142,7 +143,7 @@ struct BufferDescriptor
     \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage),
     'size' must be a multiple of 'storageBuffer.stride'.
     */
-    uint64_t                size    = 0;
+    std::uint64_t           size    = 0;
 
     /**
     \brief Specifies the buffer creation flags. By default 0.
@@ -168,8 +169,8 @@ struct BufferDescriptor
 struct ConstantBufferViewDescriptor
 {
     std::string     name;           //!< Constant buffer name.
-    unsigned int    index   = 0;    //!< Index of the constant buffer within the respective shader.
-    unsigned int    size    = 0;    //!< Buffer size (in bytes).
+    std::uint32_t   index   = 0;    //!< Index of the constant buffer within the respective shader.
+    std::uint32_t   size    = 0;    //!< Buffer size (in bytes).
 };
 
 /**
@@ -179,7 +180,7 @@ struct ConstantBufferViewDescriptor
 struct StorageBufferViewDescriptor
 {
     std::string         name;           //!< Storage buffer name.
-    unsigned int        index   = 0;    //!< Index of the storage buffer within the respective shader.
+    std::uint32_t       index   = 0;    //!< Index of the storage buffer within the respective shader.
 
     /**
     \brief Storage buffer type.

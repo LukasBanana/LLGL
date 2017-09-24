@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-VKSamplerArray::VKSamplerArray(uint32_t numSamplers, Sampler* const * samplerArray)
+VKSamplerArray::VKSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     /* Store the ID of each GLSampler inside the array */
     samplers_.reserve(numSamplers);

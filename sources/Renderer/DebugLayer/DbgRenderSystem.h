@@ -119,7 +119,7 @@ class DbgRenderSystem : public RenderSystem
 
     private:
 
-        void DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
+        void DebugBufferSize(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
         void DebugMipLevelLimit(int mipLevel, int mipLevelCount);
 
         void DebugTextureDescriptor(const TextureDescriptor& desc);

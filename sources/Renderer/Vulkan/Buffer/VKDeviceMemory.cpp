@@ -13,7 +13,7 @@ namespace LLGL
 {
 
 
-VKDeviceMemory::VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size, uint32_t memoryTypeIndex) :
+VKDeviceMemory::VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size, std::uint32_t memoryTypeIndex) :
     deviceMemory_ { device, vkFreeMemory }
 {
     /* Allocate device memory */

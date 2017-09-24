@@ -12,7 +12,7 @@ namespace LLGL
 {
 
 
-LLGL_EXPORT uint32_t DataTypeSize(const DataType dataType)
+LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType)
 {
     switch (dataType)
     {
@@ -32,19 +32,19 @@ LLGL_EXPORT uint32_t DataTypeSize(const DataType dataType)
     return 0;
 }
 
-LLGL_EXPORT uint32_t VectorTypeSize(const VectorType vectorType)
+LLGL_EXPORT std::uint32_t VectorTypeSize(const VectorType vectorType)
 {
     DataType dataType   = DataType::Float;
-    uint32_t components = 0;
+    std::uint32_t components = 0;
     VectorTypeFormat(vectorType, dataType, components);
 
     return (DataTypeSize(dataType) * components);
 }
 
-LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, uint32_t& components)
+LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, std::uint32_t& components)
 {
     /* Get data type and components by indexed vector type */
-    auto vectorTypeIdx = (static_cast<uint32_t>(vectorType) - static_cast<uint32_t>(VectorType::Float));
+    auto vectorTypeIdx = (static_cast<std::uint32_t>(vectorType) - static_cast<std::uint32_t>(VectorType::Float));
     auto componentsIdx = vectorTypeIdx % 4;
     vectorTypeIdx /= 4;
 

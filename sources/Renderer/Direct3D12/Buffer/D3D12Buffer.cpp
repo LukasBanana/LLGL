@@ -49,7 +49,7 @@ void D3D12Buffer::UpdateStaticSubresource(
     hr = uploadBuffer->Map(0, nullptr, &dest);
     DXThrowIfFailed(hr, "failed to map D3D12 resource");
     {
-        ::memcpy(dest, data, static_cast<size_t>(bufferSize));
+        ::memcpy(dest, data, static_cast<std::size_t>(bufferSize));
     }
     uploadBuffer->Unmap(0, nullptr);
 
@@ -70,7 +70,7 @@ void D3D12Buffer::UpdateDynamicSubresource(const void* data, UINT64 bufferSize, 
     auto hr = resource_->Map(0, nullptr, &dest);
     DXThrowIfFailed(hr, "failed to map D3D12 resource");
     {
-        ::memcpy((reinterpret_cast<char*>(dest) + offset), data, static_cast<size_t>(bufferSize));
+        ::memcpy((reinterpret_cast<char*>(dest) + offset), data, static_cast<std::size_t>(bufferSize));
     }
     resource_->Unmap(0, nullptr);
 }

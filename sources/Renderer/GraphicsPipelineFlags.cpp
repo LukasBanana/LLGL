@@ -17,10 +17,10 @@ LLGL_EXPORT bool IsPrimitiveTopologyPatches(const PrimitiveTopology primitiveTop
     return (primitiveTopology >= PrimitiveTopology::Patches1 && primitiveTopology <= PrimitiveTopology::Patches32);
 }
 
-LLGL_EXPORT uint32_t GetPrimitiveTopologyPatchSize(const PrimitiveTopology primitiveTopology)
+LLGL_EXPORT std::uint32_t GetPrimitiveTopologyPatchSize(const PrimitiveTopology primitiveTopology)
 {
     if (IsPrimitiveTopologyPatches(primitiveTopology))
-        return (static_cast<uint32_t>(primitiveTopology) - static_cast<uint32_t>(PrimitiveTopology::Patches1) + 1);
+        return (static_cast<std::uint32_t>(primitiveTopology) - static_cast<std::uint32_t>(PrimitiveTopology::Patches1) + 1);
     else
         return 0;
 }

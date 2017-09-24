@@ -29,7 +29,7 @@ class DbgBuffer : public Buffer
 
         LLGL::Buffer&       instance;
         BufferDescriptor    desc;
-        unsigned int        elements    = 0;
+        std::uint64_t       elements    = 0;
         bool                initialized = false;
 
 };

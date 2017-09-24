@@ -424,9 +424,9 @@ void DbgRenderSystem::Release(Query& query)
  * ======= Private: =======
  */
 
-void DbgRenderSystem::DebugBufferSize(std::size_t bufferSize, std::size_t dataSize, std::size_t dataOffset)
+void DbgRenderSystem::DebugBufferSize(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset)
 {
-    if (dataSize + dataOffset > bufferSize)
+    if (static_cast<std::uint64_t>(dataSize) + static_cast<std::uint64_t>(dataOffset) > bufferSize)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds");
 }
 

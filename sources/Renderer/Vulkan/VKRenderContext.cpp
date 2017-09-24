@@ -162,10 +162,10 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
     /* Pick surface format, present mode, and extent */
     auto surfaceFormat  = PickSwapSurfaceFormat(swapChainSupport.formats);
     auto presentMode    = PickSwapPresentMode(swapChainSupport.presentModes);
-    auto extent         = PickSwapExtent(swapChainSupport.caps, static_cast<uint32_t>(desc.resolution.x), static_cast<uint32_t>(desc.resolution.y));
+    auto extent         = PickSwapExtent(swapChainSupport.caps, static_cast<std::uint32_t>(desc.resolution.x), static_cast<std::uint32_t>(desc.resolution.y));
 
     /* Determine required image count for swap-chain */
-    uint32_t imageCount = swapChainSupport.caps.minImageCount;
+    auto imageCount = swapChainSupport.caps.minImageCount;
     if (swapChainSupport.caps.maxImageCount > 0)
         imageCount = std::min(imageCount, swapChainSupport.caps.maxImageCount);
 
@@ -380,9 +380,9 @@ VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresen
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, uint32_t width, uint32_t height) const
+VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const
 {
-    if (surfaceCaps.currentExtent.width == std::numeric_limits<uint32_t>::max())
+    if (surfaceCaps.currentExtent.width == std::numeric_limits<std::uint32_t>::max())
     {
         return VkExtent2D
         {

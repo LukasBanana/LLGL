@@ -20,7 +20,7 @@ D3D11ConstantBuffer::D3D11ConstantBuffer(ID3D11Device* device, const BufferDescr
     D3D11Buffer { BufferType::Constant }
 {
     /* Setup descriptor and create constant buffer */
-    CD3D11_BUFFER_DESC bufferDesc(desc.size, D3D11_BIND_CONSTANT_BUFFER);
+    CD3D11_BUFFER_DESC bufferDesc(static_cast<UINT>(desc.size), D3D11_BIND_CONSTANT_BUFFER);
 
     if ((desc.flags & BufferFlags::DynamicUsage) != 0)
     {
@@ -31,7 +31,7 @@ D3D11ConstantBuffer::D3D11ConstantBuffer(ID3D11Device* device, const BufferDescr
     usage_ = bufferDesc.Usage;
 
     CreateResource(device, bufferDesc, initialData, desc.flags);
-    bufferSize_ = desc.size;
+    bufferSize_ = static_cast<UINT>(desc.size);
 }
 
 void D3D11ConstantBuffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset)

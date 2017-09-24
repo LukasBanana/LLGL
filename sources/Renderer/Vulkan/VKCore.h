@@ -23,7 +23,7 @@ namespace LLGL
 
 struct QueueFamilyIndices
 {
-    static const uint32_t invalidIndex = 0xffffffff;
+    static const std::uint32_t invalidIndex = 0xffffffff;
 
     QueueFamilyIndices() :
         graphicsFamily { invalidIndex },
@@ -33,12 +33,12 @@ struct QueueFamilyIndices
 
     union
     {
-        uint32_t indices[2];
+        std::uint32_t indices[2];
         struct
         {
-            uint32_t graphicsFamily;
-            uint32_t presentFamily;
-            //uint32_t transferFamily;
+            std::uint32_t graphicsFamily;
+            std::uint32_t presentFamily;
+            //std::uint32_t transferFamily;
         };
     };
 
@@ -65,7 +65,7 @@ std::string VKErrorToStr(const VkResult errorCode);
 void VKThrowIfFailed(const VkResult errorCode, const std::string& info);
 
 // Converts the specified Vulkan API version into a string (e.g. "1.0.100").
-std::string VKApiVersionToString(uint32_t version);
+std::string VKApiVersionToString(std::uint32_t version);
 
 //! Converts the boolean value into a VkBool322 value.
 VkBool32 VKBoolean(bool value);

@@ -29,7 +29,7 @@ D3D12ConstantBuffer::D3D12ConstantBuffer(ID3D12Device* device, const BufferDescr
     DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap for constant-buffer-view (CBV)");
 
     /* Create resource and put view */
-    CreateResourceAndPutView(device, desc.size);
+    CreateResourceAndPutView(device, static_cast<UINT>(desc.size));
 }
 
 void D3D12ConstantBuffer::UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset)

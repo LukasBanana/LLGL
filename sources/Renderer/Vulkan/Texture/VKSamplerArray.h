@@ -25,7 +25,7 @@ class VKSamplerArray : public SamplerArray
 
     public:
 
-        VKSamplerArray(uint32_t numSamplers, Sampler* const * samplerArray);
+        VKSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray);
 
         //! Returns the array of Vulkan samplers.
         inline const std::vector<VkSampler>& GetSamplers() const
