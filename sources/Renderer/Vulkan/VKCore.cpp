@@ -148,9 +148,9 @@ std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevi
     return queueFamilies;
 }
 
-SwapChainSupportDetails VKQuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
+SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
-    SwapChainSupportDetails details;
+    SurfaceSupportDetails details;
 
     /* Query surface capabilities */
     auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.caps);

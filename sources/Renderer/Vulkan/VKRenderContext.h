@@ -71,13 +71,13 @@ class VKRenderContext : public RenderContext
 
     private:
 
-        void CreateVkSurface();
+        void CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore);
+        void CreatePresentSemaphores();
+        void CreateGpuSurface();
+        void CreateSwapChainRenderPass();
         void CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc);
         void CreateSwapChainImageViews();
-        void CreateSwapChainRenderPass();
         void CreateSwapChainFramebuffers();
-        void CreateVkSemaphore(VKPtr<VkSemaphore>& semaphore);
-        void CreatePresentSemaphorse();
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
         VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, const VsyncDescriptor& vsyncDesc) const;
@@ -92,10 +92,11 @@ class VKRenderContext : public RenderContext
         const VKPtr<VkDevice>&              device_;
 
         VKPtr<VkSurfaceKHR>                 surface_;
+        SurfaceSupportDetails               surfaceSupportDetails_;
 
         VKPtr<VkSwapchainKHR>               swapChain_;
         VKPtr<VkRenderPass>                 swapChainRenderPass_;
-        VkFormat                            swapChainFormat_            = VK_FORMAT_UNDEFINED;
+        VkSurfaceFormatKHR                  swapChainFormat_;
         VkExtent2D                          swapChainExtent_            = { 0, 0 };
         std::vector<VkImage>                swapChainImages_;
         std::vector<VKPtr<VkImageView>>     swapChainImageViews_;
@@ -109,6 +110,8 @@ class VKRenderContext : public RenderContext
         VKPtr<VkSemaphore>                  renderFinishedSemaphore_;
 
         VKCommandBuffer*                    commandBuffer_              = nullptr;
+
+        VsyncDescriptor                     vsyncDesc_;
 
 };
 

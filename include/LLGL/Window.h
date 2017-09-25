@@ -36,25 +36,25 @@ struct WindowDescriptor
     //! Window size (this should be the client area size).
     Size            size;
 
-    //! Specifies whether the window is visible at creation time.
+    //! Specifies whether the window is visible at creation time. By default false.
     bool            visible             = false;
 
-    //! Specifies whether the window is borderless. This is required for a fullscreen render context.
+    //! Specifies whether the window is borderless. This is required for a fullscreen render context. By default false.
     bool            borderless          = false;
 
-    //! Specifies whether the window can be resized.
+    //! Specifies whether the window can be resized. By default false.
     bool            resizable           = false;
 
-    //! Specifies whether the window allows that files can be draged-and-droped onto the window.
+    //! Specifies whether the window allows that files can be draged-and-droped onto the window. By default false.
     bool            acceptDropFiles     = false;
 
     /**
-    \brief Specifies whether the 
+    \brief Specifies whether this window prevents the host system for power-safe mode. By default false.
     \note Only supported on: MS/Windows.
     */
     bool            preventForPowerSafe = false;
 
-    //! Specifies whether the window is centered within the desktop screen.
+    //! Specifies whether the window is centered within the desktop screen. By default false.
     bool            centered            = false;
 
     /**

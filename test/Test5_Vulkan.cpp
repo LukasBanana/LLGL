@@ -35,7 +35,7 @@ int main()
         LLGL::RenderContextDescriptor contextDesc;
 
         contextDesc.videoMode.resolution        = { 800, 600 };
-        contextDesc.videoMode.swapChainSize     = 3;
+        contextDesc.videoMode.swapChainSize     = 2;
         //contextDesc.videoMode.fullscreen        = true;
 
         contextDesc.multiSampling.enabled       = true;
@@ -45,15 +45,42 @@ int main()
 
         LLGL::WindowDescriptor windowDesc;
         {
-            windowDesc.size     = contextDesc.videoMode.resolution;
-            windowDesc.centered = true;
-            windowDesc.visible  = true;
+            windowDesc.size         = contextDesc.videoMode.resolution;
+            windowDesc.resizable    = true;
+            windowDesc.centered     = true;
+            windowDesc.visible      = true;
         }
         auto window = std::shared_ptr<LLGL::Window>(std::move(LLGL::Window::Create(windowDesc)));
 
         window->SetTitle(L"LLGL Vulkan Test");
 
         auto context = renderer->CreateRenderContext(contextDesc, window);
+
+        // Add resize event handler
+        class ResizeHandler : public LLGL::Window::EventListener
+        {
+
+            public:
+
+                ResizeHandler(LLGL::RenderContext& context) :
+                    context_ { context }
+                {
+                }
+            
+                void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override
+                {
+                    auto videoMode = context_.GetVideoMode();
+                    videoMode.resolution = clientAreaSize;
+                    context_.SetVideoMode(videoMode);
+                }
+
+            private:
+
+                LLGL::RenderContext& context_;
+
+        };
+
+        window->AddEventListener(std::make_shared<ResizeHandler>(*context));
 
         // Create command buffer
         auto commands = renderer->CreateCommandBuffer();
@@ -144,12 +171,19 @@ int main()
             auto elapsedTime = (currentTime - printTime);
             auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
 
-            if (elapsedMs > 500)
+            if (elapsedMs > 250)
             {
-                std::cout << "fps = " << (1.0 / frameTimer->GetDeltaTime()) << std::endl;
+                printf("fps = %f\n", static_cast<float>(1.0 / frameTimer->GetDeltaTime()));
                 printTime = currentTime;
             }
             #endif
+
+            // Update user input
+            if (input->KeyDown(LLGL::Key::F1))
+            {
+                contextDesc.vsync.enabled = !contextDesc.vsync.enabled;
+                context->SetVsync(contextDesc.vsync);
+            }
 
             // Render scene
             commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
