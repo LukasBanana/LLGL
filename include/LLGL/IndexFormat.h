@@ -33,7 +33,7 @@ class LLGL_EXPORT IndexFormat
         }
 
         //! Returns the size of this vertex format (in bytes).
-        inline unsigned int GetFormatSize() const
+        inline std::uint32_t GetFormatSize() const
         {
             return formatSize_;
         }
@@ -41,7 +41,7 @@ class LLGL_EXPORT IndexFormat
     private:
 
         DataType        dataType_   = DataType::UInt32;
-        unsigned int    formatSize_ = 0;
+        std::uint32_t   formatSize_ = 0;
 
 };
 

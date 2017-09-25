@@ -25,7 +25,7 @@ class D3D12Texture : public Texture
 
         D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc);
 
-        Gs::Vector3ui QueryMipLevelSize(unsigned int mipLevel) const override;
+        Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override;
 
         /* ----- Extended internal functions ---- */
 

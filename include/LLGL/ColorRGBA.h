@@ -207,7 +207,7 @@ using ColorRGBA   = ColorRGBAT<Gs::Real>;
 using ColorRGBAb  = ColorRGBAT<bool>;
 using ColorRGBAf  = ColorRGBAT<float>;
 using ColorRGBAd  = ColorRGBAT<double>;
-using ColorRGBAub = ColorRGBAT<unsigned char>;
+using ColorRGBAub = ColorRGBAT<std::uint8_t>;
 
 
 } // /namespace LLGL

@@ -487,7 +487,7 @@ static ByteBuffer ConvertImageBufferFormat(
 
 /* ----- Public structures ----- */
 
-unsigned int ImageDescriptor::GetElementSize() const
+std::uint32_t ImageDescriptor::GetElementSize() const
 {
     return ImageFormatSize(format) * DataTypeSize(dataType);
 }
@@ -495,7 +495,7 @@ unsigned int ImageDescriptor::GetElementSize() const
 
 /* ----- Public functions ----- */
 
-LLGL_EXPORT unsigned int ImageFormatSize(const ImageFormat imageFormat)
+LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {

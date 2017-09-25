@@ -18,7 +18,7 @@ D3D11Texture::D3D11Texture(const TextureType type) :
 {
 }
 
-Gs::Vector3ui D3D11Texture::QueryMipLevelSize(unsigned int mipLevel) const
+Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
     Gs::Vector3ui size;
 
@@ -168,7 +168,7 @@ void D3D11Texture::UpdateSubresource(
 
 void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     ID3D11Device* device, ID3D11DeviceContext* context,
-    D3D11HardwareTexture& textureCopy, UINT cpuAccessFlags, unsigned int mipLevel) const
+    D3D11HardwareTexture& textureCopy, UINT cpuAccessFlags, std::uint32_t mipLevel) const
 {
     D3D11_RESOURCE_DIMENSION dimension;
     hardwareTexture_.resource->GetType(&dimension);

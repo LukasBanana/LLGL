@@ -42,7 +42,7 @@ class D3D11Texture : public Texture
 
         D3D11Texture(const TextureType type);
 
-        Gs::Vector3ui QueryMipLevelSize(unsigned int mipLevel) const override;
+        Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override;
 
         /* ----- Extended internal functions ---- */
 
@@ -79,7 +79,7 @@ class D3D11Texture : public Texture
             ID3D11Device* device, ID3D11DeviceContext* context,
             D3D11HardwareTexture& textureCopy,
             UINT cpuAccessFlags,
-            unsigned int mipLevel
+            std::uint32_t mipLevel
         ) const;
 
         inline const D3D11HardwareTexture& GetHardwareTexture() const

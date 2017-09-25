@@ -14,6 +14,7 @@
 #include "RenderSystemFlags.h"
 #include "TextureFlags.h"
 #include <memory>
+#include <cstdint>
 
 
 namespace LLGL
@@ -76,7 +77,7 @@ struct LLGL_EXPORT ImageDescriptor
     }
 
     //! Constructor for compressed image data.
-    inline ImageDescriptor(ImageFormat format, const void* buffer, unsigned int compressedSize) :
+    inline ImageDescriptor(ImageFormat format, const void* buffer, std::uint32_t compressedSize) :
         format         { format         },
         buffer         { buffer         },
         compressedSize { compressedSize }
@@ -90,12 +91,12 @@ struct LLGL_EXPORT ImageDescriptor
     ImageFormatSize(format) * DataTypeSize(dataType);
     \endcode
     */
-    unsigned int GetElementSize() const;
+    std::uint32_t GetElementSize() const;
 
     ImageFormat     format          = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
     DataType        dataType        = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images.
     const void*     buffer          = nullptr;              //!< Pointer to the image buffer.
-    unsigned int    compressedSize  = 0;                    //!< Specifies the size (in bytes) of a compressed image. This must be 0 for uncompressed images.
+    std::uint32_t   compressedSize  = 0;                    //!< Specifies the size (in bytes) of a compressed image. This must be 0 for uncompressed images.
 };
 
 
@@ -107,7 +108,7 @@ struct LLGL_EXPORT ImageDescriptor
 \return Number of components of the specified image format, or 0 if 'imageFormat' specifies a compressed color format.
 \see IsCompressedFormat(const ImageFormat)
 */
-LLGL_EXPORT unsigned int ImageFormatSize(const ImageFormat imageFormat);
+LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat);
 
 /**
 \brief Returns true if the specified color format is a compressed format,

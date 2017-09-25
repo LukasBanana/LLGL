@@ -25,7 +25,7 @@ GLTexture::~GLTexture()
     glDeleteTextures(1, &id_);
 }
 
-Gs::Vector3ui GLTexture::QueryMipLevelSize(unsigned int mipLevel) const
+Gs::Vector3ui GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
     Gs::Vector3ui size;
 
@@ -36,13 +36,15 @@ Gs::Vector3ui GLTexture::QueryMipLevelSize(unsigned int mipLevel) const
         auto target = GLTypes::Map(GetType());
 
         GLint texSize[3] = { 0 };
-        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_WIDTH,  &texSize[0]);
-        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_HEIGHT, &texSize[1]);
-        glGetTexLevelParameteriv(target, mipLevel, GL_TEXTURE_DEPTH,  &texSize[2]);
+        GLint level = static_cast<GLint>(mipLevel);
 
-        size.x = static_cast<unsigned int>(texSize[0]);
-        size.y = static_cast<unsigned int>(texSize[1]);
-        size.z = static_cast<unsigned int>(texSize[2]);
+        glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
+        glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
+        glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH,  &texSize[2]);
+
+        size.x = static_cast<std::uint32_t>(texSize[0]);
+        size.y = static_cast<std::uint32_t>(texSize[1]);
+        size.z = static_cast<std::uint32_t>(texSize[2]);
     }
     GLStateManager::active->PopBoundTexture();
 

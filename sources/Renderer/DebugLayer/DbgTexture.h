@@ -28,7 +28,7 @@ class DbgTexture : public Texture
         {
         }
 
-        Gs::Vector3ui QueryMipLevelSize(unsigned int mipLevel) const override
+        Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override
         {
             return instance.QueryMipLevelSize(mipLevel);
         }

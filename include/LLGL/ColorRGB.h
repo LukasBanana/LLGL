@@ -188,7 +188,7 @@ using ColorRGB      = ColorRGBT<Gs::Real>;
 using ColorRGBb     = ColorRGBT<bool>;
 using ColorRGBf     = ColorRGBT<float>;
 using ColorRGBd     = ColorRGBT<double>;
-using ColorRGBub    = ColorRGBT<unsigned char>;
+using ColorRGBub    = ColorRGBT<std::uint8_t>;
 
 
 } // /namespace LLGL

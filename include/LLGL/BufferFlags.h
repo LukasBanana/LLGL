@@ -136,21 +136,21 @@ struct BufferDescriptor
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.
-    BufferType              type    = BufferType::Vertex;
+    BufferType              type            = BufferType::Vertex;
 
     /**
     \brief Buffer size (in bytes). By default 0.
     \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage),
     'size' must be a multiple of 'storageBuffer.stride'.
     */
-    std::uint64_t           size    = 0;
+    std::uint64_t           size            = 0;
 
     /**
     \brief Specifies the buffer creation flags. By default 0.
     \remarks This can be bitwise OR combination of the entries of the BufferFlags enumeration.
     \see BufferFlags
     */
-    long                    flags   = 0;
+    long                    flags           = 0;
 
     //! Vertex buffer type descriptor appendix.
     VertexBufferDescriptor  vertexBuffer;

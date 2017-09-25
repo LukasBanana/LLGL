@@ -13,6 +13,7 @@
 #include "Image.h"
 #include "TextureFlags.h"
 #include <Gauss/Vector3.h>
+#include <cstdint>
 
 
 namespace LLGL
@@ -42,7 +43,7 @@ class LLGL_EXPORT Texture
         If this level is greater than or equal to the number of MIP-maps this texture has, the return value is undefined (i.e. depends on the render system).
         \see RenderContext::GenerateMips
         */
-        virtual Gs::Vector3ui QueryMipLevelSize(unsigned int mipLevel) const = 0;
+        virtual Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const = 0;
 
     protected:
 
