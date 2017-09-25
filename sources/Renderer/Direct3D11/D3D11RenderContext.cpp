@@ -93,7 +93,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
         swapChainDesc.SampleDesc.Count                      = (desc_.multiSampling.enabled ? std::max(1u, desc_.multiSampling.samples) : 1);
         swapChainDesc.SampleDesc.Quality                    = 0;
         swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount                           = (desc_.videoMode.swapChainMode == SwapChainMode::TripleBuffering ? 2 : 1);
+        swapChainDesc.BufferCount                           = (desc_.videoMode.swapChainSize == 3 ? 2 : 1);
         swapChainDesc.OutputWindow                          = wndHandle.window;
         swapChainDesc.Windowed                              = (desc_.videoMode.fullscreen ? FALSE : TRUE);
         swapChainDesc.SwapEffect                            = DXGI_SWAP_EFFECT_DISCARD;

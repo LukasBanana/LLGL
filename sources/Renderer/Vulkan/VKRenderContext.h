@@ -72,15 +72,15 @@ class VKRenderContext : public RenderContext
     private:
 
         void CreateVkSurface();
-        void CreateSwapChain(const VideoModeDescriptor& desc);
-        void CreateSwapChainImageViews(const VKPtr<VkDevice>& device);
+        void CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc);
+        void CreateSwapChainImageViews();
         void CreateSwapChainRenderPass();
-        void CreateSwapChainFramebuffers(const VKPtr<VkDevice>& device);
+        void CreateSwapChainFramebuffers();
         void CreateVkSemaphore(VKPtr<VkSemaphore>& semaphore);
         void CreatePresentSemaphorse();
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
-        VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes) const;
+        VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, const VsyncDescriptor& vsyncDesc) const;
         VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const;
 
         void AcquireNextPresentImage();
@@ -89,7 +89,7 @@ class VKRenderContext : public RenderContext
 
         VkInstance                          instance_                   = VK_NULL_HANDLE;
         VkPhysicalDevice                    physicalDevice_             = VK_NULL_HANDLE;
-        VkDevice                            device_                     = VK_NULL_HANDLE;
+        const VKPtr<VkDevice>&              device_;
 
         VKPtr<VkSurfaceKHR>                 surface_;
 

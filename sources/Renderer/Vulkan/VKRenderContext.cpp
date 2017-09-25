@@ -39,10 +39,10 @@ VKRenderContext::VKRenderContext(
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
     CreateVkSurface();
-    CreateSwapChain(desc.videoMode);
-    CreateSwapChainImageViews(device);
+    CreateSwapChain(desc.videoMode, desc.vsync);
+    CreateSwapChainImageViews();
     CreateSwapChainRenderPass();
-    CreateSwapChainFramebuffers(device);
+    CreateSwapChainFramebuffers();
     CreatePresentSemaphorse();
     AcquireNextPresentImage();
 }
@@ -103,6 +103,8 @@ void VKRenderContext::Present()
 
 void VKRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
+    RenderContext::SetVideoMode(videoModeDesc);
+
     //todo
 }
 
@@ -147,7 +149,7 @@ void VKRenderContext::CreateVkSurface()
     #endif
 }
 
-void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
+void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc)
 {
     /* Query swap-chain support for physics device and surface  */
     auto swapChainSupport = VKQuerySwapChainSupport(physicalDevice_, surface_);
@@ -161,13 +163,13 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
 
     /* Pick surface format, present mode, and extent */
     auto surfaceFormat  = PickSwapSurfaceFormat(swapChainSupport.formats);
-    auto presentMode    = PickSwapPresentMode(swapChainSupport.presentModes);
-    auto extent         = PickSwapExtent(swapChainSupport.caps, static_cast<std::uint32_t>(desc.resolution.x), static_cast<std::uint32_t>(desc.resolution.y));
+    auto presentMode    = PickSwapPresentMode(swapChainSupport.presentModes, vsyncDesc);
+    auto extent         = PickSwapExtent(swapChainSupport.caps, static_cast<std::uint32_t>(videoModeDesc.resolution.x), static_cast<std::uint32_t>(videoModeDesc.resolution.y));
 
     /* Determine required image count for swap-chain */
     auto imageCount = swapChainSupport.caps.minImageCount;
     if (swapChainSupport.caps.maxImageCount > 0)
-        imageCount = std::min(imageCount, swapChainSupport.caps.maxImageCount);
+        imageCount = std::max(imageCount, std::min(videoModeDesc.swapChainSize, swapChainSupport.caps.maxImageCount));
 
     /* Create swap-chain */
     VkSwapchainCreateInfoKHR createInfo;
@@ -218,9 +220,9 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& desc)
     swapChainExtent_ = extent;
 }
 
-void VKRenderContext::CreateSwapChainImageViews(const VKPtr<VkDevice>& device)
+void VKRenderContext::CreateSwapChainImageViews()
 {
-    swapChainImageViews_.resize(swapChainImages_.size(), VKPtr<VkImageView>{ device, vkDestroyImageView });
+    swapChainImageViews_.resize(swapChainImages_.size(), VKPtr<VkImageView>{ device_, vkDestroyImageView });
 
     for (std::size_t i = 0, n = swapChainImages_.size(); i < n; ++i)
     {
@@ -309,9 +311,9 @@ void VKRenderContext::CreateSwapChainRenderPass()
     VKThrowIfFailed(result, "failed to create Vulkan swap-chain render pass");
 }
 
-void VKRenderContext::CreateSwapChainFramebuffers(const VKPtr<VkDevice>& device)
+void VKRenderContext::CreateSwapChainFramebuffers()
 {
-    swapChainFramebuffers_.resize(swapChainImageViews_.size(), VKPtr<VkFramebuffer>{ device, vkDestroyFramebuffer });
+    swapChainFramebuffers_.resize(swapChainImageViews_.size(), VKPtr<VkFramebuffer>{ device_, vkDestroyFramebuffer });
 
     for (std::size_t i = 0, n = swapChainImageViews_.size(); i < n; ++i)
     {
@@ -370,12 +372,16 @@ VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSu
     return surfaceFormats.front();
 }
 
-VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes) const
+VkPresentModeKHR VKRenderContext::PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, const VsyncDescriptor& vsyncDesc) const
 {
-    for (const auto& mode : presentModes)
+    if (!vsyncDesc.enabled)
     {
-        if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
-            return mode;
+        /* Check if MAILBOX or IMMEDIATE presentation mode is available, to avoid vertical synchronization */
+        for (const auto& mode : presentModes)
+        {
+            if (mode == VK_PRESENT_MODE_MAILBOX_KHR || mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+                return mode;
+        }
     }
     return VK_PRESENT_MODE_FIFO_KHR;
 }

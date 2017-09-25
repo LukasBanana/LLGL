@@ -37,7 +37,7 @@ LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDes
         LLGL_COMPARE_MEMBER_EQ( resolution    ) &&
         LLGL_COMPARE_MEMBER_EQ( colorDepth    ) &&
         LLGL_COMPARE_MEMBER_EQ( fullscreen    ) &&
-        LLGL_COMPARE_MEMBER_EQ( swapChainMode )
+        LLGL_COMPARE_MEMBER_EQ( swapChainSize )
     );
 }
 
@@ -49,14 +49,14 @@ LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDes
 
 /* ----- Functions ----- */
 
-LLGL_EXPORT int GetMajorVersion(const OpenGLVersion version)
+LLGL_EXPORT std::int32_t GetMajorVersion(const OpenGLVersion version)
 {
-    return static_cast<int>(version) / 100;
+    return static_cast<std::int32_t>(version) / 100;
 }
 
-LLGL_EXPORT int GetMinorVersion(const OpenGLVersion version)
+LLGL_EXPORT std::int32_t GetMinorVersion(const OpenGLVersion version)
 {
-    return (static_cast<int>(version) / 10) % 10;
+    return (static_cast<std::int32_t>(version) / 10) % 10;
 }
 
 

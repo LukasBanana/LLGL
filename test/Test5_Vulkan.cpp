@@ -7,6 +7,7 @@
 
 #include "Helper.h"
 #include <LLGL/Utility.h>
+#include <chrono>
 
 
 //#define TEST_RENDER_TARGET
@@ -34,6 +35,7 @@ int main()
         LLGL::RenderContextDescriptor contextDesc;
 
         contextDesc.videoMode.resolution        = { 800, 600 };
+        contextDesc.videoMode.swapChainSize     = 3;
         //contextDesc.videoMode.fullscreen        = true;
 
         contextDesc.multiSampling.enabled       = true;
@@ -76,7 +78,7 @@ int main()
         auto shaderVert = renderer->CreateShader(LLGL::ShaderType::Vertex);
         auto shaderFrag = renderer->CreateShader(LLGL::ShaderType::Fragment);
 
-        shaderVert->LoadBinary(LoadSPIRVModule("Triangle2.vert.spv"));
+        shaderVert->LoadBinary(LoadSPIRVModule("Triangle.vert.spv"));
         shaderFrag->LoadBinary(LoadSPIRVModule("Triangle.frag.spv"));
 
         // Create shader program
@@ -128,9 +130,27 @@ int main()
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
 
+        auto frameTimer = LLGL::Timer::Create();
+        auto printTime = std::chrono::system_clock::now();
+
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
+            #if 1
+            // Show frame time
+            frameTimer->MeasureTime();
+
+            auto currentTime = std::chrono::system_clock::now();
+            auto elapsedTime = (currentTime - printTime);
+            auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
+
+            if (elapsedMs > 500)
+            {
+                std::cout << "fps = " << (1.0 / frameTimer->GetDeltaTime()) << std::endl;
+                printTime = currentTime;
+            }
+            #endif
+
             // Render scene
             commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
 

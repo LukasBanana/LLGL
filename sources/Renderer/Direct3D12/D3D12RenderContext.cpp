@@ -198,7 +198,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     else
     {
         /* Setup swap chain meta data */
-        numFrames_ = static_cast<UINT>(desc_.videoMode.swapChainMode);
+        numFrames_ = desc_.videoMode.swapChainSize;
 
         /* Create swap chain for window handle */
         NativeHandle wndHandle;

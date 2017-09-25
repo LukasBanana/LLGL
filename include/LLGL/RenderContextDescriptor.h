@@ -57,14 +57,6 @@ enum class OpenGLVersion
     OpenGL_4_6      = 460, //!< OpenGL 4.6, released in Jul, 2017.
 };
 
-//! Swap chain mode enumeration.
-enum class SwapChainMode
-{
-    SingleBuffering = 1, //!< Single buffering. This is almost no longer used.
-    DoubleBuffering = 2, //!< Double buffering. This is the default for most renderers.
-    TripleBuffering = 3, //!< Triple buffering. Triple buffering can only be used for Direct3D renderers.
-};
-
 
 /* ----- Structures ----- */
 
@@ -79,10 +71,10 @@ struct VsyncDescriptor
 //! Video mode descriptor structure.
 struct VideoModeDescriptor
 {
-    Size            resolution;                                         //!< Screen resolution.
-    int             colorDepth      = 32;                               //!< Color bit depth. Should be 24 or 32. By default 32.
-    bool            fullscreen      = false;                            //!< Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
-    SwapChainMode   swapChainMode   = SwapChainMode::DoubleBuffering;   //!< Swap chain buffering mode.
+    Size            resolution;                 //!< Screen resolution.
+    int             colorDepth      = 32;       //!< Color bit depth. Should be 24 or 32. By default 32.
+    bool            fullscreen      = false;    //!< Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
+    std::uint32_t   swapChainSize   = 2;        //!< Number of swap-chain buffers. By default 2 (for double-buffering).
 };
 
 //! OpenGL profile descriptor structure.
@@ -130,10 +122,10 @@ LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDes
 /* ----- Functions ----- */
 
 //! Returns the major number of the specified OpenGL version.
-LLGL_EXPORT int GetMajorVersion(const OpenGLVersion version);
+LLGL_EXPORT std::int32_t GetMajorVersion(const OpenGLVersion version);
 
 //! Returns the minor number of the specified OpenGL version.
-LLGL_EXPORT int GetMinorVersion(const OpenGLVersion version);
+LLGL_EXPORT std::int32_t GetMinorVersion(const OpenGLVersion version);
 
 
 } // /namespace LLGL
