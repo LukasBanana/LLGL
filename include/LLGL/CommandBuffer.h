@@ -27,6 +27,8 @@
 #include "ComputePipeline.h"
 #include "Query.h"
 
+#include <cstdint>
+
 
 namespace LLGL
 {
@@ -86,7 +88,7 @@ class LLGL_EXPORT CommandBuffer
         \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
         */
-        virtual void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) = 0;
+        virtual void SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray) = 0;
 
         /**
         \brief Sets a single scissor rectangle.
@@ -107,7 +109,7 @@ class LLGL_EXPORT CommandBuffer
         \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
         */
-        virtual void SetScissorArray(unsigned int numScissors, const Scissor* scissorArray) = 0;
+        virtual void SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray) = 0;
 
         /**
         \brief Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
@@ -125,10 +127,12 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Sets the new value to clear the stencil buffer. By default 0.
+        \param[in] stencil Specifies the value to clear the stencil buffer.
+        This value is masked with 2^m-1, where m is the number of bits in the stencil buffer (e.g. 'stencil & 0xFF' for an 8-bit stencil buffer).
         \note This state is guaranteed to be persistent.
         \see Clear
         */
-        virtual void SetClearStencil(int stencil) = 0;
+        virtual void SetClearStencil(std::uint32_t stencil) = 0;
 
         /**
         \brief Clears the specified framebuffers of the active render target.
@@ -153,7 +157,7 @@ class LLGL_EXPORT CommandBuffer
         \remarks To clear all color buffers with the same value, use the "Clear" function.
         \see Clear
         */
-        virtual void ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color) = 0;
+        virtual void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) = 0;
 
         /* ----- Buffers ------ */
 
@@ -196,7 +200,7 @@ class LLGL_EXPORT CommandBuffer
         \see RenderSystem::WriteBuffer
         \see ShaderStageFlags
         */
-        virtual void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        virtual void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active array of constant buffers at the specified start slot index.
@@ -204,7 +208,7 @@ class LLGL_EXPORT CommandBuffer
         \see RenderSystem::CreateBufferArray
         \see SetConstantBuffer
         */
-        virtual void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        virtual void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.
@@ -215,7 +219,7 @@ class LLGL_EXPORT CommandBuffer
         \see RenderSystem::MapBuffer
         \see RenderSystem::UnmapBuffer
         */
-        virtual void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        virtual void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active array of storage buffers at the specified start slot index.
@@ -223,7 +227,7 @@ class LLGL_EXPORT CommandBuffer
         \see RenderSystem::CreateBufferArray
         \see SetStorageBuffer
         */
-        virtual void SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        virtual void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active stream-output buffer to the stream-output stage.
@@ -261,13 +265,13 @@ class LLGL_EXPORT CommandBuffer
         \param[in] texture Specifies the texture to set.
         \param[in] slot Specifies the slot index where to put the texture.
         */
-        virtual void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        virtual void SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active array of textures at the specified start slot index.
         \see SetTexture
         */
-        virtual void SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        virtual void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /* ----- Samplers ----- */
 
@@ -277,13 +281,13 @@ class LLGL_EXPORT CommandBuffer
         \param[in] slot Specifies the slot index where to put the sampler.
         \see RenderSystem::CreateSampler
         */
-        virtual void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        virtual void SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /**
         \brief Sets the active array of samplers at the specified start slot index.
         \see SetSampler
         */
-        virtual void SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        virtual void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /* ----- Render Targets ----- */
 
@@ -386,10 +390,10 @@ class LLGL_EXPORT CommandBuffer
         \param[in] numVertices Specifies the number of vertices to generate.
         \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.
         */
-        virtual void Draw(unsigned int numVertices, unsigned int firstVertex) = 0;
+        virtual void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) = 0;
 
-        //! \see DrawIndexed(unsigned int, unsigned int, int)
-        virtual void DrawIndexed(unsigned int numVertices, unsigned int firstIndex) = 0;
+        //! \see DrawIndexed(std::uint32_t, std::uint32_t, std::int32_t)
+        virtual void DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex) = 0;
 
         /**
         \brief Draws the specified amount of primitives from the currently set vertex- and index buffers.
@@ -397,10 +401,10 @@ class LLGL_EXPORT CommandBuffer
         \param[in] firstIndex Specifies the zero-based offset of the first index from the index buffer.
         \param[in] vertexOffset Specifies the base vertex offset (positive or negative) which is added to each index from the index buffer.
         */
-        virtual void DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset) = 0;
+        virtual void DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset) = 0;
 
-        //! \see DrawInstanced(unsigned int, unsigned int, unsigned int, unsigned int)
-        virtual void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) = 0;
+        //! \see DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+        virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances) = 0;
         
         /**
         \brief Draws the specified amount of instances of primitives from the currently set vertex buffer.
@@ -409,13 +413,13 @@ class LLGL_EXPORT CommandBuffer
         \param[in] numInstances Specifies the number of instances to generate.
         \param[in] instanceOffset Specifies the zero-based instance offset which is added to each instance ID.
         */
-        virtual void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) = 0;
+        virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset) = 0;
 
-        //! \see DrawIndexedInstanced(unsigned int, unsigned int, unsigned int, int, unsigned int)
-        virtual void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex) = 0;
+        //! \see DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
+        virtual void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex) = 0;
         
-        //! \see DrawIndexedInstanced(unsigned int, unsigned int, unsigned int, int, unsigned int)
-        virtual void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset) = 0;
+        //! \see DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
+        virtual void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset) = 0;
         
         /**
         \brief Draws the specified amount of instances of primitives from the currently set vertex- and index buffers.
@@ -425,7 +429,7 @@ class LLGL_EXPORT CommandBuffer
         \param[in] vertexOffset Specifies the base vertex offset (positive or negative) which is added to each index from the index buffer.
         \param[in] instanceOffset Specifies the zero-based instance offset which is added to each instance ID.
         */
-        virtual void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset) = 0;
+        virtual void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset) = 0;
 
         /* ----- Compute ----- */
 
@@ -437,7 +441,7 @@ class LLGL_EXPORT CommandBuffer
         \see SetComputePipeline
         \see RenderingCaps::maxNumComputeShaderWorkGroups
         */
-        virtual void Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ) = 0;
+        virtual void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) = 0;
 
         /* ----- Misc ----- */
 

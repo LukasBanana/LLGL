@@ -764,7 +764,7 @@ GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
     throw std::invalid_argument("failed to convert texture type to OpenGL texture target");
 }
 
-void GLStateManager::ActiveTexture(unsigned int layer)
+void GLStateManager::ActiveTexture(std::uint32_t layer)
 {
     #ifdef LLGL_DEBUG
     LLGL_ASSERT_RANGE(layer, numTextureLayers);
@@ -822,7 +822,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
     }
 }
 
-void GLStateManager::PushBoundTexture(unsigned int layer, GLTextureTarget target)
+void GLStateManager::PushBoundTexture(std::uint32_t layer, GLTextureTarget target)
 {
     #ifdef LLGL_DEBUG
     LLGL_ASSERT_RANGE(layer, numTextureLayers);
@@ -872,7 +872,7 @@ void GLStateManager::NotifyTextureRelease(GLTextureTarget target, GLuint texture
 
 /* ----- Sampler ----- */
 
-void GLStateManager::BindSampler(unsigned int layer, GLuint sampler)
+void GLStateManager::BindSampler(std::uint32_t layer, GLuint sampler)
 {
     #ifdef LLGL_DEBUG
     LLGL_ASSERT_RANGE(layer, numTextureLayers);
@@ -885,7 +885,7 @@ void GLStateManager::BindSampler(unsigned int layer, GLuint sampler)
     }
 }
 
-void GLStateManager::BindSamplers(unsigned int first, unsigned int count, const GLuint* samplers)
+void GLStateManager::BindSamplers(std::uint32_t first, std::uint32_t count, const GLuint* samplers)
 {
     #ifdef GL_ARB_multi_bind
     if (HasExtension(GLExt::ARB_multi_bind))
@@ -894,14 +894,14 @@ void GLStateManager::BindSamplers(unsigned int first, unsigned int count, const 
         glBindSamplers(first, static_cast<GLsizei>(count), samplers);
 
         /* Store bound textures */
-        for (unsigned int i = 0; i < count; ++i)
+        for (std::uint32_t i = 0; i < count; ++i)
             samplerState_.boundSamplers[i] = samplers[i];
     }
     else
     #endif
     {
         /* Bind each sampler individually */
-        for (unsigned int i = 0; i < count; ++i)
+        for (std::uint32_t i = 0; i < count; ++i)
             BindSampler(first + i, samplers[i]);
     }
 }
@@ -939,7 +939,7 @@ void GLStateManager::AssertExtViewportArray()
         throw std::runtime_error("renderer does not support viewport, depth-range, and scissor arrays");
 }
 
-void GLStateManager::SetActiveTextureLayer(unsigned int layer)
+void GLStateManager::SetActiveTextureLayer(std::uint32_t layer)
 {
     textureState_.activeTexture = layer;
     activeTextureLayer_ = &(textureState_.layers[textureState_.activeTexture]);

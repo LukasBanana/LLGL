@@ -41,17 +41,17 @@ class DbgCommandBuffer : public CommandBuffer
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
 
         void SetViewport(const Viewport& viewport) override;
-        void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) override;
+        void SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray) override;
 
         void SetScissor(const Scissor& scissor) override;
-        void SetScissorArray(unsigned int numScissors, const Scissor* scissorArray) override;
+        void SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray) override;
 
         void SetClearColor(const ColorRGBAf& color) override;
         void SetClearDepth(float depth) override;
-        void SetClearStencil(int stencil) override;
+        void SetClearStencil(std::uint32_t stencil) override;
 
         void Clear(long flags) override;
-        void ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color) override;
+        void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) override;
 
         /* ----- Buffers ------ */
 
@@ -60,11 +60,11 @@ class DbgCommandBuffer : public CommandBuffer
 
         void SetIndexBuffer(Buffer& buffer) override;
         
-        void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
-        void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
         void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
@@ -74,13 +74,13 @@ class DbgCommandBuffer : public CommandBuffer
 
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Render Targets ----- */
 
@@ -104,21 +104,21 @@ class DbgCommandBuffer : public CommandBuffer
 
         /* ----- Drawing ----- */
 
-        void Draw(unsigned int numVertices, unsigned int firstVertex) override;
+        void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) override;
 
-        void DrawIndexed(unsigned int numVertices, unsigned int firstIndex) override;
-        void DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset) override;
+        void DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex) override;
+        void DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset) override;
 
-        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) override;
-        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) override;
+        void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances) override;
+        void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset) override;
 
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex) override;
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset) override;
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset) override;
+        void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex) override;
+        void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset) override;
+        void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset) override;
 
         /* ----- Compute ----- */
 
-        void Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ) override;
+        void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
         /* ----- Misc ----- */
 
@@ -136,20 +136,20 @@ class DbgCommandBuffer : public CommandBuffer
         void DebugIndexBufferSet();
         void DebugVertexLayout();
 
-        void DebugNumVertices(unsigned int numVertices);
-        void DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset);
+        void DebugNumVertices(std::uint32_t numVertices);
+        void DebugNumInstances(std::uint32_t numInstances, std::uint32_t instanceOffset);
 
-        void DebugDraw(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset);
-        void DebugDrawIndexed(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset);
+        void DebugDraw(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset);
+        void DebugDrawIndexed(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset);
 
         void DebugInstancing();
-        void DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit);
-        void DebugThreadGroupLimit(unsigned int size, unsigned int limit);
+        void DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit);
+        void DebugThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
 
         void DebugShaderStageFlags(long shaderStageFlags, long validFlags);
         void DebugBufferType(const BufferType bufferType, const BufferType compareType);
 
-        void WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices);
+        void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 
         /* ----- Common objects ----- */
 

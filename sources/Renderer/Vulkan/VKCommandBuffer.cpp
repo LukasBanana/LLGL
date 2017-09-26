@@ -43,7 +43,7 @@ void VKCommandBuffer::SetViewport(const Viewport& viewport)
     //todo
 }
 
-void VKCommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
+void VKCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
 {
     //todo
 }
@@ -53,7 +53,7 @@ void VKCommandBuffer::SetScissor(const Scissor& scissor)
     //todo
 }
 
-void VKCommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
+void VKCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
 {
     //todo
 }
@@ -71,9 +71,9 @@ void VKCommandBuffer::SetClearDepth(float depth)
     clearValue_.depthStencil.depth = depth;
 }
 
-void VKCommandBuffer::SetClearStencil(int stencil)
+void VKCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
-    clearValue_.depthStencil.stencil = static_cast<std::uint32_t>(stencil);
+    clearValue_.depthStencil.stencil = stencil;
 }
 
 void VKCommandBuffer::Clear(long flags)
@@ -81,7 +81,7 @@ void VKCommandBuffer::Clear(long flags)
     //todo
 }
 
-void VKCommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
+void VKCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
 {
     //todo
 }
@@ -109,22 +109,22 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer)
     vkCmdBindIndexBuffer(commandBuffer_, bufferVK.Get(), 0, VK_INDEX_TYPE_UINT32);
 }
 
-void VKCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
+void VKCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     //todo
 }
 
-void VKCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long /*shaderStageFlags*/)
+void VKCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     //todo
 }
 
-void VKCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
+void VKCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     //todo
 }
 
-void VKCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long /*shaderStageFlags*/)
+void VKCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     //todo
 }
@@ -151,24 +151,24 @@ void VKCommandBuffer::EndStreamOutput()
 
 /* ----- Textures ----- */
 
-void VKCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long /*shaderStageFlags*/)
+void VKCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     //todo
 }
 
-void VKCommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long /*shaderStageFlags*/)
+void VKCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     //todo
 }
 
 /* ----- Sampler States ----- */
 
-void VKCommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long /*shaderStageFlags*/)
+void VKCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     //todo
 }
 
-void VKCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long /*shaderStageFlags*/)
+void VKCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     //todo
 }
@@ -239,49 +239,49 @@ void VKCommandBuffer::EndRenderCondition()
 
 /* ----- Drawing ----- */
 
-void VKCommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
+void VKCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
     vkCmdDraw(commandBuffer_, numVertices, 1, firstVertex, 0);
 }
 
-void VKCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void VKCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
     vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, 0, 0);
 }
 
-void VKCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
+void VKCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, vertexOffset, 0);
 }
 
-void VKCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
+void VKCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
     vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, 0);
 }
 
-void VKCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
+void VKCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
 {
     vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, instanceOffset);
 }
 
-void VKCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
+void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
     vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, 0, 0);
 }
 
-void VKCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
+void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
-void VKCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
+void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
 {
     vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
 
-void VKCommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
+void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     vkCmdDispatch(commandBuffer_, groupSizeX, groupSizeY, groupSizeZ);
 }

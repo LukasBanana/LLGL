@@ -59,7 +59,7 @@ void GLCommandBuffer::SetViewport(const Viewport& viewport)
     stateMngr_->SetDepthRange(depthRangeGL);
 }
 
-void GLCommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
+void GLCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
 {
     /* Setup GL viewports and depth-ranges */
     std::vector<GLViewport> viewportsGL;
@@ -68,7 +68,7 @@ void GLCommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport
     std::vector<GLDepthRange> depthRangesGL;
     depthRangesGL.reserve(numViewports);
 
-    for (unsigned int i = 0; i < numViewports; ++i)
+    for (std::uint32_t i = 0; i < numViewports; ++i)
     {
         const auto& vp = viewportArray[i];
         viewportsGL.push_back({ vp.x, vp.y, vp.width, vp.height });
@@ -87,13 +87,13 @@ void GLCommandBuffer::SetScissor(const Scissor& scissor)
     stateMngr_->SetScissor(scissorGL);
 }
 
-void GLCommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
+void GLCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
 {
     /* Setup GL scissors */
     std::vector<GLScissor> scissorsGL;
     scissorsGL.reserve(numScissors);
 
-    for (unsigned int i = 0; i < numScissors; ++i)
+    for (std::uint32_t i = 0; i < numScissors; ++i)
     {
         const auto& sc = scissorArray[i];
         scissorsGL.push_back({ sc.x, sc.y, sc.width, sc.height });
@@ -113,9 +113,9 @@ void GLCommandBuffer::SetClearDepth(float depth)
     glClearDepth(depth);
 }
 
-void GLCommandBuffer::SetClearStencil(int stencil)
+void GLCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
-    glClearStencil(stencil);
+    glClearStencil(static_cast<GLint>(stencil));
 }
 
 void GLCommandBuffer::Clear(long flags)
@@ -144,10 +144,10 @@ void GLCommandBuffer::Clear(long flags)
     glClear(mask);
 }
 
-void GLCommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
+void GLCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
 {
     /* Clear target color buffer */
-    glClearBufferfv(GL_COLOR, targetIndex, color.Ptr());
+    glClearBufferfv(GL_COLOR, static_cast<GLint>(targetIndex), color.Ptr());
 }
 
 /* ----- Buffers ------ */
@@ -178,22 +178,22 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
     renderState_.indexBufferStride      = format.GetFormatSize();
 }
 
-void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     SetGenericBufferArray(GLBufferTarget::UNIFORM_BUFFER, bufferArray, startSlot);
 }
 
-void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     SetGenericBufferArray(GLBufferTarget::SHADER_STORAGE_BUFFER, bufferArray, startSlot);
 }
@@ -238,7 +238,7 @@ void GLCommandBuffer::EndStreamOutput()
 
 /* ----- Textures ----- */
 
-void GLCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     /* Bind texture to layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -246,7 +246,7 @@ void GLCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long /*sha
     stateMngr_->BindTexture(textureGL);
 }
 
-void GLCommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     /* Bind texture array to layers */
     auto& textureArrayGL = LLGL_CAST(GLTextureArray&, textureArray);
@@ -260,18 +260,18 @@ void GLCommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int s
 
 /* ----- Sampler States ----- */
 
-void GLCommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     stateMngr_->BindSampler(slot, samplerGL.GetID());
 }
 
-void GLCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
     stateMngr_->BindSamplers(
         startSlot,
-        static_cast<unsigned int>(samplerArrayGL.GetIDArray().size()),
+        static_cast<std::uint32_t>(samplerArrayGL.GetIDArray().size()),
         samplerArrayGL.GetIDArray().data()
     );
 }
@@ -396,7 +396,7 @@ void GLCommandBuffer::EndRenderCondition()
 
 /* ----- Drawing ----- */
 
-void GLCommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
+void GLCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
     glDrawArrays(
         renderState_.drawMode,
@@ -405,7 +405,7 @@ void GLCommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
     );
 }
 
-void GLCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void GLCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
     glDrawElements(
         renderState_.drawMode,
@@ -415,7 +415,7 @@ void GLCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIn
     );
 }
 
-void GLCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
+void GLCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     glDrawElementsBaseVertex(
         renderState_.drawMode,
@@ -426,7 +426,7 @@ void GLCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIn
     );
 }
 
-void GLCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
+void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
     glDrawArraysInstanced(
         renderState_.drawMode,
@@ -436,7 +436,7 @@ void GLCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int first
     );
 }
 
-void GLCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
+void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
 {
     #ifndef __APPLE__
     glDrawArraysInstancedBaseInstance(
@@ -449,7 +449,7 @@ void GLCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int first
     #endif
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
+void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
     glDrawElementsInstanced(
         renderState_.drawMode,
@@ -460,7 +460,7 @@ void GLCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned in
     );
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
+void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     glDrawElementsInstancedBaseVertex(
         renderState_.drawMode,
@@ -472,7 +472,7 @@ void GLCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned in
     );
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
+void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
 {
     #ifndef __APPLE__
     glDrawElementsInstancedBaseVertexBaseInstance(
@@ -489,7 +489,7 @@ void GLCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned in
 
 /* ----- Compute ----- */
 
-void GLCommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
+void GLCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     #ifndef __APPLE__
     glDispatchCompute(groupSizeX, groupSizeY, groupSizeZ);
@@ -508,14 +508,14 @@ void GLCommandBuffer::SyncGPU()
  * ======= Private: =======
  */
 
-void GLCommandBuffer::SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, unsigned int slot)
+void GLCommandBuffer::SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot)
 {
     /* Bind buffer with BindBufferBase */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     stateMngr_->BindBufferBase(bufferTarget, slot, bufferGL.GetID());
 }
 
-void GLCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, unsigned int startSlot)
+void GLCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot)
 {
     /* Bind buffers with BindBuffersBase */
     auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);

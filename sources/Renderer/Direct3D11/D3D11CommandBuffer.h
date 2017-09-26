@@ -39,17 +39,17 @@ class D3D11CommandBuffer : public CommandBuffer
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
 
         void SetViewport(const Viewport& viewport) override;
-        void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray) override;
+        void SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray) override;
 
         void SetScissor(const Scissor& scissor) override;
-        void SetScissorArray(unsigned int numScissors, const Scissor* scissorArray) override;
+        void SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray) override;
 
         void SetClearColor(const ColorRGBAf& color) override;
         void SetClearDepth(float depth) override;
-        void SetClearStencil(int stencil) override;
+        void SetClearStencil(std::uint32_t stencil) override;
 
         void Clear(long flags) override;
-        void ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color) override;
+        void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) override;
 
         /* ----- Buffers ------ */
 
@@ -58,11 +58,11 @@ class D3D11CommandBuffer : public CommandBuffer
 
         void SetIndexBuffer(Buffer& buffer) override;
         
-        void SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
-        void SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
         void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
@@ -72,13 +72,13 @@ class D3D11CommandBuffer : public CommandBuffer
 
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Render Targets ----- */
 
@@ -102,21 +102,21 @@ class D3D11CommandBuffer : public CommandBuffer
 
         /* ----- Drawing ----- */
 
-        void Draw(unsigned int numVertices, unsigned int firstVertex) override;
+        void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) override;
 
-        void DrawIndexed(unsigned int numVertices, unsigned int firstIndex) override;
-        void DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset) override;
+        void DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex) override;
+        void DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset) override;
 
-        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances) override;
-        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset) override;
+        void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances) override;
+        void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset) override;
 
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex) override;
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset) override;
-        void DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset) override;
+        void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex) override;
+        void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset) override;
+        void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset) override;
 
         /* ----- Compute ----- */
 
-        void Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ) override;
+        void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
         /* ----- Misc ----- */
 

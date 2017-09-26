@@ -16,6 +16,7 @@
 #include <array>
 #include <vector>
 #include <stack>
+#include <cstdint>
 
 
 namespace LLGL
@@ -122,12 +123,12 @@ class GLStateManager
 
         static GLTextureTarget GetTextureTarget(const TextureType type);
 
-        void ActiveTexture(unsigned int layer);
+        void ActiveTexture(std::uint32_t layer);
 
         void BindTexture(GLTextureTarget target, GLuint texture);
         void BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures);
         
-        void PushBoundTexture(unsigned int layer, GLTextureTarget target);
+        void PushBoundTexture(std::uint32_t layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
 
@@ -137,8 +138,8 @@ class GLStateManager
 
         /* ----- Sampler ----- */
 
-        void BindSampler(unsigned int layer, GLuint sampler);
-        void BindSamplers(unsigned int first, unsigned int count, const GLuint* samplers);
+        void BindSampler(std::uint32_t layer, GLuint sampler);
+        void BindSamplers(std::uint32_t first, std::uint32_t count, const GLuint* samplers);
 
         /* ----- Shader ----- */
 
@@ -158,18 +159,18 @@ class GLStateManager
 
         void AssertExtViewportArray();
 
-        void SetActiveTextureLayer(unsigned int layer);
+        void SetActiveTextureLayer(std::uint32_t layer);
 
         /* ----- Constants ----- */
 
-        static const unsigned int numTextureLayers      = 32;
-        static const unsigned int numStates             = (static_cast<unsigned int>(GLState::PROGRAM_POINT_SIZE) + 1);
-        static const unsigned int numBufferTargets      = (static_cast<unsigned int>(GLBufferTarget::UNIFORM_BUFFER) + 1);
-        static const unsigned int numFramebufferTargets = (static_cast<unsigned int>(GLFramebufferTarget::READ_FRAMEBUFFER) + 1);
-        static const unsigned int numTextureTargets     = (static_cast<unsigned int>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
+        static const std::uint32_t numTextureLayers         = 32;
+        static const std::uint32_t numStates                = (static_cast<std::uint32_t>(GLState::PROGRAM_POINT_SIZE) + 1);
+        static const std::uint32_t numBufferTargets         = (static_cast<std::uint32_t>(GLBufferTarget::UNIFORM_BUFFER) + 1);
+        static const std::uint32_t numFramebufferTargets    = (static_cast<std::uint32_t>(GLFramebufferTarget::READ_FRAMEBUFFER) + 1);
+        static const std::uint32_t numTextureTargets        = (static_cast<std::uint32_t>(GLTextureTarget::TEXTURE_2D_MULTISAMPLE_ARRAY) + 1);
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        static const unsigned int numStatesExt          = (static_cast<unsigned int>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
+        static const std::uint32_t numStatesExt             = (static_cast<std::uint32_t>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
         #endif
 
         /* ----- Structure ----- */
@@ -246,12 +247,12 @@ class GLStateManager
         {
             struct StackEntry
             {
-                unsigned int    layer;
+                std::uint32_t   layer;
                 GLTextureTarget target;
                 GLuint          texture;
             };
 
-            unsigned int                                    activeTexture = 0;
+            std::uint32_t                                   activeTexture = 0;
             std::array<GLTextureLayer, numTextureLayers>    layers;
             std::stack<StackEntry>                          boundTextureStack;
         };

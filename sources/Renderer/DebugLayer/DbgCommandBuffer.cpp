@@ -43,7 +43,7 @@ void DbgCommandBuffer::SetViewport(const Viewport& viewport)
     instance.SetViewport(viewport);
 }
 
-void DbgCommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
+void DbgCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
 {
     if (debugger_)
     {
@@ -62,7 +62,7 @@ void DbgCommandBuffer::SetScissor(const Scissor& scissor)
     instance.SetScissor(scissor);
 }
 
-void DbgCommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
+void DbgCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
 {
     if (debugger_)
     {
@@ -86,7 +86,7 @@ void DbgCommandBuffer::SetClearDepth(float depth)
     instance.SetClearDepth(depth);
 }
 
-void DbgCommandBuffer::SetClearStencil(int stencil)
+void DbgCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
     instance.SetClearStencil(stencil);
 }
@@ -96,7 +96,7 @@ void DbgCommandBuffer::Clear(long flags)
     instance.Clear(flags);
 }
 
-void DbgCommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
+void DbgCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
 {
     instance.ClearTarget(targetIndex, color);
 }
@@ -146,7 +146,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     LLGL_DBG_PROFILER_DO(setIndexBuffer.Inc());
 }
 
-void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
@@ -162,7 +162,7 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
-void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
 {
     if (debugger_)
     {
@@ -176,7 +176,7 @@ void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
-void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     
@@ -192,7 +192,7 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long 
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
 
-void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
 {
     if (debugger_)
     {
@@ -265,7 +265,7 @@ void DbgCommandBuffer::EndStreamOutput()
 
 /* ----- Textures ----- */
 
-void DbgCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
+void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
@@ -280,7 +280,7 @@ void DbgCommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shad
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
-void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags)
 {
     if (debugger_)
     {
@@ -295,7 +295,7 @@ void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int 
 
 /* ----- Sampler States ----- */
 
-void DbgCommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
+void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags)
 {
     if (debugger_)
     {
@@ -308,7 +308,7 @@ void DbgCommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long shad
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
 
-void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags)
 {
     if (debugger_)
     {
@@ -425,7 +425,7 @@ void DbgCommandBuffer::EndRenderCondition()
 
 /* ----- Drawing ----- */
 
-void DbgCommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
+void DbgCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
     if (debugger_)
     {
@@ -438,7 +438,7 @@ void DbgCommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
-void DbgCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void DbgCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
     if (debugger_)
     {
@@ -451,7 +451,7 @@ void DbgCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstI
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
-void DbgCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
+void DbgCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     if (debugger_)
     {
@@ -464,7 +464,7 @@ void DbgCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstI
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
-void DbgCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
+void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
     if (debugger_)
     {
@@ -478,7 +478,7 @@ void DbgCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firs
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
+void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
 {
     if (debugger_)
     {
@@ -492,7 +492,7 @@ void DbgCommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firs
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
+void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
     if (debugger_)
     {
@@ -506,7 +506,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned i
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
+void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     if (debugger_)
     {
@@ -520,7 +520,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned i
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
+void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
 {
     if (debugger_)
     {
@@ -536,7 +536,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned i
 
 /* ----- Compute ----- */
 
-void DbgCommandBuffer::DebugThreadGroupLimit(unsigned int size, unsigned int limit)
+void DbgCommandBuffer::DebugThreadGroupLimit(std::uint32_t size, std::uint32_t limit)
 {
     if (size > limit)
     {
@@ -548,7 +548,7 @@ void DbgCommandBuffer::DebugThreadGroupLimit(unsigned int size, unsigned int lim
     }
 }
 
-void DbgCommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
+void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     if (debugger_)
     {
@@ -627,7 +627,7 @@ void DbgCommandBuffer::DebugVertexLayout()
     }
 }
 
-void DbgCommandBuffer::DebugNumVertices(unsigned int numVertices)
+void DbgCommandBuffer::DebugNumVertices(std::uint32_t numVertices)
 {
     if (numVertices == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no vertices will be generated");
@@ -689,7 +689,7 @@ void DbgCommandBuffer::DebugNumVertices(unsigned int numVertices)
         default:
             if (topology_ >= PrimitiveTopology::Patches1 && topology_ <= PrimitiveTopology::Patches32)
             {
-                auto numPatchVertices = static_cast<unsigned int>(topology_) - static_cast<unsigned int>(PrimitiveTopology::Patches1) + 1;
+                auto numPatchVertices = static_cast<std::uint32_t>(topology_) - static_cast<std::uint32_t>(PrimitiveTopology::Patches1) + 1;
                 if (numVertices % numPatchVertices != 0)
                     WarnImproperVertices("patches" + std::to_string(numPatchVertices), (numVertices % numPatchVertices));
             }
@@ -697,14 +697,14 @@ void DbgCommandBuffer::DebugNumVertices(unsigned int numVertices)
     }
 }
 
-void DbgCommandBuffer::DebugNumInstances(unsigned int numInstances, unsigned int instanceOffset)
+void DbgCommandBuffer::DebugNumInstances(std::uint32_t numInstances, std::uint32_t instanceOffset)
 {
     if (numInstances == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no instances will be generated");
 }
 
 void DbgCommandBuffer::DebugDraw(
-    unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
+    std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
 {
     DebugGraphicsPipelineSet();
     DebugVertexBufferSet();
@@ -713,11 +713,11 @@ void DbgCommandBuffer::DebugDraw(
     DebugNumInstances(numInstances, instanceOffset);
 
     if (bindings_.vertexBuffer)
-        DebugVertexLimit(numVertices + firstVertex, static_cast<unsigned int>(bindings_.vertexBuffer->elements));
+        DebugVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffer->elements));
 }
 
 void DbgCommandBuffer::DebugDrawIndexed(
-    unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
+    std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
 {
     DebugGraphicsPipelineSet();
     DebugVertexBufferSet();
@@ -727,7 +727,7 @@ void DbgCommandBuffer::DebugDrawIndexed(
     DebugNumInstances(numInstances, instanceOffset);
 
     if (bindings_.indexBuffer)
-        DebugVertexLimit(numVertices + firstIndex, static_cast<unsigned int>(bindings_.indexBuffer->elements));
+        DebugVertexLimit(numVertices + firstIndex, static_cast<std::uint32_t>(bindings_.indexBuffer->elements));
 }
 
 void DbgCommandBuffer::DebugInstancing()
@@ -736,7 +736,7 @@ void DbgCommandBuffer::DebugInstancing()
         LLGL_DBG_ERROR_NOT_SUPPORTED("instancing");
 }
 
-void DbgCommandBuffer::DebugVertexLimit(unsigned int vertexCount, unsigned int vertexLimit)
+void DbgCommandBuffer::DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit)
 {
     if (vertexCount > vertexLimit)
     {
@@ -762,7 +762,7 @@ void DbgCommandBuffer::DebugBufferType(const BufferType bufferType, const Buffer
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type");
 }
 
-void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, unsigned int unusedVertices)
+void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices)
 {
     std::string vertexSingularPlural = (unusedVertices > 1 ? "vertices" : "vertex");
 

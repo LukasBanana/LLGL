@@ -64,7 +64,7 @@ void D3D11CommandBuffer::SetViewport(const Viewport& viewport)
     stateMngr_.SetViewports(1, &viewport);
 }
 
-void D3D11CommandBuffer::SetViewportArray(unsigned int numViewports, const Viewport* viewportArray)
+void D3D11CommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
 {
     stateMngr_.SetViewports(numViewports, viewportArray);
 }
@@ -74,7 +74,7 @@ void D3D11CommandBuffer::SetScissor(const Scissor& scissor)
     stateMngr_.SetScissors(1, &scissor);
 }
 
-void D3D11CommandBuffer::SetScissorArray(unsigned int numScissors, const Scissor* scissorArray)
+void D3D11CommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
 {
     stateMngr_.SetScissors(numScissors, scissorArray);
 }
@@ -89,9 +89,9 @@ void D3D11CommandBuffer::SetClearDepth(float depth)
     clearState_.depth = depth;
 }
 
-void D3D11CommandBuffer::SetClearStencil(int stencil)
+void D3D11CommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
-    clearState_.stencil = stencil;
+    clearState_.stencil = static_cast<UINT8>(stencil & 0xff);
 }
 
 void D3D11CommandBuffer::Clear(long flags)
@@ -104,7 +104,7 @@ void D3D11CommandBuffer::Clear(long flags)
     }
     
     /* Clear depth-stencil buffer */
-    int dsvClearFlags = 0;
+    std::int32_t dsvClearFlags = 0;
 
     if ((flags & ClearFlags::Depth) != 0)
         dsvClearFlags |= D3D11_CLEAR_DEPTH;
@@ -115,7 +115,7 @@ void D3D11CommandBuffer::Clear(long flags)
         context_->ClearDepthStencilView(framebufferView_.dsv, dsvClearFlags, clearState_.depth, clearState_.stencil);
 }
 
-void D3D11CommandBuffer::ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color)
+void D3D11CommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
 {
     /* Clear target color buffer */
     if (targetIndex < framebufferView_.rtvList.size())
@@ -154,7 +154,7 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
     context_->IASetIndexBuffer(indexBufferD3D.Get(), indexBufferD3D.GetFormat(), 0);
 }
 
-void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
     /* Set constant buffer resource to all shader stages */
     auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, buffer);
@@ -162,7 +162,7 @@ void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, unsigned int slot, lo
     SetConstantBuffersOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
-void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
 {
     /* Set constant buffer resource to all shader stages */
     auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
@@ -174,7 +174,7 @@ void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, unsign
     );
 }
 
-void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, long shaderStageFlags)
+void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
     auto& storageBufferD3D = LLGL_CAST(D3D11StorageBuffer&, buffer);
 
@@ -193,7 +193,7 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, unsigned int slot, lon
     }
 }
 
-void D3D11CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, unsigned int startSlot, long shaderStageFlags)
+void D3D11CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
 {
     auto& stroageBufferArrayD3D = LLGL_CAST(D3D11StorageBufferArray&, bufferArray);
 
@@ -254,7 +254,7 @@ void D3D11CommandBuffer::EndStreamOutput()
 
 /* ----- Textures ----- */
 
-void D3D11CommandBuffer::SetTexture(Texture& texture, unsigned int slot, long shaderStageFlags)
+void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags)
 {
     /* Set texture resource to all shader stages */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
@@ -262,7 +262,7 @@ void D3D11CommandBuffer::SetTexture(Texture& texture, unsigned int slot, long sh
     SetShaderResourcesOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
-void D3D11CommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned int startSlot, long shaderStageFlags)
+void D3D11CommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags)
 {
     /* Set texture resource to all shader stages */
     auto& textureArrayD3D = LLGL_CAST(D3D11TextureArray&, textureArray);
@@ -276,7 +276,7 @@ void D3D11CommandBuffer::SetTextureArray(TextureArray& textureArray, unsigned in
 
 /* ----- Sampler States ----- */
 
-void D3D11CommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long shaderStageFlags)
+void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags)
 {
     /* Set sampler state object to all shader stages */
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
@@ -284,7 +284,7 @@ void D3D11CommandBuffer::SetSampler(Sampler& sampler, unsigned int slot, long sh
     SetSamplersOnStages(slot, 1, &resource, shaderStageFlags);
 }
 
-void D3D11CommandBuffer::SetSamplerArray(SamplerArray& samplerArray, unsigned int startSlot, long shaderStageFlags)
+void D3D11CommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags)
 {
     /* Set sampler state object to all shader stages */
     auto& samplerArrayD3D = LLGL_CAST(D3D11SamplerArray&, samplerArray);
@@ -535,49 +535,49 @@ void D3D11CommandBuffer::EndRenderCondition()
 
 /* ----- Drawing ----- */
 
-void D3D11CommandBuffer::Draw(unsigned int numVertices, unsigned int firstVertex)
+void D3D11CommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
     context_->Draw(numVertices, firstVertex);
 }
 
-void D3D11CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
     context_->DrawIndexed(numVertices, firstIndex, 0);
 }
 
-void D3D11CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex, int vertexOffset)
+void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     context_->DrawIndexed(numVertices, firstIndex, vertexOffset);
 }
 
-void D3D11CommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances)
+void D3D11CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
 {
     context_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
-void D3D11CommandBuffer::DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int instanceOffset)
+void D3D11CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
 {
     context_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
 }
 
-void D3D11CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex)
+void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
     context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
 }
 
-void D3D11CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset)
+void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
 }
 
-void D3D11CommandBuffer::DrawIndexedInstanced(unsigned int numVertices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int instanceOffset)
+void D3D11CommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
 {
     context_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
 }
 
 /* ----- Compute ----- */
 
-void D3D11CommandBuffer::Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ)
+void D3D11CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     context_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }
