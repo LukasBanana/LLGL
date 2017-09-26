@@ -50,7 +50,7 @@ CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex);
 // OpenGL Implementation:
 void GLCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
-    auto indices = static_cast<GLintptr>(firstIndex * renderState_.indexBufferStride);
+    const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
     glDrawElements(
         renderState_.drawMode,
         static_cast<GLsizei>(numVertices),

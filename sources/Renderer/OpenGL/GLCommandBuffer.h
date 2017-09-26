@@ -124,7 +124,7 @@ class GLCommandBuffer : public CommandBuffer
         {
             GLenum      drawMode            = GL_TRIANGLES;     // Render mode for "glDraw*"
             GLenum      indexBufferDataType = GL_UNSIGNED_INT;
-            GLintptr    indexBufferStride   = 4;
+            GLsizeiptr  indexBufferStride   = 4;
         };
 
         void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
