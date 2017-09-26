@@ -44,34 +44,35 @@ Thin Abstraction Layer
 ----------------------
 
 ```cpp
-// Interface:
-CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex);
+// Unified Interface:
+CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex);
 
 // OpenGL Implementation:
-void GLCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void GLCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
+    auto indices = static_cast<GLintptr>(firstIndex * renderState_.indexBufferStride);
     glDrawElements(
         renderState_.drawMode,
         static_cast<GLsizei>(numVertices),
         renderState_.indexBufferDataType,
-        (reinterpret_cast<const GLvoid*>(firstIndex * renderState_.indexBufferStride))
+        reinterpret_cast<const GLvoid*>(indices)
     );
 }
 
 // Direct3D 11 Implementation
-void D3D11CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
     context_->DrawIndexed(numVertices, firstIndex, 0);
 }
 
 // Direct3D 12 Implementation
-void D3D12CommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void D3D12CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
     commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
 }
 
 // Vulkan Implementation
-void VKCommandBuffer::DrawIndexed(unsigned int numVertices, unsigned int firstIndex)
+void VKCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
 {
     vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, 0, 0);
 }
