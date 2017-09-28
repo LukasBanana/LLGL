@@ -189,7 +189,7 @@ void VKRenderContext::CreateSwapChainRenderPass()
         attachmentDesc.flags                = 0;
         attachmentDesc.format               = swapChainFormat_.format;
         attachmentDesc.samples              = VK_SAMPLE_COUNT_1_BIT;
-        attachmentDesc.loadOp               = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachmentDesc.loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;//VK_ATTACHMENT_LOAD_OP_CLEAR;
         attachmentDesc.storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
         attachmentDesc.stencilLoadOp        = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachmentDesc.stencilStoreOp       = VK_ATTACHMENT_STORE_OP_DONT_CARE;

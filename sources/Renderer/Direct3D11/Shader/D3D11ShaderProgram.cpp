@@ -75,7 +75,7 @@ void D3D11ShaderProgram::AttachShader(Shader& shader)
     InsertBufferDesc(storageBufferDescs_, shaderD3D->GetStorageBufferDescs());
 
     /* Update buffer view indices */
-    unsigned int bufferIdx = 0;
+    std::uint32_t bufferIdx = 0;
     for (auto& desc : constantBufferDescs_)
         desc.index = bufferIdx++;
 
@@ -244,12 +244,12 @@ void D3D11ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
     DXThrowIfFailed(hr, "failed to create D3D11 input layout");
 }
 
-void D3D11ShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
+void D3D11ShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     // dummy
 }
 
-void D3D11ShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
+void D3D11ShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     // dummy
 }

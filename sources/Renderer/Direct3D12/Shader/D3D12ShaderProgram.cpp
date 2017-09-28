@@ -218,12 +218,12 @@ void D3D12ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
     }
 }
 
-void D3D12ShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
+void D3D12ShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     //todo...
 }
 
-void D3D12ShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
+void D3D12ShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     //todo...
 }

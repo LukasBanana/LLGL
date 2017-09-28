@@ -24,7 +24,7 @@ class GLVertexBufferArray : public GLBufferArray
 
         GLVertexBufferArray();
 
-        void BuildVertexArray(unsigned int numBuffers, Buffer* const * bufferArray);
+        void BuildVertexArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         //! Returns the ID of the vertex-array-object (VAO)
         inline GLuint GetVaoID() const

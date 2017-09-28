@@ -78,7 +78,7 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     return TakeOwnership(textures_, std::move(texture));
 }
 
-TextureArray* D3D11RenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+TextureArray* D3D11RenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
 {
     AssertCreateTextureArray(numTextures, textureArray);
     return TakeOwnership(textureArrays_, MakeUnique<D3D11TextureArray>(numTextures, textureArray));
@@ -192,7 +192,7 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescripto
         case TextureType::TextureCube:
             position.x  = subTextureDesc.textureCube.x;
             position.y  = subTextureDesc.textureCube.y;
-            position.z  = static_cast<unsigned int>(subTextureDesc.textureCube.cubeFaceOffset);
+            position.z  = static_cast<std::uint32_t>(subTextureDesc.textureCube.cubeFaceOffset);
             size.x      = subTextureDesc.textureCube.width;
             size.y      = subTextureDesc.textureCube.height;
             size.z      = 1;
@@ -219,7 +219,7 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescripto
         case TextureType::TextureCubeArray:
             position.x  = subTextureDesc.textureCube.x;
             position.y  = subTextureDesc.textureCube.y;
-            position.z  = subTextureDesc.textureCube.layerOffset * 6 + static_cast<unsigned int>(subTextureDesc.textureCube.cubeFaceOffset);
+            position.z  = subTextureDesc.textureCube.layerOffset * 6 + static_cast<std::uint32_t>(subTextureDesc.textureCube.cubeFaceOffset);
             size.x      = subTextureDesc.textureCube.width;
             size.y      = subTextureDesc.textureCube.height;
             size.z      = subTextureDesc.textureCube.cubeFaces;
@@ -318,7 +318,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(
         auto subImageDesc = *imageDesc;
         auto subImageStride = descD3D.texture1D.width * ImageFormatSize(subImageDesc.format) * DataTypeSize(subImageDesc.dataType);
 
-        for (unsigned int arraySlice = 0; arraySlice < descD3D.texture1D.layers; ++arraySlice)
+        for (std::uint32_t arraySlice = 0; arraySlice < descD3D.texture1D.layers; ++arraySlice)
         {
             textureD3D.UpdateSubresource(
                 context_.Get(), 0, 0,
@@ -361,7 +361,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(
         auto subImageDesc = *imageDesc;
         auto subImageStride = descD3D.texture2D.width * descD3D.texture2D.height * subImageDesc.GetElementSize();
 
-        for (unsigned int arraySlice = 0; arraySlice < descD3D.texture2D.layers; ++arraySlice)
+        for (std::uint32_t arraySlice = 0; arraySlice < descD3D.texture2D.layers; ++arraySlice)
         {
             textureD3D.UpdateSubresource(
                 context_.Get(), 0, arraySlice,
@@ -440,7 +440,7 @@ void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const 
 }
 
 void D3D11RenderSystem::UpdateGenericTexture(
-    Texture& texture, unsigned int mipLevel, unsigned int layer,
+    Texture& texture, std::uint32_t mipLevel, std::uint32_t layer,
     const Gs::Vector3ui& position, const Gs::Vector3ui& size, const ImageDescriptor& imageDesc)
 {
     /* Get D3D texture and update subresource */

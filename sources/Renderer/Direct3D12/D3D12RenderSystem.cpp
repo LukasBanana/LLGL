@@ -140,7 +140,7 @@ Buffer* D3D12RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeBufferAndInitialize(desc, initialData));
 }
 
-static std::unique_ptr<BufferArray> MakeD3D12BufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+static std::unique_ptr<BufferArray> MakeD3D12BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     auto type = (*bufferArray)->GetType();
     switch (type)
@@ -154,7 +154,7 @@ static std::unique_ptr<BufferArray> MakeD3D12BufferArray(unsigned int numBuffers
     return nullptr;
 }
 
-BufferArray* D3D12RenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+BufferArray* D3D12RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
     return TakeOwnership(bufferArrays_, MakeD3D12BufferArray(numBuffers, bufferArray));
@@ -215,7 +215,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     return TakeOwnership(textures_, std::move(textureD3D));
 }
 
-TextureArray* D3D12RenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+TextureArray* D3D12RenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
 {
     return nullptr;//todo...
 }
@@ -264,7 +264,7 @@ Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return nullptr;//todo
 }
 
-SamplerArray* D3D12RenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+SamplerArray* D3D12RenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     return nullptr;//todo
 }

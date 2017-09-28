@@ -20,7 +20,7 @@ GLBufferArray::GLBufferArray(const BufferType type) :
 {
 }
 
-GLBufferArray::GLBufferArray(const BufferType type, unsigned int numBuffers, Buffer* const * bufferArray) :
+GLBufferArray::GLBufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray) :
     BufferArray { type }
 {
     BuildArray(numBuffers, bufferArray);
@@ -31,7 +31,7 @@ GLBufferArray::GLBufferArray(const BufferType type, unsigned int numBuffers, Buf
  * ======= Protected: =======
  */
 
-void GLBufferArray::BuildArray(unsigned int numBuffers, Buffer* const * bufferArray)
+void GLBufferArray::BuildArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     /* Store the ID of each GLBuffer inside the array */
     idArray_.clear();

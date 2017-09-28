@@ -117,7 +117,7 @@ std::string GLShaderProgram::QueryInfoLog()
     return "";
 }
 
-static std::pair<VectorType, unsigned int> UnmapAttribType(GLenum type)
+static std::pair<VectorType, std::uint32_t> UnmapAttribType(GLenum type)
 {
     switch (type)
     {
@@ -369,7 +369,7 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
 
             desc.name       = std::string(uniformName.data());
             desc.location   = glGetUniformLocation(id_, uniformName.data());
-            desc.size       = static_cast<unsigned int>(size);
+            desc.size       = static_cast<std::uint32_t>(size);
 
             GLTypes::Unmap(desc.type, type);
 
@@ -411,7 +411,7 @@ void GLShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
         LinkShaderProgram();
 }
 
-void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
+void GLShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     /* Query uniform block index and bind it to the specified binding index */
     auto blockIndex = glGetUniformBlockIndex(id_, name.c_str());
@@ -421,7 +421,7 @@ void GLShaderProgram::BindConstantBuffer(const std::string& name, unsigned int b
         throw std::invalid_argument("failed to bind constant buffer, because uniform block name is invalid");
 }
 
-void GLShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
+void GLShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     #ifndef __APPLE__
     /* Query shader storage block index and bind it to the specified binding index */

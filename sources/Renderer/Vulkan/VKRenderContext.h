@@ -64,6 +64,11 @@ class VKRenderContext : public RenderContext
             return swapChainFramebuffers_[presentImageIndex_].Get();
         }
 
+        inline VkImage GetSwapChainImage() const
+        {
+            return swapChainImages_[presentImageIndex_];
+        }
+
         inline const VkExtent2D& GetSwapChainExtent() const
         {
             return swapChainExtent_;

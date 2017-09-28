@@ -97,12 +97,12 @@ void DbgShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
     instance.BuildInputLayout(vertexFormat);
 }
 
-void DbgShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
+void DbgShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     instance.BindConstantBuffer(name, bindingIndex);
 }
 
-void DbgShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
+void DbgShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     instance.BindStorageBuffer(name, bindingIndex);
 }

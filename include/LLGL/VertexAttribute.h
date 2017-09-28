@@ -91,7 +91,7 @@ struct LLGL_EXPORT VertexAttribute
     //! Specifies whether non-floating-point data types are to be converted to floating-points. By default false.
     bool            conversion      = false;
 
-    //! Byte offset within each vertex. By default 0.
+    //! Byte offset within each vertex and each buffer. By default 0.
     std::uint32_t   offset          = 0;
 
     /**
@@ -100,6 +100,7 @@ struct LLGL_EXPORT VertexAttribute
     */
     std::uint32_t   semanticIndex   = 0;
 
+    //TODO: remove this (use array of VertexFormat instead)
     /**
     \brief Vertex buffer input slot.
     \remarks This is used when multiple vertex buffers are used simultaneously.

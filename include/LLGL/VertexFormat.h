@@ -61,7 +61,7 @@ struct LLGL_EXPORT VertexFormat
     /**
     \brief Specifies the vertex data stride (or format size) which describes the byte offset between consecutive vertices.
     \remarks This is updated automatically everytime "AppendAttribute" or "AppendAttributes" is called,
-    but it can also modified manually. It is commonly the size of all vertex attributes.
+    but it can also be modified manually. It is commonly the size of all vertex attributes.
     */
     std::uint32_t                   stride = 0;
 };

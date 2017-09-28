@@ -82,7 +82,7 @@ void VKShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
 
     vertexAttribDescs_.resize(attribCount);
 
-    for (size_t i = 0; i < attribCount; ++i)
+    for (std::size_t i = 0; i < attribCount; ++i)
     {
         const auto& attrib = formatAttribs[i];
         auto& desc = vertexAttribDescs_[i];
@@ -135,12 +135,12 @@ void VKShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
     }
 }
 
-void VKShaderProgram::BindConstantBuffer(const std::string& name, unsigned int bindingIndex)
+void VKShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     //todo
 }
 
-void VKShaderProgram::BindStorageBuffer(const std::string& name, unsigned int bindingIndex)
+void VKShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
 {
     //todo
 }
@@ -162,7 +162,7 @@ std::vector<VkPipelineShaderStageCreateInfo> VKShaderProgram::GetShaderStageCrea
     auto shaderCount = shaders_.size();
     std::vector<VkPipelineShaderStageCreateInfo> createInfos(shaderCount);
 
-    for (size_t i = 0; i < shaderCount; ++i)
+    for (std::size_t i = 0; i < shaderCount; ++i)
         shaders_[i]->FillShaderStageCreateInfo(createInfos[i]);
 
     return createInfos;

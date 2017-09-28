@@ -138,7 +138,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     return buffer;
 }
 
-BufferArray* VKRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+BufferArray* VKRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     return nullptr;//todo
 }
@@ -175,7 +175,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     return nullptr;//todo
 }
 
-TextureArray* VKRenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+TextureArray* VKRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
 {
     return nullptr;//todo
 }
@@ -217,7 +217,7 @@ Sampler* VKRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, MakeUnique<VKSampler>(device_, desc));
 }
 
-SamplerArray* VKRenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+SamplerArray* VKRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     return TakeOwnership(samplerArrays_, MakeUnique<VKSamplerArray>(numSamplers, samplerArray));
 }

@@ -28,7 +28,7 @@ class VKCommandBuffer : public CommandBuffer
 
         /* ----- Common ----- */
 
-        VKCommandBuffer(const VKPtr<VkDevice>& device, size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices);
+        VKCommandBuffer(const VKPtr<VkDevice>& device, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices);
         ~VKCommandBuffer();
 
         /* ----- Configuration ----- */
@@ -139,12 +139,26 @@ class VKCommandBuffer : public CommandBuffer
         void CreateCommandPool(std::uint32_t queueFamilyIndex);
         void CreateCommandBuffers(std::size_t bufferCount);
 
+        void BeginClearImage(
+            VkImageMemoryBarrier& clearToPresentBarrier, VkImage image,
+            const VkImageAspectFlags clearFlags, const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil
+        );
+        void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
+
         VkDevice                        device_;
         VKPtr<VkCommandPool>            commandPool_;
         std::vector<VkCommandBuffer>    commandBufferList_;
         VkCommandBuffer                 commandBuffer_;
 
-        VkClearValue                    clearValue_         = { 0.0f, 0.0f, 0.0f, 0.0f };
+        VkClearColorValue               clearColor_         = { 0.0f, 0.0f, 0.0f, 0.0f };
+        VkClearDepthStencilValue        clearDepthStencil_  = { 1.0f, 0 };
+
+        VkRenderPass                    renderPass_         = VK_NULL_HANDLE;
+        VkFramebuffer                   framebuffer_        = VK_NULL_HANDLE;
+        VkImage                         imageColor_         = VK_NULL_HANDLE;
+        VkImage                         imageDepthStencil_  = VK_NULL_HANDLE;
+
+        std::uint32_t                   queuePresentFamily_ = 0;
 
 };
 

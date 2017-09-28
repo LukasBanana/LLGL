@@ -243,7 +243,7 @@ std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixel
     return std::vector<ColorRGBAub>(static_cast<size_t>(numPixels), GetConfiguration().imageInitialization.color);
 }
 
-void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, uint64_t maxSize)
+void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize)
 {
     if (desc.type < BufferType::Vertex || desc.type > BufferType::StreamOutput)
         throw std::invalid_argument("cannot create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
@@ -251,7 +251,7 @@ void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, uint64_t max
         throw std::runtime_error("cannot create buffer with size of " + std::to_string(desc.size) + " bytes (limit is " + std::to_string(maxSize) + " bytes)");
 }
 
-static void AssertCreateResourceArrayCommon(unsigned int numResources, void* const * resourceArray, const std::string& resourceName)
+static void AssertCreateResourceArrayCommon(std::uint32_t numResources, void* const * resourceArray, const std::string& resourceName)
 {
     /* Validate number of buffers */
     if (numResources == 0)
@@ -262,21 +262,21 @@ static void AssertCreateResourceArrayCommon(unsigned int numResources, void* con
         throw std::invalid_argument("cannot create " + resourceName + " array with invalid array pointer");
     
     /* Validate pointers in array */
-    for (unsigned int i = 0; i < numResources; ++i)
+    for (std::uint32_t i = 0; i < numResources; ++i)
     {
         if (resourceArray[i] == nullptr)
             throw std::invalid_argument("cannot create " + resourceName + " array with invalid pointer in array");
     }
 }
 
-void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     /* Validate common resource array parameters */
     AssertCreateResourceArrayCommon(numBuffers, reinterpret_cast<void* const*>(bufferArray), "buffer");
     
     /* Validate buffer types */
     auto refType = bufferArray[0]->GetType();
-    for (unsigned int i = 1; i < numBuffers; ++i)
+    for (std::uint32_t i = 1; i < numBuffers; ++i)
     {
         if (bufferArray[i]->GetType() != refType)
             throw std::invalid_argument("cannot create buffer array with type mismatch");
@@ -292,13 +292,13 @@ void RenderSystem::AssertCreateBufferArray(unsigned int numBuffers, Buffer* cons
     }
 }
 
-void RenderSystem::AssertCreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+void RenderSystem::AssertCreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
 {
     /* Validate common resource array parameters */
     AssertCreateResourceArrayCommon(numTextures, reinterpret_cast<void* const*>(textureArray), "texture");
 }
 
-void RenderSystem::AssertCreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+void RenderSystem::AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     /* Validate common resource array parameters */
     AssertCreateResourceArrayCommon(numSamplers, reinterpret_cast<void* const*>(samplerArray), "sampler");

@@ -70,7 +70,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     }
 }
 
-BufferArray* GLRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
     auto type = (*bufferArray)->GetType();

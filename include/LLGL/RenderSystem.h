@@ -32,6 +32,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <cstdint>
 
 
 namespace LLGL
@@ -204,7 +205,7 @@ class LLGL_EXPORT RenderSystem
         if any of the pointers in the array are null, if not all buffers have the same type, or if the buffer array type is
         not one of these: BufferType::Vertex, BufferType::Constant, BufferType::Storage, or BufferType::StreamOutput.
         */
-        virtual BufferArray* CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) = 0;
+        virtual BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) = 0;
 
         //! Releases the specified buffer object. After this call, the specified object must no longer be used.
         virtual void Release(Buffer& buffer) = 0;
@@ -261,7 +262,7 @@ class LLGL_EXPORT RenderSystem
         \throws std::invalid_argument If 'numTextures' is 0, if 'textureArray' is null,
         or if any of the pointers in the array are null.
         */
-        virtual TextureArray* CreateTextureArray(unsigned int numTextures, Texture* const * textureArray) = 0;
+        virtual TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) = 0;
 
         //! Releases the specified texture object. After this call, the specified object must no longer be used.
         virtual void Release(Texture& texture) = 0;
@@ -325,7 +326,7 @@ class LLGL_EXPORT RenderSystem
         \throws std::invalid_argument If 'numSamplers' is 0, if 'samplerArray' is null,
         or if any of the pointers in the array are null.
         */
-        virtual SamplerArray* CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray) = 0;
+        virtual SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) = 0;
 
         //! Releases the specified Sampler object. After this call, the specified object must no longer be used.
         virtual void Release(Sampler& sampler) = 0;
@@ -413,16 +414,16 @@ class LLGL_EXPORT RenderSystem
         std::vector<ColorRGBAub> GetDefaultTextureImageRGBAub(int numPixels) const;
 
         //! Validates the specified buffer descriptor to be used for buffer creation.
-        void AssertCreateBuffer(const BufferDescriptor& desc, uint64_t maxSize);
+        void AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize);
 
         //! Validates the specified arguments to be used for buffer array creation.
-        void AssertCreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray);
+        void AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         //! Validates the specified arguments to be used for texture array creation.
-        void AssertCreateTextureArray(unsigned int numTextures, Texture* const * textureArray);
+        void AssertCreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray);
 
         //! Validates the specified arguments to be used for sampler array creation.
-        void AssertCreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray);
+        void AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray);
 
     private:
 

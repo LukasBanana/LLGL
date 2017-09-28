@@ -46,8 +46,8 @@ class DbgShaderProgram : public ShaderProgram
         std::vector<UniformDescriptor> QueryUniforms() const override;
 
         void BuildInputLayout(const VertexFormat& vertexFormat) override;
-        void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) override;
-        void BindStorageBuffer(const std::string& name, unsigned int bindingIndex) override;
+        void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
+        void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
 
         ShaderUniform* LockShaderUniform() override;
         void UnlockShaderUniform() override;

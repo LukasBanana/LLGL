@@ -98,8 +98,10 @@ class LLGL_EXPORT ShaderProgram
         \see Shader::Compile
         \see LinkShaders
         \throws std::invalid_argument If the name of an vertex attribute is invalid or the maximal number of available vertex attributes is exceeded.
+        \todo Replace this function by the new version.
         */
         virtual void BuildInputLayout(const VertexFormat& vertexFormat) = 0;
+        //virtual void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats, std::uint32_t inputSlotStart = 0);
 
         //TODO: add FragmentFormat structure to provide CPU side fragment binding for OpenGL
         //virtual void BuildOutputLayout(const FragmentFormat& fragmentFormat) = 0;
@@ -112,7 +114,7 @@ class LLGL_EXPORT ShaderProgram
         \see QueryConstantBuffers
         \see RenderContext::BindConstantBuffer
         */
-        virtual void BindConstantBuffer(const std::string& name, unsigned int bindingIndex) = 0;
+        virtual void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) = 0;
 
         /**
         \brief Binds the specified storage buffer to this shader.
@@ -121,21 +123,20 @@ class LLGL_EXPORT ShaderProgram
         \remarks This function is only necessary if the binding index does not match the default binding index of the storage buffer within the shader.
         \see RenderContext::BindStorageBuffer
         */
-        virtual void BindStorageBuffer(const std::string& name, unsigned int bindingIndex) = 0;
+        virtual void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) = 0;
 
         /**
         \brief Locks the shader uniform handler.
         \return Pointer to the shader uniform handler or null if the render system does not support individual shader uniforms.
         \remarks This must be called to set individual shader uniforms.
         \code
-        auto uniform = shaderProgram->LockShaderUniform();
-        if (uniform)
+        if (auto uniform = shaderProgram->LockShaderUniform())
         {
             uniform->SetUniform("mySampler1", 0);
             uniform->SetUniform("mySampler2", 1);
             uniform->SetUniform("projection", myProjectionMatrix);
+            shaderProgram->UnlockShaderUniform();
         }
-        shaderProgram->UnlockShaderUniform();
         \endcode
         \note Only supported with: OpenGL.
         \see UnlockShaderUniform

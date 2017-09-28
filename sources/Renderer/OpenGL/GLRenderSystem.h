@@ -73,7 +73,7 @@ class GLRenderSystem : public RenderSystem
         /* ----- Buffers ------ */
 
         Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) override;
-        BufferArray* CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) override;
+        BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) override;
 
         void Release(Buffer& buffer) override;
         void Release(BufferArray& bufferArray) override;
@@ -86,7 +86,7 @@ class GLRenderSystem : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) override;
-        TextureArray* CreateTextureArray(unsigned int numTextures, Texture* const * textureArray) override;
+        TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
         void Release(TextureArray& textureArray) override;
@@ -102,7 +102,7 @@ class GLRenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
-        SamplerArray* CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray) override;
+        SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
         void Release(SamplerArray& samplerArray) override;

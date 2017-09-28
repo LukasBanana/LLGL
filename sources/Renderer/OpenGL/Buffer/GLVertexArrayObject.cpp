@@ -38,11 +38,11 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
 
     /* Get data type and components of vector type */
     DataType        dataType    = DataType::Float;
-    unsigned int    components  = 0;
+    std::uint32_t   components  = 0;
     VectorTypeFormat(attribute.vectorType, dataType, components);
 
-    /* Convert offset to pointer sized type (for 32- and 64 bit builds */
-    std::size_t offsetPtrSized = attribute.offset;
+    /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
+    const GLsizeiptr offsetPtrSized = attribute.offset;
 
     /* Use currently bound VBO for VertexAttribPointer functions */
     if (!attribute.conversion && dataType != DataType::Float && dataType != DataType::Double)

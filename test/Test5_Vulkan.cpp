@@ -185,6 +185,8 @@ int main()
                 context->SetVsync(contextDesc.vsync);
             }
 
+            #if 1
+
             // Render scene
             commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
 
@@ -199,6 +201,29 @@ int main()
             commands->Draw(3, 0);
 
             context->Present();
+
+            #else
+            
+            commands->BeginRenderPass();
+            {
+
+
+            }
+            commands->EndRenderPass();
+
+            commands->BeginRenderPass(*contextRenderPass);
+            {
+                commands->SetGraphicsPipeline(*pipeline);
+
+                commands->SetVertexBuffer(*vertexBuffer);
+
+                commands->Draw(3, 0);
+            }
+            commands->EndRenderPass(*contextRenderPass);
+
+            context->Present();
+
+            #endif
         }
     }
     catch (const std::exception& e)

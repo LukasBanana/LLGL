@@ -93,7 +93,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, std::move(sampler));
 }
 
-SamplerArray* GLRenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+SamplerArray* GLRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     LLGL_ASSERT_CAP(hasSamplers);
     AssertCreateSamplerArray(numSamplers, samplerArray);

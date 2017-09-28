@@ -87,7 +87,7 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     return TakeOwnership(textures_, std::move(texture));
 }
 
-TextureArray* GLRenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+TextureArray* GLRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
 {
     AssertCreateTextureArray(numTextures, textureArray);
     return TakeOwnership(textureArrays_, MakeUnique<GLTextureArray>(numTextures, textureArray));
@@ -143,9 +143,9 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
     glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
     glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &texSize[2]);
 
-    desc.texture3D.width    = static_cast<unsigned int>(texSize[0]);
-    desc.texture3D.height   = static_cast<unsigned int>(texSize[1]);
-    desc.texture3D.depth    = static_cast<unsigned int>(texSize[2]);
+    desc.texture3D.width    = static_cast<std::uint32_t>(texSize[0]);
+    desc.texture3D.height   = static_cast<std::uint32_t>(texSize[1]);
+    desc.texture3D.depth    = static_cast<std::uint32_t>(texSize[2]);
 
     if (desc.type == TextureType::TextureCube || desc.type == TextureType::TextureCubeArray)
         desc.texture3D.depth /= 6;

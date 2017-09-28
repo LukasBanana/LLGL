@@ -18,9 +18,10 @@ namespace LLGL
 {
 
 
-VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices) :
-    device_      { device                       },
-    commandPool_ { device, vkDestroyCommandPool }
+VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices) :
+    device_             { device                           },
+    commandPool_        { device, vkDestroyCommandPool     },
+    queuePresentFamily_ { queueFamilyIndices.presentFamily }
 {
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
     CreateCommandBuffers(bufferCount);
@@ -60,30 +61,70 @@ void VKCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* 
 
 void VKCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
-    clearValue_.color.float32[0] = color.r;
-    clearValue_.color.float32[1] = color.g;
-    clearValue_.color.float32[2] = color.b;
-    clearValue_.color.float32[3] = color.a;
+    clearColor_.float32[0] = color.r;
+    clearColor_.float32[1] = color.g;
+    clearColor_.float32[2] = color.b;
+    clearColor_.float32[3] = color.a;
 }
 
 void VKCommandBuffer::SetClearDepth(float depth)
 {
-    clearValue_.depthStencil.depth = depth;
+    clearDepthStencil_.depth = depth;
 }
 
 void VKCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
-    clearValue_.depthStencil.stencil = stencil;
+    clearDepthStencil_.stencil = stencil;
 }
 
 void VKCommandBuffer::Clear(long flags)
 {
-    //todo
+    /* Initialize clear flags */
+    VkImageAspectFlags clearFlags[2] = { 0, 0 };
+
+    if (imageColor_ != VK_NULL_HANDLE)
+    {
+        if ((flags & ClearFlags::Color) != 0)
+            clearFlags[0] |= VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+
+    if (imageDepthStencil_ != VK_NULL_HANDLE)
+    {
+        if ((flags & ClearFlags::Depth) != 0)
+            clearFlags[1] |= VK_IMAGE_ASPECT_DEPTH_BIT;
+        if ((flags & ClearFlags::Stencil) != 0)
+            clearFlags[1] |= VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+
+    /* Begin and end clear image commands interleaved */
+    VkImageMemoryBarrier clearToPresentBarrier[2];
+
+    if (clearFlags[0] != 0)
+        BeginClearImage(clearToPresentBarrier[0], imageColor_, clearFlags[0], &clearColor_, nullptr);
+    if (clearFlags[1] != 0)
+        BeginClearImage(clearToPresentBarrier[1], imageDepthStencil_, clearFlags[1], nullptr, &clearDepthStencil_);
+    if (clearFlags[0] != 0)
+        EndClearImage(clearToPresentBarrier[0]);
+    if (clearFlags[1] != 0)
+        EndClearImage(clearToPresentBarrier[1]);
 }
 
 void VKCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
 {
-    //todo
+    if (targetIndex == 0 && imageColor_ != VK_NULL_HANDLE)
+    {
+        /* Copy clear value */
+        VkClearColorValue clearColor;
+        clearColor.float32[0] = color.r;
+        clearColor.float32[1] = color.g;
+        clearColor.float32[2] = color.b;
+        clearColor.float32[3] = color.a;
+
+        /* Clear color image target */
+        VkImageMemoryBarrier clearToPresentBarrier;
+        BeginClearImage(clearToPresentBarrier, imageColor_, VK_IMAGE_ASPECT_COLOR_BIT, &clearColor, nullptr);
+        EndClearImage(clearToPresentBarrier);
+    }
 }
 
 /* ----- Buffers ------ */
@@ -187,12 +228,13 @@ void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
     renderContextVK.SetPresentCommandBuffer(this);
 
     /* Get swap chain objects */
-    auto renderPass = renderContextVK.GetSwapChainRenderPass().Get();
-    auto framebuffer = renderContextVK.GetSwapChainFramebuffer();
+    renderPass_ = renderContextVK.GetSwapChainRenderPass().Get();
+    framebuffer_ = renderContextVK.GetSwapChainFramebuffer();
+    imageColor_ = renderContextVK.GetSwapChainImage();
 
     /* Begin command buffer and render pass */
     BeginCommandBuffer();
-    BeginRenderPass(renderPass, framebuffer, renderContextVK.GetSwapChainExtent());
+    BeginRenderPass(renderPass_, framebuffer_, renderContextVK.GetSwapChainExtent());
 }
 
 
@@ -329,8 +371,8 @@ void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer fra
         beginInfo.framebuffer       = framebuffer;
         beginInfo.renderArea.offset = { 0, 0 };
         beginInfo.renderArea.extent = extent;
-        beginInfo.clearValueCount   = 1;
-        beginInfo.pClearValues      = (&clearValue_);
+        beginInfo.clearValueCount   = 0;//1;
+        beginInfo.pClearValues      = nullptr;//(&clearValue_);
     }
     vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
@@ -376,6 +418,63 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
 
     commandBuffer_ = commandBufferList_.front();
+}
+
+void VKCommandBuffer::BeginClearImage(
+    VkImageMemoryBarrier& clearToPresentBarrier, VkImage image,
+    const VkImageAspectFlags clearFlags, const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil)
+{
+    /* Initialize image subresource range */
+    VkImageSubresourceRange subresourceRange;
+    {
+        subresourceRange.aspectMask     = clearFlags;
+        subresourceRange.baseMipLevel   = 0;
+        subresourceRange.levelCount     = 1;
+        subresourceRange.baseArrayLayer = 0;
+        subresourceRange.layerCount     = 1;
+    }
+
+    /* Initialize pre-barrier */
+    VkImageMemoryBarrier presentToClearBarrier;
+    {
+        presentToClearBarrier.sType                 = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        presentToClearBarrier.pNext                 = nullptr;
+        presentToClearBarrier.srcAccessMask         = VK_ACCESS_MEMORY_READ_BIT;
+        presentToClearBarrier.dstAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
+        presentToClearBarrier.oldLayout             = VK_IMAGE_LAYOUT_UNDEFINED;
+        presentToClearBarrier.newLayout             = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        presentToClearBarrier.srcQueueFamilyIndex   = queuePresentFamily_;
+        presentToClearBarrier.dstQueueFamilyIndex   = queuePresentFamily_;
+        presentToClearBarrier.image                 = image;
+        presentToClearBarrier.subresourceRange      = subresourceRange;
+    }
+
+    /* Initialize post-barrier */
+    {
+        presentToClearBarrier.sType                 = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        presentToClearBarrier.pNext                 = nullptr;
+        presentToClearBarrier.srcAccessMask         = VK_ACCESS_TRANSFER_WRITE_BIT;
+        presentToClearBarrier.dstAccessMask         = VK_ACCESS_MEMORY_READ_BIT;
+        presentToClearBarrier.oldLayout             = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        presentToClearBarrier.newLayout             = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        presentToClearBarrier.srcQueueFamilyIndex   = queuePresentFamily_;
+        presentToClearBarrier.dstQueueFamilyIndex   = queuePresentFamily_;
+        presentToClearBarrier.image                 = image;
+        presentToClearBarrier.subresourceRange      = subresourceRange;
+    }
+
+    /* Record barrier and clear color commands */
+    vkCmdPipelineBarrier(commandBuffer_, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &presentToClearBarrier);
+
+    if ((clearFlags & VK_IMAGE_ASPECT_COLOR_BIT) != 0)
+        vkCmdClearColorImage(commandBuffer_, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, clearColor, 1, &subresourceRange);
+    if ((clearFlags & (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT)) != 0)
+        vkCmdClearDepthStencilImage(commandBuffer_, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, clearDepthStencil, 1, &subresourceRange);
+}
+
+void VKCommandBuffer::EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier)
+{
+    vkCmdPipelineBarrier(commandBuffer_, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &clearToPresentBarrier);
 }
 
 

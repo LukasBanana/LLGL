@@ -78,7 +78,7 @@ void DbgRenderSystem::Release(CommandBuffer& commandBuffer)
 Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
     /* Validate and store format size (if supported) */
-    unsigned int formatSize = 0;
+    std::uint32_t formatSize = 0;
 
     if (debugger_)
     {
@@ -129,13 +129,13 @@ Buffer* DbgRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* 
     return TakeOwnership(buffers_, std::move(bufferDbg));
 }
 
-BufferArray* DbgRenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
 
     /* Create temporary buffer array with buffer instances */
     std::vector<Buffer*> bufferInstanceArray;
-    for (unsigned int i = 0; i < numBuffers; ++i)
+    for (std::uint32_t i = 0; i < numBuffers; ++i)
     {
         auto bufferDbg = LLGL_CAST(DbgBuffer*, (*(bufferArray++)));
         bufferInstanceArray.push_back(&(bufferDbg->instance));
@@ -207,13 +207,13 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
 }
 
-TextureArray* DbgRenderSystem::CreateTextureArray(unsigned int numTextures, Texture* const * textureArray)
+TextureArray* DbgRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
 {
     AssertCreateTextureArray(numTextures, textureArray);
 
     /* Create temporary buffer array with buffer instances */
     std::vector<Texture*> textureInstanceArray;
-    for (unsigned int i = 0; i < numTextures; ++i)
+    for (std::uint32_t i = 0; i < numTextures; ++i)
     {
         auto textureDbg = LLGL_CAST(DbgTexture*, (*(textureArray++)));
         textureInstanceArray.push_back(&(textureDbg->instance));
@@ -283,7 +283,7 @@ Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     //return TakeOwnership(samplers_, MakeUnique<DbgSampler>());
 }
 
-SamplerArray* DbgRenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+SamplerArray* DbgRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     AssertCreateSamplerArray(numSamplers, samplerArray);
     return instance_->CreateSamplerArray(numSamplers, samplerArray);
@@ -500,7 +500,7 @@ void DbgRenderSystem::DebugTextureDescriptor(const TextureDescriptor& desc)
     }
 }
 
-void DbgRenderSystem::DebugTextureSize(unsigned int size)
+void DbgRenderSystem::DebugTextureSize(std::uint32_t size)
 {
     if (size == 0)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid texture size");
