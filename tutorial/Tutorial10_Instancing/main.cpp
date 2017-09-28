@@ -70,10 +70,12 @@ private:
     {
         // Specify vertex formats
         LLGL::VertexFormat vertexFormatPerVertex;
+        vertexFormatPerVertex.inputSlot = 0;
         vertexFormatPerVertex.AppendAttribute({ "position", LLGL::VectorType::Float3 });
         vertexFormatPerVertex.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
 
         LLGL::VertexFormat vertexFormatPerInstance;
+        vertexFormatPerInstance.inputSlot = 1;
         vertexFormatPerInstance.AppendAttribute({ "color",      LLGL::VectorType::Float3, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 0, LLGL::VectorType::Float4, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 1, LLGL::VectorType::Float4, 1 });

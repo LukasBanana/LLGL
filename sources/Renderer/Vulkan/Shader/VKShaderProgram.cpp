@@ -91,7 +91,7 @@ void VKShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const Ver
             VkVertexInputAttributeDescription vertexAttrib;
             {
                 vertexAttrib.location   = location++;
-                vertexAttrib.binding    = i;
+                vertexAttrib.binding    = vertexFormats[i].inputSlot;
                 vertexAttrib.format     = VKTypes::Map(attr.vectorType);
                 vertexAttrib.offset     = attr.offset;
             }
@@ -101,7 +101,7 @@ void VKShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const Ver
         /* Initialize vertex input binding descriptors */
         VkVertexInputBindingDescription inputBinding;
         {
-            inputBinding.binding    = i;
+            inputBinding.binding    = vertexFormats[i].inputSlot;
             inputBinding.stride     = vertexFormats[i].stride;
             inputBinding.inputRate  = ((!attribs.empty() && attribs.front().instanceDivisor != 0) ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
         }

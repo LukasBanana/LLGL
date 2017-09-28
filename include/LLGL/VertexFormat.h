@@ -57,7 +57,15 @@ struct LLGL_EXPORT VertexFormat
     \remarks This is updated automatically everytime "AppendAttribute" or "AppendAttributes" is called,
     but it can also be modified manually. It is commonly the size of all vertex attributes.
     */
-    std::uint32_t                   stride = 0;
+    std::uint32_t                   stride      = 0;
+
+    /**
+    \brief Vertex buffer input slot. By default 0.
+    \remarks This is used when multiple vertex buffers are used simultaneously.
+    \note Only supported with: Direct3D 11, Direct3D 12, Vulkan.
+    \note For OpenGL, the input slots are automatically generated in ascending order and beginning with zero.
+    */
+    std::uint32_t                   inputSlot   = 0;
 };
 
 

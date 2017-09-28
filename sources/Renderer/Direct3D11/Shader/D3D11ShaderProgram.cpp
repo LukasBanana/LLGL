@@ -228,7 +228,7 @@ void D3D11ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const 
                 elementDesc.SemanticName            = attrib.name.c_str();
                 elementDesc.SemanticIndex           = attrib.semanticIndex;
                 elementDesc.Format                  = GetInputElementFormat(attrib);
-                elementDesc.InputSlot               = i;
+                elementDesc.InputSlot               = vertexFormats[i].inputSlot;
                 elementDesc.AlignedByteOffset       = attrib.offset;
                 elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
                 elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
