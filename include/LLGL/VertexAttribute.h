@@ -95,17 +95,10 @@ struct LLGL_EXPORT VertexAttribute
     std::uint32_t   offset          = 0;
 
     /**
-    \brief Semantic index.
-    \note Only supported with: Direct3D 11, Direct3D 12.
+    \brief Semantic index (for HLSL) or vector index (for GLSL).
+    \remarks This is used when a matrix is distributed over multiple vector attributes.
     */
     std::uint32_t   semanticIndex   = 0;
-
-    //TODO: remove this (use array of VertexFormat instead)
-    /**
-    \brief Vertex buffer input slot.
-    \remarks This is used when multiple vertex buffers are used simultaneously.
-    */
-    std::uint32_t   inputSlot       = 0;
 };
 
 

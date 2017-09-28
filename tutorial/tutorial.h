@@ -236,7 +236,7 @@ private:
     {
         std::vector<TutorialShaderDescriptor>   shaderDescs;
         std::vector<LLGL::Shader*>              shaders;
-        LLGL::VertexFormat                      vertexFormat;
+        std::vector<LLGL::VertexFormat>         vertexFormats;
         LLGL::StreamOutputFormat                streamOutputFormat;
     };
 
@@ -291,7 +291,7 @@ protected:
     Tutorial(
         const std::wstring& title,
         const LLGL::Size&   resolution      = { 800, 600 },
-        unsigned int        multiSampling   = 8,
+        std::uint32_t       multiSampling   = 8,
         bool                vsync           = true,
         bool                debugger        = true) :
             profilerObj_ { new LLGL::RenderingProfiler() },
@@ -386,7 +386,7 @@ protected:
 
     LLGL::ShaderProgram* LoadShaderProgram(
         const std::vector<TutorialShaderDescriptor>& shaderDescs,
-        const LLGL::VertexFormat& vertexFormat = {},
+        const std::vector<LLGL::VertexFormat>& vertexFormats = {},
         const LLGL::StreamOutputFormat& streamOutputFormat = {})
     {
         // Create shader program
@@ -423,15 +423,15 @@ protected:
         }
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
-        if (!vertexFormat.attributes.empty())
-            shaderProgram->BuildInputLayout(vertexFormat);
+        if (!vertexFormats.empty())
+            shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(vertexFormats.size()), vertexFormats.data());
 
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
 
         // Store information in call
-        recall.vertexFormat = vertexFormat;
+        recall.vertexFormats = vertexFormats;
         recall.streamOutputFormat = streamOutputFormat;
         shaderPrograms_[shaderProgram] = recall;
 
@@ -484,8 +484,8 @@ protected:
             }
 
             // Bind vertex attribute layout (this is not required for a compute shader program)
-            if (!recall.vertexFormat.attributes.empty())
-                shaderProgram->BuildInputLayout(recall.vertexFormat);
+            if (!recall.vertexFormats.empty())
+                shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(recall.vertexFormats.size()), recall.vertexFormats.data());
 
             // Link shader program and check for errors
             if (!shaderProgram->LinkShaders())
@@ -501,8 +501,8 @@ protected:
                 shaderProgram->AttachShader(*shader);
 
             // Bind vertex attribute layout (this is not required for a compute shader program)
-            if (!recall.vertexFormat.attributes.empty())
-                shaderProgram->BuildInputLayout(recall.vertexFormat);
+            if (!recall.vertexFormats.empty())
+                shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(recall.vertexFormats.size()), recall.vertexFormats.data());
 
             // Link shader program and check for errors
             if (!shaderProgram->LinkShaders())
@@ -522,7 +522,7 @@ protected:
     }
 
     // Load standard shader program (with vertex- and fragment shaders)
-    LLGL::ShaderProgram* LoadStandardShaderProgram(const LLGL::VertexFormat& vertexFormat)
+    LLGL::ShaderProgram* LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats)
     {
         // Load shader program
         if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
@@ -532,7 +532,7 @@ protected:
                     { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
                 },
-                vertexFormat
+                vertexFormats
             );
         }
         else
@@ -542,7 +542,7 @@ protected:
                     { LLGL::ShaderType::Vertex, "vertex.glsl" },
                     { LLGL::ShaderType::Fragment, "fragment.glsl" }
                 },
-                vertexFormat
+                vertexFormats
             );
         }
     }

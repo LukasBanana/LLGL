@@ -385,25 +385,44 @@ std::vector<UniformDescriptor> GLShaderProgram::QueryUniforms() const
     return descList;
 }
 
-void GLShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
+void GLShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
 {
-    if (vertexFormat.attributes.size() > GL_MAX_VERTEX_ATTRIBS)
+    if (numVertexFormats == 0 || vertexFormats == nullptr)
+        return;
+
+    /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
+    static const std::size_t minSupportedVertexAttribs = 8;
+
+    std::size_t numVertexAttribs = 0;
+    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
+        numVertexAttribs += vertexFormats[i].attributes.size();
+
+    if (numVertexAttribs > minSupportedVertexAttribs)
     {
-        throw std::invalid_argument(
-            "failed to bind vertex attributes, because too many attributes are specified (maximum is " +
-            std::to_string(GL_MAX_VERTEX_ATTRIBS) + ")"
-        );
+        GLint maxSupportedVertexAttribs = 0;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxSupportedVertexAttribs);
+
+        if (numVertexAttribs > static_cast<std::size_t>(maxSupportedVertexAttribs))
+        {
+            throw std::invalid_argument(
+                "failed build input layout, because too many vertex attributes are specified (maximum is " +
+                std::to_string(maxSupportedVertexAttribs) + ")"
+            );
+        }
     }
 
     /* Bind all vertex attribute locations */
     GLuint index = 0;
 
-    for (const auto& attrib : vertexFormat.attributes)
+    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
     {
-        /* Bind attribute location (matrices only use the column) */
-        if (attrib.semanticIndex == 0)
-            glBindAttribLocation(id_, index, attrib.name.c_str());
-        ++index;
+        for (const auto& attrib : vertexFormats[i].attributes)
+        {
+            /* Bind attribute location (matrices only use the column) */
+            if (attrib.semanticIndex == 0)
+                glBindAttribLocation(id_, index, attrib.name.c_str());
+            ++index;
+        }
     }
 
     /* Re-link shader program if the shader has already been linked */

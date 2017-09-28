@@ -52,24 +52,6 @@ void VertexFormat::AppendAttribute(const VertexAttribute& attrib, std::uint32_t 
         /* Update stride */
         UpdateStride(*this);
     }
-
-    /* Overwrite attribute input slot */
-    if (attributes.size() > 1)
-    {
-        /* Check if input slot must be increased */
-        const auto& prevAttr = attributes[attributes.size() - 2];
-        attr.inputSlot = prevAttr.inputSlot;
-        if (attr.offset < prevAttr.offset + prevAttr.GetSize())
-            ++attr.inputSlot;
-    }
-    else
-        attr.inputSlot = 0;
-}
-
-void VertexFormat::AppendAttributes(const VertexFormat& format)
-{
-    for (const auto& attr : format.attributes)
-        AppendAttribute(attr, attr.offset);
 }
 
 

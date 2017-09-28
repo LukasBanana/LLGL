@@ -74,64 +74,38 @@ std::vector<UniformDescriptor> VKShaderProgram::QueryUniforms() const
     return {}; //todo
 }
 
-void VKShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
+void VKShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
 {
-    /* Initialize vertex input attribute descriptors */
-    const auto& formatAttribs = vertexFormat.attributes;
-    const auto attribCount = formatAttribs.size();
+    if (numVertexFormats == 0 || vertexFormats == nullptr)
+        return;
 
-    vertexAttribDescs_.resize(attribCount);
+    vertexBindingDescs_.reserve(static_cast<std::size_t>(numVertexFormats));
 
-    for (std::size_t i = 0; i < attribCount; ++i)
+    for (std::uint32_t i = 0, location = 0; i < numVertexFormats; ++i)
     {
-        const auto& attrib = formatAttribs[i];
-        auto& desc = vertexAttribDescs_[i];
+        const auto& attribs = vertexFormats[i].attributes;
 
-        desc.location   = static_cast<std::uint32_t>(i);
-        desc.binding    = attrib.inputSlot;
-        desc.format     = VKTypes::Map(attrib.vectorType);
-        desc.offset     = attrib.offset;
-    }
-
-    /* Initialize vertex input binding descriptors */
-    std::uint32_t prevSlot = 0, stride = 0;
-    VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-    for (auto it = formatAttribs.begin(), itEnd = formatAttribs.end(); true; ++it)
-    {
-        /* Check if new input slot begins */
-        if (it == itEnd || prevSlot != it->inputSlot)
+        /* Initialize vertex input attribute descriptors */
+        for (const auto& attr : attribs)
         {
-            if (stride > 0)
+            VkVertexInputAttributeDescription vertexAttrib;
             {
-                /* Append description to list */
-                VkVertexInputBindingDescription desc;
-                {
-                    desc.binding    = prevSlot;
-                    desc.stride     = stride;
-                    desc.inputRate  = inputRate;
-                }
-                vertexBindingDescs_.push_back(desc);
-
-                stride = 0;
+                vertexAttrib.location   = location++;
+                vertexAttrib.binding    = i;
+                vertexAttrib.format     = VKTypes::Map(attr.vectorType);
+                vertexAttrib.offset     = attr.offset;
             }
-
-            /* Break iteration */
-            if (it == itEnd)
-                break;
-
-            /* Store next input slot */
-            prevSlot = it->inputSlot;
+            vertexAttribDescs_.push_back(vertexAttrib);
         }
-        
-        /* Increment vertex stride */
-        stride += it->GetSize();
 
-        /* Store vertex rate */
-        if (it->instanceDivisor > 0)
-            inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
-        else
-            inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        /* Initialize vertex input binding descriptors */
+        VkVertexInputBindingDescription inputBinding;
+        {
+            inputBinding.binding    = i;
+            inputBinding.stride     = vertexFormats[i].stride;
+            inputBinding.inputRate  = ((!attribs.empty() && attribs.front().instanceDivisor != 0) ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX);
+        }
+        vertexBindingDescs_.push_back(inputBinding);
     }
 }
 

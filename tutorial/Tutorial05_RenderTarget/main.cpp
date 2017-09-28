@@ -110,7 +110,7 @@ public:
                     { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
                 },
-                vertexFormat
+                { vertexFormat }
             );
         }
         else
@@ -124,7 +124,7 @@ public:
                     { LLGL::ShaderType::Fragment, "fragment.glsl" }
                     #endif
                 },
-                vertexFormat
+                { vertexFormat }
             );
         }
     }

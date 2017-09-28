@@ -208,28 +208,33 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
 }
 
-void D3D11ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
+void D3D11ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
 {
     if (!vs_ || vs_->GetByteCode().empty())
-        throw std::runtime_error("cannot bind vertex attributes without valid vertex shader");
+        throw std::runtime_error("cannot build input layout without valid vertex shader");
+
+    if (numVertexFormats == 0 || vertexFormats == nullptr)
+        return;
 
     /* Setup input element descriptors */
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
-    inputElements.reserve(vertexFormat.attributes.size());
 
-    for (const auto& attrib : vertexFormat.attributes)
+    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
     {
-        D3D11_INPUT_ELEMENT_DESC elementDesc;
+        for (const auto& attrib : vertexFormats[i].attributes)
         {
-            elementDesc.SemanticName            = attrib.name.c_str();
-            elementDesc.SemanticIndex           = attrib.semanticIndex;
-            elementDesc.Format                  = GetInputElementFormat(attrib);
-            elementDesc.InputSlot               = attrib.inputSlot;
-            elementDesc.AlignedByteOffset       = attrib.offset;
-            elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
-            elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
+            D3D11_INPUT_ELEMENT_DESC elementDesc;
+            {
+                elementDesc.SemanticName            = attrib.name.c_str();
+                elementDesc.SemanticIndex           = attrib.semanticIndex;
+                elementDesc.Format                  = GetInputElementFormat(attrib);
+                elementDesc.InputSlot               = i;
+                elementDesc.AlignedByteOffset       = attrib.offset;
+                elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
+                elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
+            }
+            inputElements.push_back(elementDesc);
         }
-        inputElements.push_back(elementDesc);
     }
 
     /* Create input layout */

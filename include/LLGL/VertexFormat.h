@@ -47,12 +47,6 @@ struct LLGL_EXPORT VertexFormat
     void AppendAttribute(const VertexAttribute& attrib, std::uint32_t offset = OffsetAppend);
 
     /**
-    \brief Append all attributes of the specified vertex format.
-    \remarks This can be used to build a vertex format for vertex buffer arrays.
-    */
-    void AppendAttributes(const VertexFormat& format);
-
-    /**
     \brief Specifies the list of vertex attributes.
     \remarks Use "AppendAttribute" or "AppendAttributes" to append new attributes.
     */

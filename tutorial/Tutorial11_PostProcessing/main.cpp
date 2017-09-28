@@ -115,7 +115,7 @@ public:
                     { LLGL::ShaderType::Vertex, "shader.hlsl", "VScene", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PScene", "ps_5_0" }
                 },
-                vertexFormatScene
+                { vertexFormatScene }
             );
 
             // Load blur shader program
@@ -123,8 +123,7 @@ public:
                 {
                     { LLGL::ShaderType::Vertex, "shader.hlsl", "VPP", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PBlur", "ps_5_0" }
-                },
-                {} // empty vertex format
+                }
             );
 
             // Load final shader program
@@ -132,8 +131,7 @@ public:
                 {
                     { LLGL::ShaderType::Vertex, "shader.hlsl", "VPP", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PFinal", "ps_5_0" }
-                },
-                {} // empty vertex format
+                }
             );
         }
         else
@@ -144,7 +142,7 @@ public:
                     { LLGL::ShaderType::Vertex, "scene.vertex.glsl" },
                     { LLGL::ShaderType::Fragment, "scene.fragment.glsl" }
                 },
-                vertexFormatScene
+                { vertexFormatScene }
             );
 
             // Load blur shader program
@@ -152,8 +150,7 @@ public:
                 {
                     { LLGL::ShaderType::Vertex, "postprocess.vertex.glsl" },
                     { LLGL::ShaderType::Fragment, "blur.fragment.glsl" }
-                },
-                {} // empty vertex format
+                }
             );
 
             // Load final shader program
@@ -161,8 +158,7 @@ public:
                 {
                     { LLGL::ShaderType::Vertex, "postprocess.vertex.glsl" },
                     { LLGL::ShaderType::Fragment, "final.fragment.glsl" }
-                },
-                {} // empty vertex format
+                }
             );
         }
         

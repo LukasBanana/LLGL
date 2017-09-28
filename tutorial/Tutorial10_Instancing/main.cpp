@@ -12,8 +12,8 @@ class Tutorial10 : public Tutorial
 {
 
     // Static configuration for this demo
-    static const unsigned int   numPlantInstances   = 20000;
-    static const unsigned int   numPlantImages      = 10;
+    static const std::uint32_t  numPlantInstances   = 20000;
+    static const std::uint32_t  numPlantImages      = 10;
     const float                 positionRange       = 40.0f;
 
     LLGL::ShaderProgram*        shaderProgram       = nullptr;
@@ -47,8 +47,8 @@ public:
         Tutorial { L"LLGL Tutorial 10: Instancing" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram(vertexFormat);
+        auto vertexFormats = CreateBuffers();
+        shaderProgram = LoadStandardShaderProgram(vertexFormats);
         CreateTextures();
         CreateSamplers();
         CreatePipelines();
@@ -66,7 +66,7 @@ private:
         return a + (b - a) * rnd;
     }
 
-    LLGL::VertexFormat CreateBuffers()
+    std::vector<LLGL::VertexFormat> CreateBuffers()
     {
         // Specify vertex formats
         LLGL::VertexFormat vertexFormatPerVertex;
@@ -80,10 +80,6 @@ private:
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 2, LLGL::VectorType::Float4, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 3, LLGL::VectorType::Float4, 1 });
         vertexFormatPerInstance.AppendAttribute({ "arrayLayer", LLGL::VectorType::Float,  1 });
-
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttributes(vertexFormatPerVertex);
-        vertexFormat.AppendAttributes(vertexFormatPerInstance);
 
         // Initialize per-vertex data (4 vertices for the plane of each plant)
         static const float grassSize    = 100.0f;
@@ -174,7 +170,7 @@ private:
         // Create constant buffer
         constantBuffer = CreateConstantBuffer(settings);
 
-        return vertexFormat;
+        return { vertexFormatPerVertex, vertexFormatPerInstance };
     }
 
     void CreateTextures()

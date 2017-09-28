@@ -135,7 +135,7 @@ int main()
         vertexFormat.AppendAttribute({ "coord", LLGL::VectorType::Float2 });
         vertexFormat.AppendAttribute({ "color", LLGL::VectorType::Float3 });
 
-        shaderProgram->BuildInputLayout(vertexFormat);
+        shaderProgram->BuildInputLayout(1, &vertexFormat);
 
         // Create vertex buffer
         auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);

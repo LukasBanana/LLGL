@@ -27,7 +27,7 @@ GLVertexArrayObject::~GLVertexArrayObject()
     glDeleteVertexArrays(1, &id_);
 }
 
-void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute, unsigned int stride, unsigned int index)
+void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute, std::uint32_t stride, std::uint32_t index)
 {
     /* Enable array index in currently bound VAO */
     glEnableVertexAttribArray(index);

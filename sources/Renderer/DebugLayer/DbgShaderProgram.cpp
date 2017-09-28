@@ -89,12 +89,17 @@ std::vector<UniformDescriptor> DbgShaderProgram::QueryUniforms() const
     return instance.QueryUniforms();
 }
 
-void DbgShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
+void DbgShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
 {
-    vertexLayout_.attributes    = vertexFormat.attributes;
-    vertexLayout_.bound         = true;
+    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
+    {
+        for (const auto& attrib : vertexFormats[i].attributes)
+            vertexLayout_.attributes.push_back(attrib);
+    }
 
-    instance.BuildInputLayout(vertexFormat);
+    vertexLayout_.bound = true;
+
+    instance.BuildInputLayout(numVertexFormats, vertexFormats);
 }
 
 void DbgShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)

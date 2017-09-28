@@ -24,12 +24,12 @@ public:
         Tutorial { L"LLGL Tutorial 07: Array" }
     {
         // Create all graphics objects
-        auto vertexFormat = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram(vertexFormat);
+        auto vertexFormats = CreateBuffers();
+        shaderProgram = LoadStandardShaderProgram(vertexFormats);
         CreatePipelines();
     }
 
-    LLGL::VertexFormat CreateBuffers()
+    std::vector<LLGL::VertexFormat> CreateBuffers()
     {
         // Specify vertex formats
         LLGL::VertexFormat vertexFormatPositions;
@@ -42,11 +42,6 @@ public:
         vertexFormatInstanceData.AppendAttribute({ "instanceColor",  LLGL::VectorType::Float3, 1 });
         vertexFormatInstanceData.AppendAttribute({ "instanceOffset", LLGL::VectorType::Float2, 1 });
         vertexFormatInstanceData.AppendAttribute({ "instanceScale",  LLGL::VectorType::Float,  1 });
-
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttributes(vertexFormatPositions);
-        vertexFormat.AppendAttributes(vertexFormatColors);
-        vertexFormat.AppendAttributes(vertexFormatInstanceData);
 
         // Initialize buffer data
         Gs::Vector2f vertexPositions[] =
@@ -101,7 +96,7 @@ public:
         // Create vertex buffer array
         vertexBufferArray = renderer->CreateBufferArray(3, vertexBuffers);
 
-        return vertexFormat;
+        return { vertexFormatPositions, vertexFormatColors, vertexFormatInstanceData };
     }
 
     void CreatePipelines()

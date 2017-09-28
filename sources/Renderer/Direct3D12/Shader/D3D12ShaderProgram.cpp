@@ -197,24 +197,29 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
     }
 }
 
-void D3D12ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat)
+void D3D12ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
 {
-    inputElements_.clear();
-    inputElements_.reserve(vertexFormat.attributes.size());
+    if (numVertexFormats == 0 || vertexFormats == nullptr)
+        return;
 
-    for (const auto& attrib : vertexFormat.attributes)
+    inputElements_.clear();
+
+    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
     {
-        D3D12_INPUT_ELEMENT_DESC elementDesc;
+        for (const auto& attrib : vertexFormats[i].attributes)
         {
-            elementDesc.SemanticName            = attrib.name.c_str();
-            elementDesc.SemanticIndex           = attrib.semanticIndex;
-            elementDesc.Format                  = GetInputElementFormat(attrib);
-            elementDesc.InputSlot               = attrib.inputSlot;
-            elementDesc.AlignedByteOffset       = attrib.offset;
-            elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
-            elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
+            D3D12_INPUT_ELEMENT_DESC elementDesc;
+            {
+                elementDesc.SemanticName            = attrib.name.c_str();
+                elementDesc.SemanticIndex           = attrib.semanticIndex;
+                elementDesc.Format                  = GetInputElementFormat(attrib);
+                elementDesc.InputSlot               = i;
+                elementDesc.AlignedByteOffset       = attrib.offset;
+                elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA);
+                elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
+            }
+            inputElements_.push_back(elementDesc);
         }
-        inputElements_.push_back(elementDesc);
     }
 }
 

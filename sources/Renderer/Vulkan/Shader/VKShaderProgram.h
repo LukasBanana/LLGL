@@ -42,7 +42,7 @@ class VKShaderProgram : public ShaderProgram
         std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
 
-        void BuildInputLayout(const VertexFormat& vertexFormat) override;
+        void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
         void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
 
