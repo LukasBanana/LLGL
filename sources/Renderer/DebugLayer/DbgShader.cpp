@@ -28,7 +28,8 @@ bool DbgShader::Compile(const std::string& sourceCode, const ShaderDescriptor& s
 
 bool DbgShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
 {
-    return instance.LoadBinary(std::move(binaryCode), shaderDesc);
+    compiled_ = instance.LoadBinary(std::move(binaryCode), shaderDesc);
+    return compiled_;
 }
 
 std::string DbgShader::Disassemble(int flags)

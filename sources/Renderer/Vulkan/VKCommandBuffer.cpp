@@ -11,6 +11,8 @@
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
 #include "Buffer/VKBuffer.h"
+#include "Buffer/VKBufferArray.h"
+#include "Buffer/VKIndexBuffer.h"
 #include "../CheckedCast.h"
 
 
@@ -141,13 +143,20 @@ void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
 
 void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    //todo
+    auto& bufferArrayVK = LLGL_CAST(VKBufferArray&, bufferArray);
+    vkCmdBindVertexBuffers(
+        commandBuffer_,
+        0,
+        static_cast<std::uint32_t>(bufferArrayVK.GetBuffers().size()),
+        bufferArrayVK.GetBuffers().data(),
+        bufferArrayVK.GetOffsets().data()
+    );
 }
 
 void VKCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
-    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
-    vkCmdBindIndexBuffer(commandBuffer_, bufferVK.Get(), 0, VK_INDEX_TYPE_UINT32);
+    auto& indexBufferVK = LLGL_CAST(VKIndexBuffer&, buffer);
+    vkCmdBindIndexBuffer(commandBuffer_, indexBufferVK.Get(), 0, indexBufferVK.GetIndexType());
 }
 
 void VKCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)

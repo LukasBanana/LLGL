@@ -177,6 +177,7 @@ static void CreateRasterizerState(const GraphicsPipelineDescriptor& desc, VkPipe
 
 static VkSampleCountFlagBits GetSampleCountBitmask(const MultiSamplingDescriptor& desc)
 {
+    #if 0//TODO: multisampling currently not supported for Vulkan
     if (desc.enabled)
     {
         switch (desc.samples)
@@ -190,6 +191,7 @@ static VkSampleCountFlagBits GetSampleCountBitmask(const MultiSamplingDescriptor
             case 64: return VK_SAMPLE_COUNT_64_BIT;
         }
     }
+    #endif
     return VK_SAMPLE_COUNT_1_BIT;
 }
 

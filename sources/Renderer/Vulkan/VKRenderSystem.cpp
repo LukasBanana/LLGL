@@ -41,6 +41,18 @@ static void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCall
         func(instance, callback, allocator);
 }
 
+static void FillBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize size, VkBufferUsageFlags usage)
+{
+    createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    createInfo.pNext                    = nullptr;
+    createInfo.flags                    = 0;
+    createInfo.size                     = size;
+    createInfo.usage                    = usage;
+    createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
+    createInfo.queueFamilyIndexCount    = 0;
+    createInfo.pQueueFamilyIndices      = nullptr;
+}
+
 
 /* ----- Common ----- */
 
@@ -73,10 +85,12 @@ VKRenderSystem::VKRenderSystem() :
 
     QueryDeviceProperties();
     CreateLogicalDevice();
+    CreateStagingCommandResources();
 }
 
 VKRenderSystem::~VKRenderSystem()
 {
+    ReleaseStagingCommandResources();
 }
 
 /* ----- Render Context ----- */
@@ -113,34 +127,56 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 {
     AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
 
-    /* Create buffer object */
-    auto buffer = CreateBufferObject(desc);
-    
-    /* Allocate device memory */
-    const auto& requirements = buffer->GetRequirements();
-    const auto memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    /* Create staging buffer */
+    VkBufferCreateInfo stagingCreateInfo;
+    FillBufferCreateInfo(stagingCreateInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
-    auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, memoryTypeIndex);
+    VKBuffer stagingBuffer(desc.type, device_, stagingCreateInfo);
 
-    /* Bind buffer to device memory */
-    buffer->BindToMemory(device_, deviceMemory, 0);
+    /* Allocate statging device memory */
+    {
+        const auto& requirements = stagingBuffer.GetRequirements();
+        const auto stagingMemoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, stagingMemoryTypeIndex);
+
+        stagingBuffer.BindToMemory(device_, deviceMemory, 0);
+    }
 
     /* Copy initial data to buffer memory */
     if (initialData != nullptr)
     {
-        if (auto memory = buffer->Map(device_))
+        if (auto memory = stagingBuffer.Map(device_))
         {
             ::memcpy(memory, initialData, static_cast<size_t>(desc.size));
-            buffer->Unmap(device_);
+            stagingBuffer.Unmap(device_);
         }
     }
+
+    /* Create device buffer */
+    auto buffer = CreateBufferObject(desc);
+    
+    /* Allocate device memory */
+    {
+        const auto& requirements = buffer->GetRequirements();
+        const auto memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, memoryTypeIndex);
+
+        buffer->BindToMemory(device_, deviceMemory, 0);
+    }
+
+    /* Copy staging buffer into hardware buffer */
+    CopyBuffer(stagingBuffer.Get(), buffer->Get(), static_cast<VkDeviceSize>(desc.size));
 
     return buffer;
 }
 
 BufferArray* VKRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    return nullptr;//todo
+    AssertCreateBufferArray(numBuffers, bufferArray);
+    auto type = (*bufferArray)->GetType();
+    return TakeOwnership(bufferArrays_, MakeUnique<VKBufferArray>(type, numBuffers, bufferArray));
 }
 
 void VKRenderSystem::Release(Buffer& buffer)
@@ -538,6 +574,42 @@ void VKRenderSystem::CreateLogicalDevice()
     /* Create logical device */
     VkResult result = vkCreateDevice(physicalDevice_, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan logical device");
+
+    /* Query device graphics queue */
+    vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+}
+
+void VKRenderSystem::CreateStagingCommandResources()
+{
+    /* Create staging command pool */
+    VkCommandPoolCreateInfo createInfo;
+    {
+        createInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        createInfo.pNext            = nullptr;
+        createInfo.flags            = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+        createInfo.queueFamilyIndex = queueFamilyIndices_.graphicsFamily;
+    }
+    auto result = vkCreateCommandPool(device_, &createInfo, nullptr, stagingCommandPool_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan command pool for staging buffers");
+
+    /* Allocate staging command buffer */
+    VkCommandBufferAllocateInfo allocInfo;
+    {
+        allocInfo.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.pNext                 = nullptr;
+        allocInfo.commandPool           = stagingCommandPool_;
+        allocInfo.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount    = 1;
+    }
+    result = vkAllocateCommandBuffers(device_, &allocInfo, &stagingCommandBuffer_);
+    VKThrowIfFailed(result, "failed to create Vulkan command buffer for staging buffers");
+}
+
+void VKRenderSystem::ReleaseStagingCommandResources()
+{
+    /* Release staging command buffer */
+    vkFreeCommandBuffers(device_, stagingCommandPool_, 1, &stagingCommandBuffer_);
+    stagingCommandBuffer_ = VK_NULL_HANDLE;
 }
 
 bool VKRenderSystem::IsLayerRequired(const std::string& name) const
@@ -595,38 +667,28 @@ std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t typeFilter, VkMemoryP
 
 VKBuffer* VKRenderSystem::CreateBufferObject(const BufferDescriptor& desc)
 {
-    /* Initialize buffer descriptor with common data */
-    VkBufferCreateInfo createInfo;
-    {
-        createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
-        createInfo.flags                    = 0;
-        createInfo.size                     = static_cast<VkDeviceSize>(desc.size);
-        createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
-        createInfo.queueFamilyIndexCount    = 0;
-        createInfo.pQueueFamilyIndices      = nullptr;
-    }
-
     /* Create hardware buffer */
+    VkBufferCreateInfo createInfo;
+
     switch (desc.type)
     {
         case BufferType::Vertex:
         {
-            createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Vertex, device_, createInfo));
         }
         break;
 
         case BufferType::Index:
         {
-            createInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
             return TakeOwnership(buffers_, MakeUnique<VKIndexBuffer>(device_, createInfo, desc.indexBuffer.format));
         }
         break;
 
         case BufferType::Constant:
         {
-            createInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Constant, device_, createInfo));
         }
         break;
@@ -635,6 +697,48 @@ VKBuffer* VKRenderSystem::CreateBufferObject(const BufferDescriptor& desc)
         break;
     }
     return nullptr;
+}
+
+void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
+    /* Begin command buffer record */
+    VkCommandBufferBeginInfo beginInfo;
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        beginInfo.pInheritanceInfo  = nullptr;
+    }
+    auto result = vkBeginCommandBuffer(stagingCommandBuffer_, &beginInfo);
+    VKThrowIfFailed(result, "failed to begin recording Vulkan command buffer");
+
+    /* Record copy command */
+    VkBufferCopy copyRegion;
+    {
+        copyRegion.srcOffset    = 0;
+        copyRegion.dstOffset    = 0;
+        copyRegion.size         = size;
+    }
+    vkCmdCopyBuffer(stagingCommandBuffer_, srcBuffer, dstBuffer, 1, &copyRegion);
+
+    /* End command buffer record */
+    vkEndCommandBuffer(stagingCommandBuffer_);
+
+    /* Submit command buffer to queue */
+    VkSubmitInfo submitInfo;
+    {
+        submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.pNext                = nullptr;
+        submitInfo.waitSemaphoreCount   = 0;
+        submitInfo.pWaitSemaphores      = nullptr;
+        submitInfo.pWaitDstStageMask    = nullptr;
+        submitInfo.commandBufferCount   = 1;
+        submitInfo.pCommandBuffers      = (&stagingCommandBuffer_);
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores    = nullptr;
+    }
+    vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(graphicsQueue_);
 }
 
 

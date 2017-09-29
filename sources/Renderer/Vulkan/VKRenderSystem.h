@@ -18,7 +18,7 @@
 #include "VKRenderContext.h"
 
 #include "Buffer/VKBuffer.h"
-//#include "Buffer/VKBufferArray.h"
+#include "Buffer/VKBufferArray.h"
 
 #include "Shader/VKShader.h"
 #include "Shader/VKShaderProgram.h"
@@ -139,6 +139,9 @@ class VKRenderSystem : public RenderSystem
         void QueryDeviceProperties();
         void CreateLogicalDevice();
 
+        void CreateStagingCommandResources();
+        void ReleaseStagingCommandResources();
+
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
         bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
@@ -147,6 +150,8 @@ class VKRenderSystem : public RenderSystem
         std::uint32_t FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
         VKBuffer* CreateBufferObject(const BufferDescriptor& desc);
+
+        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
         /* ----- Common objects ----- */
 
@@ -157,6 +162,10 @@ class VKRenderSystem : public RenderSystem
 
         QueueFamilyIndices                      queueFamilyIndices_;
         VkPhysicalDeviceMemoryProperties        memoryPropertiers_;
+        VkQueue                                 graphicsQueue_          = VK_NULL_HANDLE;
+
+        VKPtr<VkCommandPool>                    stagingCommandPool_;
+        VkCommandBuffer                         stagingCommandBuffer_   = VK_NULL_HANDLE;
 
         bool                                    debugLayerEnabled_      = false;
 
@@ -165,8 +174,8 @@ class VKRenderSystem : public RenderSystem
         HWObjectContainer<VKRenderContext>      renderContexts_;
         HWObjectContainer<VKCommandBuffer>      commandBuffers_;
         HWObjectContainer<VKBuffer>             buffers_;
-        /*HWObjectContainer<VKBufferArray>        bufferArrays_;
-        HWObjectContainer<VKTexture>            textures_;
+        HWObjectContainer<VKBufferArray>        bufferArrays_;
+        /*HWObjectContainer<VKTexture>            textures_;
         HWObjectContainer<VKTextureArray>       textureArrays_;*/
         HWObjectContainer<VKSampler>            samplers_;
         HWObjectContainer<VKSamplerArray>       samplerArrays_;
