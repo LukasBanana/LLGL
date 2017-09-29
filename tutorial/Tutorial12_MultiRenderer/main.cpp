@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
             shaderProgram->AttachShader(*fragShader);
 
             // Bind vertex attribute layout (this is not required for a compute shader program)
-            shaderProgram->BuildInputLayout(vertexFormat);
+            shaderProgram->BuildInputLayout(1, &vertexFormat);
         
             // Link shader program and check for errors
             if (!shaderProgram->LinkShaders())

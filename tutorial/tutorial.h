@@ -85,7 +85,7 @@ static std::string GetSelectedRendererModule(int argc, char* argv[])
 
 static std::string ReadFileContent(const std::string& filename)
 {
-    // Read shader file
+    // Read file content into string
     std::ifstream file(filename);
 
     if (!file.good())
@@ -95,6 +95,23 @@ static std::string ReadFileContent(const std::string& filename)
         ( std::istreambuf_iterator<char>(file) ),
         ( std::istreambuf_iterator<char>() )
     );
+}
+
+static std::vector<char> ReadFileBuffer(const std::string& filename)
+{
+    // Read file content into buffer
+    std::ifstream file(filename, std::ios_base::binary | std::ios_base::ate);
+
+    if (!file.good())
+        throw std::runtime_error("failed to open file: \"" + filename + "\"");
+
+    auto fileSize = static_cast<size_t>(file.tellg());
+    std::vector<char> buffer(fileSize);
+
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+
+    return buffer;
 }
 
 
@@ -398,17 +415,25 @@ protected:
 
         for (const auto& desc : shaderDescs)
         {
-            // Read shader file
-            auto shaderCode = ReadFileContent(desc.filename);
-
             // Create shader
             auto shader = renderer->CreateShader(desc.type);
 
-            // Compile shader
-            LLGL::ShaderDescriptor shaderDesc{ desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug };
+            LLGL::ShaderDescriptor shaderDesc { desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug };
             shaderDesc.streamOutput.format = streamOutputFormat;
 
-            shader->Compile(shaderCode, shaderDesc);
+            // Read shader file
+            if (desc.filename.size() > 4 && desc.filename.substr(desc.filename.size() - 4) == ".spv")
+            {
+                // Load binary
+                auto byteCode = ReadFileBuffer(desc.filename);
+                shader->LoadBinary(std::move(byteCode), shaderDesc);
+            }
+            else
+            {
+                // Compile shader
+                auto shaderCode = ReadFileContent(desc.filename);
+                shader->Compile(shaderCode, shaderDesc);
+            }
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
@@ -525,7 +550,19 @@ protected:
     LLGL::ShaderProgram* LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats)
     {
         // Load shader program
-        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+        const auto shaderLang = renderer->GetRenderingCaps().shadingLanguage;
+
+        if (shaderLang == LLGL::ShadingLanguage::SPIRV_100)
+        {
+            return LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "vertex.spv" },
+                    { LLGL::ShaderType::Fragment, "fragment.spv" }
+                },
+                vertexFormats
+            );
+        }
+        else if (shaderLang >= LLGL::ShadingLanguage::HLSL_2_0)
         {
             return LoadShaderProgram(
                 {
@@ -555,7 +592,7 @@ public:
         // Load image data from file (using STBI library, see https://github.com/nothings/stb)
         int width = 0, height = 0, components = 0;
 
-        unsigned char* imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, 4);
+        auto imageBuffer = stbi_load(filename.c_str(), &width, &height, &components, 4);
         if (!imageBuffer)
             throw std::runtime_error("failed to load texture from file: \"" + filename + "\"");
 

@@ -81,7 +81,7 @@ public:
                     { LLGL::ShaderType::Geometry, "shader.hlsl", "GS", "gs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
                 },
-                vertexFormat,
+                { vertexFormat },
                 streamOutputFormat
             );
         }
@@ -93,7 +93,7 @@ public:
                     { LLGL::ShaderType::Geometry, "geometry.glsl" },
                     { LLGL::ShaderType::Fragment, "fragment.glsl" }
                 },
-                vertexFormat,
+                { vertexFormat },
                 streamOutputFormat
             );
         }
@@ -146,6 +146,7 @@ private:
         commands->SyncGPU();
 
         auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::BufferCPUAccess::ReadOnly);
+
         if (outputBuffer)
         {
             std::vector<Gs::Vector4f> output(36*3);

@@ -39,7 +39,7 @@ public:
     {
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
-        shaderProgram = LoadStandardShaderProgram(vertexFormat);
+        shaderProgram = LoadStandardShaderProgram({ vertexFormat });
         CreatePipelines();
         CreateQueries();
 

@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
         shaderProgram->AttachShader(*fragmentShader);
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
-        shaderProgram->BuildInputLayout(vertexFormat);
+        shaderProgram->BuildInputLayout(1, &vertexFormat);
         
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())
@@ -176,6 +176,10 @@ int main(int argc, char* argv[])
         while ( ( window1.ProcessEvents() || window2.ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
         {
             // Draw content in 1st render context
+            /*
+            TODO: replace with:
+            commands->BeginRenderPass(*renderPass1);
+            */
             commands->SetRenderTarget(*context1);
             {
                 // Set graphics pipeline
@@ -193,6 +197,11 @@ int main(int argc, char* argv[])
                 // Present the result on the screen
                 context1->Present();
             }
+            /*
+            TODO: replace with:
+            commands->EndRenderPass(*renderPass1);
+            context1->Present();
+            */
 
             // Draw content in 2nd render context
             commands->SetRenderTarget(*context2);
