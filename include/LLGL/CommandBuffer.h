@@ -350,19 +350,33 @@ class LLGL_EXPORT CommandBuffer
         virtual void EndQuery(Query& query) = 0;
 
         /**
-        \brief Queries the result of the specified Query object.
-        \param[in] query Specifies the Query object whose result is to be queried.
-        \param[out] result Specifies the output result.
+        \brief Queries the result of the specified query object.
+        \param[in] query Specifies the query object whose result is to be queried. This query object must not have been created with the QueryType::PipelineStatistics type.
+        \param[out] result Specifies the output result in form of a 64-bit unsigned integer.
         \return True if the result is available, otherwise false in which case 'result' is not modified.
+        \remarks For a query of type QueryType::PipelineStatistics, the function CommandBuffer::QueryPipelineStatisticsResult must be used.
+        \see QueryPipelineStatisticsResult
         */
         virtual bool QueryResult(Query& query, std::uint64_t& result) = 0;
+
+        //TODO: add this to the interface
+        #if 0
+        /**
+        \brief Queries the result of the specified query object for pipeline statistics.
+        \param[in] query Specifies the query object whose result is to be queried. This query object must have been created with the QueryType::PipelineStatistics type.
+        \param[out] result Specifies the output result in form of the QueryPipelineStatistics structure.
+        \remarks For a query of type other than QueryType::PipelineStatistics, the function CommandBuffer::QueryResult must be used.
+        \see QueryResult
+        */
+        virtual bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) = 0;
+        #endif
 
         /**
         \brief Begins conditional rendering with the specified query object.
         \param[in] query Specifies the query object which is to be used as render condition.
         This must be an occlusion query, i.e. it's type must be either
         QueryType::SamplesPassed, QueryType::AnySamplesPassed, or QueryType::AnySamplesPassedConservative.
-        \param[in] mode Specifies the mode of the render conidition.
+        \param[in] mode Specifies the mode of the render condition.
         \remarks Here is a usage example:
         \code
         context->BeginQuery(*occlusionQuery);
