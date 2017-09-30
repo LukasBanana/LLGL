@@ -41,8 +41,6 @@ class VKGraphicsPipeline : public GraphicsPipeline
         VKPtr<VkPipelineLayout> pipelineLayout_;
         VKPtr<VkPipeline>       pipeline_;
 
-        VKShaderProgram*        shaderProgram_  = nullptr;
-
 };
 
 

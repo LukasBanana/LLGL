@@ -283,10 +283,10 @@ struct Scissor
     {
     }
 
-    std::int32_t x       = 0;
-    std::int32_t y       = 0;
-    std::int32_t width   = 0;
-    std::int32_t height  = 0;
+    std::int32_t x       = 0; //!< Left-top X coordinate.
+    std::int32_t y       = 0; //!< Left-top Y coordinate.
+    std::int32_t width   = 0; //!< Right-bottom width.
+    std::int32_t height  = 0; //!< Right-bottom height.
 };
 
 //! Multi-sampling descriptor structure.

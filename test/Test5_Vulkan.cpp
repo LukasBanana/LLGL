@@ -140,6 +140,16 @@ int main()
         // Create vertex buffer
         auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
 
+        // Create constant data
+        struct Matrices
+        {
+            Gs::Matrix4f projection;
+        }
+        matrices;
+
+        // Create constant buffer
+        //auto constBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)));
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
 
@@ -159,6 +169,9 @@ int main()
 
         auto frameTimer = LLGL::Timer::Create();
         auto printTime = std::chrono::system_clock::now();
+
+        // Set clear color
+        commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
 
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
@@ -188,8 +201,6 @@ int main()
             #if 1
 
             // Render scene
-            commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
-
             commands->SetRenderTarget(*context);
 
             commands->Clear(LLGL::ClearFlags::ColorDepth);
@@ -204,15 +215,10 @@ int main()
 
             #else
             
-            commands->BeginRenderPass();
-            {
-
-
-            }
-            commands->EndRenderPass();
-
             commands->BeginRenderPass(*contextRenderPass);
             {
+                commands->Clear();
+
                 commands->SetGraphicsPipeline(*pipeline);
 
                 commands->SetVertexBuffer(*vertexBuffer);

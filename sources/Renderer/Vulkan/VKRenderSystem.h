@@ -149,7 +149,7 @@ class VKRenderSystem : public RenderSystem
 
         std::uint32_t FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
-        VKBuffer* CreateBufferObject(const BufferDescriptor& desc);
+        VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
@@ -162,6 +162,8 @@ class VKRenderSystem : public RenderSystem
 
         QueueFamilyIndices                      queueFamilyIndices_;
         VkPhysicalDeviceMemoryProperties        memoryPropertiers_;
+        VkPhysicalDeviceFeatures                features_;
+
         VkQueue                                 graphicsQueue_          = VK_NULL_HANDLE;
 
         VKPtr<VkCommandPool>                    stagingCommandPool_;

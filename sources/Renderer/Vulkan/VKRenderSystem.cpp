@@ -90,7 +90,9 @@ VKRenderSystem::VKRenderSystem() :
 
 VKRenderSystem::~VKRenderSystem()
 {
+    /* Release resource and wait until device becomes idle */
     ReleaseStagingCommandResources();
+    vkDeviceWaitIdle(device_);
 }
 
 /* ----- Render Context ----- */
@@ -155,7 +157,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     }
 
     /* Create device buffer */
-    auto buffer = CreateBufferObject(desc);
+    auto buffer = CreateHardwareBuffer(desc, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
     
     /* Allocate device memory */
     const auto& requirements = buffer->GetRequirements();
@@ -476,8 +478,9 @@ bool VKRenderSystem::PickPhysicalDevice()
 
 void VKRenderSystem::QueryDeviceProperties()
 {
-    /* Query physical memory propertiers */
+    /* Query physical device features and memory propertiers */
     vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryPropertiers_);
+    vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
 
     /* Query properties of selected physical device */
     VkPhysicalDeviceProperties properties;
@@ -497,44 +500,44 @@ void VKRenderSystem::QueryDeviceProperties()
     const auto& limits = properties.limits;
 
     RenderingCaps caps;
-
-    caps.screenOrigin                       = ScreenOrigin::UpperLeft;
-    caps.clippingRange                      = ClippingRange::ZeroToOne;
-    caps.shadingLanguage                    = ShadingLanguage::SPIRV_100;
-    caps.hasRenderTargets                   = true;
-    caps.has3DTextures                      = true;
-    caps.hasCubeTextures                    = true;
-    caps.hasTextureArrays                   = true;
-    caps.hasCubeTextureArrays               = true;
-    caps.hasMultiSampleTextures             = true;
-    caps.hasSamplers                        = true;
-    caps.hasConstantBuffers                 = true;
-    caps.hasStorageBuffers                  = true;
-    caps.hasUniforms                        = true;
-    caps.hasGeometryShaders                 = true;
-    caps.hasTessellationShaders             = true;
-    caps.hasComputeShaders                  = true;
-    caps.hasInstancing                      = true;
-    caps.hasOffsetInstancing                = true;
-    caps.hasViewportArrays                  = true;
-    caps.hasConservativeRasterization       = true;
-    caps.hasStreamOutputs                   = true;
-    caps.maxNumTextureArrayLayers           = limits.maxImageArrayLayers;
-    caps.maxNumRenderTargetAttachments      = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
-    caps.maxConstantBufferSize              = 0; //???
-    caps.maxPatchVertices                   = limits.maxTessellationPatchSize;
-    caps.max1DTextureSize                   = limits.maxImageDimension1D;
-    caps.max2DTextureSize                   = limits.maxImageDimension2D;
-    caps.max3DTextureSize                   = limits.maxImageDimension3D;
-    caps.maxCubeTextureSize                 = limits.maxImageDimensionCube;
-    caps.maxAnisotropy                      = static_cast<std::uint32_t>(limits.maxSamplerAnisotropy);
-    caps.maxNumComputeShaderWorkGroups[0]   = limits.maxComputeWorkGroupCount[0];
-    caps.maxNumComputeShaderWorkGroups[1]   = limits.maxComputeWorkGroupCount[1];
-    caps.maxNumComputeShaderWorkGroups[2]   = limits.maxComputeWorkGroupCount[2];
-    caps.maxComputeShaderWorkGroupSize[0]   = limits.maxComputeWorkGroupSize[0];
-    caps.maxComputeShaderWorkGroupSize[1]   = limits.maxComputeWorkGroupSize[1];
-    caps.maxComputeShaderWorkGroupSize[2]   = limits.maxComputeWorkGroupSize[2];
-
+    {
+        caps.screenOrigin                       = ScreenOrigin::UpperLeft;
+        caps.clippingRange                      = ClippingRange::ZeroToOne;
+        caps.shadingLanguage                    = ShadingLanguage::SPIRV_100;
+        caps.hasRenderTargets                   = true;
+        caps.has3DTextures                      = true;
+        caps.hasCubeTextures                    = true;
+        caps.hasTextureArrays                   = true;
+        caps.hasCubeTextureArrays               = (features_.imageCubeArray != VK_FALSE);
+        caps.hasMultiSampleTextures             = true;
+        caps.hasSamplers                        = true;
+        caps.hasConstantBuffers                 = true;
+        caps.hasStorageBuffers                  = true;
+        caps.hasUniforms                        = true;
+        caps.hasGeometryShaders                 = (features_.geometryShader != VK_FALSE);
+        caps.hasTessellationShaders             = (features_.tessellationShader != VK_FALSE);
+        caps.hasComputeShaders                  = true;
+        caps.hasInstancing                      = true;
+        caps.hasOffsetInstancing                = true;
+        caps.hasViewportArrays                  = (features_.multiViewport != VK_FALSE);
+        caps.hasConservativeRasterization       = false;
+        caps.hasStreamOutputs                   = true;
+        caps.maxNumTextureArrayLayers           = limits.maxImageArrayLayers;
+        caps.maxNumRenderTargetAttachments      = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
+        caps.maxConstantBufferSize              = 0; //???
+        caps.maxPatchVertices                   = limits.maxTessellationPatchSize;
+        caps.max1DTextureSize                   = limits.maxImageDimension1D;
+        caps.max2DTextureSize                   = limits.maxImageDimension2D;
+        caps.max3DTextureSize                   = limits.maxImageDimension3D;
+        caps.maxCubeTextureSize                 = limits.maxImageDimensionCube;
+        caps.maxAnisotropy                      = static_cast<std::uint32_t>(limits.maxSamplerAnisotropy);
+        caps.maxNumComputeShaderWorkGroups[0]   = limits.maxComputeWorkGroupCount[0];
+        caps.maxNumComputeShaderWorkGroups[1]   = limits.maxComputeWorkGroupCount[1];
+        caps.maxNumComputeShaderWorkGroups[2]   = limits.maxComputeWorkGroupCount[2];
+        caps.maxComputeShaderWorkGroupSize[0]   = limits.maxComputeWorkGroupSize[0];
+        caps.maxComputeShaderWorkGroupSize[1]   = limits.maxComputeWorkGroupSize[1];
+        caps.maxComputeShaderWorkGroupSize[2]   = limits.maxComputeWorkGroupSize[2];
+    }
     SetRenderingCaps(caps);
 }
 
@@ -561,25 +564,20 @@ void VKRenderSystem::CreateLogicalDevice()
         queueCreateInfos.push_back(info);
     }
 
-    /* Initialize device features */
-    VkPhysicalDeviceFeatures deviceFeatures;
-    InitMemory(deviceFeatures);
-
-    /* Initialize create descriptor for logical device */
-    VkDeviceCreateInfo createInfo;
-
-    createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pNext                    = nullptr;
-    createInfo.flags                    = 0;
-    createInfo.queueCreateInfoCount     = static_cast<std::uint32_t>(queueCreateInfos.size());
-    createInfo.pQueueCreateInfos        = queueCreateInfos.data();
-    createInfo.enabledLayerCount        = 0;
-    createInfo.ppEnabledLayerNames      = nullptr;
-    createInfo.enabledExtensionCount    = static_cast<std::uint32_t>(g_deviceExtensions.size());
-    createInfo.ppEnabledExtensionNames  = g_deviceExtensions.data();
-    createInfo.pEnabledFeatures         = &deviceFeatures;
-
     /* Create logical device */
+    VkDeviceCreateInfo createInfo;
+    {
+        createInfo.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.pNext                    = nullptr;
+        createInfo.flags                    = 0;
+        createInfo.queueCreateInfoCount     = static_cast<std::uint32_t>(queueCreateInfos.size());
+        createInfo.pQueueCreateInfos        = queueCreateInfos.data();
+        createInfo.enabledLayerCount        = 0;
+        createInfo.ppEnabledLayerNames      = nullptr;
+        createInfo.enabledExtensionCount    = static_cast<std::uint32_t>(g_deviceExtensions.size());
+        createInfo.ppEnabledExtensionNames  = g_deviceExtensions.data();
+        createInfo.pEnabledFeatures         = &features_;
+    }
     VkResult result = vkCreateDevice(physicalDevice_, &createInfo, nullptr, device_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan logical device");
 
@@ -673,7 +671,7 @@ std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t typeFilter, VkMemoryP
     throw std::runtime_error("failed to find suitable Vulkan memory type");
 }
 
-VKBuffer* VKRenderSystem::CreateBufferObject(const BufferDescriptor& desc)
+VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage)
 {
     /* Create hardware buffer */
     VkBufferCreateInfo createInfo;
@@ -682,21 +680,21 @@ VKBuffer* VKRenderSystem::CreateBufferObject(const BufferDescriptor& desc)
     {
         case BufferType::Vertex:
         {
-            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Vertex, device_, createInfo));
         }
         break;
 
         case BufferType::Index:
         {
-            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_INDEX_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKIndexBuffer>(device_, createInfo, desc.indexBuffer.format));
         }
         break;
 
         case BufferType::Constant:
         {
-            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Constant, device_, createInfo));
         }
         break;

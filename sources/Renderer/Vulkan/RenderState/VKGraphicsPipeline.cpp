@@ -23,13 +23,6 @@ VKGraphicsPipeline::VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPa
     pipelineLayout_ { device, vkDestroyPipelineLayout },
     pipeline_       { device, vkDestroyPipeline       }
 {
-    /* Get shader program object */
-    shaderProgram_ = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
-
-    if (!shaderProgram_)
-        throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
-
-    /* Create graphics pipeline states */
     CreateGraphicsPipeline(desc, extent);
 }
 
@@ -301,12 +294,17 @@ static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBl
 
 void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent)
 {
+    /* Get shader program object */
+    auto shaderProgramVK = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
+    if (!shaderProgramVK)
+        throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
+
     /* Get shader stages */
-    auto shaderStageCreateInfos = shaderProgram_->GetShaderStageCreateInfos();
+    auto shaderStageCreateInfos = shaderProgramVK->GetShaderStageCreateInfos();
 
     /* Initialize vertex input descriptor */
     VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo;
-    shaderProgram_->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
+    shaderProgramVK->FillVertexInputStateCreateInfo(vertexInputCreateInfo);
 
     /* Initialize input assembly state */
     VkPipelineInputAssemblyStateCreateInfo inputAssembly;
