@@ -28,6 +28,21 @@ VKDeviceMemory::VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size,
     VKThrowIfFailed(result, "failed to allocate Vulkan device memory of " + std::to_string(size) + " bytes");
 }
 
+void* VKDeviceMemory::Map(VkDevice device, VkDeviceSize offset, VkDeviceSize size)
+{
+    void* data = nullptr;
+
+    auto result = vkMapMemory(device, deviceMemory_, offset, size, 0, &data);
+    VKThrowIfFailed(result, "failed to map Vulkan buffer into CPU memory space");
+
+    return data;
+}
+
+void VKDeviceMemory::Unmap(VkDevice device)
+{
+    vkUnmapMemory(device, deviceMemory_);
+}
+
 
 } // /namespace LLGL
 

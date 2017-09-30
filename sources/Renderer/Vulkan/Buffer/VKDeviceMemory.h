@@ -24,6 +24,9 @@ class VKDeviceMemory
 
         VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size, std::uint32_t memoryTypeIndex);
 
+        void* Map(VkDevice device, VkDeviceSize offset, VkDeviceSize size);
+        void Unmap(VkDevice device);
+
         // Returns the hardware buffer object.
         inline VkDeviceMemory Get() const
         {

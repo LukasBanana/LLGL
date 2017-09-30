@@ -77,12 +77,19 @@ struct BufferFlags
         */
         MapWriteAccess  = (1 << 1),
 
+        /*
+        \brief Buffer mapping with CPU read and write access is required.
+        \see BufferFlags::MapReadAccess
+        \see BufferFlags::MapWriteAccess
+        */
+        MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
+
         /**
         \brief Hint to the renderer that the buffer will be frequently updated from the CPU.
         This is useful for a constant buffer for instance, that is updated by the host program every frame.
         \see RenderSystem::WriteBuffer
         */
-        DynamicUsage    = (1 << 2),
+        DynamicUsage        = (1 << 2),
     };
 };
 

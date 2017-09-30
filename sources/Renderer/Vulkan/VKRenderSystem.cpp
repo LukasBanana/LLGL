@@ -131,25 +131,26 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     VkBufferCreateInfo stagingCreateInfo;
     FillBufferCreateInfo(stagingCreateInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
-    VKBuffer stagingBuffer(desc.type, device_, stagingCreateInfo);
+    VKBufferObject stagingBuffer(device_);
+    stagingBuffer.Create(device_, stagingCreateInfo);
 
     /* Allocate statging device memory */
-    {
-        const auto& requirements = stagingBuffer.GetRequirements();
-        const auto stagingMemoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    const auto stagingMemoryTypeIndex = FindMemoryType(
+        stagingBuffer.requirements.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
 
-        auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, stagingMemoryTypeIndex);
+    auto stagingDeviceMemory = std::make_shared<VKDeviceMemory>(device_, stagingBuffer.requirements.size, stagingMemoryTypeIndex);
 
-        stagingBuffer.BindToMemory(device_, deviceMemory, 0);
-    }
+    vkBindBufferMemory(device_, stagingBuffer.buffer, stagingDeviceMemory->Get(), 0);
 
     /* Copy initial data to buffer memory */
     if (initialData != nullptr)
     {
-        if (auto memory = stagingBuffer.Map(device_))
+        if (auto memory = stagingDeviceMemory->Map(device_, 0, static_cast<VkDeviceSize>(desc.size)))
         {
             ::memcpy(memory, initialData, static_cast<size_t>(desc.size));
-            stagingBuffer.Unmap(device_);
+            stagingDeviceMemory->Unmap(device_);
         }
     }
 
@@ -157,17 +158,24 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     auto buffer = CreateBufferObject(desc);
     
     /* Allocate device memory */
-    {
-        const auto& requirements = buffer->GetRequirements();
-        const auto memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    const auto& requirements = buffer->GetRequirements();
+    const auto memoryTypeIndex = FindMemoryType(
+        requirements.memoryTypeBits,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    );
 
-        auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, memoryTypeIndex);
+    auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, memoryTypeIndex);
 
-        buffer->BindToMemory(device_, deviceMemory, 0);
-    }
+    buffer->BindToMemory(device_, deviceMemory, 0);
 
     /* Copy staging buffer into hardware buffer */
-    CopyBuffer(stagingBuffer.Get(), buffer->Get(), static_cast<VkDeviceSize>(desc.size));
+    CopyBuffer(stagingBuffer.buffer, buffer->Get(), static_cast<VkDeviceSize>(desc.size));
+
+    if ((desc.flags & BufferFlags::MapReadWriteAccess) != 0)
+    {
+        /* Store ownershup of staging buffer */
+        buffer->TakeStagingBuffer(std::move(stagingBuffer), std::move(stagingDeviceMemory));
+    }
 
     return buffer;
 }

@@ -13,17 +13,54 @@ namespace LLGL
 {
 
 
-VKBuffer::VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo) :
-    Buffer  { type                    },
-    buffer_ { device, vkDestroyBuffer },
-    size_   { createInfo.size         }
+/*
+ * VKBufferObject structure
+ */
+
+VKBufferObject::VKBufferObject(const VKPtr<VkDevice>& device) :
+    buffer { device, vkDestroyBuffer }
+{
+}
+
+VKBufferObject::VKBufferObject(VKBufferObject&& rhs) :
+    buffer       { std::move(rhs.buffer) },
+    requirements { rhs.requirements      }
+{
+}
+
+VKBufferObject& VKBufferObject::operator = (VKBufferObject&& rhs)
+{
+    buffer = std::move(rhs.buffer);
+    requirements = rhs.requirements;
+    return *this;
+}
+
+void VKBufferObject::Create(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo)
 {
     /* Create buffer object */
-    auto result = vkCreateBuffer(device, &createInfo, nullptr, buffer_.ReleaseAndGetAddressOf());
+    auto result = vkCreateBuffer(device, &createInfo, nullptr, buffer.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan buffer");
 
     /* Query memory requirements */
-    vkGetBufferMemoryRequirements(device, Get(), &requirements_);
+    vkGetBufferMemoryRequirements(device, buffer, &requirements);
+}
+
+void VKBufferObject::Release()
+{
+    buffer.Release();
+}
+
+
+/*
+ * VKBuffer class
+ */
+
+VKBuffer::VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo) :
+    Buffer            { type   },
+    bufferObj_        { device },
+    bufferObjStaging_ { device }
+{
+    bufferObj_.Create(device, createInfo);
 }
 
 void VKBuffer::BindToMemory(VkDevice device, const std::shared_ptr<VKDeviceMemory>& deviceMemory, VkDeviceSize memoryOffset)
@@ -31,22 +68,13 @@ void VKBuffer::BindToMemory(VkDevice device, const std::shared_ptr<VKDeviceMemor
     /* Bind buffer to device memory */
     deviceMemory_ = deviceMemory;
     if (deviceMemory_ != nullptr)
-        vkBindBufferMemory(device, buffer_, deviceMemory_->Get(), memoryOffset);
+        vkBindBufferMemory(device, Get(), deviceMemory_->Get(), memoryOffset);
 }
 
-void* VKBuffer::Map(VkDevice device)
+void VKBuffer::TakeStagingBuffer(VKBufferObject&& buffer, std::shared_ptr<VKDeviceMemory>&& deviceMemory)
 {
-    void* memory = nullptr;
+    bufferObjStaging_ = std::move(buffer);
 
-    auto result = vkMapMemory(device, deviceMemory_->Get(), 0, size_, 0, &memory);
-    VKThrowIfFailed(result, "failed to map Vulkan buffer into CPU memory space");
-
-    return memory;
-}
-
-void VKBuffer::Unmap(VkDevice device)
-{
-    vkUnmapMemory(device, deviceMemory_->Get());
 }
 
 

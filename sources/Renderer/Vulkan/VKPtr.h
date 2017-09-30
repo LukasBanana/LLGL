@@ -53,6 +53,15 @@ class VKPtr
             };
         }
 
+        VKPtr(const VKPtr<T>&) = default;
+
+        VKPtr(VKPtr<T>&& rhs) :
+            object_  { rhs.object_  },
+            deleter_ { rhs.deleter_ }
+        {
+            rhs.object_ = VK_NULL_HANDLE;
+        }
+
         ~VKPtr()
         {
             Release();
@@ -68,11 +77,28 @@ class VKPtr
             return &object_;
         }
 
+        void Release()
+        {
+            if (object_ != VK_NULL_HANDLE)
+            {
+                deleter_(object_);
+                object_ = VK_NULL_HANDLE;
+            }
+        }
+
         T* ReleaseAndGetAddressOf()
         {
             Release();
             return &object_;
         }
+
+        /*VKPtr<T>& TakeOwnership(VKPtr<T>& rhs)
+        {
+            object_ = rhs.object_;
+            deleter_ = rhs.deleter_;
+            rhs.object_ = VK_NULL_HANDLE;
+            return *this;
+        }*/
 
         inline T Get() const
         {
@@ -91,6 +117,13 @@ class VKPtr
             return *this;
         }
 
+        VKPtr<T>& operator = (VKPtr&& rhs)
+        {
+            object_ = rhs.object_;
+            rhs.object_ = VK_NULL_HANDLE;
+            return *this;
+        }
+
         template <typename U>
         bool operator == (const U& rhs) const
         {
@@ -101,15 +134,6 @@ class VKPtr
 
         T                       object_ { VK_NULL_HANDLE };
         std::function<void(T)>  deleter_;
-
-        void Release()
-        {
-            if (object_ != VK_NULL_HANDLE)
-            {
-                deleter_(object_);
-                object_ = VK_NULL_HANDLE;
-            }
-        }
 
 };
 

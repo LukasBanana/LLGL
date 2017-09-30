@@ -20,6 +20,20 @@ namespace LLGL
 {
 
 
+struct VKBufferObject
+{
+    VKBufferObject(const VKPtr<VkDevice>& device);
+    VKBufferObject(VKBufferObject&& rhs);
+    VKBufferObject& operator = (VKBufferObject&& rhs);
+
+    void Create(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
+    void Release();
+
+    VKPtr<VkBuffer>         buffer;
+    VkMemoryRequirements    requirements;
+};
+
+
 class VKBuffer : public Buffer
 {
 
@@ -28,28 +42,27 @@ class VKBuffer : public Buffer
         VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
 
         void BindToMemory(VkDevice device, const std::shared_ptr<VKDeviceMemory>& deviceMemory, VkDeviceSize memoryOffset);
-
-        void* Map(VkDevice device);
-        void Unmap(VkDevice device);
+        void TakeStagingBuffer(VKBufferObject&& buffer, std::shared_ptr<VKDeviceMemory>&& deviceMemory);
 
         // Returns the hardware buffer object.
         inline VkBuffer Get() const
         {
-            return buffer_.Get();
+            return bufferObj_.buffer.Get();
         }
 
         // Returns the memory requirements of the hardware buffer.
         inline const VkMemoryRequirements& GetRequirements() const
         {
-            return requirements_;
+            return bufferObj_.requirements;
         }
 
     private:
 
-        VKPtr<VkBuffer>                 buffer_;
-        VkDeviceSize                    size_           = 0;
-        VkMemoryRequirements            requirements_;
+        VKBufferObject                  bufferObj_;
         std::shared_ptr<VKDeviceMemory> deviceMemory_;
+
+        VKBufferObject                  bufferObjStaging_;
+        std::shared_ptr<VKDeviceMemory> deviceMemoryStaging_;
 
 };
 
