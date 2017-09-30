@@ -17,17 +17,17 @@ namespace Version
 {
 
 
-LLGL_EXPORT unsigned int GetMajor()
+LLGL_EXPORT std::uint32_t GetMajor()
 {
     return LLGL_VERSION_MAJOR;
 }
 
-LLGL_EXPORT unsigned int GetMinor()
+LLGL_EXPORT std::uint32_t GetMinor()
 {
     return LLGL_VERSION_MINOR;
 }
 
-LLGL_EXPORT unsigned int GetRevision()
+LLGL_EXPORT std::uint32_t GetRevision()
 {
     return LLGL_VERSION_REVISION;
 }
@@ -37,7 +37,7 @@ LLGL_EXPORT std::string GetStatus()
     return std::string(LLGL_VERSION_STATUS);
 }
 
-LLGL_EXPORT unsigned int GetID()
+LLGL_EXPORT std::uint32_t GetID()
 {
     return LLGL_VERSION_ID;
 }
