@@ -20,6 +20,7 @@ namespace LLGL
 
 
 class ShaderProgram;
+class PipelineLayout;
 
 
 /* ----- Enumerations ----- */
@@ -497,6 +498,13 @@ struct GraphicsPipelineDescriptor
     \see RenderSystem::CreateShaderProgram
     */
     ShaderProgram*          shaderProgram       = nullptr;
+
+    /**
+    \brief Pointer to an optional pipeline layout for the graphics pipeline.
+    \remarks This layout determines at which slots buffer resources can be bound.
+    This is ignored by render systems which do not support pipeline layouts.
+    */
+    PipelineLayout*         pipelineLayout      = nullptr;
 
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.

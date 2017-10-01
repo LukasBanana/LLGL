@@ -80,15 +80,33 @@ enum class ShadingLanguage
 //! Screen coordinate system origin enumeration.
 enum class ScreenOrigin
 {
-    LowerLeft, //!< Screen origin is in the lower-left (default in OpenGL).
-    UpperLeft, //!< Screen origin is in the upper-left (default in Direct3D).
+    /**
+    \brief Specifies a screen origin in the lower-left.
+    \note: Native screen origin in: OpenGL.
+    */
+    LowerLeft,
+
+    /**
+    \brief Specifies a screen origin in the upper-left.
+    \note: Native screen origin in: Direct3D 11, Direct3D 12, Vulkan.
+    */
+    UpperLeft,
 };
 
 //! Clipping depth range enumeration.
 enum class ClippingRange
 {
-    MinusOneToOne,  //!< Clipping depth is in the range [-1, 1] (default in OpenGL).
-    ZeroToOne,      //!< Clipping depth is in the range [0, 1] (default in Direct3D).
+    /**
+    \brief Specifies the clipping depth range [-1, 1].
+    \note Native clipping depth range in: OpenGL.
+    */
+    MinusOneToOne,
+
+    /**
+    \brief Specifies the clipping depth range [0, 1].
+    \note Native clipping depth range in: Direct3D 11, Direct3D 12, Vulkan.
+    */
+    ZeroToOne,
 };
 
 
@@ -109,6 +127,7 @@ struct ImageInitialization
     /**
     \brief Specifies the default color for uninitialized textures. The default value is black (0, 0, 0, 0).
     \remarks This will be used when a texture is created and no initial image data is specified.
+    \todo Change type to ColorRGBAf.
     */
     ColorRGBAub color   { 0, 0, 0, 0 };
 
@@ -143,20 +162,20 @@ Or use one of the pre-defined IDs if you want to implement your own OpenGL/ Dire
 */
 struct RendererID
 {
-    static const unsigned int Undefined     = 0x00000000; //!< Undefined ID number.
+    static const int Undefined  = 0x00000000; //!< Undefined ID number.
 
-    static const unsigned int OpenGL        = 0x00000001; //!< ID number for an OpenGL renderer.
-    static const unsigned int OpenGLES1     = 0x00000002; //!< ID number for an OpenGL ES 1 renderer.
-    static const unsigned int OpenGLES2     = 0x00000003; //!< ID number for an OpenGL ES 2 renderer.
-    static const unsigned int OpenGLES3     = 0x00000004; //!< ID number for an OpenGL ES 3 renderer.
-    static const unsigned int Direct3D9     = 0x00000005; //!< ID number for a Direct3D 9 renderer.
-    static const unsigned int Direct3D10    = 0x00000006; //!< ID number for a Direct3D 10 renderer.
-    static const unsigned int Direct3D11    = 0x00000007; //!< ID number for a Direct3D 11 renderer.
-    static const unsigned int Direct3D12    = 0x00000008; //!< ID number for a Direct3D 12 renderer.
-    static const unsigned int Vulkan        = 0x00000009; //!< ID number for a Vulkan renderer.
-    static const unsigned int Metal         = 0x0000000a; //!< ID number for a Metal renderer.
+    static const int OpenGL     = 0x00000001; //!< ID number for an OpenGL renderer.
+    static const int OpenGLES1  = 0x00000002; //!< ID number for an OpenGL ES 1 renderer.
+    static const int OpenGLES2  = 0x00000003; //!< ID number for an OpenGL ES 2 renderer.
+    static const int OpenGLES3  = 0x00000004; //!< ID number for an OpenGL ES 3 renderer.
+    static const int Direct3D9  = 0x00000005; //!< ID number for a Direct3D 9 renderer.
+    static const int Direct3D10 = 0x00000006; //!< ID number for a Direct3D 10 renderer.
+    static const int Direct3D11 = 0x00000007; //!< ID number for a Direct3D 11 renderer.
+    static const int Direct3D12 = 0x00000008; //!< ID number for a Direct3D 12 renderer.
+    static const int Vulkan     = 0x00000009; //!< ID number for a Vulkan renderer.
+    static const int Metal      = 0x0000000a; //!< ID number for a Metal renderer.
 
-    static const unsigned int Reserved      = 0x000000ff; //!< Highest ID number for reserved future renderers. Value is 0x000000ff.
+    static const int Reserved   = 0x000000ff; //!< Highest ID number for reserved future renderers. Value is 0x000000ff.
 };
 
 //! Renderer basic information structure.
@@ -262,16 +281,16 @@ struct RenderingCaps
 
     /**
     \brief Specifies whether hardware instancing is supported.
-    \see RenderContext::DrawInstanced(unsigned int, unsigned int, unsigned int)
-    \see RenderContext::DrawIndexedInstanced(unsigned int, unsigned int, unsigned int)
-    \see RenderContext::DrawIndexedInstanced(unsigned int, unsigned int, unsigned int, int)
+    \see RenderContext::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
+    \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
+    \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t)
     */
     bool            hasInstancing                   = false;
 
     /**
     \brief Specifies whether hardware instancing with instance offsets is supported.
-    \see RenderContext::DrawInstanced(unsigned int, unsigned int, unsigned int, unsigned int)
-    \see RenderContext::DrawIndexedInstanced(unsigned int, unsigned int, unsigned int, int, unsigned int)
+    \see RenderContext::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+    \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
     */
     bool            hasOffsetInstancing             = false;
 

@@ -32,14 +32,26 @@ class VKGraphicsPipeline : public GraphicsPipeline
             return pipeline_.Get();
         }
 
+        inline VkPipelineLayout GetPipelineLayout() const
+        {
+            return pipelineLayout_;
+        }
+
+        inline VkDescriptorSet GetDescriptorSet() const
+        {
+            return descriptorSet_;
+        }
+
     private:
 
         void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent);
 
         VkDevice                device_         = VK_NULL_HANDLE;
         VkRenderPass            renderPass_     = VK_NULL_HANDLE;
-        VKPtr<VkPipelineLayout> pipelineLayout_;
+        VkPipelineLayout        pipelineLayout_ = VK_NULL_HANDLE;
         VKPtr<VkPipeline>       pipeline_;
+
+        VkDescriptorSet         descriptorSet_  = VK_NULL_HANDLE;
 
 };
 

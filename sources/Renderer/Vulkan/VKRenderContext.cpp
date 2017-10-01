@@ -257,7 +257,9 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
         imageCount = std::max(imageCount, std::min(videoModeDesc.swapChainSize, surfaceSupportDetails_.caps.maxImageCount));
 
     /* Get device queues for graphics and presentation */
-    auto queueFamilyIndices = VKFindQueueFamilies(physicalDevice_, VK_QUEUE_GRAPHICS_BIT);
+    VkSurfaceKHR surface = surface_.Get();
+    auto queueFamilyIndices = VKFindQueueFamilies(physicalDevice_, VK_QUEUE_GRAPHICS_BIT, &surface);
+
     vkGetDeviceQueue(device_, queueFamilyIndices.graphicsFamily, 0, &graphicsQueue_);
     vkGetDeviceQueue(device_, queueFamilyIndices.presentFamily, 0, &presentQueue_);
 

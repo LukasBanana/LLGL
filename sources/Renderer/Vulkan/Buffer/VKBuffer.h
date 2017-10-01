@@ -56,6 +56,12 @@ class VKBuffer : public Buffer
             return bufferObj_.requirements;
         }
 
+        // Returns the size originally specified in the descriptor.
+        inline VkDeviceSize GetSize() const
+        {
+            return size_;
+        }
+
     private:
 
         VKBufferObject                  bufferObj_;
@@ -63,6 +69,8 @@ class VKBuffer : public Buffer
 
         VKBufferObject                  bufferObjStaging_;
         std::shared_ptr<VKDeviceMemory> deviceMemoryStaging_;
+
+        VkDeviceSize                    size_                   = 0;
 
 };
 

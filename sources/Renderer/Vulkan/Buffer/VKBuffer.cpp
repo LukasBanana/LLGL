@@ -56,9 +56,10 @@ void VKBufferObject::Release()
  */
 
 VKBuffer::VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo) :
-    Buffer            { type   },
-    bufferObj_        { device },
-    bufferObjStaging_ { device }
+    Buffer            { type            },
+    bufferObj_        { device          },
+    bufferObjStaging_ { device          },
+    size_             { createInfo.size }
 {
     bufferObj_.Create(device, createInfo);
 }

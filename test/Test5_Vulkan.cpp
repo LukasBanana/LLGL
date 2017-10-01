@@ -147,8 +147,22 @@ int main()
         }
         matrices;
 
+        Gs::RotateFree(matrices.projection, Gs::Vector3f(0, 0, 1), Gs::pi * 0.25f);
+
         // Create constant buffer
-        //auto constBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)));
+        auto constBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)), &matrices);
+
+        // Create pipeline layout
+        LLGL::PipelineLayoutDescriptor layoutDesc;
+
+        LLGL::LayoutBinding layoutBinding;
+        {
+            layoutBinding.type          = LLGL::LayoutBindingType::ConstantBuffer;
+            layoutBinding.stageFlags    = LLGL::ShaderStageFlags::VertexStage;
+        }
+        layoutDesc.bindings.push_back(layoutBinding);
+
+        auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -157,6 +171,7 @@ int main()
         const auto viewportSize = resolution.Cast<float>();
 
         pipelineDesc.shaderProgram = shaderProgram;
+        pipelineDesc.pipelineLayout = pipelineLayout;
         pipelineDesc.viewports.push_back(LLGL::Viewport(0.0f, 0.0f, viewportSize.x, viewportSize.y));
         pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, resolution.x, resolution.y));
         pipelineDesc.blend.targets.push_back({});
@@ -203,11 +218,14 @@ int main()
             // Render scene
             commands->SetRenderTarget(*context);
 
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
+            //commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             commands->SetGraphicsPipeline(*pipeline);
 
             commands->SetVertexBuffer(*vertexBuffer);
+            commands->SetConstantBuffer(*constBuffer, 0);
+
+            //commands->UpdatePipelineLayout(*pipelineLayout);
 
             commands->Draw(3, 0);
 

@@ -30,6 +30,7 @@
 //#include "Texture/VKRenderTarget.h"
 
 //#include "RenderState/VKQuery.h"
+#include "RenderState/VKPipelineLayout.h"
 #include "RenderState/VKGraphicsPipeline.h"
 //#include "RenderState/VKComputePipeline.h"
 
@@ -115,6 +116,12 @@ class VKRenderSystem : public RenderSystem
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
+        
+        /* ----- Pipeline Layouts ----- */
+
+        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) override;
+
+        void Release(PipelineLayout& pipelineLayout) override;
 
         /* ----- Pipeline States ----- */
 
@@ -184,6 +191,7 @@ class VKRenderSystem : public RenderSystem
         //HWObjectContainer<VKRenderTarget>       renderTargets_;
         HWObjectContainer<VKShader>             shaders_;
         HWObjectContainer<VKShaderProgram>      shaderPrograms_;
+        HWObjectContainer<VKPipelineLayout>     pipelineLayouts_;
         HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
         /*HWObjectContainer<VKComputePipeline>    computePipelines_;
         HWObjectContainer<VKQuery>              queries_;*/

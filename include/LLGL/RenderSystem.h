@@ -25,6 +25,7 @@
 
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
+#include "PipelineLayout.h"
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
 #include "Query.h"
@@ -366,6 +367,20 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified ShaderProgram object. After this call, the specified object must no longer be used.
         virtual void Release(ShaderProgram& shaderProgram) = 0;
+        
+        /* ----- Pipeline Layouts ----- */
+
+        /**
+        \brief Creates a new and initialized pipeline layout object, if and only if the renderer supports pipeline layouts.
+        \param[in] desc Specifies the pipeline layout descriptor with all layout bindings.
+        \remarks This is only required for modern graphics APIs such as Direct3D 12 and Vulkan.
+        \note Only supported with: Direct3D 12, Vulkan.
+        \return Pointer to the new PipelineLayout object or null if the renderer does not support pipeline layouts.
+        */
+        virtual PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc)/* = 0*/;
+
+        //! Releases the specified PipelineLayout object. After this call, the specified object must no longer be used.
+        virtual void Release(PipelineLayout& pipelineLayout)/* = 0*/;
 
         /* ----- Pipeline States ----- */
 

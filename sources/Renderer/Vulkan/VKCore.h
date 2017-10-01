@@ -75,13 +75,13 @@ VkBool32 VKBoolean(bool value);
 /* ----- Query Functions ----- */
 
 std::vector<VkLayerProperties> VKQueryInstanceLayerProperties();
-std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties();
+std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties(const char* layerName = nullptr);
 std::vector<VkPhysicalDevice> VKQueryPhysicalDevices(VkInstance instance);
 std::vector<VkExtensionProperties> VKQueryDeviceExtensionProperties(VkPhysicalDevice device);
 std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevice device);
 
 SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
-QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags);
+QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface = nullptr);
 
 
 } // /namespace LLGL

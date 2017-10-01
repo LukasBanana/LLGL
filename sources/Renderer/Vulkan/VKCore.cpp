@@ -38,6 +38,7 @@ std::string VKErrorToStr(const VkResult errorCode)
         LLGL_CASE_TO_STR( VK_ERROR_INCOMPATIBLE_DRIVER );
         LLGL_CASE_TO_STR( VK_ERROR_TOO_MANY_OBJECTS );
         LLGL_CASE_TO_STR( VK_ERROR_FORMAT_NOT_SUPPORTED );
+        LLGL_CASE_TO_STR( VK_ERROR_FRAGMENTED_POOL );
         LLGL_CASE_TO_STR( VK_ERROR_SURFACE_LOST_KHR );
         LLGL_CASE_TO_STR( VK_ERROR_NATIVE_WINDOW_IN_USE_KHR );
         LLGL_CASE_TO_STR( VK_SUBOPTIMAL_KHR );
@@ -98,14 +99,14 @@ std::vector<VkLayerProperties> VKQueryInstanceLayerProperties()
     return properties;
 }
 
-std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties()
+std::vector<VkExtensionProperties> VKQueryInstanceExtensionProperties(const char* layerName)
 {
     std::uint32_t propertyCount = 0;
-    auto result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, nullptr);
+    auto result = vkEnumerateInstanceExtensionProperties(layerName, &propertyCount, nullptr);
     VKThrowIfFailed(result, "failed to query number of Vulkan instance extension properties");
 
     std::vector<VkExtensionProperties> properties(propertyCount);
-    result = vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, properties.data());
+    result = vkEnumerateInstanceExtensionProperties(layerName, &propertyCount, properties.data());
     VKThrowIfFailed(result, "failed to query Vulkan instance extension properties");
 
     return properties;
@@ -183,7 +184,7 @@ SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKH
     return details;
 }
 
-QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags)
+QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface)
 {
     QueueFamilyIndices indices;
 
@@ -196,17 +197,20 @@ QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFla
         if (family.queueCount > 0 && (family.queueFlags & flags) != 0)
             indices.graphicsFamily = i;
 
-        #if 0
-        /* Get present family index */
-        VkBool32 presentSupport = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, *surface, &presentSupport);
+        if (surface != nullptr)
+        {
+            /* Get present family index */
+            VkBool32 presentSupport = VK_FALSE;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, *surface, &presentSupport);
 
-        if (family.queueCount > 0 && presentSupport)
-            indices.presentFamily = i;
-        #else
-        if (family.queueCount > 0)
-            indices.presentFamily = i;
-        #endif
+            if (family.queueCount > 0 && presentSupport)
+                indices.presentFamily = i;
+        }
+        else
+        {
+            if (family.queueCount > 0)
+                indices.presentFamily = i;
+        }
 
         /* Check if queue family is complete */
         if (indices.Complete())

@@ -161,7 +161,34 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer)
 
 void VKCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
 {
-    //todo
+    if (activeDescriptorSet_ != VK_NULL_HANDLE)
+    {
+        auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+
+        /* Initialize buffer information */
+        VkDescriptorBufferInfo bufferInfo;
+        {
+            bufferInfo.buffer   = bufferVK.Get();
+            bufferInfo.offset   = 0;
+            bufferInfo.range    = bufferVK.GetSize();
+        }
+
+        /* Update descriptor sets */
+        VkWriteDescriptorSet writeDescriptor;
+        {
+            writeDescriptor.sType               = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writeDescriptor.pNext               = nullptr;
+            writeDescriptor.dstSet              = activeDescriptorSet_;
+            writeDescriptor.dstBinding          = 0;
+            writeDescriptor.dstArrayElement     = 0;
+            writeDescriptor.descriptorCount     = 1;
+            writeDescriptor.descriptorType      = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            writeDescriptor.pImageInfo          = nullptr;
+            writeDescriptor.pBufferInfo         = &bufferInfo;
+            writeDescriptor.pTexelBufferView    = nullptr;
+        }
+        vkUpdateDescriptorSets(device_, 1, &writeDescriptor, 0, nullptr);
+    }
 }
 
 void VKCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
@@ -252,7 +279,15 @@ void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 void VKCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineVK = LLGL_CAST(VKGraphicsPipeline&, graphicsPipeline);
+    
+    /* Bind graphics pipeline */
     vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineVK.Get());
+
+    /* Set active descriptor sets */
+    activePipelineLayout_ = graphicsPipelineVK.GetPipelineLayout();
+    activeDescriptorSet_ = graphicsPipelineVK.GetDescriptorSet();
+    boundDescriptorSet_ = VK_NULL_HANDLE;
+    //vkCmdBindDescriptorSets(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineVK.GetPipelineLayout(), 0, 1, &activeDescriptorSet_, 0, nullptr);
 }
 
 void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
@@ -296,6 +331,14 @@ void VKCommandBuffer::EndRenderCondition()
 
 void VKCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
 {
+    #if 1//TODO: debugging
+    if (boundDescriptorSet_ != activeDescriptorSet_)
+    {
+        boundDescriptorSet_ = activeDescriptorSet_;
+        vkCmdBindDescriptorSets(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, activePipelineLayout_, 0, 1, &boundDescriptorSet_, 0, nullptr);
+    }
+    #endif
+
     vkCmdDraw(commandBuffer_, numVertices, 1, firstVertex, 0);
 }
 
@@ -357,6 +400,7 @@ void VKCommandBuffer::SetPresentIndex(std::uint32_t idx)
 
 void VKCommandBuffer::BeginCommandBuffer()
 {
+    /* Begin recording of current command buffer */
     VkCommandBufferBeginInfo beginInfo;
     {
         beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -407,7 +451,7 @@ void VKCommandBuffer::CreateCommandPool(std::uint32_t queueFamilyIndex)
     {
         createInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         createInfo.pNext            = nullptr;
-        createInfo.flags            = 0;
+        createInfo.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         createInfo.queueFamilyIndex = queueFamilyIndex;
     }
     auto result = vkCreateCommandPool(device_, &createInfo, nullptr, commandPool_.ReleaseAndGetAddressOf());

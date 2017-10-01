@@ -151,15 +151,19 @@ class VKCommandBuffer : public CommandBuffer
         std::vector<VkCommandBuffer>    commandBufferList_;
         VkCommandBuffer                 commandBuffer_;
 
-        VkClearColorValue               clearColor_         = { 0.0f, 0.0f, 0.0f, 0.0f };
-        VkClearDepthStencilValue        clearDepthStencil_  = { 1.0f, 0 };
+        VkClearColorValue               clearColor_             = { 0.0f, 0.0f, 0.0f, 0.0f };
+        VkClearDepthStencilValue        clearDepthStencil_      = { 1.0f, 0 };
 
-        VkRenderPass                    renderPass_         = VK_NULL_HANDLE;
-        VkFramebuffer                   framebuffer_        = VK_NULL_HANDLE;
-        VkImage                         imageColor_         = VK_NULL_HANDLE;
-        VkImage                         imageDepthStencil_  = VK_NULL_HANDLE;
+        VkRenderPass                    renderPass_             = VK_NULL_HANDLE;
+        VkFramebuffer                   framebuffer_            = VK_NULL_HANDLE;
+        VkImage                         imageColor_             = VK_NULL_HANDLE;
+        VkImage                         imageDepthStencil_      = VK_NULL_HANDLE;
 
-        std::uint32_t                   queuePresentFamily_ = 0;
+        std::uint32_t                   queuePresentFamily_     = 0;
+
+        VkPipelineLayout                activePipelineLayout_   = VK_NULL_HANDLE;
+        VkDescriptorSet                 activeDescriptorSet_    = VK_NULL_HANDLE;
+        VkDescriptorSet                 boundDescriptorSet_     = VK_NULL_HANDLE;
 
 };
 

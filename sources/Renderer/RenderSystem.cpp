@@ -223,6 +223,14 @@ void RenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
     config_ = config;
 }
 
+#if 1//TODO: make this functions pure virtual!!!
+
+PipelineLayout* RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc) { return nullptr; }
+
+void RenderSystem::Release(PipelineLayout& pipelineLayout) {}
+
+#endif
+
 
 /*
  * ======= Protected: =======

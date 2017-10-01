@@ -312,6 +312,18 @@ void VKRenderSystem::Release(ShaderProgram& shaderProgram)
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
+/* ----- Pipeline Layouts ----- */
+
+PipelineLayout* VKRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+{
+    return TakeOwnership(pipelineLayouts_, MakeUnique<VKPipelineLayout>(device_, desc));
+}
+
+void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
+{
+    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
+}
+
 /* ----- Pipeline States ----- */
 
 GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
@@ -440,17 +452,25 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
 
 void VKRenderSystem::CreateDebugReportCallback()
 {
-    /* Initialize debug report callback descriptor */
-    VkDebugReportCallbackCreateInfoEXT createInfo;
+    /* Initialize flags */
+    VkDebugReportFlagsEXT flags = 0;
 
-    createInfo.sType        = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-    createInfo.pNext        = nullptr;
-    createInfo.flags        = 0;
-    createInfo.pfnCallback  = VKDebugCallback;
-    createInfo.pUserData    = reinterpret_cast<void*>(this);
+    //flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+    flags |= VK_DEBUG_REPORT_WARNING_BIT_EXT;
+    //flags |= VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+    flags |= VK_DEBUG_REPORT_ERROR_BIT_EXT;
+    //flags |= VK_DEBUG_REPORT_DEBUG_BIT_EXT;
 
     /* Create report callback */
-    VkResult result = CreateDebugReportCallbackEXT(instance_, &createInfo, nullptr, debugReportCallback_.ReleaseAndGetAddressOf());
+    VkDebugReportCallbackCreateInfoEXT createInfo;
+    {
+        createInfo.sType        = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+        createInfo.pNext        = nullptr;
+        createInfo.flags        = flags;
+        createInfo.pfnCallback  = VKDebugCallback;
+        createInfo.pUserData    = reinterpret_cast<void*>(this);
+    }
+    auto result = CreateDebugReportCallbackEXT(instance_, &createInfo, nullptr, debugReportCallback_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan debug report callback");
 }
 
@@ -541,6 +561,8 @@ void VKRenderSystem::QueryDeviceProperties()
     SetRenderingCaps(caps);
 }
 
+// Device-only layers are deprecated -> set 'enabledLayerCount' and 'ppEnabledLayerNames' members to zero during device creation.
+// see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#extended-functionality-device-layer-deprecation
 void VKRenderSystem::CreateLogicalDevice()
 {
     /* Initialize queue create description */
@@ -592,7 +614,7 @@ void VKRenderSystem::CreateStagingCommandResources()
     {
         createInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         createInfo.pNext            = nullptr;
-        createInfo.flags            = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+        createInfo.flags            = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         createInfo.queueFamilyIndex = queueFamilyIndices_.graphicsFamily;
     }
     auto result = vkCreateCommandPool(device_, &createInfo, nullptr, stagingCommandPool_.ReleaseAndGetAddressOf());
@@ -620,7 +642,11 @@ void VKRenderSystem::ReleaseStagingCommandResources()
 
 bool VKRenderSystem::IsLayerRequired(const std::string& name) const
 {
-    return (name == "VK_LAYER_NV_optimus");
+    #ifdef LLGL_DEBUG
+    if (name == "VK_LAYER_LUNARG_core_validation")
+        return true;
+    #endif
+    return false;
 }
 
 bool VKRenderSystem::IsExtensionRequired(const std::string& name) const

@@ -7,6 +7,7 @@
 
 #include "VKGraphicsPipeline.h"
 #include "../Shader/VKShaderProgram.h"
+#include "VKPipelineLayout.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
@@ -18,11 +19,19 @@ namespace LLGL
 
 
 VKGraphicsPipeline::VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPass renderPass, const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent) :
-    device_         { device                          },
-    renderPass_     { renderPass                      },
-    pipelineLayout_ { device, vkDestroyPipelineLayout },
-    pipeline_       { device, vkDestroyPipeline       }
+    device_         { device                    },
+    renderPass_     { renderPass                },
+    pipeline_       { device, vkDestroyPipeline }
 {
+    /* Get pipeline layout object */
+    if (desc.pipelineLayout)
+    {
+        auto pipelineLayoutVK = LLGL_CAST(VKPipelineLayout*, desc.pipelineLayout);
+        pipelineLayout_ = pipelineLayoutVK->Get();
+        descriptorSet_ = pipelineLayoutVK->GetDescriptorSet();
+    }
+
+    /* Create Vulkan graphics pipeline object */
     CreateGraphicsPipeline(desc, extent);
 }
 
