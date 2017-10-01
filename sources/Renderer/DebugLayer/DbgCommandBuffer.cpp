@@ -412,6 +412,20 @@ bool DbgCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
     return instance.QueryResult(queryDbg.instance, result);
 }
 
+bool DbgCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+{
+    auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        if (queryDbg.state != DbgQuery::State::Ready)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
+    }
+
+    return instance.QueryPipelineStatisticsResult(queryDbg.instance, result);
+}
+
 void DbgCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     auto& queryDbg = LLGL_CAST(DbgQuery&, query);

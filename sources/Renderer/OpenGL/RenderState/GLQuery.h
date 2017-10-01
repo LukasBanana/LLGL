@@ -11,6 +11,7 @@
 
 #include <LLGL/Query.h>
 #include "../OpenGL.h"
+#include <vector>
 
 
 namespace LLGL
@@ -25,22 +26,24 @@ class GLQuery : public Query
         GLQuery(const QueryDescriptor& desc);
         ~GLQuery();
 
-        //! Returns the query target.
-        inline GLenum GetTarget() const
+        void Begin();
+        void End();
+
+        // Returns the first ID.
+        inline GLuint GetFirstID() const
         {
-            return target_;
+            return ids_.front();
         }
 
-        //! Returns the hardware query ID.
-        inline GLuint GetID() const
+        // Returns the list of hardware query IDs.
+        inline const std::vector<GLuint>& GetIDs() const
         {
-            return id_;
+            return ids_;
         }
 
     private:
 
-        GLenum target_  = 0;
-        GLuint id_      = 0;
+        std::vector<GLuint> ids_;
 
 };
 

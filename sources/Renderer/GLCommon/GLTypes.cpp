@@ -421,47 +421,6 @@ GLenum Map(const ShaderType shaderType)
     MapFailed("ShaderType");
 }
 
-// for pipeline statistice query:
-// see https://www.opengl.org/registry/specs/ARB/pipeline_statistics_query.txt
-GLenum Map(const QueryType queryType)
-{
-    switch (queryType)
-    {
-        #ifdef LLGL_OPENGL
-        case QueryType::SamplesPassed:                      return GL_SAMPLES_PASSED;
-        #endif
-        case QueryType::AnySamplesPassed:                   return GL_ANY_SAMPLES_PASSED;
-        case QueryType::AnySamplesPassedConservative:       return GL_ANY_SAMPLES_PASSED_CONSERVATIVE;
-        #ifdef LLGL_OPENGL
-        case QueryType::PrimitivesGenerated:                return GL_PRIMITIVES_GENERATED;
-        case QueryType::TimeElapsed:                        return GL_TIME_ELAPSED;
-        #endif
-        case QueryType::StreamOutPrimitivesWritten:         return GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN;
-
-        #ifdef GL_ARB_transform_feedback_overflow_query
-        case QueryType::StreamOutOverflow:                  return GL_TRANSFORM_FEEDBACK_OVERFLOW_ARB;
-        //GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB;
-        #endif
-
-        #ifdef GL_ARB_pipeline_statistics_query
-        case QueryType::VerticesSubmitted:                  return GL_VERTICES_SUBMITTED_ARB;
-        case QueryType::PrimitivesSubmitted:                return GL_PRIMITIVES_SUBMITTED_ARB;
-        case QueryType::VertexShaderInvocations:            return GL_VERTEX_SHADER_INVOCATIONS_ARB;
-        case QueryType::TessControlShaderInvocations:       return GL_TESS_CONTROL_SHADER_PATCHES_ARB;
-        case QueryType::TessEvaluationShaderInvocations:    return GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB;
-        case QueryType::GeometryShaderInvocations:          return GL_GEOMETRY_SHADER_INVOCATIONS;
-        case QueryType::FragmentShaderInvocations:          return GL_FRAGMENT_SHADER_INVOCATIONS_ARB;
-        case QueryType::ComputeShaderInvocations:           return GL_COMPUTE_SHADER_INVOCATIONS_ARB;
-        case QueryType::GeometryPrimitivesGenerated:        return GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB;
-        case QueryType::ClippingInputPrimitives:            return GL_CLIPPING_INPUT_PRIMITIVES_ARB;
-        case QueryType::ClippingOutputPrimitives:           return GL_CLIPPING_OUTPUT_PRIMITIVES_ARB;
-        #endif
-        
-        default:                                            break;
-    }
-    MapFailed("QueryType");
-}
-
 GLenum Map(const BufferType bufferType)
 {
     switch (bufferType)

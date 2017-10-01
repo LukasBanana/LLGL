@@ -255,6 +255,11 @@ bool D3D12CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
     return false; //todo
 }
 
+bool D3D12CommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+{
+    return false; //todo
+}
+
 void D3D12CommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     //auto predicateOp = (mode >= RenderConditionMode::WaitInverted ? D3D12_PREDICATION_OP_EQUAL_NOT_ZERO : D3D12_PREDICATION_OP_EQUAL_ZERO);

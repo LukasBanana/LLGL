@@ -723,6 +723,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_geometry_shader4             );
     ENABLE_GLEXT( NV_conservative_raster           );
     ENABLE_GLEXT( INTEL_conservative_rasterization );
+    ENABLE_GLEXT( ARB_pipeline_statistics_query    );
 
     #undef LOAD_GLEXT
     #undef ENABLE_GLEXT

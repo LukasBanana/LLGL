@@ -359,8 +359,6 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual bool QueryResult(Query& query, std::uint64_t& result) = 0;
 
-        //TODO: add this to the interface
-        #if 0
         /**
         \brief Queries the result of the specified query object for pipeline statistics.
         \param[in] query Specifies the query object whose result is to be queried. This query object must have been created with the QueryType::PipelineStatistics type.
@@ -369,7 +367,6 @@ class LLGL_EXPORT CommandBuffer
         \see QueryResult
         */
         virtual bool QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result) = 0;
-        #endif
 
         /**
         \brief Begins conditional rendering with the specified query object.

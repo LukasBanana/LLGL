@@ -232,18 +232,7 @@ D3D11_QUERY Map(const QueryDescriptor& queryDesc)
             case QueryType::TimeElapsed:                        return D3D11_QUERY_TIMESTAMP_DISJOINT;
             case QueryType::StreamOutOverflow:                  break;
             case QueryType::StreamOutPrimitivesWritten:         return D3D11_QUERY_SO_STATISTICS;
-            case QueryType::PrimitivesGenerated:                /* pass */
-            case QueryType::VerticesSubmitted:                  /* pass */
-            case QueryType::PrimitivesSubmitted:                /* pass */
-            case QueryType::VertexShaderInvocations:            /* pass */
-            case QueryType::TessControlShaderInvocations:       /* pass */
-            case QueryType::TessEvaluationShaderInvocations:    /* pass */
-            case QueryType::GeometryShaderInvocations:          /* pass */
-            case QueryType::FragmentShaderInvocations:          /* pass */
-            case QueryType::ComputeShaderInvocations:           /* pass */
-            case QueryType::GeometryPrimitivesGenerated:        /* pass */
-            case QueryType::ClippingInputPrimitives:            /* pass */
-            case QueryType::ClippingOutputPrimitives:           return D3D11_QUERY_PIPELINE_STATISTICS;
+            case QueryType::PipelineStatistics:                 return D3D11_QUERY_PIPELINE_STATISTICS;
         }
     }
     DXTypes::MapFailed("QueryType", "D3D11_QUERY");

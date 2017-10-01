@@ -101,7 +101,7 @@ public:
 
         // Create query to determine number of primitives that are sent to the rasterizer
         {
-            queryDesc.type              = LLGL::QueryType::PrimitivesGenerated;
+            queryDesc.type              = LLGL::QueryType::PipelineStatistics;
             queryDesc.renderCondition   = false;
         }
         geometryQuery = renderer->CreateQuery(queryDesc);
@@ -111,7 +111,18 @@ public:
     {
         // Wait until query result is available and return result
         std::uint64_t result = 0;
-        while (!commands->QueryResult(*query, result)) { /* wait */ }
+
+        if (query->GetType() == LLGL::QueryType::PipelineStatistics)
+        {
+            LLGL::QueryPipelineStatistics statistics;
+            while (!commands->QueryPipelineStatisticsResult(*query, statistics)) { /* wait */ }
+            result = statistics.numPrimitivesGenerated;
+        }
+        else
+        {
+            while (!commands->QueryResult(*query, result)) { /* wait */ }
+        }
+
         return result;
     }
 

@@ -19,7 +19,6 @@
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/ShaderUniform.h>
 #include <LLGL/ShaderFlags.h>
-#include <LLGL/QueryFlags.h>
 
 
 namespace LLGL
@@ -47,7 +46,6 @@ GLenum Map( const TextureWrap           textureWrap         ); // GL_REPEAT, ...
 GLenum Map( const TextureFilter         textureFilter       ); // GL_NEAREST, GL_LINEAR
 GLenum Map( const TextureFilter         textureMinFilter, const TextureFilter textureMipMapFilter );
 GLenum Map( const ShaderType            shaderType          );
-GLenum Map( const QueryType             queryType           );
 GLenum Map( const BufferType            bufferType          );
 GLenum Map( const RenderConditionMode   renderConditionMode );
 GLenum Map( const LogicOp               logicOp             );

@@ -454,58 +454,6 @@ bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
         }
         break;
 
-        /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
-        case D3D11_QUERY_PIPELINE_STATISTICS:
-        {
-            D3D11_QUERY_DATA_PIPELINE_STATISTICS data;
-            if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
-            {
-                switch (queryD3D.GetType())
-                {
-                    case QueryType::PrimitivesGenerated:
-                        result = data.CInvocations;
-                        break;
-                    case QueryType::VerticesSubmitted:
-                        result = data.IAVertices;
-                        break;
-                    case QueryType::PrimitivesSubmitted:
-                        result = data.IAPrimitives;
-                        break;
-                    case QueryType::VertexShaderInvocations:
-                        result = data.VSInvocations;
-                        break;
-                    case QueryType::TessControlShaderInvocations:
-                        result = data.HSInvocations;
-                        break;
-                    case QueryType::TessEvaluationShaderInvocations:
-                        result = data.DSInvocations;
-                        break;
-                    case QueryType::GeometryShaderInvocations:
-                        result = data.GSInvocations;
-                        break;
-                    case QueryType::FragmentShaderInvocations:
-                        result = data.PSInvocations;
-                        break;
-                    case QueryType::ComputeShaderInvocations:
-                        result = data.CSInvocations;
-                        break;
-                    case QueryType::GeometryPrimitivesGenerated:
-                        result = data.GSPrimitives;
-                        break;
-                    case QueryType::ClippingInputPrimitives:
-                        result = data.CInvocations; // <-- TODO: workaround
-                        break;
-                    case QueryType::ClippingOutputPrimitives:
-                        result = data.CPrimitives;
-                        break;
-                    default:
-                        return false;
-                }
-                return true;
-            }
-        }
-        break;
-
         /* Query result from data of type: D3D11_QUERY_DATA_SO_STATISTICS */
         case D3D11_QUERY_SO_STATISTICS:
         {
@@ -517,6 +465,38 @@ bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
             }
         }
         break;
+
+        default:
+        break;
+    }
+
+    return false;
+}
+
+bool D3D11CommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+{
+    auto& queryD3D = LLGL_CAST(D3D11Query&, query);
+
+    /* Query result from data of type: D3D11_QUERY_DATA_PIPELINE_STATISTICS */
+    if (queryD3D.GetQueryObjectType() == D3D11_QUERY_PIPELINE_STATISTICS)
+    {
+        D3D11_QUERY_DATA_PIPELINE_STATISTICS data;
+        if (context_->GetData(queryD3D.GetQueryObject(), &data, sizeof(data), 0) == S_OK)
+        {
+            result.numPrimitivesGenerated               = data.CInvocations;
+            result.numVerticesSubmitted                 = data.IAVertices;
+            result.numPrimitivesSubmitted               = data.IAPrimitives;
+            result.numVertexShaderInvocations           = data.VSInvocations;
+            result.numTessControlShaderInvocations      = data.HSInvocations;
+            result.numTessEvaluationShaderInvocations   = data.DSInvocations;
+            result.numGeometryShaderInvocations         = data.GSInvocations;
+            result.numFragmentShaderInvocations         = data.PSInvocations;
+            result.numComputeShaderInvocations          = data.CSInvocations;
+            result.numGeometryPrimitivesGenerated       = data.GSPrimitives;
+            result.numClippingInputPrimitives           = data.CInvocations; // <-- TODO: workaround
+            result.numClippingOutputPrimitives          = data.CPrimitives;
+            return true;
+        }
     }
 
     return false;

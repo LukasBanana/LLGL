@@ -274,8 +274,12 @@ void VKCommandBuffer::EndQuery(Query& query)
 
 bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 {
-    //todo
-    return false;
+    return false; //todo
+}
+
+bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+{
+    return false; //todo
 }
 
 void VKCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)

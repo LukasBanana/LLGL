@@ -55,6 +55,7 @@ enum class GLExt
     EXT_transform_feedback,
     NV_transform_feedback,
     EXT_gpu_shader4,
+    ARB_pipeline_statistics_query,
 
     /* Extensions without procedures */
     ARB_texture_cube_map,

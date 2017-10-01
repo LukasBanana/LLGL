@@ -345,14 +345,14 @@ void GLCommandBuffer::BeginQuery(Query& query)
 {
     /* Begin query with internal target */
     auto& queryGL = LLGL_CAST(GLQuery&, query);
-    glBeginQuery(queryGL.GetTarget(), queryGL.GetID());
+    queryGL.Begin();
 }
 
 void GLCommandBuffer::EndQuery(Query& query)
 {
     /* Begin query with internal target */
     auto& queryGL = LLGL_CAST(GLQuery&, query);
-    glEndQuery(queryGL.GetTarget());
+    queryGL.End();
 }
 
 bool GLCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
@@ -361,20 +361,20 @@ bool GLCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 
     /* Check if query result is available */
     GLint available = 0;
-    glGetQueryObjectiv(queryGL.GetID(), GL_QUERY_RESULT_AVAILABLE, &available);
+    glGetQueryObjectiv(queryGL.GetFirstID(), GL_QUERY_RESULT_AVAILABLE, &available);
 
     if (available != GL_FALSE)
     {
         if (HasExtension(GLExt::ARB_timer_query))
         {
             /* Get query result with 64-bit version */
-            glGetQueryObjectui64v(queryGL.GetID(), GL_QUERY_RESULT, &result);
+            glGetQueryObjectui64v(queryGL.GetFirstID(), GL_QUERY_RESULT, &result);
         }
         else
         {
             /* Get query result with 32-bit version and convert to 64-bit */
             GLuint result32 = 0;
-            glGetQueryObjectuiv(queryGL.GetID(), GL_QUERY_RESULT, &result32);
+            glGetQueryObjectuiv(queryGL.GetFirstID(), GL_QUERY_RESULT, &result32);
             result = result32;
         }
         return true;
@@ -383,10 +383,77 @@ bool GLCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
     return false;
 }
 
+bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
+{
+    auto& queryGL = LLGL_CAST(GLQuery&, query);
+
+    if (HasExtension(GLExt::ARB_pipeline_statistics_query))
+    {
+        /* Check if query result is available for all query objects */
+        GLint available = 0;
+        for (auto id : queryGL.GetIDs())
+        {
+            glGetQueryObjectiv(id, GL_QUERY_RESULT_AVAILABLE, &available);
+            if (available == GL_FALSE)
+                return false;
+        }
+
+        /* Parameter setup for 32-bit and 64-bit version of query function */
+        union
+        {
+            GLuint      ui32;
+            GLuint64    ui64;
+        }
+        params[QueryPipelineStatistics::memberCount];
+
+        const auto numResults = std::min(queryGL.GetIDs().size(), QueryPipelineStatistics::memberCount);
+
+        if (HasExtension(GLExt::ARB_timer_query))
+        {
+            /* Get query result with 64-bit version */
+            for (std::size_t i = 0; i < numResults; ++i)
+            {
+                params[i].ui64 = 0;
+                glGetQueryObjectui64v(queryGL.GetIDs()[i], GL_QUERY_RESULT, &(params[i].ui64));
+            }
+        }
+        else
+        {
+            /* Get query result with 32-bit version and convert to 64-bit */
+            for (std::size_t i = 0; i < numResults; ++i)
+            {
+                params[i].ui64 = 0;
+                glGetQueryObjectuiv(queryGL.GetIDs()[i], GL_QUERY_RESULT, &(params[i].ui32));
+            }
+        }
+
+        /* Copy result to output parameter */
+        result.numPrimitivesGenerated               = params[0].ui64;
+        result.numVerticesSubmitted                 = params[1].ui64;
+        result.numPrimitivesSubmitted               = params[2].ui64;
+        result.numVertexShaderInvocations           = params[3].ui64;
+        result.numTessControlShaderInvocations      = params[4].ui64;
+        result.numTessEvaluationShaderInvocations   = params[5].ui64;
+        result.numGeometryShaderInvocations         = params[6].ui64;
+        result.numFragmentShaderInvocations         = params[7].ui64;
+        result.numComputeShaderInvocations          = params[8].ui64;
+        result.numGeometryPrimitivesGenerated       = params[9].ui64;
+        result.numClippingInputPrimitives           = params[10].ui64;
+        result.numClippingOutputPrimitives          = params[11].ui64;
+    }
+    else
+    {
+        /* Return only result of first query object (of type GL_PRIMITIVES_GENERATED) */
+        return QueryResult(query, result.numPrimitivesGenerated);
+    }
+
+    return true;
+}
+
 void GLCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     auto& queryGL = LLGL_CAST(GLQuery&, query);
-    glBeginConditionalRender(queryGL.GetID(), GLTypes::Map(mode));
+    glBeginConditionalRender(queryGL.GetFirstID(), GLTypes::Map(mode));
 }
 
 void GLCommandBuffer::EndRenderCondition()
