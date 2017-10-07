@@ -10,9 +10,7 @@
 #include <chrono>
 
 
-//#define TEST_RENDER_TARGET
 //#define TEST_QUERY
-//#define TEST_STORAGE_BUFFER
 
 
 int main()
@@ -178,6 +176,11 @@ int main()
 
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
+        // Create query
+        #ifdef TEST_QUERY
+        auto query = renderer->CreateQuery(LLGL::QueryType::PipelineStatistics);
+        #endif
+
         // Add input event listener
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
@@ -227,9 +230,26 @@ int main()
 
             //commands->UpdatePipelineLayout(*pipelineLayout);
 
+            #ifdef TEST_QUERY
+            commands->BeginQuery(*query);
+            {
+                commands->Draw(3, 0);
+            }
+            commands->EndQuery(*query);
+            #else
             commands->Draw(3, 0);
+            #endif
 
             context->Present();
+
+            // Evaluate query
+            #ifdef TEST_QUERY
+            LLGL::QueryPipelineStatistics statistics;
+            while (!commands->QueryPipelineStatisticsResult(*query, statistics)) { /* wait */ }
+            #ifdef _DEBUG
+            __debugbreak();
+            #endif
+            #endif
 
             #else
             

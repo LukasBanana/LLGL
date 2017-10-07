@@ -356,12 +356,12 @@ void VKRenderSystem::Release(ComputePipeline& computePipeline)
 
 Query* VKRenderSystem::CreateQuery(const QueryDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(queries_, MakeUnique<VKQuery>(device_, desc));
 }
 
 void VKRenderSystem::Release(Query& query)
 {
-    //todo
+    RemoveFromUniqueSet(queries_, &query);
 }
 
 

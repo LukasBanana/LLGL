@@ -15,6 +15,7 @@
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
+#include <LLGL/QueryFlags.h>
 
 
 namespace LLGL
@@ -39,6 +40,7 @@ VkBlendFactor           Map( const BlendOp           blendOp              );
 VkBlendOp               Map( const BlendArithmetic   blendArithmetic      );
 VkSamplerAddressMode    Map( const TextureWrap       textureWrap          );
 VkDescriptorType        Map( const LayoutBindingType layoutingBindingType );
+VkQueryType             Map( const QueryType         queryType            );
 
 
 } // /namespace VKTypes

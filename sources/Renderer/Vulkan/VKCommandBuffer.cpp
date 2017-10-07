@@ -8,6 +8,7 @@
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 #include "RenderState/VKGraphicsPipeline.h"
+#include "RenderState/VKQuery.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
 #include "Buffer/VKBuffer.h"
@@ -299,22 +300,77 @@ void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 
 void VKCommandBuffer::BeginQuery(Query& query)
 {
-    //todo
+    auto& queryVK = LLGL_CAST(VKQuery&, query);
+
+    /* Determine control flags (for either 'SamplesPassed' or 'AnySamplesPassed') */
+    VkQueryControlFlags flags = 0;
+
+    if (query.GetType() == QueryType::SamplesPassed)
+        flags |= VK_QUERY_CONTROL_PRECISE_BIT;
+
+    vkCmdBeginQuery(commandBuffer_, queryVK.GetQueryPool(), 0, flags);
 }
 
 void VKCommandBuffer::EndQuery(Query& query)
 {
-    //todo
+    auto& queryVK = LLGL_CAST(VKQuery&, query);
+    vkCmdEndQuery(commandBuffer_, queryVK.GetQueryPool(), 0);
 }
 
 bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 {
-    return false; //todo
+    auto& queryVK = LLGL_CAST(VKQuery&, query);
+
+    /* Store result directly into output parameter */
+    auto stateResult = vkGetQueryPoolResults(
+        device_, queryVK.GetQueryPool(), 0, 1,
+        sizeof(result), &result, sizeof(std::uint64_t),
+        VK_QUERY_RESULT_64_BIT
+    );
+
+    /* Check if result is not ready yet */
+    if (stateResult == VK_NOT_READY)
+        return false;
+
+    VKThrowIfFailed(stateResult, "failed to retrieve results from Vulkan query pool");
+
+    return true;
 }
 
 bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineStatistics& result)
 {
-    return false; //todo
+    auto& queryVK = LLGL_CAST(VKQuery&, query);
+
+    /* Store results in intermediate memory */
+    std::uint64_t intermediateResults[11];
+
+    auto stateResult = vkGetQueryPoolResults(
+        device_, queryVK.GetQueryPool(), 0, 1,
+        sizeof(intermediateResults), intermediateResults, sizeof(std::uint64_t),
+        VK_QUERY_RESULT_64_BIT
+    );
+
+    /* Check if result is not ready yet */
+    if (stateResult == VK_NOT_READY)
+        return false;
+
+    VKThrowIfFailed(stateResult, "failed to retrieve results from Vulkan query pool");
+
+    /* Copy result to output parameter */
+    result.numPrimitivesGenerated               = 0;
+    result.numVerticesSubmitted                 = intermediateResults[ 0]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT
+    result.numPrimitivesSubmitted               = intermediateResults[ 1]; // VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT
+    result.numVertexShaderInvocations           = intermediateResults[ 2]; // VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT
+    result.numTessControlShaderInvocations      = intermediateResults[ 8]; // VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT
+    result.numTessEvaluationShaderInvocations   = intermediateResults[ 9]; // VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT
+    result.numGeometryShaderInvocations         = intermediateResults[ 3]; // VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_INVOCATIONS_BIT
+    result.numFragmentShaderInvocations         = intermediateResults[ 7]; // VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT
+    result.numComputeShaderInvocations          = intermediateResults[10]; // VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT
+    result.numGeometryPrimitivesGenerated       = intermediateResults[ 4]; // VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT
+    result.numClippingInputPrimitives           = intermediateResults[ 5]; // VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT
+    result.numClippingOutputPrimitives          = intermediateResults[ 6]; // VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT
+
+    return true;
 }
 
 void VKCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
