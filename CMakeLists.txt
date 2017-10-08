@@ -315,8 +315,7 @@ source_group("Sources\\Direct3D12\\Texture" FILES ${FilesRendererD3D12Texture})
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 
-find_path(GaussianLib_INCLUDE_DIR NAMES Gauss/Gauss.h)
-include_directories(${GaussianLib_INCLUDE_DIR})
+include(cmake/FindGaussianLib.cmake)
 
 
 # === Projects ===
