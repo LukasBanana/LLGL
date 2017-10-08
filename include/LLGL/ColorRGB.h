@@ -100,7 +100,7 @@ class Color<T, 3u>
             return *this;
         }
 
-        Color<T, 3>& operator *= (const T& rhs)
+        Color<T, 3>& operator *= (const T rhs)
         {
             r *= rhs;
             g *= rhs;
@@ -108,7 +108,7 @@ class Color<T, 3u>
             return *this;
         }
 
-        Color<T, 3>& operator /= (const T& rhs)
+        Color<T, 3>& operator /= (const T rhs)
         {
             r /= rhs;
             g /= rhs;

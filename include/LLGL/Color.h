@@ -131,6 +131,11 @@ class Color
             std::copy(std::begin(rhs.v_), std::end(rhs.v_), v_);
         }
 
+        explicit Color(const T& scalar)
+        {
+            std::fill(std::begin(v_), std::end(v_), scalar);
+        }
+
         Color(Gs::UninitializeTag)
         {
             // do nothing
@@ -164,14 +169,14 @@ class Color
             return *this;
         }
 
-        Color<T, N>& operator *= (const T& rhs)
+        Color<T, N>& operator *= (const T rhs)
         {
             for (std::size_t i = 0; i < N; ++i)
                 v_[i] *= rhs;
             return *this;
         }
 
-        Color<T, N>& operator /= (const T& rhs)
+        Color<T, N>& operator /= (const T rhs)
         {
             for (std::size_t i = 0; i < N; ++i)
                 v_[i] /= rhs;
@@ -295,6 +300,14 @@ template <typename T, std::size_t N>
 Color<T, N> operator / (const Color<T, N>& lhs, const T& rhs)
 {
     auto result = lhs;
+    result /= rhs;
+    return result;
+}
+
+template <typename T, std::size_t N>
+Color<T, N> operator / (const T& lhs, const Color<T, N>& rhs)
+{
+    auto result = Color<T, N>(lhs);
     result /= rhs;
     return result;
 }

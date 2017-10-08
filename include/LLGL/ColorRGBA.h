@@ -51,10 +51,18 @@ class Color<T, 4u>
         {
         }
 
-        explicit Color(const T& brightness) :
-            r { brightness         },
-            g { brightness         },
-            b { brightness         },
+        explicit Color(const T& scalar) :
+            r { scalar },
+            g { scalar },
+            b { scalar },
+            a { scalar }
+        {
+        }
+
+        explicit Color(const Color<T, 3u>& rhs) :
+            r { r                  },
+            g { g                  },
+            b { b                  },
             a { MaxColorValue<T>() }
         {
         }
@@ -116,7 +124,7 @@ class Color<T, 4u>
             return *this;
         }
 
-        Color<T, 4>& operator *= (const T& rhs)
+        Color<T, 4>& operator *= (const T rhs)
         {
             r *= rhs;
             g *= rhs;
@@ -125,7 +133,7 @@ class Color<T, 4u>
             return *this;
         }
 
-        Color<T, 4>& operator /= (const T& rhs)
+        Color<T, 4>& operator /= (const T rhs)
         {
             r /= rhs;
             g /= rhs;
