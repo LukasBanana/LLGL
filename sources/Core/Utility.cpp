@@ -47,7 +47,7 @@ LLGL_EXPORT TextureDescriptor Texture3DDesc(TextureFormat format, std::uint32_t 
         desc.format             = format;
         desc.texture3D.width    = width;
         desc.texture3D.height   = height;
-        desc.texture3D.height   = depth;
+        desc.texture3D.depth    = depth;
     }
     return desc;
 }
