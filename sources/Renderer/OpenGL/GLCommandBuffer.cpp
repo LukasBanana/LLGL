@@ -399,14 +399,16 @@ bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
         }
 
         /* Parameter setup for 32-bit and 64-bit version of query function */
+        static const std::size_t memberCount = sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t);
+        
         union
         {
             GLuint      ui32;
             GLuint64    ui64;
         }
-        params[QueryPipelineStatistics::memberCount];
+        params[memberCount];
 
-        const auto numResults = std::min(queryGL.GetIDs().size(), QueryPipelineStatistics::memberCount);
+        const auto numResults = std::min(queryGL.GetIDs().size(), memberCount);
 
         if (HasExtension(GLExt::ARB_timer_query))
         {
