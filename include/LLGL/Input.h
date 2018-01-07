@@ -32,6 +32,9 @@ class LLGL_EXPORT Input : public Window::EventListener
         //! Returns true if the specified key was pressed down in the previous event processing.
         bool KeyDown(Key keyCode) const;
 
+        //! Returns true if the specified key was pressed down in the previous event processing (this event will be repeated, depending on the paltform settings).
+        bool KeyDownRepeated(Key keyCode) const;
+
         //! Returns true if the specified key was released in the previous event processing.
         bool KeyUp(Key keyCode) const;
 
@@ -105,6 +108,7 @@ class LLGL_EXPORT Input : public Window::EventListener
 
         KeyStateArray       keyPressed_;
         KeyStateArray       keyDown_;
+        KeyStateArray       keyDownRepeated_;
         KeyStateArray       keyUp_;
 
         Point               mousePosition_;
@@ -113,6 +117,7 @@ class LLGL_EXPORT Input : public Window::EventListener
         int                 wheelMotion_    = 0;
 
         KeyTracker          keyDownTracker_;
+        KeyTracker          keyDownRepeatedTracker_;
         KeyTracker          keyUpTracker_;
 
         std::array<bool, 3> doubleClick_;

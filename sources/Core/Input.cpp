@@ -19,6 +19,7 @@ Input::Input()
 {
     InitArray(keyPressed_);
     InitArray(keyDown_);
+    InitArray(keyDownRepeated_);
     InitArray(keyUp_);
     std::fill(doubleClick_.begin(), doubleClick_.end(), false);
 }
@@ -31,6 +32,11 @@ bool Input::KeyPressed(Key keyCode) const
 bool Input::KeyDown(Key keyCode) const
 {
     return keyDown_[KEY_IDX(keyCode)];
+}
+
+bool Input::KeyDownRepeated(Key keyCode) const
+{
+    return keyDownRepeated_[KEY_IDX(keyCode)];
 }
 
 bool Input::KeyUp(Key keyCode) const
@@ -66,6 +72,7 @@ void Input::OnProcessEvents(Window& sender)
     mouseMotion_ = { 0, 0 };
 
     keyDownTracker_.Reset(keyDown_);
+    keyDownRepeatedTracker_.Reset(keyDownRepeated_);
     keyUpTracker_.Reset(keyUp_);
 
     std::fill(doubleClick_.begin(), doubleClick_.end(), false);
@@ -95,6 +102,10 @@ void Input::OnKeyDown(Window& sender, Key keyCode)
 
     /* Store key pressed state */
     keyPressed_[idx] = true;
+
+    /* Store repeated key hit state */
+    keyDownRepeated_[idx] = true;
+    keyDownRepeatedTracker_.Add(keyCode);
 }
 
 void Input::OnKeyUp(Window& sender, Key keyCode)
