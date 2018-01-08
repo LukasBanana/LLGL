@@ -60,9 +60,9 @@ class Color<T, 4u>
         }
 
         explicit Color(const Color<T, 3u>& rhs) :
-            r { r                  },
-            g { g                  },
-            b { b                  },
+            r { rhs.r              },
+            g { rhs.g              },
+            b { rhs.b              },
             a { MaxColorValue<T>() }
         {
         }
