@@ -358,7 +358,8 @@ void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
             PostChar(static_cast<wchar_t>(chr));
         }
         
-        [str release];
+        //TODO: don't release? if released, app crashes on MacOS when functions keys are pressed (i.e. F1 - F12)
+        //[str release];
     }
     
     // Post key up/down event
