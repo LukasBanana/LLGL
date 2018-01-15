@@ -15,7 +15,7 @@ namespace LLGL
 #define KEY(c) Key::c
 #define DUMMY KEY(Pause) // <-- any key, a dummy will never be used
 
-static Key macOSKeyCodeMap[256] =
+static Key g_macOSKeyCodeMap[256] =
 {
     KEY(A                   ), // 0x00
     KEY(S                   ), // 0x01
@@ -150,9 +150,9 @@ static Key macOSKeyCodeMap[256] =
 #undef DUMMY
 
 
-Key MapKey(unsigned short sysKeyCode)
+Key MapKey(std::uint8_t sysKeyCode)
 {
-    return (sysKeyCode <= 0x7e ? macOSKeyCodeMap[sysKeyCode] : Key::Pause);
+    return (sysKeyCode <= 0x7e ? g_macOSKeyCodeMap[sysKeyCode] : Key::Pause);
 }
 
 

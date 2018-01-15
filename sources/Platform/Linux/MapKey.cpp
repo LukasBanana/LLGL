@@ -145,7 +145,7 @@ static std::map<KeySym, Key> GenerateLinuxKeyCodeMap()
     };
 };
 
-static std::map<KeySym, Key> linuxKeyCodeMap = GenerateLinuxKeyCodeMap();
+static std::map<KeySym, Key> g_linuxKeyCodeMap = GenerateLinuxKeyCodeMap();
 
 #undef KEYPAIR
 
@@ -153,8 +153,8 @@ static std::map<KeySym, Key> linuxKeyCodeMap = GenerateLinuxKeyCodeMap();
 Key MapKey(XKeyEvent& keyEvent)
 {
     auto keyCode = XLookupKeysym(&keyEvent, 0);
-    auto it = linuxKeyCodeMap.find(keyCode);
-    return (it != linuxKeyCodeMap.end() ? it->second : Key::Pause);
+    auto it = g_linuxKeyCodeMap.find(keyCode);
+    return (it != g_linuxKeyCodeMap.end() ? it->second : Key::Pause);
 }
 
 

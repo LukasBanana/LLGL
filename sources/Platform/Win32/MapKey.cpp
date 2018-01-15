@@ -15,7 +15,7 @@ namespace LLGL
 #define KEY(c) Key::c
 #define DUMMY KEY(Pause) // <-- any key, a dummy will never be used
 
-static const Key win32KeyCodeMap[256] =
+static const Key g_win32KeyCodeMap[256] =
 {
     DUMMY,                     // 0x00
     KEY(LButton             ), // 0x01
@@ -301,9 +301,9 @@ static const Key win32KeyCodeMap[256] =
 #undef DUMMY
 
 
-Key MapKey(unsigned char sysKeyCode)
+Key MapKey(std::uint8_t sysKeyCode)
 {
-    return win32KeyCodeMap[sysKeyCode];
+    return g_win32KeyCodeMap[sysKeyCode];
 }
 
 

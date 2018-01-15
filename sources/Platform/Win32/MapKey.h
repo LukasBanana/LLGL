@@ -10,13 +10,14 @@
 
 
 #include <LLGL/Key.h>
+#include <cstdint>
 
 
 namespace LLGL
 {
 
 
-Key MapKey(unsigned char sysKeyCode);
+Key MapKey(std::uint8_t sysKeyCode);
 
 
 } // /namespace LLGL

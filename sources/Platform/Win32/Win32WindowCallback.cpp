@@ -50,8 +50,8 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
         auto keyCodeSys = static_cast<unsigned int>(wParam);
         auto keyCodeOEM = static_cast<unsigned int>(lParam & (0xff << 16)) >> 16;
 
-        /* Get first key code mapping */
-        auto keyCode = MapKey(keyCodeSys);
+        /* Get key code mapping first */
+        auto keyCode = MapKey(static_cast<std::uint8_t>(keyCodeSys));
 
         /* Check for extended keys */
         switch (keyCode)
@@ -204,7 +204,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
             {
                 WORD width = LOWORD(lParam);
                 WORD height = HIWORD(lParam);
-                window->PostResize(Size(width, height));
+                window->PostResize(Size { width, height });
             }
         }
         break;
