@@ -40,8 +40,7 @@ static HMODULE LoadLibrarySafe(LPCSTR filename)
 bool Module::IsAvailable(const std::string& moduleFilename)
 {
     /* Check if Win32 dynamic link library can be loaded properly */
-    auto handle = LoadLibrarySafe(moduleFilename.c_str());
-    if (handle)
+    if (auto handle = LoadLibrarySafe(moduleFilename.c_str()))
     {
         FreeLibrary(handle);
         return true;

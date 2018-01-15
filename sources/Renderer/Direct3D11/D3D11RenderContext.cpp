@@ -45,7 +45,7 @@ void D3D11RenderContext::Present()
 
 void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
-    if (GetVideoMode() != videoModeDesc)
+    if (GetVideoMode() != videoModeDesc && videoModeDesc.resolution.x > 0 && videoModeDesc.resolution.y > 0)
     {
         auto prevVideoMode = GetVideoMode();
 
