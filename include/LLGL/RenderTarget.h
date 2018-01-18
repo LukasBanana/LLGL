@@ -13,6 +13,7 @@
 #include "TextureFlags.h"
 #include "GraphicsPipelineFlags.h"
 #include <Gauss/Vector2.h>
+#include <cstdint>
 
 
 namespace LLGL
@@ -28,14 +29,14 @@ struct RenderTargetAttachmentDescriptor
     All multi-sample textures will always use the first MIP-map level
     (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
     */
-    unsigned int    mipLevel    = 0;
+    std::uint32_t   mipLevel    = 0;
 
     /**
     \brief Array texture layer.
     \remarks This is only used for array textures (i.e. TextureType::Texture1DArray,
     TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
     */
-    unsigned int    layer       = 0;
+    std::uint32_t   layer       = 0;
 
     /**
     \brief Cube texture face.
