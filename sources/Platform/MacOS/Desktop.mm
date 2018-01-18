@@ -46,6 +46,25 @@ LLGL_EXPORT bool ResetVideoMode()
     return false;
 }
 
+static bool g_cursorShown = true;
+
+LLGL_EXPORT void ShowCursor(bool show)
+{
+    if (g_cursorShown != show)
+    {
+        g_cursorShown = show;
+        if (show)
+            [NSCursor unhide];
+        else
+            [NSCursor hide];
+    }
+}
+
+LLGL_EXPORT bool IsCursorShown()
+{
+    return g_cursorShown;
+}
+
 
 } // /namespace Desktop
 
