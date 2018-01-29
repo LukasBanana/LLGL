@@ -12,6 +12,7 @@
 #include "../../DXCommon/ComPtr.h"
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <vector>
+#include <cstdint>
 #include <d3d11.h>
 
 
@@ -26,8 +27,8 @@ class D3D11StateManager
 
         D3D11StateManager(ComPtr<ID3D11DeviceContext>& context);
 
-        void SetViewports(unsigned int numViewports, const Viewport* viewportArray);
-        void SetScissors(unsigned int numScissors, const Scissor* scissorArray);
+        void SetViewports(std::uint32_t numViewports, const Viewport* viewportArray);
+        void SetScissors(std::uint32_t numScissors, const Scissor* scissorArray);
 
     private:
 

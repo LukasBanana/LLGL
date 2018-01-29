@@ -6,6 +6,7 @@
  */
 
 #include "D3D11StateManager.h"
+#include <algorithm>
 #include <cstddef>
 
 
@@ -18,8 +19,10 @@ D3D11StateManager::D3D11StateManager(ComPtr<ID3D11DeviceContext>& context) :
 {
 }
 
-void D3D11StateManager::SetViewports(unsigned int numViewports, const Viewport* viewportArray)
+void D3D11StateManager::SetViewports(std::uint32_t numViewports, const Viewport* viewportArray)
 {
+    numViewports = std::min(numViewports, std::size_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+
     /* Check if D3D11_VIEWPORT and Viewport structures can be safly reinterpret-casted */
     if ( sizeof(D3D11_VIEWPORT)             == sizeof(Viewport)             &&
          offsetof(D3D11_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
@@ -35,9 +38,9 @@ void D3D11StateManager::SetViewports(unsigned int numViewports, const Viewport* 
     else
     {
         /* Convert viewport into D3D viewport */
-        std::vector<D3D11_VIEWPORT> viewportsD3D(numViewports);
+        D3D11_VIEWPORT viewportsD3D[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
 
-        for (unsigned int i = 0; i < numViewports; ++i)
+        for (std::uint32_t i = 0; i < numViewports; ++i)
         {
             const auto& src = viewportArray[i];
             auto& dest = viewportsD3D[i];
@@ -50,15 +53,17 @@ void D3D11StateManager::SetViewports(unsigned int numViewports, const Viewport* 
             dest.MaxDepth   = src.maxDepth;
         }
 
-        context_->RSSetViewports(numViewports, viewportsD3D.data());
+        context_->RSSetViewports(numViewports, viewportsD3D);
     }
 }
 
-void D3D11StateManager::SetScissors(unsigned int numScissors, const Scissor* scissorArray)
+void D3D11StateManager::SetScissors(std::uint32_t numScissors, const Scissor* scissorArray)
 {
-    std::vector<D3D11_RECT> scissorsD3D(numScissors);
+    numScissors = std::min(numScissors, std::size_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+
+    D3D11_RECT scissorsD3D[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
     
-    for (unsigned int i = 0; i < numScissors; ++i)
+    for (std::uint32_t i = 0; i < numScissors; ++i)
     {
         const auto& src = scissorArray[i];
         auto& dest = scissorsD3D[i];
@@ -68,8 +73,8 @@ void D3D11StateManager::SetScissors(unsigned int numScissors, const Scissor* sci
         dest.right  = src.x + src.width;
         dest.bottom = src.y + src.height;
     }
-
-    context_->RSSetScissorRects(numScissors, scissorsD3D.data());
+    
+    context_->RSSetScissorRects(numScissors, scissorsD3D);
 }
 
 
