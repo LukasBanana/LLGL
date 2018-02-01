@@ -227,6 +227,9 @@ class LLGL_EXPORT Window : public Surface
             return behavior_;
         }
 
+        //! Returns true if this window has the keyboard focus.
+        virtual bool HasFocus() const;
+
         /**
         \brief Adapts the window for the specified video mode.
         \remarks This is a default implementation of the base class function and makes use of "GetDesc" and "SetDesc".
@@ -311,6 +314,7 @@ class LLGL_EXPORT Window : public Surface
         std::vector<std::shared_ptr<EventListener>> eventListeners_;
         WindowBehavior                              behavior_;
         bool                                        quit_           = false;
+        bool                                        hasFocus_       = false;
 
 };
 

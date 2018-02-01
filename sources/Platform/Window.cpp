@@ -109,6 +109,11 @@ void Window::SetBehavior(const WindowBehavior& behavior)
     behavior_ = behavior;
 }
 
+bool Window::HasFocus() const
+{
+    return hasFocus_;
+}
+
 bool Window::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
 {
     /* Query current window descriptor */
@@ -198,11 +203,13 @@ void Window::PostResize(const Size& clientAreaSize)
 void Window::PostGetFocus()
 {
     FOREACH_LISTENER_CALL( OnGetFocus(*this) );
+    hasFocus_ = true;
 }
 
 void Window::PostLoseFocus()
 {
     FOREACH_LISTENER_CALL( OnLoseFocus(*this) );
+    hasFocus_ = false;
 }
 
 void Window::PostQuit()
