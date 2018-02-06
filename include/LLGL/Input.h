@@ -74,21 +74,7 @@ class LLGL_EXPORT Input : public Window::EventListener
             return anyKeyCount_;
         }
 
-    private:
-
-        using KeyStateArray = std::array<bool, 256>;
-
-        struct KeyTracker
-        {
-            static const size_t         maxCount    = 10;
-            std::array<Key, maxCount>   keys;
-            size_t                      resetCount  = 0;
-
-            void Add(Key keyCode);
-            void Reset(KeyStateArray& keyStates);
-        };
-
-        void InitArray(KeyStateArray& keyStates);
+    protected:
 
         void OnProcessEvents(Window& sender) override;
 
@@ -105,6 +91,22 @@ class LLGL_EXPORT Input : public Window::EventListener
         void OnGlobalMotion(Window& sender, const Point& motion) override;
 
         void OnLoseFocus(Window& sender) override;
+
+    private:
+
+        using KeyStateArray = std::array<bool, 256>;
+
+        struct KeyTracker
+        {
+            static const size_t         maxCount    = 10;
+            std::array<Key, maxCount>   keys;
+            size_t                      resetCount  = 0;
+
+            void Add(Key keyCode);
+            void Reset(KeyStateArray& keyStates);
+        };
+
+        void InitArray(KeyStateArray& keyStates);
 
         KeyStateArray       keyPressed_;
         KeyStateArray       keyDown_;

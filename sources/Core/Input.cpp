@@ -58,13 +58,8 @@ bool Input::KeyDoubleClick(Key keyCode) const
 
 
 /*
- * ======= Private: =======
+ * ======= Protected: =======
  */
-
-void Input::InitArray(KeyStateArray& keyStates)
-{
-    std::fill(keyStates.begin(), keyStates.end(), false);
-}
 
 void Input::OnProcessEvents(Window& sender)
 {
@@ -164,6 +159,16 @@ void Input::OnLoseFocus(Window& sender)
 {
     /* Reset all 'key-pressed' states */
     InitArray(keyPressed_);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void Input::InitArray(KeyStateArray& keyStates)
+{
+    std::fill(keyStates.begin(), keyStates.end(), false);
 }
 
 
