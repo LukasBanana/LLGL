@@ -7,6 +7,7 @@
 
 #include <LLGL/Desktop.h>
 #include <LLGL/Platform/Platform.h>
+#include "../../Core/Helper.h"
 #include <Windows.h>
 
 
@@ -54,7 +55,7 @@ LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode)
     if (videoMode.fullscreen)
     {
         DEVMODE config;
-        memset(&config, 0, sizeof(DEVMODE));
+        InitMemory(config);
         {
             config.dmSize       = sizeof(DEVMODE);
             config.dmPelsWidth  = static_cast<DWORD>(videoMode.resolution.x);
