@@ -13,7 +13,7 @@ namespace LLGL
 {
 
 
-#define KEY_IDX(k) (static_cast<unsigned char>(k))
+#define KEY_IDX(k) (static_cast<std::uint8_t>(k))
 
 Input::Input()
 {

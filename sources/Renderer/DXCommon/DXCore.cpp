@@ -125,7 +125,7 @@ static int GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
     else                                        return 512;
 }
 
-static unsigned int GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
+static std::uint32_t GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
 {
     if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8;
     if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return 4;

@@ -142,7 +142,7 @@ void D3D12Shader::ReflectShader()
     }
 
     /* Get constant buffer descriptors */
-    unsigned int bufferIdx = 0;
+    std::uint32_t bufferIdx = 0;
     for (UINT i = 0; i < shaderDesc.ConstantBuffers; ++i)
     {
         /* Get shader buffer descriptor */

@@ -23,7 +23,7 @@ class Tutorial11 : public Tutorial
 
     LLGL::VertexFormat      vertexFormatScene;
 
-    unsigned int            numSceneVertices    = 0;
+    std::uint32_t            numSceneVertices    = 0;
     
     LLGL::Buffer*           vertexBufferScene   = nullptr;
     LLGL::Buffer*           vertexBufferNull    = nullptr;
@@ -87,7 +87,7 @@ public:
 
         // Create scene buffers
         auto sceneVertices = LoadObjModel("../Media/Models/WiredBox.obj");
-        numSceneVertices = static_cast<unsigned int>(sceneVertices.size());
+        numSceneVertices = static_cast<std::uint32_t>(sceneVertices.size());
 
         vertexBufferScene = CreateVertexBuffer(sceneVertices, vertexFormatScene);
         constantBufferScene = CreateConstantBuffer(sceneSettings);
@@ -223,7 +223,7 @@ public:
     void CreateTextures()
     {
         // Create empty color and gloss map
-        auto resolution = context->GetVideoMode().resolution.Cast<unsigned int>();
+        auto resolution = context->GetVideoMode().resolution.Cast<std::uint32_t>();
         colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
         glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
 
@@ -235,7 +235,7 @@ public:
 
     void CreateRenderTargets()
     {
-        auto resolution = context->GetVideoMode().resolution.Cast<unsigned int>();
+        auto resolution = context->GetVideoMode().resolution.Cast<std::uint32_t>();
 
         // Create render-target for scene rendering
         if (renderTargetScene)

@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         auto vertexBufferD3D = rendererD3D->CreateBuffer(vertexBufferDesc, cubeVertices.data());
 
         // Create index buffers
-        const auto indexBufferDesc = LLGL::IndexBufferDesc(sizeof(unsigned int) * cubeIndices.size(), LLGL::DataType::UInt32);
+        const auto indexBufferDesc = LLGL::IndexBufferDesc(sizeof(std::uint32_t) * cubeIndices.size(), LLGL::DataType::UInt32);
         auto indexBufferGL = rendererGL->CreateBuffer(indexBufferDesc, cubeIndices.data());
         auto indexBufferD3D = rendererD3D->CreateBuffer(indexBufferDesc, cubeIndices.data());
 

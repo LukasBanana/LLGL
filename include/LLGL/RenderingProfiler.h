@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "RenderContextFlags.h"
 #include "GraphicsPipelineFlags.h"
+#include <cstdint>
 
 
 namespace LLGL
@@ -33,7 +34,7 @@ class LLGL_EXPORT RenderingProfiler
 
             public:
 
-                using ValueType = unsigned int;
+                using ValueType = std::uint32_t;
 
                 //! Increment internal counter by one.
                 void Inc()
@@ -60,7 +61,7 @@ class LLGL_EXPORT RenderingProfiler
                 }
 
                 //! Returns the internal counter value (same as "Count()" function).
-                inline operator unsigned int () const
+                inline operator ValueType () const
                 {
                     return Count();
                 }

@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-D3D11TextureArray::D3D11TextureArray(unsigned int numTextures, Texture* const * textureArray)
+D3D11TextureArray::D3D11TextureArray(std::uint32_t numTextures, Texture* const * textureArray)
 {
     /* Store the pointer of each SRV inside the array */
     resourceViews_.reserve(numTextures);

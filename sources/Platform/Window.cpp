@@ -79,7 +79,7 @@ bool Window::EventListener::OnQuit(Window& sender)
     return true; // dummy
 }
 
-void Window::EventListener::OnTimer(Window& sender, unsigned int timerID)
+void Window::EventListener::OnTimer(Window& sender, std::uint32_t timerID)
 {
     // dummy
 }
@@ -222,7 +222,7 @@ void Window::PostQuit()
     quit_ = true;
 }
 
-void Window::PostTimer(unsigned int timerID)
+void Window::PostTimer(std::uint32_t timerID)
 {
     FOREACH_LISTENER_CALL( OnTimer(*this, timerID) );
 }

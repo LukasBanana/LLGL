@@ -24,10 +24,10 @@ class D3D12StateManager
 
     public:
 
-        void SetViewports(unsigned int numViewports, const Viewport* viewportArray);
+        void SetViewports(std::uint32_t numViewports, const Viewport* viewportArray);
         void SubmitViewports(ID3D12GraphicsCommandList* commandList);
 
-        void SetScissors(unsigned int numScissors, const Scissor* scissorArray);
+        void SetScissors(std::uint32_t numScissors, const Scissor* scissorArray);
         void SubmitScissors(ID3D12GraphicsCommandList* commandList);
 
     private:

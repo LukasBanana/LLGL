@@ -161,7 +161,7 @@ private:
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexData);
 
         // Create buffer for per-instance data
-        desc.size                   = static_cast<unsigned int>(sizeof(Instance) * instanceData.size());
+        desc.size                   = static_cast<std::uint32_t>(sizeof(Instance) * instanceData.size());
         desc.vertexBuffer.format    = vertexFormatPerInstance;
 
         vertexBuffers[1] = renderer->CreateBuffer(desc, instanceData.data());
@@ -187,7 +187,7 @@ private:
 
         auto numImages = (numPlantImages + 1);
 
-        for (unsigned int i = 0; i < numImages; ++i)
+        for (std::uint32_t i = 0; i < numImages; ++i)
         {
             // Setup filename for "Plants_N.png" where N is from 0 to 9
             if (i < numPlantImages)

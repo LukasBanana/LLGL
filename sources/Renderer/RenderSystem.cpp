@@ -254,7 +254,7 @@ std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixel
 void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize)
 {
     if (desc.type < BufferType::Vertex || desc.type > BufferType::StreamOutput)
-        throw std::invalid_argument("cannot create buffer of unknown type (0x" + ToHex(static_cast<unsigned char>(desc.type)) + ")");
+        throw std::invalid_argument("cannot create buffer of unknown type (0x" + ToHex(static_cast<std::uint8_t>(desc.type)) + ")");
     if (desc.size > maxSize)
         throw std::runtime_error("cannot create buffer with size of " + std::to_string(desc.size) + " bytes (limit is " + std::to_string(maxSize) + " bytes)");
 }

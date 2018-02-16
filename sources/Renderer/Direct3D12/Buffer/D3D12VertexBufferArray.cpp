@@ -15,7 +15,7 @@ namespace LLGL
 {
 
 
-D3D12VertexBufferArray::D3D12VertexBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) :
+D3D12VertexBufferArray::D3D12VertexBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
     BufferArray { BufferType::Vertex }
 {
     /* Store the strides and offests of each D3D12VertexBuffer inside the arrays */

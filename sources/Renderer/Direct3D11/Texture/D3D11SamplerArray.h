@@ -25,7 +25,7 @@ class D3D11SamplerArray : public SamplerArray
 
     public:
 
-        D3D11SamplerArray(unsigned int numSamplers, Sampler* const * samplerArray);
+        D3D11SamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray);
 
         // Returns the array of sampler state objects.
         inline const std::vector<ID3D11SamplerState*>& GetSamplerStates() const

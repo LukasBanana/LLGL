@@ -12,6 +12,7 @@
 #include <LLGL/SamplerArray.h>
 #include "../OpenGL.h"
 #include <vector>
+#include <cstdint>
 
 
 namespace LLGL
@@ -25,7 +26,7 @@ class GLSamplerArray : public SamplerArray
 
     public:
 
-        GLSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray);
+        GLSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray);
 
         //! Returns the array of sampler IDs.
         inline const std::vector<GLuint>& GetIDArray() const

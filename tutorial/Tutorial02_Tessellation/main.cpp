@@ -32,7 +32,7 @@ class Tutorial02 : public Tutorial
     LLGL::BufferArray*      constantBufferArray = nullptr;
     #endif
 
-    unsigned int            constantBufferIndex = 0;
+    std::uint32_t           constantBufferIndex = 0;
 
     bool                    showWireframe       = false;
 

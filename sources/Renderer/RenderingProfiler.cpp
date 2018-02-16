@@ -94,7 +94,7 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
         default:
             if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
             {
-                auto numPatchVertices = static_cast<unsigned int>(topology) - static_cast<unsigned int>(PrimitiveTopology::Patches1) + 1;
+                auto numPatchVertices = (static_cast<std::uint32_t>(topology) - static_cast<std::uint32_t>(PrimitiveTopology::Patches1) + 1);
                 renderedPatches.Inc(numVertices / numPatchVertices);
             }
             break;
@@ -158,7 +158,7 @@ void RenderingProfiler::RecordDrawCall(const PrimitiveTopology topology, Counter
         default:
             if (topology >= PrimitiveTopology::Patches1 && topology <= PrimitiveTopology::Patches32)
             {
-                auto numPatchVertices = static_cast<unsigned int>(topology) - static_cast<unsigned int>(PrimitiveTopology::Patches1) + 1;
+                auto numPatchVertices = (static_cast<std::uint32_t>(topology) - static_cast<std::uint32_t>(PrimitiveTopology::Patches1) + 1);
                 renderedPatches.Inc((numVertices / numPatchVertices) * numInstances);
             }
             break;

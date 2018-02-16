@@ -19,7 +19,7 @@ namespace LLGL
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1DBase(
-    GLenum target, unsigned int mipLevel, unsigned int x, unsigned int width, const ImageDescriptor& imageDesc)
+    GLenum target, std::uint32_t mipLevel, std::uint32_t x, std::uint32_t width, const ImageDescriptor& imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))
     {
@@ -50,8 +50,8 @@ static void GLTexSubImage1DBase(
 #endif
 
 static void GLTexSubImage2DBase(
-    GLenum target, unsigned int mipLevel, unsigned int x, unsigned int y,
-    unsigned int width, unsigned int height, const ImageDescriptor& imageDesc)
+    GLenum target, std::uint32_t mipLevel, std::uint32_t x, std::uint32_t y,
+    std::uint32_t width, std::uint32_t height, const ImageDescriptor& imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))
     {
@@ -83,8 +83,8 @@ static void GLTexSubImage2DBase(
 }
 
 static void GLTexSubImage3DBase(
-    GLenum target, unsigned int mipLevel, unsigned int x, unsigned int y, unsigned int z,
-    unsigned int width, unsigned int height, unsigned int depth, const ImageDescriptor& imageDesc)
+    GLenum target, std::uint32_t mipLevel, std::uint32_t x, std::uint32_t y, std::uint32_t z,
+    std::uint32_t width, std::uint32_t height, std::uint32_t depth, const ImageDescriptor& imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))
     {
@@ -123,7 +123,7 @@ static void GLTexSubImage3DBase(
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1D(
-    unsigned int mipLevel, unsigned int x, unsigned int width, const ImageDescriptor& imageDesc)
+    std::uint32_t mipLevel, std::uint32_t x, std::uint32_t width, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage1DBase(GL_TEXTURE_1D, mipLevel, x, width, imageDesc);
 }
@@ -131,22 +131,22 @@ static void GLTexSubImage1D(
 #endif
 
 static void GLTexSubImage2D(
-    unsigned int mipLevel, unsigned int x, unsigned int y,
-    unsigned int width, unsigned int height, const ImageDescriptor& imageDesc)
+    std::uint32_t mipLevel, std::uint32_t x, std::uint32_t y,
+    std::uint32_t width, std::uint32_t height, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage2DBase(GL_TEXTURE_2D, mipLevel, x, y, width, height, imageDesc);
 }
 
 static void GLTexSubImage3D(
-    unsigned int mipLevel, unsigned int x, unsigned int y, unsigned int z,
-    unsigned int width, unsigned int height, unsigned int depth, const ImageDescriptor& imageDesc)
+    std::uint32_t mipLevel, std::uint32_t x, std::uint32_t y, std::uint32_t z,
+    std::uint32_t width, std::uint32_t height, std::uint32_t depth, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage3DBase(GL_TEXTURE_3D, mipLevel, x, y, z, width, height, depth, imageDesc);
 }
 
 static void GLTexSubImageCube(
-    unsigned int mipLevel, unsigned int x, unsigned int y,
-    unsigned int width, unsigned int height, AxisDirection cubeFace, const ImageDescriptor& imageDesc)
+    std::uint32_t mipLevel, std::uint32_t x, std::uint32_t y,
+    std::uint32_t width, std::uint32_t height, AxisDirection cubeFace, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage2DBase(GLTypes::Map(cubeFace), mipLevel, x, y, width, height, imageDesc);
 }
@@ -154,8 +154,8 @@ static void GLTexSubImageCube(
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1DArray(
-    unsigned int mipLevel, unsigned int x, unsigned int layerOffset,
-    unsigned int width, unsigned int layers, const ImageDescriptor& imageDesc)
+    std::uint32_t mipLevel, std::uint32_t x, std::uint32_t layerOffset,
+    std::uint32_t width, std::uint32_t layers, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevel, x, layerOffset, width, layers, imageDesc);
 }
@@ -163,8 +163,8 @@ static void GLTexSubImage1DArray(
 #endif
 
 static void GLTexSubImage2DArray(
-    int mipLevel, int x, int y, unsigned int layerOffset,
-    int width, int height, unsigned int layers, const ImageDescriptor& imageDesc)
+    int mipLevel, int x, int y, std::uint32_t layerOffset,
+    int width, int height, std::uint32_t layers, const ImageDescriptor& imageDesc)
 {
     GLTexSubImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevel, x, y, layerOffset, width, height, layers, imageDesc);
 }
@@ -172,10 +172,10 @@ static void GLTexSubImage2DArray(
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImageCubeArray(
-    unsigned int mipLevel, unsigned int x, unsigned int y, unsigned int layerOffset, AxisDirection cubeFaceOffset,
-    unsigned int width, unsigned int height, unsigned int cubeFaces, const ImageDescriptor& imageDesc)
+    std::uint32_t mipLevel, std::uint32_t x, std::uint32_t y, std::uint32_t layerOffset, AxisDirection cubeFaceOffset,
+    std::uint32_t width, std::uint32_t height, std::uint32_t cubeFaces, const ImageDescriptor& imageDesc)
 {
-    layerOffset = layerOffset * 6 + static_cast<unsigned int>(cubeFaceOffset);
+    layerOffset = layerOffset * 6 + static_cast<std::uint32_t>(cubeFaceOffset);
     GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, layerOffset, width, height, cubeFaces, imageDesc);
 }
 

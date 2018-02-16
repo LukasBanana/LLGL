@@ -21,7 +21,7 @@ class D3D11StreamOutputBufferArray : public D3D11BufferArray
 
     public:
 
-        D3D11StreamOutputBufferArray(unsigned int numBuffers, Buffer* const * bufferArray);
+        D3D11StreamOutputBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer offsets.
         inline const std::vector<UINT>& GetOffsets() const

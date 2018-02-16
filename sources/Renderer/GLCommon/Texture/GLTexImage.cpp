@@ -42,8 +42,8 @@ void ErrIllegalUseOfDepthFormat()
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1DBase(
-    GLenum target, const TextureFormat internalFormat, unsigned int width,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize)
+    GLenum target, const TextureFormat internalFormat, std::uint32_t width,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize)
 {
     if (IsCompressedFormat(internalFormat))
     {
@@ -66,8 +66,8 @@ static void GLTexImage1DBase(
 #endif
 
 static void GLTexImage2DBase(
-    GLenum target, const TextureFormat internalFormat, unsigned int width, unsigned int height,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize)
+    GLenum target, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize)
 {
     if (IsCompressedFormat(internalFormat))
     {
@@ -90,8 +90,8 @@ static void GLTexImage2DBase(
 }
 
 static void GLTexImage3DBase(
-    GLenum target, const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int depth,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize)
+    GLenum target, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize)
 {
     if (IsCompressedFormat(internalFormat))
     {
@@ -118,7 +118,7 @@ static void GLTexImage3DBase(
 #ifdef LLGL_OPENGL
 
 static void GLTexImage2DMultisampleBase(
-    GLenum target, unsigned int samples, const TextureFormat internalFormat, unsigned int width, unsigned int height, bool fixedSamples)
+    GLenum target, std::uint32_t samples, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, bool fixedSamples)
 {
     glTexImage2DMultisample(
         target,
@@ -131,7 +131,7 @@ static void GLTexImage2DMultisampleBase(
 }
 
 static void GLTexImage3DMultisampleBase(
-    GLenum target, unsigned int samples, const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int depth, bool fixedSamples)
+    GLenum target, std::uint32_t samples, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth, bool fixedSamples)
 {
     glTexImage3DMultisample(
         target,
@@ -145,8 +145,8 @@ static void GLTexImage3DMultisampleBase(
 }
 
 static void GLTexImage1D(
-    const TextureFormat internalFormat, unsigned int width,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+    const TextureFormat internalFormat, std::uint32_t width,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize = 0)
 {
     GLTexImage1DBase(GL_TEXTURE_1D, internalFormat, width, format, type, data, compressedSize);
 }
@@ -154,22 +154,22 @@ static void GLTexImage1D(
 #endif
 
 static void GLTexImage2D(
-    const TextureFormat internalFormat, unsigned int width, unsigned int height,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize = 0)
 {
     GLTexImage2DBase(GL_TEXTURE_2D, internalFormat, width, height, format, type, data, compressedSize);
 }
 
 static void GLTexImage3D(
-    const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int depth,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize = 0)
 {
     GLTexImage3DBase(GL_TEXTURE_3D, internalFormat, width, height, depth, format, type, data, compressedSize);
 }
 
 static void GLTexImageCube(
-    const TextureFormat internalFormat, unsigned int width, unsigned int height, AxisDirection cubeFace,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, AxisDirection cubeFace,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize = 0)
 {
     GLTexImage2DBase(GLTypes::Map(cubeFace), internalFormat, width, height, format, type, data, compressedSize);
 }
@@ -177,8 +177,8 @@ static void GLTexImageCube(
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1DArray(
-    const TextureFormat internalFormat, unsigned int width, unsigned int layers,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t layers,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize = 0)
 {
     GLTexImage2DBase(GL_TEXTURE_1D_ARRAY, internalFormat, width, layers, format, type, data, compressedSize);
 }
@@ -186,8 +186,8 @@ static void GLTexImage1DArray(
 #endif
 
 static void GLTexImage2DArray(
-    const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int layers,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t layers,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize = 0)
 {
     GLTexImage3DBase(GL_TEXTURE_2D_ARRAY, internalFormat, width, height, layers, format, type, data, compressedSize);
 }
@@ -195,20 +195,20 @@ static void GLTexImage2DArray(
 #ifdef LLGL_OPENGL
 
 static void GLTexImageCubeArray(
-    const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int layers,
-    GLenum format, GLenum type, const void* data, unsigned int compressedSize = 0)
+    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t layers,
+    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize = 0)
 {
     GLTexImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, internalFormat, width, height, layers*6, format, type, data, compressedSize);
 }
 
 static void GLTexImage2DMultisample(
-    unsigned int samples, const TextureFormat internalFormat, unsigned int width, unsigned int height, bool fixedSamples)
+    std::uint32_t samples, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, bool fixedSamples)
 {
     GLTexImage2DMultisampleBase(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, fixedSamples);
 }
 
 static void GLTexImage2DMultisampleArray(
-    unsigned int samples, const TextureFormat internalFormat, unsigned int width, unsigned int height, unsigned int depth, bool fixedSamples)
+    std::uint32_t samples, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth, bool fixedSamples)
 {
     GLTexImage3DMultisampleBase(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, depth, fixedSamples);
 }

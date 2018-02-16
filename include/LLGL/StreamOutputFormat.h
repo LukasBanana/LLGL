@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "StreamOutputAttribute.h"
 #include <vector>
+#include <cstdint>
 
 
 namespace LLGL
@@ -48,7 +49,7 @@ struct LLGL_EXPORT StreamOutputFormat
     \remarks This is updated automatically evertime "AppendAttribute" or "AppendAttributes" is called,
     but it can also modified manually. It is commonly the size of all stream-output attributes.
     */
-    unsigned int                        stride = 0;
+    std::uint32_t                       stride = 0;
     #endif
 };
 

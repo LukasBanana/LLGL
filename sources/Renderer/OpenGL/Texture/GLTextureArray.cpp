@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-GLTextureArray::GLTextureArray(unsigned int numTextures, Texture* const * textureArray)
+GLTextureArray::GLTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
 {
     /* Store the ID of each GLTexture inside the array */
     idArray_.reserve(numTextures);

@@ -25,7 +25,7 @@ class D3D11BufferArray : public BufferArray
 
     public:
 
-        D3D11BufferArray(const BufferType type, unsigned int numBuffers, Buffer* const * bufferArray);
+        D3D11BufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         //! Returns the array of buffer objects.
         inline const std::vector<ID3D11Buffer*>& GetBuffers() const

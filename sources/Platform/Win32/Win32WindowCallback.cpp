@@ -47,8 +47,8 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
     if (auto window = GetWindowFromUserData(wnd))
     {
         /* Extract key code */
-        auto keyCodeSys = static_cast<unsigned int>(wParam);
-        auto keyCodeOEM = static_cast<unsigned int>(lParam & (0xff << 16)) >> 16;
+        auto keyCodeSys = static_cast<std::uint32_t>(wParam);
+        auto keyCodeOEM = static_cast<std::uint32_t>(lParam & (0xff << 16)) >> 16;
 
         /* Get key code mapping first */
         auto keyCode = MapKey(static_cast<std::uint8_t>(keyCodeSys));
@@ -67,7 +67,7 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
 
             case Key::Control:
             {
-                if ( ( ( static_cast<unsigned int>(lParam) >> 24 ) & 0x00000001 ) != 0 )
+                if ( ( ( static_cast<std::uint32_t>(lParam) >> 24 ) & 0x00000001 ) != 0 )
                     PostKeyEvent(*window, Key::RControl, isDown);
                 else
                     PostKeyEvent(*window, Key::LControl, isDown);
@@ -402,7 +402,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
         {
             if (auto window = GetWindowFromUserData(wnd))
             {
-                auto timerID = static_cast<unsigned int>(wParam);
+                auto timerID = static_cast<std::uint32_t>(wParam);
                 window->PostTimer(timerID);
             }
         };

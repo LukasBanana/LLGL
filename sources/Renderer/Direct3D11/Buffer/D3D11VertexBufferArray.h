@@ -21,7 +21,7 @@ class D3D11VertexBufferArray : public D3D11BufferArray
 
     public:
 
-        D3D11VertexBufferArray(unsigned int numBuffers, Buffer* const * bufferArray);
+        D3D11VertexBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // Returns the array of buffer strides.
         inline const std::vector<UINT>& GetStrides() const

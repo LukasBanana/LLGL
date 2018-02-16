@@ -235,7 +235,7 @@ int main()
                 }
                 projectionBuffer = renderer->CreateBuffer(constantBufferDesc, &projection);
 
-                unsigned int bindingIndex = 2; // the 2 is just for testing
+                std::uint32_t bindingIndex = 2; // the 2 is just for testing
                 shaderProgram.BindConstantBuffer(desc.name, bindingIndex);
                 commands->SetConstantBuffer(*projectionBuffer, bindingIndex);
             }

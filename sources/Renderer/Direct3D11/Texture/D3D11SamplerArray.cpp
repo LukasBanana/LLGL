@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-D3D11SamplerArray::D3D11SamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+D3D11SamplerArray::D3D11SamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     /* Store the pointer of each SRV inside the array */
     samplerStates_.reserve(numSamplers);

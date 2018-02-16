@@ -15,7 +15,7 @@ namespace LLGL
 {
 
 
-D3D11StorageBufferArray::D3D11StorageBufferArray(unsigned int numBuffers, Buffer* const * bufferArray) :
+D3D11StorageBufferArray::D3D11StorageBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) :
     D3D11BufferArray { BufferType::Storage, numBuffers, bufferArray }
 {
     auto next = NextArrayResource<D3D11StorageBuffer>(numBuffers, bufferArray);

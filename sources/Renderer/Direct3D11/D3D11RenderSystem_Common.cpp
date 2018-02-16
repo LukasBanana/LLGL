@@ -95,7 +95,7 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 
-static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     auto type = (*bufferArray)->GetType();
     switch (type)
@@ -109,7 +109,7 @@ static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(unsigned int numBu
     return nullptr;
 }
 
-BufferArray* D3D11RenderSystem::CreateBufferArray(unsigned int numBuffers, Buffer* const * bufferArray)
+BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
     return TakeOwnership(bufferArrays_, MakeD3D11BufferArray(numBuffers, bufferArray));
@@ -155,7 +155,7 @@ Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, MakeUnique<D3D11Sampler>(device_.Get(), desc));
 }
 
-SamplerArray* D3D11RenderSystem::CreateSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+SamplerArray* D3D11RenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     AssertCreateSamplerArray(numSamplers, samplerArray);
     return TakeOwnership(samplerArrays_, MakeUnique<D3D11SamplerArray>(numSamplers, samplerArray));

@@ -26,7 +26,7 @@ class GLTextureArray : public TextureArray
 
     public:
 
-        GLTextureArray(unsigned int numTextures, Texture* const * textureArray);
+        GLTextureArray(std::uint32_t numTextures, Texture* const * textureArray);
 
         //! Returns the array of texture IDs.
         inline const std::vector<GLuint>& GetIDArray() const

@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-void D3D12StateManager::SetViewports(unsigned int numViewports, const Viewport* viewportArray)
+void D3D12StateManager::SetViewports(std::uint32_t numViewports, const Viewport* viewportArray)
 {
     viewports_.resize(numViewports);
     
@@ -33,7 +33,7 @@ void D3D12StateManager::SetViewports(unsigned int numViewports, const Viewport* 
     }
     else
     {
-        for (unsigned int i = 0; i < numViewports; ++i)
+        for (std::uint32_t i = 0; i < numViewports; ++i)
         {
             const auto& src = viewportArray[i];
             auto& dest = viewports_[i];
@@ -54,11 +54,11 @@ void D3D12StateManager::SubmitViewports(ID3D12GraphicsCommandList* commandList)
         commandList->RSSetViewports(static_cast<UINT>(viewports_.size()), viewports_.data());
 }
 
-void D3D12StateManager::SetScissors(unsigned int numScissors, const Scissor* scissorArray)
+void D3D12StateManager::SetScissors(std::uint32_t numScissors, const Scissor* scissorArray)
 {
     scissors_.resize(numScissors);
     
-    for (unsigned int i = 0; i < numScissors; ++i)
+    for (std::uint32_t i = 0; i < numScissors; ++i)
     {
         const auto& src = scissorArray[i];
         auto& dest = scissors_[i];

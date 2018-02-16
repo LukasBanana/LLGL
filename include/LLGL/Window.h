@@ -22,7 +22,7 @@ namespace LLGL
 
 
 //! Value for an invalid window timer ID.
-static const unsigned int invalidWindowTimerID = 0;
+static const std::uint32_t invalidWindowTimerID = 0;
 
 //! Window descriptor structure.
 struct WindowDescriptor
@@ -93,7 +93,7 @@ struct WindowBehavior
     \see Window::EventListener::OnTimer
     \see invalidWindowTimerID
     */
-    unsigned int    moveAndResizeTimerID    = invalidWindowTimerID;
+    std::uint32_t   moveAndResizeTimerID    = invalidWindowTimerID;
 };
 
 
@@ -167,7 +167,7 @@ class LLGL_EXPORT Window : public Surface
                 virtual bool OnQuit(Window& sender);
 
                 //! Send when the window received a timer event with the specified timer ID number.
-                virtual void OnTimer(Window& sender, unsigned int timerID);
+                virtual void OnTimer(Window& sender, std::uint32_t timerID);
 
         };
 
@@ -298,7 +298,7 @@ class LLGL_EXPORT Window : public Surface
         void PostQuit();
 
         //! \see PostKeyDown
-        void PostTimer(unsigned int timerID);
+        void PostTimer(std::uint32_t timerID);
 
     protected:
 

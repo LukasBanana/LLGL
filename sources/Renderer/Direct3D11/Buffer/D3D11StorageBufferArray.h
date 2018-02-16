@@ -21,7 +21,7 @@ class D3D11StorageBufferArray : public D3D11BufferArray
 
     public:
 
-        D3D11StorageBufferArray(unsigned int numBuffers, Buffer* const * bufferArray);
+        D3D11StorageBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
         // True, if this storage buffer array has UAV objects.
         bool HasUAV() const;

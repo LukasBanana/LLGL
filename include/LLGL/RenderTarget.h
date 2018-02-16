@@ -122,7 +122,7 @@ class LLGL_EXPORT RenderTarget
     protected:
 
         void ApplyResolution(const Gs::Vector2ui& resolution);
-        void ApplyMipResolution(Texture& texture, unsigned int mipLevel);
+        void ApplyMipResolution(Texture& texture, std::uint32_t mipLevel);
         void ResetResolution();
 
     private:

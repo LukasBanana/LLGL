@@ -14,7 +14,7 @@ namespace LLGL
 {
 
 
-GLSamplerArray::GLSamplerArray(unsigned int numSamplers, Sampler* const * samplerArray)
+GLSamplerArray::GLSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
     /* Store the ID of each GLSampler inside the array */
     idArray_.reserve(numSamplers);
