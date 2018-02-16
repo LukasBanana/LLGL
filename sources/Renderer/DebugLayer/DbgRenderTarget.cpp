@@ -50,6 +50,8 @@ void DbgRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachme
     }
 
     instance.AttachTexture(textureDbg.instance, attachmentDesc);
+
+    ApplyResolution(instance.GetResolution());
 }
 
 void DbgRenderTarget::DetachAll()
