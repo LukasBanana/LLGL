@@ -41,14 +41,16 @@ static void PostKeyEvent(Window& window, Key keyCode, bool isDown)
         window.PostKeyUp(keyCode);
 }
 
-static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/ms646280(v=vs.85).aspx
+static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown, bool isSysKey)
 {
     /* Get window object from window handle */
     if (auto window = GetWindowFromUserData(wnd))
     {
         /* Extract key code */
-        auto keyCodeSys = static_cast<std::uint32_t>(wParam);
-        auto keyCodeOEM = static_cast<std::uint32_t>(lParam & (0xff << 16)) >> 16;
+        auto keyCodeSys     = static_cast<std::uint32_t>(wParam);
+        auto keyCodeOEM     = static_cast<std::uint32_t>(lParam & (0xff << 16)) >> 16;
+        bool isExtendedKey  = ((lParam & (1 << 24)) != 0);
 
         /* Get key code mapping first */
         auto keyCode = MapKey(static_cast<std::uint8_t>(keyCodeSys));
@@ -67,7 +69,7 @@ static void PostKeyEvent(HWND wnd, WPARAM wParam, LPARAM lParam, bool isDown)
 
             case Key::Control:
             {
-                if ( ( ( static_cast<std::uint32_t>(lParam) >> 24 ) & 0x00000001 ) != 0 )
+                if (isExtendedKey)
                     PostKeyEvent(*window, Key::RControl, isDown);
                 else
                     PostKeyEvent(*window, Key::LControl, isDown);
@@ -259,13 +261,25 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 
         case WM_KEYDOWN:
         {
-            PostKeyEvent(wnd, wParam, lParam, true);
+            PostKeyEvent(wnd, wParam, lParam, true, false);
         }
         return 0;
 
         case WM_KEYUP:
         {
-            PostKeyEvent(wnd, wParam, lParam, false);
+            PostKeyEvent(wnd, wParam, lParam, false, false);
+        }
+        return 0;
+
+        case WM_SYSKEYDOWN:
+        {
+            PostKeyEvent(wnd, wParam, lParam, true, true);
+        }
+        return 0;
+
+        case WM_SYSKEYUP:
+        {
+            PostKeyEvent(wnd, wParam, lParam, false, true);
         }
         return 0;
 
