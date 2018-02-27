@@ -6,6 +6,7 @@
  */
 
 #include "MacOSTimer.h"
+//#include <CoreServices/CoreServices.h>
 
 
 namespace LLGL
@@ -19,20 +20,26 @@ std::unique_ptr<Timer> Timer::Create()
 
 MacOSTimer::MacOSTimer()
 {
+    mach_timebase_info(&timebaseInfo_);
+    if (timebaseInfo_.denom == 0)
+        throw std::runtime_error("failed to retrieve base information for high resolution timer");
 }
 
 void MacOSTimer::Start()
 {
+    startTime_ = mach_absolute_time();
 }
 
 double MacOSTimer::Stop()
 {
-    return 0.0;
+    auto elapsed        = mach_absolute_time() - startTime_;
+    auto elapsedNano    = elapsed * timebaseInfo_.numer / timebaseInfo_.denom;
+    return static_cast<double>(elapsedNano);
 }
 
 double MacOSTimer::GetFrequency() const
 {
-    return 0.0;
+    return 1.0e9;
 }
     
     

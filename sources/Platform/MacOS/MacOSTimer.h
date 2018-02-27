@@ -10,6 +10,9 @@
 
 
 #include <LLGL/Timer.h>
+#include <cstdint>
+#include <mach/mach.h>
+#include <mach/mach_time.h>
 
 
 namespace LLGL
@@ -31,7 +34,8 @@ class MacOSTimer : public Timer
         
     private:
     
-        //todo...
+        std::uint64_t               startTime_      = 0;
+        mach_timebase_info_data_t   timebaseInfo_;
     
 };
     
