@@ -20,15 +20,7 @@ void Timer::MeasureTime()
 {
     auto elapsed = Stop();
     Start();
-
-    deltaTime_ = elapsed / GetFrequency();
-
-    ++frameCount_;
-}
-
-void Timer::ResetFrameCounter()
-{
-    frameCount_ = 0;
+    deltaTime_ = static_cast<double>(elapsed) / static_cast<double>(GetFrequency());
 }
 
 

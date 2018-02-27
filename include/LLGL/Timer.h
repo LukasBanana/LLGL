@@ -11,6 +11,7 @@
 
 #include <LLGL/Export.h>
 #include <memory>
+#include <cstdint>
 
 
 namespace LLGL
@@ -23,8 +24,6 @@ class LLGL_EXPORT Timer
 
     public:
 
-        using FrameCount = unsigned long long;
-
         virtual ~Timer();
 
         //! Creates a platform specific timer object.
@@ -33,25 +32,26 @@ class LLGL_EXPORT Timer
         //! Starts the timer.
         virtual void Start() = 0;
 
-        //! Stops the timer and returns the elapsed time since "Start" was called.
-        virtual double Stop() = 0;
+        //! Stops the timer and returns the elapsed ticks since "Start" was called.
+        virtual std::uint64_t Stop() = 0;
 
-        //! Returns the frequency this timer can measure time (e.g. for milliseconds this is 1000.0).
-        virtual double GetFrequency() const = 0;
+        //! Returns the frequency resolution of this timer, or rather 'ticks per second' (e.g. for microseconds this is 1000000).
+        virtual std::uint64_t GetFrequency() const = 0;
+
+        /**
+        \brief Returns true if the timer is currently running.
+        \remarks This is true between a call to "Start" and a call to "Stop".
+        \see Start
+        \see Stop
+        */
+        virtual bool IsRunning() const = 0;
 
         /**
         \brief Measures the time (elapsed time, and frame count) for each frame.
         \see GetDeltaTime
-        \see GetFrameCount()
         */
         void MeasureTime();
 
-        /**
-        \brief Restes the frame counter.
-        \see GetFrameCount
-        */
-        void ResetFrameCounter();
-        
         /**
         \brief Returns the elapsed time (in seconds) between the current and the previous frame.
         \remarks This requires that "MeasureTime" is called once every frame.
@@ -62,20 +62,9 @@ class LLGL_EXPORT Timer
             return deltaTime_;
         }
 
-        /**
-        \brief Returns the number of counted frames.
-        \remarks This requires that "MeasureTime" is called once every frame.
-        \see MeasureTime
-        */
-        FrameCount GetFrameCount() const
-        {
-            return frameCount_;
-        }
-
     private:
         
-        double      deltaTime_  = 0.0;
-        FrameCount  frameCount_ = 0;
+        double deltaTime_ = 0.0;
 
 };
 

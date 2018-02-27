@@ -204,7 +204,7 @@ int main()
 
             if (elapsedMs > 250)
             {
-                printf("fps = %f\n", static_cast<float>(1.0 / frameTimer->GetDeltaTime()));
+                printf("Elapsed Time = %fms (FPS = %f)\n", static_cast<float>(frameTimer->GetDeltaTime()*1000.0f), static_cast<float>(1.0 / frameTimer->GetDeltaTime()));
                 printTime = currentTime;
             }
             #endif

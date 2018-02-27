@@ -6,7 +6,6 @@
  */
 
 #include "MacOSTimer.h"
-//#include <CoreServices/CoreServices.h>
 
 
 namespace LLGL
@@ -27,19 +26,30 @@ MacOSTimer::MacOSTimer()
 
 void MacOSTimer::Start()
 {
-    startTime_ = mach_absolute_time();
+    running_    = true;
+    startTime_  = mach_absolute_time();
 }
 
-double MacOSTimer::Stop()
+std::uint64_t MacOSTimer::Stop()
 {
-    auto elapsed        = mach_absolute_time() - startTime_;
-    auto elapsedNano    = elapsed * timebaseInfo_.numer / timebaseInfo_.denom;
-    return static_cast<double>(elapsedNano);
+    if (running_)
+    {
+        running_ = false;
+        auto elapsed        = mach_absolute_time() - startTime_;
+        auto elapsedNano    = elapsed * timebaseInfo_.numer / timebaseInfo_.denom;
+        return static_cast<std::uint64_t>(elapsedNano);
+    }
+    return 0;
 }
 
-double MacOSTimer::GetFrequency() const
+std::uint64_t MacOSTimer::GetFrequency() const
 {
-    return 1.0e9;
+    return 1000000000ull;
+}
+
+bool MacOSTimer::IsRunning() const
+{
+    return running_;
 }
     
     

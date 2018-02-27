@@ -10,7 +10,6 @@
 
 
 #include <LLGL/Timer.h>
-#include <cstdint>
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 
@@ -27,16 +26,18 @@ class MacOSTimer : public Timer
         MacOSTimer();
         
         void Start() override;
+        std::uint64_t Stop() override;
         
-        double Stop() override;
+        std::uint64_t GetFrequency() const override;
         
-        double GetFrequency() const override;
-        
+        bool IsRunning() const override;
+
     private:
     
+        bool                        running_        = false;
         std::uint64_t               startTime_      = 0;
         mach_timebase_info_data_t   timebaseInfo_;
-    
+
 };
     
     

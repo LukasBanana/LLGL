@@ -25,10 +25,11 @@ class Win32Timer : public Timer
         Win32Timer();
 
         void Start() override;
+        std::uint64_t Stop() override;
 
-        double Stop() override;
+        std::uint64_t GetFrequency() const override;
 
-        double GetFrequency() const override;
+        bool IsRunning() const override;
 
     private:
         
@@ -38,6 +39,8 @@ class Win32Timer : public Timer
 
         DWORD           startTick_          = 0;
         LONGLONG        prevElapsedTime_    = 0;
+
+        bool            running_            = false;
 
 };
 

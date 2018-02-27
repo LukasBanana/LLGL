@@ -25,14 +25,16 @@ class LinuxTimer : public Timer
         LinuxTimer();
 
         void Start() override;
+        std::uint64_t Stop() override;
 
-        double Stop() override;
-
-        double GetFrequency() const override;
+        std::uint64_t GetFrequency() const override;
         
+        bool IsRunning() const override;
+
     private:
     
-        timespec startTime_;
+        bool        running_    = false;
+        timespec    startTime_;
 
 };
 

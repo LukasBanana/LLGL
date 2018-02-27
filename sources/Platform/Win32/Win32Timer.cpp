@@ -19,12 +19,9 @@ This is caused by unexpected data across the PCI to ISA bridge, aka south bridge
 */
 #define LLGL_LEAP_FORWARD_ADJUSTMENT
 
-// Timer frequency
-#define LLGL_WINTIMER_FREQ 1000000.0
-
 std::unique_ptr<Timer> Timer::Create()
 {
-    return std::unique_ptr<Win32Timer>(new Win32Timer());
+    return std::unique_ptr<Win32Timer>(new Win32Timer {});
 }
 
 Win32Timer::Win32Timer()
@@ -40,10 +37,18 @@ void Win32Timer::Start()
     #ifdef LLGL_LEAP_FORWARD_ADJUSTMENT
     startTick_ = GetTickCount();
     #endif
+
+    running_ = true;
 }
 
-double Win32Timer::Stop()
+std::uint64_t Win32Timer::Stop()
 {
+    /* Reset running state */
+    if (!running_)
+        return 0;
+
+    running_ = false;
+
     /* Querry elapsed ticks */
     QueryPerformanceCounter(&t1_);
     auto elapsedTime = t1_.QuadPart - t0_.QuadPart;
@@ -51,11 +56,11 @@ double Win32Timer::Stop()
     #ifdef LLGL_LEAP_FORWARD_ADJUSTMENT
 
     /* Compute the number of millisecond ticks elapsed */
-    long long msecTicks = static_cast<long long>(1000 * elapsedTime / clockFrequency_.QuadPart);
+    auto msecTicks          = static_cast<long long>(1000 * elapsedTime / clockFrequency_.QuadPart);
     
     /* Check for unexpected leaps */
-    long long elapsedLowTicks = static_cast<long long>(GetTickCount() - startTick_);
-    auto msecOff = msecTicks - elapsedLowTicks;
+    auto elapsedLowTicks    = static_cast<long long>(GetTickCount() - startTick_);
+    auto msecOff            = msecTicks - elapsedLowTicks;
     
     if (std::abs(msecOff) > 100)
     {
@@ -72,13 +77,18 @@ double Win32Timer::Stop()
 
     #endif
 
-    /* Store final elapsed time */
-    return (LLGL_WINTIMER_FREQ * elapsedTime / clockFrequency_.QuadPart);
+    /* Return final elapsed time */
+    return static_cast<std::uint64_t>(elapsedTime);
 }
 
-double Win32Timer::GetFrequency() const
+std::uint64_t Win32Timer::GetFrequency() const
 {
-    return LLGL_WINTIMER_FREQ;
+    return static_cast<std::uint64_t>(clockFrequency_.QuadPart);
+}
+
+bool Win32Timer::IsRunning() const
+{
+    return running_;
 }
 
 

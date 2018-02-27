@@ -16,7 +16,7 @@ namespace LLGL
 
 std::unique_ptr<Timer> Timer::Create()
 {
-    return std::unique_ptr<Timer>(new LinuxTimer());
+    return std::unique_ptr<Timer>(new LinuxTimer {});
 }
 
 LinuxTimer::LinuxTimer()
@@ -27,6 +27,7 @@ LinuxTimer::LinuxTimer()
 
 void LinuxTimer::Start()
 {
+    running_ = true;
     clock_gettime(CLOCK_MONOTONIC, &startTime_);
 }
 
@@ -35,20 +36,31 @@ static std::uint64_t MonotonicTimeToUInt64(const timespec& t)
     return (static_cast<std::uint64_t>(t.tv_sec) * 1000000000ull + static_cast<std::uint64_t>(t.tv_nsec));
 }
 
-double LinuxTimer::Stop()
+std::uint64_t LinuxTimer::Stop()
 {
-    timespec endTime;
-    clock_gettime(CLOCK_MONOTONIC, &endTime);
-    
-    auto t0 = MonotonicTimeToUInt64(startTime_);
-    auto t1 = MonotonicTimeToUInt64(endTime);
-    
-    return (t1 > t0 ? static_cast<double>(t1 - t0) : 0.0);
+    if (running_)
+    {
+        running_ = false;
+
+        timespec endTime;
+        clock_gettime(CLOCK_MONOTONIC, &endTime);
+
+        auto t0 = MonotonicTimeToUInt64(startTime_);
+        auto t1 = MonotonicTimeToUInt64(endTime);
+
+        return (t1 > t0 ? t1 - t0 : 0);
+    }
+    return 0;
 }
 
-double LinuxTimer::GetFrequency() const
+std::uint64_t LinuxTimer::GetFrequency() const
 {
-    return 1.0e9;
+    return 1000000000ull;
+}
+
+bool LinuxTimer::IsRunning() const
+{
+    return running_;
 }
 
 
