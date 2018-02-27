@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Timer.h>
+#include <time.h>
 
 
 namespace LLGL
@@ -28,6 +29,10 @@ class LinuxTimer : public Timer
         double Stop() override;
 
         double GetFrequency() const override;
+        
+    private:
+    
+        timespec startTime_;
 
 };
 
