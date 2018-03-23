@@ -91,6 +91,7 @@ class GLStateManager
         void SetPatchVertices(GLint patchVertices);
         void SetBlendColor(const ColorRGBAf& color);
         void SetLogicOp(GLenum opcode);
+        void SetLineWidth(GLfloat width);
 
         /* ----- Buffer ----- */
 
@@ -175,6 +176,11 @@ class GLStateManager
 
         /* ----- Structure ----- */
 
+        struct GLLimits
+        {
+            GLfloat     lineWidthRange[2];
+        };
+
         struct GLCommonState
         {
             GLenum      depthFunc       = GL_LESS;
@@ -187,6 +193,7 @@ class GLStateManager
             GLint       patchVertices_  = 0;
             ColorRGBAf  blendColor      = { 0.0f, 0.0f, 0.0f, 0.0f };
             GLenum      logicOpCode     = GL_COPY;
+            GLfloat     lineWidth       = 1.0f;
         };
 
         struct GLRenderState
@@ -275,6 +282,8 @@ class GLStateManager
         };
 
         /* ----- Members ----- */
+
+        GLLimits                            limits_;
 
         GraphicsAPIDependentStateDescriptor gfxDependentState_;
 

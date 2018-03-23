@@ -19,7 +19,8 @@ namespace LLGL
 
 /* ----- Internal constants ---- */
 
-static const GLenum stateCapsMap[] =
+// Maps GLState to <cap> in glEnable, glDisable, glIsEnabled
+static const GLenum g_stateCapsMap[] =
 {
     GL_BLEND,
     GL_COLOR_LOGIC_OP,
@@ -50,7 +51,8 @@ static const GLenum stateCapsMap[] =
     GL_PROGRAM_POINT_SIZE,
 };
 
-static const GLenum bufferTargetsMap[] =
+// Maps GLBufferTarget to <target> in glBindBuffer, glBindBufferBase
+static const GLenum g_bufferTargetsMap[] =
 {
     GL_ARRAY_BUFFER,
     GL_ATOMIC_COUNTER_BUFFER,
@@ -68,14 +70,16 @@ static const GLenum bufferTargetsMap[] =
     GL_UNIFORM_BUFFER,
 };
 
-static const GLenum framebufferTargetsMap[] =
+// Maps GLFramebufferTarget to <target> in glBindFramebuffer
+static const GLenum g_framebufferTargetsMap[] =
 {
     GL_FRAMEBUFFER,
     GL_DRAW_FRAMEBUFFER,
     GL_READ_FRAMEBUFFER,
 };
 
-static const GLenum textureTargetsMap[] =
+// Maps GLTextureTarget to <target> in glBindTexture
+static const GLenum g_textureTargetsMap[] =
 {
     GL_TEXTURE_1D,
     GL_TEXTURE_2D,
@@ -90,7 +94,8 @@ static const GLenum textureTargetsMap[] =
     GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
 };
 
-static const GLenum textureLayersMap[] = 
+// Maps std::uint32_t to <texture> in glActiveTexture
+static const GLenum g_textureLayersMap[] = 
 {
     GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3,
     GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7,
@@ -187,10 +192,6 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
             Disable(GLState::COLOR_LOGIC_OP);
     }
     #endif
-
-    /* Set line width */
-    if (state.stateOpenGL.lineWidth > 0.0f)
-        glLineWidth(state.stateOpenGL.lineWidth);
 }
 
 /* ----- Boolean states ----- */
@@ -199,7 +200,7 @@ void GLStateManager::Reset()
 {
     /* Query all states from OpenGL */
     for (std::size_t i = 0; i < numStates; ++i)
-        renderState_.values[i] = (glIsEnabled(stateCapsMap[i]) != GL_FALSE);
+        renderState_.values[i] = (glIsEnabled(g_stateCapsMap[i]) != GL_FALSE);
 }
 
 void GLStateManager::Set(GLState state, bool value)
@@ -209,9 +210,9 @@ void GLStateManager::Set(GLState state, bool value)
     {
         renderState_.values[idx] = value;
         if (value)
-            glEnable(stateCapsMap[idx]);
+            glEnable(g_stateCapsMap[idx]);
         else
-            glDisable(stateCapsMap[idx]);
+            glDisable(g_stateCapsMap[idx]);
     }
 }
 
@@ -221,7 +222,7 @@ void GLStateManager::Enable(GLState state)
     if (!renderState_.values[idx])
     {
         renderState_.values[idx] = true;
-        glEnable(stateCapsMap[idx]);
+        glEnable(g_stateCapsMap[idx]);
     }
 }
 
@@ -231,7 +232,7 @@ void GLStateManager::Disable(GLState state)
     if (renderState_.values[idx])
     {
         renderState_.values[idx] = false;
-        glDisable(stateCapsMap[idx]);
+        glDisable(g_stateCapsMap[idx]);
     }
 }
 
@@ -595,6 +596,15 @@ void GLStateManager::SetLogicOp(GLenum opcode)
     }
 }
 
+void GLStateManager::SetLineWidth(GLfloat width)
+{
+    if (commonState_.lineWidth != width)
+    {
+        commonState_.lineWidth = width;
+        glLineWidth(std::max(1.0f, width));
+    }
+}
+
 /* ----- Buffer ----- */
 
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
@@ -603,7 +613,7 @@ void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
     auto targetIdx = static_cast<std::size_t>(target);
     if (bufferState_.boundBuffers[targetIdx] != buffer)
     {
-        glBindBuffer(bufferTargetsMap[targetIdx], buffer);
+        glBindBuffer(g_bufferTargetsMap[targetIdx], buffer);
         bufferState_.boundBuffers[targetIdx] = buffer;
     }
 }
@@ -612,7 +622,7 @@ void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint 
 {
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
-    glBindBufferBase(bufferTargetsMap[targetIdx], index, buffer);
+    glBindBufferBase(g_bufferTargetsMap[targetIdx], index, buffer);
     bufferState_.boundBuffers[targetIdx] = buffer;
 }
 
@@ -620,7 +630,7 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
 {
     /* Always bind buffers with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
-    auto targetGL = bufferTargetsMap[targetIdx];
+    auto targetGL = g_bufferTargetsMap[targetIdx];
     
     #ifdef GL_ARB_multi_bind
     if (HasExtension(GLExt::ARB_multi_bind))
@@ -729,7 +739,7 @@ void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuf
     if (framebufferState_.boundFramebuffers[targetIdx] != framebuffer)
     {
         framebufferState_.boundFramebuffers[targetIdx] = framebuffer;
-        glBindFramebuffer(framebufferTargetsMap[targetIdx], framebuffer);
+        glBindFramebuffer(g_framebufferTargetsMap[targetIdx], framebuffer);
     }
 }
 
@@ -774,7 +784,7 @@ void GLStateManager::ActiveTexture(std::uint32_t layer)
     {
         /* Active specified texture layer and store reference to bound textures array */
         SetActiveTextureLayer(layer);
-        glActiveTexture(textureLayersMap[layer]);
+        glActiveTexture(g_textureLayersMap[layer]);
     }
 }
 
@@ -785,7 +795,7 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
     if (activeTextureLayer_->boundTextures[targetIdx] != texture)
     {
         activeTextureLayer_->boundTextures[targetIdx] = texture;
-        glBindTexture(textureTargetsMap[targetIdx], texture);
+        glBindTexture(g_textureTargetsMap[targetIdx], texture);
     }
 }
 
@@ -803,7 +813,8 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
 
         /*
         Bind all textures at once, but don't reset the currently active texture layer.
-        The spec. of GL_ARB_multi_bind says, that the active texture slot is not modified by this function!
+        The spec. of GL_ARB_multi_bind states that the active texture slot is not modified by this function.
+        see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_multi_bind.txt
         */
         glBindTextures(first, count, textures);
     }

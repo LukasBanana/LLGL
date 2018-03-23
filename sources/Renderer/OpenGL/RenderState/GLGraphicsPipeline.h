@@ -62,6 +62,7 @@ class GLGraphicsPipeline : public GraphicsPipeline
         bool                    depthClampEnabled_  = false;    // glEnable(GL_DEPTH_CLAMP)
         bool                    multiSampleEnabled_ = false;    // glEnable(GL_MULTISAMPLE)
         bool                    lineSmoothEnabled_  = false;    // glEnable(GL_LINE_SMOOTH)
+        GLfloat                 lineWidth_          = 1.0f;
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
         bool                    conservativeRaster_ = false;    // glEnable(GL_CONSERVATIVE_RASTERIZATION_NV/INTEL)
@@ -72,6 +73,10 @@ class GLGraphicsPipeline : public GraphicsPipeline
         ColorRGBAf              blendColor_         = { 0.0f, 0.0f, 0.0f, 0.0f };
         bool                    blendColorNeeded_   = false;
         std::vector<GLBlend>    blendStates_;
+
+        // color logic operation state
+        bool                    logicOpEnabled_     = false;
+        GLenum                  logicOp_            = GL_COPY;
 
 };
 

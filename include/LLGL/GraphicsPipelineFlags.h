@@ -430,7 +430,7 @@ struct RasterizerDescriptor
 
     /**
     \brief Specifies the width of all generated line primitives. By default 1.0.
-    \note Only supported with: OpenGL, Vulkan.
+    \note Only supported with: OpenGL (Compatibility Profile), Vulkan.
     */
     float                   lineWidth                   = 1.0f;
 };

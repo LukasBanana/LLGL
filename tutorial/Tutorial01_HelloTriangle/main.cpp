@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
         {
             contextDesc.videoMode.resolution    = { 800, 600 };
             #ifdef ENABLE_MULTISAMPLING
-            contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor(8);
+            contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor { 8 };
             #endif
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);

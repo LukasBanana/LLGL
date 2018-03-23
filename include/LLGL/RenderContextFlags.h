@@ -64,8 +64,6 @@ union GraphicsAPIDependentStateDescriptor
     {
         stateOpenGL.screenSpaceOriginLowerLeft      = false;
         stateOpenGL.invertFrontFace                 = false;
-        //stateOpenGL.logicOp                         = LogicOp::Keep;
-        stateOpenGL.lineWidth                       = 0.0f;
 
         stateDirect3D12.disableAutoStateSubmission  = false;
     }
@@ -85,20 +83,6 @@ union GraphicsAPIDependentStateDescriptor
         i.e. CCW becomes CW, and CW becomes CCW.
         */
         bool        invertFrontFace;
-
-        /**
-        \brief Specifies the logical pixel operation for drawing operations. By default LogicOp::Keep.
-        \see https://www.opengl.org/sdk/docs/man/html/glLogicOp.xhtml
-        */
-        //LogicOp     logicOp;
-
-        /**
-        \brief Specifies the width to rasterize lines. By default 0.
-        \remarks If this is 0, the attribute is ignored and the current line width will not be changed.
-        \see https://www.opengl.org/sdk/docs/man/html/glLineWidth.xhtml
-        \todo Replace this by RasterizerState::lineWidth.
-        */
-        float       lineWidth;
     }
     stateOpenGL;
 

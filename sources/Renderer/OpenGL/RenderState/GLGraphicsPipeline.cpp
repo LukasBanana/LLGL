@@ -125,6 +125,7 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     depthClampEnabled_  = desc.rasterizer.depthClampEnabled;
     multiSampleEnabled_ = desc.rasterizer.multiSampling.enabled;
     lineSmoothEnabled_  = desc.rasterizer.antiAliasedLineEnabled;
+    lineWidth_          = desc.rasterizer.lineWidth;
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     conservativeRaster_ = desc.rasterizer.conservativeRasterization;
@@ -135,6 +136,13 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     blendColor_         = desc.blend.blendFactor;
     blendColorNeeded_   = IsBlendColorNeeded(desc.blend);
     Convert(blendStates_, desc.blend.targets);
+
+    /* Convert color logic operation state */
+    if (desc.blend.logicOp != LogicOp::Disabled)
+    {
+        logicOpEnabled_ = true;
+        logicOp_        = GLTypes::Map(desc.blend.logicOp);
+    }
 }
 
 void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
@@ -185,6 +193,7 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     stateMngr.Set(GLState::DEPTH_CLAMP, depthClampEnabled_);
     stateMngr.Set(GLState::MULTISAMPLE, multiSampleEnabled_);
     stateMngr.Set(GLState::LINE_SMOOTH, lineSmoothEnabled_);
+    stateMngr.SetLineWidth(lineWidth_);
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     stateMngr.Set(GLStateExt::CONSERVATIVE_RASTERIZATION, conservativeRaster_);
@@ -196,6 +205,15 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 
     if (blendColorNeeded_)
         stateMngr.SetBlendColor(blendColor_);
+
+    /* Setup color logic operation */
+    if (logicOpEnabled_)
+    {
+        stateMngr.Enable(GLState::COLOR_LOGIC_OP);
+        stateMngr.SetLogicOp(logicOp_);
+    }
+    else
+        stateMngr.Disable(GLState::COLOR_LOGIC_OP);
 }
 
 
