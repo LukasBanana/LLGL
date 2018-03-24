@@ -136,6 +136,7 @@ void GLCommandBuffer::SetClearStencil(std::uint32_t stencil)
     glClearStencil(static_cast<GLint>(stencil));
 }
 
+//TODO: maybe glColorMask must be set to (1, 1, 1, 1) to clear color correctly
 void GLCommandBuffer::Clear(long flags)
 {
     /* Setup GL clear mask and clear respective buffer */
@@ -162,6 +163,7 @@ void GLCommandBuffer::Clear(long flags)
     glClear(mask);
 }
 
+//TODO: maybe glColorMask must be set to (1, 1, 1, 1) to clear color correctly
 void GLCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
 {
     /* Clear target color buffer */

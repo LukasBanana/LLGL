@@ -103,8 +103,7 @@ int main(int argc, char* argv[])
         // Read result
         commands->SyncGPU();
         
-        auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
-        if (outputBuffer)
+        if (auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly))
         {
             ::memcpy(outputData.data(), outputBuffer, sizeof(DataBlock) * outputData.size());
             renderer->UnmapBuffer(*storageBuffer);

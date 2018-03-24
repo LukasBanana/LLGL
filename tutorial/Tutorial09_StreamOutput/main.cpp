@@ -145,9 +145,7 @@ private:
         // Read stream-output buffer
         commands->SyncGPU();
 
-        auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::BufferCPUAccess::ReadOnly);
-
-        if (outputBuffer)
+        if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::BufferCPUAccess::ReadOnly))
         {
             std::vector<Gs::Vector4f> output(36*3);
             ::memcpy(output.data(), outputBuffer, sizeof(Gs::Vector4f)*36*3);
