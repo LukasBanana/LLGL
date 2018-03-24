@@ -216,7 +216,7 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
     }
 
     /* Use uniform clipping space */
-    GLStateManager::active->DetermineExtensions();
+    GLStateManager::active->DetermineExtensionsAndLimits();
     GLStateManager::active->SetClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 
     /* Take ownership and return raw pointer */

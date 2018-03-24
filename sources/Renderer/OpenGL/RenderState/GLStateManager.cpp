@@ -20,7 +20,7 @@ namespace LLGL
 /* ----- Internal constants ---- */
 
 // Maps GLState to <cap> in glEnable, glDisable, glIsEnabled
-static const GLenum g_stateCapsMap[] =
+static const GLenum g_stateCapsEnum[] =
 {
     GL_BLEND,
     GL_COLOR_LOGIC_OP,
@@ -52,7 +52,7 @@ static const GLenum g_stateCapsMap[] =
 };
 
 // Maps GLBufferTarget to <target> in glBindBuffer, glBindBufferBase
-static const GLenum g_bufferTargetsMap[] =
+static const GLenum g_bufferTargetsEnum[] =
 {
     GL_ARRAY_BUFFER,
     GL_ATOMIC_COUNTER_BUFFER,
@@ -71,7 +71,7 @@ static const GLenum g_bufferTargetsMap[] =
 };
 
 // Maps GLFramebufferTarget to <target> in glBindFramebuffer
-static const GLenum g_framebufferTargetsMap[] =
+static const GLenum g_framebufferTargetsEnum[] =
 {
     GL_FRAMEBUFFER,
     GL_DRAW_FRAMEBUFFER,
@@ -79,7 +79,7 @@ static const GLenum g_framebufferTargetsMap[] =
 };
 
 // Maps GLTextureTarget to <target> in glBindTexture
-static const GLenum g_textureTargetsMap[] =
+static const GLenum g_textureTargetsEnum[] =
 {
     GL_TEXTURE_1D,
     GL_TEXTURE_2D,
@@ -95,7 +95,7 @@ static const GLenum g_textureTargetsMap[] =
 };
 
 // Maps std::uint32_t to <texture> in glActiveTexture
-static const GLenum g_textureLayersMap[] = 
+static const GLenum g_textureLayersEnum[] = 
 {
     GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3,
     GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7,
@@ -129,32 +129,11 @@ GLStateManager::GLStateManager()
     GLStateManager::active = this;
 }
 
-void GLStateManager::DetermineExtensions()
+void GLStateManager::DetermineExtensionsAndLimits()
 {
+    DetermineLimits();
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-
-    /* Initialize extenstion states */
-    auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
-    {
-        auto idx = static_cast<std::size_t>(state);
-        auto& val = renderStateExt_.values[idx];
-        if (val.cap == 0 && HasExtension(extension))
-        {
-            val.cap     = cap;
-            val.enabled = (glIsEnabled(cap) != GL_FALSE);
-        }
-    };
-
-    #ifdef GL_NV_conservative_raster
-    // see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
-    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::NV_conservative_raster, GL_CONSERVATIVE_RASTERIZATION_NV);
-    #endif
-
-    #ifdef GL_INTEL_conservative_rasterization
-    // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
-    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::INTEL_conservative_rasterization, GL_CONSERVATIVE_RASTERIZATION_INTEL);
-    #endif
-
+    DetermineVendorSpecificExtensions();
     #endif
 }
 
@@ -164,7 +143,7 @@ void GLStateManager::NotifyRenderTargetHeight(GLint height)
     renderTargetHeight_ = height;
 
     /* Update viewports */
-    //todo...
+    //TODO...
 }
 
 void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
@@ -178,20 +157,6 @@ void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStat
     /* Update front face */
     if (updateFrontFace)
         SetFrontFace(commonState_.frontFaceAct);
-
-    #if 0//TODO: replace this by graphics pipeline state
-    /* Set logical operation */
-    if (state.stateOpenGL.logicOp != LogicOp::Keep)
-    {
-        if (state.stateOpenGL.logicOp != LogicOp::Disabled)
-        {
-            Enable(GLState::COLOR_LOGIC_OP);
-            SetLogicOp(GLTypes::Map(state.stateOpenGL.logicOp));
-        }
-        else
-            Disable(GLState::COLOR_LOGIC_OP);
-    }
-    #endif
 }
 
 /* ----- Boolean states ----- */
@@ -200,7 +165,7 @@ void GLStateManager::Reset()
 {
     /* Query all states from OpenGL */
     for (std::size_t i = 0; i < numStates; ++i)
-        renderState_.values[i] = (glIsEnabled(g_stateCapsMap[i]) != GL_FALSE);
+        renderState_.values[i] = (glIsEnabled(g_stateCapsEnum[i]) != GL_FALSE);
 }
 
 void GLStateManager::Set(GLState state, bool value)
@@ -210,9 +175,9 @@ void GLStateManager::Set(GLState state, bool value)
     {
         renderState_.values[idx] = value;
         if (value)
-            glEnable(g_stateCapsMap[idx]);
+            glEnable(g_stateCapsEnum[idx]);
         else
-            glDisable(g_stateCapsMap[idx]);
+            glDisable(g_stateCapsEnum[idx]);
     }
 }
 
@@ -222,7 +187,7 @@ void GLStateManager::Enable(GLState state)
     if (!renderState_.values[idx])
     {
         renderState_.values[idx] = true;
-        glEnable(g_stateCapsMap[idx]);
+        glEnable(g_stateCapsEnum[idx]);
     }
 }
 
@@ -232,7 +197,7 @@ void GLStateManager::Disable(GLState state)
     if (renderState_.values[idx])
     {
         renderState_.values[idx] = false;
-        glDisable(g_stateCapsMap[idx]);
+        glDisable(g_stateCapsEnum[idx]);
     }
 }
 
@@ -323,6 +288,7 @@ void GLStateManager::AdjustViewport(GLViewport& viewport)
 
 void GLStateManager::SetViewport(GLViewport& viewport)
 {
+    /* Adjust viewport for vertical-flipped screen space origin */
     if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
         AdjustViewport(viewport);
 
@@ -340,6 +306,7 @@ void GLStateManager::SetViewportArray(std::vector<GLViewport>&& viewports)
     {
         AssertExtViewportArray();
 
+        /* Adjust viewports for vertical-flipped screen space origin */
         if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
         {
             for (auto& vp : viewports)
@@ -613,7 +580,7 @@ void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
     auto targetIdx = static_cast<std::size_t>(target);
     if (bufferState_.boundBuffers[targetIdx] != buffer)
     {
-        glBindBuffer(g_bufferTargetsMap[targetIdx], buffer);
+        glBindBuffer(g_bufferTargetsEnum[targetIdx], buffer);
         bufferState_.boundBuffers[targetIdx] = buffer;
     }
 }
@@ -622,7 +589,7 @@ void GLStateManager::BindBufferBase(GLBufferTarget target, GLuint index, GLuint 
 {
     /* Always bind buffer with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
-    glBindBufferBase(g_bufferTargetsMap[targetIdx], index, buffer);
+    glBindBufferBase(g_bufferTargetsEnum[targetIdx], index, buffer);
     bufferState_.boundBuffers[targetIdx] = buffer;
 }
 
@@ -630,7 +597,7 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
 {
     /* Always bind buffers with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
-    auto targetGL = g_bufferTargetsMap[targetIdx];
+    auto targetGL = g_bufferTargetsEnum[targetIdx];
     
     #ifdef GL_ARB_multi_bind
     if (HasExtension(GLExt::ARB_multi_bind))
@@ -739,7 +706,7 @@ void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuf
     if (framebufferState_.boundFramebuffers[targetIdx] != framebuffer)
     {
         framebufferState_.boundFramebuffers[targetIdx] = framebuffer;
-        glBindFramebuffer(g_framebufferTargetsMap[targetIdx], framebuffer);
+        glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
     }
 }
 
@@ -784,7 +751,7 @@ void GLStateManager::ActiveTexture(std::uint32_t layer)
     {
         /* Active specified texture layer and store reference to bound textures array */
         SetActiveTextureLayer(layer);
-        glActiveTexture(g_textureLayersMap[layer]);
+        glActiveTexture(g_textureLayersEnum[layer]);
     }
 }
 
@@ -795,7 +762,7 @@ void GLStateManager::BindTexture(GLTextureTarget target, GLuint texture)
     if (activeTextureLayer_->boundTextures[targetIdx] != texture)
     {
         activeTextureLayer_->boundTextures[targetIdx] = texture;
-        glBindTexture(g_textureTargetsMap[targetIdx], texture);
+        glBindTexture(g_textureTargetsEnum[targetIdx], texture);
     }
 }
 
@@ -955,6 +922,50 @@ void GLStateManager::SetActiveTextureLayer(std::uint32_t layer)
     textureState_.activeTexture = layer;
     activeTextureLayer_ = &(textureState_.layers[textureState_.activeTexture]);
 }
+
+void GLStateManager::DetermineLimits()
+{
+    glGetIntegerv(GL_MAX_VIEWPORTS, &limits_.maxViewports);
+
+    /* Determine minimal line width range for both aliased and smooth lines */
+    GLfloat aliasedLineRange[2];
+    glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, aliasedLineRange);
+
+    GLfloat smoothLineRange[2];
+    glGetFloatv(GL_SMOOTH_LINE_WIDTH_RANGE, smoothLineRange);
+
+    limits_.lineWidthRange[0] = std::min(aliasedLineRange[0], smoothLineRange[0]);
+    limits_.lineWidthRange[1] = std::min(aliasedLineRange[1], smoothLineRange[1]);
+}
+
+#ifdef LLGL_GL_ENABLE_VENDOR_EXT
+
+void GLStateManager::DetermineVendorSpecificExtensions()
+{
+    /* Initialize extenstion states */
+    auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
+    {
+        auto idx = static_cast<std::size_t>(state);
+        auto& val = renderStateExt_.values[idx];
+        if (val.cap == 0 && HasExtension(extension))
+        {
+            val.cap     = cap;
+            val.enabled = (glIsEnabled(cap) != GL_FALSE);
+        }
+    };
+
+    #ifdef GL_NV_conservative_raster
+    // see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
+    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::NV_conservative_raster, GL_CONSERVATIVE_RASTERIZATION_NV);
+    #endif
+
+    #ifdef GL_INTEL_conservative_rasterization
+    // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
+    InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::INTEL_conservative_rasterization, GL_CONSERVATIVE_RASTERIZATION_INTEL);
+    #endif
+}
+
+#endif
 
 
 } // /namespace LLGL

@@ -43,8 +43,8 @@ static void Convert(GLBlend& to, const BlendTargetDescriptor& from)
     to.colorMask.a  = GLBoolean(from.colorMask.a);
 }
 
-template <typename To, typename From>
-void Convert(std::vector<To>& to, const std::vector<From>& from)
+template <typename DstType, typename SrcType>
+void Convert(std::vector<DstType>& to, const std::vector<SrcType>& from)
 {
     to.resize(from.size());
     for (std::size_t i = 0, n = from.size(); i < n; ++i)

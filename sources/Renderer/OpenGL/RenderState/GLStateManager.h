@@ -36,16 +36,19 @@ class GLStateManager
         // Active state manager. Each GL context has its own states, thus its own state manager.
         static GLStateManager* active;
 
-        void DetermineExtensions();
+        // Queries all supported and available GL extensions and limitations, then stores it internally (must be called once a GL context has been created).
+        void DetermineExtensionsAndLimits();
 
-        //! Notifies the state manager about a new render-target height.
+        //TODO: viewports and scissors must be updated!
+        // Notifies the state manager about a new render-target height.
         void NotifyRenderTargetHeight(GLint height);
 
+        // Sets and applies the specified OpenGL specific render state.
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state);
 
         /* ----- Boolean states ----- */
 
-        //! Resets all internal states by querying the values from OpenGL.
+        // Resets all internal states by querying the values from OpenGL.
         void Reset();
 
         void Set(GLState state, bool value);
@@ -162,6 +165,12 @@ class GLStateManager
 
         void SetActiveTextureLayer(std::uint32_t layer);
 
+        void DetermineLimits();
+
+        #ifdef LLGL_GL_ENABLE_VENDOR_EXT
+        void DetermineVendorSpecificExtensions();
+        #endif
+
         /* ----- Constants ----- */
 
         static const std::uint32_t numTextureLayers         = 32;
@@ -176,11 +185,14 @@ class GLStateManager
 
         /* ----- Structure ----- */
 
+        // GL limitations required for validation of state parameters
         struct GLLimits
         {
-            GLfloat     lineWidthRange[2];
+            GLint       maxViewports        = 16;               // must be at least 16
+            GLfloat     lineWidthRange[2]   = { 1.0f, 1.0f };   // minimal range of both <aliased> and <smooth> line width range
         };
 
+        // Common GL states
         struct GLCommonState
         {
             GLenum      depthFunc       = GL_LESS;
