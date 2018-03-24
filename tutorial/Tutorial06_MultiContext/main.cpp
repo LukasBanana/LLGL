@@ -156,8 +156,8 @@ int main(int argc, char* argv[])
         // Initialize viewport array
         LLGL::Viewport viewports[2] =
         {
-            LLGL::Viewport(0, 0, 320, 480),
-            LLGL::Viewport(320, 0, 320, 480),
+            LLGL::Viewport {   0.0f, 0.0f, 320.0f, 480.0f },
+            LLGL::Viewport { 320.0f, 0.0f, 320.0f, 480.0f },
         };
 
         // Set viewport array
@@ -166,8 +166,8 @@ int main(int argc, char* argv[])
         // For Direct3D12
         LLGL::Scissor scissors[2] =
         {
-            LLGL::Scissor(0, 0, 320, 480),
-            LLGL::Scissor(320, 0, 320, 480),
+            LLGL::Scissor {   0, 0, 320, 480 },
+            LLGL::Scissor { 320, 0, 320, 480 },
         };
 
         commands->SetScissorArray(2, scissors);

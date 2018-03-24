@@ -338,7 +338,15 @@ void D3D11RenderSystem::QueryRendererInfo()
 void D3D11RenderSystem::QueryRenderingCaps()
 {
     RenderingCaps caps;
-    DXGetRenderingCaps(caps, GetFeatureLevel());
+    {
+        /* Query common DX rendering capabilities */
+        DXGetRenderingCaps(caps, GetFeatureLevel());
+
+        /* Set extended attributes */
+        caps.maxNumViewports    = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+        caps.maxViewportSize[0] = D3D11_VIEWPORT_BOUNDS_MAX;
+        caps.maxViewportSize[1] = D3D11_VIEWPORT_BOUNDS_MAX;
+    }
     SetRenderingCaps(caps);
 }
 

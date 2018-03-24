@@ -393,6 +393,14 @@ void GLRenderSystem::QueryRenderingCaps()
     caps.maxComputeShaderWorkGroupSize[1]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
     caps.maxComputeShaderWorkGroupSize[2]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
 
+    /* Query viewport limits */
+    caps.maxNumViewports    = GetUInt(GL_MAX_VIEWPORTS);
+
+    GLint maxViewportDims[2];
+    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewportDims);
+    caps.maxViewportSize[0] = static_cast<std::uint32_t>(maxViewportDims[0]);
+    caps.maxViewportSize[1] = static_cast<std::uint32_t>(maxViewportDims[1]);
+
     /* Query maximum texture dimensions */
     GLint querySizeBase = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &querySizeBase);

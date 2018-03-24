@@ -43,14 +43,14 @@ void D3D11StateManager::SetViewports(std::uint32_t numViewports, const Viewport*
         for (std::uint32_t i = 0; i < numViewports; ++i)
         {
             const auto& src = viewportArray[i];
-            auto& dest = viewportsD3D[i];
+            auto& dst       = viewportsD3D[i];
 
-            dest.TopLeftX   = src.x;
-            dest.TopLeftY   = src.y;
-            dest.Width      = src.width;
-            dest.Height     = src.height;
-            dest.MinDepth   = src.minDepth;
-            dest.MaxDepth   = src.maxDepth;
+            dst.TopLeftX    = src.x;
+            dst.TopLeftY    = src.y;
+            dst.Width       = src.width;
+            dst.Height      = src.height;
+            dst.MinDepth    = src.minDepth;
+            dst.MaxDepth    = src.maxDepth;
         }
 
         context_->RSSetViewports(numViewports, viewportsD3D);
@@ -66,12 +66,12 @@ void D3D11StateManager::SetScissors(std::uint32_t numScissors, const Scissor* sc
     for (std::uint32_t i = 0; i < numScissors; ++i)
     {
         const auto& src = scissorArray[i];
-        auto& dest = scissorsD3D[i];
+        auto& dst       = scissorsD3D[i];
 
-        dest.left   = src.x;
-        dest.top    = src.y;
-        dest.right  = src.x + src.width;
-        dest.bottom = src.y + src.height;
+        dst.left        = src.x;
+        dst.top         = src.y;
+        dst.right       = src.x + src.width;
+        dst.bottom      = src.y + src.height;
     }
     
     context_->RSSetScissorRects(numScissors, scissorsD3D);

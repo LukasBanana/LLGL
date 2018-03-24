@@ -590,7 +590,15 @@ void D3D12RenderSystem::QueryRendererInfo()
 void D3D12RenderSystem::QueryRenderingCaps()
 {
     RenderingCaps caps;
-    DXGetRenderingCaps(caps, GetFeatureLevel());
+    {
+        /* Query common DX rendering capabilities */
+        DXGetRenderingCaps(caps, GetFeatureLevel());
+
+        /* Set extended attributes */
+        caps.maxNumViewports    = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+        caps.maxViewportSize[0] = D3D12_VIEWPORT_BOUNDS_MAX;
+        caps.maxViewportSize[1] = D3D12_VIEWPORT_BOUNDS_MAX;
+    }
     SetRenderingCaps(caps);
 }
 

@@ -36,6 +36,9 @@ namespace LLGL
 {
 
 
+// Maximal number of viewports for the GL renderer.
+static const std::uint32_t g_maxNumViewportsGL = 16;
+
 GLCommandBuffer::GLCommandBuffer(const std::shared_ptr<GLStateManager>& stateMngr) :
     stateMngr_ { stateMngr }
 {
@@ -61,23 +64,31 @@ void GLCommandBuffer::SetViewport(const Viewport& viewport)
 
 void GLCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
 {
-    /* Setup GL viewports and depth-ranges */
-    std::vector<GLViewport> viewportsGL;
-    viewportsGL.reserve(numViewports);
-
-    std::vector<GLDepthRange> depthRangesGL;
-    depthRangesGL.reserve(numViewports);
-
-    for (std::uint32_t i = 0; i < numViewports; ++i)
+    GLViewport viewportsGL[g_maxNumViewportsGL];
+    GLDepthRange depthRangesGL[g_maxNumViewportsGL];
+    
+    for (std::uint32_t offset = 0; offset < numViewports; offset += g_maxNumViewportsGL)
     {
-        const auto& vp = viewportArray[i];
-        viewportsGL.push_back({ vp.x, vp.y, vp.width, vp.height });
-        depthRangesGL.push_back({ static_cast<GLdouble>(vp.minDepth), static_cast<GLdouble>(vp.maxDepth) });
-    }
+        /* Setup GL viewports and depth-ranges */
+        auto n = std::min(numViewports - offset, g_maxNumViewportsGL);
 
-    /* Submit viewports and depth-ranges to state manager */
-    stateMngr_->SetViewportArray(std::move(viewportsGL));
-    stateMngr_->SetDepthRangeArray(std::move(depthRangesGL));
+        for (std::uint32_t i = 0; i < n; ++i)
+        {
+            /* Copy GL viewport data */
+            viewportsGL[i].x        = viewportArray[i].x;
+            viewportsGL[i].y        = viewportArray[i].y;
+            viewportsGL[i].width    = viewportArray[i].width;
+            viewportsGL[i].height   = viewportArray[i].height;
+
+            /* Copy GL depth-range data */
+            depthRangesGL[i].minDepth = static_cast<GLdouble>(viewportArray[i].minDepth);
+            depthRangesGL[i].maxDepth = static_cast<GLdouble>(viewportArray[i].maxDepth);
+        }
+
+        /* Submit viewports and depth-ranges to state manager */
+        stateMngr_->SetViewportArray(offset, n, viewportsGL);
+        stateMngr_->SetDepthRangeArray(offset, n, depthRangesGL);
+    }
 }
 
 void GLCommandBuffer::SetScissor(const Scissor& scissor)
@@ -89,18 +100,25 @@ void GLCommandBuffer::SetScissor(const Scissor& scissor)
 
 void GLCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
 {
-    /* Setup GL scissors */
-    std::vector<GLScissor> scissorsGL;
-    scissorsGL.reserve(numScissors);
+    GLScissor scissorsGL[g_maxNumViewportsGL];
 
-    for (std::uint32_t i = 0; i < numScissors; ++i)
+    for (std::uint32_t offset = 0; offset < numScissors; offset += g_maxNumViewportsGL)
     {
-        const auto& sc = scissorArray[i];
-        scissorsGL.push_back({ sc.x, sc.y, sc.width, sc.height });
-    }
+        /* Setup GL scissors */
+        auto n = std::min(numScissors - offset, g_maxNumViewportsGL);
 
-    /* Submit scissors to state manager */
-    stateMngr_->SetScissorArray(std::move(scissorsGL));
+        for (std::uint32_t i = 0; i < n; ++i)
+        {
+            /* Copy GL scissor data */
+            scissorsGL[i].x         = static_cast<GLint>(scissorArray[i].x);
+            scissorsGL[i].y         = static_cast<GLint>(scissorArray[i].y);
+            scissorsGL[i].width     = static_cast<GLsizei>(scissorArray[i].width);
+            scissorsGL[i].height    = static_cast<GLsizei>(scissorArray[i].height);
+        }
+
+        /* Submit scissors to state manager */
+        stateMngr_->SetScissorArray(offset, n, scissorsGL);
+    }
 }
 
 void GLCommandBuffer::SetClearColor(const ColorRGBAf& color)

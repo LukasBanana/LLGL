@@ -300,48 +300,54 @@ void GLStateManager::SetViewport(GLViewport& viewport)
     );
 }
 
-void GLStateManager::SetViewportArray(std::vector<GLViewport>&& viewports)
+void GLStateManager::AssertViewportLimit(GLuint first, GLsizei count)
 {
-    if (viewports.size() > 1)
+    if (static_cast<GLint>(first) + count > limits_.maxViewports)
+    {
+        throw std::runtime_error(
+            "exceeded limit of viewports/scissors (limits is " + std::to_string(limits_.maxViewports) +
+            ", but specified " + std::to_string(first + count) + ")"
+        );
+    }
+}
+
+void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* viewports)
+{
+    AssertViewportLimit(first, count);
+
+    if (first + count > 1)
     {
         AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
         if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
         {
-            for (auto& vp : viewports)
-                AdjustViewport(vp);
+            for (GLsizei i = 0; i < count; ++i)
+                AdjustViewport(viewports[i]);
         }
 
-        glViewportArrayv(
-            0,
-            static_cast<GLsizei>(viewports.size()),
-            reinterpret_cast<const GLfloat*>(viewports.data())
-        );
+        glViewportArrayv(first, count, reinterpret_cast<const GLfloat*>(viewports));
     }
-    else if (viewports.size() == 1)
-        SetViewport(viewports.front());
+    else if (count == 1)
+        SetViewport(viewports[0]);
 }
 
-void GLStateManager::SetDepthRange(GLDepthRange& depthRange)
+void GLStateManager::SetDepthRange(const GLDepthRange& depthRange)
 {
     glDepthRange(depthRange.minDepth, depthRange.maxDepth);
 }
 
-void GLStateManager::SetDepthRangeArray(std::vector<GLDepthRange>&& depthRanges)
+void GLStateManager::SetDepthRangeArray(GLuint first, GLsizei count, const GLDepthRange* depthRanges)
 {
-    if (depthRanges.size() > 1)
+    AssertViewportLimit(first, count);
+
+    if (first + count > 1)
     {
         AssertExtViewportArray();
-
-        glDepthRangeArrayv(
-            0,
-            static_cast<GLsizei>(depthRanges.size()),
-            reinterpret_cast<const GLdouble*>(depthRanges.data())
-        );
+        glDepthRangeArrayv(first, count, reinterpret_cast<const GLdouble*>(depthRanges));
     }
-    else if (depthRanges.size() == 1)
-        SetDepthRange(depthRanges.front());
+    else if (count == 1)
+        SetDepthRange(depthRanges[0]);
 }
 
 //private
@@ -358,26 +364,25 @@ void GLStateManager::SetScissor(GLScissor& scissor)
     glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
 }
 
-void GLStateManager::SetScissorArray(std::vector<GLScissor>&& scissors)
+void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* scissors)
 {
-    if (scissors.size() > 1)
+    AssertViewportLimit(first, count);
+
+    if (first + count > 1)
     {
         AssertExtViewportArray();
 
-        if (emulateClipControl_)
+        /* Adjust viewports for vertical-flipped screen space origin */
+        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
         {
-            for (auto& sc : scissors)
-                AdjustScissor(sc);
+            for (GLsizei i = 0; i < count; ++i)
+                AdjustScissor(scissors[0]);
         }
 
-        glScissorArrayv(
-            0,
-            static_cast<GLsizei>(scissors.size()),
-            reinterpret_cast<const GLint*>(scissors.data())
-        );
+        glScissorArrayv(first, count, reinterpret_cast<const GLint*>(scissors));
     }
-    else if (scissors.size() == 1)
-        SetScissor(scissors.front());
+    else if (count == 1)
+        SetScissor(scissors[0]);
 }
 
 void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled)

@@ -79,7 +79,7 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Sets an array of viewports.
-        \param[in] numViewports Specifies the number of viewports to set.
+        \param[in] numViewports Specifies the number of viewports to set. Most render system have a limit of 16 viewports.
         \param[in] viewportArray Pointer to the array of viewports. This must not be null!
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
@@ -87,6 +87,7 @@ class LLGL_EXPORT CommandBuffer
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each viewport is on the lower-left.
         \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
+        \see RenderingCaps::maxNumViewports
         */
         virtual void SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray) = 0;
 

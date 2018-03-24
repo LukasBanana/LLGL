@@ -74,13 +74,13 @@ class GLStateManager
         /* ----- Common states ----- */
 
         void SetViewport(GLViewport& viewport);
-        void SetViewportArray(std::vector<GLViewport>&& viewports);
+        void SetViewportArray(GLuint first, GLsizei count, GLViewport* viewports);
 
-        void SetDepthRange(GLDepthRange& depthRange);
-        void SetDepthRangeArray(std::vector<GLDepthRange>&& depthRanges);
+        void SetDepthRange(const GLDepthRange& depthRange);
+        void SetDepthRangeArray(GLuint first, GLsizei count, const GLDepthRange* depthRanges);
 
         void SetScissor(GLScissor& scissor);
-        void SetScissorArray(std::vector<GLScissor>&& scissors);
+        void SetScissorArray(GLuint first, GLsizei count, GLScissor* scissors);
 
         void SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled);
 
@@ -161,6 +161,7 @@ class GLStateManager
         void AdjustViewport(GLViewport& viewport);
         void AdjustScissor(GLScissor& scissor);
 
+        void AssertViewportLimit(GLuint first, GLsizei count);
         void AssertExtViewportArray();
 
         void SetActiveTextureLayer(std::uint32_t layer);

@@ -206,78 +206,78 @@ struct RenderingCaps
     \brief Screen coordinate system origin.
     \remarks This determines the coordinate space of viewports, scissors, and framebuffers.
     */
-    ScreenOrigin    screenOrigin                    = ScreenOrigin::UpperLeft;
+    ScreenOrigin    screenOrigin                        { ScreenOrigin::UpperLeft };
 
     //! Clipping depth range.
-    ClippingRange   clippingRange                   = ClippingRange::ZeroToOne;
+    ClippingRange   clippingRange                       { ClippingRange::ZeroToOne };
 
     //! Latest suppported shading language.
-    ShadingLanguage shadingLanguage                 = ShadingLanguage::Unsupported;
+    ShadingLanguage shadingLanguage                     { ShadingLanguage::Unsupported };
 
     //! Specifies whether render targets (also "framebuffer objects") are supported.
-    bool            hasRenderTargets                = false;
+    bool            hasRenderTargets                    { false };
 
     /**
     \brief Specifies whether 3D textures are supported.
     \see TextureType::Texture3D
     */
-    bool            has3DTextures                   = false;
+    bool            has3DTextures                       { false };
 
     /**
     \brief Specifies whether cube textures are supported.
     \see TextureType::TextureCube
     */
-    bool            hasCubeTextures                 = false;
+    bool            hasCubeTextures                     { false };
 
     /**
     \brief Specifies whether 1D- and 2D array textures are supported.
     \see TextureType::Texture1DArray
     \see TextureType::Texture2DArray
     */
-    bool            hasTextureArrays                = false;
+    bool            hasTextureArrays                    { false };
 
     /**
     \brief Specifies whether cube array textures are supported.
     \see TextureType::TextureCubeArray
     */
-    bool            hasCubeTextureArrays            = false;
+    bool            hasCubeTextureArrays                { false };
 
     /**
     \brief Specifies whether multi-sample textures are supported.
     \see TextureType::Texture2DMS
     \see TextureType::Texture2DMSArray
     */
-    bool            hasMultiSampleTextures          = false;
+    bool            hasMultiSampleTextures              { false };
     
     //! Specifies whether samplers are supported.
-    bool            hasSamplers                     = false;
+    bool            hasSamplers                         { false };
 
     /**
     \brief Specifies whether constant buffers (also "uniform buffer objects") are supported.
     \see BufferType::Constant
     */
-    bool            hasConstantBuffers              = false;
+    bool            hasConstantBuffers                  { false };
 
     /**
     \brief Specifies whether storage buffers (also "read/write buffers") are supported.
     \see BufferType::Storage
     */
-    bool            hasStorageBuffers               = false;
+    bool            hasStorageBuffers                   { false };
 
     /**
     \brief Specifies whether individual shader uniforms are supported (typically only for OpenGL 2.0+).
     \see ShaderProgram::LockShaderUniform
     */
-    bool            hasUniforms                     = false;
+    bool            hasUniforms                         { false };
 
     //! Specifies whether geometry shaders are supported.
-    bool            hasGeometryShaders              = false;
+    bool            hasGeometryShaders                  { false };
 
     //! Specifies whether tessellation shaders are supported.
-    bool            hasTessellationShaders          = false;
+    bool            hasTessellationShaders              { false };
 
     //! Speciifes whether compute shaders are supported.
-    bool            hasComputeShaders               = false;
+    bool            hasComputeShaders                   { false };
 
     /**
     \brief Specifies whether hardware instancing is supported.
@@ -285,69 +285,81 @@ struct RenderingCaps
     \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
     \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t)
     */
-    bool            hasInstancing                   = false;
+    bool            hasInstancing                       { false };
 
     /**
     \brief Specifies whether hardware instancing with instance offsets is supported.
     \see RenderContext::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
     \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
     */
-    bool            hasOffsetInstancing             = false;
+    bool            hasOffsetInstancing                 { false };
 
-    //! Specifies whether multiple viewports, depth-ranges, and scissors are supported at once.
-    bool            hasViewportArrays               = false;
+    /**
+    \brief Specifies whether multiple viewports, depth-ranges, and scissors are supported at once.
+    \see maxViewportsAndScissors
+    */
+    bool            hasViewportArrays                   { false };
 
     /**
     \brief Specifies whether conservative rasterization is supported.
     \see RasterizerDescriptor::conservativeRasterization
     */
-    bool            hasConservativeRasterization    = false;
+    bool            hasConservativeRasterization        { false };
 
     /**
     \brief Specifies whether stream-output is supported.
     \see ShaderSource::streamOutput
     \see CommandBuffer::BeginStreamOutput
     */
-    bool            hasStreamOutputs                = false;
+    bool            hasStreamOutputs                    { false };
 
-    //! Specifies maximum number of texture array layers (for 1D-, 2D-, and cube textures).
-    std::uint32_t   maxNumTextureArrayLayers        = 0;
+    //! Specifies the maximum number of texture array layers (for 1D-, 2D-, and cube textures).
+    std::uint32_t   maxNumTextureArrayLayers            { 0 };
 
-    //! Specifies maximum number of attachment points for each render target.
-    std::uint32_t   maxNumRenderTargetAttachments   = 0;
+    //! Specifies the maximum number of attachment points for each render target.
+    std::uint32_t   maxNumRenderTargetAttachments       { 0 };
     
-    //! Specifies maximum size (in bytes) of each constant buffer.
-    std::uint32_t   maxConstantBufferSize           = 0;
+    //! Specifies the maximum size (in bytes) of each constant buffer.
+    std::uint32_t   maxConstantBufferSize               { 0 };
 
-    //! Specifies maximum number of patch control points.
-    std::uint32_t   maxPatchVertices                = 0;
+    //! Specifies the maximum number of patch control points.
+    std::uint32_t   maxPatchVertices                    { 0 };
 
-    //! Specifies maximum size of each 1D texture.
-    std::uint32_t   max1DTextureSize                = 0;
+    //! Specifies the maximum size of each 1D texture.
+    std::uint32_t   max1DTextureSize                    { 0 };
 
-    //! Specifies maximum size of each 2D texture (for width and height).
-    std::uint32_t   max2DTextureSize                = 0;
+    //! Specifies the maximum size of each 2D texture (for width and height).
+    std::uint32_t   max2DTextureSize                    { 0 };
 
-    //! Specifies maximum size of each 3D texture (for width, height, and depth).
-    std::uint32_t   max3DTextureSize                = 0;
+    //! Specifies the maximum size of each 3D texture (for width, height, and depth).
+    std::uint32_t   max3DTextureSize                    { 0 };
 
-    //! Specifies maximum size of each cube texture (for width and height).
-    std::uint32_t   maxCubeTextureSize              = 0;
+    //! Specifies the maximum size of each cube texture (for width and height).
+    std::uint32_t   maxCubeTextureSize                  { 0 };
 
     /**
-    \brief Specifies maximum anisotropy texture filter.
+    \brief Specifies the maximum anisotropy texture filter.
     \see SamplerDescriptor::maxAnisotropy
     */
-    std::uint32_t   maxAnisotropy                   = 0;
+    std::uint32_t   maxAnisotropy                       { 0 };
 
     /**
-    \brief Specifies maximum number of work groups in a compute shader.
+    \brief Specifies the maximum number of work groups in a compute shader.
     \see RenderContext::Dispatch
     */
-    std::uint32_t   maxNumComputeShaderWorkGroups[3] { 0, 0, 0 };
+    std::uint32_t   maxNumComputeShaderWorkGroups[3]    { 0, 0, 0 };
     
-    //! Specifies maximum work group size in a compute shader.
-    std::uint32_t   maxComputeShaderWorkGroupSize[3] { 0, 0, 0 };
+    //! Specifies the maximum work group size in a compute shader.
+    std::uint32_t   maxComputeShaderWorkGroupSize[3]    { 0, 0, 0 };
+
+    /**
+    \brief Specifies the maximum number of viewports and scissor rectangles. Most render systems have a maximum of 16.
+    \see hasViewportArrays
+    */
+    std::uint32_t   maxNumViewports                     { 0 };
+
+    //! Specifies the maximum width and height of each viewport and scissor rectangle.
+    std::uint32_t   maxViewportSize[2]                  { 0, 0 };
 };
 
 

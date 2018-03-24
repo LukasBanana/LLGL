@@ -557,6 +557,9 @@ void VKRenderSystem::QueryDeviceProperties()
         caps.maxComputeShaderWorkGroupSize[0]   = limits.maxComputeWorkGroupSize[0];
         caps.maxComputeShaderWorkGroupSize[1]   = limits.maxComputeWorkGroupSize[1];
         caps.maxComputeShaderWorkGroupSize[2]   = limits.maxComputeWorkGroupSize[2];
+        caps.maxNumViewports                    = limits.maxViewports;
+        caps.maxViewportSize[0]                 = limits.maxViewportDimensions[0];
+        caps.maxViewportSize[1]                 = limits.maxViewportDimensions[1];
     }
     SetRenderingCaps(caps);
 }
