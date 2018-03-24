@@ -313,10 +313,9 @@ void GLStateManager::AssertViewportLimit(GLuint first, GLsizei count)
 
 void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* viewports)
 {
-    AssertViewportLimit(first, count);
-
     if (first + count > 1)
     {
+        AssertViewportLimit(first, count);
         AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
@@ -329,7 +328,10 @@ void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* v
         glViewportArrayv(first, count, reinterpret_cast<const GLfloat*>(viewports));
     }
     else if (count == 1)
+    {
+        /* Set as single viewport */
         SetViewport(viewports[0]);
+    }
 }
 
 void GLStateManager::SetDepthRange(const GLDepthRange& depthRange)
@@ -339,15 +341,18 @@ void GLStateManager::SetDepthRange(const GLDepthRange& depthRange)
 
 void GLStateManager::SetDepthRangeArray(GLuint first, GLsizei count, const GLDepthRange* depthRanges)
 {
-    AssertViewportLimit(first, count);
-
     if (first + count > 1)
     {
+        AssertViewportLimit(first, count);
         AssertExtViewportArray();
+
         glDepthRangeArrayv(first, count, reinterpret_cast<const GLdouble*>(depthRanges));
     }
     else if (count == 1)
+    {
+        /* Set as single depth-range */
         SetDepthRange(depthRanges[0]);
+    }
 }
 
 //private
@@ -366,10 +371,9 @@ void GLStateManager::SetScissor(GLScissor& scissor)
 
 void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* scissors)
 {
-    AssertViewportLimit(first, count);
-
     if (first + count > 1)
     {
+        AssertViewportLimit(first, count);
         AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
@@ -382,7 +386,10 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* sci
         glScissorArrayv(first, count, reinterpret_cast<const GLint*>(scissors));
     }
     else if (count == 1)
+    {
+        /* Set as single scissor box */
         SetScissor(scissors[0]);
+    }
 }
 
 void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled)
