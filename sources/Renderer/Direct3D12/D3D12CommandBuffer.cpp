@@ -27,7 +27,8 @@ namespace LLGL
 {
 
 
-D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
+D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem) :
+    commandQueue_ { renderSystem.GetCommandQueue() }
 {
     CreateDevices(renderSystem);
     //InitStateManager();
@@ -273,6 +274,25 @@ void D3D12CommandBuffer::EndRenderCondition()
     //todo...
 }
 
+/* ----- Fences ----- */
+
+void D3D12CommandBuffer::SubmitFence(Fence& fence)
+{
+    auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence); 
+    fenceD3D.Submit(commandQueue_);
+}
+
+bool D3D12CommandBuffer::WaitForFence(Fence& fence, std::uint64_t timeout)
+{
+    auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence); 
+    return fenceD3D.Wait(timeout);
+}
+
+void D3D12CommandBuffer::WaitForFinish()
+{
+    //renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
+}
+
 /* ----- Drawing ----- */
 
 void D3D12CommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
@@ -320,13 +340,6 @@ void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::ui
 void D3D12CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     commandList_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
-}
-
-/* ----- Misc ----- */
-
-void D3D12CommandBuffer::SyncGPU()
-{
-    //renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
 }
 
 /* ----- Extended functions ----- */

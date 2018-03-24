@@ -360,6 +360,16 @@ DECL_GLPROC(void, glTransformFeedbackVaryingsNV, (GLuint, GLsizei, const GLint*,
 DECL_GLPROC(GLint, glGetVaryingLocationNV, (GLuint, const GLchar*));
 DECL_GLPROC(void, glGetActiveVaryingNV, (GLuint, GLuint, GLsizei, GLsizei*, GLsizei*, GLenum*, GLchar*));
 
+/* GL_ARB_sync */
+
+DECL_GLPROC(GLsync, glFenceSync, (GLenum, GLbitfield));
+DECL_GLPROC(GLboolean, glIsSync, (GLsync));
+DECL_GLPROC(void, glDeleteSync, (GLsync));
+DECL_GLPROC(GLenum, glClientWaitSync, (GLsync, GLbitfield, GLuint64));
+DECL_GLPROC(void, glWaitSync, (GLsync, GLbitfield, GLuint64));
+DECL_GLPROC(void, glGetInteger64v, (GLenum pname, GLint64*));
+DECL_GLPROC(void, glGetSynciv, (GLsync, GLenum, GLsizei, GLsizei*, GLint*));
+
 #endif // /ifndef(__APPLE__)
 
 #undef DECL_GLPROC

@@ -239,6 +239,18 @@ void D3D11RenderSystem::Release(Query& query)
     RemoveFromUniqueSet(queries_, &query);
 }
 
+/* ----- Fences ----- */
+
+Fence* D3D11RenderSystem::CreateFence()
+{
+    return TakeOwnership(fences_, MakeUnique<D3D11Fence>(/*device_.Get(), 0*/));
+}
+
+void D3D11RenderSystem::Release(Fence& fence)
+{
+    RemoveFromUniqueSet(fences_, &fence);
+}
+
 
 /*
  * ======= Private: =======

@@ -347,6 +347,17 @@ void D3D12RenderSystem::Release(Query& query)
     //todo...
 }
 
+/* ----- Fences ----- */
+
+Fence* D3D12RenderSystem::CreateFence()
+{
+    return TakeOwnership(fences_, MakeUnique<D3D12Fence>(device_.Get(), 0));
+}
+
+void D3D12RenderSystem::Release(Fence& fence)
+{
+    RemoveFromUniqueSet(fences_, &fence);
+}
 
 /* ----- Extended internal functions ----- */
 

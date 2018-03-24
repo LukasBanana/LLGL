@@ -327,6 +327,16 @@ PFNGLTRANSFORMFEEDBACKVARYINGSNVPROC                    glTransformFeedbackVaryi
 PFNGLGETVARYINGLOCATIONNVPROC                           glGetVaryingLocationNV                          = nullptr;
 PFNGLGETACTIVEVARYINGNVPROC                             glGetActiveVaryingNV                            = nullptr;
 
+/* GL_ARB_sync */
+
+PFNGLFENCESYNCPROC                                      glFenceSync                                     = nullptr;
+PFNGLISSYNCPROC                                         glIsSync                                        = nullptr;
+PFNGLDELETESYNCPROC                                     glDeleteSync                                    = nullptr;
+PFNGLCLIENTWAITSYNCPROC                                 glClientWaitSync                                = nullptr;
+PFNGLWAITSYNCPROC                                       glWaitSync                                      = nullptr;
+PFNGLGETINTEGER64VPROC                                  glGetInteger64v                                 = nullptr;
+PFNGLGETSYNCIVPROC                                      glGetSynciv                                     = nullptr;
+
 #endif // /ifndef(__APPLE__)
 
 

@@ -329,8 +329,18 @@ extern PFNGLENDTRANSFORMFEEDBACKNVPROC                      glEndTransformFeedba
 extern PFNGLTRANSFORMFEEDBACKVARYINGSNVPROC                 glTransformFeedbackVaryingsNV;
 extern PFNGLGETVARYINGLOCATIONNVPROC                        glGetVaryingLocationNV;
 extern PFNGLGETACTIVEVARYINGNVPROC                          glGetActiveVaryingNV;
-    
-#endif
+
+/* GL_ARB_sync */
+
+extern PFNGLFENCESYNCPROC                                   glFenceSync;
+extern PFNGLISSYNCPROC                                      glIsSync;
+extern PFNGLDELETESYNCPROC                                  glDeleteSync;
+extern PFNGLCLIENTWAITSYNCPROC                              glClientWaitSync;
+extern PFNGLWAITSYNCPROC                                    glWaitSync;
+extern PFNGLGETINTEGER64VPROC                               glGetInteger64v;
+extern PFNGLGETSYNCIVPROC                                   glGetSynciv;
+
+#endif // /ifndef(__APPLE__)
 
 
 } // /namespace LLGL

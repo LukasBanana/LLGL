@@ -437,6 +437,23 @@ void DbgCommandBuffer::EndRenderCondition()
     instance.EndRenderCondition();
 }
 
+/* ----- Fences ----- */
+
+void DbgCommandBuffer::SubmitFence(Fence& fence)
+{
+    instance.SubmitFence(fence);
+}
+
+bool DbgCommandBuffer::WaitForFence(Fence& fence, std::uint64_t timeout)
+{
+    return instance.WaitForFence(fence, timeout);
+}
+
+void DbgCommandBuffer::WaitForFinish()
+{
+    instance.SyncGPU();
+}
+
 /* ----- Drawing ----- */
 
 void DbgCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
@@ -580,13 +597,6 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
     
     LLGL_DBG_PROFILER_DO(dispatchComputeCalls.Inc());
-}
-
-/* ----- Misc ----- */
-
-void DbgCommandBuffer::SyncGPU()
-{
-    instance.SyncGPU();
 }
 
 

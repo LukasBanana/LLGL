@@ -18,6 +18,7 @@
 #include "Buffer/D3D12Buffer.h"
 #include "Texture/D3D12Texture.h"
 
+#include "RenderState/D3D12Fence.h"
 #include "RenderState/D3D12GraphicsPipeline.h"
 
 #include "Shader/D3D12Shader.h"
@@ -120,6 +121,12 @@ class D3D12RenderSystem : public RenderSystem
 
         void Release(Query& query) override;
 
+        /* ----- Fences ----- */
+
+        Fence* CreateFence() override;
+
+        void Release(Fence& fence) override;
+
         /* ----- Extended internal functions ----- */
 
         ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
@@ -205,6 +212,7 @@ class D3D12RenderSystem : public RenderSystem
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
         HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
         //HWObjectContainer<D3D12Sampler>             samplers_;
+        HWObjectContainer<D3D12Fence>               fences_;
 
         /* ----- Other members ----- */
 

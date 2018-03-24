@@ -364,6 +364,18 @@ void VKRenderSystem::Release(Query& query)
     RemoveFromUniqueSet(queries_, &query);
 }
 
+/* ----- Fences ----- */
+
+Fence* VKRenderSystem::CreateFence()
+{
+    return TakeOwnership(fences_, MakeUnique<VKFence>(device_));
+}
+
+void VKRenderSystem::Release(Fence& fence)
+{
+    RemoveFromUniqueSet(fences_, &fence);
+}
+
 
 /*
  * ======= Private: =======

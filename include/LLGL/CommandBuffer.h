@@ -26,6 +26,7 @@
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
 #include "Query.h"
+#include "Fence.h"
 
 #include <cstdint>
 
@@ -395,6 +396,28 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual void EndRenderCondition() = 0;
 
+        /* ----- Fences ----- */
+
+        //! Submits the specified fence to the command queue for CPU/GPU synchronization.
+        virtual void SubmitFence(Fence& fence) = 0;
+
+        /**
+        \brief Blocks the CPU execution until the specified fence has been signaled.
+        \param[in] fence Specifies the fence for which the CPU needs to wait to be signaled.
+        \param[in] timeout Specifies the waiting timeout (in nanoseconds).
+        \return True on success, or false if the fence has a timeout (in nanoseconds) or the device is lost.
+        \remarks To wait for the completion of the entire GPU command queue, use 'WaitForFinish'.
+        \see WaitForFinish
+        */
+        virtual bool WaitForFence(Fence& fence, std::uint64_t timeout) = 0;
+
+        /**
+        \brief Blocks the CPU execution until the entire GPU command queue has been completed (or rather flushed).
+        \remarks To wait for a specific point in the command queue, use fences.
+        \see WaitForFence
+        */
+        virtual void WaitForFinish() = 0;
+
         /* ----- Drawing ----- */
 
         /**
@@ -455,10 +478,18 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) = 0;
 
-        /* ----- Misc ----- */
+        /* ----- DEPRECATED ----- */
 
-        //! Synchronizes the GPU, i.e. waits until the GPU has completed all pending commands from this command buffer.
-        virtual void SyncGPU() = 0;
+        /**
+        \deprecated Use 'WaitForFinish' instead.
+        \see WaitForFinish
+        */
+        inline void SyncGPU()
+        {
+            WaitForFinish();
+        }
+
+        /* ----- /DEPRECATED ----- */
 
     protected:
 

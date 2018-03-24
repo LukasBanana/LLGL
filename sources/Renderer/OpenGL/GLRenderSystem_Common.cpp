@@ -197,6 +197,18 @@ void GLRenderSystem::Release(Query& query)
     RemoveFromUniqueSet(queries_, &query);
 }
 
+/* ----- Fences ----- */
+
+Fence* GLRenderSystem::CreateFence()
+{
+    return TakeOwnership(fences_, MakeUnique<GLFence>());
+}
+
+void GLRenderSystem::Release(Fence& fence)
+{
+    RemoveFromUniqueSet(fences_, &fence);
+}
+
 
 /*
  * ======= Protected: =======

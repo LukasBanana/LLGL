@@ -29,6 +29,7 @@
 #include "Texture/GLRenderTarget.h"
 
 #include "RenderState/GLQuery.h"
+#include "RenderState/GLFence.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
 
@@ -135,6 +136,12 @@ class GLRenderSystem : public RenderSystem
 
         void Release(Query& query) override;
 
+        /* ----- Fences ----- */
+
+        Fence* CreateFence() override;
+
+        void Release(Fence& fence) override;
+
     protected:
 
         RenderContext* AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc);
@@ -167,6 +174,7 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<GLComputePipeline>    computePipelines_;
         HWObjectContainer<GLQuery>              queries_;
+        HWObjectContainer<GLFence>              fences_;
 
         DebugCallback                           debugCallback_;
 

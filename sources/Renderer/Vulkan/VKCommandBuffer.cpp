@@ -9,6 +9,7 @@
 #include "VKRenderContext.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKQuery.h"
+#include "RenderState/VKFence.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
 #include "Buffer/VKBuffer.h"
@@ -383,6 +384,25 @@ void VKCommandBuffer::EndRenderCondition()
     //todo
 }
 
+/* ----- Fences ----- */
+
+void VKCommandBuffer::SubmitFence(Fence& fence)
+{
+    auto& fenceVK = LLGL_CAST(VKFence&, fence);
+    fenceVK.Submit(device_);
+}
+
+bool VKCommandBuffer::WaitForFence(Fence& fence, std::uint64_t timeout)
+{
+    auto& fenceVK = LLGL_CAST(VKFence&, fence);
+    return fenceVK.Wait(device_, timeout);
+}
+
+void VKCommandBuffer::WaitForFinish()
+{
+    //todo
+}
+
 /* ----- Drawing ----- */
 
 void VKCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
@@ -438,13 +458,6 @@ void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint3
 void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     vkCmdDispatch(commandBuffer_, groupSizeX, groupSizeY, groupSizeZ);
-}
-
-/* ----- Misc ----- */
-
-void VKCommandBuffer::SyncGPU()
-{
-    //todo
 }
 
 /* --- Extended functions --- */

@@ -22,6 +22,7 @@
 #include "RenderState/D3D11ComputePipeline.h"
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11Query.h"
+#include "RenderState/D3D11Fence.h"
 
 #include "Shader/D3D11Shader.h"
 #include "Shader/D3D11ShaderProgram.h"
@@ -129,6 +130,12 @@ class D3D11RenderSystem : public RenderSystem
 
         void Release(Query& query) override;
 
+        /* ----- Fences ----- */
+
+        Fence* CreateFence() override;
+
+        void Release(Fence& fence) override;
+
         /* ----- Extended internal functions ----- */
 
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
@@ -188,6 +195,7 @@ class D3D11RenderSystem : public RenderSystem
         HWObjectContainer<D3D11GraphicsPipeline>    graphicsPipelines_;
         HWObjectContainer<D3D11ComputePipeline>     computePipelines_;
         HWObjectContainer<D3D11Query>               queries_;
+        HWObjectContainer<D3D11Fence>               fences_;
 
         /* ----- Other members ----- */
 

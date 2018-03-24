@@ -117,6 +117,12 @@ class DbgRenderSystem : public RenderSystem
 
         void Release(Query& query) override;
 
+        /* ----- Fences ----- */
+
+        Fence* CreateFence() override;
+
+        void Release(Fence& fence) override;
+
     private:
 
         void DebugBufferSize(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset);

@@ -483,6 +483,18 @@ static bool Load_GL_NV_transform_feedback(bool usePlaceHolder)
     return true;
 }
 
+static bool Load_GL_ARB_sync(bool usePlaceHolder)
+{
+    LOAD_GLPROC( glFenceSync      );
+    LOAD_GLPROC( glIsSync         );
+    LOAD_GLPROC( glDeleteSync     );
+    LOAD_GLPROC( glClientWaitSync );
+    LOAD_GLPROC( glWaitSync       );
+    LOAD_GLPROC( glGetInteger64v  );
+    LOAD_GLPROC( glGetSynciv      );
+    return true;
+}
+
 #undef LOAD_GLPROC_SIMPLE
 #undef LOAD_GLPROC
     
@@ -608,6 +620,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( EXT_draw_buffers2                );
     ENABLE_GLEXT( EXT_transform_feedback           );
     ENABLE_GLEXT( NV_transform_feedback            );
+    ENABLE_GLEXT( ARB_sync                         );
     
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );
@@ -715,6 +728,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( EXT_draw_buffers2                );
     LOAD_GLEXT( EXT_transform_feedback           );
     LOAD_GLEXT( NV_transform_feedback            );
+    LOAD_GLEXT( ARB_sync                         );
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );

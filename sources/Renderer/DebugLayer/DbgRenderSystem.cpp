@@ -419,6 +419,18 @@ void DbgRenderSystem::Release(Query& query)
     ReleaseDbg(queries_, query);
 }
 
+/* ----- Fences ----- */
+
+Fence* DbgRenderSystem::CreateFence()
+{
+    return instance_->CreateFence();
+}
+
+void DbgRenderSystem::Release(Fence& fence)
+{
+    return instance_->Release(fence);
+}
+
 
 /*
  * ======= Private: =======
