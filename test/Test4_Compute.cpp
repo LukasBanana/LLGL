@@ -100,7 +100,7 @@ int main()
         commands->EndQuery(*timerQuery);
 
         // Wait until the GPU has completed all work, to be sure we can evaluate the storage buffer
-        commands->SyncGPU();
+        renderer->GetCommandQueue()->WaitForFinish();
 
         // Evaluate compute shader
         auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);

@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/VideoAdapter.h>
 
+#include "D3D12CommandQueue.h"
 #include "D3D12CommandBuffer.h"
 #include "D3D12RenderContext.h"
 
@@ -49,6 +50,10 @@ class D3D12RenderSystem : public RenderSystem
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
+
+        /* ----- Command queues ----- */
+
+        CommandQueue* GetCommandQueue() override;
 
         /* ----- Command buffers ----- */
 
@@ -156,10 +161,10 @@ class D3D12RenderSystem : public RenderSystem
             return device_.Get();
         }
 
-        inline ID3D12CommandQueue* GetCommandQueue() const
+        /*inline ID3D12CommandQueue* GetHardwareQueue() const
         {
-            return commandQueue_.Get();
-        }
+            return queue_.Get();
+        }*/
 
     private:
         
@@ -187,7 +192,7 @@ class D3D12RenderSystem : public RenderSystem
         ComPtr<ID3D12Device>                        device_;
         D3D_FEATURE_LEVEL                           featureLevel_           = D3D_FEATURE_LEVEL_9_1;
 
-        ComPtr<ID3D12CommandQueue>                  commandQueue_;
+        ComPtr<ID3D12CommandQueue>                  queue_;
         ComPtr<ID3D12CommandAllocator>              commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>           commandList_; // graphics command list to upload data to the GPU
 
@@ -203,6 +208,7 @@ class D3D12RenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<D3D12RenderContext>       renderContexts_;
+        HWObjectInstance<D3D12CommandQueue>         commandQueue_;
         HWObjectContainer<D3D12CommandBuffer>       commandBuffers_;
         HWObjectContainer<D3D12Buffer>              buffers_;
         HWObjectContainer<BufferArray>              bufferArrays_;

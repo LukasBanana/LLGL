@@ -18,7 +18,10 @@ namespace LLGL
 
 
 template <typename T>
-using HWObjectContainer = std::set<std::unique_ptr<T>>;
+using HWObjectInstance = std::unique_ptr<T>;
+
+template <typename T>
+using HWObjectContainer = std::set<HWObjectInstance<T>>;
 
 
 } // /namespace LLGL

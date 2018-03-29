@@ -13,6 +13,7 @@
 #include "Ext/GLExtensionLoader.h"
 #include "../ContainerTypes.h"
 
+#include "GLCommandQueue.h"
 #include "GLCommandBuffer.h"
 #include "GLRenderContext.h"
 
@@ -64,6 +65,10 @@ class GLRenderSystem : public RenderSystem
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
+
+        /* ----- Command queues ----- */
+
+        CommandQueue* GetCommandQueue() override;
 
         /* ----- Command buffers ----- */
 
@@ -161,6 +166,7 @@ class GLRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<GLRenderContext>      renderContexts_;
+        HWObjectInstance<GLCommandQueue>        commandQueue_;
         HWObjectContainer<GLCommandBuffer>      commandBuffers_;
         HWObjectContainer<GLBuffer>             buffers_;
         HWObjectContainer<GLBufferArray>        bufferArrays_;

@@ -9,7 +9,6 @@
 #include "VKRenderContext.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKQuery.h"
-#include "RenderState/VKFence.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
 #include "Buffer/VKBuffer.h"
@@ -380,25 +379,6 @@ void VKCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMo
 }
 
 void VKCommandBuffer::EndRenderCondition()
-{
-    //todo
-}
-
-/* ----- Fences ----- */
-
-void VKCommandBuffer::SubmitFence(Fence& fence)
-{
-    auto& fenceVK = LLGL_CAST(VKFence&, fence);
-    fenceVK.Submit(device_);
-}
-
-bool VKCommandBuffer::WaitForFence(Fence& fence, std::uint64_t timeout)
-{
-    auto& fenceVK = LLGL_CAST(VKFence&, fence);
-    return fenceVK.Wait(device_, timeout);
-}
-
-void VKCommandBuffer::WaitForFinish()
 {
     //todo
 }

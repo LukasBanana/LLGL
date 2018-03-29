@@ -27,8 +27,7 @@ namespace LLGL
 {
 
 
-D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem) :
-    commandQueue_ { renderSystem.GetCommandQueue() }
+D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
 {
     CreateDevices(renderSystem);
     //InitStateManager();
@@ -272,25 +271,6 @@ void D3D12CommandBuffer::EndRenderCondition()
 {
     //commandList_->SetPredication(nullptr, offset, D3D12_PREDICATION_OP_EQUAL_ZERO);
     //todo...
-}
-
-/* ----- Fences ----- */
-
-void D3D12CommandBuffer::SubmitFence(Fence& fence)
-{
-    auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence); 
-    fenceD3D.Submit(commandQueue_);
-}
-
-bool D3D12CommandBuffer::WaitForFence(Fence& fence, std::uint64_t timeout)
-{
-    auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence); 
-    return fenceD3D.Wait(timeout);
-}
-
-void D3D12CommandBuffer::WaitForFinish()
-{
-    //renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
 }
 
 /* ----- Drawing ----- */

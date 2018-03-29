@@ -107,6 +107,13 @@ void VKRenderSystem::Release(RenderContext& renderContext)
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
+/* ----- Command queues ----- */
+
+CommandQueue* VKRenderSystem::GetCommandQueue()
+{
+    return commandQueue_.get();
+}
+
 /* ----- Command buffers ----- */
 
 CommandBuffer* VKRenderSystem::CreateCommandBuffer()
@@ -620,6 +627,9 @@ void VKRenderSystem::CreateLogicalDevice()
 
     /* Query device graphics queue */
     vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+
+    /* Create command queue interface */
+    commandQueue_ = MakeUnique<VKCommandQueue>(device_, graphicsQueue_);
 }
 
 void VKRenderSystem::CreateStagingCommandResources()

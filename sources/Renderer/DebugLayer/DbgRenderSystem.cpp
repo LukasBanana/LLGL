@@ -59,6 +59,13 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
     ReleaseDbg(renderContexts_, renderContext);
 }
 
+/* ----- Command queues ----- */
+
+CommandQueue* DbgRenderSystem::GetCommandQueue()
+{
+    return instance_->GetCommandQueue();
+}
+
 /* ----- Command buffers ----- */
 
 CommandBuffer* DbgRenderSystem::CreateCommandBuffer()

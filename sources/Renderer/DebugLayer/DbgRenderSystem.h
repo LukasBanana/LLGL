@@ -46,6 +46,10 @@ class DbgRenderSystem : public RenderSystem
 
         void Release(RenderContext& renderContext) override;
 
+        /* ----- Command queues ----- */
+
+        CommandQueue* GetCommandQueue() override;
+
         /* ----- Command buffers ----- */
 
         CommandBuffer* CreateCommandBuffer() override;

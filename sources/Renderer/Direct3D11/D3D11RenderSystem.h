@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include <LLGL/VideoAdapter.h>
 
+#include "D3D11CommandQueue.h"
 #include "D3D11CommandBuffer.h"
 #include "D3D11RenderContext.h"
 
@@ -58,6 +59,10 @@ class D3D11RenderSystem : public RenderSystem
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
+
+        /* ----- Command queues ----- */
+
+        CommandQueue* GetCommandQueue() override;
 
         /* ----- Command buffers ----- */
 
@@ -154,7 +159,7 @@ class D3D11RenderSystem : public RenderSystem
         void QueryVideoAdapters();
         void CreateDevice(IDXGIAdapter* adapter);
         bool CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels, UINT flags, HRESULT& hr);
-        void InitStateManager();
+        void CreateStateManagerAndCommandQueue();
 
         void QueryRendererInfo();
         void QueryRenderingCaps();
@@ -182,6 +187,7 @@ class D3D11RenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<D3D11RenderContext>       renderContexts_;
+        HWObjectInstance<D3D11CommandQueue>         commandQueue_;
         HWObjectContainer<D3D11CommandBuffer>       commandBuffers_;
         HWObjectContainer<D3D11Buffer>              buffers_;
         HWObjectContainer<D3D11BufferArray>         bufferArrays_;

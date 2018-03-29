@@ -57,6 +57,13 @@ void GLRenderSystem::Release(RenderContext& renderContext)
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
+/* ----- Command queues ----- */
+
+CommandQueue* GLRenderSystem::GetCommandQueue()
+{
+    return commandQueue_.get();
+}
+
 /* ----- Command buffers ----- */
 
 CommandBuffer* GLRenderSystem::CreateCommandBuffer()
@@ -225,6 +232,7 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
     {
         LoadGLExtensions(desc.profileOpenGL);
         SetDebugCallback(desc.debugCallback);
+        commandQueue_ = MakeUnique<GLCommandQueue>();
     }
 
     /* Use uniform clipping space */

@@ -101,12 +101,6 @@ class D3D11CommandBuffer : public CommandBuffer
         void BeginRenderCondition(Query& query, const RenderConditionMode mode) override;
         void EndRenderCondition() override;
 
-        /* ----- Fences ----- */
-
-        void SubmitFence(Fence& fence) override;
-        bool WaitForFence(Fence& fence, std::uint64_t timeout) override;
-        void WaitForFinish() override;
-
         /* ----- Drawing ----- */
 
         void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) override;

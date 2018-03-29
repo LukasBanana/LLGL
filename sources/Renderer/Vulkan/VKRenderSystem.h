@@ -14,6 +14,7 @@
 #include "VKPtr.h"
 #include "../ContainerTypes.h"
 
+#include "VKCommandQueue.h"
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 
@@ -60,6 +61,10 @@ class VKRenderSystem : public RenderSystem
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
+
+        /* ----- Command queues ----- */
+
+        CommandQueue* GetCommandQueue() override;
 
         /* ----- Command buffers ----- */
 
@@ -188,6 +193,7 @@ class VKRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<VKRenderContext>      renderContexts_;
+        HWObjectInstance<VKCommandQueue>        commandQueue_;
         HWObjectContainer<VKCommandBuffer>      commandBuffers_;
         HWObjectContainer<VKBuffer>             buffers_;
         HWObjectContainer<VKBufferArray>        bufferArrays_;

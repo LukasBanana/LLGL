@@ -30,7 +30,6 @@
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
 #include "RenderState/GLQuery.h"
-#include "RenderState/GLFence.h"
 
 
 namespace LLGL
@@ -482,25 +481,6 @@ void GLCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMo
 void GLCommandBuffer::EndRenderCondition()
 {
     glEndConditionalRender();
-}
-
-/* ----- Fences ----- */
-
-void GLCommandBuffer::SubmitFence(Fence& fence)
-{
-    auto& fenceGL = LLGL_CAST(GLFence&, fence);
-    fenceGL.Submit();
-}
-
-bool GLCommandBuffer::WaitForFence(Fence& fence, std::uint64_t timeout)
-{
-    auto& fenceGL = LLGL_CAST(GLFence&, fence);
-    return fenceGL.Wait(timeout);
-}
-
-void GLCommandBuffer::WaitForFinish()
-{
-    glFinish();
 }
 
 /* ----- Drawing ----- */

@@ -513,25 +513,6 @@ void D3D11CommandBuffer::EndRenderCondition()
     context_->SetPredication(nullptr, FALSE);
 }
 
-/* ----- Fences ----- */
-
-void D3D11CommandBuffer::SubmitFence(Fence& fence)
-{
-    //TODO: use D3D11Fence
-}
-
-bool D3D11CommandBuffer::WaitForFence(Fence& fence, std::uint64_t timeout)
-{
-    //TODO: use D3D11Fence
-    context_->Flush();
-    return true;
-}
-
-void D3D11CommandBuffer::WaitForFinish()
-{
-    context_->Flush();
-}
-
 /* ----- Drawing ----- */
 
 void D3D11CommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)

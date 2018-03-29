@@ -39,9 +39,12 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateGPUSynchObjects();
 
     /* Create command queue, command allocator, and graphics command list */
-    commandQueue_   = CreateDXCommandQueue();
+    queue_          = CreateDXCommandQueue();
     commandAlloc_   = CreateDXCommandAllocator();
     commandList_    = CreateDXCommandList();
+
+    /* Create command queue interface */
+    commandQueue_ = MakeUnique<D3D12CommandQueue>(queue_, commandAlloc_);
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -69,6 +72,13 @@ RenderContext* D3D12RenderSystem::CreateRenderContext(const RenderContextDescrip
 void D3D12RenderSystem::Release(RenderContext& renderContext)
 {
     RemoveFromUniqueSet(renderContexts_, &renderContext);
+}
+
+/* ----- Command queues ----- */
+
+CommandQueue* D3D12RenderSystem::GetCommandQueue()
+{
+    return commandQueue_.get();
 }
 
 /* ----- Command buffers ----- */
@@ -365,7 +375,7 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
 {
     ComPtr<IDXGISwapChain1> swapChain;
 
-    auto hr = factory_->CreateSwapChainForHwnd(commandQueue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
+    auto hr = factory_->CreateSwapChainForHwnd(queue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
@@ -448,7 +458,7 @@ void D3D12RenderSystem::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* co
 
     /* Execute command list */
     ID3D12CommandList* cmdLists[] = { commandList };
-    commandQueue_->ExecuteCommandLists(1, cmdLists);
+    queue_->ExecuteCommandLists(1, cmdLists);
 }
 
 void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
@@ -473,7 +483,7 @@ void D3D12RenderSystem::SyncGPU()
 void D3D12RenderSystem::SignalFenceValue(UINT64 fenceValue)
 {
     /* Schedule signal command into the qeue */
-    auto hr = commandQueue_->Signal(fence_.Get(), fenceValue);
+    auto hr = queue_->Signal(fence_.Get(), fenceValue);
     DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
 }
 

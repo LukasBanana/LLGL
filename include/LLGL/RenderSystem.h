@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "RenderContext.h"
+#include "CommandQueue.h"
 #include "CommandBuffer.h"
 #include "RenderSystemFlags.h"
 #include "RenderingProfiler.h"
@@ -172,6 +173,11 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified render context. This will all release all resources, that are associated with this render context.
         virtual void Release(RenderContext& renderContext) = 0;
+
+        /* ----- Command queues ----- */
+
+        //! Returns the single instance of the command queue.
+        virtual CommandQueue* GetCommandQueue() = 0;
 
         /* ----- Command buffers ----- */
 
