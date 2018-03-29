@@ -30,7 +30,7 @@ void D3D12Fence::Submit(ID3D12CommandQueue* commandQueue)
     /* Schedule signal command into the qeue */
     ++value_;
     auto hr = commandQueue->Signal(fence_.Get(), value_);
-    DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
+    DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
 }
 
 bool D3D12Fence::Wait(UINT64 timeout)

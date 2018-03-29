@@ -80,6 +80,9 @@ int main()
 
         window->AddEventListener(std::make_shared<ResizeHandler>(*context));
 
+        // Get command queue
+        auto queue = renderer->GetCommandQueue();
+
         // Create command buffer
         auto commands = renderer->CreateCommandBuffer();
 
@@ -190,6 +193,8 @@ int main()
 
         // Set clear color
         commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
+
+        //auto fence = renderer->CreateFence();
 
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))

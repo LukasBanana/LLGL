@@ -26,7 +26,7 @@ VKFence::VKFence(const VKPtr<VkDevice>& device) :
     VKThrowIfFailed(result, "failed to create Vulkan fence");
 }
 
-void VKFence::Submit(VkDevice device)
+void VKFence::Reset(VkDevice device)
 {
     vkResetFences(device, 1, &fence_);
 }
