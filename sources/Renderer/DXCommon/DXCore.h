@@ -44,11 +44,8 @@ struct D3DTextureFormatDescriptor
 
 /* ----- Functions ----- */
 
-// Converts the DX error code into a string.
-std::string DXErrorToStr(const HRESULT errorCode);
-
-// Throws an std::runtime_error exception if 'errorCode' is not S_OK.
-void DXThrowIfFailed(const HRESULT errorCode, const std::string& info);
+// Throws an std::runtime_error exception if 'hr' is not S_OK.
+void DXThrowIfFailed(const HRESULT hr, const char* info);
 
 // Returns the blob data as string.
 std::string DXGetBlobString(ID3DBlob* blob);

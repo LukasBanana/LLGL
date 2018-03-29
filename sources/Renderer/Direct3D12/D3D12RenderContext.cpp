@@ -250,7 +250,12 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     {
         /* Get render target resource from swap-chain buffer */
         auto hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(renderTargets_[i].ReleaseAndGetAddressOf()));
-        DXThrowIfFailed(hr, "failed to get D3D12 render target " + std::to_string(i) + "/" + std::to_string(numFrames_) + " from swap chain");
+
+        if (FAILED(hr))
+        {
+            std::string info = "failed to get D3D12 render target " + std::to_string(i) + "/" + std::to_string(numFrames_) + " from swap chain";
+            DXThrowIfFailed(hr, info.c_str());
+        }
 
         /* Create render target view (RTV) */
         device->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDescHandle);
@@ -288,7 +293,12 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
                 nullptr,
                 IID_PPV_ARGS(renderTargetsMS_[i].ReleaseAndGetAddressOf())
             );
-            DXThrowIfFailed(hr, "failed to create D3D12 multi-sampled render target " + std::to_string(i) + "/" + std::to_string(numFrames_) + " for swap chain");
+
+            if (FAILED(hr))
+            {
+                std::string info = "failed to create D3D12 multi-sampled render target " + std::to_string(i) + "/" + std::to_string(numFrames_) + " for swap chain";
+                DXThrowIfFailed(hr, info.c_str());
+            }
 
             /* Create render target view (RTV) */
             device->CreateRenderTargetView(renderTargetsMS_[i].Get(), nullptr, rtvDescHandle);

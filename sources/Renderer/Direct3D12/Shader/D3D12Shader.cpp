@@ -126,10 +126,12 @@ void D3D12Shader::ReflectShader()
             /* Get signature parameter descriptor */
             D3D12_SIGNATURE_PARAMETER_DESC paramDesc;
             hr = reflection->GetInputParameterDesc(i, &paramDesc);
-            DXThrowIfFailed(
-                hr, "failed to retrieve D3D12 signature parameter descriptor (" +
-                std::to_string(i + 1) + " of " + std::to_string(shaderDesc.InputParameters) + ")"
-            );
+
+            if (FAILED(hr))
+            {
+                std::string info = "failed to retrieve D3D12 signature parameter descriptor (" + std::to_string(i + 1) + " of " + std::to_string(shaderDesc.InputParameters) + ")";
+                DXThrowIfFailed(hr, info.c_str());
+            }
 
             /* Add vertex attribute to output list */
             VertexAttribute vertexAttrib;

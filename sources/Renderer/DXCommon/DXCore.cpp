@@ -20,9 +20,9 @@ namespace LLGL
 {
 
 
-std::string DXErrorToStr(const HRESULT errorCode)
+static const char* DXErrorToStr(const HRESULT hr)
 {
-    switch (errorCode)
+    switch (hr)
     {
         // see https://msdn.microsoft.com/en-us/library/windows/desktop/aa378137(v=vs.85).aspx
         LLGL_CASE_TO_STR( S_OK );
@@ -76,13 +76,29 @@ std::string DXErrorToStr(const HRESULT errorCode)
         LLGL_CASE_TO_STR( D3D12_ERROR_DRIVER_VERSION_MISMATCH );
         #endif
     }
-    return ToHex(errorCode);
+    return nullptr;
 }
 
-void DXThrowIfFailed(const HRESULT errorCode, const std::string& info)
+void DXThrowIfFailed(const HRESULT hr, const char* info)
 {
-    if (FAILED(errorCode))
-        throw std::runtime_error(info + " (error code = " + DXErrorToStr(errorCode) + ")");
+    if (FAILED(hr))
+    {
+        std::string s = info;
+        
+        s += " (error code = ";
+
+        if (auto err = DXErrorToStr(hr))
+            s += err;
+        else
+        {
+            s += "0x";
+            s += ToHex(hr);
+        }
+
+        s += ")";
+
+        throw std::runtime_error(s);
+    }
 }
 
 template <typename Cont>
