@@ -144,12 +144,13 @@ class D3D12RenderSystem : public RenderSystem
         // Close and execute command list.
         void CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList);
 
+        // Internal fence
+        void SignalFenceValue(UINT64 fenceValue);
+        void WaitForFenceValue(UINT64 fenceValue);
+
         // Waits until the GPU has done all previous work.
         void SyncGPU(UINT64& fenceValue);
         void SyncGPU();
-
-        void SignalFenceValue(UINT64 fenceValue);
-        void WaitForFenceValue(UINT64 fenceValue);
 
         inline D3D_FEATURE_LEVEL GetFeatureLevel() const
         {

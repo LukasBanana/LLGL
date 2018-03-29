@@ -461,25 +461,6 @@ void D3D12RenderSystem::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* co
     queue_->ExecuteCommandLists(1, cmdLists);
 }
 
-void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
-{
-    /* Schedule signal command into the qeue */
-    SignalFenceValue(fenceValue);
-
-    /* Wait until the fence has been crossed */
-    auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
-    DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
-    WaitForSingleObjectEx(fenceEvent_, INFINITE, FALSE);
-
-    /* Increment fence value */
-    ++fenceValue;
-}
-
-void D3D12RenderSystem::SyncGPU()
-{
-    SyncGPU(fenceValue_);
-}
-
 void D3D12RenderSystem::SignalFenceValue(UINT64 fenceValue)
 {
     /* Schedule signal command into the qeue */
@@ -496,6 +477,25 @@ void D3D12RenderSystem::WaitForFenceValue(UINT64 fenceValue)
         DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
         WaitForSingleObjectEx(fenceEvent_, INFINITE, FALSE);
     }
+}
+
+void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
+{
+    /* Increment fence value */
+    ++fenceValue;
+
+    /* Schedule signal command into the qeue */
+    SignalFenceValue(fenceValue);
+
+    /* Wait until the fence has been processed */
+    auto hr = fence_->SetEventOnCompletion(fenceValue, fenceEvent_);
+    DXThrowIfFailed(hr, "failed to set 'on completion'-event for D3D12 fence");
+    WaitForSingleObjectEx(fenceEvent_, INFINITE, FALSE);
+}
+
+void D3D12RenderSystem::SyncGPU()
+{
+    SyncGPU(fenceValue_);
 }
 
 
@@ -586,7 +586,13 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
     DXThrowIfFailed(hr, "failed to create D3D12 fence");
     
     /* Create Win32 event */
+    #if 0
     fenceEvent_ = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+    #else
+    fenceEvent_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    #endif
+    if (!fenceEvent_)
+        DXThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()), "failed to create Win32 event object");
 }
 
 void D3D12RenderSystem::QueryRendererInfo()

@@ -83,9 +83,15 @@ void DXThrowIfFailed(const HRESULT hr, const char* info)
 {
     if (FAILED(hr))
     {
-        std::string s = info;
+        std::string s;
         
-        s += " (error code = ";
+        if (info)
+        {
+            s += info;
+            s += " (error code = ";
+        }
+        else
+            s += "Direct3D operation failed (error code = ";
 
         if (auto err = DXErrorToStr(hr))
             s += err;
@@ -125,7 +131,7 @@ std::vector<char> DXGetBlobData(ID3DBlob* blob)
     return GetBlobDataTmpl<std::vector<char>>(blob);
 }
 
-static int GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+static std::uint32_t GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
 {
     if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
     if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;
@@ -133,7 +139,7 @@ static int GetMaxTextureDimension(D3D_FEATURE_LEVEL featureLevel)
     else                                        return 2048;
 }
 
-static int GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
+static std::uint32_t GetMaxCubeTextureDimension(D3D_FEATURE_LEVEL featureLevel)
 {
     if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return 16384;
     if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return 8192;

@@ -29,13 +29,10 @@ void D3D12Buffer::UpdateStaticSubresource(
         throw std::out_of_range(LLGL_ASSERT_INFO("'bufferSize' and/or 'offset' are out of range"));
 
     /* Create resource to upload memory from CPU to GPU */
-    CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
-    auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
-
     auto hr = device->CreateCommittedResource(
-        &uploadHeapProperties,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
         D3D12_HEAP_FLAG_NONE,
-        &bufferDesc,
+        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())
@@ -43,24 +40,20 @@ void D3D12Buffer::UpdateStaticSubresource(
 
     DXThrowIfFailed(hr, "failed to create D3D12 committed resource for upload buffer");
 
-    /* Copy data into upload buffer */
-    void* dest = nullptr;
-    
-    hr = uploadBuffer->Map(0, nullptr, &dest);
-    DXThrowIfFailed(hr, "failed to map D3D12 resource");
-    {
-        ::memcpy(dest, data, static_cast<std::size_t>(bufferSize));
-    }
-    uploadBuffer->Unmap(0, nullptr);
+    #ifdef LLGL_DEBUG
+    uploadBuffer->SetName(L"D3D12Buffer/UploadBuffer");
+    #endif
 
-    /* Upload memory to GPU */
-    commandList->CopyBufferRegion(resource_.Get(), 0, uploadBuffer.Get(), 0, bufferSize);
-    
-    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, uploadState
-    );
-    
-    commandList->ResourceBarrier(1, &resourceBarrier);
+    /* Copy data into upload buffer, then copy upload buffer into destination resource */
+    D3D12_SUBRESOURCE_DATA subresourceData;
+    {
+        subresourceData.pData       = data;
+        subresourceData.RowPitch    = static_cast<LONG_PTR>(bufferSize);
+        subresourceData.SlicePitch  = subresourceData.RowPitch;
+    }
+    UpdateSubresources<1>(commandList, resource_.Get(), uploadBuffer.Get(), 0, 0, 1, &subresourceData);
+
+    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, uploadState));
 }
 
 void D3D12Buffer::UpdateDynamicSubresource(const void* data, UINT64 bufferSize, UINT64 offset)
