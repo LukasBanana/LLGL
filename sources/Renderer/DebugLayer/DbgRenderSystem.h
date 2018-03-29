@@ -46,6 +46,10 @@ class DbgRenderSystem : public RenderSystem
 
         void Release(RenderContext& renderContext) override;
 
+        /* ----- Command queues ----- */
+
+        CommandQueue* GetCommandQueue() override;
+
         /* ----- Command buffers ----- */
 
         CommandBuffer* CreateCommandBuffer() override;
@@ -116,6 +120,12 @@ class DbgRenderSystem : public RenderSystem
         Query* CreateQuery(const QueryDescriptor& desc) override;
 
         void Release(Query& query) override;
+
+        /* ----- Fences ----- */
+
+        Fence* CreateFence() override;
+
+        void Release(Fence& fence) override;
 
     private:
 

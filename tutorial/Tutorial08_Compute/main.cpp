@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
         commands->Dispatch(static_cast<std::uint32_t>(inputData.size()), 1, 1);
 
         // Read result
-        commands->SyncGPU();
+        renderer->GetCommandQueue()->WaitForFinish();
         
         if (auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly))
         {

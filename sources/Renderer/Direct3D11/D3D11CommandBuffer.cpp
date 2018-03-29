@@ -562,13 +562,6 @@ void D3D11CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupS
     context_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }
 
-/* ----- Misc ----- */
-
-void D3D11CommandBuffer::SyncGPU()
-{
-    context_->Flush();
-}
-
 
 /*
  * ======= Private: =======

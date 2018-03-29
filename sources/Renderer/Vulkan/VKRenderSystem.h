@@ -14,6 +14,7 @@
 #include "VKPtr.h"
 #include "../ContainerTypes.h"
 
+#include "VKCommandQueue.h"
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 
@@ -30,6 +31,7 @@
 //#include "Texture/VKRenderTarget.h"
 
 #include "RenderState/VKQuery.h"
+#include "RenderState/VKFence.h"
 #include "RenderState/VKPipelineLayout.h"
 #include "RenderState/VKGraphicsPipeline.h"
 //#include "RenderState/VKComputePipeline.h"
@@ -59,6 +61,10 @@ class VKRenderSystem : public RenderSystem
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
+
+        /* ----- Command queues ----- */
+
+        CommandQueue* GetCommandQueue() override;
 
         /* ----- Command buffers ----- */
 
@@ -137,6 +143,12 @@ class VKRenderSystem : public RenderSystem
 
         void Release(Query& query) override;
 
+        /* ----- Fences ----- */
+
+        Fence* CreateFence() override;
+
+        void Release(Fence& fence) override;
+
     private:
 
         void CreateInstance(const ApplicationDescriptor& appDesc);
@@ -181,6 +193,7 @@ class VKRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<VKRenderContext>      renderContexts_;
+        HWObjectInstance<VKCommandQueue>        commandQueue_;
         HWObjectContainer<VKCommandBuffer>      commandBuffers_;
         HWObjectContainer<VKBuffer>             buffers_;
         HWObjectContainer<VKBufferArray>        bufferArrays_;
@@ -195,6 +208,7 @@ class VKRenderSystem : public RenderSystem
         HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
         //HWObjectContainer<VKComputePipeline>    computePipelines_;
         HWObjectContainer<VKQuery>              queries_;
+        HWObjectContainer<VKFence>              fences_;
 
 };
 

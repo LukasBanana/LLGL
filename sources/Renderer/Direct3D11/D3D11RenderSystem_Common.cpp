@@ -37,7 +37,7 @@ D3D11RenderSystem::D3D11RenderSystem()
     CreateDevice(nullptr);
 
     /* Initialize states and renderer information */
-    InitStateManager();
+    CreateStateManagerAndCommandQueue();
     QueryRendererInfo();
     QueryRenderingCaps();
 }
@@ -59,6 +59,13 @@ RenderContext* D3D11RenderSystem::CreateRenderContext(const RenderContextDescrip
 void D3D11RenderSystem::Release(RenderContext& renderContext)
 {
     RemoveFromUniqueSet(renderContexts_, &renderContext);
+}
+
+/* ----- Command queues ----- */
+
+CommandQueue* D3D11RenderSystem::GetCommandQueue()
+{
+    return commandQueue_.get();
 }
 
 /* ----- Command buffers ----- */
@@ -239,6 +246,18 @@ void D3D11RenderSystem::Release(Query& query)
     RemoveFromUniqueSet(queries_, &query);
 }
 
+/* ----- Fences ----- */
+
+Fence* D3D11RenderSystem::CreateFence()
+{
+    return TakeOwnership(fences_, MakeUnique<D3D11Fence>(/*device_.Get(), 0*/));
+}
+
+void D3D11RenderSystem::Release(Fence& fence)
+{
+    RemoveFromUniqueSet(fences_, &fence);
+}
+
 
 /*
  * ======= Private: =======
@@ -310,10 +329,10 @@ bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::
     return false;
 }
 
-void D3D11RenderSystem::InitStateManager()
+void D3D11RenderSystem::CreateStateManagerAndCommandQueue()
 {
-    /* Create state manager */
     stateMngr_ = MakeUnique<D3D11StateManager>(context_);
+    commandQueue_ = MakeUnique<D3D11CommandQueue>(context_);
 }
 
 void D3D11RenderSystem::QueryRendererInfo()

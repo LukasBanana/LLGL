@@ -1,27 +1,32 @@
 /*
- * ContainerTypes.h
+ * Fence.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2017 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_CONTAINER_TYPES_H
-#define LLGL_CONTAINER_TYPES_H
+#ifndef LLGL_FENCE_H
+#define LLGL_FENCE_H
 
 
-#include <set>
-#include <memory>
+#include "Export.h"
 
 
 namespace LLGL
 {
 
 
-template <typename T>
-using HWObjectInstance = std::unique_ptr<T>;
+//! Fence interface for CPU/GPU synchronization.
+class LLGL_EXPORT Fence
+{
 
-template <typename T>
-using HWObjectContainer = std::set<HWObjectInstance<T>>;
+    public:
+
+        virtual ~Fence()
+        {
+        }
+
+};
 
 
 } // /namespace LLGL

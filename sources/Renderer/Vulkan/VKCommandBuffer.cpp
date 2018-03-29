@@ -440,13 +440,6 @@ void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
     vkCmdDispatch(commandBuffer_, groupSizeX, groupSizeY, groupSizeZ);
 }
 
-/* ----- Misc ----- */
-
-void VKCommandBuffer::SyncGPU()
-{
-    //todo
-}
-
 /* --- Extended functions --- */
 
 void VKCommandBuffer::SetPresentIndex(std::uint32_t idx)

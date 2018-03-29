@@ -596,13 +596,6 @@ void GLCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
     #endif
 }
 
-/* ----- Misc ----- */
-
-void GLCommandBuffer::SyncGPU()
-{
-    glFinish();
-}
-
 
 /*
  * ======= Private: =======

@@ -13,6 +13,7 @@
 #include "Ext/GLExtensionLoader.h"
 #include "../ContainerTypes.h"
 
+#include "GLCommandQueue.h"
 #include "GLCommandBuffer.h"
 #include "GLRenderContext.h"
 
@@ -29,6 +30,7 @@
 #include "Texture/GLRenderTarget.h"
 
 #include "RenderState/GLQuery.h"
+#include "RenderState/GLFence.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
 
@@ -63,6 +65,10 @@ class GLRenderSystem : public RenderSystem
         RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) override;
 
         void Release(RenderContext& renderContext) override;
+
+        /* ----- Command queues ----- */
+
+        CommandQueue* GetCommandQueue() override;
 
         /* ----- Command buffers ----- */
 
@@ -135,6 +141,12 @@ class GLRenderSystem : public RenderSystem
 
         void Release(Query& query) override;
 
+        /* ----- Fences ----- */
+
+        Fence* CreateFence() override;
+
+        void Release(Fence& fence) override;
+
     protected:
 
         RenderContext* AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc);
@@ -154,6 +166,7 @@ class GLRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<GLRenderContext>      renderContexts_;
+        HWObjectInstance<GLCommandQueue>        commandQueue_;
         HWObjectContainer<GLCommandBuffer>      commandBuffers_;
         HWObjectContainer<GLBuffer>             buffers_;
         HWObjectContainer<GLBufferArray>        bufferArrays_;
@@ -167,6 +180,7 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<GLComputePipeline>    computePipelines_;
         HWObjectContainer<GLQuery>              queries_;
+        HWObjectContainer<GLFence>              fences_;
 
         DebugCallback                           debugCallback_;
 

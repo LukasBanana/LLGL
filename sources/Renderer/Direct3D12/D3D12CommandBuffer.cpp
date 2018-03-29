@@ -322,13 +322,6 @@ void D3D12CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupS
     commandList_->Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 }
 
-/* ----- Misc ----- */
-
-void D3D12CommandBuffer::SyncGPU()
-{
-    //renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
-}
-
 /* ----- Extended functions ----- */
 
 void D3D12CommandBuffer::ResetCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState)

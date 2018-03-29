@@ -57,6 +57,13 @@ void GLRenderSystem::Release(RenderContext& renderContext)
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
+/* ----- Command queues ----- */
+
+CommandQueue* GLRenderSystem::GetCommandQueue()
+{
+    return commandQueue_.get();
+}
+
 /* ----- Command buffers ----- */
 
 CommandBuffer* GLRenderSystem::CreateCommandBuffer()
@@ -197,6 +204,18 @@ void GLRenderSystem::Release(Query& query)
     RemoveFromUniqueSet(queries_, &query);
 }
 
+/* ----- Fences ----- */
+
+Fence* GLRenderSystem::CreateFence()
+{
+    return TakeOwnership(fences_, MakeUnique<GLFence>());
+}
+
+void GLRenderSystem::Release(Fence& fence)
+{
+    RemoveFromUniqueSet(fences_, &fence);
+}
+
 
 /*
  * ======= Protected: =======
@@ -213,6 +232,7 @@ RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>
     {
         LoadGLExtensions(desc.profileOpenGL);
         SetDebugCallback(desc.debugCallback);
+        commandQueue_ = MakeUnique<GLCommandQueue>();
     }
 
     /* Use uniform clipping space */

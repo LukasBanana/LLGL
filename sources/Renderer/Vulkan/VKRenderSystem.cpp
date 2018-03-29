@@ -107,6 +107,13 @@ void VKRenderSystem::Release(RenderContext& renderContext)
     RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
+/* ----- Command queues ----- */
+
+CommandQueue* VKRenderSystem::GetCommandQueue()
+{
+    return commandQueue_.get();
+}
+
 /* ----- Command buffers ----- */
 
 CommandBuffer* VKRenderSystem::CreateCommandBuffer()
@@ -364,6 +371,18 @@ void VKRenderSystem::Release(Query& query)
     RemoveFromUniqueSet(queries_, &query);
 }
 
+/* ----- Fences ----- */
+
+Fence* VKRenderSystem::CreateFence()
+{
+    return TakeOwnership(fences_, MakeUnique<VKFence>(device_));
+}
+
+void VKRenderSystem::Release(Fence& fence)
+{
+    RemoveFromUniqueSet(fences_, &fence);
+}
+
 
 /*
  * ======= Private: =======
@@ -608,6 +627,9 @@ void VKRenderSystem::CreateLogicalDevice()
 
     /* Query device graphics queue */
     vkGetDeviceQueue(device_, queueFamilyIndices_.graphicsFamily, 0, &graphicsQueue_);
+
+    /* Create command queue interface */
+    commandQueue_ = MakeUnique<VKCommandQueue>(device_, graphicsQueue_);
 }
 
 void VKRenderSystem::CreateStagingCommandResources()

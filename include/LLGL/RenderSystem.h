@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "RenderContext.h"
+#include "CommandQueue.h"
 #include "CommandBuffer.h"
 #include "RenderSystemFlags.h"
 #include "RenderingProfiler.h"
@@ -29,6 +30,7 @@
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"
 #include "Query.h"
+#include "Fence.h"
 
 #include <string>
 #include <memory>
@@ -171,6 +173,11 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified render context. This will all release all resources, that are associated with this render context.
         virtual void Release(RenderContext& renderContext) = 0;
+
+        /* ----- Command queues ----- */
+
+        //! Returns the single instance of the command queue.
+        virtual CommandQueue* GetCommandQueue() = 0;
 
         /* ----- Command buffers ----- */
 
@@ -414,6 +421,18 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified Query object. After this call, the specified object must no longer be used.
         virtual void Release(Query& query) = 0;
+
+        /* ----- Fences ----- */
+
+        /**
+        \brief Creates a new fence (used for CPU/GPU synchronization).
+        \see CommandBuffer::SubmitFence
+        \see CommandBuffer::WaitForFence
+        */
+        virtual Fence* CreateFence() = 0;
+
+        //! Releases the specified Fence object. After this call, the specified object must no longer be used.
+        virtual void Release(Fence& fence) = 0;
 
     protected:
 

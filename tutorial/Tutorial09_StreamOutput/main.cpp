@@ -143,7 +143,7 @@ private:
         commands->EndStreamOutput();
 
         // Read stream-output buffer
-        commands->SyncGPU();
+        renderer->GetCommandQueue()->WaitForFinish();
 
         if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::BufferCPUAccess::ReadOnly))
         {

@@ -582,13 +582,6 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
     LLGL_DBG_PROFILER_DO(dispatchComputeCalls.Inc());
 }
 
-/* ----- Misc ----- */
-
-void DbgCommandBuffer::SyncGPU()
-{
-    instance.SyncGPU();
-}
-
 
 /*
  * ======= Private: =======

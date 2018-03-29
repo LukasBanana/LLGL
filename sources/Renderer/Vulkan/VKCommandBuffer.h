@@ -116,10 +116,6 @@ class VKCommandBuffer : public CommandBuffer
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
-        /* ----- Misc ----- */
-
-        void SyncGPU() override;
-
         /* --- Extended functions --- */
 
         void SetPresentIndex(std::uint32_t idx);

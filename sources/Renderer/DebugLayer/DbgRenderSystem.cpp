@@ -59,6 +59,13 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
     ReleaseDbg(renderContexts_, renderContext);
 }
 
+/* ----- Command queues ----- */
+
+CommandQueue* DbgRenderSystem::GetCommandQueue()
+{
+    return instance_->GetCommandQueue();
+}
+
 /* ----- Command buffers ----- */
 
 CommandBuffer* DbgRenderSystem::CreateCommandBuffer()
@@ -417,6 +424,18 @@ Query* DbgRenderSystem::CreateQuery(const QueryDescriptor& desc)
 void DbgRenderSystem::Release(Query& query)
 {
     ReleaseDbg(queries_, query);
+}
+
+/* ----- Fences ----- */
+
+Fence* DbgRenderSystem::CreateFence()
+{
+    return instance_->CreateFence();
+}
+
+void DbgRenderSystem::Release(Fence& fence)
+{
+    return instance_->Release(fence);
 }
 
 

@@ -119,10 +119,6 @@ class D3D11CommandBuffer : public CommandBuffer
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
-        /* ----- Misc ----- */
-
-        void SyncGPU() override;
-
     private:
 
         struct D3D11FramebufferView

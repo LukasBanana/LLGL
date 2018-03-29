@@ -124,10 +124,6 @@ class D3D12CommandBuffer : public CommandBuffer
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
-        /* ----- Misc ----- */
-
-        void SyncGPU() override;
-
         /* ----- Extended functions ----- */
 
         inline ID3D12GraphicsCommandList* GetCommandList() const

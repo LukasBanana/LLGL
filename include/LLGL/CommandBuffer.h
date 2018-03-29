@@ -455,11 +455,6 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) = 0;
 
-        /* ----- Misc ----- */
-
-        //! Synchronizes the GPU, i.e. waits until the GPU has completed all pending commands from this command buffer.
-        virtual void SyncGPU() = 0;
-
     protected:
 
         CommandBuffer() = default;
