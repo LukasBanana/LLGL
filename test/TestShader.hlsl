@@ -25,8 +25,11 @@ VertexOut VS(VertexIn inp, uint id : SV_VertexID)
 {
 	VertexOut outp;
 	
-	outp.position = mul(projection, float4(inp.position, 0, 1));
-	//outp.position = float4(inp.position, 0, 1);
+	#if 1
+	outp.position = mul(projection, float4(inp.position, 1, 1));
+	#else
+	outp.position = float4(inp.position, 0, 1);
+	#endif
 	
 	outp.color = float4(inp.color, 1);
 	

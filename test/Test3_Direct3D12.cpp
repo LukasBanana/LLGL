@@ -56,6 +56,8 @@ int main()
         vertexFormat.AppendAttribute({ "POSITION", LLGL::VectorType::Float2 });
         vertexFormat.AppendAttribute({ "COLOR", LLGL::VectorType::Float3 });
 
+        const float triSize = 0.5f;
+
         struct Vertex
         {
             Gs::Vector2f    position;
@@ -63,9 +65,9 @@ int main()
         }
         vertices[] =
         {
-            { {  0,  1 }, { 1, 0, 0 } },
-            { {  1, -1 }, { 0, 1, 0 } },
-            { { -1, -1 }, { 0, 0, 1 } },
+            { {        0,  triSize }, { 1, 0, 0 } },
+            { {  triSize, -triSize }, { 0, 1, 0 } },
+            { { -triSize, -triSize }, { 0, 0, 1 } },
         };
 
         LLGL::BufferDescriptor vertexBufferDesc;
@@ -84,7 +86,7 @@ int main()
         }
         matrices;
 
-        float orthoSize = 0.01f;
+        float orthoSize = 0.0025f;
         matrices.projection = Gs::ProjectionMatrix4f::Orthogonal(800.0f * orthoSize, 600.0f * orthoSize, 0.1f, 100.0f).ToMatrix4();
 
         LLGL::BufferDescriptor constantBufferDesc;
@@ -154,8 +156,10 @@ int main()
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
-        commands->SetClearColor({ 0.2f, 0.2f, 0.7f });
+        commands->SetClearColor({ 0.1f, 0.1f, 0.4f });
         //context->SetClearColor({ 0, 0, 0 });
+
+        #if 0
 
         // Create texture
         LLGL::ColorRGBAub imageData[4] =
@@ -181,6 +185,8 @@ int main()
             imageDesc.format    = LLGL::ImageFormat::RGBA;
         }
         auto texture = renderer->CreateTexture(texDesc, &imageDesc);
+
+        #endif
 
         //INTERFACE DRAFT
         #if 0
