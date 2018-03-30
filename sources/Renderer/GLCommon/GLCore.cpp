@@ -6,6 +6,7 @@
  */
 
 #include "GLCore.h"
+#include "../../Core/Helper.h"
 #include "../../Core/HelperMacros.h"
 #include <sstream>
 
@@ -14,9 +15,9 @@ namespace LLGL
 {
 
 
-std::string GLErrorToStr(const GLenum errorCode)
+static const char* GLErrorToStr(const GLenum status)
 {
-    switch (errorCode)
+    switch (status)
     {
         LLGL_CASE_TO_STR( GL_NO_ERROR );
         LLGL_CASE_TO_STR( GL_INVALID_ENUM );
@@ -41,7 +42,35 @@ std::string GLErrorToStr(const GLenum errorCode)
         LLGL_CASE_TO_STR( GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS );
         #endif
     }
-    return "";
+    return nullptr;
+}
+
+void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const char* info)
+{
+    if (status != statusRequired)
+    {
+        std::string s;
+
+        if (info)
+        {
+            s += info;
+            s += " (error code = ";
+        }
+        else
+            s += "OpenGL operation failed (error code = ";
+
+        if (auto err = GLErrorToStr(status))
+            s += err;
+        else
+        {
+            s += "0x";
+            s += ToHex(status);
+        }
+
+        s += ")";
+
+        throw std::runtime_error(s);
+    }
 }
 
 std::string GLDebugSourceToStr(const GLenum source)

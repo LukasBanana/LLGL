@@ -25,7 +25,12 @@ VKDeviceMemory::VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size,
         allocInfo.memoryTypeIndex   = memoryTypeIndex;
     }
     auto result = vkAllocateMemory(device, &allocInfo, nullptr, deviceMemory_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to allocate Vulkan device memory of " + std::to_string(size) + " bytes");
+
+    if (result != VK_SUCCESS)
+    {
+        std::string info = "failed to allocate Vulkan device memory of " + std::to_string(size) + " bytes";
+        VKThrowIfFailed(result, info.c_str());
+    }
 }
 
 void* VKDeviceMemory::Map(VkDevice device, VkDeviceSize offset, VkDeviceSize size)

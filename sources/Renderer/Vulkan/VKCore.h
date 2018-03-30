@@ -58,11 +58,8 @@ struct SurfaceSupportDetails
 
 /* ----- Basic Functions ----- */
 
-// Converts the DX error code into a string.
-std::string VKErrorToStr(const VkResult errorCode);
-
-// Throws an std::runtime_error exception if 'errorCode' is not VK_SUCCESS.
-void VKThrowIfFailed(const VkResult errorCode, const std::string& info);
+// Throws an std::runtime_error exception if 'result' is not VK_SUCCESS.
+void VKThrowIfFailed(const VkResult result, const char* info);
 
 // Converts the specified Vulkan API version into a string (e.g. "1.0.100").
 std::string VKApiVersionToString(std::uint32_t version);

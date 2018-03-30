@@ -199,7 +199,7 @@ int main()
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
-            #if 1
+            #if 0
             // Show frame time
             frameTimer->MeasureTime();
 

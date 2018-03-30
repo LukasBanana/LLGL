@@ -16,7 +16,7 @@ namespace LLGL
 
 /* ----- Basic Functions ----- */
 
-std::string VKErrorToStr(const VkResult errorCode)
+static const char* VKErrorToStr(const VkResult errorCode)
 {
     // see https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkResult.html
     switch (errorCode)
@@ -48,13 +48,35 @@ std::string VKErrorToStr(const VkResult errorCode)
         LLGL_CASE_TO_STR( VK_ERROR_INVALID_SHADER_NV );
         LLGL_CASE_TO_STR( VK_RESULT_RANGE_SIZE );
     }
-    return ToHex(errorCode);
+    return nullptr;
 }
 
-void VKThrowIfFailed(const VkResult errorCode, const std::string& info)
+void VKThrowIfFailed(const VkResult result, const char* info)
 {
-    if (errorCode != VK_SUCCESS)
-        throw std::runtime_error(info + " (error code = " + VKErrorToStr(errorCode) + ")");
+    if (result != VK_SUCCESS)
+    {
+        std::string s;
+
+        if (info)
+        {
+            s += info;
+            s += " (error code = ";
+        }
+        else
+            s += "Vulkan operation failed (error code = ";
+
+        if (auto err = VKErrorToStr(result))
+            s += err;
+        else
+        {
+            s += "0x";
+            s += ToHex(result);
+        }
+
+        s += ")";
+
+        throw std::runtime_error(s);
+    }
 }
 
 // see https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#fundamentals-versionnum

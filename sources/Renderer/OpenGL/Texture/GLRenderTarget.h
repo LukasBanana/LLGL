@@ -60,7 +60,7 @@ class GLRenderTarget : public RenderTarget
         // Sets the draw buffers for the currently bound FBO.
         void SetDrawBuffers();
 
-        void CheckFramebufferStatus(GLenum status, const std::string& info);
+        void ErrOnIncompleteFramebuffer(const GLenum status, const char* info);
 
         void CreateOnceFramebufferMS();
 

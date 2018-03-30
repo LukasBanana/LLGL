@@ -49,7 +49,7 @@ void GLRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
     blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
-static GLenum CheckDrawFramebufferStatus()
+static GLenum GetFramebufferStatus()
 {
     return glCheckFramebufferStatus(GL_FRAMEBUFFER);
 }
@@ -115,7 +115,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
                 break;
         }
 
-        status = CheckDrawFramebufferStatus();
+        status = GetFramebufferStatus();
         
         /* Set draw buffers for this framebuffer if multi-sampling is disabled */
         if (!framebufferMS_)
@@ -123,7 +123,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
     }
     framebuffer_.Unbind();
 
-    CheckFramebufferStatus(status, "color attachment to framebuffer object (FBO)");
+    ErrOnIncompleteFramebuffer(status, "color attachment to framebuffer object (FBO) failed");
 
     /* Create renderbuffer for attachment if multi-sample framebuffer is used */
     if (framebufferMS_)
@@ -137,14 +137,14 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
             framebufferMS_->Bind();
             {
                 GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer->GetID());
-                status = CheckDrawFramebufferStatus();
+                status = GetFramebufferStatus();
                 
                 /* Set draw buffers for this framebuffer is multi-sampling is enabled */
                 SetDrawBuffers();
             }
             framebufferMS_->Unbind();
 
-            CheckFramebufferStatus(status, "color attachment to multi-sample framebuffer object (FBO)");
+            ErrOnIncompleteFramebuffer(status, "color attachment to multi-sample framebuffer object (FBO) failed");
         }
         renderbuffersMS_.emplace_back(std::move(renderbuffer));
     }
@@ -240,7 +240,7 @@ GLenum GLRenderTarget::AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLe
     framebuffer.Bind();
     {
         GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer_->GetID());
-        status = CheckDrawFramebufferStatus();
+        status = GetFramebufferStatus();
     }
     framebuffer.Unbind();
 
@@ -265,12 +265,12 @@ void GLRenderTarget::AttachRenderbuffer(const Gs::Vector2ui& size, GLenum intern
         if (framebufferMS_)
         {
             status = AttachDefaultRenderbuffer(*framebufferMS_, attachment);
-            CheckFramebufferStatus(status, "depth- or depth-stencil attachment to multi-sample framebuffer object (FBO)");
+            ErrOnIncompleteFramebuffer(status, "depth- or depth-stencil attachment to multi-sample framebuffer object (FBO) failed");
         }
         else
         {
             status = AttachDefaultRenderbuffer(framebuffer_, attachment);
-            CheckFramebufferStatus(status, "depth- or depth-stencil attachment to framebuffer object (FBO)");
+            ErrOnIncompleteFramebuffer(status, "depth- or depth-stencil attachment to framebuffer object (FBO) failed");
         }
     }
     else
@@ -325,10 +325,9 @@ void GLRenderTarget::SetDrawBuffers()
         glDrawBuffers(static_cast<GLsizei>(colorAttachments_.size()), colorAttachments_.data());
 }
 
-void GLRenderTarget::CheckFramebufferStatus(GLenum status, const std::string& info)
+void GLRenderTarget::ErrOnIncompleteFramebuffer(const GLenum status, const char* info)
 {
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-        throw std::runtime_error(info + " failed (error code = " + GLErrorToStr(status) + ")");
+    GLThrowIfFailed(status, GL_FRAMEBUFFER_COMPLETE, info);
 }
 
 void GLRenderTarget::CreateOnceFramebufferMS()

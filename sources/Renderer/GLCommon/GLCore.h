@@ -17,19 +17,19 @@ namespace LLGL
 {
 
 
-//! Converts the GL error code into a string.
-std::string GLErrorToStr(const GLenum errorCode);
+// Throws an std::runtime_error exception if 'status' is not equal to 'statusRequired'.
+void GLThrowIfFailed(const GLenum status, const GLenum statusRequired, const char* info);
 
-//! Converts the GL debug source into a string.
+// Converts the GL debug source into a string.
 std::string GLDebugSourceToStr(const GLenum source);
 
-//! Converts the GL debug type into a string.
+// Converts the GL debug type into a string.
 std::string GLDebugTypeToStr(const GLenum type);
 
-//! Converts the GL debug severity into a string.
+// Converts the GL debug severity into a string.
 std::string GLDebugSeverityToStr(const GLenum severity);
 
-//! Converts the boolean value into a GLboolean value.
+// Converts the boolean value into a GLboolean value.
 GLboolean GLBoolean(bool value);
 
 
