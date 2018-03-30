@@ -142,11 +142,9 @@ void D3D12RenderContext::SetCommandBuffer(D3D12CommandBuffer* commandBuffer)
 void D3D12RenderContext::TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
 {
     /* Indicate a transition in the render-target usage and synchronize with the resource barrier */
-    auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        renderTargets_[currentFrame_].Get(),
-        stateBefore, stateAfter
+    commandBuffer_->GetCommandList()->ResourceBarrier(
+        1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets_[currentFrame_].Get(), stateBefore, stateAfter)
     );
-    commandBuffer_->GetCommandList()->ResourceBarrier(1, &resourceBarrier);
 }
 
 bool D3D12RenderContext::HasMultiSampling() const

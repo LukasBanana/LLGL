@@ -7,6 +7,7 @@
 
 #include "Win32Window.h"
 #include "Win32WindowClass.h"
+#include "../../Core/Helper.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Platform/Platform.h>
 #include <Gauss/Equals.h>
@@ -109,7 +110,7 @@ static WindowAppearance GetWindowAppearance(const WindowDescriptor& desc)
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 {
-    return std::unique_ptr<Window>(new Win32Window(desc));
+    return MakeUnique<Win32Window>(desc);
 }
 
 Win32Window::Win32Window(const WindowDescriptor& desc) :

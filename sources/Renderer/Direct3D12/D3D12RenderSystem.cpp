@@ -53,6 +53,8 @@ D3D12RenderSystem::D3D12RenderSystem()
 
 D3D12RenderSystem::~D3D12RenderSystem()
 {
+    SyncGPU();
+
     /*
     Release render targets first, to ensure the GPU is no longer
     referencing resources that are about to be released
@@ -95,47 +97,56 @@ void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 
 /* ----- Buffers ------ */
 
+static std::unique_ptr<D3D12Buffer> MakeD3D12VertexBuffer(
+    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, const BufferDescriptor& desc, const void* initialData)
+{
+    auto bufferD3D = MakeUnique<D3D12VertexBuffer>(device, desc);
+    bufferD3D->UpdateSubresource(device, commandList, uploadBuffer, initialData, static_cast<UINT>(desc.size));
+    return std::move(bufferD3D);
+}
+
+static std::unique_ptr<D3D12Buffer> MakeD3D12IndexBuffer(
+    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, const BufferDescriptor& desc, const void* initialData)
+{
+    auto bufferD3D = MakeUnique<D3D12IndexBuffer>(device, desc);
+    bufferD3D->UpdateSubresource(device, commandList, uploadBuffer, initialData, static_cast<UINT>(desc.size));
+    return std::move(bufferD3D);
+}
+
+static std::unique_ptr<D3D12Buffer> MakeD3D12ConstantBuffer(
+    ID3D12Device* device, const BufferDescriptor& desc, const void* initialData)
+{
+    auto bufferD3D = MakeUnique<D3D12ConstantBuffer>(device, desc);
+    bufferD3D->UpdateSubresource(initialData, static_cast<UINT>(desc.size));
+    return std::move(bufferD3D);
+}
+
+static std::unique_ptr<D3D12Buffer> MakeD3D12StorageBuffer(ID3D12Device* device, const BufferDescriptor& desc, const void* /*initialData*/)
+{
+    auto bufferD3D = MakeUnique<D3D12StorageBuffer>(device, desc);
+    //todo...
+    return std::move(bufferD3D);
+}
+
+static std::unique_ptr<D3D12Buffer> MakeD3D12Buffer(
+    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, const BufferDescriptor& desc, const void* initialData)
+{
+    switch (desc.type)
+    {
+        case BufferType::Vertex:    return MakeD3D12VertexBuffer(device, commandList, uploadBuffer, desc, initialData);
+        case BufferType::Index:     return MakeD3D12IndexBuffer(device, commandList, uploadBuffer, desc, initialData);
+        case BufferType::Constant:  return MakeD3D12ConstantBuffer(device, desc, initialData);
+        case BufferType::Storage:   return MakeD3D12StorageBuffer(device, desc, initialData);
+        default:                    return nullptr;
+    }
+}
+
 // private
 std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const BufferDescriptor& desc, const void* initialData)
 {
-    std::unique_ptr<D3D12Buffer> buffer;
-    ComPtr<ID3D12Resource> uploadBuffer;
-
     /* Create buffer and upload data to GPU */
-    switch (desc.type)
-    {
-        case BufferType::Vertex:
-        {
-            auto vertexBufferD3D = MakeUnique<D3D12VertexBuffer>(device_.Get(), desc);
-            vertexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, initialData, static_cast<UINT>(desc.size));
-            buffer = std::move(vertexBufferD3D);
-        }
-        break;
-
-        case BufferType::Index:
-        {
-            auto indexBufferD3D = MakeUnique<D3D12IndexBuffer>(device_.Get(), desc);
-            indexBufferD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, initialData, static_cast<UINT>(desc.size));
-            buffer = std::move(indexBufferD3D);
-        }
-        break;
-
-        case BufferType::Constant:
-        {
-            auto constantBufferD3D = MakeUnique<D3D12ConstantBuffer>(device_.Get(), desc);
-            constantBufferD3D->UpdateSubresource(initialData, static_cast<UINT>(desc.size));
-            buffer = std::move(constantBufferD3D);
-        }
-        break;
-
-        case BufferType::Storage:
-        {
-            auto storageBufferD3D = MakeUnique<D3D12StorageBuffer>(device_.Get(), desc);
-            //todo...
-            buffer = std::move(storageBufferD3D);
-        }
-        break;
-    }
+    ComPtr<ID3D12Resource> uploadBuffer;
+    auto buffer = MakeD3D12Buffer(device_.Get(), commandList_.Get(), uploadBuffer, desc, initialData);
 
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
@@ -159,9 +170,8 @@ static std::unique_ptr<BufferArray> MakeD3D12BufferArray(std::uint32_t numBuffer
       /*case BufferType::Constant:      return MakeUnique<D3D12BufferArray>(type, numBuffers, bufferArray);
         case BufferType::Storage:       return MakeUnique<D3D12StorageBufferArray>(numBuffers, bufferArray);
         case BufferType::StreamOutput:  return MakeUnique<D3D12StreamOutputBufferArray>(numBuffers, bufferArray);*/
-        default:                        break;
+        default:                        return nullptr;
     }
-    return nullptr;
 }
 
 BufferArray* D3D12RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -483,6 +493,7 @@ void D3D12RenderSystem::SyncGPU(UINT64& fenceValue)
 {
     /* Increment fence value */
     ++fenceValue;
+    fenceValue_ = fenceValue;
 
     /* Schedule signal command into the qeue */
     SignalFenceValue(fenceValue);
@@ -508,12 +519,12 @@ void D3D12RenderSystem::SyncGPU()
 void D3D12RenderSystem::EnableDebugLayer()
 {
     ComPtr<ID3D12Debug> debugController0;
-    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(debugController0.ReleaseAndGetAddressOf()))))
+    if (SUCCEEDED( D3D12GetDebugInterface(IID_PPV_ARGS(debugController0.ReleaseAndGetAddressOf())) ))
     {
         debugController0->EnableDebugLayer();
 
         ComPtr<ID3D12Debug1> debugController1;
-        if (SUCCEEDED(debugController0->QueryInterface(IID_PPV_ARGS(debugController1.ReleaseAndGetAddressOf()))))
+        if (SUCCEEDED( debugController0->QueryInterface(IID_PPV_ARGS(debugController1.ReleaseAndGetAddressOf())) ))
             debugController1->SetEnableGPUBasedValidation(TRUE);
     }
 }

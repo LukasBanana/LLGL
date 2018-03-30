@@ -23,7 +23,7 @@ D3D12Buffer::D3D12Buffer(const BufferType type) :
 
 void D3D12Buffer::UpdateStaticSubresource(
     ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
-    const void* data, UINT64 bufferSize, UINT64 offset, D3D12_RESOURCE_STATES uploadState)
+    const void* data, UINT64 bufferSize, UINT64 offset, D3D12_RESOURCE_STATES stateAfter)
 {
     if (offset + bufferSize > bufferSize_)
         throw std::out_of_range(LLGL_ASSERT_INFO("'bufferSize' and/or 'offset' are out of range"));
@@ -53,7 +53,7 @@ void D3D12Buffer::UpdateStaticSubresource(
     }
     UpdateSubresources<1>(commandList, resource_.Get(), uploadBuffer.Get(), 0, 0, 1, &subresourceData);
 
-    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, uploadState));
+    commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, stateAfter));
 }
 
 void D3D12Buffer::UpdateDynamicSubresource(const void* data, UINT64 bufferSize, UINT64 offset)
