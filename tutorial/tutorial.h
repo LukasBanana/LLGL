@@ -207,30 +207,33 @@ private:
 
             void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override
             {
-                auto videoMode = context_->GetVideoMode();
-
-                // Update video mode
-                videoMode.resolution = clientAreaSize;
-                context_->SetVideoMode(videoMode);
-                commands_->SetRenderTarget(*context_);
-                
-                // Update viewport
-                LLGL::Viewport viewport;
+                if (clientAreaSize.x >= 4 && clientAreaSize.y >= 4)
                 {
-                    viewport.width  = static_cast<float>(videoMode.resolution.x);
-                    viewport.height = static_cast<float>(videoMode.resolution.y);
-                }
-                commands_->SetViewport(viewport);
+                    auto videoMode = context_->GetVideoMode();
 
-                // Update scissor
-                commands_->SetScissor({ 0, 0, videoMode.resolution.x, videoMode.resolution.y });
+                    // Update video mode
+                    videoMode.resolution = clientAreaSize;
+                    context_->SetVideoMode(videoMode);
+                    commands_->SetRenderTarget(*context_);
 
-                // Update projection matrix
-                projection_ = tutorial_.PerspectiveProjection(viewport.width / viewport.height, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
+                    // Update viewport
+                    LLGL::Viewport viewport;
+                    {
+                        viewport.width  = static_cast<float>(videoMode.resolution.x);
+                        viewport.height = static_cast<float>(videoMode.resolution.y);
+                    }
+                    commands_->SetViewport(viewport);
+
+                    // Update scissor
+                    commands_->SetScissor({ 0, 0, videoMode.resolution.x, videoMode.resolution.y });
+
+                    // Update projection matrix
+                    projection_ = tutorial_.PerspectiveProjection(viewport.width / viewport.height, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
                 
-                // Re-draw frame
-                if (tutorial_.IsLoadingDone())
-                    tutorial_.OnDrawFrame();
+                    // Re-draw frame
+                    if (tutorial_.IsLoadingDone())
+                        tutorial_.OnDrawFrame();
+                }
             }
 
             void OnTimer(LLGL::Window& sender, unsigned int timerID) override
