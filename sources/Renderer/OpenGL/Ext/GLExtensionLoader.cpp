@@ -67,7 +67,7 @@ static void ExtractExtensionsFromString(GLExtensionList& extensions, const std::
 #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
 
 #define LOAD_GLPROC(NAME)               \
-    if (usePlaceHolder)                 \
+    if (usePlaceholder)                 \
         NAME = Dummy_##NAME;            \
     else if (!LoadGLProc(NAME, #NAME))  \
         return false
@@ -113,7 +113,7 @@ bool LoadCreateContextProcs()
 
 /* --- Hardware buffer extensions --- */
 
-static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceHolder)
+static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceholder)
 {
     LOAD_GLPROC( glGenBuffers    );
     LOAD_GLPROC( glDeleteBuffers );
@@ -132,7 +132,7 @@ static bool Load_GL_ARB_vertex_buffer_object(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_vertex_array_object(bool usePlaceHolder)
+static bool Load_GL_ARB_vertex_array_object(bool usePlaceholder)
 {
     LOAD_GLPROC( glGenVertexArrays    );
     LOAD_GLPROC( glDeleteVertexArrays );
@@ -140,7 +140,7 @@ static bool Load_GL_ARB_vertex_array_object(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_framebuffer_object(bool usePlaceHolder)
+static bool Load_GL_ARB_framebuffer_object(bool usePlaceholder)
 {
     LOAD_GLPROC( glGenRenderbuffers                    );
     LOAD_GLPROC( glDeleteRenderbuffers                 );
@@ -164,7 +164,7 @@ static bool Load_GL_ARB_framebuffer_object(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_uniform_buffer_object(bool usePlaceHolder)
+static bool Load_GL_ARB_uniform_buffer_object(bool usePlaceholder)
 {
     LOAD_GLPROC( glGetUniformBlockIndex      );
     LOAD_GLPROC( glGetActiveUniformBlockiv   );
@@ -174,7 +174,7 @@ static bool Load_GL_ARB_uniform_buffer_object(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_shader_storage_buffer_object(bool usePlaceHolder)
+static bool Load_GL_ARB_shader_storage_buffer_object(bool usePlaceholder)
 {
     LOAD_GLPROC( glShaderStorageBlockBinding );
     return true;
@@ -182,14 +182,14 @@ static bool Load_GL_ARB_shader_storage_buffer_object(bool usePlaceHolder)
 
 /* --- Drawing extensions --- */
 
-static bool Load_GL_ARB_draw_instanced(bool usePlaceHolder)
+static bool Load_GL_ARB_draw_instanced(bool usePlaceholder)
 {
     LOAD_GLPROC( glDrawArraysInstanced   );
     LOAD_GLPROC( glDrawElementsInstanced );
     return true;
 }
 
-static bool Load_GL_ARB_base_instance(bool usePlaceHolder)
+static bool Load_GL_ARB_base_instance(bool usePlaceholder)
 {
     LOAD_GLPROC( glDrawArraysInstancedBaseInstance             );
     LOAD_GLPROC( glDrawElementsInstancedBaseInstance           );
@@ -197,7 +197,7 @@ static bool Load_GL_ARB_base_instance(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_draw_elements_base_vertex(bool usePlaceHolder)
+static bool Load_GL_ARB_draw_elements_base_vertex(bool usePlaceholder)
 {
     LOAD_GLPROC( glDrawElementsBaseVertex          );
     LOAD_GLPROC( glDrawElementsInstancedBaseVertex );
@@ -206,7 +206,7 @@ static bool Load_GL_ARB_draw_elements_base_vertex(bool usePlaceHolder)
 
 /* --- Shader extensions --- */
 
-static bool Load_GL_ARB_shader_objects(bool usePlaceHolder)
+static bool Load_GL_ARB_shader_objects(bool usePlaceholder)
 {
     LOAD_GLPROC( glCreateShader       );
     LOAD_GLPROC( glShaderSource       );
@@ -242,27 +242,27 @@ static bool Load_GL_ARB_shader_objects(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_instanced_arrays(bool usePlaceHolder)
+static bool Load_GL_ARB_instanced_arrays(bool usePlaceholder)
 {
     LOAD_GLPROC( glVertexAttribDivisor );
     return true;
 }
 
-static bool Load_GL_ARB_tessellation_shader(bool usePlaceHolder)
+static bool Load_GL_ARB_tessellation_shader(bool usePlaceholder)
 {
     LOAD_GLPROC( glPatchParameteri  );
     LOAD_GLPROC( glPatchParameterfv );
     return true;
 }
 
-static bool Load_GL_ARB_compute_shader(bool usePlaceHolder)
+static bool Load_GL_ARB_compute_shader(bool usePlaceholder)
 {
     LOAD_GLPROC( glDispatchCompute         );
     LOAD_GLPROC( glDispatchComputeIndirect );
     return true;
 }
 
-static bool Load_GL_ARB_get_program_binary(bool usePlaceHolder)
+static bool Load_GL_ARB_get_program_binary(bool usePlaceholder)
 {
     LOAD_GLPROC( glGetProgramBinary  );
     LOAD_GLPROC( glProgramBinary     );
@@ -270,7 +270,7 @@ static bool Load_GL_ARB_get_program_binary(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_program_interface_query(bool usePlaceHolder)
+static bool Load_GL_ARB_program_interface_query(bool usePlaceholder)
 {
     LOAD_GLPROC( glGetProgramInterfaceiv           );
     LOAD_GLPROC( glGetProgramResourceIndex         );
@@ -281,7 +281,7 @@ static bool Load_GL_ARB_program_interface_query(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_EXT_gpu_shader4(bool usePlaceHolder)
+static bool Load_GL_EXT_gpu_shader4(bool usePlaceholder)
 {
     LOAD_GLPROC( glVertexAttribIPointer );
     LOAD_GLPROC( glBindFragDataLocation );
@@ -291,27 +291,27 @@ static bool Load_GL_EXT_gpu_shader4(bool usePlaceHolder)
 
 /* --- Texture extensions --- */
 
-static bool Load_GL_ARB_multitexture(bool usePlaceHolder)
+static bool Load_GL_ARB_multitexture(bool usePlaceholder)
 {
     LOAD_GLPROC( glActiveTexture );
     return true;
 }
 
-static bool Load_GL_EXT_texture3D(bool usePlaceHolder)
+static bool Load_GL_EXT_texture3D(bool usePlaceholder)
 {
     LOAD_GLPROC( glTexImage3D    );
     LOAD_GLPROC( glTexSubImage3D );
     return true;
 }
 
-static bool Load_GL_ARB_clear_texture(bool usePlaceHolder)
+static bool Load_GL_ARB_clear_texture(bool usePlaceholder)
 {
     LOAD_GLPROC( glClearTexImage    );
     LOAD_GLPROC( glClearTexSubImage );
     return true;
 }
 
-static bool Load_GL_ARB_texture_compression(bool usePlaceHolder)
+static bool Load_GL_ARB_texture_compression(bool usePlaceholder)
 {
     LOAD_GLPROC( glCompressedTexImage1D    );
     LOAD_GLPROC( glCompressedTexImage2D    );
@@ -323,7 +323,7 @@ static bool Load_GL_ARB_texture_compression(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_texture_multisample(bool usePlaceHolder)
+static bool Load_GL_ARB_texture_multisample(bool usePlaceholder)
 {
     LOAD_GLPROC( glTexImage2DMultisample );
     LOAD_GLPROC( glTexImage3DMultisample );
@@ -332,7 +332,7 @@ static bool Load_GL_ARB_texture_multisample(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_sampler_objects(bool usePlaceHolder)
+static bool Load_GL_ARB_sampler_objects(bool usePlaceholder)
 {
     LOAD_GLPROC( glGenSamplers        );
     LOAD_GLPROC( glDeleteSamplers     );
@@ -346,7 +346,7 @@ static bool Load_GL_ARB_sampler_objects(bool usePlaceHolder)
 
 /* --- Other extensions --- */
 
-static bool Load_GL_ARB_occlusion_query(bool usePlaceHolder)
+static bool Load_GL_ARB_occlusion_query(bool usePlaceholder)
 {
     LOAD_GLPROC( glGenQueries        );
     LOAD_GLPROC( glDeleteQueries     );
@@ -357,14 +357,14 @@ static bool Load_GL_ARB_occlusion_query(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_NV_conditional_render(bool usePlaceHolder)
+static bool Load_GL_NV_conditional_render(bool usePlaceholder)
 {
     LOAD_GLPROC( glBeginConditionalRender );
     LOAD_GLPROC( glEndConditionalRender   );
     return true;
 }
 
-static bool Load_GL_ARB_timer_query(bool usePlaceHolder)
+static bool Load_GL_ARB_timer_query(bool usePlaceholder)
 {
     LOAD_GLPROC( glQueryCounter        );
     LOAD_GLPROC( glGetQueryObjecti64v  );
@@ -372,7 +372,7 @@ static bool Load_GL_ARB_timer_query(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_viewport_array(bool usePlaceHolder)
+static bool Load_GL_ARB_viewport_array(bool usePlaceholder)
 {
     LOAD_GLPROC( glViewportArrayv   );
     LOAD_GLPROC( glScissorArrayv    );
@@ -380,31 +380,31 @@ static bool Load_GL_ARB_viewport_array(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_EXT_blend_minmax(bool usePlaceHolder)
+static bool Load_GL_EXT_blend_minmax(bool usePlaceholder)
 {
     LOAD_GLPROC( glBlendEquation );
     return true;
 }
 
-static bool Load_GL_EXT_blend_color(bool usePlaceHolder)
+static bool Load_GL_EXT_blend_color(bool usePlaceholder)
 {
     LOAD_GLPROC( glBlendColor );
     return true;
 }
 
-static bool Load_GL_EXT_blend_func_separate(bool usePlaceHolder)
+static bool Load_GL_EXT_blend_func_separate(bool usePlaceholder)
 {
     LOAD_GLPROC( glBlendFuncSeparate );
     return true;
 }
 
-static bool Load_GL_EXT_blend_equation_separate(bool usePlaceHolder)
+static bool Load_GL_EXT_blend_equation_separate(bool usePlaceholder)
 {
     LOAD_GLPROC( glBlendEquationSeparate );
     return true;
 }
 
-static bool Load_GL_ARB_draw_buffers_blend(bool usePlaceHolder)
+static bool Load_GL_ARB_draw_buffers_blend(bool usePlaceholder)
 {
     LOAD_GLPROC( glBlendEquationi         );
     LOAD_GLPROC( glBlendEquationSeparatei );
@@ -413,7 +413,7 @@ static bool Load_GL_ARB_draw_buffers_blend(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_multi_bind(bool usePlaceHolder)
+static bool Load_GL_ARB_multi_bind(bool usePlaceholder)
 {
     LOAD_GLPROC( glBindBuffersBase   );
     LOAD_GLPROC( glBindBuffersRange  );
@@ -424,7 +424,7 @@ static bool Load_GL_ARB_multi_bind(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_EXT_stencil_two_side(bool usePlaceHolder)
+static bool Load_GL_EXT_stencil_two_side(bool usePlaceholder)
 {
     //correct extension ??? maybe "GL_ATI_separate_stencil"
     LOAD_GLPROC( glStencilFuncSeparate );
@@ -433,25 +433,25 @@ static bool Load_GL_EXT_stencil_two_side(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_KHR_debug(bool usePlaceHolder)
+static bool Load_GL_KHR_debug(bool usePlaceholder)
 {
     LOAD_GLPROC( glDebugMessageCallback );
     return true;
 }
 
-static bool Load_GL_ARB_clip_control(bool usePlaceHolder)
+static bool Load_GL_ARB_clip_control(bool usePlaceholder)
 {
     LOAD_GLPROC( glClipControl );
     return true;
 }
 
-static bool Load_GL_ARB_draw_buffers(bool usePlaceHolder)
+static bool Load_GL_ARB_draw_buffers(bool usePlaceholder)
 {
     LOAD_GLPROC( glDrawBuffers );
     return true;
 }
 
-static bool Load_GL_EXT_draw_buffers2(bool usePlaceHolder)
+static bool Load_GL_EXT_draw_buffers2(bool usePlaceholder)
 {
     LOAD_GLPROC( glColorMaski    );
     LOAD_GLPROC( glGetBooleani_v );
@@ -462,7 +462,7 @@ static bool Load_GL_EXT_draw_buffers2(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_EXT_transform_feedback(bool usePlaceHolder)
+static bool Load_GL_EXT_transform_feedback(bool usePlaceholder)
 {
     LOAD_GLPROC( glBindBufferRange             );
     LOAD_GLPROC( glBeginTransformFeedback      );
@@ -472,7 +472,7 @@ static bool Load_GL_EXT_transform_feedback(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_NV_transform_feedback(bool usePlaceHolder)
+static bool Load_GL_NV_transform_feedback(bool usePlaceholder)
 {
     LOAD_GLPROC( glBindBufferRangeNV           );
     LOAD_GLPROC( glBeginTransformFeedbackNV    );
@@ -483,7 +483,7 @@ static bool Load_GL_NV_transform_feedback(bool usePlaceHolder)
     return true;
 }
 
-static bool Load_GL_ARB_sync(bool usePlaceHolder)
+static bool Load_GL_ARB_sync(bool usePlaceholder)
 {
     LOAD_GLPROC( glFenceSync      );
     LOAD_GLPROC( glIsSync         );
@@ -492,6 +492,18 @@ static bool Load_GL_ARB_sync(bool usePlaceHolder)
     LOAD_GLPROC( glWaitSync       );
     LOAD_GLPROC( glGetInteger64v  );
     LOAD_GLPROC( glGetSynciv      );
+    return true;
+}
+
+static bool Load_GL_ARB_internalformat_query(bool usePlaceholder)
+{
+    LOAD_GLPROC( glGetInternalformativ );
+    return true;
+}
+
+static bool Load_GL_ARB_internalformat_query2(bool usePlaceholder)
+{
+    LOAD_GLPROC( glGetInternalformati64v );
     return true;
 }
 
@@ -729,6 +741,8 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( EXT_transform_feedback           );
     LOAD_GLEXT( NV_transform_feedback            );
     LOAD_GLEXT( ARB_sync                         );
+    LOAD_GLEXT( ARB_internalformat_query         );
+    LOAD_GLEXT( ARB_internalformat_query2        );
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );

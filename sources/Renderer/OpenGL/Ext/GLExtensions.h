@@ -340,6 +340,14 @@ extern PFNGLWAITSYNCPROC                                    glWaitSync;
 extern PFNGLGETINTEGER64VPROC                               glGetInteger64v;
 extern PFNGLGETSYNCIVPROC                                   glGetSynciv;
 
+/* GL_ARB_internalformat_query */
+
+extern PFNGLGETINTERNALFORMATIVPROC                         glGetInternalformativ;
+
+/* GL_ARB_internalformat_query2 */
+
+extern PFNGLGETINTERNALFORMATI64VPROC                       glGetInternalformati64v;
+
 #endif // /ifndef(__APPLE__)
 
 

@@ -13,6 +13,7 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Exception.h"
+#include "GLRenderingCaps.h"
 #include <LLGL/Desktop.h>
 
 #include <LLGL/Log.h>
@@ -308,34 +309,6 @@ void GLRenderSystem::SetDebugCallback(const DebugCallback& debugCallback)
     #endif
 }
 
-static ShadingLanguage QueryShadingLanguage()
-{
-    /* Derive shading language version by OpenGL version */
-    GLint major = 0, minor = 0;
-    glGetIntegerv(GL_MAJOR_VERSION, &major);
-    glGetIntegerv(GL_MINOR_VERSION, &minor);
-
-    auto IsVer = [major, minor](int maj, int min)
-    {
-        return (major == maj && minor == min);
-    };
-
-    if (IsVer(2, 0)) return ShadingLanguage::GLSL_110;
-    if (IsVer(2, 1)) return ShadingLanguage::GLSL_120;
-    if (IsVer(3, 0)) return ShadingLanguage::GLSL_130;
-    if (IsVer(3, 1)) return ShadingLanguage::GLSL_140;
-    if (IsVer(3, 2)) return ShadingLanguage::GLSL_150;
-    if (IsVer(3, 3)) return ShadingLanguage::GLSL_330;
-    if (IsVer(4, 0)) return ShadingLanguage::GLSL_400;
-    if (IsVer(4, 1)) return ShadingLanguage::GLSL_410;
-    if (IsVer(4, 2)) return ShadingLanguage::GLSL_420;
-    if (IsVer(4, 3)) return ShadingLanguage::GLSL_430;
-    if (IsVer(4, 4)) return ShadingLanguage::GLSL_440;
-    if (IsVer(4, 5)) return ShadingLanguage::GLSL_450;
-
-    return ShadingLanguage::GLSL_110;
-}
-
 static std::string GLGetString(GLenum name)
 {
     auto bytes = glGetString(name);
@@ -354,214 +327,10 @@ void GLRenderSystem::QueryRendererInfo()
     SetRendererInfo(info);
 }
 
-static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
-{
-    return
-    {
-        TextureFormat::DepthComponent,
-        TextureFormat::DepthStencil,
-        TextureFormat::R,
-        TextureFormat::RG,
-        TextureFormat::RGB,
-        TextureFormat::RGBA,
-        TextureFormat::R8,
-        TextureFormat::R8Sgn,
-        TextureFormat::R16,
-        TextureFormat::R16Sgn,
-        TextureFormat::R16Float,
-        TextureFormat::R32UInt,
-        TextureFormat::R32SInt,
-        TextureFormat::R32Float,
-        TextureFormat::RG8,
-        TextureFormat::RG8Sgn,
-        TextureFormat::RG16,
-        TextureFormat::RG16Sgn,
-        TextureFormat::RG16Float,
-        TextureFormat::RG32UInt,
-        TextureFormat::RG32SInt,
-        TextureFormat::RG32Float,
-        TextureFormat::RGB8,
-        TextureFormat::RGB8Sgn,
-        TextureFormat::RGB16,
-        TextureFormat::RGB16Sgn,
-        TextureFormat::RGB16Float,
-        TextureFormat::RGB32UInt,
-        TextureFormat::RGB32SInt,
-        TextureFormat::RGB32Float,
-        TextureFormat::RGBA8,
-        TextureFormat::RGBA8Sgn,
-        TextureFormat::RGBA16,
-        TextureFormat::RGBA16Sgn,
-        TextureFormat::RGBA16Float,
-        TextureFormat::RGBA32UInt,
-        TextureFormat::RGBA32SInt,
-        TextureFormat::RGBA32Float,
-    };
-}
-
 void GLRenderSystem::QueryRenderingCaps()
 {
-    auto GetUInt = [&](GLenum param)
-    {
-        GLint attr = 0;
-        glGetIntegerv(param, &attr);
-        return static_cast<std::uint32_t>(attr);
-    };
-
-    auto GetUIntIdx = [](GLenum param, GLuint index)
-    {
-        GLint attr = 0;
-        if (HasExtension(GLExt::EXT_draw_buffers2))
-            glGetIntegeri_v(param, index, &attr);
-        return static_cast<std::uint32_t>(attr);
-    };
-
     RenderingCaps caps;
-
-    /* Set fixed states for this renderer */
-    caps.screenOrigin                   = ScreenOrigin::LowerLeft;
-    caps.clippingRange                  = ClippingRange::MinusOneToOne;
-    caps.shadingLanguage                = QueryShadingLanguage();
-
-    /* Query supported texture formats */
-    caps.textureFormats = GetDefaultSupportedGLTextureFormats();
-    
-    #ifdef GL_EXT_texture_compression_s3tc
-
-    const auto numCompressedTexFormats = GetUInt(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
-
-    std::vector<GLint> compressedTexFormats(numCompressedTexFormats);
-    glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, compressedTexFormats.data());
-
-    for (GLint format : compressedTexFormats)
-    {
-        switch (format)
-        {
-            case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-                caps.textureFormats.push_back(TextureFormat::RGB_DXT1);
-                break;
-            case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-                caps.textureFormats.push_back(TextureFormat::RGBA_DXT1);
-                break;
-            case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-                caps.textureFormats.push_back(TextureFormat::RGBA_DXT3);
-                break;
-            case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-                caps.textureFormats.push_back(TextureFormat::RGBA_DXT5);
-                break;
-            default:
-                break;
-        }
-    }
-
-    #endif
-
-    /* Query all boolean capabilies by their respective OpenGL extension */
-    caps.hasRenderTargets               = HasExtension(GLExt::ARB_framebuffer_object);
-    caps.has3DTextures                  = HasExtension(GLExt::EXT_texture3D);
-    caps.hasCubeTextures                = HasExtension(GLExt::ARB_texture_cube_map);
-    caps.hasTextureArrays               = HasExtension(GLExt::EXT_texture_array);
-    caps.hasCubeTextureArrays           = HasExtension(GLExt::ARB_texture_cube_map_array);
-    caps.hasMultiSampleTextures         = HasExtension(GLExt::ARB_texture_multisample);
-    caps.hasSamplers                    = HasExtension(GLExt::ARB_sampler_objects);
-    caps.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
-    caps.hasStorageBuffers              = HasExtension(GLExt::ARB_shader_storage_buffer_object);
-    caps.hasUniforms                    = HasExtension(GLExt::ARB_shader_objects);
-    caps.hasGeometryShaders             = HasExtension(GLExt::ARB_geometry_shader4);
-    caps.hasTessellationShaders         = HasExtension(GLExt::ARB_tessellation_shader);
-    caps.hasComputeShaders              = HasExtension(GLExt::ARB_compute_shader);
-    caps.hasInstancing                  = HasExtension(GLExt::ARB_draw_instanced);
-    caps.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);
-    caps.hasViewportArrays              = HasExtension(GLExt::ARB_viewport_array);
-    caps.hasConservativeRasterization   = ( HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization) );
-    caps.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
-
-    /* Query integral attributes */
-    caps.maxNumTextureArrayLayers           = GetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
-    caps.maxNumRenderTargetAttachments      = GetUInt(GL_MAX_DRAW_BUFFERS);
-    caps.maxConstantBufferSize              = GetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
-    caps.maxPatchVertices                   = GetUInt(GL_MAX_PATCH_VERTICES);
-    caps.maxAnisotropy                      = 16; //TODO: glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT)
-    
-    caps.maxNumComputeShaderWorkGroups[0]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
-    caps.maxNumComputeShaderWorkGroups[1]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
-    caps.maxNumComputeShaderWorkGroups[2]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
-
-    caps.maxComputeShaderWorkGroupSize[0]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
-    caps.maxComputeShaderWorkGroupSize[1]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
-    caps.maxComputeShaderWorkGroupSize[2]   = GetUIntIdx(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
-
-    /* Query viewport limits */
-    caps.maxNumViewports    = GetUInt(GL_MAX_VIEWPORTS);
-
-    GLint maxViewportDims[2];
-    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewportDims);
-    caps.maxViewportSize[0] = static_cast<std::uint32_t>(maxViewportDims[0]);
-    caps.maxViewportSize[1] = static_cast<std::uint32_t>(maxViewportDims[1]);
-
-    /* Query maximum texture dimensions */
-    GLint querySizeBase = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &querySizeBase);
-
-    /* Query 1D texture max size */
-    GLint texSize = 0;
-    auto querySize = querySizeBase;
-
-    while (texSize == 0 && querySize > 0)
-    {
-        glTexImage1D(GL_PROXY_TEXTURE_1D, 0, GL_RGBA, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_1D, 0, GL_TEXTURE_WIDTH, &texSize);
-        querySize /= 2;
-    }
-
-    caps.max1DTextureSize = static_cast<std::uint32_t>(texSize);
-
-    /* Query 2D texture max size */
-    texSize = 0;
-    querySize = querySizeBase;
-
-    while (texSize == 0 && querySize > 0)
-    {
-        glTexImage2D(GL_PROXY_TEXTURE_2D, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texSize);
-        querySize /= 2;
-    }
-
-    caps.max2DTextureSize = static_cast<std::uint32_t>(texSize);
-
-    /* Query 3D texture max size */
-    if (caps.has3DTextures)
-    {
-        texSize = 0;
-        querySize = querySizeBase;
-
-        while (texSize == 0 && querySize > 0)
-        {
-            glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_RGBA, querySize, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0, GL_TEXTURE_WIDTH, &texSize);
-            querySize /= 2;
-        }
-
-        caps.max3DTextureSize = static_cast<std::uint32_t>(texSize);
-    }
-
-    /* Query cube texture max size */
-    if (caps.hasCubeTextures)
-    {
-        texSize = 0;
-        querySize = querySizeBase;
-
-        while (texSize == 0 && querySize > 0)
-        {
-            glTexImage2D(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_RGBA, querySize, querySize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_CUBE_MAP, 0, GL_TEXTURE_WIDTH, &texSize);
-            querySize /= 2;
-        }
-
-        caps.maxCubeTextureSize = static_cast<std::uint32_t>(texSize);
-    }
-
-    /* Finally store queried rendering capabilities */
+    GLQueryRenderingCaps(caps);
     SetRenderingCaps(caps);
 }
 

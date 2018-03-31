@@ -370,6 +370,14 @@ DECL_GLPROC(void, glWaitSync, (GLsync, GLbitfield, GLuint64));
 DECL_GLPROC(void, glGetInteger64v, (GLenum pname, GLint64*));
 DECL_GLPROC(void, glGetSynciv, (GLsync, GLenum, GLsizei, GLsizei*, GLint*));
 
+/* GL_ARB_internalformat_query */
+
+DECL_GLPROC(void, glGetInternalformativ, (GLenum, GLenum, GLenum, GLsizei, GLint*));
+
+/* GL_ARB_internalformat_query2 */
+
+DECL_GLPROC(void, glGetInternalformati64v, (GLenum, GLenum, GLenum, GLsizei, GLint64*));
+
 #endif // /ifndef(__APPLE__)
 
 #undef DECL_GLPROC

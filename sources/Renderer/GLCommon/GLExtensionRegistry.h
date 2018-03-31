@@ -57,6 +57,8 @@ enum class GLExt
     EXT_gpu_shader4,
     ARB_pipeline_statistics_query,
     ARB_sync,
+    ARB_internalformat_query,
+    ARB_internalformat_query2,
 
     /* Extensions without procedures */
     ARB_texture_cube_map,

@@ -337,6 +337,14 @@ PFNGLWAITSYNCPROC                                       glWaitSync              
 PFNGLGETINTEGER64VPROC                                  glGetInteger64v                                 = nullptr;
 PFNGLGETSYNCIVPROC                                      glGetSynciv                                     = nullptr;
 
+/* GL_ARB_internalformat_query */
+
+PFNGLGETINTERNALFORMATIVPROC                            glGetInternalformativ                           = nullptr;
+
+/* GL_ARB_internalformat_query2 */
+
+PFNGLGETINTERNALFORMATI64VPROC                          glGetInternalformati64v                         = nullptr;
+
 #endif // /ifndef(__APPLE__)
 
 
