@@ -59,6 +59,7 @@ enum class GLExt
     ARB_sync,
     ARB_internalformat_query,
     ARB_internalformat_query2,
+    ARB_direct_state_access,
 
     /* Extensions without procedures */
     ARB_texture_cube_map,
