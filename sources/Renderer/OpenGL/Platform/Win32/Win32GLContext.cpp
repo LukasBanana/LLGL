@@ -145,7 +145,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
     hGLRC_ = stdRenderContext;
 
     /* Check for extended render context */
-    if (desc_.profileOpenGL.extProfile && !hasSharedContext_)
+    if (desc_.profileOpenGL.contextProfile != OpenGLContextProfile::CompatibilityProfile && !hasSharedContext_)
     {
         /*
         Load profile selection extension (wglCreateContextAttribsARB) via current context,
@@ -165,14 +165,14 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
             {
                 /* Print warning and disbale profile selection */
                 Log::StdErr() << "failed to create extended OpenGL profile" << std::endl;
-                desc_.profileOpenGL.extProfile = false;
+                desc_.profileOpenGL.contextProfile = OpenGLContextProfile::CompatibilityProfile;
             }
         }
         else
         {
             /* Print warning and disable profile settings */
             Log::StdErr() << "failed to select OpenGL profile" << std::endl;
-            desc_.profileOpenGL.extProfile = false;
+            desc_.profileOpenGL .contextProfile = OpenGLContextProfile::CompatibilityProfile;
         }
     }
 
@@ -188,7 +188,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
     -> Only do this, if this context has its own GL hardware context (hasSharedContext_ == false),
        but a shared render context was passed (sharedContext != null).
     */
-    if (sharedContext && !hasSharedContext_ && !desc_.profileOpenGL.extProfile)
+    if (sharedContext && !hasSharedContext_ && desc_.profileOpenGL.contextProfile == OpenGLContextProfile::CompatibilityProfile)
     {
         if (!wglShareLists(sharedContext->hGLRC_, hGLRC_))
             throw std::runtime_error("failed to share resources from OpenGL render context");
@@ -269,23 +269,30 @@ HGLRC Win32GLContext::CreateStdContextProfile()
     return wglCreateContext(hDC_);
 }
 
+static int GLContextProfileToBitmask(const OpenGLContextProfile profile)
+{
+    switch (profile)
+    {
+        case OpenGLContextProfile::CompatibilityProfile:    return WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+        case OpenGLContextProfile::CoreProfile:             return WGL_CONTEXT_CORE_PROFILE_BIT_ARB;
+        #ifdef WGL_EXT_create_context_es_profile
+        case OpenGLContextProfile::ESProfile:               return WGL_CONTEXT_ES_PROFILE_BIT_EXT;
+        #endif
+        default:                                            return WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
+    }
+}
+
 HGLRC Win32GLContext::CreateExtContextProfile(HGLRC sharedGLRC)
 {
-    bool useCoreProfile = desc_.profileOpenGL.coreProfile;
-    
-    /* Initialize GL version number */
-    int major = GetMajorVersion(desc_.profileOpenGL.version);
-    int minor = GetMinorVersion(desc_.profileOpenGL.version);
-
     /* Setup extended attributes to select the OpenGL profile */
     const int attribList[] =
     {
-        WGL_CONTEXT_MAJOR_VERSION_ARB,  major,
-        WGL_CONTEXT_MINOR_VERSION_ARB,  minor,
+        WGL_CONTEXT_MAJOR_VERSION_ARB,  desc_.profileOpenGL.majorVersion,
+        WGL_CONTEXT_MINOR_VERSION_ARB,  desc_.profileOpenGL.minorVersion,
         #ifdef LLGL_DEBUG
         WGL_CONTEXT_FLAGS_ARB,          WGL_CONTEXT_DEBUG_BIT_ARB /*| WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB*/,
         #endif
-        WGL_CONTEXT_PROFILE_MASK_ARB,   (useCoreProfile ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB),
+        WGL_CONTEXT_PROFILE_MASK_ARB,   GLContextProfileToBitmask(desc_.profileOpenGL.contextProfile),
         0, 0
     };
 

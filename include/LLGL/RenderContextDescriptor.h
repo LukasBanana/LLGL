@@ -33,28 +33,15 @@ using DebugCallback = std::function<void(const std::string& type, const std::str
 
 /* ----- Enumerations ----- */
 
-enum class OpenGLVersion
+/**
+\brief OpenGL context profile enumeration.
+\remarks Can be used to specify a specific OpenGL profile other than the default (i.e. compatibility profile).
+*/
+enum class OpenGLContextProfile
 {
-    OpenGL_Latest   =   0, //!< Latest available OpenGL version (on the host platform).
-    OpenGL_1_0      = 100, //!< OpenGL 1.0, released in Jan, 1992.
-    OpenGL_1_1      = 110, //!< OpenGL 1.1, released in Mar, 1997.
-    OpenGL_1_2      = 120, //!< OpenGL 1.2, released in Mar, 1998.
-    OpenGL_1_3      = 130, //!< OpenGL 1.3, released in Aug, 2001.
-    OpenGL_1_4      = 140, //!< OpenGL 1.4, released in Jul, 2002.
-    OpenGL_1_5      = 150, //!< OpenGL 1.5, released in Jul, 2003.
-    OpenGL_2_0      = 200, //!< OpenGL 2.0, released in Sep, 2004.
-    OpenGL_2_1      = 210, //!< OpenGL 2.1, released in Jul, 2006.
-    OpenGL_3_0      = 300, //!< OpenGL 3.0, released in Aug, 2008 (known as "Longs Peak").
-    OpenGL_3_1      = 310, //!< OpenGL 3.1, released in Mar, 2009 (known as "Longs Peak Reloaded").
-    OpenGL_3_2      = 320, //!< OpenGL 3.2, released in Aug, 2009.
-    OpenGL_3_3      = 330, //!< OpenGL 3.3, released in Mar, 2010.
-    OpenGL_4_0      = 400, //!< OpenGL 4.0, released in Mar, 2010 (alongside with OpenGL 3.3).
-    OpenGL_4_1      = 410, //!< OpenGL 4.1, released in Jul, 2010.
-    OpenGL_4_2      = 420, //!< OpenGL 4.2, released in Aug, 2011.
-    OpenGL_4_3      = 430, //!< OpenGL 4.3, released in Aug, 2012.
-    OpenGL_4_4      = 440, //!< OpenGL 4.4, released in Jul, 2013.
-    OpenGL_4_5      = 450, //!< OpenGL 4.5, released in Aug, 2014.
-    OpenGL_4_6      = 460, //!< OpenGL 4.6, released in Jul, 2017.
+    CompatibilityProfile,   //!< OpenGL compatibility profile. This is the default.
+    CoreProfile,            //!< OpenGL core profile.
+    ESProfile,              //!< OpenGL ES profile. \todo This is incomplete, do not use!
 };
 
 
@@ -77,26 +64,26 @@ struct VideoModeDescriptor
     std::uint32_t   swapChainSize   = 2;        //!< Number of swap-chain buffers. By default 2 (for double-buffering).
 };
 
-//! OpenGL profile descriptor structure.
+/**
+\brief OpenGL profile descriptor structure.
+\note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.
+*/
 struct ProfileOpenGLDescriptor
 {
-    //! Specifies whether an extended renderer profile is to be used. By default false.
-    bool            extProfile  = false;
+    //! Specifies the requested OpenGL context profile. By default OpenGLContextProfile::CompatibilityProfile.
+    OpenGLContextProfile    contextProfile  = OpenGLContextProfile::CompatibilityProfile;
 
     /**
-    \brief Specifies whether to use 'OpenGL Core Profile', instead of 'OpenGL Compatibility Profile'. By default disbaled.
-    \remarks This requires 'extProfile' to be enabled.
+    \brief Specifies the requested OpenGL context major version. By default 3.
+    \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
     */
-    bool            coreProfile = false;
-
-    //! Specifies whether the hardware renderer will produce debug dump. By default disabled.
-    bool            debugDump   = false;
+    int                     majorVersion    = 3;
 
     /**
-    \brief OpenGL version to create the render context with.
-    \remarks This required 'coreProfile' to be enabled.
+    \brief Specifies the requested OpenGL context minor version. By default 2.
+    \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
     */
-    OpenGLVersion   version     = OpenGLVersion::OpenGL_Latest;
+    int                     minorVersion    = 2;
 };
 
 //! Render context descriptor structure.
@@ -117,15 +104,6 @@ LLGL_EXPORT bool operator != (const VsyncDescriptor& lhs, const VsyncDescriptor&
 
 LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
 LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
-
-
-/* ----- Functions ----- */
-
-//! Returns the major number of the specified OpenGL version.
-LLGL_EXPORT std::int32_t GetMajorVersion(const OpenGLVersion version);
-
-//! Returns the minor number of the specified OpenGL version.
-LLGL_EXPORT std::int32_t GetMinorVersion(const OpenGLVersion version);
 
 
 } // /namespace LLGL

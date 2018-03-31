@@ -47,19 +47,6 @@ LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDes
 }
 
 
-/* ----- Functions ----- */
-
-LLGL_EXPORT std::int32_t GetMajorVersion(const OpenGLVersion version)
-{
-    return static_cast<std::int32_t>(version) / 100;
-}
-
-LLGL_EXPORT std::int32_t GetMinorVersion(const OpenGLVersion version)
-{
-    return (static_cast<std::int32_t>(version) / 10) % 10;
-}
-
-
 } // /namespace LLGL
 
 

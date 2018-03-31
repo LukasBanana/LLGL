@@ -68,6 +68,20 @@ bool MacOSGLContext::Activate(bool activate)
     return true;
 }
 
+static NSOpenGLPixelFormatAttribute TranslateNSOpenGLProfile(const ProfileOpenGLDescriptor& profile)
+{
+    if (profile.contextProfile == OpenGLContextProfile::CompatibilityProfile)
+        return NSOpenGLProfileVersionLegacy;
+    if (profile.contextProfile == OpenGLContextProfile::CoreProfile)
+    {
+        if (profile.majorVersion == 3 && profile.minorVersion == 2)
+            return NSOpenGLProfileVersion3_2Core;
+        if (profile.majorVersion == 4 && profile.minorVersion == 1)
+            return NSOpenGLProfileVersion4_1Core;
+    }
+    throw std::runtime_error("failed to choose OpenGL profile (only compatibility profile, 3.2 core profile, and 4.1 core profile are supported)");
+}
+
 void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
 {
     NSOpenGLPixelFormatAttribute attribs[] =
@@ -75,7 +89,7 @@ void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
         //NSOpenGLPFANoRecovery,
         NSOpenGLPFAAccelerated,
         NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFAOpenGLProfile,   NSOpenGLProfileVersion3_2Core,
+        NSOpenGLPFAOpenGLProfile,   TranslateNSOpenGLProfile(desc.profileOpenGL),
         NSOpenGLPFADepthSize,       24,
         NSOpenGLPFAStencilSize,     8,
         NSOpenGLPFAColorSize,       24,

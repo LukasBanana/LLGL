@@ -112,12 +112,10 @@ void LinuxGLContext::CreateContext(const RenderContextDescriptor& contextDesc, c
     /* Create OpenGL context with X11 lib */
     const auto& profileDesc = contextDesc.profileOpenGL;
     
-    if (profileDesc.extProfile && profileDesc.coreProfile)
+    if (profileDesc.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
-        int major = GetMajorVersion(profileDesc.version);
-        int minor = GetMinorVersion(profileDesc.version);
-        glc_ = CreateContextCoreProfile(glcShared, major, minor);
+        glc_ = CreateContextCoreProfile(glcShared, profileDesc.majorVersion, profileDesc.minorVersion);
     }
     
     if (!glc_)

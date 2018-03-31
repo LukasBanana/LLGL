@@ -30,6 +30,14 @@ int main(int argc, char* argv[])
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
 
+        // Print renderer information
+        const auto& info = renderer->GetRendererInfo();
+
+        std::cout << "Renderer:         " << info.rendererName << std::endl;
+        std::cout << "Device:           " << info.deviceName << std::endl;
+        std::cout << "Vendor:           " << info.vendorName << std::endl;
+        std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
+
         // Set window title and show window
         auto& window = static_cast<LLGL::Window&>(context->GetSurface());
 

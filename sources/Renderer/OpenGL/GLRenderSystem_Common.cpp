@@ -269,7 +269,7 @@ void GLRenderSystem::LoadGLExtensions(const ProfileOpenGLDescriptor& profileDesc
     /* Load OpenGL extensions if not already done */
     if (!AreExtensionsLoaded())
     {
-        auto coreProfile = (profileDesc.extProfile && profileDesc.coreProfile);
+        auto coreProfile = (profileDesc.contextProfile == OpenGLContextProfile::CoreProfile);
 
         /* Query extensions and load all of them */
         auto extensions = QueryExtensions(coreProfile);
