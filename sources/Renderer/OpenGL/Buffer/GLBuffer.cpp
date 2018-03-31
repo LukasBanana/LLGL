@@ -30,10 +30,12 @@ void GLBuffer::BufferData(const void* data, GLsizeiptr size, GLenum usage)
     glBufferData(GetTarget(), size, data, usage);
 }
 
+#if 0
 void GLBuffer::BufferSubData(const void* data, GLsizeiptr size, GLintptr offset)
 {
     glBufferSubData(GetTarget(), offset, size, data);
 }
+#endif
 
 void* GLBuffer::MapBuffer(GLenum access)
 {

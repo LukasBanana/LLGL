@@ -6,6 +6,7 @@
  */
 
 #include "GLRenderSystem.h"
+#include "Ext/GLExtensions.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../GLCommon/GLTypes.h"
@@ -108,17 +109,38 @@ void GLRenderSystem::Release(BufferArray& bufferArray)
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
+void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
+{
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+
+    #ifdef GL_ARB_direct_state_access
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glNamedBufferSubData(
+            bufferGL.GetID(),
+            static_cast<GLintptr>(offset),
+            static_cast<GLsizeiptr>(dataSize),
+            data
+        );
+    }
+    else
+    #endif
+    {
+        GLStateManager::active->BindBuffer(bufferGL);
+        glBufferSubData(
+            GLTypes::Map(bufferGL.GetType()),
+            static_cast<GLintptr>(offset),
+            static_cast<GLsizeiptr>(dataSize),
+            data
+        );
+    }
+}
+
 static GLBuffer& BindAndGetGLBuffer(Buffer& buffer)
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
     GLStateManager::active->BindBuffer(bufferGL);
     return bufferGL;
-}
-
-void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
-{
-    /* Bind and update buffer sub-data */
-    BindAndGetGLBuffer(buffer).BufferSubData(data, dataSize, static_cast<GLintptr>(offset));
 }
 
 void* GLRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)

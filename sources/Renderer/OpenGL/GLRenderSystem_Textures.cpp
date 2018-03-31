@@ -117,27 +117,37 @@ void GLRenderSystem::Release(TextureArray& textureArray)
 
 TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
 {
-    /* Bind texture */
     auto& textureGL = LLGL_CAST(const GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
 
-    /* Setup texture descriptor */
     TextureDescriptor desc;
 
     desc.type = texture.GetType();
 
-    auto target = GLTypes::Map(texture.GetType());
+    /* Query hardware texture format and size */
+    GLint internalFormat = 0, texSize[3] = { 0 };
 
-    /* Query hardware texture format */
-    GLint internalFormat = 0;
-    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+    #ifdef GL_ARB_direct_state_access
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        auto texID = textureGL.GetID();
+        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_WIDTH, &texSize[0]);
+        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
+        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_DEPTH, &texSize[2]);
+    }
+    else
+    #endif
+    {
+        GLStateManager::active->BindTexture(textureGL);
+        auto target = GLTypes::Map(texture.GetType());
+        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &texSize[0]);
+        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
+        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH, &texSize[2]);
+    }
+
+    /* Transform data from OpenGL to LLGL */
     GLTypes::Unmap(desc.format, static_cast<GLenum>(internalFormat));
-
-    /* Query texture size */
-    GLint texSize[3] = { 0 };
-    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH,  &texSize[0]);
-    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
-    glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &texSize[2]);
 
     desc.texture3D.width    = static_cast<std::uint32_t>(texSize[0]);
     desc.texture3D.height   = static_cast<std::uint32_t>(texSize[1]);
@@ -202,33 +212,45 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageForm
 {
     LLGL_ASSERT_PTR(buffer);
 
-    /* Bind texture */
     auto& textureGL = LLGL_CAST(const GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
 
     /* Read image data from texture */
-    glGetTexImage(
-        GLTypes::Map(textureGL.GetType()),
-        mipLevel,
-        GLTypes::Map(imageFormat),
-        GLTypes::Map(dataType),
-        buffer
-    );
+    #if 0
+    #ifdef GL_ARB_direct_state_access
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        //glGetTextureImage(textureGL.GetID(), mipLevel, GLTypes::Map(imageFormat), GLTypes::Map(dataType), bufferSize, buffer);
+    }
+    else
+    #endif
+    #endif
+    {
+        /* Bind texture and read image data from texture */
+        GLStateManager::active->BindTexture(textureGL);
+        glGetTexImage(GLTypes::Map(textureGL.GetType()), mipLevel, GLTypes::Map(imageFormat), GLTypes::Map(dataType), buffer);
+    }
 }
 
 void GLRenderSystem::GenerateMips(Texture& texture)
 {
     /* Bind texture to active layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::active->BindTexture(textureGL);
 
-    auto target = GLTypes::Map(textureGL.GetType());
-
-    /* Generate MIP-maps */
-    glGenerateMipmap(target);
-
-    /* Update texture minification filter to a default value */
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    /* Generate MIP-maps and update texture minification filter to a default value */
+    #ifdef GL_ARB_direct_state_access
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glGenerateTextureMipmap(textureGL.GetID());
+        glTextureParameteri(textureGL.GetID(), GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    }
+    else
+    #endif
+    {
+        GLStateManager::active->BindTexture(textureGL);
+        auto target = GLTypes::Map(textureGL.GetType());
+        glGenerateMipmap(target);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    }
 }
 
 
