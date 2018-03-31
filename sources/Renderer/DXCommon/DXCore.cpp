@@ -168,6 +168,48 @@ static ShadingLanguage DXGetHLSLVersion(D3D_FEATURE_LEVEL featureLevel)
     else                                        return ShadingLanguage::HLSL_2_0a;
 }
 
+static std::vector<TextureFormat> DXGetSupportedTextureFormats()
+{
+    return
+    {
+        TextureFormat::DepthComponent,
+        TextureFormat::DepthStencil,
+        TextureFormat::R,
+        TextureFormat::RG,
+        TextureFormat::RGBA,
+        TextureFormat::R8,
+        TextureFormat::R8Sgn,
+        TextureFormat::R16,
+        TextureFormat::R16Sgn,
+        TextureFormat::R16Float,
+        TextureFormat::R32UInt,
+        TextureFormat::R32SInt,
+        TextureFormat::R32Float,
+        TextureFormat::RG8,
+        TextureFormat::RG8Sgn,
+        TextureFormat::RG16,
+        TextureFormat::RG16Sgn,
+        TextureFormat::RG16Float,
+        TextureFormat::RG32UInt,
+        TextureFormat::RG32SInt,
+        TextureFormat::RG32Float,
+        TextureFormat::RGB32UInt,
+        TextureFormat::RGB32SInt,
+        TextureFormat::RGB32Float,
+        TextureFormat::RGBA8,
+        TextureFormat::RGBA8Sgn,
+        TextureFormat::RGBA16,
+        TextureFormat::RGBA16Sgn,
+        TextureFormat::RGBA16Float,
+        TextureFormat::RGBA32UInt,
+        TextureFormat::RGBA32SInt,
+        TextureFormat::RGBA32Float,
+        TextureFormat::RGBA_DXT1,
+        TextureFormat::RGBA_DXT3,
+        TextureFormat::RGBA_DXT5,
+    };
+}
+
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476876(v=vs.85).aspx
 void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
 {
@@ -176,6 +218,7 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
     caps.screenOrigin                       = ScreenOrigin::UpperLeft;
     caps.clippingRange                      = ClippingRange::ZeroToOne;
     caps.shadingLanguage                    = DXGetHLSLVersion(featureLevel);
+    caps.textureFormats                     = DXGetSupportedTextureFormats();
     caps.hasRenderTargets                   = true;
     caps.has3DTextures                      = true;
     caps.hasCubeTextures                    = true;

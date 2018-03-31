@@ -354,14 +354,107 @@ void GLRenderSystem::QueryRendererInfo()
     SetRendererInfo(info);
 }
 
+static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
+{
+    return
+    {
+        TextureFormat::DepthComponent,
+        TextureFormat::DepthStencil,
+        TextureFormat::R,
+        TextureFormat::RG,
+        TextureFormat::RGB,
+        TextureFormat::RGBA,
+        TextureFormat::R8,
+        TextureFormat::R8Sgn,
+        TextureFormat::R16,
+        TextureFormat::R16Sgn,
+        TextureFormat::R16Float,
+        TextureFormat::R32UInt,
+        TextureFormat::R32SInt,
+        TextureFormat::R32Float,
+        TextureFormat::RG8,
+        TextureFormat::RG8Sgn,
+        TextureFormat::RG16,
+        TextureFormat::RG16Sgn,
+        TextureFormat::RG16Float,
+        TextureFormat::RG32UInt,
+        TextureFormat::RG32SInt,
+        TextureFormat::RG32Float,
+        TextureFormat::RGB8,
+        TextureFormat::RGB8Sgn,
+        TextureFormat::RGB16,
+        TextureFormat::RGB16Sgn,
+        TextureFormat::RGB16Float,
+        TextureFormat::RGB32UInt,
+        TextureFormat::RGB32SInt,
+        TextureFormat::RGB32Float,
+        TextureFormat::RGBA8,
+        TextureFormat::RGBA8Sgn,
+        TextureFormat::RGBA16,
+        TextureFormat::RGBA16Sgn,
+        TextureFormat::RGBA16Float,
+        TextureFormat::RGBA32UInt,
+        TextureFormat::RGBA32SInt,
+        TextureFormat::RGBA32Float,
+    };
+}
+
 void GLRenderSystem::QueryRenderingCaps()
 {
+    auto GetUInt = [&](GLenum param)
+    {
+        GLint attr = 0;
+        glGetIntegerv(param, &attr);
+        return static_cast<std::uint32_t>(attr);
+    };
+
+    auto GetUIntIdx = [](GLenum param, GLuint index)
+    {
+        GLint attr = 0;
+        if (HasExtension(GLExt::EXT_draw_buffers2))
+            glGetIntegeri_v(param, index, &attr);
+        return static_cast<std::uint32_t>(attr);
+    };
+
     RenderingCaps caps;
 
     /* Set fixed states for this renderer */
     caps.screenOrigin                   = ScreenOrigin::LowerLeft;
     caps.clippingRange                  = ClippingRange::MinusOneToOne;
     caps.shadingLanguage                = QueryShadingLanguage();
+
+    /* Query supported texture formats */
+    caps.textureFormats = GetDefaultSupportedGLTextureFormats();
+    
+    #ifdef GL_EXT_texture_compression_s3tc
+
+    const auto numCompressedTexFormats = GetUInt(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
+
+    std::vector<GLint> compressedTexFormats(numCompressedTexFormats);
+    glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, compressedTexFormats.data());
+
+    for (GLint format : compressedTexFormats)
+    {
+        switch (format)
+        {
+            case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+                caps.textureFormats.push_back(TextureFormat::RGB_DXT1);
+                break;
+            case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+                caps.textureFormats.push_back(TextureFormat::RGBA_DXT1);
+                break;
+            case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+                caps.textureFormats.push_back(TextureFormat::RGBA_DXT3);
+                break;
+            case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+                caps.textureFormats.push_back(TextureFormat::RGBA_DXT5);
+                break;
+            default:
+                break;
+        }
+    }
+
+    #endif
 
     /* Query all boolean capabilies by their respective OpenGL extension */
     caps.hasRenderTargets               = HasExtension(GLExt::ARB_framebuffer_object);
@@ -384,21 +477,6 @@ void GLRenderSystem::QueryRenderingCaps()
     caps.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
 
     /* Query integral attributes */
-    auto GetUInt = [&](GLenum param)
-    {
-        GLint attr = 0;
-        glGetIntegerv(param, &attr);
-        return static_cast<std::uint32_t>(attr);
-    };
-
-    auto GetUIntIdx = [](GLenum param, GLuint index)
-    {
-        GLint attr = 0;
-        if (HasExtension(GLExt::EXT_draw_buffers2))
-            glGetIntegeri_v(param, index, &attr);
-        return static_cast<std::uint32_t>(attr);
-    };
-
     caps.maxNumTextureArrayLayers           = GetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
     caps.maxNumRenderTargetAttachments      = GetUInt(GL_MAX_DRAW_BUFFERS);
     caps.maxConstantBufferSize              = GetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);

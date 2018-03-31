@@ -97,10 +97,10 @@ enum class TextureFormat
     RGBA32Float,    //!< Sized format: red, green, blue, alpha 32-bit floating point components.
 
     /* --- Compressed formats --- */
-    RGB_DXT1,       //!< Compressed format: RGB S3TC DXT1.
-    RGBA_DXT1,      //!< Compressed format: RGBA S3TC DXT1.
-    RGBA_DXT3,      //!< Compressed format: RGBA S3TC DXT3.
-    RGBA_DXT5,      //!< Compressed format: RGBA S3TC DXT5.
+    RGB_DXT1,       //!< Compressed format: RGB S3TC DXT1 with 8 bytes per 4x4 block. \note Only supported with: OpenGL.
+    RGBA_DXT1,      //!< Compressed format: RGBA S3TC DXT1 with 8 bytes per 4x4 block.
+    RGBA_DXT3,      //!< Compressed format: RGBA S3TC DXT3 with 16 bytes per 4x4 block.
+    RGBA_DXT5,      //!< Compressed format: RGBA S3TC DXT5 with 16 bytes per 4x4 block.
 };
 
 //! Axis direction (also used for texture cube face).

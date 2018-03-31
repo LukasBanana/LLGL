@@ -123,7 +123,7 @@ DXGI_FORMAT Map(const TextureFormat textureFormat)
         case TextureFormat::RGBA32Float:    return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
         /* --- Compressed formats --- */
-        case TextureFormat::RGB_DXT1:       return DXGI_FORMAT_BC1_UNORM;
+        case TextureFormat::RGB_DXT1:       break;
         case TextureFormat::RGBA_DXT1:      return DXGI_FORMAT_BC1_UNORM;
         case TextureFormat::RGBA_DXT3:      return DXGI_FORMAT_BC2_UNORM;
         case TextureFormat::RGBA_DXT5:      return DXGI_FORMAT_BC3_UNORM;

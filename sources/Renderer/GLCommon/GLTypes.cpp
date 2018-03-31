@@ -202,7 +202,7 @@ GLenum Map(const TextureFormat textureFormat)
         case TextureFormat::RGBA32SInt:     return GL_RGBA32I;
         case TextureFormat::RGBA32Float:    return GL_RGBA32F;
 
-        #ifdef LLGL_OPENGL
+        #ifdef GL_EXT_texture_compression_s3tc
         /* --- Compressed formats --- */
         case TextureFormat::RGB_DXT1:       return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
         case TextureFormat::RGBA_DXT1:      return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
