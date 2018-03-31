@@ -32,6 +32,7 @@ class GLStateManager
         /* ----- Common ----- */
 
         GLStateManager();
+        ~GLStateManager();
 
         // Active state manager. Each GL context has its own states, thus its own state manager.
         static GLStateManager* active;
@@ -98,6 +99,8 @@ class GLStateManager
 
         /* ----- Buffer ----- */
 
+        static GLBufferTarget GetBufferTarget(const BufferType type);
+
         void BindBuffer(GLBufferTarget target, GLuint buffer);
         void BindBufferBase(GLBufferTarget target, GLuint index, GLuint buffer);
         void BindBuffersBase(GLBufferTarget target, GLuint first, GLsizei count, const GLuint* buffers);
@@ -115,9 +118,13 @@ class GLStateManager
 
         void BindBuffer(const GLBuffer& buffer);
 
+        static void NotifyBufferRelease(GLuint buffer, GLBufferTarget target);
+
         /* ----- Framebuffer ----- */
 
         void BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer);
+
+        static void NotifyFramebufferRelease(GLuint framebuffer);
 
         /* ----- Renderbuffer ----- */
 
@@ -138,19 +145,23 @@ class GLStateManager
 
         void BindTexture(const GLTexture& texture);
 
-        void NotifyTextureRelease(GLTextureTarget target, GLuint texture);
+        static void NotifyTextureRelease(GLuint texture, GLTextureTarget target);
 
         /* ----- Sampler ----- */
 
         void BindSampler(std::uint32_t layer, GLuint sampler);
         void BindSamplers(std::uint32_t first, std::uint32_t count, const GLuint* samplers);
 
-        /* ----- Shader ----- */
+        static void NotifySamplerRelease(GLuint sampler);
+
+        /* ----- Shader Program ----- */
 
         void BindShaderProgram(GLuint program);
 
         void PushShaderProgram();
         void PopShaderProgram();
+
+        static void NotifyShaderProgramRelease(GLuint program);
 
     private:
 

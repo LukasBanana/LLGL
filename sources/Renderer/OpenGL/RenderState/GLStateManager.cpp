@@ -107,8 +107,21 @@ static const GLenum g_textureLayersEnum[] =
     GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
 };
 
+static const GLuint g_GLInvalidId = ~0;
+
+
+/* ----- Internal functions ----- */
+
+static void InvalidateBoundGLObject(GLuint& boundId, const GLuint releasedObjectId)
+{
+    if (boundId == releasedObjectId)
+        boundId = g_GLInvalidId;
+}
+
 
 /* ----- Common ----- */
+
+static std::vector<GLStateManager*> g_GLStateManagerList;
 
 GLStateManager* GLStateManager::active = nullptr;
 
@@ -127,6 +140,14 @@ GLStateManager::GLStateManager()
 
     /* Make this to the active state manager */
     GLStateManager::active = this;
+
+    /* Store state manager in global list */
+    g_GLStateManagerList.push_back(this);
+}
+
+GLStateManager::~GLStateManager()
+{
+    RemoveFromList(g_GLStateManagerList, this);
 }
 
 void GLStateManager::DetermineExtensionsAndLimits()
@@ -586,6 +607,19 @@ void GLStateManager::SetLineWidth(GLfloat width)
 
 /* ----- Buffer ----- */
 
+GLBufferTarget GLStateManager::GetBufferTarget(const BufferType type)
+{
+    switch (type)
+    {
+        case BufferType::Vertex:        return GLBufferTarget::ARRAY_BUFFER;
+        case BufferType::Index:         return GLBufferTarget::ELEMENT_ARRAY_BUFFER;
+        case BufferType::Constant:      return GLBufferTarget::UNIFORM_BUFFER;
+        case BufferType::Storage:       return GLBufferTarget::SHADER_STORAGE_BUFFER;
+        case BufferType::StreamOutput:  return GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER;
+    }
+    throw std::invalid_argument("failed to map 'BufferType' to internal type 'GLBufferTarget'");
+}
+
 void GLStateManager::BindBuffer(GLBufferTarget target, GLuint buffer)
 {
     /* Only bind buffer if the buffer has changed */
@@ -691,22 +725,16 @@ void GLStateManager::PopBoundBuffer()
     bufferState_.boundBufferStack.pop();
 }
 
-static GLBufferTarget GetGLBufferTarget(const BufferType type)
-{
-    switch (type)
-    {
-        case BufferType::Vertex:        return GLBufferTarget::ARRAY_BUFFER;
-        case BufferType::Index:         return GLBufferTarget::ELEMENT_ARRAY_BUFFER;
-        case BufferType::Constant:      return GLBufferTarget::UNIFORM_BUFFER;
-        case BufferType::Storage:       return GLBufferTarget::SHADER_STORAGE_BUFFER;
-        case BufferType::StreamOutput:  return GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER;
-    }
-    throw std::invalid_argument("failed to map 'BufferType' to internal type 'GLBufferTarget'");
-}
-
 void GLStateManager::BindBuffer(const GLBuffer& buffer)
 {
-    BindBuffer(GetGLBufferTarget(buffer.GetType()), buffer.GetID());
+    BindBuffer(GLStateManager::GetBufferTarget(buffer.GetType()), buffer.GetID());
+}
+
+void GLStateManager::NotifyBufferRelease(GLuint buffer, GLBufferTarget target)
+{
+    auto targetIdx = static_cast<std::size_t>(target);
+    for (auto stateMngr : g_GLStateManagerList)
+        InvalidateBoundGLObject(stateMngr->bufferState_.boundBuffers[targetIdx], buffer);
 }
 
 /* ----- Framebuffer ----- */
@@ -719,6 +747,15 @@ void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuf
     {
         framebufferState_.boundFramebuffers[targetIdx] = framebuffer;
         glBindFramebuffer(g_framebufferTargetsEnum[targetIdx], framebuffer);
+    }
+}
+
+void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
+{
+    for (auto stateMngr : g_GLStateManagerList)
+    {
+        for (auto& boundFramebuffer : stateMngr->framebufferState_.boundFramebuffers)
+            InvalidateBoundGLObject(boundFramebuffer, framebuffer);
     }
 }
 
@@ -847,16 +884,14 @@ void GLStateManager::BindTexture(const GLTexture& texture)
     BindTexture(GLStateManager::GetTextureTarget(texture.GetType()), texture.GetID());
 }
 
-void GLStateManager::NotifyTextureRelease(GLTextureTarget target, GLuint texture)
+void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target)
 {
     auto targetIdx = static_cast<std::size_t>(target);
 
-    /* Search texture on all layers */
-    for (auto& layer : textureState_.layers)
+    for (auto stateMngr : g_GLStateManagerList)
     {
-        /* Invalidate texture binding memory for this texture */
-        if (layer.boundTextures[targetIdx] == texture)
-            layer.boundTextures[targetIdx] = ~0;
+        for (auto& layer : stateMngr->textureState_.layers)
+            InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
     }
 }
 
@@ -896,6 +931,15 @@ void GLStateManager::BindSamplers(std::uint32_t first, std::uint32_t count, cons
     }
 }
 
+void GLStateManager::NotifySamplerRelease(GLuint sampler)
+{
+    for (auto stateMngr : g_GLStateManagerList)
+    {
+        for (auto& boundSampler : stateMngr->samplerState_.boundSamplers)
+            InvalidateBoundGLObject(boundSampler, sampler);
+    }
+}
+
 /* ----- Shader binding ----- */
 
 void GLStateManager::BindShaderProgram(GLuint program)
@@ -916,6 +960,12 @@ void GLStateManager::PopShaderProgram()
 {
     BindShaderProgram(shaderState_.boundProgramStack.top());
     shaderState_.boundProgramStack.pop();
+}
+
+void GLStateManager::NotifyShaderProgramRelease(GLuint program)
+{
+    for (auto stateMngr : g_GLStateManagerList)
+        InvalidateBoundGLObject(stateMngr->shaderState_.boundProgram, program);
 }
 
 

@@ -95,27 +95,23 @@ TextureArray* GLRenderSystem::CreateTextureArray(std::uint32_t numTextures, Text
 
 void GLRenderSystem::Release(Texture& texture)
 {
-    /* Notify state manager about texture release */
-    auto& textureGL = LLGL_CAST(const GLTexture&, texture);
-    GLStateManager::active->NotifyTextureRelease(GLStateManager::GetTextureTarget(textureGL.GetType()), textureGL.GetID());
-
-    /* Release object */
+    /* Notify GL state manager about object release, then release object */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+    GLStateManager::NotifyTextureRelease(textureGL.GetID(), GLStateManager::GetTextureTarget(textureGL.GetType()));
     RemoveFromUniqueSet(textures_, &texture);
 }
 
 void GLRenderSystem::Release(TextureArray& textureArray)
 {
-    /* Notify state manager about texture release */
-    auto& textureArrayGL = LLGL_CAST(const GLTextureArray&, textureArray);
+    /* Notify GL state manager about object release, then release object */
+    auto& textureArrayGL = LLGL_CAST(GLTextureArray&, textureArray);
 
     const auto& texIDs      = textureArrayGL.GetIDArray();
     const auto& texTargets  = textureArrayGL.GetTargetArray();
 
-    //TODO: must be done for ALL state managers!!!
     for (std::size_t i = 0, n = texIDs.size(); i < n; ++i)
-        GLStateManager::active->NotifyTextureRelease(texTargets[i], texIDs[i]);
+        GLStateManager::NotifyTextureRelease(texIDs[i], texTargets[i]);
 
-    /* Release object */
     RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
