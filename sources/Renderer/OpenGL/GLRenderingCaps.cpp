@@ -8,6 +8,8 @@
 #include "GLRenderingCaps.h"
 #include "Ext/GLExtensions.h"
 #include "../GLCommon/GLExtensionRegistry.h"
+#include "../GLCommon/GLTypes.h"
+#include "../../Core/Helper.h"
 #include <cstdint>
 
 
@@ -116,11 +118,22 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
 {
     textureFormats = GetDefaultSupportedGLTextureFormats();
 
-    /*if (HasExtension(GLExt::ARB_internalformat_query) && HasExtension(GLExt::ARB_internalformat_query2))
+    if (HasExtension(GLExt::ARB_internalformat_query) && HasExtension(GLExt::ARB_internalformat_query2))
     {
-        GLint params[1];
-        glGetInternalformativ(GL_TEXTURE_2D, GL_R16F, GL_INTERNALFORMAT_SUPPORTED, 1, params);
-    }*/
+        RemoveAllFromListIf(
+            textureFormats,
+            [](TextureFormat format) -> bool
+            {
+                if (auto internalformat = GLTypes::MapOrZero(format))
+                {
+                    GLint params[1];
+                    glGetInternalformativ(GL_TEXTURE_2D, internalformat, GL_INTERNALFORMAT_SUPPORTED, 1, params);
+                    return (params[0] == GL_FALSE);
+                }
+                return true;
+            }
+        );
+    }
     
     #ifdef GL_EXT_texture_compression_s3tc
 
