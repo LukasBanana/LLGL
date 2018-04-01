@@ -76,12 +76,29 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
         if (version >= 460) { languages.push_back(ShadingLanguage::GLSL_460); }
     }
 
-    if (HasExtension(GLExt::ARB_gl_spirv))
+    #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
+
+    if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
     {
-        /* Add supported SPIR-V versions */
-        languages.push_back(ShadingLanguage::SPIRV);
-        languages.push_back(ShadingLanguage::SPIRV_100);
+        /* Query supported shader binary formats */
+        GLint numBinaryFormats = 0;
+        glGetIntegerv(GL_NUM_SHADER_BINARY_FORMATS, &numBinaryFormats);
+
+        if (numBinaryFormats > 0)
+        {
+            std::vector<GLint> binaryFormats(static_cast<std::size_t>(numBinaryFormats));
+            glGetIntegerv(GL_SHADER_BINARY_FORMATS, binaryFormats.data());
+
+            if (std::find(binaryFormats.begin(), binaryFormats.end(), GL_SHADER_BINARY_FORMAT_SPIR_V) != binaryFormats.end())
+            {
+                /* Add supported SPIR-V versions */
+                languages.push_back(ShadingLanguage::SPIRV);
+                languages.push_back(ShadingLanguage::SPIRV_100);
+            }
+        }
     }
+
+    #endif // /GL_ARB_gl_spirv
 
     return languages;
 }

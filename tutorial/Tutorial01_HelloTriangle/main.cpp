@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
         auto ReadTextFile = [](const std::string& filename)
         {
             // Read file and check for failure
-            std::ifstream file(filename);
+            std::ifstream file { filename };
 
             if (!file.good())
                 throw std::runtime_error("failed to read file: \"" + filename + "\"");
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         auto ReadBinaryFile = [](const std::string& filename)
         {
             // Read file and for failure
-            std::ifstream file(filename, std::ios_base::binary | std::ios_base::ate);
+            std::ifstream file { filename, std::ios_base::binary | std::ios_base::ate };
 
             if (!file.good())
                 throw std::runtime_error("failed to read file: \"" + filename + "\"");
@@ -128,18 +128,7 @@ int main(int argc, char* argv[])
 
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
-        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
-        {
-            auto shaderCode = ReadTextFile("shader.hlsl");
-            CompileShader(vertexShader, shaderCode, {}, LLGL::ShaderDescriptor("VS", "vs_4_0"));
-            CompileShader(fragmentShader, shaderCode, {}, LLGL::ShaderDescriptor("PS", "ps_4_0"));
-        }
-        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV_100) != languages.end())
-        {
-            CompileShader(vertexShader, "", ReadBinaryFile("vertex.450core.spv"));
-            CompileShader(fragmentShader, "", ReadBinaryFile("fragment.450core.spv"));
-        }
-        else
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
             #ifdef __APPLE__
             CompileShader(vertexShader, ReadTextFile("vertex.140core.glsl"));
@@ -148,6 +137,17 @@ int main(int argc, char* argv[])
             CompileShader(vertexShader, ReadTextFile("vertex.glsl"));
             CompileShader(fragmentShader, ReadTextFile("fragment.glsl"));
             #endif
+        }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
+        {
+            CompileShader(vertexShader, "", ReadBinaryFile("vertex.450core.spv"));
+            CompileShader(fragmentShader, "", ReadBinaryFile("fragment.450core.spv"));
+        }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+        {
+            auto shaderCode = ReadTextFile("shader.hlsl");
+            CompileShader(vertexShader, shaderCode, {}, LLGL::ShaderDescriptor("VS", "vs_4_0"));
+            CompileShader(fragmentShader, shaderCode, {}, LLGL::ShaderDescriptor("PS", "ps_4_0"));
         }
 
         // Create shader program which is used as composite

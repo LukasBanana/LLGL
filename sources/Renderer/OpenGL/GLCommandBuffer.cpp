@@ -319,6 +319,8 @@ void GLCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 
     /* Store current render target */
     boundRenderTarget_ = &renderTargetGL;
+
+    //glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
 }
 
 void GLCommandBuffer::SetRenderTarget(RenderContext& renderContext)
@@ -339,6 +341,8 @@ void GLCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 
     /* Reset reference to render target */
     boundRenderTarget_ = nullptr;
+
+    //glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 }
 
 /* ----- Pipeline States ----- */

@@ -114,7 +114,7 @@ struct ShaderDescriptor
 
     /**
     \brief Shader entry point (shader main function).
-    \note Only supported with: Direct3D 11, Direct3D 12.
+    \note Only supported with: HLSL, SPIR-V.
     */
     std::string     entryPoint;
 
