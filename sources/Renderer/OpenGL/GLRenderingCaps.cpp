@@ -56,7 +56,7 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
         glGetIntegerv(GL_MINOR_VERSION, &minor);
 
         /* Map OpenGL version to GLSL version */
-        const GLint version = major * 100 + minor;
+        const GLint version = major * 100 + minor * 10;
 
         /* Add supported GLSL versions */
         languages.push_back(ShadingLanguage::GLSL);
