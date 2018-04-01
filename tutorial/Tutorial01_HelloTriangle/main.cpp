@@ -126,15 +126,15 @@ int main(int argc, char* argv[])
                 std::cerr << log << std::endl;
         };
 
-        const auto shadingLang = renderer->GetRenderingCaps().shadingLanguage;
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
-        if (shadingLang >= LLGL::ShadingLanguage::HLSL_2_0 && shadingLang <= LLGL::ShadingLanguage::HLSL_5_1)
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             auto shaderCode = ReadTextFile("shader.hlsl");
             CompileShader(vertexShader, shaderCode, {}, LLGL::ShaderDescriptor("VS", "vs_4_0"));
             CompileShader(fragmentShader, shaderCode, {}, LLGL::ShaderDescriptor("PS", "ps_4_0"));
         }
-        else if (shadingLang == LLGL::ShadingLanguage::SPIRV_100)
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV_100) != languages.end())
         {
             CompileShader(vertexShader, "", ReadBinaryFile("vertex.450core.spv"));
             CompileShader(fragmentShader, "", ReadBinaryFile("fragment.450core.spv"));

@@ -155,17 +155,24 @@ static std::uint32_t GetMaxRenderTargets(D3D_FEATURE_LEVEL featureLevel)
 }
 
 // Returns the HLSL version for the specified Direct3D feature level.
-static ShadingLanguage DXGetHLSLVersion(D3D_FEATURE_LEVEL featureLevel)
+static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureLevel)
 {
+    std::vector<ShadingLanguage> languages;
+
+    languages.push_back(ShadingLanguage::HLSL);
+    languages.push_back(ShadingLanguage::HLSL_2_0);
+
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_1 ) { languages.push_back(ShadingLanguage::HLSL_2_0a); }
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) { languages.push_back(ShadingLanguage::HLSL_2_0b); }
+    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) { languages.push_back(ShadingLanguage::HLSL_3_0); }
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) { languages.push_back(ShadingLanguage::HLSL_4_0); }
+    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) { languages.push_back(ShadingLanguage::HLSL_4_1); }
+    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) { languages.push_back(ShadingLanguage::HLSL_5_0); }
     #ifdef LLGL_DX_ENABLE_D3D12
-    if (featureLevel >= D3D_FEATURE_LEVEL_12_0) return ShadingLanguage::HLSL_5_1;
+    if (featureLevel >= D3D_FEATURE_LEVEL_12_0) { languages.push_back(ShadingLanguage::HLSL_5_1); }
     #endif
-    if (featureLevel >= D3D_FEATURE_LEVEL_11_0) return ShadingLanguage::HLSL_5_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_1) return ShadingLanguage::HLSL_4_1;
-    if (featureLevel >= D3D_FEATURE_LEVEL_10_0) return ShadingLanguage::HLSL_4_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_3 ) return ShadingLanguage::HLSL_3_0;
-    if (featureLevel >= D3D_FEATURE_LEVEL_9_2 ) return ShadingLanguage::HLSL_2_0b;
-    else                                        return ShadingLanguage::HLSL_2_0a;
+
+    return languages;
 }
 
 static std::vector<TextureFormat> DXGetSupportedTextureFormats()
@@ -217,7 +224,7 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
 
     caps.screenOrigin                       = ScreenOrigin::UpperLeft;
     caps.clippingRange                      = ClippingRange::ZeroToOne;
-    caps.shadingLanguage                    = DXGetHLSLVersion(featureLevel);
+    caps.shadingLanguages                   = DXGetHLSLVersions(featureLevel);
     caps.textureFormats                     = DXGetSupportedTextureFormats();
     caps.hasRenderTargets                   = true;
     caps.has3DTextures                      = true;

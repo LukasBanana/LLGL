@@ -542,7 +542,7 @@ void VKRenderSystem::QueryDeviceProperties()
     {
         caps.screenOrigin                       = ScreenOrigin::UpperLeft;
         caps.clippingRange                      = ClippingRange::ZeroToOne;
-        caps.shadingLanguage                    = ShadingLanguage::SPIRV_100;
+        caps.shadingLanguages                   = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
         caps.hasRenderTargets                   = true;
         caps.has3DTextures                      = true;
         caps.hasCubeTextures                    = true;

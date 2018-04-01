@@ -348,6 +348,18 @@ extern PFNGLGETINTERNALFORMATIVPROC                         glGetInternalformati
 
 extern PFNGLGETINTERNALFORMATI64VPROC                       glGetInternalformati64v;
 
+/* GL_ARB_ES2_compatibility */
+
+extern PFNGLRELEASESHADERCOMPILERPROC                       glReleaseShaderCompiler;
+extern PFNGLSHADERBINARYPROC                                glShaderBinary;
+extern PFNGLGETSHADERPRECISIONFORMATPROC                    glGetShaderPrecisionFormat;
+extern PFNGLDEPTHRANGEFPROC                                 glDepthRangef;
+extern PFNGLCLEARDEPTHFPROC                                 glClearDepthf;
+
+/* GL_ARB_gl_spirv */
+
+extern PFNGLSPECIALIZESHADERPROC                            glSpecializeShader;
+
 /* GL_ARB_direct_state_access */
 
 extern PFNGLCREATETRANSFORMFEEDBACKSPROC                    glCreateTransformFeedbacks;

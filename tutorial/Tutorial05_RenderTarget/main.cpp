@@ -103,7 +103,8 @@ public:
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
         // Load shader program
-        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             shaderProgram = LoadShaderProgram(
                 {

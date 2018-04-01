@@ -507,6 +507,22 @@ static bool Load_GL_ARB_internalformat_query2(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_ES2_compatibility(bool usePlaceholder)
+{
+    LOAD_GLPROC( glReleaseShaderCompiler    );
+    LOAD_GLPROC( glShaderBinary             );
+    LOAD_GLPROC( glGetShaderPrecisionFormat );
+    LOAD_GLPROC( glDepthRangef              );
+    LOAD_GLPROC( glClearDepthf              );
+    return true;
+}
+
+static bool Load_GL_ARB_gl_spirv(bool usePlaceholder)
+{
+    LOAD_GLPROC( glSpecializeShader );
+    return true;
+}
+
 static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -845,6 +861,8 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_sync                         );
     LOAD_GLEXT( ARB_internalformat_query         );
     LOAD_GLEXT( ARB_internalformat_query2        );
+    LOAD_GLEXT( ARB_ES2_compatibility            );
+    LOAD_GLEXT( ARB_gl_spirv                     );
     LOAD_GLEXT( ARB_direct_state_access          );
 
     /* Enable extensions without procedures */

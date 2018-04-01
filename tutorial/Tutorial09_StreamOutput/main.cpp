@@ -53,7 +53,8 @@ public:
         // Specify stream-output format
         LLGL::StreamOutputAttribute soAttrib;
         {
-            if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+            const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+            if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
                 soAttrib.name = "SV_Position";
             else
                 soAttrib.name = "gl_Position";
@@ -73,7 +74,8 @@ public:
     void CreateShaders(const LLGL::VertexFormat& vertexFormat, const LLGL::StreamOutputFormat& streamOutputFormat)
     {
         // Load shader program
-        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             shaderProgram = LoadShaderProgram(
                 {

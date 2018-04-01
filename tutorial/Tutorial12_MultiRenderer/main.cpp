@@ -118,7 +118,9 @@ int main(int argc, char* argv[])
             auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
             auto fragShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
 
-            if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+            const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+
+            if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
             {
                 auto shaderCode = ReadFileContent("shader.hlsl");
                 CompileShader(vertShader, shaderCode, { "VS", "vs_4_0" });

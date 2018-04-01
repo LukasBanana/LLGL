@@ -59,6 +59,8 @@ enum class GLExt
     ARB_sync,
     ARB_internalformat_query,
     ARB_internalformat_query2,
+    ARB_ES2_compatibility,
+    ARB_gl_spirv,
     ARB_direct_state_access,
 
     /* Extensions without procedures */

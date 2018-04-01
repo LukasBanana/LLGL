@@ -553,9 +553,9 @@ protected:
     LLGL::ShaderProgram* LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats)
     {
         // Load shader program
-        const auto shaderLang = renderer->GetRenderingCaps().shadingLanguage;
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
-        if (shaderLang == LLGL::ShadingLanguage::SPIRV_100)
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
         {
             return LoadShaderProgram(
                 {
@@ -565,7 +565,7 @@ protected:
                 vertexFormats
             );
         }
-        else if (shaderLang >= LLGL::ShadingLanguage::HLSL_2_0)
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             return LoadShaderProgram(
                 {

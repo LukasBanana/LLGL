@@ -73,7 +73,8 @@ int main(int argc, char* argv[])
                 std::cerr << log << std::endl;
         };
 
-        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
             CompileShader(computeShader, ReadFileContent("shader.hlsl"), { "CS", "cs_5_0" });
         else
             CompileShader(computeShader, ReadFileContent("compute.glsl"));

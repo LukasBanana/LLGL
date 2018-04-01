@@ -375,6 +375,18 @@ DECL_GLPROC(void, glGetInternalformativ, (GLenum, GLenum, GLenum, GLsizei, GLint
 
 DECL_GLPROC(void, glGetInternalformati64v, (GLenum, GLenum, GLenum, GLsizei, GLint64*));
 
+/* GL_ARB_ES2_compatibility */
+
+DECL_GLPROC(void, glReleaseShaderCompiler, (void));
+DECL_GLPROC(void, glShaderBinary, (GLsizei, const GLuint*, GLenum, const void*, GLsizei));
+DECL_GLPROC(void, glGetShaderPrecisionFormat, (GLenum, GLenum, GLint*, GLint*));
+DECL_GLPROC(void, glDepthRangef, (GLclampf, GLclampf));
+DECL_GLPROC(void, glClearDepthf, (GLclampf));
+
+/* GL_ARB_gl_spirv */
+
+DECL_GLPROC(void, glSpecializeShader, (GLuint, const GLchar*, GLuint, const GLuint*, const GLuint*));
+
 /* GL_ARB_direct_state_access */
 
 DECL_GLPROC(void, glCreateTransformFeedbacks, (GLsizei, GLuint*));
