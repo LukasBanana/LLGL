@@ -357,6 +357,21 @@ PFNGLCLEARDEPTHFPROC                                    glClearDepthf           
 
 PFNGLSPECIALIZESHADERPROC                               glSpecializeShader                              = nullptr;
 
+/* GL_ARB_texture_storage */
+
+PFNGLTEXSTORAGE1DPROC                                   glTexStorage1D                                  = nullptr;
+PFNGLTEXSTORAGE2DPROC                                   glTexStorage2D                                  = nullptr;
+PFNGLTEXSTORAGE3DPROC                                   glTexStorage3D                                  = nullptr;
+
+/* GL_ARB_texture_storage_multisample */
+
+PFNGLTEXSTORAGE2DMULTISAMPLEPROC                        glTexStorage2DMultisample                       = nullptr;
+PFNGLTEXSTORAGE3DMULTISAMPLEPROC                        glTexStorage3DMultisample                       = nullptr;
+
+/* GL_ARB_buffer_storage */
+
+PFNGLBUFFERSTORAGEPROC                                  glBufferStorage                                 = nullptr;
+
 /* GL_ARB_direct_state_access */
 
 PFNGLCREATETRANSFORMFEEDBACKSPROC                       glCreateTransformFeedbacks                      = nullptr;

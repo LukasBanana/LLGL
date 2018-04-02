@@ -17,6 +17,9 @@
 // Enable depth texture instead of depth buffer for render target
 //#define ENABLE_DEPTH_TEXTURE
 
+// Enable to emulate the clip-control functionality for OpenGL renderer (since 'GL_ARB_clip_control' is not integrated in LLGL yet)
+#define ENABLE_OPENGL_CLIPCONTROL_EMULATION
+
 
 #ifndef ENABLE_MULTISAMPLING
 #undef ENABLE_CUSTOM_MULTISAMPLING
@@ -249,7 +252,7 @@ private:
         // Set graphics pipeline state
         commands->SetGraphicsPipeline(*pipeline);
 
-        #if 0
+        #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
         if (IsOpenGL())
         {
             /*
@@ -286,7 +289,7 @@ private:
             // Update model transformation with render-target projection
             UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
             
-            #if 0
+            #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
             if (IsOpenGL())
             {
                 /*
@@ -314,7 +317,7 @@ private:
         // Generate MIP-maps again after texture has been written by the render-target
         renderer->GenerateMips(*renderTargetTex);
 
-        #if 0
+        #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
         if (IsOpenGL())
         {
             // Reset graphics API dependent state

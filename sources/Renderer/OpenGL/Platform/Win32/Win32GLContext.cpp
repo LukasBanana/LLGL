@@ -284,6 +284,13 @@ static int GLContextProfileToBitmask(const OpenGLContextProfile profile)
 
 HGLRC Win32GLContext::CreateExtContextProfile(HGLRC sharedGLRC)
 {
+    /* Check if highest version possible shall be used */
+    if (desc_.profileOpenGL.majorVersion < 0 || desc_.profileOpenGL.minorVersion < 0)
+    {
+        glGetIntegerv(GL_MAJOR_VERSION, &(desc_.profileOpenGL.majorVersion));
+        glGetIntegerv(GL_MINOR_VERSION, &(desc_.profileOpenGL.minorVersion));
+    }
+
     /* Setup extended attributes to select the OpenGL profile */
     const int attribList[] =
     {

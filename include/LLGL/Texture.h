@@ -41,7 +41,9 @@ class LLGL_EXPORT Texture
         \brief Returns the texture size for the specified MIP-level.
         \param[in] mipLevel Specifies the MIP-map level to querey from. The first and largest MIP-map is level zero.
         If this level is greater than or equal to the number of MIP-maps this texture has, the return value is undefined (i.e. depends on the render system).
+        \remarks This function is guaranteed to keep the currently bound textures, i.e. all previously set textures using the 'CommandBuffer::SetTexture' function will remain.
         \see RenderContext::GenerateMips
+        \see CommandBuffer::SetTexture
         */
         virtual Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const = 0;
 

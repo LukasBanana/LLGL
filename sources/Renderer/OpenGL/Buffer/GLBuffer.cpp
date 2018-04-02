@@ -7,6 +7,7 @@
 
 #include "GLBuffer.h"
 #include "../../GLCommon/GLTypes.h"
+#include "../../GLCommon/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
 
 
@@ -17,25 +18,24 @@ namespace LLGL
 GLBuffer::GLBuffer(const BufferType type) :
     Buffer { type }
 {
-    glGenBuffers(1, &id_);
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* Creates a new GL buffer object and binds it to an unspecified target */
+        glCreateBuffers(1, &id_);
+    }
+    else
+    #endif
+    {
+        /* Creates a new GL buffer object (must be bound to a target before it can be used) */
+        glGenBuffers(1, &id_);
+    }
 }
 
 GLBuffer::~GLBuffer()
 {
     glDeleteBuffers(1, &id_);
 }
-
-void GLBuffer::BufferData(const void* data, GLsizeiptr size, GLenum usage)
-{
-    glBufferData(GetTarget(), size, data, usage);
-}
-
-#if 0
-void GLBuffer::BufferSubData(const void* data, GLsizeiptr size, GLintptr offset)
-{
-    glBufferSubData(GetTarget(), offset, size, data);
-}
-#endif
 
 void* GLBuffer::MapBuffer(GLenum access)
 {

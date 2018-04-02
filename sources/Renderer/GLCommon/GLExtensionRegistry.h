@@ -61,6 +61,9 @@ enum class GLExt
     ARB_internalformat_query2,
     ARB_ES2_compatibility,
     ARB_gl_spirv,
+    ARB_texture_storage,
+    ARB_texture_storage_multisample,
+    ARB_buffer_storage,
     ARB_direct_state_access,
 
     /* Extensions without procedures */

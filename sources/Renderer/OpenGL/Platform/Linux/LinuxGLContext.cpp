@@ -136,6 +136,14 @@ void LinuxGLContext::DeleteContext()
 
 GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int major, int minor)
 {
+    /* Check if highest version possible shall be used */
+    if (major < 0 || minor < 0)
+    {
+        /* Set to fixed value since 'glGetIntegerv' can not be used until a valid GL context has been created */
+        major = 3;
+        minor = 2;
+    }
+
     /* Load GL extension to create core profile */
     GXLCREATECONTEXTATTRIBARBPROC glXCreateContextAttribsARB = nullptr;
     glXCreateContextAttribsARB = (GXLCREATECONTEXTATTRIBARBPROC)glXGetProcAddressARB(reinterpret_cast<const GLubyte*>("glXCreateContextAttribsARB"));

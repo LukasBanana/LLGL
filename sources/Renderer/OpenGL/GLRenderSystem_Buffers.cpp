@@ -21,9 +21,54 @@ namespace LLGL
 
 /* ----- Buffers ------ */
 
+#ifdef GL_ARB_buffer_storage
+
+static GLbitfield GetGLBufferFlags(long flags)
+{
+    GLbitfield flagsGL = 0;
+
+    /* Allways enable dynamic storage, to enable usage of 'glBufferSubData' */
+    flagsGL |= GL_DYNAMIC_STORAGE_BIT;
+
+    if ((flags & BufferFlags::MapReadAccess) != 0)
+        flagsGL |= GL_MAP_READ_BIT;
+    if ((flags & BufferFlags::MapWriteAccess) != 0)
+        flagsGL |= GL_MAP_WRITE_BIT;
+
+    return flagsGL;
+}
+
+#endif
+
 static GLenum GetGLBufferUsage(long flags)
 {
     return ((flags & BufferFlags::DynamicUsage) != 0 ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+}
+
+static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& desc, const void* initialData)
+{
+    #ifdef GL_ARB_buffer_storage
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* Allocate buffer with immutable storage */
+        glNamedBufferStorage(bufferGL.GetID(), static_cast<GLsizeiptr>(desc.size), initialData, GetGLBufferFlags(desc.flags));
+    }
+    else
+    #endif
+    if (HasExtension(GLExt::ARB_buffer_storage))
+    {
+        /* Bind and allocate buffer with immutable storage */
+        GLStateManager::active->BindBuffer(bufferGL);
+        glBufferStorage(GLTypes::Map(bufferGL.GetType()), static_cast<GLsizeiptr>(desc.size), initialData, GetGLBufferFlags(desc.flags));
+    }
+    else
+    #endif
+    {
+        /* Bind and allocate buffer with mutable storage */
+        GLStateManager::active->BindBuffer(bufferGL);
+        glBufferData(GLTypes::Map(bufferGL.GetType()), static_cast<GLsizeiptr>(desc.size), initialData, GetGLBufferUsage(desc.flags));
+    }
 }
 
 Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
@@ -38,8 +83,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             /* Create vertex buffer and build vertex array */
             auto bufferGL = MakeUnique<GLVertexBuffer>();
             {
-                GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, static_cast<GLsizeiptr>(desc.size), GetGLBufferUsage(desc.flags));
+                GLBufferStorage(*bufferGL, desc, initialData);
                 bufferGL->BuildVertexArray(desc.vertexBuffer.format);
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
@@ -51,8 +95,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             /* Create index buffer and store index format */
             auto bufferGL = MakeUnique<GLIndexBuffer>(desc.indexBuffer.format);
             {
-                GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, static_cast<GLsizeiptr>(desc.size), GetGLBufferUsage(desc.flags));
+                GLBufferStorage(*bufferGL, desc, initialData);
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
         }
@@ -63,8 +106,7 @@ Buffer* GLRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
             /* Create generic buffer */
             auto bufferGL = MakeUnique<GLBuffer>(desc.type);
             {
-                GLStateManager::active->BindBuffer(*bufferGL);
-                bufferGL->BufferData(initialData, static_cast<GLsizeiptr>(desc.size), GetGLBufferUsage(desc.flags));
+                GLBufferStorage(*bufferGL, desc, initialData);
             }
             return TakeOwnership(buffers_, std::move(bufferGL));
         }
@@ -113,7 +155,7 @@ void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
 
-    #ifdef LLGL_GL_ENABLE_DSA_EXT
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glNamedBufferSubData(

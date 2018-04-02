@@ -523,6 +523,27 @@ static bool Load_GL_ARB_gl_spirv(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_texture_storage(bool usePlaceholder)
+{
+    LOAD_GLPROC( glTexStorage1D );
+    LOAD_GLPROC( glTexStorage2D );
+    LOAD_GLPROC( glTexStorage3D );
+    return true;
+}
+
+static bool Load_GL_ARB_texture_storage_multisample(bool usePlaceholder)
+{
+    LOAD_GLPROC( glTexStorage2DMultisample );
+    LOAD_GLPROC( glTexStorage3DMultisample );
+    return true;
+}
+
+static bool Load_GL_ARB_buffer_storage(bool usePlaceholder)
+{
+    LOAD_GLPROC( glBufferStorage );
+    return true;
+}
+
 static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -863,6 +884,9 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_internalformat_query2        );
     LOAD_GLEXT( ARB_ES2_compatibility            );
     LOAD_GLEXT( ARB_gl_spirv                     );
+    LOAD_GLEXT( ARB_texture_storage              );
+    LOAD_GLEXT( ARB_texture_storage_multisample  );
+    LOAD_GLEXT( ARB_buffer_storage               );
     #ifdef LLGL_GL_ENABLE_DSA_EXT
     LOAD_GLEXT( ARB_direct_state_access          );
     #endif

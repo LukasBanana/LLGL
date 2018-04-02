@@ -387,6 +387,21 @@ DECL_GLPROC(void, glClearDepthf, (GLclampf));
 
 DECL_GLPROC(void, glSpecializeShader, (GLuint, const GLchar*, GLuint, const GLuint*, const GLuint*));
 
+/* GL_ARB_texture_storage */
+
+DECL_GLPROC(void, glTexStorage1D, (GLenum, GLsizei, GLenum, GLsizei));
+DECL_GLPROC(void, glTexStorage2D, (GLenum, GLsizei, GLenum, GLsizei, GLsizei));
+DECL_GLPROC(void, glTexStorage3D, (GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei));
+
+/* GL_ARB_texture_storage_multisample */
+
+DECL_GLPROC(void, glTexStorage2DMultisample, (GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLboolean));
+DECL_GLPROC(void, glTexStorage3DMultisample, (GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, GLboolean));
+
+/* GL_ARB_buffer_storage */
+
+DECL_GLPROC(void, glBufferStorage, (GLenum, GLsizeiptr, const void*, GLbitfield));
+
 /* GL_ARB_direct_state_access */
 
 DECL_GLPROC(void, glCreateTransformFeedbacks, (GLsizei, GLuint*));

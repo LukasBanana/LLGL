@@ -320,7 +320,7 @@ void GLCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
     /* Store current render target */
     boundRenderTarget_ = &renderTargetGL;
 
-    //glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
+    //TODO: maybe use 'glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
 }
 
 void GLCommandBuffer::SetRenderTarget(RenderContext& renderContext)
@@ -342,7 +342,7 @@ void GLCommandBuffer::SetRenderTarget(RenderContext& renderContext)
     /* Reset reference to render target */
     boundRenderTarget_ = nullptr;
 
-    //glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+    //TODO: maybe use 'glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
 }
 
 /* ----- Pipeline States ----- */

@@ -74,16 +74,16 @@ struct ProfileOpenGLDescriptor
     OpenGLContextProfile    contextProfile  = OpenGLContextProfile::CompatibilityProfile;
 
     /**
-    \brief Specifies the requested OpenGL context major version. By default 3.
+    \brief Specifies the requested OpenGL context major version. By default -1 to indicate to use the highest version possible.
     \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
     */
-    int                     majorVersion    = 3;
+    int                     majorVersion    = -1;
 
     /**
-    \brief Specifies the requested OpenGL context minor version. By default 2.
+    \brief Specifies the requested OpenGL context minor version. By default -1 to indicate to use the highest version possible.
     \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
     */
-    int                     minorVersion    = 2;
+    int                     minorVersion    = -1;
 };
 
 //! Render context descriptor structure.

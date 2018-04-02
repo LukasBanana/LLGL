@@ -25,12 +25,6 @@ class GLBuffer : public Buffer
         GLBuffer(const BufferType type);
         ~GLBuffer();
 
-        void BufferData(const void* data, GLsizeiptr size, GLenum usage);
-
-        #if 0
-        void BufferSubData(const void* data, GLsizeiptr size, GLintptr offset);
-        #endif
-
         void* MapBuffer(GLenum access);
         GLboolean UnmapBuffer();
 

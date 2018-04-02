@@ -360,6 +360,21 @@ extern PFNGLCLEARDEPTHFPROC                                 glClearDepthf;
 
 extern PFNGLSPECIALIZESHADERPROC                            glSpecializeShader;
 
+/* GL_ARB_texture_storage */
+
+extern PFNGLTEXSTORAGE1DPROC                                glTexStorage1D;
+extern PFNGLTEXSTORAGE2DPROC                                glTexStorage2D;
+extern PFNGLTEXSTORAGE3DPROC                                glTexStorage3D;
+
+/* GL_ARB_texture_storage_multisample */
+
+extern PFNGLTEXSTORAGE2DMULTISAMPLEPROC                     glTexStorage2DMultisample;
+extern PFNGLTEXSTORAGE3DMULTISAMPLEPROC                     glTexStorage3DMultisample;
+
+/* GL_ARB_buffer_storage */
+
+extern PFNGLBUFFERSTORAGEPROC                               glBufferStorage;
+
 /* GL_ARB_direct_state_access */
 
 extern PFNGLCREATETRANSFORMFEEDBACKSPROC                    glCreateTransformFeedbacks;
