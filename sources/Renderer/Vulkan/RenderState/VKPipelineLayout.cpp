@@ -34,6 +34,9 @@ static VkShaderStageFlags MapShaderStageFlags(long flags)
     return bitmask;
 }
 
+//TODO:
+// looks like 'VkDescriptorSetLayoutBinding::descriptorCount' can only be greater than 1
+// for arrays in a shader (e.g. array of uniform buffers), but not for multiple binding points.
 static void Convert(VkDescriptorSetLayoutBinding& dst, const LayoutBinding& src)
 {
     dst.binding             = src.startSlot;
@@ -123,8 +126,9 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
 
 VKPipelineLayout::~VKPipelineLayout()
 {
-    auto result = vkFreeDescriptorSets(device_, descriptorPool_, 1, &descriptorSet_);
-    VKThrowIfFailed(result, "failed to release Vulkan descriptor sets");
+    //INFO: is automatically deleted when pool is deleted
+    /*auto result = vkFreeDescriptorSets(device_, descriptorPool_, 1, &descriptorSet_);
+    VKThrowIfFailed(result, "failed to release Vulkan descriptor sets");*/
 }
 
 

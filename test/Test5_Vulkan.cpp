@@ -148,7 +148,7 @@ int main()
         }
         matrices;
 
-        Gs::RotateFree(matrices.projection, Gs::Vector3f(0, 0, 1), Gs::pi * 0.25f);
+        Gs::RotateFree(matrices.projection, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
 
         // Create constant buffer
         auto constBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)), &matrices);
@@ -159,6 +159,8 @@ int main()
         LLGL::LayoutBinding layoutBinding;
         {
             layoutBinding.type          = LLGL::LayoutBindingType::ConstantBuffer;
+            layoutBinding.startSlot     = 0;
+            layoutBinding.numSlots      = 1;
             layoutBinding.stageFlags    = LLGL::ShaderStageFlags::VertexStage;
         }
         layoutDesc.bindings.push_back(layoutBinding);
@@ -194,7 +196,7 @@ int main()
         // Set clear color
         commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
 
-        //auto fence = renderer->CreateFence();
+        auto fence = renderer->CreateFence();
 
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
@@ -246,6 +248,12 @@ int main()
             #endif
 
             context->Present();
+
+            #if 1//TODO: currently required for "SetConstantBuffer" to work
+            // Wait for command buffer to complete
+            queue->Submit(*fence);
+            queue->WaitForFence(*fence, ~0);
+            #endif
 
             // Evaluate query
             #ifdef TEST_QUERY

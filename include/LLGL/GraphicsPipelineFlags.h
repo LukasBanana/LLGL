@@ -503,6 +503,7 @@ struct GraphicsPipelineDescriptor
     \brief Pointer to an optional pipeline layout for the graphics pipeline.
     \remarks This layout determines at which slots buffer resources can be bound.
     This is ignored by render systems which do not support pipeline layouts.
+    \note Only supported with: Vulkan, Direct3D 12
     */
     PipelineLayout*         pipelineLayout      = nullptr;
 
