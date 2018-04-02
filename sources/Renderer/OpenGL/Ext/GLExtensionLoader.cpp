@@ -863,7 +863,9 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_internalformat_query2        );
     LOAD_GLEXT( ARB_ES2_compatibility            );
     LOAD_GLEXT( ARB_gl_spirv                     );
+    #ifdef LLGL_GL_ENABLE_DSA_EXT
     LOAD_GLEXT( ARB_direct_state_access          );
+    #endif
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );

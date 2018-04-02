@@ -249,6 +249,7 @@ private:
         // Set graphics pipeline state
         commands->SetGraphicsPipeline(*pipeline);
 
+        #if 0
         if (IsOpenGL())
         {
             /*
@@ -267,6 +268,7 @@ private:
             }
             commands->SetGraphicsAPIDependentState(apiState);
         }
+        #endif
 
         // Draw scene into render-target
         commands->SetRenderTarget(*renderTarget);
@@ -284,6 +286,7 @@ private:
             // Update model transformation with render-target projection
             UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
             
+            #if 0
             if (IsOpenGL())
             {
                 /*
@@ -292,6 +295,7 @@ private:
                 */
                 Gs::FlipAxis(settings.wvpMatrix, 1);
             }
+            #endif
 
             #ifdef ENABLE_CUSTOM_MULTISAMPLING
             
@@ -310,11 +314,13 @@ private:
         // Generate MIP-maps again after texture has been written by the render-target
         renderer->GenerateMips(*renderTargetTex);
 
+        #if 0
         if (IsOpenGL())
         {
             // Reset graphics API dependent state
             commands->SetGraphicsAPIDependentState({});
         }
+        #endif
 
         // Reset viewport for the screen
         auto resolution = context->GetVideoMode().resolution.Cast<float>();

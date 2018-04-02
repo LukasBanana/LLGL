@@ -126,7 +126,7 @@ TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
     /* Query hardware texture format and size */
     GLint internalFormat = 0, texSize[3] = { 0 };
 
-    #ifdef GL_ARB_direct_state_access
+    #ifdef LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         auto texID = textureGL.GetID();
@@ -216,7 +216,7 @@ void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageForm
 
     /* Read image data from texture */
     #if 0
-    #ifdef GL_ARB_direct_state_access
+    #ifdef LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         //glGetTextureImage(textureGL.GetID(), mipLevel, GLTypes::Map(imageFormat), GLTypes::Map(dataType), bufferSize, buffer);
@@ -237,7 +237,7 @@ void GLRenderSystem::GenerateMips(Texture& texture)
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
 
     /* Generate MIP-maps and update texture minification filter to a default value */
-    #ifdef GL_ARB_direct_state_access
+    #ifdef LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glGenerateTextureMipmap(textureGL.GetID());

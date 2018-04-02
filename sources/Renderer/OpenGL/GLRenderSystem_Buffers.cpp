@@ -113,7 +113,7 @@ void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
 
-    #ifdef GL_ARB_direct_state_access
+    #ifdef LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
         glNamedBufferSubData(
