@@ -45,6 +45,11 @@ static GLenum GetGLBufferUsage(long flags)
     return ((flags & BufferFlags::DynamicUsage) != 0 ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 }
 
+static GLenum GetGLBufferTarget(const GLBuffer& bufferGL)
+{
+    return GLTypes::Map(bufferGL.GetType());
+}
+
 static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& desc, const void* initialData)
 {
     #ifdef GL_ARB_buffer_storage
@@ -60,14 +65,14 @@ static void GLBufferStorage(GLBuffer& bufferGL, const BufferDescriptor& desc, co
     {
         /* Bind and allocate buffer with immutable storage */
         GLStateManager::active->BindBuffer(bufferGL);
-        glBufferStorage(GLTypes::Map(bufferGL.GetType()), static_cast<GLsizeiptr>(desc.size), initialData, GetGLBufferFlags(desc.flags));
+        glBufferStorage(GetGLBufferTarget(bufferGL), static_cast<GLsizeiptr>(desc.size), initialData, GetGLBufferFlags(desc.flags));
     }
     else
     #endif
     {
         /* Bind and allocate buffer with mutable storage */
         GLStateManager::active->BindBuffer(bufferGL);
-        glBufferData(GLTypes::Map(bufferGL.GetType()), static_cast<GLsizeiptr>(desc.size), initialData, GetGLBufferUsage(desc.flags));
+        glBufferData(GetGLBufferTarget(bufferGL), static_cast<GLsizeiptr>(desc.size), initialData, GetGLBufferUsage(desc.flags));
     }
 }
 
@@ -170,7 +175,7 @@ void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
     {
         GLStateManager::active->BindBuffer(bufferGL);
         glBufferSubData(
-            GLTypes::Map(bufferGL.GetType()),
+            GetGLBufferTarget(bufferGL),
             static_cast<GLintptr>(offset),
             static_cast<GLsizeiptr>(dataSize),
             data
@@ -178,23 +183,38 @@ void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
     }
 }
 
-static GLBuffer& BindAndGetGLBuffer(Buffer& buffer)
-{
-    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    GLStateManager::active->BindBuffer(bufferGL);
-    return bufferGL;
-}
-
 void* GLRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
 {
-    /* Bind and map buffer */
-    return BindAndGetGLBuffer(buffer).MapBuffer(GLTypes::Map(access));
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        return glMapNamedBuffer(bufferGL.GetID(), GLTypes::Map(access));
+    }
+    else
+    #endif
+    {
+        GLStateManager::active->BindBuffer(bufferGL);
+        return glMapBuffer(GetGLBufferTarget(bufferGL), GLTypes::Map(access));
+    }
 }
 
 void GLRenderSystem::UnmapBuffer(Buffer& buffer)
 {
-    /* Bind and unmap buffer */
-    BindAndGetGLBuffer(buffer).UnmapBuffer();
+    auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
+
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        glUnmapNamedBuffer(bufferGL.GetID());
+    }
+    else
+    #endif
+    {
+        GLStateManager::active->BindBuffer(bufferGL);
+        glUnmapBuffer(GetGLBufferTarget(bufferGL));
+    }
 }
 
 

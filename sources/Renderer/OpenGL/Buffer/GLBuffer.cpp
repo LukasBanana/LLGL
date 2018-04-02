@@ -37,36 +37,6 @@ GLBuffer::~GLBuffer()
     glDeleteBuffers(1, &id_);
 }
 
-void* GLBuffer::MapBuffer(GLenum access)
-{
-    #ifdef LLGL_GL_OPENGLES
-    //TODO: move this into "Renderer/OpenGLES2/Buffer/GLES2Buffer.cpp"
-    return glMapBufferOES(GetTarget(), access);
-    #else
-    return glMapBuffer(GetTarget(), access);
-    #endif
-}
-
-GLboolean GLBuffer::UnmapBuffer()
-{
-    #ifdef LLGL_GL_OPENGLES
-    //TODO: move this into "Renderer/OpenGLES2/Buffer/GLES2Buffer.cpp"
-    return glUnmapBufferOES(GetTarget());
-    #else
-    return glUnmapBuffer(GetTarget());
-    #endif
-}
-
-
-/*
- * ======= Private: =======
- */
-
-GLenum GLBuffer::GetTarget() const
-{
-    return GLTypes::Map(GetType());
-}
-
 
 } // /namespace LLGL
 
