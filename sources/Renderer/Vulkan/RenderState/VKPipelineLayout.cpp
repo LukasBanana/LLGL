@@ -93,6 +93,7 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, pipelineLayout_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan pipeline layout");
 
+    #if 1 //TODO: move this to VKResourceViewHeap
     /* Initialize descriptor pool sizes */
     std::vector<VkDescriptorPoolSize> poolSizes(numBindings);
     for (std::size_t i = 0; i < numBindings; ++i)
@@ -122,6 +123,7 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     }
     result = vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet_);
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
+    #endif // /TODO
 }
 
 VKPipelineLayout::~VKPipelineLayout()

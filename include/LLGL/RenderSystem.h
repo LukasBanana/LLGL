@@ -23,6 +23,7 @@
 #include "TextureArray.h"
 #include "Sampler.h"
 #include "SamplerArray.h"
+#include "ResourceViewHeap.h"
 
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
@@ -355,6 +356,12 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified sampler array object. After this call, the specified object must no longer be used.
         virtual void Release(SamplerArray& samplerArray) = 0;
+
+        /* ----- Resource Views ----- */
+
+        virtual ResourceViewHeap* CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc)/* = 0*/;
+
+        virtual void Release(ResourceViewHeap& resourceViewHeap)/* = 0*/;
 
         /* ----- Render Targets ----- */
 

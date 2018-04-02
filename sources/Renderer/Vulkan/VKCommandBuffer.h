@@ -77,6 +77,10 @@ class VKCommandBuffer : public CommandBuffer
         void SetSampler(Sampler& sampler, std::uint32_t layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
+        /* ----- Resource View Heaps ----- */
+
+        void SetResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
+
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;

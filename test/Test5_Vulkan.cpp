@@ -158,7 +158,7 @@ int main()
 
         LLGL::LayoutBinding layoutBinding;
         {
-            layoutBinding.type          = LLGL::LayoutBindingType::ConstantBuffer;
+            layoutBinding.type          = LLGL::ResourceViewType::ConstantBuffer;
             layoutBinding.startSlot     = 0;
             layoutBinding.numSlots      = 1;
             layoutBinding.stageFlags    = LLGL::ShaderStageFlags::VertexStage;

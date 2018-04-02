@@ -254,6 +254,13 @@ void VKCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t 
     //todo
 }
 
+/* ----- Resource View Heaps ----- */
+
+void VKCommandBuffer::SetResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)
+{
+
+}
+
 /* ----- Render Targets ----- */
 
 void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)

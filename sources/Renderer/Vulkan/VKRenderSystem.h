@@ -35,6 +35,7 @@
 #include "RenderState/VKPipelineLayout.h"
 #include "RenderState/VKGraphicsPipeline.h"
 //#include "RenderState/VKComputePipeline.h"
+#include "RenderState/VKResourceViewHeap.h"
 
 #include <string>
 #include <memory>
@@ -106,6 +107,12 @@ class VKRenderSystem : public RenderSystem
 
         void Release(Sampler& sampler) override;
         void Release(SamplerArray& samplerArray) override;
+
+        /* ----- Resource Views ----- */
+
+        ResourceViewHeap* CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc) override;
+
+        void Release(ResourceViewHeap& resourceViewHeap) override;
 
         /* ----- Render Targets ----- */
 
@@ -205,6 +212,7 @@ class VKRenderSystem : public RenderSystem
         HWObjectContainer<VKPipelineLayout>     pipelineLayouts_;
         HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
         //HWObjectContainer<VKComputePipeline>    computePipelines_;
+        HWObjectContainer<VKResourceViewHeap>   resourceViewHeaps_;
         HWObjectContainer<VKQuery>              queries_;
         HWObjectContainer<VKFence>              fences_;
 

@@ -219,14 +219,14 @@ VkSamplerAddressMode Map(const TextureWrap textureWrap)
     MapFailed("TextureWrap", "VkSamplerAddressMode");
 }
 
-VkDescriptorType Map(const LayoutBindingType layoutingBindingType)
+VkDescriptorType Map(ResourceViewType resourceViewType)
 {
-    switch (layoutingBindingType)
+    switch (resourceViewType)
     {
-        case LayoutBindingType::Sampler:        return VK_DESCRIPTOR_TYPE_SAMPLER;
-        case LayoutBindingType::Texture:        return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-        case LayoutBindingType::ConstantBuffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        case LayoutBindingType::StorageBuffer:  return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        case ResourceViewType::Sampler:         return VK_DESCRIPTOR_TYPE_SAMPLER;
+        case ResourceViewType::Texture:         return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        case ResourceViewType::ConstantBuffer:  return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        case ResourceViewType::StorageBuffer:   return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     }
     MapFailed("LayoutBindingType", "VkDescriptorType");
 }

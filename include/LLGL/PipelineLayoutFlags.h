@@ -12,6 +12,7 @@
 #include "Export.h"
 #include "BufferFlags.h"
 #include "ShaderFlags.h"
+#include "ResourceViewHeapFlags.h"
 #include <vector>
 
 
@@ -19,27 +20,12 @@ namespace LLGL
 {
 
 
-/* ----- Enumerations ----- */
-
-/**
-\brief Layout binding type enumeration.
-\see LayoutBinding::type
-*/
-enum class LayoutBindingType
-{
-    Sampler,        //!< Sampler state resource.
-    Texture,        //!< Texture (or image) resource.
-    ConstantBuffer, //!< Constant buffer (or uniform buffer) resource.
-    StorageBuffer,  //!< Storage buffer resource.
-};
-
-
 /* ----- Structures ----- */
 
 struct LayoutBinding
 {
-    //! Buffer type for this layout binding. By default LayoutBindingType::ConstantBuffer.
-    LayoutBindingType   type        = LayoutBindingType::ConstantBuffer;
+    //! Resource view type for this layout binding. By default ResourceViewType::ConstantBuffer.
+    ResourceViewType    type        = ResourceViewType::ConstantBuffer;
 
     /**
     \brief Specifies the first zero-based binding slot. By default 0.

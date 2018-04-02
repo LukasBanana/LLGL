@@ -20,6 +20,7 @@
 #include "TextureArray.h"
 #include "Sampler.h"
 #include "SamplerArray.h"
+#include "ResourceViewHeap.h"
 
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
@@ -289,6 +290,14 @@ class LLGL_EXPORT CommandBuffer
         \see SetSampler
         */
         virtual void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+
+        /* ----- Resource View Heaps ----- */
+
+        //TODO: testing for Vulkan renderer
+        virtual void SetResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
+        {
+            // dummy
+        }
 
         /* ----- Render Targets ----- */
 
