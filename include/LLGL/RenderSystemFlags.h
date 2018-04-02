@@ -34,49 +34,55 @@ static const std::size_t maxThreadCount = ~0;
 
 /**
 \brief Shading language version enumation.
-\remarks These enumeration entries can be casted to an integer to get the respective version number.
-GLSL versions range from 110 (ver. 1.10) to 450 (ver. 4.50),
-GLSL ES versions range from 100100 (ver. 1.00) to 100320 (ver. 3.20),
-HLSL versions range from 200200 (ver. 2.0) to 200510 (ver. 5.1).
-and Metal versions range from 300100 (ver. 1.0) to 300120 (ver. 1.2).
+\remarks These enumeration entries can be casted to an integer using the bitmask ShadingLanguage::VersionBitmask to get the respective version number.
+GLSL versions range from 100110 (ver. 1.10) to 100460 (ver. 4.60),
+ESSL versions range from 200100 (ver. 1.00) to 200320 (ver. 3.20),
+HLSL versions range from 300200 (ver. 2.0) to 300510 (ver. 5.1),
+Metal versions range from 400100 (ver. 1.0) to 400120 (ver. 1.2),
+and SPIR-V version is 500100 (ver. 1.0).
 */
 enum class ShadingLanguage
 {
-    Unsupported = 0,        //!< Enumeration entry if shaders are not supported. Value is 0.
+    GLSL            = 100000, //!< GLSL (OpenGL Shading Language).
+    GLSL_110        = 100110, //!< GLSL 1.10 (since OpenGL 2.0).
+    GLSL_120        = 100120, //!< GLSL 1.20 (since OpenGL 2.1).
+    GLSL_130        = 100130, //!< GLSL 1.30 (since OpenGL 3.0).
+    GLSL_140        = 100140, //!< GLSL 1.40 (since OpenGL 3.1).
+    GLSL_150        = 100150, //!< GLSL 1.50 (since OpenGL 3.2).
+    GLSL_330        = 100330, //!< GLSL 3.30 (since OpenGL 3.3).
+    GLSL_400        = 100400, //!< GLSL 4.00 (since OpenGL 4.0).
+    GLSL_410        = 100410, //!< GLSL 4.10 (since OpenGL 4.1).
+    GLSL_420        = 100420, //!< GLSL 4.20 (since OpenGL 4.2).
+    GLSL_430        = 100430, //!< GLSL 4.30 (since OpenGL 4.3).
+    GLSL_440        = 100440, //!< GLSL 4.40 (since OpenGL 4.4).
+    GLSL_450        = 100450, //!< GLSL 4.50 (since OpenGL 4.5).
+    GLSL_460        = 100460, //!< GLSL 4.60 (since OpenGL 4.6).
 
-    GLSL_110    = 110,      //!< GLSL 1.10 (since OpenGL 2.0). Value is 110.
-    GLSL_120    = 120,      //!< GLSL 1.20 (since OpenGL 2.1). Value is 120.
-    GLSL_130    = 130,      //!< GLSL 1.30 (since OpenGL 3.0). Value is 130.
-    GLSL_140    = 140,      //!< GLSL 1.40 (since OpenGL 3.1). Value is 140.
-    GLSL_150    = 150,      //!< GLSL 1.50 (since OpenGL 3.2). Value is 150.
-    GLSL_330    = 330,      //!< GLSL 3.30 (since OpenGL 3.3). Value is 330.
-    GLSL_400    = 400,      //!< GLSL 4.00 (since OpenGL 4.0). Value is 400.
-    GLSL_410    = 410,      //!< GLSL 4.10 (since OpenGL 4.1). Value is 410.
-    GLSL_420    = 420,      //!< GLSL 4.20 (since OpenGL 4.2). Value is 420.
-    GLSL_430    = 430,      //!< GLSL 4.30 (since OpenGL 4.3). Value is 430.
-    GLSL_440    = 440,      //!< GLSL 4.40 (since OpenGL 4.4). Value is 440.
-    GLSL_450    = 450,      //!< GLSL 4.50 (since OpenGL 4.5). Value is 450.
-    GLSL_460    = 460,      //!< GLSL 4.60 (since OpenGL 4.6). Value is 460.
+    ESSL            = 200000, //!< ESSL (OpenGL ES Shading Language).
+    ESSL_100        = 200100, //!< ESSL 1.00 (since OpenGL ES 2.0).
+    ESSL_300        = 200300, //!< ESSL 3.00 (since OpenGL ES 3.0).
+    ESSL_310        = 200310, //!< ESSL 3.10 (since OpenGL ES 3.1).
+    ESSL_320        = 200320, //!< ESSL 3.20 (since OpenGL ES 3.2).
 
-    GLSL_ES_100 = 100100,   //!< GLSL ES 1.00 (since OpenGL ES 2.0). Values is 100100.
-    GLSL_ES_300 = 100300,   //!< GLSL ES 3.00 (since OpenGL ES 3.0). Values is 100300.
-    GLSL_ES_310 = 100310,   //!< GLSL ES 3.10 (since OpenGL ES 3.1). Values is 100310.
-    GLSL_ES_320 = 100320,   //!< GLSL ES 3.20 (since OpenGL ES 3.2). Values is 100320.
+    HLSL            = 300000, //!< HLSL (High Level Shading Language).
+    HLSL_2_0        = 300200, //!< HLSL 2.0 (since Direct3D 9).
+    HLSL_2_0a       = 300201, //!< HLSL 2.0a (since Direct3D 9a).
+    HLSL_2_0b       = 300202, //!< HLSL 2.0b (since Direct3D 9b).
+    HLSL_3_0        = 300300, //!< HLSL 3.0 (since Direct3D 9c).
+    HLSL_4_0        = 300400, //!< HLSL 4.0 (since Direct3D 10).
+    HLSL_4_1        = 300410, //!< HLSL 4.1 (since Direct3D 10.1).
+    HLSL_5_0        = 300500, //!< HLSL 5.0 (since Direct3D 11).
+    HLSL_5_1        = 300510, //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3).
 
-    HLSL_2_0    = 200200,   //!< HLSL 2.0 (since Direct3D 9). Value is 200200.
-    HLSL_2_0a   = 200201,   //!< HLSL 2.0a (since Direct3D 9a). Value is 200201.
-    HLSL_2_0b   = 200202,   //!< HLSL 2.0b (since Direct3D 9b). Value is 200202.
-    HLSL_3_0    = 200300,   //!< HLSL 3.0 (since Direct3D 9c). Value is 200300.
-    HLSL_4_0    = 200400,   //!< HLSL 4.0 (since Direct3D 10). Value is 200400.
-    HLSL_4_1    = 200410,   //!< HLSL 4.1 (since Direct3D 10.1). Value is 200410.
-    HLSL_5_0    = 200500,   //!< HLSL 5.0 (since Direct3D 11). Value is 200500.
-    HLSL_5_1    = 200510,   //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3). Value is 200510.
+    Metal           = 400000, //!< Metal Shading Language. \note Not supported yet
+    Metal_1_0       = 400100, //!< Metal 1.0 (since iOS 8.0). \note Not supported yet
+    Metal_1_1       = 400110, //!< Metal 1.1 (since iOS 9.0 and OS X 10.11). \note Not supported yet
+    Metal_1_2       = 400120, //!< Metal 1.2 (since iOS 10.0 and macOS 10.12). \note Not supported yet
 
-    Metal_1_0   = 300100,   //!< Metal shading language 1.0 (since iOS 8.0). Value is 300100.
-    Metal_1_1   = 300110,   //!< Metal shading language 1.1 (since iOS 9.0 and OS X 10.11). Value is 300110.
-    Metal_1_2   = 300120,   //!< Metal shading language 1.2 (since iOS 10.0 and macOS 10.12). Value is 300120.
+    SPIRV           = 500000, //!< SPIR-V Shading Language.
+    SPIRV_100       = 500100, //!< SPIR-V 1.0.
 
-    SPIRV_100   = 400100,   //!< SPIR-V shading language 1.0. Value is 400100.
+    VersionBitmask  = 0x0000fff,
 };
 
 //! Screen coordinate system origin enumeration.
@@ -118,7 +124,7 @@ enum class ClippingRange
 struct ImageInitialization
 {
     /**
-    \brief Enables or disables the default initialization of texture images. By default enabled.
+    \brief Enables or disables the default initialization of texture images. By default true.
     \remarks This will be used when a texture is created and no initial image data is specified.
     If this is false and a texture is created without initial image data, the texture remains uninitialized.
     \see defaultImageColor
@@ -208,81 +214,86 @@ struct RenderingCaps
     \brief Screen coordinate system origin.
     \remarks This determines the coordinate space of viewports, scissors, and framebuffers.
     */
-    ScreenOrigin                screenOrigin                        { ScreenOrigin::UpperLeft };
+    ScreenOrigin                    screenOrigin                        { ScreenOrigin::UpperLeft };
 
     //! Clipping depth range.
-    ClippingRange               clippingRange                       { ClippingRange::ZeroToOne };
+    ClippingRange                   clippingRange                       { ClippingRange::ZeroToOne };
 
-    //! Latest suppported shading language.
-    ShadingLanguage             shadingLanguage                     { ShadingLanguage::Unsupported };
+    /**
+    \brief Specifies the list of supported shading languages.
+    \remarks This also specifies whether shaders can be loaded in source or binary form (using "Compile" or "LoadBinary" functions of the "Shader" interface).
+    \see Shader::Compile
+    \see Shader::LoadBinary
+    */
+    std::vector<ShadingLanguage>    shadingLanguages;
 
     //! Specifies the list of supported texture formats.
-    std::vector<TextureFormat>  textureFormats;
+    std::vector<TextureFormat>      textureFormats;
 
     //! Specifies whether render targets (also "framebuffer objects") are supported.
-    bool                        hasRenderTargets                    { false };
+    bool                            hasRenderTargets                    { false };
 
     /**
     \brief Specifies whether 3D textures are supported.
     \see TextureType::Texture3D
     */
-    bool                        has3DTextures                       { false };
+    bool                            has3DTextures                       { false };
 
     /**
     \brief Specifies whether cube textures are supported.
     \see TextureType::TextureCube
     */
-    bool                        hasCubeTextures                     { false };
+    bool                            hasCubeTextures                     { false };
 
     /**
     \brief Specifies whether 1D- and 2D array textures are supported.
     \see TextureType::Texture1DArray
     \see TextureType::Texture2DArray
     */
-    bool                        hasTextureArrays                    { false };
+    bool                            hasTextureArrays                    { false };
 
     /**
     \brief Specifies whether cube array textures are supported.
     \see TextureType::TextureCubeArray
     */
-    bool                        hasCubeTextureArrays                { false };
+    bool                            hasCubeTextureArrays                { false };
 
     /**
     \brief Specifies whether multi-sample textures are supported.
     \see TextureType::Texture2DMS
     \see TextureType::Texture2DMSArray
     */
-    bool                        hasMultiSampleTextures              { false };
+    bool                            hasMultiSampleTextures              { false };
     
     //! Specifies whether samplers are supported.
-    bool                        hasSamplers                         { false };
+    bool                            hasSamplers                         { false };
 
     /**
     \brief Specifies whether constant buffers (also "uniform buffer objects") are supported.
     \see BufferType::Constant
     */
-    bool                        hasConstantBuffers                  { false };
+    bool                            hasConstantBuffers                  { false };
 
     /**
     \brief Specifies whether storage buffers (also "read/write buffers") are supported.
     \see BufferType::Storage
     */
-    bool                        hasStorageBuffers                   { false };
+    bool                            hasStorageBuffers                   { false };
 
     /**
     \brief Specifies whether individual shader uniforms are supported (typically only for OpenGL 2.0+).
     \see ShaderProgram::LockShaderUniform
     */
-    bool                        hasUniforms                         { false };
+    bool                            hasUniforms                         { false };
 
     //! Specifies whether geometry shaders are supported.
-    bool                        hasGeometryShaders                  { false };
+    bool                            hasGeometryShaders                  { false };
 
     //! Specifies whether tessellation shaders are supported.
-    bool                        hasTessellationShaders              { false };
+    bool                            hasTessellationShaders              { false };
 
     //! Speciifes whether compute shaders are supported.
-    bool                        hasComputeShaders                   { false };
+    bool                            hasComputeShaders                   { false };
 
     /**
     \brief Specifies whether hardware instancing is supported.
@@ -290,81 +301,81 @@ struct RenderingCaps
     \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
     \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t)
     */
-    bool                        hasInstancing                       { false };
+    bool                            hasInstancing                       { false };
 
     /**
     \brief Specifies whether hardware instancing with instance offsets is supported.
     \see RenderContext::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
     \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
     */
-    bool                        hasOffsetInstancing                 { false };
+    bool                            hasOffsetInstancing                 { false };
 
     /**
     \brief Specifies whether multiple viewports, depth-ranges, and scissors are supported at once.
     \see maxViewportsAndScissors
     */
-    bool                        hasViewportArrays                   { false };
+    bool                            hasViewportArrays                   { false };
 
     /**
     \brief Specifies whether conservative rasterization is supported.
     \see RasterizerDescriptor::conservativeRasterization
     */
-    bool                        hasConservativeRasterization        { false };
+    bool                            hasConservativeRasterization        { false };
 
     /**
     \brief Specifies whether stream-output is supported.
     \see ShaderSource::streamOutput
     \see CommandBuffer::BeginStreamOutput
     */
-    bool                        hasStreamOutputs                    { false };
+    bool                            hasStreamOutputs                    { false };
 
     //! Specifies the maximum number of texture array layers (for 1D-, 2D-, and cube textures).
-    std::uint32_t               maxNumTextureArrayLayers            { 0 };
+    std::uint32_t                   maxNumTextureArrayLayers            { 0 };
 
     //! Specifies the maximum number of attachment points for each render target.
-    std::uint32_t               maxNumRenderTargetAttachments       { 0 };
+    std::uint32_t                   maxNumRenderTargetAttachments       { 0 };
     
     //! Specifies the maximum size (in bytes) of each constant buffer.
-    std::uint32_t               maxConstantBufferSize               { 0 };
+    std::uint32_t                   maxConstantBufferSize               { 0 };
 
     //! Specifies the maximum number of patch control points.
-    std::uint32_t               maxPatchVertices                    { 0 };
+    std::uint32_t                   maxPatchVertices                    { 0 };
 
     //! Specifies the maximum size of each 1D texture.
-    std::uint32_t               max1DTextureSize                    { 0 };
+    std::uint32_t                   max1DTextureSize                    { 0 };
 
     //! Specifies the maximum size of each 2D texture (for width and height).
-    std::uint32_t               max2DTextureSize                    { 0 };
+    std::uint32_t                   max2DTextureSize                    { 0 };
 
     //! Specifies the maximum size of each 3D texture (for width, height, and depth).
-    std::uint32_t               max3DTextureSize                    { 0 };
+    std::uint32_t                   max3DTextureSize                    { 0 };
 
     //! Specifies the maximum size of each cube texture (for width and height).
-    std::uint32_t               maxCubeTextureSize                  { 0 };
+    std::uint32_t                   maxCubeTextureSize                  { 0 };
 
     /**
     \brief Specifies the maximum anisotropy texture filter.
     \see SamplerDescriptor::maxAnisotropy
     */
-    std::uint32_t               maxAnisotropy                       { 0 };
+    std::uint32_t                   maxAnisotropy                       { 0 };
 
     /**
     \brief Specifies the maximum number of work groups in a compute shader.
     \see RenderContext::Dispatch
     */
-    std::uint32_t               maxNumComputeShaderWorkGroups[3]    { 0, 0, 0 };
+    std::uint32_t                   maxNumComputeShaderWorkGroups[3]    { 0, 0, 0 };
     
     //! Specifies the maximum work group size in a compute shader.
-    std::uint32_t               maxComputeShaderWorkGroupSize[3]    { 0, 0, 0 };
+    std::uint32_t                   maxComputeShaderWorkGroupSize[3]    { 0, 0, 0 };
 
     /**
     \brief Specifies the maximum number of viewports and scissor rectangles. Most render systems have a maximum of 16.
-    \see hasViewportArrays
+    \see     hasViewportArrays
     */
-    std::uint32_t               maxNumViewports                     { 0 };
+    std::uint32_t                   maxNumViewports                     { 0 };
 
     //! Specifies the maximum width and height of each viewport and scissor rectangle.
-    std::uint32_t               maxViewportSize[2]                  { 0, 0 };
+    std::uint32_t                   maxViewportSize[2]                  { 0, 0 };
 };
 
 

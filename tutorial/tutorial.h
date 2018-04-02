@@ -335,9 +335,9 @@ protected:
             contextDesc.multiSampling.samples   = multiSampling;
             
             #if 0
-            contextDesc.profileOpenGL.extProfile    = true;
-            contextDesc.profileOpenGL.coreProfile   = true;
-            contextDesc.profileOpenGL.version       = LLGL::OpenGLVersion::OpenGL_3_3;
+            contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
+            contextDesc.profileOpenGL.majorVersion      = 3;
+            contextDesc.profileOpenGL.minorVersion      = 2;
             /*contextDesc.debugCallback = [](const std::string& type, const std::string& message)
             {
                 std::cout << type << " -- " << message << std::endl;
@@ -553,9 +553,9 @@ protected:
     LLGL::ShaderProgram* LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats)
     {
         // Load shader program
-        const auto shaderLang = renderer->GetRenderingCaps().shadingLanguage;
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
-        if (shaderLang == LLGL::ShadingLanguage::SPIRV_100)
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
         {
             return LoadShaderProgram(
                 {
@@ -565,7 +565,7 @@ protected:
                 vertexFormats
             );
         }
-        else if (shaderLang >= LLGL::ShadingLanguage::HLSL_2_0)
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             return LoadShaderProgram(
                 {

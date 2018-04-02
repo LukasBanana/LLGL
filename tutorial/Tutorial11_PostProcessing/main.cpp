@@ -107,7 +107,8 @@ public:
     
     void LoadShaders()
     {
-        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             // Load scene shader program
             shaderProgramScene = LoadShaderProgram(

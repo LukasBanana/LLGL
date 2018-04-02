@@ -313,8 +313,11 @@ class LLGL_EXPORT RenderSystem
         virtual void ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer) = 0;
 
         /**
-        \brief Generates the MIP ("Multum in Parvo") maps for the specified texture.
-        \see https://developer.valvesoftware.com/wiki/MIP_Mapping
+        \brief Generates all MIP-maps for the specified texture.
+        \remarks This may invalidate any currently bound texture slot.
+        If this is used after a texture slot is bound (using 'CommandBuffer::SetTexture')
+        and before a draw call that is dependent on this previously bound texture slot, the behavior is undefined.
+        \see CommandBuffer::SetTexture
         */
         virtual void GenerateMips(Texture& texture) = 0;
 

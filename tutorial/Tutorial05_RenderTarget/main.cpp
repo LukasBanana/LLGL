@@ -12,10 +12,13 @@
 #define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
-#define ENABLE_CUSTOM_MULTISAMPLING
+//#define ENABLE_CUSTOM_MULTISAMPLING
 
 // Enable depth texture instead of depth buffer for render target
 //#define ENABLE_DEPTH_TEXTURE
+
+// Enable to emulate the clip-control functionality for OpenGL renderer (since 'GL_ARB_clip_control' is not integrated in LLGL yet)
+#define ENABLE_OPENGL_CLIPCONTROL_EMULATION
 
 
 #ifndef ENABLE_MULTISAMPLING
@@ -103,7 +106,8 @@ public:
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
         // Load shader program
-        if (renderer->GetRenderingCaps().shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0)
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             shaderProgram = LoadShaderProgram(
                 {
@@ -248,6 +252,7 @@ private:
         // Set graphics pipeline state
         commands->SetGraphicsPipeline(*pipeline);
 
+        #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
         if (IsOpenGL())
         {
             /*
@@ -266,6 +271,7 @@ private:
             }
             commands->SetGraphicsAPIDependentState(apiState);
         }
+        #endif
 
         // Draw scene into render-target
         commands->SetRenderTarget(*renderTarget);
@@ -283,6 +289,7 @@ private:
             // Update model transformation with render-target projection
             UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
             
+            #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
             if (IsOpenGL())
             {
                 /*
@@ -291,6 +298,7 @@ private:
                 */
                 Gs::FlipAxis(settings.wvpMatrix, 1);
             }
+            #endif
 
             #ifdef ENABLE_CUSTOM_MULTISAMPLING
             
@@ -309,11 +317,13 @@ private:
         // Generate MIP-maps again after texture has been written by the render-target
         renderer->GenerateMips(*renderTargetTex);
 
+        #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
         if (IsOpenGL())
         {
             // Reset graphics API dependent state
             commands->SetGraphicsAPIDependentState({});
         }
+        #endif
 
         // Reset viewport for the screen
         auto resolution = context->GetVideoMode().resolution.Cast<float>();

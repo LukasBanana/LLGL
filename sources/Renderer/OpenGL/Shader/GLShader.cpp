@@ -7,6 +7,7 @@
 
 #include "GLShader.h"
 #include "../Ext/GLExtensions.h"
+#include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
 #include <vector>
 #include <sstream>
@@ -30,27 +31,45 @@ GLShader::~GLShader()
 
 bool GLShader::Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc)
 {
-    /* Setup shader source */
+    /* Load shader source code, then compile shader */
     const GLchar* strings[] = { sourceCode.c_str() };
-    glShaderSource(id_, 1, strings, nullptr);
 
-    /* Compile shader */
+    glShaderSource(id_, 1, strings, nullptr);
     glCompileShader(id_);
 
     /* Store stream-output format */
     streamOutputFormat_ = shaderDesc.streamOutput.format;
 
     /* Query compilation status */
-    GLint compileStatus = 0;
-    glGetShaderiv(id_, GL_COMPILE_STATUS, &compileStatus);
+    GLint status = 0;
+    glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
 
-    return (compileStatus != GL_FALSE);
+    return (status != GL_FALSE);
 }
-
 
 bool GLShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
 {
-    return false; // dummy
+    #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
+    if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
+    {
+        /* Load shader binary */
+        glShaderBinary(1, &id_, GL_SHADER_BINARY_FORMAT_SPIR_V, binaryCode.data(), static_cast<GLsizei>(binaryCode.size()));
+
+        /* Specialize for the default "main" function in a SPIR-V module  */
+        const char* entryPoint = (shaderDesc.entryPoint.empty() ? "main" : shaderDesc.entryPoint.c_str());
+        glSpecializeShader(id_, entryPoint, 0, nullptr, nullptr);
+
+        /* Store stream-output format */
+        streamOutputFormat_ = shaderDesc.streamOutput.format;
+
+        /* Query compilation status */
+        GLint status = 0;
+        glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
+
+        return (status != GL_FALSE);
+    }
+    #endif
+    return false;
 }
 
 std::string GLShader::Disassemble(int flags)

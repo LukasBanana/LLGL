@@ -61,7 +61,8 @@ public:
 
         // Create graphics object
         auto vertexFormat = CreateBuffers();
-        LoadShaders(vertexFormat, (renderCaps.shadingLanguage >= LLGL::ShadingLanguage::HLSL_2_0));
+        const auto& languages = renderCaps.shadingLanguages;
+        LoadShaders(vertexFormat, (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end()));
         CreatePipelines();
 
         // Print some information on the standard output

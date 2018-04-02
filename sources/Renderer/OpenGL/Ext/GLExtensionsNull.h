@@ -20,7 +20,6 @@ unsupported GL extension.
 */
 
 
-#include <stdexcept>
 #include "../OpenGL.h"
 
 
@@ -30,12 +29,10 @@ namespace LLGL
 
 #ifdef LLGL_DEF_GL_DUMMY_PROCS
 
-#define DECL_GLPROC(RTYPE, NAME, ARGS)                                                              \
-    RTYPE APIENTRY Dummy_##NAME ARGS                                                                \
-    {                                                                                               \
-        throw std::runtime_error(                                                                   \
-            "illegal use of unsupported OpenGL extension procedure: \"" + std::string(#NAME) + "\"" \
-        );                                                                                          \
+#define DECL_GLPROC(RTYPE, NAME, ARGS)  \
+    RTYPE APIENTRY Dummy_##NAME ARGS    \
+    {                                   \
+        ErrUnsupportedGLProc(#NAME);    \
     }
 
 #else
@@ -377,6 +374,133 @@ DECL_GLPROC(void, glGetInternalformativ, (GLenum, GLenum, GLenum, GLsizei, GLint
 /* GL_ARB_internalformat_query2 */
 
 DECL_GLPROC(void, glGetInternalformati64v, (GLenum, GLenum, GLenum, GLsizei, GLint64*));
+
+/* GL_ARB_ES2_compatibility */
+
+DECL_GLPROC(void, glReleaseShaderCompiler, (void));
+DECL_GLPROC(void, glShaderBinary, (GLsizei, const GLuint*, GLenum, const void*, GLsizei));
+DECL_GLPROC(void, glGetShaderPrecisionFormat, (GLenum, GLenum, GLint*, GLint*));
+DECL_GLPROC(void, glDepthRangef, (GLclampf, GLclampf));
+DECL_GLPROC(void, glClearDepthf, (GLclampf));
+
+/* GL_ARB_gl_spirv */
+
+DECL_GLPROC(void, glSpecializeShader, (GLuint, const GLchar*, GLuint, const GLuint*, const GLuint*));
+
+/* GL_ARB_texture_storage */
+
+DECL_GLPROC(void, glTexStorage1D, (GLenum, GLsizei, GLenum, GLsizei));
+DECL_GLPROC(void, glTexStorage2D, (GLenum, GLsizei, GLenum, GLsizei, GLsizei));
+DECL_GLPROC(void, glTexStorage3D, (GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei));
+
+/* GL_ARB_texture_storage_multisample */
+
+DECL_GLPROC(void, glTexStorage2DMultisample, (GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLboolean));
+DECL_GLPROC(void, glTexStorage3DMultisample, (GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, GLboolean));
+
+/* GL_ARB_buffer_storage */
+
+DECL_GLPROC(void, glBufferStorage, (GLenum, GLsizeiptr, const void*, GLbitfield));
+
+/* GL_ARB_direct_state_access */
+
+DECL_GLPROC(void, glCreateTransformFeedbacks, (GLsizei, GLuint*));
+DECL_GLPROC(void, glTransformFeedbackBufferBase, (GLuint, GLuint, GLuint));
+DECL_GLPROC(void, glTransformFeedbackBufferRange, (GLuint, GLuint, GLuint, GLintptr, GLsizeiptr));
+DECL_GLPROC(void, glGetTransformFeedbackiv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetTransformFeedbacki_v, (GLuint, GLenum, GLuint, GLint*));
+DECL_GLPROC(void, glGetTransformFeedbacki64_v, (GLuint, GLenum, GLuint, GLint64*));
+DECL_GLPROC(void, glCreateBuffers, (GLsizei, GLuint*));
+DECL_GLPROC(void, glNamedBufferStorage, (GLuint, GLsizeiptr, const void*, GLbitfield));
+DECL_GLPROC(void, glNamedBufferData, (GLuint, GLsizeiptr, const void*, GLenum));
+DECL_GLPROC(void, glNamedBufferSubData, (GLuint, GLintptr, GLsizeiptr, const void*));
+DECL_GLPROC(void, glCopyNamedBufferSubData, (GLuint, GLuint, GLintptr, GLintptr, GLsizeiptr));
+DECL_GLPROC(void, glClearNamedBufferData, (GLuint, GLenum, GLenum, GLenum, const void*));
+DECL_GLPROC(void, glClearNamedBufferSubData, (GLuint, GLenum, GLintptr, GLsizeiptr, GLenum, GLenum, const void*));
+DECL_GLPROC(void*, glMapNamedBuffer, (GLuint, GLenum));
+DECL_GLPROC(void*, glMapNamedBufferRange, (GLuint, GLintptr, GLsizeiptr, GLbitfield));
+DECL_GLPROC(GLboolean, glUnmapNamedBuffer, (GLuint));
+DECL_GLPROC(void, glFlushMappedNamedBufferRange, (GLuint, GLintptr, GLsizeiptr));
+DECL_GLPROC(void, glGetNamedBufferParameteriv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetNamedBufferParameteri64v, (GLuint, GLenum, GLint64*));
+DECL_GLPROC(void, glGetNamedBufferPointerv, (GLuint, GLenum, void**));
+DECL_GLPROC(void, glGetNamedBufferSubData, (GLuint, GLintptr, GLsizeiptr, void*));
+DECL_GLPROC(void, glCreateFramebuffers, (GLsizei, GLuint*));
+DECL_GLPROC(void, glNamedFramebufferRenderbuffer, (GLuint, GLenum, GLenum, GLuint));
+DECL_GLPROC(void, glNamedFramebufferParameteri, (GLuint, GLenum, GLint));
+DECL_GLPROC(void, glNamedFramebufferTexture, (GLuint, GLenum, GLuint, GLint));
+DECL_GLPROC(void, glNamedFramebufferTextureLayer, (GLuint, GLenum, GLuint, GLint, GLint));
+DECL_GLPROC(void, glNamedFramebufferDrawBuffer, (GLuint, GLenum));
+DECL_GLPROC(void, glNamedFramebufferDrawBuffers, (GLuint, GLsizei, const GLenum*));
+DECL_GLPROC(void, glNamedFramebufferReadBuffer, (GLuint, GLenum));
+DECL_GLPROC(void, glInvalidateNamedFramebufferData, (GLuint, GLsizei, const GLenum*));
+DECL_GLPROC(void, glInvalidateNamedFramebufferSubData, (GLuint, GLsizei, const GLenum*, GLint, GLint, GLsizei, GLsizei));
+DECL_GLPROC(void, glClearNamedFramebufferiv, (GLuint, GLenum, GLint, const GLint*));
+DECL_GLPROC(void, glClearNamedFramebufferuiv, (GLuint, GLenum, GLint, const GLuint*));
+DECL_GLPROC(void, glClearNamedFramebufferfv, (GLuint, GLenum, GLint, const GLfloat*));
+DECL_GLPROC(void, glClearNamedFramebufferfi, (GLuint, GLenum, GLint, GLfloat, GLint));
+DECL_GLPROC(void, glBlitNamedFramebuffer, (GLuint, GLuint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum));
+DECL_GLPROC(GLenum, glCheckNamedFramebufferStatus, (GLuint, GLenum));
+DECL_GLPROC(void, glGetNamedFramebufferParameteriv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetNamedFramebufferAttachmentParameteriv, (GLuint, GLenum, GLenum, GLint*));
+DECL_GLPROC(void, glCreateRenderbuffers, (GLsizei, GLuint*));
+DECL_GLPROC(void, glNamedRenderbufferStorage, (GLuint, GLenum, GLsizei, GLsizei));
+DECL_GLPROC(void, glNamedRenderbufferStorageMultisample, (GLuint, GLsizei, GLenum, GLsizei, GLsizei));
+DECL_GLPROC(void, glGetNamedRenderbufferParameteriv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glCreateTextures, (GLenum, GLsizei, GLuint*));
+DECL_GLPROC(void, glTextureBuffer, (GLuint, GLenum, GLuint));
+DECL_GLPROC(void, glTextureBufferRange, (GLuint, GLenum, GLuint, GLintptr, GLsizeiptr));
+DECL_GLPROC(void, glTextureStorage1D, (GLuint, GLsizei, GLenum, GLsizei));
+DECL_GLPROC(void, glTextureStorage2D, (GLuint, GLsizei, GLenum, GLsizei, GLsizei));
+DECL_GLPROC(void, glTextureStorage3D, (GLuint, GLsizei, GLenum, GLsizei, GLsizei, GLsizei));
+DECL_GLPROC(void, glTextureStorage2DMultisample, (GLuint, GLsizei, GLenum, GLsizei, GLsizei, GLboolean));
+DECL_GLPROC(void, glTextureStorage3DMultisample, (GLuint, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, GLboolean));
+DECL_GLPROC(void, glTextureSubImage1D, (GLuint, GLint, GLint, GLsizei, GLenum, GLenum, const void*));
+DECL_GLPROC(void, glTextureSubImage2D, (GLuint, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, const void*));
+DECL_GLPROC(void, glTextureSubImage3D, (GLuint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const void*));
+DECL_GLPROC(void, glCompressedTextureSubImage1D, (GLuint, GLint, GLint, GLsizei, GLenum, GLsizei, const void*));
+DECL_GLPROC(void, glCompressedTextureSubImage2D, (GLuint, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, const void*));
+DECL_GLPROC(void, glCompressedTextureSubImage3D, (GLuint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, const void*));
+DECL_GLPROC(void, glCopyTextureSubImage1D, (GLuint, GLint, GLint, GLint, GLint, GLsizei));
+DECL_GLPROC(void, glCopyTextureSubImage2D, (GLuint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei));
+DECL_GLPROC(void, glCopyTextureSubImage3D, (GLuint, GLint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei));
+DECL_GLPROC(void, glTextureParameterf, (GLuint, GLenum, GLfloat));
+DECL_GLPROC(void, glTextureParameterfv, (GLuint, GLenum, const GLfloat*));
+DECL_GLPROC(void, glTextureParameteri, (GLuint, GLenum, GLint));
+DECL_GLPROC(void, glTextureParameterIiv, (GLuint, GLenum, const GLint*));
+DECL_GLPROC(void, glTextureParameterIuiv, (GLuint, GLenum, const GLuint*));
+DECL_GLPROC(void, glTextureParameteriv, (GLuint, GLenum, const GLint*));
+DECL_GLPROC(void, glGenerateTextureMipmap, (GLuint));
+DECL_GLPROC(void, glBindTextureUnit, (GLuint, GLuint));
+DECL_GLPROC(void, glGetTextureImage, (GLuint, GLint, GLenum, GLenum, GLsizei, void*));
+DECL_GLPROC(void, glGetCompressedTextureImage, (GLuint, GLint, GLsizei, void*));
+DECL_GLPROC(void, glGetTextureLevelParameterfv, (GLuint, GLint, GLenum, GLfloat*));
+DECL_GLPROC(void, glGetTextureLevelParameteriv, (GLuint, GLint, GLenum, GLint*));
+DECL_GLPROC(void, glGetTextureParameterfv, (GLuint, GLenum, GLfloat*));
+DECL_GLPROC(void, glGetTextureParameterIiv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetTextureParameterIuiv, (GLuint, GLenum, GLuint*));
+DECL_GLPROC(void, glGetTextureParameteriv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glCreateVertexArrays, (GLsizei, GLuint*));
+DECL_GLPROC(void, glDisableVertexArrayAttrib, (GLuint, GLuint));
+DECL_GLPROC(void, glEnableVertexArrayAttrib, (GLuint, GLuint));
+DECL_GLPROC(void, glVertexArrayElementBuffer, (GLuint, GLuint));
+DECL_GLPROC(void, glVertexArrayVertexBuffer, (GLuint, GLuint, GLuint, GLintptr, GLsizei));
+DECL_GLPROC(void, glVertexArrayVertexBuffers, (GLuint, GLuint, GLsizei, const GLuint*, const GLintptr*, const GLsizei*));
+DECL_GLPROC(void, glVertexArrayAttribFormat, (GLuint, GLuint, GLint, GLenum, GLboolean, GLuint));
+DECL_GLPROC(void, glVertexArrayAttribIFormat, (GLuint, GLuint, GLint, GLenum, GLuint));
+DECL_GLPROC(void, glVertexArrayAttribLFormat, (GLuint, GLuint, GLint, GLenum, GLuint));
+DECL_GLPROC(void, glVertexArrayAttribBinding, (GLuint, GLuint, GLuint));
+DECL_GLPROC(void, glVertexArrayBindingDivisor, (GLuint, GLuint, GLuint));
+DECL_GLPROC(void, glGetVertexArrayiv, (GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetVertexArrayIndexediv, (GLuint, GLuint, GLenum, GLint*));
+DECL_GLPROC(void, glGetVertexArrayIndexed64iv, (GLuint, GLuint, GLenum, GLint64*));
+DECL_GLPROC(void, glCreateSamplers, (GLsizei, GLuint*));
+DECL_GLPROC(void, glCreateProgramPipelines, (GLsizei, GLuint*));
+DECL_GLPROC(void, glCreateQueries, (GLenum, GLsizei, GLuint*));
+DECL_GLPROC(void, glGetQueryBufferObjectiv, (GLuint, GLuint, GLenum, GLintptr));
+DECL_GLPROC(void, glGetQueryBufferObjectuiv, (GLuint, GLuint, GLenum, GLintptr));
+DECL_GLPROC(void, glGetQueryBufferObjecti64v, (GLuint, GLuint, GLenum, GLintptr));
+DECL_GLPROC(void, glGetQueryBufferObjectui64v, (GLuint, GLuint, GLenum, GLintptr));
 
 #endif // /ifndef(__APPLE__)
 

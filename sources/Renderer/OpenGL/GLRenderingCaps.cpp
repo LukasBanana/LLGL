@@ -17,11 +17,16 @@ namespace LLGL
 {
 
 
-static std::uint32_t GLGetUInt(GLenum param)
+static std::int32_t GLGetInt(GLenum param)
 {
     GLint attr = 0;
     glGetIntegerv(param, &attr);
-    return static_cast<std::uint32_t>(attr);
+    return attr;
+}
+
+static std::uint32_t GLGetUInt(GLenum param)
+{
+    return static_cast<std::uint32_t>(GLGetInt(param));
 };
 
 static std::uint32_t GLGetUIntIndexed(GLenum param, GLuint index)
@@ -32,33 +37,70 @@ static std::uint32_t GLGetUIntIndexed(GLenum param, GLuint index)
     return static_cast<std::uint32_t>(attr);
 };
 
-static ShadingLanguage GLQueryShadingLanguage()
+static float GLGetFloat(GLenum param)
 {
-    /* Derive shading language version by OpenGL version */
-    GLint major = 0, minor = 0;
-    glGetIntegerv(GL_MAJOR_VERSION, &major);
-    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    GLfloat attr = 0.0f;
+    glGetFloatv(param, &attr);
+    return attr;
+}
 
-    /* Map OpenGL version to GLSL version */
-    const GLint version = major * 100 + minor;
-    switch (version)
+static std::vector<ShadingLanguage> GLQueryShadingLanguages()
+{
+    std::vector<ShadingLanguage> languages;
+
+    if (HasExtension(GLExt::ARB_shader_objects))
     {
-        case 200: return ShadingLanguage::GLSL_110;
-        case 210: return ShadingLanguage::GLSL_120;
-        case 300: return ShadingLanguage::GLSL_130;
-        case 310: return ShadingLanguage::GLSL_140;
-        case 320: return ShadingLanguage::GLSL_150;
-        case 330: return ShadingLanguage::GLSL_330;
-        case 400: return ShadingLanguage::GLSL_400;
-        case 410: return ShadingLanguage::GLSL_410;
-        case 420: return ShadingLanguage::GLSL_420;
-        case 430: return ShadingLanguage::GLSL_430;
-        case 440: return ShadingLanguage::GLSL_440;
-        case 450: return ShadingLanguage::GLSL_450;
-        case 460: return ShadingLanguage::GLSL_460;
+        /* Derive shading language version by OpenGL version */
+        GLint major = 0, minor = 0;
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+        /* Map OpenGL version to GLSL version */
+        const GLint version = major * 100 + minor * 10;
+
+        /* Add supported GLSL versions */
+        languages.push_back(ShadingLanguage::GLSL);
+
+        if (version >= 200) { languages.push_back(ShadingLanguage::GLSL_110); }
+        if (version >= 210) { languages.push_back(ShadingLanguage::GLSL_120); }
+        if (version >= 300) { languages.push_back(ShadingLanguage::GLSL_130); }
+        if (version >= 310) { languages.push_back(ShadingLanguage::GLSL_140); }
+        if (version >= 320) { languages.push_back(ShadingLanguage::GLSL_150); }
+        if (version >= 330) { languages.push_back(ShadingLanguage::GLSL_330); }
+        if (version >= 400) { languages.push_back(ShadingLanguage::GLSL_400); }
+        if (version >= 410) { languages.push_back(ShadingLanguage::GLSL_410); }
+        if (version >= 420) { languages.push_back(ShadingLanguage::GLSL_420); }
+        if (version >= 430) { languages.push_back(ShadingLanguage::GLSL_430); }
+        if (version >= 440) { languages.push_back(ShadingLanguage::GLSL_440); }
+        if (version >= 450) { languages.push_back(ShadingLanguage::GLSL_450); }
+        if (version >= 460) { languages.push_back(ShadingLanguage::GLSL_460); }
     }
 
-    return (version > 460 ? ShadingLanguage::GLSL_460 : ShadingLanguage::Unsupported);
+    #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
+
+    if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
+    {
+        /* Query supported shader binary formats */
+        GLint numBinaryFormats = 0;
+        glGetIntegerv(GL_NUM_SHADER_BINARY_FORMATS, &numBinaryFormats);
+
+        if (numBinaryFormats > 0)
+        {
+            std::vector<GLint> binaryFormats(static_cast<std::size_t>(numBinaryFormats));
+            glGetIntegerv(GL_SHADER_BINARY_FORMATS, binaryFormats.data());
+
+            if (std::find(binaryFormats.begin(), binaryFormats.end(), GL_SHADER_BINARY_FORMAT_SPIR_V) != binaryFormats.end())
+            {
+                /* Add supported SPIR-V versions */
+                languages.push_back(ShadingLanguage::SPIRV);
+                languages.push_back(ShadingLanguage::SPIRV_100);
+            }
+        }
+    }
+
+    #endif // /GL_ARB_gl_spirv
+
+    return languages;
 }
 
 static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
@@ -111,7 +153,7 @@ static void GLGetRenderingAttribs(RenderingCaps& caps)
     /* Set fixed states for this renderer */
     caps.screenOrigin       = ScreenOrigin::LowerLeft;
     caps.clippingRange      = ClippingRange::MinusOneToOne;
-    caps.shadingLanguage    = GLQueryShadingLanguage();
+    caps.shadingLanguages   = GLQueryShadingLanguages();
 }
 
 static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureFormats)
@@ -200,7 +242,7 @@ static void GLGetFeatureLimits(RenderingCaps& caps)
     caps.maxNumRenderTargetAttachments      = GLGetUInt(GL_MAX_DRAW_BUFFERS);
     caps.maxConstantBufferSize              = GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
     caps.maxPatchVertices                   = GLGetUInt(GL_MAX_PATCH_VERTICES);
-    caps.maxAnisotropy                      = 16; //TODO: glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT)
+    caps.maxAnisotropy                      = static_cast<std::uint32_t>(GLGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
     
     caps.maxNumComputeShaderWorkGroups[0]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
     caps.maxNumComputeShaderWorkGroups[1]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
@@ -211,7 +253,7 @@ static void GLGetFeatureLimits(RenderingCaps& caps)
     caps.maxComputeShaderWorkGroupSize[2]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
 
     /* Query viewport limits */
-    caps.maxNumViewports    = GLGetUInt(GL_MAX_VIEWPORTS);
+    caps.maxNumViewports                    = GLGetUInt(GL_MAX_VIEWPORTS);
 
     GLint maxViewportDims[2];
     glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewportDims);

@@ -78,7 +78,7 @@ static void ExtractExtensionsFromString(GLExtensionList& extensions, const std::
     if (!LoadGLProc(NAME, #NAME))   \
         return false
 
-#endif
+#endif // /LLGL_GL_ENABLE_EXT_PLACEHOLDERS
 
 /* --- Common GL extensions --- */
 
@@ -507,10 +507,149 @@ static bool Load_GL_ARB_internalformat_query2(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_ES2_compatibility(bool usePlaceholder)
+{
+    LOAD_GLPROC( glReleaseShaderCompiler    );
+    LOAD_GLPROC( glShaderBinary             );
+    LOAD_GLPROC( glGetShaderPrecisionFormat );
+    LOAD_GLPROC( glDepthRangef              );
+    LOAD_GLPROC( glClearDepthf              );
+    return true;
+}
+
+static bool Load_GL_ARB_gl_spirv(bool usePlaceholder)
+{
+    LOAD_GLPROC( glSpecializeShader );
+    return true;
+}
+
+static bool Load_GL_ARB_texture_storage(bool usePlaceholder)
+{
+    LOAD_GLPROC( glTexStorage1D );
+    LOAD_GLPROC( glTexStorage2D );
+    LOAD_GLPROC( glTexStorage3D );
+    return true;
+}
+
+static bool Load_GL_ARB_texture_storage_multisample(bool usePlaceholder)
+{
+    LOAD_GLPROC( glTexStorage2DMultisample );
+    LOAD_GLPROC( glTexStorage3DMultisample );
+    return true;
+}
+
+static bool Load_GL_ARB_buffer_storage(bool usePlaceholder)
+{
+    LOAD_GLPROC( glBufferStorage );
+    return true;
+}
+
+static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
+{
+    LOAD_GLPROC( glCreateTransformFeedbacks                 );
+    LOAD_GLPROC( glTransformFeedbackBufferBase              );
+    LOAD_GLPROC( glTransformFeedbackBufferRange             );
+    LOAD_GLPROC( glGetTransformFeedbackiv                   );
+    LOAD_GLPROC( glGetTransformFeedbacki_v                  );
+    LOAD_GLPROC( glGetTransformFeedbacki64_v                );
+    LOAD_GLPROC( glCreateBuffers                            );
+    LOAD_GLPROC( glNamedBufferStorage                       );
+    LOAD_GLPROC( glNamedBufferData                          );
+    LOAD_GLPROC( glNamedBufferSubData                       );
+    LOAD_GLPROC( glCopyNamedBufferSubData                   );
+    LOAD_GLPROC( glClearNamedBufferData                     );
+    LOAD_GLPROC( glClearNamedBufferSubData                  );
+    LOAD_GLPROC( glMapNamedBuffer                           );
+    LOAD_GLPROC( glMapNamedBufferRange                      );
+    LOAD_GLPROC( glUnmapNamedBuffer                         );
+    LOAD_GLPROC( glFlushMappedNamedBufferRange              );
+    LOAD_GLPROC( glGetNamedBufferParameteriv                );
+    LOAD_GLPROC( glGetNamedBufferParameteri64v              );
+    LOAD_GLPROC( glGetNamedBufferPointerv                   );
+    LOAD_GLPROC( glGetNamedBufferSubData                    );
+    LOAD_GLPROC( glCreateFramebuffers                       );
+    LOAD_GLPROC( glNamedFramebufferRenderbuffer             );
+    LOAD_GLPROC( glNamedFramebufferParameteri               );
+    LOAD_GLPROC( glNamedFramebufferTexture                  );
+    LOAD_GLPROC( glNamedFramebufferTextureLayer             );
+    LOAD_GLPROC( glNamedFramebufferDrawBuffer               );
+    LOAD_GLPROC( glNamedFramebufferDrawBuffers              );
+    LOAD_GLPROC( glNamedFramebufferReadBuffer               );
+    LOAD_GLPROC( glInvalidateNamedFramebufferData           );
+    LOAD_GLPROC( glInvalidateNamedFramebufferSubData        );
+    LOAD_GLPROC( glClearNamedFramebufferiv                  );
+    LOAD_GLPROC( glClearNamedFramebufferuiv                 );
+    LOAD_GLPROC( glClearNamedFramebufferfv                  );
+    LOAD_GLPROC( glClearNamedFramebufferfi                  );
+    LOAD_GLPROC( glBlitNamedFramebuffer                     );
+    LOAD_GLPROC( glCheckNamedFramebufferStatus              );
+    LOAD_GLPROC( glGetNamedFramebufferParameteriv           );
+    LOAD_GLPROC( glGetNamedFramebufferAttachmentParameteriv );
+    LOAD_GLPROC( glCreateRenderbuffers                      );
+    LOAD_GLPROC( glNamedRenderbufferStorage                 );
+    LOAD_GLPROC( glNamedRenderbufferStorageMultisample      );
+    LOAD_GLPROC( glGetNamedRenderbufferParameteriv          );
+    LOAD_GLPROC( glCreateTextures                           );
+    LOAD_GLPROC( glTextureBuffer                            );
+    LOAD_GLPROC( glTextureBufferRange                       );
+    LOAD_GLPROC( glTextureStorage1D                         );
+    LOAD_GLPROC( glTextureStorage2D                         );
+    LOAD_GLPROC( glTextureStorage3D                         );
+    LOAD_GLPROC( glTextureStorage2DMultisample              );
+    LOAD_GLPROC( glTextureStorage3DMultisample              );
+    LOAD_GLPROC( glTextureSubImage1D                        );
+    LOAD_GLPROC( glTextureSubImage2D                        );
+    LOAD_GLPROC( glTextureSubImage3D                        );
+    LOAD_GLPROC( glCompressedTextureSubImage1D              );
+    LOAD_GLPROC( glCompressedTextureSubImage2D              );
+    LOAD_GLPROC( glCompressedTextureSubImage3D              );
+    LOAD_GLPROC( glCopyTextureSubImage1D                    );
+    LOAD_GLPROC( glCopyTextureSubImage2D                    );
+    LOAD_GLPROC( glCopyTextureSubImage3D                    );
+    LOAD_GLPROC( glTextureParameterf                        );
+    LOAD_GLPROC( glTextureParameterfv                       );
+    LOAD_GLPROC( glTextureParameteri                        );
+    LOAD_GLPROC( glTextureParameterIiv                      );
+    LOAD_GLPROC( glTextureParameterIuiv                     );
+    LOAD_GLPROC( glTextureParameteriv                       );
+    LOAD_GLPROC( glGenerateTextureMipmap                    );
+    LOAD_GLPROC( glBindTextureUnit                          );
+    LOAD_GLPROC( glGetTextureImage                          );
+    LOAD_GLPROC( glGetCompressedTextureImage                );
+    LOAD_GLPROC( glGetTextureLevelParameterfv               );
+    LOAD_GLPROC( glGetTextureLevelParameteriv               );
+    LOAD_GLPROC( glGetTextureParameterfv                    );
+    LOAD_GLPROC( glGetTextureParameterIiv                   );
+    LOAD_GLPROC( glGetTextureParameterIuiv                  );
+    LOAD_GLPROC( glGetTextureParameteriv                    );
+    LOAD_GLPROC( glCreateVertexArrays                       );
+    LOAD_GLPROC( glDisableVertexArrayAttrib                 );
+    LOAD_GLPROC( glEnableVertexArrayAttrib                  );
+    LOAD_GLPROC( glVertexArrayElementBuffer                 );
+    LOAD_GLPROC( glVertexArrayVertexBuffer                  );
+    LOAD_GLPROC( glVertexArrayVertexBuffers                 );
+    LOAD_GLPROC( glVertexArrayAttribFormat                  );
+    LOAD_GLPROC( glVertexArrayAttribIFormat                 );
+    LOAD_GLPROC( glVertexArrayAttribLFormat                 );
+    LOAD_GLPROC( glVertexArrayAttribBinding                 );
+    LOAD_GLPROC( glVertexArrayBindingDivisor                );
+    LOAD_GLPROC( glGetVertexArrayiv                         );
+    LOAD_GLPROC( glGetVertexArrayIndexediv                  );
+    LOAD_GLPROC( glGetVertexArrayIndexed64iv                );
+    LOAD_GLPROC( glCreateSamplers                           );
+    LOAD_GLPROC( glCreateProgramPipelines                   );
+    LOAD_GLPROC( glCreateQueries                            );
+    LOAD_GLPROC( glGetQueryBufferObjectiv                   );
+    LOAD_GLPROC( glGetQueryBufferObjectuiv                  );
+    LOAD_GLPROC( glGetQueryBufferObjecti64v                 );
+    LOAD_GLPROC( glGetQueryBufferObjectui64v                );
+    return true;
+}
+
 #undef LOAD_GLPROC_SIMPLE
 #undef LOAD_GLPROC
     
-#endif
+#endif // /ifndef(__APPLE__)
 
 
 /* --- Common extension loading functions --- */
@@ -743,6 +882,14 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_sync                         );
     LOAD_GLEXT( ARB_internalformat_query         );
     LOAD_GLEXT( ARB_internalformat_query2        );
+    LOAD_GLEXT( ARB_ES2_compatibility            );
+    LOAD_GLEXT( ARB_gl_spirv                     );
+    LOAD_GLEXT( ARB_texture_storage              );
+    LOAD_GLEXT( ARB_texture_storage_multisample  );
+    LOAD_GLEXT( ARB_buffer_storage               );
+    #ifdef LLGL_GL_ENABLE_DSA_EXT
+    LOAD_GLEXT( ARB_direct_state_access          );
+    #endif
 
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );

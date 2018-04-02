@@ -22,11 +22,7 @@ else()
 endif()
 
 macro(ADD_DEFINE IDENT)
-	if(MSVC)
-		add_definitions(/D${IDENT})
-	else(MSVC)
-		add_definitions(-D${IDENT})
-	endif(MSVC)
+	add_definitions(-D${IDENT})
 endmacro()
 
 macro(ADD_DEBUG_DEFINE IDENT)
@@ -104,8 +100,9 @@ option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
 option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
 
-option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL extension placeholders" ON)
+option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
+option(LLGL_GL_ENABLE_DSA_EXT "Enable OpenGL direct state access (DSA) extension if available" ON)
 option(LLGL_GL_INCLUDE_EXTERNAL "Includes additional OpenGL header files from 'external' folder" ON)
 
 option(LLGL_BUILD_STATIC_LIB "Build LLGL as static lib (Only allows a single render system!)" OFF)
@@ -139,12 +136,16 @@ if(LLGL_ENABLE_UTILITY)
 	ADD_DEFINE(LLGL_ENABLE_UTILITY)
 endif()
 
+if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
+	ADD_DEFINE(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
+endif()
+
 if(LLGL_GL_ENABLE_VENDOR_EXT)
 	ADD_DEFINE(LLGL_GL_ENABLE_VENDOR_EXT)
 endif()
 
-if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
-	ADD_DEFINE(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
+if(LLGL_GL_ENABLE_DSA_EXT)
+	ADD_DEFINE(LLGL_GL_ENABLE_DSA_EXT)
 endif()
 
 if(LLGL_BUILD_STATIC_LIB)

@@ -38,6 +38,9 @@ class GLTexture : public Texture
 
     private:
 
+        void AllocHwTexture();
+        void FreeHwTexture();
+
         GLuint id_ = 0;
 
 };

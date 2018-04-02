@@ -69,20 +69,13 @@ struct BufferFlags
         \brief Buffer mapping with CPU read access is required.
         \see RenderSystem::MapBuffer
         */
-        MapReadAccess   = (1 << 0),
+        MapReadAccess       = (1 << 0),
 
         /**
         \brief Buffer mapping with CPU write access is required.
         \see RenderSystem::MapBuffer
         */
-        MapWriteAccess  = (1 << 1),
-
-        /*
-        \brief Buffer mapping with CPU read and write access is required.
-        \see BufferFlags::MapReadAccess
-        \see BufferFlags::MapWriteAccess
-        */
-        MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
+        MapWriteAccess      = (1 << 1),
 
         /**
         \brief Hint to the renderer that the buffer will be frequently updated from the CPU.
@@ -90,6 +83,13 @@ struct BufferFlags
         \see RenderSystem::WriteBuffer
         */
         DynamicUsage        = (1 << 2),
+
+        /*
+        \brief Buffer mapping with CPU read and write access is required.
+        \see BufferFlags::MapReadAccess
+        \see BufferFlags::MapWriteAccess
+        */
+        MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
     };
 };
 
