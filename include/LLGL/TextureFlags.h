@@ -147,7 +147,7 @@ struct LLGL_EXPORT TextureDescriptor
     {
         std::uint32_t   width;          //!< Texture width.
         std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   layers;         //!< Number of texture array layers (internally it will be a multiple of 6).
+        std::uint32_t   layers;         //!< Number of texture array layers, one for each cube.
     };
 
     struct Texture2DMSDescriptor

@@ -555,6 +555,16 @@ protected:
         // Load shader program
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
+        {
+            return LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "vertex.glsl" },
+                    { LLGL::ShaderType::Fragment, "fragment.glsl" }
+                },
+                vertexFormats
+            );
+        }
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
         {
             return LoadShaderProgram(
@@ -565,7 +575,7 @@ protected:
                 vertexFormats
             );
         }
-        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
             return LoadShaderProgram(
                 {
@@ -575,16 +585,8 @@ protected:
                 vertexFormats
             );
         }
-        else
-        {
-            return LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex, "vertex.glsl" },
-                    { LLGL::ShaderType::Fragment, "fragment.glsl" }
-                },
-                vertexFormats
-            );
-        }
+
+        return nullptr;
     }
 
 public:

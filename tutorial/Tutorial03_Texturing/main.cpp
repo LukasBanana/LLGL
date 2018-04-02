@@ -122,7 +122,7 @@ public:
         }
         auto texCreationTime = timer->Stop();
         std::cout << "texture creation time: " << texCreationTime << " microseconds" << std::endl;
-    
+
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping
         // see http://whatis.techtarget.com/definition/MIP-map
@@ -134,7 +134,8 @@ public:
         // Query texture descriptor to see what is really stored on the GPU
         //auto textureDesc = renderer->QueryTextureDescriptor(*colorMap);
 
-        // Create array of textures (not to be confused with an "array texture" which is a texture of arrays)
+        // Create array of textures, which is generally done to bind multiple textures at once, but here it is only for demonstration purposes
+        // Note: Not to be confused with an "array texture" which is an arrayed texture type, e.g. LLGL::TextureType::Texture2DArray
         textureArray = renderer->CreateTextureArray(1, &colorMap);
     }
 
