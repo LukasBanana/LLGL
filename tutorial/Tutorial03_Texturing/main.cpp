@@ -132,7 +132,7 @@ public:
         stbi_image_free(imageBuffer);
 
         // Query texture descriptor to see what is really stored on the GPU
-        //auto textureDesc = renderer->QueryTextureDescriptor(*colorMap);
+        auto textureDesc = colorMap->QueryDesc();
 
         // Create array of textures, which is generally done to bind multiple textures at once, but here it is only for demonstration purposes
         // Note: Not to be confused with an "array texture" which is an arrayed texture type, e.g. LLGL::TextureType::Texture2DArray

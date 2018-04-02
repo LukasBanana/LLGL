@@ -47,6 +47,13 @@ class LLGL_EXPORT Texture
         */
         virtual Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const = 0;
 
+        /**
+        \brief Queries a descriptor of this texture (including its type and size).
+        \remarks This function is guaranteed to keep the currently bound textures, i.e. all previously set textures using the 'CommandBuffer::SetTexture' function will remain.
+        \see TextureDescriptor
+        */
+        virtual TextureDescriptor QueryDesc() const = 0;
+
     protected:
 
         Texture(const TextureType type);

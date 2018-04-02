@@ -81,8 +81,6 @@ class D3D12RenderSystem : public RenderSystem
 
         void Release(Texture& texture) override;
         void Release(TextureArray& textureArray) override;
-
-        TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
         
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
 

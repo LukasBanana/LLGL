@@ -21,17 +21,11 @@ class DbgTexture : public Texture
 
     public:
 
-        DbgTexture(Texture& instance, const TextureDescriptor& desc) :
-            Texture  { desc.type },
-            instance { instance  },
-            desc     { desc      }
-        {
-        }
+        DbgTexture(Texture& instance, const TextureDescriptor& desc);
 
-        Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override
-        {
-            return instance.QueryMipLevelSize(mipLevel);
-        }
+        Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override;
+
+        TextureDescriptor QueryDesc() const override;
 
         Texture&            instance;
         TextureDescriptor   desc;

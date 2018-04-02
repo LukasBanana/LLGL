@@ -243,11 +243,6 @@ void VKRenderSystem::Release(TextureArray& textureArray)
     //todo
 }
 
-TextureDescriptor VKRenderSystem::QueryTextureDescriptor(const Texture& texture)
-{
-    return {};//todo
-}
-
 void VKRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
 {
     //todo

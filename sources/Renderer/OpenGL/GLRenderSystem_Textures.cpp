@@ -115,50 +115,6 @@ void GLRenderSystem::Release(TextureArray& textureArray)
     RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
-TextureDescriptor GLRenderSystem::QueryTextureDescriptor(const Texture& texture)
-{
-    auto& textureGL = LLGL_CAST(const GLTexture&, texture);
-
-    TextureDescriptor desc;
-
-    desc.type = texture.GetType();
-
-    /* Query hardware texture format and size */
-    GLint internalFormat = 0, texSize[3] = { 0 };
-
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
-    if (HasExtension(GLExt::ARB_direct_state_access))
-    {
-        auto texID = textureGL.GetID();
-        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
-        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_WIDTH, &texSize[0]);
-        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
-        glGetTextureLevelParameteriv(texID, 0, GL_TEXTURE_DEPTH, &texSize[2]);
-    }
-    else
-    #endif
-    {
-        GLStateManager::active->BindTexture(textureGL);
-        auto target = GLTypes::Map(texture.GetType());
-        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
-        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &texSize[0]);
-        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
-        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH, &texSize[2]);
-    }
-
-    /* Transform data from OpenGL to LLGL */
-    GLTypes::Unmap(desc.format, static_cast<GLenum>(internalFormat));
-
-    desc.texture3D.width    = static_cast<std::uint32_t>(texSize[0]);
-    desc.texture3D.height   = static_cast<std::uint32_t>(texSize[1]);
-    desc.texture3D.depth    = static_cast<std::uint32_t>(texSize[2]);
-
-    if (desc.type == TextureType::TextureCube || desc.type == TextureType::TextureCubeArray)
-        desc.texture3D.depth /= 6;
-
-    return desc;
-}
-
 /* ----- "WriteTexture..." functions ----- */
 
 void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)

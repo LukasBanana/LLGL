@@ -93,8 +93,6 @@ class VKRenderSystem : public RenderSystem
         void Release(Texture& texture) override;
         void Release(TextureArray& textureArray) override;
 
-        TextureDescriptor QueryTextureDescriptor(const Texture& texture) override;
-
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
         
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) override;

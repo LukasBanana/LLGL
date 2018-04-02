@@ -240,12 +240,6 @@ void DbgRenderSystem::Release(TextureArray& textureArray)
     //ReleaseDbg(textureArrays_, textureArray);
 }
 
-TextureDescriptor DbgRenderSystem::QueryTextureDescriptor(const Texture& texture)
-{
-    auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
-    return instance_->QueryTextureDescriptor(textureDbg.instance);
-}
-
 void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);

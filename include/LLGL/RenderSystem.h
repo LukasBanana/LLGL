@@ -277,13 +277,6 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified texture array object. After this call, the specified object must no longer be used.
         virtual void Release(TextureArray& textureArray) = 0;
-
-        /**
-        \brief Queries a descriptor of the specified texture.
-        \remarks This can be used to query the type and dimension size of the texture.
-        \see TextureDescriptor
-        */
-        virtual TextureDescriptor QueryTextureDescriptor(const Texture& texture) = 0;
         
         /**
         \brief Updates the image data of the specified texture.
@@ -304,17 +297,17 @@ class LLGL_EXPORT RenderSystem
         \param[out] data Specifies the output image data buffer. This must be a pointer to a memory block with at least 'dataSize' bytes. This must not be null.
         \param[in] dataSize Specifies the size (in bytes) of the output data buffer.
         \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
-        The "QueryTextureDescriptor" function can be used to determine the texture dimensions.
+        The "Texture::QueryDesc" function can be used to determine the texture dimensions.
         \code
         // Query texture size attribute
-        auto textureDesc = renderer->QueryTextureDescriptor();
+        auto textureDesc = texture->QueryDesc();
 
         // Allocate image buffer with elements in all dimensions
         std::vector<LLGL::ColorRGBAub> image(textureDesc.texture3D.width * textureDesc.texture3D.height * textureDesc.texture3D.depth);
 
         // Read texture data
         renderSystem->ReadTexture(
-            texture,                                // Texture whose image content is to be read
+            *texture,                               // Texture whose image content is to be read
             0,                                      // Highest MIP-map level
             LLGL::ImageFormat::RGBA,                // RGBA image format, since we used LLGL::ColorRGBAub
             LLGL::DataType::UInt8,                  // 8-bit unsigned integral data type: <std::uint8_t> or <unsigned char>
@@ -324,9 +317,9 @@ class LLGL_EXPORT RenderSystem
         \endcode
         \note The behavior is undefined if 'data' points to an invalid buffer,
         or 'data' points to a buffer that is smaller than specified by 'dataSize',
-        or 'dataSize' is less than the required size (can be determined by 'QueryTextureDescriptor').
+        or 'dataSize' is less than the required size (can be determined by 'Texture::QueryDesc').
         \throws std::invalid_argument If 'data' is null.
-        \see QueryTextureDescriptor
+        \see Texture::QueryDesc
         */
         virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) = 0;
 

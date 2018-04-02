@@ -44,6 +44,8 @@ class D3D11Texture : public Texture
 
         Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override;
 
+        TextureDescriptor QueryDesc() const override;
+
         /* ----- Extended internal functions ---- */
 
         void CreateTexture1D(

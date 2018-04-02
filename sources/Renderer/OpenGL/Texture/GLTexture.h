@@ -27,6 +27,8 @@ class GLTexture : public Texture
 
         Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override;
 
+        TextureDescriptor QueryDesc() const override;
+
         // Recreates the internal texture object. This will invalidate the previous texture ID.
         void Recreate();
 

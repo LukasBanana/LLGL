@@ -7,6 +7,7 @@
 
 #include "D3D11Texture.h"
 #include "../../DXCommon/DXCore.h"
+#include "../D3D11Types.h"
 
 
 namespace LLGL
@@ -65,6 +66,69 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
     }
 
     return size;
+}
+
+TextureDescriptor D3D11Texture::QueryDesc() const
+{
+    /* Get D3D hardware texture resource */
+    const auto& hwTex = GetHardwareTexture();
+
+    /* Initialize texture descriptor */
+    TextureDescriptor texDesc;
+
+    texDesc.type = GetType();
+
+    /* Get resource dimension to query the respective D3D descriptor */
+    D3D11_RESOURCE_DIMENSION dimension;
+    hwTex.resource->GetType(&dimension);
+
+    switch (dimension)
+    {
+        case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
+        {
+            /* Query descriptor from 1D texture */
+            D3D11_TEXTURE1D_DESC desc;
+            hwTex.tex1D->GetDesc(&desc);
+
+            texDesc.format              = D3D11Types::Unmap(desc.Format);
+            texDesc.texture1D.width     = desc.Width;
+            texDesc.texture1D.layers    = desc.ArraySize;
+        }
+        break;
+
+        case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
+        {
+            /* Query descriptor from 2D texture */
+            D3D11_TEXTURE2D_DESC desc;
+            hwTex.tex2D->GetDesc(&desc);
+
+            texDesc.format              = D3D11Types::Unmap(desc.Format);
+            texDesc.texture2D.width     = desc.Width;
+            texDesc.texture2D.height    = desc.Height;
+            texDesc.texture2D.layers    = desc.ArraySize;
+
+            if (texDesc.type == TextureType::TextureCube || texDesc.type == TextureType::TextureCubeArray)
+                texDesc.textureCube.layers /= 6;
+            else if (texDesc.type == TextureType::Texture2DMS || texDesc.type == TextureType::Texture2DMSArray)
+                texDesc.texture2DMS.samples = desc.SampleDesc.Count;
+        }
+        break;
+
+        case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
+        {
+            /* Query descriptor from 3D texture */
+            D3D11_TEXTURE3D_DESC desc;
+            hwTex.tex3D->GetDesc(&desc);
+
+            texDesc.format              = D3D11Types::Unmap(desc.Format);
+            texDesc.texture3D.width     = desc.Width;
+            texDesc.texture3D.height    = desc.Height;
+            texDesc.texture3D.depth     = desc.Depth;
+        }
+        break;
+    }
+
+    return texDesc;
 }
 
 static ComPtr<ID3D11Texture1D> DXCreateTexture1D(

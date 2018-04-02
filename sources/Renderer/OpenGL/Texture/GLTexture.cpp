@@ -65,6 +65,54 @@ Gs::Vector3ui GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
     };
 }
 
+TextureDescriptor GLTexture::QueryDesc() const
+{
+    TextureDescriptor desc;
+
+    desc.type = GetType();
+
+    /* Query hardware texture format and size */
+    GLint internalFormat = 0, texSize[3] = { 0 };
+
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* Query texture attributes directly using DSA */
+        glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+        glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_WIDTH, &texSize[0]);
+        glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
+        glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_DEPTH, &texSize[2]);
+    }
+    else
+    #endif
+    {
+        /* Push currently bound texture onto stack to restore it after query */
+        GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(GetType()));
+        {
+            /* Bind texture and query attributes */
+            GLStateManager::active->BindTexture(*this);
+            auto target = GLTypes::Map(GetType());
+            glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+            glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &texSize[0]);
+            glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &texSize[1]);
+            glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH, &texSize[2]);
+        }
+        GLStateManager::active->PopBoundTexture();
+    }
+
+    /* Transform data from OpenGL to LLGL */
+    GLTypes::Unmap(desc.format, static_cast<GLenum>(internalFormat));
+
+    desc.texture3D.width    = static_cast<std::uint32_t>(texSize[0]);
+    desc.texture3D.height   = static_cast<std::uint32_t>(texSize[1]);
+    desc.texture3D.depth    = static_cast<std::uint32_t>(texSize[2]);
+
+    if (desc.type == TextureType::TextureCube || desc.type == TextureType::TextureCubeArray)
+        desc.texture3D.depth /= 6;
+
+    return desc;
+}
+
 void GLTexture::Recreate()
 {
     /* Delete previous texture and create a new one */

@@ -83,6 +83,16 @@ Gs::Vector3ui D3D12Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
     return size;
 }
 
+TextureDescriptor D3D12Texture::QueryDesc() const
+{
+    /* Setup texture descriptor */
+    TextureDescriptor desc;
+
+    //todo
+
+    return desc;
+}
+
 void D3D12Texture::UpdateSubresource(
     ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, D3D12_SUBRESOURCE_DATA& subresourceData)
 {

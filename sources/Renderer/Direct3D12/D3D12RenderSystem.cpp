@@ -250,16 +250,6 @@ void D3D12RenderSystem::Release(TextureArray& textureArray)
     //RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
-TextureDescriptor D3D12RenderSystem::QueryTextureDescriptor(const Texture& texture)
-{
-    /* Setup texture descriptor */
-    TextureDescriptor desc;
-
-    //todo
-
-    return desc;
-}
-
 void D3D12RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
 {
     //todo...

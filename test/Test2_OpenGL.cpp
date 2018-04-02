@@ -285,7 +285,7 @@ int main()
         }
         //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
 
-        auto textureQueryDesc = renderer->QueryTextureDescriptor(texture);
+        auto textureQueryDesc = texture.QueryDesc();
 
         // Create render target
         LLGL::RenderTarget* renderTarget = nullptr;
