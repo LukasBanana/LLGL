@@ -47,6 +47,8 @@ class GLShader : public Shader
 
     private:
 
+        bool QueryCompileStatus() const;
+
         GLuint              id_ = 0;
 
         StreamOutputFormat  streamOutputFormat_;

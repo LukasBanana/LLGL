@@ -301,16 +301,34 @@ class LLGL_EXPORT RenderSystem
         \param[in] mipLevel Specifies the MIP-level from which to read the image data.
         \param[in] imageFormat Specifies the output image format.
         \param[in] dataType Specifies the output data type.
-        \param[out] buffer Specifies the output image buffer. This must be a pointer to a memory block, which is large enough to fit all the image data.
-        \remarks Depending on the image format, data type, and texture size, the output image container must be allocated with enough memory size.
+        \param[out] data Specifies the output image data buffer. This must be a pointer to a memory block with at least 'dataSize' bytes. This must not be null.
+        \param[in] dataSize Specifies the size (in bytes) of the output data buffer.
+        \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
         The "QueryTextureDescriptor" function can be used to determine the texture dimensions.
         \code
-        std::vector<LLGL::ColorRGBAub> image(textureWidth*textureHeight);
-        renderSystem->ReadTexture(texture, 0, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, image.data());
+        // Query texture size attribute
+        auto textureDesc = renderer->QueryTextureDescriptor();
+
+        // Allocate image buffer with elements in all dimensions
+        std::vector<LLGL::ColorRGBAub> image(textureDesc.texture3D.width * textureDesc.texture3D.height * textureDesc.texture3D.depth);
+
+        // Read texture data
+        renderSystem->ReadTexture(
+            texture,                                // Texture whose image content is to be read
+            0,                                      // Highest MIP-map level
+            LLGL::ImageFormat::RGBA,                // RGBA image format, since we used LLGL::ColorRGBAub
+            LLGL::DataType::UInt8,                  // 8-bit unsigned integral data type: <std::uint8_t> or <unsigned char>
+            image.data(),                           // Output image buffer
+            image.size()*sizeof(LLGL::ColorRGBAub)  // Image buffer size: number of color elements and size of each color element
+        );
         \endcode
+        \note The behavior is undefined if 'data' points to an invalid buffer,
+        or 'data' points to a buffer that is smaller than specified by 'dataSize',
+        or 'dataSize' is less than the required size (can be determined by 'QueryTextureDescriptor').
+        \throws std::invalid_argument If 'data' is null.
         \see QueryTextureDescriptor
         */
-        virtual void ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer) = 0;
+        virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) = 0;
 
         /**
         \brief Generates all MIP-maps for the specified texture.

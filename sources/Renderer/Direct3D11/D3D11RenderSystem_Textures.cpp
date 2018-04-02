@@ -234,9 +234,15 @@ void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescripto
     UpdateGenericTexture(texture, subTextureDesc.mipLevel, 0, position, size, imageDesc);
 }
 
-void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer)
+static void ValidateImageDataSize(std::size_t dataSize, std::size_t requiredDataSize)
 {
-    LLGL_ASSERT_PTR(buffer);
+    if (dataSize < requiredDataSize)
+        throw std::invalid_argument("output image data buffer too small for texture read operation");
+}
+
+void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize)
+{
+    LLGL_ASSERT_PTR(data);
     auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
 
     /* Create a copy of the hardware texture with CPU read access */
@@ -258,6 +264,13 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageF
 
     if (srcTexFormat.format != imageFormat || srcTexFormat.dataType != dataType)
     {
+        /* Determine destination image size */
+        auto dstPitch       = DataTypeSize(dataType) * ImageFormatSize(imageFormat);
+        auto dstImageSize   = (size.x*size.y*size.z * dstPitch);
+
+        /* Validate input size */
+        ValidateImageDataSize(dataSize, dstImageSize);
+
         /* Convert mapped data into requested format */
         auto tempData = ConvertImageBuffer(
             srcTexFormat.format, srcTexFormat.dataType,
@@ -267,14 +280,15 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageF
         );
 
         /* Copy temporary data into output buffer */
-        auto dstPitch       = DataTypeSize(dataType) * ImageFormatSize(imageFormat);
-        auto dstImageSize   = (size.x*size.y*size.z * dstPitch);
-        ::memcpy(buffer, tempData.get(), dstImageSize);
+        ::memcpy(data, tempData.get(), dstImageSize);
     }
     else
     {
+        /* Validate input size */
+        ValidateImageDataSize(dataSize, srcImageSize);
+
         /* Copy mapped data directly into the output buffer */
-        ::memcpy(buffer, mappedSubresource.pData, srcImageSize);
+        ::memcpy(data, mappedSubresource.pData, srcImageSize);
     }
 
     /* Unmap resource */

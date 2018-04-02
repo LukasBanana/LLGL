@@ -265,9 +265,9 @@ void D3D12RenderSystem::WriteTexture(Texture& texture, const SubTextureDescripto
     //todo...
 }
 
-void D3D12RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer)
+void D3D12RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize)
 {
-    LLGL_ASSERT_PTR(buffer);
+    LLGL_ASSERT_PTR(data);
 
     //todo
 }

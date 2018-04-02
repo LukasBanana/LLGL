@@ -259,17 +259,31 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor&
     instance_->WriteTexture(textureDbg.instance, subTextureDesc, imageDesc);
 }
 
-void DbgRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer)
+void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize)
 {
     auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+
+        /* Validate MIP-level */
         DebugMipLevelLimit(mipLevel, textureDbg.mipLevels);
+
+        /* Validate output data size */
+        const auto requiredDataSize =
+        (
+            textureDbg.desc.texture3D.width *
+            textureDbg.desc.texture3D.height *
+            textureDbg.desc.texture3D.depth *
+            ImageFormatSize(imageFormat) *
+            DataTypeSize(dataType)
+        );
+
+        DebugTextureImageDataSize(dataSize, requiredDataSize);
     }
     
-    instance_->ReadTexture(textureDbg.instance, mipLevel, imageFormat, dataType, buffer);
+    instance_->ReadTexture(textureDbg.instance, mipLevel, imageFormat, dataType, data, dataSize);
 }
 
 void DbgRenderSystem::GenerateMips(Texture& texture)
@@ -449,14 +463,26 @@ void DbgRenderSystem::DebugBufferSize(std::uint64_t bufferSize, std::size_t data
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds");
 }
 
-void DbgRenderSystem::DebugMipLevelLimit(int mipLevel, int mipLevelCount)
+void DbgRenderSystem::DebugMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount)
 {
     if (mipLevel >= mipLevelCount)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "mip level out of bounds (" + std::to_string(mipLevel) +
-            " specified but limit is " + std::to_string(mipLevelCount - 1) + ")"
+            " specified but limit is " + std::to_string(mipLevelCount > 0 ? mipLevelCount - 1 : 0) + ")"
+        );
+    }
+}
+
+void DbgRenderSystem::DebugTextureImageDataSize(std::uint32_t dataSize, std::uint32_t requiredDataSize)
+{
+    if (dataSize < requiredDataSize)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "image data size too small for texture (" + std::to_string(dataSize) +
+            " specified but required is " + std::to_string(requiredDataSize) + ")"
         );
     }
 }

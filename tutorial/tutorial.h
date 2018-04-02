@@ -649,7 +649,7 @@ public:
 
         // Read texture image data
         std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.x*texSize.y);
-        renderSys.ReadTexture(texture, mipLevel, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, imageBuffer.data());
+        renderSys.ReadTexture(texture, mipLevel, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, imageBuffer.data(), imageBuffer.size() * sizeof(LLGL::ColorRGBAub));
 
         // Save image data to file (using STBI library, see https://github.com/nothings/stb)
         if (!stbi_write_png(filename.c_str(), texSize.x, texSize.y, 4, imageBuffer.data(), texSize.x*4))

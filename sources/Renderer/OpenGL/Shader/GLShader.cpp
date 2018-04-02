@@ -41,10 +41,7 @@ bool GLShader::Compile(const std::string& sourceCode, const ShaderDescriptor& sh
     streamOutputFormat_ = shaderDesc.streamOutput.format;
 
     /* Query compilation status */
-    GLint status = 0;
-    glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
-
-    return (status != GL_FALSE);
+    return QueryCompileStatus();
 }
 
 bool GLShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
@@ -63,10 +60,7 @@ bool GLShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor
         streamOutputFormat_ = shaderDesc.streamOutput.format;
 
         /* Query compilation status */
-        GLint status = 0;
-        glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
-
-        return (status != GL_FALSE);
+        return QueryCompileStatus();
     }
     #endif
     return false;
@@ -113,6 +107,18 @@ bool GLShader::MoveStreamOutputFormat(StreamOutputFormat& streamOutputFormat)
         return true;
     }
     return false;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool GLShader::QueryCompileStatus() const
+{
+    GLint status = 0;
+    glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
+    return (status != GL_FALSE);
 }
 
 

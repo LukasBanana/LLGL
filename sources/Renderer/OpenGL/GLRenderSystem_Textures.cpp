@@ -208,26 +208,37 @@ void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& 
     }
 }
 
-void GLRenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer)
+void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize)
 {
-    LLGL_ASSERT_PTR(buffer);
+    LLGL_ASSERT_PTR(data);
 
     auto& textureGL = LLGL_CAST(const GLTexture&, texture);
 
     /* Read image data from texture */
-    #if 0
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
-        //glGetTextureImage(textureGL.GetID(), mipLevel, GLTypes::Map(imageFormat), GLTypes::Map(dataType), bufferSize, buffer);
+        glGetTextureImage(
+            textureGL.GetID(),
+            static_cast<GLint>(mipLevel),
+            GLTypes::Map(imageFormat),
+            GLTypes::Map(dataType),
+            static_cast<GLsizei>(dataSize),
+            data
+        );
     }
     else
-    #endif
     #endif
     {
         /* Bind texture and read image data from texture */
         GLStateManager::active->BindTexture(textureGL);
-        glGetTexImage(GLTypes::Map(textureGL.GetType()), mipLevel, GLTypes::Map(imageFormat), GLTypes::Map(dataType), buffer);
+        glGetTexImage(
+            GLTypes::Map(textureGL.GetType()),
+            static_cast<GLint>(mipLevel),
+            GLTypes::Map(imageFormat),
+            GLTypes::Map(dataType),
+            data
+        );
     }
 }
 

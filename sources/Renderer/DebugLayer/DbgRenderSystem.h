@@ -81,7 +81,7 @@ class DbgRenderSystem : public RenderSystem
         
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
 
-        void ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer) override;
+        void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) override;
 
         void GenerateMips(Texture& texture) override;
 
@@ -130,7 +130,8 @@ class DbgRenderSystem : public RenderSystem
     private:
 
         void DebugBufferSize(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
-        void DebugMipLevelLimit(int mipLevel, int mipLevelCount);
+        void DebugMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
+        void DebugTextureImageDataSize(std::uint32_t dataSize, std::uint32_t requiredDataSize);
 
         void DebugTextureDescriptor(const TextureDescriptor& desc);
         void DebugTextureSize(std::uint32_t size);
