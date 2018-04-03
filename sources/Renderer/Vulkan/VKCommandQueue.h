@@ -13,6 +13,7 @@
 #include "Vulkan.h"
 #include "VKPtr.h"
 #include "VKCore.h"
+#include "RenderState/VKFence.h"
 
 
 namespace LLGL
@@ -43,6 +44,8 @@ class VKCommandQueue : public CommandQueue
 
         VkDevice    device_;
         VkQueue     graphicsQueue_  = VK_NULL_HANDLE;
+
+        VKFence     globalFence_; // global fence used for "WaitForFinish" function
 
 };
 

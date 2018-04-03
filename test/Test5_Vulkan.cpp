@@ -221,7 +221,7 @@ int main()
         // Set clear color
         commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
 
-        auto fence = renderer->CreateFence();
+        //auto fence = renderer->CreateFence();
 
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
@@ -275,10 +275,9 @@ int main()
 
             context->Present();
 
-            #if 1//TODO: currently required for "SetConstantBuffer" to work
+            #if 1
             // Wait for command buffer to complete
-            queue->Submit(*fence);
-            queue->WaitForFence(*fence, ~0);
+            queue->WaitForFinish();
             #endif
 
             // Evaluate query
