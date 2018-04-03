@@ -55,8 +55,7 @@ static void Convert(VkDescriptorPoolSize& dst, const LayoutBinding& src)
 VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc) :
     device_              { device                               },
     pipelineLayout_      { device, vkDestroyPipelineLayout      },
-    descriptorSetLayout_ { device, vkDestroyDescriptorSetLayout },
-    descriptorPool_      { device, vkDestroyDescriptorPool      }
+    descriptorSetLayout_ { device, vkDestroyDescriptorSetLayout }
 {
     /* Initialize all descriptor-set layout bindings */
     const auto numBindings = desc.bindings.size();
@@ -92,45 +91,6 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     }
     result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, pipelineLayout_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan pipeline layout");
-
-    #if 1 //TODO: move this to VKResourceViewHeap
-    /* Initialize descriptor pool sizes */
-    std::vector<VkDescriptorPoolSize> poolSizes(numBindings);
-    for (std::size_t i = 0; i < numBindings; ++i)
-        Convert(poolSizes[i], desc.bindings[i]);
-
-    /* Create descriptor pool */
-    VkDescriptorPoolCreateInfo poolCreateInfo;
-    {
-        poolCreateInfo.sType            = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolCreateInfo.pNext            = nullptr;
-        poolCreateInfo.flags            = 0;
-        poolCreateInfo.maxSets          = 1;
-        poolCreateInfo.poolSizeCount    = static_cast<std::uint32_t>(poolSizes.size());
-        poolCreateInfo.pPoolSizes       = poolSizes.data();
-    }
-    result = vkCreateDescriptorPool(device, &poolCreateInfo, nullptr, descriptorPool_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan descriptor pool");
-
-    /* Allocate descriptor set */
-    VkDescriptorSetAllocateInfo allocInfo;
-    {
-        allocInfo.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.pNext                 = nullptr;
-        allocInfo.descriptorPool        = descriptorPool_;
-        allocInfo.descriptorSetCount    = 1;
-        allocInfo.pSetLayouts           = setLayouts;
-    }
-    result = vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet_);
-    VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
-    #endif // /TODO
-}
-
-VKPipelineLayout::~VKPipelineLayout()
-{
-    //INFO: is automatically deleted when pool is deleted
-    /*auto result = vkFreeDescriptorSets(device_, descriptorPool_, 1, &descriptorSet_);
-    VKThrowIfFailed(result, "failed to release Vulkan descriptor sets");*/
 }
 
 

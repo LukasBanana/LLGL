@@ -141,7 +141,7 @@ int main()
         // Create vertex buffer
         auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
 
-        // Create constant data
+        // Create constant buffers
         struct Matrices
         {
             Gs::Matrix4f projection;
@@ -150,8 +150,17 @@ int main()
 
         Gs::RotateFree(matrices.projection, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
 
-        // Create constant buffer
-        auto constBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)), &matrices);
+        auto constBufferMatrices = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)), &matrices);
+
+        struct Colors
+        {
+            LLGL::ColorRGBAf diffuse;
+        }
+        colors;
+
+        colors.diffuse = { 0.0f, 1.0f, 0.0f };
+
+        auto constBufferColors = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(colors)), &colors);
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
@@ -165,7 +174,23 @@ int main()
         }
         layoutDesc.bindings.push_back(layoutBinding);
 
+        #if 0
+        {
+            layoutBinding.startSlot     = 1;
+            layoutBinding.stageFlags    = LLGL::ShaderStageFlags::FragmentStage;
+        }
+        layoutDesc.bindings.push_back(layoutBinding);
+        #endif
+
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
+
+        // Create resource view heap
+        LLGL::ResourceViewHeapDescriptor rsvHeapDesc;
+        {
+            rsvHeapDesc.pipelineLayout  = pipelineLayout;
+            rsvHeapDesc.resourceViews   = { LLGL::ResourceViewDesc(constBufferMatrices)/*, LLGL::ResourceViewDesc(constBufferColors)*/ };
+        }
+        auto resourceViewHeap = renderer->CreateResourceViewHeap(rsvHeapDesc);
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -233,7 +258,8 @@ int main()
             commands->SetGraphicsPipeline(*pipeline);
 
             commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetConstantBuffer(*constBuffer, 0);
+            //commands->SetConstantBuffer(*constBufferMatrices, 0);
+            commands->SetGraphicsResourceViewHeap(*resourceViewHeap, 0);
 
             //commands->UpdatePipelineLayout(*pipelineLayout);
 

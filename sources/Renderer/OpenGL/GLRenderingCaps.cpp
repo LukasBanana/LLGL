@@ -170,9 +170,9 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
             {
                 if (auto internalformat = GLTypes::MapOrZero(format))
                 {
-                    GLint params[1];
-                    glGetInternalformativ(GL_TEXTURE_2D, internalformat, GL_INTERNALFORMAT_SUPPORTED, 1, params);
-                    return (params[0] == GL_FALSE);
+                    GLint supported = 0;
+                    glGetInternalformativ(GL_TEXTURE_2D, internalformat, GL_INTERNALFORMAT_SUPPORTED, 1, &supported);
+                    return (supported == GL_FALSE);
                 }
                 return true;
             }

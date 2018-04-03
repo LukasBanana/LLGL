@@ -8,6 +8,9 @@
 #ifdef LLGL_ENABLE_UTILITY
 
 #include <LLGL/Utility.h>
+#include <LLGL/Buffer.h>
+#include <LLGL/Texture.h>
+#include <LLGL/Sampler.h>
 
 
 namespace LLGL
@@ -177,6 +180,48 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const Storage
         desc.flags                      = flags;
         desc.storageBuffer.storageType  = storageType;
         desc.storageBuffer.stride       = stride;
+    }
+    return desc;
+}
+
+/* ----- ResourceViewDescriptor utility functions ----- */
+
+LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Buffer* buffer)
+{
+    ResourceViewDescriptor desc;
+    {
+        switch (buffer->GetType())
+        {
+            case BufferType::Constant:
+                desc.type = ResourceViewType::ConstantBuffer;
+                break;
+            case BufferType::Storage:
+                desc.type = ResourceViewType::StorageBuffer;
+                break;
+            default:
+                break;
+        }
+        desc.buffer = buffer;
+    }
+    return desc;
+}
+
+LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Texture* texture)
+{
+    ResourceViewDescriptor desc;
+    {
+        desc.type       = ResourceViewType::Texture;
+        desc.texture    = texture;
+    }
+    return desc;
+}
+
+LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Sampler* sampler)
+{
+    ResourceViewDescriptor desc;
+    {
+        desc.type       = ResourceViewType::Sampler;
+        desc.sampler    = sampler;
     }
     return desc;
 }

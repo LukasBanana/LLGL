@@ -21,6 +21,7 @@
 #include "Sampler.h"
 #include "SamplerArray.h"
 #include "ResourceViewHeap.h"
+#include "PipelineLayoutFlags.h"
 
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
@@ -294,7 +295,7 @@ class LLGL_EXPORT CommandBuffer
         /* ----- Resource View Heaps ----- */
 
         //TODO: testing for Vulkan renderer
-        virtual void SetResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
+        virtual void SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
         {
             // dummy
         }

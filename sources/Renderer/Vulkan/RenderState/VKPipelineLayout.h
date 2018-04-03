@@ -25,7 +25,6 @@ class VKPipelineLayout : public PipelineLayout
     public:
 
         VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc);
-        ~VKPipelineLayout();
 
         inline VkPipelineLayout Get() const
         {
@@ -37,29 +36,11 @@ class VKPipelineLayout : public PipelineLayout
             return descriptorSetLayout_.Get();
         }
 
-        //TODO: move this to VKResourceViewHeap
-        inline VkDescriptorPool GetDescriptorPool() const
-        {
-            return descriptorPool_.Get();
-        }
-
-        //TODO: move this to VKResourceViewHeap
-        inline VkDescriptorSet GetDescriptorSet() const
-        {
-            return descriptorSet_;
-        }
-
     private:
 
         VkDevice                        device_                 = VK_NULL_HANDLE;
         VKPtr<VkPipelineLayout>         pipelineLayout_;
         VKPtr<VkDescriptorSetLayout>    descriptorSetLayout_;
-
-        //TODO: move this to VKResourceViewHeap
-        #if 1
-        VKPtr<VkDescriptorPool>         descriptorPool_;
-        VkDescriptorSet                 descriptorSet_          = VK_NULL_HANDLE;
-        #endif
 
 };
 

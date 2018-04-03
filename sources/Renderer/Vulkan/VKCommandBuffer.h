@@ -79,7 +79,7 @@ class VKCommandBuffer : public CommandBuffer
 
         /* ----- Resource View Heaps ----- */
 
-        void SetResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
 
         /* ----- Render Targets ----- */
 
@@ -160,10 +160,6 @@ class VKCommandBuffer : public CommandBuffer
         VkImage                         imageDepthStencil_      = VK_NULL_HANDLE;
 
         std::uint32_t                   queuePresentFamily_     = 0;
-
-        VkPipelineLayout                activePipelineLayout_   = VK_NULL_HANDLE;
-        VkDescriptorSet                 activeDescriptorSet_    = VK_NULL_HANDLE;
-        VkDescriptorSet                 boundDescriptorSet_     = VK_NULL_HANDLE;
 
 };
 
