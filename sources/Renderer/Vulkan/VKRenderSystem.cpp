@@ -151,7 +151,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 
     auto stagingDeviceMemory = std::make_shared<VKDeviceMemory>(device_, stagingBuffer.requirements.size, stagingMemoryTypeIndex);
 
-    vkBindBufferMemory(device_, stagingBuffer.buffer, stagingDeviceMemory->Get(), 0);
+    vkBindBufferMemory(device_, stagingBuffer.buffer, stagingDeviceMemory->GetVkDeviceMemory(), 0);
 
     /* Copy initial data to buffer memory */
     if (initialData != nullptr)
@@ -178,7 +178,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     buffer->BindToMemory(device_, deviceMemory, 0);
 
     /* Copy staging buffer into hardware buffer */
-    CopyBuffer(stagingBuffer.buffer, buffer->Get(), static_cast<VkDeviceSize>(desc.size));
+    CopyBuffer(stagingBuffer.buffer, buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
 
     if ((desc.flags & BufferFlags::MapReadWriteAccess) != 0)
     {

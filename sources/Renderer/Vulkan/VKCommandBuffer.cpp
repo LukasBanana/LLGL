@@ -137,7 +137,7 @@ void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
 
-    VkBuffer buffers[] = { bufferVK.Get() };
+    VkBuffer buffers[] = { bufferVK.GetVkBuffer() };
     VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(commandBuffer_, 0, 1, buffers, offsets);
@@ -158,7 +158,7 @@ void VKCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 void VKCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& indexBufferVK = LLGL_CAST(VKIndexBuffer&, buffer);
-    vkCmdBindIndexBuffer(commandBuffer_, indexBufferVK.Get(), 0, indexBufferVK.GetIndexType());
+    vkCmdBindIndexBuffer(commandBuffer_, indexBufferVK.GetVkBuffer(), 0, indexBufferVK.GetIndexType());
 }
 
 void VKCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)

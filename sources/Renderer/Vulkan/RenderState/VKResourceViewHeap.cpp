@@ -156,8 +156,8 @@ void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& 
 
                 /* Initialize buffer information */
                 auto& bufInfo = bufferInfos[numResourceViews];
-
-                bufInfo.buffer  = bufferVK->Get();
+                
+                bufInfo.buffer  = bufferVK->GetVkBuffer();
                 bufInfo.offset  = 0;
                 bufInfo.range   = bufferVK->GetSize();
 

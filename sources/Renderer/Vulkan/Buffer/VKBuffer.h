@@ -45,7 +45,7 @@ class VKBuffer : public Buffer
         void TakeStagingBuffer(VKBufferObject&& buffer, std::shared_ptr<VKDeviceMemory>&& deviceMemory);
 
         // Returns the hardware buffer object.
-        inline VkBuffer Get() const
+        inline VkBuffer GetVkBuffer() const
         {
             return bufferObj_.buffer.Get();
         }
