@@ -158,7 +158,7 @@ int main()
         }
         colors;
 
-        colors.diffuse = { 0.0f, 1.0f, 0.0f };
+        colors.diffuse = { 1.0f, 2.0f, 5.0f };
 
         auto constBufferColors = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(colors)), &colors);
 
@@ -168,15 +168,15 @@ int main()
         LLGL::LayoutBinding layoutBinding;
         {
             layoutBinding.type          = LLGL::ResourceViewType::ConstantBuffer;
-            layoutBinding.startSlot     = 0;
+            layoutBinding.startSlot     = 2;
             layoutBinding.numSlots      = 1;
             layoutBinding.stageFlags    = LLGL::ShaderStageFlags::VertexStage;
         }
         layoutDesc.bindings.push_back(layoutBinding);
 
-        #if 0
+        #if 1
         {
-            layoutBinding.startSlot     = 1;
+            layoutBinding.startSlot     = 5;
             layoutBinding.stageFlags    = LLGL::ShaderStageFlags::FragmentStage;
         }
         layoutDesc.bindings.push_back(layoutBinding);
@@ -188,7 +188,11 @@ int main()
         LLGL::ResourceViewHeapDescriptor rsvHeapDesc;
         {
             rsvHeapDesc.pipelineLayout  = pipelineLayout;
-            rsvHeapDesc.resourceViews   = { LLGL::ResourceViewDesc(constBufferMatrices)/*, LLGL::ResourceViewDesc(constBufferColors)*/ };
+            rsvHeapDesc.resourceViews   =
+            {
+                LLGL::ResourceViewDesc(constBufferMatrices),
+                LLGL::ResourceViewDesc(constBufferColors),
+            };
         }
         auto resourceViewHeap = renderer->CreateResourceViewHeap(rsvHeapDesc);
 

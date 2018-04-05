@@ -52,6 +52,11 @@ static void Convert(VkDescriptorPoolSize& dst, const LayoutBinding& src)
     dst.descriptorCount = src.numSlots;
 }
 
+/*
+TODO:
+maybe move the VkPipelineLayout object into "VKGraphicsPipeline",
+in this case the "PipelineLayout" interface might need a renaming
+*/
 VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const PipelineLayoutDescriptor& desc) :
     device_              { device                               },
     pipelineLayout_      { device, vkDestroyPipelineLayout      },
@@ -91,6 +96,11 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     }
     result = vkCreatePipelineLayout(device, &layoutCreateInfo, nullptr, pipelineLayout_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan pipeline layout");
+
+    /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
+    dstBindings_.reserve(numBindings);
+    for (const auto& binding : desc.bindings)
+        dstBindings_.push_back(binding.startSlot);
 }
 
 

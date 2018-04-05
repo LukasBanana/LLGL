@@ -12,6 +12,7 @@
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
+#include <map>
 
 
 namespace LLGL
@@ -27,17 +28,17 @@ VKResourceViewHeap::VKResourceViewHeap(const VKPtr<VkDevice>& device, const Reso
     if (!pipelineLayoutVK)
         throw std::invalid_argument("failed to create resource view heap due to missing pipeline layout");
 
-    pipelineLayout_ = pipelineLayoutVK->Get();
+    pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
 
     /* Create resource descriptor pool */
     CreateDescriptorPool(desc);
     
     /* Create resource descriptor set for pipeline layout */
-    VkDescriptorSetLayout setLayouts[] = { pipelineLayoutVK->GetDescriptorSetLayout() };
+    VkDescriptorSetLayout setLayouts[] = { pipelineLayoutVK->GetVkDescriptorSetLayout() };
     CreateDescriptorSets(1, setLayouts);
 
     /* Update write descriptors in descriptor set */
-    UpdateDescriptorSets(desc);
+    UpdateDescriptorSets(desc, pipelineLayoutVK->GetDstBindings());
 }
 
 VKResourceViewHeap::~VKResourceViewHeap()
@@ -54,15 +55,53 @@ VKResourceViewHeap::~VKResourceViewHeap()
  * ======= Private: =======
  */
 
+static std::uint32_t AccumDescriptorPoolSizes(
+    VkDescriptorType type,
+    std::vector<VkDescriptorPoolSize>::iterator it,
+    std::vector<VkDescriptorPoolSize>::iterator itEnd)
+{
+    std::uint32_t descriptorCount = it->descriptorCount;
+
+    for (++it; it != itEnd; ++it)
+    {
+        if (it->type == type)
+        {
+            descriptorCount += it->descriptorCount;
+            it->descriptorCount = 0;
+        }
+    }
+
+    return descriptorCount;
+}
+
+static void CompressDescriptorPoolSizes(std::vector<VkDescriptorPoolSize>& poolSizes)
+{
+    /* Accumulate all descriptors of the same type */
+    for (auto it = poolSizes.begin(); it != poolSizes.end(); ++it)
+        it->descriptorCount = AccumDescriptorPoolSizes(it->type, it, poolSizes.end());
+    
+    /* Remove all remaining pool sizes with zero descriptors */
+    RemoveAllFromListIf(
+        poolSizes,
+        [](const VkDescriptorPoolSize& dps)
+        {
+            return (dps.descriptorCount == 0);
+        }
+    );
+}
+
 void VKResourceViewHeap::CreateDescriptorPool(const ResourceViewHeapDescriptor& desc)
 {
     /* Initialize descriptor pool sizes */
     std::vector<VkDescriptorPoolSize> poolSizes(desc.resourceViews.size());
     for (std::size_t i = 0; i < desc.resourceViews.size(); ++i)
     {
-        poolSizes[i].type            = VKTypes::Map(desc.resourceViews[i].type);
-        poolSizes[i].descriptorCount = 1;
+        poolSizes[i].type               = VKTypes::Map(desc.resourceViews[i].type);
+        poolSizes[i].descriptorCount    = 1;
     }
+
+    /* Compress pool sizes by merging equal types with accumulated number of descriptors */
+    CompressDescriptorPoolSizes(poolSizes);
 
     /* Create descriptor pool */
     VkDescriptorPoolCreateInfo poolCreateInfo;
@@ -95,9 +134,9 @@ void VKResourceViewHeap::CreateDescriptorSets(std::uint32_t numSetLayouts, const
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
 }
 
-void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& desc)
+void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings)
 {
-    const auto numResourceViewsMax = desc.resourceViews.size();
+    const auto numResourceViewsMax = std::min(desc.resourceViews.size(), dstBindings.size());
 
     std::vector<VkDescriptorBufferInfo> bufferInfos(numResourceViewsMax);
     std::vector<VkWriteDescriptorSet> writeDescriptors(numResourceViewsMax);
@@ -128,7 +167,7 @@ void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& 
                 writeDesc.sType               = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                 writeDesc.pNext               = nullptr;
                 writeDesc.dstSet              = descriptorSets_[0];//numResourceViews];
-                writeDesc.dstBinding          = 0;
+                writeDesc.dstBinding          = dstBindings[i];
                 writeDesc.dstArrayElement     = 0;
                 writeDesc.descriptorCount     = 1;
                 writeDesc.descriptorType      = VKTypes::Map(rvDesc.type);

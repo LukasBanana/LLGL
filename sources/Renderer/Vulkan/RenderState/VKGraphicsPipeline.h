@@ -27,17 +27,17 @@ class VKGraphicsPipeline : public GraphicsPipeline
 
         VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPass renderPass, const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent);
 
-        inline VkPipeline Get() const
+        inline VkPipeline GetVkPipeline() const
         {
             return pipeline_.Get();
         }
 
-        inline VkPipelineLayout GetPipelineLayout() const
+        inline VkPipelineLayout GetVkPipelineLayout() const
         {
             return pipelineLayout_;
         }
 
-        inline VkDescriptorSet GetDescriptorSet() const
+        inline VkDescriptorSet GetVkDescriptorSet() const
         {
             return descriptorSet_;
         }

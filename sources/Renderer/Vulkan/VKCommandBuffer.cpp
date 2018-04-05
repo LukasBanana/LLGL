@@ -235,10 +235,10 @@ void VKCommandBuffer::SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap
     vkCmdBindDescriptorSets(
         commandBuffer_,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        resourceHeapVK.GetPipelineLayout(),
+        resourceHeapVK.GetVkPipelineLayout(),
         startSlot,
-        static_cast<std::uint32_t>(resourceHeapVK.GetDescriptorSets().size()),
-        resourceHeapVK.GetDescriptorSets().data(),
+        static_cast<std::uint32_t>(resourceHeapVK.GetVkDescriptorSets().size()),
+        resourceHeapVK.GetVkDescriptorSets().data(),
         0,
         nullptr
     );
@@ -273,7 +273,7 @@ void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 void VKCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineVK = LLGL_CAST(VKGraphicsPipeline&, graphicsPipeline);
-    vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineVK.Get());
+    vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineVK.GetVkPipeline());
 }
 
 void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)

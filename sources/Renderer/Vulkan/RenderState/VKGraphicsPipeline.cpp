@@ -27,8 +27,8 @@ VKGraphicsPipeline::VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPa
     if (desc.pipelineLayout)
     {
         auto pipelineLayoutVK = LLGL_CAST(VKPipelineLayout*, desc.pipelineLayout);
-        pipelineLayout_ = pipelineLayoutVK->Get();
-        descriptorSet_ = pipelineLayoutVK->GetDescriptorSet();
+        pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
+        descriptorSet_ = pipelineLayoutVK->GetVkDescriptorSetLayout();
     }
 
     /* Create Vulkan graphics pipeline object */

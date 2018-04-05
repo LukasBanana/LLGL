@@ -27,17 +27,17 @@ class VKResourceViewHeap : public ResourceViewHeap
         VKResourceViewHeap(const VKPtr<VkDevice>& device, const ResourceViewHeapDescriptor& desc);
         ~VKResourceViewHeap();
 
-        inline VkPipelineLayout GetPipelineLayout() const
+        inline VkPipelineLayout GetVkPipelineLayout() const
         {
             return pipelineLayout_;
         }
 
-        inline VkDescriptorPool GetDescriptorPool() const
+        inline VkDescriptorPool GetVkDescriptorPool() const
         {
             return descriptorPool_.Get();
         }
 
-        inline const std::vector<VkDescriptorSet>& GetDescriptorSets() const
+        inline const std::vector<VkDescriptorSet>& GetVkDescriptorSets() const
         {
             return descriptorSets_;
         }
@@ -46,7 +46,7 @@ class VKResourceViewHeap : public ResourceViewHeap
 
         void CreateDescriptorPool(const ResourceViewHeapDescriptor& desc);
         void CreateDescriptorSets(std::uint32_t numSetLayouts, const VkDescriptorSetLayout* setLayouts);
-        void UpdateDescriptorSets(const ResourceViewHeapDescriptor& desc);
+        void UpdateDescriptorSets(const ResourceViewHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings);
 
         VkDevice                        device_         = VK_NULL_HANDLE;
         VkPipelineLayout                pipelineLayout_ = VK_NULL_HANDLE;
