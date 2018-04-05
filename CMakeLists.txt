@@ -219,6 +219,7 @@ file(GLOB FilesRendererGLES3				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES3
 file(GLOB FilesRendererVK					${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
 file(GLOB FilesRendererVKBuffer				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Buffer/*.*)
 file(GLOB FilesRendererVKExt				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Ext/*.*)
+file(GLOB FilesRendererVKMemory				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Memory/*.*)
 file(GLOB FilesRendererVKRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/RenderState/*.*)
 file(GLOB FilesRendererVKShader				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Shader/*.*)
 file(GLOB FilesRendererVKTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Texture/*.*)
@@ -293,6 +294,7 @@ source_group("Sources\\OpenGLES3" FILES ${FilesRendererGLES3})
 source_group("Sources\\Vulkan" FILES ${FilesRendererVK})
 source_group("Sources\\Vulkan\\Buffer" FILES ${FilesRendererVKBuffer})
 source_group("Sources\\Vulkan\\Ext" FILES ${FilesRendererVKExt})
+source_group("Sources\\Vulkan\\Memory" FILES ${FilesRendererVKMemory})
 source_group("Sources\\Vulkan\\RenderState" FILES ${FilesRendererVKRenderState})
 source_group("Sources\\Vulkan\\Shader" FILES ${FilesRendererVKShader})
 source_group("Sources\\Vulkan\\Texture" FILES ${FilesRendererVKTexture})
@@ -362,6 +364,7 @@ set(
 	${FilesRendererVK}
 	${FilesRendererVKBuffer}
 	${FilesRendererVKExt}
+	${FilesRendererVKMemory}
 	${FilesRendererVKRenderState}
 	${FilesRendererVKShader}
 	${FilesRendererVKTexture}

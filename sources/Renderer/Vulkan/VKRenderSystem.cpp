@@ -9,7 +9,7 @@
 #include "VKRenderSystem.h"
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
-#include "Buffer/VKDeviceMemory.h"
+#include "Memory/VKDeviceMemory.h"
 #include "Buffer/VKIndexBuffer.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"

@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Buffer.h>
-#include "VKDeviceMemory.h"
+#include "../Memory/VKDeviceMemory.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <memory>
