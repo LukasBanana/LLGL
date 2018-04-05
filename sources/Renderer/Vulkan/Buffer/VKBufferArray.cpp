@@ -24,7 +24,7 @@ VKBufferArray::VKBufferArray(const BufferType type, std::uint32_t numBuffers, Bu
 
     while (auto next = NextArrayResource<VKBuffer>(numBuffers, bufferArray))
     {
-        buffers_.push_back(next->Get());
+        buffers_.push_back(next->GetVkBuffer());
         offsets_.push_back(0);//next->GetOffset()
     }
 }

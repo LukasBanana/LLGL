@@ -38,7 +38,7 @@ class D3D12CommandQueue : public CommandQueue
 
         /* ----- Extended functions ----- */
 
-        inline ID3D12CommandQueue* GetHardwareQueue() const
+        inline ID3D12CommandQueue* GetDxCommandQueue() const
         {
             return queue_.Get();
         }

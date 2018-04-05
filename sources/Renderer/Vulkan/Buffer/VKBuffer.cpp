@@ -69,7 +69,7 @@ void VKBuffer::BindToMemory(VkDevice device, const std::shared_ptr<VKDeviceMemor
     /* Bind buffer to device memory */
     deviceMemory_ = deviceMemory;
     if (deviceMemory_ != nullptr)
-        vkBindBufferMemory(device, Get(), deviceMemory_->Get(), memoryOffset);
+        vkBindBufferMemory(device, GetVkBuffer(), deviceMemory_->GetVkDeviceMemory(), memoryOffset);
 }
 
 void VKBuffer::TakeStagingBuffer(VKBufferObject&& buffer, std::shared_ptr<VKDeviceMemory>&& deviceMemory)

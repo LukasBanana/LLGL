@@ -16,7 +16,8 @@ namespace LLGL
 
 VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue graphicsQueue) :
     device_        { device        },
-    graphicsQueue_ { graphicsQueue }
+    graphicsQueue_ { graphicsQueue },
+    globalFence_   { device        }
 {
 }
 
@@ -44,7 +45,10 @@ bool VKCommandQueue::WaitForFence(Fence& fence, std::uint64_t timeout)
 
 void VKCommandQueue::WaitForFinish()
 {
-    //todo
+    globalFence_.Reset(device_);
+    vkQueueSubmit(graphicsQueue_, 0, nullptr, globalFence_.GetHardwareFence());
+    globalFence_.Wait(device_, ~0);
+
 }
 
 

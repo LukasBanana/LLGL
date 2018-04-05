@@ -77,6 +77,10 @@ class VKCommandBuffer : public CommandBuffer
         void SetSampler(Sampler& sampler, std::uint32_t layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
+        /* ----- Resource View Heaps ----- */
+
+        void SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
+
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;
@@ -156,10 +160,6 @@ class VKCommandBuffer : public CommandBuffer
         VkImage                         imageDepthStencil_      = VK_NULL_HANDLE;
 
         std::uint32_t                   queuePresentFamily_     = 0;
-
-        VkPipelineLayout                activePipelineLayout_   = VK_NULL_HANDLE;
-        VkDescriptorSet                 activeDescriptorSet_    = VK_NULL_HANDLE;
-        VkDescriptorSet                 boundDescriptorSet_     = VK_NULL_HANDLE;
 
 };
 

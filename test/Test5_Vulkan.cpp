@@ -141,7 +141,7 @@ int main()
         // Create vertex buffer
         auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
 
-        // Create constant data
+        // Create constant buffers
         struct Matrices
         {
             Gs::Matrix4f projection;
@@ -150,22 +150,51 @@ int main()
 
         Gs::RotateFree(matrices.projection, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
 
-        // Create constant buffer
-        auto constBuffer = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)), &matrices);
+        auto constBufferMatrices = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)), &matrices);
+
+        struct Colors
+        {
+            LLGL::ColorRGBAf diffuse;
+        }
+        colors;
+
+        colors.diffuse = { 1.0f, 2.0f, 5.0f };
+
+        auto constBufferColors = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(colors)), &colors);
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
 
         LLGL::LayoutBinding layoutBinding;
         {
-            layoutBinding.type          = LLGL::LayoutBindingType::ConstantBuffer;
-            layoutBinding.startSlot     = 0;
+            layoutBinding.type          = LLGL::ResourceViewType::ConstantBuffer;
+            layoutBinding.startSlot     = 2;
             layoutBinding.numSlots      = 1;
             layoutBinding.stageFlags    = LLGL::ShaderStageFlags::VertexStage;
         }
         layoutDesc.bindings.push_back(layoutBinding);
 
+        #if 1
+        {
+            layoutBinding.startSlot     = 5;
+            layoutBinding.stageFlags    = LLGL::ShaderStageFlags::FragmentStage;
+        }
+        layoutDesc.bindings.push_back(layoutBinding);
+        #endif
+
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
+
+        // Create resource view heap
+        LLGL::ResourceViewHeapDescriptor rsvHeapDesc;
+        {
+            rsvHeapDesc.pipelineLayout  = pipelineLayout;
+            rsvHeapDesc.resourceViews   =
+            {
+                LLGL::ResourceViewDesc(constBufferMatrices),
+                LLGL::ResourceViewDesc(constBufferColors),
+            };
+        }
+        auto resourceViewHeap = renderer->CreateResourceViewHeap(rsvHeapDesc);
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -196,7 +225,7 @@ int main()
         // Set clear color
         commands->SetClearColor({ 0.2f, 0.2f, 0.4f, 1.0f });
 
-        auto fence = renderer->CreateFence();
+        //auto fence = renderer->CreateFence();
 
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
@@ -233,7 +262,8 @@ int main()
             commands->SetGraphicsPipeline(*pipeline);
 
             commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetConstantBuffer(*constBuffer, 0);
+            //commands->SetConstantBuffer(*constBufferMatrices, 0);
+            commands->SetGraphicsResourceViewHeap(*resourceViewHeap, 0);
 
             //commands->UpdatePipelineLayout(*pipelineLayout);
 
@@ -249,10 +279,9 @@ int main()
 
             context->Present();
 
-            #if 1//TODO: currently required for "SetConstantBuffer" to work
+            #if 1
             // Wait for command buffer to complete
-            queue->Submit(*fence);
-            queue->WaitForFence(*fence, ~0);
+            queue->WaitForFinish();
             #endif
 
             // Evaluate query

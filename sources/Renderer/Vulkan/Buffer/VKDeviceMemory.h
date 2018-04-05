@@ -28,7 +28,7 @@ class VKDeviceMemory
         void Unmap(VkDevice device);
 
         // Returns the hardware buffer object.
-        inline VkDeviceMemory Get() const
+        inline VkDeviceMemory GetVkDeviceMemory() const
         {
             return deviceMemory_.Get();
         }

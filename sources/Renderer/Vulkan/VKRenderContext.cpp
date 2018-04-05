@@ -156,6 +156,9 @@ void VKRenderContext::CreatePresentSemaphores()
 
 void VKRenderContext::CreateGpuSurface()
 {
+    /* All previous swap-chains must be destroyed before VkSurfaceKHR can be destroyed */
+    swapChain_.Release();
+
     /* Get hantive handle from context surface */
     NativeHandle nativeHandle;
     GetSurface().GetNativeHandle(&nativeHandle);
