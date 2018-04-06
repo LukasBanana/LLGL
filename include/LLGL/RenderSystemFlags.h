@@ -43,46 +43,56 @@ and SPIR-V version is 500100 (ver. 1.0).
 */
 enum class ShadingLanguage
 {
-    GLSL            = 100000, //!< GLSL (OpenGL Shading Language).
-    GLSL_110        = 100110, //!< GLSL 1.10 (since OpenGL 2.0).
-    GLSL_120        = 100120, //!< GLSL 1.20 (since OpenGL 2.1).
-    GLSL_130        = 100130, //!< GLSL 1.30 (since OpenGL 3.0).
-    GLSL_140        = 100140, //!< GLSL 1.40 (since OpenGL 3.1).
-    GLSL_150        = 100150, //!< GLSL 1.50 (since OpenGL 3.2).
-    GLSL_330        = 100330, //!< GLSL 3.30 (since OpenGL 3.3).
-    GLSL_400        = 100400, //!< GLSL 4.00 (since OpenGL 4.0).
-    GLSL_410        = 100410, //!< GLSL 4.10 (since OpenGL 4.1).
-    GLSL_420        = 100420, //!< GLSL 4.20 (since OpenGL 4.2).
-    GLSL_430        = 100430, //!< GLSL 4.30 (since OpenGL 4.3).
-    GLSL_440        = 100440, //!< GLSL 4.40 (since OpenGL 4.4).
-    GLSL_450        = 100450, //!< GLSL 4.50 (since OpenGL 4.5).
-    GLSL_460        = 100460, //!< GLSL 4.60 (since OpenGL 4.6).
+    GLSL            = (0x10000),        //!< GLSL (OpenGL Shading Language).
+    GLSL_110        = (0x10000 | 110),  //!< GLSL 1.10 (since OpenGL 2.0).
+    GLSL_120        = (0x10000 | 120),  //!< GLSL 1.20 (since OpenGL 2.1).
+    GLSL_130        = (0x10000 | 130),  //!< GLSL 1.30 (since OpenGL 3.0).
+    GLSL_140        = (0x10000 | 140),  //!< GLSL 1.40 (since OpenGL 3.1).
+    GLSL_150        = (0x10000 | 150),  //!< GLSL 1.50 (since OpenGL 3.2).
+    GLSL_330        = (0x10000 | 330),  //!< GLSL 3.30 (since OpenGL 3.3).
+    GLSL_400        = (0x10000 | 400),  //!< GLSL 4.00 (since OpenGL 4.0).
+    GLSL_410        = (0x10000 | 410),  //!< GLSL 4.10 (since OpenGL 4.1).
+    GLSL_420        = (0x10000 | 420),  //!< GLSL 4.20 (since OpenGL 4.2).
+    GLSL_430        = (0x10000 | 430),  //!< GLSL 4.30 (since OpenGL 4.3).
+    GLSL_440        = (0x10000 | 440),  //!< GLSL 4.40 (since OpenGL 4.4).
+    GLSL_450        = (0x10000 | 450),  //!< GLSL 4.50 (since OpenGL 4.5).
+    GLSL_460        = (0x10000 | 460),  //!< GLSL 4.60 (since OpenGL 4.6).
 
-    ESSL            = 200000, //!< ESSL (OpenGL ES Shading Language).
-    ESSL_100        = 200100, //!< ESSL 1.00 (since OpenGL ES 2.0).
-    ESSL_300        = 200300, //!< ESSL 3.00 (since OpenGL ES 3.0).
-    ESSL_310        = 200310, //!< ESSL 3.10 (since OpenGL ES 3.1).
-    ESSL_320        = 200320, //!< ESSL 3.20 (since OpenGL ES 3.2).
+    ESSL            = (0x20000),        //!< ESSL (OpenGL ES Shading Language).
+    ESSL_100        = (0x20000 | 100),  //!< ESSL 1.00 (since OpenGL ES 2.0).
+    ESSL_300        = (0x20000 | 300),  //!< ESSL 3.00 (since OpenGL ES 3.0).
+    ESSL_310        = (0x20000 | 310),  //!< ESSL 3.10 (since OpenGL ES 3.1).
+    ESSL_320        = (0x20000 | 320),  //!< ESSL 3.20 (since OpenGL ES 3.2).
 
-    HLSL            = 300000, //!< HLSL (High Level Shading Language).
-    HLSL_2_0        = 300200, //!< HLSL 2.0 (since Direct3D 9).
-    HLSL_2_0a       = 300201, //!< HLSL 2.0a (since Direct3D 9a).
-    HLSL_2_0b       = 300202, //!< HLSL 2.0b (since Direct3D 9b).
-    HLSL_3_0        = 300300, //!< HLSL 3.0 (since Direct3D 9c).
-    HLSL_4_0        = 300400, //!< HLSL 4.0 (since Direct3D 10).
-    HLSL_4_1        = 300410, //!< HLSL 4.1 (since Direct3D 10.1).
-    HLSL_5_0        = 300500, //!< HLSL 5.0 (since Direct3D 11).
-    HLSL_5_1        = 300510, //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3).
+    HLSL            = (0x30000 | 000),  //!< HLSL (High Level Shading Language).
+    HLSL_2_0        = (0x30000 | 200),  //!< HLSL 2.0 (since Direct3D 9).
+    HLSL_2_0a       = (0x30000 | 201),  //!< HLSL 2.0a (since Direct3D 9a).
+    HLSL_2_0b       = (0x30000 | 202),  //!< HLSL 2.0b (since Direct3D 9b).
+    HLSL_3_0        = (0x30000 | 300),  //!< HLSL 3.0 (since Direct3D 9c).
+    HLSL_4_0        = (0x30000 | 400),  //!< HLSL 4.0 (since Direct3D 10).
+    HLSL_4_1        = (0x30000 | 410),  //!< HLSL 4.1 (since Direct3D 10.1).
+    HLSL_5_0        = (0x30000 | 500),  //!< HLSL 5.0 (since Direct3D 11).
+    HLSL_5_1        = (0x30000 | 510),  //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3).
 
-    Metal           = 400000, //!< Metal Shading Language. \note Not supported yet
-    Metal_1_0       = 400100, //!< Metal 1.0 (since iOS 8.0). \note Not supported yet
-    Metal_1_1       = 400110, //!< Metal 1.1 (since iOS 9.0 and OS X 10.11). \note Not supported yet
-    Metal_1_2       = 400120, //!< Metal 1.2 (since iOS 10.0 and macOS 10.12). \note Not supported yet
+    Metal           = (0x40000),        //!< Metal Shading Language. \note Not supported yet
+    Metal_1_0       = (0x40000 | 100),  //!< Metal 1.0 (since iOS 8.0). \note Not supported yet
+    Metal_1_1       = (0x40000 | 110),  //!< Metal 1.1 (since iOS 9.0 and OS X 10.11). \note Not supported yet
+    Metal_1_2       = (0x40000 | 120),  //!< Metal 1.2 (since iOS 10.0 and macOS 10.12). \note Not supported yet
 
-    SPIRV           = 500000, //!< SPIR-V Shading Language.
-    SPIRV_100       = 500100, //!< SPIR-V 1.0.
+    SPIRV           = (0x50000),        //!< SPIR-V Shading Language.
+    SPIRV_100       = (0x50000 | 100),  //!< SPIR-V 1.0.
 
-    VersionBitmask  = 0x0000fff,
+    /**
+    \brief Bitmask for the version number of each shading language enumeration entry.
+    \remarks Can be used like this:
+    \code
+    // 'versionNo' will have the value 330
+    static const auto versionGLSL330 = static_cast<std::uint32_t>(LLGL::ShadingLanguage::GLSL_330);
+    static const auto versionBitmask = static_cast<std::uint32_t>(LLGL::ShadingLanguage::VersionBitmask);
+    static const auto versionNo      = versionGLSL330 & versionBitmask;
+    \endcode
+    */
+    VersionBitmask  = 0x0000ffff,
 };
 
 //! Screen coordinate system origin enumeration.

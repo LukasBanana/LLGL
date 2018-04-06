@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Surface.h>
-#include <LLGL/RenderContextDescriptor.h>
+#include <LLGL/RenderContextFlags.h>
 #include <memory>
 #include "../RenderState/GLStateManager.h"
 

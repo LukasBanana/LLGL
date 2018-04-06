@@ -12,7 +12,7 @@
 #include "GLState.h"
 #include "../Buffer/GLBuffer.h"
 #include "../Texture/GLTexture.h"
-#include <LLGL/RenderContextFlags.h>
+#include <LLGL/CommandBufferFlags.h>
 #include <array>
 #include <vector>
 #include <stack>
