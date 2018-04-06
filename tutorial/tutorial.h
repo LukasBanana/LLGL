@@ -334,20 +334,14 @@ protected:
             contextDesc.multiSampling.enabled   = (multiSampling > 1);
             contextDesc.multiSampling.samples   = multiSampling;
             
-            #if 0
+            #if defined __APPLE__
+            contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
+            contextDesc.profileOpenGL.majorVersion      = 4;
+            contextDesc.profileOpenGL.minorVersion      = 1;
+            #elif defined __linux__
             contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
             contextDesc.profileOpenGL.majorVersion      = 3;
-            contextDesc.profileOpenGL.minorVersion      = 2;
-            /*contextDesc.debugCallback = [](const std::string& type, const std::string& message)
-            {
-                std::cout << type << " -- " << message << std::endl;
-            };*/
-            #endif
-
-            #ifdef __linux__
-            contextDesc.profileOpenGL.extProfile    = true;
-            contextDesc.profileOpenGL.coreProfile   = true;
-            contextDesc.profileOpenGL.version       = LLGL::OpenGLVersion::OpenGL_3_3;
+            contextDesc.profileOpenGL.minorVersion      = 3;
             #endif
         }
         context = renderer->CreateRenderContext(contextDesc);
