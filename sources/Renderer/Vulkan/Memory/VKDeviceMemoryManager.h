@@ -40,6 +40,9 @@ class VKDeviceMemoryManager
         // Releases the specified device memory block.
         void Release(VKDeviceMemoryRegion* region);
 
+        // Queries the memory details of all chunks.
+        VKDeviceMemoryDetails QueryDetails() const;
+
     private:
 
         // Finds a memory type index for the specified attributes.

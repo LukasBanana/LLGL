@@ -55,6 +55,16 @@ void VKDeviceMemoryManager::Release(VKDeviceMemoryRegion* region)
     }
 }
 
+VKDeviceMemoryDetails VKDeviceMemoryManager::QueryDetails() const
+{
+    VKDeviceMemoryDetails details;
+    {
+        for (const auto& chunk : chunks_)
+            chunk->AccumDetails(details);
+    }
+    return details;
+}
+
 
 /*
  * ======= Private: =======
@@ -75,7 +85,7 @@ VKDeviceMemory* VKDeviceMemoryManager::FindOrAllocChunk(VkDeviceSize allocationS
     /* Search for a suitable chunk */
     for (const auto& chunk : chunks_)
     {
-        if (chunk->GetMaxFreeBlockSize() >= minFreeBlockSize && chunk->GetMemoryTypeIndex() == memoryTypeIndex)
+        if (chunk->GetMaxAllocationSize() >= minFreeBlockSize && chunk->GetMemoryTypeIndex() == memoryTypeIndex)
             return chunk.get();
     }
 
