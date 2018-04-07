@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <memory>
 #include <vector>
+#include <list>
 #include <algorithm>
 #include <set>
 #include <string>
@@ -28,14 +29,14 @@ namespace LLGL
 {
 
 
-//! Alternative to std::make_unique for strict C++11 support.
+// Alternative to std::make_unique for strict C++11 support.
 template <typename T, typename... Args>
 std::unique_ptr<T> MakeUnique(Args&&... args)
 {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-//! Initializes the specified data of basic type of POD structure type with zeros (using ::memset).
+// Initializes the specified data of basic type of POD structure type with zeros (using ::memset).
 template <class T>
 void InitMemory(T& data)
 {
@@ -44,7 +45,7 @@ void InitMemory(T& data)
     ::memset(&data, 0, sizeof(T));
 }
 
-//! Fills the specified container with 'value' (using std::fill).
+// Fills the specified container with 'value' (using std::fill).
 template <typename Container, typename Value>
 void Fill(Container& container, Value&& value)
 {
@@ -138,6 +139,14 @@ SubType* TakeOwnership(std::vector<std::unique_ptr<BaseType>>& objectSet, std::u
     return ref;
 }
 
+template <typename BaseType, typename SubType>
+SubType* TakeOwnership(std::list<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
+{
+    auto ref = object.get();
+    objectSet.emplace_back(std::move(object));
+    return ref;
+}
+
 template <typename T>
 std::string ToHex(T value)
 {
@@ -146,7 +155,7 @@ std::string ToHex(T value)
     return s.str();
 }
 
-/**
+/*
 \brief Returns the next resource from the specified resource array.
 \param[in,out] numResources Specifies the remaining number of resources in the array.
 \param[in,out] resourceArray Pointer to the remaining array of resource pointers.
@@ -162,6 +171,18 @@ TSub* NextArrayResource(std::uint32_t& numResources, TBase* const * & resourceAr
         return LLGL_CAST(TSub*, (*(resourceArray++)));
     }
     return nullptr;
+}
+
+// Returns the adjusted size with the specified alignemnt (T can be UINT or VkDeviceSize for instance).
+template <typename T>
+T GetAlignedSize(T size, T alignment)
+{
+    if (alignment > 1)
+    {
+        const auto alignmentBitmask = alignment - 1;
+        return ((size + alignmentBitmask) & ~alignmentBitmask);
+    }
+    return size;
 }
 
 

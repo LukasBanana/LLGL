@@ -171,7 +171,7 @@ class VKRenderSystem : public RenderSystem
         bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
         bool CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const;
 
-        std::uint32_t FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+        std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
 
         VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
@@ -185,7 +185,7 @@ class VKRenderSystem : public RenderSystem
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 
         QueueFamilyIndices                      queueFamilyIndices_;
-        VkPhysicalDeviceMemoryProperties        memoryPropertiers_;
+        VkPhysicalDeviceMemoryProperties        memoryProperties_;
         VkPhysicalDeviceFeatures                features_;
 
         VkQueue                                 graphicsQueue_          = VK_NULL_HANDLE;

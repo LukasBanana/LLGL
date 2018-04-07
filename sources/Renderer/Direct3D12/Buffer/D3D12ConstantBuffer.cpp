@@ -45,8 +45,8 @@ void D3D12ConstantBuffer::UpdateSubresource(const void* data, UINT bufferSize, U
 void D3D12ConstantBuffer::CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize)
 {
     /* Constant buffers are required to be 256-byte aligned */
-    static const UINT alignment = 255;
-    bufferSize = (bufferSize + alignment) & ~alignment;
+    static const UINT alignment = 256;
+    bufferSize = GetAlignedSize(bufferSize, alignment);
 
     /* Create hardware resource */
     CreateResource(device, bufferSize, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);

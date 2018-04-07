@@ -525,7 +525,7 @@ bool VKRenderSystem::PickPhysicalDevice()
 void VKRenderSystem::QueryDeviceProperties()
 {
     /* Query physical device features and memory propertiers */
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryPropertiers_);
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
     vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
 
     /* Query properties of selected physical device */
@@ -719,14 +719,9 @@ bool VKRenderSystem::CheckDeviceExtensionSupport(VkPhysicalDevice device, const 
     return requiredExtensions.empty();
 }
 
-std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const
 {
-    for (std::uint32_t i = 0; i < memoryPropertiers_.memoryTypeCount; ++i)
-    {
-        if ((typeFilter & (1 << i)) != 0 && (memoryPropertiers_.memoryTypes[i].propertyFlags & properties) == properties)
-            return i;
-    }
-    throw std::runtime_error("failed to find suitable Vulkan memory type");
+    return VKFindMemoryType(memoryProperties_, memoryTypeBits, properties);
 }
 
 VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage)

@@ -7,6 +7,7 @@
 
 #include "VKDeviceMemory.h"
 #include "../VKCore.h"
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
@@ -14,7 +15,10 @@ namespace LLGL
 
 
 VKDeviceMemory::VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size, std::uint32_t memoryTypeIndex) :
-    deviceMemory_ { device, vkFreeMemory }
+    deviceMemory_     { device, vkFreeMemory },
+    size_             { size                 },
+    memoryTypeIndex_  { memoryTypeIndex      },
+    maxFreeBlockSize_ { size                 }
 {
     /* Allocate device memory */
     VkMemoryAllocateInfo allocInfo;
@@ -46,6 +50,57 @@ void* VKDeviceMemory::Map(VkDevice device, VkDeviceSize offset, VkDeviceSize siz
 void VKDeviceMemory::Unmap(VkDevice device)
 {
     vkUnmapMemory(device, deviceMemory_);
+}
+
+VKDeviceMemoryRegion* VKDeviceMemory::Allocate(VkDeviceSize size, VkDeviceSize alignment)
+{
+    /* Adjust size and offset by alignment */
+    auto alignedSize    = GetAlignedSize(size, alignment);
+    auto alignedOffset  = GetAlignedSize(GetNextOffset(), alignment);
+
+    /* Allocate block with aligned size and offset */
+    if (alignedSize <= GetMaxFreeBlockSize())
+        return AllocBlock(alignedSize, alignedOffset);
+    else
+        return nullptr;
+}
+
+void VKDeviceMemory::Release(VKDeviceMemoryRegion* region)
+{
+    //TODO...
+}
+
+bool VKDeviceMemory::IsEmpty() const
+{
+    return blocks_.empty();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+VKDeviceMemoryRegion* VKDeviceMemory::AllocBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset)
+{
+    if (alignedSize + alignedOffset <= GetSize())
+    {
+        /* Update maximal free block size */
+        maxFreeBlockSize_ = GetSize() - (alignedSize + alignedOffset);
+
+        /* Allocate new block */
+        return TakeOwnership(blocks_, MakeUnique<VKDeviceMemoryRegion>(this, alignedSize, alignedOffset, memoryTypeIndex_));
+    }
+    return nullptr;
+}
+
+VkDeviceSize VKDeviceMemory::GetNextOffset() const
+{
+    if (!blocks_.empty())
+    {
+        auto block = blocks_.back().get();
+        return (block->GetOffset() + block->GetSize());
+    }
+    return 0;
 }
 
 
