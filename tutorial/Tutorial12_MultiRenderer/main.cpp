@@ -75,6 +75,7 @@ int main(int argc, char* argv[])
         {
             contextDesc.videoMode.resolution    = { 400, 600 };
             contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor(8);
+            contextDesc.profileOpenGL.contextProfile = LLGL::OpenGLContextProfile::CoreProfile;
         }
         auto contextGL = rendererGL->CreateRenderContext(contextDesc, subWindow0);
         auto contextD3D = rendererD3D->CreateRenderContext(contextDesc, subWindow1);

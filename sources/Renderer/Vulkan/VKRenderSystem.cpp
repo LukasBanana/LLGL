@@ -105,7 +105,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
         (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
     );
 
-    #ifdef TEST_VULKAN_MEMORY_MNGR
+    #if defined TEST_VULKAN_MEMORY_MNGR && 0
 
     auto& mngr = *deviceMemoryMngr_;
 
@@ -204,23 +204,25 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     VkBufferCreateInfo stagingCreateInfo;
     FillBufferCreateInfo(stagingCreateInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
-    VKBufferObject stagingBuffer(device_);
+    VKBufferWithRequirements stagingBuffer { device_ };
     stagingBuffer.Create(device_, stagingCreateInfo);
 
     /* Allocate statging device memory */
-    const auto stagingMemoryTypeIndex = FindMemoryType(
+    auto memoryRegionStaging = deviceMemoryMngr_->Allocate(
+        stagingBuffer.requirements.size,
+        stagingBuffer.requirements.alignment,
         stagingBuffer.requirements.memoryTypeBits,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 
-    auto stagingDeviceMemory = std::make_shared<VKDeviceMemory>(device_, stagingBuffer.requirements.size, stagingMemoryTypeIndex);
-
-    vkBindBufferMemory(device_, stagingBuffer.buffer, stagingDeviceMemory->GetVkDeviceMemory(), 0);
+    memoryRegionStaging->BindBuffer(device_, stagingBuffer.buffer);
 
     /* Copy initial data to buffer memory */
     if (initialData != nullptr)
     {
-        if (auto memory = stagingDeviceMemory->Map(device_, 0, static_cast<VkDeviceSize>(desc.size)))
+        auto stagingDeviceMemory = memoryRegionStaging->GetParentChunk();
+
+        if (auto memory = stagingDeviceMemory->Map(device_, memoryRegionStaging->GetOffset(), static_cast<VkDeviceSize>(desc.size)))
         {
             ::memcpy(memory, initialData, static_cast<size_t>(desc.size));
             stagingDeviceMemory->Unmap(device_);
@@ -232,22 +234,28 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     
     /* Allocate device memory */
     const auto& requirements = buffer->GetRequirements();
-    const auto memoryTypeIndex = FindMemoryType(
+
+    auto memoryRegion = deviceMemoryMngr_->Allocate(
+        requirements.size,
+        requirements.alignment,
         requirements.memoryTypeBits,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
-    auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, memoryTypeIndex);
-
-    buffer->BindToMemory(device_, deviceMemory, 0);
+    buffer->BindToMemory(device_, memoryRegion);
 
     /* Copy staging buffer into hardware buffer */
     CopyBuffer(stagingBuffer.buffer, buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
 
     if ((desc.flags & BufferFlags::MapReadWriteAccess) != 0)
     {
-        /* Store ownershup of staging buffer */
-        buffer->TakeStagingBuffer(std::move(stagingBuffer), std::move(stagingDeviceMemory));
+        /* Store ownership of staging buffer */
+        buffer->TakeStagingBuffer(std::move(stagingBuffer), memoryRegionStaging);
+    }
+    else
+    {
+        /* Release staging buffer */
+        deviceMemoryMngr_->Release(memoryRegionStaging);
     }
 
     return buffer;

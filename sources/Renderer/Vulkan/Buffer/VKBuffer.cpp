@@ -14,28 +14,28 @@ namespace LLGL
 
 
 /*
- * VKBufferObject structure
+ * VKBufferWithRequirements structure
  */
 
-VKBufferObject::VKBufferObject(const VKPtr<VkDevice>& device) :
+VKBufferWithRequirements::VKBufferWithRequirements(const VKPtr<VkDevice>& device) :
     buffer { device, vkDestroyBuffer }
 {
 }
 
-VKBufferObject::VKBufferObject(VKBufferObject&& rhs) :
+VKBufferWithRequirements::VKBufferWithRequirements(VKBufferWithRequirements&& rhs) :
     buffer       { std::move(rhs.buffer) },
     requirements { rhs.requirements      }
 {
 }
 
-VKBufferObject& VKBufferObject::operator = (VKBufferObject&& rhs)
+VKBufferWithRequirements& VKBufferWithRequirements::operator = (VKBufferWithRequirements&& rhs)
 {
     buffer = std::move(rhs.buffer);
     requirements = rhs.requirements;
     return *this;
 }
 
-void VKBufferObject::Create(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo)
+void VKBufferWithRequirements::Create(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo)
 {
     /* Create buffer object */
     auto result = vkCreateBuffer(device, &createInfo, nullptr, buffer.ReleaseAndGetAddressOf());
@@ -45,7 +45,7 @@ void VKBufferObject::Create(const VKPtr<VkDevice>& device, const VkBufferCreateI
     vkGetBufferMemoryRequirements(device, buffer, &requirements);
 }
 
-void VKBufferObject::Release()
+void VKBufferWithRequirements::Release()
 {
     buffer.Release();
 }
@@ -64,18 +64,19 @@ VKBuffer::VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const V
     bufferObj_.Create(device, createInfo);
 }
 
-void VKBuffer::BindToMemory(VkDevice device, const std::shared_ptr<VKDeviceMemory>& deviceMemory, VkDeviceSize memoryOffset)
+void VKBuffer::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
 {
-    /* Bind buffer to device memory */
-    deviceMemory_ = deviceMemory;
-    if (deviceMemory_ != nullptr)
-        vkBindBufferMemory(device, GetVkBuffer(), deviceMemory_->GetVkDeviceMemory(), memoryOffset);
+    if (memoryRegion)
+    {
+        memoryRegion_ = memoryRegion;
+        memoryRegion_->BindBuffer(device, GetVkBuffer());
+    }
 }
 
-void VKBuffer::TakeStagingBuffer(VKBufferObject&& buffer, std::shared_ptr<VKDeviceMemory>&& deviceMemory)
+void VKBuffer::TakeStagingBuffer(VKBufferWithRequirements&& buffer, VKDeviceMemoryRegion* memoryRegionStaging)
 {
     bufferObjStaging_ = std::move(buffer);
-
+    memoryRegionStaging_ = memoryRegionStaging;
 }
 
 
