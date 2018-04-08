@@ -60,6 +60,8 @@ VKDeviceMemoryRegion* VKDeviceMemory::Allocate(VkDeviceSize size, VkDeviceSize a
         auto alignedSize    = GetAlignedSize(size, alignment);
         auto alignedOffset  = GetAlignedSize(GetNextOffset(), alignment);
 
+        #if 0//TESTING
+        
         /* Allocate block with aligned size and offset */
         if (alignedSize + alignedOffset <= GetSize())
             return AllocBlock(alignedSize, alignedOffset);
@@ -67,6 +69,18 @@ VKDeviceMemoryRegion* VKDeviceMemory::Allocate(VkDeviceSize size, VkDeviceSize a
         /* Reuse fragmanted block */
         if (alignedSize <= maxFragmentedBlockSize_)
             return FindReusableBlock(alignedSize, alignment);
+        
+        #else
+
+        /* Reuse fragmanted block */
+        if (alignedSize <= maxFragmentedBlockSize_)
+            return FindReusableBlock(alignedSize, alignment);
+        
+        /* Allocate block with aligned size and offset */
+        if (alignedSize + alignedOffset <= GetSize())
+            return AllocBlock(alignedSize, alignedOffset);
+
+        #endif
     }
     return nullptr;
 }
@@ -100,6 +114,81 @@ void VKDeviceMemory::AccumDetails(VKDeviceMemoryDetails& details) const
     details.maxFragmentedBlockSize  = std::max(details.maxFragmentedBlockSize, maxFragmentedBlockSize_);
 }
 
+#ifdef LLGL_DEBUG
+
+/*
+Prints a single memory region to the output stream.
+Example of 3 consecutive blocks: [0+++++][8++][13++++++]
+Example of 3 fragmented blocks: [0+++++]...[11+].[17++++++]
+*/
+static void PrintDeviceMemoryRegion(std::ostream& s, VKDeviceMemoryRegion& region, VKDeviceMemoryRegion* prevRegion)
+{
+    /* Print space between previous and current region */
+    if (prevRegion)
+    {
+        auto startOffset    = prevRegion->GetOffset() + prevRegion->GetSize();
+        auto endOffset      = region.GetOffset();
+        if (startOffset < endOffset)
+            s << std::string(static_cast<std::size_t>(endOffset - startOffset), '.');
+    }
+    else
+    {
+        auto endOffset = region.GetOffset();
+        if (endOffset > 0)
+            s << std::string(static_cast<std::size_t>(endOffset), '.');
+    }
+
+    /* Print new region */
+    auto n = static_cast<std::size_t>(region.GetSize());
+    if (n > 2)
+    {
+        s << '[';
+
+        auto numStr = std::to_string(region.GetOffset());
+
+        n -= 2;
+        if (numStr.size() <= n)
+        {
+            s << numStr;
+            n -= numStr.size();
+        }
+
+        if (n > 0)
+            s << std::string(n, '+');
+
+        s << ']';
+    }
+    else if (n == 2)
+        s << "[]";
+    else if (n == 1)
+        s << '|';
+}
+
+void VKDeviceMemory::PrintBlocks(std::ostream& s) const
+{
+    VKDeviceMemoryRegion* prevBlock = nullptr;
+    for (const auto& block : blocks_)
+    {
+        if (std::find(fragmentedBlocks_.begin(), fragmentedBlocks_.end(), block.get()) == fragmentedBlocks_.end())
+        {
+            PrintDeviceMemoryRegion(s, *block, prevBlock);
+            prevBlock = block.get();
+        }
+    }
+}
+
+void VKDeviceMemory::PrintFragmentedBlocks(std::ostream& s) const
+{
+    VKDeviceMemoryRegion* prevBlock = nullptr;
+    for (auto block : fragmentedBlocks_)
+    {
+        PrintDeviceMemoryRegion(s, *block, prevBlock);
+        prevBlock = block;
+    }
+}
+
+#endif
+
 
 /*
  * ======= Private: =======
@@ -121,11 +210,32 @@ VKDeviceMemoryRegion* VKDeviceMemory::AllocBlock(VkDeviceSize alignedSize, VkDev
     maxNewBlockSize_ = GetSize() - (alignedSize + alignedOffset);
 
     /* Allocate new block */
-    return TakeOwnership(blocks_, MakeUnique<VKDeviceMemoryRegion>(this, alignedSize, alignedOffset, memoryTypeIndex_));
+    auto block = MakeUnique<VKDeviceMemoryRegion>(this, alignedSize, alignedOffset, memoryTypeIndex_);
+    auto blockRef = block.get();
+
+    /* Add block by insertion sort */
+    if (!blocks_.empty())
+    {
+        for (auto it = blocks_.rbegin(); it != blocks_.rend(); ++it)
+        {
+            if ((*it)->GetOffset() < alignedOffset)
+            {
+                blocks_.insert(it.base(), std::move(block));
+                break;
+            }
+        }
+    }
+    else
+        blocks_.emplace_back(std::move(block));
+
+    return blockRef;
 }
 
 VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize, VkDeviceSize alignment)
 {
+    VKDeviceMemoryRegion* prevBlock = nullptr;
+    VKDeviceMemoryRegion* nextBlock = nullptr;
+
     /* Search for fragmented block that fits the requirement */
     for (auto it = fragmentedBlocks_.begin(); it != fragmentedBlocks_.end(); ++it)
     {
@@ -139,8 +249,39 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
             const bool mustUpdateMaxSize = (block->GetSize() == maxFragmentedBlockSize_);
 
             /* If block can be reused with its entire size, it can be removed from the fragmented blocks */
+            it = fragmentedBlocks_.erase(it);
+            if (it != fragmentedBlocks_.end())
+                nextBlock = *it;
 
-            //TODO...
+            /* Check if block must be split up at the lower part */
+            if (block->GetOffset() < alignedOffset)
+            {
+                /* Allocate fragmented lower block (left to the current block) */
+                auto blockLower = AllocBlock(alignedOffset - block->GetOffset(), block->GetOffset());
+                
+                it = fragmentedBlocks_.insert(it, blockLower);
+                ++it;
+
+                if (prevBlock)
+                    prevBlock->MergeWith(*blockLower);
+            }
+
+            /* Check if block must be split up at the upper part */
+            auto alignedSizeWithOffset = alignedSize + alignedOffset - block->GetOffset();
+            if (alignedSizeWithOffset < block->GetSize())
+            {
+                /* Allocate fragmented upper block (right to the current block) */
+                auto blockUpperSize = block->GetSize() - alignedSizeWithOffset;
+                auto blockUpper     = AllocBlock(blockUpperSize, block->GetOffset() + block->GetSize() - blockUpperSize);
+                
+                fragmentedBlocks_.insert(it, blockUpper);
+
+                if (nextBlock)
+                    blockUpper->MergeWith(*nextBlock);
+            }
+
+            /* Move reused block to new offset and size */
+            block->MoveAt(alignedSize, alignedOffset);
 
             if (mustUpdateMaxSize)
                 UpdateMaxFragmantedBlockSize();
@@ -148,6 +289,8 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
             /* Reuse current block */
             return block;
         }
+
+        prevBlock = block;
     }
 
     /* No reusable block found */
@@ -215,7 +358,7 @@ void VKDeviceMemory::InsertBlockToFragmentsAt(VKDeviceMemoryRegion* region, std:
         }
     }
     /* Try to merge region into upper part: [BLOCK][UPPER] --> [+++UPPER++++] */
-    else if (position > count || !fragmentedBlocks_[position]->MergeWith(*region))
+    else if (position >= count || !fragmentedBlocks_[position]->MergeWith(*region))
     {
         /* Insert new fragmented block: [LOWER]..[BLOCK]..[UPPER] */
         fragmentedBlocks_.insert(fragmentedBlocks_.begin() + position, region);

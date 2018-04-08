@@ -18,6 +18,12 @@
 #include "VKCore.h"
 #include <LLGL/Log.h>
 
+#define TEST_VULKAN_MEMORY_MNGR
+#ifdef TEST_VULKAN_MEMORY_MNGR
+#   include "Memory/VKDeviceMemoryManager.h"
+#   include <iostream>
+#endif
+
 
 namespace LLGL
 {
@@ -86,6 +92,40 @@ VKRenderSystem::VKRenderSystem() :
     QueryDeviceProperties();
     CreateLogicalDevice();
     CreateStagingCommandResources();
+
+    #ifdef TEST_VULKAN_MEMORY_MNGR
+
+    VKDeviceMemoryManager mngr { device_, memoryProperties_ };
+
+    std::uint32_t typeBits = 1665;
+    VkDeviceSize alignment = 1;
+    
+    auto reg0 = mngr.Allocate(8, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg1 = mngr.Allocate(7, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg2 = mngr.Allocate(12, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg3 = mngr.Allocate(5, 16, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg4 = mngr.Allocate(5, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mngr.PrintBlocks(std::cout);
+
+    mngr.Release(reg1);
+    mngr.PrintBlocks(std::cout);
+
+    reg1 = mngr.Allocate(3, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mngr.PrintBlocks(std::cout);
+
+    auto reg5 = mngr.Allocate(4, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mngr.PrintBlocks(std::cout);
+
+    mngr.Release(reg1);
+    mngr.PrintBlocks(std::cout);
+
+    mngr.Release(reg2);
+    mngr.PrintBlocks(std::cout);
+
+    mngr.Release(reg5);
+    mngr.PrintBlocks(std::cout);
+
+    #endif
 }
 
 VKRenderSystem::~VKRenderSystem()

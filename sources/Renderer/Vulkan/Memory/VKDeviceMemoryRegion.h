@@ -29,9 +29,6 @@ class VKDeviceMemoryRegion
 
         void BindBuffer(VkDevice device, VkBuffer buffer);
 
-        // Tries to merge the specified region into this region, and returns true on success.
-        bool MergeWith(VKDeviceMemoryRegion& other);
-
         // Returns the parent device memory chunk.
         inline VKDeviceMemory* GetParentChunk() const
         {
@@ -55,6 +52,16 @@ class VKDeviceMemoryRegion
         {
             return memoryTypeIndex_;
         }
+
+    protected:
+
+        friend class VKDeviceMemory;
+
+        // Tries to merge the specified region into this region, and returns true on success.
+        bool MergeWith(VKDeviceMemoryRegion& other);
+
+        // Sets the new size and offset.
+        void MoveAt(VkDeviceSize alignedSize, VkDeviceSize alignedOffset);
 
     private:
 

@@ -17,6 +17,10 @@
 #include <vector>
 #include <memory>
 
+#ifdef LLGL_DEBUG
+#   include <ostream>
+#endif
+
 
 namespace LLGL
 {
@@ -57,6 +61,13 @@ class VKDeviceMemory
 
         // Accumulates the memory details of this device memory into the output structure.
         void AccumDetails(VKDeviceMemoryDetails& details) const;
+
+        #ifdef LLGL_DEBUG
+
+        void PrintBlocks(std::ostream& s) const;
+        void PrintFragmentedBlocks(std::ostream& s) const;
+
+        #endif
 
         // Returns the hardware buffer object.
         inline VkDeviceMemory GetVkDeviceMemory() const

@@ -65,6 +65,29 @@ VKDeviceMemoryDetails VKDeviceMemoryManager::QueryDetails() const
     return details;
 }
 
+#ifdef LLGL_DEBUG
+
+void VKDeviceMemoryManager::PrintBlocks(std::ostream& s) const
+{
+    std::size_t i = 0;
+    for (const auto& chunk : chunks_)
+    {
+        s << "chunk[" << (i++) << "]:\n";
+        s << "  size             = " << chunk->GetSize() << '\n';
+        s << "  memoryTypeIndex  = " << chunk->GetMemoryTypeIndex() << '\n';
+
+        s << "  blocks           = ";
+        chunk->PrintBlocks(s);
+        s << '\n';
+
+        s << "  fragmentedBlocks = ";
+        chunk->PrintFragmentedBlocks(s);
+        s << '\n';
+    }
+}
+
+#endif
+
 
 /*
  * ======= Private: =======

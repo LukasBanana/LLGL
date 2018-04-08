@@ -27,6 +27,11 @@ void VKDeviceMemoryRegion::BindBuffer(VkDevice device, VkBuffer buffer)
     vkBindBufferMemory(device, buffer, deviceMemory_->GetVkDeviceMemory(), offset_);
 }
 
+
+/*
+ * ======= Protected: =======
+ */
+
 bool VKDeviceMemoryRegion::MergeWith(VKDeviceMemoryRegion& other)
 {
     if (GetParentChunk() == other.GetParentChunk() && GetMemoryTypeIndex() == other.GetMemoryTypeIndex())
@@ -47,6 +52,12 @@ bool VKDeviceMemoryRegion::MergeWith(VKDeviceMemoryRegion& other)
         }
     }
     return false;
+}
+
+void VKDeviceMemoryRegion::MoveAt(VkDeviceSize alignedSize, VkDeviceSize alignedOffset)
+{
+    size_   = alignedSize;
+    offset_ = alignedOffset;
 }
 
 

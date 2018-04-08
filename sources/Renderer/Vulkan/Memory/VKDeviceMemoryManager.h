@@ -43,6 +43,12 @@ class VKDeviceMemoryManager
         // Queries the memory details of all chunks.
         VKDeviceMemoryDetails QueryDetails() const;
 
+        #ifdef LLGL_DEBUG
+
+        void PrintBlocks(std::ostream& s) const;
+
+        #endif
+
     private:
 
         // Finds a memory type index for the specified attributes.
