@@ -24,7 +24,7 @@ VKDeviceMemoryRegion::VKDeviceMemoryRegion(VKDeviceMemory* deviceMemory, VkDevic
 
 void VKDeviceMemoryRegion::BindBuffer(VkDevice device, VkBuffer buffer)
 {
-    vkBindBufferMemory(device, buffer, deviceMemory_->GetVkDeviceMemory(), offset_);
+    vkBindBufferMemory(device, buffer, deviceMemory_->GetVkDeviceMemory(), GetOffset());
 }
 
 
@@ -37,14 +37,14 @@ bool VKDeviceMemoryRegion::MergeWith(VKDeviceMemoryRegion& other)
     if (GetParentChunk() == other.GetParentChunk() && GetMemoryTypeIndex() == other.GetMemoryTypeIndex())
     {
         /* Check if this region is a direct lower part */
-        if (GetOffset() + GetSize() == other.GetOffset())
+        if (GetOffsetWithSize() == other.GetOffset())
         {
             size_ += other.GetSize();
             return true;
         }
 
         /* Check if this region is a direct upper part */
-        if (other.GetOffset() + other.GetSize() == GetOffset())
+        if (other.GetOffsetWithSize() == GetOffset())
         {
             offset_ = other.GetOffset();
             size_ += other.GetSize();

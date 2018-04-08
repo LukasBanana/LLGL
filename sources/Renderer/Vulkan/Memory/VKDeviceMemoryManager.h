@@ -34,6 +34,9 @@ class VKDeviceMemoryManager
 
         VKDeviceMemoryManager(const VKPtr<VkDevice>& device, const VkPhysicalDeviceMemoryProperties& memoryProperties);
 
+        VKDeviceMemoryManager(const VKDeviceMemoryManager&) = delete;
+        VKDeviceMemoryManager& operator = (const VKDeviceMemoryManager&) = delete;
+
         // Allocates a new device memory block of the specified size and with the specified attributes.
         VKDeviceMemoryRegion* Allocate(VkDeviceSize size, VkDeviceSize alignment, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties);
 
@@ -45,7 +48,7 @@ class VKDeviceMemoryManager
 
         #ifdef LLGL_DEBUG
 
-        void PrintBlocks(std::ostream& s) const;
+        void PrintBlocks(std::ostream& s, const std::string& title = "") const;
 
         #endif
 

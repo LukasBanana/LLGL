@@ -27,6 +27,7 @@ class VKDeviceMemoryRegion
 
         VKDeviceMemoryRegion(VKDeviceMemory* deviceMemory, VkDeviceSize alignedSize, VkDeviceSize alignedOffset, std::uint32_t memoryTypeIndex);
 
+        // Binds the specified buffer to this memory region.
         void BindBuffer(VkDevice device, VkBuffer buffer);
 
         // Returns the parent device memory chunk.
@@ -45,6 +46,12 @@ class VKDeviceMemoryRegion
         inline VkDeviceSize GetOffset() const
         {
             return offset_;
+        }
+
+        // Returns the aligned offset with the added size.
+        inline VkDeviceSize GetOffsetWithSize() const
+        {
+            return offset_ + size_;
         }
 
         // Returns the memory type index.

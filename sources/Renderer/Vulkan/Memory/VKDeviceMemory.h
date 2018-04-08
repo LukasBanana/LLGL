@@ -13,7 +13,6 @@
 #include "../VKPtr.h"
 #include <vulkan/vulkan.h>
 #include <cstdint>
-#include <list>
 #include <vector>
 #include <memory>
 
@@ -43,6 +42,12 @@ class VKDeviceMemory
     public:
 
         VKDeviceMemory(const VKPtr<VkDevice>& device, VkDeviceSize size, std::uint32_t memoryTypeIndex);
+
+        VKDeviceMemory(const VKDeviceMemory&) = delete;
+        VKDeviceMemory& operator = (const VKDeviceMemory&) = delete;
+
+        VKDeviceMemory(VKDeviceMemory&&) = default;
+        VKDeviceMemory& operator = (VKDeviceMemory&&) = default;
 
         void* Map(VkDevice device, VkDeviceSize offset, VkDeviceSize size);
         void Unmap(VkDevice device);
@@ -92,8 +97,14 @@ class VKDeviceMemory
         // Returns the next offset after the last block.
         VkDeviceSize GetNextOffset() const;
 
+        // Makes a new device memory block.
+        std::unique_ptr<VKDeviceMemoryRegion> MakeUniqueBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset);
+
         // Allocates a new block.
-        VKDeviceMemoryRegion* AllocBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset);
+        VKDeviceMemoryRegion* AllocAndAppendBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset);
+
+        // Inserts the specified region into the main block list by insertion-sort.
+        VKDeviceMemoryRegion* InsertBlock(std::unique_ptr<VKDeviceMemoryRegion>&& region);
 
         // Tries to find a fragmented block that can be reused.
         VKDeviceMemoryRegion* FindReusableBlock(VkDeviceSize alignedSize, VkDeviceSize alignment);
@@ -102,23 +113,29 @@ class VKDeviceMemory
         void UpdateMaxFragmantedBlockSize();
 
         // Inserts the specified region into the fragmented block list by insertion-sort.
-        void InsertBlockToFragmentsSorted(VKDeviceMemoryRegion* region);
+        void InsertBlockToFragmentsSorted(std::unique_ptr<VKDeviceMemoryRegion>&& region);
 
         // Inserts the specified region into the fragmented block list at the specified position and merges it with surrounding blocks if possible.
-        void InsertBlockToFragmentsAt(VKDeviceMemoryRegion* region, std::size_t position);
+        void InsertBlockToFragmentsAt(std::unique_ptr<VKDeviceMemoryRegion>&& region, std::size_t position);
+
+        // Merges the two fragmented blocks and records the maximal fragmented block size.
+        bool MergeFragmentedBlockWith(VKDeviceMemoryRegion& region, VKDeviceMemoryRegion& appendixRegion);
 
         // Returns the offset after the specified fragmented block.
         VkDeviceSize GetFragmentBlockOffsetEnd(std::size_t position) const;
+
+        // Increases the maximal fragmented block size.
+        void IncMaxFragmentedBlockSize(VkDeviceSize size);
 
         VKPtr<VkDeviceMemory>                               deviceMemory_;
         VkDeviceSize                                        size_                   = 0;
         std::uint32_t                                       memoryTypeIndex_        = 0;
 
         VkDeviceSize                                        maxNewBlockSize_        = 0;
-        std::list<std::unique_ptr<VKDeviceMemoryRegion>>    blocks_;
+        std::vector<std::unique_ptr<VKDeviceMemoryRegion>>  blocks_;
 
         VkDeviceSize                                        maxFragmentedBlockSize_ = 0;
-        std::vector<VKDeviceMemoryRegion*>                  fragmentedBlocks_;
+        std::vector<std::unique_ptr<VKDeviceMemoryRegion>>  fragmentedBlocks_;
 
 };
 

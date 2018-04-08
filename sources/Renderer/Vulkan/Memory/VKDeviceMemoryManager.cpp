@@ -67,12 +67,17 @@ VKDeviceMemoryDetails VKDeviceMemoryManager::QueryDetails() const
 
 #ifdef LLGL_DEBUG
 
-void VKDeviceMemoryManager::PrintBlocks(std::ostream& s) const
+void VKDeviceMemoryManager::PrintBlocks(std::ostream& s, const std::string& title) const
 {
     std::size_t i = 0;
     for (const auto& chunk : chunks_)
     {
-        s << "chunk[" << (i++) << "]:\n";
+        s << "chunk[" << (i++) << "]:";
+        
+        if (!title.empty())
+            s << " \"" << title << '\"';
+
+        s << '\n';
         s << "  size             = " << chunk->GetSize() << '\n';
         s << "  memoryTypeIndex  = " << chunk->GetMemoryTypeIndex() << '\n';
 

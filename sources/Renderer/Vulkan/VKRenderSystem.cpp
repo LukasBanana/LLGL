@@ -18,7 +18,7 @@
 #include "VKCore.h"
 #include <LLGL/Log.h>
 
-#define TEST_VULKAN_MEMORY_MNGR
+//#define TEST_VULKAN_MEMORY_MNGR
 #ifdef TEST_VULKAN_MEMORY_MNGR
 #   include "Memory/VKDeviceMemoryManager.h"
 #   include <iostream>
@@ -100,30 +100,42 @@ VKRenderSystem::VKRenderSystem() :
     std::uint32_t typeBits = 1665;
     VkDeviceSize alignment = 1;
     
-    auto reg0 = mngr.Allocate(8, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg0 = mngr.Allocate(6, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     auto reg1 = mngr.Allocate(7, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     auto reg2 = mngr.Allocate(12, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     auto reg3 = mngr.Allocate(5, 16, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     auto reg4 = mngr.Allocate(5, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout);
+    mngr.PrintBlocks(std::cout, "Allocate: 6, 7, 12, 5 (alignment 16), 5");
+    std::cout << std::endl;
 
     mngr.Release(reg1);
-    mngr.PrintBlocks(std::cout);
+    mngr.PrintBlocks(std::cout, "Release second allocation (7)");
+    std::cout << std::endl;
 
     reg1 = mngr.Allocate(3, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout);
+    mngr.PrintBlocks(std::cout, "Allocate: 3");
+    std::cout << std::endl;
 
     auto reg5 = mngr.Allocate(4, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    mngr.PrintBlocks(std::cout);
+    mngr.PrintBlocks(std::cout, "Allocate: 4");
+    std::cout << std::endl;
 
     mngr.Release(reg1);
-    mngr.PrintBlocks(std::cout);
+    mngr.PrintBlocks(std::cout, "Release previous 3");
+    std::cout << std::endl;
 
     mngr.Release(reg2);
-    mngr.PrintBlocks(std::cout);
+    mngr.PrintBlocks(std::cout, "Release previous 12");
+    std::cout << std::endl;
 
     mngr.Release(reg5);
-    mngr.PrintBlocks(std::cout);
+    mngr.Release(reg4);
+    mngr.PrintBlocks(std::cout, "Release previous 4, 5");
+    std::cout << std::endl;
+
+    reg5 = mngr.Allocate(9, 8, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mngr.PrintBlocks(std::cout, "Allocate: 9 with alignment 8");
+    std::cout << std::endl;
 
     #endif
 }

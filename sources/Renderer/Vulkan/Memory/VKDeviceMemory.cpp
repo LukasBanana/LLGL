@@ -78,7 +78,7 @@ VKDeviceMemoryRegion* VKDeviceMemory::Allocate(VkDeviceSize size, VkDeviceSize a
         
         /* Allocate block with aligned size and offset */
         if (alignedSize + alignedOffset <= GetSize())
-            return AllocBlock(alignedSize, alignedOffset);
+            return AllocAndAppendBlock(alignedSize, alignedOffset);
 
         #endif
     }
@@ -91,7 +91,20 @@ void VKDeviceMemory::Release(VKDeviceMemoryRegion* region)
     {
         /* Increase maximal size of fragmented blocks */
         maxFragmentedBlockSize_ = std::max(maxFragmentedBlockSize_, region->GetSize());
-        InsertBlockToFragmentsSorted(region);
+
+        auto it = std::find_if(
+            blocks_.begin(), blocks_.end(),
+            [region](const std::unique_ptr<VKDeviceMemoryRegion>& entry)
+            {
+                return (entry.get() == region);
+            }
+        );
+
+        if (it != blocks_.end())
+        {
+            InsertBlockToFragmentsSorted(std::move(*it));
+            blocks_.erase(it);
+        }
     }
 }
 
@@ -126,7 +139,7 @@ static void PrintDeviceMemoryRegion(std::ostream& s, VKDeviceMemoryRegion& regio
     /* Print space between previous and current region */
     if (prevRegion)
     {
-        auto startOffset    = prevRegion->GetOffset() + prevRegion->GetSize();
+        auto startOffset    = prevRegion->GetOffsetWithSize();
         auto endOffset      = region.GetOffset();
         if (startOffset < endOffset)
             s << std::string(static_cast<std::size_t>(endOffset - startOffset), '.');
@@ -144,7 +157,7 @@ static void PrintDeviceMemoryRegion(std::ostream& s, VKDeviceMemoryRegion& regio
     {
         s << '[';
 
-        auto numStr = std::to_string(region.GetOffset());
+        auto numStr = std::to_string(region.GetSize());
 
         n -= 2;
         if (numStr.size() <= n)
@@ -169,21 +182,18 @@ void VKDeviceMemory::PrintBlocks(std::ostream& s) const
     VKDeviceMemoryRegion* prevBlock = nullptr;
     for (const auto& block : blocks_)
     {
-        if (std::find(fragmentedBlocks_.begin(), fragmentedBlocks_.end(), block.get()) == fragmentedBlocks_.end())
-        {
-            PrintDeviceMemoryRegion(s, *block, prevBlock);
-            prevBlock = block.get();
-        }
+        PrintDeviceMemoryRegion(s, *block, prevBlock);
+        prevBlock = block.get();
     }
 }
 
 void VKDeviceMemory::PrintFragmentedBlocks(std::ostream& s) const
 {
     VKDeviceMemoryRegion* prevBlock = nullptr;
-    for (auto block : fragmentedBlocks_)
+    for (const auto& block : fragmentedBlocks_)
     {
         PrintDeviceMemoryRegion(s, *block, prevBlock);
-        prevBlock = block;
+        prevBlock = block.get();
     }
 }
 
@@ -196,39 +206,82 @@ void VKDeviceMemory::PrintFragmentedBlocks(std::ostream& s) const
 
 VkDeviceSize VKDeviceMemory::GetNextOffset() const
 {
-    if (!blocks_.empty())
-    {
-        auto block = blocks_.back().get();
-        return (block->GetOffset() + block->GetSize());
-    }
-    return 0;
+    if (blocks_.empty())
+        return 0;
+    else
+        return blocks_.back()->GetOffsetWithSize();
 }
 
-VKDeviceMemoryRegion* VKDeviceMemory::AllocBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset)
+std::unique_ptr<VKDeviceMemoryRegion> VKDeviceMemory::MakeUniqueBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset)
+{
+    return MakeUnique<VKDeviceMemoryRegion>(this, alignedSize, alignedOffset, memoryTypeIndex_);
+}
+
+VKDeviceMemoryRegion* VKDeviceMemory::AllocAndAppendBlock(VkDeviceSize alignedSize, VkDeviceSize alignedOffset)
 {
     /* Update maximal free block size */
     maxNewBlockSize_ = GetSize() - (alignedSize + alignedOffset);
 
+    /* Check if the aligned offset results in a new fragment */
+    const auto nextOffset = GetNextOffset();
+
+    if (nextOffset < alignedOffset)
+    {
+        /*
+        Check if new fragment can be immediately merged with previous fragment:
+        Before: blocks:    [++]........[++++]
+                fragments: ....[++++]
+        After:  blocks:    [++]........[++++]
+                fragments: ....[++++++]
+        */
+        if (!fragmentedBlocks_.empty() && fragmentedBlocks_.back()->GetOffset() == nextOffset)
+        {
+            /* Resize last fragmented block */
+            fragmentedBlocks_.back()->MoveAt(alignedOffset - nextOffset, nextOffset);
+        }
+        else
+        {
+            /* Append new fragmented block at the end */
+            fragmentedBlocks_.push_back(MakeUniqueBlock(alignedOffset - nextOffset, nextOffset));
+        }
+    }
+    else
+    {
+        /* Check if last fragmented block can be replaced by new block */
+        if (!fragmentedBlocks_.empty() && fragmentedBlocks_.back()->GetOffset() == nextOffset)
+        {
+            /* Move fragmented block into main blocks and resize it */
+            auto block = TakeOwnership(blocks_, std::move(fragmentedBlocks_.back()));
+            block->MoveAt(alignedSize, alignedOffset);
+            fragmentedBlocks_.pop_back();
+            return block;
+        }
+    }
+
     /* Allocate new block */
-    auto block = MakeUnique<VKDeviceMemoryRegion>(this, alignedSize, alignedOffset, memoryTypeIndex_);
-    auto blockRef = block.get();
+    return TakeOwnership(blocks_, MakeUniqueBlock(alignedSize, alignedOffset));
+}
+
+VKDeviceMemoryRegion* VKDeviceMemory::InsertBlock(std::unique_ptr<VKDeviceMemoryRegion>&& region)
+{
+    auto regionRef = region.get();
 
     /* Add block by insertion sort */
     if (!blocks_.empty())
     {
         for (auto it = blocks_.rbegin(); it != blocks_.rend(); ++it)
         {
-            if ((*it)->GetOffset() < alignedOffset)
+            if ((*it)->GetOffset() < region->GetOffset())
             {
-                blocks_.insert(it.base(), std::move(block));
+                blocks_.insert(it.base(), std::move(region));
                 break;
             }
         }
     }
     else
-        blocks_.emplace_back(std::move(block));
+        blocks_.emplace_back(std::move(region));
 
-    return blockRef;
+    return regionRef;
 }
 
 VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize, VkDeviceSize alignment)
@@ -239,7 +292,7 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
     /* Search for fragmented block that fits the requirement */
     for (auto it = fragmentedBlocks_.begin(); it != fragmentedBlocks_.end(); ++it)
     {
-        auto block = *it;
+        auto block = it->get();
         
         /* Check if required size plus the additional aligned offset fits into the current block */
         const auto alignedOffset = GetAlignedSize(block->GetOffset(), alignment);
@@ -249,21 +302,23 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
             const bool mustUpdateMaxSize = (block->GetSize() == maxFragmentedBlockSize_);
 
             /* If block can be reused with its entire size, it can be removed from the fragmented blocks */
+            InsertBlock(std::move(*it));
+
             it = fragmentedBlocks_.erase(it);
             if (it != fragmentedBlocks_.end())
-                nextBlock = *it;
+                nextBlock = it->get();
 
             /* Check if block must be split up at the lower part */
             if (block->GetOffset() < alignedOffset)
             {
                 /* Allocate fragmented lower block (left to the current block) */
-                auto blockLower = AllocBlock(alignedOffset - block->GetOffset(), block->GetOffset());
+                auto blockLower = MakeUniqueBlock(alignedOffset - block->GetOffset(), block->GetOffset());
                 
-                it = fragmentedBlocks_.insert(it, blockLower);
-                ++it;
-
-                if (prevBlock)
-                    prevBlock->MergeWith(*blockLower);
+                if (!prevBlock || !MergeFragmentedBlockWith(*prevBlock, *blockLower))
+                {
+                    it = fragmentedBlocks_.insert(it, std::move(blockLower));
+                    ++it;
+                }
             }
 
             /* Check if block must be split up at the upper part */
@@ -272,12 +327,10 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
             {
                 /* Allocate fragmented upper block (right to the current block) */
                 auto blockUpperSize = block->GetSize() - alignedSizeWithOffset;
-                auto blockUpper     = AllocBlock(blockUpperSize, block->GetOffset() + block->GetSize() - blockUpperSize);
+                auto blockUpper     = MakeUniqueBlock(blockUpperSize, block->GetOffsetWithSize() - blockUpperSize);
                 
-                fragmentedBlocks_.insert(it, blockUpper);
-
-                if (nextBlock)
-                    blockUpper->MergeWith(*nextBlock);
+                if (!nextBlock || !MergeFragmentedBlockWith(*blockUpper, *nextBlock))
+                    fragmentedBlocks_.insert(it, std::move(blockUpper));
             }
 
             /* Move reused block to new offset and size */
@@ -300,11 +353,11 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
 void VKDeviceMemory::UpdateMaxFragmantedBlockSize()
 {
     maxFragmentedBlockSize_ = 0;
-    for (auto block : fragmentedBlocks_)
+    for (const auto& block : fragmentedBlocks_)
         maxFragmentedBlockSize_ = std::max(maxFragmentedBlockSize_, block->GetSize());
 }
 
-void VKDeviceMemory::InsertBlockToFragmentsSorted(VKDeviceMemoryRegion* region)
+void VKDeviceMemory::InsertBlockToFragmentsSorted(std::unique_ptr<VKDeviceMemoryRegion>&& region)
 {
     auto offset = region->GetOffset();
     auto count  = fragmentedBlocks_.size();
@@ -331,44 +384,58 @@ void VKDeviceMemory::InsertBlockToFragmentsSorted(VKDeviceMemoryRegion* region)
 
     /* Insert region by insertion-sort of the remaining half-open range [begin, begin + 2) */
     if (begin < count && offset < fragmentedBlocks_[begin]->GetOffset())
-        InsertBlockToFragmentsAt(region, begin);
+        InsertBlockToFragmentsAt(std::move(region), begin);
     else if (begin + 1 < count)
     {
         if (offset < fragmentedBlocks_[begin + 1]->GetOffset())
-            InsertBlockToFragmentsAt(region, begin + 1);
+            InsertBlockToFragmentsAt(std::move(region), begin + 1);
         else
-            InsertBlockToFragmentsAt(region, begin + 2);
+            InsertBlockToFragmentsAt(std::move(region), begin + 2);
     }
     else
-        InsertBlockToFragmentsAt(region, count);
+        InsertBlockToFragmentsAt(std::move(region), count);
 }
 
-void VKDeviceMemory::InsertBlockToFragmentsAt(VKDeviceMemoryRegion* region, std::size_t position)
+void VKDeviceMemory::InsertBlockToFragmentsAt(std::unique_ptr<VKDeviceMemoryRegion>&& region, std::size_t position)
 {
     auto count = fragmentedBlocks_.size();
 
     /* Try to merge region into lower part: [LOWER][BLOCK] --> [+++LOWER++++] */
-    if (position > 0 && fragmentedBlocks_[position - 1]->MergeWith(*region))
+    if (position > 0 && MergeFragmentedBlockWith(*fragmentedBlocks_[position - 1], *region))
     {
         /* Try to merge upper part into lower part: [+++LOWER++++][UPPER] --> [+++++++LOWER+++++++] */
-        if (position < count && fragmentedBlocks_[position - 1]->MergeWith(*fragmentedBlocks_[position]))
+        if (position < count && MergeFragmentedBlockWith(*fragmentedBlocks_[position - 1], *fragmentedBlocks_[position]))
         {
             /* Remove previous upper part after two-phase-merge */
             fragmentedBlocks_.erase(fragmentedBlocks_.begin() + position);
         }
     }
     /* Try to merge region into upper part: [BLOCK][UPPER] --> [+++UPPER++++] */
-    else if (position >= count || !fragmentedBlocks_[position]->MergeWith(*region))
+    else if (position >= count || !MergeFragmentedBlockWith(*fragmentedBlocks_[position], *region))
     {
         /* Insert new fragmented block: [LOWER]..[BLOCK]..[UPPER] */
-        fragmentedBlocks_.insert(fragmentedBlocks_.begin() + position, region);
+        fragmentedBlocks_.insert(fragmentedBlocks_.begin() + position, std::move(region));
     }
+}
+
+bool VKDeviceMemory::MergeFragmentedBlockWith(VKDeviceMemoryRegion& region, VKDeviceMemoryRegion& appendixRegion)
+{
+    if (region.MergeWith(appendixRegion))
+    {
+        IncMaxFragmentedBlockSize(region.GetSize());
+        return true;
+    }
+    return false;
 }
 
 VkDeviceSize VKDeviceMemory::GetFragmentBlockOffsetEnd(std::size_t position) const
 {
-    auto block = fragmentedBlocks_[position];
-    return (block->GetOffset() + block->GetSize());
+    return fragmentedBlocks_[position]->GetOffsetWithSize();
+}
+
+void VKDeviceMemory::IncMaxFragmentedBlockSize(VkDeviceSize size)
+{
+    maxFragmentedBlockSize_ = std::max(maxFragmentedBlockSize_, size);
 }
 
 
