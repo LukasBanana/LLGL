@@ -81,22 +81,21 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Loads a new render system from the specified module.
-        \param[in] moduleName Specifies the name from which the new render system is to be loaded.
-        This denotes a dynamic library (*.dll-files on Windows, *.so-files on Unix systems).
-        If compiled in debug mode, the postfix "D" is appended to the module name.
-        Moreover, the platform dependent file extension is always added automatically
-        as well as the prefix "LLGL_", i.e. a module name "OpenGL" will be
-        translated to "LLGL_OpenGLD.dll", if compiled on Windows in Debug mode.
+        \param[in] renderSystemDesc Specifies the render system descriptor structure. The 'moduleName' member of this strucutre must not be empty.
         \param[in] profiler Optional pointer to a rendering profiler. If this is used, the counters of the profiler must be reset manually.
         This is only supported if LLGL was compiled with the "LLGL_ENABLE_DEBUG_LAYER" flag.
         \param[in] debugger Optional pointer to a rendering debugger.
         This is only supported if LLGL was compiled with the "LLGL_ENABLE_DEBUG_LAYER" flag.
+        \remarks The descriptor structure can be initialized by only the module name like shown in the following example:
+        \code
+        // Load the "OpenGL" render system module
+        auto renderer = LLGL::RenderSystem::Load("OpenGL");
+        \endcode
         \throws std::runtime_error If loading the render system from the specified module failed.
-        \throws std::runtime_error If there is already a loaded instance of a render system
-        (make sure there are no more shared pointer references to the previous render system!)
+        \see RenderSystemDescriptor::moduleName
         */
         static std::unique_ptr<RenderSystem> Load(
-            const std::string& moduleName,
+            const RenderSystemDescriptor& renderSystemDesc,
             RenderingProfiler* profiler = nullptr,
             RenderingDebugger* debugger = nullptr
         );

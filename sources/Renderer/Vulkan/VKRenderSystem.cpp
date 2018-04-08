@@ -18,9 +18,8 @@
 #include "VKCore.h"
 #include <LLGL/Log.h>
 
-//#define TEST_VULKAN_MEMORY_MNGR
+#define TEST_VULKAN_MEMORY_MNGR
 #ifdef TEST_VULKAN_MEMORY_MNGR
-#   include "Memory/VKDeviceMemoryManager.h"
 #   include <iostream>
 #endif
 
@@ -67,23 +66,28 @@ static const std::vector<const char*> g_deviceExtensions
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-VKRenderSystem::VKRenderSystem() :
+VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     instance_            { vkDestroyInstance                        },
     device_              { vkDestroyDevice                          },
     debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
 {
-    //TODO: get application descriptor from client programmer
-    ApplicationDescriptor appDesc;
-    appDesc.applicationName     = "LLGL-App";
-    appDesc.applicationVersion  = 1;
-    appDesc.engineName          = "LLGL";
-    appDesc.engineVersion       = 1;
+    /* Extract optional renderer configuartion */
+    const VulkanRendererConfiguration* rendererConfigVK= nullptr;
+
+    if (renderSystemDesc.rendererConfig != nullptr && renderSystemDesc.rendererConfigSize > 0)
+    {
+        if (renderSystemDesc.rendererConfigSize == sizeof(VulkanRendererConfiguration))
+            rendererConfigVK = reinterpret_cast<const VulkanRendererConfiguration*>(renderSystemDesc.rendererConfig);
+        else
+            throw std::invalid_argument("invalid renderer configuration structure (expected size of 'VulkanRendererConfiguration' structure)");
+    }
 
     #ifdef LLGL_DEBUG
     debugLayerEnabled_ = true;
     #endif
 
-    CreateInstance(appDesc);
+    /* Create Vulkan instance and device objects */
+    CreateInstance(rendererConfigVK != nullptr ? &(rendererConfigVK->application) : nullptr);
     LoadExtensions();
 
     if (!PickPhysicalDevice())
@@ -93,9 +97,17 @@ VKRenderSystem::VKRenderSystem() :
     CreateLogicalDevice();
     CreateStagingCommandResources();
 
+    /* Create device memory manager */
+    deviceMemoryMngr_ = MakeUnique<VKDeviceMemoryManager>(
+        device_,
+        memoryProperties_,
+        (rendererConfigVK != nullptr ? rendererConfigVK->minDeviceMemoryAllocationSize : 1024*1024),
+        (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
+    );
+
     #ifdef TEST_VULKAN_MEMORY_MNGR
 
-    VKDeviceMemoryManager mngr { device_, memoryProperties_ };
+    auto& mngr = *deviceMemoryMngr_;
 
     std::uint32_t typeBits = 1665;
     VkDeviceSize alignment = 1;
@@ -447,18 +459,30 @@ void VKRenderSystem::Release(Fence& fence)
  * ======= Private: =======
  */
 
-void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
+void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc)
 {
-    /* Setup application descriptor */
+    /* Initialize application descriptor */
     VkApplicationInfo appInfo;
     
-    appInfo.sType               = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pNext               = nullptr;
-    appInfo.pApplicationName    = appDesc.applicationName.c_str();
-    appInfo.applicationVersion  = appDesc.applicationVersion;
-    appInfo.pEngineName         = appDesc.engineName.c_str();
-    appInfo.engineVersion       = appDesc.engineVersion;
-    appInfo.apiVersion          = VK_API_VERSION_1_0;
+    appInfo.sType                   = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pNext                   = nullptr;
+
+    if (applicationDesc)
+    {
+        appInfo.pApplicationName    = applicationDesc->applicationName.c_str();
+        appInfo.applicationVersion  = applicationDesc->applicationVersion;
+        appInfo.pEngineName         = applicationDesc->engineName.c_str();
+        appInfo.engineVersion       = applicationDesc->engineVersion;
+    }
+    else
+    {
+        appInfo.pApplicationName    = nullptr;
+        appInfo.applicationVersion  = 0;
+        appInfo.pEngineName         = nullptr;
+        appInfo.engineVersion       = 0;
+    }
+
+    appInfo.apiVersion              = VK_API_VERSION_1_0;
 
     /* Query instance layer properties */
     auto layerProperties = VKQueryInstanceLayerProperties();

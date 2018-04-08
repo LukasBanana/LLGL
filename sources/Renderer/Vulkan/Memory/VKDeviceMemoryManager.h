@@ -32,7 +32,12 @@ class VKDeviceMemoryManager
 
     public:
 
-        VKDeviceMemoryManager(const VKPtr<VkDevice>& device, const VkPhysicalDeviceMemoryProperties& memoryProperties);
+        VKDeviceMemoryManager(
+            const VKPtr<VkDevice>& device,
+            const VkPhysicalDeviceMemoryProperties& memoryProperties,
+            VkDeviceSize minAllocationSize,
+            bool reduceFragmentation
+        );
 
         VKDeviceMemoryManager(const VKDeviceMemoryManager&) = delete;
         VKDeviceMemoryManager& operator = (const VKDeviceMemoryManager&) = delete;
@@ -66,7 +71,9 @@ class VKDeviceMemoryManager
         const VKPtr<VkDevice>&                          device_;
         VkPhysicalDeviceMemoryProperties                memoryProperties_;
 
-        VkDeviceSize                                    minAllocationSize_  = 1024*1024*10;
+        VkDeviceSize                                    minAllocationSize_      = 1024*1024;
+        bool                                            reduceFragmentation_    = false;
+
         std::vector<std::unique_ptr<VKDeviceMemory>>    chunks_;
 
 };

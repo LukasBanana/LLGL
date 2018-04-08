@@ -27,9 +27,10 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
     return "Vulkan";
 }
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
 {
-    return new LLGL::VKRenderSystem();
+    auto desc = reinterpret_cast<const LLGL::RenderSystemDescriptor*>(renderSystemDesc);
+    return new LLGL::VKRenderSystem(*desc);
 }
 
 }

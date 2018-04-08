@@ -14,9 +14,12 @@ namespace LLGL
 {
 
 
-VKDeviceMemoryManager::VKDeviceMemoryManager(const VKPtr<VkDevice>& device, const VkPhysicalDeviceMemoryProperties& memoryProperties) :
-    device_           { device           },
-    memoryProperties_ { memoryProperties }
+VKDeviceMemoryManager::VKDeviceMemoryManager(
+    const VKPtr<VkDevice>& device, const VkPhysicalDeviceMemoryProperties& memoryProperties, VkDeviceSize minAllocationSize, bool reduceFragmentation) :
+        device_              { device              },
+        memoryProperties_    { memoryProperties    },
+        minAllocationSize_   { minAllocationSize   },
+        reduceFragmentation_ { reduceFragmentation }
 {
 }
 

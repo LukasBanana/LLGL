@@ -52,7 +52,7 @@ void VKDeviceMemory::Unmap(VkDevice device)
     vkUnmapMemory(device, deviceMemory_);
 }
 
-VKDeviceMemoryRegion* VKDeviceMemory::Allocate(VkDeviceSize size, VkDeviceSize alignment)
+VKDeviceMemoryRegion* VKDeviceMemory::Allocate(VkDeviceSize size, VkDeviceSize alignment, bool reduceFragmentation)
 {
     if (size > 0 && alignment > 0)
     {
@@ -60,27 +60,26 @@ VKDeviceMemoryRegion* VKDeviceMemory::Allocate(VkDeviceSize size, VkDeviceSize a
         auto alignedSize    = GetAlignedSize(size, alignment);
         auto alignedOffset  = GetAlignedSize(GetNextOffset(), alignment);
 
-        #if 0//TESTING
-        
-        /* Allocate block with aligned size and offset */
-        if (alignedSize + alignedOffset <= GetSize())
-            return AllocBlock(alignedSize, alignedOffset);
+        if (reduceFragmentation)
+        {
+            /* Reuse fragmented block */
+            if (alignedSize <= maxFragmentedBlockSize_)
+                return FindReusableBlock(alignedSize, alignment);
 
-        /* Reuse fragmanted block */
-        if (alignedSize <= maxFragmentedBlockSize_)
-            return FindReusableBlock(alignedSize, alignment);
-        
-        #else
+            /* Allocate block with aligned size and offset */
+            if (alignedSize + alignedOffset <= GetSize())
+                return AllocAndAppendBlock(alignedSize, alignedOffset);
+        }
+        else
+        {
+            /* Allocate block with aligned size and offset */
+            if (alignedSize + alignedOffset <= GetSize())
+                return AllocAndAppendBlock(alignedSize, alignedOffset);
 
-        /* Reuse fragmanted block */
-        if (alignedSize <= maxFragmentedBlockSize_)
-            return FindReusableBlock(alignedSize, alignment);
-        
-        /* Allocate block with aligned size and offset */
-        if (alignedSize + alignedOffset <= GetSize())
-            return AllocAndAppendBlock(alignedSize, alignedOffset);
-
-        #endif
+            /* Reuse fragmented block */
+            if (alignedSize <= maxFragmentedBlockSize_)
+                return FindReusableBlock(alignedSize, alignment);
+        }
     }
     return nullptr;
 }
@@ -298,7 +297,7 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
         const auto alignedOffset = GetAlignedSize(block->GetOffset(), alignment);
         if (alignedSize + alignedOffset - block->GetOffset() <= block->GetSize())
         {
-            /* If this block has the maximum fragmanted block size, this value must be updated */
+            /* If this block has the maximum fragmented block size, this value must be updated */
             const bool mustUpdateMaxSize = (block->GetSize() == maxFragmentedBlockSize_);
 
             /* If block can be reused with its entire size, it can be removed from the fragmented blocks */
@@ -337,7 +336,7 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
             block->MoveAt(alignedSize, alignedOffset);
 
             if (mustUpdateMaxSize)
-                UpdateMaxFragmantedBlockSize();
+                UpdateMaxFragmentedBlockSize();
 
             /* Reuse current block */
             return block;
@@ -350,7 +349,7 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
     return nullptr;
 }
 
-void VKDeviceMemory::UpdateMaxFragmantedBlockSize()
+void VKDeviceMemory::UpdateMaxFragmentedBlockSize()
 {
     maxFragmentedBlockSize_ = 0;
     for (const auto& block : fragmentedBlocks_)

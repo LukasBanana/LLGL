@@ -53,7 +53,7 @@ class VKDeviceMemory
         void Unmap(VkDevice device);
 
         // Tries to allocate a new block within this device memory chunk, and returns null of failure.
-        VKDeviceMemoryRegion* Allocate(VkDeviceSize size, VkDeviceSize alignment);
+        VKDeviceMemoryRegion* Allocate(VkDeviceSize size, VkDeviceSize alignment, bool reduceFragmentation = false);
 
         // Releases the specified block within this device memory chunk.
         void Release(VKDeviceMemoryRegion* region);
@@ -110,7 +110,7 @@ class VKDeviceMemory
         VKDeviceMemoryRegion* FindReusableBlock(VkDeviceSize alignedSize, VkDeviceSize alignment);
 
         // Updates the maximal size of fragmanted blocks.
-        void UpdateMaxFragmantedBlockSize();
+        void UpdateMaxFragmentedBlockSize();
 
         // Inserts the specified region into the fragmented block list by insertion-sort.
         void InsertBlockToFragmentsSorted(std::unique_ptr<VKDeviceMemoryRegion>&& region);

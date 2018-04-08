@@ -64,6 +64,7 @@ struct VideoModeDescriptor
     std::uint32_t   swapChainSize   = 2;        //!< Number of swap-chain buffers. By default 2 (for double-buffering).
 };
 
+//TODO: move this into RenderSystemDescriptor, and make GL context creation part of GLRenderSystem instead of each GLRenderContext instance
 /**
 \brief OpenGL profile descriptor structure.
 \note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.

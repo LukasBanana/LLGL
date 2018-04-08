@@ -217,6 +217,98 @@ struct ApplicationDescriptor
     std::uint32_t   engineVersion;      //!< Version number of the engine or middleware.
 };
 
+/**
+\brief Structure for a Vulkan renderer specific configuration.
+\remarks The nomenclature here is "Renderer" instead of "RenderSystem" since the configuration is renderer specific
+and does not denote a configuration of the entire system.
+*/
+struct VulkanRendererConfiguration
+{
+    /**
+    \brief Application descriptor used when a Vulkan debug or validation layer is enabled.
+    \see ApplicationDescriptor
+    */
+    ApplicationDescriptor   application;
+
+    /**
+    \brief Minimal allocation size for a device memory chunk. By default 1024*1024, i.e. 1 MB of VRAM.
+    \remarks Vulkan only allows a limit set of device memory objects (e.g. 4096 on a GPU with 8 GB of VRAM).
+    This member specifies the minimum size used for hardware memory allocation of such a memory chunk.
+    The Vulkan render system automatically manages sub-region allocation and defragmentation.
+    */
+    std::uint64_t           minDeviceMemoryAllocationSize   = 1024*1024;
+
+    /**
+    \brief Specifies whether fragmentation of the device memory blocks shall be kept low. By default false.
+    \remarks If this is true, each buffer and image allocation first tries to find a reusable device memory block
+    within a single VkDeviceMemory chunk (which might be potentially slower).
+    Whenever a VkDeviceMemory chunk is full, the memory manager tries to reduce fragmentation anyways.
+    */
+    bool                    reduceDeviceMemoryFragmentation = false;
+};
+
+/**
+\brief Render system descriptor structure.
+\remarks This can be used for some refinements of a specific renderer, e.g. to configure the Vulkan device memory manager.
+\see RenderSystem::Load
+*/
+struct RenderSystemDescriptor
+{
+    RenderSystemDescriptor() = default;
+    RenderSystemDescriptor(const RenderSystemDescriptor&) = default;
+    RenderSystemDescriptor& operator = (const RenderSystemDescriptor&) = default;
+
+    inline RenderSystemDescriptor(const std::string& moduleName) :
+        moduleName { moduleName }
+    {
+    }
+
+    inline RenderSystemDescriptor(const char* moduleName) :
+        moduleName { moduleName }
+    {
+    }
+
+    /**
+    \brief Specifies the name from which the new render system is to be loaded.
+    \remarks This denotes a shared library (*.dll-files on Windows, *.so-files on Unix systems).
+    If compiled in debug mode, the postfix "D" is appended to the module name.
+    Moreover, the platform dependent file extension is always added automatically
+    as well as the prefix "LLGL_", i.e. a module name "OpenGL" will be
+    translated to "LLGL_OpenGLD.dll", if compiled on Windows in Debug mode.
+    */
+    std::string moduleName;
+
+    /**
+    \brief Optional raw pointer to a renderer specific configuration structure.
+    \remarks This can be used to pass some refinement configurations to the render system when the module is loaded.
+    Example usage (for Vulkan renderer):
+    \code
+    // Initialize Vulkan specific configurations (e.g. always allocate at least 1GB of VRAM for each device memory chunk).
+    VulkanRendererConfiguration config;
+    config.minDeviceMemoryAllocationSize = 1024*1024*1024;
+
+    // Initialize render system descriptor
+    RenderSystemDescriptor rendererDesc;
+    rendererDesc.moduleName         = "Vulkan";
+    rendererDesc.rendererConfig     = &config;
+    rendererDesc.rendererConfigSize = sizeof(config);
+
+    // Load Vulkan render system
+    auto renderer = LLGL::RenderSystem::Load(rendererDesc);
+    \endcode
+    \see rendererConfigSize
+    \see VulkanRendererConfiguration
+    */
+    const void* rendererConfig      = nullptr;
+
+    /**
+    \brief Specifies the size (in bytes) of the strucutre where the 'rendererConfig' member points to (use 'sizeof' with the respective structure). By default 0.
+    \remarks If 'rendererConfig' is null then this member is ignored.
+    \see rendererConfig
+    */
+    std::size_t rendererConfigSize  = 0;
+};
+
 //! Rendering capabilities structure.
 struct RenderingCaps
 {

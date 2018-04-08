@@ -13,6 +13,7 @@
 #include "Vulkan.h"
 #include "VKPtr.h"
 #include "../ContainerTypes.h"
+#include "Memory/VKDeviceMemoryManager.h"
 
 #include "VKCommandQueue.h"
 #include "VKCommandBuffer.h"
@@ -54,7 +55,7 @@ class VKRenderSystem : public RenderSystem
 
         /* ----- Common ----- */
 
-        VKRenderSystem();
+        VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~VKRenderSystem();
 
         /* ----- Render Context ----- */
@@ -156,7 +157,7 @@ class VKRenderSystem : public RenderSystem
 
     private:
 
-        void CreateInstance(const ApplicationDescriptor& appDesc);
+        void CreateInstance(const ApplicationDescriptor* applicationDesc);
         void CreateDebugReportCallback();
         void LoadExtensions();
         bool PickPhysicalDevice();
@@ -194,6 +195,8 @@ class VKRenderSystem : public RenderSystem
         VkCommandBuffer                         stagingCommandBuffer_   = VK_NULL_HANDLE;
 
         bool                                    debugLayerEnabled_      = false;
+
+        std::unique_ptr<VKDeviceMemoryManager>  deviceMemoryMngr_;
 
         /* ----- Hardware object containers ----- */
 

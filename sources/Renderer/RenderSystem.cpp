@@ -108,22 +108,22 @@ static std::string LoadRenderSystemName(Module& module)
     return "";
 }
 
-static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename)
+static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleFilename, const RenderSystemDescriptor& renderSystemDesc)
 {
     /* Load "LLGL_RenderSystem_Alloc" procedure */
-    LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (void));
+    LLGL_PROC_INTERFACE(void*, PFN_RENDERSYSTEM_ALLOC, (const void*));
 
     auto RenderSystem_Alloc = reinterpret_cast<PFN_RENDERSYSTEM_ALLOC>(module.LoadProcedure("LLGL_RenderSystem_Alloc"));
     if (!RenderSystem_Alloc)
         throw std::runtime_error("failed to load \"LLGL_RenderSystem_Alloc\" procedure from module \"" + moduleFilename + "\"");
 
-    return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc());
+    return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc(&renderSystemDesc));
 }
 
 #endif
 
 std::unique_ptr<RenderSystem> RenderSystem::Load(
-    const std::string& moduleName, RenderingProfiler* profiler, RenderingDebugger* debugger)
+    const RenderSystemDescriptor& renderSystemDesc, RenderingProfiler* profiler, RenderingDebugger* debugger)
 {
     #ifdef LLGL_BUILD_STATIC_LIB
 
@@ -160,7 +160,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     #else
 
     /* Load render system module */
-    auto moduleFilename = Module::GetModuleFilename(moduleName);
+    auto moduleFilename = Module::GetModuleFilename(renderSystemDesc.moduleName);
     auto module         = Module::Load(moduleFilename);
 
     /*
@@ -173,7 +173,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
     try
     {
         /* Allocate render system */
-        auto renderSystem   = std::unique_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename));
+        auto renderSystem = std::unique_ptr<RenderSystem>(LoadRenderSystem(*module, moduleFilename, renderSystemDesc));
 
         if (profiler != nullptr || debugger != nullptr)
         {
