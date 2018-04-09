@@ -18,7 +18,7 @@
 #include "VKCore.h"
 #include <LLGL/Log.h>
 
-#define TEST_VULKAN_MEMORY_MNGR
+//#define TEST_VULKAN_MEMORY_MNGR
 #ifdef TEST_VULKAN_MEMORY_MNGR
 #   include <iostream>
 #endif
@@ -105,7 +105,7 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
         (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
     );
 
-    #if defined TEST_VULKAN_MEMORY_MNGR && 0
+    #ifdef TEST_VULKAN_MEMORY_MNGR
 
     auto& mngr = *deviceMemoryMngr_;
 

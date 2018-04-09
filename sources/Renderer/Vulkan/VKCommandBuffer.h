@@ -141,8 +141,8 @@ class VKCommandBuffer : public CommandBuffer
         void CreateCommandBuffers(std::size_t bufferCount);
 
         void BeginClearImage(
-            VkImageMemoryBarrier& clearToPresentBarrier, VkImage image,
-            const VkImageAspectFlags clearFlags, const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil
+            VkImageMemoryBarrier& clearToPresentBarrier, VkImage image, const VkImageAspectFlags clearFlags,
+            const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil
         );
         void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
 
@@ -156,6 +156,7 @@ class VKCommandBuffer : public CommandBuffer
 
         VkRenderPass                    renderPass_             = VK_NULL_HANDLE;
         VkFramebuffer                   framebuffer_            = VK_NULL_HANDLE;
+        VkExtent2D                      framebufferExtent_      = { 0, 0 };
         VkImage                         imageColor_             = VK_NULL_HANDLE;
         VkImage                         imageDepthStencil_      = VK_NULL_HANDLE;
 

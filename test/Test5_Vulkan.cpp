@@ -257,7 +257,7 @@ int main()
             // Render scene
             commands->SetRenderTarget(*context);
 
-            //commands->Clear(LLGL::ClearFlags::ColorDepth);
+            commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             commands->SetGraphicsPipeline(*pipeline);
 

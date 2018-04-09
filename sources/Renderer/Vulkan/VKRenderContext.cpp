@@ -208,8 +208,7 @@ void VKRenderContext::CreateSwapChainRenderPass()
     }
 
     /* Initialize sub-pass descriptor */
-    VkSubpassDescription subpassDesc;
-    InitMemory(subpassDesc);
+    VkSubpassDescription subpassDesc = {};
     {
         subpassDesc.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpassDesc.colorAttachmentCount    = 1;
