@@ -21,6 +21,8 @@ namespace LLGL
 {
 
 
+class VKResourceViewHeap;
+
 class VKCommandBuffer : public CommandBuffer
 {
 
@@ -80,6 +82,7 @@ class VKCommandBuffer : public CommandBuffer
         /* ----- Resource View Heaps ----- */
 
         void SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
 
         /* ----- Render Targets ----- */
 
@@ -145,6 +148,8 @@ class VKCommandBuffer : public CommandBuffer
             const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil
         );
         void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
+
+        void BindResourceViewHeap(VKResourceViewHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t startSlot);
 
         VkDevice                        device_;
         VKPtr<VkCommandPool>            commandPool_;

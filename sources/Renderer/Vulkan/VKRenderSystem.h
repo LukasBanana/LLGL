@@ -35,7 +35,7 @@
 #include "RenderState/VKFence.h"
 #include "RenderState/VKPipelineLayout.h"
 #include "RenderState/VKGraphicsPipeline.h"
-//#include "RenderState/VKComputePipeline.h"
+#include "RenderState/VKComputePipeline.h"
 #include "RenderState/VKResourceViewHeap.h"
 
 #include <string>
@@ -220,7 +220,7 @@ class VKRenderSystem : public RenderSystem
         HWObjectContainer<VKShaderProgram>      shaderPrograms_;
         HWObjectContainer<VKPipelineLayout>     pipelineLayouts_;
         HWObjectContainer<VKGraphicsPipeline>   graphicsPipelines_;
-        //HWObjectContainer<VKComputePipeline>    computePipelines_;
+        HWObjectContainer<VKComputePipeline>    computePipelines_;
         HWObjectContainer<VKResourceViewHeap>   resourceViewHeaps_;
         HWObjectContainer<VKQuery>              queries_;
         HWObjectContainer<VKFence>              fences_;

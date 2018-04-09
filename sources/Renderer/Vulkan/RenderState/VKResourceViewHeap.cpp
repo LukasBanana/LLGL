@@ -151,6 +151,7 @@ void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& 
         switch (rvDesc.type)
         {
             case ResourceViewType::ConstantBuffer:
+            case ResourceViewType::StorageBuffer:
             {
                 auto bufferVK = LLGL_CAST(VKBuffer*, rvDesc.buffer);
 

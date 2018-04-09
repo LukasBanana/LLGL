@@ -473,7 +473,7 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
 
 ComputePipeline* VKRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(computePipelines_, MakeUnique<VKComputePipeline>(device_, desc, defaultPipelineLayout_));
 }
 
 void VKRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
@@ -483,7 +483,7 @@ void VKRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 
 void VKRenderSystem::Release(ComputePipeline& computePipeline)
 {
-    //todo
+    RemoveFromUniqueSet(computePipelines_, &computePipeline);
 }
 
 /* ----- Queries ----- */
@@ -891,6 +891,13 @@ VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkB
         {
             FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Constant, device_, createInfo));
+        }
+        break;
+
+        case BufferType::Storage:
+        {
+            FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
+            return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Storage, device_, createInfo));
         }
         break;
 

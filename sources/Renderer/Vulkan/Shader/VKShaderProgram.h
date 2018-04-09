@@ -51,7 +51,9 @@ class VKShaderProgram : public ShaderProgram
 
         /* --- Extended functions --- */
 
+        //TODO: replace by "FillShaderStageCreateInfos" to avoid std::vector
         std::vector<VkPipelineShaderStageCreateInfo> GetShaderStageCreateInfos() const;
+        //void FillShaderStageCreateInfos(std::size_t maxNumCreateInfos, VkPipelineShaderStageCreateInfo* createInfos) const;
 
         void FillVertexInputStateCreateInfo(VkPipelineVertexInputStateCreateInfo& createInfo) const;
 

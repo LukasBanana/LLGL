@@ -8,6 +8,7 @@
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 #include "RenderState/VKGraphicsPipeline.h"
+#include "RenderState/VKComputePipeline.h"
 #include "RenderState/VKResourceViewHeap.h"
 #include "RenderState/VKQuery.h"
 #include "Texture/VKSampler.h"
@@ -276,14 +277,12 @@ void VKCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t 
 
 /* ----- Resource View Heaps ----- */
 
-void VKCommandBuffer::SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)
+//private
+void VKCommandBuffer::BindResourceViewHeap(VKResourceViewHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t startSlot)
 {
-    auto& resourceHeapVK = LLGL_CAST(VKResourceViewHeap&, resourceHeap);
-
-    /* Bind descriptor set */
     vkCmdBindDescriptorSets(
         commandBuffer_,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        bindingPoint,
         resourceHeapVK.GetVkPipelineLayout(),
         startSlot,
         static_cast<std::uint32_t>(resourceHeapVK.GetVkDescriptorSets().size()),
@@ -291,6 +290,18 @@ void VKCommandBuffer::SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap
         0,
         nullptr
     );
+}
+
+void VKCommandBuffer::SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)
+{
+    auto& resourceHeapVK = LLGL_CAST(VKResourceViewHeap&, resourceHeap);
+    BindResourceViewHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_GRAPHICS, startSlot);
+}
+
+void VKCommandBuffer::SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)
+{
+    auto& resourceHeapVK = LLGL_CAST(VKResourceViewHeap&, resourceHeap);
+    BindResourceViewHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, startSlot);
 }
 
 /* ----- Render Targets ----- */
@@ -338,7 +349,8 @@ void VKCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
 void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
-    //todo
+    auto& computePipelineVK = LLGL_CAST(VKComputePipeline&, computePipeline);
+    vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_COMPUTE, computePipelineVK.GetVkPipeline());
 }
 
 /* ----- Queries ----- */

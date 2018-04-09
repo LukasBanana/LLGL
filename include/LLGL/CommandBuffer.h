@@ -300,6 +300,12 @@ class LLGL_EXPORT CommandBuffer
             // dummy
         }
 
+        //TODO: testing for Vulkan renderer
+        virtual void SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
+        {
+            // dummy
+        }
+
         /* ----- Render Targets ----- */
 
         /**

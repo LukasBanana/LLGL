@@ -41,6 +41,9 @@ int main()
 
         contextDesc.vsync.enabled               = true;
 
+        const auto resolution = contextDesc.videoMode.resolution;
+        const auto viewportSize = resolution.Cast<float>();
+
         LLGL::WindowDescriptor windowDesc;
         {
             windowDesc.size         = contextDesc.videoMode.resolution;
@@ -118,6 +121,11 @@ int main()
         shaderProgram->LinkShaders();
 
         // Create vertex data
+        auto PointOnCircle = [](float angle, float radius)
+        {
+            return Gs::Vector2f { std::sin(angle) * radius, std::cos(angle) * radius };
+        };
+
         struct Vertex
         {
             Gs::Vector2f    coord;
@@ -125,9 +133,9 @@ int main()
         }
         vertices[] =
         {
-            { {  0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
-            { { +0.5f, +0.5f }, { 0.0f, 1.0f, 0.0f } },
-            { { -0.5f, +0.5f }, { 0.0f, 0.0f, 1.0f } },
+            { PointOnCircle(0.0f, 1.0f), { 1.0f, 0.0f, 0.0f } },
+            { PointOnCircle(Gs::pi * 2.0f / 3.0f, 1.0f), { 0.0f, 1.0f, 0.0f } },
+            { PointOnCircle(Gs::pi * 4.0f / 3.0f, 1.0f), { 0.0f, 0.0f, 1.0f } },
         };
 
         // Create vertex format
@@ -145,10 +153,13 @@ int main()
         struct Matrices
         {
             Gs::Matrix4f projection;
+            Gs::Matrix4f modelView;
         }
         matrices;
 
-        Gs::RotateFree(matrices.projection, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
+        const float projectionScale = 0.005f;
+        matrices.projection = Gs::ProjectionMatrix4f::Orthogonal(viewportSize.x * projectionScale, viewportSize.y * projectionScale, -100.0f, 100.0f, 0).ToMatrix4();
+        Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
 
         auto constBufferMatrices = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices), LLGL::BufferFlags::MapReadWriteAccess), &matrices);
 
@@ -198,9 +209,6 @@ int main()
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
-
-        const auto resolution = contextDesc.videoMode.resolution;
-        const auto viewportSize = resolution.Cast<float>();
 
         pipelineDesc.shaderProgram = shaderProgram;
         pipelineDesc.pipelineLayout = pipelineLayout;
@@ -256,8 +264,8 @@ int main()
 
             if (auto data = renderer->MapBuffer(*constBufferMatrices, LLGL::BufferCPUAccess::ReadWrite))
             {
-                auto matrix = reinterpret_cast<Gs::Matrix4f*>(data);
-                Gs::RotateFree(*matrix, Gs::Vector3f(0, 0, 1), Gs::pi * 0.01f);
+                auto ptr = reinterpret_cast<Matrices*>(data);
+                Gs::RotateFree(ptr->modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.01f);
                 renderer->UnmapBuffer(*constBufferMatrices);
             }
 

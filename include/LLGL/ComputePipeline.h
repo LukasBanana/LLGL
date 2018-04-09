@@ -10,31 +10,11 @@
 
 
 #include "Export.h"
+#include "ComputePipelineFlags.h"
 
 
 namespace LLGL
 {
-
-
-class ShaderProgram;
-
-//! Compute pipeline descriptor structure.
-struct ComputePipelineDescriptor
-{
-    ComputePipelineDescriptor() = default;
-    ComputePipelineDescriptor(ShaderProgram* shaderProgram) :
-        shaderProgram { shaderProgram }
-    {
-    }
-
-    /**
-    \brief Pointer to the shader program for the compute pipeline.
-    \remarks This must never be null when "RenderSystem::CreateComputePipeline" is called with this structure.
-    \see RenderSystem::CreateComputePipeline
-    \see RenderSystem::CreateShaderProgram
-    */
-    ShaderProgram* shaderProgram = nullptr;
-};
 
 
 //! Compute pipeline interface.
