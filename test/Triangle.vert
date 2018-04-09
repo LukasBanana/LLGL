@@ -8,6 +8,7 @@ layout(location = 0) out vec4 vColor;
 layout(binding = 2) uniform Matrices
 {
 	mat4 projection;
+	mat4 modelView;
 };
 
 out gl_PerVertex
@@ -17,6 +18,6 @@ out gl_PerVertex
 
 void main()
 {
-	gl_Position = projection * vec4(coord, 0, 1);
+	gl_Position = projection * modelView * vec4(coord, 0, 1);
 	vColor = vec4(color, 1);
 }

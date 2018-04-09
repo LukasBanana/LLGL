@@ -1,5 +1,5 @@
 // GLSL compute shader
-#version 430
+#version 450
 
 struct DataBlock
 {
