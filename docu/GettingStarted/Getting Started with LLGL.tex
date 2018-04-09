@@ -89,9 +89,67 @@
 
 
 %----------------------------------------------------------------------------------------
+%	IN A NUTSHELL
+%----------------------------------------------------------------------------------------
+
+\section{In a nutshell}
+
+\subsection{What can \LLGL do for me?}
+
+\begin{itemize}
+	\item \textbf{Unification} \\
+	\LLGL provides a unified interface across all supported renderers.
+	Write your graphics render passes once and use them across multiple rendering APIs and platforms.
+	
+	\item \textbf{Low Overhead} \\
+	\LLGL is meant to be a thin abstraction layer which only adds as less overhead between your application and the underlying rendering API as possible.
+	At best, a function is just a wrapper that passes the parameters to the actual renderer.
+	For example, the implementation of the \texttt{CommandBuffer::DrawIndexed} interface for Direct3D11:
+\begin{lstlisting}
+void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex) {
+    context_->DrawIndexed(numVertices, firstIndex, 0);
+}
+\end{lstlisting}
+	
+	\item \textbf{Compatibility} \\
+	\LLGL provides various compatibility functionalities between the renderers.
+	For example, some image formats that are supported by OpenGL but not by Direct3D are converted `on the fly' by \LLGL.
+	However, some compromises are inevitable, due to different hardware restrictions.
+	All incompatibilities are well documented though.
+	
+	\item \textbf{Simplification} \\
+	Where close access to the hardware is not necessary, \LLGL provides useful simplifications.
+	For example, creating a render context as well as a device context across multiple platforms requires a lot of work when done manually.
+	With \LLGL, this can be done with a few lines of code, but still have plenty of control thanks to the rich descriptor structures.
+\end{itemize}
+
+
+\subsection{What can \LLGL \emph{not} do for me?}
+
+\begin{itemize}
+	\item \textbf{Shader Cross Compilation} \\
+	\LLGL unifies the underlying rendering APIs as far as possible, but since each rendering API has its own shading language,
+	all shaders need to be provided for each desired renderer explicitly by the user.
+	That said, there are several shader cross compilers available:
+	\begin{itemize}
+	\item XShaderCompiler (\href{https://github.com/LukasBanana/XShaderCompiler}{github.com/LukasBanana/XShaderCompiler}),
+	\item SPIRV-Cross (\href{https://github.com/KhronosGroup/SPIRV-Cross}{github.com/KhronosGroup/SPIRV-Cross}),
+	\item hlsl2glsl (\href{https://github.com/aras-p/hlsl2glslfork}{github.com/aras-p/hlsl2glslfork}).
+	\item HLSLCrossCompiler (\href{https://github.com/James-Jones/HLSLCrossCompiler}{github.com/James-Jones/HLSLCrossCompiler})
+	\end{itemize}
+	
+	\item \textbf{Scene Management} \\
+	\LLGL is a low-level render system which does not provide any high-level scene management or animation system.
+	It provides you with a set of functions to submit draw commands and render states to the graphics hardware as well as managing raw hardware buffers.
+	`Game engine'-like functionality or anything beyond graphics is not part of \LLGL.
+\end{itemize}
+
+
+%----------------------------------------------------------------------------------------
 %	PREREQUISITES
 %----------------------------------------------------------------------------------------
 
+\newpage
 \section{Prerequisites}
 
 \LLGL (Low Level Graphics Library) is a thin abstraction layer for graphics APIs such as
@@ -156,7 +214,7 @@ This project is still in its early steps. Here is a short overview of its progre
 	Direct3D 12 renderer is only in an experimental state (\textasciitilde 5\% complete).
 	
 	\item \textbf{Vulkan} \\
-	Vulkan renderer is scheduled, but not supported yet.
+	Vulkan renderer is only in an experimental state (\textasciitilde 5\% complete).
 \end{itemize}
 
 
@@ -622,7 +680,7 @@ When you have done everything right, you should see something like shown in figu
 and program start (set working directory to \texttt{tutorial/Tutorial01\_HelloTriangle}).
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.8 \textwidth]{tut01_mask1a}
+	\includegraphics[width=0.9 \textwidth]{tut01_mask1a}
 	\caption{Output of the ``Tutorial01: HelloTriangle'' running on Windows 10.}
 	\label{fig:tut01_mask1}
 \end{figure}
