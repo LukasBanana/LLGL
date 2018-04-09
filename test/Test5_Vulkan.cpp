@@ -150,7 +150,7 @@ int main()
 
         Gs::RotateFree(matrices.projection, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
 
-        auto constBufferMatrices = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices)), &matrices);
+        auto constBufferMatrices = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices), LLGL::BufferFlags::MapReadWriteAccess), &matrices);
 
         struct Colors
         {
@@ -254,6 +254,13 @@ int main()
 
             #if 1
 
+            if (auto data = renderer->MapBuffer(*constBufferMatrices, LLGL::BufferCPUAccess::ReadWrite))
+            {
+                auto matrix = reinterpret_cast<Gs::Matrix4f*>(data);
+                Gs::RotateFree(*matrix, Gs::Vector3f(0, 0, 1), Gs::pi * 0.01f);
+                renderer->UnmapBuffer(*constBufferMatrices);
+            }
+
             // Render scene
             commands->SetRenderTarget(*context);
 
@@ -279,7 +286,7 @@ int main()
 
             context->Present();
 
-            #if 1
+            #if 0
             // Wait for command buffer to complete
             queue->WaitForFinish();
             #endif

@@ -42,13 +42,21 @@ class VKBuffer : public Buffer
         VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
 
         void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
-
         void TakeStagingBuffer(VKBufferWithRequirements&& buffer, VKDeviceMemoryRegion* memoryRegionStaging);
+
+        void* Map(VkDevice device, const BufferCPUAccess access);
+        void Unmap(VkDevice device);
 
         // Returns the hardware buffer object.
         inline VkBuffer GetVkBuffer() const
         {
             return bufferObj_.buffer.Get();
+        }
+
+        // Returns the hardware staging buffer object.
+        inline VkBuffer GetStagingVkBuffer() const
+        {
+            return bufferObjStaging_.buffer.Get();
         }
 
         // Returns the memory requirements of the hardware buffer.
@@ -63,15 +71,22 @@ class VKBuffer : public Buffer
             return size_;
         }
 
+        // Returns the CPU access previously set when "Map" was called.
+        inline BufferCPUAccess GetMappingCPUAccess() const
+        {
+            return mappingCPUAccess_;
+        }
+
     private:
 
-        VKBufferWithRequirements          bufferObj_;
-        VKDeviceMemoryRegion*   memoryRegion_           = nullptr;
+        VKBufferWithRequirements    bufferObj_;
+        VKDeviceMemoryRegion*       memoryRegion_           = nullptr;
 
-        VKBufferWithRequirements          bufferObjStaging_;
-        VKDeviceMemoryRegion*   memoryRegionStaging_    = nullptr;
+        VKBufferWithRequirements    bufferObjStaging_;
+        VKDeviceMemoryRegion*       memoryRegionStaging_    = nullptr;
 
-        VkDeviceSize            size_                   = 0;
+        VkDeviceSize                size_                   = 0;
+        BufferCPUAccess             mappingCPUAccess_       = BufferCPUAccess::ReadOnly;
 
 };
 

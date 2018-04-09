@@ -300,21 +300,31 @@ void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
     //todo
 }
 
+/*
+TODO:
+BeginCommandBuffer at this point is only a workaround!
+Maybe it can be integrated into a Begin/EndRenderPass function with a new interface "RenderPass".
+*/
 void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
-    /* Get render context object */
-    auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderContext);
-    renderContextVK.SetPresentCommandBuffer(this);
+    if (renderContextTarget_ != &renderContext)
+    {
+        renderContextTarget_ = &renderContext;
 
-    /* Get swap chain objects */
-    renderPass_         = renderContextVK.GetSwapChainRenderPass().Get();
-    framebuffer_        = renderContextVK.GetSwapChainFramebuffer();
-    framebufferExtent_  = renderContextVK.GetSwapChainExtent();
-    imageColor_         = renderContextVK.GetSwapChainImage();
+        /* Get render context object */
+        auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderContext);
+        renderContextVK.SetPresentCommandBuffer(this);
 
-    /* Begin command buffer and render pass */
-    BeginCommandBuffer();
-    BeginRenderPass(renderPass_, framebuffer_, renderContextVK.GetSwapChainExtent());
+        /* Get swap chain objects */
+        renderPass_         = renderContextVK.GetSwapChainRenderPass().Get();
+        framebuffer_        = renderContextVK.GetSwapChainFramebuffer();
+        framebufferExtent_  = renderContextVK.GetSwapChainExtent();
+        imageColor_         = renderContextVK.GetSwapChainImage();
+
+        /* Begin command buffer and render pass */
+        BeginCommandBuffer();
+        BeginRenderPass(renderPass_, framebuffer_, renderContextVK.GetSwapChainExtent());
+    }
 }
 
 
@@ -343,13 +353,13 @@ void VKCommandBuffer::BeginQuery(Query& query)
     if (query.GetType() == QueryType::SamplesPassed)
         flags |= VK_QUERY_CONTROL_PRECISE_BIT;
 
-    vkCmdBeginQuery(commandBuffer_, queryVK.GetQueryPool(), 0, flags);
+    vkCmdBeginQuery(commandBuffer_, queryVK.GetVkQueryPool(), 0, flags);
 }
 
 void VKCommandBuffer::EndQuery(Query& query)
 {
     auto& queryVK = LLGL_CAST(VKQuery&, query);
-    vkCmdEndQuery(commandBuffer_, queryVK.GetQueryPool(), 0);
+    vkCmdEndQuery(commandBuffer_, queryVK.GetVkQueryPool(), 0);
 }
 
 bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
@@ -358,7 +368,7 @@ bool VKCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
 
     /* Store result directly into output parameter */
     auto stateResult = vkGetQueryPoolResults(
-        device_, queryVK.GetQueryPool(), 0, 1,
+        device_, queryVK.GetVkQueryPool(), 0, 1,
         sizeof(result), &result, sizeof(std::uint64_t),
         VK_QUERY_RESULT_64_BIT
     );
@@ -380,7 +390,7 @@ bool VKCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
     std::uint64_t intermediateResults[11];
 
     auto stateResult = vkGetQueryPoolResults(
-        device_, queryVK.GetQueryPool(), 0, 1,
+        device_, queryVK.GetVkQueryPool(), 0, 1,
         sizeof(intermediateResults), intermediateResults, sizeof(std::uint64_t),
         VK_QUERY_RESULT_64_BIT
     );
@@ -492,6 +502,7 @@ void VKCommandBuffer::EndCommandBuffer()
 {
     auto result = vkEndCommandBuffer(commandBuffer_);
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
+    renderContextTarget_ = nullptr;
 }
 
 void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)

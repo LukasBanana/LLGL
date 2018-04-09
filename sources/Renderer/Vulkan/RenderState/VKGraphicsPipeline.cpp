@@ -18,17 +18,19 @@ namespace LLGL
 {
 
 
-VKGraphicsPipeline::VKGraphicsPipeline(const VKPtr<VkDevice>& device, VkRenderPass renderPass, const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent) :
-    device_         { device                    },
-    renderPass_     { renderPass                },
-    pipeline_       { device, vkDestroyPipeline }
+VKGraphicsPipeline::VKGraphicsPipeline(
+    const VKPtr<VkDevice>& device, VkRenderPass renderPass, const VkExtent2D& extent,
+    const GraphicsPipelineDescriptor& desc, VkPipelineLayout defaultPipelineLayout) :
+        device_         { device                    },
+        renderPass_     { renderPass                },
+        pipelineLayout_ { defaultPipelineLayout     },
+        pipeline_       { device, vkDestroyPipeline }
 {
     /* Get pipeline layout object */
     if (desc.pipelineLayout)
     {
         auto pipelineLayoutVK = LLGL_CAST(VKPipelineLayout*, desc.pipelineLayout);
         pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
-        descriptorSet_ = pipelineLayoutVK->GetVkDescriptorSetLayout();
     }
 
     /* Create Vulkan graphics pipeline object */

@@ -26,7 +26,7 @@ class VKQuery : public Query
         VKQuery(const VKPtr<VkDevice>& device, const QueryDescriptor& desc);
 
         // Returns the Vulkan VkQueryPool object.
-        inline VkQueryPool GetQueryPool() const
+        inline VkQueryPool GetVkQueryPool() const
         {
             return queryPool_.Get();
         }

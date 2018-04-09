@@ -167,6 +167,8 @@ class VKRenderSystem : public RenderSystem
         void CreateStagingCommandResources();
         void ReleaseStagingCommandResources();
 
+        void CreateDefaultPipelineLayout();
+
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
         bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
@@ -177,6 +179,8 @@ class VKRenderSystem : public RenderSystem
         VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+        void AssertBufferCPUAccess(const VKBuffer& bufferVK);
 
         /* ----- Common objects ----- */
 
@@ -193,6 +197,8 @@ class VKRenderSystem : public RenderSystem
 
         VKPtr<VkCommandPool>                    stagingCommandPool_;
         VkCommandBuffer                         stagingCommandBuffer_   = VK_NULL_HANDLE;
+
+        VKPtr<VkPipelineLayout>                 defaultPipelineLayout_;
 
         bool                                    debugLayerEnabled_      = false;
 

@@ -46,6 +46,22 @@ static void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCall
         func(instance, callback, allocator);
 }
 
+static VkBufferUsageFlags GetVkBufferUsageFlags(long bufferFlags)
+{
+    if ((bufferFlags & BufferFlags::MapReadAccess) != 0)
+        return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    else
+        return VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+}
+
+static VkBufferUsageFlags GetStagingVkBufferUsageFlags(long bufferFlags)
+{
+    if ((bufferFlags & BufferFlags::MapWriteAccess) != 0)
+        return VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    else
+        return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+}
+
 static void FillBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize size, VkBufferUsageFlags usage)
 {
     createInfo.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -58,57 +74,10 @@ static void FillBufferCreateInfo(VkBufferCreateInfo& createInfo, VkDeviceSize si
     createInfo.pQueueFamilyIndices      = nullptr;
 }
 
+#ifdef TEST_VULKAN_MEMORY_MNGR
 
-/* ----- Common ----- */
-
-static const std::vector<const char*> g_deviceExtensions
+static void TestVulkanMemoryMngr(VKDeviceMemoryManager& mngr)
 {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
-VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
-    instance_            { vkDestroyInstance                        },
-    device_              { vkDestroyDevice                          },
-    debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
-{
-    /* Extract optional renderer configuartion */
-    const VulkanRendererConfiguration* rendererConfigVK= nullptr;
-
-    if (renderSystemDesc.rendererConfig != nullptr && renderSystemDesc.rendererConfigSize > 0)
-    {
-        if (renderSystemDesc.rendererConfigSize == sizeof(VulkanRendererConfiguration))
-            rendererConfigVK = reinterpret_cast<const VulkanRendererConfiguration*>(renderSystemDesc.rendererConfig);
-        else
-            throw std::invalid_argument("invalid renderer configuration structure (expected size of 'VulkanRendererConfiguration' structure)");
-    }
-
-    #ifdef LLGL_DEBUG
-    debugLayerEnabled_ = true;
-    #endif
-
-    /* Create Vulkan instance and device objects */
-    CreateInstance(rendererConfigVK != nullptr ? &(rendererConfigVK->application) : nullptr);
-    LoadExtensions();
-
-    if (!PickPhysicalDevice())
-        throw std::runtime_error("failed to find physical device with Vulkan support");
-
-    QueryDeviceProperties();
-    CreateLogicalDevice();
-    CreateStagingCommandResources();
-
-    /* Create device memory manager */
-    deviceMemoryMngr_ = MakeUnique<VKDeviceMemoryManager>(
-        device_,
-        memoryProperties_,
-        (rendererConfigVK != nullptr ? rendererConfigVK->minDeviceMemoryAllocationSize : 1024*1024),
-        (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
-    );
-
-    #ifdef TEST_VULKAN_MEMORY_MNGR
-
-    auto& mngr = *deviceMemoryMngr_;
-
     std::uint32_t typeBits = 1665;
     VkDeviceSize alignment = 1;
     
@@ -148,7 +117,60 @@ VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     reg5 = mngr.Allocate(9, 8, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     mngr.PrintBlocks(std::cout, "Allocate: 9 with alignment 8");
     std::cout << std::endl;
+}
 
+#endif
+
+
+/* ----- Common ----- */
+
+static const std::vector<const char*> g_deviceExtensions
+{
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
+VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
+    instance_            { vkDestroyInstance                        },
+    device_              { vkDestroyDevice                          },
+    debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
+{
+    /* Extract optional renderer configuartion */
+    const VulkanRendererConfiguration* rendererConfigVK= nullptr;
+
+    if (renderSystemDesc.rendererConfig != nullptr && renderSystemDesc.rendererConfigSize > 0)
+    {
+        if (renderSystemDesc.rendererConfigSize == sizeof(VulkanRendererConfiguration))
+            rendererConfigVK = reinterpret_cast<const VulkanRendererConfiguration*>(renderSystemDesc.rendererConfig);
+        else
+            throw std::invalid_argument("invalid renderer configuration structure (expected size of 'VulkanRendererConfiguration' structure)");
+    }
+
+    #ifdef LLGL_DEBUG
+    debugLayerEnabled_ = true;
+    #endif
+
+    /* Create Vulkan instance and device objects */
+    CreateInstance(rendererConfigVK != nullptr ? &(rendererConfigVK->application) : nullptr);
+    LoadExtensions();
+
+    if (!PickPhysicalDevice())
+        throw std::runtime_error("failed to find physical device with Vulkan support");
+
+    QueryDeviceProperties();
+    CreateLogicalDevice();
+    CreateStagingCommandResources();
+    CreateDefaultPipelineLayout();
+
+    /* Create device memory manager */
+    deviceMemoryMngr_ = MakeUnique<VKDeviceMemoryManager>(
+        device_,
+        memoryProperties_,
+        (rendererConfigVK != nullptr ? rendererConfigVK->minDeviceMemoryAllocationSize : 1024*1024),
+        (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
+    );
+
+    #ifdef TEST_VULKAN_MEMORY_MNGR
+    TestVulkanMemoryMngr(*deviceMemoryMngr_);
     #endif
 }
 
@@ -202,7 +224,11 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;
-    FillBufferCreateInfo(stagingCreateInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    FillBufferCreateInfo(
+        stagingCreateInfo,
+        static_cast<VkDeviceSize>(desc.size),
+        GetStagingVkBufferUsageFlags(desc.flags)
+    );
 
     VKBufferWithRequirements stagingBuffer { device_ };
     stagingBuffer.Create(device_, stagingCreateInfo);
@@ -230,7 +256,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     }
 
     /* Create device buffer */
-    auto buffer = CreateHardwareBuffer(desc, VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+    auto buffer = CreateHardwareBuffer(desc, GetVkBufferUsageFlags(desc.flags));
     
     /* Allocate device memory */
     const auto& requirements = buffer->GetRequirements();
@@ -285,12 +311,28 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 
 void* VKRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
 {
-    return nullptr;//todo
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    AssertBufferCPUAccess(bufferVK);
+
+    /* Copy GPU local buffer into staging buffer for read accces */
+    if (access != BufferCPUAccess::WriteOnly)
+        CopyBuffer(bufferVK.GetVkBuffer(), bufferVK.GetStagingVkBuffer(), bufferVK.GetSize());
+
+    /* Map staging buffer */
+    return bufferVK.Map(device_, access);
 }
 
 void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 {
-    //todo
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    AssertBufferCPUAccess(bufferVK);
+
+    /* Unmap staging buffer */
+    bufferVK.Unmap(device_);
+
+    /* Copy staging buffer into GPU local buffer for write access */
+    if (bufferVK.GetMappingCPUAccess() != BufferCPUAccess::ReadOnly)
+        CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), bufferVK.GetSize());
 }
 
 /* ----- Textures ----- */
@@ -420,7 +462,13 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
     auto renderContext = renderContexts_.begin()->get();
     auto renderPassVK = renderContext->GetSwapChainRenderPass().Get();
 
-    return TakeOwnership(graphicsPipelines_, MakeUnique<VKGraphicsPipeline>(device_, renderPassVK, desc, renderContext->GetSwapChainExtent()));
+    return TakeOwnership(
+        graphicsPipelines_,
+        MakeUnique<VKGraphicsPipeline>(
+            device_, renderPassVK, renderContext->GetSwapChainExtent(),
+            desc, defaultPipelineLayout_
+        )
+    );
 }
 
 ComputePipeline* VKRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -756,6 +804,16 @@ void VKRenderSystem::ReleaseStagingCommandResources()
     stagingCommandBuffer_ = VK_NULL_HANDLE;
 }
 
+void VKRenderSystem::CreateDefaultPipelineLayout()
+{
+    VkPipelineLayoutCreateInfo layoutCreateInfo = {};
+    {
+        layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    }
+    auto result = vkCreatePipelineLayout(device_, &layoutCreateInfo, nullptr, defaultPipelineLayout_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan default pipeline layout");
+}
+
 bool VKRenderSystem::IsLayerRequired(const std::string& name) const
 {
     #ifdef LLGL_DEBUG
@@ -882,6 +940,12 @@ void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDevice
     }
     vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
     vkQueueWaitIdle(graphicsQueue_);
+}
+
+void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
+{
+    if (bufferVK.GetStagingVkBuffer() == VK_NULL_HANDLE)
+        throw std::runtime_error("hardware buffer was not created with CPU access (missing staging VkBuffer)");
 }
 
 

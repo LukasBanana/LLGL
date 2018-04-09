@@ -79,6 +79,24 @@ void VKBuffer::TakeStagingBuffer(VKBufferWithRequirements&& buffer, VKDeviceMemo
     memoryRegionStaging_ = memoryRegionStaging;
 }
 
+void* VKBuffer::Map(VkDevice device, const BufferCPUAccess access)
+{
+    if (memoryRegionStaging_)
+    {
+        mappingCPUAccess_ = access;
+        return memoryRegionStaging_->GetParentChunk()->Map(
+            device, memoryRegionStaging_->GetOffset(), memoryRegionStaging_->GetSize()
+        );
+    }
+    return nullptr;
+}
+
+void VKBuffer::Unmap(VkDevice device)
+{
+    if (memoryRegionStaging_)
+        memoryRegionStaging_->GetParentChunk()->Unmap(device);
+}
+
 
 } // /namespace LLGL
 

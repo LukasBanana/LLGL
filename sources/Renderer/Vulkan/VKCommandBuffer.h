@@ -162,6 +162,8 @@ class VKCommandBuffer : public CommandBuffer
 
         std::uint32_t                   queuePresentFamily_     = 0;
 
+        RenderContext*                  renderContextTarget_    = nullptr;
+
 };
 
 
