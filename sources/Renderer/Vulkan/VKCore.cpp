@@ -238,6 +238,16 @@ QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFla
     return indices;
 }
 
+std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
+{
+    for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
+    {
+        if ((memoryTypeBits & (1 << i)) != 0 && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            return i;
+    }
+    throw std::runtime_error("failed to find suitable Vulkan memory type");
+}
+
 
 } // /namespace LLGL
 

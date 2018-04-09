@@ -43,46 +43,56 @@ and SPIR-V version is 500100 (ver. 1.0).
 */
 enum class ShadingLanguage
 {
-    GLSL            = 100000, //!< GLSL (OpenGL Shading Language).
-    GLSL_110        = 100110, //!< GLSL 1.10 (since OpenGL 2.0).
-    GLSL_120        = 100120, //!< GLSL 1.20 (since OpenGL 2.1).
-    GLSL_130        = 100130, //!< GLSL 1.30 (since OpenGL 3.0).
-    GLSL_140        = 100140, //!< GLSL 1.40 (since OpenGL 3.1).
-    GLSL_150        = 100150, //!< GLSL 1.50 (since OpenGL 3.2).
-    GLSL_330        = 100330, //!< GLSL 3.30 (since OpenGL 3.3).
-    GLSL_400        = 100400, //!< GLSL 4.00 (since OpenGL 4.0).
-    GLSL_410        = 100410, //!< GLSL 4.10 (since OpenGL 4.1).
-    GLSL_420        = 100420, //!< GLSL 4.20 (since OpenGL 4.2).
-    GLSL_430        = 100430, //!< GLSL 4.30 (since OpenGL 4.3).
-    GLSL_440        = 100440, //!< GLSL 4.40 (since OpenGL 4.4).
-    GLSL_450        = 100450, //!< GLSL 4.50 (since OpenGL 4.5).
-    GLSL_460        = 100460, //!< GLSL 4.60 (since OpenGL 4.6).
+    GLSL            = (0x10000),        //!< GLSL (OpenGL Shading Language).
+    GLSL_110        = (0x10000 | 110),  //!< GLSL 1.10 (since OpenGL 2.0).
+    GLSL_120        = (0x10000 | 120),  //!< GLSL 1.20 (since OpenGL 2.1).
+    GLSL_130        = (0x10000 | 130),  //!< GLSL 1.30 (since OpenGL 3.0).
+    GLSL_140        = (0x10000 | 140),  //!< GLSL 1.40 (since OpenGL 3.1).
+    GLSL_150        = (0x10000 | 150),  //!< GLSL 1.50 (since OpenGL 3.2).
+    GLSL_330        = (0x10000 | 330),  //!< GLSL 3.30 (since OpenGL 3.3).
+    GLSL_400        = (0x10000 | 400),  //!< GLSL 4.00 (since OpenGL 4.0).
+    GLSL_410        = (0x10000 | 410),  //!< GLSL 4.10 (since OpenGL 4.1).
+    GLSL_420        = (0x10000 | 420),  //!< GLSL 4.20 (since OpenGL 4.2).
+    GLSL_430        = (0x10000 | 430),  //!< GLSL 4.30 (since OpenGL 4.3).
+    GLSL_440        = (0x10000 | 440),  //!< GLSL 4.40 (since OpenGL 4.4).
+    GLSL_450        = (0x10000 | 450),  //!< GLSL 4.50 (since OpenGL 4.5).
+    GLSL_460        = (0x10000 | 460),  //!< GLSL 4.60 (since OpenGL 4.6).
 
-    ESSL            = 200000, //!< ESSL (OpenGL ES Shading Language).
-    ESSL_100        = 200100, //!< ESSL 1.00 (since OpenGL ES 2.0).
-    ESSL_300        = 200300, //!< ESSL 3.00 (since OpenGL ES 3.0).
-    ESSL_310        = 200310, //!< ESSL 3.10 (since OpenGL ES 3.1).
-    ESSL_320        = 200320, //!< ESSL 3.20 (since OpenGL ES 3.2).
+    ESSL            = (0x20000),        //!< ESSL (OpenGL ES Shading Language).
+    ESSL_100        = (0x20000 | 100),  //!< ESSL 1.00 (since OpenGL ES 2.0).
+    ESSL_300        = (0x20000 | 300),  //!< ESSL 3.00 (since OpenGL ES 3.0).
+    ESSL_310        = (0x20000 | 310),  //!< ESSL 3.10 (since OpenGL ES 3.1).
+    ESSL_320        = (0x20000 | 320),  //!< ESSL 3.20 (since OpenGL ES 3.2).
 
-    HLSL            = 300000, //!< HLSL (High Level Shading Language).
-    HLSL_2_0        = 300200, //!< HLSL 2.0 (since Direct3D 9).
-    HLSL_2_0a       = 300201, //!< HLSL 2.0a (since Direct3D 9a).
-    HLSL_2_0b       = 300202, //!< HLSL 2.0b (since Direct3D 9b).
-    HLSL_3_0        = 300300, //!< HLSL 3.0 (since Direct3D 9c).
-    HLSL_4_0        = 300400, //!< HLSL 4.0 (since Direct3D 10).
-    HLSL_4_1        = 300410, //!< HLSL 4.1 (since Direct3D 10.1).
-    HLSL_5_0        = 300500, //!< HLSL 5.0 (since Direct3D 11).
-    HLSL_5_1        = 300510, //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3).
+    HLSL            = (0x30000 | 000),  //!< HLSL (High Level Shading Language).
+    HLSL_2_0        = (0x30000 | 200),  //!< HLSL 2.0 (since Direct3D 9).
+    HLSL_2_0a       = (0x30000 | 201),  //!< HLSL 2.0a (since Direct3D 9a).
+    HLSL_2_0b       = (0x30000 | 202),  //!< HLSL 2.0b (since Direct3D 9b).
+    HLSL_3_0        = (0x30000 | 300),  //!< HLSL 3.0 (since Direct3D 9c).
+    HLSL_4_0        = (0x30000 | 400),  //!< HLSL 4.0 (since Direct3D 10).
+    HLSL_4_1        = (0x30000 | 410),  //!< HLSL 4.1 (since Direct3D 10.1).
+    HLSL_5_0        = (0x30000 | 500),  //!< HLSL 5.0 (since Direct3D 11).
+    HLSL_5_1        = (0x30000 | 510),  //!< HLSL 5.1 (since Direct3D 12 and Direct3D 11.3).
 
-    Metal           = 400000, //!< Metal Shading Language. \note Not supported yet
-    Metal_1_0       = 400100, //!< Metal 1.0 (since iOS 8.0). \note Not supported yet
-    Metal_1_1       = 400110, //!< Metal 1.1 (since iOS 9.0 and OS X 10.11). \note Not supported yet
-    Metal_1_2       = 400120, //!< Metal 1.2 (since iOS 10.0 and macOS 10.12). \note Not supported yet
+    Metal           = (0x40000),        //!< Metal Shading Language. \note Not supported yet
+    Metal_1_0       = (0x40000 | 100),  //!< Metal 1.0 (since iOS 8.0). \note Not supported yet
+    Metal_1_1       = (0x40000 | 110),  //!< Metal 1.1 (since iOS 9.0 and OS X 10.11). \note Not supported yet
+    Metal_1_2       = (0x40000 | 120),  //!< Metal 1.2 (since iOS 10.0 and macOS 10.12). \note Not supported yet
 
-    SPIRV           = 500000, //!< SPIR-V Shading Language.
-    SPIRV_100       = 500100, //!< SPIR-V 1.0.
+    SPIRV           = (0x50000),        //!< SPIR-V Shading Language.
+    SPIRV_100       = (0x50000 | 100),  //!< SPIR-V 1.0.
 
-    VersionBitmask  = 0x0000fff,
+    /**
+    \brief Bitmask for the version number of each shading language enumeration entry.
+    \remarks Can be used like this:
+    \code
+    // 'versionNo' will have the value 330
+    static const auto versionGLSL330 = static_cast<std::uint32_t>(LLGL::ShadingLanguage::GLSL_330);
+    static const auto versionBitmask = static_cast<std::uint32_t>(LLGL::ShadingLanguage::VersionBitmask);
+    static const auto versionNo      = versionGLSL330 & versionBitmask;
+    \endcode
+    */
+    VersionBitmask  = 0x0000ffff,
 };
 
 //! Screen coordinate system origin enumeration.
@@ -205,6 +215,98 @@ struct ApplicationDescriptor
     std::uint32_t   applicationVersion; //!< Version number of the application.
     std::string     engineName;         //!< Descriptive string of the engine or middleware.
     std::uint32_t   engineVersion;      //!< Version number of the engine or middleware.
+};
+
+/**
+\brief Structure for a Vulkan renderer specific configuration.
+\remarks The nomenclature here is "Renderer" instead of "RenderSystem" since the configuration is renderer specific
+and does not denote a configuration of the entire system.
+*/
+struct VulkanRendererConfiguration
+{
+    /**
+    \brief Application descriptor used when a Vulkan debug or validation layer is enabled.
+    \see ApplicationDescriptor
+    */
+    ApplicationDescriptor   application;
+
+    /**
+    \brief Minimal allocation size for a device memory chunk. By default 1024*1024, i.e. 1 MB of VRAM.
+    \remarks Vulkan only allows a limit set of device memory objects (e.g. 4096 on a GPU with 8 GB of VRAM).
+    This member specifies the minimum size used for hardware memory allocation of such a memory chunk.
+    The Vulkan render system automatically manages sub-region allocation and defragmentation.
+    */
+    std::uint64_t           minDeviceMemoryAllocationSize   = 1024*1024;
+
+    /**
+    \brief Specifies whether fragmentation of the device memory blocks shall be kept low. By default false.
+    \remarks If this is true, each buffer and image allocation first tries to find a reusable device memory block
+    within a single VkDeviceMemory chunk (which might be potentially slower).
+    Whenever a VkDeviceMemory chunk is full, the memory manager tries to reduce fragmentation anyways.
+    */
+    bool                    reduceDeviceMemoryFragmentation = false;
+};
+
+/**
+\brief Render system descriptor structure.
+\remarks This can be used for some refinements of a specific renderer, e.g. to configure the Vulkan device memory manager.
+\see RenderSystem::Load
+*/
+struct RenderSystemDescriptor
+{
+    RenderSystemDescriptor() = default;
+    RenderSystemDescriptor(const RenderSystemDescriptor&) = default;
+    RenderSystemDescriptor& operator = (const RenderSystemDescriptor&) = default;
+
+    inline RenderSystemDescriptor(const std::string& moduleName) :
+        moduleName { moduleName }
+    {
+    }
+
+    inline RenderSystemDescriptor(const char* moduleName) :
+        moduleName { moduleName }
+    {
+    }
+
+    /**
+    \brief Specifies the name from which the new render system is to be loaded.
+    \remarks This denotes a shared library (*.dll-files on Windows, *.so-files on Unix systems).
+    If compiled in debug mode, the postfix "D" is appended to the module name.
+    Moreover, the platform dependent file extension is always added automatically
+    as well as the prefix "LLGL_", i.e. a module name "OpenGL" will be
+    translated to "LLGL_OpenGLD.dll", if compiled on Windows in Debug mode.
+    */
+    std::string moduleName;
+
+    /**
+    \brief Optional raw pointer to a renderer specific configuration structure.
+    \remarks This can be used to pass some refinement configurations to the render system when the module is loaded.
+    Example usage (for Vulkan renderer):
+    \code
+    // Initialize Vulkan specific configurations (e.g. always allocate at least 1GB of VRAM for each device memory chunk).
+    VulkanRendererConfiguration config;
+    config.minDeviceMemoryAllocationSize = 1024*1024*1024;
+
+    // Initialize render system descriptor
+    RenderSystemDescriptor rendererDesc;
+    rendererDesc.moduleName         = "Vulkan";
+    rendererDesc.rendererConfig     = &config;
+    rendererDesc.rendererConfigSize = sizeof(config);
+
+    // Load Vulkan render system
+    auto renderer = LLGL::RenderSystem::Load(rendererDesc);
+    \endcode
+    \see rendererConfigSize
+    \see VulkanRendererConfiguration
+    */
+    const void* rendererConfig      = nullptr;
+
+    /**
+    \brief Specifies the size (in bytes) of the strucutre where the 'rendererConfig' member points to (use 'sizeof' with the respective structure). By default 0.
+    \remarks If 'rendererConfig' is null then this member is ignored.
+    \see rendererConfig
+    */
+    std::size_t rendererConfigSize  = 0;
 };
 
 //! Rendering capabilities structure.

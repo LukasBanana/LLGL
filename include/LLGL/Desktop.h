@@ -11,7 +11,7 @@
 
 #include "Export.h"
 #include "Types.h"
-#include "RenderContextDescriptor.h"
+#include "RenderContextFlags.h"
 
 
 namespace LLGL

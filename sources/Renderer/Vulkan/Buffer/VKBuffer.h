@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Buffer.h>
-#include "VKDeviceMemory.h"
+#include "../Memory/VKDeviceMemory.h"
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <memory>
@@ -20,11 +20,11 @@ namespace LLGL
 {
 
 
-struct VKBufferObject
+struct VKBufferWithRequirements
 {
-    VKBufferObject(const VKPtr<VkDevice>& device);
-    VKBufferObject(VKBufferObject&& rhs);
-    VKBufferObject& operator = (VKBufferObject&& rhs);
+    VKBufferWithRequirements(const VKPtr<VkDevice>& device);
+    VKBufferWithRequirements(VKBufferWithRequirements&& rhs);
+    VKBufferWithRequirements& operator = (VKBufferWithRequirements&& rhs);
 
     void Create(const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
     void Release();
@@ -41,8 +41,9 @@ class VKBuffer : public Buffer
 
         VKBuffer(const BufferType type, const VKPtr<VkDevice>& device, const VkBufferCreateInfo& createInfo);
 
-        void BindToMemory(VkDevice device, const std::shared_ptr<VKDeviceMemory>& deviceMemory, VkDeviceSize memoryOffset);
-        void TakeStagingBuffer(VKBufferObject&& buffer, std::shared_ptr<VKDeviceMemory>&& deviceMemory);
+        void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
+
+        void TakeStagingBuffer(VKBufferWithRequirements&& buffer, VKDeviceMemoryRegion* memoryRegionStaging);
 
         // Returns the hardware buffer object.
         inline VkBuffer GetVkBuffer() const
@@ -64,13 +65,13 @@ class VKBuffer : public Buffer
 
     private:
 
-        VKBufferObject                  bufferObj_;
-        std::shared_ptr<VKDeviceMemory> deviceMemory_;
+        VKBufferWithRequirements          bufferObj_;
+        VKDeviceMemoryRegion*   memoryRegion_           = nullptr;
 
-        VKBufferObject                  bufferObjStaging_;
-        std::shared_ptr<VKDeviceMemory> deviceMemoryStaging_;
+        VKBufferWithRequirements          bufferObjStaging_;
+        VKDeviceMemoryRegion*   memoryRegionStaging_    = nullptr;
 
-        VkDeviceSize                    size_                   = 0;
+        VkDeviceSize            size_                   = 0;
 
 };
 

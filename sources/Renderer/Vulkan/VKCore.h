@@ -64,7 +64,7 @@ void VKThrowIfFailed(const VkResult result, const char* info);
 // Converts the specified Vulkan API version into a string (e.g. "1.0.100").
 std::string VKApiVersionToString(std::uint32_t version);
 
-//! Converts the boolean value into a VkBool322 value.
+// Converts the boolean value into a VkBool322 value.
 VkBool32 VKBoolean(bool value);
 
 
@@ -79,6 +79,9 @@ std::vector<VkQueueFamilyProperties> VKQueryQueueFamilyProperties(VkPhysicalDevi
 
 SurfaceSupportDetails VKQuerySurfaceSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFlags flags, VkSurfaceKHR* surface = nullptr);
+
+// Returns the memory type index that supports the specified type bits and properties, or throws an std::runtime_error exception on failure.
+std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties);
 
 
 } // /namespace LLGL

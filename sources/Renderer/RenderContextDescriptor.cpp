@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/RenderContextDescriptor.h>
+#include <LLGL/RenderContextFlags.h>
 #include "../Core/HelperMacros.h"
 
 

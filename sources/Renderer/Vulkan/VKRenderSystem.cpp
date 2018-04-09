@@ -9,7 +9,7 @@
 #include "VKRenderSystem.h"
 #include "Ext/VKExtensionLoader.h"
 #include "Ext/VKExtensions.h"
-#include "Buffer/VKDeviceMemory.h"
+#include "Memory/VKDeviceMemory.h"
 #include "Buffer/VKIndexBuffer.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
@@ -17,6 +17,11 @@
 #include "../GLCommon/GLTypes.h"
 #include "VKCore.h"
 #include <LLGL/Log.h>
+
+#define TEST_VULKAN_MEMORY_MNGR
+#ifdef TEST_VULKAN_MEMORY_MNGR
+#   include <iostream>
+#endif
 
 
 namespace LLGL
@@ -61,23 +66,28 @@ static const std::vector<const char*> g_deviceExtensions
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-VKRenderSystem::VKRenderSystem() :
+VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :
     instance_            { vkDestroyInstance                        },
     device_              { vkDestroyDevice                          },
     debugReportCallback_ { instance_, DestroyDebugReportCallbackEXT }
 {
-    //TODO: get application descriptor from client programmer
-    ApplicationDescriptor appDesc;
-    appDesc.applicationName     = "LLGL-App";
-    appDesc.applicationVersion  = 1;
-    appDesc.engineName          = "LLGL";
-    appDesc.engineVersion       = 1;
+    /* Extract optional renderer configuartion */
+    const VulkanRendererConfiguration* rendererConfigVK= nullptr;
+
+    if (renderSystemDesc.rendererConfig != nullptr && renderSystemDesc.rendererConfigSize > 0)
+    {
+        if (renderSystemDesc.rendererConfigSize == sizeof(VulkanRendererConfiguration))
+            rendererConfigVK = reinterpret_cast<const VulkanRendererConfiguration*>(renderSystemDesc.rendererConfig);
+        else
+            throw std::invalid_argument("invalid renderer configuration structure (expected size of 'VulkanRendererConfiguration' structure)");
+    }
 
     #ifdef LLGL_DEBUG
     debugLayerEnabled_ = true;
     #endif
 
-    CreateInstance(appDesc);
+    /* Create Vulkan instance and device objects */
+    CreateInstance(rendererConfigVK != nullptr ? &(rendererConfigVK->application) : nullptr);
     LoadExtensions();
 
     if (!PickPhysicalDevice())
@@ -86,6 +96,60 @@ VKRenderSystem::VKRenderSystem() :
     QueryDeviceProperties();
     CreateLogicalDevice();
     CreateStagingCommandResources();
+
+    /* Create device memory manager */
+    deviceMemoryMngr_ = MakeUnique<VKDeviceMemoryManager>(
+        device_,
+        memoryProperties_,
+        (rendererConfigVK != nullptr ? rendererConfigVK->minDeviceMemoryAllocationSize : 1024*1024),
+        (rendererConfigVK != nullptr ? rendererConfigVK->reduceDeviceMemoryFragmentation : false)
+    );
+
+    #if defined TEST_VULKAN_MEMORY_MNGR && 0
+
+    auto& mngr = *deviceMemoryMngr_;
+
+    std::uint32_t typeBits = 1665;
+    VkDeviceSize alignment = 1;
+    
+    auto reg0 = mngr.Allocate(6, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg1 = mngr.Allocate(7, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg2 = mngr.Allocate(12, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg3 = mngr.Allocate(5, 16, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto reg4 = mngr.Allocate(5, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mngr.PrintBlocks(std::cout, "Allocate: 6, 7, 12, 5 (alignment 16), 5");
+    std::cout << std::endl;
+
+    mngr.Release(reg1);
+    mngr.PrintBlocks(std::cout, "Release second allocation (7)");
+    std::cout << std::endl;
+
+    reg1 = mngr.Allocate(3, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mngr.PrintBlocks(std::cout, "Allocate: 3");
+    std::cout << std::endl;
+
+    auto reg5 = mngr.Allocate(4, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mngr.PrintBlocks(std::cout, "Allocate: 4");
+    std::cout << std::endl;
+
+    mngr.Release(reg1);
+    mngr.PrintBlocks(std::cout, "Release previous 3");
+    std::cout << std::endl;
+
+    mngr.Release(reg2);
+    mngr.PrintBlocks(std::cout, "Release previous 12");
+    std::cout << std::endl;
+
+    mngr.Release(reg5);
+    mngr.Release(reg4);
+    mngr.PrintBlocks(std::cout, "Release previous 4, 5");
+    std::cout << std::endl;
+
+    reg5 = mngr.Allocate(9, 8, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    mngr.PrintBlocks(std::cout, "Allocate: 9 with alignment 8");
+    std::cout << std::endl;
+
+    #endif
 }
 
 VKRenderSystem::~VKRenderSystem()
@@ -140,23 +204,25 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     VkBufferCreateInfo stagingCreateInfo;
     FillBufferCreateInfo(stagingCreateInfo, static_cast<VkDeviceSize>(desc.size), VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 
-    VKBufferObject stagingBuffer(device_);
+    VKBufferWithRequirements stagingBuffer { device_ };
     stagingBuffer.Create(device_, stagingCreateInfo);
 
     /* Allocate statging device memory */
-    const auto stagingMemoryTypeIndex = FindMemoryType(
+    auto memoryRegionStaging = deviceMemoryMngr_->Allocate(
+        stagingBuffer.requirements.size,
+        stagingBuffer.requirements.alignment,
         stagingBuffer.requirements.memoryTypeBits,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 
-    auto stagingDeviceMemory = std::make_shared<VKDeviceMemory>(device_, stagingBuffer.requirements.size, stagingMemoryTypeIndex);
-
-    vkBindBufferMemory(device_, stagingBuffer.buffer, stagingDeviceMemory->GetVkDeviceMemory(), 0);
+    memoryRegionStaging->BindBuffer(device_, stagingBuffer.buffer);
 
     /* Copy initial data to buffer memory */
     if (initialData != nullptr)
     {
-        if (auto memory = stagingDeviceMemory->Map(device_, 0, static_cast<VkDeviceSize>(desc.size)))
+        auto stagingDeviceMemory = memoryRegionStaging->GetParentChunk();
+
+        if (auto memory = stagingDeviceMemory->Map(device_, memoryRegionStaging->GetOffset(), static_cast<VkDeviceSize>(desc.size)))
         {
             ::memcpy(memory, initialData, static_cast<size_t>(desc.size));
             stagingDeviceMemory->Unmap(device_);
@@ -168,22 +234,28 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     
     /* Allocate device memory */
     const auto& requirements = buffer->GetRequirements();
-    const auto memoryTypeIndex = FindMemoryType(
+
+    auto memoryRegion = deviceMemoryMngr_->Allocate(
+        requirements.size,
+        requirements.alignment,
         requirements.memoryTypeBits,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
-    auto deviceMemory = std::make_shared<VKDeviceMemory>(device_, requirements.size, memoryTypeIndex);
-
-    buffer->BindToMemory(device_, deviceMemory, 0);
+    buffer->BindToMemory(device_, memoryRegion);
 
     /* Copy staging buffer into hardware buffer */
     CopyBuffer(stagingBuffer.buffer, buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
 
     if ((desc.flags & BufferFlags::MapReadWriteAccess) != 0)
     {
-        /* Store ownershup of staging buffer */
-        buffer->TakeStagingBuffer(std::move(stagingBuffer), std::move(stagingDeviceMemory));
+        /* Store ownership of staging buffer */
+        buffer->TakeStagingBuffer(std::move(stagingBuffer), memoryRegionStaging);
+    }
+    else
+    {
+        /* Release staging buffer */
+        deviceMemoryMngr_->Release(memoryRegionStaging);
     }
 
     return buffer;
@@ -395,18 +467,30 @@ void VKRenderSystem::Release(Fence& fence)
  * ======= Private: =======
  */
 
-void VKRenderSystem::CreateInstance(const ApplicationDescriptor& appDesc)
+void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc)
 {
-    /* Setup application descriptor */
+    /* Initialize application descriptor */
     VkApplicationInfo appInfo;
     
-    appInfo.sType               = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pNext               = nullptr;
-    appInfo.pApplicationName    = appDesc.applicationName.c_str();
-    appInfo.applicationVersion  = appDesc.applicationVersion;
-    appInfo.pEngineName         = appDesc.engineName.c_str();
-    appInfo.engineVersion       = appDesc.engineVersion;
-    appInfo.apiVersion          = VK_API_VERSION_1_0;
+    appInfo.sType                   = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pNext                   = nullptr;
+
+    if (applicationDesc)
+    {
+        appInfo.pApplicationName    = applicationDesc->applicationName.c_str();
+        appInfo.applicationVersion  = applicationDesc->applicationVersion;
+        appInfo.pEngineName         = applicationDesc->engineName.c_str();
+        appInfo.engineVersion       = applicationDesc->engineVersion;
+    }
+    else
+    {
+        appInfo.pApplicationName    = nullptr;
+        appInfo.applicationVersion  = 0;
+        appInfo.pEngineName         = nullptr;
+        appInfo.engineVersion       = 0;
+    }
+
+    appInfo.apiVersion              = VK_API_VERSION_1_0;
 
     /* Query instance layer properties */
     auto layerProperties = VKQueryInstanceLayerProperties();
@@ -525,7 +609,7 @@ bool VKRenderSystem::PickPhysicalDevice()
 void VKRenderSystem::QueryDeviceProperties()
 {
     /* Query physical device features and memory propertiers */
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryPropertiers_);
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
     vkGetPhysicalDeviceFeatures(physicalDevice_, &features_);
 
     /* Query properties of selected physical device */
@@ -719,14 +803,9 @@ bool VKRenderSystem::CheckDeviceExtensionSupport(VkPhysicalDevice device, const 
     return requiredExtensions.empty();
 }
 
-std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const
 {
-    for (std::uint32_t i = 0; i < memoryPropertiers_.memoryTypeCount; ++i)
-    {
-        if ((typeFilter & (1 << i)) != 0 && (memoryPropertiers_.memoryTypes[i].propertyFlags & properties) == properties)
-            return i;
-    }
-    throw std::runtime_error("failed to find suitable Vulkan memory type");
+    return VKFindMemoryType(memoryProperties_, memoryTypeBits, properties);
 }
 
 VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage)

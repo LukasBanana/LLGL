@@ -13,7 +13,7 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/Image.h>
 #include <LLGL/BufferFlags.h>
-#include <LLGL/RenderContextFlags.h>
+#include <LLGL/CommandBufferFlags.h>
 #include <LLGL/TextureFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/SamplerFlags.h>

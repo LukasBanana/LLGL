@@ -11,7 +11,6 @@
 
 #include "Export.h"
 #include "Surface.h"
-#include "RenderContextDescriptor.h"
 #include "RenderContextFlags.h"
 #include "RenderSystemFlags.h"
 

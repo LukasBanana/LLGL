@@ -10,7 +10,7 @@
 
 
 #include "Export.h"
-#include "RenderContextFlags.h"
+#include "CommandBufferFlags.h"
 #include "RenderSystemFlags.h"
 #include "ColorRGBA.h"
 

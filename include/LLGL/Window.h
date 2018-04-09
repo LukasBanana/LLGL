@@ -27,7 +27,7 @@ static const std::uint32_t invalidWindowTimerID = 0;
 //! Window descriptor structure.
 struct WindowDescriptor
 {
-    //! Window title as UTF16 string.
+    //! Window title as unicode string.
     std::wstring    title;
 
     //! Window position (relative to the client area).
@@ -166,7 +166,10 @@ class LLGL_EXPORT Window : public Surface
                 */
                 virtual bool OnQuit(Window& sender);
 
-                //! Send when the window received a timer event with the specified timer ID number.
+                /**
+                \brief Send when the window received a timer event with the specified timer ID number.
+                \note Only supported on: Win32.
+                */
                 virtual void OnTimer(Window& sender, std::uint32_t timerID);
 
         };
@@ -247,7 +250,7 @@ class LLGL_EXPORT Window : public Surface
 
         /* --- Event handling --- */
 
-        //! Adds a new event listener to this window.
+        //! Adds the specified event listener to this window.
         void AddEventListener(const std::shared_ptr<EventListener>& eventListener);
 
         //! Removes the specified event listener from this window.
@@ -303,7 +306,7 @@ class LLGL_EXPORT Window : public Surface
     protected:
 
         /**
-        \briefs Called inside the "ProcessEvents" function after all event listeners received the same event.
+        \brief Called inside the "ProcessEvents" function after all event listeners received the same event.
         \see ProcessEvents
         \see EventListener::OnProcessEvents
         */

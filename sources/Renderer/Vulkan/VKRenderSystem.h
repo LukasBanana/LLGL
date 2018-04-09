@@ -13,6 +13,7 @@
 #include "Vulkan.h"
 #include "VKPtr.h"
 #include "../ContainerTypes.h"
+#include "Memory/VKDeviceMemoryManager.h"
 
 #include "VKCommandQueue.h"
 #include "VKCommandBuffer.h"
@@ -54,7 +55,7 @@ class VKRenderSystem : public RenderSystem
 
         /* ----- Common ----- */
 
-        VKRenderSystem();
+        VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc);
         ~VKRenderSystem();
 
         /* ----- Render Context ----- */
@@ -156,7 +157,7 @@ class VKRenderSystem : public RenderSystem
 
     private:
 
-        void CreateInstance(const ApplicationDescriptor& appDesc);
+        void CreateInstance(const ApplicationDescriptor* applicationDesc);
         void CreateDebugReportCallback();
         void LoadExtensions();
         bool PickPhysicalDevice();
@@ -171,7 +172,7 @@ class VKRenderSystem : public RenderSystem
         bool IsPhysicalDeviceSuitable(VkPhysicalDevice device) const;
         bool CheckDeviceExtensionSupport(VkPhysicalDevice device, const std::vector<const char*>& extensionNames) const;
 
-        std::uint32_t FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+        std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
 
         VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
@@ -185,7 +186,7 @@ class VKRenderSystem : public RenderSystem
         VKPtr<VkDebugReportCallbackEXT>         debugReportCallback_;
 
         QueueFamilyIndices                      queueFamilyIndices_;
-        VkPhysicalDeviceMemoryProperties        memoryPropertiers_;
+        VkPhysicalDeviceMemoryProperties        memoryProperties_;
         VkPhysicalDeviceFeatures                features_;
 
         VkQueue                                 graphicsQueue_          = VK_NULL_HANDLE;
@@ -194,6 +195,8 @@ class VKRenderSystem : public RenderSystem
         VkCommandBuffer                         stagingCommandBuffer_   = VK_NULL_HANDLE;
 
         bool                                    debugLayerEnabled_      = false;
+
+        std::unique_ptr<VKDeviceMemoryManager>  deviceMemoryMngr_;
 
         /* ----- Hardware object containers ----- */
 

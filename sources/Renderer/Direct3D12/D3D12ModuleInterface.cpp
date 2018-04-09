@@ -27,7 +27,7 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
     return "Direct3D 12";
 }
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* /*renderSystemDesc*/)
 {
     return new LLGL::D3D12RenderSystem();
 }

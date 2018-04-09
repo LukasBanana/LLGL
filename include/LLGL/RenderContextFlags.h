@@ -9,99 +9,102 @@
 #define LLGL_RENDER_CONTEXT_FLAGS_H
 
 
+#include "Export.h"
+#include "Types.h"
+#include "GraphicsPipelineFlags.h"
+#include <functional>
+#include <cstdint>
+
+
 namespace LLGL
 {
+
+
+/* ----- Types ----- */
+
+/**
+\brief Debug callback function interface.
+\param[in] type Descriptive type of the message.
+\param[in] message Specifies the debug output message.
+\remarks This output is renderer dependent.
+*/
+using DebugCallback = std::function<void(const std::string& type, const std::string& message)>;
 
 
 /* ----- Enumerations ----- */
 
 /**
-\brief Render condition mode enumeration.
-\remarks The condition is determined by the type of the Query object.
-\see RenderContext::BeginRenderCondition
+\brief OpenGL context profile enumeration.
+\remarks Can be used to specify a specific OpenGL profile other than the default (i.e. compatibility profile).
 */
-enum class RenderConditionMode
+enum class OpenGLContextProfile
 {
-    Wait,                   //!< Wait until the occlusion query result is available, before conditional rendering begins.
-    NoWait,                 //!< Do not wait until the occlusion query result is available, before conditional rendering begins.
-    ByRegionWait,           //!< Similar to Wait, but the renderer may discard the results of commands for any framebuffer region that did not contribute to the occlusion query.
-    ByRegionNoWait,         //!< Similar to NoWait, but the renderer may discard the results of commands for any framebuffer region that did not contribute to the occlusion query.
-    WaitInverted,           //!< Same as Wait, but the condition is inverted.
-    NoWaitInverted,         //!< Same as NoWait, but the condition is inverted.
-    ByRegionWaitInverted,   //!< Same as ByRegionWait, but the condition is inverted.
-    ByRegionNoWaitInverted, //!< Same as ByRegionNoWait, but the condition is inverted.
+    CompatibilityProfile,   //!< OpenGL compatibility profile. This is the default.
+    CoreProfile,            //!< OpenGL core profile.
+    ESProfile,              //!< OpenGL ES profile. \todo This is incomplete, do not use!
 };
 
 
 /* ----- Structures ----- */
 
-/**
-\brief Command buffer clear flags.
-\see CommandBuffer::Clear
-*/
-struct ClearFlags
+//! Vertical-synchronization (Vsync) descriptor structure.
+struct VsyncDescriptor
 {
-    enum
-    {
-        Color           = (1 << 0),                     //!< Clears the color buffer.
-        Depth           = (1 << 1),                     //!< Clears the depth buffer.
-        Stencil         = (1 << 2),                     //!< Clears the stencil buffer.
-
-        ColorDepth      = (Color | Depth),              //!< Clears the color and depth buffers.
-        DepthStencil    = (Depth | Stencil),            //!< Clears the depth and stencil buffers.
-        All             = (Color | Depth | Stencil),    //!< Clears the all buffers (color, depth, and stencil).
-    };
+    bool            enabled     = false;    //!< Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
+    std::uint32_t   refreshRate = 60;       //!< Refresh rate (in Hz). By default 60.
+    std::uint32_t   interval    = 1;        //!< Synchronisation interval. Can be 1, 2, 3, or 4. If Vsync is disabled, this value is implicit zero.
 };
 
-/**
-\brief Low-level graphics API dependent state descriptor union.
-\remarks This descriptor is used to compensate a few differences between OpenGL and Direct3D.
-\see RenderContext::SetGraphicsAPIDependentState
-*/
-union GraphicsAPIDependentStateDescriptor
+//! Video mode descriptor structure.
+struct VideoModeDescriptor
 {
-    GraphicsAPIDependentStateDescriptor()
-    {
-        stateOpenGL.screenSpaceOriginLowerLeft      = false;
-        stateOpenGL.invertFrontFace                 = false;
-
-        stateDirect3D12.disableAutoStateSubmission  = false;
-    }
-
-    struct StateOpenGLDescriptor
-    {
-        /**
-        \brief Specifies whether the screen-space origin is on the lower-left. By default false.
-        \remarks If this is true, the viewports and scissor rectangles of OpenGL are NOT emulated to the upper-left,
-        which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
-        */
-        bool        screenSpaceOriginLowerLeft;
-
-        /**
-        \brief Specifies whether to invert front-facing. By default false.
-        \remarks If this is true, the front facing (either GL_CW or GL_CCW) will be inverted,
-        i.e. CCW becomes CW, and CW becomes CCW.
-        */
-        bool        invertFrontFace;
-    }
-    stateOpenGL;
-
-    //! \todo Remove this as soon as SetViewport and SetScissor are replaced by graphics pipeline states.
-    struct StateDirect3D12Descriptor
-    {
-        /**
-        \brief Specifies whether persistent states are automatically submitted to the command buffer or not. By default false.
-        \remarks If this is true, "SetViewport" or "SetViewportArray", and "SetScissor" or "SetScissorArray" of the CommandBuffer interface
-        must be called every time after the command buffer has been submitted to the command queue (e.g. after the "RenderContext::Present" function has been called).
-        \see CommandBuffer::SetViewport
-        \see CommandBuffer::SetViewportArray
-        \see CommandBuffer::SetScissor
-        \see CommandBuffer::SetScissorArray
-        */
-        bool        disableAutoStateSubmission;
-    }
-    stateDirect3D12;
+    Size            resolution;                 //!< Screen resolution.
+    int             colorDepth      = 32;       //!< Color bit depth. Should be 24 or 32. By default 32.
+    bool            fullscreen      = false;    //!< Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
+    std::uint32_t   swapChainSize   = 2;        //!< Number of swap-chain buffers. By default 2 (for double-buffering).
 };
+
+//TODO: move this into RenderSystemDescriptor, and make GL context creation part of GLRenderSystem instead of each GLRenderContext instance
+/**
+\brief OpenGL profile descriptor structure.
+\note On MacOS the only supported OpenGL profiles are compatibility profile (for lagecy OpenGL before 3.0), 3.2 core profile, or 4.1 core profile.
+*/
+struct ProfileOpenGLDescriptor
+{
+    //! Specifies the requested OpenGL context profile. By default OpenGLContextProfile::CompatibilityProfile.
+    OpenGLContextProfile    contextProfile  = OpenGLContextProfile::CompatibilityProfile;
+
+    /**
+    \brief Specifies the requested OpenGL context major version. By default -1 to indicate to use the highest version possible.
+    \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
+    */
+    int                     majorVersion    = -1;
+
+    /**
+    \brief Specifies the requested OpenGL context minor version. By default -1 to indicate to use the highest version possible.
+    \remarks This member is ignored if 'contextProfile' is 'OpenGLContextProfile::CompatibilityProfile'.
+    */
+    int                     minorVersion    = -1;
+};
+
+//! Render context descriptor structure.
+struct RenderContextDescriptor
+{
+    VsyncDescriptor         vsync;          //!< Vertical-synchronization (Vsync) descriptor.
+    MultiSamplingDescriptor multiSampling;  //!< Sampling descriptor.
+    VideoModeDescriptor     videoMode;      //!< Video mode descriptor.
+    ProfileOpenGLDescriptor profileOpenGL;  //!< OpenGL profile descriptor (to switch between compatability or core profile).
+    DebugCallback           debugCallback;  //!< Debuging callback descriptor.
+};
+
+
+/* ----- Operators ----- */
+
+LLGL_EXPORT bool operator == (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs);
+LLGL_EXPORT bool operator != (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs);
+
+LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
+LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
 
 
 } // /namespace LLGL
