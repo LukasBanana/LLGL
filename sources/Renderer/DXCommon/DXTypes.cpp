@@ -69,6 +69,8 @@ DXGI_FORMAT Map(const TextureFormat textureFormat)
 {
     switch (textureFormat)
     {
+        case TextureFormat::Unknown:        break;
+
         /* --- Base internal formats --- */
         case TextureFormat::DepthComponent: return DXGI_FORMAT_D32_FLOAT;
         case TextureFormat::DepthStencil:   return DXGI_FORMAT_D24_UNORM_S8_UINT;

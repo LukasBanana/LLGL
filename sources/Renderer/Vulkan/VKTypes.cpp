@@ -66,6 +66,91 @@ VkFormat Map(const VectorType vectorType)
     MapFailed("VectorType", "VkFormat");
 }
 
+VkFormat Map(const TextureFormat textureFormat)
+{
+    switch (textureFormat)
+    {
+        case TextureFormat::Unknown:        break;
+
+        /* --- Base internal formats --- */
+        case TextureFormat::DepthComponent: return VK_FORMAT_D32_SFLOAT;
+        case TextureFormat::DepthStencil:   return VK_FORMAT_D24_UNORM_S8_UINT;
+        case TextureFormat::R:              return VK_FORMAT_R8_UNORM;
+        case TextureFormat::RG:             return VK_FORMAT_R8G8_UNORM;
+        case TextureFormat::RGB:            return VK_FORMAT_R8G8B8_UNORM;
+        case TextureFormat::RGBA:           return VK_FORMAT_R8G8B8A8_UNORM;
+
+        /* --- Sized internal formats --- */
+        case TextureFormat::R8:             return VK_FORMAT_R8_UNORM;
+        case TextureFormat::R8Sgn:          return VK_FORMAT_R8_SNORM;
+
+        case TextureFormat::R16:            return VK_FORMAT_R16_UNORM;
+        case TextureFormat::R16Sgn:         return VK_FORMAT_R16_SNORM;
+        case TextureFormat::R16Float:       return VK_FORMAT_R16_SFLOAT;
+
+        case TextureFormat::R32UInt:        return VK_FORMAT_R32_UINT;
+        case TextureFormat::R32SInt:        return VK_FORMAT_R32_SINT;
+        case TextureFormat::R32Float:       return VK_FORMAT_R32_SFLOAT;
+
+        case TextureFormat::RG8:            return VK_FORMAT_R8G8_UNORM;
+        case TextureFormat::RG8Sgn:         return VK_FORMAT_R8G8_SNORM;
+
+        case TextureFormat::RG16:           return VK_FORMAT_R16G16_UNORM;
+        case TextureFormat::RG16Sgn:        return VK_FORMAT_R16G16_SNORM;
+        case TextureFormat::RG16Float:      return VK_FORMAT_R16G16_SFLOAT;
+
+        case TextureFormat::RG32UInt:       return VK_FORMAT_R32G32_UINT;
+        case TextureFormat::RG32SInt:       return VK_FORMAT_R32G32_SINT;
+        case TextureFormat::RG32Float:      return VK_FORMAT_R32G32_SFLOAT;
+
+        case TextureFormat::RGB8:           return VK_FORMAT_R8G8B8_UNORM;
+        case TextureFormat::RGB8Sgn:        return VK_FORMAT_R8G8B8_SNORM;
+
+        case TextureFormat::RGB16:          return VK_FORMAT_R16G16B16_UNORM;
+        case TextureFormat::RGB16Sgn:       return VK_FORMAT_R16G16B16_SNORM;
+        case TextureFormat::RGB16Float:     return VK_FORMAT_R16G16B16_SFLOAT;
+
+        case TextureFormat::RGB32UInt:      return VK_FORMAT_R32G32B32_UINT;
+        case TextureFormat::RGB32SInt:      return VK_FORMAT_R32G32B32_SINT;
+        case TextureFormat::RGB32Float:     return VK_FORMAT_R32G32B32_SFLOAT;
+
+        case TextureFormat::RGBA8:          return VK_FORMAT_R8G8B8A8_UNORM;
+        case TextureFormat::RGBA8Sgn:       return VK_FORMAT_R8G8B8A8_SNORM;
+
+        case TextureFormat::RGBA16:         return VK_FORMAT_R16G16B16A16_UNORM;
+        case TextureFormat::RGBA16Sgn:      return VK_FORMAT_R16G16B16A16_SNORM;
+        case TextureFormat::RGBA16Float:    return VK_FORMAT_R16G16B16A16_SFLOAT;
+
+        case TextureFormat::RGBA32UInt:     return VK_FORMAT_R32G32B32A32_UINT;
+        case TextureFormat::RGBA32SInt:     return VK_FORMAT_R32G32B32A32_SINT;
+        case TextureFormat::RGBA32Float:    return VK_FORMAT_R32G32B32A32_SFLOAT;
+
+        /* --- Compressed formats --- */
+        case TextureFormat::RGB_DXT1:       return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+        case TextureFormat::RGBA_DXT1:      return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+        case TextureFormat::RGBA_DXT3:      return VK_FORMAT_BC2_UNORM_BLOCK;
+        case TextureFormat::RGBA_DXT5:      return VK_FORMAT_BC3_UNORM_BLOCK;
+    }
+    MapFailed("TextureFormat", "VkFormat");
+}
+
+VkImageType Map(const TextureType textureType)
+{
+    switch (textureType)
+    {
+        case TextureType::Texture1D:        return VK_IMAGE_TYPE_1D;
+        case TextureType::Texture2D:        return VK_IMAGE_TYPE_2D;
+        case TextureType::Texture3D:        return VK_IMAGE_TYPE_3D;
+        case TextureType::TextureCube:      return VK_IMAGE_TYPE_3D;
+        case TextureType::Texture1DArray:   return VK_IMAGE_TYPE_2D;
+        case TextureType::Texture2DArray:   return VK_IMAGE_TYPE_3D;
+        case TextureType::TextureCubeArray: return VK_IMAGE_TYPE_3D;
+        case TextureType::Texture2DMS:      return VK_IMAGE_TYPE_2D;
+        case TextureType::Texture2DMSArray: return VK_IMAGE_TYPE_3D;
+    }
+    MapFailed("TextureType", "VkImageType");
+}
+
 VkPrimitiveTopology Map(const PrimitiveTopology primitiveTopology)
 {
     switch (primitiveTopology)

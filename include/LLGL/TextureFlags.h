@@ -44,14 +44,20 @@ enum class TextureFormat
     Unknown,        //!< Unknown texture format.
 
     /* --- Base formats --- */
+    #if 1
     DepthComponent, //!< Base format: depth component.
     DepthStencil,   //!< Base format: depth- and stencil components.
     R,              //!< Base format: red component.
     RG,             //!< Base format: red and green components.
-    RGB,            //!< Base format: red, green, and blue components. \note Only supported with: OpenGL.
+    RGB,            //!< Base format: red, green, and blue components. \note Only supported with: OpenGL, Vulkan.
     RGBA,           //!< Base format: red, green, blue, and alpha components.
 
     /* --- Sized formats --- */
+    #else
+    D32,            //!< Sized format: depth 32-bit floating point component,
+    D24S8,          //!< Sized format: depth 24-bit normalized unsigned integer, and 8-bit unsigned integer stencil components.
+    #endif
+
     R8,             //!< Sized format: red 8-bit normalized unsigned integer component.
     R8Sgn,          //!< Sized format: red 8-bit normalized signed integer component.
 
@@ -74,12 +80,12 @@ enum class TextureFormat
     RG32SInt,       //!< Sized format: red, green 32-bit un-normalized signed interger components.
     RG32Float,      //!< Sized format: red, green 32-bit floating point components.
 
-    RGB8,           //!< Sized format: red, green, blue 8-bit normalized unsigned integer components. \note Only supported with: OpenGL.
-    RGB8Sgn,        //!< Sized format: red, green, blue 8-bit normalized signed integer components. \note Only supported with: OpenGL.
+    RGB8,           //!< Sized format: red, green, blue 8-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan.
+    RGB8Sgn,        //!< Sized format: red, green, blue 8-bit normalized signed integer components. \note Only supported with: OpenGL, Vulkan.
 
-    RGB16,          //!< Sized format: red, green, blue 16-bit normalized unsigned interger components. \note Only supported with: OpenGL.
-    RGB16Sgn,       //!< Sized format: red, green, blue 16-bit normalized signed interger components. \note Only supported with: OpenGL.
-    RGB16Float,     //!< Sized format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL.
+    RGB16,          //!< Sized format: red, green, blue 16-bit normalized unsigned interger components. \note Only supported with: OpenGL, Vulkan.
+    RGB16Sgn,       //!< Sized format: red, green, blue 16-bit normalized signed interger components. \note Only supported with: OpenGL, Vulkan.
+    RGB16Float,     //!< Sized format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL, Vulkan.
 
     RGB32UInt,      //!< Sized format: red, green, blue 32-bit un-normalized unsigned interger components.
     RGB32SInt,      //!< Sized format: red, green, blue 32-bit un-normalized signed interger components.
