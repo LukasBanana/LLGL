@@ -440,7 +440,7 @@ To create an \LLGL renderer instance in our main function, we load a renderer mo
 (a \textit{module} here denotes a dynamic shared library)
 from the static \texttt{Load} function of the \texttt{RenderSystem} interface:
 \begin{lstlisting}
-std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("OpenGL");
+std::unique_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("OpenGL");
 \end{lstlisting}
 Here we could actually use the C++11 keyword \texttt{auto} to simplify the code,
 but for explanation purposes we keep the types explicit.
@@ -580,8 +580,9 @@ LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
 shaderProgram->AttachShader(*vertexShader);
 shaderProgram->AttachShader(*fragmentShader);
 
-// Build vertex layout for input assembly (this is not required for a compute shader program)
-shaderProgram->BuildInputLayout(vertexFormat);
+// Build vertex layout for input assembly (this is not required for a compute shader program).
+// Multiple vertex formats can be passed when the vertex data comes from multiple vertex buffers.
+shaderProgram->BuildInputLayout(1, &vertexFormat);
 
 // Link shader program and check for errors
 if (!shaderProgram->LinkShaders()) {
@@ -926,7 +927,7 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
 
 // Here you have to return a raw pointer of your custom implementation of the
 // LLGL::RenderSystem interface, where the instance must be allocated with "new",
-// so it can be moved into an std::shared_ptr.
+// so it can be moved into an std::unique_ptr.
 LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
 {
 	return new CustomOpenGLRenderSystem();
@@ -939,7 +940,7 @@ in your \texttt{CustomOpenGLRenderSystem} class ;-).
 After that, you can load your render system like this:
 \begin{lstlisting}
 // Load custom render system (library name is "LLGL_CustomOpenGL", so the passed name is "CustomOpenGL")
-std::shared_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("CustomOpenGL");
+std::unique_ptr<LLGL::RenderSystem> renderer = LLGL::RenderSystem::Load("CustomOpenGL");
 
 // Start using the custom renderer ...
 \end{lstlisting}
