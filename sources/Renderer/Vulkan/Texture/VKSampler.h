@@ -10,7 +10,7 @@
 
 
 #include <LLGL/Sampler.h>
-#include "../Vulkan.h"
+#include <vulkan/vulkan.h>
 #include "../VKPtr.h"
 
 
@@ -26,7 +26,7 @@ class VKSampler : public Sampler
         VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& desc);
 
         // Returns the Vulkan sampler object.
-        inline VkSampler Get() const
+        inline VkSampler GetVkSampler() const
         {
             return sampler_.Get();
         }

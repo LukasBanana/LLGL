@@ -10,7 +10,7 @@
 
 
 #include <LLGL/SamplerArray.h>
-#include "../Vulkan.h"
+#include <vulkan/vulkan.h>
 #include <vector>
 
 

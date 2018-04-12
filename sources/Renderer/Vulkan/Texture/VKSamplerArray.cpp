@@ -19,7 +19,7 @@ VKSamplerArray::VKSamplerArray(std::uint32_t numSamplers, Sampler* const * sampl
     /* Store the ID of each GLSampler inside the array */
     samplers_.reserve(numSamplers);
     while (auto next = NextArrayResource<VKSampler>(numSamplers, samplerArray))
-        samplers_.push_back(next->Get());
+        samplers_.push_back(next->GetVkSampler());
 }
 
 
