@@ -270,15 +270,14 @@ and click on ``Configure''. If everything worked quite well, you should see the 
 in the lower box. To finally create the project files, click on ``Generate''.
 Then your project files should be located in the build directory you just set up previously.
 
-\begin{figure}[H]
+\begin{figure}[ht]
 	\centering
-	\includegraphics[width=0.85\textwidth]{cmake_mask1b}
+	\includegraphics[width=0.85\textwidth]{cmake_mask1c}
 	\caption{CMake GUI mask to set up the project files for VisualStudio 2015 (MSVC14).}
 	\label{fig:cmake_mask1}
 \end{figure}
 
-There are a few options you can switch on and off, which will enable or disable the respective macro
-when you compile the project:
+There are several options you can enable or disable to build the project:
 \begin{itemize}
 	\item \texttt{LLGL\_BUILD\_(TESTS/TUTORIALS/RENDERER\_\dots)} \\
 	Specifies whether to include all test, all tutorials, or the repsective renderer projects.
@@ -295,6 +294,9 @@ when you compile the project:
 	Specifies whether to enable or disable utility functions, which can be used to easily initialize descriptor structures.
 	They must be included separately with the \texttt{LLGL/Utility.h} header file.
 	
+	\item \texttt{LLGL\_GL\_ENABLE\_DSA\_EXT} \\
+	Specifies whether to enable or disable the \texttt{GL\_ARB\_direct\_state\_access} extension that spans the entire render system.
+	
 	\item \texttt{LLGL\_GL\_ENABLE\_EXT\_PLACEHOLDERS} \\
 	Specifies whether OpenGL extensions should be replaced by placeholder procedures
 	when they are not available. This may help debugging and should not influence the runtime performance.
@@ -304,6 +306,10 @@ when you compile the project:
 	One of these extensions is for conservative rasterization
 	(\texttt{GL\_NV\_conservative\_raster} and \texttt{GL\_INTEL\_conservative\_rasterization}) for instance.
 	These extensions will only be loaded and used by the runtime if they are available on the host platform.
+	
+	\item \texttt{LLGL\_GL\_INCLUDE\_EXTERNAL} \\
+	Specifies whether to include the OpenGL header files from the \texttt{external/GL/} directory of the LLGL repository.
+	Otherwise the \texttt{GL/} directory must be elsewhere specified in your include search paths.
 \end{itemize}
 
 
@@ -311,6 +317,7 @@ when you compile the project:
 %	API OVERVIEW
 %----------------------------------------------------------------------------------------
 
+\clearpage
 \newpage
 \section{API Overview}
 
@@ -354,8 +361,8 @@ The most important function in the \texttt{RenderContext} interface is \texttt{P
 to show the content of the back buffer on the screen.
 There are a few other functions to access the context window and change the video mode:
 \begin{lstlisting}
-// Access context window
-GetWindow
+// Access context surface (this is the window on desktop platforms).
+GetSurface
 
 // Set video mode (i.e. resolution, fullscreen/windowed mode etc.)
 SetVideoMode
