@@ -12,6 +12,7 @@
 #include <LLGL/Texture.h>
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
+#include <cstdint>
 
 
 namespace LLGL
@@ -32,15 +33,26 @@ class VKTexture : public Texture
 
         void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
 
+        void CreateImageView(VkDevice device, const TextureDescriptor& desc);
+
         // Returns the Vulkan image object.
         inline VkImage GetVkImage() const
         {
             return image_;
         }
 
+        // Returns the Vulkan image view object.
+        inline VkImageView GetVkImageView() const
+        {
+            return imageView_;
+        }
+
     private:
 
+        void CreateImage(VkDevice device, const TextureDescriptor& desc);
+
         VKPtr<VkImage>          image_;
+        VKPtr<VkImageView>      imageView_;
         VKDeviceMemoryRegion*   memoryRegion_   = nullptr;
 
 };

@@ -32,7 +32,7 @@ void MapFailed(const std::string& typeName, const std::string& vknTypeName);
 VkShaderStageFlagBits   Map( const ShaderType        shaderType        );
 VkFormat                Map( const VectorType        vectorType        );
 VkFormat                Map( const TextureFormat     textureFormat     );
-VkImageType             Map( const TextureType       textureType       );
+VkImageViewType         Map( const TextureType       textureType       );
 VkPrimitiveTopology     Map( const PrimitiveTopology primitiveTopology );
 VkPolygonMode           Map( const PolygonMode       polygonMode       );
 VkCullModeFlags         Map( const CullMode          cullMode          );

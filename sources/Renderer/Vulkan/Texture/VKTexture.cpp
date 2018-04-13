@@ -16,6 +16,70 @@ namespace LLGL
 {
 
 
+VKTexture::VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& desc) :
+    Texture    { desc.type                  },
+    image_     { device, vkDestroyImage     },
+    imageView_ { device, vkDestroyImageView }
+{
+    CreateImage(device, desc);
+}
+
+Gs::Vector3ui VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
+{
+    //todo...
+    return { 0, 0, 0 };
+}
+
+TextureDescriptor VKTexture::QueryDesc() const
+{
+    TextureDescriptor desc;
+
+    desc.type = GetType();
+
+    //todo...
+    
+    return desc;
+}
+
+void VKTexture::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
+{
+    if (memoryRegion)
+    {
+        memoryRegion_ = memoryRegion;
+        memoryRegion_->BindImage(device, GetVkImage());
+    }
+}
+
+void VKTexture::CreateImageView(VkDevice device, const TextureDescriptor& desc)
+{
+    /* Create image view object */
+    VkImageViewCreateInfo createInfo;
+    {
+        createInfo.sType                            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.pNext                            = nullptr;
+        createInfo.flags                            = 0;
+        createInfo.image                            = image_;
+        createInfo.viewType                         = VKTypes::Map(desc.type);
+        createInfo.format                           = VKTypes::Map(desc.format);
+        createInfo.components.r                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.subresourceRange.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel    = 0;
+        createInfo.subresourceRange.levelCount      = 1;
+        createInfo.subresourceRange.baseArrayLayer  = 0;
+        createInfo.subresourceRange.layerCount      = 1;
+    }
+    VkResult result = vkCreateImageView(device, &createInfo, nullptr, imageView_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan image view");
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
 static VkImageCreateFlags GetVkImageCreateFlags(const TextureDescriptor& desc)
 {
     VkImageCreateFlags flags = 0;
@@ -24,6 +88,15 @@ static VkImageCreateFlags GetVkImageCreateFlags(const TextureDescriptor& desc)
         flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
     return flags;
+}
+
+static VkImageType GetVkImageType(const TextureType textureType)
+{
+    if (textureType == TextureType::Texture3D)
+        return VK_IMAGE_TYPE_3D;
+    if (textureType == TextureType::Texture1D || textureType == TextureType::Texture1DArray)
+        return VK_IMAGE_TYPE_1D;
+    return VK_IMAGE_TYPE_2D;
 }
 
 static VkExtent3D GetVkImageExtent3D(const TextureDescriptor& desc, const VkImageType imageType)
@@ -106,17 +179,15 @@ static VkSampleCountFlagBits GetVkImageSampleCountFlags(const TextureDescriptor&
     return VK_SAMPLE_COUNT_1_BIT;
 }
 
-VKTexture::VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& desc) :
-    Texture { desc.type              },
-    image_  { device, vkDestroyImage }
+void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
 {
-    /* Create sampler state */
+    /* Create image object */
     VkImageCreateInfo createInfo;
     {
         createInfo.sType                    = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         createInfo.pNext                    = nullptr;
         createInfo.flags                    = GetVkImageCreateFlags(desc);
-        createInfo.imageType                = VKTypes::Map(desc.type);
+        createInfo.imageType                = GetVkImageType(desc.type);
         createInfo.format                   = VKTypes::Map(desc.format);
         createInfo.extent                   = GetVkImageExtent3D(desc, createInfo.imageType);
         createInfo.mipLevels                = GetVkImageMipLevels(desc, createInfo.extent);
@@ -131,32 +202,6 @@ VKTexture::VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& des
     }
     VkResult result = vkCreateImage(device, &createInfo, nullptr, image_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan image");
-}
-
-Gs::Vector3ui VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
-{
-    //todo...
-    return { 0, 0, 0 };
-}
-
-TextureDescriptor VKTexture::QueryDesc() const
-{
-    TextureDescriptor desc;
-
-    desc.type = GetType();
-
-    //todo...
-    
-    return desc;
-}
-
-void VKTexture::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
-{
-    if (memoryRegion)
-    {
-        memoryRegion_ = memoryRegion;
-        memoryRegion_->BindImage(device, GetVkImage());
-    }
 }
 
 

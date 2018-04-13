@@ -348,11 +348,12 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     );
 
     /* Create device texture */
-    auto texture = MakeUnique<VKTexture>(device_, textureDesc);
+    auto textureVK = MakeUnique<VKTexture>(device_, textureDesc);
+    auto image = textureVK->GetVkImage();
 
     /* Allocate device memory */
     VkMemoryRequirements requirements;
-    vkGetImageMemoryRequirements(device_, texture->GetVkImage(), &requirements);
+    vkGetImageMemoryRequirements(device_, image, &requirements);
 
     auto memoryRegion = deviceMemoryMngr_->Allocate(
         requirements.size,
@@ -361,20 +362,23 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
-    texture->BindToMemory(device_, memoryRegion);
+    textureVK->BindToMemory(device_, memoryRegion);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     auto formatVK = VKTypes::Map(textureDesc.format);
-    TransitionImageLayout(texture->GetVkImage(), formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     {
-        CopyBufferToImage(stagingBuffer.buffer, texture->GetVkImage(), extent);
+        CopyBufferToImage(stagingBuffer.buffer, image, extent);
     }
-    TransitionImageLayout(texture->GetVkImage(), formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     /* Release staging buffer */
     deviceMemoryMngr_->Release(memoryRegionStaging);
 
-    return TakeOwnership(textures_, std::move(texture));
+    /* Create image view for texture */
+    textureVK->CreateImageView(device_, textureDesc);
+
+    return TakeOwnership(textures_, std::move(textureVK));
 }
 
 TextureArray* VKRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
