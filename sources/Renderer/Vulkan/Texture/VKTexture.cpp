@@ -39,8 +39,17 @@ static VkExtent3D GetVkImageExtent3D(const TextureDescriptor& desc, const VkImag
             break;
 
         case VK_IMAGE_TYPE_2D:
-            extent.width    = std::max(1u, desc.texture2D.width);
-            extent.height   = std::max(1u, desc.texture2D.height);
+            if (IsCubeTexture(desc.type))
+            {
+                /* Width and height must be equal for cube textures in Vulkan */
+                extent.width    = std::max(1u, std::max(desc.textureCube.width, desc.textureCube.height));
+                extent.height   = extent.width;
+            }
+            else
+            {
+                extent.width    = std::max(1u, desc.texture2D.width);
+                extent.height   = std::max(1u, desc.texture2D.height);
+            }
             extent.depth    = 1u;
             break;
 

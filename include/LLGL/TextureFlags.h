@@ -326,6 +326,15 @@ struct LLGL_EXPORT SubTextureDescriptor
 LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height = 1, std::uint32_t depth = 1);
 
 /**
+\brief Returns the required buffer size (in bytes) of a texture with the specified hardware format and size.
+\param[in] format Specifies the hardware format.
+\param[in] numTexels Specifies the number of texture elements (texels).
+For the DXT compressed texture formats, this must be a multiple of 16, since these formats compress the image in 4x4 texel blocks.
+\return The required buffer size (in bytes), or zero if the input is invalid.
+*/
+LLGL_EXPORT std::uint32_t TextureBufferSize(const TextureFormat format, std::uint32_t numTexels);
+
+/**
 \brief Returns true if the specified texture format is a compressed format,
 i.e. either TextureFormat::RGB_DXT1, TextureFormat::RGBA_DXT1, TextureFormat::RGBA_DXT3, or TextureFormat::RGBA_DXT5.
 \see TextureFormat

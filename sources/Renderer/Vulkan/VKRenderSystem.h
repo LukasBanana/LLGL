@@ -42,6 +42,7 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <tuple>
 
 
 namespace LLGL
@@ -177,8 +178,18 @@ class VKRenderSystem : public RenderSystem
         std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
 
         VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
+        
+        std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> CreateStagingBuffer(
+            const VkBufferCreateInfo& stagingCreateInfo, const void* initialData = nullptr, std::size_t initialDataSize = 0
+        );
+
+        void BeginStagingCommands();
+        void EndStagingCommands();
+
+        void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+        void CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, const VkExtent3D& extent);
 
         void AssertBufferCPUAccess(const VKBuffer& bufferVK);
 

@@ -489,7 +489,7 @@ static ByteBuffer ConvertImageBufferFormat(
 
 std::uint32_t ImageDescriptor::GetElementSize() const
 {
-    return ImageFormatSize(format) * DataTypeSize(dataType);
+    return (ImageFormatSize(format) * DataTypeSize(dataType));
 }
 
 

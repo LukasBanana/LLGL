@@ -16,6 +16,7 @@
 #include "../../Core/Vendor.h"
 #include "../GLCommon/GLTypes.h"
 #include "VKCore.h"
+#include "VKTypes.h"
 #include <LLGL/Log.h>
 
 //#define TEST_VULKAN_MEMORY_MNGR
@@ -231,29 +232,9 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     );
 
     VKBufferWithRequirements stagingBuffer { device_ };
-    stagingBuffer.Create(device_, stagingCreateInfo);
+    VKDeviceMemoryRegion* memoryRegionStaging = nullptr;
 
-    /* Allocate statging device memory */
-    auto memoryRegionStaging = deviceMemoryMngr_->Allocate(
-        stagingBuffer.requirements.size,
-        stagingBuffer.requirements.alignment,
-        stagingBuffer.requirements.memoryTypeBits,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    );
-
-    memoryRegionStaging->BindBuffer(device_, stagingBuffer.buffer);
-
-    /* Copy initial data to buffer memory */
-    if (initialData != nullptr)
-    {
-        auto stagingDeviceMemory = memoryRegionStaging->GetParentChunk();
-
-        if (auto memory = stagingDeviceMemory->Map(device_, memoryRegionStaging->GetOffset(), static_cast<VkDeviceSize>(desc.size)))
-        {
-            ::memcpy(memory, initialData, static_cast<size_t>(desc.size));
-            stagingDeviceMemory->Unmap(device_);
-        }
-    }
+    std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(stagingCreateInfo, initialData, static_cast<std::size_t>(desc.size));
 
     /* Create device buffer */
     auto buffer = CreateHardwareBuffer(desc, GetVkBufferUsageFlags(desc.flags));
@@ -339,11 +320,61 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
 {
-    auto textureVK = MakeUnique<VKTexture>(device_, textureDesc);
+    /* Determine size of image for staging buffer */
+    const VkExtent3D extent
+    {
+        std::max(1u, textureDesc.texture3D.width),
+        std::max(1u, textureDesc.texture3D.height),
+        std::max(1u, textureDesc.texture3D.depth)
+    };
 
-    //todo...
+    const auto imageDataSize = static_cast<VkDeviceSize>(TextureBufferSize(textureDesc.format, extent.width * extent.height * extent.depth));
 
-    return TakeOwnership(textures_, std::move(textureVK));
+    /* Create staging buffer */
+    VkBufferCreateInfo stagingCreateInfo;
+    FillBufferCreateInfo(
+        stagingCreateInfo,
+        imageDataSize,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT            // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.flags)
+    );
+
+    VKBufferWithRequirements stagingBuffer { device_ };
+    VKDeviceMemoryRegion* memoryRegionStaging = nullptr;
+
+    std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(
+        stagingCreateInfo,
+        (imageDesc != nullptr ? imageDesc->buffer : nullptr),
+        static_cast<std::size_t>(imageDataSize)
+    );
+
+    /* Create device texture */
+    auto texture = MakeUnique<VKTexture>(device_, textureDesc);
+
+    /* Allocate device memory */
+    VkMemoryRequirements requirements;
+    vkGetImageMemoryRequirements(device_, texture->GetVkImage(), &requirements);
+
+    auto memoryRegion = deviceMemoryMngr_->Allocate(
+        requirements.size,
+        requirements.alignment,
+        requirements.memoryTypeBits,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    );
+
+    texture->BindToMemory(device_, memoryRegion);
+
+    /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
+    auto formatVK = VKTypes::Map(textureDesc.format);
+    TransitionImageLayout(texture->GetVkImage(), formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    {
+        CopyBufferToImage(stagingBuffer.buffer, texture->GetVkImage(), extent);
+    }
+    TransitionImageLayout(texture->GetVkImage(), formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    /* Release staging buffer */
+    deviceMemoryMngr_->Release(memoryRegionStaging);
+
+    return TakeOwnership(textures_, std::move(texture));
 }
 
 TextureArray* VKRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
@@ -911,7 +942,37 @@ VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkB
     return nullptr;
 }
 
-void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> VKRenderSystem::CreateStagingBuffer(const VkBufferCreateInfo& stagingCreateInfo, const void* initialData, std::size_t initialDataSize)
+{
+    VKBufferWithRequirements stagingBuffer { device_ };
+    stagingBuffer.Create(device_, stagingCreateInfo);
+
+    /* Allocate statging device memory */
+    auto memoryRegionStaging = deviceMemoryMngr_->Allocate(
+        stagingBuffer.requirements.size,
+        stagingBuffer.requirements.alignment,
+        stagingBuffer.requirements.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
+
+    memoryRegionStaging->BindBuffer(device_, stagingBuffer.buffer);
+
+    /* Copy initial data to buffer memory */
+    if (initialData != nullptr)
+    {
+        auto stagingDeviceMemory = memoryRegionStaging->GetParentChunk();
+
+        if (auto memory = stagingDeviceMemory->Map(device_, memoryRegionStaging->GetOffset(), static_cast<VkDeviceSize>(initialDataSize)))
+        {
+            ::memcpy(memory, initialData, initialDataSize);
+            stagingDeviceMemory->Unmap(device_);
+        }
+    }
+
+    return std::make_tuple(std::move(stagingBuffer), memoryRegionStaging);
+}
+
+void VKRenderSystem::BeginStagingCommands()
 {
     /* Begin command buffer record */
     VkCommandBufferBeginInfo beginInfo;
@@ -923,34 +984,108 @@ void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDevice
     }
     auto result = vkBeginCommandBuffer(stagingCommandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin recording Vulkan command buffer");
+}
 
-    /* Record copy command */
-    VkBufferCopy copyRegion;
-    {
-        copyRegion.srcOffset    = 0;
-        copyRegion.dstOffset    = 0;
-        copyRegion.size         = size;
-    }
-    vkCmdCopyBuffer(stagingCommandBuffer_, srcBuffer, dstBuffer, 1, &copyRegion);
-
+void VKRenderSystem::EndStagingCommands()
+{
     /* End command buffer record */
     vkEndCommandBuffer(stagingCommandBuffer_);
 
     /* Submit command buffer to queue */
-    VkSubmitInfo submitInfo;
+    VkSubmitInfo submitInfo = {};
     {
         submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.pNext                = nullptr;
-        submitInfo.waitSemaphoreCount   = 0;
-        submitInfo.pWaitSemaphores      = nullptr;
-        submitInfo.pWaitDstStageMask    = nullptr;
         submitInfo.commandBufferCount   = 1;
         submitInfo.pCommandBuffers      = (&stagingCommandBuffer_);
-        submitInfo.signalSemaphoreCount = 0;
-        submitInfo.pSignalSemaphores    = nullptr;
     }
     vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
     vkQueueWaitIdle(graphicsQueue_);
+}
+
+void VKRenderSystem::TransitionImageLayout(VkImage image, VkFormat /*format*/, VkImageLayout oldLayout, VkImageLayout newLayout)
+{
+    BeginStagingCommands();
+
+    /* Initialize image memory barrier descriptor */
+    VkImageMemoryBarrier barrier;
+    {
+        barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.pNext                           = nullptr;
+        barrier.srcAccessMask                   = 0;
+        barrier.dstAccessMask                   = 0;
+        barrier.oldLayout                       = oldLayout;
+        barrier.newLayout                       = newLayout;
+        barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image                           = image;
+        barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel   = 0;
+        barrier.subresourceRange.levelCount     = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount     = 1;
+    }
+
+    /* Initialize pipeline state flags */
+    VkPipelineStageFlags srcStageMask = 0;
+    VkPipelineStageFlags dstStageMask = 0;
+
+    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+    {
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    }
+    else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+    {
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    }
+
+    /* Record image barrier command */
+    vkCmdPipelineBarrier(stagingCommandBuffer_, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+    EndStagingCommands();
+}
+
+void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
+    BeginStagingCommands();
+
+    /* Record copy command */
+    VkBufferCopy region;
+    {
+        region.srcOffset    = 0;
+        region.dstOffset    = 0;
+        region.size         = size;
+    }
+    vkCmdCopyBuffer(stagingCommandBuffer_, srcBuffer, dstBuffer, 1, &region);
+
+    EndStagingCommands();
+}
+
+void VKRenderSystem::CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, const VkExtent3D& extent)
+{
+    BeginStagingCommands();
+
+    /* Record copy command */
+    VkBufferImageCopy region;
+    {
+        region.bufferOffset                     = 0;
+        region.bufferRowLength                  = 0;
+        region.bufferImageHeight                = 0;
+        region.imageSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel        = 0;
+        region.imageSubresource.baseArrayLayer  = 0;
+        region.imageSubresource.layerCount      = 1;
+        region.imageOffset                      = { 0, 0, 0 };
+        region.imageExtent                      = extent;
+    }
+    vkCmdCopyBufferToImage(stagingCommandBuffer_, srcBuffer, dstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    EndStagingCommands();
 }
 
 void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
