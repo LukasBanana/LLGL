@@ -141,12 +141,12 @@ VkImageType Map(const TextureType textureType)
         case TextureType::Texture1D:        return VK_IMAGE_TYPE_1D;
         case TextureType::Texture2D:        return VK_IMAGE_TYPE_2D;
         case TextureType::Texture3D:        return VK_IMAGE_TYPE_3D;
-        case TextureType::TextureCube:      return VK_IMAGE_TYPE_3D;
-        case TextureType::Texture1DArray:   return VK_IMAGE_TYPE_2D;
-        case TextureType::Texture2DArray:   return VK_IMAGE_TYPE_3D;
-        case TextureType::TextureCubeArray: return VK_IMAGE_TYPE_3D;
+        case TextureType::TextureCube:      return VK_IMAGE_TYPE_2D;
+        case TextureType::Texture1DArray:   return VK_IMAGE_TYPE_1D;
+        case TextureType::Texture2DArray:   return VK_IMAGE_TYPE_2D;
+        case TextureType::TextureCubeArray: return VK_IMAGE_TYPE_2D;
         case TextureType::Texture2DMS:      return VK_IMAGE_TYPE_2D;
-        case TextureType::Texture2DMSArray: return VK_IMAGE_TYPE_3D;
+        case TextureType::Texture2DMSArray: return VK_IMAGE_TYPE_2D;
     }
     MapFailed("TextureType", "VkImageType");
 }

@@ -44,7 +44,7 @@ enum class TextureFormat
     Unknown,        //!< Unknown texture format.
 
     /* --- Base formats --- */
-    #if 1
+    #if 1//TODO: remove "DepthComponent" and "DepthStencil" (only use the sized formats for depth-stencil)
     DepthComponent, //!< Base format: depth component.
     DepthStencil,   //!< Base format: depth- and stencil components.
     R,              //!< Base format: red component.
@@ -120,6 +120,40 @@ enum class AxisDirection
     ZNeg,       //!< Z- direction.
 };
 
+//! Texture flags enumeration.
+struct TextureFlags
+{
+    enum
+    {
+        #if 0
+        /**
+        \brief Texture mapping with CPU read access is required.
+        \see RenderSystem::MapTexture
+        */
+        MapReadAccess       = (1 << 0),
+
+        /**
+        \brief Texture mapping with CPU write access is required.
+        \see RenderSystem::MapTexture
+        */
+        MapWriteAccess      = (1 << 1),
+
+        /*
+        \brief Texture mapping with CPU read and write access is required.
+        \see TextureFlags::MapReadAccess
+        \see TextureFlags::MapWriteAccess
+        */
+        MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
+        #endif
+
+        /**
+        \brief Texture will be used with MIP-mapping. This will create all MIP-map levels at texture creation time.
+        \see RenderSystem::GenerateMips
+        */
+        GenerateMips        = (1 << 3),
+    };
+};
+
 
 /* ----- Structures ----- */
 
@@ -129,12 +163,14 @@ enum class AxisDirection
 */
 struct LLGL_EXPORT TextureDescriptor
 {
+    //! 1D- and 1D-Array texture specific descriptor structure.
     struct Texture1DDescriptor
     {
         std::uint32_t   width;          //!< Texture width.
         std::uint32_t   layers;         //!< Number of texture array layers.
     };
 
+    //! 2D- and 2D-Array texture specific descriptor structure.
     struct Texture2DDescriptor
     {
         std::uint32_t   width;          //!< Texture width.
@@ -142,6 +178,7 @@ struct LLGL_EXPORT TextureDescriptor
         std::uint32_t   layers;         //!< Number of texture array layers.
     };
 
+    //! 3D texture specific descriptor structure.
     struct Texture3DDescriptor
     {
         std::uint32_t   width;          //!< Texture width.
@@ -149,6 +186,7 @@ struct LLGL_EXPORT TextureDescriptor
         std::uint32_t   depth;          //!< Texture depth.
     };
 
+    //! Cube- and Cube-Array texture specific descriptor structure.
     struct TextureCubeDescriptor
     {
         std::uint32_t   width;          //!< Texture width.
@@ -156,6 +194,7 @@ struct LLGL_EXPORT TextureDescriptor
         std::uint32_t   layers;         //!< Number of texture array layers, one for each cube.
     };
 
+    //! Multi-sampled 2D- and 2D-Array texture specific descriptor structure.
     struct Texture2DMSDescriptor
     {
         std::uint32_t   width;          //!< Texture width.
@@ -167,8 +206,6 @@ struct LLGL_EXPORT TextureDescriptor
     
     TextureDescriptor()
     {
-        type                        = TextureType::Texture1D;
-        format                      = TextureFormat::RGBA;
         texture2DMS.width           = 0;
         texture2DMS.height          = 0;
         texture2DMS.layers          = 0;
@@ -181,8 +218,18 @@ struct LLGL_EXPORT TextureDescriptor
         // Dummy
     }
 
-    TextureType                 type;           //!< Texture type. By default TextureType::Texture1D.
-    TextureFormat               format;         //!< Texture hardware format. By default TextureFormat::RGBA.
+    //! Hardware texture type. By default TextureType::Texture1D.
+    TextureType                 type        = TextureType::Texture1D;
+
+    //! Hardware texture format. By default TextureFormat::RGBA.
+    TextureFormat               format      = TextureFormat::RGBA;
+
+    /**
+    \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default 0.
+    \remarks This can be bitwise OR combination of the entries of the TextureFlags enumeration.
+    \see TextureFlags
+    */
+    long                        flags       = 0;
 
     union
     {
@@ -304,6 +351,12 @@ LLGL_EXPORT bool IsArrayTexture(const TextureType type);
 \return True if 'type' is either TextureType::Texture2DMS, or TextureType::Texture2DMSArray.
 */
 LLGL_EXPORT bool IsMultiSampleTexture(const TextureType type);
+
+/**
+\brief Returns true if the specified texture type is a cube texture.
+\return True if 'type' is either TextureType::TextureCube or TextureType::TextureCubeArray.
+*/
+LLGL_EXPORT bool IsCubeTexture(const TextureType type);
 
 
 } // /namespace LLGL

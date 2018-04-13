@@ -25,7 +25,7 @@
 #include "Shader/VKShader.h"
 #include "Shader/VKShaderProgram.h"
 
-//#include "Texture/VKTexture.h"
+#include "Texture/VKTexture.h"
 //#include "Texture/VKTextureArray.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
@@ -211,8 +211,8 @@ class VKRenderSystem : public RenderSystem
         HWObjectContainer<VKCommandBuffer>      commandBuffers_;
         HWObjectContainer<VKBuffer>             buffers_;
         HWObjectContainer<VKBufferArray>        bufferArrays_;
-        /*HWObjectContainer<VKTexture>            textures_;
-        HWObjectContainer<VKTextureArray>       textureArrays_;*/
+        HWObjectContainer<VKTexture>            textures_;
+        //HWObjectContainer<VKTextureArray>       textureArrays_;
         HWObjectContainer<VKSampler>            samplers_;
         HWObjectContainer<VKSamplerArray>       samplerArrays_;
         //HWObjectContainer<VKRenderTarget>       renderTargets_;

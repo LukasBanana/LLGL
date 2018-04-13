@@ -99,7 +99,7 @@ struct BufferFlags
 //! Hardware buffer descriptor structure.
 struct BufferDescriptor
 {
-    //! Vertex buffer descriptor structure.
+    //! Vertex buffer specific descriptor structure.
     struct VertexBufferDescriptor
     {
         /**
@@ -110,6 +110,7 @@ struct BufferDescriptor
         VertexFormat format;
     };
 
+    //! Index buffer specific descriptor structure.
     struct IndexBufferDescriptor
     {
         /**
@@ -120,6 +121,7 @@ struct BufferDescriptor
         IndexFormat format;
     };
 
+    //! Storage buffer specific descriptor structure.
     struct StorageBufferDescriptor
     {
         /**

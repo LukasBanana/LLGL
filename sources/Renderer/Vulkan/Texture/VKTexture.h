@@ -18,12 +18,19 @@ namespace LLGL
 {
 
 
+class VKDeviceMemoryRegion;
+
 class VKTexture : public Texture
 {
 
     public:
 
         VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& desc);
+
+        Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override;
+        TextureDescriptor QueryDesc() const override;
+
+        void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
 
         // Returns the Vulkan image object.
         inline VkImage GetVkImage() const
@@ -33,7 +40,8 @@ class VKTexture : public Texture
 
     private:
 
-        VKPtr<VkImage> image_;
+        VKPtr<VkImage>          image_;
+        VKDeviceMemoryRegion*   memoryRegion_   = nullptr;
 
 };
 

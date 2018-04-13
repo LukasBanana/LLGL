@@ -50,7 +50,7 @@ enum class ImageFormat
 
     /* Depth-stencil formats */
     Depth,          //!< 32-bit depth component.
-    DepthStencil,   //!< 24-bit depth- and 8-bit stencil component.
+    DepthStencil,   //!< 24-bit depth- and 8-bit stencil components.
 
     /* Compressed formats */
     CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
@@ -93,10 +93,17 @@ struct LLGL_EXPORT ImageDescriptor
     */
     std::uint32_t GetElementSize() const;
 
+    #if 1//TODO: maybe rename this to "data" and "dataSize"
     ImageFormat     format          = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
     DataType        dataType        = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images.
     const void*     buffer          = nullptr;              //!< Pointer to the image buffer.
     std::uint32_t   compressedSize  = 0;                    //!< Specifies the size (in bytes) of a compressed image. This must be 0 for uncompressed images.
+    #else
+    const void* data        = nullptr;              //!< Pointer to the image data.
+    std::size_t dataSize    = 0;                    //!< Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
+    DataType    dataType    = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
+    ImageFormat format      = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
+    #endif
 };
 
 
@@ -107,6 +114,7 @@ struct LLGL_EXPORT ImageDescriptor
 \param[in] imageFormat Specifies the image format.
 \return Number of components of the specified image format, or 0 if 'imageFormat' specifies a compressed color format.
 \see IsCompressedFormat(const ImageFormat)
+\see ImageFormat
 */
 LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat);
 
@@ -120,6 +128,7 @@ LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format);
 /**
 \brief Returns true if the specified color format is a depth-stencil format,
 i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
+\see ImageFormat
 */
 LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
 

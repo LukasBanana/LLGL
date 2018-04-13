@@ -27,6 +27,11 @@ void VKDeviceMemoryRegion::BindBuffer(VkDevice device, VkBuffer buffer)
     vkBindBufferMemory(device, buffer, deviceMemory_->GetVkDeviceMemory(), GetOffset());
 }
 
+void VKDeviceMemoryRegion::BindImage(VkDevice device, VkImage image)
+{
+    vkBindImageMemory(device, image, deviceMemory_->GetVkDeviceMemory(), GetOffset());
+}
+
 
 /*
  * ======= Protected: =======

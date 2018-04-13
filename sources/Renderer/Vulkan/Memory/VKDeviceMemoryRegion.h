@@ -30,6 +30,9 @@ class VKDeviceMemoryRegion
         // Binds the specified buffer to this memory region.
         void BindBuffer(VkDevice device, VkBuffer buffer);
 
+        // Binds the specified image to this memory region.
+        void BindImage(VkDevice device, VkImage image);
+
         // Returns the parent device memory chunk.
         inline VKDeviceMemory* GetParentChunk() const
         {

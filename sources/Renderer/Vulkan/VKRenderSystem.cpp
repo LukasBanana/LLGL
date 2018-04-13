@@ -339,7 +339,11 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
 {
-    return nullptr;//todo
+    auto textureVK = MakeUnique<VKTexture>(device_, textureDesc);
+
+    //todo...
+
+    return TakeOwnership(textures_, std::move(textureVK));
 }
 
 TextureArray* VKRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
@@ -349,7 +353,7 @@ TextureArray* VKRenderSystem::CreateTextureArray(std::uint32_t numTextures, Text
 
 void VKRenderSystem::Release(Texture& texture)
 {
-    //todo
+    RemoveFromUniqueSet(textures_, &texture);
 }
 
 void VKRenderSystem::Release(TextureArray& textureArray)

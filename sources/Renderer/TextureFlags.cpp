@@ -40,6 +40,11 @@ LLGL_EXPORT bool IsMultiSampleTexture(const TextureType type)
     return (type >= TextureType::Texture2DMS);
 }
 
+LLGL_EXPORT bool IsCubeTexture(const TextureType type)
+{
+    return (type == TextureType::TextureCube || type == TextureType::TextureCubeArray);
+}
+
 
 } // /namespace LLGL
 

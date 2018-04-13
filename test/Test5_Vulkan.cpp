@@ -173,6 +173,9 @@ int main()
 
         auto constBufferColors = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(colors)), &colors);
 
+        // Create texture
+        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, 2, 2));
+
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
 
