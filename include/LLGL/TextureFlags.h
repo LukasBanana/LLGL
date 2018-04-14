@@ -37,27 +37,24 @@ enum class TextureType
 
 /**
 \brief Hardware texture format enumeration.
-\note All integral 32-bit formats are un-normalized!
+\note All 32-bit integral formats are un-normalized!
 */
 enum class TextureFormat
 {
     Unknown,        //!< Unknown texture format.
 
+    #if 1
     /* --- Base formats --- */
-    #if 1//TODO: remove "DepthComponent" and "DepthStencil" (only use the sized formats for depth-stencil)
+    //TODO: remove base formats and only use sized formats
     DepthComponent, //!< Base format: depth component.
     DepthStencil,   //!< Base format: depth- and stencil components.
     R,              //!< Base format: red component.
     RG,             //!< Base format: red and green components.
     RGB,            //!< Base format: red, green, and blue components. \note Only supported with: OpenGL, Vulkan.
     RGBA,           //!< Base format: red, green, blue, and alpha components.
-
-    /* --- Sized formats --- */
-    #else
-    D32,            //!< Sized format: depth 32-bit floating point component,
-    D24S8,          //!< Sized format: depth 24-bit normalized unsigned integer, and 8-bit unsigned integer stencil components.
     #endif
 
+    /* --- Sized formats --- */
     R8,             //!< Sized format: red 8-bit normalized unsigned integer component.
     R8Sgn,          //!< Sized format: red 8-bit normalized signed integer component.
 
@@ -101,6 +98,12 @@ enum class TextureFormat
     RGBA32UInt,     //!< Sized format: red, green, blue, alpha 32-bit un-normalized unsigned interger components.
     RGBA32SInt,     //!< Sized format: red, green, blue, alpha 32-bit un-normalized signed interger components.
     RGBA32Float,    //!< Sized format: red, green, blue, alpha 32-bit floating point components.
+
+    #if 0
+    /* --- Depth-stencil formats --- */
+    D32,            //!< Sized format: depth 32-bit floating point component,
+    D24S8,          //!< Sized format: depth 24-bit normalized unsigned integer, and 8-bit unsigned integer stencil components.
+    #endif
 
     /* --- Compressed formats --- */
     RGB_DXT1,       //!< Compressed format: RGB S3TC DXT1 with 8 bytes per 4x4 block. \note Only supported with: OpenGL.

@@ -173,7 +173,7 @@ TSub* NextArrayResource(std::uint32_t& numResources, TBase* const * & resourceAr
     return nullptr;
 }
 
-// Returns the adjusted size with the specified alignemnt, which is always greater or equal to 'size' (T can be UINT or VkDeviceSize for instance).
+// Returns the adjusted size with the specified alignment, which is always greater or equal to 'size' (T can be UINT or VkDeviceSize for instance).
 template <typename T>
 T GetAlignedSize(T size, T alignment)
 {

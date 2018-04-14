@@ -129,20 +129,22 @@ int main()
         struct Vertex
         {
             Gs::Vector2f    coord;
+            Gs::Vector2f    texCoord;
             LLGL::ColorRGBf color;
         }
         vertices[] =
         {
-            { PointOnCircle(0.0f, 1.0f), { 1.0f, 0.0f, 0.0f } },
-            { PointOnCircle(Gs::pi * 2.0f / 3.0f, 1.0f), { 0.0f, 1.0f, 0.0f } },
-            { PointOnCircle(Gs::pi * 4.0f / 3.0f, 1.0f), { 0.0f, 0.0f, 1.0f } },
+            { PointOnCircle(0.0f, 1.0f),                 { 0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f } },
+            { PointOnCircle(Gs::pi * 2.0f / 3.0f, 1.0f), { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+            { PointOnCircle(Gs::pi * 4.0f / 3.0f, 1.0f), { 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
         };
 
         // Create vertex format
         LLGL::VertexFormat vertexFormat;
 
-        vertexFormat.AppendAttribute({ "coord", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "color", LLGL::VectorType::Float3 });
+        vertexFormat.AppendAttribute({ "coord",    LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "color",    LLGL::VectorType::Float3 });
 
         shaderProgram->BuildInputLayout(1, &vertexFormat);
 
@@ -169,12 +171,34 @@ int main()
         }
         colors;
 
-        colors.diffuse = { 1.0f, 2.0f, 5.0f };
+        //colors.diffuse = { 1.0f, 2.0f, 5.0f };
+        colors.diffuse = { 1.0f, 1.0f, 1.0f };
 
         auto constBufferColors = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(colors)), &colors);
 
+        // Create sampler
+        LLGL::SamplerDescriptor samplerDesc;
+        {
+            samplerDesc.mipMapping = false;
+            samplerDesc.minFilter = LLGL::TextureFilter::Nearest;
+            samplerDesc.magFilter = LLGL::TextureFilter::Nearest;
+        }
+        auto sampler = renderer->CreateSampler(samplerDesc);
+
         // Create texture
-        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, 2, 2));
+        const LLGL::ColorRGBAub imageData[] =
+        {
+            { 255, 255, 255, 255 },
+            { 255,   0,   0, 255 },
+            {   0, 255,   0, 255 },
+            {   0,   0, 255, 255 },
+        };
+
+        LLGL::ImageDescriptor imageDesc;
+        {
+            imageDesc.buffer = imageData;
+        }
+        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, 2, 2), &imageDesc);
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
@@ -188,13 +212,23 @@ int main()
         }
         layoutDesc.bindings.push_back(layoutBinding);
 
-        #if 1
         {
             layoutBinding.startSlot     = 5;
             layoutBinding.stageFlags    = LLGL::ShaderStageFlags::FragmentStage;
         }
         layoutDesc.bindings.push_back(layoutBinding);
-        #endif
+
+        {
+            layoutBinding.type          = LLGL::ResourceViewType::Sampler;
+            layoutBinding.startSlot     = 3;
+        }
+        layoutDesc.bindings.push_back(layoutBinding);
+
+        {
+            layoutBinding.type          = LLGL::ResourceViewType::Texture;
+            layoutBinding.startSlot     = 4;
+        }
+        layoutDesc.bindings.push_back(layoutBinding);
 
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
@@ -206,6 +240,8 @@ int main()
             {
                 LLGL::ResourceViewDesc(constBufferMatrices),
                 LLGL::ResourceViewDesc(constBufferColors),
+                LLGL::ResourceViewDesc(sampler),
+                LLGL::ResourceViewDesc(texture),
             };
         }
         auto resourceViewHeap = renderer->CreateResourceViewHeap(rsvHeapDesc);

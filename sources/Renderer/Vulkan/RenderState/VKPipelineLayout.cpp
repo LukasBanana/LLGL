@@ -14,7 +14,8 @@ namespace LLGL
 {
 
 
-static VkShaderStageFlags MapShaderStageFlags(long flags)
+// Converts the bitmask of LLGL::ShaderStageFlags to VkShaderStageFlags
+static VkShaderStageFlags GetVkShaderStageFlags(long flags)
 {
     VkShaderStageFlags bitmask = 0;
 
@@ -42,15 +43,15 @@ static void Convert(VkDescriptorSetLayoutBinding& dst, const LayoutBinding& src)
     dst.binding             = src.startSlot;
     dst.descriptorType      = VKTypes::Map(src.type);
     dst.descriptorCount     = src.numSlots;
-    dst.stageFlags          = MapShaderStageFlags(src.stageFlags);
+    dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);
     dst.pImmutableSamplers  = nullptr;
 }
 
-static void Convert(VkDescriptorPoolSize& dst, const LayoutBinding& src)
+/*static void Convert(VkDescriptorPoolSize& dst, const LayoutBinding& src)
 {
     dst.type            = VKTypes::Map(src.type);
     dst.descriptorCount = src.numSlots;
-}
+}*/
 
 /*
 TODO:
