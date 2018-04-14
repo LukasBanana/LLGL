@@ -81,7 +81,7 @@ enum class PrimitiveTopology
 
     /**
     \brief Triangle fan where each triangle uses the first vertex, the previous vertex, and a new vertex.
-    \note Only supported with: OpenGL.
+    \note Only supported with: OpenGL, Vulkan.
     */
     TriangleFan,
 

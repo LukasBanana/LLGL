@@ -16,4 +16,6 @@ layout(binding = 4) uniform texture2D tex;
 void main()
 {
 	fColor = diffuse * vColor * texture(sampler2D(tex, texSampler), vTexCoord);
+	fColor = mix(vec4(1, 1, 1, 1), fColor, fColor.a);
+	fColor.a = 1.0;
 }

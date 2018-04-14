@@ -47,7 +47,10 @@ struct LayoutBinding
     */
     std::uint32_t       startSlot   = 0;
 
-    //! Specifies the number of binding slots. By default 1.
+    /**
+    \brief Specifies the number of binding slots. By default 1.
+    \note For Vulkan, this number specifies the size of an array of resources (e.g. an array of uniform buffers).
+    */
     std::uint32_t       numSlots    = 1;
 
     //! Specifies which shader stages are affected by this layout binding. By default all shader stages are affected.

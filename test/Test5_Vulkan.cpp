@@ -9,6 +9,9 @@
 #include <LLGL/Utility.h>
 #include <chrono>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../tutorial/stb_image.h"
+
 
 //#define TEST_QUERY
 
@@ -126,6 +129,8 @@ int main()
             return Gs::Vector2f { std::sin(angle) * radius, std::cos(angle) * radius };
         };
 
+        const float uScale = 1.0f, vScale = 1.0f;
+
         struct Vertex
         {
             Gs::Vector2f    coord;
@@ -134,9 +139,10 @@ int main()
         }
         vertices[] =
         {
-            { PointOnCircle(0.0f, 1.0f),                 { 0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f } },
-            { PointOnCircle(Gs::pi * 2.0f / 3.0f, 1.0f), { 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
-            { PointOnCircle(Gs::pi * 4.0f / 3.0f, 1.0f), { 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f } },
+            { { -1.0f,  1.0f }, { 0.0f  , vScale }, { 1.0f, 1.0f, 1.0f } },
+            { { -1.0f, -1.0f }, { 0.0f  , 0.0f   }, { 1.0f, 1.0f, 1.0f } },
+            { {  1.0f,  1.0f }, { uScale, vScale }, { 1.0f, 1.0f, 1.0f } },
+            { {  1.0f, -1.0f }, { uScale, 0.0f   }, { 1.0f, 1.0f, 1.0f } },
         };
 
         // Create vertex format
@@ -161,7 +167,7 @@ int main()
 
         const float projectionScale = 0.005f;
         matrices.projection = Gs::ProjectionMatrix4f::Orthogonal(viewportSize.x * projectionScale, viewportSize.y * projectionScale, -100.0f, 100.0f, 0).ToMatrix4();
-        Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
+        //Gs::RotateFree(matrices.modelView, Gs::Vector3f(0, 0, 1), Gs::pi * 0.5f);
 
         auto constBufferMatrices = renderer->CreateBuffer(LLGL::ConstantBufferDesc(sizeof(matrices), LLGL::BufferFlags::MapReadWriteAccess), &matrices);
 
@@ -180,25 +186,28 @@ int main()
         LLGL::SamplerDescriptor samplerDesc;
         {
             samplerDesc.mipMapping = false;
+            #if 0
             samplerDesc.minFilter = LLGL::TextureFilter::Nearest;
             samplerDesc.magFilter = LLGL::TextureFilter::Nearest;
+            #endif
         }
         auto sampler = renderer->CreateSampler(samplerDesc);
 
         // Create texture
-        const LLGL::ColorRGBAub imageData[] =
-        {
-            { 255, 255, 255, 255 },
-            { 255,   0,   0, 255 },
-            {   0, 255,   0, 255 },
-            {   0,   0, 255, 255 },
-        };
+        std::string texFilename = "../tutorial/Media/Textures/Logo_Vulkan.png";
+        int texWidth = 0, texHeight = 0, texComponents = 0;
+
+        auto imageBuffer = stbi_load(texFilename.c_str(), &texWidth, &texHeight, &texComponents, 4);
+        if (!imageBuffer)
+            throw std::runtime_error("failed to load texture from file: \"" + texFilename + "\"");
 
         LLGL::ImageDescriptor imageDesc;
         {
-            imageDesc.buffer = imageData;
+            imageDesc.buffer = imageBuffer;
         }
-        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, 2, 2), &imageDesc);
+        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, texWidth, texHeight), &imageDesc);
+
+        stbi_image_free(imageBuffer);
 
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
@@ -248,13 +257,17 @@ int main()
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
+        {
+            pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.pipelineLayout     = pipelineLayout;
+            pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
 
-        pipelineDesc.shaderProgram = shaderProgram;
-        pipelineDesc.pipelineLayout = pipelineLayout;
-        pipelineDesc.viewports.push_back(LLGL::Viewport(0.0f, 0.0f, viewportSize.x, viewportSize.y));
-        pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, resolution.x, resolution.y));
-        pipelineDesc.blend.targets.push_back({});
+            pipelineDesc.viewports.push_back(LLGL::Viewport(0.0f, 0.0f, viewportSize.x, viewportSize.y));
+            pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, resolution.x, resolution.y));
 
+            pipelineDesc.blend.blendEnabled = true;
+            pipelineDesc.blend.targets.push_back({});
+        }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Create query
@@ -324,11 +337,11 @@ int main()
             #ifdef TEST_QUERY
             commands->BeginQuery(*query);
             {
-                commands->Draw(3, 0);
+                commands->Draw(4, 0);
             }
             commands->EndQuery(*query);
             #else
-            commands->Draw(3, 0);
+            commands->Draw(4, 0);
             #endif
 
             context->Present();
