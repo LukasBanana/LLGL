@@ -25,10 +25,12 @@ class IOSTimer : public Timer
         
         void Start() override;
         
-        double Stop() override;
+        std::uint64_t Stop() override;
         
-        double GetFrequency() const override;
-        
+        std::uint64_t GetFrequency() const override;
+
+        bool IsRunning() const override;
+    
     private:
     
         //todo...

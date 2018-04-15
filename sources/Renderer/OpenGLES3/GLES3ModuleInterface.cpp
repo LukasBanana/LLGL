@@ -28,7 +28,7 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
     return "OpenGL ES";
 }
 
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
 {
     return nullptr;//new LLGL::GLES3RenderSystem();
 }

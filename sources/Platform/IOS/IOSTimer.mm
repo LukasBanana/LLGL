@@ -25,14 +25,19 @@ void IOSTimer::Start()
 {
 }
 
-double IOSTimer::Stop()
+std::uint64_t IOSTimer::Stop()
 {
-    return 0.0;
+    return 0;
 }
 
-double IOSTimer::GetFrequency() const
+std::uint64_t IOSTimer::GetFrequency() const
 {
-    return 0.0;
+    return 0;
+}
+
+bool IOSTimer::IsRunning() const
+{
+    return false;
 }
     
     
