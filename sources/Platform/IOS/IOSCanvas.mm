@@ -9,7 +9,9 @@
 #include <LLGL/Platform/NativeHandle.h>
 
 
-/*@interface AppDelegate : NSObject
+#if 0
+
+@interface AppDelegate : NSObject
 
 - (id)initWithWindow:(LLGL::IOSCanvas*)window isResizable:(BOOL)resizable;
 - (BOOL)isQuit;
@@ -18,7 +20,7 @@
 
 @implementation AppDelegate
 {
-    LLGL::IOSCanvas*  window_;
+    LLGL::IOSCanvas*    window_;
     BOOL                resizable_;
     BOOL                quit_;
 }
@@ -60,7 +62,9 @@
     return (quit_);
 }
 
-@end*/
+@end
+
+#endif
 
 
 namespace LLGL
@@ -82,8 +86,9 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 }
 
 IOSCanvas::IOSCanvas(const CanvasDescriptor& desc) :
-    desc_ { desc               }/*,
-    view_ { CreateUIView(desc) }*/
+    desc_           { desc                       },
+    viewController_ { CreateViewController(desc) },
+    view_           { CreateView(desc)           }
 {
 }
 
@@ -125,6 +130,16 @@ std::wstring IOSCanvas::GetTitle() const
 void IOSCanvas::OnProcessEvents()
 {
     //TODO...
+}
+
+UIViewController* IOSCanvas::CreateViewController(const CanvasDescriptor& desc)
+{
+    return nullptr;
+}
+
+UIView* IOSCanvas::CreateView(const CanvasDescriptor& desc)
+{
+    return nullptr;
 }
 
 

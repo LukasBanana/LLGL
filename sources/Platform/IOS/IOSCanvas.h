@@ -37,10 +37,14 @@ class IOSCanvas : public Canvas
     private:
         
         void OnProcessEvents() override;
+    
+        UIViewController* CreateViewController(const CanvasDescriptor& desc);
+        UIView* CreateView(const CanvasDescriptor& desc);
 
         CanvasDescriptor    desc_;
 
-        UIView*             view_ = nullptr;
+        UIViewController*   viewController_ = nullptr;
+        UIView*             view_           = nullptr;
 
 };
 
