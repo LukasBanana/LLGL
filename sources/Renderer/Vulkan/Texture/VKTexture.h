@@ -47,13 +47,29 @@ class VKTexture : public Texture
             return imageView_;
         }
 
+        // Returns the number of MIP level with whereby the VkImage object was created.
+        inline std::uint32_t GetNumMipLevels() const
+        {
+            return numMipLevels_;
+        }
+
+        // Returns the VkExtent3D with whereby the VkImage object was created.
+        inline const VkExtent3D& GetExtent() const
+        {
+            return extent_;
+        }
+
     private:
 
         void CreateImage(VkDevice device, const TextureDescriptor& desc);
 
         VKPtr<VkImage>          image_;
         VKPtr<VkImageView>      imageView_;
+
         VKDeviceMemoryRegion*   memoryRegion_   = nullptr;
+
+        std::uint32_t           numMipLevels_   = 0;
+        VkExtent3D              extent_;
 
 };
 

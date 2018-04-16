@@ -186,7 +186,7 @@ class VKRenderSystem : public RenderSystem
         void BeginStagingCommands();
         void EndStagingCommands();
 
-        void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+        void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, std::uint32_t levelCount);
 
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
         void CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, const VkExtent3D& extent);

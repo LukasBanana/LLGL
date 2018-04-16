@@ -47,7 +47,6 @@ VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& des
         createInfo.flags                    = 0;
         createInfo.magFilter                = GetVkFilter(desc.magFilter);
         createInfo.minFilter                = GetVkFilter(desc.minFilter);
-        createInfo.mipmapMode               = GetVkSamplerMipmapMode(desc.mipMapFilter);
         createInfo.addressModeU             = VKTypes::Map(desc.textureWrapU);
         createInfo.addressModeV             = VKTypes::Map(desc.textureWrapV);
         createInfo.addressModeW             = VKTypes::Map(desc.textureWrapW);
@@ -56,10 +55,25 @@ VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& des
         createInfo.maxAnisotropy            = static_cast<float>(desc.maxAnisotropy);
         createInfo.compareEnable            = VKBoolean(desc.compareEnabled);
         createInfo.compareOp                = VKTypes::Map(desc.compareOp);
-        createInfo.minLod                   = desc.minLOD;
-        createInfo.maxLod                   = desc.maxLOD;
         createInfo.borderColor              = GetVkBorderColor(desc.borderColor);
         createInfo.unnormalizedCoordinates  = VK_FALSE;
+
+        if (desc.mipMapping)
+        {
+            createInfo.mipmapMode   = GetVkSamplerMipmapMode(desc.mipMapFilter);
+            createInfo.minLod       = desc.minLOD;
+            createInfo.maxLod       = desc.maxLOD;
+        }
+        else
+        {
+            /*
+            Set MIP-map mode to fixed values.
+            see https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkSamplerCreateInfo.html
+            */
+            createInfo.mipmapMode   = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+            createInfo.minLod       = 0.0f;
+            createInfo.maxLod       = 0.25f;
+        }
     }
     VkResult result = vkCreateSampler(device, &createInfo, nullptr, sampler_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan sampler");

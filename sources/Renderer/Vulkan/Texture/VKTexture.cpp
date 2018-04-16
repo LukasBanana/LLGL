@@ -26,15 +26,20 @@ VKTexture::VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& des
 
 Gs::Vector3ui VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
-    //todo...
-    return { 0, 0, 0 };
+    return Gs::Vector3ui
+    {
+        std::max(1u, extent_.width  >> mipLevel),
+        std::max(1u, extent_.height >> mipLevel),
+        std::max(1u, extent_.depth  >> mipLevel)
+    };
 }
 
 TextureDescriptor VKTexture::QueryDesc() const
 {
     TextureDescriptor desc;
 
-    desc.type = GetType();
+    desc.type   = GetType();
+    //desc.format = ;
 
     //todo...
     
@@ -67,7 +72,7 @@ void VKTexture::CreateImageView(VkDevice device, const TextureDescriptor& desc)
         createInfo.components.a                     = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.subresourceRange.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
         createInfo.subresourceRange.baseMipLevel    = 0;
-        createInfo.subresourceRange.levelCount      = 1;
+        createInfo.subresourceRange.levelCount      = numMipLevels_;
         createInfo.subresourceRange.baseArrayLayer  = 0;
         createInfo.subresourceRange.layerCount      = 1;
     }
@@ -142,9 +147,14 @@ static VkExtent3D GetVkImageExtent3D(const TextureDescriptor& desc, const VkImag
     return extent;
 }
 
+static bool HasTextureMipMaps(const TextureDescriptor& desc)
+{
+    return (!IsMultiSampleTexture(desc.type) && (desc.flags & TextureFlags::GenerateMips) != 0);
+}
+
 static std::uint32_t GetVkImageMipLevels(const TextureDescriptor& desc, const VkExtent3D& extent)
 {
-    if (!IsMultiSampleTexture(desc.type) && (desc.flags & TextureFlags::GenerateMips) != 0)
+    if (HasTextureMipMaps(desc))
         return NumMipLevels(extent.width, extent.height, extent.depth);
     else
         return 1u;
@@ -179,6 +189,16 @@ static VkSampleCountFlagBits GetVkImageSampleCountFlags(const TextureDescriptor&
     return VK_SAMPLE_COUNT_1_BIT;
 }
 
+static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
+{
+    VkImageUsageFlags flags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+    if (HasTextureMipMaps(desc))
+        flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+    return flags;
+}
+
 void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
 {
     /* Create image object */
@@ -194,7 +214,7 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
         createInfo.arrayLayers              = GetVkImageArrayLayers(desc, createInfo.imageType);
         createInfo.samples                  = GetVkImageSampleCountFlags(desc);
         createInfo.tiling                   = VK_IMAGE_TILING_OPTIMAL;
-        createInfo.usage                    = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        createInfo.usage                    = GetVkImageUsageFlags(desc);
         createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE; // only used by graphics queue
         createInfo.queueFamilyIndexCount    = 0;
         createInfo.pQueueFamilyIndices      = nullptr;
@@ -202,6 +222,10 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
     }
     VkResult result = vkCreateImage(device, &createInfo, nullptr, image_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan image");
+
+    /* Store number of MIP level and image extent */
+    numMipLevels_   = createInfo.mipLevels;
+    extent_         = createInfo.extent;
 }
 
 

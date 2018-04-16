@@ -37,7 +37,11 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
                 hardwareTexture_.tex1D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width >> mipLevel), 1, 1);
+                {
+                    size.x = std::max(1u, desc.Width >> mipLevel);
+                    size.y = 1u;
+                    size.z = 1u;
+                }
             }
             break;
 
@@ -48,7 +52,11 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
                 hardwareTexture_.tex2D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width >> mipLevel), (desc.Height >> mipLevel), 1);
+                {
+                    size.x = std::max(1u, desc.Width  >> mipLevel);
+                    size.y = std::max(1u, desc.Height >> mipLevel);
+                    size.z = 1u;
+                }
             }
             break;
 
@@ -59,7 +67,11 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
                 hardwareTexture_.tex3D->GetDesc(&desc);
 
                 if (mipLevel < desc.MipLevels)
-                    size = Gs::Vector3ui((desc.Width >> mipLevel), (desc.Height >> mipLevel), (desc.Depth >> mipLevel));
+                {
+                    size.x = std::max(1u, desc.Width  >> mipLevel);
+                    size.y = std::max(1u, desc.Height >> mipLevel);
+                    size.z = std::max(1u, desc.Depth  >> mipLevel);
+                }
             }
             break;
         }

@@ -348,8 +348,9 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     );
 
     /* Create device texture */
-    auto textureVK = MakeUnique<VKTexture>(device_, textureDesc);
-    auto image = textureVK->GetVkImage();
+    auto textureVK  = MakeUnique<VKTexture>(device_, textureDesc);
+    auto image      = textureVK->GetVkImage();
+    auto mipLevels  = textureVK->GetNumMipLevels();
 
     /* Allocate device memory */
     VkMemoryRequirements requirements;
@@ -366,11 +367,11 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     auto formatVK = VKTypes::Map(textureDesc.format);
-    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
     {
         CopyBufferToImage(stagingBuffer.buffer, image, extent);
     }
-    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
 
     /* Release staging buffer */
     deviceMemoryMngr_->Release(memoryRegionStaging);
@@ -408,7 +409,129 @@ void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
 
 void VKRenderSystem::GenerateMips(Texture& texture)
 {
-    //todo
+    auto& textureVK = LLGL_CAST(VKTexture&, texture);
+
+    auto image          = textureVK.GetVkImage();
+    auto numMipLevels   = textureVK.GetNumMipLevels();
+    auto extent         = textureVK.GetExtent();
+
+    TransitionImageLayout(image, VK_FORMAT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, numMipLevels);
+
+    BeginStagingCommands();
+
+    /* Initialize image memory barrier */
+    VkImageMemoryBarrier barrier;
+
+    barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.pNext                           = nullptr;
+    barrier.srcAccessMask                   = 0;
+    barrier.dstAccessMask                   = 0;
+    barrier.oldLayout                       = VK_IMAGE_LAYOUT_UNDEFINED;
+    barrier.newLayout                       = VK_IMAGE_LAYOUT_UNDEFINED;
+    barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image                           = image;
+    barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel   = 0;
+    barrier.subresourceRange.levelCount     = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount     = 1;
+
+    /* Blit each MIP-map from previous (lower) MIP level */
+    const auto arrayLayerCount  = 1; //TODO!!!
+
+    if (numMipLevels > 0)
+    {
+        for (std::uint32_t arrayLayer = 0; arrayLayer < arrayLayerCount; ++arrayLayer)
+        {
+            for (std::uint32_t mipLevel = 1; mipLevel < numMipLevels; ++mipLevel)
+            {
+                /* Determine extent of next MIP level */
+                auto nextExtent = extent;
+
+                nextExtent.width    = std::max(1u, extent.width / 2);
+                nextExtent.height   = std::max(1u, extent.height / 2);
+                nextExtent.depth    = std::max(1u, extent.depth / 2);
+
+                /* Transition previous MIP level to VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL */
+                barrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+                barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.subresourceRange.baseMipLevel   = mipLevel - 1;
+
+                vkCmdPipelineBarrier(
+                    stagingCommandBuffer_,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                    0, nullptr,
+                    0, nullptr,
+                    1, &barrier
+                );
+
+                /* Blit previous MIP level into next higher MIP level (with smaller extent) */
+                VkImageBlit blit;
+
+                blit.srcSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.srcSubresource.mipLevel        = mipLevel - 1;
+                blit.srcSubresource.baseArrayLayer  = arrayLayer;
+                blit.srcSubresource.layerCount      = 1;
+                blit.srcOffsets[0]                  = { 0, 0, 0 };
+                blit.srcOffsets[1].x                = static_cast<std::int32_t>(extent.width);
+                blit.srcOffsets[1].y                = static_cast<std::int32_t>(extent.height);
+                blit.srcOffsets[1].z                = static_cast<std::int32_t>(extent.depth);
+                blit.dstSubresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+                blit.dstSubresource.mipLevel        = mipLevel;
+                blit.dstSubresource.baseArrayLayer  = arrayLayer;
+                blit.dstSubresource.layerCount      = 1;
+                blit.dstOffsets[0]                  = { 0, 0, 0 };
+                blit.dstOffsets[1].x                = static_cast<std::int32_t>(nextExtent.width);
+                blit.dstOffsets[1].y                = static_cast<std::int32_t>(nextExtent.height);
+                blit.dstOffsets[1].z                = static_cast<std::int32_t>(nextExtent.depth);
+
+                vkCmdBlitImage(
+                    stagingCommandBuffer_,
+                    image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    1, &blit,
+                    VK_FILTER_LINEAR
+                );
+
+                /* Transition previous MIP level back to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL */
+                barrier.srcAccessMask   = VK_ACCESS_TRANSFER_READ_BIT;
+                barrier.dstAccessMask   = VK_ACCESS_SHADER_READ_BIT;
+                barrier.oldLayout       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+                barrier.newLayout       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+                vkCmdPipelineBarrier(
+                    stagingCommandBuffer_,
+                    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+                    0, nullptr,
+                    0, nullptr,
+                    1, &barrier
+                );
+
+                /* Reduce image extent to next MIP level */
+                extent = nextExtent;
+            }
+
+            /* Transition last MIP level back to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL */
+            barrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
+            barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.newLayout                       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.subresourceRange.baseMipLevel   = numMipLevels - 1;
+
+            vkCmdPipelineBarrier(
+                stagingCommandBuffer_,
+                VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+                0, nullptr,
+                0, nullptr,
+                1, &barrier
+            );
+        }
+    }
+
+    EndStagingCommands();
 }
 
 /* ----- Sampler States ---- */
@@ -1006,7 +1129,7 @@ void VKRenderSystem::EndStagingCommands()
     vkQueueWaitIdle(graphicsQueue_);
 }
 
-void VKRenderSystem::TransitionImageLayout(VkImage image, VkFormat /*format*/, VkImageLayout oldLayout, VkImageLayout newLayout)
+void VKRenderSystem::TransitionImageLayout(VkImage image, VkFormat /*format*/, VkImageLayout oldLayout, VkImageLayout newLayout, std::uint32_t levelCount)
 {
     BeginStagingCommands();
 
@@ -1024,7 +1147,7 @@ void VKRenderSystem::TransitionImageLayout(VkImage image, VkFormat /*format*/, V
         barrier.image                           = image;
         barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = 1;
+        barrier.subresourceRange.levelCount     = levelCount;
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount     = 1;
     }

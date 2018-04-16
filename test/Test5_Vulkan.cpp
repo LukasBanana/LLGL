@@ -129,7 +129,7 @@ int main()
             return Gs::Vector2f { std::sin(angle) * radius, std::cos(angle) * radius };
         };
 
-        const float uScale = 1.0f, vScale = 1.0f;
+        const float uScale = 25.0f, vScale = 25.0f;
 
         struct Vertex
         {
@@ -185,7 +185,7 @@ int main()
         // Create sampler
         LLGL::SamplerDescriptor samplerDesc;
         {
-            samplerDesc.mipMapping = false;
+            //samplerDesc.mipMapping = false;
             #if 0
             samplerDesc.minFilter = LLGL::TextureFilter::Nearest;
             samplerDesc.magFilter = LLGL::TextureFilter::Nearest;
@@ -206,6 +206,8 @@ int main()
             imageDesc.buffer = imageBuffer;
         }
         auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, texWidth, texHeight), &imageDesc);
+
+        renderer->GenerateMips(*texture);
 
         stbi_image_free(imageBuffer);
 
@@ -317,7 +319,7 @@ int main()
             if (auto data = renderer->MapBuffer(*constBufferMatrices, LLGL::BufferCPUAccess::ReadWrite))
             {
                 auto ptr = reinterpret_cast<Matrices*>(data);
-                Gs::RotateFree(ptr->modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.01f);
+                Gs::RotateFree(ptr->modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.002f);
                 renderer->UnmapBuffer(*constBufferMatrices);
             }
 
