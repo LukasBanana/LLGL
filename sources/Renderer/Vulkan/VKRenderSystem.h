@@ -29,7 +29,7 @@
 //#include "Texture/VKTextureArray.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
-//#include "Texture/VKRenderTarget.h"
+#include "Texture/VKRenderTarget.h"
 
 #include "RenderState/VKQuery.h"
 #include "RenderState/VKFence.h"
@@ -226,7 +226,7 @@ class VKRenderSystem : public RenderSystem
         //HWObjectContainer<VKTextureArray>       textureArrays_;
         HWObjectContainer<VKSampler>            samplers_;
         HWObjectContainer<VKSamplerArray>       samplerArrays_;
-        //HWObjectContainer<VKRenderTarget>       renderTargets_;
+        HWObjectContainer<VKRenderTarget>       renderTargets_;
         HWObjectContainer<VKShader>             shaders_;
         HWObjectContainer<VKShaderProgram>      shaderPrograms_;
         HWObjectContainer<VKPipelineLayout>     pipelineLayouts_;

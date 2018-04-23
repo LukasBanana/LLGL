@@ -241,6 +241,7 @@ struct Viewport
     Viewport() = default;
     Viewport(const Viewport&) = default;
     
+    //! Viewport constructor with default depth range of [0, 1].
     inline Viewport(float x, float y, float width, float height) :
         x      { x      },
         y      { y      },
@@ -249,6 +250,7 @@ struct Viewport
     {
     }
     
+    //! Viewport constructor with parameters for all attributes.
     inline Viewport(float x, float y, float width, float height, float minDepth, float maxDepth) :
         x        { x        },
         y        { y        },
@@ -259,12 +261,12 @@ struct Viewport
     {
     }
 
-    float x         = 0.0f; //!< Left-top X coordinate.
-    float y         = 0.0f; //!< Left-top Y coordinate.
-    float width     = 0.0f; //!< Right-bottom width.
-    float height    = 0.0f; //!< Right-bottom height.
-    float minDepth  = 0.0f; //!< Minimal depth range.
-    float maxDepth  = 1.0f; //!< Maximal depth range.
+    float x         = 0.0f; //!< X coordinate of the left-top origin. By default 0.0.
+    float y         = 0.0f; //!< Y coordinate of the left-top origin. By default 0.0.
+    float width     = 0.0f; //!< Width of the right-bottom size. By default 0.0.
+    float height    = 0.0f; //!< Height of the right-bottom size. By default 0.0.
+    float minDepth  = 0.0f; //!< Minimum of the depth range. By default 0.0.
+    float maxDepth  = 1.0f; //!< Maximum of the depth range. By default 1.0.
 };
 
 /**

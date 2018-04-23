@@ -100,7 +100,7 @@ struct ShaderDescriptor
 {
     ShaderDescriptor() = default;
 
-    ShaderDescriptor(const std::string& entryPoint, const std::string& target, long flags = 0) :
+    inline ShaderDescriptor(const std::string& entryPoint, const std::string& target, long flags = 0) :
         entryPoint { entryPoint },
         target     { target     }
     {

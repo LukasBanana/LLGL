@@ -10,56 +10,13 @@
 
 
 #include "Export.h"
-#include "TextureFlags.h"
-#include "GraphicsPipelineFlags.h"
+#include "RenderTargetFlags.h"
 #include <Gauss/Vector2.h>
-#include <cstdint>
 
 
 namespace LLGL
 {
 
-
-//! Render target attachment descriptor structure.
-struct RenderTargetAttachmentDescriptor
-{
-    /**
-    \brief Specifies the MIP-map level which is to be attached to a render target.
-    \remarks This is only used for non-multi-sample textures.
-    All multi-sample textures will always use the first MIP-map level
-    (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
-    */
-    std::uint32_t   mipLevel    = 0;
-
-    /**
-    \brief Array texture layer.
-    \remarks This is only used for array textures (i.e. TextureType::Texture1DArray,
-    TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
-    */
-    std::uint32_t   layer       = 0;
-
-    /**
-    \brief Cube texture face.
-    \remarks This is only used for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
-    */
-    AxisDirection   cubeFace    = AxisDirection::XPos;
-};
-
-//! Render target descriptor structure.
-struct RenderTargetDescriptor
-{
-    //! Sampling descriptor.
-    MultiSamplingDescriptor multiSampling;
-
-    /**
-    \brief Specifies whether custom multi-sampling is used or not. By default false.
-    \remarks If this is true, only multi-sampled textures can be attached to a render-target,
-    i.e. textures of the following types: Texture2DMS, Texture2DMSArray.
-    If this is false, only non-multi-sampled textures can be attached to a render-target.
-    This field will be ignored if multi-sampling is disabled.
-    */
-    bool                    customMultiSampling = false;
-};
 
 class Texture;
 
@@ -77,38 +34,49 @@ class LLGL_EXPORT RenderTarget
 
         virtual ~RenderTarget();
 
+        #if 1 // DEPRECATED
+
         /**
         \brief Attaches an internal depth buffer to this render target.
         \param[in] size Specifies the size of the depth buffer. This must be the same as for all other attachemnts.
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthStencilBuffer
+        \deprecated Use RenderTargetDescriptor::attachmnets instead.
         */
-        virtual void AttachDepthBuffer(const Gs::Vector2ui& size) = 0;
+        virtual void AttachDepthBuffer(const Gs::Vector2ui& size);
 
         /**
         \brief Attaches an internal stencil buffer to this render target.
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthBuffer
+        \deprecated Use RenderTargetDescriptor::attachmnets instead.
         */
-        virtual void AttachStencilBuffer(const Gs::Vector2ui& size) = 0;
+        virtual void AttachStencilBuffer(const Gs::Vector2ui& size);
 
         /**
         \brief Attaches an internal depth-stencil buffer to this render target.
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthBuffer
+        \deprecated Use RenderTargetDescriptor::attachmnets instead.
         */
-        virtual void AttachDepthStencilBuffer(const Gs::Vector2ui& size) = 0;
+        virtual void AttachDepthStencilBuffer(const Gs::Vector2ui& size);
 
         /**
         \brief Attaches the specified texture to this render target.
         \param[in] attachmnetDesc Specifies the attachment descriptor.
         Unused members will be ignored, e.g. the 'layer' member is ignored when a non-array texture is passed.
         \note A mixed attachment of multi-sample and non-multi-sample textures to a render-target is currently only supported with: Direct3D 11.
+        \deprecated Use RenderTargetDescriptor::attachmnets instead.
         */
-        virtual void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) = 0;
+        virtual void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc);
 
-        //! Detaches all textures and depth-stencil buffers from this render target.
-        virtual void DetachAll() = 0;
+        /**
+        \brief Detaches all textures and depth-stencil buffers from this render target.
+        \deprecated Use CreateRenderTarget instead, to create a new render target.
+        */
+        virtual void DetachAll();
+
+        #endif // /DEPRECATED
 
         /**
         \brief Returns the render target resolution.

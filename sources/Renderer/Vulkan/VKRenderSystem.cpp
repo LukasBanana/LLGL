@@ -572,12 +572,12 @@ void VKRenderSystem::Release(ResourceViewHeap& resourceViewHeap)
 
 RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(renderTargets_, MakeUnique<VKRenderTarget>(device_, desc));
 }
 
 void VKRenderSystem::Release(RenderTarget& renderTarget)
 {
-    //todo
+    RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
 /* ----- Shader ----- */
