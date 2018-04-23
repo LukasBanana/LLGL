@@ -64,7 +64,7 @@ enum class ShadingLanguage
     ESSL_310        = (0x20000 | 310),  //!< ESSL 3.10 (since OpenGL ES 3.1).
     ESSL_320        = (0x20000 | 320),  //!< ESSL 3.20 (since OpenGL ES 3.2).
 
-    HLSL            = (0x30000 | 000),  //!< HLSL (High Level Shading Language).
+    HLSL            = (0x30000),        //!< HLSL (High Level Shading Language).
     HLSL_2_0        = (0x30000 | 200),  //!< HLSL 2.0 (since Direct3D 9).
     HLSL_2_0a       = (0x30000 | 201),  //!< HLSL 2.0a (since Direct3D 9a).
     HLSL_2_0b       = (0x30000 | 202),  //!< HLSL 2.0b (since Direct3D 9b).
@@ -232,7 +232,7 @@ struct VulkanRendererConfiguration
 
     /**
     \brief Minimal allocation size for a device memory chunk. By default 1024*1024, i.e. 1 MB of VRAM.
-    \remarks Vulkan only allows a limit set of device memory objects (e.g. 4096 on a GPU with 8 GB of VRAM).
+    \remarks Vulkan only allows a limited set of device memory objects (e.g. 4096 on a GPU with 8 GB of VRAM).
     This member specifies the minimum size used for hardware memory allocation of such a memory chunk.
     The Vulkan render system automatically manages sub-region allocation and defragmentation.
     */
@@ -284,11 +284,11 @@ struct RenderSystemDescriptor
     Example usage (for Vulkan renderer):
     \code
     // Initialize Vulkan specific configurations (e.g. always allocate at least 1GB of VRAM for each device memory chunk).
-    VulkanRendererConfiguration config;
+    LLGL::VulkanRendererConfiguration config;
     config.minDeviceMemoryAllocationSize = 1024*1024*1024;
 
     // Initialize render system descriptor
-    RenderSystemDescriptor rendererDesc;
+    LLGL::RenderSystemDescriptor rendererDesc;
     rendererDesc.moduleName         = "Vulkan";
     rendererDesc.rendererConfig     = &config;
     rendererDesc.rendererConfigSize = sizeof(config);
@@ -302,7 +302,7 @@ struct RenderSystemDescriptor
     const void* rendererConfig      = nullptr;
 
     /**
-    \brief Specifies the size (in bytes) of the strucutre where the 'rendererConfig' member points to (use 'sizeof' with the respective structure). By default 0.
+    \brief Specifies the size (in bytes) of the structure where the 'rendererConfig' member points to (use 'sizeof' with the respective structure). By default 0.
     \remarks If 'rendererConfig' is null then this member is ignored.
     \see rendererConfig
     */
@@ -472,7 +472,7 @@ struct RenderingCaps
 
     /**
     \brief Specifies the maximum number of viewports and scissor rectangles. Most render systems have a maximum of 16.
-    \see     hasViewportArrays
+    \see hasViewportArrays
     */
     std::uint32_t                   maxNumViewports                     { 0 };
 

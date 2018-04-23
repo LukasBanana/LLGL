@@ -382,7 +382,13 @@ struct StencilDescriptor
     */
     bool                    testEnabled  = false;
 
-    //! Specifies the front face settings for the stencil test.
+    /**
+    \brief Specifies the front face settings for the stencil test.
+    \note For Direct3D 11 and Direct3D 12, the read mask, write mask, and stencil reference are only supported for the front face.
+    \see StencilFaceDescriptor::readMask
+    \see StencilFaceDescriptor::writeMask
+    \see StencilFaceDescriptor::reference
+    */
     StencilFaceDescriptor   front;
 
     //! Specifies the back face settings for the stencil test.
@@ -423,7 +429,7 @@ struct RasterizerDescriptor
     bool                    antiAliasedLineEnabled      = false;
 
     /**
-    \brief If ture, conservative rasterization is enabled.
+    \brief If true, conservative rasterization is enabled.
     \note Only supported with: Direct3D 12 (or OpenGL if the extension "GL_NV_conservative_raster" or "GL_INTEL_conservative_rasterization" is supported).
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
