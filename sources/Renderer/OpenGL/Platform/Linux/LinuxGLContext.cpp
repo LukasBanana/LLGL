@@ -49,14 +49,7 @@ LinuxGLContext::LinuxGLContext(RenderContextDescriptor& desc, Surface& surface, 
 {
     NativeHandle nativeHandle;
     surface.GetNativeHandle(&nativeHandle);
-    
-    if (sharedContext)
-    {
-        auto sharedContextGLX = LLGL_CAST(LinuxGLContext*, sharedContext);
-        CreateContext(desc, nativeHandle, sharedContextGLX);
-    }
-    else
-        CreateContext(desc, nativeHandle, nullptr);
+    CreateContext(desc, nativeHandle, sharedContext);
 }
 
 LinuxGLContext::~LinuxGLContext()
