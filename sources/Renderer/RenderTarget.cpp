@@ -44,9 +44,7 @@ void RenderTarget::ApplyResolution(const Gs::Vector2ui& resolution)
 {
     /* Validate texture attachment size */
     if (resolution == Gs::Vector2ui(0, 0))
-    {
         throw std::invalid_argument("attachment to render target failed, due to invalid size of zero");
-    }
 
     /* Check if size matches the current resolution */
     if (resolution_ != Gs::Vector2ui(0, 0))

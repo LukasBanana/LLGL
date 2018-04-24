@@ -488,7 +488,11 @@ struct BlendDescriptor
     */
     LogicOp                             logicOp         = LogicOp::Disabled;
 
-    //! Render-target blend states. A maximum of 8 targets is supported. Further targets will be ignored.
+    /**
+    \brief Render-target blend states. A maximum of 8 targets is supported. Further targets will be ignored.
+    \remarks If the number of targets is not equal to the number of attachments of the respective render target (either RenderTarget or RenderContext), the behavior is undefined.
+    Especially for low-level APIs such as Vulkan, this must be compatible to the render target that is used with the graphics pipeline state of this blend descriptor.
+    */
     std::vector<BlendTargetDescriptor>  targets;
 };
 

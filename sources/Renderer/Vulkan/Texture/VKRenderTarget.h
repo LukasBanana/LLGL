@@ -25,11 +25,23 @@ class VKRenderTarget : public RenderTarget
 
         VKRenderTarget(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
 
+        inline VkFramebuffer GetVkFramebuffer() const
+        {
+            return framebuffer_;
+        }
+
+        inline VkRenderPass GetVkRenderPass() const
+        {
+            return renderPass_;
+        }
+
     private:
 
+        void CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
         void CreateFramebuffer(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
 
-        VKPtr<VkFramebuffer> framebuffer_;
+        VKPtr<VkFramebuffer>    framebuffer_;
+        VKPtr<VkRenderPass>     renderPass_;
 
 };
 

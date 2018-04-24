@@ -19,7 +19,8 @@ namespace LLGL
 VKTexture::VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& desc) :
     Texture    { desc.type                  },
     image_     { device, vkDestroyImage     },
-    imageView_ { device, vkDestroyImageView }
+    imageView_ { device, vkDestroyImageView },
+    format_    { VKTypes::Map(desc.format)  }
 {
     CreateImage(device, desc);
 }
@@ -65,7 +66,7 @@ void VKTexture::CreateImageView(VkDevice device, const TextureDescriptor& desc)
         createInfo.flags                            = 0;
         createInfo.image                            = image_;
         createInfo.viewType                         = VKTypes::Map(desc.type);
-        createInfo.format                           = VKTypes::Map(desc.format);
+        createInfo.format                           = format_;
         createInfo.components.r                     = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.g                     = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.b                     = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -208,7 +209,7 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
         createInfo.pNext                    = nullptr;
         createInfo.flags                    = GetVkImageCreateFlags(desc);
         createInfo.imageType                = GetVkImageType(desc.type);
-        createInfo.format                   = VKTypes::Map(desc.format);
+        createInfo.format                   = format_;
         createInfo.extent                   = GetVkImageExtent3D(desc, createInfo.imageType);
         createInfo.mipLevels                = GetVkImageMipLevels(desc, createInfo.extent);
         createInfo.arrayLayers              = GetVkImageArrayLayers(desc, createInfo.imageType);
@@ -224,8 +225,8 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
     VKThrowIfFailed(result, "failed to create Vulkan image");
 
     /* Store number of MIP level and image extent */
-    numMipLevels_   = createInfo.mipLevels;
     extent_         = createInfo.extent;
+    numMipLevels_   = createInfo.mipLevels;
 }
 
 
