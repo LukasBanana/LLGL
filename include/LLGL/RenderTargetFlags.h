@@ -80,7 +80,7 @@ struct AttachmentDescriptor
     std::uint32_t   mipLevel    = 0;
 
     /**
-    \brief Array texture layer.
+    \brief Specifies the array texture layer which is to be used as render target attachment.
     \remarks This is only used for array textures (i.e. TextureType::Texture1DArray,
     TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
     */

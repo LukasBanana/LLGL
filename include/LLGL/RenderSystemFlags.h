@@ -34,12 +34,13 @@ static const std::size_t maxThreadCount = ~0;
 
 /**
 \brief Shading language version enumation.
-\remarks These enumeration entries can be casted to an integer using the bitmask ShadingLanguage::VersionBitmask to get the respective version number.
-GLSL versions range from 100110 (ver. 1.10) to 100460 (ver. 4.60),
-ESSL versions range from 200100 (ver. 1.00) to 200320 (ver. 3.20),
-HLSL versions range from 300200 (ver. 2.0) to 300510 (ver. 5.1),
-Metal versions range from 400100 (ver. 1.0) to 400120 (ver. 1.2),
-and SPIR-V version is 500100 (ver. 1.0).
+\remarks These enumeration entries can be casted to an integer using the bitmask ShadingLanguage::VersionBitmask to get the respective version number:
+\code
+// 'versionNo' will have the value 330
+static const auto versionGLSL330 = static_cast<std::uint32_t>(LLGL::ShadingLanguage::GLSL_330);
+static const auto versionBitmask = static_cast<std::uint32_t>(LLGL::ShadingLanguage::VersionBitmask);
+static const auto versionNo      = versionGLSL330 & versionBitmask;
+\endcode
 */
 enum class ShadingLanguage
 {
@@ -82,17 +83,7 @@ enum class ShadingLanguage
     SPIRV           = (0x50000),        //!< SPIR-V Shading Language.
     SPIRV_100       = (0x50000 | 100),  //!< SPIR-V 1.0.
 
-    /**
-    \brief Bitmask for the version number of each shading language enumeration entry.
-    \remarks Can be used like this:
-    \code
-    // 'versionNo' will have the value 330
-    static const auto versionGLSL330 = static_cast<std::uint32_t>(LLGL::ShadingLanguage::GLSL_330);
-    static const auto versionBitmask = static_cast<std::uint32_t>(LLGL::ShadingLanguage::VersionBitmask);
-    static const auto versionNo      = versionGLSL330 & versionBitmask;
-    \endcode
-    */
-    VersionBitmask  = 0x0000ffff,
+    VersionBitmask  = 0x0000ffff,       //!< Bitmask for the version number of each shading language enumeration entry.
 };
 
 //! Screen coordinate system origin enumeration.
@@ -100,13 +91,13 @@ enum class ScreenOrigin
 {
     /**
     \brief Specifies a screen origin in the lower-left.
-    \note: Native screen origin in: OpenGL.
+    \note Native screen origin in: OpenGL.
     */
     LowerLeft,
 
     /**
     \brief Specifies a screen origin in the upper-left.
-    \note: Native screen origin in: Direct3D 11, Direct3D 12, Vulkan.
+    \note Native screen origin in: Direct3D 11, Direct3D 12, Vulkan.
     */
     UpperLeft,
 };

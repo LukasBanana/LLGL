@@ -35,8 +35,8 @@ enum class TextureWrap
 //! Texture sampling filter enumeration.
 enum class TextureFilter
 {
-    Nearest,    //!< Take the nearest sample.
-    Linear,     //!< Interpolate between two samples.
+    Nearest,    //!< Take the nearest texture sample. \image html TextureFilter_Nearest.png
+    Linear,     //!< Interpolate between multiple texture samples. \image html TextureFilter_Linear.png
 };
 
 

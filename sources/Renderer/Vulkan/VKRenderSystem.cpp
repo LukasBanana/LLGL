@@ -330,20 +330,35 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     const auto imageDataSize = static_cast<VkDeviceSize>(TextureBufferSize(textureDesc.format, extent.width * extent.height * extent.depth));
 
+    /* Set up initial image data */
+    const void* initialData = nullptr;
+    std::vector<char> imageDefaultBuffer;
+
+    if (imageDesc)
+    {
+        /* Use data buffer from image descriptor */
+        initialData = imageDesc->buffer;
+    }
+    else if (GetConfiguration().imageInitialization.enabled)
+    {
+        /* Allocate default image data */
+        imageDefaultBuffer.resize(static_cast<std::size_t>(imageDataSize), 0);
+
+        //TODO: fill with configured color ...
+
+        initialData = imageDefaultBuffer.data();
+    }
+
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;
-    FillBufferCreateInfo(
-        stagingCreateInfo,
-        imageDataSize,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT            // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.flags)
-    );
+    FillBufferCreateInfo(stagingCreateInfo, imageDataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT); // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.flags)
 
     VKBufferWithRequirements stagingBuffer { device_ };
     VKDeviceMemoryRegion* memoryRegionStaging = nullptr;
 
     std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(
         stagingCreateInfo,
-        (imageDesc != nullptr ? imageDesc->buffer : nullptr),
+        initialData,
         static_cast<std::size_t>(imageDataSize)
     );
 
@@ -377,7 +392,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     deviceMemoryMngr_->Release(memoryRegionStaging);
 
     /* Create image view for texture */
-    textureVK->CreateImageView(device_, textureDesc);
+    textureVK->CreateInternalImageView(device_);
 
     return TakeOwnership(textures_, std::move(textureVK));
 }

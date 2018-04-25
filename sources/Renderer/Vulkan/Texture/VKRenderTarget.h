@@ -55,10 +55,11 @@ class VKRenderTarget : public RenderTarget
         void CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
         void CreateFramebuffer(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
 
-        VKPtr<VkFramebuffer>    framebuffer_;
-        VKPtr<VkRenderPass>     renderPass_;
-        std::uint32_t           numColorAttachments_        = 0;
-        bool                    hasDepthStencilAttachment_  = false;
+        VKPtr<VkFramebuffer>            framebuffer_;
+        VKPtr<VkRenderPass>             renderPass_;
+        std::vector<VKPtr<VkImageView>> imageViews_;
+        std::uint32_t                   numColorAttachments_        = 0;
+        bool                            hasDepthStencilAttachment_  = false;
 
 };
 

@@ -56,7 +56,7 @@ void VKTexture::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion
     }
 }
 
-void VKTexture::CreateImageView(VkDevice device, const TextureDescriptor& desc)
+void VKTexture::CreateImageView(VkDevice device, std::uint32_t baseArrayLayer, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, VkImageView* imageViewRef)
 {
     /* Create image view object */
     VkImageViewCreateInfo createInfo;
@@ -65,20 +65,25 @@ void VKTexture::CreateImageView(VkDevice device, const TextureDescriptor& desc)
         createInfo.pNext                            = nullptr;
         createInfo.flags                            = 0;
         createInfo.image                            = image_;
-        createInfo.viewType                         = VKTypes::Map(desc.type);
+        createInfo.viewType                         = VKTypes::Map(GetType());
         createInfo.format                           = format_;
         createInfo.components.r                     = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.g                     = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.b                     = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.a                     = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.subresourceRange.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel    = 0;
-        createInfo.subresourceRange.levelCount      = numMipLevels_;
-        createInfo.subresourceRange.baseArrayLayer  = 0;
+        createInfo.subresourceRange.baseMipLevel    = baseMipLevel;
+        createInfo.subresourceRange.levelCount      = numMipLevels;
+        createInfo.subresourceRange.baseArrayLayer  = baseArrayLayer;
         createInfo.subresourceRange.layerCount      = 1;
     }
-    VkResult result = vkCreateImageView(device, &createInfo, nullptr, imageView_.ReleaseAndGetAddressOf());
+    VkResult result = vkCreateImageView(device, &createInfo, nullptr, imageViewRef);
     VKThrowIfFailed(result, "failed to create Vulkan image view");
+}
+
+void VKTexture::CreateInternalImageView(VkDevice device)
+{
+    CreateImageView(device, 0, 0, GetNumMipLevels(), imageView_.ReleaseAndGetAddressOf());
 }
 
 

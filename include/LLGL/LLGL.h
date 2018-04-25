@@ -22,7 +22,7 @@
 
 //DOXYGEN MAIN PAGE
 /**
- * \mainpage LLGL 0.01 Beta Documentation
+ * \mainpage LLGL 0.02 Beta Documentation
  * 
  * LLGL (Low Level Graphics Library)
  * =================================

@@ -322,7 +322,7 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
 
 void VKRenderContext::CreateSwapChainImageViews()
 {
-    swapChainImageViews_.resize(swapChainImages_.size(), VKPtr<VkImageView>{ device_, vkDestroyImageView });
+    swapChainImageViews_.resize(swapChainImages_.size(), VKPtr<VkImageView> { device_, vkDestroyImageView });
 
     for (std::size_t i = 0, n = swapChainImages_.size(); i < n; ++i)
     {

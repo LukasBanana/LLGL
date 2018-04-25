@@ -33,7 +33,8 @@ class VKTexture : public Texture
 
         void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
 
-        void CreateImageView(VkDevice device, const TextureDescriptor& desc);
+        void CreateImageView(VkDevice device, std::uint32_t baseArrayLayer, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, VkImageView* imageViewRef);
+        void CreateInternalImageView(VkDevice device);
 
         // Returns the Vulkan image object.
         inline VkImage GetVkImage() const
@@ -41,7 +42,7 @@ class VKTexture : public Texture
             return image_;
         }
 
-        // Returns the Vulkan image view object.
+        // Returns the internal Vulkan image view object (created with 'CreateInternalImageView').
         inline VkImageView GetVkImageView() const
         {
             return imageView_;

@@ -272,6 +272,21 @@ int main()
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
+        // Create texture for render target attachment
+        const std::uint32_t renderTargetSize = 512;
+        auto renderTargetTex = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, renderTargetSize, renderTargetSize));
+
+        // Create render target
+        LLGL::RenderTargetDescriptor rtDesc;
+        {
+            LLGL::AttachmentDescriptor attachmentDesc;
+            {
+                attachmentDesc.texture = renderTargetTex;
+            }
+            rtDesc.attachments.push_back(attachmentDesc);
+        }
+        auto renderTarget = renderer->CreateRenderTarget(rtDesc);
+
         // Create query
         #ifdef TEST_QUERY
         auto query = renderer->CreateQuery(LLGL::QueryType::PipelineStatistics);
