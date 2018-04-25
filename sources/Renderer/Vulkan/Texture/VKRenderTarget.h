@@ -35,6 +35,21 @@ class VKRenderTarget : public RenderTarget
             return renderPass_;
         }
 
+        inline VkExtent2D GetVkExtent() const
+        {
+            return { GetResolution().x, GetResolution().y };
+        }
+
+        inline std::uint32_t GetNumColorAttachments() const
+        {
+            return numColorAttachments_;
+        }
+
+        inline bool HasDepthStencilAttachment() const
+        {
+            return hasDepthStencilAttachment_;
+        }
+
     private:
 
         void CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
@@ -42,6 +57,8 @@ class VKRenderTarget : public RenderTarget
 
         VKPtr<VkFramebuffer>    framebuffer_;
         VKPtr<VkRenderPass>     renderPass_;
+        std::uint32_t           numColorAttachments_        = 0;
+        bool                    hasDepthStencilAttachment_  = false;
 
 };
 

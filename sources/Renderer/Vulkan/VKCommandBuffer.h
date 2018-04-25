@@ -127,13 +127,16 @@ class VKCommandBuffer : public CommandBuffer
 
         void SetPresentIndex(std::uint32_t idx);
 
+        bool IsCommandBufferActive() const;
+
         void BeginCommandBuffer();
         void EndCommandBuffer();
 
         void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
         void EndRenderPass();
 
-        inline VkCommandBuffer GetBufferObject() const
+        // Returns the native VkCommandBuffer object.
+        inline VkCommandBuffer GetVkCommandBuffer() const
         {
             return commandBuffer_;
         }
@@ -143,11 +146,16 @@ class VKCommandBuffer : public CommandBuffer
         void CreateCommandPool(std::uint32_t queueFamilyIndex);
         void CreateCommandBuffers(std::size_t bufferCount);
 
+        void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
+
+        //TODO: current unused; previously used for 'Clear' and 'ClearTarget' functions
+        #if 0
         void BeginClearImage(
             VkImageMemoryBarrier& clearToPresentBarrier, VkImage image, const VkImageAspectFlags clearFlags,
             const VkClearColorValue* clearColor, const VkClearDepthStencilValue* clearDepthStencil
         );
         void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
+        #endif
 
         void BindResourceViewHeap(VKResourceViewHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t startSlot);
 
@@ -155,19 +163,25 @@ class VKCommandBuffer : public CommandBuffer
         VKPtr<VkCommandPool>            commandPool_;
         std::vector<VkCommandBuffer>    commandBufferList_;
         VkCommandBuffer                 commandBuffer_;
+        std::vector<bool>               commandBufferActiveList_;
+        std::vector<bool>::iterator     commandBufferActiveIt_      = commandBufferActiveList_.end();
 
-        VkClearColorValue               clearColor_             = { 0.0f, 0.0f, 0.0f, 0.0f };
-        VkClearDepthStencilValue        clearDepthStencil_      = { 1.0f, 0 };
+        VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
+        VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
 
-        VkRenderPass                    renderPass_             = VK_NULL_HANDLE;
-        VkFramebuffer                   framebuffer_            = VK_NULL_HANDLE;
-        VkExtent2D                      framebufferExtent_      = { 0, 0 };
-        VkImage                         imageColor_             = VK_NULL_HANDLE;
-        VkImage                         imageDepthStencil_      = VK_NULL_HANDLE;
+        VkRenderPass                    renderPass_                 = VK_NULL_HANDLE;
+        bool                            renderPassActive_           = false;
+        VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE;
+        VkExtent2D                      framebufferExtent_          = { 0, 0 };
+        std::uint32_t                   numColorAttachments_        = 0;
+        bool                            hasDepthStencilAttachment_  = false;
 
-        std::uint32_t                   queuePresentFamily_     = 0;
+        #if 1//TODO: remove (use numColorAttachments_ instead)
+        VkImage                         imageColor_                 = VK_NULL_HANDLE;
+        VkImage                         imageDepthStencil_          = VK_NULL_HANDLE;
+        #endif
 
-        RenderContext*                  renderContextTarget_    = nullptr;
+        std::uint32_t                   queuePresentFamily_         = 0;
 
 };
 

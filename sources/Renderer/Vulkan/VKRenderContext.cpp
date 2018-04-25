@@ -53,12 +53,12 @@ void VKRenderContext::Present()
     /* End command buffer and render pass */
     commandBuffer_->EndRenderPass();
     commandBuffer_->EndCommandBuffer();
-
+    
     /* Initialize semaphorse */
     VkSemaphore waitSemaphorse[] = { imageAvailableSemaphore_ };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     VkSemaphore signalSemaphorse[] = { renderFinishedSemaphore_ };
-    VkCommandBuffer commandBuffers[] = { commandBuffer_->GetBufferObject() };
+    VkCommandBuffer commandBuffers[] = { commandBuffer_->GetVkCommandBuffer() };
 
     /* Submit command buffer to graphics queue */
     VkSubmitInfo submitInfo;

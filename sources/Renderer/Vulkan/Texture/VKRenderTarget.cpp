@@ -70,14 +70,14 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const Rende
     /* Initialize attachment reference */
     std::vector<VkAttachmentReference> attachmentsRefs(desc.attachments.size());
 
-    std::uint32_t colorAttachmentsCount = 0;
+    numColorAttachments_ = 0;
     std::size_t depthAttachmentIndex = ~0;
 
     for (std::uint32_t i = 0, n = static_cast<std::uint32_t>(desc.attachments.size()); i < n; ++i)
     {
         if (desc.attachments[i].type == AttachmentType::Color)
         {
-            auto& attachmentRef = attachmentsRefs[colorAttachmentsCount++];
+            auto& attachmentRef = attachmentsRefs[numColorAttachments_++];
             {
                 attachmentRef.attachment    = i;
                 attachmentRef.layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -85,7 +85,7 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const Rende
         }
         else
         {
-            if (depthAttachmentIndex == ~0)
+            if (!hasDepthStencilAttachment_)
             {
                 auto& attachmentRef = attachmentsRefs.back();
                 {
@@ -93,6 +93,7 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const Rende
                     attachmentRef.layout        = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 }
                 depthAttachmentIndex = (attachmentsRefs.size() - 1);
+                hasDepthStencilAttachment_ = true;
             }
             else
                 throw std::invalid_argument("cannot have more than one depth-stencil attachment for render target");
@@ -106,7 +107,7 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const Rende
         subpassDesc.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpassDesc.inputAttachmentCount    = 0;
         subpassDesc.pInputAttachments       = nullptr;
-        subpassDesc.colorAttachmentCount    = colorAttachmentsCount;
+        subpassDesc.colorAttachmentCount    = numColorAttachments_;
         subpassDesc.pColorAttachments       = attachmentsRefs.data();
         subpassDesc.pResolveAttachments     = nullptr;
         subpassDesc.pDepthStencilAttachment = (depthAttachmentIndex < attachmentsRefs.size() ? &(attachmentsRefs[depthAttachmentIndex]) : nullptr);

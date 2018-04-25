@@ -13,6 +13,7 @@
 #include "RenderState/VKQuery.h"
 #include "Texture/VKSampler.h"
 #include "Texture/VKSamplerArray.h"
+#include "Texture/VKRenderTarget.h"
 #include "Buffer/VKBuffer.h"
 #include "Buffer/VKBufferArray.h"
 #include "Buffer/VKIndexBuffer.h"
@@ -82,103 +83,68 @@ void VKCommandBuffer::SetClearStencil(std::uint32_t stencil)
     clearDepthStencil_.stencil = stencil;
 }
 
+static VkImageAspectFlags GetDepthStencilAspectMask(long flags)
+{
+    VkImageAspectFlags aspectMask = 0;
+
+    if ((flags & ClearFlags::Depth) != 0)
+        aspectMask |= VK_IMAGE_ASPECT_DEPTH_BIT;
+    if ((flags & ClearFlags::Stencil) != 0)
+        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+    return aspectMask;
+}
+
 void VKCommandBuffer::Clear(long flags)
 {
-    #if 0
+    static const std::uint32_t maxNumAttachments = 32;
 
-    /* Initialize clear flags */
-    VkImageAspectFlags clearFlags[2] = { 0, 0 };
-
-    if (imageColor_ != VK_NULL_HANDLE)
-    {
-        if ((flags & ClearFlags::Color) != 0)
-            clearFlags[0] |= VK_IMAGE_ASPECT_COLOR_BIT;
-    }
-
-    if (imageDepthStencil_ != VK_NULL_HANDLE)
-    {
-        if ((flags & ClearFlags::Depth) != 0)
-            clearFlags[1] |= VK_IMAGE_ASPECT_DEPTH_BIT;
-        if ((flags & ClearFlags::Stencil) != 0)
-            clearFlags[1] |= VK_IMAGE_ASPECT_STENCIL_BIT;
-    }
-
-    /* Begin and end clear image commands interleaved */
-    VkImageMemoryBarrier clearToPresentBarrier[2];
-
-    if (clearFlags[0] != 0)
-        BeginClearImage(clearToPresentBarrier[0], imageColor_, clearFlags[0], &clearColor_, nullptr);
-    if (clearFlags[1] != 0)
-        BeginClearImage(clearToPresentBarrier[1], imageDepthStencil_, clearFlags[1], nullptr, &clearDepthStencil_);
-
-    if (clearFlags[0] != 0)
-        EndClearImage(clearToPresentBarrier[0]);
-    if (clearFlags[1] != 0)
-        EndClearImage(clearToPresentBarrier[1]);
-
-    #else
-
-    VkClearAttachment attachments[2];
+    VkClearAttachment attachments[maxNumAttachments + 1];
 
     std::uint32_t numAttachments = 0;
     
-    if ((flags & ClearFlags::Color) != 0 && imageColor_)
+    /* Fill clear descriptors for color attachments */
+    if ((flags & ClearFlags::Color) != 0)
     {
-        auto& attachment = attachments[numAttachments++];
-        attachment.aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT;
-        attachment.colorAttachment  = 0;
-        attachment.clearValue.color = clearColor_;
-    }
-
-    if ((flags & ClearFlags::DepthStencil) != 0 && imageDepthStencil_)
-    {
-        auto& attachment = attachments[numAttachments++];
-        attachment.aspectMask               = 0;
-        
-        if ((flags & ClearFlags::Depth) != 0)
-            attachment.aspectMask |= VK_IMAGE_ASPECT_DEPTH_BIT;
-        if ((flags & ClearFlags::Stencil) != 0)
-            attachment.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-
-        attachment.colorAttachment          = 1;
-        attachment.clearValue.depthStencil  = clearDepthStencil_;
-    }
-
-    if (numAttachments > 0)
-    {
-        /* Initialize image region of clear operation */
-        VkClearRect clearRect;
+        numAttachments = std::min(numColorAttachments_, maxNumAttachments);
+        for (std::uint32_t i = 0; i < numAttachments; ++i)
         {
-            clearRect.rect.offset.x     = 0;
-            clearRect.rect.offset.y     = 0;
-            clearRect.rect.extent       = framebufferExtent_;
-            clearRect.baseArrayLayer    = 0;
-            clearRect.layerCount        = 1;
+            auto& attachment = attachments[i];
+            {
+                attachment.aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT;
+                attachment.colorAttachment  = i;
+                attachment.clearValue.color = clearColor_;
+            }
         }
-
-        /* Clear framebuffer attachments */
-        vkCmdClearAttachments(commandBuffer_, numAttachments, attachments, 1, &clearRect);
     }
 
-    #endif
+    /* Fill clear descriptor for depth-stencil attachment */
+    if ((flags & ClearFlags::DepthStencil) != 0 && hasDepthStencilAttachment_)
+    {
+        auto& attachment = attachments[numAttachments++];
+        {
+            attachment.aspectMask               = GetDepthStencilAspectMask(flags);
+            attachment.colorAttachment          = 0; // ignored
+            attachment.clearValue.depthStencil  = clearDepthStencil_;
+        }
+    }
+
+    /* Clear all framebuffer attachments */
+    ClearFramebufferAttachments(numAttachments, attachments);
 }
 
 void VKCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
 {
-    if (targetIndex == 0 && imageColor_ != VK_NULL_HANDLE)
+    VkClearAttachment attachment;
     {
-        /* Copy clear value */
-        VkClearColorValue clearColor;
-        clearColor.float32[0] = color.r;
-        clearColor.float32[1] = color.g;
-        clearColor.float32[2] = color.b;
-        clearColor.float32[3] = color.a;
-
-        /* Clear color image target */
-        VkImageMemoryBarrier clearToPresentBarrier;
-        BeginClearImage(clearToPresentBarrier, imageColor_, VK_IMAGE_ASPECT_COLOR_BIT, &clearColor, nullptr);
-        EndClearImage(clearToPresentBarrier);
+        attachment.aspectMask                   = VK_IMAGE_ASPECT_COLOR_BIT;
+        attachment.colorAttachment              = targetIndex;
+        attachment.clearValue.color.float32[0]  = color.r;
+        attachment.clearValue.color.float32[1]  = color.g;
+        attachment.clearValue.color.float32[2]  = color.b;
+        attachment.clearValue.color.float32[3]  = color.a;
     }
+    ClearFramebufferAttachments(1, &attachment);
 }
 
 /* ----- Buffers ------ */
@@ -308,7 +274,26 @@ void VKCommandBuffer::SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap,
 
 void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 {
-    //todo
+    auto& renderTargetVK = LLGL_CAST(VKRenderTarget&, renderTarget);
+
+    /* Begin command buffer and render pass */
+    if (!IsCommandBufferActive())
+        BeginCommandBuffer();
+
+    /* End previous render pass */
+    if (renderPass_)
+        EndRenderPass();
+
+    /* Begin with new render pass */
+    BeginRenderPass(
+        renderTargetVK.GetVkRenderPass(),
+        renderTargetVK.GetVkFramebuffer(),
+        renderTargetVK.GetVkExtent()
+    );
+
+    /* Store information about framebuffer attachments */
+    numColorAttachments_        = renderTargetVK.GetNumColorAttachments();
+    hasDepthStencilAttachment_  = renderTargetVK.HasDepthStencilAttachment();
 }
 
 /*
@@ -318,24 +303,32 @@ Maybe it can be integrated into a Begin/EndRenderPass function with a new interf
 */
 void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
-    if (renderContextTarget_ != &renderContext)
-    {
-        renderContextTarget_ = &renderContext;
+    auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderContext);
 
-        /* Get render context object */
-        auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderContext);
-        renderContextVK.SetPresentCommandBuffer(this);
+    //TODO:
+    //  this must be done for all command buffers at the end of the "VKRenderContext::Present" function
+    /* Switch internal command buffer for the respective render context presentation index */
+    renderContextVK.SetPresentCommandBuffer(this);
 
-        /* Get swap chain objects */
-        renderPass_         = renderContextVK.GetSwapChainRenderPass().Get();
-        framebuffer_        = renderContextVK.GetSwapChainFramebuffer();
-        framebufferExtent_  = renderContextVK.GetSwapChainExtent();
-        imageColor_         = renderContextVK.GetSwapChainImage();
-
-        /* Begin command buffer and render pass */
+    /* Begin command buffer and render pass */
+    if (!IsCommandBufferActive())
         BeginCommandBuffer();
-        BeginRenderPass(renderPass_, framebuffer_, renderContextVK.GetSwapChainExtent());
-    }
+
+    /* End previous render pass */
+    if (renderPass_)
+        EndRenderPass();
+
+    /* Begin with new render pass */
+    BeginRenderPass(
+        renderContextVK.GetSwapChainRenderPass(),
+        renderContextVK.GetSwapChainFramebuffer(),
+        renderContextVK.GetSwapChainExtent()
+    );
+
+    /* Store information about framebuffer attachments */
+    numColorAttachments_        = 1;
+    hasDepthStencilAttachment_  = false;
+    //hasDepthStencilAttachment_  = true;
 }
 
 
@@ -493,7 +486,13 @@ void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
 
 void VKCommandBuffer::SetPresentIndex(std::uint32_t idx)
 {
-    commandBuffer_ = commandBufferList_[idx];
+    commandBuffer_          = commandBufferList_[idx];
+    commandBufferActiveIt_  = commandBufferActiveList_.begin() + idx;
+}
+
+bool VKCommandBuffer::IsCommandBufferActive() const
+{
+    return *commandBufferActiveIt_;
 }
 
 void VKCommandBuffer::BeginCommandBuffer()
@@ -508,17 +507,29 @@ void VKCommandBuffer::BeginCommandBuffer()
     }
     auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
     VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
+
+    /* Store activity state */
+    *commandBufferActiveIt_ = true;
 }
 
 void VKCommandBuffer::EndCommandBuffer()
 {
+    /* End recording of current command buffer */
     auto result = vkEndCommandBuffer(commandBuffer_);
     VKThrowIfFailed(result, "failed to end Vulkan command buffer");
-    renderContextTarget_ = nullptr;
+
+    /* Store activity state */
+    *commandBufferActiveIt_ = false;
 }
 
 void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
 {
+    /* Store render pass and framebuffer attributes */
+    renderPass_         = renderPass;
+    framebuffer_        = framebuffer;
+    framebufferExtent_  = extent;
+
+    /* Record begin of render pass */
     VkRenderPassBeginInfo beginInfo;
     {
         beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -535,7 +546,12 @@ void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer fra
 
 void VKCommandBuffer::EndRenderPass()
 {
+    /* Record and of render pass */
     vkCmdEndRenderPass(commandBuffer_);
+
+    /* Reset render pass and framebuffer attributes */
+    renderPass_     = VK_NULL_HANDLE;
+    framebuffer_    = VK_NULL_HANDLE;
 }
 
 
@@ -574,7 +590,31 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
 
     commandBuffer_ = commandBufferList_.front();
+
+    /* Allocate list to keep track of which command buffers are active */
+    commandBufferActiveList_.resize(bufferCount);
+    commandBufferActiveIt_ = commandBufferActiveList_.end();
 }
+
+void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments)
+{
+    if (numAttachments > 0)
+    {
+        /* Clear framebuffer attachments at the entire image region */
+        VkClearRect clearRect;
+        {
+            clearRect.rect.offset.x     = 0;
+            clearRect.rect.offset.y     = 0;
+            clearRect.rect.extent       = framebufferExtent_;
+            clearRect.baseArrayLayer    = 0;
+            clearRect.layerCount        = 1;
+        }
+        vkCmdClearAttachments(commandBuffer_, numAttachments, attachments, 1, &clearRect);
+    }
+}
+
+//TODO: current unused; previously used for 'Clear' and 'ClearTarget' functions
+#if 0
 
 void VKCommandBuffer::BeginClearImage(
     VkImageMemoryBarrier& clearToPresentBarrier, VkImage image, const VkImageAspectFlags clearFlags,
@@ -648,6 +688,8 @@ void VKCommandBuffer::EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier)
         1, &clearToPresentBarrier               // image memory barriers
     );
 }
+
+#endif
 
 
 } // /namespace LLGL
