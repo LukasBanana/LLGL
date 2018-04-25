@@ -328,11 +328,12 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         std::max(1u, textureDesc.texture3D.depth)
     };
 
-    const auto imageDataSize = static_cast<VkDeviceSize>(TextureBufferSize(textureDesc.format, extent.width * extent.height * extent.depth));
+    const auto imageSize        = extent.width * extent.height * extent.depth;
+    const auto imageDataSize    = static_cast<VkDeviceSize>(TextureBufferSize(textureDesc.format, imageSize));
 
     /* Set up initial image data */
     const void* initialData = nullptr;
-    std::vector<char> imageDefaultBuffer;
+    ByteBuffer imageDefaultBuffer;
 
     if (imageDesc)
     {
@@ -342,11 +343,18 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     else if (GetConfiguration().imageInitialization.enabled)
     {
         /* Allocate default image data */
-        imageDefaultBuffer.resize(static_cast<std::size_t>(imageDataSize), 0);
+        ImageFormat imageFormat = ImageFormat::RGBA;
+        DataType imageDataType = DataType::Double;
 
-        //TODO: fill with configured color ...
+        if (FindSuitableImageFormat(textureDesc.format, imageFormat, imageDataType))
+        {
+            const ColorRGBAd fillColor { GetConfiguration().imageInitialization.color.Cast<double>() };
+            imageDefaultBuffer = GenerateImageBuffer(imageFormat, imageDataType, imageSize, fillColor);
+        }
+        else
+            imageDefaultBuffer = GenerateEmptyByteBuffer(static_cast<std::size_t>(imageDataSize));
 
-        initialData = imageDefaultBuffer.data();
+        initialData = imageDefaultBuffer.get();
     }
 
     /* Create staging buffer */

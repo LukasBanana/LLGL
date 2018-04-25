@@ -13,6 +13,7 @@
 #include "Format.h"
 #include "RenderSystemFlags.h"
 #include "TextureFlags.h"
+#include "ColorRGBA.h"
 #include <memory>
 #include <cstdint>
 
@@ -133,6 +134,16 @@ i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
 LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
 
 /**
+\brief Finds a suitable image format for the specified texture hardware format.
+\param[in] textureFormat Specifies the input texture format.
+\param[out] imageFormat Specifies the output image format.
+\param[out] dataType Specifies the output image data type.
+\return True if a suitable image format has been found. Otherwise, the output parameter 'imageFormat' and 'dataType' have not been modified.
+\remarks Texture formats that cannot be converted to an image format are all 16-bit floating-point types, and TextureFormat::Unknown.
+*/
+LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, ImageFormat& imageFormat, DataType& dataType);
+
+/**
 \brief Converts the image format and data type of the source image (only uncompressed color formats).
 \param[in] srcFormat Specifies the source image format.
 \param[in] srcDataType Specifies the source data type.
@@ -163,6 +174,39 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     DataType    dstDataType,
     std::size_t threadCount = 0
 );
+
+/**
+\brief Generates an image buffer with the specified fill data for each pixel.
+\param[in] format Specifies the image format of each pixel in the output image.
+\param[in] dataType Specifies the data type of each component of each pixel in the output image.
+\param[in] imageSize Specifies the 1-Dimensional size (in pixels) of the output image. For a 2D image, this can be width times height for instance.
+\param[in] fillColor Specifies the color to fill the image for each pixel.
+\return The new allocated and initialized byte buffer.
+\remarks This can be used to generate a single-colored n-Dimensional image.
+Usage example for a 2D image:
+\code
+// Generate 2D image of size 512 x 512 with a half-transparent yellow color
+auto imageBuffer = LLGL::GenerateImageBuffer(
+    LLGL::ImageFormat::RGBA,
+    LLGL::DataType::UInt8,
+    512 * 512,
+    LLGL::ColorRGBAd { 1.0, 1.0, 0.0, 0.5 }
+);
+\endcode
+*/
+LLGL_EXPORT ByteBuffer GenerateImageBuffer(
+    ImageFormat         format,
+    DataType            dataType,
+    std::size_t         imageSize,
+    const ColorRGBAd&   fillColor
+);
+
+/**
+\brief Generates a new byte buffer with zeros in each byte.
+\param[in] bufferSize Specifies the size (in bytes) of the buffer.
+\return The new allocated and initialized byte buffer.
+*/
+LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize);
 
 
 } // /namespace LLGL

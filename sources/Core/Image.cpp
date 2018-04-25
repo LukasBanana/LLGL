@@ -156,7 +156,7 @@ static void WriteNormalizedTypedVariant(DataType dstDataType, VariantBuffer& dst
 
 static ByteBuffer AllocByteArray(std::size_t size)
 {
-    return ByteBuffer(new char[size]);
+    return ByteBuffer { new char[size] };
 }
 
 // Worker thread procedure for the "ConvertImageBufferDataType" function
@@ -193,8 +193,8 @@ static ByteBuffer ConvertImageBufferDataType(
     auto dstBuffer      = AllocByteArray(dstBufferSize);
 
     /* Get variant buffer for source and destination images */
-    VariantConstBuffer src(srcBuffer);
-    VariantBuffer dst(dstBuffer.get());
+    VariantConstBuffer src { srcBuffer };
+    VariantBuffer dst { dstBuffer.get() };
     
     threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
 
@@ -404,7 +404,7 @@ static void ConvertImageBufferFormatWorker(
     auto dstFormatSize  = ImageFormatSize(dstFormat);
     
     /* Initialize default variant color (0, 0, 0, 1) */
-    VariantColor value(Gs::UninitializeTag{});
+    VariantColor value { Gs::UninitializeTag{} };
     
     SetVariantMinMax(srcDataType, value.r, true);
     SetVariantMinMax(srcDataType, value.g, true);
@@ -441,8 +441,8 @@ static ByteBuffer ConvertImageBufferFormat(
     auto dstBuffer = AllocByteArray(dstBufferSize);
 
     /* Get variant buffer for source and destination images */
-    VariantConstBuffer src(srcBuffer);
-    VariantBuffer dst(dstBuffer.get());
+    VariantConstBuffer src { srcBuffer };
+    VariantBuffer dst { dstBuffer.get() };
 
     threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
 
@@ -525,6 +525,91 @@ LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format)
     return (format == ImageFormat::Depth || format == ImageFormat::DepthStencil);
 }
 
+static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const TextureFormat textureFormat)
+{
+    switch (textureFormat)
+    {
+        case TextureFormat::Unknown:        break;
+
+        case TextureFormat::DepthComponent: return { ImageFormat::Depth, DataType::Float };
+        case TextureFormat::DepthStencil:   return { ImageFormat::DepthStencil, DataType::Float };
+        case TextureFormat::R:              return { ImageFormat::R, DataType::UInt8 };
+        case TextureFormat::RG:             return { ImageFormat::RG, DataType::UInt8 };
+        case TextureFormat::RGB:            return { ImageFormat::RGB, DataType::UInt8 };
+        case TextureFormat::RGBA:           return { ImageFormat::RGBA, DataType::UInt8 };
+
+        case TextureFormat::R8:             return { ImageFormat::R, DataType::UInt8 };
+        case TextureFormat::R8Sgn:          return { ImageFormat::R, DataType::Int8 };
+
+        case TextureFormat::R16:            return { ImageFormat::R, DataType::UInt16 };
+        case TextureFormat::R16Sgn:         return { ImageFormat::R, DataType::Int16 };
+        case TextureFormat::R16Float:       break;
+
+        case TextureFormat::R32UInt:        return { ImageFormat::R, DataType::UInt32 };
+        case TextureFormat::R32SInt:        return { ImageFormat::R, DataType::Int32 };
+        case TextureFormat::R32Float:       return { ImageFormat::R, DataType::Float };
+
+        case TextureFormat::RG8:            return { ImageFormat::RG, DataType::UInt8 };
+        case TextureFormat::RG8Sgn:         return { ImageFormat::RG, DataType::Int8 };
+
+        case TextureFormat::RG16:           return { ImageFormat::RG, DataType::UInt16 };
+        case TextureFormat::RG16Sgn:        return { ImageFormat::RG, DataType::Int16 };
+        case TextureFormat::RG16Float:      break;
+
+        case TextureFormat::RG32UInt:       return { ImageFormat::RG, DataType::UInt32 };
+        case TextureFormat::RG32SInt:       return { ImageFormat::RG, DataType::Int32 };
+        case TextureFormat::RG32Float:      return { ImageFormat::RG, DataType::Float };
+
+        case TextureFormat::RGB8:           return { ImageFormat::RGB, DataType::UInt8 };
+        case TextureFormat::RGB8Sgn:        return { ImageFormat::RGB, DataType::Int8 };
+
+        case TextureFormat::RGB16:          return { ImageFormat::RGB, DataType::UInt16 };
+        case TextureFormat::RGB16Sgn:       return { ImageFormat::RGB, DataType::Int16 };
+        case TextureFormat::RGB16Float:     break;
+
+        case TextureFormat::RGB32UInt:      return { ImageFormat::RGB, DataType::UInt32 };
+        case TextureFormat::RGB32SInt:      return { ImageFormat::RGB, DataType::Int32 };
+        case TextureFormat::RGB32Float:     return { ImageFormat::RGB, DataType::Float };
+
+        case TextureFormat::RGBA8:          return { ImageFormat::RGBA, DataType::UInt8 };
+        case TextureFormat::RGBA8Sgn:       return { ImageFormat::RGBA, DataType::Int8 };
+
+        case TextureFormat::RGBA16:         return { ImageFormat::RGBA, DataType::UInt16 };
+        case TextureFormat::RGBA16Sgn:      return { ImageFormat::RGBA, DataType::Int16 };
+        case TextureFormat::RGBA16Float:    break;
+
+        case TextureFormat::RGBA32UInt:     return { ImageFormat::RGBA, DataType::UInt32 };
+        case TextureFormat::RGBA32SInt:     return { ImageFormat::RGBA, DataType::Int32 };
+        case TextureFormat::RGBA32Float:    return { ImageFormat::RGBA, DataType::Float };
+
+        case TextureFormat::RGB_DXT1:       return { ImageFormat::CompressedRGB, DataType::Int8 };
+        case TextureFormat::RGBA_DXT1:      return { ImageFormat::CompressedRGBA, DataType::Int8 };
+        case TextureFormat::RGBA_DXT3:      return { ImageFormat::CompressedRGBA, DataType::Int16 };
+        case TextureFormat::RGBA_DXT5:      return { ImageFormat::CompressedRGBA, DataType::Int16 };
+    }
+
+    /* Return an invalid image format */
+    return { ImageFormat::CompressedRGBA, DataType::Double };
+}
+
+LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, ImageFormat& imageFormat, DataType& dataType)
+{
+    /* Find suitable format and check for invalid output */
+    ImageFormat imageFormatTmp;
+    DataType dataTypeTmp;
+
+    std::tie(imageFormatTmp, dataTypeTmp) = FindSuitableImageFormatPrimary(textureFormat);
+
+    if (!(imageFormatTmp == ImageFormat::CompressedRGBA && dataTypeTmp == DataType::Double))
+    {
+        imageFormat = imageFormatTmp;
+        dataType    = dataTypeTmp;
+        return true;
+    }
+
+    return false;
+}
+
 LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     ImageFormat srcFormat,
     DataType    srcDataType,
@@ -567,6 +652,47 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     }
 
     return dstImage;
+}
+
+LLGL_EXPORT ByteBuffer GenerateImageBuffer(
+    ImageFormat         format,
+    DataType            dataType,
+    std::size_t         imageSize,
+    const ColorRGBAd&   fillColor)
+{
+    /* Convert fill color data type */
+    VariantColor fillColor0 { Gs::UninitializeTag{} };
+    VariantBuffer fillBuffer0 { &fillColor0 };
+
+    WriteNormalizedTypedVariant(dataType, fillBuffer0, 0, fillColor.r);
+    WriteNormalizedTypedVariant(dataType, fillBuffer0, 1, fillColor.g);
+    WriteNormalizedTypedVariant(dataType, fillBuffer0, 2, fillColor.b);
+    WriteNormalizedTypedVariant(dataType, fillBuffer0, 3, fillColor.a);
+
+    /* Convert fill color format */
+    VariantColor fillColor1 { Gs::UninitializeTag{} };
+    VariantBuffer fillBuffer1 { &fillColor1 };
+    VariantConstBuffer fillBuffer2 { fillBuffer0.raw };
+
+    ReadRGBAFormattedVariant(ImageFormat::RGBA, dataType, fillBuffer2, 0, fillColor1);
+    WriteRGBAFormattedVariant(format, dataType, fillBuffer1, 0, fillColor1);
+
+    /* Allocate image buffer */
+    const auto bytesPerPixel = DataTypeSize(dataType) * ImageFormatSize(format);
+    auto imageBuffer = AllocByteArray(bytesPerPixel * imageSize);
+
+    /* Initialize image buffer with fill color */
+    for (std::size_t i = 0; i < imageSize; ++i)
+        ::memcpy(imageBuffer.get() + bytesPerPixel * i, fillBuffer1.raw, bytesPerPixel);
+
+    return imageBuffer;
+}
+
+LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize)
+{
+    auto buffer = AllocByteArray(bufferSize);
+    std::fill(buffer.get(), buffer.get() + bufferSize, 0);
+    return buffer;
 }
 
 
