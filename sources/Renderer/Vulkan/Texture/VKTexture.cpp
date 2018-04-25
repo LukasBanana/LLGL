@@ -194,8 +194,18 @@ static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
 {
     VkImageUsageFlags flags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
+    /* Enable TRANSFER_SRC_BIT image usage when MIP-maps are enabled */
     if (HasTextureMipMaps(desc))
         flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+    /* Enable either color or depth-stencil ATTACHMENT_BIT image usage when attachment usage is enabled */
+    if ((desc.flags & TextureFlags::AttachmentUsage) != 0)
+    {
+        if (IsDepthStencilFormat(desc.format))
+            flags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        else
+            flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    }
 
     return flags;
 }

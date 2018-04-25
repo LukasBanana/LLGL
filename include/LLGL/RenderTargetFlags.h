@@ -47,7 +47,9 @@ struct AttachmentDescriptor
     /**
     \brief Pointer to the texture which is to be used as target output. By default null.
     \remarks If this is null, the attribute 'type' must not be AttachmentType::Color and the attributes 'width' and 'height' must be specified.
+    The texture must also have been created with the flag 'TextureFlags::AttachmentUsage'.
     \see AttachmentDescriptor::type
+    \see TextureFlags::AttachmentUsage
     */
     Texture*        texture     = nullptr;
 

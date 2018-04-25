@@ -49,7 +49,7 @@ std::uint64_t Win32Timer::Stop()
 
     running_ = false;
 
-    /* Querry elapsed ticks */
+    /* Query elapsed ticks */
     QueryPerformanceCounter(&t1_);
     auto elapsedTime = t1_.QuadPart - t0_.QuadPart;
     

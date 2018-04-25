@@ -162,10 +162,10 @@ class D3D11RenderSystem : public RenderSystem
         void QueryRendererInfo();
         void QueryRenderingCaps();
 
-        void BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags);
-        void BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags);
-        void BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags);
-        void BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& descD3D);
+        void BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc);
         
         void UpdateGenericTexture(
             Texture& texture, std::uint32_t mipLevel, std::uint32_t layer,

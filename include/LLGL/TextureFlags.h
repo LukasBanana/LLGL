@@ -154,6 +154,19 @@ struct TextureFlags
         \see RenderSystem::GenerateMips
         */
         GenerateMips        = (1 << 3),
+
+        /**
+        \brief Texture can be used as render target attachment.
+        \see AttachmentDescriptor::texture
+        */
+        AttachmentUsage     = (1 << 4),
+
+        /**
+        \brief Default texture flags: (GenerateMips | AttachmentUsage).
+        \see GenerateMips
+        \see AttachmentUsage
+        */
+        Default             = (GenerateMips | AttachmentUsage),
     };
 };
 
@@ -228,11 +241,11 @@ struct LLGL_EXPORT TextureDescriptor
     TextureFormat               format      = TextureFormat::RGBA;
 
     /**
-    \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default 0.
+    \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default TextureFlags::Default.
     \remarks This can be bitwise OR combination of the entries of the TextureFlags enumeration.
     \see TextureFlags
     */
-    long                        flags       = 0;
+    long                        flags       = TextureFlags::Default;
 
     union
     {

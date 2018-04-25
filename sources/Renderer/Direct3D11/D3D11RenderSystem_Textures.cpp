@@ -53,18 +53,18 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            BuildGenericTexture1D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            BuildGenericTexture1D(*texture, descD3D, imageDesc);
             break;
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-            BuildGenericTexture2D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            BuildGenericTexture2D(*texture, descD3D, imageDesc);
             break;
         case TextureType::Texture3D:
-            BuildGenericTexture3D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS);
+            BuildGenericTexture3D(*texture, descD3D, imageDesc);
             break;
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
-            BuildGenericTexture2D(*texture, descD3D, imageDesc, D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE);
+            BuildGenericTexture2D(*texture, descD3D, imageDesc);
             break;
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
@@ -243,36 +243,64 @@ void D3D11RenderSystem::GenerateMips(Texture& texture)
  * ======= Private: =======
  */
 
-void D3D11RenderSystem::BuildGenericTexture1D(
-    D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags)
+static UINT GetDXTextureMipLevels(const TextureDescriptor& desc)
+{
+    return ((desc.flags & TextureFlags::GenerateMips) != 0 ? 0 : 1);
+}
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476203(v=vs.85).aspx
+static UINT GetDXTextureBindFlags(const TextureDescriptor& desc)
+{
+    UINT flags = D3D11_BIND_SHADER_RESOURCE;
+
+    /* Render target binding flag is required for MIP-map generation and render target attachment */
+    if ((desc.flags & TextureFlags::GenerateMips) != 0 || (desc.flags & TextureFlags::AttachmentUsage) != 0)
+        flags |= D3D11_BIND_RENDER_TARGET;
+
+    return flags;
+}
+
+static UINT GetDXTextureMiscFlags(const TextureDescriptor& desc)
+{
+    UINT flags = 0;
+
+    if ((desc.flags & TextureFlags::GenerateMips) != 0)
+        flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+    if (IsCubeTexture(desc.type))
+        flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+    return flags;
+}
+
+void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     /* Setup D3D texture descriptor */
-    D3D11_TEXTURE1D_DESC texDesc;
+    D3D11_TEXTURE1D_DESC descDX;
     {
-        texDesc.Width           = descD3D.texture1D.width;
-        texDesc.MipLevels       = 0;
-        texDesc.ArraySize       = descD3D.texture1D.layers;
-        texDesc.Format          = D3D11Types::Map(descD3D.format);
-        texDesc.Usage           = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags  = 0;
-        texDesc.MiscFlags       = miscFlags;
+        descDX.Width            = desc.texture1D.width;
+        descDX.MipLevels        = GetDXTextureMipLevels(desc);
+        descDX.ArraySize        = desc.texture1D.layers;
+        descDX.Format           = D3D11Types::Map(desc.format);
+        descDX.Usage            = D3D11_USAGE_DEFAULT;
+        descDX.BindFlags        = GetDXTextureBindFlags(desc);
+        descDX.CPUAccessFlags   = 0;
+        descDX.MiscFlags        = GetDXTextureMiscFlags(desc);
     }
 
     /* Create D3D texture resource */
-    textureD3D.CreateTexture1D(device_.Get(), texDesc);
+    textureD3D.CreateTexture1D(device_.Get(), descDX);
 
     if (imageDesc)
     {
         /* Update only the first MIP-map level for each array slice */
         auto subImageDesc = *imageDesc;
-        auto subImageStride = descD3D.texture1D.width * ImageFormatSize(subImageDesc.format) * DataTypeSize(subImageDesc.dataType);
+        auto subImageStride = desc.texture1D.width * ImageFormatSize(subImageDesc.format) * DataTypeSize(subImageDesc.dataType);
 
-        for (std::uint32_t arraySlice = 0; arraySlice < descD3D.texture1D.layers; ++arraySlice)
+        for (std::uint32_t arraySlice = 0; arraySlice < desc.texture1D.layers; ++arraySlice)
         {
             textureD3D.UpdateSubresource(
                 context_.Get(), 0, 0,
-                CD3D11_BOX(0, 0, 0, descD3D.texture1D.width, 1, 1),
+                CD3D11_BOX(0, 0, 0, desc.texture1D.width, 1, 1),
                 subImageDesc, GetConfiguration().threadCount
             );
 
@@ -285,37 +313,36 @@ void D3D11RenderSystem::BuildGenericTexture1D(
     }
 }
 
-void D3D11RenderSystem::BuildGenericTexture2D(
-    D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags)
+void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     /* Setup D3D texture descriptor and create D3D texture resouce */
-    D3D11_TEXTURE2D_DESC texDesc;
+    D3D11_TEXTURE2D_DESC descDX;
     {
-        texDesc.Width               = descD3D.texture2D.width;
-        texDesc.Height              = descD3D.texture2D.height;
-        texDesc.MipLevels           = 0;
-        texDesc.ArraySize           = descD3D.texture2D.layers;
-        texDesc.Format              = D3D11Types::Map(descD3D.format);
-        texDesc.SampleDesc.Count    = 1;
-        texDesc.SampleDesc.Quality  = 0;
-        texDesc.Usage               = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags      = 0;
-        texDesc.MiscFlags           = miscFlags;
+        descDX.Width                = desc.texture2D.width;
+        descDX.Height               = desc.texture2D.height;
+        descDX.MipLevels            = GetDXTextureMipLevels(desc);
+        descDX.ArraySize            = desc.texture2D.layers;
+        descDX.Format               = D3D11Types::Map(desc.format);
+        descDX.SampleDesc.Count     = 1;
+        descDX.SampleDesc.Quality   = 0;
+        descDX.Usage                = D3D11_USAGE_DEFAULT;
+        descDX.BindFlags            = GetDXTextureBindFlags(desc);
+        descDX.CPUAccessFlags       = 0;
+        descDX.MiscFlags            = GetDXTextureMiscFlags(desc);
     }
-    textureD3D.CreateTexture2D(device_.Get(), texDesc);
+    textureD3D.CreateTexture2D(device_.Get(), descDX);
 
     if (imageDesc)
     {
         /* Update only the first MIP-map level for each array slice */
         auto subImageDesc = *imageDesc;
-        auto subImageStride = descD3D.texture2D.width * descD3D.texture2D.height * subImageDesc.GetElementSize();
+        auto subImageStride = desc.texture2D.width * desc.texture2D.height * subImageDesc.GetElementSize();
 
-        for (std::uint32_t arraySlice = 0; arraySlice < descD3D.texture2D.layers; ++arraySlice)
+        for (std::uint32_t arraySlice = 0; arraySlice < desc.texture2D.layers; ++arraySlice)
         {
             textureD3D.UpdateSubresource(
                 context_.Get(), 0, arraySlice,
-                CD3D11_BOX(0, 0, 0, descD3D.texture2D.width, descD3D.texture2D.height, 1),
+                CD3D11_BOX(0, 0, 0, desc.texture2D.width, desc.texture2D.height, 1),
                 subImageDesc, GetConfiguration().threadCount
             );
 
@@ -324,7 +351,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(
     }
     else if (GetConfiguration().imageInitialization.enabled)
     {
-        if (IsDepthStencilFormat(descD3D.format))
+        if (IsDepthStencilFormat(desc.format))
         {
             //TODO -> fill texture with default depth
             //GetConfiguration().defaultImageColor
@@ -337,29 +364,28 @@ void D3D11RenderSystem::BuildGenericTexture2D(
     }
 }
 
-void D3D11RenderSystem::BuildGenericTexture3D(
-    D3D11Texture& textureD3D, const TextureDescriptor& descD3D, const ImageDescriptor* imageDesc, UINT miscFlags)
+void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     /* Setup D3D texture descriptor and create D3D texture resouce */
-    D3D11_TEXTURE3D_DESC texDesc;
+    D3D11_TEXTURE3D_DESC descDX;
     {
-        texDesc.Width           = descD3D.texture3D.width;
-        texDesc.Height          = descD3D.texture3D.height;
-        texDesc.Depth           = descD3D.texture3D.depth;
-        texDesc.MipLevels       = 0;
-        texDesc.Format          = D3D11Types::Map(descD3D.format);
-        texDesc.Usage           = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags       = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags  = 0;
-        texDesc.MiscFlags       = miscFlags;
+        descDX.Width            = desc.texture3D.width;
+        descDX.Height           = desc.texture3D.height;
+        descDX.Depth            = desc.texture3D.depth;
+        descDX.MipLevels        = GetDXTextureMipLevels(desc);
+        descDX.Format           = D3D11Types::Map(desc.format);
+        descDX.Usage            = D3D11_USAGE_DEFAULT;
+        descDX.BindFlags        = GetDXTextureBindFlags(desc);
+        descDX.CPUAccessFlags   = 0;
+        descDX.MiscFlags        = GetDXTextureMiscFlags(desc);
     }
-    textureD3D.CreateTexture3D(device_.Get(), texDesc);
+    textureD3D.CreateTexture3D(device_.Get(), descDX);
 
     if (imageDesc)
     {
         textureD3D.UpdateSubresource(
             context_.Get(), 0, 0,
-            CD3D11_BOX(0, 0, 0, descD3D.texture3D.width, descD3D.texture3D.height, descD3D.texture3D.depth),
+            CD3D11_BOX(0, 0, 0, desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth),
             *imageDesc, GetConfiguration().threadCount
         );
     }
@@ -369,24 +395,24 @@ void D3D11RenderSystem::BuildGenericTexture3D(
     }
 }
 
-void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& descD3D)
+void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc)
 {
     /* Setup D3D texture descriptor and create D3D texture resouce */
-    D3D11_TEXTURE2D_DESC texDesc;
+    D3D11_TEXTURE2D_DESC descDX;
     {
-        texDesc.Width               = descD3D.texture2DMS.width;
-        texDesc.Height              = descD3D.texture2DMS.height;
-        texDesc.MipLevels           = 1;
-        texDesc.ArraySize           = descD3D.texture2DMS.layers;
-        texDesc.Format              = D3D11Types::Map(descD3D.format);
-        texDesc.SampleDesc.Count    = descD3D.texture2DMS.samples;
-        texDesc.SampleDesc.Quality  = 0;//(descD3D.texture2DMS.fixedSamples ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
-        texDesc.Usage               = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-        texDesc.CPUAccessFlags      = 0;
-        texDesc.MiscFlags           = 0;
+        descDX.Width                = desc.texture2DMS.width;
+        descDX.Height               = desc.texture2DMS.height;
+        descDX.MipLevels            = 1;
+        descDX.ArraySize            = desc.texture2DMS.layers;
+        descDX.Format               = D3D11Types::Map(desc.format);
+        descDX.SampleDesc.Count     = desc.texture2DMS.samples;
+        descDX.SampleDesc.Quality   = 0;//(descD3D.texture2DMS.fixedSamples ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
+        descDX.Usage                = D3D11_USAGE_DEFAULT;
+        descDX.BindFlags            = GetDXTextureBindFlags(desc);
+        descDX.CPUAccessFlags       = 0;
+        descDX.MiscFlags            = 0;
     }
-    textureD3D.CreateTexture2D(device_.Get(), texDesc);
+    textureD3D.CreateTexture2D(device_.Get(), descDX);
 }
 
 void D3D11RenderSystem::UpdateGenericTexture(
