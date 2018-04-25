@@ -525,12 +525,18 @@ struct GraphicsPipelineDescriptor
     */
     PrimitiveTopology       primitiveTopology   = PrimitiveTopology::TriangleList;
 
-    //! Specifies the viewport list. If empty, the render context resolution is used as single viewport.
+    /**
+    \brief Specifies the viewport list. If empty, the viewports must be set dynamically with the command buffer.
+    \see CommandBuffer::SetViewport
+    \see CommandBuffer::SetViewportArray
+    */
     std::vector<Viewport>   viewports;
 
     /**
-    \brief Specifies the scissor list. If empty, the render context resolution is used as single scissor.
-    \remarks The number of elements in this list will be resized to the number of viewports, when a graphics pipeline is created.
+    \brief Specifies the scissor list. If empty, the scissors must be set dynamically with the command buffer.
+    \remarks This list must have the same number of entries as 'viewports', unless one of the lists is empty.
+    \see CommandBuffer::SetScissor
+    \see CommandBuffer::SetScissorArray
     */
     std::vector<Scissor>    scissors;
 

@@ -97,6 +97,7 @@ union GraphicsAPIDependentStateDescriptor
         \see CommandBuffer::SetViewportArray
         \see CommandBuffer::SetScissor
         \see CommandBuffer::SetScissorArray
+        \deprecated Will be replaced by GraphicsPipelineDescriptor::viewports and CommandBuffer::SetViewport.
         */
         bool        disableAutoStateSubmission;
     }

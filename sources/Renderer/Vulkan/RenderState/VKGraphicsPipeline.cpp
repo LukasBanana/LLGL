@@ -303,6 +303,24 @@ static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBl
     createInfo.blendConstants[3]    = desc.blendFactor.a;
 }
 
+static void CreateDynamicState(const GraphicsPipelineDescriptor& desc, VkPipelineDynamicStateCreateInfo& createInfo, std::vector<VkDynamicState>& dynamicStatesVK)
+{
+    if (desc.viewports.empty())
+    {
+        dynamicStatesVK.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+        dynamicStatesVK.push_back(VK_DYNAMIC_STATE_DEPTH_BOUNDS);
+    }
+
+    if (desc.scissors.empty())
+        dynamicStatesVK.push_back(VK_DYNAMIC_STATE_SCISSOR);
+
+    createInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    createInfo.pNext                = nullptr;
+    createInfo.flags                = 0;
+    createInfo.dynamicStateCount    = static_cast<std::uint32_t>(dynamicStatesVK.size());
+    createInfo.pDynamicStates       = (dynamicStatesVK.empty() ? nullptr : dynamicStatesVK.data());
+}
+
 void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent)
 {
     /* Get shader program object */
@@ -348,6 +366,11 @@ void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor
     VkPipelineColorBlendStateCreateInfo colorBlendState;
     CreateColorBlendState(desc.blend, colorBlendState, attachmentStatesVK);
 
+    /* Initialize dynamic state */
+    std::vector<VkDynamicState> dynamicStatesVK;
+    VkPipelineDynamicStateCreateInfo dynamicState;
+    CreateDynamicState(desc, dynamicState, dynamicStatesVK);
+
     /* Create graphics pipeline state object */
     VkGraphicsPipelineCreateInfo createInfo;
     {
@@ -364,7 +387,7 @@ void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor
         createInfo.pMultisampleState            = (&multisampleState);
         createInfo.pDepthStencilState           = (&depthStencilState);
         createInfo.pColorBlendState             = (&colorBlendState);
-        createInfo.pDynamicState                = nullptr;
+        createInfo.pDynamicState                = (!dynamicStatesVK.empty() ? &dynamicState : nullptr);
         createInfo.layout                       = pipelineLayout_;
         createInfo.renderPass                   = renderPass_;
         createInfo.subpass                      = 0;

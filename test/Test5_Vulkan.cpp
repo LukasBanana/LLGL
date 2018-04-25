@@ -361,6 +361,15 @@ int main()
             commands->Draw(4, 0);
             #endif
 
+            // Render scene into render target
+            commands->SetRenderTarget(*renderTarget);
+            commands->Clear(LLGL::ClearFlags::Color);
+            commands->SetGraphicsPipeline(*pipeline);
+            commands->SetVertexBuffer(*vertexBuffer);
+            commands->SetGraphicsResourceViewHeap(*resourceViewHeap, 0);
+            commands->Draw(4, 0);
+
+            // Present result on screen
             context->Present();
 
             #if 0

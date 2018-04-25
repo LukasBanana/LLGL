@@ -171,29 +171,25 @@ int main(int argc, char* argv[])
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
             #endif
-
-            #if 1
-            const auto resolution = contextDesc.videoMode.resolution;
-            const auto viewportSize = resolution.Cast<float>();
-            pipelineDesc.viewports.push_back(LLGL::Viewport(0.0f, 0.0f, viewportSize.x, viewportSize.y));
-            pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, resolution.x, resolution.y));
-            pipelineDesc.blend.targets.push_back({});
-            #endif
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Create command buffer to submit subsequent graphics commands to the GPU
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
         
-        // Set viewport (this guaranteed to be a persistent state)
-        commands->SetViewport({ 0, 0, 800, 600 });
-        commands->SetScissor({ 0, 0, 800, 600 });
+        // Get resolution to determine viewport size
+        const auto resolution = contextDesc.videoMode.resolution;
+        const auto viewportSize = resolution.Cast<float>();
 
         // Enter main loop
         while (window.ProcessEvents())
         {
             // Set the render context as the initial render target
             commands->SetRenderTarget(*context);
+
+            // Set viewport and scissor rectangle
+            commands->SetViewport({ 0, 0, viewportSize.x, viewportSize.y });
+            commands->SetScissor({ 0, 0, resolution.x, resolution.y });
 
             // Clear color buffer
             commands->Clear(LLGL::ClearFlags::Color);
@@ -209,6 +205,10 @@ int main(int argc, char* argv[])
 
             // Present the result on the screen
             context->Present();
+
+            #if 1//TODO: issue with Vulkan renderer
+            renderer->GetCommandQueue()->WaitForFinish();
+            #endif
         }
     }
     catch (const std::exception& e)

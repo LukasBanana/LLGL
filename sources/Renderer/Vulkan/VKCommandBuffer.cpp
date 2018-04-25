@@ -47,7 +47,17 @@ void VKCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentSta
 
 void VKCommandBuffer::SetViewport(const Viewport& viewport)
 {
-    //todo
+    VkViewport viewportVK;
+    {
+        viewportVK.x        = viewport.x;
+        viewportVK.y        = viewport.y;
+        viewportVK.width    = viewport.width;
+        viewportVK.height   = viewport.height;
+        viewportVK.minDepth = viewport.minDepth;
+        viewportVK.maxDepth = viewport.maxDepth;
+    }
+    vkCmdSetViewport(commandBuffer_, 0, 1, &viewportVK);
+    vkCmdSetDepthBounds(commandBuffer_, viewport.minDepth, viewport.maxDepth);
 }
 
 void VKCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
@@ -57,7 +67,14 @@ void VKCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewpor
 
 void VKCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    //todo
+    VkRect2D scissorVK;
+    {
+        scissorVK.offset.x      = scissor.x;
+        scissorVK.offset.y      = scissor.y;
+        scissorVK.extent.width  = static_cast<std::uint32_t>(std::max(0, scissor.width));
+        scissorVK.extent.height = static_cast<std::uint32_t>(std::max(0, scissor.height));
+    }
+    vkCmdSetScissor(commandBuffer_, 0, 1, &scissorVK);
 }
 
 void VKCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
