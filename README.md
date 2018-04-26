@@ -30,7 +30,7 @@ Progress
 | OpenGL | ~90% | |
 | Direct3D 11 | ~85% | Depth-textures are incomplete |
 | Direct3D 12 | ~5% | Experimental state; Tutorials working: 01, 06, 07 |
-| Vulkan | ~2% | Experimental state; Tutorials working: 01 |
+| Vulkan | ~5% | Experimental state; Tutorials working: 01, 07 |
 
 | Platform | Progress | Remarks |
 |----------|:--------:|---------|
