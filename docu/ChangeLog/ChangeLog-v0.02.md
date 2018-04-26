@@ -203,7 +203,7 @@ myRenderTargetDesc.attachments.resize(2);
 myRenderTargetDesc.attachments =
 {
     LLGL::AttachmentDesc(LLGL::AttachmentType::Depth, myRenderTargetSize.x, myRenderTargetSize.y),
-	LLGL::AttachmentDesc(LLGL::AttachmentType::Color, myColorTexture)
+    LLGL::AttachmentDesc(LLGL::AttachmentType::Color, myColorTexture)
 };
 
 // Create render target
