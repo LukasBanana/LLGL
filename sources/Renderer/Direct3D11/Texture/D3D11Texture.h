@@ -84,10 +84,10 @@ class D3D11Texture : public Texture
             std::uint32_t mipLevel
         ) const;
 
-        //TODO: rename to "GetHwTexture"
-        inline const D3D11HardwareTexture& GetHardwareTexture() const
+        // Returns the union of D3D hardware textures.
+        inline const D3D11HardwareTexture& GetHwTexture() const
         {
-            return hardwareTexture_;
+            return hwTexture_;
         }
 
         // Returns the shader-resource-view (SRV) of the hardware texture object.
@@ -117,7 +117,7 @@ class D3D11Texture : public Texture
             const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
         );
 
-        D3D11HardwareTexture                hardwareTexture_; //TODO rename to "hwTexture_"
+        D3D11HardwareTexture                hwTexture_;
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         //ComPtr<ID3D11UnorderedAccessView>   uav_; //TODO: use this to support UAV of textures

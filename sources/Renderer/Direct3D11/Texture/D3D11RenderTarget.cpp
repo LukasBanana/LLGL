@@ -24,7 +24,7 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
 
 void D3D11RenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
 {
-    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
+    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D32_FLOAT);
 }
 
 void D3D11RenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
@@ -155,7 +155,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
 
         /* Recreate texture resource with multi-sampling */
         D3D11_TEXTURE2D_DESC texDesc;
-        textureD3D.GetHardwareTexture().tex2D->GetDesc(&texDesc);
+        textureD3D.GetHwTexture().tex2D->GetDesc(&texDesc);
         {
             texDesc.Width               = (texDesc.Width << attachmentDesc.mipLevel);
             texDesc.Height              = (texDesc.Height << attachmentDesc.mipLevel);
@@ -171,7 +171,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
         multiSampledAttachments_.push_back(
             {
                 tex2DMS,
-                textureD3D.GetHardwareTexture().tex2D.Get(),
+                textureD3D.GetHwTexture().tex2D.Get(),
                 D3D11CalcSubresource(attachmentDesc.mipLevel, attachmentDesc.layer, texDesc.MipLevels),
                 texDesc.Format
             }
@@ -215,7 +215,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
         }
     
         /* Create RTV for target texture */
-        CreateAndAppendRTV(textureD3D.GetHardwareTexture().resource.Get(), rtvDesc);
+        CreateAndAppendRTV(textureD3D.GetHwTexture().resource.Get(), rtvDesc);
     }
 }
 
