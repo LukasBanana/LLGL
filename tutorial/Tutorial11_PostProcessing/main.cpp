@@ -225,13 +225,13 @@ public:
     {
         // Create empty color and gloss map
         auto resolution = context->GetVideoMode().resolution.Cast<std::uint32_t>();
-        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
-        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
+        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.x, resolution.y));
+        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.x, resolution.y));
 
         // Create empty blur pass maps (in quarter resolution)
         resolution /= 4;
-        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
-        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, resolution.x, resolution.y));
+        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.x, resolution.y));
+        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.x, resolution.y));
     }
 
     void CreateRenderTargets()

@@ -265,7 +265,7 @@ int main()
         LLGL::TextureDescriptor textureDesc;
         {
             textureDesc.type                = LLGL::TextureType::Texture2D;
-            textureDesc.format              = LLGL::TextureFormat::RGBA;
+            textureDesc.format              = LLGL::TextureFormat::RGBA8;
             textureDesc.texture2D.width     = 2;
             textureDesc.texture2D.height    = 2;
         }

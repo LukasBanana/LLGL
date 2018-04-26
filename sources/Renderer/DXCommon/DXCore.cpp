@@ -179,11 +179,6 @@ static std::vector<TextureFormat> DXGetSupportedTextureFormats()
 {
     return
     {
-        TextureFormat::DepthComponent,
-        TextureFormat::DepthStencil,
-        TextureFormat::R,
-        TextureFormat::RG,
-        TextureFormat::RGBA,
         TextureFormat::R8,
         TextureFormat::R8Sgn,
         TextureFormat::R16,
@@ -211,6 +206,8 @@ static std::vector<TextureFormat> DXGetSupportedTextureFormats()
         TextureFormat::RGBA32UInt,
         TextureFormat::RGBA32SInt,
         TextureFormat::RGBA32Float,
+        TextureFormat::D32,
+        TextureFormat::D24S8,
         TextureFormat::RGBA_DXT1,
         TextureFormat::RGBA_DXT3,
         TextureFormat::RGBA_DXT5,

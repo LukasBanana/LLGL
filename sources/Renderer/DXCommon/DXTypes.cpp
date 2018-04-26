@@ -71,15 +71,7 @@ DXGI_FORMAT Map(const TextureFormat textureFormat)
     {
         case TextureFormat::Unknown:        break;
 
-        /* --- Base internal formats --- */
-        case TextureFormat::DepthComponent: return DXGI_FORMAT_D32_FLOAT;
-        case TextureFormat::DepthStencil:   return DXGI_FORMAT_D24_UNORM_S8_UINT;
-        case TextureFormat::R:              return DXGI_FORMAT_R8_UNORM;
-        case TextureFormat::RG:             return DXGI_FORMAT_R8G8_UNORM;
-        case TextureFormat::RGB:            break;
-        case TextureFormat::RGBA:           return DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        /* --- Sized internal formats --- */
+        /* --- Color formats --- */
         case TextureFormat::R8:             return DXGI_FORMAT_R8_UNORM;
         case TextureFormat::R8Sgn:          return DXGI_FORMAT_R8_SNORM;
 
@@ -124,7 +116,11 @@ DXGI_FORMAT Map(const TextureFormat textureFormat)
         case TextureFormat::RGBA32SInt:     return DXGI_FORMAT_R32G32B32A32_SINT;
         case TextureFormat::RGBA32Float:    return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-        /* --- Compressed formats --- */
+        /* --- Depth-stencil formats --- */
+        case TextureFormat::D32:            return DXGI_FORMAT_R32_TYPELESS;    // typeless format to be used with SRV and DSV
+        case TextureFormat::D24S8:          return DXGI_FORMAT_R24G8_TYPELESS;  // typeless format to be used with SRV and DSV
+
+        /* --- Compressed color formats --- */
         case TextureFormat::RGB_DXT1:       break;
         case TextureFormat::RGBA_DXT1:      return DXGI_FORMAT_BC1_UNORM;
         case TextureFormat::RGBA_DXT3:      return DXGI_FORMAT_BC2_UNORM;
@@ -188,11 +184,7 @@ TextureFormat Unmap(const DXGI_FORMAT format)
 {
     switch (format)
     {
-        /* --- Base internal formats --- */
-        case DXGI_FORMAT_D32_FLOAT:             return TextureFormat::DepthComponent;
-        case DXGI_FORMAT_D24_UNORM_S8_UINT:     return TextureFormat::DepthStencil;
-
-        /* --- Sized internal formats --- */
+        /* --- Color formats --- */
         case DXGI_FORMAT_R8_UNORM:              return TextureFormat::R8;
         case DXGI_FORMAT_R8_SNORM:              return TextureFormat::R8Sgn;
 
@@ -230,7 +222,11 @@ TextureFormat Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_R32G32B32A32_SINT:     return TextureFormat::RGBA32SInt;
         case DXGI_FORMAT_R32G32B32A32_FLOAT:    return TextureFormat::RGBA32Float;
 
-        /* --- Compressed formats --- */
+        /* --- Depth-stencil formats --- */
+        case DXGI_FORMAT_D32_FLOAT:             return TextureFormat::D32;
+        case DXGI_FORMAT_D24_UNORM_S8_UINT:     return TextureFormat::D24S8;
+
+        /* --- Compressed color formats --- */
         case DXGI_FORMAT_BC1_UNORM:             return TextureFormat::RGBA_DXT1;
         case DXGI_FORMAT_BC2_UNORM:             return TextureFormat::RGBA_DXT3;
         case DXGI_FORMAT_BC3_UNORM:             return TextureFormat::RGBA_DXT5;

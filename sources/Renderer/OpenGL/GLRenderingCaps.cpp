@@ -107,12 +107,6 @@ static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
 {
     return
     {
-        TextureFormat::DepthComponent,
-        TextureFormat::DepthStencil,
-        TextureFormat::R,
-        TextureFormat::RG,
-        TextureFormat::RGB,
-        TextureFormat::RGBA,
         TextureFormat::R8,
         TextureFormat::R8Sgn,
         TextureFormat::R16,
@@ -145,6 +139,8 @@ static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
         TextureFormat::RGBA32UInt,
         TextureFormat::RGBA32SInt,
         TextureFormat::RGBA32Float,
+        TextureFormat::D32,
+        TextureFormat::D24S8,
     };
 }
 

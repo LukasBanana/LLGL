@@ -9,7 +9,7 @@
 
 
 // Enable multi-sampling
-#define ENABLE_MULTISAMPLING
+//#define ENABLE_MULTISAMPLING
 
 // Enable custom multi-sampling by rendering directly into a multi-sample texture
 //#define ENABLE_CUSTOM_MULTISAMPLING
@@ -185,13 +185,13 @@ public:
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
         
         renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA, renderTargetSize.x, renderTargetSize.y, renderTargetDesc.multiSampling.samples)
+            LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA8, renderTargetSize.x, renderTargetSize.y, renderTargetDesc.multiSampling.samples)
         );
         
         #else
         
         renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, renderTargetSize.x, renderTargetSize.y)
+            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, renderTargetSize.x, renderTargetSize.y)
         );
 
         #endif
@@ -200,9 +200,16 @@ public:
 
         // Create depth texture
         renderTargetDepthTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::DepthComponent, renderTargetSize.x, renderTargetSize.y)
+            LLGL::Texture2DDesc(LLGL::TextureFormat::D32, renderTargetSize.x, renderTargetSize.y)
         );
 
+        #endif
+
+        #if 0//TEST
+        // Create depth texture
+        auto renderTargetDepthTex2 = renderer->CreateTexture(
+            LLGL::Texture2DDesc(LLGL::TextureFormat::D32, renderTargetSize.x, renderTargetSize.y)
+        );
         #endif
 
         // Generate all MIP-map levels

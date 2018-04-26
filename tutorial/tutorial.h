@@ -610,7 +610,7 @@ public:
 
         // Create texture and upload image data onto hardware texture
         auto tex = renderSys.CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA, width, height), &imageDesc
+            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, width, height), &imageDesc
         );
 
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")

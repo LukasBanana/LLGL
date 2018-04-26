@@ -72,15 +72,7 @@ VkFormat Map(const TextureFormat textureFormat)
     {
         case TextureFormat::Unknown:        break;
 
-        /* --- Base internal formats --- */
-        case TextureFormat::DepthComponent: return VK_FORMAT_D32_SFLOAT;
-        case TextureFormat::DepthStencil:   return VK_FORMAT_D24_UNORM_S8_UINT;
-        case TextureFormat::R:              return VK_FORMAT_R8_UNORM;
-        case TextureFormat::RG:             return VK_FORMAT_R8G8_UNORM;
-        case TextureFormat::RGB:            return VK_FORMAT_R8G8B8_UNORM;
-        case TextureFormat::RGBA:           return VK_FORMAT_R8G8B8A8_UNORM;
-
-        /* --- Sized internal formats --- */
+        /* --- Color formats --- */
         case TextureFormat::R8:             return VK_FORMAT_R8_UNORM;
         case TextureFormat::R8Sgn:          return VK_FORMAT_R8_SNORM;
 
@@ -125,7 +117,11 @@ VkFormat Map(const TextureFormat textureFormat)
         case TextureFormat::RGBA32SInt:     return VK_FORMAT_R32G32B32A32_SINT;
         case TextureFormat::RGBA32Float:    return VK_FORMAT_R32G32B32A32_SFLOAT;
 
-        /* --- Compressed formats --- */
+        /* --- Depth-stencil formats --- */
+        case TextureFormat::D32: return VK_FORMAT_D32_SFLOAT;
+        case TextureFormat::D24S8:   return VK_FORMAT_D24_UNORM_S8_UINT;
+
+        /* --- Compressed color formats --- */
         case TextureFormat::RGB_DXT1:       return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
         case TextureFormat::RGBA_DXT1:      return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
         case TextureFormat::RGBA_DXT3:      return VK_FORMAT_BC2_UNORM_BLOCK;

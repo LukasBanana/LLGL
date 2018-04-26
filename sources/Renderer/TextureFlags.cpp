@@ -24,15 +24,7 @@ std::uint32_t TextureBufferSize(const TextureFormat textureFormat, std::uint32_t
 {
     switch (textureFormat)
     {
-        /* --- Base internal formats --- */
-        case TextureFormat::DepthComponent: return numTexels * 4; // 32-bit depth
-        case TextureFormat::DepthStencil:   return numTexels * 4; // 24-bit depth, 8-bit stencil
-        case TextureFormat::R:              return numTexels;
-        case TextureFormat::RG:             return numTexels * 2;
-        case TextureFormat::RGB:            return numTexels * 3;
-        case TextureFormat::RGBA:           return numTexels * 4;
-
-        /* --- Sized internal formats --- */
+        /* --- Color formats --- */
         case TextureFormat::R8:             return numTexels;
         case TextureFormat::R8Sgn:          return numTexels;
 
@@ -77,7 +69,11 @@ std::uint32_t TextureBufferSize(const TextureFormat textureFormat, std::uint32_t
         case TextureFormat::RGBA32SInt:     return numTexels * 16;
         case TextureFormat::RGBA32Float:    return numTexels * 16;
 
-        /* --- Compressed formats --- */
+        /* --- Depth-stencil formats --- */
+        case TextureFormat::D32:            return numTexels * 4; // 32-bit depth
+        case TextureFormat::D24S8:          return numTexels * 4; // 24-bit depth, 8-bit stencil
+
+        /* --- Compressed color formats --- */
         case TextureFormat::RGB_DXT1:       return numTexels / 4; // 64-bit per 4x4 block
         case TextureFormat::RGBA_DXT1:      return numTexels / 4; // 64-bit per 4x4 block
         case TextureFormat::RGBA_DXT3:      return numTexels / 8; // 128-bit per 4x4 block
@@ -94,7 +90,7 @@ LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format)
 
 LLGL_EXPORT bool IsDepthStencilFormat(const TextureFormat format)
 {
-    return (format == TextureFormat::DepthComponent || format == TextureFormat::DepthStencil);
+    return (format == TextureFormat::D32 || format == TextureFormat::D24S8);
 }
 
 LLGL_EXPORT bool IsArrayTexture(const TextureType type)

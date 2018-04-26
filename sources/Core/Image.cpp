@@ -531,13 +531,6 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Te
     {
         case TextureFormat::Unknown:        break;
 
-        case TextureFormat::DepthComponent: return { ImageFormat::Depth, DataType::Float };
-        case TextureFormat::DepthStencil:   return { ImageFormat::DepthStencil, DataType::Float };
-        case TextureFormat::R:              return { ImageFormat::R, DataType::UInt8 };
-        case TextureFormat::RG:             return { ImageFormat::RG, DataType::UInt8 };
-        case TextureFormat::RGB:            return { ImageFormat::RGB, DataType::UInt8 };
-        case TextureFormat::RGBA:           return { ImageFormat::RGBA, DataType::UInt8 };
-
         case TextureFormat::R8:             return { ImageFormat::R, DataType::UInt8 };
         case TextureFormat::R8Sgn:          return { ImageFormat::R, DataType::Int8 };
 
@@ -581,6 +574,9 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Te
         case TextureFormat::RGBA32UInt:     return { ImageFormat::RGBA, DataType::UInt32 };
         case TextureFormat::RGBA32SInt:     return { ImageFormat::RGBA, DataType::Int32 };
         case TextureFormat::RGBA32Float:    return { ImageFormat::RGBA, DataType::Float };
+
+        case TextureFormat::D32:            return { ImageFormat::Depth, DataType::Float };
+        case TextureFormat::D24S8:          return { ImageFormat::DepthStencil, DataType::Float };
 
         case TextureFormat::RGB_DXT1:       return { ImageFormat::CompressedRGB, DataType::Int8 };
         case TextureFormat::RGBA_DXT1:      return { ImageFormat::CompressedRGBA, DataType::Int8 };

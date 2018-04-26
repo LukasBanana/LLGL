@@ -40,15 +40,7 @@ GLenum MapOrZero(const TextureFormat textureFormat)
     {
         case TextureFormat::Unknown:        return 0;
         
-        /* --- Base internal formats --- */
-        case TextureFormat::DepthComponent: return GL_DEPTH_COMPONENT;
-        case TextureFormat::DepthStencil:   return GL_DEPTH_STENCIL;
-        case TextureFormat::R:              return GL_RED;
-        case TextureFormat::RG:             return GL_RG;
-        case TextureFormat::RGB:            return GL_RGB;
-        case TextureFormat::RGBA:           return GL_RGBA;
-
-        /* --- Sized internal formats --- */
+        /* --- Color formats --- */
         case TextureFormat::R8:             return GL_R8;
         case TextureFormat::R8Sgn:          return GL_R8_SNORM;
 
@@ -101,8 +93,12 @@ GLenum MapOrZero(const TextureFormat textureFormat)
         case TextureFormat::RGBA32SInt:     return GL_RGBA32I;
         case TextureFormat::RGBA32Float:    return GL_RGBA32F;
 
+        /* --- Depth-stencil formats --- */
+        case TextureFormat::D32:            return GL_DEPTH_COMPONENT;
+        case TextureFormat::D24S8:          return GL_DEPTH_STENCIL;
+
         #ifdef GL_EXT_texture_compression_s3tc
-        /* --- Compressed formats --- */
+        /* --- Compressed color formats --- */
         case TextureFormat::RGB_DXT1:       return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
         case TextureFormat::RGBA_DXT1:      return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
         case TextureFormat::RGBA_DXT3:      return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
@@ -686,14 +682,12 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
     switch (internalFormat)
     {
         /* --- Base internal formats --- */
-        case GL_DEPTH_COMPONENT:                return TextureFormat::DepthComponent;
-        case GL_DEPTH_STENCIL:                  return TextureFormat::DepthStencil;
-        case GL_RED:                            return TextureFormat::R;
-        case GL_RG:                             return TextureFormat::RG;
-        case GL_RGB:                            return TextureFormat::RGB;
-        case GL_RGBA:                           return TextureFormat::RGBA;
+        case GL_RED:                            return TextureFormat::R8;
+        case GL_RG:                             return TextureFormat::RG8;
+        case GL_RGB:                            return TextureFormat::RGB8;
+        case GL_RGBA:                           return TextureFormat::RGBA8;
 
-        /* --- Sized internal formats --- */
+        /* --- Color formats --- */
         case GL_R8:                             return TextureFormat::R8;
         case GL_R8_SNORM:                       return TextureFormat::R8Sgn;
 
@@ -746,8 +740,12 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_RGBA32I:                        return TextureFormat::RGBA32SInt;
         case GL_RGBA32F:                        return TextureFormat::RGBA32Float;
 
+        /* --- Depth-stencil formats --- */
+        case GL_DEPTH_COMPONENT:                return TextureFormat::D32;
+        case GL_DEPTH_STENCIL:                  return TextureFormat::D24S8;
+
         #ifdef LLGL_OPENGL
-        /* --- Compressed formats --- */
+        /* --- Compressed color formats --- */
         case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:   return TextureFormat::RGB_DXT1;
         case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:  return TextureFormat::RGBA_DXT1;
         case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:  return TextureFormat::RGBA_DXT3;
