@@ -140,15 +140,27 @@ BufferArray* DbgRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
 
+    const auto bufferType = (*bufferArray)->GetType();
+
     /* Create temporary buffer array with buffer instances */
-    std::vector<Buffer*> bufferInstanceArray;
+    std::vector<Buffer*>    bufferInstanceArray(numBuffers);
+    std::vector<DbgBuffer*> bufferDbgArray(numBuffers);
+
     for (std::uint32_t i = 0; i < numBuffers; ++i)
     {
-        auto bufferDbg = LLGL_CAST(DbgBuffer*, (*(bufferArray++)));
-        bufferInstanceArray.push_back(&(bufferDbg->instance));
+        auto bufferDbg          = LLGL_CAST(DbgBuffer*, (*(bufferArray++)));
+        bufferInstanceArray[i]  = &(bufferDbg->instance);
+        bufferDbgArray[i]       = bufferDbg;
     }
 
-    return instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
+    /* Create native buffer and debug buffer */
+    auto bufferArrayInstance    = instance_->CreateBufferArray(numBuffers, bufferInstanceArray.data());
+    auto bufferArrayDbg         = MakeUnique<DbgBufferArray>(*bufferArrayInstance, bufferType);
+
+    /* Store buffer references */
+    bufferArrayDbg->buffers = std::move(bufferDbgArray);
+
+    return TakeOwnership(bufferArrays_, std::move(bufferArrayDbg));
 }
 
 void DbgRenderSystem::Release(Buffer& buffer)
@@ -158,8 +170,7 @@ void DbgRenderSystem::Release(Buffer& buffer)
 
 void DbgRenderSystem::Release(BufferArray& bufferArray)
 {
-    instance_->Release(bufferArray);
-    //ReleaseDbg(bufferArrays_, bufferArray);
+    ReleaseDbg(bufferArrays_, bufferArray);
 }
 
 void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)

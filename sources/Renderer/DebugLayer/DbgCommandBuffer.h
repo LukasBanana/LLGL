@@ -14,6 +14,7 @@
 #include <LLGL/RenderingDebugger.h>
 
 #include "DbgGraphicsPipeline.h"
+#include <cstdint>
 
 
 namespace LLGL
@@ -132,6 +133,7 @@ class DbgCommandBuffer : public CommandBuffer
         void DebugVertexBufferSet();
         void DebugIndexBufferSet();
         void DebugVertexLayout();
+        void DebugVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers);
 
         void DebugNumVertices(std::uint32_t numVertices);
         void DebugNumInstances(std::uint32_t numInstances, std::uint32_t instanceOffset);
@@ -150,23 +152,24 @@ class DbgCommandBuffer : public CommandBuffer
 
         /* ----- Common objects ----- */
 
-        RenderingProfiler*      profiler_       = nullptr;
-        RenderingDebugger*      debugger_       = nullptr;
+        RenderingProfiler*          profiler_               = nullptr;
+        RenderingDebugger*          debugger_               = nullptr;
 
-        const RenderingCaps&    caps_;
+        const RenderingCaps&        caps_;
 
         /* ----- Render states ----- */
 
-        PrimitiveTopology       topology_       = PrimitiveTopology::TriangleList;
-        VertexFormat            vertexFormat_;
+        PrimitiveTopology           topology_               = PrimitiveTopology::TriangleList;
 
         struct Bindings
         {
-            DbgBuffer*              vertexBuffer        = nullptr;
-            DbgBuffer*              indexBuffer         = nullptr;
-            DbgBuffer*              streamOutput        = nullptr;
-            DbgGraphicsPipeline*    graphicsPipeline    = nullptr;
-            ComputePipeline*        computePipeline     = nullptr;
+            DbgBuffer*              vertexBufferStore[1]    = { nullptr };
+            DbgBuffer**             vertexBuffers           = nullptr;
+            std::uint32_t           numVertexBuffers        = 0;
+            DbgBuffer*              indexBuffer             = nullptr;
+            DbgBuffer*              streamOutput            = nullptr;
+            DbgGraphicsPipeline*    graphicsPipeline        = nullptr;
+            ComputePipeline*        computePipeline         = nullptr;
         }
         bindings_;
 

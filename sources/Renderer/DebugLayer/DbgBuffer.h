@@ -27,7 +27,7 @@ class DbgBuffer : public Buffer
         {
         }
 
-        LLGL::Buffer&       instance;
+        Buffer&             instance;
         BufferDescriptor    desc;
         std::uint64_t       elements    = 0;
         bool                initialized = false;

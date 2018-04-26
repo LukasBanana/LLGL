@@ -14,6 +14,7 @@
 #include "DbgCommandBuffer.h"
 
 #include "DbgBuffer.h"
+#include "DbgBufferArray.h"
 #include "DbgGraphicsPipeline.h"
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
@@ -151,6 +152,7 @@ class DbgRenderSystem : public RenderSystem
         HWObjectContainer<DbgRenderContext>     renderContexts_;
         HWObjectContainer<DbgCommandBuffer>     commandBuffers_;
         HWObjectContainer<DbgBuffer>            buffers_;
+        HWObjectContainer<DbgBufferArray>       bufferArrays_;
         HWObjectContainer<DbgTexture>           textures_;
         HWObjectContainer<DbgRenderTarget>      renderTargets_;
         HWObjectContainer<DbgShader>            shaders_;

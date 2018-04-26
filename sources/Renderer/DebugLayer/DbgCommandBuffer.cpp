@@ -12,6 +12,7 @@
 
 #include "DbgRenderContext.h"
 #include "DbgBuffer.h"
+#include "DbgBufferArray.h"
 #include "DbgTexture.h"
 #include "DbgRenderTarget.h"
 #include "DbgShaderProgram.h"
@@ -115,8 +116,9 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     
     if (debugger_)
     {
-        bindings_.vertexBuffer = (&bufferDbg);
-        vertexFormat_ = bufferDbg.desc.vertexBuffer.format;
+        bindings_.vertexBufferStore[0]  = (&bufferDbg);
+        bindings_.vertexBuffers         = bindings_.vertexBufferStore;
+        bindings_.numVertexBuffers      = 1;
     }
     
     instance.SetVertexBuffer(bufferDbg.instance);
@@ -126,8 +128,23 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
 
 void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    //todo...
-    instance.SetVertexBufferArray(bufferArray);
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        DebugBufferType(bufferArray.GetType(), BufferType::Vertex);
+    }
+
+    auto& bufferArrayDbg = LLGL_CAST(DbgBufferArray&, bufferArray);
+    
+    if (debugger_)
+    {
+        bindings_.vertexBuffers     = bufferArrayDbg.buffers.data();
+        bindings_.numVertexBuffers  = static_cast<std::uint32_t>(bufferArrayDbg.buffers.size());
+    }
+    
+    instance.SetVertexBufferArray(bufferArrayDbg.instance);
+    
+    LLGL_DBG_PROFILER_DO(setVertexBuffer.Inc());
 }
 
 void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
@@ -601,10 +618,16 @@ void DbgCommandBuffer::DebugComputePipelineSet()
 
 void DbgCommandBuffer::DebugVertexBufferSet()
 {
-    if (!bindings_.vertexBuffer)
+    if (bindings_.numVertexBuffers > 0)
+    {
+        for (std::uint32_t i = 0; i< bindings_.numVertexBuffers; ++i)
+        {
+            if (!bindings_.vertexBuffers[i]->initialized)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot " + std::to_string(i));
+        }
+    }
+    else
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no vertex buffer is bound");
-    else if (!bindings_.vertexBuffer->initialized)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound");
 }
 
 void DbgCommandBuffer::DebugIndexBufferSet()
@@ -617,21 +640,42 @@ void DbgCommandBuffer::DebugIndexBufferSet()
 
 void DbgCommandBuffer::DebugVertexLayout()
 {
-    if (bindings_.graphicsPipeline && bindings_.vertexBuffer)
+    if (bindings_.graphicsPipeline && bindings_.numVertexBuffers > 0)
     {
         auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, bindings_.graphicsPipeline->desc.shaderProgram);
         const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
 
         /* Check if vertex layout is specified in active shader program */
         if (vertexLayout.bound)
-        {
-            /* Check if all vertex attributes are served by active vertex buffer(s) */
-            if (vertexLayout.attributes != vertexFormat_.attributes)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex layout mismatch between shader program and vertex buffer(s)");
-        }
+            DebugVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
         else
             LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program");
     }
+}
+
+void DbgCommandBuffer::DebugVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers)
+{
+    /* Check if all vertex attributes are served by active vertex buffer(s) */
+    std::size_t attribIndex = 0;
+
+    for (std::uint32_t bufferIndex = 0; attribIndex < shaderAttributes.size() && bufferIndex < numVertexBuffers; ++bufferIndex)
+    {
+        /* Compare remaining shader attributes with next vertex buffer attributes */
+        const auto& vertexFormatRhs = vertexBuffers[bufferIndex]->desc.vertexBuffer.format;
+
+        for (std::size_t i = 0; i < vertexFormatRhs.attributes.size() && attribIndex < shaderAttributes.size(); ++i, ++attribIndex)
+        {
+            /* Compare current vertex attributes */
+            const auto& attribLhs = shaderAttributes[attribIndex];
+            const auto& attribRhs = vertexFormatRhs.attributes[i];
+
+            if (attribLhs != attribRhs)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex layout mismatch between shader program and vertex buffer(s)");
+        }
+    }
+
+    if (attribIndex < shaderAttributes.size())
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "not all vertex attributes in the shader pipeline are covered by the bound vertex buffer(s)");
 }
 
 void DbgCommandBuffer::DebugNumVertices(std::uint32_t numVertices)
@@ -719,8 +763,8 @@ void DbgCommandBuffer::DebugDraw(
     DebugNumVertices(numVertices);
     DebugNumInstances(numInstances, instanceOffset);
 
-    if (bindings_.vertexBuffer)
-        DebugVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffer->elements));
+    if (bindings_.numVertexBuffers > 0)
+        DebugVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
 }
 
 void DbgCommandBuffer::DebugDrawIndexed(
