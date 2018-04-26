@@ -45,6 +45,12 @@ enum class AttachmentType
 struct AttachmentDescriptor
 {
     /**
+    \brief Specifies for which output information the texture attachment is to be used,
+    e.g. for color or depth information. By default AttachmentType::Color.
+    */
+    AttachmentType  type        = AttachmentType::Color;
+
+    /**
     \brief Pointer to the texture which is to be used as target output. By default null.
     \remarks If this is null, the attribute 'type' must not be AttachmentType::Color and the attributes 'width' and 'height' must be specified.
     The texture must also have been created with the flag 'TextureFlags::AttachmentUsage'.
@@ -52,12 +58,6 @@ struct AttachmentDescriptor
     \see TextureFlags::AttachmentUsage
     */
     Texture*        texture     = nullptr;
-
-    /**
-    \brief Specifies for which output information the texture attachment is to be used,
-    e.g. for color or depth information. By default AttachmentType::Color.
-    */
-    AttachmentType  type        = AttachmentType::Color;
 
     /**
     \brief Specifies the width of the attachment resolution.

@@ -17,6 +17,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include "Export.h"
 #include "TextureFlags.h"
 #include "BufferFlags.h"
+#include "RenderTargetFlags.h"
 #include "ResourceViewHeapFlags.h"
 
 
@@ -87,6 +88,14 @@ LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Texture* texture);
 
 //! Returns a ResourceViewDescriptor structure for the specified sampler.
 LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Sampler* sampler);
+
+/* ----- AttachmentDescriptor utility functions ----- */
+
+//! Returns a AttachmentDescriptor structure for the specified depth-, stencil-, or color texture.
+LLGL_EXPORT AttachmentDescriptor AttachmentDesc(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t layer = 0, AxisDirection cubeFace = AxisDirection::XPos);
+
+//! Returns a AttachmentDescriptor structure for the specified depth- or stencil texture.
+LLGL_EXPORT AttachmentDescriptor AttachmentDesc(AttachmentType type, std::uint32_t width, std::uint32_t height);
 
 /** @} */
 

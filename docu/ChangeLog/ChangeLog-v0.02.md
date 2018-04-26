@@ -198,15 +198,13 @@ LLGL::RenderTargetDescriptor myRenderTargetDesc;
 
 myRenderTargetDesc.attachments.resize(2);
 
-// Specify depth attachment
+// Specify depth and color attachments
 /* myRenderTargetSize ... */
-myRenderTargetDesc.attachments[0].type    = LLGL::AttachmentType::Depth;
-myRenderTargetDesc.attachments[0].width   = myRenderTargetSize.x;
-myRenderTargetDesc.attachments[0].height  = myRenderTargetSize.y;
-
-// Specify color attachment
-myRenderTargetDesc.attachments[1].type    = LLGL::AttachmentType::Color;
-myRenderTargetDesc.attachments[1].texture = myColorTexture;
+myRenderTargetDesc.attachments =
+{
+    LLGL::AttachmentDesc(LLGL::AttachmentType::Depth, myRenderTargetSize.x, myRenderTargetSize.y),
+	LLGL::AttachmentDesc(LLGL::AttachmentType::Color, myColorTexture)
+};
 
 // Create render target
 auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);

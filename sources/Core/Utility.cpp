@@ -235,6 +235,34 @@ LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Sampler* sampler)
     return desc;
 }
 
+/* ----- AttachmentDescriptor utility functions ----- */
+
+//! Returns a AttachmentDescriptor structure for the specified depth-, stencil-, or color texture.
+LLGL_EXPORT AttachmentDescriptor AttachmentDesc(AttachmentType type, Texture* texture, std::uint32_t mipLevel, std::uint32_t layer, AxisDirection cubeFace)
+{
+    AttachmentDescriptor desc;
+    {
+        desc.type       = type;
+        desc.texture    = texture;
+        desc.mipLevel   = mipLevel;
+        desc.layer      = layer;
+        desc.cubeFace   = cubeFace;
+    }
+    return desc;
+}
+
+//! Returns a AttachmentDescriptor structure for the specified depth- or stencil texture.
+LLGL_EXPORT AttachmentDescriptor AttachmentDesc(AttachmentType type, std::uint32_t width, std::uint32_t height)
+{
+    AttachmentDescriptor desc;
+    {
+        desc.type   = type;
+        desc.width  = width;
+        desc.height = height;
+    }
+    return desc;
+}
+
 
 } // /namespace LLGL
 
