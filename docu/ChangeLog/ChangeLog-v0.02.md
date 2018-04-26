@@ -1,7 +1,7 @@
 ChangeLog v0.02
 ===============
 
-`ShaderProgram` interface:
+Vertex layout in `ShaderProgram` interface:
 --------------------------
 
 Before:
@@ -117,6 +117,101 @@ myContextDesc.profileOpenGL.majorVersion   = 4;
 myContextDesc.profileOpenGL.minorVersion   = 6;
 myRenderer->CreateRenderContext(myContextDesc);
 ```
+
+
+Query texture descriptor:
+-------------------------
+
+Before:
+```cpp
+// Interface:
+TextureDescriptor RenderSystem::QueryTextureDescriptor(const Texture& texture);
+
+// Usage:
+auto myTextureDesc = myRenderer->QueryTextureDescriptor(myTexture);
+```
+
+After:
+```cpp
+// Interface:
+TextureDescriptor Texture::QueryDesc() const;
+
+// Usage:
+auto myTextureDesc = myTexture->QueryDesc();
+```
+
+
+Render target attachments:
+--------------------------
+
+***Under Construction***
+
+Before:
+```cpp
+// Interface:
+unsigned int  RenderTargetAttachmentDescriptor::mipLevel;
+unsigned int  RenderTargetAttachmentDescriptor::layer;
+AxidDirection RenderTargetAttachmentDescriptor::cubeFace;
+
+MultiSamplingDescriptor RenderTargetDescriptor::multiSampling;
+bool                    RenderTargetDescriptor::customMultiSampling;
+
+void RenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size);
+void RenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size);
+void RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size);
+void RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc);
+void RenderTarget::DetachAll();
+
+// Usage:
+// Create render target
+LLGL::RenderTargetDescriptor myRenderTargetDesc;
+/* myRenderTargetDesc ... */
+auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
+
+// Attach depth buffer
+/* myRenderTargetSize ... */
+myRenderTarget->AttachDepthBuffer(myRenderTargetSize);
+
+// Attach color texture
+LLGL::RenderTargetAttachmentDescriptor myAttachmentDesc;
+/* myAttachmentDesc ... */
+myRenderTarget->AttachTexture(myColorTexture, myAttachmentDesc);
+```
+
+After:
+```cpp
+// Interface:
+Texture*       AttachmentDescriptor::texture;
+AttachmentType AttachmentDescriptor::type;
+uint32_t       AttachmentDescriptor::width;
+uint32_t       AttachmentDescriptor::height;
+uint32_t       AttachmentDescriptor::mipLevel;
+uint32_t       AttachmentDescriptor::layer;
+AxisDirection  AttachmentDescriptor::cubeFace;
+
+vector<AttachmentDescriptor> RenderTargetDescriptor::attachments;
+MultiSamplingDescriptor      RenderTargetDescriptor::multiSampling;
+bool                         RenderTargetDescriptor::customMultiSampling;
+
+// Usage:
+LLGL::RenderTargetDescriptor myRenderTargetDesc;
+
+myRenderTargetDesc.attachments.resize(2);
+
+// Specify depth attachment
+/* myRenderTargetSize ... */
+myRenderTargetDesc.attachments[0].type    = LLGL::AttachmentType::Depth;
+myRenderTargetDesc.attachments[0].width   = myRenderTargetSize.x;
+myRenderTargetDesc.attachments[0].height  = myRenderTargetSize.y;
+
+// Specify color attachment
+myRenderTargetDesc.attachments[1].type    = LLGL::AttachmentType::Color;
+myRenderTargetDesc.attachments[1].texture = myColorTexture;
+
+// Create render target
+auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
+```
+
 
 
 
