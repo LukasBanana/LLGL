@@ -47,7 +47,7 @@ namespace LLGL
 \brief Render system interface.
 \remarks This is the main interface for the entire renderer.
 It manages the ownership of all graphics objects and is used to create, modify, and delete all those objects.
-The main functions for most graphics objects are "Create...", "Write...", and "Release":
+The main functions for most graphics objects are "Create...", "Write...", "Read...", "Map...", "Unmap...", and "Release":
 \code
 // Create and initialize vertex buffer
 LLGL::BufferDescriptor bufferDesc;
@@ -463,9 +463,6 @@ class LLGL_EXPORT RenderSystem
 
         //! Sets the rendering capabilities.
         void SetRenderingCaps(const RenderingCaps& caps);
-
-        //! Creates an RGBA unsigned-byte image buffer for the specified number of pixels.
-        std::vector<ColorRGBAub> GetDefaultTextureImageRGBAub(int numPixels) const;
 
         //! Validates the specified buffer descriptor to be used for buffer creation.
         void AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize);

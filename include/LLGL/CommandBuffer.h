@@ -417,6 +417,11 @@ class LLGL_EXPORT CommandBuffer
         \brief Draws the specified amount of primitives from the currently set vertex buffer.
         \param[in] numVertices Specifies the number of vertices to generate.
         \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.
+        \note The parameter <code>firstVertex</code> modifies the vertex ID within the shader pipeline differently for <code>SV_VertexID</code>
+        in HLSL and <code>gl_VertexID</code> in GLSL (or <code>gl_VertexIndex</code> for Vulkan), due to rendering API differences.
+        The system value <code>SV_VertexID</code> in HLSL will always start with zero,
+        but the system value <code>gl_VertexID</code> in GLSL (or <code>gl_VertexIndex</code> for Vulkan)
+        will start with the value of <code>firstVertex</code>.
         */
         virtual void Draw(std::uint32_t numVertices, std::uint32_t firstVertex) = 0;
 
@@ -440,6 +445,12 @@ class LLGL_EXPORT CommandBuffer
         \param[in] firstVertex Specifies the zero-based offset of the first vertex from the vertex buffer.
         \param[in] numInstances Specifies the number of instances to generate.
         \param[in] instanceOffset Specifies the zero-based instance offset which is added to each instance ID.
+        \note The parameter <code>firstVertex</code> modifies the vertex ID within the shader pipeline differently for <code>SV_VertexID</code>
+        in HLSL and <code>gl_VertexID</code> in GLSL (or <code>gl_VertexIndex</code> for Vulkan), due to rendering API differences.
+        The system value <code>SV_VertexID</code> in HLSL will always start with zero,
+        but the system value <code>gl_VertexID</code> in GLSL (or <code>gl_VertexIndex</code> for Vulkan)
+        will start with the value of <code>firstVertex</code>.
+        The same holds true for the parameter <code>instanceOffset</code> and the system values <code>SV_InstanceID</code> in HLSL and <code>gl_InstanceID</code> in GLSL (or <code>gl_InstanceIndex</code> for Vulkan).
         */
         virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset) = 0;
 
@@ -456,6 +467,11 @@ class LLGL_EXPORT CommandBuffer
         \param[in] firstIndex Specifies the zero-based offset of the first index from the index buffer.
         \param[in] vertexOffset Specifies the base vertex offset (positive or negative) which is added to each index from the index buffer.
         \param[in] instanceOffset Specifies the zero-based instance offset which is added to each instance ID.
+        \note The parameter <code>instanceOffset</code> modifies the instance ID within the shader pipeline differently for <code>SV_InstanceID</code>
+        in HLSL and <code>gl_InstanceID</code> in GLSL (or <code>gl_InstanceIndex</code> for Vulkan), due to rendering API differences.
+        The system value <code>SV_InstanceID</code> in HLSL will always start with zero,
+        but the system value <code>gl_InstanceID</code> in GLSL (or <code>gl_InstanceIndex</code> for Vulkan)
+        will start with the value of <code>instanceOffset</code>.
         */
         virtual void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset) = 0;
 

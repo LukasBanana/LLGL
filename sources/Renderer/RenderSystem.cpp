@@ -250,11 +250,6 @@ void RenderSystem::SetRenderingCaps(const RenderingCaps& caps)
     caps_ = caps;
 }
 
-std::vector<ColorRGBAub> RenderSystem::GetDefaultTextureImageRGBAub(int numPixels) const
-{
-    return std::vector<ColorRGBAub>(static_cast<size_t>(numPixels), GetConfiguration().imageInitialization.color);
-}
-
 void RenderSystem::AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize)
 {
     if (desc.type < BufferType::Vertex || desc.type > BufferType::StreamOutput)

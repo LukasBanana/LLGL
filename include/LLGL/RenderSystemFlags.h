@@ -136,9 +136,8 @@ struct ImageInitialization
     /**
     \brief Specifies the default color for uninitialized textures. The default value is black (0, 0, 0, 0).
     \remarks This will be used when a texture is created and no initial image data is specified.
-    \todo Change type to ColorRGBAf.
     */
-    ColorRGBAub color   { 0, 0, 0, 0 };
+    ColorRGBAf  color   { 0.0f, 0.0f, 0.0f, 0.0f };
 
     /**
     \brief Specifies the default depth value for uninitialized depth textures. The default value is 0.
@@ -390,22 +389,22 @@ struct RenderingCaps
 
     /**
     \brief Specifies whether hardware instancing is supported.
-    \see RenderContext::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
-    \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
-    \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t)
+    \see CommandBuffer::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
+    \see CommandBuffer::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t)
+    \see CommandBuffer::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t)
     */
     bool                            hasInstancing                       { false };
 
     /**
     \brief Specifies whether hardware instancing with instance offsets is supported.
-    \see RenderContext::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
-    \see RenderContext::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
+    \see CommandBuffer::DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+    \see CommandBuffer::DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
     */
     bool                            hasOffsetInstancing                 { false };
 
     /**
     \brief Specifies whether multiple viewports, depth-ranges, and scissors are supported at once.
-    \see maxViewportsAndScissors
+    \see maxNumViewports
     */
     bool                            hasViewportArrays                   { false };
 

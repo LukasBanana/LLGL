@@ -84,6 +84,7 @@ class D3D11Texture : public Texture
             std::uint32_t mipLevel
         ) const;
 
+        //TODO: rename to "GetHwTexture"
         inline const D3D11HardwareTexture& GetHardwareTexture() const
         {
             return hardwareTexture_;
@@ -116,8 +117,10 @@ class D3D11Texture : public Texture
             const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
         );
 
-        D3D11HardwareTexture                hardwareTexture_;//hwTexture_
+        D3D11HardwareTexture                hardwareTexture_; //TODO rename to "hwTexture_"
+
         ComPtr<ID3D11ShaderResourceView>    srv_;
+        //ComPtr<ID3D11UnorderedAccessView>   uav_; //TODO: use this to support UAV of textures
 
         DXGI_FORMAT                         format_             = DXGI_FORMAT_UNKNOWN;
         UINT                                numMipLevels_       = 0;

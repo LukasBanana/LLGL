@@ -23,9 +23,9 @@ void GLTexImageInitialization(const ImageInitialization& imageInitialization)
     g_imageInitialization = imageInitialization;
 }
 
-static std::vector<ColorRGBAub> GenImageDataRGBAub(int numPixels, const ColorRGBAub& color)
+static std::vector<ColorRGBAf> GenImageDataRGBAf(int numPixels, const ColorRGBAf& color)
 {
-    return std::vector<ColorRGBAub>(static_cast<std::size_t>(numPixels), color);
+    return std::vector<ColorRGBAf>(static_cast<std::size_t>(numPixels), color);
 }
 
 static std::vector<float> GenImageDataRf(int numPixels, float value)
@@ -241,7 +241,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAub(
+        auto image = GenImageDataRGBAf(
             desc.texture1D.width,
             g_imageInitialization.color
         );
@@ -249,7 +249,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         GLTexImage1D(
             desc.format,
             desc.texture1D.width,
-            GL_RGBA, GL_UNSIGNED_BYTE, image.data()
+            GL_RGBA, GL_FLOAT, image.data()
         );
     }
 }
@@ -305,7 +305,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAub(
+        auto image = GenImageDataRGBAf(
             desc.texture2D.width * desc.texture2D.height,
             g_imageInitialization.color
         );
@@ -313,7 +313,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         GLTexImage2D(
             desc.format,
             desc.texture2D.width, desc.texture2D.height,
-            GL_RGBA, GL_UNSIGNED_BYTE, image.data()
+            GL_RGBA, GL_FLOAT, image.data()
         );
     }
 }
@@ -346,7 +346,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAub(
+        auto image = GenImageDataRGBAf(
             desc.texture3D.width * desc.texture3D.height * desc.texture3D.depth,
             g_imageInitialization.color
         );
@@ -354,7 +354,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         GLTexImage3D(
             desc.format,
             desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
-            GL_RGBA, GL_UNSIGNED_BYTE, image.data()
+            GL_RGBA, GL_FLOAT, image.data()
         );
     }
 }
@@ -413,7 +413,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
     else
     {
         /* Initialize texture image cube-faces with default color */
-        auto image = GenImageDataRGBAub(
+        auto image = GenImageDataRGBAf(
             desc.textureCube.width * desc.textureCube.height,
             g_imageInitialization.color
         );
@@ -423,7 +423,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
             GLTexImageCube(
                 desc.format,
                 desc.textureCube.width, desc.textureCube.height, face,
-                GL_RGBA, GL_UNSIGNED_BYTE, image.data()
+                GL_RGBA, GL_FLOAT, image.data()
             );
         }
     }
@@ -459,7 +459,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAub(
+        auto image = GenImageDataRGBAf(
             desc.texture1D.width * static_cast<int>(desc.texture1D.layers),
             g_imageInitialization.color
         );
@@ -467,7 +467,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         GLTexImage1DArray(
             desc.format,
             desc.texture1D.width, desc.texture1D.layers,
-            GL_RGBA, GL_UNSIGNED_BYTE, image.data()
+            GL_RGBA, GL_FLOAT, image.data()
         );
     }
 }
@@ -523,7 +523,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAub(
+        auto image = GenImageDataRGBAf(
             desc.texture2D.width * desc.texture2D.height * static_cast<int>(desc.texture2D.layers),
             g_imageInitialization.color
         );
@@ -531,7 +531,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         GLTexImage2DArray(
             desc.format,
             desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
-            GL_RGBA, GL_UNSIGNED_BYTE, image.data()
+            GL_RGBA, GL_FLOAT, image.data()
         );
     }
 }
@@ -566,7 +566,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
     else
     {
         /* Initialize texture image cube-faces with default color */
-        auto image = GenImageDataRGBAub(
+        auto image = GenImageDataRGBAf(
             desc.textureCube.width * desc.textureCube.height * static_cast<int>(desc.textureCube.layers*6),
             g_imageInitialization.color
         );
@@ -574,7 +574,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
         GLTexImageCubeArray(
             desc.format,
             desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
-            GL_RGBA, GL_UNSIGNED_BYTE, image.data()
+            GL_RGBA, GL_FLOAT, image.data()
         );
     }
 }
