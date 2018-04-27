@@ -260,7 +260,8 @@ int main()
         {
             imageDesc.format    = LLGL::ImageFormat::RGB;
             imageDesc.dataType  = LLGL::DataType::UInt8;
-            imageDesc.buffer    = image;
+            imageDesc.data      = image;
+            imageDesc.dataSize  = 2*2*3;
         }
         LLGL::TextureDescriptor textureDesc;
         {

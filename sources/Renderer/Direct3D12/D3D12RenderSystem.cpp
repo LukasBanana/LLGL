@@ -221,7 +221,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 
         D3D12_SUBRESOURCE_DATA subresourceData;
         {
-            subresourceData.pData       = imageDesc->buffer;
+            subresourceData.pData       = imageDesc->data;
             subresourceData.RowPitch    = ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType) * texWidth;
             subresourceData.SlicePitch  = subresourceData.RowPitch * texHeight;
         }

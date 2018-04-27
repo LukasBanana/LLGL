@@ -529,6 +529,8 @@ struct GraphicsPipelineDescriptor
     \brief Specifies the viewport list. If empty, the viewports must be set dynamically with the command buffer.
     \see CommandBuffer::SetViewport
     \see CommandBuffer::SetViewportArray
+    \note Only supported with: Vulkan
+    \todo Also implemented this for remaining renderers.
     */
     std::vector<Viewport>   viewports;
 
@@ -537,6 +539,8 @@ struct GraphicsPipelineDescriptor
     \remarks This list must have the same number of entries as 'viewports', unless one of the lists is empty.
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissorArray
+    \note Only supported with: Vulkan
+    \todo Also implemented this for remaining renderers.
     */
     std::vector<Scissor>    scissors;
 

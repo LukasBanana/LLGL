@@ -412,7 +412,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
             imageDesc, GetConfiguration().threadCount
         );
 
-        imageDesc.buffer = reinterpret_cast<const char*>(imageDesc.buffer) + layerStride;
+        imageDesc.data = reinterpret_cast<const char*>(imageDesc.data) + layerStride;
     }
 }
 
@@ -431,7 +431,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithDefault(
         auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);
 
         /* Update only the first MIP-map level for each array slice */
-        imageDescDefault.buffer = imageBuffer.get();
+        imageDescDefault.data = imageBuffer.get();
 
         for (std::uint32_t arraySlice = 0; arraySlice < numLayers; ++arraySlice)
         {

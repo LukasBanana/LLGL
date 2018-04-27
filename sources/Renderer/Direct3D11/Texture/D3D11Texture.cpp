@@ -212,7 +212,7 @@ void D3D11Texture::UpdateSubresource(
         /* Convert image data from RGB to RGBA */
         auto tempData = ConvertImageBuffer(
             imageDesc.format, imageDesc.dataType,
-            imageDesc.buffer, imageSize,
+            imageDesc.data, imageSize,
             dstTexFormat.format, dstTexFormat.dataType,
             threadCount
         );
@@ -237,7 +237,7 @@ void D3D11Texture::UpdateSubresource(
         /* Update subresource with specified image data */
         context->UpdateSubresource(
             hwTexture_.resource.Get(), dstSubresource,
-            &dstBox, imageDesc.buffer, srcRowPitch, srcDepthPitch
+            &dstBox, imageDesc.data, srcRowPitch, srcDepthPitch
         );
     }
 }

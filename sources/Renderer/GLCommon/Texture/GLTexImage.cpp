@@ -43,14 +43,14 @@ void ErrIllegalUseOfDepthFormat()
 
 static void GLTexImage1DBase(
     GLenum target, const TextureFormat internalFormat, std::uint32_t width,
-    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize)
+    GLenum format, GLenum type, const void* data, std::size_t dataSize)
 {
     if (IsCompressedFormat(internalFormat))
     {
         glCompressedTexImage1D(
             target, 0, GLTypes::Map(internalFormat),
             static_cast<GLsizei>(width),
-            0, static_cast<GLsizei>(compressedSize), data
+            0, static_cast<GLsizei>(dataSize), data
         );
     }
     else
@@ -67,7 +67,7 @@ static void GLTexImage1DBase(
 
 static void GLTexImage2DBase(
     GLenum target, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height,
-    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize)
+    GLenum format, GLenum type, const void* data, std::size_t dataSize)
 {
     if (IsCompressedFormat(internalFormat))
     {
@@ -75,7 +75,7 @@ static void GLTexImage2DBase(
             target, 0, GLTypes::Map(internalFormat),
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
-            0, static_cast<GLsizei>(compressedSize), data
+            0, static_cast<GLsizei>(dataSize), data
         );
     }
     else
@@ -91,7 +91,7 @@ static void GLTexImage2DBase(
 
 static void GLTexImage3DBase(
     GLenum target, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth,
-    GLenum format, GLenum type, const void* data, std::uint32_t compressedSize)
+    GLenum format, GLenum type, const void* data, std::size_t dataSize)
 {
     if (IsCompressedFormat(internalFormat))
     {
@@ -100,7 +100,7 @@ static void GLTexImage3DBase(
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
-            0, static_cast<GLsizei>(compressedSize), data
+            0, static_cast<GLsizei>(dataSize), data
         );
     }
     else
@@ -221,7 +221,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         GLTexImage1D(
             desc.format,
             desc.texture1D.width,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
+            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -264,7 +264,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         GLTexImage2D(
             desc.format,
             desc.texture2D.width, desc.texture2D.height,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
+            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -326,7 +326,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         GLTexImage3D(
             desc.format,
             desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
+            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -374,11 +374,11 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
-        auto imageFace          = reinterpret_cast<const char*>(imageDesc->buffer);
+        auto imageFace          = reinterpret_cast<const char*>(imageDesc->data);
         auto imageFaceStride    = (desc.textureCube.width * desc.textureCube.height * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType));
 
         if (IsCompressedFormat(desc.format))
-            imageFaceStride = imageDesc->compressedSize;
+            imageFaceStride = imageDesc->dataSize;
 
         auto dataFormatGL       = GLTypes::Map(imageDesc->format);
         auto dataTypeGL         = GLTypes::Map(imageDesc->dataType);
@@ -388,7 +388,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
             GLTexImageCube(
                 desc.format,
                 desc.textureCube.width, desc.textureCube.height, face,
-                dataFormatGL, dataTypeGL, imageFace, imageDesc->compressedSize
+                dataFormatGL, dataTypeGL, imageFace, imageDesc->dataSize
             );
             imageFace += imageFaceStride;
         }
@@ -439,7 +439,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         GLTexImage1DArray(
             desc.format,
             desc.texture1D.width, desc.texture1D.layers,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
+            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -482,7 +482,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         GLTexImage2DArray(
             desc.format,
             desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
+            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -546,7 +546,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
         GLTexImageCubeArray(
             desc.format,
             desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->buffer, imageDesc->compressedSize
+            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))

@@ -29,8 +29,8 @@ static void GLTexSubImage1DBase(
             static_cast<GLint>(x),
             static_cast<GLsizei>(width),
             GLTypes::Map(imageDesc.format),
-            static_cast<GLsizei>(imageDesc.compressedSize),
-            imageDesc.buffer
+            static_cast<GLsizei>(imageDesc.dataSize),
+            imageDesc.data
         );
     }
     else
@@ -42,7 +42,7 @@ static void GLTexSubImage1DBase(
             static_cast<GLsizei>(width),
             GLTypes::Map(imageDesc.format),
             GLTypes::Map(imageDesc.dataType),
-            imageDesc.buffer
+            imageDesc.data
         );
     }
 }
@@ -63,7 +63,8 @@ static void GLTexSubImage2DBase(
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             GLTypes::Map(imageDesc.format),
-            static_cast<GLsizei>(imageDesc.compressedSize), imageDesc.buffer
+            static_cast<GLsizei>(imageDesc.dataSize),
+            imageDesc.data
         );
     }
     else
@@ -77,7 +78,7 @@ static void GLTexSubImage2DBase(
             static_cast<GLsizei>(height),
             GLTypes::Map(imageDesc.format),
             GLTypes::Map(imageDesc.dataType),
-            imageDesc.buffer
+            imageDesc.data
         );
     }
 }
@@ -98,8 +99,8 @@ static void GLTexSubImage3DBase(
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
             GLTypes::Map(imageDesc.format),
-            static_cast<GLsizei>(imageDesc.compressedSize),
-            imageDesc.buffer
+            static_cast<GLsizei>(imageDesc.dataSize),
+            imageDesc.data
         );
     }
     else
@@ -115,7 +116,7 @@ static void GLTexSubImage3DBase(
             static_cast<GLsizei>(depth),
             GLTypes::Map(imageDesc.format),
             GLTypes::Map(imageDesc.dataType),
-            imageDesc.buffer
+            imageDesc.data
         );
     }
 }

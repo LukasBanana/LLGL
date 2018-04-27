@@ -203,8 +203,9 @@ int main()
 
         LLGL::ImageDescriptor imageDesc;
         {
-            imageDesc.buffer = imageBuffer;
-        }
+            imageDesc.data      = imageBuffer;
+            imageDesc.dataSize  = texWidth*texHeight*4;
+        };
         auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, texWidth, texHeight), &imageDesc);
 
         renderer->GenerateMips(*texture);

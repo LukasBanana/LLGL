@@ -338,7 +338,8 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     if (imageDesc)
     {
         /* Use data buffer from image descriptor */
-        initialData = imageDesc->buffer;
+        AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(imageDataSize));
+        initialData = imageDesc->data;
     }
     else if (GetConfiguration().imageInitialization.enabled)
     {

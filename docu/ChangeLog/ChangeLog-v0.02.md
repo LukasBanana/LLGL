@@ -54,8 +54,8 @@ myRenderer->CreateGraphicsPipeline(myGfxPipelineDesc);
 ```
 
 
-Rasterization line width:
--------------------------
+Rasterization line width (OpenGL and Vulkan only):
+--------------------------------------------------
 
 Before:
 ```cpp
@@ -87,9 +87,9 @@ OpenGL profile selection:
 Before:
 ```cpp
 // Interface:
-bool ProfileOpenGLDescriptor::extProfile;
-bool ProfileOpenGLDescriptor::coreProfile;
-bool ProfileOpenGLDescriptor::debugDump;
+bool          ProfileOpenGLDescriptor::extProfile;
+bool          ProfileOpenGLDescriptor::coreProfile;
+bool          ProfileOpenGLDescriptor::debugDump;
 OpenGLVersion ProfileOpenGLDescriptor::version;
 
 // Usage:
@@ -106,8 +106,8 @@ After:
 ```cpp
 // Interface:
 OpenGLContextProfile ProfileOpenGLDescriptor::contextProfile;
-int ProfileOpenGLDescriptor::majorVersion;
-int ProfileOpenGLDescriptor::minorVersion;
+int                  ProfileOpenGLDescriptor::majorVersion;
+int                  ProfileOpenGLDescriptor::minorVersion;
 
 // Usage:
 LLGL::RenderContextDescriptor myContextDesc;
@@ -181,8 +181,8 @@ myRenderTarget->AttachTexture(myColorTexture, myAttachmentDesc);
 After:
 ```cpp
 // Interface:
-Texture*       AttachmentDescriptor::texture;
 AttachmentType AttachmentDescriptor::type;
+Texture*       AttachmentDescriptor::texture;
 uint32_t       AttachmentDescriptor::width;
 uint32_t       AttachmentDescriptor::height;
 uint32_t       AttachmentDescriptor::mipLevel;
@@ -208,6 +208,47 @@ myRenderTargetDesc.attachments =
 
 // Create render target
 auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
+```
+
+
+Texture initialization with `ImageDescriptor` interface:
+--------------------------------------------------------
+
+Before:
+```cpp
+// Interface:
+ImageFormat ImageDescriptor::format;
+DataType    ImageDescriptor::dataType;
+const void* ImageDescriptor::buffer;
+uint32_t    ImageDescriptor::compressedSize;
+
+// Usage (for uncompressed images):
+LLGL::ImageDescriptor myImageDesc;
+myImageDesc.format   = LLGL::ImageFormat::RGBA;
+myImageDesc.dataType = LLGL::DataType::UInt8;
+myImageDesc.buffer   = myImageBuffer;
+
+// Usage (for compressed images):
+LLGL::ImageDescriptor myImageDesc;
+myImageDesc.format         = LLGL::ImageFormat::CompressedRGBA;
+myImageDesc.buffer         = myImageBuffer;
+myImageDesc.compressedSize = myImageBufferSize;
+```
+
+After:
+```cpp
+// Interface:
+ImageFormat ImageDescriptor::format;
+DataType    ImageDescriptor::dataType;
+const void* ImageDescriptor::data;
+size_t      ImageDescriptor::dataSize;
+
+// Usage (for both compressed and uncompressed images):
+LLGL::ImageDescriptor myImageDesc;
+myImageDesc.format   = /* ... */;
+myImageDesc.dataType = /* ... */;
+myImageDesc.data     = myImageBuffer;
+myImageDesc.dataSize = myImageBufferSize;
 ```
 
 

@@ -92,14 +92,17 @@ public:
         // Initialize image descriptor to upload image data onto hardware texture
         LLGL::ImageDescriptor imageDesc;
         {
-            // Set image buffer color format
+            // Set image color format
             imageDesc.format    = (texComponents == 4 ? LLGL::ImageFormat::RGBA : LLGL::ImageFormat::RGB);
             
-            // Set image buffer data type (unsigned char = 8-bit unsigned integer)
+            // Set image data type (unsigned char = 8-bit unsigned integer)
             imageDesc.dataType  = LLGL::DataType::UInt8;
 
             // Set image buffer source for texture initial data
-            imageDesc.buffer    = imageBuffer;
+            imageDesc.data      = imageBuffer;
+
+            // Set image buffer size
+            imageDesc.dataSize  = static_cast<std::size_t>(texWidth*texHeight*texComponents);
         }
 
         // Upload image data onto hardware texture and stop the time

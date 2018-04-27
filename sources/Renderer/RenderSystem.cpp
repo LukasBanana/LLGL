@@ -311,6 +311,30 @@ void RenderSystem::AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* 
     AssertCreateResourceArrayCommon(numSamplers, reinterpret_cast<void* const*>(samplerArray), "sampler");
 }
 
+void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info)
+{
+    if (dataSize < requiredDataSize)
+    {
+        std::string s;
+
+        /* Build error message */
+        s += "image data size is too small";
+        if (info)
+        {
+            s += " for ";
+            s += info;
+        }
+
+        s += " (";
+        s += std::to_string(requiredDataSize);
+        s += " byte(s) are required, but only ";
+        s += std::to_string(dataSize);
+        s += " is specified)";
+
+        throw std::invalid_argument(s);
+    }
+}
+
 
 } // /namespace LLGL
 

@@ -476,6 +476,9 @@ class LLGL_EXPORT RenderSystem
         //! Validates the specified arguments to be used for sampler array creation.
         void AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray);
 
+        //! Validates the specified image data size against the required size (in bytes).
+        void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);
+
     private:
 
         int                         rendererID_ = 0;

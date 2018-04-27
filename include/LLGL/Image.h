@@ -69,19 +69,11 @@ struct LLGL_EXPORT ImageDescriptor
 {
     ImageDescriptor() = default;
 
-    // Constructor for uncompressed image data.
-    inline ImageDescriptor(ImageFormat format, DataType dataType, const void* buffer) :
+    inline ImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
         format   { format   },
         dataType { dataType },
-        buffer   { buffer   }
-    {
-    }
-
-    //! Constructor for compressed image data.
-    inline ImageDescriptor(ImageFormat format, const void* buffer, std::uint32_t compressedSize) :
-        format         { format         },
-        buffer         { buffer         },
-        compressedSize { compressedSize }
+        data     { data     },
+        dataSize { dataSize }
     {
     }
 
@@ -94,17 +86,10 @@ struct LLGL_EXPORT ImageDescriptor
     */
     std::uint32_t GetElementSize() const;
 
-    #if 1//TODO: maybe rename this to "data" and "dataSize"
-    ImageFormat     format          = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
-    DataType        dataType        = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images.
-    const void*     buffer          = nullptr;              //!< Pointer to the image buffer.
-    std::uint32_t   compressedSize  = 0;                    //!< Specifies the size (in bytes) of a compressed image. This must be 0 for uncompressed images.
-    #else
+    ImageFormat format      = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
+    DataType    dataType    = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
     const void* data        = nullptr;              //!< Pointer to the image data.
     std::size_t dataSize    = 0;                    //!< Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
-    DataType    dataType    = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
-    ImageFormat format      = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
-    #endif
 };
 
 

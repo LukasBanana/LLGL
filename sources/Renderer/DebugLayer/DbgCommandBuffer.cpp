@@ -620,7 +620,7 @@ void DbgCommandBuffer::DebugVertexBufferSet()
 {
     if (bindings_.numVertexBuffers > 0)
     {
-        for (std::uint32_t i = 0; i< bindings_.numVertexBuffers; ++i)
+        for (std::uint32_t i = 0; i < bindings_.numVertexBuffers; ++i)
         {
             if (!bindings_.vertexBuffers[i]->initialized)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot " + std::to_string(i));
