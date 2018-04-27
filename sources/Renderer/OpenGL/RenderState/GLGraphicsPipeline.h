@@ -28,8 +28,10 @@ class GLGraphicsPipeline : public GraphicsPipeline
 
         GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingCaps& renderCaps);
 
+        // Binds this graphics pipeline state with the specified GL state manager.
         void Bind(GLStateManager& stateMngr);
 
+        // Returns the GL mode for drawing commands (GL_TRIANGLES, GL_TRIANGLE_STRIP, etc.).
         inline GLenum GetDrawMode() const
         {
             return drawMode_;

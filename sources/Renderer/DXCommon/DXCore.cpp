@@ -241,6 +241,8 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
     caps.hasViewportArrays                  = true;
     caps.hasConservativeRasterization       = (featureLevel >= D3D_FEATURE_LEVEL_11_1);
     caps.hasStreamOutputs                   = (featureLevel >= D3D_FEATURE_LEVEL_10_0);
+    caps.lineWidthRange[0]                  = 1.0f;
+    caps.lineWidthRange[1]                  = 1.0f;
     caps.maxNumTextureArrayLayers           = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
     caps.maxNumRenderTargetAttachments      = GetMaxRenderTargets(featureLevel);
     caps.maxConstantBufferSize              = 16384u;

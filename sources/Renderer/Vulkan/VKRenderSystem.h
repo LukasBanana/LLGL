@@ -215,6 +215,8 @@ class VKRenderSystem : public RenderSystem
 
         std::unique_ptr<VKDeviceMemoryManager>  deviceMemoryMngr_;
 
+        VKGraphicsPipelineLimits                gfxPipelineLimits_;
+
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<VKRenderContext>      renderContexts_;

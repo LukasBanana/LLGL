@@ -421,6 +421,13 @@ struct RenderingCaps
     */
     bool                            hasStreamOutputs                    { false };
 
+    /**
+    \brief Specifies the range for rasterizer line widths. By default [1, 1].
+    \note Only supported with: OpenGL, Vulkan.
+    \see RasterizerDescriptor::lineWidth
+    */
+    float                           lineWidthRange[2]                   { 1.0f, 1.0f };
+
     //! Specifies the maximum number of texture array layers (for 1D-, 2D-, and cube textures).
     std::uint32_t                   maxNumTextureArrayLayers            { 0 };
 

@@ -18,6 +18,13 @@ namespace LLGL
 {
 
 
+// Vulkan graphics pipeline limitations structure.
+struct VKGraphicsPipelineLimits
+{
+    float lineWidthRange[2];
+    float lineWidthGranularity;
+};
+
 class VKShaderProgram;
 
 class VKGraphicsPipeline : public GraphicsPipeline
@@ -26,15 +33,17 @@ class VKGraphicsPipeline : public GraphicsPipeline
     public:
 
         VKGraphicsPipeline(
-            const VKPtr<VkDevice>& device, VkRenderPass renderPass, const VkExtent2D& extent,
-            const GraphicsPipelineDescriptor& desc, VkPipelineLayout defaultPipelineLayout
+            const VKPtr<VkDevice>& device, VkRenderPass renderPass, VkPipelineLayout defaultPipelineLayout,
+            const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent
         );
 
+        // Returns the VkPipeline Vulkan object.
         inline VkPipeline GetVkPipeline() const
         {
             return pipeline_.Get();
         }
 
+        // Returns the VkPipelineLayout Vulkan object.
         inline VkPipelineLayout GetVkPipelineLayout() const
         {
             return pipelineLayout_;
@@ -42,7 +51,7 @@ class VKGraphicsPipeline : public GraphicsPipeline
 
     private:
 
-        void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent);
+        void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent);
 
         VkDevice            device_         = VK_NULL_HANDLE;
         VkRenderPass        renderPass_     = VK_NULL_HANDLE;

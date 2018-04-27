@@ -14,6 +14,7 @@
 
 
 //#define TEST_QUERY
+//#define TEST_RENDER_TARGET
 
 
 int main()
@@ -270,8 +271,15 @@ int main()
 
             pipelineDesc.blend.blendEnabled = true;
             pipelineDesc.blend.targets.push_back({});
+
+            #if 1
+            pipelineDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
+            pipelineDesc.rasterizer.lineWidth = 150.0f;
+            #endif
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        #ifdef TEST_RENDER_TARGET
 
         // Create texture for render target attachment
         const std::uint32_t renderTargetSize = 512;
@@ -287,6 +295,8 @@ int main()
             rtDesc.attachments.push_back(attachmentDesc);
         }
         auto renderTarget = renderer->CreateRenderTarget(rtDesc);
+
+        #endif
 
         // Create query
         #ifdef TEST_QUERY
@@ -362,6 +372,7 @@ int main()
             commands->Draw(4, 0);
             #endif
 
+            #ifdef TEST_RENDER_TARGET
             // Render scene into render target
             commands->SetRenderTarget(*renderTarget);
             commands->Clear(LLGL::ClearFlags::Color);
@@ -369,6 +380,7 @@ int main()
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetGraphicsResourceViewHeap(*resourceViewHeap, 0);
             commands->Draw(4, 0);
+            #endif
 
             // Present result on screen
             context->Present();

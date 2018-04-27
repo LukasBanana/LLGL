@@ -438,7 +438,10 @@ struct RasterizerDescriptor
 
     /**
     \brief Specifies the width of all generated line primitives. By default 1.0.
-    \note Only supported with: OpenGL (Compatibility Profile), Vulkan.
+    \remarks The minimum and maximum supported line width can be determined by the 'lineWidthRange' member in the 'RenderingCaps' structure.
+    If this line width is out of range, it will be clamped silently during graphics pipeline creation.
+    \note Only supported with: OpenGL, Vulkan.
+    \see RenderingCaps::lineWidthRange
     */
     float                   lineWidth                   = 1.0f;
 };
@@ -511,13 +514,16 @@ struct GraphicsPipelineDescriptor
     */
     ShaderProgram*          shaderProgram       = nullptr;
 
+    #if 1 // TODO: try to parse the SPIR-V modules in the shader program with the SPIRV-Tools library, to deduce the pipeline layout automatically
     /**
     \brief Pointer to an optional pipeline layout for the graphics pipeline.
     \remarks This layout determines at which slots buffer resources can be bound.
     This is ignored by render systems which do not support pipeline layouts.
     \note Only supported with: Vulkan, Direct3D 12
+    \todo Remove this and deduce the pipeline layout automatically by parsing the SPIR-V module with the SPIRV-Tools library (i.e. the "spvBinaryParse" function).
     */
     PipelineLayout*         pipelineLayout      = nullptr;
+    #endif // /TODO
 
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.
@@ -525,12 +531,13 @@ struct GraphicsPipelineDescriptor
     */
     PrimitiveTopology       primitiveTopology   = PrimitiveTopology::TriangleList;
 
+    #if 1 // TODO: maybe remove this, since it makes the remaining renderers more complex
     /**
     \brief Specifies the viewport list. If empty, the viewports must be set dynamically with the command buffer.
     \see CommandBuffer::SetViewport
     \see CommandBuffer::SetViewportArray
     \note Only supported with: Vulkan
-    \todo Also implemented this for remaining renderers.
+    \todo Either implemented this for remaining renderers or remove it.
     */
     std::vector<Viewport>   viewports;
 
@@ -540,9 +547,10 @@ struct GraphicsPipelineDescriptor
     \see CommandBuffer::SetScissor
     \see CommandBuffer::SetScissorArray
     \note Only supported with: Vulkan
-    \todo Also implemented this for remaining renderers.
+    \todo Either implemented this for remaining renderers or remove it.
     */
     std::vector<Scissor>    scissors;
+    #endif // /TODO
 
     //! Specifies the depth state descriptor.
     DepthDescriptor         depth;

@@ -233,6 +233,16 @@ static void GLGetSupportedFeatures(RenderingCaps& caps)
 
 static void GLGetFeatureLimits(RenderingCaps& caps)
 {
+    /* Determine minimal line width range for both aliased and smooth lines */
+    GLfloat aliasedLineRange[2];
+    glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, aliasedLineRange);
+
+    GLfloat smoothLineRange[2];
+    glGetFloatv(GL_SMOOTH_LINE_WIDTH_RANGE, smoothLineRange);
+
+    caps.lineWidthRange[0] = std::max(aliasedLineRange[0], smoothLineRange[0]);
+    caps.lineWidthRange[1] = std::min(aliasedLineRange[1], smoothLineRange[1]);
+
     /* Query integral attributes */
     caps.maxNumTextureArrayLayers           = GLGetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
     caps.maxNumRenderTargetAttachments      = GLGetUInt(GL_MAX_DRAW_BUFFERS);

@@ -598,10 +598,12 @@ void GLStateManager::SetLogicOp(GLenum opcode)
 
 void GLStateManager::SetLineWidth(GLfloat width)
 {
+    /* Clamp width silently into limited range */
+    width = std::max(limits_.lineWidthRange[0], std::min(width, limits_.lineWidthRange[1]));
     if (commonState_.lineWidth != width)
     {
         commonState_.lineWidth = width;
-        glLineWidth(std::max(1.0f, width));
+        glLineWidth(width);
     }
 }
 

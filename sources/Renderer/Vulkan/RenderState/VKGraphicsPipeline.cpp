@@ -19,8 +19,8 @@ namespace LLGL
 
 
 VKGraphicsPipeline::VKGraphicsPipeline(
-    const VKPtr<VkDevice>& device, VkRenderPass renderPass, const VkExtent2D& extent,
-    const GraphicsPipelineDescriptor& desc, VkPipelineLayout defaultPipelineLayout) :
+    const VKPtr<VkDevice>& device, VkRenderPass renderPass, VkPipelineLayout defaultPipelineLayout,
+    const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent) :
         device_         { device                    },
         renderPass_     { renderPass                },
         pipelineLayout_ { defaultPipelineLayout     },
@@ -34,7 +34,7 @@ VKGraphicsPipeline::VKGraphicsPipeline(
     }
 
     /* Create Vulkan graphics pipeline object */
-    CreateGraphicsPipeline(desc, extent);
+    CreateGraphicsPipeline(desc, limits, extent);
 }
 
 
@@ -160,7 +160,7 @@ static void CreateViewportState(
     createInfo.pScissors = scissorsVK.data();
 }
 
-static void CreateRasterizerState(const GraphicsPipelineDescriptor& desc, VkPipelineRasterizationStateCreateInfo& createInfo)
+static void CreateRasterizerState(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, VkPipelineRasterizationStateCreateInfo& createInfo)
 {
     auto shaderProgramVK = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
 
@@ -176,7 +176,7 @@ static void CreateRasterizerState(const GraphicsPipelineDescriptor& desc, VkPipe
     createInfo.depthBiasConstantFactor  = desc.rasterizer.depthBiasConstantFactor;
     createInfo.depthBiasClamp           = desc.rasterizer.depthBiasClamp;
     createInfo.depthBiasSlopeFactor     = desc.rasterizer.depthBiasSlopeFactor;
-    createInfo.lineWidth                = desc.rasterizer.lineWidth;
+    createInfo.lineWidth                = std::max(limits.lineWidthRange[0], std::min(desc.rasterizer.lineWidth, limits.lineWidthRange[1]));
 }
 
 static VkSampleCountFlagBits GetSampleCountBitmask(const MultiSamplingDescriptor& desc)
@@ -321,7 +321,7 @@ static void CreateDynamicState(const GraphicsPipelineDescriptor& desc, VkPipelin
     createInfo.pDynamicStates       = (dynamicStatesVK.empty() ? nullptr : dynamicStatesVK.data());
 }
 
-void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent)
+void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent)
 {
     /* Get shader program object */
     auto shaderProgramVK = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
@@ -351,7 +351,7 @@ void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor
 
     /* Initialize rasterizer state */
     VkPipelineRasterizationStateCreateInfo rasterizerState;
-    CreateRasterizerState(desc, rasterizerState);
+    CreateRasterizerState(desc, limits, rasterizerState);
 
     /* Initialize multi-sample state */
     VkPipelineMultisampleStateCreateInfo multisampleState;

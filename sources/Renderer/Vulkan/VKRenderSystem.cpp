@@ -651,8 +651,8 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
     return TakeOwnership(
         graphicsPipelines_,
         MakeUnique<VKGraphicsPipeline>(
-            device_, renderPassVK, renderContext->GetSwapChainExtent(),
-            desc, defaultPipelineLayout_
+            device_, renderPassVK, defaultPipelineLayout_,
+            desc, gfxPipelineLimits_, renderContext->GetSwapChainExtent()
         )
     );
 }
@@ -886,6 +886,8 @@ void VKRenderSystem::QueryDeviceProperties()
         caps.hasViewportArrays                  = (features_.multiViewport != VK_FALSE);
         caps.hasConservativeRasterization       = false;
         caps.hasStreamOutputs                   = true;
+        caps.lineWidthRange[0]                  = limits.lineWidthRange[0];
+        caps.lineWidthRange[1]                  = limits.lineWidthRange[1];
         caps.maxNumTextureArrayLayers           = limits.maxImageArrayLayers;
         caps.maxNumRenderTargetAttachments      = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
         caps.maxConstantBufferSize              = 0; //???
@@ -906,6 +908,11 @@ void VKRenderSystem::QueryDeviceProperties()
         caps.maxViewportSize[1]                 = limits.maxViewportDimensions[1];
     }
     SetRenderingCaps(caps);
+
+    /* Store graphics pipeline spcific limitations */
+    gfxPipelineLimits_.lineWidthRange[0]    = limits.lineWidthRange[0];
+    gfxPipelineLimits_.lineWidthRange[1]    = limits.lineWidthRange[1];
+    gfxPipelineLimits_.lineWidthGranularity = limits.lineWidthGranularity;
 }
 
 // Device-only layers are deprecated -> set 'enabledLayerCount' and 'ppEnabledLayerNames' members to zero during device creation.
