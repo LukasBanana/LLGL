@@ -132,8 +132,8 @@ class VKCommandBuffer : public CommandBuffer
         void BeginCommandBuffer();
         void EndCommandBuffer();
 
-        void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
-        void EndRenderPass();
+        void SetRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
+        void SetRenderPassNull();
 
         // Returns the native VkCommandBuffer object.
         inline VkCommandBuffer GetVkCommandBuffer() const
@@ -158,6 +158,9 @@ class VKCommandBuffer : public CommandBuffer
         #endif
 
         void BindResourceViewHeap(VKResourceViewHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t startSlot);
+
+        void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
+        void EndRenderPass();
 
         VkDevice                        device_;
         VKPtr<VkCommandPool>            commandPool_;

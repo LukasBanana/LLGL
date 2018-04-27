@@ -21,6 +21,7 @@ namespace LLGL
 
 class ShaderProgram;
 class PipelineLayout;
+class RenderTarget;
 
 
 /* ----- Enumerations ----- */
@@ -524,6 +525,16 @@ struct GraphicsPipelineDescriptor
     */
     PipelineLayout*         pipelineLayout      = nullptr;
     #endif // /TODO
+
+    #if 1 // TODO: maybe find a better way to determine compatible vkRenderPass object.
+    /**
+    \brief Pointer to an optional render target that will be used with this graphics pipeline.
+    If this is null, the graphics pipeline will be compatible with a RenderContext only.
+    \remarks This is only used for the Vulkan renderer, to determine which 
+    \note Only supported with: Vulkan.
+    */
+    RenderTarget*           renderTarget        = nullptr;
+    #endif
 
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.

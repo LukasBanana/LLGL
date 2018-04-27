@@ -51,7 +51,7 @@ void VKRenderContext::Present()
         throw std::runtime_error("no command buffer set to present render context");
 
     /* End command buffer and render pass */
-    commandBuffer_->EndRenderPass();
+    commandBuffer_->SetRenderPassNull();
     commandBuffer_->EndCommandBuffer();
     
     /* Initialize semaphorse */

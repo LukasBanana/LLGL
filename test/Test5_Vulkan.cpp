@@ -14,7 +14,7 @@
 
 
 //#define TEST_QUERY
-//#define TEST_RENDER_TARGET
+#define TEST_RENDER_TARGET
 
 
 int main()
@@ -271,11 +271,6 @@ int main()
 
             pipelineDesc.blend.blendEnabled = true;
             pipelineDesc.blend.targets.push_back({});
-
-            #if 1
-            pipelineDesc.rasterizer.polygonMode = LLGL::PolygonMode::Wireframe;
-            pipelineDesc.rasterizer.lineWidth = 150.0f;
-            #endif
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
@@ -288,13 +283,16 @@ int main()
         // Create render target
         LLGL::RenderTargetDescriptor rtDesc;
         {
-            LLGL::AttachmentDescriptor attachmentDesc;
+            rtDesc.attachments =
             {
-                attachmentDesc.texture = renderTargetTex;
-            }
-            rtDesc.attachments.push_back(attachmentDesc);
+                LLGL::AttachmentDesc(LLGL::AttachmentType::Color, renderTargetTex)
+            };
         }
         auto renderTarget = renderer->CreateRenderTarget(rtDesc);
+
+        // Create render target graphics pipeline
+        pipelineDesc.renderTarget = renderTarget;
+        auto renderTargetPipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         #endif
 
@@ -376,7 +374,7 @@ int main()
             // Render scene into render target
             commands->SetRenderTarget(*renderTarget);
             commands->Clear(LLGL::ClearFlags::Color);
-            commands->SetGraphicsPipeline(*pipeline);
+            commands->SetGraphicsPipeline(*renderTargetPipeline);
             commands->SetVertexBuffer(*vertexBuffer);
             commands->SetGraphicsResourceViewHeap(*resourceViewHeap, 0);
             commands->Draw(4, 0);

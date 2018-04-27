@@ -297,12 +297,8 @@ void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
     if (!IsCommandBufferActive())
         BeginCommandBuffer();
 
-    /* End previous render pass */
-    if (renderPass_)
-        EndRenderPass();
-
-    /* Begin with new render pass */
-    BeginRenderPass(
+    /* Set new render pass */
+    SetRenderPass(
         renderTargetVK.GetVkRenderPass(),
         renderTargetVK.GetVkFramebuffer(),
         renderTargetVK.GetVkExtent()
@@ -331,12 +327,8 @@ void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
     if (!IsCommandBufferActive())
         BeginCommandBuffer();
 
-    /* End previous render pass */
-    if (renderPass_)
-        EndRenderPass();
-
-    /* Begin with new render pass */
-    BeginRenderPass(
+    /* Set new render pass */
+    SetRenderPass(
         renderContextVK.GetSwapChainRenderPass(),
         renderContextVK.GetSwapChainFramebuffer(),
         renderContextVK.GetSwapChainExtent()
@@ -539,13 +531,38 @@ void VKCommandBuffer::EndCommandBuffer()
     *commandBufferActiveIt_ = false;
 }
 
+void VKCommandBuffer::SetRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
+{
+    if (renderPass_)
+        EndRenderPass();
+
+    if (renderPass != VK_NULL_HANDLE)
+    {
+        /* Begin new render pass */
+        BeginRenderPass(renderPass, framebuffer, extent);
+
+        /* Store render pass and framebuffer attributes */
+        renderPass_         = renderPass;
+        framebuffer_        = framebuffer;
+        framebufferExtent_  = extent;
+    }
+}
+
+void VKCommandBuffer::SetRenderPassNull()
+{
+    if (renderPass_)
+    {
+        /* End current render pass */
+        EndRenderPass();
+
+        /* Reset render pass and framebuffer attributes */
+        renderPass_     = VK_NULL_HANDLE;
+        framebuffer_    = VK_NULL_HANDLE;
+    }
+}
+
 void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
 {
-    /* Store render pass and framebuffer attributes */
-    renderPass_         = renderPass;
-    framebuffer_        = framebuffer;
-    framebufferExtent_  = extent;
-
     /* Record begin of render pass */
     VkRenderPassBeginInfo beginInfo;
     {
@@ -565,10 +582,6 @@ void VKCommandBuffer::EndRenderPass()
 {
     /* Record and of render pass */
     vkCmdEndRenderPass(commandBuffer_);
-
-    /* Reset render pass and framebuffer attributes */
-    renderPass_     = VK_NULL_HANDLE;
-    framebuffer_    = VK_NULL_HANDLE;
 }
 
 

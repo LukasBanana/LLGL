@@ -6,8 +6,9 @@
  */
 
 #include "VKGraphicsPipeline.h"
-#include "../Shader/VKShaderProgram.h"
 #include "VKPipelineLayout.h"
+#include "../Shader/VKShaderProgram.h"
+#include "../Texture/VKRenderTarget.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
@@ -31,6 +32,13 @@ VKGraphicsPipeline::VKGraphicsPipeline(
     {
         auto pipelineLayoutVK = LLGL_CAST(VKPipelineLayout*, desc.pipelineLayout);
         pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
+    }
+
+    /* Use render pass from render target if it's specified */
+    if (desc.renderTarget)
+    {
+        auto renderTargetVK = LLGL_CAST(VKRenderTarget*, desc.renderTarget);
+        renderPass_ = renderTargetVK->GetVkRenderPass();
     }
 
     /* Create Vulkan graphics pipeline object */
