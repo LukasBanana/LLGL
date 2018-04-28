@@ -1,15 +1,14 @@
-// GLSL shader version 1.50 (for OpenGL 3.2)
-#version 150 core
-#extension GL_ARB_viewport_array : enable
+// GLSL shader version 4.50 (for Vulkan)
+#version 450
 
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 6) out;
 
 // Geometry input from the vertex shader
-in vec3 vertexColor[];
+layout(location = 0) in vec3 vertexColor[];
 
 // Geometry output color
-out vec3 geometryColor;
+layout(location = 0) out vec3 geometryColor;
 
 // Geometry shader main function
 void main()
