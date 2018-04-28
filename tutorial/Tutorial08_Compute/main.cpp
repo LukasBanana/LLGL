@@ -105,12 +105,10 @@ int main(int argc, char* argv[])
         // Create pipeline layout for Vulkan and Direct3D 12 render systems
         LLGL::PipelineLayoutDescriptor pipelineLayoutDesc;
         {
-            LLGL::LayoutBinding binding;
+            pipelineLayoutDesc.bindings =
             {
-                binding.type        = LLGL::ResourceViewType::StorageBuffer;
-                binding.stageFlags  = LLGL::ShaderStageFlags::ComputeStage;
-            }
-            pipelineLayoutDesc.bindings.push_back(binding);
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::StorageBuffer, 0, 1, LLGL::ShaderStageFlags::ComputeStage }
+            };
         }
         auto pipelineLayout = renderer->CreatePipelineLayout(pipelineLayoutDesc);
 

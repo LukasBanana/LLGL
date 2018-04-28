@@ -216,32 +216,13 @@ int main()
         // Create pipeline layout
         LLGL::PipelineLayoutDescriptor layoutDesc;
 
-        LLGL::LayoutBinding layoutBinding;
+        layoutDesc.bindings =
         {
-            layoutBinding.type          = LLGL::ResourceViewType::ConstantBuffer;
-            layoutBinding.startSlot     = 2;
-            layoutBinding.numSlots      = 1;
-            layoutBinding.stageFlags    = LLGL::ShaderStageFlags::VertexStage;
-        }
-        layoutDesc.bindings.push_back(layoutBinding);
-
-        {
-            layoutBinding.startSlot     = 5;
-            layoutBinding.stageFlags    = LLGL::ShaderStageFlags::FragmentStage;
-        }
-        layoutDesc.bindings.push_back(layoutBinding);
-
-        {
-            layoutBinding.type          = LLGL::ResourceViewType::Sampler;
-            layoutBinding.startSlot     = 3;
-        }
-        layoutDesc.bindings.push_back(layoutBinding);
-
-        {
-            layoutBinding.type          = LLGL::ResourceViewType::Texture;
-            layoutBinding.startSlot     = 4;
-        }
-        layoutDesc.bindings.push_back(layoutBinding);
+            LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::ConstantBuffer, 2, 1, LLGL::ShaderStageFlags::VertexStage   },
+            LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::ConstantBuffer, 5, 1, LLGL::ShaderStageFlags::FragmentStage },
+            LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::Sampler,        3, 1, LLGL::ShaderStageFlags::FragmentStage },
+            LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::Texture,        4, 1, LLGL::ShaderStageFlags::FragmentStage },
+        };
 
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
@@ -285,7 +266,7 @@ int main()
         {
             rtDesc.attachments =
             {
-                LLGL::AttachmentDesc(LLGL::AttachmentType::Color, renderTargetTex)
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
             };
         }
         auto renderTarget = renderer->CreateRenderTarget(rtDesc);

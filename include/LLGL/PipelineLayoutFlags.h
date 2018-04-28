@@ -20,24 +20,25 @@ namespace LLGL
 {
 
 
-/* ----- Enumerations ----- */
-
-//! Pipeline type enumeration.
-enum class PipelineType
-{
-    Graphics,   //!< Specifies the graphics shader pipeline.
-    Compute,    //!< Specifies the compute shader pipeline.
-};
-
-
 /* ----- Structures ----- */
 
 /**
 \brief Layout structure for a single binding point of the pipeline layout descriptor.
 \see PipelineLayoutDescriptor
 */
-struct LayoutBinding
+struct LayoutBindingDescriptor
 {
+    LayoutBindingDescriptor() = default;
+    LayoutBindingDescriptor(const LayoutBindingDescriptor&) = default;
+
+    inline LayoutBindingDescriptor(ResourceViewType type, std::uint32_t startSlot, std::uint32_t numSlots = 1, long stageFlags = ShaderStageFlags::AllStages) :
+        type       { type       },
+        startSlot  { startSlot  },
+        numSlots   { numSlots   },
+        stageFlags { stageFlags }
+    {
+    }
+
     //! Resource view type for this layout binding. By default ResourceViewType::ConstantBuffer.
     ResourceViewType    type        = ResourceViewType::ConstantBuffer;
 
@@ -63,7 +64,7 @@ struct LayoutBinding
 */
 struct PipelineLayoutDescriptor
 {
-    std::vector<LayoutBinding> bindings; //!< List of layout resource bindings.
+    std::vector<LayoutBindingDescriptor> bindings; //!< List of layout resource bindings.
 };
 
 

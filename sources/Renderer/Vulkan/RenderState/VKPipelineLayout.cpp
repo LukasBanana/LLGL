@@ -38,7 +38,7 @@ static VkShaderStageFlags GetVkShaderStageFlags(long flags)
 //TODO:
 // looks like 'VkDescriptorSetLayoutBinding::descriptorCount' can only be greater than 1
 // for arrays in a shader (e.g. array of uniform buffers), but not for multiple binding points.
-static void Convert(VkDescriptorSetLayoutBinding& dst, const LayoutBinding& src)
+static void Convert(VkDescriptorSetLayoutBinding& dst, const LayoutBindingDescriptor& src)
 {
     dst.binding             = src.startSlot;
     dst.descriptorType      = VKTypes::Map(src.type);

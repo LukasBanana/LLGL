@@ -12,7 +12,7 @@
 //#define AUTO_ROTATE
 
 // Enable multi-sampling anti-aliasing
-#define ENABLE_MULTISAMPLING
+//#define ENABLE_MULTISAMPLING
 
 // Test constant buffer array
 //#define _TEST_BUFFER_ARRAY_
@@ -27,6 +27,9 @@ class Tutorial02 : public Tutorial
     LLGL::Buffer*           vertexBuffer        = nullptr;
     LLGL::Buffer*           indexBuffer         = nullptr;
     LLGL::Buffer*           constantBuffer      = nullptr;
+
+    LLGL::PipelineLayout*   pipelineLayout      = nullptr;
+    LLGL::ResourceViewHeap* resourceView        = nullptr;
 
     #ifdef _TEST_BUFFER_ARRAY_
     LLGL::BufferArray*      constantBufferArray = nullptr;
@@ -61,8 +64,7 @@ public:
 
         // Create graphics object
         auto vertexFormat = CreateBuffers();
-        const auto& languages = renderCaps.shadingLanguages;
-        LoadShaders(vertexFormat, (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end()));
+        LoadShaders(vertexFormat);
         CreatePipelines();
 
         // Print some information on the standard output
@@ -79,6 +81,8 @@ public:
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float3 });
 
+        UpdateUserInput();
+
         // Create buffers for a simple 3D cube model
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);
         indexBuffer = CreateIndexBuffer(GenerateCubeQuadlIndices(), LLGL::DataType::UInt32);
@@ -94,22 +98,12 @@ public:
         return vertexFormat;
     }
 
-    void LoadShaders(const LLGL::VertexFormat& vertexFormat, bool loadHLSL)
+    void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
         // Load shader program
-        if (loadHLSL)
-        {
-            shaderProgram = LoadShaderProgram(
-                {
-                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
-                    { LLGL::ShaderType::TessControl, "shader.hlsl", "HS", "hs_5_0" },
-                    { LLGL::ShaderType::TessEvaluation, "shader.hlsl", "DS", "ds_5_0" },
-                    { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
-                },
-                { vertexFormat }
-            );
-        }
-        else
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
             shaderProgram = LoadShaderProgram(
                 {
@@ -121,6 +115,30 @@ public:
                 { vertexFormat }
             );
         }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "vertex.450core.spv" },
+                    { LLGL::ShaderType::TessControl, "tesscontrol.450core.spv" },
+                    { LLGL::ShaderType::TessEvaluation, "tesseval.450core.spv" },
+                    { LLGL::ShaderType::Fragment, "fragment.450core.spv" }
+                },
+                { vertexFormat }
+            );
+        }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
+                    { LLGL::ShaderType::TessControl, "shader.hlsl", "HS", "hs_5_0" },
+                    { LLGL::ShaderType::TessEvaluation, "shader.hlsl", "DS", "ds_5_0" },
+                    { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
+                },
+                { vertexFormat }
+            );
+        }
 
         // Bind constant buffer location to the index we use later with the render context
         shaderProgram->BindConstantBuffer("Settings", constantBufferIndex);
@@ -128,11 +146,38 @@ public:
 
     void CreatePipelines()
     {
+        // Create pipeline layout
+        LLGL::PipelineLayoutDescriptor plDesc;
+        {
+            plDesc.bindings =
+            {
+                LLGL::LayoutBindingDescriptor
+                {
+                    LLGL::ResourceViewType::ConstantBuffer,
+                    constantBufferIndex,
+                    1,
+                    LLGL::ShaderStageFlags::AllTessStages
+                }
+            };
+        }
+        pipelineLayout = renderer->CreatePipelineLayout(plDesc);
+
+        // Create resource view heap
+        LLGL::ResourceViewHeapDescriptor rvhDesc;
+        {
+            rvhDesc.pipelineLayout  = pipelineLayout;
+            rvhDesc.resourceViews   = { LLGL::ResourceViewDesc(constantBuffer) };
+        }
+        resourceView = renderer->CreateResourceViewHeap(rvhDesc);
+
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             // Set shader program
             pipelineDesc.shaderProgram              = shaderProgram;
+
+            // Set pipeline layout
+            pipelineDesc.pipelineLayout             = pipelineLayout;
 
             // Set input-assembler state (draw pachtes with 4 control points)
             pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::Patches4;
@@ -142,9 +187,11 @@ public:
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
 
+            #if 0
             // Enable depth test and writing
             pipelineDesc.depth.testEnabled          = true;
             pipelineDesc.depth.writeEnabled         = true;
+            #endif
 
             // Enable back-face culling
             pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
@@ -214,8 +261,15 @@ private:
         // Set the render context as the initial render target
         commands->SetRenderTarget(*context);
 
+        // Set viewport and scissor
+        const auto resolution = context->GetVideoMode().resolution;
+        const auto viewportSize = resolution.Cast<float>();
+
+        commands->SetViewport(LLGL::Viewport { 0.0f, 0.0f, viewportSize.x, viewportSize.y });
+        commands->SetScissor(LLGL::Scissor { 0, 0, resolution.x, resolution.y });
+
         // Clear color- and depth buffers
-        commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
+        commands->Clear(LLGL::ClearFlags::ColorDepth);
 
         // Update constant buffer
         UpdateBuffer(constantBuffer, settings);
@@ -227,18 +281,28 @@ private:
         commands->SetVertexBuffer(*vertexBuffer);
         commands->SetIndexBuffer(*indexBuffer);
 
-        // Set constant buffer only to tessellation shader stages
-        #ifdef _TEST_BUFFER_ARRAY_
-        commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
-        #else
-        commands->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
-        #endif
+        if (resourceView)
+        {
+            // Bind resource view heap to graphics pipeline
+            commands->SetGraphicsResourceViewHeap(*resourceView, 0);
+        }
+        else
+        {
+            // Set constant buffer only to tessellation shader stages
+            #ifdef _TEST_BUFFER_ARRAY_
+            commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+            #else
+            commands->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+            #endif
+        }
 
         // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
         commands->DrawIndexed(24, 0);
 
         // Present result on the screen
         context->Present();
+
+        renderer->GetCommandQueue()->WaitForFinish();
     }
 
     void OnDrawFrame() override
