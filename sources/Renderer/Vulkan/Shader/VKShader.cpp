@@ -64,16 +64,39 @@ std::string VKShader::Disassemble(int flags)
     return ""; // dummy
 }
 
+static const char* ToString(const ShaderType t)
+{
+    switch (t)
+    {
+        case ShaderType::Vertex:            return "vertex shader";
+        case ShaderType::TessControl:       return "tessellation control shader";
+        case ShaderType::TessEvaluation:    return "tessellation evaluation shader";
+        case ShaderType::Geometry:          return "geometry shader";
+        case ShaderType::Fragment:          return "fragment shader";
+        case ShaderType::Compute:           return "compute shader";
+    }
+    return nullptr;
+}
+
 std::string VKShader::QueryInfoLog()
 {
+    std::string s;
+
     switch (loadBinaryResult_)
     {
+        case LoadBinaryResult::Undefined:
+            s += ToString(GetType());
+            s += ": shader module is undefined";
+            break;
         case LoadBinaryResult::InvalidCodeSize:
-            return "shader module code size is not a multiple of four bytes";
+            s += ToString(GetType());
+            s += ": shader module code size is not a multiple of four bytes";
+            break;
         default:
             break;
     }
-    return "";
+
+    return s;
 }
 
 void VKShader::FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo) const

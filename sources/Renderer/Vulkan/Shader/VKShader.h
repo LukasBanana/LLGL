@@ -45,13 +45,14 @@ class VKShader : public Shader
 
         enum class LoadBinaryResult
         {
+            Undefined,
             Success,
             InvalidCodeSize,
         };
 
         VkDevice                device_             = VK_NULL_HANDLE;
         VKPtr<VkShaderModule>   shaderModule_;
-        LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Success;
+        LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Undefined;
 
         std::string             entryPoint_;
 

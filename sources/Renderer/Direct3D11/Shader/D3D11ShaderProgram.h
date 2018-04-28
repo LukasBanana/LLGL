@@ -64,13 +64,6 @@ class D3D11ShaderProgram : public ShaderProgram
 
     private:
 
-        enum class LinkError
-        {
-            NoError,
-            Composition,
-            ByteCode,
-        };
-
         ID3D11Device*                               device_                 = nullptr;
 
         ComPtr<ID3D11InputLayout>                   inputLayout_;

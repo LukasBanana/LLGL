@@ -40,12 +40,55 @@ void VKShaderProgram::DetachAll()
 
 bool VKShaderProgram::LinkShaders()
 {
-    return true; //todo
+    linkError_ = LinkError::NoError;
+
+    /* Validate hardware shader objects */
+    Shader* shaders[6] = {};
+    std::size_t numShaders = 0;
+
+    for (auto shader : shaders_)
+    {
+        if (shader)
+        {
+            if (shader->GetShaderModule() != VK_NULL_HANDLE)
+            {
+                if (numShaders < 6)
+                {
+                    /* Store shader in array and increment counter */
+                    shaders[numShaders++] = shader;
+                }
+                else
+                {
+                    /* Error: too many shaders attached */
+                    linkError_ = LinkError::TooManyAttachments;
+                    return false;
+                }
+            }
+            else
+            {
+                /* Error: invalid shader module */
+                linkError_ = LinkError::IncompleteAttachments;
+                return false;
+            }
+        }
+    };
+
+    /* Validate composition of attached shaders */
+    if (!ValidateShaderComposition(shaders, numShaders))
+    {
+        linkError_ = LinkError::InvalidComposition;
+        return false;
+    }
+
+    return (linkError_ == LinkError::NoError);
 }
 
 std::string VKShaderProgram::QueryInfoLog()
 {
-    return ""; //todo
+    if (auto s = ShaderProgram::LinkErrorToString(linkError_))
+        return s;
+    else
+        return "";
 }
 
 

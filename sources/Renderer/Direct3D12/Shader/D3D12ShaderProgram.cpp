@@ -94,70 +94,31 @@ void D3D12ShaderProgram::DetachAll()
 
 bool D3D12ShaderProgram::LinkShaders()
 {
-    enum ShaderTypeMask
-    {
-        MaskVS = (1 << 0),
-        MaskHS = (1 << 1),
-        MaskDS = (1 << 2),
-        MaskGS = (1 << 3),
-        MaskPS = (1 << 4),
-        MaskCS = (1 << 5),
-    };
-
     /* Validate shader composition */
     linkError_ = LinkError::NoError;
 
-    int flags = 0;
+    /* Validate hardware shader objects */
+    Shader* shaders[] = { vs_, hs_, ds_, gs_, ps_, cs_ };
 
-    auto MarkShader = [&](D3D12Shader* shader, ShaderTypeMask mask)
+    for (std::size_t i = 0; i < 6; ++i)
     {
-        if (shader)
-        {
-            if (shader->GetByteCode().BytecodeLength == 0)
-                linkError_ = LinkError::ByteCode;
-            flags |= mask;
-        }
-    };
-
-    MarkShader(vs_, MaskVS);
-    MarkShader(hs_, MaskHS);
-    MarkShader(ds_, MaskDS);
-    MarkShader(gs_, MaskGS);
-    MarkShader(ps_, MaskPS);
-    MarkShader(cs_, MaskCS);
-
-    switch (flags)
-    {
-        case (MaskVS                                    ):
-        case (MaskVS |                   MaskGS         ):
-        case (MaskVS | MaskDS | MaskHS                  ):
-        case (MaskVS | MaskDS | MaskHS | MaskGS         ):
-        case (MaskVS |                            MaskPS):
-        case (MaskVS |                   MaskGS | MaskPS):
-        case (MaskVS | MaskDS | MaskHS |          MaskPS):
-        case (MaskVS | MaskDS | MaskHS | MaskGS | MaskPS):
-        case (MaskCS):
-            break;
-        default:
-            linkError_ = LinkError::Composition;
-            break;
+        if (shaders[i] != nullptr && static_cast<D3D12Shader*>(shaders[i])->GetByteCode().BytecodeLength == 0)
+            linkError_ = LinkError::InvalidByteCode;
     }
+
+    /* Validate composition of attached shaders */
+    if (!ValidateShaderComposition(shaders, 6))
+        linkError_ = LinkError::InvalidComposition;
 
     return (linkError_ == LinkError::NoError);
 }
 
 std::string D3D12ShaderProgram::QueryInfoLog()
 {
-    switch (linkError_)
-    {
-        case LinkError::Composition:
-            return "invalid composition of attached shaders";
-        case LinkError::ByteCode:
-            return "invalid shader byte code";
-        default:
-            break;
-    }
-    return "";
+    if (auto s = ShaderProgram::LinkErrorToString(linkError_))
+        return s;
+    else
+        return "";
 }
 
 std::vector<VertexAttribute> D3D12ShaderProgram::QueryVertexAttributes() const

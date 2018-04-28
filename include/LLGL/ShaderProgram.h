@@ -32,9 +32,7 @@ class LLGL_EXPORT ShaderProgram
         ShaderProgram(const ShaderProgram&) = delete;
         ShaderProgram& operator = (const ShaderProgram&) = delete;
 
-        virtual ~ShaderProgram()
-        {
-        }
+        virtual ~ShaderProgram();
 
         /**
         \brief Attaches the specified shader to this shader program.
@@ -150,6 +148,29 @@ class LLGL_EXPORT ShaderProgram
         virtual void UnlockShaderUniform() = 0;
 
     protected:
+
+        //! Linker error codes for internal error checking.
+        enum class LinkError
+        {
+            NoError,
+            InvalidComposition,
+            InvalidByteCode,
+            TooManyAttachments,
+            IncompleteAttachments,
+        };
+
+        /**
+        \brief Validates the composition of the specified shader attachments.
+        \param[in] shaders Array of Shader objects that belong to this shader program. Null pointers within the array are ignored.
+        \param[in] numShaders Specifies the number of entries in the array 'shaders'. This must not be larger than the number of entries in the 'shaders' array.
+        \return True if the shader composition is valid, otherwise false.
+        \remarks For example, a composition of a compute shader and a fragment shader is invalid,
+        but a composition of a vertex shader and a fragment shader is valid.
+        */
+        bool ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders) const;
+
+        //! Returns a string representation for the specified shader linker error, or null if the no error is entered (i.e. LinkError::NoError).
+        static const char* LinkErrorToString(const LinkError errorCode);
 
         ShaderProgram() = default;
 

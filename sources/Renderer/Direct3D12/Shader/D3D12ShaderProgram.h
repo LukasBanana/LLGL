@@ -76,13 +76,6 @@ class D3D12ShaderProgram : public ShaderProgram
 
     private:
 
-        enum class LinkError
-        {
-            NoError,
-            Composition,
-            ByteCode,
-        };
-
         std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
 
         D3D12Shader*                                vs_                     = nullptr;

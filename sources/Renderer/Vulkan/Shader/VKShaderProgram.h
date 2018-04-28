@@ -66,6 +66,8 @@ class VKShaderProgram : public ShaderProgram
         std::vector<VkVertexInputBindingDescription>    vertexBindingDescs_;
         std::vector<VkVertexInputAttributeDescription>  vertexAttribDescs_;
 
+        LinkError                                       linkError_          = LinkError::NoError;
+
 };
 
 
