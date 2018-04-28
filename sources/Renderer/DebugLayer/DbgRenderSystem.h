@@ -92,6 +92,12 @@ class DbgRenderSystem : public RenderSystem
         void Release(Sampler& sampler) override;
         void Release(SamplerArray& samplerArray) override;
 
+        /* ----- Resource Views ----- */
+
+        ResourceViewHeap* CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc) override;
+
+        void Release(ResourceViewHeap& resourceViewHeap) override;
+
         /* ----- Render Targets ----- */
 
         RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;
@@ -105,6 +111,12 @@ class DbgRenderSystem : public RenderSystem
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
+
+        /* ----- Pipeline Layouts ----- */
+
+        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) override;
+
+        void Release(PipelineLayout& pipelineLayout) override;
 
         /* ----- Pipeline States ----- */
 

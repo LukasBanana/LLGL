@@ -327,6 +327,37 @@ void DbgRenderSystem::Release(SamplerArray& samplerArray)
     //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
+/* ----- Resource Views ----- */
+
+ResourceViewHeap* DbgRenderSystem::CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc)
+{
+    auto instanceDesc = desc;
+    {
+        for (auto& resourceView : instanceDesc.resourceViews)
+        {
+            switch (resourceView.type)
+            {
+                case ResourceViewType::Sampler:
+                    //todo
+                    break;
+                case ResourceViewType::Texture:
+                    resourceView.texture = &(LLGL_CAST(DbgTexture*, resourceView.texture)->instance);
+                    break;
+                case ResourceViewType::ConstantBuffer:
+                case ResourceViewType::StorageBuffer:
+                    resourceView.buffer = &(LLGL_CAST(DbgBuffer*, resourceView.buffer)->instance);
+                    break;
+            }
+        }
+    }
+    return instance_->CreateResourceViewHeap(instanceDesc);
+}
+
+void DbgRenderSystem::Release(ResourceViewHeap& resourceViewHeap)
+{
+    return instance_->Release(resourceViewHeap);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
@@ -361,6 +392,18 @@ void DbgRenderSystem::Release(ShaderProgram& shaderProgram)
     ReleaseDbg(shaderPrograms_, shaderProgram);
 }
 
+/* ----- Pipeline Layouts ----- */
+
+PipelineLayout* DbgRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+{
+    return instance_->CreatePipelineLayout(desc);
+}
+
+void DbgRenderSystem::Release(PipelineLayout& pipelineLayout)
+{
+    instance_->Release(pipelineLayout);
+}
+
 /* ----- Pipeline States ----- */
 
 GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
@@ -392,7 +435,7 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
 
     if (desc.shaderProgram)
     {
-        GraphicsPipelineDescriptor instanceDesc = desc;
+        auto instanceDesc = desc;
         {
             auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, desc.shaderProgram);
             instanceDesc.shaderProgram = &(shaderProgramDbg->instance);
@@ -409,7 +452,7 @@ ComputePipeline* DbgRenderSystem::CreateComputePipeline(const ComputePipelineDes
 {
     if (desc.shaderProgram)
     {
-        ComputePipelineDescriptor instanceDesc = desc;
+        auto instanceDesc = desc;
         {
             auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, desc.shaderProgram);
             instanceDesc.shaderProgram = &(shaderProgramDbg->instance);

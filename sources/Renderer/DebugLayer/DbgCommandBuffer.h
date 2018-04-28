@@ -83,6 +83,11 @@ class DbgCommandBuffer : public CommandBuffer
         void SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
+        /* ----- Resource View Heaps ----- */
+
+        void SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
+
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;

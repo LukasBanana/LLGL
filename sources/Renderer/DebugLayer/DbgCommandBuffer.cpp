@@ -338,6 +338,18 @@ void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
 
+/* ----- Resource View Heaps ----- */
+
+void DbgCommandBuffer::SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)
+{
+    instance.SetGraphicsResourceViewHeap(resourceHeap, startSlot);
+}
+
+void DbgCommandBuffer::SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)
+{
+    instance.SetComputeResourceViewHeap(resourceHeap, startSlot);
+}
+
 /* ----- Render Targets ----- */
 
 void DbgCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
