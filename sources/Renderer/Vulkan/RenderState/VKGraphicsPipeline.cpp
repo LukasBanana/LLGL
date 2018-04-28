@@ -314,11 +314,7 @@ static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBl
 static void CreateDynamicState(const GraphicsPipelineDescriptor& desc, VkPipelineDynamicStateCreateInfo& createInfo, std::vector<VkDynamicState>& dynamicStatesVK)
 {
     if (desc.viewports.empty())
-    {
         dynamicStatesVK.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-        dynamicStatesVK.push_back(VK_DYNAMIC_STATE_DEPTH_BOUNDS);
-    }
-
     if (desc.scissors.empty())
         dynamicStatesVK.push_back(VK_DYNAMIC_STATE_SCISSOR);
 

@@ -23,7 +23,7 @@ void D3D11StateManager::SetViewports(std::uint32_t numViewports, const Viewport*
 {
     numViewports = std::min(numViewports, std::size_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
-    /* Check if D3D11_VIEWPORT and Viewport structures can be safly reinterpret-casted */
+    /* Check if D3D11_VIEWPORT and Viewport structures can be safely reinterpret-casted */
     if ( sizeof(D3D11_VIEWPORT)             == sizeof(Viewport)             &&
          offsetof(D3D11_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
          offsetof(D3D11_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&

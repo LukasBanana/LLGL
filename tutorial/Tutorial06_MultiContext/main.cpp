@@ -97,17 +97,41 @@ int main(int argc, char* argv[])
         auto ReadFileContent = [](const std::string& filename)
         {
             std::ifstream file(filename);
+
+            if (!file.good())
+                throw std::runtime_error("failed to read file: \"" + filename + "\"");
+
             return std::string(
                 ( std::istreambuf_iterator<char>(file) ),
                 ( std::istreambuf_iterator<char>() )
             );
         };
 
+        auto ReadBinaryFile = [](const std::string& filename)
+        {
+            // Read file and for failure
+            std::ifstream file { filename, std::ios_base::binary | std::ios_base::ate };
+
+            if (!file.good())
+                throw std::runtime_error("failed to read file: \"" + filename + "\"");
+
+            const auto fileSize = static_cast<size_t>(file.tellg());
+            std::vector<char> buffer(fileSize);
+
+            file.seekg(0);
+            file.read(buffer.data(), fileSize);
+
+            return buffer;
+        };
+
         // Load vertex - and fragment shader code from file
-        auto CompileShader = [](LLGL::Shader* shader, const std::string& source, const LLGL::ShaderDescriptor& shaderDesc = {})
+        auto CompileShader = [](LLGL::Shader* shader, const std::string& source, std::vector<char> byteCode = {}, const LLGL::ShaderDescriptor& shaderDesc = {})
         {
             // Compile shader
-            shader->Compile(source, shaderDesc);
+            if (byteCode.empty())
+                shader->Compile(source, shaderDesc);
+            else
+                shader->LoadBinary(std::move(byteCode), shaderDesc);
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
@@ -116,18 +140,24 @@ int main(int argc, char* argv[])
         };
 
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
-        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
-        {
-            auto shaderCode = ReadFileContent("shader.hlsl");
-            CompileShader(vertexShader, shaderCode, { "VS", "vs_4_0" });
-            CompileShader(geometryShader, shaderCode, { "GS", "gs_4_0" });
-            CompileShader(fragmentShader, shaderCode, { "PS", "ps_4_0" });
-        }
-        else
+        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
             CompileShader(vertexShader, ReadFileContent("vertex.glsl"));
             CompileShader(geometryShader, ReadFileContent("geometry.glsl"));
             CompileShader(fragmentShader, ReadFileContent("fragment.glsl"));
+        }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
+        {
+            CompileShader(vertexShader, "", ReadBinaryFile("vertex.450core.spv"));
+            CompileShader(geometryShader, "", ReadBinaryFile("geometry.450core.spv"));
+            CompileShader(fragmentShader, "", ReadBinaryFile("fragment.450core.spv"));
+        }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+        {
+            auto shaderCode = ReadFileContent("shader.hlsl");
+            CompileShader(vertexShader, shaderCode, {}, { "VS", "vs_4_0" });
+            CompileShader(geometryShader, shaderCode, {}, { "GS", "gs_4_0" });
+            CompileShader(fragmentShader, shaderCode, {}, { "PS", "ps_4_0" });
         }
 
         // Create shader program which is used as composite
@@ -161,28 +191,23 @@ int main(int argc, char* argv[])
             LLGL::Viewport { 320.0f, 0.0f, 320.0f, 480.0f },
         };
 
-        // Set viewport array
-        commands->SetViewportArray(2, viewports);
-
-        // For Direct3D12
+        // For Direct3D12 and Vulkan
         LLGL::Scissor scissors[2] =
         {
             LLGL::Scissor {   0, 0, 320, 480 },
             LLGL::Scissor { 320, 0, 320, 480 },
         };
-
-        commands->SetScissorArray(2, scissors);
         
         // Enter main loop
         while ( ( window1.ProcessEvents() || window2.ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
         {
             // Draw content in 1st render context
-            /*
-            TODO: replace with:
-            commands->BeginRenderPass(*renderPass1);
-            */
             commands->SetRenderTarget(*context1);
             {
+                // Set viewport and scissor arrays
+                commands->SetViewportArray(2, viewports);
+                commands->SetScissorArray(2, scissors);
+
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);
 
@@ -198,15 +223,15 @@ int main(int argc, char* argv[])
                 // Present the result on the screen
                 context1->Present();
             }
-            /*
-            TODO: replace with:
-            commands->EndRenderPass(*renderPass1);
-            context1->Present();
-            */
-
+            renderer->GetCommandQueue()->WaitForFinish();
+            
             // Draw content in 2nd render context
             commands->SetRenderTarget(*context2);
             {
+                // Set viewport and scissor arrays
+                commands->SetViewportArray(2, viewports);
+                commands->SetScissorArray(2, scissors);
+
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);
 
@@ -222,6 +247,7 @@ int main(int argc, char* argv[])
                 // Present the result on the screen
                 context2->Present();
             }
+            renderer->GetCommandQueue()->WaitForFinish();
         }
     }
     catch (const std::exception& e)
