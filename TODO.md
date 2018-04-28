@@ -7,13 +7,13 @@ Common
 
 | Subject | Progress | Priority | Remarks |
 |---------|:--------:|:--------:|---------|
-| Depth textures | 0% | Very High | Depth buffers from render targets can currently *not* be used as textures |
+| Depth textures | 50% | Very High | Depth buffers from render targets can currently *not* be used as textures (only supported with GL renderer) |
 | Mobile surface | 50% | High | Special interface for mobile platforms is required (`Surface` -> `Canvas`/`Window` interfaces) |
 | Stream outputs | 90% | High | An interface for stream outputs (transform feedback) is required |
 | Copy functions | 0% | Medium | Functions for Buffer and Texture copying are required |
 | Query arrays | 0% | Low | Queries shall be grouped to arrays with a "QueryArray" interface |
 | Atomic counter | 0% | Low | Add "AtomicCounter" interface (GL_ATOMIC_COUNTER_BUFFER, ID3D11Counter) |
-| Shader class interfaces | 0% | Low | An interface for shader classes (also "Subroutines") is required |
+| Shader class interfaces | 0% | Low | An interface for shader classes (also "Subroutines") is required (possibly never supported) |
 
 | Planned Feature | Relevance | Remarks |
 |-----------------|:---------:|---------|
