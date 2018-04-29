@@ -571,6 +571,7 @@ void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fi
     {
         LLGL_DBG_SOURCE;
         DebugInstancing();
+        DebugOffsetInstancing();
         DebugDraw(numVertices, firstVertex, numInstances, instanceOffset);
     }
     
@@ -613,6 +614,7 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint
     {
         LLGL_DBG_SOURCE;
         DebugInstancing();
+        DebugOffsetInstancing();
         DebugDrawIndexed(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
     }
     
@@ -849,6 +851,12 @@ void DbgCommandBuffer::DebugInstancing()
 {
     if (!caps_.hasInstancing)
         LLGL_DBG_ERROR_NOT_SUPPORTED("instancing");
+}
+
+void DbgCommandBuffer::DebugOffsetInstancing()
+{
+    if (!caps_.hasOffsetInstancing)
+        LLGL_DBG_ERROR_NOT_SUPPORTED("offset-instancing");
 }
 
 void DbgCommandBuffer::DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit)

@@ -157,6 +157,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void DebugDrawIndexed(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset);
 
         void DebugInstancing();
+        void DebugOffsetInstancing();
         void DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit);
         void DebugThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
 
