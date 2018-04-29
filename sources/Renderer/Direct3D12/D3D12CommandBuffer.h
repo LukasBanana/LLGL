@@ -42,10 +42,10 @@ class D3D12CommandBuffer : public CommandBuffer
         /* ----- Viewport and Scissor ----- */
 
         void SetViewport(const Viewport& viewport) override;
-        void SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray) override;
+        void SetViewports(std::uint32_t numViewports, const Viewport* viewports) override;
 
         void SetScissor(const Scissor& scissor) override;
-        void SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray) override;
+        void SetScissors(std::uint32_t numScissors, const Scissor* scissors) override;
 
         /* ----- Clear ----- */
 

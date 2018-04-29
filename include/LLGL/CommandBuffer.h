@@ -75,8 +75,8 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Sets a single viewport.
-        \remarks Similar to SetViewportArray but only a single viewport is set.
-        \see SetViewportArray
+        \remarks Similar to SetViewports but only a single viewport is set.
+        \see SetViewports
         */
         virtual void SetViewport(const Viewport& viewport) = 0;
 
@@ -92,14 +92,13 @@ class LLGL_EXPORT CommandBuffer
         \see SetGraphicsAPIDependentState
         \see RenderingCaps::maxNumViewports
         */
-        //TODO: rename to "SetViewports"
-        virtual void SetViewportArray(std::uint32_t numViewports, const Viewport* viewports) = 0;
+        virtual void SetViewports(std::uint32_t numViewports, const Viewport* viewports) = 0;
 
         /**
         \brief Sets a single scissor rectangle.
-        \remarks Similar to SetScissorArray but only a single scissor rectangle is set.
+        \remarks Similar to SetScissors but only a single scissor rectangle is set.
         \note This state is guaranteed to be persistent.
-        \see SetScissorArray
+        \see SetScissors
         */
         virtual void SetScissor(const Scissor& scissor) = 0;
 
@@ -114,8 +113,7 @@ class LLGL_EXPORT CommandBuffer
         \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
         */
-        //TODO: rename to "SetScissors"
-        virtual void SetScissorArray(std::uint32_t numScissors, const Scissor* scissors) = 0;
+        virtual void SetScissors(std::uint32_t numScissors, const Scissor* scissors) = 0;
 
         /* ----- Clear ----- */
 

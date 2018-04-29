@@ -47,18 +47,18 @@ void DbgCommandBuffer::SetViewport(const Viewport& viewport)
     instance.SetViewport(viewport);
 }
 
-void DbgCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
+void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        if (!viewportArray)
+        if (!viewports)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "viewport array must not be a null pointer");
         if (numViewports == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no viewports are specified");
     }
 
-    instance.SetViewportArray(numViewports, viewportArray);
+    instance.SetViewports(numViewports, viewports);
 }
 
 void DbgCommandBuffer::SetScissor(const Scissor& scissor)
@@ -66,18 +66,18 @@ void DbgCommandBuffer::SetScissor(const Scissor& scissor)
     instance.SetScissor(scissor);
 }
 
-void DbgCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
+void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        if (!scissorArray)
+        if (!scissors)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "scissor array must not be a null pointer");
         if (numScissors == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no scissor rectangles are specified");
     }
 
-    instance.SetScissorArray(numScissors, scissorArray);
+    instance.SetScissors(numScissors, scissors);
 }
 
 /* ----- Clear ----- */

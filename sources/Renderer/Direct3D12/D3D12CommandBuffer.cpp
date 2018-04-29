@@ -48,9 +48,9 @@ void D3D12CommandBuffer::SetViewport(const Viewport& viewport)
     stateMngr_.SubmitViewports(commandList_.Get());
 }
 
-void D3D12CommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
+void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    stateMngr_.SetViewports(numViewports, viewportArray);
+    stateMngr_.SetViewports(numViewports, viewports);
     stateMngr_.SubmitViewports(commandList_.Get());
 }
 
@@ -60,9 +60,9 @@ void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
     stateMngr_.SubmitScissors(commandList_.Get());
 }
 
-void D3D12CommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
+void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    stateMngr_.SetScissors(numScissors, scissorArray);
+    stateMngr_.SetScissors(numScissors, scissors);
     stateMngr_.SubmitScissors(commandList_.Get());
 }
 

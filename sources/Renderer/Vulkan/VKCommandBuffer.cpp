@@ -92,12 +92,12 @@ void VKCommandBuffer::SetViewport(const Viewport& viewport)
     }
 }
 
-void VKCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
+void VKCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
     if (IsCompatibleToVkViewport())
     {
         /* Cast viewport to VkViewport types */
-        vkCmdSetViewport(commandBuffer_, 0, numViewports, reinterpret_cast<const VkViewport*>(viewportArray));
+        vkCmdSetViewport(commandBuffer_, 0, numViewports, reinterpret_cast<const VkViewport*>(viewports));
     }
     else
     {
@@ -109,7 +109,7 @@ void VKCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewpor
             count = std::min(numViewports, g_maxNumViewportsPerBatch);
 
             for (first = i; i < first + count; ++i)
-                Convert(viewportsVK[i - first], viewportArray[i]);
+                Convert(viewportsVK[i - first], viewports[i]);
 
             vkCmdSetViewport(commandBuffer_, first, count, viewportsVK);
         }
@@ -132,7 +132,7 @@ void VKCommandBuffer::SetScissor(const Scissor& scissor)
     vkCmdSetScissor(commandBuffer_, 0, 1, &scissorVK);
 }
 
-void VKCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
+void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
     VkRect2D scissorsVK[g_maxNumViewportsPerBatch];
 
@@ -142,7 +142,7 @@ void VKCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* 
         count = std::min(numScissors, g_maxNumViewportsPerBatch);
 
         for (first = i; i < first + count; ++i)
-            Convert(scissorsVK[i - first], scissorArray[i]);
+            Convert(scissorsVK[i - first], scissors[i]);
 
         vkCmdSetScissor(commandBuffer_, first, count, scissorsVK);
     }

@@ -205,8 +205,8 @@ int main(int argc, char* argv[])
             commands->SetRenderTarget(*context1);
             {
                 // Set viewport and scissor arrays
-                commands->SetViewportArray(2, viewports);
-                commands->SetScissorArray(2, scissors);
+                commands->SetViewports(2, viewports);
+                commands->SetScissors(2, scissors);
 
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);
@@ -229,8 +229,8 @@ int main(int argc, char* argv[])
             commands->SetRenderTarget(*context2);
             {
                 // Set viewport and scissor arrays
-                commands->SetViewportArray(2, viewports);
-                commands->SetScissorArray(2, scissors);
+                commands->SetViewports(2, viewports);
+                commands->SetScissors(2, scissors);
 
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);

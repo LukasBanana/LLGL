@@ -66,9 +66,9 @@ void D3D11CommandBuffer::SetViewport(const Viewport& viewport)
     stateMngr_.SetViewports(1, &viewport);
 }
 
-void D3D11CommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
+void D3D11CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    stateMngr_.SetViewports(numViewports, viewportArray);
+    stateMngr_.SetViewports(numViewports, viewports);
 }
 
 void D3D11CommandBuffer::SetScissor(const Scissor& scissor)
@@ -76,9 +76,9 @@ void D3D11CommandBuffer::SetScissor(const Scissor& scissor)
     stateMngr_.SetScissors(1, &scissor);
 }
 
-void D3D11CommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
+void D3D11CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    stateMngr_.SetScissors(numScissors, scissorArray);
+    stateMngr_.SetScissors(numScissors, scissors);
 }
 
 /* ----- Clear ----- */

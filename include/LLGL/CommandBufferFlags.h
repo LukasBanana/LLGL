@@ -170,12 +170,12 @@ union GraphicsAPIDependentStateDescriptor
     {
         /**
         \brief Specifies whether persistent states are automatically submitted to the command buffer or not. By default false.
-        \remarks If this is true, "SetViewport" or "SetViewportArray", and "SetScissor" or "SetScissorArray" of the CommandBuffer interface
+        \remarks If this is true, "SetViewport" or "SetViewports", and "SetScissor" or "SetScissors" of the CommandBuffer interface
         must be called every time after the command buffer has been submitted to the command queue (e.g. after the "RenderContext::Present" function has been called).
         \see CommandBuffer::SetViewport
-        \see CommandBuffer::SetViewportArray
+        \see CommandBuffer::SetViewports
         \see CommandBuffer::SetScissor
-        \see CommandBuffer::SetScissorArray
+        \see CommandBuffer::SetScissors
         \deprecated Will be replaced by GraphicsPipelineDescriptor::viewports and CommandBuffer::SetViewport.
         */
         bool        disableAutoStateSubmission;

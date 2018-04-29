@@ -64,7 +64,7 @@ void GLCommandBuffer::SetViewport(const Viewport& viewport)
     stateMngr_->SetDepthRange(depthRangeGL);
 }
 
-void GLCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray)
+void GLCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
     GLViewport viewportsGL[g_maxNumViewportsGL];
     GLDepthRange depthRangesGL[g_maxNumViewportsGL];
@@ -77,14 +77,14 @@ void GLCommandBuffer::SetViewportArray(std::uint32_t numViewports, const Viewpor
         for (std::uint32_t i = 0; i < n; ++i)
         {
             /* Copy GL viewport data */
-            viewportsGL[i].x        = viewportArray[i].x;
-            viewportsGL[i].y        = viewportArray[i].y;
-            viewportsGL[i].width    = viewportArray[i].width;
-            viewportsGL[i].height   = viewportArray[i].height;
+            viewportsGL[i].x        = viewports[i].x;
+            viewportsGL[i].y        = viewports[i].y;
+            viewportsGL[i].width    = viewports[i].width;
+            viewportsGL[i].height   = viewports[i].height;
 
             /* Copy GL depth-range data */
-            depthRangesGL[i].minDepth = static_cast<GLdouble>(viewportArray[i].minDepth);
-            depthRangesGL[i].maxDepth = static_cast<GLdouble>(viewportArray[i].maxDepth);
+            depthRangesGL[i].minDepth = static_cast<GLdouble>(viewports[i].minDepth);
+            depthRangesGL[i].maxDepth = static_cast<GLdouble>(viewports[i].maxDepth);
         }
 
         /* Submit viewports and depth-ranges to state manager */
@@ -100,7 +100,7 @@ void GLCommandBuffer::SetScissor(const Scissor& scissor)
     stateMngr_->SetScissor(scissorGL);
 }
 
-void GLCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray)
+void GLCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
     GLScissor scissorsGL[g_maxNumViewportsGL];
 
@@ -112,10 +112,10 @@ void GLCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* 
         for (std::uint32_t i = 0; i < n; ++i)
         {
             /* Copy GL scissor data */
-            scissorsGL[i].x         = static_cast<GLint>(scissorArray[i].x);
-            scissorsGL[i].y         = static_cast<GLint>(scissorArray[i].y);
-            scissorsGL[i].width     = static_cast<GLsizei>(scissorArray[i].width);
-            scissorsGL[i].height    = static_cast<GLsizei>(scissorArray[i].height);
+            scissorsGL[i].x         = static_cast<GLint>(scissors[i].x);
+            scissorsGL[i].y         = static_cast<GLint>(scissors[i].y);
+            scissorsGL[i].width     = static_cast<GLsizei>(scissors[i].width);
+            scissorsGL[i].height    = static_cast<GLsizei>(scissors[i].height);
         }
 
         /* Submit scissors to state manager */
