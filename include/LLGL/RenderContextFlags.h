@@ -50,18 +50,54 @@ enum class OpenGLContextProfile
 //! Vertical-synchronization (Vsync) descriptor structure.
 struct VsyncDescriptor
 {
-    bool            enabled     = false;    //!< Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
-    std::uint32_t   refreshRate = 60;       //!< Refresh rate (in Hz). By default 60.
-    std::uint32_t   interval    = 1;        //!< Synchronisation interval. Can be 1, 2, 3, or 4. If Vsync is disabled, this value is implicit zero.
+    //!< Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
+    bool            enabled     = false;
+
+    //!< Refresh rate (in Hz). By default 60.
+    std::uint32_t   refreshRate = 60;
+
+    /**
+    \brief Synchronisation interval. Can be 1, 2, 3, or 4.
+    \remarks If Vsync is disabled, this value is implicit zero.
+    */
+    std::uint32_t   interval    = 1;
 };
 
 //! Video mode descriptor structure.
 struct VideoModeDescriptor
 {
-    Size            resolution;                 //!< Screen resolution.
-    int             colorDepth      = 32;       //!< Color bit depth. Should be 24 or 32. By default 32.
-    bool            fullscreen      = false;    //!< Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
-    std::uint32_t   swapChainSize   = 2;        //!< Number of swap-chain buffers. By default 2 (for double-buffering).
+    //! Screen resolution (in pixels).
+    Size            resolution;
+
+    /**
+    \brief Number of bits for each pixel in the color buffer. Should be 24 or 32. By default 32.
+    \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the color buffer.
+    */
+    int             colorBits       = 32;
+
+    /**
+    \breif Number of bits for each pixel in the depth buffer. Should be 24, 32, or zero to disable depth buffer. By default 24.
+    \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the depth buffer.
+    */
+    int             depthBits       = 24;
+
+    /**
+    \breif Number of bits for each pixel in the stencil buffer. Should be 8, or zero to disable stencil buffer. By default 8.
+    \remarks This is only a hint to the renderer and there is no guarantee which hardware format is finally used for the stencil buffer.
+    */
+    int             stencilBits     = 8;
+
+    /**
+    \breif Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
+    */
+    bool            fullscreen      = false;
+
+    /**
+    \brief Number of swap-chain buffers. By default 2 (for double-buffering).
+    \remarks This is only a hint to the renderer and there is no guarantee how many buffers are finally used for the swap chain.
+    Especially OpenGL does not support custom swap chain sizes.
+    */
+    std::uint32_t   swapChainSize   = 2;
 };
 
 //TODO: move this into RenderSystemDescriptor, and make GL context creation part of GLRenderSystem instead of each GLRenderContext instance
@@ -91,10 +127,10 @@ struct ProfileOpenGLDescriptor
 struct RenderContextDescriptor
 {
     VsyncDescriptor         vsync;          //!< Vertical-synchronization (Vsync) descriptor.
-    MultiSamplingDescriptor multiSampling;  //!< Sampling descriptor.
+    MultiSamplingDescriptor multiSampling;  //!< Multi-sampling descriptor.
     VideoModeDescriptor     videoMode;      //!< Video mode descriptor.
     ProfileOpenGLDescriptor profileOpenGL;  //!< OpenGL profile descriptor (to switch between compatability or core profile).
-    DebugCallback           debugCallback;  //!< Debuging callback descriptor.
+    DebugCallback           debugCallback;  //!< Debuging callback function object.
 };
 
 

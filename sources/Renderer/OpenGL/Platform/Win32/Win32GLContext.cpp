@@ -339,29 +339,44 @@ void Win32GLContext::SetupDeviceContextAndPixelFormat()
 
 void Win32GLContext::SelectPixelFormat()
 {
+    const auto& videoMode = desc_.videoMode;
+
     /* Setup pixel format attributes */
-    PIXELFORMATDESCRIPTOR formatDesc
+    PIXELFORMATDESCRIPTOR formatDesc;
     {
-        sizeof(PIXELFORMATDESCRIPTOR),  // Structure size
-        1,                              // Version number
-        ( PFD_DRAW_TO_WINDOW |          // Format must support draw-to-window
-          PFD_SUPPORT_OPENGL |          // Format must support OpenGL
-          PFD_DOUBLEBUFFER   |          // Must support double buffering
-          PFD_SWAP_EXCHANGE ),          // Hint to the driver to exchange the back- with the front buffer
-        PFD_TYPE_RGBA,                  // Request an RGBA format
-        32,                             // Select color bit depth (cColorBits)
-        0, 0, 0, 0, 0, 0,               // Color bits ignored
-        8,                              // Request an alpha buffer of 8 bits (cAlphaBits)
-        0,                              // Shift bit ignored
-        0,                              // No accumulation buffer
-        0, 0, 0, 0,                     // Accumulation bits ignored
-        24,                             // Z-Buffer bits (cDepthBits)
-        8,                              // Stencil buffer bits (cStencilBits)
-        0,                              // No auxiliary buffer
-        0,                              // Main drawing layer (No longer used)
-        0,                              // Reserved
-        0, 0, 0                         // Layer masks ignored
-    };
+        formatDesc.nSize            = sizeof(PIXELFORMATDESCRIPTOR);            // Structure size
+        formatDesc.nVersion         = 1;                                        // Version number
+        formatDesc.dwFlags          =
+        (
+            PFD_DRAW_TO_WINDOW |                                                // Format must support draw-to-window
+            PFD_SUPPORT_OPENGL |                                                // Format must support OpenGL
+            PFD_DOUBLEBUFFER   |                                                // Must support double buffering
+            PFD_SWAP_EXCHANGE                                                   // Hint to the driver to exchange the back- with the front buffer
+        );
+        formatDesc.iPixelType       = PFD_TYPE_RGBA;                            // Request an RGBA format
+        formatDesc.cColorBits       = static_cast<BYTE>(videoMode.colorBits);   // Select color bit depth
+        formatDesc.cRedBits         = 0;
+        formatDesc.cRedShift        = 0;
+        formatDesc.cGreenBits       = 0;
+        formatDesc.cGreenShift      = 0;
+        formatDesc.cBlueBits        = 0;
+        formatDesc.cBlueShift       = 0;
+        formatDesc.cAlphaBits       = (videoMode.colorBits == 32 ? 8 : 0);      // Request an alpha buffer of 8 bits
+        formatDesc.cAlphaShift      = 0;
+        formatDesc.cAccumBits       = 0;                                        // No accumulation buffer
+        formatDesc.cAccumRedBits    = 0;
+        formatDesc.cAccumGreenBits  = 0;
+        formatDesc.cAccumBlueBits   = 0;
+        formatDesc.cAccumAlphaBits  = 0;
+        formatDesc.cDepthBits       = static_cast<BYTE>(videoMode.depthBits);   // Z-Buffer bits
+        formatDesc.cStencilBits     = static_cast<BYTE>(videoMode.stencilBits); // Stencil buffer bits
+        formatDesc.cAuxBuffers      = 0;                                        // No auxiliary buffer
+        formatDesc.iLayerType       = 0;                                        // Main drawing layer (No longer used)
+        formatDesc.bReserved        = 0;
+        formatDesc.dwLayerMask      = 0;
+        formatDesc.dwVisibleMask    = 0;
+        formatDesc.dwDamageMask     = 0;
+    }
     
     /* Try to find suitable pixel format */
     const bool wantAntiAliasFormat = (desc_.multiSampling.enabled && !pixelFormatsMS_.empty());
@@ -419,7 +434,8 @@ bool Win32GLContext::SetupAntiAliasing()
 
     /* Setup pixel format for anti-aliasing */
     const auto queriedMultiSamples = desc_.multiSampling.samples;
-
+    const auto& videoMode = desc_.videoMode;
+    
     while (desc_.multiSampling.samples > 0)
     {
         float attribsFlt[] = { 0.0f, 0.0f };
@@ -430,9 +446,9 @@ bool Win32GLContext::SetupAntiAliasing()
             WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
             WGL_ACCELERATION_ARB,   WGL_FULL_ACCELERATION_ARB,
             WGL_COLOR_BITS_ARB,     24,
-            WGL_ALPHA_BITS_ARB,     8,
-            WGL_DEPTH_BITS_ARB,     24,
-            WGL_STENCIL_BITS_ARB,   8,
+            WGL_ALPHA_BITS_ARB,     (videoMode.colorBits == 32 ? 8 : 0),
+            WGL_DEPTH_BITS_ARB,     videoMode.depthBits,
+            WGL_STENCIL_BITS_ARB,   videoMode.stencilBits,
             WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
             WGL_SAMPLE_BUFFERS_ARB, (desc_.multiSampling.enabled ? GL_TRUE : GL_FALSE),
             WGL_SAMPLES_ARB,        static_cast<int>(desc_.multiSampling.samples),

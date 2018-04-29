@@ -60,7 +60,7 @@ LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode)
             config.dmSize       = sizeof(DEVMODE);
             config.dmPelsWidth  = static_cast<DWORD>(videoMode.resolution.x);
             config.dmPelsHeight = static_cast<DWORD>(videoMode.resolution.y);
-            config.dmBitsPerPel = videoMode.colorDepth;
+            config.dmBitsPerPel = videoMode.colorBits;
             config.dmFields     = (DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT);
         }
         result = ChangeDisplaySettings(&config, CDS_FULLSCREEN);

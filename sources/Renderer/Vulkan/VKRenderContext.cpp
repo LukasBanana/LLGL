@@ -39,9 +39,18 @@ VKRenderContext::VKRenderContext(
         vsyncDesc_           { desc.vsync                    }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
+
     CreatePresentSemaphores();
     CreateGpuSurface();
-    CreateSwapChainRenderPass();
+    
+    /*if (desc.videoMode.depthBits > 0 || desc.videoMode.stencilBits > 0)
+    {
+        CreateDepthStencilBuffer();
+        CreateSwapChainRenderPass(true);
+    }
+    else*/
+        CreateSwapChainRenderPass(false);
+
     CreateSwapChain(desc.videoMode, desc.vsync);
 }
 
@@ -106,7 +115,15 @@ void VKRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
         /* Recreate surface and swap-chain with new video settings */
         RenderContext::SetVideoMode(videoModeDesc);
         CreateGpuSurface();
-        CreateSwapChainRenderPass();
+        
+        /*if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
+        {
+            CreateDepthStencilBuffer();
+            CreateSwapChainRenderPass(true);
+        }
+        else*/
+            CreateSwapChainRenderPass(false);
+
         CreateSwapChain(videoModeDesc, vsyncDesc_);
     }
 }
@@ -184,27 +201,47 @@ void VKRenderContext::CreateGpuSurface()
     swapChainFormat_ = PickSwapSurfaceFormat(surfaceSupportDetails_.formats);
 }
 
-void VKRenderContext::CreateSwapChainRenderPass()
+void VKRenderContext::CreateSwapChainRenderPass(bool createDepthStencil)
 {
-    /* Initialize attachment descriptor */
-    VkAttachmentDescription attachmentDesc;
+    VkAttachmentDescription attachments[2];
+
+    /* Initialize color attachment */
+    attachments[0].flags                = 0;
+    attachments[0].format               = swapChainFormat_.format;
+    attachments[0].samples              = VK_SAMPLE_COUNT_1_BIT;
+    attachments[0].loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachments[0].storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
+    attachments[0].stencilLoadOp        = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachments[0].stencilStoreOp       = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments[0].initialLayout        = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachments[0].finalLayout          = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    if (createDepthStencil)
     {
-        attachmentDesc.flags                = 0;
-        attachmentDesc.format               = swapChainFormat_.format;
-        attachmentDesc.samples              = VK_SAMPLE_COUNT_1_BIT;
-        attachmentDesc.loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;//VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachmentDesc.storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
-        attachmentDesc.stencilLoadOp        = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDesc.stencilStoreOp       = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDesc.initialLayout        = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachmentDesc.finalLayout          = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        /* Initialize depth-stencil attachment */
+        attachments[1].flags                = 0;
+        attachments[1].format               = PickDepthStencilFormat();
+        attachments[1].samples              = VK_SAMPLE_COUNT_1_BIT;
+        attachments[1].loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[1].storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
+        attachments[1].stencilLoadOp        = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachments[1].stencilStoreOp       = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachments[1].initialLayout        = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachments[1].finalLayout          = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
-    /* Initialize attachment reference */
-    VkAttachmentReference attachmentRef;
+    /* Initialize color attachment reference */
+    VkAttachmentReference colorAttachmentRef;
     {
-        attachmentRef.attachment            = 0;
-        attachmentRef.layout                = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRef.attachment       = 0;
+        colorAttachmentRef.layout           = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    }
+
+    /* Initialize depth-stencil attachment reference */
+    VkAttachmentReference depthAttachmentRef;
+    {
+        depthAttachmentRef.attachment       = 1;
+        depthAttachmentRef.layout           = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     }
 
     /* Initialize sub-pass descriptor */
@@ -212,7 +249,9 @@ void VKRenderContext::CreateSwapChainRenderPass()
     {
         subpassDesc.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpassDesc.colorAttachmentCount    = 1;
-        subpassDesc.pColorAttachments       = (&attachmentRef);
+        subpassDesc.pColorAttachments       = (&colorAttachmentRef);
+        if (createDepthStencil)
+            subpassDesc.pDepthStencilAttachment = (&depthAttachmentRef);
     }
 
     /* Initialize sub-pass dependency */
@@ -233,8 +272,8 @@ void VKRenderContext::CreateSwapChainRenderPass()
         createInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         createInfo.pNext                    = nullptr;
         createInfo.flags                    = 0;
-        createInfo.attachmentCount          = 1;
-        createInfo.pAttachments             = (&attachmentDesc);
+        createInfo.attachmentCount          = (createDepthStencil ? 2 : 1);
+        createInfo.pAttachments             = attachments;
         createInfo.subpassCount             = 1;
         createInfo.pSubpasses               = (&subpassDesc);
         createInfo.dependencyCount          = 1;
@@ -374,6 +413,11 @@ void VKRenderContext::CreateSwapChainFramebuffers()
     }
 }
 
+void VKRenderContext::CreateDepthStencilBuffer()
+{
+    //todo
+}
+
 VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const
 {
     if (surfaceFormats.empty())
@@ -416,6 +460,16 @@ VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfa
         };
     }
     return surfaceCaps.currentExtent;
+}
+
+VkFormat VKRenderContext::PickDepthStencilFormat() const
+{
+    return VKFindSupportedImageFormat(
+        physicalDevice_,
+        { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM },
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    );
 }
 
 void VKRenderContext::AcquireNextPresentImage()

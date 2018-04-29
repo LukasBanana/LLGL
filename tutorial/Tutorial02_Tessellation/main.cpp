@@ -187,11 +187,9 @@ public:
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
 
-            #if 0
             // Enable depth test and writing
             pipelineDesc.depth.testEnabled          = true;
             pipelineDesc.depth.writeEnabled         = true;
-            #endif
 
             // Enable back-face culling
             pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;

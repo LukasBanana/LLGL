@@ -238,6 +238,23 @@ QueueFamilyIndices VKFindQueueFamilies(VkPhysicalDevice device, const VkQueueFla
     return indices;
 }
 
+VkFormat VKFindSupportedImageFormat(VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+{
+    for (auto format : candidates)
+    {
+        /* Query physics device properties of current image format */
+        VkFormatProperties properties;
+        vkGetPhysicalDeviceFormatProperties(device, format, &properties);
+
+        /* Check if features are supported */
+        if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & features) == features)
+            return format;
+        if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & features) == features)
+            return format;
+    }
+    throw std::runtime_error("failed to find suitable image format");
+}
+
 std::uint32_t VKFindMemoryType(const VkPhysicalDeviceMemoryProperties& memoryProperties, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
 {
     for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)

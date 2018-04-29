@@ -64,6 +64,8 @@ class D3D11RenderContext : public RenderContext
         void CreateBackBuffer(UINT width, UINT height);
         void ResizeBackBuffer(UINT width, UINT height);
 
+        DXGI_FORMAT PickDepthStencilFormat(const VideoModeDescriptor& videoMode) const;
+
         RenderContextDescriptor     desc_;
         
         ComPtr<ID3D11Device>        device_;
