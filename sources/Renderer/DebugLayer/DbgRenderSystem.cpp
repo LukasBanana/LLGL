@@ -373,7 +373,21 @@ void DbgRenderSystem::Release(ResourceViewHeap& resourceViewHeap)
 
 RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
-    return TakeOwnership(renderTargets_, MakeUnique<DbgRenderTarget>(*instance_->CreateRenderTarget(desc), debugger_, desc));
+    auto instanceDesc = desc;
+
+    for (auto& attachment : instanceDesc.attachments)
+    {
+        if (auto texture = attachment.texture)
+        {
+            auto textureDbg = LLGL_CAST(DbgTexture*, texture);
+            attachment.texture = &(textureDbg->instance);
+        }
+    }
+
+    return TakeOwnership(
+        renderTargets_,
+        MakeUnique<DbgRenderTarget>(*instance_->CreateRenderTarget(instanceDesc), debugger_, desc)
+    );
 }
 
 void DbgRenderSystem::Release(RenderTarget& renderTarget)

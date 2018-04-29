@@ -20,6 +20,40 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
     device_       { device                           },
     multiSamples_ { desc.multiSampling.SampleCount() }
 {
+    /* Initialize all attachments */
+    for (const auto& attachment : desc.attachments)
+    {
+        if (attachment.texture)
+        {
+            /* Attach texture */
+            RenderTargetAttachmentDescriptor attachmentDesc;
+            {
+                attachmentDesc.mipLevel = attachment.mipLevel;
+                attachmentDesc.layer    = attachment.layer;
+                attachmentDesc.cubeFace = attachment.cubeFace;
+            }
+            AttachTexture(*attachment.texture, attachmentDesc);
+        }
+        else
+        {
+            /* Attach (and create) depth-stencil buffer */
+            switch (attachment.type)
+            {
+                case AttachmentType::Color:
+                    throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
+                    break;
+                case AttachmentType::Depth:
+                    AttachDepthBuffer({ attachment.width, attachment.height });
+                    break;
+                case AttachmentType::DepthStencil:
+                    AttachDepthStencilBuffer({ attachment.width, attachment.height });
+                    break;
+                case AttachmentType::Stencil:
+                    AttachStencilBuffer({ attachment.width, attachment.height });
+                    break;
+            }
+        }
+    }
 }
 
 void D3D11RenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)

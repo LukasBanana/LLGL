@@ -239,41 +239,45 @@ public:
         auto resolution = context->GetVideoMode().resolution.Cast<std::uint32_t>();
 
         // Create render-target for scene rendering
-        if (renderTargetScene)
-            renderTargetScene->DetachAll();
-        else
+        LLGL::RenderTargetDescriptor renderTargetDesc;
         {
-            LLGL::RenderTargetDescriptor renderTargetDesc;
+            renderTargetDesc.attachments =
             {
-                renderTargetDesc.multiSampling = LLGL::MultiSamplingDescriptor(8);
-            }
-            renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, resolution.x, resolution.y },
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, colorMap },
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMap },
+            };
+            renderTargetDesc.multiSampling = LLGL::MultiSamplingDescriptor(8);
         }
-
-        renderTargetScene->AttachDepthBuffer(resolution);
-        renderTargetScene->AttachTexture(*colorMap, {});
-        renderTargetScene->AttachTexture(*glossMap, {});
+        renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
 
         // Create render-target for horizontal blur pass (no depth buffer needed)
-        if (renderTargetBlurX)
-            renderTargetBlurX->DetachAll();
-        else
-            renderTargetBlurX = renderer->CreateRenderTarget({});
-
-        renderTargetBlurX->AttachTexture(*glossMapBlurX, {});
+        LLGL::RenderTargetDescriptor renderTargetBlurXDesc;
+        {
+            renderTargetBlurXDesc.attachments =
+            {
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMapBlurX }
+            };
+        }
+        renderTargetBlurX = renderer->CreateRenderTarget(renderTargetBlurXDesc);
 
         // Create render-target for vertical blur pass (no depth buffer needed)
-        if (renderTargetBlurY)
-            renderTargetBlurY->DetachAll();
-        else
-            renderTargetBlurY = renderer->CreateRenderTarget({});
-
-        renderTargetBlurY->AttachTexture(*glossMapBlurY, {});
+        LLGL::RenderTargetDescriptor renderTargetBlurYDesc;
+        {
+            renderTargetBlurYDesc.attachments =
+            {
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMapBlurY }
+            };
+        }
+        renderTargetBlurY = renderer->CreateRenderTarget(renderTargetBlurYDesc);
     }
 
     void UpdateScreenSize()
     {
         // Release previous textures
+        renderer->Release(*renderTargetScene);
+        renderer->Release(*renderTargetBlurX);
+        renderer->Release(*renderTargetBlurY);
         renderer->Release(*colorMap);
         renderer->Release(*glossMap);
         renderer->Release(*glossMapBlurX);

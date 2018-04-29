@@ -19,7 +19,7 @@ namespace LLGL
 
 
 [[noreturn]]
-static void DepthAttachmentFailed()
+static void ErrDepthAttachmentFailed()
 {
     throw std::runtime_error("attachment to render target failed, because render target already has a depth- or depth-stencil buffer");
 }
@@ -29,6 +29,41 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
 {
     if (HasMultiSampling() && !desc.customMultiSampling)
         CreateOnceFramebufferMS();
+
+    /* Initialize all attachments */
+    for (const auto& attachment : desc.attachments)
+    {
+        if (attachment.texture)
+        {
+            /* Attach texture */
+            RenderTargetAttachmentDescriptor attachmentDesc;
+            {
+                attachmentDesc.mipLevel = attachment.mipLevel;
+                attachmentDesc.layer    = attachment.layer;
+                attachmentDesc.cubeFace = attachment.cubeFace;
+            }
+            AttachTexture(*attachment.texture, attachmentDesc);
+        }
+        else
+        {
+            /* Attach (and create) depth-stencil buffer */
+            switch (attachment.type)
+            {
+                case AttachmentType::Color:
+                    throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
+                    break;
+                case AttachmentType::Depth:
+                    AttachDepthBuffer({ attachment.width, attachment.height });
+                    break;
+                case AttachmentType::DepthStencil:
+                    AttachDepthStencilBuffer({ attachment.width, attachment.height });
+                    break;
+                case AttachmentType::Stencil:
+                    AttachStencilBuffer({ attachment.width, attachment.height });
+                    break;
+            }
+        }
+    }
 }
 
 void GLRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
@@ -274,7 +309,7 @@ void GLRenderTarget::AttachRenderbuffer(const Gs::Vector2ui& size, GLenum intern
         }
     }
     else
-        DepthAttachmentFailed();
+        ErrDepthAttachmentFailed();
 }
 
 GLenum GLRenderTarget::MakeFramebufferAttachment(GLint internalFormat)
@@ -288,7 +323,7 @@ GLenum GLRenderTarget::MakeFramebufferAttachment(GLint internalFormat)
             return GL_DEPTH_ATTACHMENT;
         }
         else
-            DepthAttachmentFailed();
+            ErrDepthAttachmentFailed();
     }
     else if (internalFormat == GL_DEPTH_STENCIL)
     {
@@ -299,7 +334,7 @@ GLenum GLRenderTarget::MakeFramebufferAttachment(GLint internalFormat)
             return GL_DEPTH_STENCIL_ATTACHMENT;
         }
         else
-            DepthAttachmentFailed();
+            ErrDepthAttachmentFailed();
     }
     else
     {

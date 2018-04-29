@@ -169,18 +169,6 @@ public:
 
     void CreateRenderTarget()
     {
-        // Create render-target with multi-sampling
-        LLGL::RenderTargetDescriptor renderTargetDesc;
-        {
-            #ifdef ENABLE_MULTISAMPLING
-            renderTargetDesc.multiSampling          = LLGL::MultiSamplingDescriptor(8);
-            #   ifdef ENABLE_CUSTOM_MULTISAMPLING
-            renderTargetDesc.customMultiSampling    = true;
-            #   endif
-            #endif
-        }
-        renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
-
         // Create empty render-target texture
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
         
@@ -215,15 +203,27 @@ public:
         // Generate all MIP-map levels
         renderer->GenerateMips(*renderTargetTex);
 
-        // Attach depth-texture or depth-buffer to render-target
-        #ifdef ENABLE_DEPTH_TEXTURE
-        renderTarget->AttachTexture(*renderTargetDepthTex, {});
-        #else
-        renderTarget->AttachDepthBuffer(renderTargetSize);
-        #endif
+        // Create render-target with multi-sampling
+        LLGL::RenderTargetDescriptor renderTargetDesc;
+        {
+            renderTargetDesc.attachments =
+            {
+                #ifdef ENABLE_DEPTH_TEXTURE
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetDepthTex },
+                #else
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetSize.x, renderTargetSize.y },
+                #endif
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
+            };
 
-        // Attach texture (first MIP-map level) to render-target
-        renderTarget->AttachTexture(*renderTargetTex, {});
+            #ifdef ENABLE_MULTISAMPLING
+            renderTargetDesc.multiSampling          = LLGL::MultiSamplingDescriptor(8);
+            #   ifdef ENABLE_CUSTOM_MULTISAMPLING
+            renderTargetDesc.customMultiSampling    = true;
+            #   endif
+            #endif
+        }
+        renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
 
         // Initialize projection matrix for render-target scene rendering
         renderTargetProj = PerspectiveProjection(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));

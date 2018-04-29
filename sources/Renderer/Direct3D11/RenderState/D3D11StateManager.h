@@ -20,6 +20,7 @@ namespace LLGL
 {
 
 
+//TODO: add function to bind ID3D11... objects to avoid unnecessary bindings (can be easily tracked by their pointers).
 class D3D11StateManager
 {
 
