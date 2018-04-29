@@ -20,6 +20,25 @@ DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debu
     debugger_ { debugger },
     desc_     { desc     }
 {
+    for (const auto& attachment : desc.attachments)
+    {
+        switch (attachment.type)
+        {
+            case AttachmentType::Color:
+                ++numColorAttachments_;
+                break;
+            case AttachmentType::Depth:
+                hasDepthAttachment_     = true;
+                break;
+            case AttachmentType::DepthStencil:
+                hasDepthAttachment_     = true;
+                hasStencilAttachment_   = true;
+                break;
+            case AttachmentType::Stencil:
+                hasStencilAttachment_   = true;
+                break;
+        }
+    }
 }
 
 void DbgRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)

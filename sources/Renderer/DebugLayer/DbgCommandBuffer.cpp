@@ -104,6 +104,13 @@ void DbgCommandBuffer::Clear(long flags)
 
 void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        for (std::uint32_t i = 0; i < numAttachments; ++i)
+            DebugAttachmentClear(attachments[i]);
+    }
+
     instance.ClearAttachments(numAttachments, attachments);
 }
 
@@ -395,6 +402,12 @@ void DbgCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 {
     auto& renderTargetDbg = LLGL_CAST(DbgRenderTarget&, renderTarget);
     
+    if (debugger_)
+    {
+        bindings_.renderContext = nullptr;
+        bindings_.renderTarget  = &renderTargetDbg;
+    }
+
     instance.SetRenderTarget(renderTargetDbg.instance);
     
     LLGL_DBG_PROFILER_DO(setRenderTarget.Inc());
@@ -404,6 +417,12 @@ void DbgCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
     auto& renderContextDbg = LLGL_CAST(DbgRenderContext&, renderContext);
     
+    if (debugger_)
+    {
+        bindings_.renderContext = &renderContextDbg;
+        bindings_.renderTarget  = nullptr;
+    }
+
     instance.SetRenderTarget(renderContextDbg.instance);
     
     LLGL_DBG_PROFILER_DO(setRenderTarget.Inc());
@@ -629,18 +648,6 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint
 
 /* ----- Compute ----- */
 
-void DbgCommandBuffer::DebugThreadGroupLimit(std::uint32_t size, std::uint32_t limit)
-{
-    if (size > limit)
-    {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "thread group size X is too large (" + std::to_string(size) +
-            " specified but limit is " + std::to_string(limit) + ")"
-        );
-    }
-}
-
 void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ)
 {
     if (debugger_)
@@ -670,6 +677,39 @@ void DbgCommandBuffer::AssertCommandBufferExt(const char* funcName)
 {
     if (!instanceExt)
         throw std::runtime_error("illegal function call for a non-extended command buffer: " + std::string(funcName));
+}
+
+void DbgCommandBuffer::DebugAttachmentClear(const AttachmentClear& attachment)
+{
+    if (bindings_.renderContext != nullptr)
+    {
+        if ((attachment.flags & ClearFlags::Color) != 0)
+            DebugAttachmentLimit(attachment.colorAttachment, 1);
+    }
+    else if (auto renderTarget = bindings_.renderTarget)
+    {
+        if ((attachment.flags & ClearFlags::Color) != 0)
+        {
+            DebugAttachmentLimit(attachment.colorAttachment, renderTarget->GetNumColorAttachments());
+            if ((attachment.flags & ClearFlags::DepthStencil) != 0)
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot have color attachment and depth-stencil attachment within a single AttachmentClear command");
+        }
+        else
+        {
+            if ((attachment.flags & ClearFlags::Depth) != 0)
+            {
+                if (!renderTarget->HasDepthAttachment())
+                    LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot clear depth with render target that does not have a depth or depth-stencil attachment");
+            }
+            if ((attachment.flags & ClearFlags::Stencil) != 0)
+            {
+                if (!renderTarget->HasStencilAttachment())
+                    LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot clear stencil with render target that does not have a stencil or depth-stencil attachment");
+            }
+        }
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no render target is bound");
 }
 
 void DbgCommandBuffer::DebugGraphicsPipelineSet()
@@ -869,8 +909,32 @@ void DbgCommandBuffer::DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
-            "vertex index out of bounds (" + std::to_string(vertexCount) +
+            "vertex count out of bounds (" + std::to_string(vertexCount) +
             " specified but limit is " + std::to_string(vertexLimit) + ")"
+        );
+    }
+}
+
+void DbgCommandBuffer::DebugThreadGroupLimit(std::uint32_t size, std::uint32_t limit)
+{
+    if (size > limit)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "thread group size X is too large (" + std::to_string(size) +
+            " specified but limit is " + std::to_string(limit) + ")"
+        );
+    }
+}
+
+void DbgCommandBuffer::DebugAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound)
+{
+    if (attachmentIndex >= attachmentUpperBound)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "color attachment index out of bounds (" + std::to_string(attachmentIndex) +
+            " specified but upper bound is " + std::to_string(attachmentUpperBound) + ")"
         );
     }
 }

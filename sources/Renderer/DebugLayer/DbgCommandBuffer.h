@@ -22,6 +22,8 @@ namespace LLGL
 
 
 class DbgBuffer;
+class DbgRenderContext;
+class DbgRenderTarget;
 
 class DbgCommandBuffer : public CommandBufferExt
 {
@@ -147,6 +149,8 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void AssertCommandBufferExt(const char* funcName);
 
+        void DebugAttachmentClear(const AttachmentClear& attachment);
+
         void DebugGraphicsPipelineSet();
         void DebugComputePipelineSet();
         void DebugVertexBufferSet();
@@ -164,6 +168,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void DebugOffsetInstancing();
         void DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit);
         void DebugThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
+        void DebugAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
 
         void DebugShaderStageFlags(long shaderStageFlags, long validFlags);
         void DebugBufferType(const BufferType bufferType, const BufferType compareType);
@@ -183,6 +188,8 @@ class DbgCommandBuffer : public CommandBufferExt
 
         struct Bindings
         {
+            DbgRenderContext*       renderContext           = nullptr;
+            DbgRenderTarget*        renderTarget            = nullptr;
             DbgBuffer*              vertexBufferStore[1]    = { nullptr };
             DbgBuffer**             vertexBuffers           = nullptr;
             std::uint32_t           numVertexBuffers        = 0;
