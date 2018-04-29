@@ -70,11 +70,12 @@ class LLGL_EXPORT CommandBuffer
         (e.g. for a uniform render target behavior between OpenGL and Direct3D).
         */
         virtual void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) = 0;
+        
+        /* ----- Viewport and Scissor ----- */
 
         /**
         \brief Sets a single viewport.
         \remarks Similar to SetViewportArray but only a single viewport is set.
-        \note This state is guaranteed to be persistent.
         \see SetViewportArray
         */
         virtual void SetViewport(const Viewport& viewport) = 0;
@@ -82,7 +83,7 @@ class LLGL_EXPORT CommandBuffer
         /**
         \brief Sets an array of viewports.
         \param[in] numViewports Specifies the number of viewports to set. Most render system have a limit of 16 viewports.
-        \param[in] viewportArray Pointer to the array of viewports. This must not be null!
+        \param[in] viewports Pointer to the array of viewports. This must not be null!
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each viewport is on the upper-left (like for all other render systems).
@@ -91,7 +92,8 @@ class LLGL_EXPORT CommandBuffer
         \see SetGraphicsAPIDependentState
         \see RenderingCaps::maxNumViewports
         */
-        virtual void SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray) = 0;
+        //TODO: rename to "SetViewports"
+        virtual void SetViewportArray(std::uint32_t numViewports, const Viewport* viewports) = 0;
 
         /**
         \brief Sets a single scissor rectangle.
@@ -104,7 +106,7 @@ class LLGL_EXPORT CommandBuffer
         /**
         \brief Sets an array of scissor rectangles.
         \param[in] numScissors Specifies the number of scissor rectangles to set.
-        \param[in] scissorArray Pointer to the array of scissor rectangles. This must not be null!
+        \param[in] scissors Pointer to the array of scissor rectangles. This must not be null!
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each scissor rectangle is on the upper-left (like for all other render systems).
@@ -112,7 +114,10 @@ class LLGL_EXPORT CommandBuffer
         \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
         */
-        virtual void SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray) = 0;
+        //TODO: rename to "SetScissors"
+        virtual void SetScissorArray(std::uint32_t numScissors, const Scissor* scissors) = 0;
+
+        /* ----- Clear ----- */
 
         /**
         \brief Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
@@ -138,29 +143,28 @@ class LLGL_EXPORT CommandBuffer
         virtual void SetClearStencil(std::uint32_t stencil) = 0;
 
         /**
-        \brief Clears the specified framebuffers of the active render target.
+        \brief Clears the specified group of attachments of the active render target.
         \param[in] flags Specifies the clear buffer flags.
         This can be a bitwise OR combination of the "ClearFlags" enumeration entries.
+        If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color previously set by SetClearColor.
         \remarks To specify the clear values for each buffer type, use the respective "SetClear..." function.
-        To clear only a specific render-target color buffer, use the "ClearTarget" function.
+        To clear only a specific render-target color buffer, use the "ClearAttachments" function.
         \see ClearFlags
         \see SetClearColor
         \see SetClearDepth
         \see SetClearStencil
-        \see ClearTarget
+        \see ClearAttachments
         */
         virtual void Clear(long flags) = 0;
 
         /**
-        \brief Clears the specified color buffer of the active render target.
-        \param[in] targetIndex Specifies the zero-based index of the color target which is to be cleared.
-        If this value is greater than or equal to the number of color attachments
-        in the active render target, the behavior of this function is undefined.
-        \param[in] color Specifies the color to clear the color buffer with.
+        \brief Clears the specified attachments of the active render target.
+        \param[in] numAttachments Specifies the number of attachments to clear.
+        \param[in] attachments Pointer to the array of attachment clear commands. This must not be null!
         \remarks To clear all color buffers with the same value, use the "Clear" function.
         \see Clear
         */
-        virtual void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) = 0;
+        virtual void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) = 0;
 
         /* ----- Input Assembly ------ */
 

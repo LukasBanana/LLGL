@@ -210,7 +210,10 @@ DECL_GLPROC(void, glBlitFramebuffer, (GLint, GLint, GLint, GLint, GLint, GLint, 
 DECL_GLPROC(void, glGenerateMipmap, (GLenum));
 
 #if 1 //WHICH EXTENSION???
+DECL_GLPROC(void, glClearBufferiv, (GLenum, GLint, const GLint*));
+DECL_GLPROC(void, glClearBufferuiv, (GLenum, GLint, const GLuint*));
 DECL_GLPROC(void, glClearBufferfv, (GLenum, GLint, const GLfloat*));
+DECL_GLPROC(void, glClearBufferfi, (GLenum, GLint, GLfloat, GLint));
 #endif
 
 /* GL_ARB_draw_instanced */

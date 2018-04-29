@@ -394,9 +394,13 @@ private:
         commands->SetRenderTarget(*renderTargetScene);
         {
             // Clear individual buffers in render target (color, glossiness, depth)
-            commands->ClearTarget(0, defaultClearColor);
-            commands->ClearTarget(1, { 0, 0, 0, 0 });
-            commands->Clear(LLGL::ClearFlags::Depth);
+            LLGL::AttachmentClear clearCmds[3] =
+            {
+                LLGL::AttachmentClear { defaultClearColor, 0 },
+                LLGL::AttachmentClear { LLGL::ColorRGBAf { 0, 0, 0, 0 }, 1 },
+                LLGL::AttachmentClear { 1.0f }
+            };
+            commands->ClearAttachments(3, clearCmds);
 
             // Draw outer scene model
             SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);

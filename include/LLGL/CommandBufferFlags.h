@@ -9,6 +9,9 @@
 #define LLGL_COMMAND_BUFFER_FLAGS_H
 
 
+#include "ColorRGBA.h"
+
+
 namespace LLGL
 {
 
@@ -51,6 +54,82 @@ struct ClearFlags
         DepthStencil    = (Depth | Stencil),            //!< Clears the depth and stencil buffers.
         All             = (Color | Depth | Stencil),    //!< Clears the all buffers (color, depth, and stencil).
     };
+};
+
+/**
+\brief Command buffer clear value structure.
+\see AttachmentClear::clearValue
+*/
+struct ClearValue
+{
+    //! Specifies the clear value to clear a color attachment.
+    ColorRGBAf      color;
+
+    //! Specifies the clear value to clear a depth attachment.
+    float           depth   = 0.0f;
+
+    //! Specifies the clear value to clear a stencil attachment.
+    std::uint32_t   stencil = 0;
+};
+
+/**
+\brief Attachment clear command structure.
+\see CommandBuffer::ClearAttachments
+*/
+struct AttachmentClear
+{
+    AttachmentClear() = default;
+    AttachmentClear(const AttachmentClear&) = default;
+    AttachmentClear& operator = (const AttachmentClear&) = default;
+
+    //! Constructor for a color attachment clear command.
+    inline AttachmentClear(const ColorRGBAf& color, std::uint32_t colorAttachment) :
+        flags           { ClearFlags::Color },
+        colorAttachment { colorAttachment   }
+    {
+        clearValue.color = color;
+    }
+
+    //! Constructor for a depth attachment clear command.
+    inline AttachmentClear(float depth) :
+        flags { ClearFlags::Depth }
+    {
+        clearValue.depth = depth;
+    }
+
+    //! Constructor for a stencil attachment clear command.
+    inline AttachmentClear(std::uint32_t stencil) :
+        flags { ClearFlags::Stencil }
+    {
+        clearValue.stencil = stencil;
+    }
+
+    //! Constructor for a depth-stencil attachment clear command.
+    inline AttachmentClear(float depth, std::uint32_t stencil) :
+        flags { ClearFlags::DepthStencil }
+    {
+        clearValue.depth    = depth;
+        clearValue.stencil  = stencil;
+    }
+
+    /**
+    \brief Specifies the clear buffer flags.
+    \remarks This can be a bitwise OR combination of the "ClearFlags" enumeration entries.
+    However, if the ClearFlags::Color bit is set, all other bits are ignored.
+    It is recommended to clear depth- and stencil buffers always simultaneously if both are meant to be cleared (i.e. use ClearFlags::DepthStencil in this case).
+    \see ClearFlags
+    */
+    long            flags           = 0;
+
+    /**
+    \brief Specifies the index of the color attachment within the active render target. By default 0.
+    \remarks This is ignored if the ClearFlags::Color bit is not set in the 'flags' member.
+    \see flags
+    */
+    std::uint32_t   colorAttachment = 0;
+
+    //! Clear value for color, depth, and stencil buffers.
+    ClearValue      clearValue;
 };
 
 /**

@@ -38,18 +38,22 @@ class D3D11CommandBuffer : public CommandBufferExt
 
         void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
 
+        /* ----- Viewport and Scissor ----- */
+
         void SetViewport(const Viewport& viewport) override;
         void SetViewportArray(std::uint32_t numViewports, const Viewport* viewportArray) override;
 
         void SetScissor(const Scissor& scissor) override;
         void SetScissorArray(std::uint32_t numScissors, const Scissor* scissorArray) override;
 
+        /* ----- Clear ----- */
+
         void SetClearColor(const ColorRGBAf& color) override;
         void SetClearDepth(float depth) override;
         void SetClearStencil(std::uint32_t stencil) override;
 
         void Clear(long flags) override;
-        void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) override;
+        void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) override;
 
         /* ----- Input Assembly ------ */
 

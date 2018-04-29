@@ -40,6 +40,8 @@ void DbgCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentSt
     instance.SetGraphicsAPIDependentState(state);
 }
 
+/* ----- Viewport and Scissor ----- */
+
 void DbgCommandBuffer::SetViewport(const Viewport& viewport)
 {
     instance.SetViewport(viewport);
@@ -78,6 +80,8 @@ void DbgCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor*
     instance.SetScissorArray(numScissors, scissorArray);
 }
 
+/* ----- Clear ----- */
+
 void DbgCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
     instance.SetClearColor(color);
@@ -98,9 +102,9 @@ void DbgCommandBuffer::Clear(long flags)
     instance.Clear(flags);
 }
 
-void DbgCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
+void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    instance.ClearTarget(targetIndex, color);
+    instance.ClearAttachments(numAttachments, attachments);
 }
 
 /* ----- Buffers ------ */

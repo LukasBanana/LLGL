@@ -48,6 +48,8 @@ void VKCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentSta
     //todo
 }
 
+/* ----- Viewport and Scissor ----- */
+
 // Check if VkViewport and Viewport structures can be safely reinterpret-casted
 static bool IsCompatibleToVkViewport()
 {
@@ -146,6 +148,11 @@ void VKCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* 
     }
 }
 
+/* ----- Clear ----- */
+
+static const std::uint32_t g_maxNumColorAttachments = 32;
+static const std::uint32_t g_maxNumAttachments      = (g_maxNumColorAttachments + 1);
+
 void VKCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
     clearColor_.float32[0] = color.r;
@@ -178,16 +185,14 @@ static VkImageAspectFlags GetDepthStencilAspectMask(long flags)
 
 void VKCommandBuffer::Clear(long flags)
 {
-    static const std::uint32_t maxNumAttachments = 32;
-
-    VkClearAttachment attachments[maxNumAttachments + 1];
+    VkClearAttachment attachments[g_maxNumAttachments];
 
     std::uint32_t numAttachments = 0;
     
     /* Fill clear descriptors for color attachments */
     if ((flags & ClearFlags::Color) != 0)
     {
-        numAttachments = std::min(numColorAttachments_, maxNumAttachments);
+        numAttachments = std::min(numColorAttachments_, g_maxNumColorAttachments);
         for (std::uint32_t i = 0; i < numAttachments; ++i)
         {
             auto& attachment = attachments[i];
@@ -214,18 +219,51 @@ void VKCommandBuffer::Clear(long flags)
     ClearFramebufferAttachments(numAttachments, attachments);
 }
 
-void VKCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
+void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    VkClearAttachment attachment;
+    /* Convert clear attachment descriptors */
+    VkClearAttachment attachmentsVK[g_maxNumAttachments];
+    
+    std::uint32_t numAttachmentsVK = 0;
+
+    for (std::uint32_t i = 0, n = std::min(numAttachments, g_maxNumAttachments); i < n; ++i)
     {
-        attachment.aspectMask                   = VK_IMAGE_ASPECT_COLOR_BIT;
-        attachment.colorAttachment              = targetIndex;
-        attachment.clearValue.color.float32[0]  = color.r;
-        attachment.clearValue.color.float32[1]  = color.g;
-        attachment.clearValue.color.float32[2]  = color.b;
-        attachment.clearValue.color.float32[3]  = color.a;
+        auto& dst = attachmentsVK[numAttachmentsVK];
+        const auto& src = attachments[i];
+
+        if ((src.flags & ClearFlags::Color) != 0)
+        {
+            /* Convert color clear command */
+            dst.aspectMask                   = VK_IMAGE_ASPECT_COLOR_BIT;
+            dst.colorAttachment              = src.colorAttachment;
+            dst.clearValue.color.float32[0]  = src.clearValue.color.r;
+            dst.clearValue.color.float32[1]  = src.clearValue.color.g;
+            dst.clearValue.color.float32[2]  = src.clearValue.color.b;
+            dst.clearValue.color.float32[3]  = src.clearValue.color.a;
+            ++numAttachmentsVK;
+        }
+        else if (hasDepthStencilAttachment_)
+        {
+            /* Convert depth-stencil clear command */
+            dst.aspectMask      = 0;
+            dst.colorAttachment = 0;
+            
+            if ((src.flags & ClearFlags::Depth) != 0)
+            {
+                dst.aspectMask                      |= VK_IMAGE_ASPECT_DEPTH_BIT;
+                dst.clearValue.depthStencil.depth   = src.clearValue.depth;
+            }
+            if ((src.flags & ClearFlags::Stencil) != 0)
+            {
+                dst.aspectMask                      |= VK_IMAGE_ASPECT_STENCIL_BIT;
+                dst.clearValue.depthStencil.stencil = src.clearValue.stencil;
+            }
+
+            ++numAttachmentsVK;
+        }
     }
-    ClearFramebufferAttachments(1, &attachment);
+
+    ClearFramebufferAttachments(numAttachmentsVK, attachmentsVK);
 }
 
 /* ----- Input Assembly ------ */
@@ -665,7 +703,7 @@ void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, 
     }
 }
 
-//TODO: current unused; previously used for 'Clear' and 'ClearTarget' functions
+//TODO: current unused; previously used for 'Clear' function
 #if 0
 
 void VKCommandBuffer::BeginClearImage(

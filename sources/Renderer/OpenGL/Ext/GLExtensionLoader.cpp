@@ -160,7 +160,12 @@ static bool Load_GL_ARB_framebuffer_object(bool usePlaceholder)
     LOAD_GLPROC( glGetFramebufferAttachmentParameteriv );
     LOAD_GLPROC( glBlitFramebuffer                     );
     LOAD_GLPROC( glGenerateMipmap                      );
-    LOAD_GLPROC( glClearBufferfv                       ); // <--- other extension! (but which one???)
+    #if 1//TODO: other extension! (but which one???)
+    LOAD_GLPROC( glClearBufferiv                       );
+    LOAD_GLPROC( glClearBufferuiv                      );
+    LOAD_GLPROC( glClearBufferfv                       );
+    LOAD_GLPROC( glClearBufferfi                       );
+    #endif
     return true;
 }
 

@@ -59,6 +59,8 @@ void D3D11CommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependent
     // dummy
 }
 
+/* ----- Viewport and Scissor ----- */
+
 void D3D11CommandBuffer::SetViewport(const Viewport& viewport)
 {
     stateMngr_.SetViewports(1, &viewport);
@@ -78,6 +80,8 @@ void D3D11CommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scisso
 {
     stateMngr_.SetScissors(numScissors, scissorArray);
 }
+
+/* ----- Clear ----- */
 
 void D3D11CommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
@@ -115,11 +119,42 @@ void D3D11CommandBuffer::Clear(long flags)
         context_->ClearDepthStencilView(framebufferView_.dsv, dsvClearFlags, clearState_.depth, clearState_.stencil);
 }
 
-void D3D11CommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
+void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    /* Clear target color buffer */
-    if (targetIndex < framebufferView_.rtvList.size())
-        context_->ClearRenderTargetView(framebufferView_.rtvList[targetIndex], color.Ptr());
+    for (; numAttachments-- > 0; ++attachments)
+    {
+        if ((attachments->flags & ClearFlags::Color) != 0)
+        {
+            if (attachments->colorAttachment < framebufferView_.rtvList.size())
+            {
+                /* Clear color attachment */
+                context_->ClearRenderTargetView(
+                    framebufferView_.rtvList[attachments->colorAttachment],
+                    attachments->clearValue.color.Ptr()
+                );
+            }
+        }
+        else if (framebufferView_.dsv != nullptr)
+        {
+            /* Clear depth and stencil buffer simultaneously */
+            UINT dsvClearFlags = 0;
+
+            if ((attachments->flags & ClearFlags::Depth) != 0)
+                dsvClearFlags |= D3D11_CLEAR_DEPTH;
+            if ((attachments->flags & ClearFlags::Stencil) != 0)
+                dsvClearFlags |= D3D11_CLEAR_STENCIL;
+
+            if (dsvClearFlags != 0)
+            {
+                context_->ClearDepthStencilView(
+                    framebufferView_.dsv,
+                    dsvClearFlags,
+                    attachments->clearValue.depth,
+                    static_cast<UINT8>(attachments->clearValue.stencil)
+                );
+            }
+        }
+    }
 }
 
 /* ----- Input Assembly ------ */

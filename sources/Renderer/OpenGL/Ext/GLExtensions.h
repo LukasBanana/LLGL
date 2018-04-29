@@ -183,7 +183,10 @@ extern PFNGLBLITFRAMEBUFFERPROC                             glBlitFramebuffer;
 extern PFNGLGENERATEMIPMAPPROC                              glGenerateMipmap;
 
 #if 1 //WHICH EXTENSION???
+extern PFNGLCLEARBUFFERIVPROC                               glClearBufferiv;
+extern PFNGLCLEARBUFFERUIVPROC                              glClearBufferuiv;
 extern PFNGLCLEARBUFFERFVPROC                               glClearBufferfv;
+extern PFNGLCLEARBUFFERFIPROC                               glClearBufferfi;
 #endif
 
 /* GL_ARB_draw_instanced */

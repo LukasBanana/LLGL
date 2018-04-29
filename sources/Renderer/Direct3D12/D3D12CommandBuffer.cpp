@@ -40,6 +40,8 @@ void D3D12CommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependent
     disableAutoStateSubmission_ = state.stateDirect3D12.disableAutoStateSubmission;
 }
 
+/* ----- Viewport and Scissor ----- */
+
 void D3D12CommandBuffer::SetViewport(const Viewport& viewport)
 {
     stateMngr_.SetViewports(1, &viewport);
@@ -63,6 +65,8 @@ void D3D12CommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scisso
     stateMngr_.SetScissors(numScissors, scissorArray);
     stateMngr_.SubmitScissors(commandList_.Get());
 }
+
+/* ----- Clear ----- */
 
 void D3D12CommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
@@ -101,7 +105,7 @@ void D3D12CommandBuffer::Clear(long flags)
     }
 }
 
-void D3D12CommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
+void D3D12CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
     //TODO...
     //CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDescHandle_, targetIndex, rtvDescHandleSize_);

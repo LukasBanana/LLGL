@@ -180,7 +180,10 @@ PFNGLBLITFRAMEBUFFERPROC                                glBlitFramebuffer       
 PFNGLGENERATEMIPMAPPROC                                 glGenerateMipmap                                = nullptr;
 
 #if 1 //WHICH EXTENSION???
+PFNGLCLEARBUFFERIVPROC                                  glClearBufferiv                                 = nullptr;
+PFNGLCLEARBUFFERUIVPROC                                 glClearBufferuiv                                = nullptr;
 PFNGLCLEARBUFFERFVPROC                                  glClearBufferfv                                 = nullptr;
+PFNGLCLEARBUFFERFIPROC                                  glClearBufferfi                                 = nullptr;
 #endif
 
 /* GL_ARB_draw_instanced */

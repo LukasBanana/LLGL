@@ -51,6 +51,8 @@ void GLCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentSta
     stateMngr_->SetGraphicsAPIDependentState(state);
 }
 
+/* ----- Viewport and Scissor ----- */
+
 void GLCommandBuffer::SetViewport(const Viewport& viewport)
 {
     /* Setup GL viewport and depth-range */
@@ -121,6 +123,8 @@ void GLCommandBuffer::SetScissorArray(std::uint32_t numScissors, const Scissor* 
     }
 }
 
+/* ----- Clear ----- */
+
 void GLCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
     glClearColor(color.r, color.g, color.b, color.a);
@@ -164,10 +168,41 @@ void GLCommandBuffer::Clear(long flags)
 }
 
 //TODO: maybe glColorMask must be set to (1, 1, 1, 1) to clear color correctly
-void GLCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color)
+void GLCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
-    /* Clear target color buffer */
-    glClearBufferfv(GL_COLOR, static_cast<GLint>(targetIndex), color.Ptr());
+    for (; numAttachments-- > 0; ++attachments)
+    {
+        if ((attachments->flags & ClearFlags::Color) != 0)
+        {
+            /* Clear color buffer */
+            glClearBufferfv(
+                GL_COLOR,
+                static_cast<GLint>(attachments->colorAttachment),
+                attachments->clearValue.color.Ptr()
+            );
+        }
+        else if ((attachments->flags & ClearFlags::DepthStencil) == ClearFlags::DepthStencil)
+        {
+            /* Clear depth and stencil buffer simultaneously */
+            glClearBufferfi(
+                GL_DEPTH_STENCIL,
+                0,
+                attachments->clearValue.depth,
+                static_cast<GLint>(attachments->clearValue.stencil)
+            );
+        }
+        else if ((attachments->flags & ClearFlags::Depth) != 0)
+        {
+            /* Clear only depth buffer */
+            glClearBufferfv(GL_DEPTH, 0, &(attachments->clearValue.depth));
+        }
+        else if ((attachments->flags & ClearFlags::Stencil) != 0)
+        {
+            /* Clear only stencil buffer */
+            GLint stencil = static_cast<GLint>(attachments->clearValue.stencil);
+            glClearBufferiv(GL_STENCIL, 0, &stencil);
+        }
+    }
 }
 
 /* ----- Input Assembly ------ */
