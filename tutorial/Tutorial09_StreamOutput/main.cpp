@@ -131,7 +131,7 @@ private:
         // Set buffers
         commands->SetVertexBuffer(*vertexBuffer);
         commands->SetIndexBuffer(*indexBuffer);
-        commands->SetConstantBuffer(*constantBuffer, 0, LLGL::ShaderStageFlags::VertexStage);
+        commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::ShaderStageFlags::VertexStage);
         commands->SetStreamOutputBuffer(*streamOutputBuffer);
 
         // Set graphics pipeline state

@@ -54,6 +54,7 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Command buffers ----- */
 
         CommandBuffer* CreateCommandBuffer() override;
+        CommandBufferExt* CreateCommandBufferExt() override;
 
         void Release(CommandBuffer& commandBuffer) override;
 

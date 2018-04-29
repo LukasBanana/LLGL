@@ -9,7 +9,7 @@
 #define LLGL_D3D11_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBuffer.h>
+#include <LLGL/CommandBufferExt.h>
 #include <cstddef>
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
@@ -25,7 +25,7 @@ namespace LLGL
 class D3D11StateManager;
 class D3D11RenderTarget;
 
-class D3D11CommandBuffer : public CommandBuffer
+class D3D11CommandBuffer : public CommandBufferExt
 {
 
     public:
@@ -51,18 +51,24 @@ class D3D11CommandBuffer : public CommandBuffer
         void Clear(long flags) override;
         void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) override;
 
-        /* ----- Buffers ------ */
+        /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
         
+        /* ----- Constant Buffers ------ */
+
         void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
+        /* ----- Storage Buffers ------ */
+
         void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+
+        /* ----- Stream Output Buffers ------ */
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
         void SetStreamOutputBufferArray(BufferArray& bufferArray) override;

@@ -69,13 +69,16 @@ CommandQueue* GLRenderSystem::GetCommandQueue()
 
 CommandBuffer* GLRenderSystem::CreateCommandBuffer()
 {
-    /* Get state manager from shared render context */
-    auto sharedContext = GetSharedRenderContext();
-    if (!sharedContext)
-        throw std::runtime_error("cannot create OpenGL command buffer without active render context");
+    return CreateCommandBufferExt();
+}
 
-    /* Create command buffer */
-    return TakeOwnership(commandBuffers_, MakeUnique<GLCommandBuffer>(sharedContext->GetStateManager()));
+CommandBufferExt* GLRenderSystem::CreateCommandBufferExt()
+{
+    /* Get state manager from shared render context */
+    if (auto sharedContext = GetSharedRenderContext())
+        return TakeOwnership(commandBuffers_, MakeUnique<GLCommandBuffer>(sharedContext->GetStateManager()));
+    else
+        throw std::runtime_error("cannot create OpenGL command buffer without active render context");
 }
 
 void GLRenderSystem::Release(CommandBuffer& commandBuffer)

@@ -322,6 +322,14 @@ struct RenderingCaps
     //! Specifies the list of supported texture formats.
     std::vector<TextureFormat>      textureFormats;
 
+    /**
+    \brief Specifies whether the render system supports extended command buffers with dynamic state access for shader resources.
+    \remarks This is only supported by older graphics APIs such as OpenGL and Direct3D 11.
+    \see RenderSystem::CreateCommandBufferExt
+    \see CommandBufferExt
+    */
+    bool                            hasCommandBufferExt                 { false };
+
     //! Specifies whether render targets (also "framebuffer objects") are supported.
     bool                            hasRenderTargets                    { false };
 

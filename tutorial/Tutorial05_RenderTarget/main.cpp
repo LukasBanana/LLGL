@@ -253,8 +253,9 @@ private:
         // Set common buffers and sampler states
         commands->SetIndexBuffer(*indexBuffer);
         commands->SetVertexBuffer(*vertexBuffer);
-        commands->SetConstantBuffer(*constantBuffer, 0, shaderStages);
-        commands->SetSampler(*samplerState, 0, shaderStages);
+
+        commandsExt->SetConstantBuffer(*constantBuffer, 0, shaderStages);
+        commandsExt->SetSampler(*samplerState, 0, shaderStages);
 
         // Set graphics pipeline state
         commands->SetGraphicsPipeline(*pipeline);
@@ -291,7 +292,7 @@ private:
             commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             // Set color map texture
-            commands->SetTexture(*colorMap, 0, shaderStages);
+            commandsExt->SetTexture(*colorMap, 0, shaderStages);
 
             // Update model transformation with render-target projection
             UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
@@ -348,7 +349,7 @@ private:
         #else
         
         // Set render-target texture
-        commands->SetTexture(*renderTargetTex, 0, shaderStages);
+        commandsExt->SetTexture(*renderTargetTex, 0, shaderStages);
 
         #endif
 

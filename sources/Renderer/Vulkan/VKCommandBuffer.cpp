@@ -228,7 +228,7 @@ void VKCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRG
     ClearFramebufferAttachments(1, &attachment);
 }
 
-/* ----- Buffers ------ */
+/* ----- Input Assembly ------ */
 
 void VKCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
@@ -258,25 +258,7 @@ void VKCommandBuffer::SetIndexBuffer(Buffer& buffer)
     vkCmdBindIndexBuffer(commandBuffer_, indexBufferVK.GetVkBuffer(), 0, indexBufferVK.GetIndexType());
 }
 
-void VKCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
-{
-    //todo
-}
-
-void VKCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
-{
-    //todo
-}
-
-void VKCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
-{
-    //todo
-}
-
-void VKCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
-{
-    //todo
-}
+/* ----- Stream Output Buffers ------ */
 
 void VKCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
@@ -294,30 +276,6 @@ void VKCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 }
 
 void VKCommandBuffer::EndStreamOutput()
-{
-    //todo
-}
-
-/* ----- Textures ----- */
-
-void VKCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*shaderStageFlags*/)
-{
-    //todo
-}
-
-void VKCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
-{
-    //todo
-}
-
-/* ----- Sampler States ----- */
-
-void VKCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*shaderStageFlags*/)
-{
-    //todo
-}
-
-void VKCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
 {
     //todo
 }

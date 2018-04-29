@@ -12,7 +12,7 @@
 #include "Export.h"
 #include "RenderContext.h"
 #include "CommandQueue.h"
-#include "CommandBuffer.h"
+#include "CommandBufferExt.h"
 #include "RenderSystemFlags.h"
 #include "RenderingProfiler.h"
 #include "RenderingDebugger.h"
@@ -183,11 +183,28 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Creates a new command buffer.
-        \remarks Some render systems only support a single command buffer, such as OpenGL and Direct3D 11.
+        \remarks All render systems can create multiple command buffers,
+        but especially for the legacy graphics APIs such as OpenGL and Direct3D 11, this doesn't provide any benefit,
+        since all graphics and compute commands are submitted sequentially to the GPU.
         */
         virtual CommandBuffer* CreateCommandBuffer() = 0;
 
-        //! Releases the specified command buffer. After this call, the specified object must no longer be used.
+        /**
+        \brief Creates a new extended command buffer (if supported) with dynamic state access for shader resources (i.e. Constant Buffers, Storage Buffers, Textures, and Samplers).
+        \return Pointer to the new CommandBufferExt object, or null if the render system does not support extended command buffers.
+        \remarks For those render systems that do not support dynamic state access for shader resources, use the ResourceViewHeap interface.
+        \note Only supported with: OpenGL, Direct3D 11.
+        \see RenderingCaps::hasCommandBufferExt
+        \see CreateResourceViewHeap
+        */
+        virtual CommandBufferExt* CreateCommandBufferExt() = 0;
+
+        /**
+        \brief Releases the specified command buffer. After this call, the specified object must no longer be used.
+        \remarks This can be used for both CommandBuffer and CommandBufferExt objects as the latter one inherits from the former one.
+        \see CreateCommandBuffer
+        \see CreateCommandBufferExt
+        */
         virtual void Release(CommandBuffer& commandBuffer) = 0;
 
         /* ----- Buffers ------ */

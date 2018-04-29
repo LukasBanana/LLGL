@@ -170,7 +170,7 @@ void GLCommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRG
     glClearBufferfv(GL_COLOR, static_cast<GLint>(targetIndex), color.Ptr());
 }
 
-/* ----- Buffers ------ */
+/* ----- Input Assembly ------ */
 
 void GLCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
@@ -198,6 +198,8 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
     renderState_.indexBufferStride      = static_cast<GLsizeiptr>(format.GetFormatSize());
 }
 
+/* ----- Constant Buffers ------ */
+
 void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
@@ -208,6 +210,8 @@ void GLCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint
     SetGenericBufferArray(GLBufferTarget::UNIFORM_BUFFER, bufferArray, startSlot);
 }
 
+/* ----- Storage Buffers ------ */
+
 void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
@@ -217,6 +221,8 @@ void GLCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint3
 {
     SetGenericBufferArray(GLBufferTarget::SHADER_STORAGE_BUFFER, bufferArray, startSlot);
 }
+
+/* ----- Stream Output Buffers ------ */
 
 void GLCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {

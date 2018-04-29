@@ -292,7 +292,7 @@ private:
             #ifdef _TEST_BUFFER_ARRAY_
             commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
             #else
-            commands->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+            commandsExt->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
             #endif
         }
 

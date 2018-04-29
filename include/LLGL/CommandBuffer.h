@@ -162,7 +162,7 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) = 0;
 
-        /* ----- Buffers ------ */
+        /* ----- Input Assembly ------ */
 
         /**
         \brief Sets the specified vertex buffer for subsequent drawing operations.
@@ -192,45 +192,8 @@ class LLGL_EXPORT CommandBuffer
         \see RenderSystem::WriteIndexBuffer
         */
         virtual void SetIndexBuffer(Buffer& buffer) = 0;
-        
-        /**
-        \brief Sets the active constant buffer at the specified slot index for subsequent drawing and compute operations.
-        \param[in] buffer Specifies the constant buffer to set. This buffer must have been created with the buffer type: BufferType::Constant.
-        This must not be an unspecified constant buffer, i.e. it must be initialized with either the initial data in the "RenderSystem::CreateBuffer"
-        function or with the "RenderSystem::WriteBuffer" function.
-        \param[in] slot Specifies the slot index where to put the constant buffer.
-        \param[in] shaderStageFlags Specifies at which shader stages the constant buffer is to be set. By default all shader stages are affected.
-        \see RenderSystem::WriteBuffer
-        \see ShaderStageFlags
-        */
-        virtual void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
-        /**
-        \brief Sets the active array of constant buffers at the specified start slot index.
-        \param[in] bufferArray Specifies the constant buffer array to set.
-        \see RenderSystem::CreateBufferArray
-        \see SetConstantBuffer
-        */
-        virtual void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
-
-        /**
-        \brief Sets the active storage buffer of the specified slot index for subsequent drawing and compute operations.
-        \param[in] buffer Specifies the storage buffer to set. This buffer must have been created with the buffer type: BufferType::Storage.
-        \param[in] slot Specifies the slot index where to put the storage buffer.
-        \param[in] shaderStageFlags Specifies at which shader stages the storage buffer is to be set and which resource views are to be set.
-        By default all shader stages and all resource views are affected.
-        \see RenderSystem::MapBuffer
-        \see RenderSystem::UnmapBuffer
-        */
-        virtual void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
-
-        /**
-        \brief Sets the active array of storage buffers at the specified start slot index.
-        \param[in] bufferArray Specifies the storage buffer array to set.
-        \see RenderSystem::CreateBufferArray
-        \see SetStorageBuffer
-        */
-        virtual void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
+        /* ----- Stream Output Buffers ------ */
 
         /**
         \brief Sets the active stream-output buffer to the stream-output stage.
@@ -260,37 +223,6 @@ class LLGL_EXPORT CommandBuffer
         \see BeginStreamOutput
         */
         virtual void EndStreamOutput() = 0;
-
-        /* ----- Textures ----- */
-
-        /**
-        \brief Sets the active texture of the specified slot index for subsequent drawing and compute operations.
-        \param[in] texture Specifies the texture to set.
-        \param[in] slot Specifies the slot index where to put the texture.
-        */
-        virtual void SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
-
-        /**
-        \brief Sets the active array of textures at the specified start slot index.
-        \see SetTexture
-        */
-        virtual void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
-
-        /* ----- Samplers ----- */
-
-        /**
-        \brief Sets the active sampler of the specified slot index for subsequent drawing and compute operations.
-        \param[in] sampler Specifies the sampler to set.
-        \param[in] slot Specifies the slot index where to put the sampler.
-        \see RenderSystem::CreateSampler
-        */
-        virtual void SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
-
-        /**
-        \brief Sets the active array of samplers at the specified start slot index.
-        \see SetSampler
-        */
-        virtual void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) = 0;
 
         /* ----- Resource View Heaps ----- */
 

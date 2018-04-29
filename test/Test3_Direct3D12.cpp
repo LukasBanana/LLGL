@@ -213,8 +213,7 @@ int main()
             commands->SetGraphicsPipeline(*pipeline);
             commands->SetVertexBuffer(*vertexBuffer);
 
-            commands->SetConstantBuffer(*constantBuffer, 0);
-            //commands->SetTexture(*texture, 0);
+            //commands->SetConstantBuffer(*constantBuffer, 0);
 
             commands->Draw(3, 0);
 

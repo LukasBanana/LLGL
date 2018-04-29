@@ -90,6 +90,12 @@ CommandBuffer* D3D12RenderSystem::CreateCommandBuffer()
     return TakeOwnership(commandBuffers_, MakeUnique<D3D12CommandBuffer>(*this));
 }
 
+CommandBufferExt* D3D12RenderSystem::CreateCommandBufferExt()
+{
+    /* Extended command buffers are not spported */
+    return nullptr;
+}
+
 void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 {
     RemoveFromUniqueSet(commandBuffers_, &commandBuffer);

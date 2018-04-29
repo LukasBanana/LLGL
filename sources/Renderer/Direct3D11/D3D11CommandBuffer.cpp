@@ -122,7 +122,7 @@ void D3D11CommandBuffer::ClearTarget(std::uint32_t targetIndex, const LLGL::Colo
         context_->ClearRenderTargetView(framebufferView_.rtvList[targetIndex], color.Ptr());
 }
 
-/* ----- Buffers ------ */
+/* ----- Input Assembly ------ */
 
 void D3D11CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
@@ -154,6 +154,8 @@ void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
     context_->IASetIndexBuffer(indexBufferD3D.Get(), indexBufferD3D.GetFormat(), 0);
 }
 
+/* ----- Constant Buffers ------ */
+
 void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
     /* Set constant buffer resource to all shader stages */
@@ -173,6 +175,8 @@ void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::u
         shaderStageFlags
     );
 }
+
+/* ----- Storage Buffers ------ */
 
 void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
@@ -219,6 +223,8 @@ void D3D11CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::ui
         );
     }
 }
+
+/* ----- Stream Output Buffers ------ */
 
 void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {

@@ -336,7 +336,6 @@ int main()
             commands->SetGraphicsPipeline(*pipeline);
 
             commands->SetVertexBuffer(*vertexBuffer);
-            //commands->SetConstantBuffer(*constBufferMatrices, 0);
             commands->SetGraphicsResourceViewHeap(*resourceViewHeap, 0);
 
             //commands->UpdatePipelineLayout(*pipelineLayout);

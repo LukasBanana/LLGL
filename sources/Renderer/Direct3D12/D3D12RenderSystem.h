@@ -58,6 +58,7 @@ class D3D12RenderSystem : public RenderSystem
         /* ----- Command buffers ----- */
 
         CommandBuffer* CreateCommandBuffer() override;
+        CommandBufferExt* CreateCommandBufferExt() override;
 
         void Release(CommandBuffer& commandBuffer) override;
 

@@ -211,6 +211,7 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
 static void GLGetSupportedFeatures(RenderingCaps& caps)
 {
     /* Query all boolean capabilies by their respective OpenGL extension */
+    caps.hasCommandBufferExt            = true;
     caps.hasRenderTargets               = HasExtension(GLExt::ARB_framebuffer_object);
     caps.has3DTextures                  = HasExtension(GLExt::EXT_texture3D);
     caps.hasCubeTextures                = HasExtension(GLExt::ARB_texture_cube_map);

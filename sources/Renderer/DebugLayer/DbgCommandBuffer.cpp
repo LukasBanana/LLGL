@@ -24,11 +24,12 @@ namespace LLGL
 
 
 DbgCommandBuffer::DbgCommandBuffer(
-    CommandBuffer& instance, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCaps& caps) :
-        instance  { instance },
-        profiler_ { profiler },
-        debugger_ { debugger },
-        caps_     { caps     }
+    CommandBuffer& instance, CommandBufferExt* instanceExt, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCaps& caps) :
+        instance    { instance    },
+        instanceExt { instanceExt },
+        profiler_   { profiler    },
+        debugger_   { debugger    },
+        caps_       { caps        }
 {
 }
 
@@ -163,8 +164,12 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     LLGL_DBG_PROFILER_DO(setIndexBuffer.Inc());
 }
 
+/* ----- Constant Buffers ------ */
+
 void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
     if (debugger_)
@@ -174,13 +179,15 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, lon
         DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
 
-    instance.SetConstantBuffer(bufferDbg.instance, slot, shaderStageFlags);
+    instanceExt->SetConstantBuffer(bufferDbg.instance, slot, shaderStageFlags);
     
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
 void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
@@ -188,13 +195,17 @@ void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uin
         DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
 
-    instance.SetConstantBufferArray(bufferArray, startSlot, shaderStageFlags);
+    instanceExt->SetConstantBufferArray(bufferArray, startSlot, shaderStageFlags);
     
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
+/* ----- Storage Buffers ------ */
+
 void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
     
     if (debugger_)
@@ -204,13 +215,15 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long
         DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages | ShaderStageFlags::ReadOnlyResource);
     }
 
-    instance.SetStorageBuffer(bufferDbg.instance, slot, shaderStageFlags);
+    instanceExt->SetStorageBuffer(bufferDbg.instance, slot, shaderStageFlags);
     
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
 
 void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
@@ -218,10 +231,12 @@ void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint
         DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
 
-    instance.SetStorageBufferArray(bufferArray, startSlot, shaderStageFlags);
+    instanceExt->SetStorageBufferArray(bufferArray, startSlot, shaderStageFlags);
     
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
+
+/* ----- Stream Output Buffers ------ */
 
 void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
@@ -284,6 +299,8 @@ void DbgCommandBuffer::EndStreamOutput()
 
 void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 
     if (debugger_)
@@ -292,20 +309,22 @@ void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long sha
         DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
     
-    instance.SetTexture(textureDbg.instance, slot, shaderStageFlags);
+    instanceExt->SetTexture(textureDbg.instance, slot, shaderStageFlags);
     
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
 void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
     
-    instance.SetTextureArray(textureArray, startSlot, shaderStageFlags);
+    instanceExt->SetTextureArray(textureArray, startSlot, shaderStageFlags);
     
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
@@ -314,26 +333,30 @@ void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t
 
 void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
     
-    instance.SetSampler(sampler, slot, shaderStageFlags);
+    instanceExt->SetSampler(sampler, slot, shaderStageFlags);
     
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
 
 void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags)
 {
+    AssertCommandBufferExt(__func__);
+
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
     
-    instance.SetSamplerArray(samplerArray, startSlot, shaderStageFlags);
+    instanceExt->SetSamplerArray(samplerArray, startSlot, shaderStageFlags);
     
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
@@ -615,6 +638,12 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
 /*
  * ======= Private: =======
  */
+
+void DbgCommandBuffer::AssertCommandBufferExt(const char* funcName)
+{
+    if (!instanceExt)
+        throw std::runtime_error("illegal function call for a non-extended command buffer: " + std::string(funcName));
+}
 
 void DbgCommandBuffer::DebugGraphicsPipelineSet()
 {

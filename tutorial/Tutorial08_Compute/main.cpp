@@ -23,7 +23,15 @@ int main(int argc, char* argv[])
         auto context = renderer->CreateRenderContext(contextDesc);
 
         // Create command buffer
-        auto commands = renderer->CreateCommandBuffer();
+        union
+        {
+            LLGL::CommandBuffer*    commands    = nullptr;
+            LLGL::CommandBufferExt* commandsExt;
+        };
+
+        commandsExt = renderer->CreateCommandBufferExt();
+        if (!commands)
+            commands = renderer->CreateCommandBuffer();
 
         // Initialize buffer data (16 byte pack alignment)
         struct DataBlock
@@ -129,8 +137,8 @@ int main(int argc, char* argv[])
         // Set storage buffer
         if (resourceViewHeap)
             commands->SetComputeResourceViewHeap(*resourceViewHeap, 0);
-        else
-            commands->SetStorageBuffer(*storageBuffer, 0, LLGL::ShaderStageFlags::ComputeStage);
+        else if (commandsExt)
+            commandsExt->SetStorageBuffer(*storageBuffer, 0, LLGL::ShaderStageFlags::ComputeStage);
 
         // Dispatch compute shader
         commands->Dispatch(static_cast<std::uint32_t>(inputData.size()), 1, 1);

@@ -186,8 +186,8 @@ int main(int argc, char* argv[])
         auto pipelineD3D = rendererD3D->CreateGraphicsPipeline(pipelineDescD3D);
 
         // Create command buffers
-        auto commandsGL = rendererGL->CreateCommandBuffer();
-        auto commandsD3D = rendererD3D->CreateCommandBuffer();
+        auto commandsGL = rendererGL->CreateCommandBufferExt();
+        auto commandsD3D = rendererD3D->CreateCommandBufferExt();
         
         // Set the render context as the initial render target
         commandsGL->SetRenderTarget(*contextGL);

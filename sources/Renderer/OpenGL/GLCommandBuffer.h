@@ -9,7 +9,7 @@
 #define LLGL_GL_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBuffer.h>
+#include <LLGL/CommandBufferExt.h>
 #include "RenderState/GLState.h"
 #include "OpenGL.h"
 
@@ -21,7 +21,7 @@ namespace LLGL
 class GLRenderTarget;
 class GLStateManager;
 
-class GLCommandBuffer : public CommandBuffer
+class GLCommandBuffer : public CommandBufferExt
 {
 
     public:
@@ -47,18 +47,24 @@ class GLCommandBuffer : public CommandBuffer
         void Clear(long flags) override;
         void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) override;
 
-        /* ----- Buffers ------ */
+        /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
         
+        /* ----- Constant Buffers ------ */
+
         void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
+        /* ----- Storage Buffers ------ */
+
         void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+
+        /* ----- Stream Output Buffers ------ */
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
         void SetStreamOutputBufferArray(BufferArray& bufferArray) override;

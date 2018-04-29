@@ -72,6 +72,11 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 CommandBuffer* D3D11RenderSystem::CreateCommandBuffer()
 {
+    return CreateCommandBufferExt();
+}
+
+CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt()
+{
     return TakeOwnership(commandBuffers_, MakeUnique<D3D11CommandBuffer>(*stateMngr_, context_));
 }
 
@@ -362,9 +367,10 @@ void D3D11RenderSystem::QueryRenderingCaps()
         DXGetRenderingCaps(caps, GetFeatureLevel());
 
         /* Set extended attributes */
-        caps.maxNumViewports    = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
-        caps.maxViewportSize[0] = D3D11_VIEWPORT_BOUNDS_MAX;
-        caps.maxViewportSize[1] = D3D11_VIEWPORT_BOUNDS_MAX;
+        caps.hasCommandBufferExt    = true;
+        caps.maxNumViewports        = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+        caps.maxViewportSize[0]     = D3D11_VIEWPORT_BOUNDS_MAX;
+        caps.maxViewportSize[1]     = D3D11_VIEWPORT_BOUNDS_MAX;
     }
     SetRenderingCaps(caps);
 }

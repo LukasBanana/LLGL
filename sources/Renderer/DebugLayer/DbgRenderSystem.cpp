@@ -71,8 +71,19 @@ CommandQueue* DbgRenderSystem::GetCommandQueue()
 CommandBuffer* DbgRenderSystem::CreateCommandBuffer()
 {
     return TakeOwnership(commandBuffers_, MakeUnique<DbgCommandBuffer>(
-        *instance_->CreateCommandBuffer(), profiler_, debugger_, GetRenderingCaps()
+        *instance_->CreateCommandBuffer(), nullptr, profiler_, debugger_, GetRenderingCaps()
     ));
+}
+
+CommandBufferExt* DbgRenderSystem::CreateCommandBufferExt()
+{
+    if (auto instance = instance_->CreateCommandBufferExt())
+    {
+        return TakeOwnership(commandBuffers_, MakeUnique<DbgCommandBuffer>(
+            *instance, instance, profiler_, debugger_, GetRenderingCaps()
+        ));
+    }
+    return nullptr;
 }
 
 void DbgRenderSystem::Release(CommandBuffer& commandBuffer)

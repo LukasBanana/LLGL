@@ -50,34 +50,20 @@ class VKCommandBuffer : public CommandBuffer
         void Clear(long flags) override;
         void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) override;
 
-        /* ----- Buffers ------ */
+        /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
-        
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+
+        /* ----- Stream Output Buffers ------ */
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
         void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
 
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
-
-        /* ----- Textures ----- */
-
-        void SetTexture(Texture& texture, std::uint32_t layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-
-        /* ----- Sampler States ----- */
-
-        void SetSampler(Sampler& sampler, std::uint32_t layer, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
 
         /* ----- Resource View Heaps ----- */
 

@@ -39,7 +39,9 @@ int main()
         auto context = renderer->CreateRenderContext(contextDesc);
         
         // Create command buffer
-        auto commands = renderer->CreateCommandBuffer();
+        auto commands = renderer->CreateCommandBufferExt();
+        if (!commands)
+            throw std::runtime_error("failed to create extended command buffer");
 
         // Change window title
         auto title = "LLGL Test 4: Compute ( " + renderer->GetName() + " )";

@@ -184,8 +184,8 @@ private:
         commands->SetVertexBuffer(*vertexBuffer);
 
         // Set texture and sampler state on slot index 0
-        commands->SetTextureArray(*textureArray, 0);
-        commands->SetSampler(*sampler[samplerIndex], 0);
+        commandsExt->SetTextureArray(*textureArray, 0);
+        commandsExt->SetSampler(*sampler[samplerIndex], 0);
 
         // Draw fullscreen triangle
         commands->Draw(3, 0);

@@ -297,7 +297,11 @@ protected:
     LLGL::RenderContext*                        context     = nullptr;
 
     // Main command buffer
-    LLGL::CommandBuffer*                        commands    = nullptr;
+    union
+    {
+        LLGL::CommandBuffer*                    commands    = nullptr;
+        LLGL::CommandBufferExt*                 commandsExt;
+    };
 
     std::shared_ptr<LLGL::Input>                input;
 
@@ -347,7 +351,9 @@ protected:
         context = renderer->CreateRenderContext(contextDesc);
 
         // Create command buffer
-        commands = renderer->CreateCommandBuffer();
+        commandsExt = renderer->CreateCommandBufferExt();
+        if (!commands)
+            commands = renderer->CreateCommandBuffer();
 
         // Initialize command buffer
         commands->SetClearColor(defaultClearColor);

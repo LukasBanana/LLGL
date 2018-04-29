@@ -77,7 +77,7 @@ int main()
         window->Show();
 
         // Create command buffer
-        auto commands = renderer->CreateCommandBuffer();
+        auto commands = renderer->CreateCommandBufferExt();
 
         const auto& renderCaps = renderer->GetRenderingCaps();
 

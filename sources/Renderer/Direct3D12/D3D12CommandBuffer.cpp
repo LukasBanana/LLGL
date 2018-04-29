@@ -132,6 +132,7 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer)
     commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
 }
 
+#if 0
 void D3D12CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
 {
     auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, buffer);
@@ -141,21 +142,9 @@ void D3D12CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, l
     commandList_->SetDescriptorHeaps(1, descHeaps);
     commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
+#endif
 
-void D3D12CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
-{
-    //todo...
-}
-
-void D3D12CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
-{
-    //todo...
-}
-
-void D3D12CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
-{
-    //todo...
-}
+/* ----- Stream Output Buffers ------ */
 
 void D3D12CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
@@ -177,6 +166,7 @@ void D3D12CommandBuffer::EndStreamOutput()
     // dummy
 }
 
+#if 0
 /* ----- Textures ----- */
 
 void D3D12CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags)
@@ -188,23 +178,7 @@ void D3D12CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long s
     commandList_->SetDescriptorHeaps(1, descHeaps);
     commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
-
-void D3D12CommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags)
-{
-    //todo
-}
-
-/* ----- Sampler States ----- */
-
-void D3D12CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags)
-{
-    //todo
-}
-
-void D3D12CommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags)
-{
-    //todo
-}
+#endif
 
 /* ----- Render Targets ----- */
 

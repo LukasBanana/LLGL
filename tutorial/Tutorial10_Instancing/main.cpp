@@ -321,18 +321,19 @@ private:
 
         // Set buffer array, texture, and sampler
         commands->SetVertexBufferArray(*vertexBufferArray);
-        commands->SetTexture(*arrayTexture, 0, LLGL::ShaderStageFlags::FragmentStage);
-        commands->SetConstantBuffer(*constantBuffer, 0, LLGL::ShaderStageFlags::VertexStage);
+
+        commandsExt->SetTexture(*arrayTexture, 0, LLGL::ShaderStageFlags::FragmentStage);
+        commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::ShaderStageFlags::VertexStage);
 
         // Set graphics pipeline state
         commands->SetGraphicsPipeline(*pipeline);
 
         // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-        commands->SetSampler(*samplers[0], 0, LLGL::ShaderStageFlags::FragmentStage);
+        commandsExt->SetSampler(*samplers[0], 0, LLGL::ShaderStageFlags::FragmentStage);
         commands->DrawInstanced(4, 0, numPlantInstances);
 
         // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-        commands->SetSampler(*samplers[1], 0, LLGL::ShaderStageFlags::FragmentStage);
+        commandsExt->SetSampler(*samplers[1], 0, LLGL::ShaderStageFlags::FragmentStage);
         commands->DrawInstanced(4, 4, 1, numPlantInstances);
 
         // Present result on the screen

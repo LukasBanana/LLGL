@@ -9,7 +9,7 @@
 #define LLGL_DBG_COMMAND_BUFFER_H
 
 
-#include <LLGL/CommandBuffer.h>
+#include <LLGL/CommandBufferExt.h>
 #include <LLGL/RenderingProfiler.h>
 #include <LLGL/RenderingDebugger.h>
 
@@ -23,7 +23,7 @@ namespace LLGL
 
 class DbgBuffer;
 
-class DbgCommandBuffer : public CommandBuffer
+class DbgCommandBuffer : public CommandBufferExt
 {
 
     public:
@@ -32,6 +32,7 @@ class DbgCommandBuffer : public CommandBuffer
 
         DbgCommandBuffer(
             CommandBuffer& instance,
+            CommandBufferExt* instanceExt,
             RenderingProfiler* profiler,
             RenderingDebugger* debugger,
             const RenderingCaps& caps
@@ -54,18 +55,24 @@ class DbgCommandBuffer : public CommandBuffer
         void Clear(long flags) override;
         void ClearTarget(std::uint32_t targetIndex, const LLGL::ColorRGBAf& color) override;
 
-        /* ----- Buffers ------ */
+        /* ----- Input Assembly ------ */
 
         void SetVertexBuffer(Buffer& buffer) override;
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
         
+        /* ----- Constant Buffers ------ */
+
         void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         
+        /* ----- Storage Buffers ------ */
+
         void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
         void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+
+        /* ----- Stream Output Buffers ------ */
 
         void SetStreamOutputBuffer(Buffer& buffer) override;
         void SetStreamOutputBufferArray(BufferArray& bufferArray) override;
@@ -129,9 +136,12 @@ class DbgCommandBuffer : public CommandBuffer
 
         /* ----- Debugging members ----- */
 
-        CommandBuffer& instance;
+        CommandBuffer&      instance;
+        CommandBufferExt*   instanceExt = nullptr;
 
     private:
+
+        void AssertCommandBufferExt(const char* funcName);
 
         void DebugGraphicsPipelineSet();
         void DebugComputePipelineSet();
