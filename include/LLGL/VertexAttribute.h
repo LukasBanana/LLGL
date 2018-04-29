@@ -19,7 +19,10 @@ namespace LLGL
 {
 
 
-//! Vertex attribute structure.
+/**
+\brief Vertex attribute structure.
+\see VertexFormat
+*/
 struct LLGL_EXPORT VertexAttribute
 {
     VertexAttribute() = default;
@@ -102,7 +105,10 @@ struct LLGL_EXPORT VertexAttribute
 };
 
 
+//! Compares the two VertexAttribute types for equality (including their names and all other members).
 LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute& rhs);
+
+//! Compares the two VertexAttribute types for inequality (including their names and all other members).
 LLGL_EXPORT bool operator != (const VertexAttribute& lhs, const VertexAttribute& rhs);
 
 

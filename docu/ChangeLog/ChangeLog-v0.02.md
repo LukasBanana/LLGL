@@ -252,6 +252,54 @@ myImageDesc.dataSize = myImageBufferSize;
 ```
 
 
+Dynamic state access for shader resources:
+------------------------------------------
+
+Dynamic state access for constant buffers, storage buffers, textures, and samplers is only supported for the legacy rendering APIs auch as OpenGL and Direct3D 11.
+For the new APIs such as Direct3D 12 and Vulkan the `ResourceViewHeap` interface can be used to bind all shader resources for a graphics pipeline at once.
+
+Before:
+```cpp
+// Interface:
+class CommandBuffer {
+    void SetConstantBuffer(/* ... */);
+    /* ... */
+};
+
+// Usage:
+auto myCmdBuffer = myRenderer->CreateCommandBuffer();
+/* ... */
+myCmdBuffer->SetConstantBuffer(/* ... */);
+myCmdBuffer->SetConstantBufferArray(/* ... */);
+myCmdBuffer->SetStorageBuffer(/* ... */);
+myCmdBuffer->SetStorageBufferArray(/* ... */);
+myCmdBuffer->SetTexture(/* ... */);
+myCmdBuffer->SetTextureArray(/* ... */);
+myCmdBuffer->SetSampler(/* ... */);
+myCmdBuffer->SetSamplerArray(/* ... */);
+```
+
+After:
+```cpp
+// Interface:
+class CommandBufferExt : public CommandBuffer {
+    void SetConstantBuffer(/* ... */);
+    /* ... */
+};
+
+// Usage (only supported with OpenGL and Direct3D 11):
+auto myCmdBufferExt = myRenderer->CreateCommandBufferExt();
+/* ... */
+myCmdBufferExt->SetConstantBuffer(/* ... */);
+myCmdBufferExt->SetConstantBufferArray(/* ... */);
+myCmdBufferExt->SetStorageBuffer(/* ... */);
+myCmdBufferExt->SetStorageBufferArray(/* ... */);
+myCmdBufferExt->SetTexture(/* ... */);
+myCmdBufferExt->SetTextureArray(/* ... */);
+myCmdBufferExt->SetSampler(/* ... */);
+myCmdBufferExt->SetSamplerArray(/* ... */);
+```
+
 
 
 
