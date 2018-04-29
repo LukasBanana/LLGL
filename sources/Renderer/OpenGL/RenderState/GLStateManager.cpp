@@ -1006,6 +1006,8 @@ void GLStateManager::DetermineLimits()
 
 void GLStateManager::DetermineVendorSpecificExtensions()
 {
+    #if defined GL_NV_conservative_raster || defined GL_INTEL_conservative_rasterization
+    
     /* Initialize extenstion states */
     auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
     {
@@ -1026,6 +1028,8 @@ void GLStateManager::DetermineVendorSpecificExtensions()
     #ifdef GL_INTEL_conservative_rasterization
     // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::INTEL_conservative_rasterization, GL_CONSERVATIVE_RASTERIZATION_INTEL);
+    #endif
+    
     #endif
 }
 

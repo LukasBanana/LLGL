@@ -12,11 +12,15 @@
 #include <string>
 
 
+#ifndef __APPLE__
+
 [[noreturn]]
 static void ErrUnsupportedGLProc(const char* name)
 {
     throw std::runtime_error("illegal use of unsupported OpenGL extension procedure: \"" + std::string(name) + "\"");
 }
+
+#endif
 
 
 #define LLGL_DEF_GL_DUMMY_PROCS
