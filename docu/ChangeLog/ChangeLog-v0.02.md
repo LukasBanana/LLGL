@@ -4,6 +4,9 @@ ChangeLog v0.02
 Vertex layout in `ShaderProgram` interface:
 --------------------------
 
+Multiple `VertexFormat` instances can now be passed to a `ShaderProgram` when multiple vertex buffers are used.
+Previously, multiple vertex buffer formats were defined by a single `VertexFormat` instance.
+
 Before:
 ```cpp
 // Interface:
@@ -29,6 +32,8 @@ myShaderProgram->BuildInputLayout(1, &myVertexFormat);
 
 `LogicOp` usage:
 ----------------
+
+Logic pixel operation parameter has been moved from `GraphicsAPIDependentStateDescriptor` into `BlendDescriptor` of a graphics pipeline.
 
 Before:
 ```cpp
@@ -57,6 +62,8 @@ myRenderer->CreateGraphicsPipeline(myGfxPipelineDesc);
 Rasterization line width (OpenGL and Vulkan only):
 --------------------------------------------------
 
+Line width rasterization parameter has been moved from `GraphicsAPIDependentStateDescriptor` into `RasterizerDescriptor` of a graphics pipeline.
+
 Before:
 ```cpp
 // Interface:
@@ -83,6 +90,9 @@ myRenderer->CreateGraphicsPipeline(myGfxPipelineDesc);
 
 OpenGL profile selection:
 -------------------------
+
+The OpenGL profile can now be selected with dynamic version numbers instead of fixed enumeration entries.
+For the profile type, the boolean members `extProfile` and `coreProfile` have been replaced by the enumeration `OpenGLContextProfile`.
 
 Before:
 ```cpp
@@ -122,6 +132,8 @@ myRenderer->CreateRenderContext(myContextDesc);
 Query texture descriptor:
 -------------------------
 
+The function to query the `TextureDescriptor` from a `Texture` object has been moved from the `RenderSystem` interface into the `Texture` interface.
+
 Before:
 ```cpp
 // Interface:
@@ -144,7 +156,12 @@ auto myTextureDesc = myTexture->QueryDesc();
 Render target attachments:
 --------------------------
 
+Render target attachments are now defined by the `RenderTargetDescriptor` structure when the render target is created.
+Instead of detaching all attachments (i.e. `DetachAll`), release the render target and create a new one.
+
 ***Under Construction***
+
+Dynamic attachment functions may be removed such as `AttachTexture` and `DetachAll`.
 
 Before:
 ```cpp
@@ -213,6 +230,9 @@ auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
 
 Texture initialization with `ImageDescriptor` interface:
 --------------------------------------------------------
+
+Member `buffer` has been renamed to `data` to be consistent with the nomenclature (like in the `RenderSystem::ReadTexture` function for instance.
+Member `compressedSize` has been renamed to `dataSize` to be used for robustness checks and not only for compressed image data.
 
 Before:
 ```cpp
