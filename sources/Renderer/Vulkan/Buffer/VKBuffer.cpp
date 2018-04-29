@@ -97,6 +97,19 @@ void VKBuffer::Unmap(VkDevice device)
         memoryRegionStaging_->GetParentChunk()->Unmap(device);
 }
 
+void VKBuffer::UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset)
+{
+    if (memoryRegionStaging_)
+    {
+        auto deviceMemory = memoryRegionStaging_->GetParentChunk();
+        if (auto memory = deviceMemory->Map(device, memoryRegionStaging_->GetOffset() + offset, dataSize))
+        {
+            ::memcpy(memory, data, static_cast<std::size_t>(dataSize));
+            deviceMemory->Unmap(device);
+        }
+    }
+}
+
 
 } // /namespace LLGL
 

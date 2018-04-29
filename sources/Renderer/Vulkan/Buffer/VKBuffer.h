@@ -47,6 +47,9 @@ class VKBuffer : public Buffer
         void* Map(VkDevice device, const BufferCPUAccess access);
         void Unmap(VkDevice device);
 
+        // Updates the staging buffer (if it was created).
+        void UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset = 0);
+
         // Returns the hardware buffer object.
         inline VkBuffer GetVkBuffer() const
         {

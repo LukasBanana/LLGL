@@ -186,7 +186,10 @@ VKRenderSystem::~VKRenderSystem()
 
 RenderContext* VKRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return TakeOwnership(renderContexts_, MakeUnique<VKRenderContext>(instance_, physicalDevice_, device_, desc, surface));
+    return TakeOwnership(
+        renderContexts_,
+        MakeUnique<VKRenderContext>(instance_, physicalDevice_, device_, desc, surface)
+    );
 }
 
 void VKRenderSystem::Release(RenderContext& renderContext)
@@ -227,6 +230,8 @@ void VKRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
+    static const long g_stagingBufferRelatedFlags = (BufferFlags::MapReadWriteAccess | BufferFlags::DynamicUsage);
+
     AssertCreateBuffer(desc, static_cast<uint64_t>(std::numeric_limits<VkDeviceSize>::max()));
 
     /* Create staging buffer */
@@ -260,7 +265,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
     /* Copy staging buffer into hardware buffer */
     CopyBuffer(stagingBuffer.buffer, buffer->GetVkBuffer(), static_cast<VkDeviceSize>(desc.size));
 
-    if ((desc.flags & BufferFlags::MapReadWriteAccess) != 0)
+    if ((desc.flags & g_stagingBufferRelatedFlags) != 0)
     {
         /* Store ownership of staging buffer */
         buffer->TakeStagingBuffer(std::move(stagingBuffer), memoryRegionStaging);
@@ -283,17 +288,50 @@ BufferArray* VKRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer*
 
 void VKRenderSystem::Release(Buffer& buffer)
 {
-    //todo
+    RemoveFromUniqueSet(buffers_, &buffer);
 }
 
 void VKRenderSystem::Release(BufferArray& bufferArray)
 {
-    //todo
+    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
 void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    //todo
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+
+    auto memorySize     = static_cast<VkDeviceSize>(dataSize);
+    auto memoryOffset   = static_cast<VkDeviceSize>(offset);
+
+    if (bufferVK.GetStagingVkBuffer() != VK_NULL_HANDLE)
+    {
+        /* Copy data to staging buffer memory */
+        bufferVK.UpdateStagingBuffer(device_, data, memorySize, memoryOffset);
+
+        /* Copy staging buffer into hardware buffer */
+        CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
+    }
+    else
+    {
+        /* Create staging buffer */
+        VkBufferCreateInfo stagingCreateInfo;
+        FillBufferCreateInfo(
+            stagingCreateInfo,
+            static_cast<VkDeviceSize>(dataSize),
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+        );
+
+        VKBufferWithRequirements stagingBuffer { device_ };
+        VKDeviceMemoryRegion* memoryRegionStaging = nullptr;
+
+        std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(stagingCreateInfo, data, dataSize);
+
+        /* Copy staging buffer into hardware buffer */
+        CopyBuffer(stagingBuffer.buffer, bufferVK.GetVkBuffer(), memorySize, 0, memoryOffset);
+
+        /* Release device memory region */
+        deviceMemoryMngr_->Release(memoryRegionStaging);
+    }
 }
 
 void* VKRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
@@ -1214,15 +1252,15 @@ void VKRenderSystem::TransitionImageLayout(VkImage image, VkFormat /*format*/, V
     EndStagingCommands();
 }
 
-void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+void VKRenderSystem::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset)
 {
     BeginStagingCommands();
 
     /* Record copy command */
     VkBufferCopy region;
     {
-        region.srcOffset    = 0;
-        region.dstOffset    = 0;
+        region.srcOffset    = srcOffset;
+        region.dstOffset    = dstOffset;
         region.size         = size;
     }
     vkCmdCopyBuffer(stagingCommandBuffer_, srcBuffer, dstBuffer, 1, &region);
