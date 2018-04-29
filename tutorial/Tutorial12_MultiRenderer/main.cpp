@@ -233,9 +233,11 @@ int main(int argc, char* argv[])
 
                 // Set graphics pipeline and vertex buffer
                 commandsGL->SetGraphicsPipeline(*pipelineGL);
-                commandsGL->SetConstantBuffer(*constBufferGL, 0);
+                
                 commandsGL->SetVertexBuffer(*vertexBufferGL);
                 commandsGL->SetIndexBuffer(*indexBufferGL);
+
+                commandsGL->SetConstantBuffer(*constBufferGL, 0);
                 commandsGL->SetSampler(*samplerGL, 0);
                 commandsGL->SetTexture(*textureGL, 0);
 
@@ -259,11 +261,13 @@ int main(int argc, char* argv[])
 
                 // Set graphics pipeline and vertex buffer
                 commandsD3D->SetGraphicsPipeline(*pipelineD3D);
-                commandsD3D->SetConstantBuffer(*constBufferD3D, 0);
+                
                 commandsD3D->SetVertexBuffer(*vertexBufferD3D);
                 commandsD3D->SetIndexBuffer(*indexBufferD3D);
-                commandsD3D->SetSampler(*samplerD3D, 0);
-                commandsD3D->SetTexture(*textureD3D, 0);
+
+                commandsD3D->SetConstantBuffer(*constBufferD3D, 0, LLGL::ShaderStageFlags::VertexStage);
+                commandsD3D->SetSampler(*samplerD3D, 0, LLGL::ShaderStageFlags::FragmentStage);
+                commandsD3D->SetTexture(*textureD3D, 0, LLGL::ShaderStageFlags::FragmentStage);
 
                 // Draw triangulated cube
                 commandsD3D->DrawIndexed(36, 0);

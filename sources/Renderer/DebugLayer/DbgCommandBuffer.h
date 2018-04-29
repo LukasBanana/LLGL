@@ -181,6 +181,8 @@ class DbgCommandBuffer : public CommandBufferExt
             DbgBuffer*              vertexBufferStore[1]    = { nullptr };
             DbgBuffer**             vertexBuffers           = nullptr;
             std::uint32_t           numVertexBuffers        = 0;
+            bool                    anyNonEmptyVertexBuffer = false;
+            bool                    anyShaderAttributes     = false;
             DbgBuffer*              indexBuffer             = nullptr;
             DbgBuffer*              streamOutput            = nullptr;
             DbgGraphicsPipeline*    graphicsPipeline        = nullptr;

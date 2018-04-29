@@ -117,9 +117,10 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     
     if (debugger_)
     {
-        bindings_.vertexBufferStore[0]  = (&bufferDbg);
-        bindings_.vertexBuffers         = bindings_.vertexBufferStore;
-        bindings_.numVertexBuffers      = 1;
+        bindings_.vertexBufferStore[0]      = (&bufferDbg);
+        bindings_.vertexBuffers             = bindings_.vertexBufferStore;
+        bindings_.numVertexBuffers          = 1;
+        bindings_.anyNonEmptyVertexBuffer   = (bufferDbg.elements > 0);
     }
     
     instance.SetVertexBuffer(bufferDbg.instance);
@@ -139,8 +140,19 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     
     if (debugger_)
     {
-        bindings_.vertexBuffers     = bufferArrayDbg.buffers.data();
-        bindings_.numVertexBuffers  = static_cast<std::uint32_t>(bufferArrayDbg.buffers.size());
+        bindings_.vertexBuffers         = bufferArrayDbg.buffers.data();
+        bindings_.numVertexBuffers      = static_cast<std::uint32_t>(bufferArrayDbg.buffers.size());
+
+        /* Check if all vertex buffers are empty */
+        bindings_.anyNonEmptyVertexBuffer = false;
+        for (auto buffer : bufferArrayDbg.buffers)
+        {
+            if (buffer->elements > 0)
+            {
+                bindings_.anyNonEmptyVertexBuffer = true;
+                break;
+            }
+        }
     }
     
     instance.SetVertexBufferArray(bufferArrayDbg.instance);
@@ -400,7 +412,16 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     auto& graphicsPipelineDbg = LLGL_CAST(DbgGraphicsPipeline&, graphicsPipeline);
 
     if (debugger_)
+    {
         bindings_.graphicsPipeline = (&graphicsPipelineDbg);
+        if (auto shaderProgram = graphicsPipelineDbg.desc.shaderProgram)
+        {
+            auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, shaderProgram);
+            bindings_.anyShaderAttributes = !(shaderProgramDbg->GetVertexLayout().attributes.empty());
+        }
+        else
+            bindings_.anyShaderAttributes = false;
+    }
 
     topology_ = graphicsPipelineDbg.desc.primitiveTopology;
     instance.SetGraphicsPipeline(graphicsPipelineDbg.instance);
@@ -663,7 +684,9 @@ void DbgCommandBuffer::DebugVertexBufferSet()
     {
         for (std::uint32_t i = 0; i < bindings_.numVertexBuffers; ++i)
         {
-            if (!bindings_.vertexBuffers[i]->initialized)
+            /* Check if buffer is initialized (ignore empty buffers) */
+            auto buffer = bindings_.vertexBuffers[i];
+            if (buffer->elements > 0 && !buffer->initialized)
                 LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot " + std::to_string(i));
         }
     }
@@ -689,8 +712,8 @@ void DbgCommandBuffer::DebugVertexLayout()
         /* Check if vertex layout is specified in active shader program */
         if (vertexLayout.bound)
             DebugVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
-        else
-            LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program");
+        else if (bindings_.anyNonEmptyVertexBuffer)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program while bound vertex buffers are non-empty");
     }
 }
 
@@ -804,7 +827,7 @@ void DbgCommandBuffer::DebugDraw(
     DebugNumVertices(numVertices);
     DebugNumInstances(numInstances, instanceOffset);
 
-    if (bindings_.numVertexBuffers > 0)
+    if (bindings_.numVertexBuffers > 0 && bindings_.anyShaderAttributes)
         DebugVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
 }
 
