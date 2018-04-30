@@ -569,8 +569,8 @@ protected:
         {
             return LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex, "vertex.spv" },
-                    { LLGL::ShaderType::Fragment, "fragment.spv" }
+                    { LLGL::ShaderType::Vertex, "vertex.450core.spv" },
+                    { LLGL::ShaderType::Fragment, "fragment.450core.spv" }
                 },
                 vertexFormats
             );

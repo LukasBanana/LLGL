@@ -67,32 +67,6 @@ static void CreateTessellationState(const GraphicsPipelineDescriptor& desc, VkPi
     createInfo.patchControlPoints   = GetPrimitiveTopologyPatchSize(desc.primitiveTopology);
 }
 
-static void Convert(VkViewport& dst, const Viewport& src)
-{
-    dst.x        = src.x;
-    dst.y        = src.y;
-    dst.width    = src.width;
-    dst.height   = src.height;
-    dst.minDepth = src.minDepth;
-    dst.maxDepth = src.maxDepth;
-}
-
-static void Convert(VkRect2D& dst, const Scissor& src)
-{
-    dst.offset.x        = src.x;
-    dst.offset.y        = src.y;
-    dst.extent.width    = static_cast<std::uint32_t>(src.width);
-    dst.extent.height   = static_cast<std::uint32_t>(src.height);
-}
-
-static void Convert(VkRect2D& dst, const Viewport& src)
-{
-    dst.offset.x        = static_cast<std::int32_t>(src.x);
-    dst.offset.y        = static_cast<std::int32_t>(src.y);
-    dst.extent.width    = static_cast<std::uint32_t>(src.width);
-    dst.extent.height   = static_cast<std::uint32_t>(src.height);
-}
-
 static void CreateViewportState(
     const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent,
     VkPipelineViewportStateCreateInfo& createInfo, std::vector<VkViewport>& viewportsVK, std::vector<VkRect2D>& scissorsVK)
@@ -109,28 +83,13 @@ static void CreateViewportState(
     {
         createInfo.viewportCount = static_cast<std::uint32_t>(numViewports);
 
-        /* Check if VkViewpport and Viewport structures can be safely reinterpret-casted */
-        if ( sizeof(VkViewport)             == sizeof(Viewport)             &&
-             offsetof(VkViewport, x)        == offsetof(Viewport, x       ) &&
-             offsetof(VkViewport, y)        == offsetof(Viewport, y       ) &&
-             offsetof(VkViewport, width   ) == offsetof(Viewport, width   ) &&
-             offsetof(VkViewport, height  ) == offsetof(Viewport, height  ) &&
-             offsetof(VkViewport, minDepth) == offsetof(Viewport, minDepth) &&
-             offsetof(VkViewport, maxDepth) == offsetof(Viewport, maxDepth) )
-        {
-            /* Use viewport descritpors directly */
-            createInfo.pViewports = reinterpret_cast<const VkViewport*>(desc.viewports.data());
-        }
-        else
-        {
-            /* Convert viewports to Vulkan structure */
-            viewportsVK.resize(numViewports);
+        /* Convert viewports to Vulkan structure */
+        viewportsVK.resize(numViewports);
 
-            for (size_t i = 0; i < numViewports; ++i)
-                Convert(viewportsVK[i], desc.viewports[i]);
+        for (size_t i = 0; i < numViewports; ++i)
+            VKTypes::Convert(viewportsVK[i], desc.viewports[i]);
 
-            createInfo.pViewports = viewportsVK.data();
-        }
+        createInfo.pViewports = viewportsVK.data();
     }
     else
     {
@@ -138,7 +97,7 @@ static void CreateViewportState(
         createInfo.viewportCount = 1;
         viewportsVK.resize(1);
 
-        Convert(viewportsVK[0], Viewport(0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f));
+        VKTypes::Convert(viewportsVK[0], Viewport(0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f));
 
         createInfo.pViewports = viewportsVK.data();
     }
@@ -152,9 +111,9 @@ static void CreateViewportState(
         for (size_t i = 0; i < numViewports; ++i)
         {
             if (i < numScissors)
-                Convert(scissorsVK[i], desc.scissors[i]);
+                VKTypes::Convert(scissorsVK[i], desc.scissors[i]);
             else
-                Convert(scissorsVK[i], desc.viewports[i]);
+                VKTypes::Convert(scissorsVK[i], desc.viewports[i]);
         }
     }
     else
@@ -162,7 +121,7 @@ static void CreateViewportState(
         /* Create default scissor */
         createInfo.scissorCount = 1;
         scissorsVK.resize(1);
-        Convert(scissorsVK[0], Scissor(0, 0, extent.width, extent.height));
+        VKTypes::Convert(scissorsVK[0], Scissor(0, 0, extent.width, extent.height));
     }
 
     createInfo.pScissors = scissorsVK.data();
@@ -179,7 +138,11 @@ static void CreateRasterizerState(const GraphicsPipelineDescriptor& desc, const 
     createInfo.rasterizerDiscardEnable  = VKBoolean(!shaderProgramVK->HasFragmentShader());
     createInfo.polygonMode              = VKTypes::Map(desc.rasterizer.polygonMode);
     createInfo.cullMode                 = VKTypes::Map(desc.rasterizer.cullMode);
+    #if 1//TODO: make this optional for the user (for now: flip front face to overcome flipped viewport)
+    createInfo.frontFace                = (desc.rasterizer.frontCCW ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE);
+    #else
     createInfo.frontFace                = (desc.rasterizer.frontCCW ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE);
+    #endif
     createInfo.depthBiasEnable          = VKBoolean(desc.rasterizer.depthBiasClamp != 0.0f);
     createInfo.depthBiasConstantFactor  = desc.rasterizer.depthBiasConstantFactor;
     createInfo.depthBiasClamp           = desc.rasterizer.depthBiasClamp;

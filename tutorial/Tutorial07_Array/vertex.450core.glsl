@@ -20,6 +20,5 @@ out gl_PerVertex
 void main()
 {
 	gl_Position = vec4(position * instanceScale + instanceOffset, 0, 1);
-	gl_Position.y = -gl_Position.y;
 	vertexColor = instanceColor * color;
 }

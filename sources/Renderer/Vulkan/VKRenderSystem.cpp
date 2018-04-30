@@ -127,7 +127,8 @@ static void TestVulkanMemoryMngr(VKDeviceMemoryManager& mngr)
 
 static const std::vector<const char*> g_deviceExtensions
 {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_KHR_MAINTENANCE1_EXTENSION_NAME,
 };
 
 VKRenderSystem::VKRenderSystem(const RenderSystemDescriptor& renderSystemDesc) :

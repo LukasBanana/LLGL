@@ -7,6 +7,7 @@
 
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
+#include "VKTypes.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
 #include "RenderState/VKResourceViewHeap.h"
@@ -50,6 +51,7 @@ void VKCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentSta
 
 /* ----- Viewport and Scissor ----- */
 
+#if 0//TODO: currently unused
 // Check if VkViewport and Viewport structures can be safely reinterpret-casted
 static bool IsCompatibleToVkViewport()
 {
@@ -64,42 +66,36 @@ static bool IsCompatibleToVkViewport()
         offsetof(VkViewport, maxDepth) == offsetof(Viewport, maxDepth)
     );
 }
-
-// Convert Viewport type to VkViewport type
-static void Convert(VkViewport& dst, const Viewport& src)
-{
-    dst.x           = src.x;
-    dst.y           = src.y;
-    dst.width       = src.width;
-    dst.height      = src.height;
-    dst.minDepth    = src.minDepth;
-    dst.maxDepth    = src.maxDepth;
-}
+#endif
 
 void VKCommandBuffer::SetViewport(const Viewport& viewport)
 {
+    #if 0
     if (IsCompatibleToVkViewport())
     {
         /* Cast viewport to VkViewport type */
         vkCmdSetViewport(commandBuffer_, 0, 1, reinterpret_cast<const VkViewport*>(&viewport));
     }
     else
+    #endif
     {
         /* Convert viewport to VkViewport type */
         VkViewport viewportVK;
-        Convert(viewportVK, viewport);
+        VKTypes::Convert(viewportVK, viewport);
         vkCmdSetViewport(commandBuffer_, 0, 1, &viewportVK);
     }
 }
 
 void VKCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
+    #if 0
     if (IsCompatibleToVkViewport())
     {
         /* Cast viewport to VkViewport types */
         vkCmdSetViewport(commandBuffer_, 0, numViewports, reinterpret_cast<const VkViewport*>(viewports));
     }
     else
+    #endif
     {
         VkViewport viewportsVK[g_maxNumViewportsPerBatch];
 
@@ -109,26 +105,17 @@ void VKCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* v
             count = std::min(numViewports, g_maxNumViewportsPerBatch);
 
             for (first = i; i < first + count; ++i)
-                Convert(viewportsVK[i - first], viewports[i]);
+                VKTypes::Convert(viewportsVK[i - first], viewports[i]);
 
             vkCmdSetViewport(commandBuffer_, first, count, viewportsVK);
         }
     }
 }
 
-// Convert Scissor type to VkRect2D type
-static void Convert(VkRect2D& dst, const Scissor& src)
-{
-    dst.offset.x        = src.x;
-    dst.offset.y        = src.y;
-    dst.extent.width    = static_cast<std::uint32_t>(std::max(0, src.width));
-    dst.extent.height   = static_cast<std::uint32_t>(std::max(0, src.height));
-}
-
 void VKCommandBuffer::SetScissor(const Scissor& scissor)
 {
     VkRect2D scissorVK;
-    Convert(scissorVK, scissor);
+    VKTypes::Convert(scissorVK, scissor);
     vkCmdSetScissor(commandBuffer_, 0, 1, &scissorVK);
 }
 
@@ -142,7 +129,7 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
         count = std::min(numScissors, g_maxNumViewportsPerBatch);
 
         for (first = i; i < first + count; ++i)
-            Convert(scissorsVK[i - first], scissors[i]);
+            VKTypes::Convert(scissorsVK[i - first], scissors[i]);
 
         vkCmdSetScissor(commandBuffer_, first, count, scissorsVK);
     }

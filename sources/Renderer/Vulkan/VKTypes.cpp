@@ -17,16 +17,13 @@ namespace VKTypes
 {
 
 
-/* ----- Internal functions ----- */
+/* ----- Map functions ----- */
 
 [[noreturn]]
 void MapFailed(const std::string& typeName, const std::string& vknTypeName)
 {
     throw std::invalid_argument("failed to map '" + typeName + "' to '" + vknTypeName + "' Vulkan parameter");
 }
-
-
-/* ----- Map functions ----- */
 
 VkShaderStageFlagBits Map(const ShaderType shaderType)
 {
@@ -325,6 +322,36 @@ VkQueryType Map(const QueryType queryType)
         case QueryType::PipelineStatistics:             return VK_QUERY_TYPE_PIPELINE_STATISTICS;
     }
     MapFailed("QueryType", "VkQueryType");
+}
+
+
+/* ----- Convert functions ----- */
+
+//TODO: let user decide to flip viewport
+void Convert(VkViewport& dst, const Viewport& src)
+{
+    dst.x        = src.x;
+    dst.y        = src.y + src.height;
+    dst.width    = src.width;
+    dst.height   = -src.height;
+    dst.minDepth = src.minDepth;
+    dst.maxDepth = src.maxDepth;
+}
+
+void Convert(VkRect2D& dst, const Scissor& src)
+{
+    dst.offset.x        = src.x;
+    dst.offset.y        = src.y;
+    dst.extent.width    = static_cast<std::uint32_t>(src.width);
+    dst.extent.height   = static_cast<std::uint32_t>(src.height);
+}
+
+void Convert(VkRect2D& dst, const Viewport& src)
+{
+    dst.offset.x        = static_cast<std::int32_t>(src.x);
+    dst.offset.y        = static_cast<std::int32_t>(src.y);
+    dst.extent.width    = static_cast<std::uint32_t>(src.width);
+    dst.extent.height   = static_cast<std::uint32_t>(src.height);
 }
 
 

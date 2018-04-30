@@ -9,7 +9,7 @@
 #define LLGL_VK_TYPES_H
 
 
-#include "Vulkan.h"
+#include <vulkan/vulkan.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/ResourceViewHeapFlags.h>
@@ -25,6 +25,8 @@ namespace LLGL
 namespace VKTypes
 {
 
+
+/* ----- Map functions ----- */
 
 [[noreturn]]
 void MapFailed(const std::string& typeName, const std::string& vknTypeName);
@@ -44,6 +46,13 @@ VkBlendOp               Map( const BlendArithmetic   blendArithmetic   );
 VkSamplerAddressMode    Map( const TextureWrap       textureWrap       );
 VkDescriptorType        Map( const ResourceViewType  resourceViewType  );
 VkQueryType             Map( const QueryType         queryType         );
+
+
+/* ----- Convert functions ----- */
+
+void Convert( VkViewport& dst, const Viewport& src );
+void Convert( VkRect2D&   dst, const Scissor&  src );
+void Convert( VkRect2D&   dst, const Viewport& src );
 
 
 } // /namespace VKTypes

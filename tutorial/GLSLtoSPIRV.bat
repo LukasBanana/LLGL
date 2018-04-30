@@ -14,6 +14,10 @@ glslang -V -S vert -o Tutorial06_MultiContext/vertex.450core.spv Tutorial06_Mult
 glslang -V -S frag -o Tutorial06_MultiContext/fragment.450core.spv Tutorial06_MultiContext/fragment.450core.glsl
 glslang -V -S geom -o Tutorial06_MultiContext/geometry.450core.spv Tutorial06_MultiContext/geometry.450core.glsl
 
+REM Tutorial07_Array
+glslang -V -S vert -o Tutorial07_Array/vertex.450core.spv Tutorial07_Array/vertex.450core.glsl
+glslang -V -S frag -o Tutorial07_Array/fragment.450core.spv Tutorial07_Array/fragment.450core.glsl
+
 REM Tutorial08_Compute
 glslang -V -S comp -o Tutorial08_Compute/compute.spv Tutorial08_Compute/compute.glsl
 
