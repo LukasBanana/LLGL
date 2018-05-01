@@ -49,6 +49,12 @@ class VKGraphicsPipeline : public GraphicsPipeline
             return pipelineLayout_;
         }
 
+        // Returns true if scissors are enabled.
+        inline bool IsScissorEnabled() const
+        {
+            return scissorEnabled_;
+        }
+
     private:
 
         void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent);
@@ -57,6 +63,8 @@ class VKGraphicsPipeline : public GraphicsPipeline
         VkRenderPass        renderPass_     = VK_NULL_HANDLE;
         VkPipelineLayout    pipelineLayout_ = VK_NULL_HANDLE;
         VKPtr<VkPipeline>   pipeline_;
+
+        bool                scissorEnabled_ = false;
 
 };
 

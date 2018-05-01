@@ -114,24 +114,30 @@ void VKCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* v
 
 void VKCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    VkRect2D scissorVK;
-    VKTypes::Convert(scissorVK, scissor);
-    vkCmdSetScissor(commandBuffer_, 0, 1, &scissorVK);
+    if (scissorEnabled_)
+    {
+        VkRect2D scissorVK;
+        VKTypes::Convert(scissorVK, scissor);
+        vkCmdSetScissor(commandBuffer_, 0, 1, &scissorVK);
+    }
 }
 
 void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    VkRect2D scissorsVK[g_maxNumViewportsPerBatch];
-
-    for (std::uint32_t i = 0, first = 0, count = 0; i < numScissors; numScissors -= count)
+    if (scissorEnabled_)
     {
-        /* Convert viewport to VkViewport types */
-        count = std::min(numScissors, g_maxNumViewportsPerBatch);
+        VkRect2D scissorsVK[g_maxNumViewportsPerBatch];
 
-        for (first = i; i < first + count; ++i)
-            VKTypes::Convert(scissorsVK[i - first], scissors[i]);
+        for (std::uint32_t i = 0, first = 0, count = 0; i < numScissors; numScissors -= count)
+        {
+            /* Convert viewport to VkViewport types */
+            count = std::min(numScissors, g_maxNumViewportsPerBatch);
 
-        vkCmdSetScissor(commandBuffer_, first, count, scissorsVK);
+            for (first = i; i < first + count; ++i)
+                VKTypes::Convert(scissorsVK[i - first], scissors[i]);
+
+            vkCmdSetScissor(commandBuffer_, first, count, scissorsVK);
+        }
     }
 }
 
@@ -393,7 +399,25 @@ void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 void VKCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineVK = LLGL_CAST(VKGraphicsPipeline&, graphicsPipeline);
+
+    /* Bind graphics pipeline */
     vkCmdBindPipeline(commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineVK.GetVkPipeline());
+
+    /* Scissor rectangle must be updated (if scissor test is disabled) */
+    scissorEnabled_ = graphicsPipelineVK.IsScissorEnabled();
+    if (!scissorEnabled_ && scissorRectInvalidated_)
+    {
+        /* Set scissor to render target resolution */
+        VkRect2D scissorRect;
+        {
+            scissorRect.offset = { 0, 0 };
+            scissorRect.extent = framebufferExtent_;
+        }
+        vkCmdSetScissor(commandBuffer_, 0, 1, &scissorRect);
+
+        /* Avoid scissor update with each graphics pipeline binding (as long as render pass does not change) */
+        scissorRectInvalidated_ = false;
+    }
 }
 
 void VKCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
@@ -589,9 +613,10 @@ void VKCommandBuffer::SetRenderPass(VkRenderPass renderPass, VkFramebuffer frame
         BeginRenderPass(renderPass, framebuffer, extent);
 
         /* Store render pass and framebuffer attributes */
-        renderPass_         = renderPass;
-        framebuffer_        = framebuffer;
-        framebufferExtent_  = extent;
+        renderPass_             = renderPass;
+        framebuffer_            = framebuffer;
+        framebufferExtent_      = extent;
+        scissorRectInvalidated_ = true;
     }
 }
 

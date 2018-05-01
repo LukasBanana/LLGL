@@ -176,6 +176,9 @@ class VKCommandBuffer : public CommandBuffer
 
         std::uint32_t                   queuePresentFamily_         = 0;
 
+        bool                            scissorEnabled_             = false;
+        bool                            scissorRectInvalidated_     = false;
+
 };
 
 

@@ -97,21 +97,20 @@ class LLGL_EXPORT CommandBuffer
         /**
         \brief Sets a single scissor rectangle.
         \remarks Similar to SetScissors but only a single scissor rectangle is set.
-        \note This state is guaranteed to be persistent.
         \see SetScissors
         */
         virtual void SetScissor(const Scissor& scissor) = 0;
 
         /**
-        \brief Sets an array of scissor rectangles.
+        \brief Sets an array of scissor rectangles, but only if the scissor test was enabled in the previously set graphics pipeline (otherwise, this function has no effect).
         \param[in] numScissors Specifies the number of scissor rectangles to set.
         \param[in] scissors Pointer to the array of scissor rectangles. This must not be null!
         \remarks This function behaves differently on the OpenGL render system, depending on the state configured
         with the "SetGraphicsAPIDependentState" function. If 'stateOpenGL.screenSpaceOriginLowerLeft' is false,
         the origin of each scissor rectangle is on the upper-left (like for all other render systems).
         If 'stateOpenGL.screenSpaceOriginLowerLeft' is true, the origin of each scissor rectangle is on the lower-left.
-        \note This state is guaranteed to be persistent.
         \see SetGraphicsAPIDependentState
+        \see RasterizerDescriptor::scissorTestEnabled
         */
         virtual void SetScissors(std::uint32_t numScissors, const Scissor* scissors) = 0;
 

@@ -423,7 +423,11 @@ struct RasterizerDescriptor
     //! If enabled, there is effectively no near and far clipping plane. By default disabled.
     bool                    depthClampEnabled           = false;
 
-    //! Specifies whether scissor test is enabled or disabled. By default disabled.
+    /**
+    \brief Specifies whether scissor test is enabled or disabled. By default disabled.
+    \see CommandBuffer::SetScissor
+    \see CommandBuffer::SetScissors
+    */
     bool                    scissorTestEnabled          = false;
 
     //! Specifies whether lines are rendered with or without anti-aliasing. By default disabled.
@@ -434,6 +438,7 @@ struct RasterizerDescriptor
     \note Only supported with: Direct3D 12 (or OpenGL if the extension "GL_NV_conservative_raster" or "GL_INTEL_conservative_rasterization" is supported).
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
+    \see RenderingCaps::hasConservativeRasterization
     */
     bool                    conservativeRasterization   = false;
 
