@@ -99,6 +99,7 @@ set(SUMMARY_LIBRARY_TYPE "Unknown")
 option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode)" ON)
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
 option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
+option(LLGL_ENABLE_BACKWARDS_COMPATIBILITY "Enable various functions for backwards compatibility (C++14 only)" OFF)
 
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL extension placeholders" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
@@ -134,6 +135,10 @@ endif()
 
 if(LLGL_ENABLE_UTILITY)
 	ADD_DEFINE(LLGL_ENABLE_UTILITY)
+endif()
+
+if(LLGL_ENABLE_BACKWARDS_COMPATIBILITY)
+    ADD_DEFINE(LLGL_ENABLE_BACKWARDS_COMPATIBILITY)
 endif()
 
 if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)

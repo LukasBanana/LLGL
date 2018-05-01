@@ -147,6 +147,13 @@ class LLGL_EXPORT ShaderProgram
         */
         virtual void UnlockShaderUniform() = 0;
 
+        #ifdef LLGL_ENABLE_BACKWARDS_COMPATIBILITY
+
+        [[deprecated("use extended version of 'LLGL::ShaderProgram::BuildInputLayout' instead")]]
+        void BuildInputLayout(const VertexFormat& vertexFormat);
+
+        #endif // /LLGL_ENABLE_BACKWARDS_COMPATIBILITY
+
     protected:
 
         //! Linker error codes for internal error checking.
