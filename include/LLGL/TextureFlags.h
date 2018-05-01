@@ -338,6 +338,12 @@ For the DXT compressed texture formats, this must be a multiple of 16, since the
 LLGL_EXPORT std::uint32_t TextureBufferSize(const TextureFormat format, std::uint32_t numTexels);
 
 /**
+\brief Returns the texture size (in texels) of the specified texture descriptor, or zero if the texture type is invalid.
+\see TextureDescriptor::type
+*/
+LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc);
+
+/**
 \brief Returns true if the specified texture format is a compressed format,
 i.e. either TextureFormat::RGB_DXT1, TextureFormat::RGBA_DXT1, TextureFormat::RGBA_DXT3, or TextureFormat::RGBA_DXT5.
 \see TextureFormat

@@ -83,6 +83,23 @@ std::uint32_t TextureBufferSize(const TextureFormat textureFormat, std::uint32_t
     }
 }
 
+LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)
+{
+    switch (textureDesc.type)
+    {
+        case TextureType::Texture1D:        return textureDesc.texture1D.width;
+        case TextureType::Texture2D:        return textureDesc.texture2D.width * textureDesc.texture2D.height;
+        case TextureType::Texture3D:        return textureDesc.texture3D.width * textureDesc.texture3D.height * textureDesc.texture3D.depth;
+        case TextureType::TextureCube:      return textureDesc.textureCube.width * textureDesc.textureCube.height * 6;
+        case TextureType::Texture1DArray:   return textureDesc.texture1D.width * textureDesc.texture1D.layers;
+        case TextureType::Texture2DArray:   return textureDesc.texture2D.width * textureDesc.texture2D.height * textureDesc.texture2D.layers;
+        case TextureType::TextureCubeArray: return textureDesc.textureCube.width * textureDesc.textureCube.height * 6 * textureDesc.textureCube.layers;
+        case TextureType::Texture2DMS:      return textureDesc.texture2D.width * textureDesc.texture2D.height;
+        case TextureType::Texture2DMSArray: return textureDesc.texture2D.width * textureDesc.texture2D.height * textureDesc.texture2D.layers;
+        default:                            return 0;
+    }
+}
+
 LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format)
 {
     return (format >= TextureFormat::RGB_DXT1);
