@@ -9,6 +9,10 @@ glslang -V -S frag -o Tutorial02_Tessellation/fragment.450core.spv Tutorial02_Te
 glslang -V -S tesc -o Tutorial02_Tessellation/tesscontrol.450core.spv Tutorial02_Tessellation/tesscontrol.450core.glsl
 glslang -V -S tese -o Tutorial02_Tessellation/tesseval.450core.spv Tutorial02_Tessellation/tesseval.450core.glsl
 
+REM Tutorial03_Texturing
+glslang -V -S vert -o Tutorial03_Texturing/vertex.450core.spv Tutorial03_Texturing/vertex.450core.glsl
+glslang -V -S frag -o Tutorial03_Texturing/fragment.450core.spv Tutorial03_Texturing/fragment.450core.glsl
+
 REM Tutorial06_MultiContext
 glslang -V -S vert -o Tutorial06_MultiContext/vertex.450core.spv Tutorial06_MultiContext/vertex.450core.glsl
 glslang -V -S frag -o Tutorial06_MultiContext/fragment.450core.spv Tutorial06_MultiContext/fragment.450core.glsl

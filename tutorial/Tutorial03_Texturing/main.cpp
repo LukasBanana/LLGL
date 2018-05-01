@@ -11,12 +11,15 @@
 class Tutorial03 : public Tutorial
 {
 
-    LLGL::ShaderProgram*    shaderProgram   = nullptr;
-    LLGL::GraphicsPipeline* pipeline        = nullptr;
-    LLGL::Buffer*           vertexBuffer    = nullptr;
-    LLGL::Texture*          colorMap        = nullptr;
+    LLGL::ShaderProgram*    shaderProgram       = nullptr;
+    LLGL::PipelineLayout*   pipelineLayout      = nullptr;
+    LLGL::GraphicsPipeline* pipeline            = nullptr;
+    LLGL::Buffer*           vertexBuffer        = nullptr;
+    LLGL::Texture*          colorMap            = nullptr;
+    LLGL::Sampler*          sampler[5]          = {};
+    LLGL::ResourceViewHeap* resourceHeaps[5]    = {};
+
     LLGL::TextureArray*     textureArray    = nullptr;
-    LLGL::Sampler*          sampler[5]      = { nullptr };
     int                     samplerIndex    = 0;
 
 public:
@@ -36,6 +39,7 @@ public:
         CreatePipelines();
         CreateTextures();
         CreateSamplers();
+        CreateResourceHeaps();
 
         // Print some information on the standard output
         std::cout << "press TAB KEY to switch between five different texture samplers" << std::endl;
@@ -70,10 +74,22 @@ public:
 
     void CreatePipelines()
     {
+        // Create pipeline layout
+        LLGL::PipelineLayoutDescriptor layoutDesc;
+        {
+            layoutDesc.bindings =
+            {
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::Sampler, 0, 1, LLGL::ShaderStageFlags::FragmentStage },
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::Texture, 1, 1, LLGL::ShaderStageFlags::FragmentStage },
+            };
+        }
+        pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram = shaderProgram;
+            pipelineDesc.shaderProgram  = shaderProgram;
+            pipelineDesc.pipelineLayout = pipelineLayout;
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -168,6 +184,23 @@ public:
         sampler[4] = renderer->CreateSampler(samplerDesc);
     }
 
+    void CreateResourceHeaps()
+    {
+        for (int i = 0; i < 5; ++i)
+        {
+            LLGL::ResourceViewHeapDescriptor rvHeapDesc;
+            {
+                rvHeapDesc.pipelineLayout   = pipelineLayout;
+                rvHeapDesc.resourceViews    =
+                {
+                    LLGL::ResourceViewDesc(sampler[i]),
+                    LLGL::ResourceViewDesc(colorMap),
+                };
+            }
+            resourceHeaps[i] = renderer->CreateResourceViewHeap(rvHeapDesc);
+        }
+    }
+
 private:
 
     void OnDrawFrame() override
@@ -176,6 +209,15 @@ private:
         if (input->KeyDown(LLGL::Key::Tab))
             samplerIndex = (samplerIndex + 1) % 5;
 
+        // Set render target
+        commands->SetRenderTarget(*context);
+
+        // Set viewports
+        const auto resolution   = context->GetVideoMode().resolution;
+        const auto viewportSize = resolution.Cast<float>();
+        commands->SetViewport(LLGL::Viewport { 0.0f, 0.0f, viewportSize.x, viewportSize.y });
+        //commands->SetScissor(LLGL::Scissor { 0, 0, resolution.x, resolution.y });
+
         // Clear color buffer
         commands->Clear(LLGL::ClearFlags::Color);
 
@@ -183,15 +225,25 @@ private:
         commands->SetGraphicsPipeline(*pipeline);
         commands->SetVertexBuffer(*vertexBuffer);
 
-        // Set texture and sampler state on slot index 0
-        commandsExt->SetTextureArray(*textureArray, 0);
-        commandsExt->SetSampler(*sampler[samplerIndex], 0);
+        if (resourceHeaps[samplerIndex])
+        {
+            // Set graphics shader resources
+            commands->SetGraphicsResourceViewHeap(*resourceHeaps[samplerIndex], 0);
+        }
+        else
+        {
+            // Set texture and sampler state on slot index 0
+            commandsExt->SetTextureArray(*textureArray, 0);
+            commandsExt->SetSampler(*sampler[samplerIndex], 0);
+        }
 
         // Draw fullscreen triangle
         commands->Draw(3, 0);
 
         // Present result on the screen
         context->Present();
+
+        commandQueue->WaitForFinish();
     }
 
 };
