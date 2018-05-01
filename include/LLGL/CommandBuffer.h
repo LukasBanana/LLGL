@@ -264,7 +264,19 @@ class LLGL_EXPORT CommandBuffer
         \brief Sets the active graphics pipeline state.
         \param[in] graphicsPipeline Specifies the graphics pipeline state to set.
         \remarks This will set all blending-, rasterizer-, depth-, stencil-, and shader states.
-        A valid graphics pipeline must always be set before any drawing operation can be performed.
+        A valid graphics pipeline must always be set before any drawing operation can be performed,
+        and a valid render target (or render context) must always be set before any graphics pipeline can be set:
+        \code
+        // First set render target
+        myRenderer->SetRenderTarget(...);
+
+        // Then set graphics pipeline
+        myRenderer->SetGraphicsPipeline(...);
+
+        // Then perform drawing operations
+        myRenderer->SetGraphicsResourceViewHeap(...);
+        myRenderer->Draw(...);
+        \endcode
         \see RenderSystem::CreateGraphicsPipeline
         */
         virtual void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) = 0;

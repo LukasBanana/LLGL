@@ -50,8 +50,8 @@ enum class ImageFormat
     ABGR,           //!< Four color components: Alpha, Blue, Green, Red. Old format, mainly used in Direct3D 9.
 
     /* Depth-stencil formats */
-    Depth,          //!< 32-bit depth component.
-    DepthStencil,   //!< 24-bit depth- and 8-bit stencil components.
+    Depth,          //!< Depth component.
+    DepthStencil,   //!< Depth component and stencil index.
 
     /* Compressed formats */
     CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.

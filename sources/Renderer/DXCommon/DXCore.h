@@ -26,6 +26,7 @@ namespace LLGL
 
 /* ----- Structure ----- */
 
+//TODO: replace by global struct "ClearValue"
 // D3D clear view state structure (with color and depth-stencil clear values).
 struct D3DClearState
 {

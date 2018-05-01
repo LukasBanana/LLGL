@@ -378,13 +378,33 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Set up initial image data */
     const void* initialData = nullptr;
-    ByteBuffer imageDefaultBuffer;
+    ByteBuffer tempImageBuffer;
 
     if (imageDesc)
     {
-        /* Use data buffer from image descriptor */
-        AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(imageDataSize));
-        initialData = imageDesc->data;
+        /* Check if image data must be converted */
+        ImageFormat dstFormat   = ImageFormat::RGBA;
+        DataType    dstDataType = DataType::Int8;
+
+        if (FindSuitableImageFormat(textureDesc.format, dstFormat, dstDataType))
+        {
+            /* Convert image format */
+            tempImageBuffer = ConvertImageBuffer(
+                imageDesc->format, imageDesc->dataType, imageDesc->data, imageDesc->dataSize,
+                dstFormat, dstDataType, GetConfiguration().threadCount
+            );
+        }
+        else
+        {
+            /* Asser image data is large enough */
+            AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(imageDataSize));
+        }
+
+        /* Use data buffer from temporary image buffer or image descriptor */
+        if (tempImageBuffer)
+            initialData = tempImageBuffer.get();
+        else
+            initialData = imageDesc->data;
     }
     else if (GetConfiguration().imageInitialization.enabled)
     {
@@ -395,12 +415,12 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         if (FindSuitableImageFormat(textureDesc.format, imageFormat, imageDataType))
         {
             const ColorRGBAd fillColor { GetConfiguration().imageInitialization.color.Cast<double>() };
-            imageDefaultBuffer = GenerateImageBuffer(imageFormat, imageDataType, imageSize, fillColor);
+            tempImageBuffer = GenerateImageBuffer(imageFormat, imageDataType, imageSize, fillColor);
         }
         else
-            imageDefaultBuffer = GenerateEmptyByteBuffer(static_cast<std::size_t>(imageDataSize));
+            tempImageBuffer = GenerateEmptyByteBuffer(static_cast<std::size_t>(imageDataSize));
 
-        initialData = imageDefaultBuffer.get();
+        initialData = tempImageBuffer.get();
     }
 
     /* Create staging buffer */
