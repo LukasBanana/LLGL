@@ -43,7 +43,7 @@ void GLRenderbuffer::Recreate()
 
 void GLRenderbuffer::Storage(GLenum internalFormat, const Gs::Vector2i& size, GLsizei samples)
 {
-    if (samples > 0)
+    if (samples > 1)
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, internalFormat, size.x, size.y);
     else
         glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, size.x, size.y);
