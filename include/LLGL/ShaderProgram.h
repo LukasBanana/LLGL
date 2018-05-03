@@ -87,6 +87,12 @@ class LLGL_EXPORT ShaderProgram
         */
         virtual std::vector<UniformDescriptor> QueryUniforms() const = 0;
 
+        //TODO: maybe replace "QueryConstantBuffers", "QueryStorageBuffers", and "QueryUniforms" by this function
+        #if 0
+        //! Returns a descriptor of the shader pipeline layout with all required shader resources.
+        virtual PipelineLayoutDescriptor QueryPipelineLayoutDesc() const;
+        #endif
+
         /**
         \brief Builds the input layout with the specified vertex format for this shader program.
         \param[in] numVertexFormats Specifies the number of entries in the vertex format array. If this is zero, the function call has no effect.
