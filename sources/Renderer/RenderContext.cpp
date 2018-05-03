@@ -38,7 +38,13 @@ void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 
 void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, VideoModeDescriptor& videoModeDesc, const void* windowContext)
 {
-    if (!surface)
+    if (surface)
+    {
+        /* Get and output resolution from specified window */
+        videoModeDesc.resolution = surface->GetContentSize();
+        surface_ = surface;
+    }
+    else
     {
         #ifdef LLGL_MOBILE_PLATFORM
 
@@ -62,12 +68,6 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
         surface_ = Window::Create(windowDesc);
 
         #endif
-    }
-    else
-    {
-        /* Get and output resolution from specified window */
-        videoModeDesc.resolution = surface->GetContentSize();
-        surface_ = surface;
     }
 
     /* Store video mode settings */

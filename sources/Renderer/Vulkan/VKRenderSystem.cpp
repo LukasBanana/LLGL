@@ -388,7 +388,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
         if (FindSuitableImageFormat(textureDesc.format, dstFormat, dstDataType))
         {
-            /* Convert image format */
+            /* Convert image format (will be null if no conversion is necessary) */
             tempImageBuffer = ConvertImageBuffer(
                 imageDesc->format, imageDesc->dataType, imageDesc->data, imageDesc->dataSize,
                 dstFormat, dstDataType, GetConfiguration().threadCount
@@ -396,7 +396,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         }
         else
         {
-            /* Asser image data is large enough */
+            /* Assert image data is large enough */
             AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(imageDataSize));
         }
 

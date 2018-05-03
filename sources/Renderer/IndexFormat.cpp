@@ -14,7 +14,7 @@ namespace LLGL
 
 
 IndexFormat::IndexFormat(const DataType dataType) :
-    formatSize_ { static_cast<std::uint32_t>(DataTypeSize(dataType)) }
+    formatSize_ { DataTypeSize(dataType) }
 {
 }
 
