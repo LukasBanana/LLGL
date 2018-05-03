@@ -27,25 +27,25 @@ struct SPIRVInstruction
     SPIRVInstruction(spv::Op opCode, spv::Id type, spv::Id result, std::uint32_t numOperands, const spv::Id* operands);
 
     // Returns the specified operand as 32-bit unsigned integral value, or throws an out-of-bounds exception on failure.
-    std::uint32_t GetOperandUInt32(std::uint32_t offset) const;
+    std::uint32_t GetUInt32(std::uint32_t offset) const;
 
     // Returns the specified operand as 64-bit unsigned integral value, or throws an out-of-bounds exception on failure.
-    std::uint64_t GetOperandUInt64(std::uint32_t offset) const;
+    std::uint64_t GetUInt64(std::uint32_t offset) const;
 
     // Returns the specified operand as (decompressed) 16-bit floating-point value, or throws an out-of-bounds exception on failure.
-    float GetOperandFloat16(std::uint32_t offset) const;
+    float GetFloat16(std::uint32_t offset) const;
 
     // Returns the specified operand as 32-bit floating-point value, or throws an out-of-bounds exception on failure.
-    float GetOperandFloat32(std::uint32_t offset) const;
+    float GetFloat32(std::uint32_t offset) const;
 
     // Returns the specified operand as 64-bit floating-point value, or throws an out-of-bounds exception on failure.
-    double GetOperandFloat64(std::uint32_t offset) const;
+    double GetFloat64(std::uint32_t offset) const;
 
     // Returns the operands as ASCII string with the specified offset, or throws an out-of-bounds exception on failure..
-    const char* GetOperandASCII(std::uint32_t offset) const;
+    const char* GetASCII(std::uint32_t offset) const;
 
     // Returns the operand offset after the end of the ASCII string operands beginning at the specified offset.
-    std::uint32_t FindOperandASCIIEndOffset(std::uint32_t offset) const;
+    std::uint32_t FindASCIIEndOffset(std::uint32_t offset) const;
 
     spv::Op         opCode      = spv::Op::OpNop;   // Instruction op-code. By default OpNop.
     spv::Id         type        = 0;                // Type ID number. By default 0.

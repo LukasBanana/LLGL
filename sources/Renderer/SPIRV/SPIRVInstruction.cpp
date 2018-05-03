@@ -36,7 +36,7 @@ SPIRVInstruction::SPIRVInstruction(spv::Op opCode, spv::Id type, spv::Id result,
 {
 }
 
-std::uint32_t SPIRVInstruction::GetOperandUInt32(std::uint32_t offset) const
+std::uint32_t SPIRVInstruction::GetUInt32(std::uint32_t offset) const
 {
     if (offset < numOperands)
         return operands[offset];
@@ -44,7 +44,7 @@ std::uint32_t SPIRVInstruction::GetOperandUInt32(std::uint32_t offset) const
         ErrOperandIndexOutOfRange();
 }
 
-std::uint64_t SPIRVInstruction::GetOperandUInt64(std::uint32_t offset) const
+std::uint64_t SPIRVInstruction::GetUInt64(std::uint32_t offset) const
 {
     if (offset + 1 < numOperands)
     {
@@ -61,12 +61,12 @@ std::uint64_t SPIRVInstruction::GetOperandUInt64(std::uint32_t offset) const
         ErrOperandIndexOutOfRange();
 }
 
-float SPIRVInstruction::GetOperandFloat16(std::uint32_t offset) const
+float SPIRVInstruction::GetFloat16(std::uint32_t offset) const
 {
-    return DecompressFloat16(static_cast<std::uint16_t>(GetOperandUInt32(offset)));
+    return DecompressFloat16(static_cast<std::uint16_t>(GetUInt32(offset)));
 }
 
-float SPIRVInstruction::GetOperandFloat32(std::uint32_t offset) const
+float SPIRVInstruction::GetFloat32(std::uint32_t offset) const
 {
     if (offset < numOperands)
     {
@@ -86,7 +86,7 @@ float SPIRVInstruction::GetOperandFloat32(std::uint32_t offset) const
         ErrOperandIndexOutOfRange();
 }
 
-double SPIRVInstruction::GetOperandFloat64(std::uint32_t offset) const
+double SPIRVInstruction::GetFloat64(std::uint32_t offset) const
 {
     if (offset + 1 < numOperands)
     {
@@ -108,7 +108,7 @@ double SPIRVInstruction::GetOperandFloat64(std::uint32_t offset) const
         ErrOperandIndexOutOfRange();
 }
 
-const char* SPIRVInstruction::GetOperandASCII(std::uint32_t offset) const
+const char* SPIRVInstruction::GetASCII(std::uint32_t offset) const
 {
     if (offset < numOperands)
         return reinterpret_cast<const char*>(&(operands[offset]));
@@ -116,7 +116,7 @@ const char* SPIRVInstruction::GetOperandASCII(std::uint32_t offset) const
         ErrOperandIndexOutOfRange();
 }
 
-std::uint32_t SPIRVInstruction::FindOperandASCIIEndOffset(std::uint32_t offset) const
+std::uint32_t SPIRVInstruction::FindASCIIEndOffset(std::uint32_t offset) const
 {
     for (; offset < numOperands; ++offset)
     {

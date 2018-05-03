@@ -77,7 +77,7 @@ void SPIRVParser::Parse(const void* byteCode, std::size_t byteCodeSize)
             /* Read operands */
             if (wordCount > 0)
             {
-                instr.operands      = words;
+                instr.operands      = &(words[i]);
                 instr.numOperands   = wordCount;
                 i += wordCount;
             }

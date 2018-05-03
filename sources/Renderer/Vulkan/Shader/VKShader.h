@@ -48,6 +48,7 @@ class VKShader : public Shader
             Undefined,
             Success,
             InvalidCodeSize,
+            ReflectFailed,
         };
 
         VkDevice                device_             = VK_NULL_HANDLE;
@@ -55,6 +56,7 @@ class VKShader : public Shader
         LoadBinaryResult        loadBinaryResult_   = LoadBinaryResult::Undefined;
 
         std::string             entryPoint_;
+        std::string             errorLog_;
 
 };
 
