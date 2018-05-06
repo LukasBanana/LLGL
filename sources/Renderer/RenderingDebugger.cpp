@@ -34,7 +34,7 @@ void RenderingDebugger::PostError(const ErrorType type, const std::string& messa
     }
     else
     {
-        errors_[message] = Message(message, source_);
+        errors_[message] = Message { message, source_ };
         OnError(type, errors_[message]);
     }
 }
@@ -52,7 +52,7 @@ void RenderingDebugger::PostWarning(const WarningType type, const std::string& m
     }
     else
     {
-        warnings_[message] = Message(message, source_);
+        warnings_[message] = Message { message, source_ };
         OnWarning(type, warnings_[message]);
     }
 }

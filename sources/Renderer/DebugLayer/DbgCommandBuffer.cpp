@@ -44,6 +44,12 @@ void DbgCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentSt
 
 void DbgCommandBuffer::SetViewport(const Viewport& viewport)
 {
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        DebugViewport(viewport);
+    }
+
     instance.SetViewport(viewport);
 }
 
@@ -52,10 +58,27 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        if (!viewports)
+
+        /* Validate all viewports in array */
+        if (viewports)
+        {
+            for (std::uint32_t i = 0; i < numViewports; ++i)
+                DebugViewport(viewports[i]);
+        }
+        else
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "viewport array must not be a null pointer");
+
+        /* Validate array size */
         if (numViewports == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no viewports are specified");
+        else if (numViewports > caps_.maxNumViewports)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "viewport array exceeded maximal number of viewports (" + std::to_string(numViewports) +
+                " specified but limit is " + std::to_string(caps_.maxNumViewports) + ")"
+            );
+        }
     }
 
     instance.SetViewports(numViewports, viewports);
@@ -677,6 +700,26 @@ void DbgCommandBuffer::AssertCommandBufferExt(const char* funcName)
 {
     if (!instanceExt)
         throw std::runtime_error("illegal function call for a non-extended command buffer: " + std::string(funcName));
+}
+
+void DbgCommandBuffer::DebugViewport(const Viewport& viewport)
+{
+    if (viewport.width < 0.0f || viewport.height < 0.0f)
+        LLGL_DBG_ERROR(ErrorType::UndefinedBehavior, "viewport of negative width or negative height");
+    if (viewport.width == 0.0f || viewport.height == 0.0f)
+        LLGL_DBG_WARN(WarningType::PointlessOperation, "viewport of empty size (width or height is zero)");
+
+    const auto w = static_cast<std::uint32_t>(viewport.width);
+    const auto h = static_cast<std::uint32_t>(viewport.height);
+
+    if (w > caps_.maxViewportSize[0] || h > caps_.maxViewportSize[1])
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "viewport exceeded maximal size ([" + std::to_string(w) + " x " + std::to_string(h) +
+            "] specified but limit is [" + std::to_string(caps_.maxViewportSize[0]) + " x " + std::to_string(caps_.maxViewportSize[1]) + "])"
+        );
+    }
 }
 
 void DbgCommandBuffer::DebugAttachmentClear(const AttachmentClear& attachment)

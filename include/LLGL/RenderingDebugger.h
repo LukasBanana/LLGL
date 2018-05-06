@@ -24,6 +24,7 @@ enum class ErrorType
     InvalidArgument,    //!< Error due to invalid argument (e.g. creating a graphics pipeline without a valid shader program being specified).
     InvalidState,       //!< Error due to invalid render state (e.g. rendering without a valid graphics pipeline).
     UnsupportedFeature, //!< Error due to use of unsupported feature (e.g. drawing with hardware instancing when the renderer hardware does not support it).
+    UndefinedBehavior,  //!< Error due to arguments that cause undefined behavior.
 };
 
 enum class WarningType

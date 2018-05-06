@@ -8,12 +8,32 @@
 #include "../tutorial.h"
 
 
+class Debugger : public LLGL::RenderingDebugger
+{
+
+    public:
+
+        void OnError(LLGL::ErrorType type, Message& message) override
+        {
+            std::cout << "ERROR: in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+            message.Block();
+        }
+
+        void OnWarning(LLGL::WarningType type, Message& message) override
+        {
+            std::cout << "WARNING: in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+            message.Block();
+        }
+
+};
+
 int main(int argc, char* argv[])
 {
     try
     {
         // Load render system module
-        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv));
+        Debugger debugger;
+        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv), nullptr, &debugger);
 
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 

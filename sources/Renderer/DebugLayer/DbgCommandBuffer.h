@@ -149,6 +149,8 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void AssertCommandBufferExt(const char* funcName);
 
+        //TODO: Rename all "Debug..." functions to "Validate..."
+        void DebugViewport(const Viewport& viewport);
         void DebugAttachmentClear(const AttachmentClear& attachment);
 
         void DebugGraphicsPipelineSet();
