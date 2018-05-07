@@ -349,12 +349,14 @@ struct RenderingCaps
     \brief Specifies whether 1D- and 2D array textures are supported.
     \see TextureType::Texture1DArray
     \see TextureType::Texture2DArray
+    \todo Rename to "hasArrayTextures"
     */
     bool                            hasTextureArrays                    { false };
 
     /**
     \brief Specifies whether cube array textures are supported.
     \see TextureType::TextureCubeArray
+    \todo Rename to "hasCubeArrayTextures"
     */
     bool                            hasCubeTextureArrays                { false };
 

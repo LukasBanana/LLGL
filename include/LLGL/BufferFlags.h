@@ -52,6 +52,7 @@ enum class StorageBufferType
 /**
 \brief Hardware buffer CPU acccess enumeration.
 \see RenderSystem::MapBuffer
+\todo Rename to CPUAccess
 */
 enum class BufferCPUAccess
 {

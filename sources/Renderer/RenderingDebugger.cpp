@@ -66,7 +66,7 @@ void RenderingDebugger::OnError(ErrorType type, Message& message)
 {
     // dummy
 }
-        
+
 void RenderingDebugger::OnWarning(WarningType type, Message& message)
 {
     // dummy

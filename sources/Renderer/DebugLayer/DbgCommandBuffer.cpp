@@ -47,7 +47,7 @@ void DbgCommandBuffer::SetViewport(const Viewport& viewport)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugViewport(viewport);
+        ValidateViewport(viewport);
     }
 
     instance.SetViewport(viewport);
@@ -63,7 +63,7 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         if (viewports)
         {
             for (std::uint32_t i = 0; i < numViewports; ++i)
-                DebugViewport(viewports[i]);
+                ValidateViewport(viewports[i]);
         }
         else
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "viewport array must not be a null pointer");
@@ -131,7 +131,7 @@ void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Atta
     {
         LLGL_DBG_SOURCE;
         for (std::uint32_t i = 0; i < numAttachments; ++i)
-            DebugAttachmentClear(attachments[i]);
+            ValidateAttachmentClear(attachments[i]);
     }
 
     instance.ClearAttachments(numAttachments, attachments);
@@ -144,7 +144,7 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(buffer.GetType(), BufferType::Vertex);
+        ValidateBufferType(buffer.GetType(), BufferType::Vertex);
     }
 
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
@@ -167,7 +167,7 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(bufferArray.GetType(), BufferType::Vertex);
+        ValidateBufferType(bufferArray.GetType(), BufferType::Vertex);
     }
 
     auto& bufferArrayDbg = LLGL_CAST(DbgBufferArray&, bufferArray);
@@ -201,7 +201,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(buffer.GetType(), BufferType::Index);
+        ValidateBufferType(buffer.GetType(), BufferType::Index);
         bindings_.indexBuffer = (&bufferDbg);
     }
 
@@ -221,8 +221,8 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, lon
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(buffer.GetType(), BufferType::Constant);
-        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateBufferType(buffer.GetType(), BufferType::Constant);
+        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
 
     instanceExt->SetConstantBuffer(bufferDbg.instance, slot, shaderStageFlags);
@@ -237,8 +237,8 @@ void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uin
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(bufferArray.GetType(), BufferType::Constant);
-        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateBufferType(bufferArray.GetType(), BufferType::Constant);
+        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
 
     instanceExt->SetConstantBufferArray(bufferArray, startSlot, shaderStageFlags);
@@ -257,8 +257,8 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(buffer.GetType(), BufferType::Storage);
-        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages | ShaderStageFlags::ReadOnlyResource);
+        ValidateBufferType(buffer.GetType(), BufferType::Storage);
+        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages | ShaderStageFlags::ReadOnlyResource);
     }
 
     instanceExt->SetStorageBuffer(bufferDbg.instance, slot, shaderStageFlags);
@@ -273,8 +273,8 @@ void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(bufferArray.GetType(), BufferType::Storage);
-        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateBufferType(bufferArray.GetType(), BufferType::Storage);
+        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
 
     instanceExt->SetStorageBufferArray(bufferArray, startSlot, shaderStageFlags);
@@ -291,7 +291,7 @@ void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(buffer.GetType(), BufferType::StreamOutput);
+        ValidateBufferType(buffer.GetType(), BufferType::StreamOutput);
         bindings_.streamOutput = (&bufferDbg);
     }
 
@@ -305,7 +305,7 @@ void DbgCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugBufferType(bufferArray.GetType(), BufferType::StreamOutput);
+        ValidateBufferType(bufferArray.GetType(), BufferType::StreamOutput);
     }
     
     instance.SetStreamOutputBufferArray(bufferArray);
@@ -352,7 +352,7 @@ void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long sha
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
     
     instanceExt->SetTexture(textureDbg.instance, slot, shaderStageFlags);
@@ -367,7 +367,7 @@ void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
     
     instanceExt->SetTextureArray(textureArray, startSlot, shaderStageFlags);
@@ -384,7 +384,7 @@ void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long sha
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
     
     instanceExt->SetSampler(sampler, slot, shaderStageFlags);
@@ -399,7 +399,7 @@ void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
     }
     
     instanceExt->SetSamplerArray(samplerArray, startSlot, shaderStageFlags);
@@ -563,7 +563,7 @@ void DbgCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugDraw(numVertices, firstVertex, 1, 0);
+        ValidateDrawCmd(numVertices, firstVertex, 1, 0);
     }
     
     instance.Draw(numVertices, firstVertex);
@@ -576,7 +576,7 @@ void DbgCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firs
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugDrawIndexed(numVertices, 1, firstIndex, 0, 0);
+        ValidateDrawIndexedCmd(numVertices, 1, firstIndex, 0, 0);
     }
     
     instance.DrawIndexed(numVertices, firstIndex);
@@ -589,7 +589,7 @@ void DbgCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firs
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugDrawIndexed(numVertices, 1, firstIndex, vertexOffset, 0);
+        ValidateDrawIndexedCmd(numVertices, 1, firstIndex, vertexOffset, 0);
     }
     
     instance.DrawIndexed(numVertices, firstIndex, vertexOffset);
@@ -602,8 +602,8 @@ void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fi
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugInstancing();
-        DebugDraw(numVertices, firstVertex, numInstances, 0);
+        AssertInstancingSupported();
+        ValidateDrawCmd(numVertices, firstVertex, numInstances, 0);
     }
     
     instance.DrawInstanced(numVertices, firstVertex, numInstances);
@@ -616,9 +616,9 @@ void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fi
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugInstancing();
-        DebugOffsetInstancing();
-        DebugDraw(numVertices, firstVertex, numInstances, instanceOffset);
+        AssertInstancingSupported();
+        AssertOffsetInstancingSupported();
+        ValidateDrawCmd(numVertices, firstVertex, numInstances, instanceOffset);
     }
     
     instance.DrawInstanced(numVertices, firstVertex, numInstances, instanceOffset);
@@ -631,8 +631,8 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugInstancing();
-        DebugDrawIndexed(numVertices, numInstances, firstIndex, 0, 0);
+        AssertInstancingSupported();
+        ValidateDrawIndexedCmd(numVertices, numInstances, firstIndex, 0, 0);
     }
     
     instance.DrawIndexedInstanced(numVertices, numInstances, firstIndex);
@@ -645,8 +645,8 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugInstancing();
-        DebugDrawIndexed(numVertices, numInstances, firstIndex, vertexOffset, 0);
+        AssertInstancingSupported();
+        ValidateDrawIndexedCmd(numVertices, numInstances, firstIndex, vertexOffset, 0);
     }
     
     instance.DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset);
@@ -659,9 +659,9 @@ void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugInstancing();
-        DebugOffsetInstancing();
-        DebugDrawIndexed(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+        AssertInstancingSupported();
+        AssertOffsetInstancingSupported();
+        ValidateDrawIndexedCmd(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
     }
     
     instance.DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
@@ -680,10 +680,10 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
         if (groupSizeX * groupSizeY * groupSizeZ == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "thread group size has volume of 0 units");
 
-        DebugComputePipelineSet();
-        DebugThreadGroupLimit(groupSizeX, caps_.maxNumComputeShaderWorkGroups[0]);
-        DebugThreadGroupLimit(groupSizeY, caps_.maxNumComputeShaderWorkGroups[1]);
-        DebugThreadGroupLimit(groupSizeZ, caps_.maxNumComputeShaderWorkGroups[2]);
+        AssertComputePipelineBound();
+        ValidateThreadGroupLimit(groupSizeX, caps_.maxNumComputeShaderWorkGroups[0]);
+        ValidateThreadGroupLimit(groupSizeY, caps_.maxNumComputeShaderWorkGroups[1]);
+        ValidateThreadGroupLimit(groupSizeZ, caps_.maxNumComputeShaderWorkGroups[2]);
     }
     
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
@@ -702,7 +702,7 @@ void DbgCommandBuffer::AssertCommandBufferExt(const char* funcName)
         throw std::runtime_error("illegal function call for a non-extended command buffer: " + std::string(funcName));
 }
 
-void DbgCommandBuffer::DebugViewport(const Viewport& viewport)
+void DbgCommandBuffer::ValidateViewport(const Viewport& viewport)
 {
     if (viewport.width < 0.0f || viewport.height < 0.0f)
         LLGL_DBG_ERROR(ErrorType::UndefinedBehavior, "viewport of negative width or negative height");
@@ -712,7 +712,8 @@ void DbgCommandBuffer::DebugViewport(const Viewport& viewport)
     const auto w = static_cast<std::uint32_t>(viewport.width);
     const auto h = static_cast<std::uint32_t>(viewport.height);
 
-    if (w > caps_.maxViewportSize[0] || h > caps_.maxViewportSize[1])
+    if ( ( viewport.width  > 0.0f && w > caps_.maxViewportSize[0] ) ||
+         ( viewport.height > 0.0f && h > caps_.maxViewportSize[1] ) )
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
@@ -722,18 +723,18 @@ void DbgCommandBuffer::DebugViewport(const Viewport& viewport)
     }
 }
 
-void DbgCommandBuffer::DebugAttachmentClear(const AttachmentClear& attachment)
+void DbgCommandBuffer::ValidateAttachmentClear(const AttachmentClear& attachment)
 {
     if (bindings_.renderContext != nullptr)
     {
         if ((attachment.flags & ClearFlags::Color) != 0)
-            DebugAttachmentLimit(attachment.colorAttachment, 1);
+            ValidateAttachmentLimit(attachment.colorAttachment, 1);
     }
     else if (auto renderTarget = bindings_.renderTarget)
     {
         if ((attachment.flags & ClearFlags::Color) != 0)
         {
-            DebugAttachmentLimit(attachment.colorAttachment, renderTarget->GetNumColorAttachments());
+            ValidateAttachmentLimit(attachment.colorAttachment, renderTarget->GetNumColorAttachments());
             if ((attachment.flags & ClearFlags::DepthStencil) != 0)
                 LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot have color attachment and depth-stencil attachment within a single AttachmentClear command");
         }
@@ -755,43 +756,7 @@ void DbgCommandBuffer::DebugAttachmentClear(const AttachmentClear& attachment)
         LLGL_DBG_ERROR(ErrorType::InvalidState, "no render target is bound");
 }
 
-void DbgCommandBuffer::DebugGraphicsPipelineSet()
-{
-    if (!bindings_.graphicsPipeline)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound");
-}
-
-void DbgCommandBuffer::DebugComputePipelineSet()
-{
-    if (!bindings_.computePipeline)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound");
-}
-
-void DbgCommandBuffer::DebugVertexBufferSet()
-{
-    if (bindings_.numVertexBuffers > 0)
-    {
-        for (std::uint32_t i = 0; i < bindings_.numVertexBuffers; ++i)
-        {
-            /* Check if buffer is initialized (ignore empty buffers) */
-            auto buffer = bindings_.vertexBuffers[i];
-            if (buffer->elements > 0 && !buffer->initialized)
-                LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot " + std::to_string(i));
-        }
-    }
-    else
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no vertex buffer is bound");
-}
-
-void DbgCommandBuffer::DebugIndexBufferSet()
-{
-    if (!bindings_.indexBuffer)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no index buffer is bound");
-    else if (!bindings_.indexBuffer->initialized)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized index buffer is bound");
-}
-
-void DbgCommandBuffer::DebugVertexLayout()
+void DbgCommandBuffer::ValidateVertexLayout()
 {
     if (bindings_.graphicsPipeline && bindings_.numVertexBuffers > 0)
     {
@@ -800,13 +765,13 @@ void DbgCommandBuffer::DebugVertexLayout()
 
         /* Check if vertex layout is specified in active shader program */
         if (vertexLayout.bound)
-            DebugVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
+            ValidateVertexLayoutAttributes(vertexLayout.attributes, bindings_.vertexBuffers, bindings_.numVertexBuffers);
         else if (bindings_.anyNonEmptyVertexBuffer)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "unspecified vertex layout in shader program while bound vertex buffers are non-empty");
     }
 }
 
-void DbgCommandBuffer::DebugVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers)
+void DbgCommandBuffer::ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers)
 {
     /* Check if all vertex attributes are served by active vertex buffer(s) */
     std::size_t attribIndex = 0;
@@ -831,7 +796,7 @@ void DbgCommandBuffer::DebugVertexLayoutAttributes(const std::vector<VertexAttri
         LLGL_DBG_ERROR(ErrorType::InvalidState, "not all vertex attributes in the shader pipeline are covered by the bound vertex buffer(s)");
 }
 
-void DbgCommandBuffer::DebugNumVertices(std::uint32_t numVertices)
+void DbgCommandBuffer::ValidateNumVertices(std::uint32_t numVertices)
 {
     if (numVertices == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no vertices will be generated");
@@ -901,52 +866,40 @@ void DbgCommandBuffer::DebugNumVertices(std::uint32_t numVertices)
     }
 }
 
-void DbgCommandBuffer::DebugNumInstances(std::uint32_t numInstances, std::uint32_t instanceOffset)
+void DbgCommandBuffer::ValidateNumInstances(std::uint32_t numInstances, std::uint32_t instanceOffset)
 {
     if (numInstances == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no instances will be generated");
 }
 
-void DbgCommandBuffer::DebugDraw(
+void DbgCommandBuffer::ValidateDrawCmd(
     std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
 {
-    DebugGraphicsPipelineSet();
-    DebugVertexBufferSet();
-    DebugVertexLayout();
-    DebugNumVertices(numVertices);
-    DebugNumInstances(numInstances, instanceOffset);
+    AssertGraphicsPipelineBound();
+    AssertVertexBufferBound();
+    ValidateVertexLayout();
+    ValidateNumVertices(numVertices);
+    ValidateNumInstances(numInstances, instanceOffset);
 
     if (bindings_.numVertexBuffers > 0 && bindings_.anyShaderAttributes)
-        DebugVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
+        ValidateVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
 }
 
-void DbgCommandBuffer::DebugDrawIndexed(
+void DbgCommandBuffer::ValidateDrawIndexedCmd(
     std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
 {
-    DebugGraphicsPipelineSet();
-    DebugVertexBufferSet();
-    DebugIndexBufferSet();
-    DebugVertexLayout();
-    DebugNumVertices(numVertices);
-    DebugNumInstances(numInstances, instanceOffset);
+    AssertGraphicsPipelineBound();
+    AssertVertexBufferBound();
+    AssertIndexBufferBound();
+    ValidateVertexLayout();
+    ValidateNumVertices(numVertices);
+    ValidateNumInstances(numInstances, instanceOffset);
 
     if (bindings_.indexBuffer)
-        DebugVertexLimit(numVertices + firstIndex, static_cast<std::uint32_t>(bindings_.indexBuffer->elements));
+        ValidateVertexLimit(numVertices + firstIndex, static_cast<std::uint32_t>(bindings_.indexBuffer->elements));
 }
 
-void DbgCommandBuffer::DebugInstancing()
-{
-    if (!caps_.hasInstancing)
-        LLGL_DBG_ERROR_NOT_SUPPORTED("instancing");
-}
-
-void DbgCommandBuffer::DebugOffsetInstancing()
-{
-    if (!caps_.hasOffsetInstancing)
-        LLGL_DBG_ERROR_NOT_SUPPORTED("offset-instancing");
-}
-
-void DbgCommandBuffer::DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit)
+void DbgCommandBuffer::ValidateVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit)
 {
     if (vertexCount > vertexLimit)
     {
@@ -958,7 +911,7 @@ void DbgCommandBuffer::DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t
     }
 }
 
-void DbgCommandBuffer::DebugThreadGroupLimit(std::uint32_t size, std::uint32_t limit)
+void DbgCommandBuffer::ValidateThreadGroupLimit(std::uint32_t size, std::uint32_t limit)
 {
     if (size > limit)
     {
@@ -970,7 +923,7 @@ void DbgCommandBuffer::DebugThreadGroupLimit(std::uint32_t size, std::uint32_t l
     }
 }
 
-void DbgCommandBuffer::DebugAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound)
+void DbgCommandBuffer::ValidateAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound)
 {
     if (attachmentIndex >= attachmentUpperBound)
     {
@@ -982,7 +935,7 @@ void DbgCommandBuffer::DebugAttachmentLimit(std::uint32_t attachmentIndex, std::
     }
 }
 
-void DbgCommandBuffer::DebugShaderStageFlags(long shaderStageFlags, long validFlags)
+void DbgCommandBuffer::ValidateShaderStageFlags(long shaderStageFlags, long validFlags)
 {
     if ((shaderStageFlags & validFlags) == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stage is specified");
@@ -990,10 +943,65 @@ void DbgCommandBuffer::DebugShaderStageFlags(long shaderStageFlags, long validFl
         LLGL_DBG_WARN(WarningType::PointlessOperation, "unknown shader stage flag is specified");
 }
 
-void DbgCommandBuffer::DebugBufferType(const BufferType bufferType, const BufferType compareType)
+void DbgCommandBuffer::ValidateBufferType(const BufferType bufferType, const BufferType compareType)
 {
     if (bufferType != compareType)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type");
+}
+
+void DbgCommandBuffer::AssertGraphicsPipelineBound()
+{
+    if (!bindings_.graphicsPipeline)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound");
+}
+
+void DbgCommandBuffer::AssertComputePipelineBound()
+{
+    if (!bindings_.computePipeline)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound");
+}
+
+void DbgCommandBuffer::AssertVertexBufferBound()
+{
+    if (bindings_.numVertexBuffers > 0)
+    {
+        for (std::uint32_t i = 0; i < bindings_.numVertexBuffers; ++i)
+        {
+            /* Check if buffer is initialized (ignore empty buffers) */
+            auto buffer = bindings_.vertexBuffers[i];
+            if (buffer->elements > 0 && !buffer->initialized)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized vertex buffer is bound at slot " + std::to_string(i));
+            if (buffer->mapped)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "vertex buffer used for drawing while being mapped to CPU local memory");
+        }
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no vertex buffer is bound");
+}
+
+void DbgCommandBuffer::AssertIndexBufferBound()
+{
+    if (auto buffer = bindings_.indexBuffer)
+    {
+        if (!buffer->initialized)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "uninitialized index buffer is bound");
+        if (buffer->mapped)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "index buffer used for drawing while being mapped to CPU local memory");
+    }
+    else
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no index buffer is bound");
+}
+
+void DbgCommandBuffer::AssertInstancingSupported()
+{
+    if (!caps_.hasInstancing)
+        LLGL_DBG_ERROR_NOT_SUPPORTED("instancing");
+}
+
+void DbgCommandBuffer::AssertOffsetInstancingSupported()
+{
+    if (!caps_.hasOffsetInstancing)
+        LLGL_DBG_ERROR_NOT_SUPPORTED("offset-instancing");
 }
 
 void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices)

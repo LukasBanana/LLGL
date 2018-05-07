@@ -147,33 +147,36 @@ class DbgCommandBuffer : public CommandBufferExt
 
     private:
 
+        //TODO: Rename all "Debug..." functions to "Validate..."
+
         void AssertCommandBufferExt(const char* funcName);
 
-        //TODO: Rename all "Debug..." functions to "Validate..."
-        void DebugViewport(const Viewport& viewport);
-        void DebugAttachmentClear(const AttachmentClear& attachment);
+        void ValidateViewport(const Viewport& viewport);
+        void ValidateAttachmentClear(const AttachmentClear& attachment);
 
-        void DebugGraphicsPipelineSet();
-        void DebugComputePipelineSet();
-        void DebugVertexBufferSet();
-        void DebugIndexBufferSet();
-        void DebugVertexLayout();
-        void DebugVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers);
+        void ValidateVertexLayout();
+        void ValidateVertexLayoutAttributes(const std::vector<VertexAttribute>& shaderAttributes, DbgBuffer** vertexBuffers, std::uint32_t numVertexBuffers);
 
-        void DebugNumVertices(std::uint32_t numVertices);
-        void DebugNumInstances(std::uint32_t numInstances, std::uint32_t instanceOffset);
+        void ValidateNumVertices(std::uint32_t numVertices);
+        void ValidateNumInstances(std::uint32_t numInstances, std::uint32_t instanceOffset);
 
-        void DebugDraw(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset);
-        void DebugDrawIndexed(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset);
+        void ValidateDrawCmd(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset);
+        void ValidateDrawIndexedCmd(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset);
 
-        void DebugInstancing();
-        void DebugOffsetInstancing();
-        void DebugVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit);
-        void DebugThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
-        void DebugAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
+        void ValidateVertexLimit(std::uint32_t vertexCount, std::uint32_t vertexLimit);
+        void ValidateThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
+        void ValidateAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
 
-        void DebugShaderStageFlags(long shaderStageFlags, long validFlags);
-        void DebugBufferType(const BufferType bufferType, const BufferType compareType);
+        void ValidateShaderStageFlags(long shaderStageFlags, long validFlags);
+        void ValidateBufferType(const BufferType bufferType, const BufferType compareType);
+
+        void AssertGraphicsPipelineBound();
+        void AssertComputePipelineBound();
+        void AssertVertexBufferBound();
+        void AssertIndexBufferBound();
+
+        void AssertInstancingSupported();
+        void AssertOffsetInstancingSupported();
 
         void WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices);
 

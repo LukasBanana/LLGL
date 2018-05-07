@@ -31,6 +31,7 @@ class DbgBuffer : public Buffer
         BufferDescriptor    desc;
         std::uint64_t       elements    = 0;
         bool                initialized = false;
+        bool                mapped      = false;
 
 };
 
