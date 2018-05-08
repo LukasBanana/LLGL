@@ -481,16 +481,16 @@ struct RasterizerDescriptor
     \note Only supported with: Direct3D 12 (or OpenGL if the extension "GL_NV_conservative_raster" or "GL_INTEL_conservative_rasterization" is supported).
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
-    \see RenderingCaps::hasConservativeRasterization
+    \see RenderingCapabilities::hasConservativeRasterization
     */
     bool                    conservativeRasterization   = false;
 
     /**
     \brief Specifies the width of all generated line primitives. By default 1.0.
-    \remarks The minimum and maximum supported line width can be determined by the 'lineWidthRange' member in the 'RenderingCaps' structure.
+    \remarks The minimum and maximum supported line width can be determined by the 'lineWidthRange' member in the 'RenderingCapabilities' structure.
     If this line width is out of range, it will be clamped silently during graphics pipeline creation.
     \note Only supported with: OpenGL, Vulkan.
-    \see RenderingCaps::lineWidthRange
+    \see RenderingCapabilities::lineWidthRange
     */
     float                   lineWidth                   = 1.0f;
 };

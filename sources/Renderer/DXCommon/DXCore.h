@@ -55,7 +55,7 @@ std::string DXGetBlobString(ID3DBlob* blob);
 std::vector<char> DXGetBlobData(ID3DBlob* blob);
 
 // Returns the rendering capabilites of the specified Direct3D feature level.
-void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel);
+void DXGetRenderingCaps(RenderingCapabilities& caps, D3D_FEATURE_LEVEL featureLevel);
 
 // Returns the list of all supported Direct3D feature levels.
 std::vector<D3D_FEATURE_LEVEL> DXGetFeatureLevels(D3D_FEATURE_LEVEL maxFeatureLevel);

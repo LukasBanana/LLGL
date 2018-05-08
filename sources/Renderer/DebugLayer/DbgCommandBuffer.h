@@ -37,7 +37,7 @@ class DbgCommandBuffer : public CommandBufferExt
             CommandBufferExt* instanceExt,
             RenderingProfiler* profiler,
             RenderingDebugger* debugger,
-            const RenderingCaps& caps
+            const RenderingCapabilities& caps
         );
 
         /* ----- Configuration ----- */
@@ -182,14 +182,16 @@ class DbgCommandBuffer : public CommandBufferExt
 
         /* ----- Common objects ----- */
 
-        RenderingProfiler*          profiler_               = nullptr;
-        RenderingDebugger*          debugger_               = nullptr;
+        RenderingProfiler*              profiler_               = nullptr;
+        RenderingDebugger*              debugger_               = nullptr;
 
-        const RenderingCaps&        caps_;
+        const RenderingCapabilities&    caps_;
+        const RenderingFeatures&        features_;
+        const RenderingLimits&          limits_;
 
         /* ----- Render states ----- */
 
-        PrimitiveTopology           topology_               = PrimitiveTopology::TriangleList;
+        PrimitiveTopology               topology_               = PrimitiveTopology::TriangleList;
 
         struct Bindings
         {

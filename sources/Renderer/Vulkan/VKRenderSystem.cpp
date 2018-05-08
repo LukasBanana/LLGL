@@ -928,50 +928,56 @@ void VKRenderSystem::QueryDeviceProperties()
     /* Map limits to output rendering capabilites */
     const auto& limits = properties.limits;
 
-    RenderingCaps caps;
+    RenderingCapabilities caps;
     {
-        caps.screenOrigin                       = ScreenOrigin::UpperLeft;
-        caps.clippingRange                      = ClippingRange::ZeroToOne;
-        caps.shadingLanguages                   = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
-        caps.hasRenderTargets                   = true;
-        caps.has3DTextures                      = true;
-        caps.hasCubeTextures                    = true;
-        caps.hasTextureArrays                   = true;
-        caps.hasCubeTextureArrays               = (features_.imageCubeArray != VK_FALSE);
-        caps.hasMultiSampleTextures             = true;
-        caps.hasSamplers                        = true;
-        caps.hasConstantBuffers                 = true;
-        caps.hasStorageBuffers                  = true;
-        caps.hasUniforms                        = true;
-        caps.hasGeometryShaders                 = (features_.geometryShader != VK_FALSE);
-        caps.hasTessellationShaders             = (features_.tessellationShader != VK_FALSE);
-        caps.hasComputeShaders                  = true;
-        caps.hasInstancing                      = true;
-        caps.hasOffsetInstancing                = true;
-        caps.hasViewportArrays                  = (features_.multiViewport != VK_FALSE);
-        caps.hasConservativeRasterization       = false;
-        caps.hasStreamOutputs                   = true;
-        caps.lineWidthRange[0]                  = limits.lineWidthRange[0];
-        caps.lineWidthRange[1]                  = limits.lineWidthRange[1];
-        caps.maxNumTextureArrayLayers           = limits.maxImageArrayLayers;
-        caps.maxNumRenderTargetAttachments      = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
-        caps.maxPatchVertices                   = limits.maxTessellationPatchSize;
-        caps.max1DTextureSize                   = limits.maxImageDimension1D;
-        caps.max2DTextureSize                   = limits.maxImageDimension2D;
-        caps.max3DTextureSize                   = limits.maxImageDimension3D;
-        caps.maxCubeTextureSize                 = limits.maxImageDimensionCube;
-        caps.maxAnisotropy                      = static_cast<std::uint32_t>(limits.maxSamplerAnisotropy);
-        caps.maxNumComputeShaderWorkGroups[0]   = limits.maxComputeWorkGroupCount[0];
-        caps.maxNumComputeShaderWorkGroups[1]   = limits.maxComputeWorkGroupCount[1];
-        caps.maxNumComputeShaderWorkGroups[2]   = limits.maxComputeWorkGroupCount[2];
-        caps.maxComputeShaderWorkGroupSize[0]   = limits.maxComputeWorkGroupSize[0];
-        caps.maxComputeShaderWorkGroupSize[1]   = limits.maxComputeWorkGroupSize[1];
-        caps.maxComputeShaderWorkGroupSize[2]   = limits.maxComputeWorkGroupSize[2];
-        caps.maxNumViewports                    = limits.maxViewports;
-        caps.maxViewportSize[0]                 = limits.maxViewportDimensions[0];
-        caps.maxViewportSize[1]                 = limits.maxViewportDimensions[1];
-        caps.maxBufferSize                      = std::numeric_limits<VkDeviceSize>::max();
-        caps.maxConstantBufferSize              = limits.maxUniformBufferRange;
+        /* Query common attributes */
+        caps.screenOrigin                               = ScreenOrigin::UpperLeft;
+        caps.clippingRange                              = ClippingRange::ZeroToOne;
+        caps.shadingLanguages                           = { ShadingLanguage::SPIRV, ShadingLanguage::SPIRV_100 };
+        //caps.textureFormats                             = ; //???
+
+        /* Query features */
+        caps.features.hasRenderTargets                  = true;
+        caps.features.has3DTextures                     = true;
+        caps.features.hasCubeTextures                   = true;
+        caps.features.hasArrayTextures                  = true;
+        caps.features.hasCubeArrayTextures              = (features_.imageCubeArray != VK_FALSE);
+        caps.features.hasMultiSampleTextures            = true;
+        caps.features.hasSamplers                       = true;
+        caps.features.hasConstantBuffers                = true;
+        caps.features.hasStorageBuffers                 = true;
+        caps.features.hasUniforms                       = true;
+        caps.features.hasGeometryShaders                = (features_.geometryShader != VK_FALSE);
+        caps.features.hasTessellationShaders            = (features_.tessellationShader != VK_FALSE);
+        caps.features.hasComputeShaders                 = true;
+        caps.features.hasInstancing                     = true;
+        caps.features.hasOffsetInstancing               = true;
+        caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
+        caps.features.hasConservativeRasterization      = false;
+        caps.features.hasStreamOutputs                  = true;
+
+        /* Query limits */
+        caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
+        caps.limits.lineWidthRange[1]                   = limits.lineWidthRange[1];
+        caps.limits.maxNumTextureArrayLayers            = limits.maxImageArrayLayers;
+        caps.limits.maxNumRenderTargetAttachments       = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
+        caps.limits.maxPatchVertices                    = limits.maxTessellationPatchSize;
+        caps.limits.max1DTextureSize                    = limits.maxImageDimension1D;
+        caps.limits.max2DTextureSize                    = limits.maxImageDimension2D;
+        caps.limits.max3DTextureSize                    = limits.maxImageDimension3D;
+        caps.limits.maxCubeTextureSize                  = limits.maxImageDimensionCube;
+        caps.limits.maxAnisotropy                       = static_cast<std::uint32_t>(limits.maxSamplerAnisotropy);
+        caps.limits.maxNumComputeShaderWorkGroups[0]    = limits.maxComputeWorkGroupCount[0];
+        caps.limits.maxNumComputeShaderWorkGroups[1]    = limits.maxComputeWorkGroupCount[1];
+        caps.limits.maxNumComputeShaderWorkGroups[2]    = limits.maxComputeWorkGroupCount[2];
+        caps.limits.maxComputeShaderWorkGroupSize[0]    = limits.maxComputeWorkGroupSize[0];
+        caps.limits.maxComputeShaderWorkGroupSize[1]    = limits.maxComputeWorkGroupSize[1];
+        caps.limits.maxComputeShaderWorkGroupSize[2]    = limits.maxComputeWorkGroupSize[2];
+        caps.limits.maxNumViewports                     = limits.maxViewports;
+        caps.limits.maxViewportSize[0]                  = limits.maxViewportDimensions[0];
+        caps.limits.maxViewportSize[1]                  = limits.maxViewportDimensions[1];
+        caps.limits.maxBufferSize                       = std::numeric_limits<VkDeviceSize>::max();
+        caps.limits.maxConstantBufferSize               = limits.maxUniformBufferRange;
     }
     SetRenderingCaps(caps);
 

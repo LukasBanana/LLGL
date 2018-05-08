@@ -179,6 +179,10 @@ class DbgRenderSystem : public RenderSystem
         RenderingProfiler*                      profiler_   = nullptr;
         RenderingDebugger*                      debugger_   = nullptr;
 
+        const RenderingCapabilities&            caps_;
+        const RenderingFeatures&                features_;
+        const RenderingLimits&                  limits_;
+
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<DbgRenderContext>     renderContexts_;

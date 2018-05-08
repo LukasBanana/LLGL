@@ -17,7 +17,7 @@ namespace LLGL
 
 
 // Queries all OpenGL rendering capacilities.
-void GLQueryRenderingCaps(RenderingCaps& caps);
+void GLQueryRenderingCaps(RenderingCapabilities& caps);
 
 
 } // /namespace LLGL

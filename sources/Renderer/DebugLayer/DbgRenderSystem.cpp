@@ -26,9 +26,12 @@ All the actual render system objects are stored in the members named "instance",
 
 DbgRenderSystem::DbgRenderSystem(
     const std::shared_ptr<RenderSystem>& instance, RenderingProfiler* profiler, RenderingDebugger* debugger) :
-        instance_ { instance },
-        profiler_ { profiler },
-        debugger_ { debugger }
+        instance_ { instance           },
+        profiler_ { profiler           },
+        debugger_ { debugger           },
+        caps_     { GetRenderingCaps() },
+        features_ { caps_.features     },
+        limits_   { caps_.limits       }
 {
 }
 
@@ -545,24 +548,24 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
 
 void DbgRenderSystem::ValidateBufferSize(std::uint64_t size)
 {
-    if (size > GetRenderingCaps().maxBufferSize)
+    if (size > limits_.maxBufferSize)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "buffer size exceeded limit (" + std::to_string(size) +
-            " specified but limit is " + std::to_string(GetRenderingCaps().maxBufferSize) + ")"
+            " specified but limit is " + std::to_string(limits_.maxBufferSize) + ")"
         );
     }
 }
 
 void DbgRenderSystem::ValidateConstantBufferSize(std::uint64_t size)
 {
-    if (size > GetRenderingCaps().maxConstantBufferSize)
+    if (size > limits_.maxConstantBufferSize)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "constant buffer size exceeded limit (" + std::to_string(size) +
-            " specified but limit is " + std::to_string(GetRenderingCaps().maxConstantBufferSize) + ")"
+            " specified but limit is " + std::to_string(limits_.maxConstantBufferSize) + ")"
         );
     }
 }
@@ -691,22 +694,22 @@ void DbgRenderSystem::ValidateTextureSize(std::uint32_t size, std::uint32_t limi
 
 void DbgRenderSystem::Validate1DTextureSize(std::uint32_t size)
 {
-    ValidateTextureSize(size, GetRenderingCaps().max1DTextureSize, "1D");
+    ValidateTextureSize(size, limits_.max1DTextureSize, "1D");
 }
 
 void DbgRenderSystem::Validate2DTextureSize(std::uint32_t size)
 {
-    ValidateTextureSize(size, GetRenderingCaps().max1DTextureSize, "2D");
+    ValidateTextureSize(size, limits_.max1DTextureSize, "2D");
 }
 
 void DbgRenderSystem::Validate3DTextureSize(std::uint32_t size)
 {
-    ValidateTextureSize(size, GetRenderingCaps().max1DTextureSize, "3D");
+    ValidateTextureSize(size, limits_.max1DTextureSize, "3D");
 }
 
 void DbgRenderSystem::ValidateCubeTextureSize(std::uint32_t size)
 {
-    ValidateTextureSize(size, GetRenderingCaps().max1DTextureSize, "cube");
+    ValidateTextureSize(size, limits_.max1DTextureSize, "cube");
 }
 
 void DbgRenderSystem::ValidateArrayTextureLayers(std::uint32_t layers)
@@ -714,7 +717,7 @@ void DbgRenderSystem::ValidateArrayTextureLayers(std::uint32_t layers)
     if (layers == 0)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of texture layers must not be zero for array texutres");
 
-    const auto maxNumLayers = GetRenderingCaps().maxNumTextureArrayLayers;
+    const auto maxNumLayers = limits_.maxNumTextureArrayLayers;
 
     if (layers > maxNumLayers)
     {
@@ -752,7 +755,7 @@ void DbgRenderSystem::ValidateTextureImageDataSize(std::size_t dataSize, std::si
 
 void DbgRenderSystem::ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc)
 {
-    if (desc.rasterizer.conservativeRasterization && !GetRenderingCaps().hasConservativeRasterization)
+    if (desc.rasterizer.conservativeRasterization && !features_.hasConservativeRasterization)
         LLGL_DBG_ERROR_NOT_SUPPORTED("conservative rasterization");
     if (desc.blend.targets.size() > 8)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "too many blend state targets (limit is 8)");
@@ -779,31 +782,31 @@ void DbgRenderSystem::ValidatePrimitiveTopology(const PrimitiveTopology primitiv
 
 void DbgRenderSystem::Assert3DTextures()
 {
-    if (!GetRenderingCaps().has3DTextures)
+    if (!features_.has3DTextures)
         LLGL_DBG_ERROR_NOT_SUPPORTED("3D textures");
 }
 
 void DbgRenderSystem::AssertCubeTextures()
 {
-    if (!GetRenderingCaps().hasCubeTextures)
+    if (!features_.hasCubeTextures)
         LLGL_DBG_ERROR_NOT_SUPPORTED("cube textures");
 }
 
 void DbgRenderSystem::AssertArrayTextures()
 {
-    if (!GetRenderingCaps().hasTextureArrays)
+    if (!features_.hasArrayTextures)
         LLGL_DBG_ERROR_NOT_SUPPORTED("array textures");
 }
 
 void DbgRenderSystem::AssertCubeArrayTextures()
 {
-    if (!GetRenderingCaps().hasCubeTextureArrays)
+    if (!features_.hasCubeArrayTextures)
         LLGL_DBG_ERROR_NOT_SUPPORTED("cube array textures");
 }
 
 void DbgRenderSystem::AssertMultiSampleTextures()
 {
-    if (!GetRenderingCaps().hasMultiSampleTextures)
+    if (!features_.hasMultiSampleTextures)
         LLGL_DBG_ERROR_NOT_SUPPORTED("multi-sample textures");
 }
 

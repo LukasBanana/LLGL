@@ -30,7 +30,7 @@ public:
         // Check if samplers are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
 
-        if (!renderCaps.hasSamplers)
+        if (!renderCaps.features.hasSamplers)
             throw std::runtime_error("samplers are not supported by this renderer");
 
         // Create all graphics objects

@@ -145,7 +145,7 @@ static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
     };
 }
 
-static void GLGetRenderingAttribs(RenderingCaps& caps)
+static void GLGetRenderingAttribs(RenderingCapabilities& caps)
 {
     /* Set fixed states for this renderer */
     caps.screenOrigin       = ScreenOrigin::LowerLeft;
@@ -158,7 +158,7 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
     textureFormats = GetDefaultSupportedGLTextureFormats();
 
     #if defined GL_ARB_internalformat_query && defined GL_ARB_internalformat_query2
-    
+
     if (HasExtension(GLExt::ARB_internalformat_query) && HasExtension(GLExt::ARB_internalformat_query2))
     {
         RemoveAllFromListIf(
@@ -175,9 +175,9 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
             }
         );
     }
-    
+
     #endif
-    
+
     #ifdef GL_EXT_texture_compression_s3tc
 
     const auto numCompressedTexFormats = GLGetUInt(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
@@ -209,31 +209,31 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
     #endif
 }
 
-static void GLGetSupportedFeatures(RenderingCaps& caps)
+static void GLGetSupportedFeatures(RenderingFeatures& features)
 {
     /* Query all boolean capabilies by their respective OpenGL extension */
-    caps.hasCommandBufferExt            = true;
-    caps.hasRenderTargets               = HasExtension(GLExt::ARB_framebuffer_object);
-    caps.has3DTextures                  = HasExtension(GLExt::EXT_texture3D);
-    caps.hasCubeTextures                = HasExtension(GLExt::ARB_texture_cube_map);
-    caps.hasTextureArrays               = HasExtension(GLExt::EXT_texture_array);
-    caps.hasCubeTextureArrays           = HasExtension(GLExt::ARB_texture_cube_map_array);
-    caps.hasMultiSampleTextures         = HasExtension(GLExt::ARB_texture_multisample);
-    caps.hasSamplers                    = HasExtension(GLExt::ARB_sampler_objects);
-    caps.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
-    caps.hasStorageBuffers              = HasExtension(GLExt::ARB_shader_storage_buffer_object);
-    caps.hasUniforms                    = HasExtension(GLExt::ARB_shader_objects);
-    caps.hasGeometryShaders             = HasExtension(GLExt::ARB_geometry_shader4);
-    caps.hasTessellationShaders         = HasExtension(GLExt::ARB_tessellation_shader);
-    caps.hasComputeShaders              = HasExtension(GLExt::ARB_compute_shader);
-    caps.hasInstancing                  = HasExtension(GLExt::ARB_draw_instanced);
-    caps.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);
-    caps.hasViewportArrays              = HasExtension(GLExt::ARB_viewport_array);
-    caps.hasConservativeRasterization   = ( HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization) );
-    caps.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
+    features.hasCommandBufferExt            = true;
+    features.hasRenderTargets               = HasExtension(GLExt::ARB_framebuffer_object);
+    features.has3DTextures                  = HasExtension(GLExt::EXT_texture3D);
+    features.hasCubeTextures                = HasExtension(GLExt::ARB_texture_cube_map);
+    features.hasArrayTextures               = HasExtension(GLExt::EXT_texture_array);
+    features.hasCubeArrayTextures           = HasExtension(GLExt::ARB_texture_cube_map_array);
+    features.hasMultiSampleTextures         = HasExtension(GLExt::ARB_texture_multisample);
+    features.hasSamplers                    = HasExtension(GLExt::ARB_sampler_objects);
+    features.hasConstantBuffers             = HasExtension(GLExt::ARB_uniform_buffer_object);
+    features.hasStorageBuffers              = HasExtension(GLExt::ARB_shader_storage_buffer_object);
+    features.hasUniforms                    = HasExtension(GLExt::ARB_shader_objects);
+    features.hasGeometryShaders             = HasExtension(GLExt::ARB_geometry_shader4);
+    features.hasTessellationShaders         = HasExtension(GLExt::ARB_tessellation_shader);
+    features.hasComputeShaders              = HasExtension(GLExt::ARB_compute_shader);
+    features.hasInstancing                  = HasExtension(GLExt::ARB_draw_instanced);
+    features.hasOffsetInstancing            = HasExtension(GLExt::ARB_base_instance);
+    features.hasViewportArrays              = HasExtension(GLExt::ARB_viewport_array);
+    features.hasConservativeRasterization   = ( HasExtension(GLExt::NV_conservative_raster) || HasExtension(GLExt::INTEL_conservative_rasterization) );
+    features.hasStreamOutputs               = ( HasExtension(GLExt::EXT_transform_feedback) || HasExtension(GLExt::NV_transform_feedback) );
 }
 
-static void GLGetFeatureLimits(RenderingCaps& caps)
+static void GLGetFeatureLimits(RenderingLimits& limits)
 {
     /* Determine minimal line width range for both aliased and smooth lines */
     GLfloat aliasedLineRange[2];
@@ -242,37 +242,37 @@ static void GLGetFeatureLimits(RenderingCaps& caps)
     GLfloat smoothLineRange[2];
     glGetFloatv(GL_SMOOTH_LINE_WIDTH_RANGE, smoothLineRange);
 
-    caps.lineWidthRange[0] = std::max(aliasedLineRange[0], smoothLineRange[0]);
-    caps.lineWidthRange[1] = std::min(aliasedLineRange[1], smoothLineRange[1]);
+    limits.lineWidthRange[0] = std::max(aliasedLineRange[0], smoothLineRange[0]);
+    limits.lineWidthRange[1] = std::min(aliasedLineRange[1], smoothLineRange[1]);
 
     /* Query integral attributes */
-    caps.maxNumTextureArrayLayers           = GLGetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
-    caps.maxNumRenderTargetAttachments      = GLGetUInt(GL_MAX_DRAW_BUFFERS);
-    caps.maxPatchVertices                   = GLGetUInt(GL_MAX_PATCH_VERTICES);
-    caps.maxAnisotropy                      = static_cast<std::uint32_t>(GLGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
+    limits.maxNumTextureArrayLayers         = GLGetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
+    limits.maxNumRenderTargetAttachments    = GLGetUInt(GL_MAX_DRAW_BUFFERS);
+    limits.maxPatchVertices                 = GLGetUInt(GL_MAX_PATCH_VERTICES);
+    limits.maxAnisotropy                    = static_cast<std::uint32_t>(GLGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
 
-    caps.maxNumComputeShaderWorkGroups[0]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
-    caps.maxNumComputeShaderWorkGroups[1]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
-    caps.maxNumComputeShaderWorkGroups[2]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
+    limits.maxNumComputeShaderWorkGroups[0] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
+    limits.maxNumComputeShaderWorkGroups[1] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
+    limits.maxNumComputeShaderWorkGroups[2] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
 
-    caps.maxComputeShaderWorkGroupSize[0]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
-    caps.maxComputeShaderWorkGroupSize[1]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
-    caps.maxComputeShaderWorkGroupSize[2]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
+    limits.maxComputeShaderWorkGroupSize[0] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0);
+    limits.maxComputeShaderWorkGroupSize[1] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1);
+    limits.maxComputeShaderWorkGroupSize[2] = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2);
 
     /* Query viewport limits */
-    caps.maxNumViewports                    = GLGetUInt(GL_MAX_VIEWPORTS);
+    limits.maxNumViewports                  = GLGetUInt(GL_MAX_VIEWPORTS);
 
     GLint maxViewportDims[2];
     glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewportDims);
-    caps.maxViewportSize[0] = static_cast<std::uint32_t>(maxViewportDims[0]);
-    caps.maxViewportSize[1] = static_cast<std::uint32_t>(maxViewportDims[1]);
+    limits.maxViewportSize[0] = static_cast<std::uint32_t>(maxViewportDims[0]);
+    limits.maxViewportSize[1] = static_cast<std::uint32_t>(maxViewportDims[1]);
 
     /* Set maximum buffer size to maximum value for <GLsizei> (used in 'glBufferData') */
-    caps.maxBufferSize          = static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max());
-    caps.maxConstantBufferSize  = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
+    limits.maxBufferSize          = static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max());
+    limits.maxConstantBufferSize  = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
 }
 
-static void GLGetTextureLimits(RenderingCaps& caps)
+static void GLGetTextureLimits(const RenderingFeatures& features, RenderingLimits& limits)
 {
     /* Query maximum texture dimensions */
     GLint querySizeBase = 0;
@@ -289,7 +289,7 @@ static void GLGetTextureLimits(RenderingCaps& caps)
         querySize /= 2;
     }
 
-    caps.max1DTextureSize = static_cast<std::uint32_t>(texSize);
+    limits.max1DTextureSize = static_cast<std::uint32_t>(texSize);
 
     /* Query 2D texture max size */
     texSize = 0;
@@ -302,10 +302,10 @@ static void GLGetTextureLimits(RenderingCaps& caps)
         querySize /= 2;
     }
 
-    caps.max2DTextureSize = static_cast<std::uint32_t>(texSize);
+    limits.max2DTextureSize = static_cast<std::uint32_t>(texSize);
 
     /* Query 3D texture max size */
-    if (caps.has3DTextures)
+    if (features.has3DTextures)
     {
         texSize = 0;
         querySize = querySizeBase;
@@ -317,11 +317,11 @@ static void GLGetTextureLimits(RenderingCaps& caps)
             querySize /= 2;
         }
 
-        caps.max3DTextureSize = static_cast<std::uint32_t>(texSize);
+        limits.max3DTextureSize = static_cast<std::uint32_t>(texSize);
     }
 
     /* Query cube texture max size */
-    if (caps.hasCubeTextures)
+    if (features.hasCubeTextures)
     {
         texSize = 0;
         querySize = querySizeBase;
@@ -333,17 +333,17 @@ static void GLGetTextureLimits(RenderingCaps& caps)
             querySize /= 2;
         }
 
-        caps.maxCubeTextureSize = static_cast<std::uint32_t>(texSize);
+        limits.maxCubeTextureSize = static_cast<std::uint32_t>(texSize);
     }
 }
 
-void GLQueryRenderingCaps(RenderingCaps& caps)
+void GLQueryRenderingCaps(RenderingCapabilities& caps)
 {
     GLGetRenderingAttribs(caps);
     GLGetSupportedTextureFormats(caps.textureFormats);
-    GLGetSupportedFeatures(caps);
-    GLGetFeatureLimits(caps);
-    GLGetTextureLimits(caps);
+    GLGetSupportedFeatures(caps.features);
+    GLGetFeatureLimits(caps.limits);
+    GLGetTextureLimits(caps.features, caps.limits);
 }
 
 

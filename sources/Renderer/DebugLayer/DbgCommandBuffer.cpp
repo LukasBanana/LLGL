@@ -24,12 +24,14 @@ namespace LLGL
 
 
 DbgCommandBuffer::DbgCommandBuffer(
-    CommandBuffer& instance, CommandBufferExt* instanceExt, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCaps& caps) :
-        instance    { instance    },
-        instanceExt { instanceExt },
-        profiler_   { profiler    },
-        debugger_   { debugger    },
-        caps_       { caps        }
+    CommandBuffer& instance, CommandBufferExt* instanceExt, RenderingProfiler* profiler, RenderingDebugger* debugger, const RenderingCapabilities& caps) :
+        instance    { instance      },
+        instanceExt { instanceExt   },
+        profiler_   { profiler      },
+        debugger_   { debugger      },
+        caps_       { caps          },
+        features_   { caps.features },
+        limits_     { caps.limits   }
 {
 }
 
@@ -71,12 +73,12 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
         /* Validate array size */
         if (numViewports == 0)
             LLGL_DBG_WARN(WarningType::PointlessOperation, "no viewports are specified");
-        else if (numViewports > caps_.maxNumViewports)
+        else if (numViewports > limits_.maxNumViewports)
         {
             LLGL_DBG_ERROR(
                 ErrorType::InvalidArgument,
                 "viewport array exceeded maximal number of viewports (" + std::to_string(numViewports) +
-                " specified but limit is " + std::to_string(caps_.maxNumViewports) + ")"
+                " specified but limit is " + std::to_string(limits_.maxNumViewports) + ")"
             );
         }
     }
@@ -684,9 +686,9 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
             LLGL_DBG_WARN(WarningType::PointlessOperation, "thread group size has volume of 0 units");
 
         AssertComputePipelineBound();
-        ValidateThreadGroupLimit(groupSizeX, caps_.maxNumComputeShaderWorkGroups[0]);
-        ValidateThreadGroupLimit(groupSizeY, caps_.maxNumComputeShaderWorkGroups[1]);
-        ValidateThreadGroupLimit(groupSizeZ, caps_.maxNumComputeShaderWorkGroups[2]);
+        ValidateThreadGroupLimit(groupSizeX, limits_.maxNumComputeShaderWorkGroups[0]);
+        ValidateThreadGroupLimit(groupSizeY, limits_.maxNumComputeShaderWorkGroups[1]);
+        ValidateThreadGroupLimit(groupSizeZ, limits_.maxNumComputeShaderWorkGroups[2]);
     }
     
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
@@ -715,13 +717,13 @@ void DbgCommandBuffer::ValidateViewport(const Viewport& viewport)
     const auto w = static_cast<std::uint32_t>(viewport.width);
     const auto h = static_cast<std::uint32_t>(viewport.height);
 
-    if ( ( viewport.width  > 0.0f && w > caps_.maxViewportSize[0] ) ||
-         ( viewport.height > 0.0f && h > caps_.maxViewportSize[1] ) )
+    if ( ( viewport.width  > 0.0f && w > limits_.maxViewportSize[0] ) ||
+         ( viewport.height > 0.0f && h > limits_.maxViewportSize[1] ) )
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             "viewport exceeded maximal size ([" + std::to_string(w) + " x " + std::to_string(h) +
-            "] specified but limit is [" + std::to_string(caps_.maxViewportSize[0]) + " x " + std::to_string(caps_.maxViewportSize[1]) + "])"
+            "] specified but limit is [" + std::to_string(limits_.maxViewportSize[0]) + " x " + std::to_string(limits_.maxViewportSize[1]) + "])"
         );
     }
 }
@@ -997,13 +999,13 @@ void DbgCommandBuffer::AssertIndexBufferBound()
 
 void DbgCommandBuffer::AssertInstancingSupported()
 {
-    if (!caps_.hasInstancing)
+    if (!features_.hasInstancing)
         LLGL_DBG_ERROR_NOT_SUPPORTED("instancing");
 }
 
 void DbgCommandBuffer::AssertOffsetInstancingSupported()
 {
-    if (!caps_.hasOffsetInstancing)
+    if (!features_.hasOffsetInstancing)
         LLGL_DBG_ERROR_NOT_SUPPORTED("offset-instancing");
 }
 

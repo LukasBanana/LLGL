@@ -138,7 +138,7 @@ class LLGL_EXPORT RenderSystem
         \remarks The validity of these information is only guaranteed if this function is called
         after a valid render context has been created. Otherwise the behavior is undefined!
         */
-        inline const RenderingCaps& GetRenderingCaps() const
+        inline const RenderingCapabilities& GetRenderingCaps() const
         {
             return caps_;
         }
@@ -194,7 +194,7 @@ class LLGL_EXPORT RenderSystem
         \return Pointer to the new CommandBufferExt object, or null if the render system does not support extended command buffers.
         \remarks For those render systems that do not support dynamic state access for shader resources, use the ResourceViewHeap interface.
         \note Only supported with: OpenGL, Direct3D 11.
-        \see RenderingCaps::hasCommandBufferExt
+        \see RenderingCapabilities::hasCommandBufferExt
         \see CreateResourceViewHeap
         */
         virtual CommandBufferExt* CreateCommandBufferExt() = 0;
@@ -489,7 +489,7 @@ class LLGL_EXPORT RenderSystem
         void SetRendererInfo(const RendererInfo& info);
 
         //! Sets the rendering capabilities.
-        void SetRenderingCaps(const RenderingCaps& caps);
+        void SetRenderingCaps(const RenderingCapabilities& caps);
 
         //! Validates the specified buffer descriptor to be used for buffer creation.
         void AssertCreateBuffer(const BufferDescriptor& desc, std::uint64_t maxSize);
@@ -512,7 +512,7 @@ class LLGL_EXPORT RenderSystem
         std::string                 name_;
 
         RendererInfo                info_;
-        RenderingCaps               caps_;
+        RenderingCapabilities               caps_;
         RenderSystemConfiguration   config_;
 
 };
