@@ -154,7 +154,7 @@ class DbgRenderSystem : public RenderSystem
         void ValidateCubeTextureSize(std::uint32_t size);
         void ValidateArrayTextureLayers(std::uint32_t layers);
         void ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
-        void ValidateTextureImageDataSize(std::uint32_t dataSize, std::uint32_t requiredDataSize);
+        void ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize);
 
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
         void ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology);

@@ -21,7 +21,7 @@ D3D11StateManager::D3D11StateManager(ComPtr<ID3D11DeviceContext>& context) :
 
 void D3D11StateManager::SetViewports(std::uint32_t numViewports, const Viewport* viewportArray)
 {
-    numViewports = std::min(numViewports, std::size_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+    numViewports = std::min(numViewports, std::uint32_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
     /* Check if D3D11_VIEWPORT and Viewport structures can be safely reinterpret-casted */
     if ( sizeof(D3D11_VIEWPORT)             == sizeof(Viewport)             &&
@@ -59,7 +59,7 @@ void D3D11StateManager::SetViewports(std::uint32_t numViewports, const Viewport*
 
 void D3D11StateManager::SetScissors(std::uint32_t numScissors, const Scissor* scissorArray)
 {
-    numScissors = std::min(numScissors, std::size_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+    numScissors = std::min(numScissors, std::uint32_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
     D3D11_RECT scissorsD3D[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
     

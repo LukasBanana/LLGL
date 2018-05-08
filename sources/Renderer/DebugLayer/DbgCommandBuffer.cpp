@@ -469,7 +469,10 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
             bindings_.anyShaderAttributes = false;
     }
 
+    /* Store primitive topology used in graphics pipeline */
     topology_ = graphicsPipelineDbg.desc.primitiveTopology;
+
+    /* Call wrapped function */
     instance.SetGraphicsPipeline(graphicsPipelineDbg.instance);
     
     LLGL_DBG_PROFILER_DO(setGraphicsPipeline.Inc());
@@ -1006,11 +1009,10 @@ void DbgCommandBuffer::AssertOffsetInstancingSupported()
 
 void DbgCommandBuffer::WarnImproperVertices(const std::string& topologyName, std::uint32_t unusedVertices)
 {
-    std::string vertexSingularPlural = (unusedVertices > 1 ? "vertices" : "vertex");
-
     LLGL_DBG_WARN(
         WarningType::ImproperArgument,
-        ("improper number of vertices for " + topologyName + " (" + std::to_string(unusedVertices) + " unused " + vertexSingularPlural + ")")
+        "improper number of vertices for " + topologyName + " (" + std::to_string(unusedVertices) +
+        " unused " + std::string(unusedVertices > 1 ? "vertices" : "vertex") + ")"
     );
 }
 

@@ -708,7 +708,7 @@ void DbgRenderSystem::ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_
     }
 }
 
-void DbgRenderSystem::ValidateTextureImageDataSize(std::uint32_t dataSize, std::uint32_t requiredDataSize)
+void DbgRenderSystem::ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize)
 {
     if (dataSize < requiredDataSize)
     {
