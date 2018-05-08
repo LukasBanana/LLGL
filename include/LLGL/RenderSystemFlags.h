@@ -499,7 +499,7 @@ struct RenderingCapabilities
     \remarks This determines the coordinate space of viewports, scissors, and framebuffers.
     */
     ScreenOrigin                    screenOrigin        = ScreenOrigin::UpperLeft;
-    #else
+    #else//TODO: use these members:
     ScreenOrigin                    screenSpaceOrigin   = ScreenOrigin::UpperLeft;
     ScreenOrigin                    textureSpaceOrigin  = ScreenOrigin::UpperLeft;
     #endif

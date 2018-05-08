@@ -41,7 +41,7 @@ class LLGL_EXPORT RenderTarget
         \param[in] size Specifies the size of the depth buffer. This must be the same as for all other attachemnts.
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthStencilBuffer
-        \deprecated Use RenderTargetDescriptor::attachmnets instead.
+        \deprecated Use RenderTargetDescriptor::attachments instead.
         */
         virtual void AttachDepthBuffer(const Gs::Vector2ui& size);
 
@@ -49,7 +49,7 @@ class LLGL_EXPORT RenderTarget
         \brief Attaches an internal stencil buffer to this render target.
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthBuffer
-        \deprecated Use RenderTargetDescriptor::attachmnets instead.
+        \deprecated Use RenderTargetDescriptor::attachments instead.
         */
         virtual void AttachStencilBuffer(const Gs::Vector2ui& size);
 
@@ -57,7 +57,7 @@ class LLGL_EXPORT RenderTarget
         \brief Attaches an internal depth-stencil buffer to this render target.
         \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
         \see AttachDepthBuffer
-        \deprecated Use RenderTargetDescriptor::attachmnets instead.
+        \deprecated Use RenderTargetDescriptor::attachments instead.
         */
         virtual void AttachDepthStencilBuffer(const Gs::Vector2ui& size);
 
@@ -66,13 +66,13 @@ class LLGL_EXPORT RenderTarget
         \param[in] attachmnetDesc Specifies the attachment descriptor.
         Unused members will be ignored, e.g. the 'layer' member is ignored when a non-array texture is passed.
         \note A mixed attachment of multi-sample and non-multi-sample textures to a render-target is currently only supported with: Direct3D 11.
-        \deprecated Use RenderTargetDescriptor::attachmnets instead.
+        \deprecated Use RenderTargetDescriptor::attachments instead.
         */
         virtual void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc);
 
         /**
         \brief Detaches all textures and depth-stencil buffers from this render target.
-        \deprecated Use CreateRenderTarget instead, to create a new render target.
+        \deprecated Use RenderSystem::CreateRenderTarget instead, to create a new render target.
         */
         virtual void DetachAll();
 

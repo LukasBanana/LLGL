@@ -52,7 +52,7 @@ struct ClearFlags
 
         ColorDepth      = (Color | Depth),              //!< Clears the color and depth buffers.
         DepthStencil    = (Depth | Stencil),            //!< Clears the depth and stencil buffers.
-        All             = (Color | Depth | Stencil),    //!< Clears the all buffers (color, depth, and stencil).
+        All             = (Color | Depth | Stencil),    //!< Clears all buffers (color, depth, and stencil).
     };
 };
 

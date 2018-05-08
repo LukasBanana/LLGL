@@ -149,9 +149,9 @@ struct BufferDescriptor
     BufferType              type            = BufferType::Vertex;
 
     /**
-    \brief Buffer size (in bytes). This must not be larger than 'RenderingCapabilities::maxBufferSize'. By default 0.
+    \brief Buffer size (in bytes). This must not be larger than 'RenderingLimits::maxBufferSize'. By default 0.
     \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage), 'size' must be a multiple of 'storageBuffer.stride'.
-    \see RenderingCapabilities::maxBufferSize
+    \see RenderingLimits::maxBufferSize
     */
     std::uint64_t           size            = 0;
 
