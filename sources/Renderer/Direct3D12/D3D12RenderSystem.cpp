@@ -14,6 +14,7 @@
 #include "../../Core/Vendor.h"
 #include "D3DX12/d3dx12.h"
 //#include "RenderState/D3D12StateManager.h"
+#include <limits>
 
 #include "Buffer/D3D12VertexBuffer.h"
 #include "Buffer/D3D12VertexBufferArray.h"
@@ -591,7 +592,7 @@ void D3D12RenderSystem::CreateGPUSynchObjects()
     UINT64 initialFenceValue = 0;
     auto hr = device_->CreateFence(initialFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 fence");
-    
+
     /* Create Win32 event */
     #if 0
     fenceEvent_ = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
@@ -629,9 +630,11 @@ void D3D12RenderSystem::QueryRenderingCaps()
         DXGetRenderingCaps(caps, GetFeatureLevel());
 
         /* Set extended attributes */
-        caps.maxNumViewports    = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
-        caps.maxViewportSize[0] = D3D12_VIEWPORT_BOUNDS_MAX;
-        caps.maxViewportSize[1] = D3D12_VIEWPORT_BOUNDS_MAX;
+        caps.maxNumViewports        = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+        caps.maxViewportSize[0]     = D3D12_VIEWPORT_BOUNDS_MAX;
+        caps.maxViewportSize[1]     = D3D12_VIEWPORT_BOUNDS_MAX;
+        caps.maxBufferSize          = std::numeric_limits<UINT64>::max();
+        caps.maxConstantBufferSize  = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
     }
     SetRenderingCaps(caps);
 }

@@ -299,7 +299,11 @@ struct RenderSystemDescriptor
     std::size_t rendererConfigSize  = 0;
 };
 
-//! Rendering capabilities structure.
+/**
+\brief Structure with all attributes describing the rendering capabilities of the render system.
+\see RenderSystem::GetRenderingCaps
+\todo Rename to RenderingCapabilities
+*/
 struct RenderingCaps
 {
     /**
@@ -366,7 +370,7 @@ struct RenderingCaps
     \see TextureType::Texture2DMSArray
     */
     bool                            hasMultiSampleTextures              { false };
-    
+
     //! Specifies whether samplers are supported.
     bool                            hasSamplers                         { false };
 
@@ -443,9 +447,6 @@ struct RenderingCaps
 
     //! Specifies the maximum number of attachment points for each render target.
     std::uint32_t                   maxNumRenderTargetAttachments       { 0 };
-    
-    //! Specifies the maximum size (in bytes) of each constant buffer.
-    std::uint32_t                   maxConstantBufferSize               { 0 };
 
     //! Specifies the maximum number of patch control points.
     std::uint32_t                   maxPatchVertices                    { 0 };
@@ -473,7 +474,7 @@ struct RenderingCaps
     \see RenderContext::Dispatch
     */
     std::uint32_t                   maxNumComputeShaderWorkGroups[3]    { 0, 0, 0 };
-    
+
     //! Specifies the maximum work group size in a compute shader.
     std::uint32_t                   maxComputeShaderWorkGroupSize[3]    { 0, 0, 0 };
 
@@ -485,6 +486,21 @@ struct RenderingCaps
 
     //! Specifies the maximum width and height of each viewport and scissor rectangle.
     std::uint32_t                   maxViewportSize[2]                  { 0, 0 };
+
+    /**
+    \brief Specifies the maximum size (in bytes) that is supported for hardware buffers (vertex, index, storage buffers).
+    \remarks Constant buffers are a special case for which 'maxConstantBufferSize' can be used.
+    \see BufferDescriptor::size
+    \see maxConstantBufferSize
+    */
+    std::uint64_t                   maxBufferSize                       { 0 };
+
+    /**
+    \brief Specifies the maximum size (in bytes) that is supported for hardware constant buffers.
+    \remarks This is typically a lot smaller than the maximum size for other types of buffers.
+    \see BufferDescriptor::size
+    */
+    std::uint64_t                   maxConstantBufferSize               { 0 };
 };
 
 

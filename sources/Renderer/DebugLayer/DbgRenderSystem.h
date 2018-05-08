@@ -142,7 +142,9 @@ class DbgRenderSystem : public RenderSystem
     private:
 
         void ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSize = nullptr);
-        void ValidateBufferSize(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
+        void ValidateBufferSize(std::uint64_t size);
+        void ValidateConstantBufferSize(std::uint64_t size);
+        void ValidateBufferBoundary(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
         void ValidateBufferCPUAccess(DbgBuffer& bufferDbg, const BufferCPUAccess access);
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
 

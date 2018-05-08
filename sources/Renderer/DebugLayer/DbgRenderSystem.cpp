@@ -167,7 +167,7 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t 
                 bufferDbg.initialized = true;
         }
 
-        ValidateBufferSize(bufferDbg.desc.size, dataSize, offset);
+        ValidateBufferBoundary(bufferDbg.desc.size, dataSize, offset);
     }
 
     instance_->WriteBuffer(bufferDbg.instance, data, dataSize, offset);
@@ -498,6 +498,12 @@ void DbgRenderSystem::Release(Fence& fence)
 
 void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSize)
 {
+    /* Validate (constant-) buffer size */
+    if (desc.type == BufferType::Constant)
+        ValidateConstantBufferSize(desc.size);
+    else
+        ValidateBufferSize(desc.size);
+
     std::uint32_t formatSizeTemp = 0;
 
     switch (desc.type)
@@ -537,7 +543,31 @@ void DbgRenderSystem::ValidateBufferDesc(const BufferDescriptor& desc, std::uint
         *formatSize = formatSizeTemp;
 }
 
-void DbgRenderSystem::ValidateBufferSize(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset)
+void DbgRenderSystem::ValidateBufferSize(std::uint64_t size)
+{
+    if (size > GetRenderingCaps().maxBufferSize)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "buffer size exceeded limit (" + std::to_string(size) +
+            " specified but limit is " + std::to_string(GetRenderingCaps().maxBufferSize) + ")"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateConstantBufferSize(std::uint64_t size)
+{
+    if (size > GetRenderingCaps().maxConstantBufferSize)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "constant buffer size exceeded limit (" + std::to_string(size) +
+            " specified but limit is " + std::to_string(GetRenderingCaps().maxConstantBufferSize) + ")"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateBufferBoundary(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset)
 {
     if (static_cast<std::uint64_t>(dataSize) + static_cast<std::uint64_t>(dataOffset) > bufferSize)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds");

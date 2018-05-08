@@ -14,6 +14,7 @@
 #include "../../Core/Vendor.h"
 #include <sstream>
 #include <iomanip>
+#include <limits>
 
 #include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11VertexBufferArray.h"
@@ -299,9 +300,9 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
     /* Try to create device with debug layer (only supported if Windows 8.1 SDK is installed) */
     if (!CreateDeviceWithFlags(adapter, featureLevels, D3D11_CREATE_DEVICE_DEBUG, hr))
         CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
-    
+
     #else
-    
+
     /* Create device without debug layer */
     CreateDeviceWithFlags(adapter, featureLevels, 0, hr);
 
@@ -371,6 +372,8 @@ void D3D11RenderSystem::QueryRenderingCaps()
         caps.maxNumViewports        = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.maxViewportSize[0]     = D3D11_VIEWPORT_BOUNDS_MAX;
         caps.maxViewportSize[1]     = D3D11_VIEWPORT_BOUNDS_MAX;
+        caps.maxBufferSize          = std::numeric_limits<UINT>::max();
+        caps.maxConstantBufferSize  = D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
     }
     SetRenderingCaps(caps);
 }

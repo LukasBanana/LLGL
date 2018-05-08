@@ -955,7 +955,6 @@ void VKRenderSystem::QueryDeviceProperties()
         caps.lineWidthRange[1]                  = limits.lineWidthRange[1];
         caps.maxNumTextureArrayLayers           = limits.maxImageArrayLayers;
         caps.maxNumRenderTargetAttachments      = static_cast<std::uint32_t>(limits.framebufferColorSampleCounts);
-        caps.maxConstantBufferSize              = 0; //???
         caps.maxPatchVertices                   = limits.maxTessellationPatchSize;
         caps.max1DTextureSize                   = limits.maxImageDimension1D;
         caps.max2DTextureSize                   = limits.maxImageDimension2D;
@@ -971,6 +970,8 @@ void VKRenderSystem::QueryDeviceProperties()
         caps.maxNumViewports                    = limits.maxViewports;
         caps.maxViewportSize[0]                 = limits.maxViewportDimensions[0];
         caps.maxViewportSize[1]                 = limits.maxViewportDimensions[1];
+        caps.maxBufferSize                      = std::numeric_limits<VkDeviceSize>::max();
+        caps.maxConstantBufferSize              = limits.maxUniformBufferRange;
     }
     SetRenderingCaps(caps);
 

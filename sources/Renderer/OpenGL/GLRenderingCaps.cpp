@@ -11,6 +11,7 @@
 #include "../GLCommon/GLTypes.h"
 #include "../../Core/Helper.h"
 #include <cstdint>
+#include <limits>
 
 
 namespace LLGL
@@ -247,10 +248,9 @@ static void GLGetFeatureLimits(RenderingCaps& caps)
     /* Query integral attributes */
     caps.maxNumTextureArrayLayers           = GLGetUInt(GL_MAX_ARRAY_TEXTURE_LAYERS);
     caps.maxNumRenderTargetAttachments      = GLGetUInt(GL_MAX_DRAW_BUFFERS);
-    caps.maxConstantBufferSize              = GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE);
     caps.maxPatchVertices                   = GLGetUInt(GL_MAX_PATCH_VERTICES);
     caps.maxAnisotropy                      = static_cast<std::uint32_t>(GLGetFloat(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
-    
+
     caps.maxNumComputeShaderWorkGroups[0]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0);
     caps.maxNumComputeShaderWorkGroups[1]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1);
     caps.maxNumComputeShaderWorkGroups[2]   = GLGetUIntIndexed(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2);
@@ -266,6 +266,10 @@ static void GLGetFeatureLimits(RenderingCaps& caps)
     glGetIntegerv(GL_MAX_VIEWPORT_DIMS, maxViewportDims);
     caps.maxViewportSize[0] = static_cast<std::uint32_t>(maxViewportDims[0]);
     caps.maxViewportSize[1] = static_cast<std::uint32_t>(maxViewportDims[1]);
+
+    /* Set maximum buffer size to maximum value for <GLsizei> (used in 'glBufferData') */
+    caps.maxBufferSize          = static_cast<std::uint64_t>(std::numeric_limits<GLsizeiptr>::max());
+    caps.maxConstantBufferSize  = static_cast<std::uint64_t>(GLGetUInt(GL_MAX_UNIFORM_BLOCK_SIZE));
 }
 
 static void GLGetTextureLimits(RenderingCaps& caps)

@@ -84,7 +84,7 @@ void DXThrowIfFailed(const HRESULT hr, const char* info)
     if (FAILED(hr))
     {
         std::string s;
-        
+
         if (info)
         {
             s += info;
@@ -245,7 +245,6 @@ void DXGetRenderingCaps(RenderingCaps& caps, D3D_FEATURE_LEVEL featureLevel)
     caps.lineWidthRange[1]                  = 1.0f;
     caps.maxNumTextureArrayLayers           = (featureLevel >= D3D_FEATURE_LEVEL_10_0 ? 2048u : 256u);
     caps.maxNumRenderTargetAttachments      = GetMaxRenderTargets(featureLevel);
-    caps.maxConstantBufferSize              = 16384u;
     caps.maxPatchVertices                   = 32u;
     caps.max1DTextureSize                   = GetMaxTextureDimension(featureLevel);
     caps.max2DTextureSize                   = GetMaxTextureDimension(featureLevel);
