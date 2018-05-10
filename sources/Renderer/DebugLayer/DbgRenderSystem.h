@@ -141,14 +141,33 @@ class DbgRenderSystem : public RenderSystem
 
     private:
 
-        void DebugBufferSize(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
-        void DebugMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
-        void DebugTextureImageDataSize(std::uint32_t dataSize, std::uint32_t requiredDataSize);
+        void ValidateBufferDesc(const BufferDescriptor& desc, std::uint32_t* formatSize = nullptr);
+        void ValidateBufferSize(std::uint64_t size);
+        void ValidateConstantBufferSize(std::uint64_t size);
+        void ValidateBufferBoundary(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
+        void ValidateBufferCPUAccess(DbgBuffer& bufferDbg, const BufferCPUAccess access);
+        void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
 
-        void DebugTextureDescriptor(const TextureDescriptor& desc);
-        void DebugTextureSize(std::uint32_t size);
+        void ValidateTextureDesc(const TextureDescriptor& desc);
+        void ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName);
+        void Validate1DTextureSize(std::uint32_t size);
+        void Validate2DTextureSize(std::uint32_t size);
+        void Validate3DTextureSize(std::uint32_t size);
+        void ValidateCubeTextureSize(std::uint32_t size);
+        void ValidateArrayTextureLayers(std::uint32_t layers);
+        void ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
+        void ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize);
+
+        void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
+        void ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology);
+
+        void Assert3DTextures();
+        void AssertCubeTextures();
+        void AssertArrayTextures();
+        void AssertCubeArrayTextures();
+        void AssertMultiSampleTextures();
+
         void WarnTextureLayersGreaterOne();
-        void ErrTextureLayersEqualZero();
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
@@ -159,6 +178,10 @@ class DbgRenderSystem : public RenderSystem
 
         RenderingProfiler*                      profiler_   = nullptr;
         RenderingDebugger*                      debugger_   = nullptr;
+
+        const RenderingCapabilities&            caps_;
+        const RenderingFeatures&                features_;
+        const RenderingLimits&                  limits_;
 
         /* ----- Hardware object containers ----- */
 

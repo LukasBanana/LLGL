@@ -55,17 +55,17 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             break;
 
         case TextureType::Texture1DArray:
-            LLGL_ASSERT_CAP(hasTextureArrays);
+            LLGL_ASSERT_CAP(hasArrayTextures);
             GLTexImage1DArray(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DArray:
-            LLGL_ASSERT_CAP(hasTextureArrays);
+            LLGL_ASSERT_CAP(hasArrayTextures);
             GLTexImage2DArray(textureDesc, imageDesc);
             break;
 
         case TextureType::TextureCubeArray:
-            LLGL_ASSERT_CAP(hasCubeTextureArrays);
+            LLGL_ASSERT_CAP(hasCubeArrayTextures);
             GLTexImageCubeArray(textureDesc, imageDesc);
             break;
 
@@ -145,17 +145,17 @@ void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& 
             break;
 
         case TextureType::Texture1DArray:
-            LLGL_ASSERT_CAP(hasTextureArrays);
+            LLGL_ASSERT_CAP(hasArrayTextures);
             GLTexSubImage1DArray(subTextureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DArray:
-            LLGL_ASSERT_CAP(hasTextureArrays);
+            LLGL_ASSERT_CAP(hasArrayTextures);
             GLTexSubImage2DArray(subTextureDesc, imageDesc);
             break;
 
         case TextureType::TextureCubeArray:
-            LLGL_ASSERT_CAP(hasCubeTextureArrays);
+            LLGL_ASSERT_CAP(hasCubeArrayTextures);
             GLTexSubImageCubeArray(subTextureDesc, imageDesc);
             break;
 

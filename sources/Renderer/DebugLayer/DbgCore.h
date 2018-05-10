@@ -31,7 +31,7 @@ namespace LLGL
     DbgPostWarning(debugger_, (TYPE), (MESSAGE))
 
 #define LLGL_DBG_ERROR_NOT_SUPPORTED(FEATURE) \
-    LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, std::string(FEATURE) + " is not supported")
+    LLGL_DBG_ERROR(ErrorType::UnsupportedFeature, std::string(FEATURE) + " not supported")
 
 
 inline void DbgSetSource(RenderingDebugger* debugger, const char* source)

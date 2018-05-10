@@ -245,7 +245,7 @@ void RenderSystem::SetRendererInfo(const RendererInfo& info)
     info_ = info;
 }
 
-void RenderSystem::SetRenderingCaps(const RenderingCaps& caps)
+void RenderSystem::SetRenderingCaps(const RenderingCapabilities& caps)
 {
     caps_ = caps;
 }

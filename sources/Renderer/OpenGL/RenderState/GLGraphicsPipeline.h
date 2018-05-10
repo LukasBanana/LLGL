@@ -26,7 +26,7 @@ class GLGraphicsPipeline : public GraphicsPipeline
 
     public:
 
-        GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingCaps& renderCaps);
+        GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits);
 
         // Binds this graphics pipeline state with the specified GL state manager.
         void Bind(GLStateManager& stateMngr);

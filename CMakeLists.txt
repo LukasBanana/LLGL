@@ -100,11 +100,12 @@ option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
 option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
 option(LLGL_ENABLE_BACKWARDS_COMPATIBILITY "Enable various functions for backwards compatibility (C++14 only)" OFF)
+option(LLGL_ENABLE_SPIRV_REFLECT "Enable shader reflection of SPIR-V modules (requires the SPIRV submodule)" OFF)
 
 option(LLGL_GL_ENABLE_EXT_PLACEHOLDERS "Enable OpenGL extension placeholders" ON)
 option(LLGL_GL_ENABLE_VENDOR_EXT "Enable vendor specific OpenGL extensions (e.g. GL_NV_..., GL_AMD_... etc.)" ON)
 option(LLGL_GL_ENABLE_DSA_EXT "Enable OpenGL direct state access (DSA) extension if available" ON)
-option(LLGL_GL_INCLUDE_EXTERNAL "Includes additional OpenGL header files from 'external' folder" ON)
+option(LLGL_GL_INCLUDE_EXTERNAL "Include additional OpenGL header files from 'external' folder" ON)
 
 option(LLGL_BUILD_STATIC_LIB "Build LLGL as static lib (Only allows a single render system!)" OFF)
 option(LLGL_BUILD_TESTS "Include test projects" ON)
@@ -139,6 +140,10 @@ endif()
 
 if(LLGL_ENABLE_BACKWARDS_COMPATIBILITY)
     ADD_DEFINE(LLGL_ENABLE_BACKWARDS_COMPATIBILITY)
+endif()
+
+if(LLGL_ENABLE_SPIRV_REFLECT)
+    ADD_DEFINE(LLGL_ENABLE_SPIRV_REFLECT)
 endif()
 
 if(LLGL_GL_ENABLE_EXT_PLACEHOLDERS)
@@ -220,6 +225,9 @@ endif()
 # OpenGLES3 renderer files
 file(GLOB FilesRendererGLES3				${PROJECT_SOURCE_DIR}/sources/Renderer/OpenGLES3/*.*)
 
+# SPIR-V renderer files
+file(GLOB FilesRendererSPIRV                ${PROJECT_SOURCE_DIR}/sources/Renderer/SPIRV/*.*)
+
 # Vulkan renderer files
 file(GLOB FilesRendererVK					${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
 file(GLOB FilesRendererVKBuffer				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Buffer/*.*)
@@ -295,6 +303,8 @@ source_group("Sources\\OpenGL\\Shader" FILES ${FilesRendererGLShader})
 source_group("Sources\\OpenGL\\Texture" FILES ${FilesRendererGLTexture})
 
 source_group("Sources\\OpenGLES3" FILES ${FilesRendererGLES3})
+
+source_group("Sources\\SPIRV" FILES ${FilesRendererSPIRV})
 
 source_group("Sources\\Vulkan" FILES ${FilesRendererVK})
 source_group("Sources\\Vulkan\\Buffer" FILES ${FilesRendererVKBuffer})
@@ -374,6 +384,10 @@ set(
 	${FilesRendererVKShader}
 	${FilesRendererVKTexture}
 )
+
+if(LLGL_ENABLE_SPIRV_REFLECT)
+    set(FilesVK ${FilesVK} ${FilesRendererSPIRV})
+endif()
 
 set(
 	FilesD3D12
@@ -455,7 +469,7 @@ if(LLGL_BUILD_RENDERER_OPENGL)
 		include_directories(${OPENGL_INCLUDE_DIR})
 		
 		if(LLGL_GL_INCLUDE_EXTERNAL)
-			include_directories(${PROJECT_SOURCE_DIR}/external)
+			include_directories("${PROJECT_SOURCE_DIR}/external/OpenGL/include")
 		endif()
 		
 		if(LLGL_BUILD_STATIC_LIB)
@@ -485,6 +499,11 @@ if(LLGL_BUILD_RENDERER_VULKAN)
 	else()
 		message("Missing Vulkan -> LLGL_Vulkan renderer will be excluded from project")
 	endif()
+    
+    if(LLGL_ENABLE_SPIRV_REFLECT)
+        # SPIRV Submodule
+        include_directories("${PROJECT_SOURCE_DIR}/external/SPIRV/include")
+    endif()
 endif()
 
 if(WIN32)
@@ -566,7 +585,7 @@ if(LLGL_BUILD_RENDERER_OPENGLES3 AND OPENGLES_FOUND)
 endif()
 
 if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
-	message("Build Renderer: Vulkan")
+    message("Build Renderer: Vulkan")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
@@ -581,6 +600,10 @@ endif()
 
 if(LLGL_BUILD_STATIC_LIB AND NOT(${RENDERER_COUNT} EQUAL 1))
 	message(SEND_ERROR "Static library only supports one single render backend, but multiple are specified!")
+endif()
+
+if(LLGL_ENABLE_SPIRV_REFLECT)
+    message("Including Submodule: SPIRV")
 endif()
 
 

@@ -45,7 +45,7 @@ namespace LLGL
 
 
 #define LLGL_ASSERT_CAP(FEATURE) \
-    AssertCap(GetRenderingCaps().FEATURE, #FEATURE)
+    AssertCap(GetRenderingCaps().features.FEATURE, #FEATURE)
 
 
 class GLRenderSystem : public RenderSystem

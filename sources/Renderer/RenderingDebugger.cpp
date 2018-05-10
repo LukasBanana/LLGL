@@ -6,6 +6,8 @@
  */
 
 #include <LLGL/RenderingDebugger.h>
+#include <LLGL/Strings.h>
+#include <LLGL/Log.h>
 
 
 namespace LLGL
@@ -34,7 +36,7 @@ void RenderingDebugger::PostError(const ErrorType type, const std::string& messa
     }
     else
     {
-        errors_[message] = Message(message, source_);
+        errors_[message] = Message { message, source_ };
         OnError(type, errors_[message]);
     }
 }
@@ -52,7 +54,7 @@ void RenderingDebugger::PostWarning(const WarningType type, const std::string& m
     }
     else
     {
-        warnings_[message] = Message(message, source_);
+        warnings_[message] = Message { message, source_ };
         OnWarning(type, warnings_[message]);
     }
 }
@@ -64,12 +66,14 @@ void RenderingDebugger::PostWarning(const WarningType type, const std::string& m
 
 void RenderingDebugger::OnError(ErrorType type, Message& message)
 {
-    // dummy
+    Log::StdErr() << "ERROR (" << LLGL::ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+    message.Block();
 }
-        
+
 void RenderingDebugger::OnWarning(WarningType type, Message& message)
 {
-    // dummy
+    Log::StdErr() << "WARNING (" << LLGL::ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+    message.Block();
 }
 
 

@@ -52,6 +52,7 @@ enum class StorageBufferType
 /**
 \brief Hardware buffer CPU acccess enumeration.
 \see RenderSystem::MapBuffer
+\todo Rename to CPUAccess
 */
 enum class BufferCPUAccess
 {
@@ -148,9 +149,9 @@ struct BufferDescriptor
     BufferType              type            = BufferType::Vertex;
 
     /**
-    \brief Buffer size (in bytes). By default 0.
-    \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage),
-    'size' must be a multiple of 'storageBuffer.stride'.
+    \brief Buffer size (in bytes). This must not be larger than 'RenderingLimits::maxBufferSize'. By default 0.
+    \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage), 'size' must be a multiple of 'storageBuffer.stride'.
+    \see RenderingLimits::maxBufferSize
     */
     std::uint64_t           size            = 0;
 

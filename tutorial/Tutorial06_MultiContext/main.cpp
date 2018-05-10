@@ -13,7 +13,8 @@ int main(int argc, char* argv[])
     try
     {
         // Load render system module
-        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv));
+        LLGL::RenderingDebugger debugger;
+        auto renderer = LLGL::RenderSystem::Load(GetSelectedRendererModule(argc, argv), nullptr, &debugger);
 
         std::cout << "LLGL Renderer: " << renderer->GetName() << std::endl;
 

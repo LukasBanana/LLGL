@@ -57,9 +57,9 @@ public:
         // Check if constant buffers and tessellation shaders are supported
         const auto& renderCaps = renderer->GetRenderingCaps();
 
-        if (!renderCaps.hasConstantBuffers)
+        if (!renderCaps.features.hasConstantBuffers)
             throw std::runtime_error("constant buffers are not supported by this renderer");
-        if (!renderCaps.hasTessellationShaders)
+        if (!renderCaps.features.hasTessellationShaders)
             throw std::runtime_error("tessellation shaders are not supported by this renderer");
 
         // Create graphics object

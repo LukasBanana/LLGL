@@ -262,12 +262,35 @@ struct Viewport
     {
     }
 
-    float x         = 0.0f; //!< X coordinate of the left-top origin. By default 0.0.
-    float y         = 0.0f; //!< Y coordinate of the left-top origin. By default 0.0.
-    float width     = 0.0f; //!< Width of the right-bottom size. By default 0.0.
-    float height    = 0.0f; //!< Height of the right-bottom size. By default 0.0.
-    float minDepth  = 0.0f; //!< Minimum of the depth range. By default 0.0.
-    float maxDepth  = 1.0f; //!< Maximum of the depth range. By default 1.0.
+    //!< X coordinate of the left-top origin. By default 0.0.
+    float x         = 0.0f;
+
+    //!< Y coordinate of the left-top origin. By default 0.0.
+    float y         = 0.0f;
+
+    /**
+    \brief Width of the right-bottom size. By default 0.0.
+    \remarks Setting a viewport of negative width results in undefined behavior.
+    */
+    float width     = 0.0f;
+
+    /**
+    \brief Height of the right-bottom size. By default 0.0.
+    \remarks Setting a viewport of negative height results in undefined behavior.
+    */
+    float height    = 0.0f;
+
+    /**
+    \brief Minimum of the depth range. Must be in the range [0, 1]. By default 0.0.
+    \remarks Reverse mappings such as minDepth=1 and maxDepth=0 are also valid.
+    */
+    float minDepth  = 0.0f;
+
+    /**
+    \brief Maximum of the depth range. Must be in the range [0, 1]. By default 1.0.
+    \remarks Reverse mappings such as minDepth=1 and maxDepth=0 are also valid.
+    */
+    float maxDepth  = 1.0f;
 };
 
 /**
@@ -396,6 +419,21 @@ struct StencilDescriptor
     StencilFaceDescriptor   back;
 };
 
+#if 0//TODO: currently not used
+//! Depth bias descriptor structure to control fragment depth values.
+struct DepthBiasDescriptor
+{
+    //! Specifies a scalar factor controlling the constant depth value added to each fragment. By default 0.0.
+    float constFactor   = 0.0f;
+
+    //! Specifies a scalar factor applied to a fragment's slope in depth bias calculations. By default 0.0.
+    float slopeFactor   = 0.0f;
+
+    //! Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
+    float clamp         = 0.0f;
+};
+#endif
+
 //! Rasterizer state descriptor structure.
 struct RasterizerDescriptor
 {
@@ -405,14 +443,19 @@ struct RasterizerDescriptor
     //! Polygon face culling mode. By default CullMode::Disabled.
     CullMode                cullMode                    = CullMode::Disabled;
 
+    #if 0//TODO: use 'DepthBiasDescriptor' struct
+    //! Specifies the parameters to bias fragment depth values.
+    DepthBiasDescriptor     depthBias;
+    #else
     //! Specifies a scalar factor controlling the constant depth value added to each fragment.
-    float                   depthBiasConstantFactor     = 0;
+    float                   depthBiasConstantFactor     = 0.0f;
 
     //! Specifies a scalar factor applied to a fragment's slope in depth bias calculations.
     float                   depthBiasSlopeFactor        = 0.0f;
 
     //! Specifies the maximum (or minimum) depth bias of a fragment.
     float                   depthBiasClamp              = 0.0f;
+    #endif
 
     //! (Multi-)sampling descriptor.
     MultiSamplingDescriptor multiSampling;
@@ -438,16 +481,16 @@ struct RasterizerDescriptor
     \note Only supported with: Direct3D 12 (or OpenGL if the extension "GL_NV_conservative_raster" or "GL_INTEL_conservative_rasterization" is supported).
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
-    \see RenderingCaps::hasConservativeRasterization
+    \see RenderingCapabilities::hasConservativeRasterization
     */
     bool                    conservativeRasterization   = false;
 
     /**
     \brief Specifies the width of all generated line primitives. By default 1.0.
-    \remarks The minimum and maximum supported line width can be determined by the 'lineWidthRange' member in the 'RenderingCaps' structure.
+    \remarks The minimum and maximum supported line width can be determined by the 'lineWidthRange' member in the 'RenderingCapabilities' structure.
     If this line width is out of range, it will be clamped silently during graphics pipeline creation.
     \note Only supported with: OpenGL, Vulkan.
-    \see RenderingCaps::lineWidthRange
+    \see RenderingCapabilities::lineWidthRange
     */
     float                   lineWidth                   = 1.0f;
 };
@@ -460,10 +503,10 @@ struct BlendTargetDescriptor
 
     //! Destination color blending operation. By default BlendOp::InvSrcAlpha.
     BlendOp         destColor       = BlendOp::InvSrcAlpha;
-    
+
     //! Color blending arithmetic. By default BlendArithmetic::Add.
     BlendArithmetic colorArithmetic = BlendArithmetic::Add;
-    
+
     //! Source alpha blending operation. By default BlendOp::SrcAlpha.
     BlendOp         srcAlpha        = BlendOp::SrcAlpha;
 
@@ -535,7 +578,7 @@ struct GraphicsPipelineDescriptor
     /**
     \brief Pointer to an optional render target that will be used with this graphics pipeline.
     If this is null, the graphics pipeline will be compatible with a RenderContext only.
-    \remarks This is only used for the Vulkan renderer, to determine which 
+    \remarks This is only used for the Vulkan renderer, to determine which render pass compatibility is required (i.e. VkRenderPass object).
     \note Only supported with: Vulkan.
     */
     RenderTarget*           renderTarget        = nullptr;

@@ -193,7 +193,7 @@ void GLRenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* GLRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<GLGraphicsPipeline>(desc, GetRenderingCaps()));
+    return TakeOwnership(graphicsPipelines_, MakeUnique<GLGraphicsPipeline>(desc, GetRenderingCaps().limits));
 }
 
 ComputePipeline* GLRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -347,7 +347,7 @@ void GLRenderSystem::QueryRendererInfo()
 
 void GLRenderSystem::QueryRenderingCaps()
 {
-    RenderingCaps caps;
+    RenderingCapabilities caps;
     GLQueryRenderingCaps(caps);
     SetRenderingCaps(caps);
 }

@@ -37,7 +37,7 @@ int main()
         contextDesc.videoMode.resolution = { 800, 600 };
 
         auto context = renderer->CreateRenderContext(contextDesc);
-        
+
         // Create command buffer
         auto commands = renderer->CreateCommandBufferExt();
         if (!commands)
@@ -51,7 +51,7 @@ int main()
 
         // Quit if compute shaders are not supported
         const auto& renderCaps = renderer->GetRenderingCaps();
-        if (!renderCaps.hasComputeShaders)
+        if (!renderCaps.features.hasComputeShaders)
             throw std::runtime_error("compute shaders are not supported by renderer");
 
         // Create storage buffer

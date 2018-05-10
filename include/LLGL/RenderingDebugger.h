@@ -24,8 +24,10 @@ enum class ErrorType
     InvalidArgument,    //!< Error due to invalid argument (e.g. creating a graphics pipeline without a valid shader program being specified).
     InvalidState,       //!< Error due to invalid render state (e.g. rendering without a valid graphics pipeline).
     UnsupportedFeature, //!< Error due to use of unsupported feature (e.g. drawing with hardware instancing when the renderer hardware does not support it).
+    UndefinedBehavior,  //!< Error due to arguments that cause undefined behavior.
 };
 
+//! Rendering debugger warning types enumeration.
 enum class WarningType
 {
     ImproperArgument,   //!< Warning due to improper argument (e.g. generating 4 vertices while having triangle list as primitive topology).
@@ -44,7 +46,7 @@ class LLGL_EXPORT RenderingDebugger
     public:
 
         virtual ~RenderingDebugger();
-        
+
         //! Sets the new source function name.
         void SetSource(const char* source);
 
@@ -123,10 +125,28 @@ class LLGL_EXPORT RenderingDebugger
 
         };
 
-        RenderingDebugger() = default;
-
+        /**
+        \brief Callback function when an error was posted.
+        \remarks Use the 'message' parameter to block further occurences of this error if you like.
+        The following example shows a custom implementation that is equivalent to the default implementation:
+        \code
+        class MyDebugger : public LLGL::RenderingDebugger {
+            void OnError(ErrorType type, Message& message) override {
+                LLGL::Log::StdErr() << "ERROR (" << LLGL::ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+                message.Block();
+            }
+        };
+        \endcode
+        \see RenderingDebugger::PostError
+        \see OnWarning
+        */
         virtual void OnError(ErrorType type, Message& message);
-        
+
+        /**
+        \brief Callback function when a warning was posted.
+        \see RenderingDebugger::PostWarning
+        \see OnError
+        */
         virtual void OnWarning(WarningType type, Message& message);
 
     private:

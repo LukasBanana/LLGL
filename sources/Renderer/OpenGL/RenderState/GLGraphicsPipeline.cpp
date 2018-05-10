@@ -79,7 +79,7 @@ static bool IsBlendColorNeeded(const BlendDescriptor& blendDesc)
 
 /* ----- GLGraphicsPipeline class ----- */
 
-GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingCaps& renderCaps)
+GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits)
 {
     /* Convert shader state */
     shaderProgram_ = LLGL_CAST(GLShaderProgram*, desc.shaderProgram);
@@ -94,11 +94,11 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     {
         /* Store patch vertices and check limit */
         const auto patchSize = GetPrimitiveTopologyPatchSize(desc.primitiveTopology);
-        if (patchSize > renderCaps.maxPatchVertices)
+        if (patchSize > limits.maxPatchVertices)
         {
             throw std::runtime_error(
                 "renderer does not support " + std::to_string(patchVertices_) +
-                " control points for patches (limit is " + std::to_string(renderCaps.maxPatchVertices) + ")"
+                " control points for patches (limit is " + std::to_string(limits.maxPatchVertices) + ")"
             );
         }
         else

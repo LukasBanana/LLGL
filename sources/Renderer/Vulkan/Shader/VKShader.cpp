@@ -10,6 +10,10 @@
 #include "../VKTypes.h"
 #include <LLGL/Strings.h>
 
+#ifdef LLGL_ENABLE_SPIRV_REFLECT
+#   include "../../SPIRV/SPIRVReflect.h"
+#endif
+
 
 namespace LLGL
 {
@@ -30,12 +34,37 @@ bool VKShader::Compile(const std::string& sourceCode, const ShaderDescriptor& sh
 
 bool VKShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
 {
+    #ifdef LLGL_ENABLE_SPIRV_REFLECT
+
+    /* Reflect SPIR-V shader module */
+    errorLog_.clear();
+
+    try
+    {
+        /* Parse shader module */
+        SPIRVReflect reflect;
+        reflect.Parse(binaryCode.data(), binaryCode.size());
+
+        /* Store reflection data */
+        //TODO...
+    }
+    catch (const std::exception& e)
+    {
+        errorLog_ = e.what();
+        loadBinaryResult_ = LoadBinaryResult::ReflectFailed;
+        return false;
+    }
+
+    #else
+
     /* Validate code size */
     if (binaryCode.empty() || binaryCode.size() % 4 != 0)
     {
         loadBinaryResult_ = LoadBinaryResult::InvalidCodeSize;
         return false;
     }
+
+    #endif
 
     /* Store shader entry point (by default "main" for GLSL) */
     if (shaderDesc.entryPoint.empty())
@@ -56,7 +85,7 @@ bool VKShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor
     VKThrowIfFailed(result, "failed to create Vulkan shader module");
 
     loadBinaryResult_ = LoadBinaryResult::Success;
-    
+
     return true;
 }
 
@@ -78,6 +107,9 @@ std::string VKShader::QueryInfoLog()
         case LoadBinaryResult::InvalidCodeSize:
             s += ToString(GetType());
             s += " shader: shader module code size is not a multiple of four bytes";
+            break;
+        case LoadBinaryResult::ReflectFailed:
+            s = errorLog_;
             break;
         default:
             break;
