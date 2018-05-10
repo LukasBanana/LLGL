@@ -15,6 +15,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include "Export.h"
 #include "ShaderFlags.h"
 #include "TextureFlags.h"
+#include "RenderingDebugger.h"
 
 
 namespace LLGL
@@ -27,8 +28,14 @@ namespace LLGL
 @{
 */
 
-//! Returns a string representation for the spcified ShaderType value, e.g. "vertex" or "tessellation control", or null if the input type is invalid.
+//! Returns a string representation for the spcified ShaderType value, e.g. "vertex", "tessellation control", or null if the input type is invalid.
 LLGL_EXPORT const char* ToString(const ShaderType t);
+
+//! Returns a string representation for the specified ErrorType value, e.g. "invalid argument", "unsupported feature", or null if the input type is invalid.
+LLGL_EXPORT const char* ToString(const ErrorType t);
+
+//! Returns a string representation for the specified WarningType value, e.g. "improper argument", "pointless operation", or null if the input type is invalid.
+LLGL_EXPORT const char* ToString(const WarningType t);
 
 /** @} */
 

@@ -26,6 +26,29 @@ LLGL_EXPORT const char* ToString(const ShaderType t)
     return nullptr;
 }
 
+LLGL_EXPORT const char* ToString(const ErrorType t)
+{
+    switch (t)
+    {
+        case ErrorType::InvalidArgument:    return "invalid argument";
+        case ErrorType::InvalidState:       return "invalid state";
+        case ErrorType::UnsupportedFeature: return "unsupported feature";
+        case ErrorType::UndefinedBehavior:  return "undefined behavior";
+    }
+    return nullptr;
+}
+
+LLGL_EXPORT const char* ToString(const WarningType t)
+{
+    switch (t)
+    {
+        case WarningType::ImproperArgument:     return "improper argument";
+        case WarningType::ImproperState:        return "improper state";
+        case WarningType::PointlessOperation:   return "pointless operation";
+    }
+    return nullptr;
+}
+
 
 } // /namespace LLGL
 

@@ -169,23 +169,6 @@ protected:
 
 public:
 
-    class Debugger : public LLGL::RenderingDebugger
-    {
-        
-        void OnError(LLGL::ErrorType type, Message& message) override
-        {
-            std::cerr << "ERROR: " << message.GetSource() << ": " << message.GetText() << std::endl;
-            message.Block();
-        }
-
-        void OnWarning(LLGL::WarningType type, Message& message) override
-        {
-            std::cerr << "WARNING: " << message.GetSource() << ": " << message.GetText() << std::endl;
-            message.Block();
-        }
-
-    };
-
 private:
 
     class ResizeEventHandler : public LLGL::Window::EventListener
@@ -322,7 +305,7 @@ protected:
         bool                vsync           = true,
         bool                debugger        = true) :
             profilerObj_ { new LLGL::RenderingProfiler() },
-            debuggerObj_ { new Debugger()                },
+            debuggerObj_ { new LLGL::RenderingDebugger() },
             timer        { LLGL::Timer::Create()         },
             profiler     { *profilerObj_                 }
     {
@@ -336,11 +319,11 @@ protected:
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
         {
-            contextDesc.videoMode.resolution    = resolution;
-            contextDesc.vsync.enabled           = vsync;
-            contextDesc.multiSampling.enabled   = (multiSampling > 1);
-            contextDesc.multiSampling.samples   = multiSampling;
-            
+            contextDesc.videoMode.resolution            = resolution;
+            contextDesc.vsync.enabled                   = vsync;
+            contextDesc.multiSampling.enabled           = (multiSampling > 1);
+            contextDesc.multiSampling.samples           = multiSampling;
+
             #if defined __APPLE__
             contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
             contextDesc.profileOpenGL.majorVersion      = 4;

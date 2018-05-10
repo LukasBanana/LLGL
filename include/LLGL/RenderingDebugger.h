@@ -125,10 +125,28 @@ class LLGL_EXPORT RenderingDebugger
 
         };
 
-        RenderingDebugger() = default;
-
+        /**
+        \brief Callback function when an error was posted.
+        \remarks Use the 'message' parameter to block further occurences of this error if you like.
+        The following example shows a custom implementation that is equivalent to the default implementation:
+        \code
+        class MyDebugger : public LLGL::RenderingDebugger {
+            void OnError(ErrorType type, Message& message) override {
+                LLGL::Log::StdErr() << "ERROR (" << LLGL::ToString(type) << "): in '" << message.GetSource() << "': " << message.GetText() << std::endl;
+                message.Block();
+            }
+        };
+        \endcode
+        \see RenderingDebugger::PostError
+        \see OnWarning
+        */
         virtual void OnError(ErrorType type, Message& message);
 
+        /**
+        \brief Callback function when a warning was posted.
+        \see RenderingDebugger::PostWarning
+        \see OnError
+        */
         virtual void OnWarning(WarningType type, Message& message);
 
     private:
