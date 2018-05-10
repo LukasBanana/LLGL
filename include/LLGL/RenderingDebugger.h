@@ -27,6 +27,7 @@ enum class ErrorType
     UndefinedBehavior,  //!< Error due to arguments that cause undefined behavior.
 };
 
+//! Rendering debugger warning types enumeration.
 enum class WarningType
 {
     ImproperArgument,   //!< Warning due to improper argument (e.g. generating 4 vertices while having triangle list as primitive topology).
@@ -45,7 +46,7 @@ class LLGL_EXPORT RenderingDebugger
     public:
 
         virtual ~RenderingDebugger();
-        
+
         //! Sets the new source function name.
         void SetSource(const char* source);
 
@@ -127,7 +128,7 @@ class LLGL_EXPORT RenderingDebugger
         RenderingDebugger() = default;
 
         virtual void OnError(ErrorType type, Message& message);
-        
+
         virtual void OnWarning(WarningType type, Message& message);
 
     private:

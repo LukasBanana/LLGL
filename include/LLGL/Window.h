@@ -10,91 +10,14 @@
 
 
 #include "Surface.h"
-#include "Types.h"
+#include "WindowFlags.h"
 #include "Key.h"
-#include <string>
 #include <memory>
 #include <vector>
 
 
 namespace LLGL
 {
-
-
-//! Value for an invalid window timer ID.
-static const std::uint32_t invalidWindowTimerID = 0;
-
-//! Window descriptor structure.
-struct WindowDescriptor
-{
-    //! Window title as unicode string.
-    std::wstring    title;
-
-    //! Window position (relative to the client area).
-    Point           position;
-
-    //! Window size (this should be the client area size).
-    Size            size;
-
-    //! Specifies whether the window is visible at creation time. By default false.
-    bool            visible             = false;
-
-    //! Specifies whether the window is borderless. This is required for a fullscreen render context. By default false.
-    bool            borderless          = false;
-
-    //! Specifies whether the window can be resized. By default false.
-    bool            resizable           = false;
-
-    //! Specifies whether the window allows that files can be draged-and-droped onto the window. By default false.
-    bool            acceptDropFiles     = false;
-
-    /**
-    \brief Specifies whether this window prevents the host system for power-safe mode. By default false.
-    \note Only supported on: MS/Windows.
-    */
-    bool            preventForPowerSafe = false;
-
-    //! Specifies whether the window is centered within the desktop screen. By default false.
-    bool            centered            = false;
-
-    /**
-    \brief Window context handle.
-    \remarks If used, this must be casted from a platform specific structure:
-    \code
-    #include <LLGL/Platform/NativeHandle.h>
-    //...
-    LLGL::NativeContextHandle handle;
-    //handle.parentWindow = ...
-    windowDesc.windowContext = reinterpret_cast<const void*>(&handle);
-    \endcode
-    */
-    const void*     windowContext       = nullptr;
-};
-
-/**
-\brief Window behavior structure.
-\see Window::SetBehavior
-*/
-struct WindowBehavior
-{
-    /**
-    \brief Specifies whether to clear the content of the window when it is resized. By default false.
-    \remarks This is used by Win32 to erase (WM_ERASEBKGND message) or keep the background on a window resize.
-    If this is false, some kind of flickering during a window resize can be avoided.
-    \note Only supported on: Win32.
-    */
-    bool            disableClearOnResize    = false;
-
-    /**
-    \brief Specifies an ID for a timer which will be activated when the window is moved or sized. By default invalidWindowTimerID.
-    \remarks This is used by Win32 to set a timer during a window is moved or resized to make continous scene updates.
-    Do not reset it during the 'OnTimer' event, otherwise a timer might be not be released correctly!
-    \note Only supported on: Win32.
-    \see Window::EventListener::OnTimer
-    \see invalidWindowTimerID
-    */
-    std::uint32_t   moveAndResizeTimerID    = invalidWindowTimerID;
-};
 
 
 /**
@@ -136,7 +59,7 @@ class LLGL_EXPORT Window : public Surface
 
                 //! Send when a mouse button has been double clicked.
                 virtual void OnDoubleClick(Window& sender, Key keyCode);
-                
+
                 //! Send when a character specific key has been typed on the sender window. This will repeat depending on the OS keyboard settings.
                 virtual void OnChar(Window& sender, wchar_t chr);
 
@@ -168,7 +91,7 @@ class LLGL_EXPORT Window : public Surface
 
                 /**
                 \brief Send when the window received a timer event with the specified timer ID number.
-                \note Only supported on: Win32.
+                \note Only supported on: MS. Windows.
                 */
                 virtual void OnTimer(Window& sender, std::uint32_t timerID);
 
@@ -258,7 +181,7 @@ class LLGL_EXPORT Window : public Surface
 
         /**
         \brief Posts a 'KeyDown' event to all event listeners.
-        \remarks For a window created with "Window::Create", and events will be posted automatically by the "ProcessEvents" function.
+        \remarks This will be called automatically by the "ProcessEvents" function.
         \see EventListener::OnKeyDown
         \see ProcessEvents
         */
@@ -269,13 +192,13 @@ class LLGL_EXPORT Window : public Surface
 
         //! \see PostKeyDown
         void PostDoubleClick(Key keyCode);
-        
+
         //! \see PostKeyDown
         void PostChar(wchar_t chr);
-        
+
         //! \see PostKeyDown
         void PostWheelMotion(int motion);
-        
+
         //! \see PostKeyDown
         void PostLocalMotion(const Point& position);
 
@@ -300,7 +223,11 @@ class LLGL_EXPORT Window : public Surface
         */
         void PostQuit();
 
-        //! \see PostKeyDown
+        /**
+        \brief Posts a timer event with the specified timer ID number.
+        \remarks This can be used to refresh the screen while the underlying window is currently being moved or resized by the user.
+        \note Only supported on: MS. Windows.
+        */
         void PostTimer(std::uint32_t timerID);
 
     protected:

@@ -16,10 +16,16 @@ namespace LLGL
 {
 
 
-//! 2D point (integer)
+/**
+\brief 2D point (integer).
+\todo Rename to "Offset2D" and make it a simple struct.
+*/
 using Point = Gs::Vector2i;
 
-//! 2D size (integer)
+/**
+\brief 2D size (integer).
+\todo Rename to "Extent2D" and make it a simple struct.
+*/
 using Size = Gs::Vector2i;
 
 

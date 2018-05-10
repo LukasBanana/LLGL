@@ -26,6 +26,7 @@ namespace LLGL
 /**
 \brief Specifies the maximal number of threads the system supports.
 \see ConvertImageBuffer
+\todo Move global constants into class or namespace.
 */
 static const std::size_t maxThreadCount = ~0;
 
