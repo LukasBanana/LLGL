@@ -18,225 +18,194 @@ GLShaderUniform::GLShaderUniform(GLuint program) :
 {
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const std::int32_t value)
+void GLShaderUniform::SetUniform1i(const UniformLocation location, int value0)
 {
-    glUniform1iv(static_cast<GLint>(location), 1, &value);
+    glUniform1i(static_cast<GLint>(location), value0);
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Vector2i& value)
+void GLShaderUniform::SetUniform2i(const UniformLocation location, int value0, int value1)
 {
-    glUniform2iv(static_cast<GLint>(location), 1, value.Ptr());
+    glUniform2i(static_cast<GLint>(location), value0, value1);
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Vector3i& value)
+void GLShaderUniform::SetUniform3i(const UniformLocation location, int value0, int value1, int value2)
 {
-    glUniform3iv(static_cast<GLint>(location), 1, value.Ptr());
+    glUniform3i(static_cast<GLint>(location), value0, value1, value2);
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Vector4i& value)
+void GLShaderUniform::SetUniform4i(const UniformLocation location, int value0, int value1, int value2, int value3)
 {
-    glUniform4iv(static_cast<GLint>(location), 1, value.Ptr());
+    glUniform4i(static_cast<GLint>(location), value0, value1, value2, value3);
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const float value)
+void GLShaderUniform::SetUniform1f(const UniformLocation location, float value0)
 {
-    glUniform4fv(static_cast<GLint>(location), 1, &value);
+    glUniform1f(static_cast<GLint>(location), value0);
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Vector2f& value)
+void GLShaderUniform::SetUniform2f(const UniformLocation location, float value0, float value1)
 {
-    glUniform4fv(static_cast<GLint>(location), 1, value.Ptr());
+    glUniform2f(static_cast<GLint>(location), value0, value1);
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Vector3f& value)
+void GLShaderUniform::SetUniform3f(const UniformLocation location, float value0, float value1, float value2)
 {
-    glUniform4fv(static_cast<GLint>(location), 1, value.Ptr());
+    glUniform3f(static_cast<GLint>(location), value0, value1, value2);
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Vector4f& value)
+void GLShaderUniform::SetUniform4f(const UniformLocation location, float value0, float value1, float value2, float value3)
 {
-    glUniform4fv(static_cast<GLint>(location), 1, value.Ptr());
+    glUniform4f(static_cast<GLint>(location), value0, value1, value2, value3);
 }
 
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Matrix2f& value)
-{
-    glUniformMatrix2fv(static_cast<GLint>(location), 1, GL_FALSE, value.Ptr());
-}
-
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Matrix3f& value)
-{
-    glUniformMatrix3fv(static_cast<GLint>(location), 1, GL_FALSE, value.Ptr());
-}
-
-void GLShaderUniform::SetUniform(const UniformLocation location, const Gs::Matrix4f& value)
-{
-    glUniformMatrix4fv(static_cast<GLint>(location), 1, GL_FALSE, value.Ptr());
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const std::int32_t value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Vector2i& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Vector3i& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Vector4i& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const float value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Vector2f& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Vector3f& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Vector4f& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Matrix2f& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Matrix3f& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniform(const std::string& name, const Gs::Matrix4f& value)
-{
-    SetUniform(GetLocation(name), value);
-}
-
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const std::int32_t* value, std::size_t count)
+void GLShaderUniform::SetUniform1iv(const UniformLocation location, const int* value, std::size_t count)
 {
     glUniform1iv(static_cast<GLint>(location), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Vector2i* value, std::size_t count)
+void GLShaderUniform::SetUniform2iv(const UniformLocation location, const int* value, std::size_t count)
 {
-    glUniform2iv(static_cast<GLint>(location), static_cast<GLsizei>(count), reinterpret_cast<const GLint*>(value));
+    glUniform2iv(static_cast<GLint>(location), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Vector3i* value, std::size_t count)
+void GLShaderUniform::SetUniform3iv(const UniformLocation location, const int* value, std::size_t count)
 {
-    glUniform3iv(static_cast<GLint>(location), static_cast<GLsizei>(count), reinterpret_cast<const GLint*>(value));
+    glUniform3iv(static_cast<GLint>(location), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Vector4i* value, std::size_t count)
+void GLShaderUniform::SetUniform4iv(const UniformLocation location, const int* value, std::size_t count)
 {
-    glUniform4iv(static_cast<GLint>(location), static_cast<GLsizei>(count), reinterpret_cast<const GLint*>(value));
+    glUniform4iv(static_cast<GLint>(location), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const float* value, std::size_t count)
+void GLShaderUniform::SetUniform1fv(const UniformLocation location, const float* value, std::size_t count)
 {
     glUniform1fv(static_cast<GLint>(location), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Vector2f* value, std::size_t count)
+void GLShaderUniform::SetUniform2fv(const UniformLocation location, const float* value, std::size_t count)
 {
-    glUniform2fv(static_cast<GLint>(location), static_cast<GLsizei>(count), reinterpret_cast<const GLfloat*>(value));
+    glUniform2fv(static_cast<GLint>(location), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Vector3f* value, std::size_t count)
+void GLShaderUniform::SetUniform3fv(const UniformLocation location, const float* value, std::size_t count)
 {
-    glUniform3fv(static_cast<GLint>(location), static_cast<GLsizei>(count), reinterpret_cast<const GLfloat*>(value));
+    glUniform3fv(static_cast<GLint>(location), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Vector4f* value, std::size_t count)
+void GLShaderUniform::SetUniform4fv(const UniformLocation location, const float* value, std::size_t count)
 {
-    glUniform4fv(static_cast<GLint>(location), static_cast<GLsizei>(count), reinterpret_cast<const GLfloat*>(value));
+    glUniform4fv(static_cast<GLint>(location), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Matrix2f* value, std::size_t count)
+void GLShaderUniform::SetUniform2x2fv(const UniformLocation location, const float* value, std::size_t count)
 {
-    glUniformMatrix2fv(static_cast<GLint>(location), static_cast<GLsizei>(count), GL_FALSE, reinterpret_cast<const GLfloat*>(value));
+    glUniformMatrix2fv(static_cast<GLint>(location), static_cast<GLsizei>(count), GL_FALSE, value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Matrix3f* value, std::size_t count)
+void GLShaderUniform::SetUniform3x3fv(const UniformLocation location, const float* value, std::size_t count)
 {
-    glUniformMatrix3fv(static_cast<GLint>(location), static_cast<GLsizei>(count), GL_FALSE, reinterpret_cast<const GLfloat*>(value));
+    glUniformMatrix3fv(static_cast<GLint>(location), static_cast<GLsizei>(count), GL_FALSE, value);
 }
 
-void GLShaderUniform::SetUniformArray(const UniformLocation location, const Gs::Matrix4f* value, std::size_t count)
+void GLShaderUniform::SetUniform4x4fv(const UniformLocation location, const float* value, std::size_t count)
 {
-    glUniformMatrix4fv(static_cast<GLint>(location), static_cast<GLsizei>(count), GL_FALSE, reinterpret_cast<const GLfloat*>(value));
+    glUniformMatrix4fv(static_cast<GLint>(location), static_cast<GLsizei>(count), GL_FALSE, value);
 }
 
-
-void GLShaderUniform::SetUniformArray(const std::string& name, const std::int32_t* value, std::size_t count)
+void GLShaderUniform::SetUniform1i(const char* name, int value0)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform1i(GetLocation(name), value0);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Vector2i* value, std::size_t count)
+void GLShaderUniform::SetUniform2i(const char* name, int value0, int value1)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform2i(GetLocation(name), value0, value1);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Vector3i* value, std::size_t count)
+void GLShaderUniform::SetUniform3i(const char* name, int value0, int value1, int value2)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform3i(GetLocation(name), value0, value1, value2);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Vector4i* value, std::size_t count)
+void GLShaderUniform::SetUniform4i(const char* name, int value0, int value1, int value2, int value3)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform4i(GetLocation(name), value0, value1, value2, value3);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const float* value, std::size_t count)
+void GLShaderUniform::SetUniform1f(const char* name, float value0)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform1f(GetLocation(name), value0);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Vector2f* value, std::size_t count)
+void GLShaderUniform::SetUniform2f(const char* name, float value0, float value1)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform2f(GetLocation(name), value0, value1);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Vector3f* value, std::size_t count)
+void GLShaderUniform::SetUniform3f(const char* name, float value0, float value1, float value2)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform3f(GetLocation(name), value0, value1, value2);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Vector4f* value, std::size_t count)
+void GLShaderUniform::SetUniform4f(const char* name, float value0, float value1, float value2, float value3)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform4f(GetLocation(name), value0, value1, value2, value3);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Matrix2f* value, std::size_t count)
+void GLShaderUniform::SetUniform1iv(const char* name, const int* value, std::size_t count)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform1iv(GetLocation(name), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Matrix3f* value, std::size_t count)
+void GLShaderUniform::SetUniform2iv(const char* name, const int* value, std::size_t count)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform2iv(GetLocation(name), static_cast<GLsizei>(count), value);
 }
 
-void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Matrix4f* value, std::size_t count)
+void GLShaderUniform::SetUniform3iv(const char* name, const int* value, std::size_t count)
 {
-    SetUniformArray(GetLocation(name), value, count);
+    glUniform3iv(GetLocation(name), static_cast<GLsizei>(count), value);
+}
+
+void GLShaderUniform::SetUniform4iv(const char* name, const int* value, std::size_t count)
+{
+    glUniform4iv(GetLocation(name), static_cast<GLsizei>(count), value);
+}
+
+void GLShaderUniform::SetUniform1fv(const char* name, const float* value, std::size_t count)
+{
+    glUniform1fv(GetLocation(name), static_cast<GLsizei>(count), value);
+}
+
+void GLShaderUniform::SetUniform2fv(const char* name, const float* value, std::size_t count)
+{
+    glUniform2fv(GetLocation(name), static_cast<GLsizei>(count), value);
+}
+
+void GLShaderUniform::SetUniform3fv(const char* name, const float* value, std::size_t count)
+{
+    glUniform3fv(GetLocation(name), static_cast<GLsizei>(count), value);
+}
+
+void GLShaderUniform::SetUniform4fv(const char* name, const float* value, std::size_t count)
+{
+    glUniform4fv(GetLocation(name), static_cast<GLsizei>(count), value);
+}
+
+void GLShaderUniform::SetUniform2x2fv(const char* name, const float* value, std::size_t count)
+{
+    glUniformMatrix2fv(GetLocation(name), static_cast<GLsizei>(count), GL_FALSE, value);
+}
+
+void GLShaderUniform::SetUniform3x3fv(const char* name, const float* value, std::size_t count)
+{
+    glUniformMatrix3fv(GetLocation(name), static_cast<GLsizei>(count), GL_FALSE, value);
+}
+
+void GLShaderUniform::SetUniform4x4fv(const char* name, const float* value, std::size_t count)
+{
+    glUniformMatrix4fv(GetLocation(name), static_cast<GLsizei>(count), GL_FALSE, value);
 }
 
 
@@ -244,9 +213,9 @@ void GLShaderUniform::SetUniformArray(const std::string& name, const Gs::Matrix4
  * ======= Private: =======
  */
 
-GLint GLShaderUniform::GetLocation(const std::string& name) const
+GLint GLShaderUniform::GetLocation(const char* name) const
 {
-    return glGetUniformLocation(program_, name.c_str());
+    return glGetUniformLocation(program_, name);
 }
 
 

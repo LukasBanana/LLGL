@@ -114,15 +114,7 @@ void DbgShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t 
 
 ShaderUniform* DbgShaderProgram::LockShaderUniform()
 {
-    auto shaderUniform = instance.LockShaderUniform();
-
-    if (debugger_ && !shaderUniform)
-    {
-        LLGL_DBG_SOURCE;
-        LLGL_DBG_WARN(WarningType::PointlessOperation, "renderer does not support individual shader uniforms");
-    }
-
-    return shaderUniform;
+    return instance.LockShaderUniform();
 }
 
 void DbgShaderProgram::UnlockShaderUniform()

@@ -136,9 +136,9 @@ class LLGL_EXPORT ShaderProgram
         \code
         if (auto uniform = shaderProgram->LockShaderUniform())
         {
-            uniform->SetUniform("mySampler1", 0);
-            uniform->SetUniform("mySampler2", 1);
-            uniform->SetUniform("projection", myProjectionMatrix);
+            uniform->SetUniform1i("mySampler1", 0);
+            uniform->SetUniform1i("mySampler2", 1);
+            uniform->SetUniform4x4fv("projection", &myProjectionMatrix[0]);
             shaderProgram->UnlockShaderUniform();
         }
         \endcode

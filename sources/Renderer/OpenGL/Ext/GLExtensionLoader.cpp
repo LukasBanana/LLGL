@@ -233,6 +233,14 @@ static bool Load_GL_ARB_shader_objects(bool usePlaceholder)
     LOAD_GLPROC( glGetActiveUniform   );
     LOAD_GLPROC( glGetUniformLocation );
     LOAD_GLPROC( glGetAttachedShaders );
+    LOAD_GLPROC( glUniform1f          );
+    LOAD_GLPROC( glUniform2f          );
+    LOAD_GLPROC( glUniform3f          );
+    LOAD_GLPROC( glUniform4f          );
+    LOAD_GLPROC( glUniform1i          );
+    LOAD_GLPROC( glUniform2i          );
+    LOAD_GLPROC( glUniform3i          );
+    LOAD_GLPROC( glUniform4i          );
     LOAD_GLPROC( glUniform1fv         );
     LOAD_GLPROC( glUniform2fv         );
     LOAD_GLPROC( glUniform3fv         );

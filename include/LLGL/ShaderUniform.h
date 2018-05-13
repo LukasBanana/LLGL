@@ -11,10 +11,6 @@
 
 #include "Export.h"
 #include <string>
-#include <Gauss/Vector2.h>
-#include <Gauss/Vector3.h>
-#include <Gauss/Vector4.h>
-#include <Gauss/Matrix.h>
 #include <cstdint>
 
 
@@ -56,16 +52,23 @@ using UniformLocation = std::int32_t;
 //! Shader uniform descriptor structure.
 struct UniformDescriptor
 {
-    std::string     name;                               //!< Name of the uniform inside the shader.
-    UniformType     type        = UniformType::Float;   //!< Data type of the uniform.
-    UniformLocation location    = 0;                    //!< Internal location of the uniform within a shader program.
-    std::uint32_t   size        = 0;                    //!< Array size of the uniform.
+    //! Name of the uniform inside the shader.
+    std::string     name;
+
+    //! Data type of the uniform.
+    UniformType     type        = UniformType::Float;
+
+    //! Internal location of the uniform within a shader program.
+    UniformLocation location    = 0;
+
+    //! Array size of the uniform.
+    std::uint32_t   size        = 0;
 };
 
 
 /**
 \brief Shader uniform setter interface.
-\remarks This is only used by the OpenGL render system.
+\note Only supported with: OpenGL.
 */
 class LLGL_EXPORT ShaderUniform
 {
@@ -76,61 +79,53 @@ class LLGL_EXPORT ShaderUniform
         {
         }
 
-        virtual void SetUniform(const UniformLocation location, const std::int32_t value) = 0;
-        virtual void SetUniform(const UniformLocation location, const Gs::Vector2i& value) = 0;
-        virtual void SetUniform(const UniformLocation location, const Gs::Vector3i& value) = 0;
-        virtual void SetUniform(const UniformLocation location, const Gs::Vector4i& value) = 0;
+        virtual void SetUniform1i(const UniformLocation location, int value0) = 0;
+        virtual void SetUniform2i(const UniformLocation location, int value0, int value1) = 0;
+        virtual void SetUniform3i(const UniformLocation location, int value0, int value1, int value2) = 0;
+        virtual void SetUniform4i(const UniformLocation location, int value0, int value1, int value2, int value3) = 0;
 
-        virtual void SetUniform(const UniformLocation location, const float value) = 0;
-        virtual void SetUniform(const UniformLocation location, const Gs::Vector2f& value) = 0;
-        virtual void SetUniform(const UniformLocation location, const Gs::Vector3f& value) = 0;
-        virtual void SetUniform(const UniformLocation location, const Gs::Vector4f& value) = 0;
+        virtual void SetUniform1f(const UniformLocation location, float value0) = 0;
+        virtual void SetUniform2f(const UniformLocation location, float value0, float value1) = 0;
+        virtual void SetUniform3f(const UniformLocation location, float value0, float value1, float value2) = 0;
+        virtual void SetUniform4f(const UniformLocation location, float value0, float value1, float value2, float value3) = 0;
 
-        virtual void SetUniform(const UniformLocation location, const Gs::Matrix2f& value) = 0;
-        virtual void SetUniform(const UniformLocation location, const Gs::Matrix3f& value) = 0;
-        virtual void SetUniform(const UniformLocation location, const Gs::Matrix4f& value) = 0;
+        virtual void SetUniform1iv(const UniformLocation location, const int* value, std::size_t count = 1) = 0;
+        virtual void SetUniform2iv(const UniformLocation location, const int* value, std::size_t count = 1) = 0;
+        virtual void SetUniform3iv(const UniformLocation location, const int* value, std::size_t count = 1) = 0;
+        virtual void SetUniform4iv(const UniformLocation location, const int* value, std::size_t count = 1) = 0;
 
-        virtual void SetUniform(const std::string& name, const std::int32_t value) = 0;
-        virtual void SetUniform(const std::string& name, const Gs::Vector2i& value) = 0;
-        virtual void SetUniform(const std::string& name, const Gs::Vector3i& value) = 0;
-        virtual void SetUniform(const std::string& name, const Gs::Vector4i& value) = 0;
+        virtual void SetUniform1fv(const UniformLocation location, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform2fv(const UniformLocation location, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform3fv(const UniformLocation location, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform4fv(const UniformLocation location, const float* value, std::size_t count = 1) = 0;
 
-        virtual void SetUniform(const std::string& name, const float value) = 0;
-        virtual void SetUniform(const std::string& name, const Gs::Vector2f& value) = 0;
-        virtual void SetUniform(const std::string& name, const Gs::Vector3f& value) = 0;
-        virtual void SetUniform(const std::string& name, const Gs::Vector4f& value) = 0;
+        virtual void SetUniform2x2fv(const UniformLocation location, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform3x3fv(const UniformLocation location, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform4x4fv(const UniformLocation location, const float* value, std::size_t count = 1) = 0;
 
-        virtual void SetUniform(const std::string& name, const Gs::Matrix2f& value) = 0;
-        virtual void SetUniform(const std::string& name, const Gs::Matrix3f& value) = 0;
-        virtual void SetUniform(const std::string& name, const Gs::Matrix4f& value) = 0;
+        virtual void SetUniform1i(const char* name, int value0) = 0;
+        virtual void SetUniform2i(const char* name, int value0, int value1) = 0;
+        virtual void SetUniform3i(const char* name, int value0, int value1, int value2) = 0;
+        virtual void SetUniform4i(const char* name, int value0, int value1, int value2, int value3) = 0;
 
-        virtual void SetUniformArray(const UniformLocation location, const std::int32_t* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Vector2i* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Vector3i* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Vector4i* value, std::size_t count) = 0;
+        virtual void SetUniform1f(const char* name, float value0) = 0;
+        virtual void SetUniform2f(const char* name, float value0, float value1) = 0;
+        virtual void SetUniform3f(const char* name, float value0, float value1, float value2) = 0;
+        virtual void SetUniform4f(const char* name, float value0, float value1, float value2, float value3) = 0;
 
-        virtual void SetUniformArray(const UniformLocation location, const float* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Vector2f* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Vector3f* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Vector4f* value, std::size_t count) = 0;
+        virtual void SetUniform1iv(const char* name, const int* value, std::size_t count = 1) = 0;
+        virtual void SetUniform2iv(const char* name, const int* value, std::size_t count = 1) = 0;
+        virtual void SetUniform3iv(const char* name, const int* value, std::size_t count = 1) = 0;
+        virtual void SetUniform4iv(const char* name, const int* value, std::size_t count = 1) = 0;
 
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Matrix2f* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Matrix3f* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const UniformLocation location, const Gs::Matrix4f* value, std::size_t count) = 0;
+        virtual void SetUniform1fv(const char* name, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform2fv(const char* name, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform3fv(const char* name, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform4fv(const char* name, const float* value, std::size_t count = 1) = 0;
 
-        virtual void SetUniformArray(const std::string& name, const std::int32_t* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const std::string& name, const Gs::Vector2i* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const std::string& name, const Gs::Vector3i* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const std::string& name, const Gs::Vector4i* value, std::size_t count) = 0;
-
-        virtual void SetUniformArray(const std::string& name, const float* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const std::string& name, const Gs::Vector2f* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const std::string& name, const Gs::Vector3f* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const std::string& name, const Gs::Vector4f* value, std::size_t count) = 0;
-
-        virtual void SetUniformArray(const std::string& name, const Gs::Matrix2f* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const std::string& name, const Gs::Matrix3f* value, std::size_t count) = 0;
-        virtual void SetUniformArray(const std::string& name, const Gs::Matrix4f* value, std::size_t count) = 0;
+        virtual void SetUniform2x2fv(const char* name, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform3x3fv(const char* name, const float* value, std::size_t count = 1) = 0;
+        virtual void SetUniform4x4fv(const char* name, const float* value, std::size_t count = 1) = 0;
 
 };
 

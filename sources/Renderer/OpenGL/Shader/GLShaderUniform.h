@@ -24,65 +24,57 @@ class GLShaderUniform : public ShaderUniform
 
         GLShaderUniform(GLuint program);
 
-        void SetUniform(const UniformLocation location, const std::int32_t value) override;
-        void SetUniform(const UniformLocation location, const Gs::Vector2i& value) override;
-        void SetUniform(const UniformLocation location, const Gs::Vector3i& value) override;
-        void SetUniform(const UniformLocation location, const Gs::Vector4i& value) override;
+        void SetUniform1i(const UniformLocation location, int value0) override;
+        void SetUniform2i(const UniformLocation location, int value0, int value1) override;
+        void SetUniform3i(const UniformLocation location, int value0, int value1, int value2) override;
+        void SetUniform4i(const UniformLocation location, int value0, int value1, int value2, int value3) override;
 
-        void SetUniform(const UniformLocation location, const float value) override;
-        void SetUniform(const UniformLocation location, const Gs::Vector2f& value) override;
-        void SetUniform(const UniformLocation location, const Gs::Vector3f& value) override;
-        void SetUniform(const UniformLocation location, const Gs::Vector4f& value) override;
+        void SetUniform1f(const UniformLocation location, float value0) override;
+        void SetUniform2f(const UniformLocation location, float value0, float value1) override;
+        void SetUniform3f(const UniformLocation location, float value0, float value1, float value2) override;
+        void SetUniform4f(const UniformLocation location, float value0, float value1, float value2, float value3) override;
 
-        void SetUniform(const UniformLocation location, const Gs::Matrix2f& value) override;
-        void SetUniform(const UniformLocation location, const Gs::Matrix3f& value) override;
-        void SetUniform(const UniformLocation location, const Gs::Matrix4f& value) override;
+        void SetUniform1iv(const UniformLocation location, const int* value, std::size_t count = 1) override;
+        void SetUniform2iv(const UniformLocation location, const int* value, std::size_t count = 1) override;
+        void SetUniform3iv(const UniformLocation location, const int* value, std::size_t count = 1) override;
+        void SetUniform4iv(const UniformLocation location, const int* value, std::size_t count = 1) override;
 
-        void SetUniform(const std::string& name, const std::int32_t value) override;
-        void SetUniform(const std::string& name, const Gs::Vector2i& value) override;
-        void SetUniform(const std::string& name, const Gs::Vector3i& value) override;
-        void SetUniform(const std::string& name, const Gs::Vector4i& value) override;
+        void SetUniform1fv(const UniformLocation location, const float* value, std::size_t count = 1) override;
+        void SetUniform2fv(const UniformLocation location, const float* value, std::size_t count = 1) override;
+        void SetUniform3fv(const UniformLocation location, const float* value, std::size_t count = 1) override;
+        void SetUniform4fv(const UniformLocation location, const float* value, std::size_t count = 1) override;
 
-        void SetUniform(const std::string& name, const float value) override;
-        void SetUniform(const std::string& name, const Gs::Vector2f& value) override;
-        void SetUniform(const std::string& name, const Gs::Vector3f& value) override;
-        void SetUniform(const std::string& name, const Gs::Vector4f& value) override;
+        void SetUniform2x2fv(const UniformLocation location, const float* value, std::size_t count = 1) override;
+        void SetUniform3x3fv(const UniformLocation location, const float* value, std::size_t count = 1) override;
+        void SetUniform4x4fv(const UniformLocation location, const float* value, std::size_t count = 1) override;
 
-        void SetUniform(const std::string& name, const Gs::Matrix2f& value) override;
-        void SetUniform(const std::string& name, const Gs::Matrix3f& value) override;
-        void SetUniform(const std::string& name, const Gs::Matrix4f& value) override;
+        void SetUniform1i(const char* name, int value0) override;
+        void SetUniform2i(const char* name, int value0, int value1) override;
+        void SetUniform3i(const char* name, int value0, int value1, int value2) override;
+        void SetUniform4i(const char* name, int value0, int value1, int value2, int value3) override;
 
-        void SetUniformArray(const UniformLocation location, const std::int32_t* value, std::size_t count) override;
-        void SetUniformArray(const UniformLocation location, const Gs::Vector2i* value, std::size_t count) override;
-        void SetUniformArray(const UniformLocation location, const Gs::Vector3i* value, std::size_t count) override;
-        void SetUniformArray(const UniformLocation location, const Gs::Vector4i* value, std::size_t count) override;
+        void SetUniform1f(const char* name, float value0) override;
+        void SetUniform2f(const char* name, float value0, float value1) override;
+        void SetUniform3f(const char* name, float value0, float value1, float value2) override;
+        void SetUniform4f(const char* name, float value0, float value1, float value2, float value3) override;
 
-        void SetUniformArray(const UniformLocation location, const float* value, std::size_t count) override;
-        void SetUniformArray(const UniformLocation location, const Gs::Vector2f* value, std::size_t count) override;
-        void SetUniformArray(const UniformLocation location, const Gs::Vector3f* value, std::size_t count) override;
-        void SetUniformArray(const UniformLocation location, const Gs::Vector4f* value, std::size_t count) override;
+        void SetUniform1iv(const char* name, const int* value, std::size_t count = 1) override;
+        void SetUniform2iv(const char* name, const int* value, std::size_t count = 1) override;
+        void SetUniform3iv(const char* name, const int* value, std::size_t count = 1) override;
+        void SetUniform4iv(const char* name, const int* value, std::size_t count = 1) override;
 
-        void SetUniformArray(const UniformLocation location, const Gs::Matrix2f* value, std::size_t count) override;
-        void SetUniformArray(const UniformLocation location, const Gs::Matrix3f* value, std::size_t count) override;
-        void SetUniformArray(const UniformLocation location, const Gs::Matrix4f* value, std::size_t count) override;
+        void SetUniform1fv(const char* name, const float* value, std::size_t count = 1) override;
+        void SetUniform2fv(const char* name, const float* value, std::size_t count = 1) override;
+        void SetUniform3fv(const char* name, const float* value, std::size_t count = 1) override;
+        void SetUniform4fv(const char* name, const float* value, std::size_t count = 1) override;
 
-        void SetUniformArray(const std::string& name, const std::int32_t* value, std::size_t count) override;
-        void SetUniformArray(const std::string& name, const Gs::Vector2i* value, std::size_t count) override;
-        void SetUniformArray(const std::string& name, const Gs::Vector3i* value, std::size_t count) override;
-        void SetUniformArray(const std::string& name, const Gs::Vector4i* value, std::size_t count) override;
-
-        void SetUniformArray(const std::string& name, const float* value, std::size_t count) override;
-        void SetUniformArray(const std::string& name, const Gs::Vector2f* value, std::size_t count) override;
-        void SetUniformArray(const std::string& name, const Gs::Vector3f* value, std::size_t count) override;
-        void SetUniformArray(const std::string& name, const Gs::Vector4f* value, std::size_t count) override;
-
-        void SetUniformArray(const std::string& name, const Gs::Matrix2f* value, std::size_t count) override;
-        void SetUniformArray(const std::string& name, const Gs::Matrix3f* value, std::size_t count) override;
-        void SetUniformArray(const std::string& name, const Gs::Matrix4f* value, std::size_t count) override;
+        void SetUniform2x2fv(const char* name, const float* value, std::size_t count = 1) override;
+        void SetUniform3x3fv(const char* name, const float* value, std::size_t count = 1) override;
+        void SetUniform4x4fv(const char* name, const float* value, std::size_t count = 1) override;
 
     private:
 
-        GLint GetLocation(const std::string& name) const;
+        GLint GetLocation(const char* name) const;
 
         GLuint program_ = 0;
 

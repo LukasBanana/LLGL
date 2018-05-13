@@ -168,14 +168,14 @@ public:
 
         if (auto uniforms = shaderProgramBlur->LockShaderUniform())
         {
-            uniforms->SetUniform("glossMap", 1);
+            uniforms->SetUniform1i("glossMap", 1);
             shaderProgramBlur->UnlockShaderUniform();
         }
 
         if (auto uniforms = shaderProgramFinal->LockShaderUniform())
         {
-            uniforms->SetUniform("colorMap", 0);
-            uniforms->SetUniform("glossMap", 1);
+            uniforms->SetUniform1i("colorMap", 0);
+            uniforms->SetUniform1i("glossMap", 1);
             shaderProgramFinal->UnlockShaderUniform();
         }
     }

@@ -211,13 +211,12 @@ int main()
             static_cast<Gs::Real>(contextDesc.videoMode.resolution.height)
         );
 
-        auto uniformSetter = shaderProgram.LockShaderUniform();
-        if (uniformSetter)
+        if (auto uniformSetter = shaderProgram.LockShaderUniform())
         {
-            uniformSetter->SetUniform("projection", projection);
-            uniformSetter->SetUniform("color", Gs::Vector4f(1, 1, 1, 1));
+            uniformSetter->SetUniform4x4fv("projection", projection.Ptr());
+            uniformSetter->SetUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
+            shaderProgram.UnlockShaderUniform();
         }
-        shaderProgram.UnlockShaderUniform();
 
         #if 0
         // Create constant buffer
@@ -389,7 +388,7 @@ int main()
                     static_cast<Gs::Real>(context->GetVideoMode().resolution.width),
                     static_cast<Gs::Real>(context->GetVideoMode().resolution.height)
                 );
-                uniformSetter->SetUniform("projection", projection);
+                uniformSetter->SetUniform4x4fv("projection", projection.Ptr());
             }
             shaderProgram.UnlockShaderUniform();
 

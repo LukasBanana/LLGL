@@ -224,6 +224,14 @@ PFNGLGETATTRIBLOCATIONPROC                              glGetAttribLocation     
 PFNGLGETACTIVEUNIFORMARBPROC                            glGetActiveUniform                              = nullptr;
 PFNGLGETUNIFORMLOCATIONPROC                             glGetUniformLocation                            = nullptr;
 PFNGLGETATTACHEDSHADERSPROC                             glGetAttachedShaders                            = nullptr;
+PFNGLUNIFORM1FPROC                                      glUniform1f                                     = nullptr;
+PFNGLUNIFORM2FPROC                                      glUniform2f                                     = nullptr;
+PFNGLUNIFORM3FPROC                                      glUniform3f                                     = nullptr;
+PFNGLUNIFORM4FPROC                                      glUniform4f                                     = nullptr;
+PFNGLUNIFORM1IPROC                                      glUniform1i                                     = nullptr;
+PFNGLUNIFORM2IPROC                                      glUniform2i                                     = nullptr;
+PFNGLUNIFORM3IPROC                                      glUniform3i                                     = nullptr;
+PFNGLUNIFORM4IPROC                                      glUniform4i                                     = nullptr;
 PFNGLUNIFORM1FVPROC                                     glUniform1fv                                    = nullptr;
 PFNGLUNIFORM2FVPROC                                     glUniform2fv                                    = nullptr;
 PFNGLUNIFORM3FVPROC                                     glUniform3fv                                    = nullptr;
