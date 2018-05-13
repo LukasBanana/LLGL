@@ -87,10 +87,10 @@ static GLState PolygonModeToPolygonOffset(const PolygonMode mode)
     throw std::invalid_argument("failed to map 'PolygonMode' to polygon offset mode (GL_POLYGON_OFFSET_FILL, GL_POLYGON_OFFSET_LINE, or GL_POLYGON_OFFSET_POINT)");
 }
 
-static bool IsPolygonOffsetEnabled(const RasterizerDescriptor& desc)
+static bool IsPolygonOffsetEnabled(const DepthBiasDescriptor& desc)
 {
     /* Ignore clamp factor for this check, since it's useless without the other two parameters */
-    return (desc.depthBiasSlopeFactor != 0.0f || desc.depthBiasConstantFactor != 0.0f);
+    return (desc.slopeFactor != 0.0f || desc.constantFactor != 0.0f);
 }
 
 
@@ -143,11 +143,11 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     multiSampleEnabled_     = desc.rasterizer.multiSampling.enabled;
     lineSmoothEnabled_      = desc.rasterizer.antiAliasedLineEnabled;
     lineWidth_              = desc.rasterizer.lineWidth;
-    polygonOffsetEnabled_   = IsPolygonOffsetEnabled(desc.rasterizer);
+    polygonOffsetEnabled_   = IsPolygonOffsetEnabled(desc.rasterizer.depthBias);
     polygonOffsetMode_      = PolygonModeToPolygonOffset(desc.rasterizer.polygonMode);
-    polygonOffsetFactor_    = desc.rasterizer.depthBiasSlopeFactor;
-    polygonOffsetUnits_     = desc.rasterizer.depthBiasConstantFactor;
-    polygonOffsetClamp_     = desc.rasterizer.depthBiasClamp;
+    polygonOffsetFactor_    = desc.rasterizer.depthBias.slopeFactor;
+    polygonOffsetUnits_     = desc.rasterizer.depthBias.constantFactor;
+    polygonOffsetClamp_     = desc.rasterizer.depthBias.clamp;
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     conservativeRaster_ = desc.rasterizer.conservativeRasterization;

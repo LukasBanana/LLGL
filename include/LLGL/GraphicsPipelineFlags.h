@@ -450,23 +450,25 @@ struct StencilDescriptor
     StencilFaceDescriptor   back;
 };
 
-#if 0//TODO: currently not used
 //! Depth bias descriptor structure to control fragment depth values.
 struct DepthBiasDescriptor
 {
-    //! Specifies a scalar factor controlling the constant depth value added to each fragment. By default 0.0.
-    float constFactor   = 0.0f;
+    /**
+    \brief Specifies a scalar factor controlling the constant depth value added to each fragment. By default 0.0.
+    \note The actual constant factor being added to each fragment is implementation dependent of the respective rendering API.
+    Direct3D 12 for instance only considers the integral part.
+    */
+    float constantFactor    = 0.0f;
 
     //! Specifies a scalar factor applied to a fragment's slope in depth bias calculations. By default 0.0.
-    float slopeFactor   = 0.0f;
+    float slopeFactor       = 0.0f;
 
     /**
     \brief Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
     \note For OpenGL, this is only supported if the extension "GL_ARB_polygon_offset_clamp" is available.
     */
-    float clamp         = 0.0f;
+    float clamp             = 0.0f;
 };
-#endif
 
 //! Rasterizer state descriptor structure.
 struct RasterizerDescriptor
@@ -477,19 +479,8 @@ struct RasterizerDescriptor
     //! Polygon face culling mode. By default CullMode::Disabled.
     CullMode                cullMode                    = CullMode::Disabled;
 
-    #if 0//TODO: use 'DepthBiasDescriptor' struct
     //! Specifies the parameters to bias fragment depth values.
     DepthBiasDescriptor     depthBias;
-    #else
-    //! Specifies a scalar factor controlling the constant depth value added to each fragment.
-    float                   depthBiasConstantFactor     = 0.0f;
-
-    //! Specifies a scalar factor applied to a fragment's slope in depth bias calculations.
-    float                   depthBiasSlopeFactor        = 0.0f;
-
-    //! Specifies the maximum (or minimum) depth bias of a fragment.
-    float                   depthBiasClamp              = 0.0f;
-    #endif
 
     //! (Multi-)sampling descriptor.
     MultiSamplingDescriptor multiSampling;

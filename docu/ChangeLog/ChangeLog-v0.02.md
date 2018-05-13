@@ -381,6 +381,27 @@ Persistent states in `CommandBuffer` interface:
 Viewports and scissors are no longer guaranteed to be a persistent state. They must be updated after a new render target is set.
 
 
+Depth biasing in `RasterizerDescriptor` interface:
+
+The rasterizer parameters for depth biasing have been moved into a separate structure named `DepthBiasDescriptor`.
+
+Before:
+```cpp
+// Interface:
+float RasterizerDescriptor::depthBiasConstantFactor;
+float RasterizerDescriptor::depthBiasSlopeFactor;
+float RasterizerDescriptor::depthBiasClamp;
+```
+
+After:
+```cpp
+// Interface:
+float               DepthBiasDescriptor::constantFactor;
+float               DepthBiasDescriptor::slopeFactor;
+float               DepthBiasDescriptor::clamp;
+DepthBiasDescriptor RasterizerDescriptor::depthBias;
+```
+
 
 
 
