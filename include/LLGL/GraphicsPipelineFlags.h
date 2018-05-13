@@ -241,7 +241,7 @@ struct Viewport
 {
     Viewport() = default;
     Viewport(const Viewport&) = default;
-    
+
     //! Viewport constructor with default depth range of [0, 1].
     inline Viewport(float x, float y, float width, float height) :
         x      { x      },
@@ -250,7 +250,7 @@ struct Viewport
         height { height }
     {
     }
-    
+
     //! Viewport constructor with parameters for all attributes.
     inline Viewport(float x, float y, float width, float height, float minDepth, float maxDepth) :
         x        { x        },

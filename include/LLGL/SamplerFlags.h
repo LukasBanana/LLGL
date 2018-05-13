@@ -45,22 +45,44 @@ enum class TextureFilter
 //! Texture sampler descriptor structure.
 struct LLGL_EXPORT SamplerDescriptor
 {
-    TextureWrap     textureWrapU    = TextureWrap::Repeat;          //!< Texture coordinate wrap mode in U direction. By default TextureWrap::Repeat.
-    TextureWrap     textureWrapV    = TextureWrap::Repeat;          //!< Texture coordinate wrap mode in V direction. By default TextureWrap::Repeat.
-    TextureWrap     textureWrapW    = TextureWrap::Repeat;          //!< Texture coordinate wrap mode in W direction. By default TextureWrap::Repeat.
+    //! Texture coordinate wrap mode in U direction. By default TextureWrap::Repeat.
+    TextureWrap     textureWrapU    = TextureWrap::Repeat;
 
-    TextureFilter   minFilter       = TextureFilter::Linear;        //!< Minification filter. By default TextureFilter::Linear.
-    TextureFilter   magFilter       = TextureFilter::Linear;        //!< Magnification filter. By default TextureFilter::Linear.
-    TextureFilter   mipMapFilter    = TextureFilter::Linear;        //!< MIP-mapping filter. By default TextureFilter::Linear.
+    //! Texture coordinate wrap mode in V direction. By default TextureWrap::Repeat.
+    TextureWrap     textureWrapV    = TextureWrap::Repeat;
 
-    bool            mipMapping      = true;                         //!< Specifies whether MIP-maps are used or not. By default true.
-    float           mipMapLODBias   = 0.0f;                         //!< MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.
-    float           minLOD          = 0.0f;                         //!< Lower end of the MIP-map range. By default 0.
-    float           maxLOD          = 1000.0f;                      //!< Upper end of the MIP-map range. Must be greater than or equal to "minLOD". By default 1000.
-    std::uint32_t   maxAnisotropy   = 1;                            //!< Maximal anisotropy in the range [1, 16].
+    //! Texture coordinate wrap mode in W direction. By default TextureWrap::Repeat.
+    TextureWrap     textureWrapW    = TextureWrap::Repeat;
 
-    bool            compareEnabled  = false;                        //!< Specifies whether the compare operation for depth textures is to be used or not. By default false.
-    CompareOp       compareOp       = CompareOp::Less;              //!< Compare operation for depth textures. By default CompareOp::Less.
+    //! Minification filter. By default TextureFilter::Linear.
+    TextureFilter   minFilter       = TextureFilter::Linear;
+
+    //! Magnification filter. By default TextureFilter::Linear.
+    TextureFilter   magFilter       = TextureFilter::Linear;
+
+    //! MIP-mapping filter. By default TextureFilter::Linear.
+    TextureFilter   mipMapFilter    = TextureFilter::Linear;
+
+    //! Specifies whether MIP-maps are used or not. By default true.
+    bool            mipMapping      = true;
+
+    //! MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.
+    float           mipMapLODBias   = 0.0f;
+
+    //! Lower end of the MIP-map range. By default 0.
+    float           minLOD          = 0.0f;
+
+    //! Upper end of the MIP-map range. Must be greater than or equal to "minLOD". By default 1000.
+    float           maxLOD          = 1000.0f;
+
+    //! Maximal anisotropy in the range [1, 16].
+    std::uint32_t   maxAnisotropy   = 1;
+
+    //! Specifies whether the compare operation for depth textures is to be used or not. By default false.
+    bool            compareEnabled  = false;
+
+    //! Compare operation for depth textures. By default CompareOp::Less.
+    CompareOp       compareOp       = CompareOp::Less;
 
     /**
     \brief Border color. By default black (0, 0, 0, 0).

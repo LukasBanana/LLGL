@@ -139,7 +139,7 @@ struct AttachmentClear
 */
 union GraphicsAPIDependentStateDescriptor
 {
-    GraphicsAPIDependentStateDescriptor()
+    inline GraphicsAPIDependentStateDescriptor()
     {
         stateOpenGL.screenSpaceOriginLowerLeft      = false;
         stateOpenGL.invertFrontFace                 = false;
@@ -147,7 +147,7 @@ union GraphicsAPIDependentStateDescriptor
         stateDirect3D12.disableAutoStateSubmission  = false;
     }
 
-    struct StateOpenGLDescriptor
+    struct StateOpenGL
     {
         /**
         \brief Specifies whether the screen-space origin is on the lower-left. By default false.
@@ -166,7 +166,7 @@ union GraphicsAPIDependentStateDescriptor
     stateOpenGL;
 
     //! \todo Remove this as soon as SetViewport and SetScissor are replaced by graphics pipeline states.
-    struct StateDirect3D12Descriptor
+    struct StateDirect3D12
     {
         /**
         \brief Specifies whether persistent states are automatically submitted to the command buffer or not. By default false.

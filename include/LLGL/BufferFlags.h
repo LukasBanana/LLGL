@@ -101,7 +101,7 @@ struct BufferFlags
 struct BufferDescriptor
 {
     //! Vertex buffer specific descriptor structure.
-    struct VertexBufferDescriptor
+    struct VertexBuffer
     {
         /**
         \brief Specifies the vertex format layout.
@@ -112,7 +112,7 @@ struct BufferDescriptor
     };
 
     //! Index buffer specific descriptor structure.
-    struct IndexBufferDescriptor
+    struct IndexBuffer
     {
         /**
         \brief Specifies the index format layout, which is basically only the data type of each index.
@@ -123,7 +123,7 @@ struct BufferDescriptor
     };
 
     //! Storage buffer specific descriptor structure.
-    struct StorageBufferDescriptor
+    struct StorageBuffer
     {
         /**
         \brief Specifies the storage buffer type. By defalut StorageBufferType::Buffer.
@@ -146,30 +146,30 @@ struct BufferDescriptor
     };
 
     //! Hardware buffer type. By default BufferType::Vertex.
-    BufferType              type            = BufferType::Vertex;
+    BufferType      type            = BufferType::Vertex;
 
     /**
     \brief Buffer size (in bytes). This must not be larger than 'RenderingLimits::maxBufferSize'. By default 0.
     \remarks If the buffer type is a storage buffer (i.e. from the type BufferType::Storage), 'size' must be a multiple of 'storageBuffer.stride'.
     \see RenderingLimits::maxBufferSize
     */
-    std::uint64_t           size            = 0;
+    std::uint64_t   size            = 0;
 
     /**
     \brief Specifies the buffer creation flags. By default 0.
     \remarks This can be bitwise OR combination of the entries of the BufferFlags enumeration.
     \see BufferFlags
     */
-    long                    flags           = 0;
+    long            flags           = 0;
 
     //! Vertex buffer type descriptor appendix.
-    VertexBufferDescriptor  vertexBuffer;
+    VertexBuffer    vertexBuffer;
 
     //! Index buffer type descriptor appendix.
-    IndexBufferDescriptor   indexBuffer;
+    IndexBuffer     indexBuffer;
 
     //! Storage buffer type descriptor appendix.
-    StorageBufferDescriptor storageBuffer;
+    StorageBuffer   storageBuffer;
 };
 
 /**

@@ -167,14 +167,14 @@ struct TextureFlags
 struct LLGL_EXPORT TextureDescriptor
 {
     //! 1D- and 1D-Array texture specific descriptor structure.
-    struct Texture1DDescriptor
+    struct Texture1D
     {
         std::uint32_t   width;          //!< Texture width.
         std::uint32_t   layers;         //!< Number of texture array layers.
     };
 
     //! 2D- and 2D-Array texture specific descriptor structure.
-    struct Texture2DDescriptor
+    struct Texture2D
     {
         std::uint32_t   width;          //!< Texture width.
         std::uint32_t   height;         //!< Texture height.
@@ -182,7 +182,7 @@ struct LLGL_EXPORT TextureDescriptor
     };
 
     //! 3D texture specific descriptor structure.
-    struct Texture3DDescriptor
+    struct Texture3D
     {
         std::uint32_t   width;          //!< Texture width.
         std::uint32_t   height;         //!< Texture height.
@@ -190,7 +190,7 @@ struct LLGL_EXPORT TextureDescriptor
     };
 
     //! Cube- and Cube-Array texture specific descriptor structure.
-    struct TextureCubeDescriptor
+    struct TextureCube
     {
         std::uint32_t   width;          //!< Texture width.
         std::uint32_t   height;         //!< Texture height.
@@ -198,7 +198,7 @@ struct LLGL_EXPORT TextureDescriptor
     };
 
     //! Multi-sampled 2D- and 2D-Array texture specific descriptor structure.
-    struct Texture2DMSDescriptor
+    struct Texture2DMS
     {
         std::uint32_t   width;          //!< Texture width.
         std::uint32_t   height;         //!< Texture height.
@@ -206,8 +206,8 @@ struct LLGL_EXPORT TextureDescriptor
         std::uint32_t   samples;        //!< Number of samples.
         bool            fixedSamples;   //!< Specifies whether the sample locations are fixed or not. By default true. \note Only supported with: OpenGL.
     };
-    
-    TextureDescriptor()
+
+    inline TextureDescriptor()
     {
         texture2DMS.width           = 0;
         texture2DMS.height          = 0;
@@ -216,31 +216,31 @@ struct LLGL_EXPORT TextureDescriptor
         texture2DMS.fixedSamples    = true;
     }
 
-    ~TextureDescriptor()
+    inline ~TextureDescriptor()
     {
         // Dummy
     }
 
     //! Hardware texture type. By default TextureType::Texture1D.
-    TextureType                 type        = TextureType::Texture1D;
+    TextureType     type        = TextureType::Texture1D;
 
     //! Hardware texture format. By default TextureFormat::RGBA8.
-    TextureFormat               format      = TextureFormat::RGBA8;
+    TextureFormat   format      = TextureFormat::RGBA8;
 
     /**
     \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default TextureFlags::Default.
     \remarks This can be bitwise OR combination of the entries of the TextureFlags enumeration.
     \see TextureFlags
     */
-    long                        flags       = TextureFlags::Default;
+    long            flags       = TextureFlags::Default;
 
     union
     {
-        Texture1DDescriptor     texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2DDescriptor     texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3DDescriptor     texture3D;      //!< Descriptor for 3D textures.
-        TextureCubeDescriptor   textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
-        Texture2DMSDescriptor   texture2DMS;    //!< Descriptor for multi-sampled 2D- and 2D-Array textures.
+        Texture1D   texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
+        Texture2D   texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
+        Texture3D   texture3D;      //!< Descriptor for 3D textures.
+        TextureCube textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
+        Texture2DMS texture2DMS;    //!< Descriptor for multi-sampled 2D- and 2D-Array textures.
     };
 };
 
@@ -250,7 +250,7 @@ struct LLGL_EXPORT TextureDescriptor
 */
 struct LLGL_EXPORT SubTextureDescriptor
 {
-    struct Texture1DDescriptor
+    struct Texture1D
     {
         std::uint32_t x;              //!< Sub-texture X-axis offset.
         std::uint32_t layerOffset;    //!< Zero-based layer offset.
@@ -258,7 +258,7 @@ struct LLGL_EXPORT SubTextureDescriptor
         std::uint32_t layers;         //!< Number of texture array layers.
     };
 
-    struct Texture2DDescriptor
+    struct Texture2D
     {
         std::uint32_t x;              //!< Sub-texture X-axis offset.
         std::uint32_t y;              //!< Sub-texture Y-axis offset.
@@ -268,7 +268,7 @@ struct LLGL_EXPORT SubTextureDescriptor
         std::uint32_t layers;         //!< Number of texture array layers.
     };
 
-    struct Texture3DDescriptor
+    struct Texture3D
     {
         std::uint32_t x;              //!< Sub-texture X-axis offset.
         std::uint32_t y;              //!< Sub-texture Y-axis offset.
@@ -278,7 +278,7 @@ struct LLGL_EXPORT SubTextureDescriptor
         std::uint32_t depth;          //!< Number of texture array layers.
     };
 
-    struct TextureCubeDescriptor
+    struct TextureCube
     {
         std::uint32_t x;              //!< Sub-texture X-axis offset.
         std::uint32_t y;              //!< Sub-texture Y-axis offset.
@@ -289,7 +289,7 @@ struct LLGL_EXPORT SubTextureDescriptor
         AxisDirection cubeFaceOffset; //!< First cube face in the current layer.
     };
 
-    SubTextureDescriptor()
+    inline SubTextureDescriptor()
     {
         mipLevel                    = 0;
         textureCube.x               = 0;
@@ -300,18 +300,20 @@ struct LLGL_EXPORT SubTextureDescriptor
         textureCube.cubeFaces       = 0;
         textureCube.cubeFaceOffset  = AxisDirection::XPos;
     }
-    ~SubTextureDescriptor()
+
+    inline ~SubTextureDescriptor()
     {
     }
 
-    std::uint32_t               mipLevel;       //!< MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
+    //! MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
+    std::uint32_t   mipLevel;
 
     union
     {
-        Texture1DDescriptor     texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2DDescriptor     texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3DDescriptor     texture3D;      //!< Descriptor for 3D textures.
-        TextureCubeDescriptor   textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
+        Texture1D   texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
+        Texture2D   texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
+        Texture3D   texture3D;      //!< Descriptor for 3D textures.
+        TextureCube textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
     };
 };
 

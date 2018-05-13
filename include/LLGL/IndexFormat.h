@@ -19,7 +19,7 @@ namespace LLGL
 
 /**
 \brief Index buffer format class.
-\see BufferDescriptor::IndexBufferDescriptor
+\see BufferDescriptor::IndexBuffer
 */
 class LLGL_EXPORT IndexFormat
 {
