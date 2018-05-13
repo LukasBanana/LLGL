@@ -124,6 +124,27 @@ class Buffer
 struct BufferDesc
 Buffer* AllocBuffer(const BufferDesc& descriptor)
 \end{lstlisting}
+However, the name of a descriptor does not explicity appear in the names of inner structures:
+\begin{lstlisting}
+// Desired
+struct TextureDescriptor
+{
+	struct Texture1D;
+	struct Texture2D;
+	/* ... */
+};
+TextureDescriptor::Texture2D texture2DDesc;
+\end{lstlisting}
+\begin{lstlisting}
+// Undesired
+struct TextureDescriptor
+{
+	struct Texture1DDescriptor;
+	struct Texture2DDescriptor;
+	/* ... */
+};
+TextureDescriptor::Texture2DDescriptor texture2DDesc;
+\end{lstlisting}
 
 \subsection*{Indentation and Braces}
 
@@ -232,10 +253,6 @@ The following order and syntax for the doxygen commands is used:
 int Foo(int count, int& bar, int* ptr = nullptr);
 \end{lstlisting}
 
-
-
-
-\newpage
 \emph{to be continued \dots}
 
 
