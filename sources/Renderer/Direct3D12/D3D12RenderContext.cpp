@@ -100,7 +100,7 @@ void D3D12RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
         RenderContext::SetVideoMode(videoModeDesc);
 
         /* Re-create resource that depend on the window size */
-        if (!Gs::Equals(prevVideoMode.resolution, videoModeDesc.resolution))
+        if (prevVideoMode.resolution != videoModeDesc.resolution)
             CreateWindowSizeDependentResources();
 
         /* Switch fullscreen mode */

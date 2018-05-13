@@ -10,7 +10,6 @@
 
 
 #include "Export.h"
-#include <Gauss/Vector3.h>
 #include <cstddef>
 #include <cstdint>
 

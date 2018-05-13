@@ -13,7 +13,6 @@
 #include "Types.h"
 #include "Image.h"
 #include "TextureFlags.h"
-#include <Gauss/Vector3.h>
 #include <cstdint>
 
 

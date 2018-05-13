@@ -53,7 +53,7 @@ void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
         RenderContext::SetVideoMode(videoModeDesc);
 
         /* Resize back buffer */
-        if (!Gs::Equals(prevVideoMode.resolution, videoModeDesc.resolution))
+        if (prevVideoMode.resolution != videoModeDesc.resolution)
         {
             ResizeBackBuffer(
                 videoModeDesc.resolution.width,

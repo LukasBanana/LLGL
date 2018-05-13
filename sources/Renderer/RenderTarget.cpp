@@ -7,7 +7,6 @@
 
 #include <LLGL/RenderTarget.h>
 #include <LLGL/Texture.h>
-#include <Gauss/Equals.h>
 #include <stdexcept>
 #include <string>
 

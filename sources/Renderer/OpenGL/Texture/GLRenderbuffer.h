@@ -10,7 +10,6 @@
 
 
 #include "../OpenGL.h"
-#include <Gauss/Vector2.h>
 
 
 namespace LLGL

@@ -25,7 +25,6 @@
 #include "Sampler.h"
 #include "Query.h"
 
-#include <Gauss/Vector3.h>
 #include <string>
 #include <map>
 

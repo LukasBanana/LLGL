@@ -447,5 +447,43 @@ if (auto myUniforms = myShaderProgram->LockShaderUniforms()) {
 ```
 
 
+Dependency removal of GaussianLib:
+----------------------------------
+
+All dependencies to the GaussianLib project have been removed from the project (except the tutorials and tests!).
+
+Before:
+```cpp
+// Usage:
+#include <LLGL/ColorRGB.h>
+#include <LLGL/ColorRGBA.h>
+LLGL::ColorRGB   myRealTypeColorRGB;
+LLGL::ColorRGBA  myRealTypeColorRGBA;
+LLGL::ColorRGBAf myUninitializedColor{ Gs::UninitializeTag{} };
+
+// Usage (with breaking change):
+LLGL::ColorRGBAf myColorA, myColorB;
+if (myColorA == myColorB) {
+    // uses 'Gs::Equals' with 'std::abs' to circumvent rounding errors
+}
+```
+
+After:
+```cpp
+// Usage:
+#include <LLGL/ColorRGB.h>
+#include <LLGL/ColorRGBA.h>
+#include <Gauss/Real.h>
+LLGL::ColorRGBT<Gs::Real>  myRealTypeColorRGB;
+LLGL::ColorRGBAT<Gs::Real> myRealTypeColorRGBA;
+LLGL::ColorRGBAf           myUninitializedColor{ LLGL::UninitializeTag{} };
+
+// Usage (with breaking change):
+LLGL::ColorRGBAf myColorA, myColorB;
+if (myColorA == myColorB) {
+    // uses 'operator ==' of float type for comparison
+}
+```
+
 
 

@@ -9,11 +9,8 @@
 #define LLGL_HELPER_MACROS_H
 
 
-#include <Gauss/Equals.h>
-
-
 #define LLGL_COMPARE_MEMBER_EQ(MEMBER) \
-    (Gs::Equals(lhs.MEMBER, rhs.MEMBER))
+    (lhs.MEMBER == rhs.MEMBER)
 
 #define LLGL_COMPARE_MEMBER_SWO(MEMBER)         \
     if (lhs.MEMBER < rhs.MEMBER) return true;   \

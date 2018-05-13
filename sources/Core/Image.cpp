@@ -403,20 +403,20 @@ static void ConvertImageBufferFormatWorker(
     /* Get size for source and destination formats */
     auto srcFormatSize  = ImageFormatSize(srcFormat);
     auto dstFormatSize  = ImageFormatSize(dstFormat);
-    
+
     /* Initialize default variant color (0, 0, 0, 1) */
-    VariantColor value { Gs::UninitializeTag{} };
-    
+    VariantColor value { UninitializeTag{} };
+
     SetVariantMinMax(srcDataType, value.r, true);
     SetVariantMinMax(srcDataType, value.g, true);
     SetVariantMinMax(srcDataType, value.b, true);
     SetVariantMinMax(srcDataType, value.a, false);
-    
+
     for (auto i = idxBegin; i < idxEnd; ++i)
     {
         /* Read RGBA variant from source buffer */
         ReadRGBAFormattedVariant(srcFormat, srcDataType, srcBuffer, i*srcFormatSize, value);
-        
+
         /* Write RGBA variant to destination buffer */
         WriteRGBAFormattedVariant(dstFormat, srcDataType, dstBuffer, i*dstFormatSize, value);
     }
@@ -659,7 +659,7 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     const ColorRGBAd&   fillColor)
 {
     /* Convert fill color data type */
-    VariantColor fillColor0 { Gs::UninitializeTag{} };
+    VariantColor fillColor0 { UninitializeTag{} };
     VariantBuffer fillBuffer0 { &fillColor0 };
 
     WriteNormalizedTypedVariant(dataType, fillBuffer0, 0, fillColor.r);
@@ -668,7 +668,7 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     WriteNormalizedTypedVariant(dataType, fillBuffer0, 3, fillColor.a);
 
     /* Convert fill color format */
-    VariantColor fillColor1 { Gs::UninitializeTag{} };
+    VariantColor fillColor1 { UninitializeTag{} };
     VariantBuffer fillBuffer1 { &fillColor1 };
     VariantConstBuffer fillBuffer2 { fillBuffer0.raw };
 
