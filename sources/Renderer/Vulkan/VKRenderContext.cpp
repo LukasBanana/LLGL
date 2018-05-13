@@ -8,6 +8,7 @@
 #include "VKRenderContext.h"
 #include "VKCommandBuffer.h"
 #include "VKCore.h"
+#include "Memory/VKDeviceMemoryManager.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
 #include <set>
@@ -16,6 +17,9 @@
 namespace LLGL
 {
 
+
+//TODO: remove this macro as soon as depth buffering works correctly
+#define _TEST_ENABLE_DEPTH_BUFFER
 
 /* ----- Common ----- */
 
@@ -28,11 +32,13 @@ VKRenderContext::VKRenderContext(
     const VKPtr<VkInstance>& instance,
     VkPhysicalDevice physicalDevice,
     const VKPtr<VkDevice>& device,
+    VKDeviceMemoryManager& deviceMemoryMngr,
     RenderContextDescriptor desc,
     const std::shared_ptr<Surface>& surface) :
         instance_            { instance                      },
         physicalDevice_      { physicalDevice                },
         device_              { device                        },
+        deviceMemoryMngr_    { deviceMemoryMngr              },
         surface_             { instance, vkDestroySurfaceKHR },
         swapChain_           { device, vkDestroySwapchainKHR },
         swapChainRenderPass_ { device, vkDestroyRenderPass   },
@@ -42,15 +48,13 @@ VKRenderContext::VKRenderContext(
 
     CreatePresentSemaphores();
     CreateGpuSurface();
-    
-    /*if (desc.videoMode.depthBits > 0 || desc.videoMode.stencilBits > 0)
-    {
-        CreateDepthStencilBuffer();
-        CreateSwapChainRenderPass(true);
-    }
-    else*/
-        CreateSwapChainRenderPass(false);
 
+    #ifdef _TEST_ENABLE_DEPTH_BUFFER
+    if (desc.videoMode.depthBits > 0 || desc.videoMode.stencilBits > 0)
+        CreateDepthStencilBuffer(desc.videoMode);
+    #endif
+
+    CreateSwapChainRenderPass();
     CreateSwapChain(desc.videoMode, desc.vsync);
 }
 
@@ -62,7 +66,7 @@ void VKRenderContext::Present()
     /* End command buffer and render pass */
     commandBuffer_->SetRenderPassNull();
     commandBuffer_->EndCommandBuffer();
-    
+
     /* Initialize semaphorse */
     VkSemaphore waitSemaphorse[] = { imageAvailableSemaphore_ };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -115,15 +119,15 @@ void VKRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
         /* Recreate surface and swap-chain with new video settings */
         RenderContext::SetVideoMode(videoModeDesc);
         CreateGpuSurface();
-        
-        /*if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
-        {
-            CreateDepthStencilBuffer();
-            CreateSwapChainRenderPass(true);
-        }
-        else*/
-            CreateSwapChainRenderPass(false);
 
+        #ifdef _TEST_ENABLE_DEPTH_BUFFER
+        if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
+            CreateDepthStencilBuffer(videoModeDesc);
+        else
+            ReleaseDepthStencilBuffer();
+        #endif
+
+        CreateSwapChainRenderPass();
         CreateSwapChain(videoModeDesc, vsyncDesc_);
     }
 }
@@ -201,7 +205,7 @@ void VKRenderContext::CreateGpuSurface()
     swapChainFormat_ = PickSwapSurfaceFormat(surfaceSupportDetails_.formats);
 }
 
-void VKRenderContext::CreateSwapChainRenderPass(bool createDepthStencil)
+void VKRenderContext::CreateSwapChainRenderPass()
 {
     VkAttachmentDescription attachments[2];
 
@@ -216,11 +220,11 @@ void VKRenderContext::CreateSwapChainRenderPass(bool createDepthStencil)
     attachments[0].initialLayout        = VK_IMAGE_LAYOUT_UNDEFINED;
     attachments[0].finalLayout          = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    if (createDepthStencil)
+    if (HasDepthStencilBuffer())
     {
         /* Initialize depth-stencil attachment */
         attachments[1].flags                = 0;
-        attachments[1].format               = PickDepthStencilFormat();
+        attachments[1].format               = depthStencilFormat_;
         attachments[1].samples              = VK_SAMPLE_COUNT_1_BIT;
         attachments[1].loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[1].storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
@@ -250,7 +254,7 @@ void VKRenderContext::CreateSwapChainRenderPass(bool createDepthStencil)
         subpassDesc.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpassDesc.colorAttachmentCount    = 1;
         subpassDesc.pColorAttachments       = (&colorAttachmentRef);
-        if (createDepthStencil)
+        if (HasDepthStencilBuffer())
             subpassDesc.pDepthStencilAttachment = (&depthAttachmentRef);
     }
 
@@ -272,7 +276,7 @@ void VKRenderContext::CreateSwapChainRenderPass(bool createDepthStencil)
         createInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         createInfo.pNext                    = nullptr;
         createInfo.flags                    = 0;
-        createInfo.attachmentCount          = (createDepthStencil ? 2 : 1);
+        createInfo.attachmentCount          = (HasDepthStencilBuffer() ? 2 : 1);
         createInfo.pAttachments             = attachments;
         createInfo.subpassCount             = 1;
         createInfo.pSubpasses               = (&subpassDesc);
@@ -393,29 +397,136 @@ void VKRenderContext::CreateSwapChainFramebuffers()
 {
     swapChainFramebuffers_.resize(swapChainImageViews_.size(), VKPtr<VkFramebuffer>{ device_, vkDestroyFramebuffer });
 
+    /* Initialize image view attachments */
+    VkImageView attachments[2];
+
+    if (HasDepthStencilBuffer())
+        attachments[1] = depthImageView_.Get();
+
+    /* Initialize framebuffer descriptor */
+    VkFramebufferCreateInfo createInfo;
+    {
+        createInfo.sType            = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        createInfo.pNext            = nullptr;
+        createInfo.flags            = 0;
+        createInfo.renderPass       = swapChainRenderPass_;
+        createInfo.attachmentCount  = (HasDepthStencilBuffer() ? 2 : 1);
+        createInfo.pAttachments     = attachments;
+        createInfo.width            = swapChainExtent_.width;
+        createInfo.height           = swapChainExtent_.height;
+        createInfo.layers           = 1;
+    }
+
     for (std::size_t i = 0, n = swapChainImageViews_.size(); i < n; ++i)
     {
+        /* Update color attachment image view */
+        attachments[0] = swapChainImageViews_[i].Get();
+
         /* Create framebuffer */
-        VkFramebufferCreateInfo createInfo;
-        {
-            createInfo.sType            = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            createInfo.pNext            = nullptr;
-            createInfo.flags            = 0;
-            createInfo.renderPass       = swapChainRenderPass_;
-            createInfo.attachmentCount  = 1;
-            createInfo.pAttachments     = &(swapChainImageViews_[i]);
-            createInfo.width            = swapChainExtent_.width;
-            createInfo.height           = swapChainExtent_.height;
-            createInfo.layers           = 1;
-        }
         auto result = vkCreateFramebuffer(device_, &createInfo, nullptr, swapChainFramebuffers_[i].ReleaseAndGetAddressOf());
         VKThrowIfFailed(result, "failed to create Vulkan swap-chain framebuffer");
     }
 }
 
-void VKRenderContext::CreateDepthStencilBuffer()
+void VKRenderContext::CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc)
 {
-    //todo
+    CreateDepthStencilImage(videoModeDesc);
+    CreateDepthStencilMemory();
+    CreateDepthStencilImageView(videoModeDesc);
+}
+
+void VKRenderContext::CreateDepthStencilImage(const VideoModeDescriptor& videoModeDesc)
+{
+    /* Pick depth-stencil format */
+    depthStencilFormat_ = (videoModeDesc.stencilBits > 0 ? PickDepthStencilFormat() : PickDepthFormat());
+
+    /* Create image object */
+    VkImageCreateInfo createInfo;
+    {
+        createInfo.sType                    = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        createInfo.pNext                    = nullptr;
+        createInfo.flags                    = 0;
+        createInfo.imageType                = VK_IMAGE_TYPE_2D;
+        createInfo.format                   = depthStencilFormat_;
+        createInfo.extent.width             = static_cast<std::uint32_t>(videoModeDesc.resolution.x);
+        createInfo.extent.height            = static_cast<std::uint32_t>(videoModeDesc.resolution.y);
+        createInfo.extent.depth             = 1;
+        createInfo.mipLevels                = 1;
+        createInfo.arrayLayers              = 1;
+        createInfo.samples                  = VK_SAMPLE_COUNT_1_BIT; //TODO: multi-sampling
+        createInfo.tiling                   = VK_IMAGE_TILING_OPTIMAL;
+        createInfo.usage                    = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE; // only used by graphics queue
+        createInfo.queueFamilyIndexCount    = 0;
+        createInfo.pQueueFamilyIndices      = nullptr;
+        createInfo.initialLayout            = VK_IMAGE_LAYOUT_UNDEFINED;
+    }
+    VkResult result = vkCreateImage(device_, &createInfo, nullptr, depthImage_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan image for depth-stencil buffer");
+}
+
+void VKRenderContext::CreateDepthStencilImageView(const VideoModeDescriptor& videoModeDesc)
+{
+    /* Determine image aspect mask */
+    VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+    if (videoModeDesc.stencilBits > 0)
+        aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+    /* Create image view object */
+    VkImageViewCreateInfo createInfo;
+    {
+        createInfo.sType                            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.pNext                            = nullptr;
+        createInfo.flags                            = 0;
+        createInfo.image                            = depthImage_;
+        createInfo.viewType                         = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format                           = depthStencilFormat_;
+        createInfo.components.r                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.subresourceRange.aspectMask      = aspectMask;
+        createInfo.subresourceRange.baseMipLevel    = 0;
+        createInfo.subresourceRange.levelCount      = 1;
+        createInfo.subresourceRange.baseArrayLayer  = 0;
+        createInfo.subresourceRange.layerCount      = 1;
+    }
+    VkResult result = vkCreateImageView(device_, &createInfo, nullptr, depthImageView_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan image view for depth-stencil buffer");
+}
+
+void VKRenderContext::CreateDepthStencilMemory()
+{
+    /* Allocate device memory */
+    VkMemoryRequirements requirements;
+    vkGetImageMemoryRequirements(device_, depthImage_, &requirements);
+
+    depthImageMemoryRegion_ = deviceMemoryMngr_.Allocate(
+        requirements.size,
+        requirements.alignment,
+        requirements.memoryTypeBits,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    );
+
+    if (depthImageMemoryRegion_)
+        depthImageMemoryRegion_->BindImage(device_, depthImage_);
+    else
+        throw std::runtime_error("failed to allocate device memory for depth-stencil buffer");
+}
+
+void VKRenderContext::ReleaseDepthStencilBuffer()
+{
+    /* Release image and image view of depth-stencil buffer */
+    depthImageView_.Release();
+    depthImage_.Release();
+
+    /* Release device memory region of depth-stencil buffer */
+    deviceMemoryMngr_.Release(depthImageMemoryRegion_);
+    depthImageMemoryRegion_ = nullptr;
+
+    /* Reset depth-stencil format */
+    depthStencilFormat_ = VK_FORMAT_UNDEFINED;
 }
 
 VkSurfaceFormatKHR VKRenderContext::PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const
@@ -466,7 +577,17 @@ VkFormat VKRenderContext::PickDepthStencilFormat() const
 {
     return VKFindSupportedImageFormat(
         physicalDevice_,
-        { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM },
+        { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT },
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    );
+}
+
+VkFormat VKRenderContext::PickDepthFormat() const
+{
+    return VKFindSupportedImageFormat(
+        physicalDevice_,
+        { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D16_UNORM, VK_FORMAT_D16_UNORM_S8_UINT },
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
     );
@@ -476,6 +597,11 @@ void VKRenderContext::AcquireNextPresentImage()
 {
     /* Get next image for presentation */
     vkAcquireNextImageKHR(device_, swapChain_, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore_, VK_NULL_HANDLE, &presentImageIndex_);
+}
+
+bool VKRenderContext::HasDepthStencilBuffer() const
+{
+    return (depthStencilFormat_ != VK_FORMAT_UNDEFINED);
 }
 
 

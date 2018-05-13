@@ -240,7 +240,7 @@ private:
 
         if (input->KeyDown(LLGL::Key::Tab))
             showWireframe = !showWireframe;
-        
+
         // Update matrices
         Gs::Matrix4f worldMatrix;
         Gs::Translate(worldMatrix, Gs::Vector3f(0, 0, 5));

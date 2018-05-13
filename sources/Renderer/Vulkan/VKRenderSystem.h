@@ -179,7 +179,7 @@ class VKRenderSystem : public RenderSystem
         std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
 
         VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
-        
+
         std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> CreateStagingBuffer(
             const VkBufferCreateInfo& stagingCreateInfo, const void* initialData = nullptr, std::size_t initialDataSize = 0
         );

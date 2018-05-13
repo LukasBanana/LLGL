@@ -22,6 +22,7 @@ namespace LLGL
 
 
 class VKCommandBuffer;
+class VKDeviceMemoryManager;
 class VKDeviceMemoryRegion;
 
 class VKRenderContext : public RenderContext
@@ -35,6 +36,7 @@ class VKRenderContext : public RenderContext
             const VKPtr<VkInstance>& instance,
             VkPhysicalDevice physicalDevice,
             const VKPtr<VkDevice>& device,
+            VKDeviceMemoryManager& deviceMemoryMngr,
             RenderContextDescriptor desc,
             const std::shared_ptr<Surface>& surface
         );
@@ -79,21 +81,31 @@ class VKRenderContext : public RenderContext
             return swapChainExtent_;
         }
 
+        // Returns true if this render context has a depth-stencil buffer.
+        bool HasDepthStencilBuffer() const;
+
     private:
 
         void CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore);
         void CreatePresentSemaphores();
         void CreateGpuSurface();
-        void CreateSwapChainRenderPass(bool createDepthStencil);
+
+        void CreateSwapChainRenderPass();
         void CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc);
         void CreateSwapChainImageViews();
         void CreateSwapChainFramebuffers();
-        void CreateDepthStencilBuffer();
+
+        void CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc);
+        void CreateDepthStencilImage(const VideoModeDescriptor& videoModeDesc);
+        void CreateDepthStencilImageView(const VideoModeDescriptor& videoModeDesc);
+        void CreateDepthStencilMemory();
+        void ReleaseDepthStencilBuffer();
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
         VkPresentModeKHR PickSwapPresentMode(const std::vector<VkPresentModeKHR>& presentModes, const VsyncDescriptor& vsyncDesc) const;
         VkExtent2D PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCaps, std::uint32_t width, std::uint32_t height) const;
         VkFormat PickDepthStencilFormat() const;
+        VkFormat PickDepthFormat() const;
 
         void AcquireNextPresentImage();
 
@@ -102,6 +114,8 @@ class VKRenderContext : public RenderContext
         VkInstance                          instance_                   = VK_NULL_HANDLE;
         VkPhysicalDevice                    physicalDevice_             = VK_NULL_HANDLE;
         const VKPtr<VkDevice>&              device_;
+
+        VKDeviceMemoryManager&              deviceMemoryMngr_;
 
         VKPtr<VkSurfaceKHR>                 surface_;
         SurfaceSupportDetails               surfaceSupportDetails_;
@@ -115,6 +129,7 @@ class VKRenderContext : public RenderContext
         std::vector<VKPtr<VkFramebuffer>>   swapChainFramebuffers_;
         std::uint32_t                       presentImageIndex_          = 0;
 
+        VkFormat                            depthStencilFormat_         = VK_FORMAT_UNDEFINED;
         VKPtr<VkImage>                      depthImage_;
         VKPtr<VkImageView>                  depthImageView_;
         VKDeviceMemoryRegion*               depthImageMemoryRegion_     = nullptr;

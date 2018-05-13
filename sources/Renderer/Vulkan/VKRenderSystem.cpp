@@ -189,7 +189,7 @@ RenderContext* VKRenderSystem::CreateRenderContext(const RenderContextDescriptor
 {
     return TakeOwnership(
         renderContexts_,
-        MakeUnique<VKRenderContext>(instance_, physicalDevice_, device_, desc, surface)
+        MakeUnique<VKRenderContext>(instance_, physicalDevice_, device_, *deviceMemoryMngr_, desc, surface)
     );
 }
 

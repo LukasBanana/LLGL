@@ -181,7 +181,7 @@ void VKCommandBuffer::Clear(long flags)
     VkClearAttachment attachments[g_maxNumAttachments];
 
     std::uint32_t numAttachments = 0;
-    
+
     /* Fill clear descriptors for color attachments */
     if ((flags & ClearFlags::Color) != 0)
     {
@@ -216,7 +216,7 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
 {
     /* Convert clear attachment descriptors */
     VkClearAttachment attachmentsVK[g_maxNumAttachments];
-    
+
     std::uint32_t numAttachmentsVK = 0;
 
     for (std::uint32_t i = 0, n = std::min(numAttachments, g_maxNumAttachments); i < n; ++i)
@@ -240,7 +240,7 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
             /* Convert depth-stencil clear command */
             dst.aspectMask      = 0;
             dst.colorAttachment = 0;
-            
+
             if ((src.flags & ClearFlags::Depth) != 0)
             {
                 dst.aspectMask                      |= VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -389,8 +389,7 @@ void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 
     /* Store information about framebuffer attachments */
     numColorAttachments_        = 1;
-    hasDepthStencilAttachment_  = false;
-    //hasDepthStencilAttachment_  = true;
+    hasDepthStencilAttachment_  = renderContextVK.HasDepthStencilBuffer();
 }
 
 

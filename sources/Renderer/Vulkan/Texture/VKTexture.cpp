@@ -43,7 +43,7 @@ TextureDescriptor VKTexture::QueryDesc() const
     //desc.format = ;
 
     //todo...
-    
+
     return desc;
 }
 

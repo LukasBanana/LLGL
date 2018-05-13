@@ -25,10 +25,11 @@ VKDeviceMemoryManager::VKDeviceMemoryManager(
 
 VKDeviceMemoryRegion* VKDeviceMemoryManager::Allocate(VkDeviceSize size, VkDeviceSize alignment, std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties)
 {
+    const auto alignedSize      = GetAlignedSize(size, alignment);
     const auto memoryTypeIndex  = FindMemoryType(memoryTypeBits, properties);
-    const auto allocationSize   = std::max(minAllocationSize_, size);
+    const auto allocationSize   = std::max(minAllocationSize_, alignedSize);
 
-    if (auto chunk = FindOrAllocChunk(allocationSize, memoryTypeIndex, size))
+    if (auto chunk = FindOrAllocChunk(allocationSize, memoryTypeIndex, alignedSize))
         return chunk->Allocate(size, alignment);
     else
         return nullptr;
