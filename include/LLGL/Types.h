@@ -9,14 +9,12 @@
 #define LLGL_TYPES_H
 
 
-#include <Gauss/Vector2.h>
+#include <cstdint>
 
 
 namespace LLGL
 {
 
-
-#if 1
 
 /* ----- Structures ----- */
 
@@ -150,22 +148,6 @@ inline bool operator != (const Extent3D& lhs, const Extent3D& rhs)
 {
     return !(lhs == rhs);
 }
-
-#else //TODO: replace "Point" by "Offset2D" and replace "Size" by "Extent2D"
-
-/**
-\brief 2D point (integer).
-\todo Rename to "Offset2D" and make it a simple struct.
-*/
-using Point = Gs::Vector2i;
-
-/**
-\brief 2D size (integer).
-\todo Rename to "Extent2D" and make it a simple struct.
-*/
-using Size = Gs::Vector2i;
-
-#endif
 
 
 } // /namespace LLGL
