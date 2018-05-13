@@ -18,9 +18,6 @@ namespace LLGL
 {
 
 
-//TODO: remove this macro as soon as depth buffering works correctly
-#define _TEST_ENABLE_DEPTH_BUFFER
-
 /* ----- Common ----- */
 
 static const std::vector<const char*> g_deviceExtensions
@@ -49,13 +46,16 @@ VKRenderContext::VKRenderContext(
     CreatePresentSemaphores();
     CreateGpuSurface();
 
-    #ifdef _TEST_ENABLE_DEPTH_BUFFER
     if (desc.videoMode.depthBits > 0 || desc.videoMode.stencilBits > 0)
         CreateDepthStencilBuffer(desc.videoMode);
-    #endif
 
     CreateSwapChainRenderPass();
     CreateSwapChain(desc.videoMode, desc.vsync);
+}
+
+VKRenderContext::~VKRenderContext()
+{
+    ReleaseDepthStencilBuffer();
 }
 
 void VKRenderContext::Present()
@@ -120,12 +120,10 @@ void VKRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
         RenderContext::SetVideoMode(videoModeDesc);
         CreateGpuSurface();
 
-        #ifdef _TEST_ENABLE_DEPTH_BUFFER
         if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
             CreateDepthStencilBuffer(videoModeDesc);
         else
             ReleaseDepthStencilBuffer();
-        #endif
 
         CreateSwapChainRenderPass();
         CreateSwapChain(videoModeDesc, vsyncDesc_);

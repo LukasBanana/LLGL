@@ -41,6 +41,8 @@ class VKRenderContext : public RenderContext
             const std::shared_ptr<Surface>& surface
         );
 
+        ~VKRenderContext();
+
         void Present() override;
 
         /* ----- Configuration ----- */
