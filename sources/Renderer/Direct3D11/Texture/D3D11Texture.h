@@ -113,7 +113,7 @@ class D3D11Texture : public Texture
         void CreateSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr);
 
         void CreateSRVAndStoreSettings(
-            ID3D11Device* device, DXGI_FORMAT format, const Gs::Vector3ui& size,
+            ID3D11Device* device, DXGI_FORMAT format, const Extent3D& size,
             const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
         );
 

@@ -22,9 +22,9 @@ RenderTarget::~RenderTarget()
 
 #if 1 // DEPRECATED
 
-void RenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size) { /* dummy */ }
-void RenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size) { /* dummy */ }
-void RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size) { /* dummy */ }
+void RenderTarget::AttachDepthBuffer(const Extent2D& size) { /* dummy */ }
+void RenderTarget::AttachStencilBuffer(const Extent2D& size) { /* dummy */ }
+void RenderTarget::AttachDepthStencilBuffer(const Extent2D& size) { /* dummy */ }
 void RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) { /* dummy */ }
 void RenderTarget::DetachAll() { /* dummy */ }
 

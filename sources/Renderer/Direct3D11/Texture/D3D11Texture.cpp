@@ -174,14 +174,14 @@ void D3D11Texture::CreateTexture1D(
     ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
     hwTexture_.tex1D = DXCreateTexture1D(device, desc, initialData);
-    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, 1, 1 }, srvDesc);
+    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, 1u, 1u }, srvDesc);
 }
 
 void D3D11Texture::CreateTexture2D(
     ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
     hwTexture_.tex2D = DXCreateTexture2D(device, desc, initialData);
-    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, 1 }, srvDesc);
+    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, 1u }, srvDesc);
 }
 
 void D3D11Texture::CreateTexture3D(
@@ -329,14 +329,14 @@ void D3D11Texture::CreateSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_V
 }
 
 void D3D11Texture::CreateSRVAndStoreSettings(
-    ID3D11Device* device, DXGI_FORMAT format, const Gs::Vector3ui& size, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
+    ID3D11Device* device, DXGI_FORMAT format, const Extent3D& size, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
     /* Create SRV for D3D texture */
     CreateSRV(device, srvDesc);
 
     /* Store format and number of MIP-maps */
     format_         = format;
-    numMipLevels_   = NumMipLevels(size.x, size.y, size.z);
+    numMipLevels_   = NumMipLevels(size.width, size.height, size.height);
 }
 
 

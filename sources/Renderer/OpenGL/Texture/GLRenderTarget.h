@@ -29,9 +29,9 @@ class GLRenderTarget : public RenderTarget
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
 
-        void AttachDepthBuffer(const Gs::Vector2ui& size) override;
-        void AttachStencilBuffer(const Gs::Vector2ui& size) override;
-        void AttachDepthStencilBuffer(const Gs::Vector2ui& size) override;
+        void AttachDepthBuffer(const Extent2D& size) override;
+        void AttachStencilBuffer(const Extent2D& size) override;
+        void AttachDepthStencilBuffer(const Extent2D& size) override;
 
         void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
 

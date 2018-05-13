@@ -41,17 +41,17 @@ DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debu
     }
 }
 
-void DbgRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
+void DbgRenderTarget::AttachDepthBuffer(const Extent2D& size)
 {
     instance.AttachDepthBuffer(size);
 }
 
-void DbgRenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
+void DbgRenderTarget::AttachStencilBuffer(const Extent2D& size)
 {
     instance.AttachStencilBuffer(size);
 }
 
-void DbgRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
+void DbgRenderTarget::AttachDepthStencilBuffer(const Extent2D& size)
 {
     instance.AttachDepthStencilBuffer(size);
 }

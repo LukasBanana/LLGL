@@ -56,19 +56,19 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
     }
 }
 
-void D3D11RenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
+void D3D11RenderTarget::AttachDepthBuffer(const Extent2D& size)
 {
-    CreateDepthStencilAndDSV({ size.x, size.y }, DXGI_FORMAT_D32_FLOAT);
+    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D32_FLOAT);
 }
 
-void D3D11RenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
+void D3D11RenderTarget::AttachStencilBuffer(const Extent2D& size)
 {
-    CreateDepthStencilAndDSV({ size.x, size.y }, DXGI_FORMAT_D24_UNORM_S8_UINT);
+    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
-void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
+void D3D11RenderTarget::AttachDepthStencilBuffer(const Extent2D& size)
 {
-    CreateDepthStencilAndDSV({ size.x, size.y }, DXGI_FORMAT_D24_UNORM_S8_UINT);
+    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
 static void FillViewDescForTexture1D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)

@@ -78,7 +78,7 @@ class D3D11RenderSystem : public RenderSystem
 
         void Release(Buffer& buffer) override;
         void Release(BufferArray& bufferArray) override;
-        
+
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
 
         void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
@@ -124,7 +124,7 @@ class D3D11RenderSystem : public RenderSystem
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
         ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
-        
+
         void Release(GraphicsPipeline& graphicsPipeline) override;
         void Release(ComputePipeline& computePipeline) override;
 
@@ -153,7 +153,7 @@ class D3D11RenderSystem : public RenderSystem
         }
 
     private:
-        
+
         void CreateFactory();
         void QueryVideoAdapters();
         void CreateDevice(IDXGIAdapter* adapter);
@@ -167,10 +167,10 @@ class D3D11RenderSystem : public RenderSystem
         void BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
         void BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
         void BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc);
-        
+
         void UpdateGenericTexture(
             Texture& texture, std::uint32_t mipLevel, std::uint32_t layer,
-            const Gs::Vector3ui& position, const Gs::Vector3ui& size,
+            const Offset3D& offset, const Extent3D& extent,
             const ImageDescriptor& imageDesc
         );
 

@@ -66,21 +66,21 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
     }
 }
 
-void GLRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
+void GLRenderTarget::AttachDepthBuffer(const Extent2D& size)
 {
-    AttachRenderbuffer({ size.x, size.y }, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
+    AttachRenderbuffer(size, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
     blitMask_ |= GL_DEPTH_BUFFER_BIT;
 }
 
-void GLRenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
+void GLRenderTarget::AttachStencilBuffer(const Extent2D& size)
 {
-    AttachRenderbuffer({ size.x, size.y }, GL_STENCIL_INDEX, GL_STENCIL_ATTACHMENT);
+    AttachRenderbuffer(size, GL_STENCIL_INDEX, GL_STENCIL_ATTACHMENT);
     blitMask_ |= GL_STENCIL_BUFFER_BIT;
 }
 
-void GLRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
+void GLRenderTarget::AttachDepthStencilBuffer(const Extent2D& size)
 {
-    AttachRenderbuffer({ size.x, size.y }, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL_ATTACHMENT);
+    AttachRenderbuffer(size, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL_ATTACHMENT);
     blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
