@@ -15,7 +15,7 @@ namespace Desktop
 {
 
 
-LLGL_EXPORT Size GetResolution()
+LLGL_EXPORT Extent2D GetResolution()
 {
     return { 1920, 1080 };//!!!
 }
