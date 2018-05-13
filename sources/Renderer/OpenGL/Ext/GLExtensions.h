@@ -378,6 +378,10 @@ extern PFNGLTEXSTORAGE3DMULTISAMPLEPROC                     glTexStorage3DMultis
 
 extern PFNGLBUFFERSTORAGEPROC                               glBufferStorage;
 
+/* GL_ARB_polygon_offset_clamp */
+
+extern PFNGLPOLYGONOFFSETCLAMPPROC                          glPolygonOffsetClamp;
+
 /* GL_ARB_direct_state_access */
 
 extern PFNGLCREATETRANSFORMFEEDBACKSPROC                    glCreateTransformFeedbacks;

@@ -33,21 +33,21 @@ bool LoadGLProc(T& procAddr, const char* procName)
     Log::StdErr() << "OS not supported for loading OpenGL extensions" << std::endl;
     return false;
     #endif
-    
+
     /* Check for errors */
     if (!procAddr)
     {
         Log::StdErr() << "failed to load OpenGL procedure: " << procName << std::endl;
         return false;
     }
-    
+
     return true;
 }
 
 static void ExtractExtensionsFromString(GLExtensionList& extensions, const std::string& extString)
 {
     size_t first = 0, last = 0;
-    
+
     /* Find next extension name in string */
     while ( ( last = extString.find(' ', first) ) != std::string::npos )
     {
@@ -549,6 +549,12 @@ static bool Load_GL_ARB_buffer_storage(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_polygon_offset_clamp(bool usePlaceholder)
+{
+    LOAD_GLPROC( glPolygonOffsetClamp );
+    return true;
+}
+
 static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -653,7 +659,7 @@ static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 
 #undef LOAD_GLPROC_SIMPLE
 #undef LOAD_GLPROC
-    
+
 #endif // /ifndef(__APPLE__)
 
 
@@ -664,12 +670,12 @@ GLExtensionList QueryExtensions(bool coreProfile)
     GLExtensionList extensions;
 
     const char* extString = nullptr;
-    
+
     /* Filter standard GL extensions */
     if (coreProfile)
     {
         #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
-        
+
         #ifndef __APPLE__
         if (glGetStringi || LoadGLProc(glGetStringi, "glGetStringi"))
         #endif
@@ -677,7 +683,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
             /* Get number of extensions */
             GLint numExtensions = 0;
             glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
-            
+
             for (int i = 0; i < numExtensions; ++i)
             {
                 /* Get current extension string */
@@ -686,7 +692,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
                     extensions[extString] = false;
             }
         }
-        
+
         #endif
     }
     else
@@ -706,7 +712,7 @@ GLExtensionList QueryExtensions(bool coreProfile)
         if (extString)
             ExtractExtensionsFromString(extensions, extString);
     }
-    
+
     #endif
 
     return extensions;
@@ -720,25 +726,25 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     /* Only load GL extensions once */
     if (g_extAlreadyLoaded)
         return;
-    
+
     #ifdef __APPLE__
-    
+
     /* Enable OpenGL extension support by host MacOS version */
     #define ENABLE_GLEXT(NAME) \
         RegisterExtension(GLExt::NAME)
-    
+
     /* Enable hardware buffer extensions */
     ENABLE_GLEXT( ARB_vertex_buffer_object         );
     ENABLE_GLEXT( ARB_vertex_array_object          );
     ENABLE_GLEXT( ARB_framebuffer_object           );
     ENABLE_GLEXT( ARB_uniform_buffer_object        );
     ENABLE_GLEXT( ARB_shader_storage_buffer_object );
-    
+
     /* Enable drawing extensions */
     ENABLE_GLEXT( ARB_draw_instanced               );
     ENABLE_GLEXT( ARB_base_instance                );
     ENABLE_GLEXT( ARB_draw_elements_base_vertex    );
-    
+
     /* Enable shader extensions */
     ENABLE_GLEXT( ARB_shader_objects               );
     ENABLE_GLEXT( ARB_instanced_arrays             );
@@ -747,7 +753,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_get_program_binary           );
     ENABLE_GLEXT( ARB_program_interface_query      );
     ENABLE_GLEXT( EXT_gpu_shader4                  );
-    
+
     /* Enable texture extensions */
     ENABLE_GLEXT( ARB_multitexture                 );
     ENABLE_GLEXT( EXT_texture3D                    );
@@ -755,14 +761,14 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_texture_compression          );
     ENABLE_GLEXT( ARB_texture_multisample          );
     ENABLE_GLEXT( ARB_sampler_objects              );
-    
+
     /* Enable blending extensions */
     ENABLE_GLEXT( EXT_blend_minmax                 );
     ENABLE_GLEXT( EXT_blend_func_separate          );
     ENABLE_GLEXT( EXT_blend_equation_separate      );
     ENABLE_GLEXT( EXT_blend_color                  );
     ENABLE_GLEXT( ARB_draw_buffers_blend           );
-    
+
     /* Enable misc extensions */
     ENABLE_GLEXT( ARB_viewport_array               );
     ENABLE_GLEXT( ARB_occlusion_query              );
@@ -777,7 +783,8 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( EXT_transform_feedback           );
     ENABLE_GLEXT( NV_transform_feedback            );
     ENABLE_GLEXT( ARB_sync                         );
-    
+    ENABLE_GLEXT( ARB_polygon_offset_clamp         );
+
     /* Enable extensions without procedures */
     ENABLE_GLEXT( ARB_texture_cube_map             );
     ENABLE_GLEXT( EXT_texture_array                );
@@ -785,11 +792,11 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_geometry_shader4             );
     ENABLE_GLEXT( NV_conservative_raster           );
     ENABLE_GLEXT( INTEL_conservative_rasterization );
-    
+
     #undef ENABLE_GLEXT
-    
+
     #else
-    
+
     auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc, GLExt viewerExt) -> void
     {
         /* Try to load OpenGL extension */
@@ -826,7 +833,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
 
     #define ENABLE_GLEXT(NAME) \
         EnableExtension("GL_" + std::string(#NAME), GLExt::NAME)
-        
+
     /* Add standard extensions */
     if (coreProfile)
     {
@@ -892,6 +899,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_texture_storage              );
     LOAD_GLEXT( ARB_texture_storage_multisample  );
     LOAD_GLEXT( ARB_buffer_storage               );
+    LOAD_GLEXT( ARB_polygon_offset_clamp         );
     #ifdef LLGL_GL_ENABLE_DSA_EXT
     LOAD_GLEXT( ARB_direct_state_access          );
     #endif
@@ -907,9 +915,9 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
 
     #undef LOAD_GLEXT
     #undef ENABLE_GLEXT
-    
+
     #endif
-    
+
     g_extAlreadyLoaded = true;
 }
 

@@ -460,7 +460,10 @@ struct DepthBiasDescriptor
     //! Specifies a scalar factor applied to a fragment's slope in depth bias calculations. By default 0.0.
     float slopeFactor   = 0.0f;
 
-    //! Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
+    /**
+    \brief Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
+    \note For OpenGL, this is only supported if the extension "GL_ARB_polygon_offset_clamp" is available.
+    */
     float clamp         = 0.0f;
 };
 #endif

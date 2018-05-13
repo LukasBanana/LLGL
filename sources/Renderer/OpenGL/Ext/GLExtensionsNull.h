@@ -342,7 +342,7 @@ DECL_GLPROC(void, glDebugMessageCallback, (GLDEBUGPROC, const void*));
 /* GL_ARB_clip_control */
 
 DECL_GLPROC(void, glClipControl, (GLenum, GLenum));
-    
+
 /* GL_EXT_transform_feedback */
 
 DECL_GLPROC(void, glBindBufferRange, (GLenum, GLuint, GLuint, GLintptr, GLsizeiptr));
@@ -404,6 +404,10 @@ DECL_GLPROC(void, glTexStorage3DMultisample, (GLenum, GLsizei, GLenum, GLsizei, 
 /* GL_ARB_buffer_storage */
 
 DECL_GLPROC(void, glBufferStorage, (GLenum, GLsizeiptr, const void*, GLbitfield));
+
+/* GL_ARB_polygon_offset_clamp */
+
+DECL_GLPROC(void, glPolygonOffsetClamp, (GLfloat, GLfloat, GLfloat));
 
 /* GL_ARB_direct_state_access */
 

@@ -89,6 +89,7 @@ class GLStateManager
         void SetDepthFunc(GLenum func);
         void SetStencilState(GLenum face, const GLStencil& state);
         void SetPolygonMode(GLenum mode);
+        void SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat clamp);
         void SetCullFace(GLenum face);
         void SetFrontFace(GLenum mode);
         void SetDepthMask(GLboolean flag);
@@ -138,7 +139,7 @@ class GLStateManager
 
         void BindTexture(GLTextureTarget target, GLuint texture);
         void BindTextures(GLuint first, GLsizei count, const GLTextureTarget* targets, const GLuint* textures);
-        
+
         void PushBoundTexture(std::uint32_t layer, GLTextureTarget target);
         void PushBoundTexture(GLTextureTarget target);
         void PopBoundTexture();
@@ -210,6 +211,9 @@ class GLStateManager
             GLenum      depthFunc       = GL_LESS;
             GLStencil   stencil[2];
             GLenum      polygonMode     = GL_FILL;
+            GLfloat     offsetFactor    = 0.0f;
+            GLfloat     offsetUnits     = 0.0f;
+            GLfloat     offsetClamp     = 0.0f;
             GLenum      cullFace        = GL_BACK;
             GLenum      frontFace       = GL_CCW;
             GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)

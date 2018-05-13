@@ -525,12 +525,36 @@ void GLStateManager::SetStencilState(GLenum face, GLStencil& to, const GLStencil
     }
 }
 
+// <face> parameter must always be 'GL_FRONT_AND_BACK' since GL 3.2+
 void GLStateManager::SetPolygonMode(GLenum mode)
 {
     if (commonState_.polygonMode != mode)
     {
         commonState_.polygonMode = mode;
         glPolygonMode(GL_FRONT_AND_BACK, mode);
+    }
+}
+
+void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat clamp)
+{
+    if (HasExtension(GLExt::ARB_polygon_offset_clamp))
+    {
+        if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units)
+        {
+            commonState_.offsetFactor   = factor;
+            commonState_.offsetUnits    = units;
+            commonState_.offsetClamp    = clamp;
+            glPolygonOffsetClamp(factor, units, clamp);
+        }
+    }
+    else
+    {
+        if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units)
+        {
+            commonState_.offsetFactor   = factor;
+            commonState_.offsetUnits    = units;
+            glPolygonOffset(factor, units);
+        }
     }
 }
 

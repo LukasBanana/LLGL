@@ -375,6 +375,10 @@ PFNGLTEXSTORAGE3DMULTISAMPLEPROC                        glTexStorage3DMultisampl
 
 PFNGLBUFFERSTORAGEPROC                                  glBufferStorage                                 = nullptr;
 
+/* GL_ARB_polygon_offset_clamp */
+
+PFNGLPOLYGONOFFSETCLAMPPROC                             glPolygonOffsetClamp                            = nullptr;
+
 /* GL_ARB_direct_state_access */
 
 PFNGLCREATETRANSFORMFEEDBACKSPROC                       glCreateTransformFeedbacks                      = nullptr;
