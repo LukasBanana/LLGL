@@ -343,7 +343,7 @@ void GLCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t 
 void GLCommandBuffer::BlitBoundRenderTarget()
 {
     if (boundRenderTarget_)
-        boundRenderTarget_->BlitOntoFrameBuffer();
+        boundRenderTarget_->BlitOntoFramebuffer();
 }
 
 void GLCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
@@ -356,7 +356,7 @@ void GLCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
     stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFramebuffer().GetID());
 
     /* Notify state manager about new render target height */
-    stateMngr_->NotifyRenderTargetHeight(renderTarget.GetResolution().y);
+    stateMngr_->NotifyRenderTargetHeight(static_cast<GLint>(renderTarget.GetResolution().height));
 
     /* Store current render target */
     boundRenderTarget_ = &renderTargetGL;

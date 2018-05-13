@@ -81,21 +81,22 @@ class LLGL_EXPORT RenderTarget
         /**
         \brief Returns the render target resolution.
         \remarks This will be determined by the first texture attachment. Every further attachment must have the same size.
+        \todo Rename to "GetExtent".
         */
-        inline const Gs::Vector2ui& GetResolution() const
+        inline const Extent2D& GetResolution() const
         {
             return resolution_;
         }
 
     protected:
 
-        void ApplyResolution(const Gs::Vector2ui& resolution);
+        void ApplyResolution(const Extent2D& resolution);
         void ApplyMipResolution(Texture& texture, std::uint32_t mipLevel);
         void ResetResolution();
 
     private:
 
-        Gs::Vector2ui resolution_;
+        Extent2D resolution_;
 
 };
 

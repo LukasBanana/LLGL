@@ -40,7 +40,7 @@ class GLRenderTarget : public RenderTarget
         /* ----- Extended Internal Functions ----- */
 
         // Blits the multi-sample framebuffer onto the default framebuffer.
-        void BlitOntoFrameBuffer();
+        void BlitOntoFramebuffer();
 
         // Blits the specified color attachment from the framebuffer onto the screen.
         void BlitOntoScreen(std::size_t colorAttachmentIndex);
@@ -53,7 +53,7 @@ class GLRenderTarget : public RenderTarget
         void InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat);
         GLenum AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLenum attachment);
 
-        void AttachRenderbuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment);
+        void AttachRenderbuffer(const Extent2D& size, GLenum internalFormat, GLenum attachment);
 
         GLenum MakeFramebufferAttachment(GLint internalFormat);
 
@@ -67,6 +67,8 @@ class GLRenderTarget : public RenderTarget
         bool HasMultiSampling() const;
         bool HasCustomMultiSampling() const;
         bool HasDepthAttachment() const;
+
+        void BlitFramebuffer();
 
         /* === Members === */
 

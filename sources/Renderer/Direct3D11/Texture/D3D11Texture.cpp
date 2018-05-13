@@ -19,9 +19,9 @@ D3D11Texture::D3D11Texture(const TextureType type) :
 {
 }
 
-Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
-    Gs::Vector3ui size;
+    Extent3D size;
 
     if (hwTexture_.resource)
     {
@@ -38,9 +38,9 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
 
                 if (mipLevel < desc.MipLevels)
                 {
-                    size.x = std::max(1u, desc.Width >> mipLevel);
-                    size.y = 1u;
-                    size.z = 1u;
+                    size.width  = std::max(1u, desc.Width >> mipLevel);
+                    size.height = 1u;
+                    size.depth  = 1u;
                 }
             }
             break;
@@ -53,9 +53,9 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
 
                 if (mipLevel < desc.MipLevels)
                 {
-                    size.x = std::max(1u, desc.Width  >> mipLevel);
-                    size.y = std::max(1u, desc.Height >> mipLevel);
-                    size.z = 1u;
+                    size.width  = std::max(1u, desc.Width  >> mipLevel);
+                    size.height = std::max(1u, desc.Height >> mipLevel);
+                    size.depth  = 1u;
                 }
             }
             break;
@@ -68,9 +68,9 @@ Gs::Vector3ui D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
 
                 if (mipLevel < desc.MipLevels)
                 {
-                    size.x = std::max(1u, desc.Width  >> mipLevel);
-                    size.y = std::max(1u, desc.Height >> mipLevel);
-                    size.z = std::max(1u, desc.Depth  >> mipLevel);
+                    size.width  = std::max(1u, desc.Width  >> mipLevel);
+                    size.height = std::max(1u, desc.Height >> mipLevel);
+                    size.depth  = std::max(1u, desc.Depth  >> mipLevel);
                 }
             }
             break;

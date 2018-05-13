@@ -635,14 +635,23 @@ public:
     static bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, unsigned int mipLevel = 0)
     {
         // Get texture dimension
-        auto texSize = texture.QueryMipLevelSize(0).Cast<int>();
+        auto texSize = texture.QueryMipLevelSize(0);
 
         // Read texture image data
-        std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.x*texSize.y);
+        std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.width*texSize.height);
         renderSys.ReadTexture(texture, mipLevel, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, imageBuffer.data(), imageBuffer.size() * sizeof(LLGL::ColorRGBAub));
 
         // Save image data to file (using STBI library, see https://github.com/nothings/stb)
-        if (!stbi_write_png(filename.c_str(), texSize.x, texSize.y, 4, imageBuffer.data(), texSize.x*4))
+        auto result = stbi_write_png(
+            filename.c_str(),
+            static_cast<int>(texSize.width),
+            static_cast<int>(texSize.height),
+            4,
+            imageBuffer.data(),
+            static_cast<int>(texSize.width)*4
+        );
+
+        if (!result)
         {
             std::cerr << "failed to write texture to file: \"" + filename + "\"" << std::endl;
             return false;

@@ -184,25 +184,26 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     /* Create a copy of the hardware texture with CPU read access */
     D3D11HardwareTexture hwTextureCopy;
     textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), hwTextureCopy, D3D11_CPU_ACCESS_READ, mipLevel);
-    
+
     /* Map subresource for reading */
     D3D11_MAPPED_SUBRESOURCE mappedSubresource;
     auto hr = context_->Map(hwTextureCopy.resource.Get(), 0, D3D11_MAP_READ, 0, &mappedSubresource);
     DXThrowIfFailed(hr, "failed to map D3D11 texture copy resource");
 
     /* Query MIP-level size to determine image buffer size */
-    auto size = texture.QueryMipLevelSize(mipLevel);
+    auto size           = texture.QueryMipLevelSize(mipLevel);
+    auto numTexels      = (size.width * size.height * size.depth);
 
     /* Check if image buffer must be converted */
     auto srcTexFormat   = DXGetTextureFormatDesc(textureD3D.GetFormat());
     auto srcPitch       = DataTypeSize(srcTexFormat.dataType) * ImageFormatSize(srcTexFormat.format);
-    auto srcImageSize   = (size.x*size.y*size.z * srcPitch);
+    auto srcImageSize   = (numTexels * srcPitch);
 
     if (srcTexFormat.format != imageFormat || srcTexFormat.dataType != dataType)
     {
         /* Determine destination image size */
         auto dstPitch       = DataTypeSize(dataType) * ImageFormatSize(imageFormat);
-        auto dstImageSize   = (size.x*size.y*size.z * dstPitch);
+        auto dstImageSize   = (numTexels * dstPitch);
 
         /* Validate input size */
         ValidateImageDataSize(dataSize, dstImageSize);

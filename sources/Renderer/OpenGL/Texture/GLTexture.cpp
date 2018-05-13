@@ -27,7 +27,7 @@ GLTexture::~GLTexture()
     FreeHwTexture();
 }
 
-Gs::Vector3ui GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
     auto target = GLTypes::Map(GetType());
 
@@ -57,7 +57,7 @@ Gs::Vector3ui GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
         GLStateManager::active->PopBoundTexture();
     }
 
-    return Gs::Vector3ui
+    return
     {
         static_cast<std::uint32_t>(texSize[0]),
         static_cast<std::uint32_t>(texSize[1]),

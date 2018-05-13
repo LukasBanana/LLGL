@@ -55,7 +55,7 @@ class D3D11RenderTarget : public RenderTarget
 
     private:
 
-        void CreateDepthStencilAndDSV(const Gs::Vector2ui& size, DXGI_FORMAT format);
+        void CreateDepthStencilAndDSV(const Extent2D& size, DXGI_FORMAT format);
         void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc);
 
         bool HasMultiSampling() const;
@@ -67,7 +67,7 @@ class D3D11RenderTarget : public RenderTarget
 
         ComPtr<ID3D11Texture2D>                     depthStencil_;
         ComPtr<ID3D11DepthStencilView>              depthStencilView_;
-        
+
         // Members for multi-sampled render-targets
         struct MultiSampledAttachment
         {

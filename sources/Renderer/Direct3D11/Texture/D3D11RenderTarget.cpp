@@ -58,17 +58,17 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
 
 void D3D11RenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
 {
-    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D32_FLOAT);
+    CreateDepthStencilAndDSV({ size.x, size.y }, DXGI_FORMAT_D32_FLOAT);
 }
 
 void D3D11RenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
 {
-    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
+    CreateDepthStencilAndDSV({ size.x, size.y }, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
 void D3D11RenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
 {
-    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
+    CreateDepthStencilAndDSV({ size.x, size.y }, DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
 static void FillViewDescForTexture1D(const RenderTargetAttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
@@ -288,7 +288,7 @@ void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
  * ======= Private: =======
  */
 
-void D3D11RenderTarget::CreateDepthStencilAndDSV(const Gs::Vector2ui& size, DXGI_FORMAT format)
+void D3D11RenderTarget::CreateDepthStencilAndDSV(const Extent2D& size, DXGI_FORMAT format)
 {
     HRESULT hr = 0;
 
@@ -298,8 +298,8 @@ void D3D11RenderTarget::CreateDepthStencilAndDSV(const Gs::Vector2ui& size, DXGI
     /* Create depth stencil texture */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width               = size.x;
-        texDesc.Height              = size.y;
+        texDesc.Width               = size.width;
+        texDesc.Height              = size.height;
         texDesc.MipLevels           = 1;
         texDesc.ArraySize           = 1;
         texDesc.Format              = format;

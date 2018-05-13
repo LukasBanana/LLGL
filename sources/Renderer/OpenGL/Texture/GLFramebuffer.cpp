@@ -66,18 +66,18 @@ void GLFramebuffer::AttachRenderbuffer(GLenum attachment, GLuint renderbufferID)
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderbufferID);
 }
 
-void GLFramebuffer::Blit(const Gs::Vector2i& size, GLenum mask)
+void GLFramebuffer::Blit(GLint width, GLint height, GLenum mask)
 {
     glBlitFramebuffer(
-        0, 0, size.x, size.y,
-        0, 0, size.x, size.y,
+        0, 0, width, height,
+        0, 0, width, height,
         mask, GL_NEAREST
     );
 }
 
 void GLFramebuffer::Blit(
-    const Gs::Vector2i& srcPos0, const Gs::Vector2i& srcPos1,
-    const Gs::Vector2i& destPos0, const Gs::Vector2i& destPos1,
+    const Offset2D& srcPos0, const Offset2D& srcPos1,
+    const Offset2D& destPos0, const Offset2D& destPos1,
     GLenum mask, GLenum filter)
 {
     glBlitFramebuffer(

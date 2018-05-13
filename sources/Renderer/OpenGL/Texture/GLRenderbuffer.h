@@ -35,7 +35,7 @@ class GLRenderbuffer
         // Recreates the internal renderbuffer object. This will invalidate the previous buffer ID.
         void Recreate();
 
-        static void Storage(GLenum internalFormat, const Gs::Vector2i& size, GLsizei samples);
+        static void Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples);
 
         // Returns the hardware buffer ID.
         inline GLuint GetID() const

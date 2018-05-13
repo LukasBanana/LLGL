@@ -19,7 +19,7 @@ DbgTexture::DbgTexture(Texture& instance, const TextureDescriptor& desc) :
 {
 }
 
-Gs::Vector3ui DbgTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D DbgTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
     return instance.QueryMipLevelSize(mipLevel);
 }
