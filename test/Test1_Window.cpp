@@ -100,7 +100,7 @@ int main()
             //window->SetTitle(s.str());
 
             auto desktopSize = LLGL::Desktop::GetResolution();
-            s << ", Screen Width = " << desktopSize.x << ", Screen Height = " << desktopSize.y;
+            s << ", Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height;
             window->SetTitle(s.str());
 
             /*auto wheel = input->GetWheelMotion();

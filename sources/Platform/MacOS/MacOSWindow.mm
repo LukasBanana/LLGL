@@ -58,8 +58,8 @@
     NSWindow* sender = [notification object];
     NSRect frame = [[sender contentView] frame];
     
-    auto w = static_cast<int>(frame.size.width);
-    auto h = static_cast<int>(frame.size.height);
+    auto w = static_cast<std::uint32_t>(frame.size.width);
+    auto h = static_cast<std::uint32_t>(frame.size.height);
     
     /* Notify event listeners about resize */
     window_->PostResize({ w, h });
@@ -154,42 +154,45 @@ void MacOSWindow::Recreate()
     //todo...
 }
 
-Size MacOSWindow::GetContentSize() const
+Extent2D MacOSWindow::GetContentSize() const
 {
     /* Return the size of the client area */
     return GetSize(true);
 }
 
-void MacOSWindow::SetPosition(const Point& position)
+void MacOSWindow::SetPosition(const Offset2D& position)
 {
     desc_.position = position;
     
-    // Get visible screen size (without dock and menu bar)
+    /* Get visible screen size (without dock and menu bar) */
     NSScreen* screen = [NSScreen mainScreen];
     CGSize frameSize = [screen frame].size;
     NSRect visibleFrame = [screen visibleFrame];
     
     CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
     
-    // Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS)
-    [wnd_ setFrameTopLeftPoint:NSMakePoint((CGFloat)position.x, frameSize.height - menuBarHeight - (CGFloat)position.y)];
+    /* Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS) */
+    CGFloat x = (CGFloat)position.x;
+    CGFloat y = frameSize.height - menuBarHeight - (CGFloat)position.y;
+    
+    [wnd_ setFrameTopLeftPoint:NSMakePoint(x, y)];
     
     [screen release];
 }
 
-Point MacOSWindow::GetPosition() const
+Offset2D MacOSWindow::GetPosition() const
 {
     //[wnd_ frame].origin;
     return desc_.position;
 }
 
-void MacOSWindow::SetSize(const Size& size, bool useClientArea)
+void MacOSWindow::SetSize(const Extent2D& size, bool useClientArea)
 {
     desc_.size = size;
     
-    // Set either content or frame size
-    auto w = static_cast<GLfloat>(size.x);
-    auto h = static_cast<GLfloat>(size.y);
+    /* Set either content or frame size */
+    auto w = static_cast<CGFloat>(size.width);
+    auto h = static_cast<CGFloat>(size.height);
     
     if (useClientArea)
         [wnd_ setContentSize:NSMakeSize(w, h)];
@@ -200,11 +203,11 @@ void MacOSWindow::SetSize(const Size& size, bool useClientArea)
         [wnd_ setFrame:frame display:YES animate:NO];
     }
     
-    // Update position due to different coordinate space between Windows and MacOS
+    /* Update position due to different coordinate space between Windows and MacOS */
     SetPosition(GetPosition());
 }
 
-Size MacOSWindow::GetSize(bool useClientArea) const
+Extent2D MacOSWindow::GetSize(bool useClientArea) const
 {
     return desc_.size;
 }
@@ -270,8 +273,11 @@ NSWindow* MacOSWindow::CreateNSWindow()
     }
     
     /* Create NSWindow object */
+    auto w = (CGFloat)(desc_.size.width);
+    auto h = (CGFloat)(desc_.size.height);
+
     NSWindow* wnd = [[NSWindow alloc]
-        initWithContentRect:NSMakeRect(0, 0, (CGFloat)desc_.size.x, (CGFloat)desc_.size.y)
+        initWithContentRect:NSMakeRect(0, 0, w, h)
         styleMask:GetNSWindowStyleMask(desc_)
         backing:NSBackingStoreBuffered
         defer:FALSE
@@ -384,14 +390,24 @@ void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
 {
     NSPoint nativePos = [event locationInWindow];
     
-    Gs::Vector2f pos(nativePos.x, static_cast<float>(desc_.size.y) - nativePos.y);
-    
-    PostLocalMotion(pos.Cast<int>());
+    const Offset2D offset
+    {
+        static_cast<int>(nativePos.x),
+        static_cast<int>(static_cast<float>(desc_.size.height) - nativePos.y)
+    };
+    PostLocalMotion(offset);
     
     #if 1//TODO: process this by another event!
-    static Gs::Vector2f lastPos;
-    PostGlobalMotion((pos - lastPos).Cast<int>());
-    lastPos = pos;
+    static Offset2D lastOffset;
+    
+    const Offset2D motion
+    {
+        offset.x - lastOffset.x,
+        offset.y - lastOffset.y
+    };
+    PostGlobalMotion(motion);
+    
+    lastOffset = offset;
     #endif
 }
 
