@@ -45,13 +45,13 @@ class LLGL_EXPORT Input : public Window::EventListener
         bool KeyDoubleClick(Key keyCode) const;
 
         //! Returns the local mouse position.
-        inline const Point& GetMousePosition() const
+        inline const Offset2D& GetMousePosition() const
         {
             return mousePosition_;
         }
 
         //! Returns the global mouse motion.
-        inline const Point& GetMouseMotion() const
+        inline const Offset2D& GetMouseMotion() const
         {
             return mouseMotion_;
         }
@@ -87,8 +87,8 @@ class LLGL_EXPORT Input : public Window::EventListener
 
         void OnWheelMotion(Window& sender, int motion) override;
 
-        void OnLocalMotion(Window& sender, const Point& position) override;
-        void OnGlobalMotion(Window& sender, const Point& motion) override;
+        void OnLocalMotion(Window& sender, const Offset2D& position) override;
+        void OnGlobalMotion(Window& sender, const Offset2D& motion) override;
 
         void OnLoseFocus(Window& sender) override;
 
@@ -113,8 +113,8 @@ class LLGL_EXPORT Input : public Window::EventListener
         KeyStateArray       keyDownRepeated_;
         KeyStateArray       keyUp_;
 
-        Point               mousePosition_;
-        Point               mouseMotion_;
+        Offset2D            mousePosition_;
+        Offset2D            mouseMotion_;
 
         int                 wheelMotion_    = 0;
 

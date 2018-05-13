@@ -44,9 +44,11 @@ int main(int argc, char* argv[])
         window2.SetTitle(L"LLGL Tutorial 06: Multi Context (2)");
 
         // Set window positions
-        auto desktopResolution = LLGL::Desktop::GetResolution();
-        window1.SetPosition({ desktopResolution.x/2 - 700, desktopResolution.y/2 - 480/2 });
-        window2.SetPosition({ desktopResolution.x/2 + 700 - 640, desktopResolution.y/2 - 480/2 });
+        const LLGL::Extent2D desktopResolution = LLGL::Desktop::GetResolution();
+        const LLGL::Offset2D desktopCenter { static_cast<int>(desktopResolution.width)/2, static_cast<int>(desktopResolution.height)/2 };
+
+        window1.SetPosition({ desktopCenter.x - 700, desktopCenter.y - 480/2 });
+        window2.SetPosition({ desktopCenter.y + 700 - 640, desktopCenter.y - 480/2 });
 
         // Show windows
         window1.Show();

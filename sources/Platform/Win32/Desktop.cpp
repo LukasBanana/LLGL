@@ -18,10 +18,13 @@ namespace Desktop
 {
 
 
-LLGL_EXPORT Size GetResolution()
+LLGL_EXPORT Extent2D GetResolution()
 {
-    return { GetSystemMetrics(SM_CXSCREEN),
-             GetSystemMetrics(SM_CYSCREEN) };
+    return
+    {
+        static_cast<std::uint32_t>(GetSystemMetrics(SM_CXSCREEN)),
+        static_cast<std::uint32_t>(GetSystemMetrics(SM_CYSCREEN))
+    };
 }
 
 LLGL_EXPORT int GetColorDepth()
@@ -58,8 +61,8 @@ LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode)
         InitMemory(config);
         {
             config.dmSize       = sizeof(DEVMODE);
-            config.dmPelsWidth  = static_cast<DWORD>(videoMode.resolution.x);
-            config.dmPelsHeight = static_cast<DWORD>(videoMode.resolution.y);
+            config.dmPelsWidth  = static_cast<DWORD>(videoMode.resolution.width);
+            config.dmPelsHeight = static_cast<DWORD>(videoMode.resolution.height);
             config.dmBitsPerPel = videoMode.colorBits;
             config.dmFields     = (DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT);
         }

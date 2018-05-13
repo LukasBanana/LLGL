@@ -29,13 +29,13 @@ class Win32Window : public Window
 
         void Recreate() override;
 
-        Size GetContentSize() const override;
+        Extent2D GetContentSize() const override;
 
-        void SetPosition(const Point& position) override;
-        Point GetPosition() const override;
+        void SetPosition(const Offset2D& position) override;
+        Offset2D GetPosition() const override;
 
-        void SetSize(const Size& size, bool useClientArea = true) override;
-        Size GetSize(bool useClientArea = true) const override;
+        void SetSize(const Extent2D& size, bool useClientArea = true) override;
+        Extent2D GetSize(bool useClientArea = true) const override;
 
         void SetTitle(const std::wstring& title) override;
         std::wstring GetTitle() const override;
@@ -48,7 +48,7 @@ class Win32Window : public Window
         void SetDesc(const WindowDescriptor& desc) override;
 
     private:
-        
+
         void OnProcessEvents() override;
 
         HWND CreateWindowHandle(const WindowDescriptor& desc);

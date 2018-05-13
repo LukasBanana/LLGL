@@ -261,10 +261,9 @@ private:
 
         // Set viewport and scissor
         const auto resolution = context->GetVideoMode().resolution;
-        const auto viewportSize = resolution.Cast<float>();
 
-        commands->SetViewport(LLGL::Viewport { 0.0f, 0.0f, viewportSize.x, viewportSize.y });
-        commands->SetScissor(LLGL::Scissor { 0, 0, resolution.x, resolution.y });
+        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
+        commands->SetScissor(LLGL::Scissor{ { 0, 0 }, resolution });
 
         // Clear color- and depth buffers
         commands->Clear(LLGL::ClearFlags::ColorDepth);

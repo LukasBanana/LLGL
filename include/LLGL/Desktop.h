@@ -22,7 +22,7 @@ namespace Desktop
 
 
 //! Returns the desktop resolution.
-LLGL_EXPORT Size GetResolution();
+LLGL_EXPORT Extent2D GetResolution();
 
 //! Returns the desktop color depth (bits per pixel).
 LLGL_EXPORT int GetColorDepth();

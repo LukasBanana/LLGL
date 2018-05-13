@@ -67,7 +67,7 @@ struct VsyncDescriptor
 struct VideoModeDescriptor
 {
     //! Screen resolution (in pixels).
-    Size            resolution;
+    Extent2D        resolution;
 
     /**
     \brief Number of bits for each pixel in the color buffer. Should be 24 or 32. By default 32.

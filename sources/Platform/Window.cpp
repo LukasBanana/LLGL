@@ -49,17 +49,17 @@ void Window::EventListener::OnWheelMotion(Window& sender, int motion)
     // dummy
 }
 
-void Window::EventListener::OnLocalMotion(Window& sender, const Point& position)
+void Window::EventListener::OnLocalMotion(Window& sender, const Offset2D& position)
 {
     // dummy
 }
 
-void Window::EventListener::OnGlobalMotion(Window& sender, const Point& motion)
+void Window::EventListener::OnGlobalMotion(Window& sender, const Offset2D& motion)
 {
     // dummy
 }
 
-void Window::EventListener::OnResize(Window& sender, const Size& clientAreaSize)
+void Window::EventListener::OnResize(Window& sender, const Extent2D& clientAreaSize)
 {
     // dummy
 }
@@ -185,17 +185,17 @@ void Window::PostWheelMotion(int motion)
     FOREACH_LISTENER_CALL( OnWheelMotion(*this, motion) );
 }
 
-void Window::PostLocalMotion(const Point& position)
+void Window::PostLocalMotion(const Offset2D& position)
 {
     FOREACH_LISTENER_CALL( OnLocalMotion(*this, position) );
 }
 
-void Window::PostGlobalMotion(const Point& motion)
+void Window::PostGlobalMotion(const Offset2D& motion)
 {
     FOREACH_LISTENER_CALL( OnGlobalMotion(*this, motion) );
 }
 
-void Window::PostResize(const Size& clientAreaSize)
+void Window::PostResize(const Extent2D& clientAreaSize)
 {
     FOREACH_LISTENER_CALL( OnResize(*this, clientAreaSize) );
 }

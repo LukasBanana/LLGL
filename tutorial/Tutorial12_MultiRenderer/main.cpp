@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
         // Create command buffers
         auto commandsGL = rendererGL->CreateCommandBufferExt();
         auto commandsD3D = rendererD3D->CreateCommandBufferExt();
-        
+
         // Set the render context as the initial render target
         commandsGL->SetRenderTarget(*contextGL);
         commandsD3D->SetRenderTarget(*contextD3D);
@@ -203,8 +203,8 @@ int main(int argc, char* argv[])
 
         // Initialize matrices (OpenGL needs a unit-cube NDC-space)
         Gs::Matrix4f projMatrixGL, projMatrixD3D, viewMatrix, worldMatrix;
-        
-        const float aspectRatio = static_cast<float>(mainWindowDesc.size.x) / static_cast<float>(mainWindowDesc.size.y);
+
+        const float aspectRatio = static_cast<float>(mainWindowDesc.size.width) / static_cast<float>(mainWindowDesc.size.height);
         const float nearPlane   = 0.1f;
         const float farPlane    = 100.0f;
         const float fieldOfView = 45.0f;
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
 
                 // Set graphics pipeline and vertex buffer
                 commandsGL->SetGraphicsPipeline(*pipelineGL);
-                
+
                 commandsGL->SetVertexBuffer(*vertexBufferGL);
                 commandsGL->SetIndexBuffer(*indexBufferGL);
 
@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 
                 // Set graphics pipeline and vertex buffer
                 commandsD3D->SetGraphicsPipeline(*pipelineD3D);
-                
+
                 commandsD3D->SetVertexBuffer(*vertexBufferD3D);
                 commandsD3D->SetIndexBuffer(*indexBufferD3D);
 

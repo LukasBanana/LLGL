@@ -13,8 +13,8 @@ namespace LLGL
 
 
 GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext) :
-    desc_          { desc                        },
-    contextHeight_ { desc.videoMode.resolution.y }
+    desc_          { desc                                                 },
+    contextHeight_ { static_cast<GLint>(desc.videoMode.resolution.height) }
 {
     #ifdef __linux__
 
@@ -57,12 +57,12 @@ void GLRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
     if (GetVideoMode() != videoModeDesc)
     {
         /* Update context height */
-        contextHeight_ = videoModeDesc.resolution.y;
+        contextHeight_ = static_cast<GLint>(videoModeDesc.resolution.height);
         stateMngr_->NotifyRenderTargetHeight(contextHeight_);
 
         /* Update window appearance and store new video mode in base function */
         RenderContext::SetVideoMode(videoModeDesc);
-        
+
         /* Notify GL context of a resize */
         context_->Resize(videoModeDesc.resolution);
     }

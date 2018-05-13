@@ -72,7 +72,7 @@ bool LinuxGLContext::SwapBuffers()
     return true;
 }
 
-void LinuxGLContext::Resize(const Size& resolution)
+void LinuxGLContext::Resize(const Extent2D& resolution)
 {
     //TODO...
 }

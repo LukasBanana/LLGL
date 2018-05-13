@@ -23,8 +23,8 @@ class Tutorial11 : public Tutorial
 
     LLGL::VertexFormat      vertexFormatScene;
 
-    std::uint32_t            numSceneVertices    = 0;
-    
+    std::uint32_t           numSceneVertices    = 0;
+
     LLGL::Buffer*           vertexBufferScene   = nullptr;
     LLGL::Buffer*           vertexBufferNull    = nullptr;
 
@@ -73,7 +73,7 @@ public:
         CreateSamplers();
         CreateTextures();
         CreateRenderTargets();
-        
+
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse to rotate the outer box" << std::endl;
         std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to change the glow intensity" << std::endl;
@@ -104,7 +104,7 @@ public:
         // Create post-processing buffers
         constantBufferBlur = CreateConstantBuffer(blurSettings);
     }
-    
+
     void LoadShaders()
     {
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
@@ -162,16 +162,16 @@ public:
                 }
             );
         }
-        
+
         // Set shader uniforms (only required for GLSL until 4.10)
         shaderProgramBlur->BindConstantBuffer("BlurSettings", 1);
-        
+
         if (auto uniforms = shaderProgramBlur->LockShaderUniform())
         {
             uniforms->SetUniform("glossMap", 1);
             shaderProgramBlur->UnlockShaderUniform();
         }
-        
+
         if (auto uniforms = shaderProgramFinal->LockShaderUniform())
         {
             uniforms->SetUniform("colorMap", 0);
@@ -224,26 +224,27 @@ public:
     void CreateTextures()
     {
         // Create empty color and gloss map
-        auto resolution = context->GetVideoMode().resolution.Cast<std::uint32_t>();
-        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.x, resolution.y));
-        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.x, resolution.y));
+        auto resolution = context->GetVideoMode().resolution;
+        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
+        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
 
         // Create empty blur pass maps (in quarter resolution)
-        resolution /= 4;
-        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.x, resolution.y));
-        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.x, resolution.y));
+        resolution.width  /= 4;
+        resolution.height /= 4;
+        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
+        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
     }
 
     void CreateRenderTargets()
     {
-        auto resolution = context->GetVideoMode().resolution.Cast<std::uint32_t>();
+        auto resolution = context->GetVideoMode().resolution;
 
         // Create render-target for scene rendering
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
             renderTargetDesc.attachments =
             {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, resolution.x, resolution.y },
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, resolution.width, resolution.height },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, colorMap },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMap },
             };
@@ -349,7 +350,11 @@ private:
         innerModelRotation += 0.01f;
 
         // Update rotation of outer model
-        auto mouseMotion = input->GetMouseMotion().Cast<float>();
+        Gs::Vector2f mouseMotion
+        {
+            static_cast<float>(input->GetMouseMotion().x),
+            static_cast<float>(input->GetMouseMotion().y),
+        };
 
         Gs::Vector2f outerModelDeltaRotation;
         if (input->KeyPressed(LLGL::Key::LButton))
@@ -365,7 +370,7 @@ private:
         }
 
         // Check if screen size has changed (this could also be done with an event listener)
-        static LLGL::Size screenSize { 800, 600 };
+        static LLGL::Extent2D screenSize { 800, 600 };
 
         if (screenSize != context->GetVideoMode().resolution)
         {
@@ -374,10 +379,8 @@ private:
         }
 
         // Initialize viewports
-        auto resolution = screenSize.Cast<float>();
-
-        const LLGL::Viewport viewportFull(0.0f, 0.0f, resolution.x, resolution.y);
-        const LLGL::Viewport viewportQuarter(0.0f, 0.0f, resolution.x / 4.0f, resolution.y / 4.0f);
+        const LLGL::Viewport viewportFull{ { 0, 0 }, screenSize };
+        const LLGL::Viewport viewportQuarter{ { 0, 0 }, { screenSize.width / 4, screenSize.height/ 4 } };
 
         // Set common buffers and sampler states
         commandsExt->SetConstantBuffer(*constantBufferScene, 0, shaderStages);
@@ -425,7 +428,7 @@ private:
             commandsExt->SetTexture(*glossMap, 1, LLGL::ShaderStageFlags::FragmentStage);
 
             // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            SetBlurSettings({ 4.0f / resolution.x, 0.0f });
+            SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
             commands->Draw(3, 0);
         }
 
@@ -436,7 +439,7 @@ private:
             commandsExt->SetTexture(*glossMapBlurX, 1, LLGL::ShaderStageFlags::FragmentStage);
 
             // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            SetBlurSettings({ 0.0f, 4.0f / resolution.y });
+            SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
             commands->Draw(3, 0);
         }
 

@@ -122,12 +122,10 @@ static void ReleaseMouseButton(HWND wnd, Key keyCode)
 
         if (--g_mouseCaptureCounter == 0)
             ReleaseCapture();
-    
+
         if (g_mouseCaptureCounter < 0)
         {
-            #ifdef LLGL_DEBUG
-            //warning!!!
-            #endif
+            //TODO: this condition should never be true!!!
             g_mouseCaptureCounter = 0;
         }
     }
@@ -206,7 +204,7 @@ LRESULT CALLBACK Win32WindowCallback(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
             {
                 WORD width = LOWORD(lParam);
                 WORD height = HIWORD(lParam);
-                window->PostResize(Size { width, height });
+                window->PostResize({ static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height) });
             }
         }
         break;

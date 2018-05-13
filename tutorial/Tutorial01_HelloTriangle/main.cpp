@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
         shaderProgram->BuildInputLayout(1, &vertexFormat);
-        
+
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
@@ -176,10 +176,9 @@ int main(int argc, char* argv[])
 
         // Create command buffer to submit subsequent graphics commands to the GPU
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
-        
+
         // Get resolution to determine viewport size
         const auto resolution = contextDesc.videoMode.resolution;
-        const auto viewportSize = resolution.Cast<float>();
 
         // Enter main loop
         while (window.ProcessEvents())
@@ -188,8 +187,8 @@ int main(int argc, char* argv[])
             commands->SetRenderTarget(*context);
 
             // Set viewport and scissor rectangle
-            commands->SetViewport({ 0, 0, viewportSize.x, viewportSize.y });
-            commands->SetScissor({ 0, 0, resolution.x, resolution.y });
+            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
+            commands->SetScissor(LLGL::Scissor{ { 0, 0 }, resolution });
 
             // Clear color buffer
             commands->Clear(LLGL::ClearFlags::Color);

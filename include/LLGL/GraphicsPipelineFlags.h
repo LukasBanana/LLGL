@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "ColorRGBA.h"
+#include "Types.h"
 #include <vector>
 #include <cstdint>
 
@@ -262,6 +263,26 @@ struct Viewport
     {
     }
 
+    //! Viewport constructor with offset, extent, and default depth range of [0, 1].
+    inline Viewport(const Offset2D& offset, const Extent2D& extent) :
+        x      { static_cast<float>(offset.x)      },
+        y      { static_cast<float>(offset.y)      },
+        width  { static_cast<float>(extent.width)  },
+        height { static_cast<float>(extent.height) }
+    {
+    }
+
+    //! Viewport constructor with offset, extent, and explicit depth range.
+    inline Viewport(const Offset2D& offset, const Extent2D& extent, float minDepth, float maxDepth) :
+        x        { static_cast<float>(offset.x)      },
+        y        { static_cast<float>(offset.y)      },
+        width    { static_cast<float>(extent.width)  },
+        height   { static_cast<float>(extent.height) },
+        minDepth { minDepth                          },
+        maxDepth { maxDepth                          }
+    {
+    }
+
     //!< X coordinate of the left-top origin. By default 0.0.
     float x         = 0.0f;
 
@@ -302,11 +323,21 @@ struct Scissor
     Scissor() = default;
     Scissor(const Scissor&) = default;
 
+    //! Scissor constructor with parameters for all attributes.
     inline Scissor(std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height) :
         x      { x      },
         y      { y      },
         width  { width  },
         height { height }
+    {
+    }
+
+    //! Scissor constructor with offset and extent parameters.
+    inline Scissor(const Offset2D& offset, const Extent2D& extent) :
+        x      { offset.x                                 },
+        y      { offset.y                                 },
+        width  { static_cast<std::int32_t>(extent.width)  },
+        height { static_cast<std::int32_t>(extent.height) }
     {
     }
 
