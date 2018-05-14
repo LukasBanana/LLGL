@@ -153,7 +153,7 @@ public:
             {
                 LLGL::LayoutBindingDescriptor
                 {
-                    LLGL::ResourceViewType::ConstantBuffer,
+                    LLGL::ResourceType::ConstantBuffer,
                     constantBufferIndex,
                     1,
                     LLGL::ShaderStageFlags::AllTessStages

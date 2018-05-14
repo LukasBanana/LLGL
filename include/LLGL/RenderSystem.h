@@ -218,7 +218,7 @@ class LLGL_EXPORT RenderSystem
         \see WriteBuffer
         */
         virtual Buffer* CreateBuffer(const BufferDescriptor& desc, const void* initialData = nullptr) = 0;
-        
+
         /**
         \brief Creates a new buffer array.
         \param[in] numBuffers Specifies the number of buffers in the array. This must be greater than 0.
@@ -237,7 +237,7 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified buffer array object. After this call, the specified object must no longer be used.
         virtual void Release(BufferArray& bufferArray) = 0;
-        
+
         /**
         \brief Updates the data of the specified buffer.
         \param[in] buffer Specifies the buffer whose data is to be updated.
@@ -294,7 +294,7 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified texture array object. After this call, the specified object must no longer be used.
         virtual void Release(TextureArray& textureArray) = 0;
-        
+
         /**
         \brief Updates the image data of the specified texture.
         \param[in] texture Specifies the texture whose data is to be updated.
@@ -375,8 +375,10 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Resource Views ----- */
 
+        //! \todo Document this and make it pure virtual.
         virtual ResourceViewHeap* CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc)/* = 0*/;
 
+        //! \todo Document this and make it pure virtual.
         virtual void Release(ResourceViewHeap& resourceViewHeap)/* = 0*/;
 
         /* ----- Render Targets ----- */
@@ -411,7 +413,7 @@ class LLGL_EXPORT RenderSystem
 
         //! Releases the specified ShaderProgram object. After this call, the specified object must no longer be used.
         virtual void Release(ShaderProgram& shaderProgram) = 0;
-        
+
         /* ----- Pipeline Layouts ----- */
 
         /**
@@ -512,7 +514,7 @@ class LLGL_EXPORT RenderSystem
         std::string                 name_;
 
         RendererInfo                info_;
-        RenderingCapabilities               caps_;
+        RenderingCapabilities       caps_;
         RenderSystemConfiguration   config_;
 
 };

@@ -197,7 +197,7 @@ void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& 
 
         switch (rvDesc.type)
         {
-            case ResourceViewType::Sampler:
+            case ResourceType::Sampler:
             {
                 auto samplerVK = LLGL_CAST(VKSampler*, rvDesc.sampler);
 
@@ -215,7 +215,7 @@ void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& 
             }
             break;
 
-            case ResourceViewType::Texture:
+            case ResourceType::Texture:
             {
                 auto textureVK = LLGL_CAST(VKTexture*, rvDesc.texture);
 
@@ -233,8 +233,8 @@ void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& 
             }
             break;
 
-            case ResourceViewType::ConstantBuffer:
-            case ResourceViewType::StorageBuffer:
+            case ResourceType::ConstantBuffer:
+            case ResourceType::StorageBuffer:
             {
                 auto bufferVK = LLGL_CAST(VKBuffer*, rvDesc.buffer);
 

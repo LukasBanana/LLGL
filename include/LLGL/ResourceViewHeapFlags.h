@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_RESOURCE_HEAP_FLAGS_H
-#define LLGL_RESOURCE_HEAP_FLAGS_H
+#ifndef LLGL_RESOURCE_VIEW_HEAP_FLAGS_H
+#define LLGL_RESOURCE_VIEW_HEAP_FLAGS_H
 
 
 #include "Export.h"
@@ -25,17 +25,20 @@ class PipelineLayout;
 /* ----- Enumerations ----- */
 
 /**
-\brief Resource view type enumeration.
+\brief Shader resource type enumeration.
 \see LayoutBinding::type
 \see ResourceViewDescriptor::type
-\todo Rename to "ResourceType"
+\see BufferType
 */
-enum class ResourceViewType
+enum class ResourceType
 {
-    Sampler,        //!< Sampler state resource.
-    Texture,        //!< Texture (or image) resource.
-    ConstantBuffer, //!< Constant buffer (or uniform buffer) resource.
-    StorageBuffer,  //!< Storage buffer resource.
+    //VertexBuffer,       //!< Vertex buffer resource.
+    //IndexBuffer,        //!< Index buffer resource.
+    ConstantBuffer,     //!< Constant buffer (or uniform buffer) resource.
+    StorageBuffer,      //!< Storage buffer resource.
+    //StreamOutputBuffer, //!< Stream-output buffer resource.
+    Texture,            //!< Texture resource.
+    Sampler,            //!< Sampler state resource.
 };
 
 
@@ -49,14 +52,14 @@ struct ResourceViewDescriptor
     {
     }
 
-    //! Resource view type for this layout binding. By default ResourceViewType::ConstantBuffer.
-    ResourceViewType    type    = ResourceViewType::ConstantBuffer;
+    //! Resource view type for this layout binding. By default ResourceType::ConstantBuffer.
+    ResourceType    type    = ResourceType::ConstantBuffer;
 
     union
     {
-        Buffer*         buffer;
-        Texture*        texture;
-        Sampler*        sampler;
+        Buffer*     buffer;
+        Texture*    texture;
+        Sampler*    sampler;
     };
 };
 

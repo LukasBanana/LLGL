@@ -23,7 +23,10 @@ namespace LLGL
 
 /* ----- Enumerations ----- */
 
-//! Hardware buffer type enumeration.
+/**
+\brief Hardware buffer type enumeration.
+\see ResourceType
+*/
 enum class BufferType
 {
     Vertex,         //!< Vertex buffer type.

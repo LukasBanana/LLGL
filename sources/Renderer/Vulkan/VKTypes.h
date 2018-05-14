@@ -44,7 +44,7 @@ VkLogicOp               Map( const LogicOp           logicOp           );
 VkBlendFactor           Map( const BlendOp           blendOp           );
 VkBlendOp               Map( const BlendArithmetic   blendArithmetic   );
 VkSamplerAddressMode    Map( const TextureWrap       textureWrap       );
-VkDescriptorType        Map( const ResourceViewType  resourceViewType  );
+VkDescriptorType        Map( const ResourceType      resourceViewType  );
 VkQueryType             Map( const QueryType         queryType         );
 
 

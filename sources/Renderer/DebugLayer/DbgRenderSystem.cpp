@@ -337,14 +337,14 @@ ResourceViewHeap* DbgRenderSystem::CreateResourceViewHeap(const ResourceViewHeap
         {
             switch (resourceView.type)
             {
-                case ResourceViewType::Sampler:
+                case ResourceType::Sampler:
                     //todo
                     break;
-                case ResourceViewType::Texture:
+                case ResourceType::Texture:
                     resourceView.texture = &(LLGL_CAST(DbgTexture*, resourceView.texture)->instance);
                     break;
-                case ResourceViewType::ConstantBuffer:
-                case ResourceViewType::StorageBuffer:
+                case ResourceType::ConstantBuffer:
+                case ResourceType::StorageBuffer:
                     resourceView.buffer = &(LLGL_CAST(DbgBuffer*, resourceView.buffer)->instance);
                     break;
             }
