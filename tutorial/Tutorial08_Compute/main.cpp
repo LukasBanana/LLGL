@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
         {
             pipelineLayoutDesc.bindings =
             {
-                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::StorageBuffer, 0, 1, LLGL::ShaderStageFlags::ComputeStage }
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::StorageBuffer, LLGL::ShaderStageFlags::ComputeStage, 0 }
             };
         }
         auto pipelineLayout = renderer->CreatePipelineLayout(pipelineLayoutDesc);
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
             viewHeapDesc.resourceViews  = { LLGL::ResourceViewDesc(storageBuffer) };
         }
         auto resourceViewHeap = renderer->CreateResourceViewHeap(viewHeapDesc);
-       
+
         // Create compute pipeline
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram, pipelineLayout });
 
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 
         // Read result
         renderer->GetCommandQueue()->WaitForFinish();
-        
+
         if (auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly))
         {
             ::memcpy(outputData.data(), outputBuffer, sizeof(DataBlock) * outputData.size());

@@ -40,9 +40,9 @@ static VkShaderStageFlags GetVkShaderStageFlags(long flags)
 // for arrays in a shader (e.g. array of uniform buffers), but not for multiple binding points.
 static void Convert(VkDescriptorSetLayoutBinding& dst, const LayoutBindingDescriptor& src)
 {
-    dst.binding             = src.startSlot;
+    dst.binding             = src.slot;
     dst.descriptorType      = VKTypes::Map(src.type);
-    dst.descriptorCount     = src.numSlots;
+    dst.descriptorCount     = src.arraySize;
     dst.stageFlags          = GetVkShaderStageFlags(src.stageFlags);
     dst.pImmutableSamplers  = nullptr;
 }
@@ -101,7 +101,7 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
     dstBindings_.reserve(numBindings);
     for (const auto& binding : desc.bindings)
-        dstBindings_.push_back(binding.startSlot);
+        dstBindings_.push_back(binding.slot);
 }
 
 

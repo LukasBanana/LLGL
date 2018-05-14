@@ -218,10 +218,10 @@ int main()
 
         layoutDesc.bindings =
         {
-            LLGL::LayoutBindingDescriptor { LLGL::ResourceType::ConstantBuffer, 2, 1, LLGL::ShaderStageFlags::VertexStage   },
-            LLGL::LayoutBindingDescriptor { LLGL::ResourceType::ConstantBuffer, 5, 1, LLGL::ShaderStageFlags::FragmentStage },
-            LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Sampler,        3, 1, LLGL::ShaderStageFlags::FragmentStage },
-            LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Texture,        4, 1, LLGL::ShaderStageFlags::FragmentStage },
+            LLGL::LayoutBindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::ShaderStageFlags::VertexStage  , 2 },
+            LLGL::LayoutBindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::ShaderStageFlags::FragmentStage, 5 },
+            LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Sampler       , LLGL::ShaderStageFlags::FragmentStage, 3 },
+            LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Texture       , LLGL::ShaderStageFlags::FragmentStage, 4 },
         };
 
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -248,7 +248,6 @@ int main()
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
 
             pipelineDesc.viewports.push_back(LLGL::Viewport{ 0.0f, 0.0f, viewportSize.x, viewportSize.y });
-            pipelineDesc.scissors.push_back(LLGL::Scissor{ { 0, 0 }, resolution });
 
             pipelineDesc.blend.blendEnabled = true;
             pipelineDesc.blend.targets.push_back({});

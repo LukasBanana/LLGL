@@ -31,33 +31,36 @@ struct LayoutBindingDescriptor
     LayoutBindingDescriptor() = default;
     LayoutBindingDescriptor(const LayoutBindingDescriptor&) = default;
 
-    inline LayoutBindingDescriptor(ResourceType type, std::uint32_t startSlot, std::uint32_t numSlots = 1, long stageFlags = ShaderStageFlags::AllStages) :
+    //! Constructors with all attributes and a default value for a uniform array.
+    inline LayoutBindingDescriptor(ResourceType type, long stageFlags, std::uint32_t slot, std::uint32_t arraySize = 1) :
         type       { type       },
-        startSlot  { startSlot  },
-        numSlots   { numSlots   },
-        stageFlags { stageFlags }
+        stageFlags { stageFlags },
+        slot       { slot       },
+        arraySize  { arraySize  }
     {
     }
 
     //! Resource view type for this layout binding. By default ResourceType::ConstantBuffer.
     ResourceType    type        = ResourceType::ConstantBuffer;
 
-    //TODO: maybe rename this to "slot"???
     /**
-    \brief Specifies the first zero-based binding slot. By default 0.
+    \brief Specifies which shader stages are affected by this layout binding. By default 0.
+    \remarks This can be a bitwise OR combination of the ShaderStageFlags bitmasks.
+    \see StageFlags
+    */
+    long            stageFlags  = 0;
+
+    /**
+    \brief Specifies the zero-based binding slot. By default 0.
     \note For Vulkan, each binding slot of all layout bindings must have a different value within a pipeline layout.
     */
-    std::uint32_t   startSlot   = 0;
+    std::uint32_t   slot        = 0;
 
-    //TODO: maybe rename this to "arraySize"???
     /**
-    \brief Specifies the number of binding slots. By default 1.
+    \brief Specifies the number of binding slots for an array resource. By default 1.
     \note For Vulkan, this number specifies the size of an array of resources (e.g. an array of uniform buffers).
     */
-    std::uint32_t   numSlots    = 1;
-
-    //! Specifies which shader stages are affected by this layout binding. By default all shader stages are affected.
-    long            stageFlags  = ShaderStageFlags::AllStages;
+    std::uint32_t   arraySize   = 1;
 };
 
 /**
