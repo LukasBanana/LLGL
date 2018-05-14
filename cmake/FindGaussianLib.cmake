@@ -48,5 +48,7 @@ endif()
 
 find_path(GaussLib_INCLUDE_DIR Gauss/Gauss.h)
 
-include_directories(${GaussLib_INCLUDE_DIR})
+if(GaussLib_INCLUDE_DIR)
+    include_directories(${GaussLib_INCLUDE_DIR})
+endif()
 

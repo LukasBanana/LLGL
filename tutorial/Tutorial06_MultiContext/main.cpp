@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
         const LLGL::Offset2D desktopCenter { static_cast<int>(desktopResolution.width)/2, static_cast<int>(desktopResolution.height)/2 };
 
         window1.SetPosition({ desktopCenter.x - 700, desktopCenter.y - 480/2 });
-        window2.SetPosition({ desktopCenter.y + 700 - 640, desktopCenter.y - 480/2 });
+        window2.SetPosition({ desktopCenter.x + 700 - 640, desktopCenter.y - 480/2 });
 
         // Show windows
         window1.Show();
