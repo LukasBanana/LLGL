@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/TextureFlags.h>
+#include <algorithm>
 #include <cmath>
 
 

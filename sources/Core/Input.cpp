@@ -145,14 +145,15 @@ void Input::OnWheelMotion(Window& sender, int motion)
     wheelMotion_ += motion;
 }
 
-void Input::OnLocalMotion(Window& sender, const Point& position)
+void Input::OnLocalMotion(Window& sender, const Offset2D& position)
 {
     mousePosition_ = position;
 }
 
-void Input::OnGlobalMotion(Window& sender, const Point& motion)
+void Input::OnGlobalMotion(Window& sender, const Offset2D& motion)
 {
-    mouseMotion_ += motion;
+    mouseMotion_.x += motion.x;
+    mouseMotion_.y += motion.y;
 }
 
 void Input::OnLoseFocus(Window& sender)

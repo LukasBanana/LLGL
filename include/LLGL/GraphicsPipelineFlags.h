@@ -11,6 +11,7 @@
 
 #include "Export.h"
 #include "ColorRGBA.h"
+#include "Types.h"
 #include <vector>
 #include <cstdint>
 
@@ -262,6 +263,26 @@ struct Viewport
     {
     }
 
+    //! Viewport constructor with offset, extent, and default depth range of [0, 1].
+    inline Viewport(const Offset2D& offset, const Extent2D& extent) :
+        x      { static_cast<float>(offset.x)      },
+        y      { static_cast<float>(offset.y)      },
+        width  { static_cast<float>(extent.width)  },
+        height { static_cast<float>(extent.height) }
+    {
+    }
+
+    //! Viewport constructor with offset, extent, and explicit depth range.
+    inline Viewport(const Offset2D& offset, const Extent2D& extent, float minDepth, float maxDepth) :
+        x        { static_cast<float>(offset.x)      },
+        y        { static_cast<float>(offset.y)      },
+        width    { static_cast<float>(extent.width)  },
+        height   { static_cast<float>(extent.height) },
+        minDepth { minDepth                          },
+        maxDepth { maxDepth                          }
+    {
+    }
+
     //!< X coordinate of the left-top origin. By default 0.0.
     float x         = 0.0f;
 
@@ -302,11 +323,21 @@ struct Scissor
     Scissor() = default;
     Scissor(const Scissor&) = default;
 
+    //! Scissor constructor with parameters for all attributes.
     inline Scissor(std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height) :
         x      { x      },
         y      { y      },
         width  { width  },
         height { height }
+    {
+    }
+
+    //! Scissor constructor with offset and extent parameters.
+    inline Scissor(const Offset2D& offset, const Extent2D& extent) :
+        x      { offset.x                                 },
+        y      { offset.y                                 },
+        width  { static_cast<std::int32_t>(extent.width)  },
+        height { static_cast<std::int32_t>(extent.height) }
     {
     }
 
@@ -419,20 +450,25 @@ struct StencilDescriptor
     StencilFaceDescriptor   back;
 };
 
-#if 0//TODO: currently not used
 //! Depth bias descriptor structure to control fragment depth values.
 struct DepthBiasDescriptor
 {
-    //! Specifies a scalar factor controlling the constant depth value added to each fragment. By default 0.0.
-    float constFactor   = 0.0f;
+    /**
+    \brief Specifies a scalar factor controlling the constant depth value added to each fragment. By default 0.0.
+    \note The actual constant factor being added to each fragment is implementation dependent of the respective rendering API.
+    Direct3D 12 for instance only considers the integral part.
+    */
+    float constantFactor    = 0.0f;
 
     //! Specifies a scalar factor applied to a fragment's slope in depth bias calculations. By default 0.0.
-    float slopeFactor   = 0.0f;
+    float slopeFactor       = 0.0f;
 
-    //! Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
-    float clamp         = 0.0f;
+    /**
+    \brief Specifies the maximum (or minimum) depth bias of a fragment. By default 0.0.
+    \note For OpenGL, this is only supported if the extension "GL_ARB_polygon_offset_clamp" is available.
+    */
+    float clamp             = 0.0f;
 };
-#endif
 
 //! Rasterizer state descriptor structure.
 struct RasterizerDescriptor
@@ -443,19 +479,8 @@ struct RasterizerDescriptor
     //! Polygon face culling mode. By default CullMode::Disabled.
     CullMode                cullMode                    = CullMode::Disabled;
 
-    #if 0//TODO: use 'DepthBiasDescriptor' struct
     //! Specifies the parameters to bias fragment depth values.
     DepthBiasDescriptor     depthBias;
-    #else
-    //! Specifies a scalar factor controlling the constant depth value added to each fragment.
-    float                   depthBiasConstantFactor     = 0.0f;
-
-    //! Specifies a scalar factor applied to a fragment's slope in depth bias calculations.
-    float                   depthBiasSlopeFactor        = 0.0f;
-
-    //! Specifies the maximum (or minimum) depth bias of a fragment.
-    float                   depthBiasClamp              = 0.0f;
-    #endif
 
     //! (Multi-)sampling descriptor.
     MultiSamplingDescriptor multiSampling;

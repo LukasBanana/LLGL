@@ -254,6 +254,14 @@ DECL_GLPROC(GLint, glGetAttribLocation, (GLuint, const GLchar*));
 DECL_GLPROC(void, glGetActiveUniform, (GLhandleARB, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLcharARB*));
 DECL_GLPROC(GLint, glGetUniformLocation, (GLuint, const GLchar*));
 DECL_GLPROC(void, glGetAttachedShaders, (GLuint, GLsizei, GLsizei*, GLuint*));
+DECL_GLPROC(void, glUniform1f, (GLint, GLfloat));
+DECL_GLPROC(void, glUniform2f, (GLint, GLfloat, GLfloat));
+DECL_GLPROC(void, glUniform3f, (GLint, GLfloat, GLfloat, GLfloat));
+DECL_GLPROC(void, glUniform4f, (GLint, GLfloat, GLfloat, GLfloat, GLfloat));
+DECL_GLPROC(void, glUniform1i, (GLint, GLint));
+DECL_GLPROC(void, glUniform2i, (GLint, GLint, GLint));
+DECL_GLPROC(void, glUniform3i, (GLint, GLint, GLint, GLint));
+DECL_GLPROC(void, glUniform4i, (GLint, GLint, GLint, GLint, GLint));
 DECL_GLPROC(void, glUniform1fv, (GLint, GLsizei, const GLfloat*));
 DECL_GLPROC(void, glUniform2fv, (GLint, GLsizei, const GLfloat*));
 DECL_GLPROC(void, glUniform3fv, (GLint, GLsizei, const GLfloat*));
@@ -342,7 +350,7 @@ DECL_GLPROC(void, glDebugMessageCallback, (GLDEBUGPROC, const void*));
 /* GL_ARB_clip_control */
 
 DECL_GLPROC(void, glClipControl, (GLenum, GLenum));
-    
+
 /* GL_EXT_transform_feedback */
 
 DECL_GLPROC(void, glBindBufferRange, (GLenum, GLuint, GLuint, GLintptr, GLsizeiptr));
@@ -404,6 +412,10 @@ DECL_GLPROC(void, glTexStorage3DMultisample, (GLenum, GLsizei, GLenum, GLsizei, 
 /* GL_ARB_buffer_storage */
 
 DECL_GLPROC(void, glBufferStorage, (GLenum, GLsizeiptr, const void*, GLbitfield));
+
+/* GL_ARB_polygon_offset_clamp */
+
+DECL_GLPROC(void, glPolygonOffsetClamp, (GLfloat, GLfloat, GLfloat));
 
 /* GL_ARB_direct_state_access */
 

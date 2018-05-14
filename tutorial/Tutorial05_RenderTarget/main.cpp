@@ -309,7 +309,7 @@ private:
             #endif
 
             #ifdef ENABLE_CUSTOM_MULTISAMPLING
-            
+
             // Disable multi-sample texture in fragment shader
             settings.useTexture2DMS = 0;
 
@@ -334,20 +334,19 @@ private:
         #endif
 
         // Reset viewport for the screen
-        auto resolution = context->GetVideoMode().resolution.Cast<float>();
-        commands->SetViewport({ 0, 0, resolution.x, resolution.y });
+        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
 
         // Clear color and depth buffers of active framebuffer (i.e. the screen)
         commands->SetClearColor(defaultClearColor);
         commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
 
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
-        
+
         // Set multi-sample render-target texture
         commands->SetTexture(*renderTargetTex, 1, shaderStages);
-        
+
         #else
-        
+
         // Set render-target texture
         commandsExt->SetTexture(*renderTargetTex, 0, shaderStages);
 

@@ -25,9 +25,9 @@ VKTexture::VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& des
     CreateImage(device, desc);
 }
 
-Gs::Vector3ui VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
-    return Gs::Vector3ui
+    return
     {
         std::max(1u, extent_.width  >> mipLevel),
         std::max(1u, extent_.height >> mipLevel),

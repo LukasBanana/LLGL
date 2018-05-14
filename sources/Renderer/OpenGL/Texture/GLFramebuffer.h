@@ -10,7 +10,7 @@
 
 
 #include "../RenderState/GLState.h"
-#include <Gauss/Vector2.h>
+#include <LLGL/Types.h>
 
 
 namespace LLGL
@@ -39,14 +39,14 @@ class GLFramebuffer
         static void AttachTexture2D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel);
         static void AttachTexture3D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel, GLint zOffset);
         static void AttachTextureLayer(GLenum attachment, GLuint textureID, GLint mipLevel, GLint layer);
-        
+
         static void AttachRenderbuffer(GLenum attachment, GLuint renderbufferID);
 
-        static void Blit(const Gs::Vector2i& size, GLenum mask);
-        
+        static void Blit(GLint width, GLint height, GLenum mask);
+
         static void Blit(
-            const Gs::Vector2i& srcPos0, const Gs::Vector2i& srcPos1,
-            const Gs::Vector2i& destPos0, const Gs::Vector2i& destPos1,
+            const Offset2D& srcPos0, const Offset2D& srcPos1,
+            const Offset2D& destPos0, const Offset2D& destPos1,
             GLenum mask, GLenum filter
         );
 

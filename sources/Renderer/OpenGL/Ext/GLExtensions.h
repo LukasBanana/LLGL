@@ -227,6 +227,14 @@ extern PFNGLGETATTRIBLOCATIONPROC                           glGetAttribLocation;
 extern PFNGLGETACTIVEUNIFORMARBPROC                         glGetActiveUniform;
 extern PFNGLGETUNIFORMLOCATIONPROC                          glGetUniformLocation;
 extern PFNGLGETATTACHEDSHADERSPROC                          glGetAttachedShaders;
+extern PFNGLUNIFORM1FPROC                                   glUniform1f;
+extern PFNGLUNIFORM2FPROC                                   glUniform2f;
+extern PFNGLUNIFORM3FPROC                                   glUniform3f;
+extern PFNGLUNIFORM4FPROC                                   glUniform4f;
+extern PFNGLUNIFORM1IPROC                                   glUniform1i;
+extern PFNGLUNIFORM2IPROC                                   glUniform2i;
+extern PFNGLUNIFORM3IPROC                                   glUniform3i;
+extern PFNGLUNIFORM4IPROC                                   glUniform4i;
 extern PFNGLUNIFORM1FVPROC                                  glUniform1fv;
 extern PFNGLUNIFORM2FVPROC                                  glUniform2fv;
 extern PFNGLUNIFORM3FVPROC                                  glUniform3fv;
@@ -377,6 +385,10 @@ extern PFNGLTEXSTORAGE3DMULTISAMPLEPROC                     glTexStorage3DMultis
 /* GL_ARB_buffer_storage */
 
 extern PFNGLBUFFERSTORAGEPROC                               glBufferStorage;
+
+/* GL_ARB_polygon_offset_clamp */
+
+extern PFNGLPOLYGONOFFSETCLAMPPROC                          glPolygonOffsetClamp;
 
 /* GL_ARB_direct_state_access */
 

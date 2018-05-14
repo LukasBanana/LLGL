@@ -46,7 +46,7 @@ int main()
         contextDesc.vsync.enabled               = true;
 
         const auto resolution = contextDesc.videoMode.resolution;
-        const auto viewportSize = resolution.Cast<float>();
+        const Gs::Vector2f viewportSize { static_cast<float>(resolution.width), static_cast<float>(resolution.height) };
 
         LLGL::WindowDescriptor windowDesc;
         {
@@ -71,8 +71,8 @@ int main()
                     context_ { context }
                 {
                 }
-            
-                void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override
+
+                void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override
                 {
                     auto videoMode = context_.GetVideoMode();
                     videoMode.resolution = clientAreaSize;
@@ -247,8 +247,8 @@ int main()
             pipelineDesc.pipelineLayout     = pipelineLayout;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
 
-            pipelineDesc.viewports.push_back(LLGL::Viewport(0.0f, 0.0f, viewportSize.x, viewportSize.y));
-            pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, resolution.x, resolution.y));
+            pipelineDesc.viewports.push_back(LLGL::Viewport{ 0.0f, 0.0f, viewportSize.x, viewportSize.y });
+            pipelineDesc.scissors.push_back(LLGL::Scissor{ { 0, 0 }, resolution });
 
             pipelineDesc.blend.blendEnabled = true;
             pipelineDesc.blend.targets.push_back({});

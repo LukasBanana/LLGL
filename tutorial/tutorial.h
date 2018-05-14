@@ -188,9 +188,9 @@ private:
             {
             }
 
-            void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override
+            void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override
             {
-                if (clientAreaSize.x >= 4 && clientAreaSize.y >= 4)
+                if (clientAreaSize.width >= 4 && clientAreaSize.height >= 4)
                 {
                     auto videoMode = context_->GetVideoMode();
 
@@ -199,20 +199,14 @@ private:
                     context_->SetVideoMode(videoMode);
                     commands_->SetRenderTarget(*context_);
 
-                    // Update viewport
-                    LLGL::Viewport viewport;
-                    {
-                        viewport.width  = static_cast<float>(videoMode.resolution.x);
-                        viewport.height = static_cast<float>(videoMode.resolution.y);
-                    }
-                    commands_->SetViewport(viewport);
-
-                    // Update scissor
-                    commands_->SetScissor({ 0, 0, videoMode.resolution.x, videoMode.resolution.y });
+                    // Update viewport and scissor
+                    commands_->SetViewport(LLGL::Viewport{ { 0, 0 }, videoMode.resolution });
+                    commands_->SetScissor(LLGL::Scissor{ { 0, 0 }, videoMode.resolution });
 
                     // Update projection matrix
-                    projection_ = tutorial_.PerspectiveProjection(viewport.width / viewport.height, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
-                
+                    auto aspectRatio = static_cast<float>(videoMode.resolution.width) / static_cast<float>(videoMode.resolution.height);
+                    projection_ = tutorial_.PerspectiveProjection(aspectRatio, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
+
                     // Re-draw frame
                     if (tutorial_.IsLoadingDone())
                         tutorial_.OnDrawFrame();
@@ -270,12 +264,12 @@ public:
 protected:
 
     friend class ResizeEventHandler;
-    
+
     const LLGL::ColorRGBAf                      defaultClearColor { 0.1f, 0.1f, 0.4f };
 
     // Render system
     std::unique_ptr<LLGL::RenderSystem>         renderer;
-    
+
     // Main render context
     LLGL::RenderContext*                        context         = nullptr;
 
@@ -299,11 +293,11 @@ protected:
     virtual void OnDrawFrame() = 0;
 
     Tutorial(
-        const std::wstring& title,
-        const LLGL::Size&   resolution      = { 800, 600 },
-        std::uint32_t       multiSampling   = 8,
-        bool                vsync           = true,
-        bool                debugger        = true) :
+        const std::wstring&     title,
+        const LLGL::Extent2D&   resolution      = { 800, 600 },
+        std::uint32_t           multiSampling   = 8,
+        bool                    vsync           = true,
+        bool                    debugger        = true) :
             profilerObj_ { new LLGL::RenderingProfiler() },
             debuggerObj_ { new LLGL::RenderingDebugger() },
             timer        { LLGL::Timer::Create()         },
@@ -329,6 +323,8 @@ protected:
             contextDesc.profileOpenGL.majorVersion      = 4;
             contextDesc.profileOpenGL.minorVersion      = 1;
             #elif defined __linux__
+            contextDesc.multiSampling.enabled           = false;
+            contextDesc.multiSampling.samples           = 1;
             contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
             contextDesc.profileOpenGL.majorVersion      = 3;
             contextDesc.profileOpenGL.minorVersion      = 3;
@@ -347,8 +343,8 @@ protected:
         // Initialize command buffer
         commands->SetClearColor(defaultClearColor);
         commands->SetRenderTarget(*context);
-        commands->SetViewport({ 0.0f, 0.0f, static_cast<float>(resolution.x), static_cast<float>(resolution.y) });
-        commands->SetScissor({ 0, 0, resolution.x, resolution.y });
+        commands->SetViewport({ { 0, 0 }, resolution });
+        commands->SetScissor({ { 0, 0 }, resolution });
 
         // Print renderer information
         const auto& info = renderer->GetRendererInfo();
@@ -639,14 +635,23 @@ public:
     static bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, unsigned int mipLevel = 0)
     {
         // Get texture dimension
-        auto texSize = texture.QueryMipLevelSize(0).Cast<int>();
+        auto texSize = texture.QueryMipLevelSize(0);
 
         // Read texture image data
-        std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.x*texSize.y);
+        std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.width*texSize.height);
         renderSys.ReadTexture(texture, mipLevel, LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, imageBuffer.data(), imageBuffer.size() * sizeof(LLGL::ColorRGBAub));
 
         // Save image data to file (using STBI library, see https://github.com/nothings/stb)
-        if (!stbi_write_png(filename.c_str(), texSize.x, texSize.y, 4, imageBuffer.data(), texSize.x*4))
+        auto result = stbi_write_png(
+            filename.c_str(),
+            static_cast<int>(texSize.width),
+            static_cast<int>(texSize.height),
+            4,
+            imageBuffer.data(),
+            static_cast<int>(texSize.width)*4
+        );
+
+        if (!result)
         {
             std::cerr << "failed to write texture to file: \"" + filename + "\"" << std::endl;
             return false;
@@ -833,8 +838,8 @@ protected:
     // Returns the aspect ratio of the render context resolution (X:Y).
     float GetAspectRatio() const
     {
-        auto resolution = context->GetVideoMode().resolution.Cast<float>();
-        return (resolution.x / resolution.y);
+        auto resolution = context->GetVideoMode().resolution;
+        return (static_cast<float>(resolution.width) / static_cast<float>(resolution.height));
     }
 
     // Returns ture if OpenGL is used as rendering API.

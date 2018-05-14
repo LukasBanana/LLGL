@@ -34,12 +34,13 @@ LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDes
 {
     return
     (
-        LLGL_COMPARE_MEMBER_EQ( resolution    ) &&
-        LLGL_COMPARE_MEMBER_EQ( colorBits     ) &&
-        LLGL_COMPARE_MEMBER_EQ( depthBits     ) &&
-        LLGL_COMPARE_MEMBER_EQ( stencilBits   ) &&
-        LLGL_COMPARE_MEMBER_EQ( fullscreen    ) &&
-        LLGL_COMPARE_MEMBER_EQ( swapChainSize )
+        LLGL_COMPARE_MEMBER_EQ( resolution.width  ) &&
+        LLGL_COMPARE_MEMBER_EQ( resolution.height ) &&
+        LLGL_COMPARE_MEMBER_EQ( colorBits         ) &&
+        LLGL_COMPARE_MEMBER_EQ( depthBits         ) &&
+        LLGL_COMPARE_MEMBER_EQ( stencilBits       ) &&
+        LLGL_COMPARE_MEMBER_EQ( fullscreen        ) &&
+        LLGL_COMPARE_MEMBER_EQ( swapChainSize     )
     );
 }
 

@@ -112,9 +112,8 @@ public:
 
             #if 1//TODO: for Vulkan
             const auto resolution = context->GetVideoMode().resolution;
-            const auto viewportSize = resolution.Cast<float>();
-            pipelineDesc.viewports.push_back(LLGL::Viewport(0.0f, 0.0f, viewportSize.x, viewportSize.y));
-            pipelineDesc.scissors.push_back(LLGL::Scissor(0, 0, resolution.x, resolution.y));
+            pipelineDesc.viewports.push_back(LLGL::Viewport{ { 0, 0 }, resolution });
+            pipelineDesc.scissors.push_back(LLGL::Scissor{ { 0, 0 }, resolution });
             pipelineDesc.blend.targets.push_back({});
             #endif
         }

@@ -277,8 +277,8 @@ Before:
 ```cpp
 // Interface:
 class CommandBuffer {
-    void SetConstantBuffer(/* ... */);
     /* ... */
+    void SetConstantBuffer(/* ... */);
 };
 
 // Usage:
@@ -298,8 +298,8 @@ After:
 ```cpp
 // Interface:
 class CommandBufferExt : public CommandBuffer {
-    void SetConstantBuffer(/* ... */);
     /* ... */
+    void SetConstantBuffer(/* ... */);
 };
 
 // Usage (only supported with OpenGL and Direct3D 11):
@@ -381,6 +381,109 @@ Persistent states in `CommandBuffer` interface:
 Viewports and scissors are no longer guaranteed to be a persistent state. They must be updated after a new render target is set.
 
 
+Depth biasing in `RasterizerDescriptor` interface:
+--------------------------------------------------
+
+The rasterizer parameters for depth biasing have been moved into a separate structure named `DepthBiasDescriptor`.
+
+Before:
+```cpp
+// Interface:
+float RasterizerDescriptor::depthBiasConstantFactor;
+float RasterizerDescriptor::depthBiasSlopeFactor;
+float RasterizerDescriptor::depthBiasClamp;
+```
+
+After:
+```cpp
+// Interface:
+float               DepthBiasDescriptor::constantFactor;
+float               DepthBiasDescriptor::slopeFactor;
+float               DepthBiasDescriptor::clamp;
+DepthBiasDescriptor RasterizerDescriptor::depthBias;
+```
+
+
+`ShaderUniform` interface:
+--------------------------
+
+All string parameters have been changed from `const std::string&` to `const char*`, and all vector and matrix types from the GaussianLib have been replaced by pointers to base types.
+
+Before:
+```cpp
+// Interface (brief selection):
+class ShaderUniform {
+    /* ... */
+    void SetUniform(const std::string& name, const float value);
+    void SetUniform(const std::string& name, const Gs::Vector2f& value);
+    void SetUniform(const std::string& name, const Gs::Matrix4f& value);
+    void SetUniformArray(const std::string& name, const Gs::Matrix4f& value, std::size_t count);
+};
+
+// Usage:
+if (auto myUniforms = myShaderProgram->LockShaderUniforms()) {
+    myUniforms->SetUniform("myUniformVec2", { 1.0f, 2.0f });
+    myUniforms->SetUniform("myUniformMat4", myWorldMatrix);
+    myShaderProgram->UnlockShaderUniform();
+}
+```
+
+After:
+```cpp
+// Interface (brief selection):
+class ShaderUniform {
+    /* ... */
+    void SetUniform1f(const char* name, float value);
+    void SetUniform2f(const char* name, float value0, float value1);
+    void SetUniform4x4fv(const char* name, const float* value, std::size_t count = 1);
+};
+
+// Usage:
+if (auto myUniforms = myShaderProgram->LockShaderUniforms()) {
+    myUniforms->SetUniform2f("myUniformVec2", 1.0f, 2.0f);
+    myUniforms->SetUniform4x4fv("myUniformMat4", &myWorldMatrix[0]);
+    myShaderProgram->UnlockShaderUniform();
+}
+```
+
+
+Dependency removal of GaussianLib:
+----------------------------------
+
+All dependencies to the GaussianLib project have been removed from the project (except the tutorials and tests!).
+
+Before:
+```cpp
+// Usage:
+#include <LLGL/ColorRGB.h>
+#include <LLGL/ColorRGBA.h>
+LLGL::ColorRGB   myRealTypeColorRGB;
+LLGL::ColorRGBA  myRealTypeColorRGBA;
+LLGL::ColorRGBAf myUninitializedColor{ Gs::UninitializeTag{} };
+
+// Usage (with breaking change):
+LLGL::ColorRGBAf myColorA, myColorB;
+if (myColorA == myColorB) {
+    // uses 'Gs::Equals' with 'std::abs' to circumvent rounding errors
+}
+```
+
+After:
+```cpp
+// Usage:
+#include <LLGL/ColorRGB.h>
+#include <LLGL/ColorRGBA.h>
+#include <Gauss/Real.h>
+LLGL::ColorRGBT<Gs::Real>  myRealTypeColorRGB;
+LLGL::ColorRGBAT<Gs::Real> myRealTypeColorRGBA;
+LLGL::ColorRGBAf           myUninitializedColor{ LLGL::UninitializeTag{} };
+
+// Usage (with breaking change):
+LLGL::ColorRGBAf myColorA, myColorB;
+if (myColorA == myColorB) {
+    // uses 'operator ==' of float type for comparison
+}
+```
 
 
 

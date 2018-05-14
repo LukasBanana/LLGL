@@ -76,6 +76,23 @@ static bool IsBlendColorNeeded(const BlendDescriptor& blendDesc)
     return false;
 }
 
+static GLState PolygonModeToPolygonOffset(const PolygonMode mode)
+{
+    switch (mode)
+    {
+        case PolygonMode::Fill:         return GLState::POLYGON_OFFSET_FILL;
+        case PolygonMode::Wireframe:    return GLState::POLYGON_OFFSET_LINE;
+        case PolygonMode::Points:       return GLState::POLYGON_OFFSET_POINT;
+    }
+    throw std::invalid_argument("failed to map 'PolygonMode' to polygon offset mode (GL_POLYGON_OFFSET_FILL, GL_POLYGON_OFFSET_LINE, or GL_POLYGON_OFFSET_POINT)");
+}
+
+static bool IsPolygonOffsetEnabled(const DepthBiasDescriptor& desc)
+{
+    /* Ignore clamp factor for this check, since it's useless without the other two parameters */
+    return (desc.slopeFactor != 0.0f || desc.constantFactor != 0.0f);
+}
+
 
 /* ----- GLGraphicsPipeline class ----- */
 
@@ -108,33 +125,38 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
         patchVertices_ = 0;
 
     /* Convert depth state */
-    depthTestEnabled_   = desc.depth.testEnabled;
-    depthMask_          = (desc.depth.writeEnabled ? GL_TRUE : GL_FALSE);
-    depthFunc_          = GLTypes::Map(desc.depth.compareOp);
+    depthTestEnabled_       = desc.depth.testEnabled;
+    depthMask_              = (desc.depth.writeEnabled ? GL_TRUE : GL_FALSE);
+    depthFunc_              = GLTypes::Map(desc.depth.compareOp);
 
     /* Convert stencil state */
-    stencilTestEnabled_ = desc.stencil.testEnabled;
+    stencilTestEnabled_     = desc.stencil.testEnabled;
     Convert(stencilFront_, desc.stencil.front);
     Convert(stencilBack_, desc.stencil.back);
 
     /* Convert rasterizer state */
-    polygonMode_        = GLTypes::Map(desc.rasterizer.polygonMode);
-    cullFace_           = GLTypes::Map(desc.rasterizer.cullMode);
-    frontFace_          = (desc.rasterizer.frontCCW ? GL_CCW : GL_CW);
-    scissorTestEnabled_ = desc.rasterizer.scissorTestEnabled;
-    depthClampEnabled_  = desc.rasterizer.depthClampEnabled;
-    multiSampleEnabled_ = desc.rasterizer.multiSampling.enabled;
-    lineSmoothEnabled_  = desc.rasterizer.antiAliasedLineEnabled;
-    lineWidth_          = desc.rasterizer.lineWidth;
+    polygonMode_            = GLTypes::Map(desc.rasterizer.polygonMode);
+    cullFace_               = GLTypes::Map(desc.rasterizer.cullMode);
+    frontFace_              = (desc.rasterizer.frontCCW ? GL_CCW : GL_CW);
+    scissorTestEnabled_     = desc.rasterizer.scissorTestEnabled;
+    depthClampEnabled_      = desc.rasterizer.depthClampEnabled;
+    multiSampleEnabled_     = desc.rasterizer.multiSampling.enabled;
+    lineSmoothEnabled_      = desc.rasterizer.antiAliasedLineEnabled;
+    lineWidth_              = desc.rasterizer.lineWidth;
+    polygonOffsetEnabled_   = IsPolygonOffsetEnabled(desc.rasterizer.depthBias);
+    polygonOffsetMode_      = PolygonModeToPolygonOffset(desc.rasterizer.polygonMode);
+    polygonOffsetFactor_    = desc.rasterizer.depthBias.slopeFactor;
+    polygonOffsetUnits_     = desc.rasterizer.depthBias.constantFactor;
+    polygonOffsetClamp_     = desc.rasterizer.depthBias.clamp;
 
     #ifdef LLGL_GL_ENABLE_VENDOR_EXT
     conservativeRaster_ = desc.rasterizer.conservativeRasterization;
     #endif
 
     /* Convert blend state */
-    blendEnabled_       = desc.blend.blendEnabled;
-    blendColor_         = desc.blend.blendFactor;
-    blendColorNeeded_   = IsBlendColorNeeded(desc.blend);
+    blendEnabled_           = desc.blend.blendEnabled;
+    blendColor_             = desc.blend.blendFactor;
+    blendColorNeeded_       = IsBlendColorNeeded(desc.blend);
     Convert(blendStates_, desc.blend.targets);
 
     /* Convert color logic operation state */
@@ -178,7 +200,6 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 
     /* Setup rasterizer state */
     stateMngr.SetPolygonMode(polygonMode_);
-    //TODO: stateMngr.SetPolygonOffset(scaleFactor_, constantFactor_);
     stateMngr.SetFrontFace(frontFace_);
 
     if (cullFace_ != 0)
@@ -188,6 +209,14 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
     }
     else
         stateMngr.Disable(GLState::CULL_FACE);
+
+    if (polygonOffsetEnabled_)
+    {
+        stateMngr.Enable(polygonOffsetMode_);
+        stateMngr.SetPolygonOffset(polygonOffsetFactor_, polygonOffsetUnits_, polygonOffsetClamp_);
+    }
+    else
+        stateMngr.Disable(polygonOffsetMode_);
 
     stateMngr.Set(GLState::SCISSOR_TEST, scissorTestEnabled_);
     stateMngr.Set(GLState::DEPTH_CLAMP, depthClampEnabled_);

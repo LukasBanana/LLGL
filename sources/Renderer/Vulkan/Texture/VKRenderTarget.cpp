@@ -204,8 +204,8 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
         createInfo.renderPass       = renderPass_;
         createInfo.attachmentCount  = numAttachments;
         createInfo.pAttachments     = imageViewRefs.data();
-        createInfo.width            = GetResolution().x;
-        createInfo.height           = GetResolution().y;
+        createInfo.width            = GetResolution().width;
+        createInfo.height           = GetResolution().height;
         createInfo.layers           = 1;
     }
     VkResult result = vkCreateFramebuffer(device, &createInfo, nullptr, framebuffer_.ReleaseAndGetAddressOf());

@@ -28,7 +28,7 @@ class VKTexture : public Texture
 
         VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& desc);
 
-        Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override;
+        Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const override;
         TextureDescriptor QueryDesc() const override;
 
         void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);

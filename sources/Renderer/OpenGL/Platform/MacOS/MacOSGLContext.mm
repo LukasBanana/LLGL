@@ -51,7 +51,7 @@ bool MacOSGLContext::SwapBuffers()
     return true;
 }
 
-void MacOSGLContext::Resize(const Size& resolution)
+void MacOSGLContext::Resize(const Extent2D& resolution)
 {
     [ctx_ update];
 }

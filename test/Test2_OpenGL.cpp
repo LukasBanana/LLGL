@@ -97,18 +97,18 @@ int main()
                 commands_ { commands }
             {
             }
-            void OnResize(LLGL::Window& sender, const LLGL::Size& clientAreaSize) override
+            void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override
             {
                 auto videoMode = context_->GetVideoMode();
                 videoMode.resolution = clientAreaSize;
 
                 context_->SetVideoMode(videoMode);
                 commands_->SetRenderTarget(*context_);
-                
+
                 LLGL::Viewport viewport;
                 {
-                    viewport.width  = static_cast<float>(videoMode.resolution.x);
-                    viewport.height = static_cast<float>(videoMode.resolution.y);
+                    viewport.width  = static_cast<float>(videoMode.resolution.width);
+                    viewport.height = static_cast<float>(videoMode.resolution.height);
                 }
                 commands_->SetViewport(viewport);
             }
@@ -132,7 +132,7 @@ int main()
             { 0, 0 }, { 200, 200 },
             { 0, 0 }, { 100, 200 },
         };
-        
+
         LLGL::BufferDescriptor vertexBufferDesc;
         {
             vertexBufferDesc.type                   = LLGL::BufferType::Vertex;
@@ -207,17 +207,16 @@ int main()
 
         // Set shader uniforms
         auto projection = Gs::ProjectionMatrix4f::Planar(
-            static_cast<Gs::Real>(contextDesc.videoMode.resolution.x),
-            static_cast<Gs::Real>(contextDesc.videoMode.resolution.y)
+            static_cast<Gs::Real>(contextDesc.videoMode.resolution.width),
+            static_cast<Gs::Real>(contextDesc.videoMode.resolution.height)
         );
 
-        auto uniformSetter = shaderProgram.LockShaderUniform();
-        if (uniformSetter)
+        if (auto uniformSetter = shaderProgram.LockShaderUniform())
         {
-            uniformSetter->SetUniform("projection", projection);
-            uniformSetter->SetUniform("color", Gs::Vector4f(1, 1, 1, 1));
+            uniformSetter->SetUniform4x4fv("projection", projection.Ptr());
+            uniformSetter->SetUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
+            shaderProgram.UnlockShaderUniform();
         }
-        shaderProgram.UnlockShaderUniform();
 
         #if 0
         // Create constant buffer
@@ -293,7 +292,7 @@ int main()
         LLGL::Texture* renderTargetTex = nullptr;
 
         #ifdef TEST_RENDER_TARGET
-        
+
         renderTarget = renderer->CreateRenderTarget(8);
 
         auto renderTargetSize = contextDesc.videoMode.resolution;
@@ -313,7 +312,7 @@ int main()
         renderTarget->AttachTexture2D(*renderTargetTex);
 
         #endif
-        
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
@@ -347,7 +346,7 @@ int main()
         //#ifndef __linux__
         commands->SetSampler(sampler, 0);
         //#endif
-        
+
         //commands->SetViewport(LLGL::Viewport(0, 0, 300, 300));
 
         #ifdef TEST_QUERY
@@ -356,7 +355,7 @@ int main()
         #endif
 
         #ifdef TEST_STORAGE_BUFFER
-        
+
         LLGL::StorageBuffer* storage = nullptr;
 
         if (renderCaps.hasStorageBuffers)
@@ -386,13 +385,13 @@ int main()
             if (uniformSetter)
             {
                 auto projection = Gs::ProjectionMatrix4f::Planar(
-                    static_cast<Gs::Real>(context->GetVideoMode().resolution.x),
-                    static_cast<Gs::Real>(context->GetVideoMode().resolution.y)
+                    static_cast<Gs::Real>(context->GetVideoMode().resolution.width),
+                    static_cast<Gs::Real>(context->GetVideoMode().resolution.height)
                 );
-                uniformSetter->SetUniform("projection", projection);
+                uniformSetter->SetUniform4x4fv("projection", projection.Ptr());
             }
             shaderProgram.UnlockShaderUniform();
-            
+
             commands->SetGraphicsPipeline(pipeline);
             commands->SetVertexBuffer(*vertexBuffer);
 
@@ -404,7 +403,7 @@ int main()
             }
 
             #ifndef __linux__
-            
+
             // Switch fullscreen mode
             if (input->KeyDown(LLGL::Key::Return))
             {
@@ -422,18 +421,13 @@ int main()
 
                 context->SetVideoMode(contextDesc.videoMode);
 
-                LLGL::Viewport viewport;
-                {
-                    viewport.width  = static_cast<float>(contextDesc.videoMode.resolution.x);
-                    viewport.height = static_cast<float>(contextDesc.videoMode.resolution.y);
-                }
-                commands->SetViewport(viewport);
+                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, contextDesc.videoMode.resolution });
             }
-            
+
             #endif
 
             #ifdef TEST_QUERY
-            
+
             if (!hasQueryResult)
                 commands->BeginQuery(*query);
 
@@ -441,9 +435,9 @@ int main()
 
             commands->SetTexture(texture, 0);
             commands->Draw(4, 0);
-            
+
             #ifdef TEST_STORAGE_BUFFER
-            
+
             if (renderCaps.hasStorageBuffers)
             {
                 static bool outputShown;

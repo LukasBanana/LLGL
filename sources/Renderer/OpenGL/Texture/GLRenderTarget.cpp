@@ -66,19 +66,19 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
     }
 }
 
-void GLRenderTarget::AttachDepthBuffer(const Gs::Vector2ui& size)
+void GLRenderTarget::AttachDepthBuffer(const Extent2D& size)
 {
     AttachRenderbuffer(size, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
     blitMask_ |= GL_DEPTH_BUFFER_BIT;
 }
 
-void GLRenderTarget::AttachStencilBuffer(const Gs::Vector2ui& size)
+void GLRenderTarget::AttachStencilBuffer(const Extent2D& size)
 {
     AttachRenderbuffer(size, GL_STENCIL_INDEX, GL_STENCIL_ATTACHMENT);
     blitMask_ |= GL_STENCIL_BUFFER_BIT;
 }
 
-void GLRenderTarget::AttachDepthStencilBuffer(const Gs::Vector2ui& size)
+void GLRenderTarget::AttachDepthStencilBuffer(const Extent2D& size)
 {
     AttachRenderbuffer(size, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL_ATTACHMENT);
     blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -151,7 +151,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
         }
 
         status = GetFramebufferStatus();
-        
+
         /* Set draw buffers for this framebuffer if multi-sampling is disabled */
         if (!framebufferMS_)
             SetDrawBuffers();
@@ -173,7 +173,7 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
             {
                 GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer->GetID());
                 status = GetFramebufferStatus();
-                
+
                 /* Set draw buffers for this framebuffer is multi-sampling is enabled */
                 SetDrawBuffers();
             }
@@ -205,11 +205,21 @@ void GLRenderTarget::DetachAll()
 
 /* ----- Extended Internal Functions ----- */
 
+//private
+void GLRenderTarget::BlitFramebuffer()
+{
+    GLFramebuffer::Blit(
+        static_cast<GLint>(GetResolution().width),
+        static_cast<GLint>(GetResolution().height),
+        blitMask_
+    );
+}
+
 /*
 Blit (or rather copy) each multi-sample attachment from the
 multi-sample framebuffer (read) into the main framebuffer (draw)
 */
-void GLRenderTarget::BlitOntoFrameBuffer()
+void GLRenderTarget::BlitOntoFramebuffer()
 {
     if (framebufferMS_)
     {
@@ -220,8 +230,7 @@ void GLRenderTarget::BlitOntoFrameBuffer()
         {
             glReadBuffer(attachment);
             glDrawBuffer(attachment);
-
-            GLFramebuffer::Blit(GetResolution().Cast<int>(), blitMask_);
+            BlitFramebuffer();
         }
 
         framebufferMS_->Unbind(GLFramebufferTarget::READ_FRAMEBUFFER);
@@ -242,8 +251,7 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
         {
             glReadBuffer(colorAttachments_[colorAttachmentIndex]);
             glDrawBuffer(GL_BACK);
-
-            GLFramebuffer::Blit(GetResolution().Cast<int>(), blitMask_);
+            BlitFramebuffer();
         }
         GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
     }
@@ -263,7 +271,12 @@ void GLRenderTarget::InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenu
 {
     renderbuffer.Bind();
     {
-        GLRenderbuffer::Storage(internalFormat, GetResolution().Cast<int>(), multiSamples_);
+        GLRenderbuffer::Storage(
+            internalFormat,
+            static_cast<GLsizei>(GetResolution().width),
+            static_cast<GLsizei>(GetResolution().height),
+            multiSamples_
+        );
     }
     renderbuffer.Unbind();
 }
@@ -282,7 +295,7 @@ GLenum GLRenderTarget::AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLe
     return status;
 }
 
-void GLRenderTarget::AttachRenderbuffer(const Gs::Vector2ui& size, GLenum internalFormat, GLenum attachment)
+void GLRenderTarget::AttachRenderbuffer(const Extent2D& size, GLenum internalFormat, GLenum attachment)
 {
     if (!HasDepthAttachment())
     {

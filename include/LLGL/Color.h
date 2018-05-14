@@ -9,19 +9,15 @@
 #define LLGL_COLOR_H
 
 
-#include <Gauss/Real.h>
-#include <Gauss/Assert.h>
-#include <Gauss/Tags.h>
-#include <Gauss/Equals.h>
-
+#include "Tags.h"
 #include <algorithm>
 #include <type_traits>
 #include <cstdint>
+#include <stdexcept>
 
 
 namespace LLGL
 {
-
 
 
 /* --- Global functions --- */
@@ -111,36 +107,44 @@ This should be a primitive data type such as float, double, int etc.
 template <typename T, std::size_t N>
 class Color
 {
-    
+
     public:
-        
+
         //! Specifies the number of vector components.
         static const std::size_t components = N;
 
-        #ifndef GS_DISABLE_AUTO_INIT
+        /**
+        \brief Constructors all attributes with the default color value.
+        \remarks For default color values the 'MaxColorValue' template is used.
+        \see MaxColorValue
+        */
         Color()
         {
             std::fill(std::begin(v_), std::end(v_), MaxColorValue<T>());
         }
-        #else
-        Color() = default;
-        #endif
 
+        //! Copy constructor.
         Color(const Color<T, N>& rhs)
         {
             std::copy(std::begin(rhs.v_), std::end(rhs.v_), v_);
         }
 
+        //! Constructs all attributes with the specified scalar value.
         explicit Color(const T& scalar)
         {
             std::fill(std::begin(v_), std::end(v_), scalar);
         }
 
-        Color(Gs::UninitializeTag)
+        /**
+        \brief Explicitly uninitialized constructor. All attributes are uninitialized!
+        \remarks Only use this constructor when you want to allocate a large amount of color elements that are being initialized later.
+        */
+        Color(UninitializeTag)
         {
             // do nothing
         }
 
+        //! Adds the specified color (component wise) to this color.
         Color<T, N>& operator += (const Color<T, N>& rhs)
         {
             for (std::size_t i = 0; i < N; ++i)
@@ -148,6 +152,7 @@ class Color
             return *this;
         }
 
+        //! Substracts the specified color (component wise) from this color.
         Color<T, N>& operator -= (const Color<T, N>& rhs)
         {
             for (std::size_t i = 0; i < N; ++i)
@@ -155,6 +160,7 @@ class Color
             return *this;
         }
 
+        //! Multiplies the specified color (component wise) with this color.
         Color<T, N>& operator *= (const Color<T, N>& rhs)
         {
             for (std::size_t i = 0; i < N; ++i)
@@ -162,6 +168,7 @@ class Color
             return *this;
         }
 
+        //! Divides the specified color (component wise) with this color.
         Color<T, N>& operator /= (const Color<T, N>& rhs)
         {
             for (std::size_t i = 0; i < N; ++i)
@@ -169,6 +176,7 @@ class Color
             return *this;
         }
 
+        //! Multiplies the specified scalar value (component wise) with this color.
         Color<T, N>& operator *= (const T rhs)
         {
             for (std::size_t i = 0; i < N; ++i)
@@ -176,6 +184,7 @@ class Color
             return *this;
         }
 
+        //! Divides the specified scalar value (component wise) with this color.
         Color<T, N>& operator /= (const T rhs)
         {
             for (std::size_t i = 0; i < N; ++i)
@@ -186,23 +195,32 @@ class Color
         /**
         \brief Returns the specified vector component.
         \param[in] component Specifies the vector component index. This must be in the range [0, N).
+        \throws std::out_of_range If the specified component index is out of range (Only if the macro 'LLGL_DEBUG' is defined).
         */
         T& operator [] (std::size_t component)
         {
-            GS_ASSERT(component < N);
+            #ifdef LLGL_DEBUG
+            if (component >= N)
+                std::out_of_range("color component index out of range");
+            #endif
             return v_[component];
         }
 
         /**
         \brief Returns the specified vector component.
         \param[in] component Specifies the vector component index. This must be in the range [0, N).
+        \throws std::out_of_range If the specified component index is out of range (Only if the macro 'LLGL_DEBUG' is defined).
         */
         const T& operator [] (std::size_t component) const
         {
-            GS_ASSERT(component < N);
+            #ifdef LLGL_DEBUG
+            if (component >= N)
+                std::out_of_range("color component index out of range");
+            #endif
             return v_[component];
         }
 
+        //! Returns the negation of this color.
         Color<T, N> operator - () const
         {
             auto result = *this;
@@ -219,7 +237,7 @@ class Color
         template <typename Dst>
         Color<Dst, N> Cast() const
         {
-            Color<Dst, N> result(Gs::UninitializeTag{});
+            Color<Dst, N> result { UninitializeTag{} };
 
             for (std::size_t i = 0; i < N; ++i)
                 result[i] = CastColorValue<Dst>(v_[i]);
@@ -240,7 +258,7 @@ class Color
         }
 
     private:
-        
+
         T v_[N];
 
 };
@@ -312,17 +330,27 @@ Color<T, N> operator / (const T& lhs, const Color<T, N>& rhs)
     return result;
 }
 
+/**
+\brief Returns true if all components of both colors 'lhs' and 'rhs' are equal.
+\remarks The comparison uses the 'operator ==' of the underlying component type.
+Note that this comparison is quite limited for floating-point types, due to precision issues.
+*/
 template <typename T, std::size_t N>
 bool operator == (const Color<T, N>& lhs, const Color<T, N>& rhs)
 {
     for (std::size_t i = 0; i < N; ++i)
     {
-        if (!Gs::Equals(lhs[i], rhs[i]))
+        if (!(lhs[i] == rhs[i]))
             return false;
     }
     return true;
 }
 
+/**
+\brief Returns true if any component of both colors 'lhs' and 'rhs' are unequal.
+\remarks The comparison uses the 'operator ==' of the underlying component type.
+Note that this comparison is quite limited for floating-point types, due to precision issues.
+*/
 template <typename T, std::size_t N>
 bool operator != (const Color<T, N>& lhs, const Color<T, N>& rhs)
 {

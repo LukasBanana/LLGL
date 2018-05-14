@@ -37,7 +37,7 @@ class VKRenderTarget : public RenderTarget
 
         inline VkExtent2D GetVkExtent() const
         {
-            return { GetResolution().x, GetResolution().y };
+            return { GetResolution().width, GetResolution().height };
         }
 
         inline std::uint32_t GetNumColorAttachments() const

@@ -15,9 +15,9 @@
 class WindowEventHandler : public LLGL::Window::EventListener
 {
 public:
-    void OnResize(LLGL::Window& sender, const LLGL::Size& size) override
+    void OnResize(LLGL::Window& sender, const LLGL::Extent2D& size) override
     {
-        std::cout << "OnResize: " << size.x << " x " << size.y << std::endl;
+        std::cout << "OnResize: " << size.width << " x " << size.height << std::endl;
     }
 };
 
@@ -38,7 +38,7 @@ int main()
 
         auto input = std::make_shared<LLGL::Input>();
         window->AddEventListener(input);
-        
+
         window->AddEventListener(std::make_shared<WindowEventHandler>());
 
         auto timer = LLGL::Timer::Create();
@@ -48,11 +48,11 @@ int main()
         try
         {
             auto renderer = LLGL::RenderSystem::Load("OpenGL");
-            
+
             window->SetTitle(
                 windowDesc.title + L" ( " + std::wstring(renderer->GetName().begin(), renderer->GetName().end()) + L" )"
             );
-            
+
             /*#ifdef __APPLE__
             LLGL::VideoModeDescriptor videoMode;
             {
@@ -91,25 +91,25 @@ int main()
                 window->SetTitle(L"RButton Down");
             if (input->KeyDown(LLGL::Key::MButton))
                 window->SetTitle(L"MButton Down");
-            
+
             #ifdef __APPLE__
-            
+
             auto mousePos = input->GetMousePosition();
             std::wstringstream s;
             s << "X = " << mousePos.x << ", Y = " << mousePos.y;
             //window->SetTitle(s.str());
-            
+
             auto desktopSize = LLGL::Desktop::GetResolution();
-            s << ", Screen Width = " << desktopSize.x << ", Screen Height = " << desktopSize.y;
+            s << ", Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height;
             window->SetTitle(s.str());
-            
+
             /*auto wheel = input->GetWheelMotion();
             if (wheel != 0)
             {
                 pos.y += wheel;
                 window->SetPosition(pos);
             }*/
-            
+
             #endif
 
             #ifndef __linux__

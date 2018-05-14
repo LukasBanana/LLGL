@@ -213,8 +213,7 @@ private:
         commands->SetRenderTarget(*context);
 
         // Set viewports
-        const auto viewportSize = context->GetVideoMode().resolution.Cast<float>();
-        commands->SetViewport(LLGL::Viewport { 0.0f, 0.0f, viewportSize.x, viewportSize.y });
+        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
 
         // Clear color buffer
         commands->Clear(LLGL::ClearFlags::Color);

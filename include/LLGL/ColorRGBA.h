@@ -25,13 +25,17 @@ but for unsigned-bytes, the initial value is 255.
 template <typename T>
 class Color<T, 4u>
 {
-    
+
     public:
-        
+
         //! Specifies the number of color components.
         static const std::size_t components = 4;
 
-        #ifndef GS_DISABLE_AUTO_INIT
+        /**
+        \brief Constructors all attributes with the default color value.
+        \remarks For default color values the 'MaxColorValue' template is used.
+        \see MaxColorValue
+        */
         Color() :
             r { MaxColorValue<T>() },
             g { MaxColorValue<T>() },
@@ -39,10 +43,8 @@ class Color<T, 4u>
             a { MaxColorValue<T>() }
         {
         }
-        #else
-        Color() = default;
-        #endif
 
+        //! Copy constructor.
         Color(const Color<T, 4>& rhs) :
             r { rhs.r },
             g { rhs.g },
@@ -51,6 +53,7 @@ class Color<T, 4u>
         {
         }
 
+        //! Constructs all attributes with the specified scalar value.
         explicit Color(const T& scalar) :
             r { scalar },
             g { scalar },
@@ -59,6 +62,11 @@ class Color<T, 4u>
         {
         }
 
+        /**
+        \brief Constructs the RGB attributes with the specified RGB color, and the default value for alpha.
+        \remarks For default color values the 'MaxColorValue' template is used.
+        \see MaxColorValue
+        */
         explicit Color(const Color<T, 3u>& rhs) :
             r { rhs.r              },
             g { rhs.g              },
@@ -67,6 +75,11 @@ class Color<T, 4u>
         {
         }
 
+        /**
+        \brief Constructs the RGB attributes with the specified color values r (red), g (green), b (blue), and the default value for alpha.
+        \remarks For default color values the 'MaxColorValue' template is used.
+        \see MaxColorValue
+        */
         Color(const T& r, const T& g, const T& b) :
             r { r                  },
             g { g                  },
@@ -75,6 +88,7 @@ class Color<T, 4u>
         {
         }
 
+        //! Constructs all attributes with the specified color values r (red), g (green), b (blue), a (alpha).
         Color(const T& r, const T& g, const T& b, const T& a) :
             r { r },
             g { g },
@@ -83,11 +97,16 @@ class Color<T, 4u>
         {
         }
 
-        Color(Gs::UninitializeTag)
+        /**
+        \brief Explicitly uninitialized constructor. All attributes are uninitialized!
+        \remarks Only use this constructor when you want to allocate a large amount of color elements that are being initialized later.
+        */
+        explicit Color(UninitializeTag)
         {
             // do nothing
         }
 
+        //! Adds the specified color (component wise) to this color.
         Color<T, 4>& operator += (const Color<T, 4>& rhs)
         {
             r += rhs.r;
@@ -97,6 +116,7 @@ class Color<T, 4u>
             return *this;
         }
 
+        //! Substracts the specified color (component wise) from this color.
         Color<T, 4>& operator -= (const Color<T, 4>& rhs)
         {
             r -= rhs.r;
@@ -106,6 +126,7 @@ class Color<T, 4u>
             return *this;
         }
 
+        //! Multiplies the specified color (component wise) with this color.
         Color<T, 4>& operator *= (const Color<T, 4>& rhs)
         {
             r *= rhs.r;
@@ -115,6 +136,7 @@ class Color<T, 4u>
             return *this;
         }
 
+        //! Divides the specified color (component wise) with this color.
         Color<T, 4>& operator /= (const Color<T, 4>& rhs)
         {
             r /= rhs.r;
@@ -124,6 +146,7 @@ class Color<T, 4u>
             return *this;
         }
 
+        //! Multiplies the specified scalar value (component wise) with this color.
         Color<T, 4>& operator *= (const T rhs)
         {
             r *= rhs;
@@ -133,6 +156,7 @@ class Color<T, 4u>
             return *this;
         }
 
+        //! Divides the specified scalar value (component wise) with this color.
         Color<T, 4>& operator /= (const T rhs)
         {
             r /= rhs;
@@ -142,6 +166,7 @@ class Color<T, 4u>
             return *this;
         }
 
+        //! Returns the negation of this color.
         Color<T, 4> operator - () const
         {
             return Color<T, 4>(-r, -g, -b, -a);
@@ -150,20 +175,28 @@ class Color<T, 4u>
         /**
         \brief Returns the specified color component.
         \param[in] component Specifies the color component index. This must be 0, 1, 2, or 3.
+        \throws std::out_of_range If the specified component index is out of range (Only if the macro 'LLGL_DEBUG' is defined).
         */
         T& operator [] (std::size_t component)
         {
-            GS_ASSERT(component < (Color<T, 4>::components));
+            #ifdef LLGL_DEBUG
+            if (component >= Color<T, 4>::components)
+                std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
+            #endif
             return *((&r) + component);
         }
 
         /**
         \brief Returns the specified color component.
         \param[in] component Specifies the color component index. This must be 0, 1, 2, or 3.
+        \throws std::out_of_range If the specified component index is out of range (Only if the macro 'LLGL_DEBUG' is defined).
         */
         const T& operator [] (std::size_t component) const
         {
-            GS_ASSERT(component < (Color<T, 4>::components));
+            #ifdef LLGL_DEBUG
+            if (component >= Color<T, 4>::components)
+                std::out_of_range("color component index out of range (must be 0, 1, 2, or 3)");
+            #endif
             return *((&r) + component);
         }
 
@@ -211,7 +244,6 @@ class Color<T, 4u>
 template <typename T>
 using ColorRGBAT = Color<T, 4>;
 
-using ColorRGBA   = ColorRGBAT<Gs::Real>;
 using ColorRGBAb  = ColorRGBAT<bool>;
 using ColorRGBAf  = ColorRGBAT<float>;
 using ColorRGBAd  = ColorRGBAT<double>;

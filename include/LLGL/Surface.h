@@ -64,7 +64,7 @@ class LLGL_EXPORT Surface
         \remarks For the Window interface this is equivalent of calling "Window::GetSize(true)" for instance.
         \see Window::GetSize
         */
-        virtual Size GetContentSize() const = 0;
+        virtual Extent2D GetContentSize() const = 0;
 
         /**
         \brief Adapts the surface to fits the needs for the specified video mode descriptor.

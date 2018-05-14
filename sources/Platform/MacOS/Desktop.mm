@@ -17,14 +17,15 @@ namespace Desktop
 {
 
 
-LLGL_EXPORT Size GetResolution()
+LLGL_EXPORT Extent2D GetResolution()
 {
     /* Get pixel size from main display */
     CGDirectDisplayID display = CGMainDisplayID();
-    return Size(
-        static_cast<int>(CGDisplayPixelsWide(display)),
-        static_cast<int>(CGDisplayPixelsHigh(display))
-    );
+    return
+    {
+        static_cast<std::uint32_t>(CGDisplayPixelsWide(display)),
+        static_cast<std::uint32_t>(CGDisplayPixelsHigh(display))
+    };
 }
 
 LLGL_EXPORT int GetColorDepth()

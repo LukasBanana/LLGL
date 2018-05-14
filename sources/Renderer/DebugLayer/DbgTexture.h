@@ -23,7 +23,7 @@ class DbgTexture : public Texture
 
         DbgTexture(Texture& instance, const TextureDescriptor& desc);
 
-        Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const override;
+        Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
 

@@ -228,9 +228,9 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.RasterizerState.FillMode              = D3D12Types::Map(desc.rasterizer.polygonMode);
     stateDesc.RasterizerState.CullMode              = D3D12Types::Map(desc.rasterizer.cullMode);
     stateDesc.RasterizerState.FrontCounterClockwise = (desc.rasterizer.frontCCW ? TRUE : FALSE);
-    stateDesc.RasterizerState.DepthBias             = static_cast<INT>(desc.rasterizer.depthBiasConstantFactor);
-    stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBiasClamp;
-    stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.depthBiasSlopeFactor;
+    stateDesc.RasterizerState.DepthBias             = static_cast<INT>(desc.rasterizer.depthBias.constantFactor);
+    stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBias.clamp;
+    stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.depthBias.slopeFactor;
     stateDesc.RasterizerState.DepthClipEnable       = (desc.rasterizer.depthClampEnabled ? FALSE : TRUE);
     #if 1//TODO: currently not supported
     stateDesc.RasterizerState.MultisampleEnable     = FALSE; //!!!
@@ -248,7 +248,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.DepthStencilState.StencilEnable       = (desc.stencil.testEnabled ? TRUE : FALSE);
     stateDesc.DepthStencilState.StencilReadMask     = static_cast<UINT8>(desc.stencil.front.readMask);
     stateDesc.DepthStencilState.StencilWriteMask    = static_cast<UINT8>(desc.stencil.front.writeMask);
-    
+
     Convert(stateDesc.DepthStencilState.FrontFace, desc.stencil.front);
     Convert(stateDesc.DepthStencilState.BackFace, desc.stencil.back);
 
@@ -263,7 +263,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     #else
     stateDesc.SampleDesc.Count      = desc.rasterizer.multiSampling.SampleCount();
     #endif
-    
+
     for (UINT i = 0; i < 8u; ++i)
         stateDesc.RTVFormats[i] = (i < stateDesc.NumRenderTargets ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_UNKNOWN);
 

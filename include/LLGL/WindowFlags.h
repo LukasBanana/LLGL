@@ -31,10 +31,10 @@ struct WindowDescriptor
     std::wstring    title;
 
     //! Window position (relative to the client area).
-    Point           position;
+    Offset2D        position;
 
     //! Window size (this should be the client area size).
-    Size            size;
+    Extent2D        size;
 
     //! Specifies whether the window is visible at creation time. By default false.
     bool            visible             = false;

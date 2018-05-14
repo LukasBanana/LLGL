@@ -30,7 +30,7 @@ D3D11RenderContext::D3D11RenderContext(
 
     /* Create D3D objects */
     CreateSwapChain(factory);
-    CreateBackBuffer(desc.videoMode.resolution.x, desc.videoMode.resolution.y);
+    CreateBackBuffer(desc.videoMode.resolution.width, desc.videoMode.resolution.height);
 
     /* Initialize v-sync */
     SetVsync(desc_.vsync);
@@ -45,7 +45,7 @@ void D3D11RenderContext::Present()
 
 void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
-    if (GetVideoMode() != videoModeDesc && videoModeDesc.resolution.x > 0 && videoModeDesc.resolution.y > 0)
+    if (GetVideoMode() != videoModeDesc && videoModeDesc.resolution.width > 0 && videoModeDesc.resolution.height > 0)
     {
         auto prevVideoMode = GetVideoMode();
 
@@ -53,10 +53,12 @@ void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
         RenderContext::SetVideoMode(videoModeDesc);
 
         /* Resize back buffer */
-        if (!Gs::Equals(prevVideoMode.resolution, videoModeDesc.resolution))
+        if (prevVideoMode.resolution != videoModeDesc.resolution)
         {
-            auto size = videoModeDesc.resolution.Cast<UINT>();
-            ResizeBackBuffer(size.x, size.y);
+            ResizeBackBuffer(
+                videoModeDesc.resolution.width,
+                videoModeDesc.resolution.height
+            );
         }
 
         /* Switch fullscreen mode */
@@ -85,8 +87,8 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     InitMemory(swapChainDesc);
     {
-        swapChainDesc.BufferDesc.Width                      = desc_.videoMode.resolution.x;
-        swapChainDesc.BufferDesc.Height                     = desc_.videoMode.resolution.y;
+        swapChainDesc.BufferDesc.Width                      = desc_.videoMode.resolution.width;
+        swapChainDesc.BufferDesc.Height                     = desc_.videoMode.resolution.height;
         swapChainDesc.BufferDesc.Format                     = DXGI_FORMAT_R8G8B8A8_UNORM;
         swapChainDesc.BufferDesc.RefreshRate.Numerator      = desc_.vsync.refreshRate;
         swapChainDesc.BufferDesc.RefreshRate.Denominator    = desc_.vsync.interval;

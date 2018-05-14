@@ -290,8 +290,8 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
     /* Pick swap-chain extent by resolution */
     swapChainExtent_ = PickSwapExtent(
         surfaceSupportDetails_.caps,
-        static_cast<std::uint32_t>(videoModeDesc.resolution.x),
-        static_cast<std::uint32_t>(videoModeDesc.resolution.y)
+        videoModeDesc.resolution.width,
+        videoModeDesc.resolution.height
     );
 
     /* Determine required image count for swap-chain */
@@ -446,8 +446,8 @@ void VKRenderContext::CreateDepthStencilImage(const VideoModeDescriptor& videoMo
         createInfo.flags                    = 0;
         createInfo.imageType                = VK_IMAGE_TYPE_2D;
         createInfo.format                   = depthStencilFormat_;
-        createInfo.extent.width             = static_cast<std::uint32_t>(videoModeDesc.resolution.x);
-        createInfo.extent.height            = static_cast<std::uint32_t>(videoModeDesc.resolution.y);
+        createInfo.extent.width             = videoModeDesc.resolution.width;
+        createInfo.extent.height            = videoModeDesc.resolution.height;
         createInfo.extent.depth             = 1;
         createInfo.mipLevels                = 1;
         createInfo.arrayLayers              = 1;

@@ -10,9 +10,9 @@
 
 
 #include "Export.h"
+#include "Types.h"
 #include "Image.h"
 #include "TextureFlags.h"
-#include <Gauss/Vector3.h>
 #include <cstdint>
 
 
@@ -45,7 +45,7 @@ class LLGL_EXPORT Texture
         \see RenderContext::GenerateMips
         \see CommandBuffer::SetTexture
         */
-        virtual Gs::Vector3ui QueryMipLevelSize(std::uint32_t mipLevel) const = 0;
+        virtual Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const = 0;
 
         /**
         \brief Queries a descriptor of this texture (including its type and size).

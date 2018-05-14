@@ -67,13 +67,13 @@ class LLGL_EXPORT Window : public Surface
                 virtual void OnWheelMotion(Window& sender, int motion);
 
                 //! Send when the mouse has been moved on the sender window.
-                virtual void OnLocalMotion(Window& sender, const Point& position);
+                virtual void OnLocalMotion(Window& sender, const Offset2D& position);
 
                 //! Send when the global mouse position has changed. This is a raw input and independent of the screen resolution.
-                virtual void OnGlobalMotion(Window& sender, const Point& motion);
+                virtual void OnGlobalMotion(Window& sender, const Offset2D& motion);
 
                 //! Send when the window has been resized.
-                virtual void OnResize(Window& sender, const Size& clientAreaSize);
+                virtual void OnResize(Window& sender, const Extent2D& clientAreaSize);
 
                 //! Send when the window gets the keyboard focus.
                 virtual void OnGetFocus(Window& sender);
@@ -111,16 +111,16 @@ class LLGL_EXPORT Window : public Surface
         static std::unique_ptr<Window> Create(const WindowDescriptor& desc);
 
         //! Sets the window position relative to its parent.
-        virtual void SetPosition(const Point& position) = 0;
+        virtual void SetPosition(const Offset2D& position) = 0;
 
         //! Returns the window position relative to its parent.
-        virtual Point GetPosition() const = 0;
+        virtual Offset2D GetPosition() const = 0;
 
         //! Sets the either the overall window size or the client area size. By default the client area size is set.
-        virtual void SetSize(const Size& size, bool useClientArea = true) = 0;
+        virtual void SetSize(const Extent2D& size, bool useClientArea = true) = 0;
 
         //! Returns either the overall window size or the client area size. By default the client area size is returned.
-        virtual Size GetSize(bool useClientArea = true) const = 0;
+        virtual Extent2D GetSize(bool useClientArea = true) const = 0;
 
         //! Sets the window title as UTF16 string. If the OS does not support UTF16 window title, it will be converted to UTF8.
         virtual void SetTitle(const std::wstring& title) = 0;
@@ -200,13 +200,13 @@ class LLGL_EXPORT Window : public Surface
         void PostWheelMotion(int motion);
 
         //! \see PostKeyDown
-        void PostLocalMotion(const Point& position);
+        void PostLocalMotion(const Offset2D& position);
 
         //! \see PostKeyDown
-        void PostGlobalMotion(const Point& motion);
+        void PostGlobalMotion(const Offset2D& motion);
 
         //! \see PostKeyDown
-        void PostResize(const Size& clientAreaSize);
+        void PostResize(const Extent2D& clientAreaSize);
 
         //! Posts a 'GetFocus' event to all event listeners.
         void PostGetFocus();

@@ -11,7 +11,7 @@
 
 #include "Export.h"
 #include "RenderTargetFlags.h"
-#include <Gauss/Vector2.h>
+#include "Types.h"
 
 
 namespace LLGL
@@ -43,7 +43,7 @@ class LLGL_EXPORT RenderTarget
         \see AttachDepthStencilBuffer
         \deprecated Use RenderTargetDescriptor::attachments instead.
         */
-        virtual void AttachDepthBuffer(const Gs::Vector2ui& size);
+        virtual void AttachDepthBuffer(const Extent2D& size);
 
         /**
         \brief Attaches an internal stencil buffer to this render target.
@@ -51,7 +51,7 @@ class LLGL_EXPORT RenderTarget
         \see AttachDepthBuffer
         \deprecated Use RenderTargetDescriptor::attachments instead.
         */
-        virtual void AttachStencilBuffer(const Gs::Vector2ui& size);
+        virtual void AttachStencilBuffer(const Extent2D& size);
 
         /**
         \brief Attaches an internal depth-stencil buffer to this render target.
@@ -59,7 +59,7 @@ class LLGL_EXPORT RenderTarget
         \see AttachDepthBuffer
         \deprecated Use RenderTargetDescriptor::attachments instead.
         */
-        virtual void AttachDepthStencilBuffer(const Gs::Vector2ui& size);
+        virtual void AttachDepthStencilBuffer(const Extent2D& size);
 
         /**
         \brief Attaches the specified texture to this render target.
@@ -81,21 +81,22 @@ class LLGL_EXPORT RenderTarget
         /**
         \brief Returns the render target resolution.
         \remarks This will be determined by the first texture attachment. Every further attachment must have the same size.
+        \todo Rename to "GetExtent".
         */
-        inline const Gs::Vector2ui& GetResolution() const
+        inline const Extent2D& GetResolution() const
         {
             return resolution_;
         }
 
     protected:
 
-        void ApplyResolution(const Gs::Vector2ui& resolution);
+        void ApplyResolution(const Extent2D& resolution);
         void ApplyMipResolution(Texture& texture, std::uint32_t mipLevel);
         void ResetResolution();
 
     private:
 
-        Gs::Vector2ui resolution_;
+        Extent2D resolution_;
 
 };
 

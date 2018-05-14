@@ -10,7 +10,6 @@
 #include "../../Core/Helper.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Platform/Platform.h>
-#include <Gauss/Equals.h>
 
 
 namespace LLGL
@@ -21,9 +20,9 @@ namespace LLGL
 
 struct WindowAppearance
 {
-    DWORD   style   = 0;
-    Point   position;
-    Size    size;
+    DWORD       style   = 0;
+    Offset2D    position;
+    Extent2D    size;
 };
 
 
@@ -48,10 +47,11 @@ static RECT GetClientArea(LONG width, LONG height, DWORD style)
     return rc;
 }
 
+// Determines the Win32 window style for the specified descriptor.
 static DWORD GetWindowStyle(const WindowDescriptor& desc)
 {
     DWORD style = (WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
-    
+
     if (desc.windowContext != nullptr && reinterpret_cast<const NativeContextHandle*>(desc.windowContext)->parentWindow != 0)
         style |= WS_CHILD;
     else if (desc.borderless)
@@ -72,12 +72,12 @@ static DWORD GetWindowStyle(const WindowDescriptor& desc)
     return style;
 }
 
-static Point GetScreenCenteredPosition(const Size& size)
+static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 {
     return
     {
-        GetSystemMetrics(SM_CXSCREEN)/2 - size.x/2,
-        GetSystemMetrics(SM_CYSCREEN)/2 - size.y/2
+        GetSystemMetrics(SM_CXSCREEN)/2 - static_cast<int>(size.width/2),
+        GetSystemMetrics(SM_CYSCREEN)/2 - static_cast<int>(size.height/2)
     };
 }
 
@@ -87,11 +87,16 @@ static WindowAppearance GetWindowAppearance(const WindowDescriptor& desc)
 
     /* Get window style and client area */
     appearance.style = GetWindowStyle(desc);
-    auto rc = GetClientArea(desc.size.x, desc.size.y, appearance.style);
+
+    auto rc = GetClientArea(
+        static_cast<LONG>(desc.size.width),
+        static_cast<LONG>(desc.size.height),
+        appearance.style
+    );
 
     /* Setup window size */
-    appearance.size.x = rc.right - rc.left;
-    appearance.size.y = rc.bottom - rc.top;
+    appearance.size.width   = static_cast<std::uint32_t>(rc.right - rc.left);
+    appearance.size.height  = static_cast<std::uint32_t>(rc.bottom - rc.top);
 
     /* Setup window position */
     appearance.position = (desc.centered ? GetScreenCenteredPosition(desc.size) : desc.position);
@@ -139,18 +144,18 @@ void Win32Window::Recreate()
     wnd_ = CreateWindowHandle(desc);
 }
 
-Size Win32Window::GetContentSize() const
+Extent2D Win32Window::GetContentSize() const
 {
     /* Return the size of the client area */
     return GetSize(true);
 }
 
-void Win32Window::SetPosition(const Point& position)
+void Win32Window::SetPosition(const Offset2D& position)
 {
     SetWindowPos(wnd_, HWND_TOP, position.x, position.y, 0, 0, (SWP_NOSIZE | SWP_NOZORDER));
 }
 
-Point Win32Window::GetPosition() const
+Offset2D Win32Window::GetPosition() const
 {
     RECT rc;
     GetWindowRect(wnd_, &rc);
@@ -158,30 +163,50 @@ Point Win32Window::GetPosition() const
     return { rc.left, rc.top };
 }
 
-void Win32Window::SetSize(const Size& size, bool useClientArea)
+void Win32Window::SetSize(const Extent2D& size, bool useClientArea)
 {
+    int cx, cy;
+
     if (useClientArea)
     {
-        auto rc = GetClientArea(size.x, size.y, GetWindowLong(wnd_, GWL_STYLE));
-        SetSize({ rc.right - rc.left, rc.bottom - rc.top }, false);
+        auto rc = GetClientArea(
+            static_cast<LONG>(size.width),
+            static_cast<LONG>(size.height),
+            GetWindowLong(wnd_, GWL_STYLE)
+        );
+        cx = rc.right - rc.left;
+        cy = rc.bottom - rc.top;
     }
     else
-        SetWindowPos(wnd_, HWND_TOP, 0, 0, size.x, size.y, (SWP_NOMOVE | SWP_NOZORDER));
+    {
+        cx = static_cast<int>(size.width);
+        cy = static_cast<int>(size.height);
+    }
+
+    SetWindowPos(wnd_, HWND_TOP, 0, 0, cx, cy, (SWP_NOMOVE | SWP_NOZORDER));
 }
 
-Size Win32Window::GetSize(bool useClientArea) const
+Extent2D Win32Window::GetSize(bool useClientArea) const
 {
     if (useClientArea)
     {
         RECT rc;
         GetClientRect(wnd_, &rc);
-        return { rc.right - rc.left, rc.bottom - rc.top };
+        return
+        {
+            static_cast<std::uint32_t>(rc.right - rc.left),
+            static_cast<std::uint32_t>(rc.bottom - rc.top)
+        };
     }
     else
     {
         RECT rc;
         GetWindowRect(wnd_, &rc);
-        return { rc.right - rc.left, rc.bottom - rc.top };
+        return
+        {
+            static_cast<std::uint32_t>(rc.right - rc.left),
+            static_cast<std::uint32_t>(rc.bottom - rc.top)
+        };
     }
 }
 
@@ -255,8 +280,8 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
     auto position           = GetPosition();
     auto size               = GetSize();
 
-    auto positionChanged    = !Gs::Equals(desc.position, position);
-    auto sizeChanged        = !Gs::Equals(desc.size, size);
+    bool positionChanged    = (desc.position.x != position.x || desc.position.y != position.y);
+    bool sizeChanged        = (desc.size.width != size.width || desc.size.height != size.height);
 
     if (flagsChanged || positionChanged || sizeChanged)
     {
@@ -283,7 +308,7 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
 
         if ((newWindowFlags & WS_MAXIMIZE) != 0)
             flags |= (SWP_NOSIZE | SWP_NOMOVE);
- 
+
         if (borderless == desc.borderless && resizable == desc.resizable)
         {
             if (!positionChanged)
@@ -297,8 +322,8 @@ void Win32Window::SetDesc(const WindowDescriptor& desc)
             0, // ignore, due to SWP_NOZORDER flag
             appearance.position.x,
             appearance.position.y,
-            appearance.size.x,
-            appearance.size.y,
+            static_cast<int>(appearance.size.width),
+            static_cast<int>(appearance.size.height),
             flags
         );
 
@@ -350,8 +375,8 @@ HWND Win32Window::CreateWindowHandle(const WindowDescriptor& desc)
         appearance.style,
         appearance.position.x,
         appearance.position.y,
-        appearance.size.x,
-        appearance.size.y,
+        static_cast<int>(appearance.size.width),
+        static_cast<int>(appearance.size.height),
         parentWnd,
         nullptr,
         GetModuleHandle(nullptr),

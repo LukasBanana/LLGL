@@ -16,9 +16,14 @@ namespace LLGL
 {
 
 
-static Point GetScreenCenteredPosition(const Size& size)
+static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 {
-    return (Desktop::GetResolution()/2 - size/2);
+    const auto resolution = Desktop::GetResolution();
+    return
+    {
+        static_cast<int>((resolution.width  - size.width )/2),
+        static_cast<int>((resolution.height - size.height)/2),
+    };
 }
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
@@ -51,30 +56,30 @@ void LinuxWindow::Recreate()
     //todo...
 }
 
-Size LinuxWindow::GetContentSize() const
+Extent2D LinuxWindow::GetContentSize() const
 {
     /* Return the size of the client area */
     return GetSize(true);
 }
 
-void LinuxWindow::SetPosition(const Point& position)
+void LinuxWindow::SetPosition(const Offset2D& position)
 {
     XMoveWindow(display_, wnd_, position.x, position.y);
 }
 
-Point LinuxWindow::GetPosition() const
+Offset2D LinuxWindow::GetPosition() const
 {
-    return Point(); //TODO
+    return {}; //TODO
 }
 
-void LinuxWindow::SetSize(const Size& size, bool useClientArea)
+void LinuxWindow::SetSize(const Extent2D& size, bool useClientArea)
 {
-    XResizeWindow(display_, wnd_, static_cast<unsigned int>(size.x), static_cast<unsigned int>(size.y));
+    XResizeWindow(display_, wnd_, size.width, size.height);
 }
 
-Size LinuxWindow::GetSize(bool useClientArea) const
+Extent2D LinuxWindow::GetSize(bool useClientArea) const
 {
-    return Size(); //TODO
+    return {}; //TODO
 }
 
 void LinuxWindow::SetTitle(const std::wstring& title)
@@ -221,8 +226,8 @@ void LinuxWindow::OpenWindow()
         rootWnd,
         position.x,
         position.y,
-        desc_.size.x,
-        desc_.size.y,
+        desc_.size.width,
+        desc_.size.height,
         borderSize,
         depth,
         InputOutput,
@@ -283,7 +288,12 @@ void LinuxWindow::ProcessMouseKeyEvent(XButtonEvent& event, bool down)
 
 void LinuxWindow::ProcessResizeRequestEvent(XResizeRequestEvent& event)
 {
-    PostResize({ event.width, event.height });
+    const Extent2D size
+    {
+        static_cast<std::uint32_t>(event.width),
+        static_cast<std::uint32_t>(event.height)
+    };
+    PostResize(size);
 }
 
 void LinuxWindow::ProcessClientMessage(XClientMessageEvent& event)

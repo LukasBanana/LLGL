@@ -29,7 +29,7 @@ class Win32GLContext : public GLContext
 
         bool SetSwapInterval(int interval) override;
         bool SwapBuffers() override;
-        void Resize(const Size& resolution) override;
+        void Resize(const Extent2D& resolution) override;
 
     private:
 
