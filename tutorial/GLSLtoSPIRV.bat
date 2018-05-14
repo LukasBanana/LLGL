@@ -13,6 +13,10 @@ REM Tutorial03_Texturing
 glslang -V -S vert -o Tutorial03_Texturing/vertex.450core.spv Tutorial03_Texturing/vertex.450core.glsl
 glslang -V -S frag -o Tutorial03_Texturing/fragment.450core.spv Tutorial03_Texturing/fragment.450core.glsl
 
+REM Tutorial05_RenderTarget
+glslang -V -S vert -o Tutorial05_RenderTarget/vertex.450core.spv Tutorial05_RenderTarget/vertex.450core.glsl
+glslang -V -S frag -o Tutorial05_RenderTarget/fragment.450core.spv Tutorial05_RenderTarget/fragment.450core.glsl
+
 REM Tutorial06_MultiContext
 glslang -V -S vert -o Tutorial06_MultiContext/vertex.450core.spv Tutorial06_MultiContext/vertex.450core.glsl
 glslang -V -S frag -o Tutorial06_MultiContext/fragment.450core.spv Tutorial06_MultiContext/fragment.450core.glsl

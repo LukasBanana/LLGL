@@ -591,7 +591,7 @@ public:
         {
             // Set image color format
             imageDesc.format    = LLGL::ImageFormat::RGBA;
-            
+
             // Set image data type (unsigned char = 8-bit unsigned integer)
             imageDesc.dataType  = LLGL::DataType::UInt8;
 
@@ -854,10 +854,18 @@ protected:
         return loadingDone_;
     }
 
+    // Returns a projection with the specified parameters for the respective renderer.
     Gs::Matrix4f PerspectiveProjection(float aspectRatio, float near, float far, float fov)
     {
         int flags = (IsOpenGL() ? Gs::ProjectionFlags::UnitCube : 0);
         return Gs::ProjectionMatrix4f::Perspective(aspectRatio, near, far, fov, flags).ToMatrix4();
+    }
+
+    // Returns true if the specified shading language is supported.
+    bool Supported(const LLGL::ShadingLanguage shadingLanguage) const
+    {
+        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
+        return (std::find(languages.begin(), languages.end(), shadingLanguage) != languages.end());
     }
 
 };

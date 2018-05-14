@@ -62,6 +62,7 @@ struct ShaderDisassembleFlags
 e.g. to which shader stages a constant buffer is set.
 For the render systems, which do not support these flags, always all shader stages are affected.
 \note Only supported with: Direct3D 11, Direct3D 12, Vulkan.
+\todo Rename to "StageFlags" and rename "VertexStage" to "Vert", "TessControlStage" to "Tesc" etc.
 */
 struct ShaderStageFlags
 {

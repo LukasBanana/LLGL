@@ -110,7 +110,7 @@ public:
         {
             // Set image color format
             imageDesc.format    = (texComponents == 4 ? LLGL::ImageFormat::RGBA : LLGL::ImageFormat::RGB);
-            
+
             // Set image data type (unsigned char = 8-bit unsigned integer)
             imageDesc.dataType  = LLGL::DataType::UInt8;
 

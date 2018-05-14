@@ -28,6 +28,7 @@ class PipelineLayout;
 \brief Resource view type enumeration.
 \see LayoutBinding::type
 \see ResourceViewDescriptor::type
+\todo Rename to "ResourceType"
 */
 enum class ResourceViewType
 {

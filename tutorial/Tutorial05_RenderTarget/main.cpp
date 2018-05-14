@@ -31,6 +31,7 @@ class Tutorial05 : public Tutorial
     LLGL::ShaderProgram*    shaderProgram           = nullptr;
 
     LLGL::GraphicsPipeline* pipeline                = nullptr;
+    LLGL::PipelineLayout*   pipelineLayout          = nullptr;
 
     LLGL::Buffer*           vertexBuffer            = nullptr;
     LLGL::Buffer*           indexBuffer             = nullptr;
@@ -38,6 +39,7 @@ class Tutorial05 : public Tutorial
 
     LLGL::Texture*          colorMap                = nullptr;
     LLGL::Sampler*          samplerState            = nullptr;
+    LLGL::ResourceViewHeap* resourceHeaps[2]        = {};
 
     LLGL::RenderTarget*     renderTarget            = nullptr;
     LLGL::Texture*          renderTargetTex         = nullptr;
@@ -75,7 +77,7 @@ public:
         CreatePipelines();
         CreateColorMap();
         CreateRenderTarget();
-        
+
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
         std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube" << std::endl;
@@ -102,12 +104,11 @@ public:
 
         return vertexFormat;
     }
-    
+
     void LoadShaders(const LLGL::VertexFormat& vertexFormat)
     {
         // Load shader program
-        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
-        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+        if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             shaderProgram = LoadShaderProgram(
                 {
@@ -117,7 +118,7 @@ public:
                 { vertexFormat }
             );
         }
-        else
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             shaderProgram = LoadShaderProgram(
                 {
@@ -131,14 +132,38 @@ public:
                 { vertexFormat }
             );
         }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            shaderProgram = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex, "vertex.450core.spv" },
+                    { LLGL::ShaderType::Fragment, "fragment.450core.spv" }
+                },
+                { vertexFormat }
+            );
+        }
     }
 
     void CreatePipelines()
     {
+        // Create pipeline layout
+        LLGL::PipelineLayoutDescriptor layoutDesc;
+        {
+            layoutDesc.bindings =
+            {
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::ConstantBuffer, 0, 1, LLGL::ShaderStageFlags::FragmentStage | LLGL::ShaderStageFlags::VertexStage },
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::Sampler,        1, 1, LLGL::ShaderStageFlags::FragmentStage },
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::Texture,        2, 1, LLGL::ShaderStageFlags::FragmentStage },
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceViewType::Texture,        3, 1, LLGL::ShaderStageFlags::FragmentStage },
+            };
+        }
+        pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
+
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.pipelineLayout             = pipelineLayout;
 
             pipelineDesc.depth.testEnabled          = true;
             pipelineDesc.depth.writeEnabled         = true;
@@ -171,19 +196,19 @@ public:
     {
         // Create empty render-target texture
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
-        
+
         renderTargetTex = renderer->CreateTexture(
             LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA8, renderTargetSize.x, renderTargetSize.y, renderTargetDesc.multiSampling.samples)
         );
-        
+
         #else
-        
+
         renderTargetTex = renderer->CreateTexture(
             LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, renderTargetSize.x, renderTargetSize.y)
         );
 
         #endif
-        
+
         #ifdef ENABLE_DEPTH_TEXTURE
 
         // Create depth texture
@@ -296,7 +321,7 @@ private:
 
             // Update model transformation with render-target projection
             UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
-            
+
             #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
             if (IsOpenGL())
             {
