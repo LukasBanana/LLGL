@@ -225,13 +225,26 @@ This project is still in its early steps. Here is a short overview of its progre
 \newpage
 \section{Build Process}
 
+\subsection{Cloning Repository}
+
+There are some submodules in the \LLGL repository, all of which are optional though.
+These submodules are located in the \texttt{external/} directory.
+To clone the repository with \href{https://git-scm.com/}{git}, enter the following line in a command prompt:
+\begin{lstlisting}[language=sh]
+git clone https://github.com/LukasBanana/LLGL.git
+\end{lstlisting}
+To clone the repository with all its submodules, enter the following:
+\begin{lstlisting}[language=sh]
+git clone --recursive https://github.com/LukasBanana/LLGL.git
+\end{lstlisting}
+
 \subsection{Dependencies}
 
 \subsubsection{GaussianLib}
 
-The only required dependency is the header-only library
-\href{https://github.com/LukasBanana/GaussianLib}{\textsc{GaussianLib}},
-which is used for basic linear algebra computations with vectors and matrices.
+The \href{https://github.com/LukasBanana/GaussianLib}{\textsc{GaussianLib}} is an optional header-only library which is only used in the tests and tutorials.
+It provides classes and functions for basic linear algebra with vectors and matrices.
+You can omit it if you only want to build the library and the renderer backends.
 
 \subsubsection{OpenGL}
 
@@ -248,10 +261,10 @@ or add the include path later in your build settings.
 Since VisualStudio 2013, the DirectX framework (of which Direct3D is a part of) is included within
 the VisualStudio setup, so no further SDK needs to be installed.
 
-%\subsubsection{Vulkan}
+\subsubsection{Vulkan}
 
-%To build the Vulkan render system you need the \href{https://lunarg.com/vulkan-sdk/}{Vulkan SDK},
-%and of course a graphics driver which supports at least Vulkan 1.0.
+To build the Vulkan render system you need the \href{https://lunarg.com/vulkan-sdk/}{Vulkan SDK},
+and of course a graphics driver which supports at least Vulkan 1.0.
 
 \subsection{Build Tool}
 
