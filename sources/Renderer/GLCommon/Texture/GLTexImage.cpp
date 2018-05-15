@@ -243,7 +243,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(
             desc.texture1D.width,
-            g_imageInitialization.color
+            g_imageInitialization.clearValue.color
         );
 
         GLTexImage1D(
@@ -274,7 +274,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             /* Initialize depth texture image with default depth */
             auto image = GenImageDataRf(
                 desc.texture2D.width * desc.texture2D.height,
-                g_imageInitialization.depth
+                g_imageInitialization.clearValue.depth
             );
 
             GLTexImage2D(
@@ -307,7 +307,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(
             desc.texture2D.width * desc.texture2D.height,
-            g_imageInitialization.color
+            g_imageInitialization.clearValue.color
         );
 
         GLTexImage2D(
@@ -348,7 +348,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(
             desc.texture3D.width * desc.texture3D.height * desc.texture3D.depth,
-            g_imageInitialization.color
+            g_imageInitialization.clearValue.color
         );
 
         GLTexImage3D(
@@ -415,7 +415,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAf(
             desc.textureCube.width * desc.textureCube.height,
-            g_imageInitialization.color
+            g_imageInitialization.clearValue.color
         );
 
         for (auto face : cubeFaces)
@@ -461,7 +461,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(
             desc.texture1D.width * static_cast<int>(desc.texture1D.layers),
-            g_imageInitialization.color
+            g_imageInitialization.clearValue.color
         );
 
         GLTexImage1DArray(
@@ -492,7 +492,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
             /* Initialize depth texture image with default depth */
             auto image = GenImageDataRf(
                 desc.texture2D.width * desc.texture2D.height * static_cast<int>(desc.texture2D.layers),
-                g_imageInitialization.depth
+                g_imageInitialization.clearValue.depth
             );
 
             GLTexImage2DArray(
@@ -525,7 +525,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         /* Initialize texture image with default color */
         auto image = GenImageDataRGBAf(
             desc.texture2D.width * desc.texture2D.height * static_cast<int>(desc.texture2D.layers),
-            g_imageInitialization.color
+            g_imageInitialization.clearValue.color
         );
 
         GLTexImage2DArray(
@@ -568,7 +568,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAf(
             desc.textureCube.width * desc.textureCube.height * static_cast<int>(desc.textureCube.layers*6),
-            g_imageInitialization.color
+            g_imageInitialization.clearValue.color
         );
 
         GLTexImageCubeArray(

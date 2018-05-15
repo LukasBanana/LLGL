@@ -430,8 +430,10 @@ void D3D11RenderSystem::InitializeGpuTextureWithDefault(
     ImageDescriptor imageDescDefault;
     if (FindSuitableImageFormat(format, imageDescDefault.format, imageDescDefault.dataType))
     {
+        const auto& cfg = GetConfiguration();
+
         /* Generate default image buffer */
-        const auto fillColor = GetConfiguration().imageInitialization.color.Cast<double>();
+        const auto fillColor = cfg.imageInitialization.clearValue.color.Cast<double>();
         const auto imageSize = width * height * depth;
 
         auto imageBuffer = GenerateImageBuffer(imageDescDefault.format, imageDescDefault.dataType, imageSize, fillColor);
@@ -444,7 +446,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithDefault(
             textureD3D.UpdateSubresource(
                 context_.Get(), 0, arraySlice,
                 CD3D11_BOX(0, 0, 0, width, height, depth),
-                imageDescDefault, GetConfiguration().threadCount
+                imageDescDefault, cfg.threadCount
             );
         }
     }

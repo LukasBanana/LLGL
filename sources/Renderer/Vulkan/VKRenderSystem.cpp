@@ -365,6 +365,8 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
 {
+    const auto& cfg = GetConfiguration();
+
     /* Determine size of image for staging buffer */
     const VkExtent3D extent
     {
@@ -391,7 +393,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             /* Convert image format (will be null if no conversion is necessary) */
             tempImageBuffer = ConvertImageBuffer(
                 imageDesc->format, imageDesc->dataType, imageDesc->data, imageDesc->dataSize,
-                dstFormat, dstDataType, GetConfiguration().threadCount
+                dstFormat, dstDataType, cfg.threadCount
             );
         }
         else
@@ -406,7 +408,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         else
             initialData = imageDesc->data;
     }
-    else if (GetConfiguration().imageInitialization.enabled)
+    else if (cfg.imageInitialization.enabled)
     {
         /* Allocate default image data */
         ImageFormat imageFormat = ImageFormat::RGBA;
@@ -414,7 +416,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
         if (FindSuitableImageFormat(textureDesc.format, imageFormat, imageDataType))
         {
-            const ColorRGBAd fillColor { GetConfiguration().imageInitialization.color.Cast<double>() };
+            const ColorRGBAd fillColor { cfg.imageInitialization.clearValue.color.Cast<double>() };
             tempImageBuffer = GenerateImageBuffer(imageFormat, imageDataType, imageSize, fillColor);
         }
         else
