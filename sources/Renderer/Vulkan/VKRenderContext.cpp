@@ -118,6 +118,11 @@ void VKRenderContext::SetPresentCommandBuffer(VKCommandBuffer* commandBuffer)
     commandBuffer_->SetPresentIndex(presentImageIndex_);
 }
 
+bool VKRenderContext::HasDepthStencilBuffer() const
+{
+    return (depthStencilFormat_ != VK_FORMAT_UNDEFINED);
+}
+
 
 /*
  * ======= Private: =======
@@ -591,11 +596,6 @@ void VKRenderContext::AcquireNextPresentImage()
 {
     /* Get next image for presentation */
     vkAcquireNextImageKHR(device_, swapChain_, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore_, VK_NULL_HANDLE, &presentImageIndex_);
-}
-
-bool VKRenderContext::HasDepthStencilBuffer() const
-{
-    return (depthStencilFormat_ != VK_FORMAT_UNDEFINED);
 }
 
 

@@ -50,10 +50,10 @@ enum class OpenGLContextProfile
 //! Vertical-synchronization (Vsync) descriptor structure.
 struct VsyncDescriptor
 {
-    //!< Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
+    //! Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
     bool            enabled     = false;
 
-    //!< Refresh rate (in Hz). By default 60.
+    //! Refresh rate (in Hz). By default 60.
     std::uint32_t   refreshRate = 60;
 
     /**
@@ -94,9 +94,7 @@ struct VideoModeDescriptor
     */
     int             stencilBits     = 8;
 
-    /**
-    \breif Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
-    */
+    //! Specifies whether to enable fullscreen mode or windowed mode. By default windowed mode.
     bool            fullscreen      = false;
 
     /**

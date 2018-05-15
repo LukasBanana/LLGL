@@ -48,7 +48,6 @@ void VKCommandQueue::WaitForFinish()
     globalFence_.Reset(device_);
     vkQueueSubmit(graphicsQueue_, 0, nullptr, globalFence_.GetHardwareFence());
     globalFence_.Wait(device_, ~0);
-
 }
 
 
