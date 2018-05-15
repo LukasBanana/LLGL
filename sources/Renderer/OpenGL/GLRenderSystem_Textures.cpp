@@ -207,17 +207,29 @@ void GLRenderSystem::GenerateMips(Texture& texture)
     #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
     if (HasExtension(GLExt::ARB_direct_state_access))
     {
+        /* Generate MIP-maps of named texture object */
         glGenerateTextureMipmap(textureGL.GetID());
         glTextureParameteri(textureGL.GetID(), GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     }
     else
     #endif
     {
-        GLStateManager::active->BindTexture(textureGL);
-        auto target = GLTypes::Map(textureGL.GetType());
-        glGenerateMipmap(target);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        /* Restore previously bound texture on active layer */
+        GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(textureGL.GetType()));
+        {
+            /* Bind texture and generate MIP-maps */
+            auto target = GLTypes::Map(textureGL.GetType());
+            GLStateManager::active->BindTexture(textureGL);
+            glGenerateMipmap(target);
+            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        }
+        GLStateManager::active->PopBoundTexture();
     }
+}
+
+void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t /*baseMipLevel*/, std::uint32_t /*numMipLevels*/, std::uint32_t /*baseArrayLayer*/, std::uint32_t /*numArrayLayers*/)
+{
+    GLRenderSystem::GenerateMips(texture);
 }
 
 

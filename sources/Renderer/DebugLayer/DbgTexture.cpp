@@ -13,10 +13,15 @@ namespace LLGL
 
 
 DbgTexture::DbgTexture(Texture& instance, const TextureDescriptor& desc) :
-    Texture  { desc.type },
-    instance { instance  },
-    desc     { desc      }
+    Texture   { desc.type },
+    instance  { instance  },
+    desc      { desc      }
 {
+    /* Store number of MIP-maps (if enabled) */
+    if ((desc.flags & TextureFlags::GenerateMips) != 0)
+        mipLevels = NumMipLevels(desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth);
+    else
+        mipLevels = 1;
 }
 
 Extent3D DbgTexture::QueryMipLevelSize(std::uint32_t mipLevel) const

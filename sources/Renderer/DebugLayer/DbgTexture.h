@@ -29,7 +29,7 @@ class DbgTexture : public Texture
 
         Texture&            instance;
         TextureDescriptor   desc;
-        int                 mipLevels   = 1;
+        std::uint32_t       mipLevels   = 1;
 
 };
 

@@ -235,9 +235,26 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
 
 void D3D11RenderSystem::GenerateMips(Texture& texture)
 {
-    /* Generate MIP-maps for SRV of specified texture */
+    /* Generate MIP-maps for the default SRV */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     context_->GenerateMips(textureD3D.GetSRV());
+}
+
+void D3D11RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
+{
+    auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
+    if (baseMipLevel == 0 && numMipLevels == textureD3D.GetNumMipLevels() && baseArrayLayer == 0 && numArrayLayers == textureD3D.GetNumArrayLayers())
+    {
+        /* Generate MIP-maps for the default SRV */
+        context_->GenerateMips(textureD3D.GetSRV());
+    }
+    else
+    {
+        /* Generate MIP-maps for a subresource SRV */
+        ComPtr<ID3D11ShaderResourceView> srv;
+        textureD3D.CreateSubresourceSRV(device_.Get(), srv.GetAddressOf(), baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
+        context_->GenerateMips(srv.Get());
+    }
 }
 
 

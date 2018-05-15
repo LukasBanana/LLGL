@@ -84,6 +84,7 @@ class DbgRenderSystem : public RenderSystem
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) override;
 
         void GenerateMips(Texture& texture) override;
+        void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers) override;
 
         /* ----- Sampler States ---- */
 
@@ -157,6 +158,10 @@ class DbgRenderSystem : public RenderSystem
         void ValidateArrayTextureLayers(std::uint32_t layers);
         void ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
         void ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize);
+        bool ValidateTextureMips(const DbgTexture& textureDbg);
+        void ValidateTextureMipRange(const DbgTexture& textureDbg, std::uint32_t baseMipLevel, std::uint32_t numMipLevels);
+        void ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
+        void ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit);
 
         void ValidateGraphicsPipelineDesc(const GraphicsPipelineDescriptor& desc);
         void ValidatePrimitiveTopology(const PrimitiveTopology primitiveTopology);

@@ -342,12 +342,21 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Generates all MIP-maps for the specified texture.
+        \remarks To generate only a small amout of MIP levels, use the secondary 'GenerateMips' function.
         \remarks This may invalidate any currently bound texture slot.
-        If this is used after a texture slot is bound (using 'CommandBuffer::SetTexture')
-        and before a draw call that is dependent on this previously bound texture slot, the behavior is undefined.
-        \see CommandBuffer::SetTexture
+        \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
         */
         virtual void GenerateMips(Texture& texture) = 0;
+
+        /**
+        \brief Generates at least the specified range of MIP-maps for the specified texture.
+        \remarks This function only guarantees to generate at least the specified amount of MIP-maps.
+        It may also update all other MIP-maps if the respective rendering API does not support hardware accelerated generation of a sub-range of MIP-maps.
+        \note Only use this function if the range of MIP-maps is significantly smaller than the entire MIP chain,
+        e.g. only a single slice of a large 2D array texture, and use the primary 'GenerateMips' function otherwise.
+        \see GenerateMips(Texture&)
+        */
+        virtual void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers) = 0;
 
         /* ----- Samplers ---- */
 

@@ -171,6 +171,9 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t 
         }
 
         ValidateBufferBoundary(bufferDbg.desc.size, dataSize, offset);
+
+        if (!data)
+            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "illegal null pointer argument for 'data' parameter");
     }
 
     instance_->WriteBuffer(bufferDbg.instance, data, dataSize, offset);
@@ -294,11 +297,32 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel
 void DbgRenderSystem::GenerateMips(Texture& texture)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+
+    if (debugger_)
     {
-        instance_->GenerateMips(textureDbg.instance);
+        LLGL_DBG_SOURCE;
+        if (ValidateTextureMips(textureDbg))
+            ValidateTextureMipRange(textureDbg, 0, textureDbg.mipLevels);
     }
-    const auto& tex3DDesc = textureDbg.desc.texture3D;
-    textureDbg.mipLevels = NumMipLevels(tex3DDesc.width, tex3DDesc.height, tex3DDesc.depth);
+
+    instance_->GenerateMips(textureDbg.instance);
+}
+
+void DbgRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
+{
+    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
+
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        if (ValidateTextureMips(textureDbg))
+        {
+            ValidateTextureMipRange(textureDbg, baseMipLevel, numMipLevels);
+            ValidateTextureArrayRange(textureDbg, baseArrayLayer, numArrayLayers);
+        }
+    }
+
+    instance_->GenerateMips(textureDbg.instance, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
 }
 
 /* ----- Sampler States ---- */
@@ -749,6 +773,65 @@ void DbgRenderSystem::ValidateTextureImageDataSize(std::size_t dataSize, std::si
             ErrorType::InvalidArgument,
             "image data size too small for texture (" + std::to_string(dataSize) +
             " specified but required is " + std::to_string(requiredDataSize) + ")"
+        );
+    }
+}
+
+bool DbgRenderSystem::ValidateTextureMips(const DbgTexture& textureDbg)
+{
+    if ((textureDbg.desc.flags & TextureFlags::GenerateMips) == 0)
+    {
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot generate MIP-maps for texture without 'TextureFlags::GenerateMips' flag set during creation");
+        return false;
+    }
+    return true;
+}
+
+void DbgRenderSystem::ValidateTextureMipRange(const DbgTexture& textureDbg, std::uint32_t baseMipLevel, std::uint32_t numMipLevels)
+{
+    const auto mipLevelRangeEnd = baseMipLevel + numMipLevels;
+    if (mipLevelRangeEnd > textureDbg.mipLevels)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "MIP level out of range for texture (" + std::to_string(mipLevelRangeEnd) +
+            " specified but limit is " + std::to_string(textureDbg.mipLevels) + ")"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
+{
+    switch (textureDbg.GetType())
+    {
+        case TextureType::Texture1DArray:
+            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture1D.layers);
+            break;
+        case TextureType::Texture2DArray:
+            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture2D.layers);
+            break;
+        case TextureType::TextureCubeArray:
+            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.textureCube.layers);
+            break;
+        case TextureType::Texture2DMSArray:
+            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture2DMS.layers);
+            break;
+        default:
+            if (baseArrayLayer > 0 || numArrayLayers > 1)
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "array layer out of range for non-array texture type");
+            break;
+    }
+}
+
+void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit)
+{
+    const auto arrayLayerRangeEnd = baseArrayLayer + numArrayLayers;
+    if (arrayLayerRangeEnd > arrayLayerLimit)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "array layer out of range for array texture (" + std::to_string(arrayLayerRangeEnd) +
+            " specified but limit is " + std::to_string(arrayLayerLimit) + ")"
         );
     }
 }
