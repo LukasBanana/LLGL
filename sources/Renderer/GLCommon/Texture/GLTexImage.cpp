@@ -271,6 +271,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     {
         if (g_imageInitialization.enabled)
         {
+            //TODO: add support for default initialization of stencil values
             /* Initialize depth texture image with default depth */
             auto image = GenImageDataRf(
                 desc.texture2D.width * desc.texture2D.height,

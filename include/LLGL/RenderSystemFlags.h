@@ -133,7 +133,10 @@ struct ImageInitialization
     */
     bool        enabled     { true };
 
-    //! Specifies the default value to clear uninitialized textures.
+    /**
+    \brief Specifies the default value to clear uninitialized textures.
+    \todo Currently only supports initialization of color and depth. Default initialization of stencil values is not supported yet.
+    */
     ClearValue  clearValue;
 };
 
