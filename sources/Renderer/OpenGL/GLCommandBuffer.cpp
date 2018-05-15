@@ -151,7 +151,7 @@ void GLCommandBuffer::Clear(long flags)
         //stateMngr_->SetColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         mask |= GL_COLOR_BUFFER_BIT;
     }
-    
+
     if ((flags & ClearFlags::Depth) != 0)
     {
         stateMngr_->SetDepthMask(GL_TRUE);

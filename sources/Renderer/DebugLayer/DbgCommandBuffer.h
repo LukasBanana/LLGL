@@ -147,8 +147,6 @@ class DbgCommandBuffer : public CommandBufferExt
 
     private:
 
-        //TODO: Rename all "Debug..." functions to "Validate..."
-
         void AssertCommandBufferExt(const char* funcName);
 
         void ValidateViewport(const Viewport& viewport);

@@ -143,7 +143,7 @@ class D3D12CommandBuffer : public CommandBuffer
         //UINT64                              fenceValues_[maxNumBuffers] = { 0 };
 
         D3D12StateManager                   stateMngr_;
-        D3DClearState                       clearState_;
+        ClearValue                          clearValue_;
 
         bool                                disableAutoStateSubmission_ = false;
 

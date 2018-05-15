@@ -85,17 +85,17 @@ void D3D11CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* s
 
 void D3D11CommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
-    clearState_.color = color;
+    clearValue_.color = color;
 }
 
 void D3D11CommandBuffer::SetClearDepth(float depth)
 {
-    clearState_.depth = depth;
+    clearValue_.depth = depth;
 }
 
 void D3D11CommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
-    clearState_.stencil = static_cast<UINT8>(stencil & 0xff);
+    clearValue_.stencil = (stencil & 0xff);
 }
 
 void D3D11CommandBuffer::Clear(long flags)
@@ -104,9 +104,9 @@ void D3D11CommandBuffer::Clear(long flags)
     if ((flags & ClearFlags::Color) != 0)
     {
         for (auto rtv : framebufferView_.rtvList)
-            context_->ClearRenderTargetView(rtv, clearState_.color.Ptr());
+            context_->ClearRenderTargetView(rtv, clearValue_.color.Ptr());
     }
-    
+
     /* Clear depth-stencil buffer */
     std::int32_t dsvClearFlags = 0;
 
@@ -114,9 +114,16 @@ void D3D11CommandBuffer::Clear(long flags)
         dsvClearFlags |= D3D11_CLEAR_DEPTH;
     if ((flags & ClearFlags::Stencil) != 0)
         dsvClearFlags |= D3D11_CLEAR_STENCIL;
-        
+
     if (dsvClearFlags && framebufferView_.dsv != nullptr)
-        context_->ClearDepthStencilView(framebufferView_.dsv, dsvClearFlags, clearState_.depth, clearState_.stencil);
+    {
+        context_->ClearDepthStencilView(
+            framebufferView_.dsv,
+            dsvClearFlags,
+            clearValue_.depth,
+            static_cast<UINT8>(clearValue_.stencil)
+        );
+    }
 }
 
 void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
@@ -150,7 +157,7 @@ void D3D11CommandBuffer::ClearAttachments(std::uint32_t numAttachments, const At
                     framebufferView_.dsv,
                     dsvClearFlags,
                     attachments->clearValue.depth,
-                    static_cast<UINT8>(attachments->clearValue.stencil)
+                    static_cast<UINT8>(attachments->clearValue.stencil & 0xff)
                 );
             }
         }

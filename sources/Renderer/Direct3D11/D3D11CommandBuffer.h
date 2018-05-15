@@ -147,14 +147,13 @@ class D3D11CommandBuffer : public CommandBufferExt
         void ResolveBoundRenderTarget();
 
         D3D11StateManager&          stateMngr_;
-        
+
         ComPtr<ID3D11DeviceContext> context_;
 
         D3D11FramebufferView        framebufferView_;
-
-        D3DClearState               clearState_;
-
         D3D11RenderTarget*          boundRenderTarget_  = nullptr;
+
+        ClearValue                  clearValue_;
 
 };
 

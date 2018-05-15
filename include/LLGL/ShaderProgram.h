@@ -108,7 +108,9 @@ class LLGL_EXPORT ShaderProgram
         virtual void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) = 0;
 
         //TODO: add FragmentFormat structure to provide CPU side fragment binding for OpenGL
-        //virtual void BuildOutputLayout(const FragmentFormat& fragmentFormat) = 0;
+        #if 0
+        virtual void BuildOutputLayout(const FragmentFormat& fragmentFormat) = 0;
+        #endif
 
         /**
         \brief Binds the specified constant buffer to this shader.
