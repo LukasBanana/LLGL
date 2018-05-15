@@ -174,21 +174,24 @@ void D3D11Texture::CreateTexture1D(
     ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
     hwTexture_.tex1D = DXCreateTexture1D(device, desc, initialData);
-    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, 1u, 1u }, srvDesc);
+    CreateDefaultSRV(device, srvDesc);
+    SetResourceParams(desc.Format, { desc.Width, 1u, 1u }, desc.ArraySize);
 }
 
 void D3D11Texture::CreateTexture2D(
     ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
     hwTexture_.tex2D = DXCreateTexture2D(device, desc, initialData);
-    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, 1u }, srvDesc);
+    CreateDefaultSRV(device, srvDesc);
+    SetResourceParams(desc.Format, { desc.Width, desc.Height, 1u }, desc.ArraySize);
 }
 
 void D3D11Texture::CreateTexture3D(
     ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
     hwTexture_.tex3D = DXCreateTexture3D(device, desc, initialData);
-    CreateSRVAndStoreSettings(device, desc.Format, { desc.Width, desc.Height, desc.Depth }, srvDesc);
+    CreateDefaultSRV(device, srvDesc);
+    SetResourceParams(desc.Format, { desc.Width, desc.Height, desc.Depth }, 1);
 }
 
 void D3D11Texture::UpdateSubresource(
@@ -244,7 +247,7 @@ void D3D11Texture::UpdateSubresource(
 
 void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     ID3D11Device* device, ID3D11DeviceContext* context,
-    D3D11HardwareTexture& textureCopy, UINT cpuAccessFlags, std::uint32_t mipLevel) const
+    D3D11HardwareTexture& textureCopy, UINT cpuAccessFlags, UINT mipLevel) const
 {
     D3D11_RESOURCE_DIMENSION dimension;
     hwTexture_.resource->GetType(&dimension);
@@ -317,26 +320,93 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
     );
 }
 
+void D3D11Texture::CreateSubresourceSRV(
+    ID3D11Device* device, ID3D11ShaderResourceView** srvOutput,
+    UINT baseMipLevel, UINT numMipLevels, UINT baseArrayLayer, UINT numArrayLayers)
+{
+    /* Create SRV for subresource */
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    {
+        srvDesc.Format          = format_;
+        srvDesc.ViewDimension   = D3D11Types::Map(GetType());
+
+        switch (srvDesc.ViewDimension)
+        {
+            case D3D11_SRV_DIMENSION_TEXTURE1D:
+                srvDesc.Texture1D.MostDetailedMip           = baseMipLevel;
+                srvDesc.Texture1D.MipLevels                 = numMipLevels;
+                break;
+
+            case D3D11_SRV_DIMENSION_TEXTURE2D:
+                srvDesc.Texture2D.MostDetailedMip           = baseMipLevel;
+                srvDesc.Texture2D.MipLevels                 = numMipLevels;
+                break;
+
+            case D3D11_SRV_DIMENSION_TEXTURE3D:
+                srvDesc.Texture3D.MostDetailedMip           = baseMipLevel;
+                srvDesc.Texture3D.MipLevels                 = numMipLevels;
+                break;
+
+            case D3D11_SRV_DIMENSION_TEXTURECUBE:
+                srvDesc.TextureCube.MostDetailedMip         = baseMipLevel;
+                srvDesc.TextureCube.MipLevels               = numMipLevels;
+                break;
+
+            case D3D11_SRV_DIMENSION_TEXTURE1DARRAY:
+                srvDesc.Texture1DArray.MostDetailedMip      = baseMipLevel;
+                srvDesc.Texture1DArray.MipLevels            = numMipLevels;
+                srvDesc.Texture1DArray.FirstArraySlice      = baseArrayLayer;
+                srvDesc.Texture1DArray.ArraySize            = numArrayLayers;
+                break;
+
+            case D3D11_SRV_DIMENSION_TEXTURE2DARRAY:
+                srvDesc.Texture2DArray.MostDetailedMip      = baseMipLevel;
+                srvDesc.Texture2DArray.MipLevels            = numMipLevels;
+                srvDesc.Texture2DArray.FirstArraySlice      = baseArrayLayer;
+                srvDesc.Texture2DArray.ArraySize            = numArrayLayers;
+                break;
+
+            case D3D11_SRV_DIMENSION_TEXTURECUBEARRAY:
+                srvDesc.TextureCubeArray.MostDetailedMip    = baseMipLevel;
+                srvDesc.TextureCubeArray.MipLevels          = numMipLevels;
+                srvDesc.TextureCubeArray.First2DArrayFace   = baseArrayLayer;
+                srvDesc.TextureCubeArray.NumCubes           = numArrayLayers;
+                break;
+
+            case D3D11_SRV_DIMENSION_TEXTURE2DMS:
+                break;
+
+            case D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY:
+                srvDesc.Texture2DMSArray.FirstArraySlice    = baseArrayLayer;
+                srvDesc.Texture2DMSArray.ArraySize          = numArrayLayers;
+                break;
+        }
+    }
+    auto hr = device->CreateShaderResourceView(hwTexture_.resource.Get(), &srvDesc, srvOutput);
+    DXThrowIfFailed(hr, "failed to create D3D11 shader-resouce-view (SRV) for texture subresource");
+}
+
 
 /*
  * ====== Private: ======
  */
 
-void D3D11Texture::CreateSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
+void D3D11Texture::CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
 {
-    auto hr = device->CreateShaderResourceView(hwTexture_.resource.Get(), srvDesc, srv_.ReleaseAndGetAddressOf());
+    /* Create internal SRV for entire texture resource */
+    auto hr = device->CreateShaderResourceView(
+        hwTexture_.resource.Get(),
+        srvDesc,
+        srv_.ReleaseAndGetAddressOf()
+    );
     DXThrowIfFailed(hr, "failed to create D3D11 shader-resouce-view (SRV) for texture");
 }
 
-void D3D11Texture::CreateSRVAndStoreSettings(
-    ID3D11Device* device, DXGI_FORMAT format, const Extent3D& size, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
+void D3D11Texture::SetResourceParams(DXGI_FORMAT format, const Extent3D& size, UINT arraySize)
 {
-    /* Create SRV for D3D texture */
-    CreateSRV(device, srvDesc);
-
-    /* Store format and number of MIP-maps */
     format_         = format;
     numMipLevels_   = NumMipLevels(size.width, size.height, size.height);
+    numArrayLayers_ = arraySize;
 }
 
 

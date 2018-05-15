@@ -230,8 +230,8 @@ private:
         else
         {
             // Set texture and sampler state on slot index 0
-            commandsExt->SetTextureArray(*textureArray, 0);
-            commandsExt->SetSampler(*sampler[samplerIndex], 0);
+            commandsExt->SetTextureArray(*textureArray, 0, LLGL::ShaderStageFlags::FragmentStage);
+            commandsExt->SetSampler(*sampler[samplerIndex], 0, LLGL::ShaderStageFlags::FragmentStage);
         }
 
         // Draw fullscreen triangle

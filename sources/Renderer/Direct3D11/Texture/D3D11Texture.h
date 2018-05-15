@@ -81,8 +81,20 @@ class D3D11Texture : public Texture
             ID3D11Device* device, ID3D11DeviceContext* context,
             D3D11HardwareTexture& textureCopy,
             UINT cpuAccessFlags,
-            std::uint32_t mipLevel
+            UINT mipLevel
         ) const;
+
+        // Creates a shader-resource-view (SRV) of a subresource of this texture object.
+        void CreateSubresourceSRV(
+            ID3D11Device* device,
+            ID3D11ShaderResourceView** srvOutput,
+            UINT baseMipLevel,
+            UINT numMipLevels,
+            UINT baseArrayLayer,
+            UINT numArrayLayers
+        );
+
+        /* ----- Hardware texture objects ----- */
 
         // Returns the union of D3D hardware textures.
         inline const D3D11HardwareTexture& GetHwTexture() const
@@ -90,11 +102,13 @@ class D3D11Texture : public Texture
             return hwTexture_;
         }
 
-        // Returns the shader-resource-view (SRV) of the hardware texture object.
+        // Returns the standard shader-resource-view (SRV) of the hardware texture object (full view of all layers and MIP levels).
         inline ID3D11ShaderResourceView* GetSRV() const
         {
             return srv_.Get();
         }
+
+        /* ----- Hardware texture parameters ----- */
 
         // Returns the hardware resource format.
         inline DXGI_FORMAT GetFormat() const
@@ -108,14 +122,17 @@ class D3D11Texture : public Texture
             return numMipLevels_;
         }
 
+        // Returns the number of array layers.
+        inline UINT GetNumArrayLayers() const
+        {
+            return numArrayLayers_;
+        }
+
     private:
 
-        void CreateSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr);
+        void CreateDefaultSRV(ID3D11Device* device, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr);
 
-        void CreateSRVAndStoreSettings(
-            ID3D11Device* device, DXGI_FORMAT format, const Extent3D& size,
-            const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
-        );
+        void SetResourceParams(DXGI_FORMAT format, const Extent3D& size, UINT arraySize);
 
         D3D11HardwareTexture                hwTexture_;
 
@@ -124,6 +141,7 @@ class D3D11Texture : public Texture
 
         DXGI_FORMAT                         format_             = DXGI_FORMAT_UNKNOWN;
         UINT                                numMipLevels_       = 0;
+        UINT                                numArrayLayers_     = 0;
 
 };
 

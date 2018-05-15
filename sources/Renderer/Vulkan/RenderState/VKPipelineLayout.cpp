@@ -47,7 +47,7 @@ static void Convert(VkDescriptorSetLayoutBinding& dst, const LayoutBindingDescri
     dst.pImmutableSamplers  = nullptr;
 }
 
-/*static void Convert(VkDescriptorPoolSize& dst, const LayoutBinding& src)
+/*static void Convert(VkDescriptorPoolSize& dst, const LayoutBindingDescriptor& src)
 {
     dst.type            = VKTypes::Map(src.type);
     dst.descriptorCount = src.numSlots;

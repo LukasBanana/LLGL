@@ -26,7 +26,7 @@ class PipelineLayout;
 
 /**
 \brief Shader resource type enumeration.
-\see LayoutBinding::type
+\see LayoutBindingDescriptor::type
 \see ResourceViewDescriptor::type
 \see BufferType
 */
