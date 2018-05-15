@@ -46,11 +46,6 @@ class D3D11RenderContext : public RenderContext
 
         void Present() override;
 
-        /* ----- Configuration ----- */
-
-        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
-
         /* ----- Extended internal functions ----- */
 
         inline const D3D11BackBuffer& GetBackBuffer() const
@@ -60,14 +55,17 @@ class D3D11RenderContext : public RenderContext
 
     private:
 
+        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+        bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
+
         void CreateSwapChain(IDXGIFactory* factory);
-        void CreateBackBuffer(UINT width, UINT height);
-        void ResizeBackBuffer(UINT width, UINT height);
+        void CreateBackBuffer(const Extent2D& extent);
+        void ResizeBackBuffer(const Extent2D& extent);
 
         DXGI_FORMAT PickDepthStencilFormat(const VideoModeDescriptor& videoMode) const;
 
         RenderContextDescriptor     desc_;
-        
+
         ComPtr<ID3D11Device>        device_;
         ComPtr<ID3D11DeviceContext> context_;
 

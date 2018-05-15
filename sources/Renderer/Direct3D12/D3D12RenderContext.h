@@ -43,9 +43,6 @@ class D3D12RenderContext : public RenderContext
 
         void Present() override;
 
-        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
-
         /* --- Extended functions --- */
 
         ID3D12Resource* GetCurrentRenderTarget();
@@ -64,14 +61,17 @@ class D3D12RenderContext : public RenderContext
 
         static const UINT maxNumBuffers = 3;
 
-        void CreateWindowSizeDependentResources();
+        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+        bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
+
+        void CreateWindowSizeDependentResources(const VideoModeDescriptor& videoModeDesc);
         void CreateDeviceResources();
         void UpdateFenceValues();
 
         void MoveToNextFrame();
 
         void ResolveRenderTarget(ID3D12GraphicsCommandList* commandList);
-        
+
         D3D12RenderSystem&                  renderSystem_;  // reference to its render system
         D3D12CommandBuffer*                 commandBuffer_                  = nullptr;
 

@@ -30,7 +30,7 @@ D3D11RenderContext::D3D11RenderContext(
 
     /* Create D3D objects */
     CreateSwapChain(factory);
-    CreateBackBuffer(desc.videoMode.resolution.width, desc.videoMode.resolution.height);
+    CreateBackBuffer(desc.videoMode.resolution);
 
     /* Initialize v-sync */
     SetVsync(desc_.vsync);
@@ -41,36 +41,26 @@ void D3D11RenderContext::Present()
     swapChain_->Present(swapChainInterval_, 0);
 }
 
-/* ----- Configuration ----- */
-
-void D3D11RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
+bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
-    if (GetVideoMode() != videoModeDesc && videoModeDesc.resolution.width > 0 && videoModeDesc.resolution.height > 0)
-    {
-        auto prevVideoMode = GetVideoMode();
+    const auto& prevVideoMode = GetVideoMode();
 
-        /* Update window appearance and store new video mode in base function */
-        RenderContext::SetVideoMode(videoModeDesc);
+    /* Resize back buffer */
+    if (prevVideoMode.resolution != videoModeDesc.resolution)
+        ResizeBackBuffer(videoModeDesc.resolution);
 
-        /* Resize back buffer */
-        if (prevVideoMode.resolution != videoModeDesc.resolution)
-        {
-            ResizeBackBuffer(
-                videoModeDesc.resolution.width,
-                videoModeDesc.resolution.height
-            );
-        }
+    /* Switch fullscreen mode */
+    if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
+        swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
 
-        /* Switch fullscreen mode */
-        if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
-            swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
-    }
+    return true;
 }
 
-void D3D11RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
+bool D3D11RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
     desc_.vsync = vsyncDesc;
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
+    return true;
 }
 
 
@@ -104,7 +94,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 }
 
-void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
+void D3D11RenderContext::CreateBackBuffer(const Extent2D& extent)
 {
     HRESULT hr = 0;
 
@@ -119,8 +109,8 @@ void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
     /* Create depth stencil texture */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width               = width;
-        texDesc.Height              = height;
+        texDesc.Width               = extent.width;
+        texDesc.Height              = extent.height;
         texDesc.MipLevels           = 1;
         texDesc.ArraySize           = 1;
         texDesc.Format              = PickDepthStencilFormat(desc_.videoMode);
@@ -139,7 +129,7 @@ void D3D11RenderContext::CreateBackBuffer(UINT width, UINT height)
     DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for swap-chain");
 }
 
-void D3D11RenderContext::ResizeBackBuffer(UINT width, UINT height)
+void D3D11RenderContext::ResizeBackBuffer(const Extent2D& extent)
 {
     /* Check if the current RTV and DSV is from this render context */
     /*ID3D11RenderTargetView* rtv = nullptr;
@@ -167,7 +157,7 @@ void D3D11RenderContext::ResizeBackBuffer(UINT width, UINT height)
     DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
 
     /* Recreate back buffer and reset default render target */
-    CreateBackBuffer(width, height);
+    CreateBackBuffer(extent);
 
     /* Reset render target (if the previous RTV and DSV was from this render context) */
     //if (rtvFromThis)

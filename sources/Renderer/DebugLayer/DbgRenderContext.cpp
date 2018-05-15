@@ -23,17 +23,19 @@ void DbgRenderContext::Present()
     instance.Present();
 }
 
-/* ----- Configuration ----- */
 
-void DbgRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
+/*
+ * ======= Private: =======
+ */
+
+bool DbgRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
-    instance.SetVideoMode(videoModeDesc);
-    RenderContext::SetVideoMode(videoModeDesc);
+    return instance.SetVideoMode(videoModeDesc);
 }
 
-void DbgRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
+bool DbgRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
-    instance.SetVsync(vsyncDesc);
+    return instance.SetVsync(vsyncDesc);
 }
 
 

@@ -50,33 +50,6 @@ void GLRenderContext::Present()
     context_->SwapBuffers();
 }
 
-/* ----- Configuration ----- */
-
-void GLRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
-{
-    if (GetVideoMode() != videoModeDesc)
-    {
-        /* Update context height */
-        contextHeight_ = static_cast<GLint>(videoModeDesc.resolution.height);
-        stateMngr_->NotifyRenderTargetHeight(contextHeight_);
-
-        /* Update window appearance and store new video mode in base function */
-        RenderContext::SetVideoMode(videoModeDesc);
-
-        /* Notify GL context of a resize */
-        context_->Resize(videoModeDesc.resolution);
-    }
-}
-
-void GLRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
-{
-    if (desc_.vsync != vsyncDesc)
-    {
-        desc_.vsync = vsyncDesc;
-        UpdateSwapInterval();
-    }
-}
-
 bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 {
     if (renderContext)
@@ -94,6 +67,25 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 /*
  * ======= Private: =======
  */
+
+bool GLRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
+{
+    /* Update context height */
+    contextHeight_ = static_cast<GLint>(videoModeDesc.resolution.height);
+    stateMngr_->NotifyRenderTargetHeight(contextHeight_);
+
+    /* Notify GL context of a resize */
+    context_->Resize(videoModeDesc.resolution);
+
+    return true;
+}
+
+bool GLRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+{
+    desc_.vsync = vsyncDesc;
+    UpdateSwapInterval();
+    return true;
+}
 
 void GLRenderContext::InitRenderStates()
 {

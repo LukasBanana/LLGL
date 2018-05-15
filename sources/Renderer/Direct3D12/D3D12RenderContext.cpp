@@ -38,7 +38,7 @@ D3D12RenderContext::D3D12RenderContext(
 
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, desc_.videoMode, nullptr);
-    CreateWindowSizeDependentResources();
+    CreateWindowSizeDependentResources(desc_.videoMode);
     CreateDeviceResources();
 
     /* Initialize v-sync */
@@ -90,31 +90,6 @@ void D3D12RenderContext::Present()
     commandBuffer_->ResetCommandList(commandAlloc, nullptr);
 }
 
-void D3D12RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
-{
-    if (GetVideoMode() != videoModeDesc)
-    {
-        auto prevVideoMode = GetVideoMode();
-
-        /* Update window appearance and store new video mode in base function */
-        RenderContext::SetVideoMode(videoModeDesc);
-
-        /* Re-create resource that depend on the window size */
-        if (prevVideoMode.resolution != videoModeDesc.resolution)
-            CreateWindowSizeDependentResources();
-
-        /* Switch fullscreen mode */
-        if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
-            swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
-    }
-}
-
-void D3D12RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
-{
-    desc_.vsync = vsyncDesc;
-    swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
-}
-
 /* --- Extended functions --- */
 
 ID3D12Resource* D3D12RenderContext::GetCurrentRenderTarget()
@@ -162,7 +137,29 @@ void D3D12RenderContext::SyncGPU()
  * ======= Private: =======
  */
 
-void D3D12RenderContext::CreateWindowSizeDependentResources()
+bool D3D12RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
+{
+    const auto& prevVideoMode = GetVideoMode();
+
+    /* Re-create resource that depend on the window size */
+    if (prevVideoMode.resolution != videoModeDesc.resolution)
+        CreateWindowSizeDependentResources(videoModeDesc);
+
+    /* Switch fullscreen mode */
+    if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
+        swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
+
+    return true;
+}
+
+bool D3D12RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+{
+    desc_.vsync = vsyncDesc;
+    swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
+    return true;
+}
+
+void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescriptor& videoModeDesc)
 {
     /* Wait until all previous GPU work is complete */
     SyncGPU();
@@ -177,8 +174,8 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     rtvDescHeap_.Reset();
 
     /* Get framebuffer size */
-    auto framebufferWidth   = desc_.videoMode.resolution.width;
-    auto framebufferHeight  = desc_.videoMode.resolution.height;
+    auto framebufferWidth   = videoModeDesc.resolution.width;
+    auto framebufferHeight  = videoModeDesc.resolution.height;
 
     if (swapChain_)
     {
@@ -196,7 +193,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
     else
     {
         /* Setup swap chain meta data */
-        numFrames_ = desc_.videoMode.swapChainSize;
+        numFrames_ = videoModeDesc.swapChainSize;
 
         /* Create swap chain for window handle */
         NativeHandle wndHandle;
@@ -274,7 +271,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources()
             framebufferWidth,
             framebufferHeight,
             1, // arraySize
-            1, // mipLevels 
+            1, // mipLevels
             std::max(1u, desc_.multiSampling.samples),
             0,
             D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET

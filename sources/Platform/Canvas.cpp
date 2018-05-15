@@ -46,7 +46,7 @@ std::unique_ptr<Canvas> Canvas::Create(const CanvasDescriptor& desc)
 
 bool Canvas::AdaptForVideoMode(VideoModeDescriptor& videoModeDesc)
 {
-    /* Defualt implementation of this function always return false for the Canvas class */
+    /* Default implementation of this function always return false for the Canvas class */
     return false;
 }
 

@@ -29,14 +29,14 @@ class DbgRenderContext : public RenderContext
 
         void Present() override;
 
-        /* ----- Configuration ----- */
-
-        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
-
         /* ----- Debugging members ----- */
 
         RenderContext& instance;
+
+    private:
+
+        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+        bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
 };
 

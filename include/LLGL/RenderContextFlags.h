@@ -58,15 +58,22 @@ struct VsyncDescriptor
 
     /**
     \brief Synchronisation interval. Can be 1, 2, 3, or 4.
-    \remarks If Vsync is disabled, this value is implicit zero.
+    \remarks If Vsync is disabled, this value is implicitly zero.
     */
     std::uint32_t   interval    = 1;
 };
 
-//! Video mode descriptor structure.
+/**
+\brief Video mode descriptor structure.
+\remarks This is mainly used to set the video mode of a RenderContext object.
+\see RenderContext::SetVideoMode
+*/
 struct VideoModeDescriptor
 {
-    //! Screen resolution (in pixels).
+    /**
+    \brief Screen resolution (in pixels).
+    \remarks If the resolution contains a member with a value of 0, the video mode is invalid.
+    */
     Extent2D        resolution;
 
     /**
@@ -96,6 +103,7 @@ struct VideoModeDescriptor
     \brief Number of swap-chain buffers. By default 2 (for double-buffering).
     \remarks This is only a hint to the renderer and there is no guarantee how many buffers are finally used for the swap chain.
     Especially OpenGL does not support custom swap chain sizes.
+    If this value is 0, the video mode is invalid.
     */
     std::uint32_t   swapChainSize   = 2;
 };

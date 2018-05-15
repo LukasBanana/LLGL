@@ -19,16 +19,49 @@ RenderContext::~RenderContext()
 {
 }
 
-void RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
+static bool IsVideoModeValid(const VideoModeDescriptor& videoModeDesc)
 {
-    if (videoModeDesc_ != videoModeDesc)
-    {
-        /* Store new video mode */
-        videoModeDesc_ = videoModeDesc;
+    return (videoModeDesc.resolution.width > 0 && videoModeDesc.resolution.height > 0 && videoModeDesc.swapChainSize > 0);
+}
 
-        /* Adapt surface for the new video mode */
-        GetSurface().AdaptForVideoMode(videoModeDesc_);
+bool RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
+{
+    if (IsVideoModeValid(videoModeDesc))
+    {
+        if (videoModeDesc_ != videoModeDesc)
+        {
+            /* Adapt surface for the new video mode */
+            auto finalVideoMode = videoModeDesc;
+            GetSurface().AdaptForVideoMode(finalVideoMode);
+
+            /* Call primary video mode function */
+            if (OnSetVideoMode(finalVideoMode))
+            {
+                /* Store video mode on success */
+                videoModeDesc_ = finalVideoMode;
+                return true;
+            }
+
+            return false;
+        }
+        return true;
     }
+    return false;
+}
+
+bool RenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
+{
+    if (vsyncDesc_ != vsyncDesc)
+    {
+        /* Call primary V-sync function */
+        if (OnSetVsync(vsyncDesc))
+        {
+            vsyncDesc_ = vsyncDesc;
+            return true;
+        }
+        return false;
+    }
+    return true;
 }
 
 

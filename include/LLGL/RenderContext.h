@@ -50,10 +50,17 @@ class LLGL_EXPORT RenderContext
 
         virtual ~RenderContext();
 
-        //! Presents the back buffer on this render context.
+        //! Swaps the back buffer with the front buffer to present it on the screen (or rather on this render context).
         virtual void Present() = 0;
 
-        //! Returns the surface which is used to present the content on the screen.
+        /**
+        \brief Returns the surface which is used to present the content on the screen.
+        \remarks On desktop platforms, this can be statically casted to 'LLGL::Window&',
+        and on mobile platforms, this can be statically casted to 'LLGL::Canvas&':
+        \code
+        auto& myWindow = static_cast<LLGL::Window&>(myRenderContext->GetSurface());
+        \endcode
+        */
         inline Surface& GetSurface() const
         {
             return *surface_;
@@ -63,14 +70,13 @@ class LLGL_EXPORT RenderContext
 
         /**
         \brief Sets the new video mode for this render context.
+        \param[in] videoModeDesc Specifies the descriptor of the new video mode.
+        \return True on success, otherwise the specified video mode was invalid (e.g. if the resolution contains a zero).
         \remarks This may invalidate the currently set render target if the back buffer is required,
         so a subsequent call to "CommandBuffer::SetRenderTarget" is necessary!
         \see CommandBuffer::SetRenderTarget(RenderContext&)
         */
-        virtual void SetVideoMode(const VideoModeDescriptor& videoModeDesc);
-
-        //! Sets the new vertical-sychronization (Vsync) configuration for this render context.
-        virtual void SetVsync(const VsyncDescriptor& vsyncDesc) = 0;
+        bool SetVideoMode(const VideoModeDescriptor& videoModeDesc);
 
         //! Returns the video mode for this render context.
         inline const VideoModeDescriptor& GetVideoMode() const
@@ -78,9 +84,42 @@ class LLGL_EXPORT RenderContext
             return videoModeDesc_;
         }
 
+        /**
+        \brief Sets the new vertical-sychronization (V-sync) configuration for this render context.
+        \param[in] vsyncDesc Specifies the descriptor of the new V-sync configuration.
+        \return True on success, otherwise the specified V-sync is invalid.
+        */
+        bool SetVsync(const VsyncDescriptor& vsyncDesc);
+
+        //! Returns the V-snyc configuration for this render context.
+        inline const VsyncDescriptor& GetVsync() const
+        {
+            return vsyncDesc_;
+        }
+
     protected:
 
         RenderContext() = default;
+
+        /**
+        \brief Callback when the video mode is about to get changed.
+        \param[in] videoModeDesc Specifies the descriptor of the new video mode.
+        \return True on success, otherwise the previous video mode remains.
+        \remarks Only if the function returns true, the new video mode will be stored in the member returned by 'GetVideoMode'.
+        This callback is only called when the parameter of 'SetVideoMode' differs from the previous video mode.
+        \note This video mode may differ from the one passed by 'SetVideoMode' if the platform specific 'Surface' object has modified it for its requirements.
+        \see SetVideoMode
+        \see GetVideoMode
+        \see Surface::AdaptForVideoMode
+        */
+        virtual bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) = 0;
+
+        /**
+        \brief Callback when the V-sync is about to get changed.
+        \param[in] vsyncDesc Specifies the descriptor of the new V-sync configuration.
+        \return True on success, otherwise the previous V-sync configuration remains.
+        */
+        virtual bool OnSetVsync(const VsyncDescriptor& vsyncDesc) = 0;
 
         /**
         \brief Sets the render context surface or creates one if 'surface' is null.
@@ -102,7 +141,9 @@ class LLGL_EXPORT RenderContext
     private:
 
         std::shared_ptr<Surface>    surface_;
+
         VideoModeDescriptor         videoModeDesc_;
+        VsyncDescriptor             vsyncDesc_;
 
 };
 

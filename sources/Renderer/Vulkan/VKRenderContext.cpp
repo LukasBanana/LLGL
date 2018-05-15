@@ -110,36 +110,6 @@ void VKRenderContext::Present()
     AcquireNextPresentImage();
 }
 
-/* ----- Configuration ----- */
-
-void VKRenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
-{
-    if (GetVideoMode() != videoModeDesc)
-    {
-        /* Recreate surface and swap-chain with new video settings */
-        RenderContext::SetVideoMode(videoModeDesc);
-        CreateGpuSurface();
-
-        if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
-            CreateDepthStencilBuffer(videoModeDesc);
-        else
-            ReleaseDepthStencilBuffer();
-
-        CreateSwapChainRenderPass();
-        CreateSwapChain(videoModeDesc, vsyncDesc_);
-    }
-}
-
-void VKRenderContext::SetVsync(const VsyncDescriptor& vsyncDesc)
-{
-    if (vsyncDesc_ != vsyncDesc)
-    {
-        /* Recreate swap-chain with new vsnyc settings */
-        CreateSwapChain(GetVideoMode(), vsyncDesc);
-        vsyncDesc_ = vsyncDesc;
-    }
-}
-
 /* --- Extended functions --- */
 
 void VKRenderContext::SetPresentCommandBuffer(VKCommandBuffer* commandBuffer)
@@ -152,6 +122,32 @@ void VKRenderContext::SetPresentCommandBuffer(VKCommandBuffer* commandBuffer)
 /*
  * ======= Private: =======
  */
+
+bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
+{
+    /* Recreate presenting semaphores and Vulkan surface */
+    CreatePresentSemaphores();
+    CreateGpuSurface();
+
+    /* Recreate (or just release) depth-stencil buffer */
+    ReleaseDepthStencilBuffer();
+    if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
+        CreateDepthStencilBuffer(videoModeDesc);
+
+    /* Recreate swap-chain and its render pass */
+    CreateSwapChainRenderPass();
+    CreateSwapChain(videoModeDesc, vsyncDesc_);
+
+    return true;
+}
+
+bool VKRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
+{
+    /* Recreate swap-chain with new vsnyc settings */
+    CreateSwapChain(GetVideoMode(), vsyncDesc);
+    vsyncDesc_ = vsyncDesc;
+    return true;
+}
 
 void VKRenderContext::CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore)
 {

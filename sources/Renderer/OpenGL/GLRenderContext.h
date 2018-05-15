@@ -38,11 +38,6 @@ class GLRenderContext : public RenderContext
 
         void Present() override;
 
-        /* ----- Configuration ----- */
-
-        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
-
         /* ----- GLRenderContext specific functions ----- */
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);
@@ -60,6 +55,9 @@ class GLRenderContext : public RenderContext
             GLenum      indexBufferDataType = GL_UNSIGNED_INT;
             GLintptr    indexBufferStride   = 4;
         };
+
+        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+        bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void InitRenderStates();
         void UpdateSwapInterval();

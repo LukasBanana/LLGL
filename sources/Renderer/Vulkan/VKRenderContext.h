@@ -45,11 +45,6 @@ class VKRenderContext : public RenderContext
 
         void Present() override;
 
-        /* ----- Configuration ----- */
-
-        void SetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
-        void SetVsync(const VsyncDescriptor& vsyncDesc) override;
-
         /* --- Extended functions --- */
 
         void SetPresentCommandBuffer(VKCommandBuffer* commandBuffer);
@@ -87,6 +82,9 @@ class VKRenderContext : public RenderContext
         bool HasDepthStencilBuffer() const;
 
     private:
+
+        bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
+        bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void CreateGpuSemaphore(VKPtr<VkSemaphore>& semaphore);
         void CreatePresentSemaphores();
