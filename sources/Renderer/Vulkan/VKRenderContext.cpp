@@ -139,8 +139,7 @@ bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
     if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
         CreateDepthStencilBuffer(videoModeDesc);
 
-    /* Recreate swap-chain and its render pass */
-    CreateSwapChainRenderPass();
+    /* Recreate only swap-chain but keep render pass (independent of swap-chain object) */
     CreateSwapChain(videoModeDesc, vsyncDesc_);
 
     return true;
