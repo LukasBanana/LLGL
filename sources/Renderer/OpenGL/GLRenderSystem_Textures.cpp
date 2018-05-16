@@ -21,6 +21,14 @@ namespace LLGL
 
 /* ----- Textures ----- */
 
+static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
+{
+    if ((textureDesc.flags & TextureFlags::GenerateMips) != 0)
+        return GL_LINEAR_MIPMAP_LINEAR;
+    else
+        return GL_LINEAR;
+}
+
 Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
 {
     auto texture = MakeUnique<GLTexture>(textureDesc.type);
@@ -30,7 +38,8 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Initialize texture parameters for the first time */
     auto target = GLTypes::Map(textureDesc.type);
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GetGlTextureMinFilter(textureDesc));
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     /* Build texture storage and upload image dataa */
@@ -209,7 +218,6 @@ void GLRenderSystem::GenerateMips(Texture& texture)
     {
         /* Generate MIP-maps of named texture object */
         glGenerateTextureMipmap(textureGL.GetID());
-        glTextureParameteri(textureGL.GetID(), GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     }
     else
     #endif
@@ -221,7 +229,6 @@ void GLRenderSystem::GenerateMips(Texture& texture)
             auto target = GLTypes::Map(textureGL.GetType());
             GLStateManager::active->BindTexture(textureGL);
             glGenerateMipmap(target);
-            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         }
         GLStateManager::active->PopBoundTexture();
     }
