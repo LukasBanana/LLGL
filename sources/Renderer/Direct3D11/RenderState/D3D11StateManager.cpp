@@ -62,7 +62,7 @@ void D3D11StateManager::SetScissors(std::uint32_t numScissors, const Scissor* sc
     numScissors = std::min(numScissors, std::uint32_t(D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
     D3D11_RECT scissorsD3D[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-    
+
     for (std::uint32_t i = 0; i < numScissors; ++i)
     {
         const auto& src = scissorArray[i];
@@ -73,8 +73,124 @@ void D3D11StateManager::SetScissors(std::uint32_t numScissors, const Scissor* sc
         dst.right       = src.x + src.width;
         dst.bottom      = src.y + src.height;
     }
-    
+
     context_->RSSetScissorRects(numScissors, scissorsD3D);
+}
+
+void D3D11StateManager::SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY primitiveTopology)
+{
+    if (inputAssemblyState_.primitiveTopology != primitiveTopology)
+    {
+        inputAssemblyState_.primitiveTopology = primitiveTopology;
+        context_->IASetPrimitiveTopology(primitiveTopology);
+    }
+}
+
+void D3D11StateManager::SetInputLayout(ID3D11InputLayout* inputLayout)
+{
+    if (inputAssemblyState_.inputLayout != inputLayout)
+    {
+        inputAssemblyState_.inputLayout = inputLayout;
+        context_->IASetInputLayout(inputLayout);
+    }
+}
+
+void D3D11StateManager::SetVertexShader(ID3D11VertexShader* shader)
+{
+    if (shaderState_.vs != shader)
+    {
+        shaderState_.vs = shader;
+        context_->VSSetShader(shader, nullptr, 0);
+    }
+}
+
+void D3D11StateManager::SetHullShader(ID3D11HullShader* shader)
+{
+    if (shaderState_.hs != shader)
+    {
+        shaderState_.hs = shader;
+        context_->HSSetShader(shader, nullptr, 0);
+    }
+}
+
+void D3D11StateManager::SetDomainShader(ID3D11DomainShader* shader)
+{
+    if (shaderState_.ds != shader)
+    {
+        shaderState_.ds = shader;
+        context_->DSSetShader(shader, nullptr, 0);
+    }
+}
+
+void D3D11StateManager::SetGeometryShader(ID3D11GeometryShader* shader)
+{
+    if (shaderState_.gs != shader)
+    {
+        shaderState_.gs = shader;
+        context_->GSSetShader(shader, nullptr, 0);
+    }
+}
+
+void D3D11StateManager::SetPixelShader(ID3D11PixelShader* shader)
+{
+    if (shaderState_.ps != shader)
+    {
+        shaderState_.ps = shader;
+        context_->PSSetShader(shader, nullptr, 0);
+    }
+}
+
+void D3D11StateManager::SetComputeShader(ID3D11ComputeShader* shader)
+{
+    if (shaderState_.cs != shader)
+    {
+        shaderState_.cs = shader;
+        context_->CSSetShader(shader, nullptr, 0);
+    }
+}
+
+void D3D11StateManager::SetRasterizerState(ID3D11RasterizerState* rasterizerState)
+{
+    if (renderState_.rasterizerState != rasterizerState)
+    {
+        renderState_.rasterizerState = rasterizerState;
+        context_->RSSetState(rasterizerState);
+    }
+}
+
+void D3D11StateManager::SetDepthStencilState(ID3D11DepthStencilState* depthStencilState, UINT stencilRef)
+{
+    if (renderState_.depthStencilState != depthStencilState || renderState_.stencilRef != stencilRef)
+    {
+        renderState_.depthStencilState  = depthStencilState;
+        renderState_.stencilRef         = stencilRef;
+        context_->OMSetDepthStencilState(depthStencilState, stencilRef);
+    }
+}
+
+static bool EqualsBlendFactors(const FLOAT* lhs, const FLOAT* rhs)
+{
+    return
+    (
+        lhs[0] == rhs[0] &&
+        lhs[1] == rhs[1] &&
+        lhs[2] == rhs[2] &&
+        lhs[3] == rhs[3]
+    );
+}
+
+void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, const FLOAT* blendFactor, UINT sampleMask)
+{
+    if (renderState_.blendState != blendState || !EqualsBlendFactors(renderState_.blendFactor, blendFactor) || renderState_.samplerMask != sampleMask)
+    {
+        renderState_.blendState     = blendState;
+        renderState_.blendFactor[0] = blendFactor[0];
+        renderState_.blendFactor[1] = blendFactor[1];
+        renderState_.blendFactor[2] = blendFactor[2];
+        renderState_.blendFactor[3] = blendFactor[3];
+        renderState_.samplerMask    = sampleMask;
+        context_->OMSetBlendState(blendState, blendFactor, sampleMask);
+    }
 }
 
 

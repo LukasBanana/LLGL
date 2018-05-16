@@ -271,7 +271,7 @@ void D3D11CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::ui
 void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
     auto& streamOutputBufferD3D = LLGL_CAST(D3D11StreamOutputBuffer&, buffer);
-    
+
     ID3D11Buffer* buffers[] = { streamOutputBufferD3D.Get() };
     UINT offsets[] = { 0 };
 
@@ -394,13 +394,13 @@ void D3D11CommandBuffer::SetRenderTarget(RenderContext& renderContext)
 void D3D11CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineD3D = LLGL_CAST(D3D11GraphicsPipeline&, graphicsPipeline);
-    graphicsPipelineD3D.Bind(context_.Get());
+    graphicsPipelineD3D.Bind(stateMngr_);
 }
 
 void D3D11CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
     auto& computePipelineD3D = LLGL_CAST(D3D11ComputePipeline&, computePipeline);
-    computePipelineD3D.Bind(context_.Get());
+    computePipelineD3D.Bind(stateMngr_);
 }
 
 /* ----- Queries ----- */
@@ -473,7 +473,7 @@ bool D3D11CommandBuffer::QueryResult(Query& query, std::uint64_t& result)
                         {
                             /* Normalize elapsed time to nanoseconds */
                             static const double nanoseconds = 1000000000.0;
-                            
+
                             auto deltaTime      = (endTime - startTime);
                             auto scale          = (nanoseconds / static_cast<double>(disjointData.Frequency));
                             auto elapsedTime    = (static_cast<double>(deltaTime) * scale);

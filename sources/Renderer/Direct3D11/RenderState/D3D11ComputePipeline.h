@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+class D3D11StateManager;
+
 class D3D11ComputePipeline : public ComputePipeline
 {
 
@@ -25,7 +27,7 @@ class D3D11ComputePipeline : public ComputePipeline
 
         D3D11ComputePipeline(const ComputePipelineDescriptor& desc);
 
-        void Bind(ID3D11DeviceContext* context);
+        void Bind(D3D11StateManager& stateMngr);
 
     private:
 

@@ -199,7 +199,7 @@ class GLStateManager
         static const std::uint32_t numStatesExt             = (static_cast<std::uint32_t>(GLStateExt::CONSERVATIVE_RASTERIZATION) + 1);
         #endif
 
-        /* ----- Structure ----- */
+        /* ----- Structures ----- */
 
         // GL limitations required for validation of state parameters
         struct GLLimits

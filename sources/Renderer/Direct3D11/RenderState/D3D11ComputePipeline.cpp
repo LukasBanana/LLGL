@@ -6,6 +6,7 @@
  */
 
 #include "D3D11ComputePipeline.h"
+#include "D3D11StateManager.h"
 #include "../Shader/D3D11ShaderProgram.h"
 #include "../Shader/D3D11Shader.h"
 #include "../../CheckedCast.h"
@@ -25,9 +26,9 @@ D3D11ComputePipeline::D3D11ComputePipeline(const ComputePipelineDescriptor& desc
         throw std::invalid_argument("failed to create compute pipeline due to missing compute shader program");
 }
 
-void D3D11ComputePipeline::Bind(ID3D11DeviceContext* context)
+void D3D11ComputePipeline::Bind(D3D11StateManager& stateMngr)
 {
-    context->CSSetShader(cs_.Get(), nullptr, 0);
+    stateMngr.SetComputeShader(cs_.Get());
 }
 
 

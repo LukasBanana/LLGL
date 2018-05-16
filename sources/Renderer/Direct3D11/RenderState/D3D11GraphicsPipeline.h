@@ -20,6 +20,7 @@ namespace LLGL
 
 
 class D3D11ShaderProgram;
+class D3D11StateManager;
 
 class D3D11GraphicsPipeline : public GraphicsPipeline
 {
@@ -31,7 +32,7 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
             const GraphicsPipelineDescriptor& desc
         );
 
-        void Bind(ID3D11DeviceContext* context);
+        void Bind(D3D11StateManager& stateMngr);
 
     private:
 

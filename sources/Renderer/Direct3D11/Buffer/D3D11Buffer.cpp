@@ -109,7 +109,7 @@ void D3D11Buffer::CreateResource(ID3D11Device* device, const D3D11_BUFFER_DESC& 
 {
     /* Setup initial subresource data */
     D3D11_SUBRESOURCE_DATA subresourceData;
-    
+
     if (initialData)
     {
         InitMemory(subresourceData);

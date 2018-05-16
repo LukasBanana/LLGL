@@ -6,6 +6,7 @@
  */
 
 #include "D3D11GraphicsPipeline.h"
+#include "D3D11StateManager.h"
 #include "../D3D11RenderSystem.h"
 #include "../D3D11Types.h"
 #include "../Shader/D3D11ShaderProgram.h"
@@ -50,23 +51,23 @@ D3D11GraphicsPipeline::D3D11GraphicsPipeline(
     CreateBlendState(device, desc.blend);
 }
 
-void D3D11GraphicsPipeline::Bind(ID3D11DeviceContext* context)
+void D3D11GraphicsPipeline::Bind(D3D11StateManager& stateMngr)
 {
     /* Setup input-assembly states */
-    context->IASetPrimitiveTopology(primitiveTopology_);
-    context->IASetInputLayout(inputLayout_.Get());
+    stateMngr.SetPrimitiveTopology(primitiveTopology_);
+    stateMngr.SetInputLayout(inputLayout_.Get());
 
     /* Setup shader states */
-    context->VSSetShader(vs_.Get(), nullptr, 0);
-    context->HSSetShader(hs_.Get(), nullptr, 0);
-    context->DSSetShader(ds_.Get(), nullptr, 0);
-    context->GSSetShader(gs_.Get(), nullptr, 0);
-    context->PSSetShader(ps_.Get(), nullptr, 0);
+    stateMngr.SetVertexShader   (vs_.Get());
+    stateMngr.SetHullShader     (hs_.Get());
+    stateMngr.SetDomainShader   (ds_.Get());
+    stateMngr.SetGeometryShader (gs_.Get());
+    stateMngr.SetPixelShader    (ps_.Get());
 
     /* Setup render states */
-    context->RSSetState(rasterizerState_.Get());
-    context->OMSetDepthStencilState(depthStencilState_.Get(), stencilRef_);
-    context->OMSetBlendState(blendState_.Get(), blendFactor_.Ptr(), sampleMask_);
+    stateMngr.SetRasterizerState(rasterizerState_.Get());
+    stateMngr.SetDepthStencilState(depthStencilState_.Get(), stencilRef_);
+    stateMngr.SetBlendState(blendState_.Get(), blendFactor_.Ptr(), sampleMask_);
 }
 
 
@@ -105,7 +106,7 @@ void D3D11GraphicsPipeline::CreateDepthStencilState(ID3D11Device* device, const 
         Convert(stateDesc.FrontFace, stencilDesc.front);
         Convert(stateDesc.BackFace, stencilDesc.back);
     }
-    auto hr = device->CreateDepthStencilState(&stateDesc, &depthStencilState_);
+    auto hr = device->CreateDepthStencilState(&stateDesc, depthStencilState_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil state");
 }
 
@@ -124,7 +125,7 @@ void D3D11GraphicsPipeline::CreateRasterizerState(ID3D11Device* device, const Ra
         stateDesc.MultisampleEnable     = (desc.multiSampling.enabled ? TRUE : FALSE);
         stateDesc.AntialiasedLineEnable = (desc.antiAliasedLineEnabled ? TRUE : FALSE);
     }
-    auto hr = device->CreateRasterizerState(&stateDesc, &rasterizerState_);
+    auto hr = device->CreateRasterizerState(&stateDesc, rasterizerState_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 rasterizer state");
 }
 
@@ -177,7 +178,7 @@ void D3D11GraphicsPipeline::CreateBlendState(ID3D11Device* device, const BlendDe
             }
         }
     }
-    auto hr = device->CreateBlendState(&stateDesc, &blendState_);
+    auto hr = device->CreateBlendState(&stateDesc, blendState_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 blend state");
 }
 
