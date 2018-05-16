@@ -778,6 +778,25 @@ void GLStateManager::BindFramebuffer(GLFramebufferTarget target, GLuint framebuf
     }
 }
 
+void GLStateManager::PushBoundFramebuffer(GLFramebufferTarget target)
+{
+    framebufferState_.boundFramebufferStack.push(
+        {
+            target,
+            framebufferState_.boundFramebuffers[static_cast<std::size_t>(target)]
+        }
+    );
+}
+
+void GLStateManager::PopBoundFramebuffer()
+{
+    const auto& state = framebufferState_.boundFramebufferStack.top();
+    {
+        BindFramebuffer(state.target, state.framebuffer);
+    }
+    framebufferState_.boundFramebufferStack.pop();
+}
+
 void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
 {
     for (auto stateMngr : g_GLStateManagerList)

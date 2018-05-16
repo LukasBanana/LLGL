@@ -125,6 +125,9 @@ class GLStateManager
 
         void BindFramebuffer(GLFramebufferTarget target, GLuint framebuffer);
 
+        void PushBoundFramebuffer(GLFramebufferTarget target);
+        void PopBoundFramebuffer();
+
         static void NotifyFramebufferRelease(GLuint framebuffer);
 
         /* ----- Renderbuffer ----- */
@@ -265,7 +268,14 @@ class GLStateManager
 
         struct GLFramebufferState
         {
-            std::array<GLuint, numFramebufferTargets> boundFramebuffers;
+            struct StackEntry
+            {
+                GLFramebufferTarget target;
+                GLuint              framebuffer;
+            };
+
+            std::array<GLuint, numFramebufferTargets>   boundFramebuffers;
+            std::stack<StackEntry>                      boundFramebufferStack;
         };
 
         struct GLRenderbufferState
