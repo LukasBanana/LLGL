@@ -225,7 +225,7 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     /* Bind index buffer deferred (can only be bound to the active VAO) */
     auto& indexBufferGL = LLGL_CAST(GLIndexBuffer&, buffer);
-    stateMngr_->DeferredBindIndexBuffer(indexBufferGL.GetID());
+    stateMngr_->BindElementArrayBufferToVAO(indexBufferGL.GetID());
 
     /* Store new index buffer data in global render state */
     const auto& format = indexBufferGL.GetIndexFormat();

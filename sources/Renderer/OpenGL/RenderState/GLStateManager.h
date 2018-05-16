@@ -109,10 +109,10 @@ class GLStateManager
         void BindVertexArray(GLuint vertexArray);
 
         /**
-        \brief Binds the specified index buffer as soon as the next VAO with "BindVertexArray" is bound.
+        \brief Binds the specified GL_ELEMENT_ARRAY_BUFFER (i.e. index buffer) to the next VAO (or the current one).
         \see BindVertexArray
         */
-        void DeferredBindIndexBuffer(GLuint buffer);
+        void BindElementArrayBufferToVAO(GLuint buffer);
 
         void PushBoundBuffer(GLBufferTarget target);
         void PopBoundBuffer();
@@ -295,7 +295,7 @@ class GLStateManager
         struct GLVertexArrayState
         {
             GLuint boundVertexArray         = 0;
-            GLuint deferredBoundIndexBuffer = 0;
+            GLuint boundElementArrayBuffer  = 0;
         };
 
         struct GLShaderState
