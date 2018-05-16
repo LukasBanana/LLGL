@@ -163,6 +163,16 @@ class GLRenderSystem : public RenderSystem
 
         GLRenderContext* GetSharedRenderContext() const;
 
+        struct MipGenerationFBOPair
+        {
+            ~MipGenerationFBOPair();
+
+            void CreateFBOs();
+            void ReleaseFBOs();
+
+            GLuint fbos[2] = { 0, 0 };
+        };
+
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<GLRenderContext>      renderContexts_;
@@ -183,6 +193,8 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLFence>              fences_;
 
         DebugCallback                           debugCallback_;
+
+        MipGenerationFBOPair                    mipGenerationFBOPair_;
 
 };
 

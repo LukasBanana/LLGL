@@ -234,9 +234,54 @@ void GLRenderSystem::GenerateMips(Texture& texture)
     }
 }
 
-void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t /*baseMipLevel*/, std::uint32_t /*numMipLevels*/, std::uint32_t /*baseArrayLayer*/, std::uint32_t /*numArrayLayers*/)
+void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
-    GLRenderSystem::GenerateMips(texture);
+    #if 0
+
+    GenerateMips(texture);
+
+    #else
+
+    /* Get GL texture object and textuee target */
+    auto& textureGL = LLGL_CAST(GLTexture&, texture);
+
+    auto texID      = textureGL.GetID();
+    auto texTarget  = GLTypes::Map(texture.GetType());
+
+    mipGenerationFBOPair_.CreateFBOs();
+
+    GLStateManager::active->PushBoundFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER);
+    GLStateManager::active->PushBoundFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+    {
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, mipGenerationFBOPair_.fbos[0]);
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, mipGenerationFBOPair_.fbos[1]);
+
+        auto extent = textureGL.QueryMipLevelSize(baseMipLevel);
+
+        auto srcWidth   = static_cast<GLint>(extent.width);
+        auto srcHeight  = static_cast<GLint>(extent.height);
+
+        auto dstWidth   = srcWidth;
+        auto dstHeight  = srcHeight;
+
+        for (std::uint32_t mipLevel = baseMipLevel; mipLevel + 1 < baseMipLevel + numMipLevels; ++mipLevel)
+        {
+            dstWidth    = std::max(1u, dstWidth  / 2u);
+            dstHeight   = std::max(1u, dstHeight / 2u);
+
+            glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texTarget, texID, static_cast<GLint>(mipLevel));
+            glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texTarget, texID, static_cast<GLint>(mipLevel + 1));
+
+            glBlitFramebuffer(0, 0, srcWidth, srcHeight, 0, 0, dstWidth, dstHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+            srcWidth    = dstWidth;
+            srcHeight   = dstHeight;
+        }
+    }
+    GLStateManager::active->PopBoundFramebuffer();
+    GLStateManager::active->PopBoundFramebuffer();
+
+    #endif
 }
 
 

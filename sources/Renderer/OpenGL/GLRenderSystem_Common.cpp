@@ -367,6 +367,32 @@ void GLRenderSystem::AssertCap(bool supported, const std::string& memberName)
 }
 
 
+/*
+ * MipGenerationFBOPair structure
+ */
+
+GLRenderSystem::MipGenerationFBOPair::~MipGenerationFBOPair()
+{
+    ReleaseFBOs();
+}
+
+void GLRenderSystem::MipGenerationFBOPair::CreateFBOs()
+{
+    if (!fbos[0])
+        glGenFramebuffers(2, fbos);
+}
+
+void GLRenderSystem::MipGenerationFBOPair::ReleaseFBOs()
+{
+    if (fbos[0])
+    {
+        glDeleteFramebuffers(2, fbos);
+        fbos[0] = 0;
+        fbos[1] = 0;
+    }
+}
+
+
 } // /namespace LLGL
 
 
