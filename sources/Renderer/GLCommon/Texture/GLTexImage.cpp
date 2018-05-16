@@ -9,12 +9,16 @@
 #include "../GLTypes.h"
 #include "../GLImport.h"
 #include "../GLImportExt.h"
+#include "../GLExtensionRegistry.h"
 #include <array>
+#include <algorithm>
 
 
 namespace LLGL
 {
 
+
+/* ----- Internal ----- */
 
 static ImageInitialization g_imageInitialization;
 
@@ -34,104 +38,220 @@ static std::vector<float> GenImageDataRf(int numPixels, float value)
 }
 
 [[noreturn]]
-void ErrIllegalUseOfDepthFormat()
+static void ErrIllegalUseOfDepthFormat()
 {
     throw std::runtime_error("illegal use of depth-stencil format for texture");
 }
 
+// Returns true if the specified GL texture target is a cube face other than GL_TEXTURE_CUBE_MAP_POSITIVE_X
+static bool IsSecondaryCubeFaceTarget(GLenum target)
+{
+    return
+    (
+        target == GL_TEXTURE_CUBE_MAP_NEGATIVE_X ||
+        target == GL_TEXTURE_CUBE_MAP_POSITIVE_Y ||
+        target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ||
+        target == GL_TEXTURE_CUBE_MAP_POSITIVE_Z ||
+        target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+    );
+}
+
+/* ----- Back-end OpenGL functions ----- */
+
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1DBase(
-    GLenum target, const TextureFormat internalFormat, std::uint32_t width,
+    GLenum target, std::uint32_t mipLevels, const TextureFormat textureFormat, std::uint32_t width,
     GLenum format, GLenum type, const void* data, std::size_t dataSize)
 {
-    if (IsCompressedFormat(internalFormat))
+    auto internalFormat = GLTypes::Map(textureFormat);
+    auto sx             = static_cast<GLsizei>(width);
+
+    #ifdef GL_ARB_texture_storage
+    if (HasExtension(GLExt::ARB_texture_storage))
     {
-        glCompressedTexImage1D(
-            target, 0, GLTypes::Map(internalFormat),
-            static_cast<GLsizei>(width),
-            0, static_cast<GLsizei>(dataSize), data
-        );
+        /* Allocate immutable texture storage */
+        glTexStorage1D(target, static_cast<GLsizei>(mipLevels), internalFormat, sx);
+
+        /* Initialize highest MIP level */
+        if (data != nullptr)
+        {
+            if (IsCompressedFormat(textureFormat))
+                glCompressedTexSubImage1D(target, 0, 0, sx, format, static_cast<GLsizei>(dataSize), data);
+            else
+                glTexSubImage1D(target, 0, 0, sx, format, type, data);
+        }
     }
     else
+    #endif
     {
-        glTexImage1D(
-            target, 0, GLTypes::Map(internalFormat),
-            static_cast<GLsizei>(width),
-            0, format, type, data
-        );
+        /* Allocate mutable texture storage and initialize highest MIP level */
+        if (IsCompressedFormat(textureFormat))
+            glCompressedTexImage1D(target, 0, internalFormat, sx, 0, static_cast<GLsizei>(dataSize), data);
+        else
+            glTexImage1D(target, 0, internalFormat, sx, 0, format, type, data);
+
+        /* Allocate mutable texture storage of MIP levels (emulate <glTexStorage1D>) */
+        if (mipLevels > 1)
+        {
+            for (std::uint32_t i = 1; i < mipLevels; ++i)
+            {
+                sx = std::max(1u, sx / 2u);
+                glTexImage1D(target, static_cast<GLint>(i), internalFormat, sx, 0, format, type, nullptr);
+            }
+        }
     }
 }
 
 #endif
 
 static void GLTexImage2DBase(
-    GLenum target, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height,
+    GLenum target, std::uint32_t mipLevels, const TextureFormat textureFormat,
+    std::uint32_t width, std::uint32_t height,
     GLenum format, GLenum type, const void* data, std::size_t dataSize)
 {
-    if (IsCompressedFormat(internalFormat))
+    auto internalFormat = GLTypes::Map(textureFormat);
+    auto sx             = static_cast<GLsizei>(width);
+    auto sy             = static_cast<GLsizei>(height);
+
+    #ifdef GL_ARB_texture_storage
+    if (HasExtension(GLExt::ARB_texture_storage))
     {
-        glCompressedTexImage2D(
-            target, 0, GLTypes::Map(internalFormat),
-            static_cast<GLsizei>(width),
-            static_cast<GLsizei>(height),
-            0, static_cast<GLsizei>(dataSize), data
-        );
+        /* Allocate immutable texture storage (only once, not for ever cube face!) */
+        if (!IsSecondaryCubeFaceTarget(target))
+            glTexStorage2D(target, static_cast<GLsizei>(mipLevels), internalFormat, sx, sy);
+
+        /* Initialize highest MIP level */
+        if (data != nullptr)
+        {
+            if (IsCompressedFormat(textureFormat))
+                glCompressedTexSubImage2D(target, 0, 0, 0, sx, sy, format, static_cast<GLsizei>(dataSize), data);
+            else
+                glTexSubImage2D(target, 0, 0, 0, sx, sy, format, type, data);
+        }
     }
     else
+    #endif
     {
-        glTexImage2D(
-            target, 0, GLTypes::Map(internalFormat),
-            static_cast<GLsizei>(width),
-            static_cast<GLsizei>(height),
-            0, format, type, data
-        );
+        /* Allocate mutable texture storage and initialize highest MIP level */
+        if (IsCompressedFormat(textureFormat))
+            glCompressedTexImage2D(target, 0, internalFormat, sx, sy, 0, static_cast<GLsizei>(dataSize), data);
+        else
+            glTexImage2D(target, 0, internalFormat, sx, sy, 0, format, type, data);
+
+        /* Allocate mutable texture storage of MIP levels (emulate <glTexStorage2D>) */
+        if (mipLevels > 1)
+        {
+            if (target == GL_TEXTURE_1D_ARRAY || target == GL_PROXY_TEXTURE_1D_ARRAY)
+            {
+                for (std::uint32_t i = 1; i < mipLevels; ++i)
+                {
+                    sx = std::max(1u, sx / 2u);
+                    glTexImage2D(target, static_cast<GLint>(i), internalFormat, sx, sy, 0, format, type, nullptr);
+                }
+            }
+            else
+            {
+                for (std::uint32_t i = 1; i < mipLevels; ++i)
+                {
+                    sx = std::max(1u, sx / 2u);
+                    sy = std::max(1u, sy / 2u);
+                    glTexImage2D(target, static_cast<GLint>(i), internalFormat, sx, sy, 0, format, type, nullptr);
+                }
+            }
+        }
     }
 }
 
 static void GLTexImage3DBase(
-    GLenum target, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth,
+    GLenum target, std::uint32_t mipLevels, const TextureFormat textureFormat,
+    std::uint32_t width, std::uint32_t height, std::uint32_t depth,
     GLenum format, GLenum type, const void* data, std::size_t dataSize)
 {
-    if (IsCompressedFormat(internalFormat))
+    auto internalFormat = GLTypes::Map(textureFormat);
+    auto sx             = static_cast<GLsizei>(width);
+    auto sy             = static_cast<GLsizei>(height);
+    auto sz             = static_cast<GLsizei>(depth);
+
+    #ifdef GL_ARB_texture_storage
+    if (HasExtension(GLExt::ARB_texture_storage))
     {
-        glCompressedTexImage3D(
-            target, 0, GLTypes::Map(internalFormat),
-            static_cast<GLsizei>(width),
-            static_cast<GLsizei>(height),
-            static_cast<GLsizei>(depth),
-            0, static_cast<GLsizei>(dataSize), data
-        );
+        /* Allocate immutable texture storage */
+        glTexStorage3D(target, static_cast<GLsizei>(mipLevels), internalFormat, sx, sy, sz);
+
+        /* Initialize highest MIP level */
+        if (data != nullptr)
+        {
+            if (IsCompressedFormat(textureFormat))
+                glCompressedTexSubImage3D(target, 0, 0, 0, 0, sx, sy, sz, format, static_cast<GLsizei>(dataSize), data);
+            else
+                glTexSubImage3D(target, 0, 0, 0, 0, sx, sy, sz, format, type, data);
+        }
     }
     else
+    #endif
     {
-        glTexImage3D(
-            target, 0, GLTypes::Map(internalFormat),
-            static_cast<GLsizei>(width),
-            static_cast<GLsizei>(height),
-            static_cast<GLsizei>(depth),
-            0, format, type, data
-        );
+        /* Allocate mutable texture storage and initialize highest MIP level */
+        if (IsCompressedFormat(textureFormat))
+            glCompressedTexImage3D(target, 0, internalFormat, sx, sy, sz, 0, static_cast<GLsizei>(dataSize), data);
+        else
+            glTexImage3D(target, 0, internalFormat, sx, sy, sz, 0, format, type, data);
+
+        /* Allocate mutable texture storage of MIP levels (emulate <glTexStorage3D>) */
+        if (mipLevels > 1)
+        {
+            if (target == GL_TEXTURE_3D || target == GL_PROXY_TEXTURE_3D)
+            {
+                for (std::uint32_t i = 1; i < mipLevels; ++i)
+                {
+                    sx = std::max(1u, sx / 2u);
+                    sy = std::max(1u, sy / 2u);
+                    sz = std::max(1u, sz / 2u);
+                    glTexImage3D(target, static_cast<GLint>(i), internalFormat, sx, sy, sz, 0, format, type, nullptr);
+                }
+            }
+            else
+            {
+                for (std::uint32_t i = 1; i < mipLevels; ++i)
+                {
+                    sx = std::max(1u, sx / 2u);
+                    sy = std::max(1u, sy / 2u);
+                    glTexImage3D(target, static_cast<GLint>(i), internalFormat, sx, sy, sz, 0, format, type, nullptr);
+                }
+            }
+        }
     }
 }
 
 #ifdef LLGL_OPENGL
 
 static void GLTexImage2DMultisampleBase(
-    GLenum target, std::uint32_t samples, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, bool fixedSamples)
+    GLenum target, std::uint32_t samples, const TextureFormat textureFormat,
+    std::uint32_t width, std::uint32_t height, bool fixedSamples)
 {
-    glTexImage2DMultisample(
-        target,
-        static_cast<GLsizei>(samples),
-        GLTypes::Map(internalFormat),
-        static_cast<GLsizei>(width),
-        static_cast<GLsizei>(height),
-        (fixedSamples ? GL_TRUE : GL_FALSE)
-    );
+    auto internalFormat         = GLTypes::Map(textureFormat);
+    auto sampleCount            = static_cast<GLsizei>(samples);
+    auto sx                     = static_cast<GLsizei>(width);
+    auto sy                     = static_cast<GLsizei>(height);
+    auto fixedSampleLocations   = static_cast<GLboolean>(fixedSamples ? GL_TRUE : GL_FALSE);
+
+    #ifdef GL_ARB_texture_storage_multisample
+    if (HasExtension(GLExt::ARB_texture_storage_multisample))
+    {
+        /* Allocate immutable texture storage */
+        glTexStorage2DMultisample(target, sampleCount, internalFormat, sx, sy, fixedSampleLocations);
+    }
+    else
+    #endif
+    {
+        /* Allocate mutable texture storage and initialize highest MIP level */
+        glTexImage2DMultisample(target, sampleCount, internalFormat, sx, sy, fixedSampleLocations);
+    }
 }
 
 static void GLTexImage3DMultisampleBase(
-    GLenum target, std::uint32_t samples, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth, bool fixedSamples)
+    GLenum target, std::uint32_t samples, const TextureFormat internalFormat,
+    std::uint32_t width, std::uint32_t height, std::uint32_t depth, bool fixedSamples)
 {
     glTexImage3DMultisample(
         target,
@@ -144,61 +264,67 @@ static void GLTexImage3DMultisampleBase(
     );
 }
 
+#endif
+
+/* ----- Wrapper functions ----- */
+
+#ifdef LLGL_OPENGL
+
 static void GLTexImage1D(
-    const TextureFormat internalFormat, std::uint32_t width,
+    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width,
     GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
 {
-    GLTexImage1DBase(GL_TEXTURE_1D, internalFormat, width, format, type, data, compressedSize);
+    GLTexImage1DBase(GL_TEXTURE_1D, mipLevels, internalFormat, width, format, type, data, compressedSize);
 }
 
 #endif
 
 static void GLTexImage2D(
-    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height,
+    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height,
     GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
 {
-    GLTexImage2DBase(GL_TEXTURE_2D, internalFormat, width, height, format, type, data, compressedSize);
+    GLTexImage2DBase(GL_TEXTURE_2D, mipLevels, internalFormat, width, height, format, type, data, compressedSize);
 }
 
 static void GLTexImage3D(
-    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth,
+    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth,
     GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
 {
-    GLTexImage3DBase(GL_TEXTURE_3D, internalFormat, width, height, depth, format, type, data, compressedSize);
+    GLTexImage3DBase(GL_TEXTURE_3D, mipLevels, internalFormat, width, height, depth, format, type, data, compressedSize);
 }
 
 static void GLTexImageCube(
-    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, AxisDirection cubeFace,
+    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, AxisDirection cubeFace,
     GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
 {
-    GLTexImage2DBase(GLTypes::Map(cubeFace), internalFormat, width, height, format, type, data, compressedSize);
+    GLTexImage2DBase(GLTypes::Map(cubeFace), mipLevels, internalFormat, width, height, format, type, data, compressedSize);
 }
 
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1DArray(
-    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t layers,
+    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t layers,
     GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
 {
-    GLTexImage2DBase(GL_TEXTURE_1D_ARRAY, internalFormat, width, layers, format, type, data, compressedSize);
+    GLTexImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevels, internalFormat, width, layers, format, type, data, compressedSize);
 }
 
 #endif
 
 static void GLTexImage2DArray(
-    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t layers,
+    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t layers,
     GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
 {
-    GLTexImage3DBase(GL_TEXTURE_2D_ARRAY, internalFormat, width, height, layers, format, type, data, compressedSize);
+    GLTexImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevels, internalFormat, width, height, layers, format, type, data, compressedSize);
 }
 
 #ifdef LLGL_OPENGL
 
 static void GLTexImageCubeArray(
-    const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t layers,
+    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t layers,
     GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
 {
-    GLTexImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, internalFormat, width, height, layers*6, format, type, data, compressedSize);
+    GLTexImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevels, internalFormat, width, height, layers*6, format, type, data, compressedSize);
 }
 
 static void GLTexImage2DMultisample(
@@ -213,13 +339,19 @@ static void GLTexImage2DMultisampleArray(
     GLTexImage3DMultisampleBase(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, depth, fixedSamples);
 }
 
+#endif
+
+/* ----- Global functions ----- */
+
+#ifdef LLGL_OPENGL
+
 void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
         /* Setup texture image from descriptor */
         GLTexImage1D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture1D.width,
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
@@ -233,7 +365,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     {
         /* Allocate texture without initial data */
         GLTexImage1D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture1D.width,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
@@ -247,7 +379,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         );
 
         GLTexImage1D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture1D.width,
             GL_RGBA, GL_FLOAT, image.data()
         );
@@ -262,7 +394,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     {
         /* Setup texture image from descriptor */
         GLTexImage2D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture2D.width, desc.texture2D.height,
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
@@ -279,7 +411,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
             );
 
             GLTexImage2D(
-                desc.format,
+                NumMipLevels(desc), desc.format,
                 desc.texture2D.width, desc.texture2D.height,
                 GL_DEPTH_COMPONENT, GL_FLOAT, image.data()
             );
@@ -288,7 +420,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         {
             /* Allocate depth texture image without initial data */
             GLTexImage2D(
-                desc.format,
+                NumMipLevels(desc), desc.format,
                 desc.texture2D.width, desc.texture2D.height,
                 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
             );
@@ -298,7 +430,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     {
         /* Allocate texture without initial data */
         GLTexImage2D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture2D.width, desc.texture2D.height,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
@@ -312,7 +444,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         );
 
         GLTexImage2D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture2D.width, desc.texture2D.height,
             GL_RGBA, GL_FLOAT, image.data()
         );
@@ -325,7 +457,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     {
         /* Setup texture image from descriptor */
         GLTexImage3D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
@@ -339,7 +471,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     {
         /* Allocate texture without initial data */
         GLTexImage3D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
@@ -353,7 +485,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
         );
 
         GLTexImage3D(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
             GL_RGBA, GL_FLOAT, image.data()
         );
@@ -387,7 +519,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                desc.format,
+                NumMipLevels(desc), desc.format,
                 desc.textureCube.width, desc.textureCube.height, face,
                 dataFormatGL, dataTypeGL, imageFace, imageDesc->dataSize
             );
@@ -405,7 +537,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                desc.format,
+                NumMipLevels(desc), desc.format,
                 desc.textureCube.width, desc.textureCube.height, face,
                 GL_RGBA, GL_UNSIGNED_BYTE, nullptr
             );
@@ -422,7 +554,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                desc.format,
+                NumMipLevels(desc), desc.format,
                 desc.textureCube.width, desc.textureCube.height, face,
                 GL_RGBA, GL_FLOAT, image.data()
             );
@@ -438,7 +570,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
     {
         /* Setup texture image from descriptor */
         GLTexImage1DArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture1D.width, desc.texture1D.layers,
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
@@ -452,7 +584,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
     {
         /* Allocate texture without initial data */
         GLTexImage1DArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture1D.width, desc.texture1D.layers,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
@@ -466,7 +598,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         );
 
         GLTexImage1DArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture1D.width, desc.texture1D.layers,
             GL_RGBA, GL_FLOAT, image.data()
         );
@@ -481,7 +613,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
     {
         /* Setup texture image from descriptor */
         GLTexImage2DArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
@@ -497,7 +629,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
             );
 
             GLTexImage2DArray(
-                desc.format,
+                NumMipLevels(desc), desc.format,
                 desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
                 GL_DEPTH_COMPONENT, GL_FLOAT, image.data()
             );
@@ -506,7 +638,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         {
             /* Allocate depth texture image without initial data */
             GLTexImage2DArray(
-                desc.format,
+                NumMipLevels(desc), desc.format,
                 desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
                 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
             );
@@ -516,7 +648,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
     {
         /* Allocate texture without initial data */
         GLTexImage2DArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
@@ -530,7 +662,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
         );
 
         GLTexImage2DArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
             GL_RGBA, GL_FLOAT, image.data()
         );
@@ -545,7 +677,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
     {
         /* Setup texture image cube-faces from descriptor */
         GLTexImageCubeArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
             GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
         );
@@ -559,7 +691,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
     {
         /* Allocate texture without initial data */
         GLTexImageCubeArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr
         );
@@ -573,7 +705,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* i
         );
 
         GLTexImageCubeArray(
-            desc.format,
+            NumMipLevels(desc), desc.format,
             desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
             GL_RGBA, GL_FLOAT, image.data()
         );
