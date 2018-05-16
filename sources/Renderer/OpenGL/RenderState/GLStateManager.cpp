@@ -537,6 +537,7 @@ void GLStateManager::SetPolygonMode(GLenum mode)
 
 void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat clamp)
 {
+    #ifdef GL_ARB_polygon_offset_clamp
     if (HasExtension(GLExt::ARB_polygon_offset_clamp))
     {
         if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units)
@@ -548,6 +549,7 @@ void GLStateManager::SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat cla
         }
     }
     else
+    #endif
     {
         if (commonState_.offsetFactor != factor || commonState_.offsetUnits != units)
         {

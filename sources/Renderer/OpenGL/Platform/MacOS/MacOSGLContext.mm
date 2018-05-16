@@ -86,7 +86,6 @@ void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
 {
     NSOpenGLPixelFormatAttribute attribs[] =
     {
-        //NSOpenGLPFANoRecovery,
         NSOpenGLPFAAccelerated,
         NSOpenGLPFADoubleBuffer,
         NSOpenGLPFAOpenGLProfile,   TranslateNSOpenGLProfile(desc.profileOpenGL),
@@ -94,9 +93,9 @@ void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
         NSOpenGLPFAStencilSize,     static_cast<std::uint32_t>(desc.videoMode.stencilBits),
         NSOpenGLPFAColorSize,       24,
         NSOpenGLPFAAlphaSize,       8,
+        //NSOpenGLPFAMultisample,
         NSOpenGLPFASampleBuffers,   (desc.multiSampling.enabled ? 1u : 0u),
         NSOpenGLPFASamples,         desc.multiSampling.SampleCount(),
-        //NSOpenGLPFAFullScreen,
         0
     };
     
