@@ -63,7 +63,12 @@ struct LLGL_EXPORT SamplerDescriptor
     //! MIP-mapping filter. By default TextureFilter::Linear.
     TextureFilter   mipMapFilter    = TextureFilter::Linear;
 
-    //! Specifies whether MIP-maps are used or not. By default true.
+    /**
+    \brief Specifies whether MIP-maps are used or not. By default true.
+    \note Sampling a texture object that was not created with the 'TextureFlags::GenerateMips' flag while MIP-mapping is enabled is considered undefined behavior.
+    \see TextureFlags::GenerateMips
+    \see TextureDescriptor::flags
+    */
     bool            mipMapping      = true;
 
     //! MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.

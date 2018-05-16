@@ -325,9 +325,17 @@ struct LLGL_EXPORT SubTextureDescriptor
 \param[in] height Specifies the texture height or number of layers for 1D array textures. By default 1 (if 1D textures are used).
 \param[in] depth Specifies the texture depth or number of layers for 2D array textures. By default 1 (if 1D or 2D textures are used).
 \remarks The height and depth are optional parameters, so this function can be easily used for 1D, 2D, and 3D textures.
-\return 1 + floor(log2(max{ x, y, z })).
+\return 1 + floor(log2(max{ width, height, depth })).
 */
 LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height = 1, std::uint32_t depth = 1);
+
+/**
+\brief Returns the number of MIP-map levels for the specified texture descriptor.
+\param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of MIP-map levels.
+\return Number of MIP-map levels, or 1 if the descriptor has not the 'TextureFlags::GenerateMips' flags bit set.
+\see NumMipLevels(std::uint32_t, std::uint32_t, std::uint32_t)
+*/
+LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc);
 
 /**
 \brief Returns the required buffer size (in bytes) of a texture with the specified hardware format and size.
