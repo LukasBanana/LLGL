@@ -236,7 +236,7 @@ void GLRenderSystem::GenerateMips(Texture& texture)
 
 void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
-    #if 0
+    #if 1
 
     GenerateMips(texture);
 
