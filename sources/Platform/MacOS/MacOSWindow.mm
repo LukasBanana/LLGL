@@ -22,12 +22,12 @@
 
 @implementation AppDelegate
 {
-    LLGL::MacOSWindow*              window_;
-    const LLGL::WindowDescriptor*   windowDescRef_;
-    BOOL                            quit_;
+    LLGL::MacOSWindow*      window_;
+    LLGL::WindowDescriptor* windowDescRef_;
+    BOOL                    quit_;
 }
 
-- (id)initWithWindow:(LLGL::MacOSWindow*)window windowDesc:(const LLGL::WindowDescriptor*)windowDescRef
+- (id)initWithWindow:(LLGL::MacOSWindow*)window windowDesc:(LLGL::WindowDescriptor*)windowDescRef
 {
     self = [super init];
     
@@ -61,6 +61,10 @@
     auto w = static_cast<std::uint32_t>(frame.size.width);
     auto h = static_cast<std::uint32_t>(frame.size.height);
     
+    /* Store new size in descriptor */
+    windowDescRef_->size.width  = w;
+    windowDescRef_->size.height = h;
+
     /* Notify event listeners about resize */
     window_->PostResize({ w, h });
 }

@@ -21,8 +21,9 @@ int main(int argc, char* argv[])
         // Create two render contexts
         LLGL::RenderContextDescriptor contextDesc;
         {
-            contextDesc.videoMode.resolution    = { 640, 480 };
-            contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor(8);
+            contextDesc.videoMode.resolution            = { 640, 480 };
+            contextDesc.multiSampling                   = LLGL::MultiSamplingDescriptor(8);
+            contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
         }
         auto context1 = renderer->CreateRenderContext(contextDesc);
         auto context2 = renderer->CreateRenderContext(contextDesc);
