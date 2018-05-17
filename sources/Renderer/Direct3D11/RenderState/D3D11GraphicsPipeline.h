@@ -56,7 +56,7 @@ class D3D11GraphicsPipeline : public GraphicsPipeline
 
         D3D11_PRIMITIVE_TOPOLOGY        primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
         UINT                            stencilRef_         = 0;
-        ColorRGBAf                      blendFactor_ { 0.0f, 0.0f, 0.0f, 0.0f };
+        FLOAT                           blendFactor_[4]     = { 0.0f, 0.0f, 0.0f, 0.0f };
         UINT                            sampleMask_         = ~0;
 
 };

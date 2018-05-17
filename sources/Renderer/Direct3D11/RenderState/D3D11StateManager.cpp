@@ -181,14 +181,14 @@ static bool EqualsBlendFactors(const FLOAT* lhs, const FLOAT* rhs)
 
 void D3D11StateManager::SetBlendState(ID3D11BlendState* blendState, const FLOAT* blendFactor, UINT sampleMask)
 {
-    if (renderState_.blendState != blendState || !EqualsBlendFactors(renderState_.blendFactor, blendFactor) || renderState_.samplerMask != sampleMask)
+    if (renderState_.blendState != blendState || !EqualsBlendFactors(renderState_.blendFactor, blendFactor) || renderState_.sampleMask != sampleMask)
     {
         renderState_.blendState     = blendState;
         renderState_.blendFactor[0] = blendFactor[0];
         renderState_.blendFactor[1] = blendFactor[1];
         renderState_.blendFactor[2] = blendFactor[2];
         renderState_.blendFactor[3] = blendFactor[3];
-        renderState_.samplerMask    = sampleMask;
+        renderState_.sampleMask     = sampleMask;
         context_->OMSetBlendState(blendState, blendFactor, sampleMask);
     }
 }

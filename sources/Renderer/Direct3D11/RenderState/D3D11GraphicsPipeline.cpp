@@ -43,7 +43,10 @@ D3D11GraphicsPipeline::D3D11GraphicsPipeline(
     stencilRef_ = desc.stencil.front.reference;
 
     /* Store blend factor */
-    blendFactor_ = desc.blend.blendFactor;
+    blendFactor_[0] = desc.blend.blendFactor.r;
+    blendFactor_[1] = desc.blend.blendFactor.g;
+    blendFactor_[2] = desc.blend.blendFactor.b;
+    blendFactor_[3] = desc.blend.blendFactor.a;
 
     /* Create D3D11 render state objects */
     CreateDepthStencilState(device, desc.depth, desc.stencil);
@@ -67,7 +70,7 @@ void D3D11GraphicsPipeline::Bind(D3D11StateManager& stateMngr)
     /* Setup render states */
     stateMngr.SetRasterizerState(rasterizerState_.Get());
     stateMngr.SetDepthStencilState(depthStencilState_.Get(), stencilRef_);
-    stateMngr.SetBlendState(blendState_.Get(), blendFactor_.Ptr(), sampleMask_);
+    stateMngr.SetBlendState(blendState_.Get(), blendFactor_, sampleMask_);
 }
 
 

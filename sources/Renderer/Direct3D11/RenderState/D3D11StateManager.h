@@ -72,7 +72,7 @@ class D3D11StateManager
             UINT                        stencilRef          = 0;
             ID3D11BlendState*           blendState          = nullptr;
             FLOAT                       blendFactor[4]      = { -1.0f, -1.0f, -1.0f, -1.0f };
-            UINT                        samplerMask         = 0;
+            UINT                        sampleMask          = 0xffffffff;
         };
 
         /* ----- Members ----- */
