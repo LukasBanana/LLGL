@@ -6,9 +6,14 @@
  */
 
 #include "../tutorial.h"
+#include <chrono>
 
 
+// Enable multi-sampling render context
 //#define ENABLE_MULTISAMPLING
+
+// Enable timer to show render times every second
+//#define ENABLE_TIMER
 
 int main(int argc, char* argv[])
 {
@@ -24,6 +29,7 @@ int main(int argc, char* argv[])
         LLGL::RenderContextDescriptor contextDesc;
         {
             contextDesc.videoMode.resolution    = { 800, 600 };
+            contextDesc.vsync.enabled           = true;
             #ifdef ENABLE_MULTISAMPLING
             contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor { 8 };
             #endif
@@ -180,15 +186,30 @@ int main(int argc, char* argv[])
         // Get resolution to determine viewport size
         const auto resolution = contextDesc.videoMode.resolution;
 
+        auto timer = LLGL::Timer::Create();
+        auto start = std::chrono::system_clock::now();
+
         // Enter main loop
         while (window.ProcessEvents())
         {
+            #ifdef ENABLE_TIMER
+            timer->MeasureTime();
+            auto end = std::chrono::system_clock::now();
+            if (std::chrono::duration_cast<std::chrono::seconds>(end - start).count() > 0)
+            {
+                std::cout << "Rendertime: " << timer->GetDeltaTime() << ", FPS: " << 1.0 / timer->GetDeltaTime() << '\n';
+                start = end;
+            }
+            #endif
+
             // Set the render context as the initial render target
             commands->SetRenderTarget(*context);
 
             // Set viewport and scissor rectangle
             commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
+            #if 1//for D3D12
             commands->SetScissor(LLGL::Scissor{ { 0, 0 }, resolution });
+            #endif
 
             // Clear color buffer
             commands->Clear(LLGL::ClearFlags::Color);
@@ -204,10 +225,6 @@ int main(int argc, char* argv[])
 
             // Present the result on the screen
             context->Present();
-
-            #if 1//TODO: issue with Vulkan renderer
-            renderer->GetCommandQueue()->WaitIdle();
-            #endif
         }
     }
     catch (const std::exception& e)

@@ -55,16 +55,23 @@ class VKGraphicsPipeline : public GraphicsPipeline
             return scissorEnabled_;
         }
 
+        // Returns true if this graphics pipeline has dynamic scissor state enabled (allows 'vkCmdSetScissor' commands).
+        inline bool HasDynamicScissor() const
+        {
+            return hasDynamicScissor_;
+        }
+
     private:
 
         void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent);
 
-        VkDevice            device_         = VK_NULL_HANDLE;
-        VkRenderPass        renderPass_     = VK_NULL_HANDLE;
-        VkPipelineLayout    pipelineLayout_ = VK_NULL_HANDLE;
+        VkDevice            device_             = VK_NULL_HANDLE;
+        VkRenderPass        renderPass_         = VK_NULL_HANDLE;
+        VkPipelineLayout    pipelineLayout_     = VK_NULL_HANDLE;
         VKPtr<VkPipeline>   pipeline_;
 
-        bool                scissorEnabled_ = false;
+        bool                scissorEnabled_     = false;
+        bool                hasDynamicScissor_  = false;
 
 };
 

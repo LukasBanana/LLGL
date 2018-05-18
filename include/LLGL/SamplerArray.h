@@ -16,7 +16,10 @@ namespace LLGL
 {
 
 
-//! Sampler array interface.
+/**
+\breif Sampler container interface.
+\todo Maybe rename this to "SamplerHeap".
+*/
 class LLGL_EXPORT SamplerArray
 {
 

@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
         shaderProgram->BuildInputLayout(1, &vertexFormat);
-        
+
         // Link shader program and check for errors
         if (!shaderProgram->LinkShaders())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
             LLGL::Scissor {   0, 0, 320, 480 },
             LLGL::Scissor { 320, 0, 320, 480 },
         };
-        
+
         // Enter main loop
         while ( ( window1.ProcessEvents() || window2.ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
         {
@@ -227,8 +227,7 @@ int main(int argc, char* argv[])
                 // Present the result on the screen
                 context1->Present();
             }
-            renderer->GetCommandQueue()->WaitIdle();
-            
+
             // Draw content in 2nd render context
             commands->SetRenderTarget(*context2);
             {
@@ -251,7 +250,6 @@ int main(int argc, char* argv[])
                 // Present the result on the screen
                 context2->Present();
             }
-            renderer->GetCommandQueue()->WaitIdle();
         }
     }
     catch (const std::exception& e)

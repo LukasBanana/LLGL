@@ -274,7 +274,7 @@ class LLGL_EXPORT RenderSystem
         If this is non-null, it is used to initialize the texture data.
         This parameter will be ignored if the texture type is a multi-sampled texture (i.e. TextureType::Texture2DMS or TextureType::Texture2DMSArray).
         \see WriteTexture
-        \see RenderSystemConfiguration::defaultImageColor
+        \see RenderSystemConfiguration::imageInitialization
         */
         virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) = 0;
 
@@ -342,21 +342,27 @@ class LLGL_EXPORT RenderSystem
 
         /**
         \brief Generates all MIP-maps for the specified texture.
+        \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
         \remarks To generate only a small amout of MIP levels, use the secondary 'GenerateMips' function.
-        \remarks This may invalidate any currently bound texture slot.
         \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
         */
         virtual void GenerateMips(Texture& texture) = 0;
 
         /**
         \brief Generates at least the specified range of MIP-maps for the specified texture.
+        \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
+        \param[in] baseMipLevel Specifies the zero-based index of the first MIP-map level.
+        \param[in] numMipLevels Specifies the number of MIP-maps to generate. This also includes the base MIP-map level, so a number of less than 2 has no effect.
+        \param[in] baseArrayLayer Specifies the zero-based index of the first array layer (if an array texture is used). By default 0.
+        \param[in] numArrayLayers Specifies the number of array layers. For both array textures and non-array textures this must be at least 1. By default 1.
         \remarks This function only guarantees to generate at least the specified amount of MIP-maps.
         It may also update all other MIP-maps if the respective rendering API does not support hardware accelerated generation of a sub-range of MIP-maps.
         \note Only use this function if the range of MIP-maps is significantly smaller than the entire MIP chain,
         e.g. only a single slice of a large 2D array texture, and use the primary 'GenerateMips' function otherwise.
         \see GenerateMips(Texture&)
+        \see NumMipLevels
         */
-        virtual void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers) = 0;
+        virtual void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer = 0, std::uint32_t numArrayLayers = 1) = 0;
 
         /* ----- Samplers ---- */
 

@@ -22,11 +22,12 @@ namespace LLGL
 VKGraphicsPipeline::VKGraphicsPipeline(
     const VKPtr<VkDevice>& device, VkRenderPass renderPass, VkPipelineLayout defaultPipelineLayout,
     const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent) :
-        device_         { device                             },
-        renderPass_     { renderPass                         },
-        pipelineLayout_ { defaultPipelineLayout              },
-        pipeline_       { device, vkDestroyPipeline          },
-        scissorEnabled_ { desc.rasterizer.scissorTestEnabled }
+        device_            { device                             },
+        renderPass_        { renderPass                         },
+        pipelineLayout_    { defaultPipelineLayout              },
+        pipeline_          { device, vkDestroyPipeline          },
+        scissorEnabled_    { desc.rasterizer.scissorTestEnabled },
+        hasDynamicScissor_ { desc.scissors.empty()              }
 {
     /* Get pipeline layout object */
     if (desc.pipelineLayout)

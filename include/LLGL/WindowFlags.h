@@ -42,7 +42,34 @@ struct WindowDescriptor
     //! Specifies whether the window is borderless. This is required for a fullscreen render context. By default false.
     bool            borderless          = false;
 
-    //! Specifies whether the window can be resized. By default false.
+    /**
+    \brief Specifies whether the window can be resized. By default false.
+    \remarks For every window representing the surface for a RenderContext which has been resized,
+    the video mode of that RenderContext must be updated with the resolution of the surface's content size.
+    This can be done by setting the video mode with the new resolution before the respective render context is set as render target,
+    or it can be handled by a window event listener on the 'OnResize' callback:
+    \code
+    // Alternative 1
+    class MyEventListener : public LLGL::Window::EventListener {
+        void OnResize(Window& sender, const Extent2D& clientAreaSize) override {
+            auto myVideoMode = myRenderContext->GetVideoMode();
+            myVideoMode.resolution = clientAreaSize;
+            myRenderContext->SetVideoMode(myVideoMode);
+        }
+    };
+    myWindow->AddEventListener(std::make_shared<MyEventListener>());
+
+    // Alternative 2
+    auto myVideoMode = myRenderContext->GetVideoMode();
+    myVideoMode.resolution = myWindow->GetContentSize();
+    myRenderContext->SetVideoMode(myVideoMode);
+    myCmdBuffer->SetRenderTarget(*myRenderContext);
+    \endcode
+    \note Not updating the render context on a resized window is undefined behavior.
+    \see RenderContext::SetVideoMode
+    \see Surface::GetContentSize
+    \see Window::EventListener::OnResize
+    */
     bool            resizable           = false;
 
     //! Specifies whether the window allows that files can be draged-and-droped onto the window. By default false.

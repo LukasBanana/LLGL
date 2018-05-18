@@ -212,7 +212,7 @@ CommandBuffer* VKRenderSystem::CreateCommandBuffer()
     auto mainContext = renderContexts_.begin()->get();
     return TakeOwnership(
         commandBuffers_,
-        MakeUnique<VKCommandBuffer>(device_, mainContext->GetSwapChainSize(), queueFamilyIndices_)
+        MakeUnique<VKCommandBuffer>(device_, graphicsQueue_, mainContext->GetSwapChainSize(), queueFamilyIndices_)
     );
 }
 
@@ -1230,6 +1230,7 @@ void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
         throw std::runtime_error("hardware buffer was not created with CPU access (missing staging VkBuffer)");
 }
 
+//TODO: add parameters
 void VKRenderSystem::GenerateMipsPrimary(VKTexture& textureVK, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
     /* Get Vulkan image object */

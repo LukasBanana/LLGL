@@ -86,7 +86,7 @@ void VKRenderContext::Present()
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores    = signalSemaphorse;
     }
-    auto result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
+    auto result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, commandBuffer_->GetQueueSubmitFence());
     VKThrowIfFailed(result, "failed to submit Vulkan graphics queue");
 
     /* Present result on screen */
@@ -130,6 +130,9 @@ bool VKRenderContext::HasDepthStencilBuffer() const
 
 bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
+    /* Wait until graphics queue is idle before resources are destroyed and recreated */
+    vkQueueWaitIdle(graphicsQueue_);
+
     /* Recreate presenting semaphores and Vulkan surface */
     CreatePresentSemaphores();
     CreateGpuSurface();
@@ -594,7 +597,14 @@ VkFormat VKRenderContext::PickDepthFormat() const
 void VKRenderContext::AcquireNextPresentImage()
 {
     /* Get next image for presentation */
-    vkAcquireNextImageKHR(device_, swapChain_, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore_, VK_NULL_HANDLE, &presentImageIndex_);
+    vkAcquireNextImageKHR(
+        device_,
+        swapChain_,
+        UINT64_MAX,
+        imageAvailableSemaphore_,
+        VK_NULL_HANDLE,
+        &presentImageIndex_
+    );
 }
 
 

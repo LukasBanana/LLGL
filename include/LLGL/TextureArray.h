@@ -16,7 +16,10 @@ namespace LLGL
 {
 
 
-//! Array of textures interface.
+/**
+\brief Texture container interface.
+\todo Maybe rename this to "TextureHeap".
+*/
 class LLGL_EXPORT TextureArray
 {
 

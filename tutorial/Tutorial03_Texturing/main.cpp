@@ -243,8 +243,6 @@ private:
 
         // Present result on the screen
         context->Present();
-
-        //commandQueue->WaitIdle();
     }
 
 };

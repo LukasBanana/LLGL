@@ -30,7 +30,7 @@ class VKCommandBuffer : public CommandBuffer
 
         /* ----- Common ----- */
 
-        VKCommandBuffer(const VKPtr<VkDevice>& device, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices);
+        VKCommandBuffer(const VKPtr<VkDevice>& device, VkQueue graphicsQueue, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices);
         ~VKCommandBuffer();
 
         /* ----- Configuration ----- */
@@ -131,10 +131,17 @@ class VKCommandBuffer : public CommandBuffer
             return commandBuffer_;
         }
 
+        // Returns the fence used to submit the command buffer to the queue.
+        inline VkFence GetQueueSubmitFence() const
+        {
+            return recordingFence_;
+        }
+
     private:
 
         void CreateCommandPool(std::uint32_t queueFamilyIndex);
         void CreateCommandBuffers(std::size_t bufferCount);
+        void CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences);
 
         void ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments);
 
@@ -152,10 +159,13 @@ class VKCommandBuffer : public CommandBuffer
         void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
         void EndRenderPass();
 
-        VkDevice                        device_;
+        const VKPtr<VkDevice>&          device_;
         VKPtr<VkCommandPool>            commandPool_;
+
         std::vector<VkCommandBuffer>    commandBufferList_;
         VkCommandBuffer                 commandBuffer_;
+        std::vector<VKPtr<VkFence>>     recordingFenceList_;
+        VkFence                         recordingFence_;
         std::vector<bool>               commandBufferActiveList_;
         std::vector<bool>::iterator     commandBufferActiveIt_      = commandBufferActiveList_.end();
 

@@ -18,5 +18,4 @@ void main()
 {
 	gl_Position = vec4(position, 0, 1);
 	vertexColor = color;
-	gl_Position.y = -gl_Position.y;
 }

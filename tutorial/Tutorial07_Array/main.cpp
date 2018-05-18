@@ -77,11 +77,11 @@ public:
 
         // Create buffer for vertex positions
         LLGL::BufferDescriptor desc;
-        
+
         desc.type                   = LLGL::BufferType::Vertex;
         desc.size                   = sizeof(vertexPositions);
         desc.vertexBuffer.format    = vertexFormatPositions;
-        
+
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexPositions);
 
         // Create buffer for vertex colors
@@ -109,13 +109,6 @@ public:
         {
             pipelineDesc.shaderProgram              = shaderProgram;
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
-
-            #if 1//TODO: for Vulkan
-            const auto resolution = context->GetVideoMode().resolution;
-            pipelineDesc.viewports.push_back(LLGL::Viewport{ { 0, 0 }, resolution });
-            pipelineDesc.scissors.push_back(LLGL::Scissor{ { 0, 0 }, resolution });
-            pipelineDesc.blend.targets.push_back({});
-            #endif
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -126,6 +119,9 @@ private:
     {
         // Set the render context as the initial render target
         commands->SetRenderTarget(*context);
+
+        // Set viewports
+        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
 
         // Clear color buffer
         commands->Clear(LLGL::ClearFlags::Color);
@@ -141,8 +137,6 @@ private:
 
         // Present result on the screen
         context->Present();
-
-        renderer->GetCommandQueue()->WaitIdle();
     }
 
 };

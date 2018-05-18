@@ -28,13 +28,14 @@ namespace LLGL
 
 static const std::uint32_t g_maxNumViewportsPerBatch = 16;
 
-VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices) :
+VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, VkQueue graphicsQueue, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices) :
     device_             { device                           },
     commandPool_        { device, vkDestroyCommandPool     },
     queuePresentFamily_ { queueFamilyIndices.presentFamily }
 {
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
     CreateCommandBuffers(bufferCount);
+    CreateRecordingFences(graphicsQueue, bufferCount);
 }
 
 VKCommandBuffer::~VKCommandBuffer()
@@ -404,7 +405,7 @@ void VKCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineVK.IsScissorEnabled();
-    if (!scissorEnabled_ && scissorRectInvalidated_)
+    if (!scissorEnabled_ && scissorRectInvalidated_ && graphicsPipelineVK.HasDynamicScissor())
     {
         /* Set scissor to render target resolution */
         VkRect2D scissorRect;
@@ -567,6 +568,7 @@ void VKCommandBuffer::SetPresentIndex(std::uint32_t idx)
 {
     commandBuffer_          = commandBufferList_[idx];
     commandBufferActiveIt_  = commandBufferActiveList_.begin() + idx;
+    recordingFence_         = recordingFenceList_[idx];
 }
 
 bool VKCommandBuffer::IsCommandBufferActive() const
@@ -576,6 +578,10 @@ bool VKCommandBuffer::IsCommandBufferActive() const
 
 void VKCommandBuffer::BeginCommandBuffer()
 {
+    /* Wait for fence before recording */
+    vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
+    vkResetFences(device_, 1, &recordingFence_);
+
     /* Begin recording of current command buffer */
     VkCommandBufferBeginInfo beginInfo;
     {
@@ -695,6 +701,30 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
     /* Allocate list to keep track of which command buffers are active */
     commandBufferActiveList_.resize(bufferCount);
     commandBufferActiveIt_ = commandBufferActiveList_.end();
+}
+
+void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences)
+{
+    recordingFenceList_.resize(numFences, VKPtr<VkFence> { device_, vkDestroyFence });
+
+    VkFenceCreateInfo createInfo;
+    {
+        createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+    }
+
+    for (auto& fence : recordingFenceList_)
+    {
+        /* Create fence for command buffer recording */
+        auto result = vkCreateFence(device_, &createInfo, nullptr, fence.ReleaseAndGetAddressOf());
+        VKThrowIfFailed(result, "failed to create Vulkan fence");
+
+        /* Initial fence signal */
+        vkQueueSubmit(graphicsQueue, 0, nullptr, fence);
+    }
+
+    recordingFence_ = recordingFenceList_.front().Get();
 }
 
 void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments)

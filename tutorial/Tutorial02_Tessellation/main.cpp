@@ -260,7 +260,6 @@ private:
         const auto resolution = context->GetVideoMode().resolution;
 
         commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
-        commands->SetScissor(LLGL::Scissor{ { 0, 0 }, resolution });
 
         // Clear color- and depth buffers
         commands->Clear(LLGL::ClearFlags::ColorDepth);
@@ -296,7 +295,7 @@ private:
         // Present result on the screen
         context->Present();
 
-        renderer->GetCommandQueue()->WaitIdle();
+        //renderer->GetCommandQueue()->WaitIdle();
     }
 
     void OnDrawFrame() override
