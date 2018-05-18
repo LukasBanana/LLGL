@@ -29,13 +29,13 @@ void GLCommandQueue::Submit(Fence& fence)
     fenceGL.Submit();
 }
 
-bool GLCommandQueue::WaitForFence(Fence& fence, std::uint64_t timeout)
+bool GLCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 {
     auto& fenceGL = LLGL_CAST(GLFence&, fence);
     return fenceGL.Wait(timeout);
 }
 
-void GLCommandQueue::WaitForFinish()
+void GLCommandQueue::WaitIdle()
 {
     glFinish();
 }

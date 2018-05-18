@@ -37,15 +37,13 @@ class VKCommandQueue : public CommandQueue
 
         void Submit(Fence& fence) override;
 
-        bool WaitForFence(Fence& fence, std::uint64_t timeout) override;
-        void WaitForFinish() override;
+        bool WaitFence(Fence& fence, std::uint64_t timeout) override;
+        void WaitIdle() override;
 
     private:
 
         VkDevice    device_;
         VkQueue     graphicsQueue_  = VK_NULL_HANDLE;
-
-        VKFence     globalFence_; // global fence used for "WaitForFinish" function
 
 };
 

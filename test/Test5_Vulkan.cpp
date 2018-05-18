@@ -364,7 +364,7 @@ int main()
 
             #if 0
             // Wait for command buffer to complete
-            queue->WaitForFinish();
+            queue->WaitIdle();
             #endif
 
             // Evaluate query

@@ -443,7 +443,7 @@ class LLGL_EXPORT CommandBuffer
         [[deprecated("use 'LLGL::CommandBuffer::ClearAttachments' instead")]]
         void ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color);
 
-        [[deprecated("use 'LLGL::CommandQueue::WaitForFinish' instead")]]
+        [[deprecated("use 'LLGL::CommandQueue::WaitIdle' instead")]]
         void SyncGPU();
 
         #endif // /LLGL_ENABLE_BACKWARDS_COMPATIBILITY

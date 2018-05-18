@@ -16,8 +16,7 @@ namespace LLGL
 
 VKCommandQueue::VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue graphicsQueue) :
     device_        { device        },
-    graphicsQueue_ { graphicsQueue },
-    globalFence_   { device        }
+    graphicsQueue_ { graphicsQueue }
 {
 }
 
@@ -37,17 +36,15 @@ void VKCommandQueue::Submit(Fence& fence)
     vkQueueSubmit(graphicsQueue_, 0, nullptr, fenceVK.GetHardwareFence());
 }
 
-bool VKCommandQueue::WaitForFence(Fence& fence, std::uint64_t timeout)
+bool VKCommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 {
     auto& fenceVK = LLGL_CAST(VKFence&, fence);
     return fenceVK.Wait(device_, timeout);
 }
 
-void VKCommandQueue::WaitForFinish()
+void VKCommandQueue::WaitIdle()
 {
-    globalFence_.Reset(device_);
-    vkQueueSubmit(graphicsQueue_, 0, nullptr, globalFence_.GetHardwareFence());
-    globalFence_.Wait(device_, ~0);
+    vkQueueWaitIdle(graphicsQueue_);
 }
 
 

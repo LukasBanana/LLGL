@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
             context->Present();
 
             #if 1//TODO: issue with Vulkan renderer
-            renderer->GetCommandQueue()->WaitForFinish();
+            renderer->GetCommandQueue()->WaitIdle();
             #endif
         }
     }

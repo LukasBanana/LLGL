@@ -475,7 +475,7 @@ class LLGL_EXPORT RenderSystem
         /**
         \brief Creates a new fence (used for CPU/GPU synchronization).
         \see CommandBuffer::SubmitFence
-        \see CommandBuffer::WaitForFence
+        \see CommandBuffer::WaitFence
         */
         virtual Fence* CreateFence() = 0;
 

@@ -32,14 +32,14 @@ void D3D11CommandQueue::Submit(Fence& fence)
     //TODO: use D3D11Fence
 }
 
-bool D3D11CommandQueue::WaitForFence(Fence& fence, std::uint64_t timeout)
+bool D3D11CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 {
     //TODO: use D3D11Fence
     context_->Flush();
     return true;
 }
 
-void D3D11CommandQueue::WaitForFinish()
+void D3D11CommandQueue::WaitIdle()
 {
     context_->Flush();
 }

@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
                 // Present the result on the screen
                 context1->Present();
             }
-            renderer->GetCommandQueue()->WaitForFinish();
+            renderer->GetCommandQueue()->WaitIdle();
             
             // Draw content in 2nd render context
             commands->SetRenderTarget(*context2);
@@ -251,7 +251,7 @@ int main(int argc, char* argv[])
                 // Present the result on the screen
                 context2->Present();
             }
-            renderer->GetCommandQueue()->WaitForFinish();
+            renderer->GetCommandQueue()->WaitIdle();
         }
     }
     catch (const std::exception& e)

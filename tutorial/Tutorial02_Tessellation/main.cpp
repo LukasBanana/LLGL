@@ -296,7 +296,7 @@ private:
         // Present result on the screen
         context->Present();
 
-        renderer->GetCommandQueue()->WaitForFinish();
+        renderer->GetCommandQueue()->WaitIdle();
     }
 
     void OnDrawFrame() override

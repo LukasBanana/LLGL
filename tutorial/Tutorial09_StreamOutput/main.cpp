@@ -145,7 +145,7 @@ private:
         commands->EndStreamOutput();
 
         // Read stream-output buffer
-        renderer->GetCommandQueue()->WaitForFinish();
+        renderer->GetCommandQueue()->WaitIdle();
 
         if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::BufferCPUAccess::ReadOnly))
         {

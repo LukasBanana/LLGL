@@ -61,17 +61,22 @@ class LLGL_EXPORT CommandQueue
         \param[in] fence Specifies the fence for which the CPU needs to wait to be signaled.
         \param[in] timeout Specifies the waiting timeout (in nanoseconds).
         \return True on success, or false if the fence has a timeout (in nanoseconds) or the device is lost.
-        \remarks To wait for the completion of the entire GPU command queue, use 'WaitForFinish'.
-        \see WaitForFinish
+        \remarks To wait for the completion of the entire GPU command queue, use 'WaitIdle'.
+        \see WaitIdle
         */
-        virtual bool WaitForFence(Fence& fence, std::uint64_t timeout) = 0;
+        virtual bool WaitFence(Fence& fence, std::uint64_t timeout) = 0;
 
         /**
-        \brief Blocks the CPU execution until the entire GPU command queue has been completed (or rather flushed).
+        \brief Blocks the CPU execution until the entire GPU command queue has been completed.
         \remarks To wait for a specific point in the command queue, use fences.
-        \see WaitForFence
+        Waiting for the queue to be become idle is equivalent to submitting a fence and waiting for that fence to be signaled:
+        \code
+        myCmdQueue->Submit(myFence);
+        myCmdQueue->WaitFence(myFence, ~0);
+        \endcode
+        \see WaitFence
         */
-        virtual void WaitForFinish() = 0;
+        virtual void WaitIdle() = 0;
 
     protected:
 

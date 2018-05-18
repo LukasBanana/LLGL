@@ -33,8 +33,8 @@ class D3D12CommandQueue : public CommandQueue
 
         void Submit(Fence& fence) override;
 
-        bool WaitForFence(Fence& fence, std::uint64_t timeout) override;
-        void WaitForFinish() override;
+        bool WaitFence(Fence& fence, std::uint64_t timeout) override;
+        void WaitIdle() override;
 
         /* ----- Extended functions ----- */
 

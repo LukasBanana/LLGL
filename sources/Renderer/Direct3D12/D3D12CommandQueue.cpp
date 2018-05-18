@@ -52,13 +52,13 @@ void D3D12CommandQueue::Submit(Fence& fence)
     fenceD3D.Submit(queue_.Get());
 }
 
-bool D3D12CommandQueue::WaitForFence(Fence& fence, std::uint64_t timeout)
+bool D3D12CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 {
     auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence); 
     return fenceD3D.Wait(timeout);
 }
 
-void D3D12CommandQueue::WaitForFinish()
+void D3D12CommandQueue::WaitIdle()
 {
     //TODO
     //renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
