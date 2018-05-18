@@ -108,18 +108,18 @@ void D3D11CommandBuffer::Clear(long flags)
     }
 
     /* Clear depth-stencil buffer */
-    std::int32_t dsvClearFlags = 0;
+    UINT clearFlagsDSV = 0;
 
     if ((flags & ClearFlags::Depth) != 0)
-        dsvClearFlags |= D3D11_CLEAR_DEPTH;
+        clearFlagsDSV |= D3D11_CLEAR_DEPTH;
     if ((flags & ClearFlags::Stencil) != 0)
-        dsvClearFlags |= D3D11_CLEAR_STENCIL;
+        clearFlagsDSV |= D3D11_CLEAR_STENCIL;
 
-    if (dsvClearFlags && framebufferView_.dsv != nullptr)
+    if (clearFlagsDSV != 0 && framebufferView_.dsv != nullptr)
     {
         context_->ClearDepthStencilView(
             framebufferView_.dsv,
-            dsvClearFlags,
+            clearFlagsDSV,
             clearValue_.depth,
             static_cast<UINT8>(clearValue_.stencil)
         );

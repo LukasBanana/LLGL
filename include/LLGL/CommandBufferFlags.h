@@ -66,8 +66,8 @@ struct ClearValue
     //! Specifies the clear value to clear a color attachment. By default (0.0, 0.0, 0.0, 0.0).
     ColorRGBAf      color   = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-    //! Specifies the clear value to clear a depth attachment. By default 0.0.
-    float           depth   = 0.0f;
+    //! Specifies the clear value to clear a depth attachment. By default 1.0.
+    float           depth   = 1.0f;
 
     //! Specifies the clear value to clear a stencil attachment. By default 0.
     std::uint32_t   stencil = 0;
