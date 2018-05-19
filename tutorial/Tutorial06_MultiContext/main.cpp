@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
         LLGL::RenderContextDescriptor contextDesc;
         {
             contextDesc.videoMode.resolution            = { 640, 480 };
+            contextDesc.vsync.enabled                   = true;
             contextDesc.multiSampling                   = LLGL::MultiSamplingDescriptor(8);
             contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
         }
@@ -223,10 +224,9 @@ int main(int argc, char* argv[])
 
                 // Draw triangle with 3 vertices
                 commands->Draw(3, 0);
-
-                // Present the result on the screen
-                context1->Present();
             }
+            // Present the result on the screen
+            context1->Present();
 
             // Draw content in 2nd render context
             commands->SetRenderTarget(*context2);
@@ -246,10 +246,9 @@ int main(int argc, char* argv[])
 
                 // Draw quad with 4 vertices
                 commands->Draw(4, 3);
-
-                // Present the result on the screen
-                context2->Present();
             }
+            // Present the result on the screen
+            context2->Present();
         }
     }
     catch (const std::exception& e)
