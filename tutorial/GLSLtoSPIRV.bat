@@ -29,4 +29,8 @@ glslang -V -S frag -o Tutorial07_Array/fragment.450core.spv Tutorial07_Array/fra
 REM Tutorial08_Compute
 glslang -V -S comp -o Tutorial08_Compute/compute.spv Tutorial08_Compute/compute.glsl
 
+REM Tutorial10_Instancing
+glslang -V -S vert -o Tutorial10_Instancing/vertex.450core.spv Tutorial10_Instancing/vertex.450core.glsl
+glslang -V -S frag -o Tutorial10_Instancing/fragment.450core.spv Tutorial10_Instancing/fragment.450core.glsl
+
 pause

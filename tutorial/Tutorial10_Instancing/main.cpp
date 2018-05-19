@@ -20,16 +20,19 @@ class Tutorial10 : public Tutorial
 
     LLGL::GraphicsPipeline*     pipeline            = nullptr;
 
+    LLGL::PipelineLayout*       pipelineLayout      = nullptr;
+    LLGL::ResourceViewHeap*     resourceHeaps[2]    = {};
+
     // Two vertex buffer, one for per-vertex data, one for per-instance data
-    LLGL::Buffer*               vertexBuffers[2]    = { nullptr };
+    LLGL::Buffer*               vertexBuffers[2]    = {};
     LLGL::BufferArray*          vertexBufferArray   = nullptr;
 
     LLGL::Buffer*               constantBuffer      = nullptr;
-    
+
     // 2D-array texture for all plant images
     LLGL::Texture*              arrayTexture        = nullptr;
 
-    LLGL::Sampler*              samplers[2]         = { nullptr };
+    LLGL::Sampler*              samplers[2]         = {};
 
     float                       viewRotation        = 0.0f;
 
@@ -153,11 +156,11 @@ private:
 
         // Create buffer for per-vertex data
         LLGL::BufferDescriptor desc;
-        
+
         desc.type                   = LLGL::BufferType::Vertex;
         desc.size                   = sizeof(vertexData);
         desc.vertexBuffer.format    = vertexFormatPerVertex;
-        
+
         vertexBuffers[0] = renderer->CreateBuffer(desc, vertexData);
 
         // Create buffer for per-instance data
@@ -259,10 +262,39 @@ private:
 
     void CreatePipelines()
     {
+        // Create pipeline layout
+        LLGL::PipelineLayoutDescriptor plDesc;
+        {
+            plDesc.bindings =
+            {
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::ShaderStageFlags::VertexStage,   0 },
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Texture,        LLGL::ShaderStageFlags::FragmentStage, 1 },
+                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::ShaderStageFlags::FragmentStage, 2 },
+            };
+        }
+        pipelineLayout = renderer->CreatePipelineLayout(plDesc);
+
+        // Create resource view heap
+        for (std::size_t i = 0; i < 2; ++i)
+        {
+            LLGL::ResourceViewHeapDescriptor rvhDesc;
+            {
+                rvhDesc.pipelineLayout  = pipelineLayout;
+                rvhDesc.resourceViews   =
+                {
+                    LLGL::ResourceViewDesc(constantBuffer),
+                    LLGL::ResourceViewDesc(arrayTexture),
+                    LLGL::ResourceViewDesc(samplers[i]),
+                };
+            }
+            resourceHeaps[i] = renderer->CreateResourceViewHeap(rvhDesc);
+        }
+
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.pipelineLayout             = pipelineLayout;
             pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.depth.testEnabled          = true;
             pipelineDesc.depth.writeEnabled         = true;
@@ -316,25 +348,45 @@ private:
     {
         UpdateAnimation();
 
+        // Set the render context as the initial render target
+        commands->SetRenderTarget(*context);
+
+        // Set viewport
+        const auto resolution = context->GetVideoMode().resolution;
+        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
+
         // Clear color- and depth buffers
-        commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
+        commands->Clear(LLGL::ClearFlags::ColorDepth);
 
         // Set buffer array, texture, and sampler
         commands->SetVertexBufferArray(*vertexBufferArray);
 
-        commandsExt->SetTexture(*arrayTexture, 0, LLGL::ShaderStageFlags::FragmentStage);
-        commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::ShaderStageFlags::VertexStage);
-
         // Set graphics pipeline state
         commands->SetGraphicsPipeline(*pipeline);
 
-        // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-        commandsExt->SetSampler(*samplers[0], 0, LLGL::ShaderStageFlags::FragmentStage);
-        commands->DrawInstanced(4, 0, numPlantInstances);
+        if (pipelineLayout)
+        {
+            // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+            commands->SetGraphicsResourceViewHeap(*resourceHeaps[0], 0);
+            commands->DrawInstanced(4, 0, numPlantInstances);
 
-        // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-        commandsExt->SetSampler(*samplers[1], 0, LLGL::ShaderStageFlags::FragmentStage);
-        commands->DrawInstanced(4, 4, 1, numPlantInstances);
+            // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+            commands->SetGraphicsResourceViewHeap(*resourceHeaps[1], 0);
+            commands->DrawInstanced(4, 4, 1, numPlantInstances);
+        }
+        else
+        {
+            commandsExt->SetTexture(*arrayTexture, 0, LLGL::ShaderStageFlags::FragmentStage);
+            commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::ShaderStageFlags::VertexStage);
+
+            // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+            commandsExt->SetSampler(*samplers[0], 0, LLGL::ShaderStageFlags::FragmentStage);
+            commands->DrawInstanced(4, 0, numPlantInstances);
+
+            // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+            commandsExt->SetSampler(*samplers[1], 0, LLGL::ShaderStageFlags::FragmentStage);
+            commands->DrawInstanced(4, 4, 1, numPlantInstances);
+        }
 
         // Present result on the screen
         context->Present();

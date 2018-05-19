@@ -29,7 +29,7 @@ class Tutorial02 : public Tutorial
     LLGL::Buffer*           constantBuffer      = nullptr;
 
     LLGL::PipelineLayout*   pipelineLayout      = nullptr;
-    LLGL::ResourceViewHeap* resourceView        = nullptr;
+    LLGL::ResourceViewHeap* resourceHeap        = nullptr;
 
     #ifdef _TEST_BUFFER_ARRAY_
     LLGL::BufferArray*      constantBufferArray = nullptr;
@@ -165,7 +165,7 @@ public:
             rvhDesc.pipelineLayout  = pipelineLayout;
             rvhDesc.resourceViews   = { LLGL::ResourceViewDesc(constantBuffer) };
         }
-        resourceView = renderer->CreateResourceViewHeap(rvhDesc);
+        resourceHeap = renderer->CreateResourceViewHeap(rvhDesc);
 
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -256,9 +256,8 @@ private:
         // Set the render context as the initial render target
         commands->SetRenderTarget(*context);
 
-        // Set viewport and scissor
+        // Set viewport
         const auto resolution = context->GetVideoMode().resolution;
-
         commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
 
         // Clear color- and depth buffers
@@ -274,10 +273,10 @@ private:
         commands->SetVertexBuffer(*vertexBuffer);
         commands->SetIndexBuffer(*indexBuffer);
 
-        if (resourceView)
+        if (resourceHeap)
         {
             // Bind resource view heap to graphics pipeline
-            commands->SetGraphicsResourceViewHeap(*resourceView, 0);
+            commands->SetGraphicsResourceViewHeap(*resourceHeap, 0);
         }
         else
         {
