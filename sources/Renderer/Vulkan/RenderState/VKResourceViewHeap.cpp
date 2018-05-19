@@ -34,7 +34,7 @@ VKResourceViewHeap::VKResourceViewHeap(const VKPtr<VkDevice>& device, const Reso
 
     /* Create resource descriptor pool */
     CreateDescriptorPool(desc);
-    
+
     /* Create resource descriptor set for pipeline layout */
     VkDescriptorSetLayout setLayouts[] = { pipelineLayoutVK->GetVkDescriptorSetLayout() };
     CreateDescriptorSets(1, setLayouts);
@@ -81,7 +81,7 @@ static void CompressDescriptorPoolSizes(std::vector<VkDescriptorPoolSize>& poolS
     /* Accumulate all descriptors of the same type */
     for (auto it = poolSizes.begin(); it != poolSizes.end(); ++it)
         it->descriptorCount = AccumDescriptorPoolSizes(it->type, it, poolSizes.end());
-    
+
     /* Remove all remaining pool sizes with zero descriptors */
     RemoveAllFromListIf(
         poolSizes,

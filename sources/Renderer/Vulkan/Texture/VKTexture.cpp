@@ -27,12 +27,37 @@ VKTexture::VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& des
 
 Extent3D VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
-    return
+    switch (GetType())
     {
-        std::max(1u, extent_.width  >> mipLevel),
-        std::max(1u, extent_.height >> mipLevel),
-        std::max(1u, extent_.depth  >> mipLevel)
-    };
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            return
+            {
+                std::max(1u, extent_.width  >> mipLevel),
+                numArrayLayers_,
+                1u
+            };
+        case TextureType::Texture2D:
+        case TextureType::Texture2DArray:
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            return
+            {
+                std::max(1u, extent_.width  >> mipLevel),
+                std::max(1u, extent_.height >> mipLevel),
+                numArrayLayers_
+            };
+        case TextureType::Texture3D:
+            return
+            {
+                std::max(1u, extent_.width  >> mipLevel),
+                std::max(1u, extent_.height >> mipLevel),
+                std::max(1u, extent_.depth  >> mipLevel)
+            };
+    }
+    return { 0u, 0u, 0u };
 }
 
 TextureDescriptor VKTexture::QueryDesc() const
@@ -56,7 +81,9 @@ void VKTexture::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion
     }
 }
 
-void VKTexture::CreateImageView(VkDevice device, std::uint32_t baseArrayLayer, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, VkImageView* imageViewRef)
+void VKTexture::CreateImageView(
+    VkDevice device, std::uint32_t baseMipLevel, std::uint32_t numMipLevels,
+    std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, VkImageView* imageViewRef)
 {
     /* Create image view object */
     VkImageViewCreateInfo createInfo;
@@ -75,7 +102,7 @@ void VKTexture::CreateImageView(VkDevice device, std::uint32_t baseArrayLayer, s
         createInfo.subresourceRange.baseMipLevel    = baseMipLevel;
         createInfo.subresourceRange.levelCount      = numMipLevels;
         createInfo.subresourceRange.baseArrayLayer  = baseArrayLayer;
-        createInfo.subresourceRange.layerCount      = 1;
+        createInfo.subresourceRange.layerCount      = numArrayLayers;
     }
     VkResult result = vkCreateImageView(device, &createInfo, nullptr, imageViewRef);
     VKThrowIfFailed(result, "failed to create Vulkan image view");
@@ -83,7 +110,7 @@ void VKTexture::CreateImageView(VkDevice device, std::uint32_t baseArrayLayer, s
 
 void VKTexture::CreateInternalImageView(VkDevice device)
 {
-    CreateImageView(device, 0, 0, GetNumMipLevels(), imageView_.ReleaseAndGetAddressOf());
+    CreateImageView(device, 0, GetNumMipLevels(), 0, GetNumArrayLayers(), imageView_.ReleaseAndGetAddressOf());
 }
 
 
@@ -242,6 +269,7 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
     /* Store number of MIP level and image extent */
     extent_         = createInfo.extent;
     numMipLevels_   = createInfo.mipLevels;
+    numArrayLayers_ = createInfo.arrayLayers;
 }
 
 

@@ -53,7 +53,7 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const Rende
             auto& attachmentDesc = attachmentDescs[i];
             {
                 attachmentDesc.flags                = 0;
-                attachmentDesc.format               = textureVK->GetFormat();
+                attachmentDesc.format               = textureVK->GetVkFormat();
                 attachmentDesc.samples              = VK_SAMPLE_COUNT_1_BIT; //!!!
                 attachmentDesc.loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;//VK_ATTACHMENT_LOAD_OP_CLEAR;
                 attachmentDesc.storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
@@ -162,8 +162,9 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
             /* Create new image view for MIP-level and array layer specified in attachment descriptor */
             textureVK->CreateImageView(
                 device,
-                attachment.layer,
                 attachment.mipLevel,
+                1,
+                attachment.layer,
                 1,
                 imageViews_[numAttachments].ReleaseAndGetAddressOf()
             );
@@ -172,7 +173,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
             imageViewRefs[numAttachments] = imageViews_[numAttachments].Get();
 
             /* Apply texture resolution to render target (to validate correlation between attachments) */
-            ApplyResolution({ textureVK->GetExtent().width, textureVK->GetExtent().height});
+            ApplyResolution({ textureVK->GetVkExtent().width, textureVK->GetVkExtent().height});
 
             ++numAttachments;
         }

@@ -193,7 +193,13 @@ struct LLGL_EXPORT TextureDescriptor
     {
         std::uint32_t   width;          //!< Texture width.
         std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   layers;         //!< Number of texture array layers, one for each cube.
+
+        /**
+        \brief Number of texture array layers, one for each cube.
+        \remarks Most rendering APIs only use the actual number of array layers, so for cube maps they are always a multiple of 6.
+        This attribute, however, specifies the number of cubes in the array texture and LLGL will multiply it by 6 automatically if necessary.
+        */
+        std::uint32_t   layers;
     };
 
     //! Multi-sampled 2D- and 2D-Array texture specific descriptor structure.
@@ -320,6 +326,12 @@ struct LLGL_EXPORT SubTextureDescriptor
 /* ----- Functions ----- */
 
 /**
+\defgroup group_tex_util Global texture utility functions to determine texture dimension and buffer sizes.
+\addtogroup group_tex_util
+@{
+*/
+
+/**
 \brief Returns the number of MIP-map levels for a texture with the specified size.
 \param[in] width Specifies the texture width.
 \param[in] height Specifies the texture height or number of layers for 1D array textures. By default 1 (if 1D textures are used).
@@ -384,6 +396,8 @@ LLGL_EXPORT bool IsMultiSampleTexture(const TextureType type);
 \return True if 'type' is either TextureType::TextureCube or TextureType::TextureCubeArray.
 */
 LLGL_EXPORT bool IsCubeTexture(const TextureType type);
+
+/** @} */
 
 
 } // /namespace LLGL

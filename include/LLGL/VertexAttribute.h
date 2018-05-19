@@ -79,8 +79,17 @@ struct LLGL_EXPORT VertexAttribute
 
     /**
     \brief Vector type of the vertex attribute. By default VectorType::Float4.
-    \remarks The double types are only supported with OpenGL, i.e. the vector types:
+    \note The double types are only supported with OpenGL, i.e. the vector types:
     VectorType::Double, VectorType::Double2, VectorType::Double3, and VectorType::Double4.
+    \remarks To specifies an attribute of a matrix type, use multiple vector types with ascending values for the semanticIndex field.
+    Here is an example for a 4x4 matrix type:
+    \code
+    myVertexFormat.AppendAttribute({ "myMatrix", 0, LLGL::VectorType::Float4 });
+    myVertexFormat.AppendAttribute({ "myMatrix", 1, LLGL::VectorType::Float4 });
+    myVertexFormat.AppendAttribute({ "myMatrix", 2, LLGL::VectorType::Float4 });
+    myVertexFormat.AppendAttribute({ "myMatrix", 3, LLGL::VectorType::Float4 });
+    \endcode
+    \see semanticIndex
     */
     VectorType      vectorType      = VectorType::Float4;
 

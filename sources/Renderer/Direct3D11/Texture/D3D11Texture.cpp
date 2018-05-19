@@ -39,7 +39,7 @@ Extent3D D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
                 if (mipLevel < desc.MipLevels)
                 {
                     size.width  = std::max(1u, desc.Width >> mipLevel);
-                    size.height = 1u;
+                    size.height = desc.ArraySize;
                     size.depth  = 1u;
                 }
             }
@@ -55,7 +55,7 @@ Extent3D D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
                 {
                     size.width  = std::max(1u, desc.Width  >> mipLevel);
                     size.height = std::max(1u, desc.Height >> mipLevel);
-                    size.depth  = 1u;
+                    size.depth  = desc.ArraySize;
                 }
             }
             break;

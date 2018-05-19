@@ -33,7 +33,13 @@ class VKTexture : public Texture
 
         void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
 
-        void CreateImageView(VkDevice device, std::uint32_t baseArrayLayer, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, VkImageView* imageViewRef);
+        void CreateImageView(
+            VkDevice device,
+            std::uint32_t baseMipLevel, std::uint32_t numMipLevels,
+            std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers,
+            VkImageView* imageViewRef
+        );
+
         void CreateInternalImageView(VkDevice device);
 
         // Returns the Vulkan image object.
@@ -49,13 +55,13 @@ class VKTexture : public Texture
         }
 
         // Returns the VkFormat with whereby the VkImage object was created.
-        inline VkFormat GetFormat() const
+        inline VkFormat GetVkFormat() const
         {
             return format_;
         }
 
-        // Returns the VkExtent3D with whereby the VkImage object was created.
-        inline const VkExtent3D& GetExtent() const
+        // Returns the VkExtent3D with whereby the VkImage object was created (does not include the array layer count).
+        inline const VkExtent3D& GetVkExtent() const
         {
             return extent_;
         }
@@ -64,6 +70,12 @@ class VKTexture : public Texture
         inline std::uint32_t GetNumMipLevels() const
         {
             return numMipLevels_;
+        }
+
+        // Returns the number of array layers.
+        inline std::uint32_t GetNumArrayLayers() const
+        {
+            return numArrayLayers_;
         }
 
     private:
@@ -78,6 +90,7 @@ class VKTexture : public Texture
         VkFormat                format_         = VK_FORMAT_UNDEFINED;
         VkExtent3D              extent_;
         std::uint32_t           numMipLevels_   = 0;
+        std::uint32_t           numArrayLayers_ = 0;
 
 };
 
