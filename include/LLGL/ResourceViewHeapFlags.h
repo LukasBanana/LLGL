@@ -63,7 +63,10 @@ struct ResourceViewDescriptor
     };
 };
 
-//! Resource view heap descriptor structure.
+/**
+\brief Resource view heap descriptor structure.
+\todo Rename to "ResourceHeapDescriptor".
+*/
 struct ResourceViewHeapDescriptor
 {
     //! Reference to the pipeline layout.

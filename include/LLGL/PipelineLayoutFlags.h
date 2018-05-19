@@ -25,6 +25,7 @@ namespace LLGL
 /**
 \brief Layout structure for a single binding point of the pipeline layout descriptor.
 \see PipelineLayoutDescriptor
+\todo Rename to "BindingDescriptor".
 */
 struct LayoutBindingDescriptor
 {

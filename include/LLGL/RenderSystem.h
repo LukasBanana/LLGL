@@ -390,7 +390,7 @@ class LLGL_EXPORT RenderSystem
 
         /* ----- Resource Views ----- */
 
-        //! \todo Document this and make it pure virtual.
+        //! \todo Document this and make it pure virtual. Rename to "CreateResourceHeap".
         virtual ResourceViewHeap* CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc)/* = 0*/;
 
         //! \todo Document this and make it pure virtual.

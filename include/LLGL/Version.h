@@ -17,6 +17,7 @@
 namespace LLGL
 {
 
+//! Namespace with functions to determine LLGL version.
 namespace Version
 {
 

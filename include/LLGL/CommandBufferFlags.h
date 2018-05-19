@@ -46,13 +46,13 @@ struct ClearFlags
 {
     enum
     {
-        Color           = (1 << 0),                     //!< Clears the color buffer.
-        Depth           = (1 << 1),                     //!< Clears the depth buffer.
-        Stencil         = (1 << 2),                     //!< Clears the stencil buffer.
+        Color           = (1 << 0),                     //!< Clears the color attachment.
+        Depth           = (1 << 1),                     //!< Clears the depth attachment.
+        Stencil         = (1 << 2),                     //!< Clears the stencil attachment.
 
-        ColorDepth      = (Color | Depth),              //!< Clears the color and depth buffers.
-        DepthStencil    = (Depth | Stencil),            //!< Clears the depth and stencil buffers.
-        All             = (Color | Depth | Stencil),    //!< Clears all buffers (color, depth, and stencil).
+        ColorDepth      = (Color | Depth),              //!< Clears the color and depth attachments.
+        DepthStencil    = (Depth | Stencil),            //!< Clears the depth and stencil attachments.
+        All             = (Color | Depth | Stencil),    //!< Clears the color, depth and stencil attachments.
     };
 };
 

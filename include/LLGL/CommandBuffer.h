@@ -40,13 +40,14 @@ class RenderContext;
 
 /**
 \brief Command buffer interface.
-\remarks This is the main interface to commit graphics and compute commands to the GPU.
+\remarks This is the main interface to record graphics and compute commands to be submitted to the GPU.
 For older graphics APIs (such as OpenGL and Direct3D 11) it makes not much sense to create multiple command buffers,
 but for recent graphics APIs (such as Vulkan and Direct3D 12) it might be sensible to have more than one command buffer,
 to maximize CPU utilization with several worker threads and one command buffer for each thread.
-Note that especially for recent graphics APIs most states in the command buffer are NOT persistent,
-i.e. they need to be reset every frame (e.g. bound vertex buffers).
 Assume that all states that can be changed with a setter function are not persistent except the opposite is mentioned.
+\note Before any command can be recorded by the command buffer, a valid render target must be set (either a RenderTarget or RenderContext object).
+\see SetRenderTarget(RenderContext&)
+\see SetRenderTarget(RenderTarget&)
 */
 class LLGL_EXPORT CommandBuffer
 {
@@ -70,7 +71,7 @@ class LLGL_EXPORT CommandBuffer
         (e.g. for a uniform render target behavior between OpenGL and Direct3D).
         */
         virtual void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) = 0;
-        
+
         /* ----- Viewport and Scissor ----- */
 
         /**
@@ -227,13 +228,13 @@ class LLGL_EXPORT CommandBuffer
 
         /* ----- Resource View Heaps ----- */
 
-        //TODO: testing for Vulkan renderer
+        //TODO: testing for Vulkan renderer. Rename to "SetGraphicsResourceHeap".
         virtual void SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
         {
             // dummy
         }
 
-        //TODO: testing for Vulkan renderer
+        //TODO: testing for Vulkan renderer. Rename to "SetComputeResourceHeap".
         virtual void SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
         {
             // dummy
@@ -383,7 +384,7 @@ class LLGL_EXPORT CommandBuffer
 
         //! \see DrawInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
         virtual void DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances) = 0;
-        
+
         /**
         \brief Draws the specified amount of instances of primitives from the currently set vertex buffer.
         \param[in] numVertices Specifies the number of vertices to generate.
@@ -401,10 +402,10 @@ class LLGL_EXPORT CommandBuffer
 
         //! \see DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
         virtual void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex) = 0;
-        
+
         //! \see DrawIndexedInstanced(std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::uint32_t)
         virtual void DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset) = 0;
-        
+
         /**
         \brief Draws the specified amount of instances of primitives from the currently set vertex- and index buffers.
         \param[in] numVertices Specifies the number of vertices to generate.
