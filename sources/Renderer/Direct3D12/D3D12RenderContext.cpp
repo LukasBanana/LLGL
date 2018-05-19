@@ -28,6 +28,7 @@ D3D12RenderContext::D3D12RenderContext(
     D3D12RenderSystem& renderSystem,
     RenderContextDescriptor desc,
     const std::shared_ptr<Surface>& surface) :
+        RenderContext { desc.vsync   },
         renderSystem_ { renderSystem },
         desc_         { desc         }
 {

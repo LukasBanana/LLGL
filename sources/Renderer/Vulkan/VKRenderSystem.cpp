@@ -250,7 +250,7 @@ Buffer* VKRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 
     /* Create device buffer */
     auto buffer = CreateHardwareBuffer(desc, GetVkBufferUsageFlags(desc.flags));
-    
+
     /* Allocate device memory */
     const auto& requirements = buffer->GetRequirements();
 
@@ -462,9 +462,10 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     );
 
     /* Create device texture */
-    auto textureVK  = MakeUnique<VKTexture>(device_, textureDesc);
-    auto image      = textureVK->GetVkImage();
-    auto mipLevels  = textureVK->GetNumMipLevels();
+    auto textureVK      = MakeUnique<VKTexture>(device_, textureDesc);
+    auto image          = textureVK->GetVkImage();
+    auto mipLevels      = textureVK->GetNumMipLevels();
+    auto arrayLayers    = textureVK->GetNumArrayLayers();
 
     /* Allocate device memory */
     VkMemoryRequirements requirements;
@@ -481,7 +482,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     auto formatVK = VKTypes::Map(textureDesc.format);
-    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
+    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, arrayLayers);
     {
         CopyBufferToImage(
             stagingBuffer.buffer,
@@ -490,7 +491,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             GetTextureLayertCount(textureDesc)
         );
     }
-    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels);
+    TransitionImageLayout(image, formatVK, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels, arrayLayers);
 
     /* Release staging buffer */
     deviceMemoryMngr_->Release(memoryRegionStaging);
@@ -1166,7 +1167,8 @@ void VKRenderSystem::EndStagingCommands()
     vkQueueWaitIdle(graphicsQueue_);
 }
 
-void VKRenderSystem::TransitionImageLayout(VkImage image, VkFormat /*format*/, VkImageLayout oldLayout, VkImageLayout newLayout, std::uint32_t levelCount)
+void VKRenderSystem::TransitionImageLayout(
+    VkImage image, VkFormat /*format*/, VkImageLayout oldLayout, VkImageLayout newLayout, std::uint32_t numMipLevels, std::uint32_t numArrayLayers)
 {
     BeginStagingCommands();
 
@@ -1184,9 +1186,9 @@ void VKRenderSystem::TransitionImageLayout(VkImage image, VkFormat /*format*/, V
         barrier.image                           = image;
         barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel   = 0;
-        barrier.subresourceRange.levelCount     = levelCount;
+        barrier.subresourceRange.levelCount     = numMipLevels;
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount     = 1;
+        barrier.subresourceRange.layerCount     = numArrayLayers;
     }
 
     /* Initialize pipeline state flags */
@@ -1265,7 +1267,7 @@ void VKRenderSystem::GenerateMipsPrimary(VKTexture& textureVK, std::uint32_t bas
     auto image  = textureVK.GetVkImage();
     auto extent = textureVK.GetVkExtent();
 
-    TransitionImageLayout(image, VK_FORMAT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, numMipLevels);
+    TransitionImageLayout(image, VK_FORMAT_UNDEFINED, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, numMipLevels, numArrayLayers);
 
     BeginStagingCommands();
 
@@ -1297,9 +1299,9 @@ void VKRenderSystem::GenerateMipsPrimary(VKTexture& textureVK, std::uint32_t bas
             /* Determine extent of next MIP level */
             auto nextExtent = currExtent;
 
-            nextExtent.width    = std::max(1u, currExtent.width / 2);
+            nextExtent.width    = std::max(1u, currExtent.width  / 2);
             nextExtent.height   = std::max(1u, currExtent.height / 2);
-            nextExtent.depth    = std::max(1u, currExtent.depth / 2);
+            nextExtent.depth    = std::max(1u, currExtent.depth  / 2);
 
             /* Transition previous MIP level to VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL */
             barrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;

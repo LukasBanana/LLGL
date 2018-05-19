@@ -99,7 +99,7 @@ class LLGL_EXPORT RenderContext
 
     protected:
 
-        RenderContext() = default;
+        RenderContext(const VsyncDescriptor& initialVsync = {});
 
         /**
         \brief Callback when the video mode is about to get changed.
@@ -136,7 +136,7 @@ class LLGL_EXPORT RenderContext
         \brief Shares the surface and video mode with another render context.
         \note This is only used by the renderer debug layer.
         */
-        void ShareSurfaceAndVideoMode(RenderContext& other);
+        void ShareSurfaceAndConfig(RenderContext& other);
 
     private:
 

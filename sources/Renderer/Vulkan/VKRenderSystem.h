@@ -83,7 +83,7 @@ class VKRenderSystem : public RenderSystem
 
         void Release(Buffer& buffer) override;
         void Release(BufferArray& bufferArray) override;
-        
+
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
 
         void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
@@ -98,7 +98,7 @@ class VKRenderSystem : public RenderSystem
         void Release(TextureArray& textureArray) override;
 
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
-        
+
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) override;
 
         void GenerateMips(Texture& texture) override;
@@ -131,7 +131,7 @@ class VKRenderSystem : public RenderSystem
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
-        
+
         /* ----- Pipeline Layouts ----- */
 
         PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) override;
@@ -142,7 +142,7 @@ class VKRenderSystem : public RenderSystem
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
         ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
-        
+
         void Release(GraphicsPipeline& graphicsPipeline) override;
         void Release(ComputePipeline& computePipeline) override;
 
@@ -188,14 +188,22 @@ class VKRenderSystem : public RenderSystem
         void BeginStagingCommands();
         void EndStagingCommands();
 
-        void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, std::uint32_t levelCount);
+        void TransitionImageLayout(
+            VkImage image, VkFormat format,
+            VkImageLayout oldLayout, VkImageLayout newLayout,
+            std::uint32_t numMipLevels, std::uint32_t numArrayLayers
+        );
 
         void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset = 0, VkDeviceSize dstOffset = 0);
         void CopyBufferToImage(VkBuffer srcBuffer, VkImage dstImage, const VkExtent3D& extent, std::uint32_t numLayers);
 
         void AssertBufferCPUAccess(const VKBuffer& bufferVK);
 
-        void GenerateMipsPrimary(VKTexture& textureVK, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
+        void GenerateMipsPrimary(
+            VKTexture& textureVK,
+            std::uint32_t baseMipLevel, std::uint32_t numMipLevels,
+            std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers
+        );
 
         /* ----- Common objects ----- */
 

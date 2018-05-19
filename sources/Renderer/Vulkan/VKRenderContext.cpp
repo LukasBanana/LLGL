@@ -32,14 +32,14 @@ VKRenderContext::VKRenderContext(
     VKDeviceMemoryManager& deviceMemoryMngr,
     RenderContextDescriptor desc,
     const std::shared_ptr<Surface>& surface) :
+        RenderContext        { desc.vsync                    },
         instance_            { instance                      },
         physicalDevice_      { physicalDevice                },
         device_              { device                        },
         deviceMemoryMngr_    { deviceMemoryMngr              },
         surface_             { instance, vkDestroySurfaceKHR },
         swapChain_           { device, vkDestroySwapchainKHR },
-        swapChainRenderPass_ { device, vkDestroyRenderPass   },
-        vsyncDesc_           { desc.vsync                    }
+        swapChainRenderPass_ { device, vkDestroyRenderPass   }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
 
@@ -143,7 +143,7 @@ bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
         CreateDepthStencilBuffer(videoModeDesc);
 
     /* Recreate only swap-chain but keep render pass (independent of swap-chain object) */
-    CreateSwapChain(videoModeDesc, vsyncDesc_);
+    CreateSwapChain(videoModeDesc, GetVsync());
 
     return true;
 }
@@ -152,7 +152,6 @@ bool VKRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
     /* Recreate swap-chain with new vsnyc settings */
     CreateSwapChain(GetVideoMode(), vsyncDesc);
-    vsyncDesc_ = vsyncDesc;
     return true;
 }
 

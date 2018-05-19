@@ -15,6 +15,11 @@ namespace LLGL
 {
 
 
+RenderContext::RenderContext(const VsyncDescriptor& initialVsync) :
+    vsyncDesc_ { initialVsync }
+{
+}
+
 RenderContext::~RenderContext()
 {
 }
@@ -107,10 +112,11 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
     videoModeDesc_ = videoModeDesc;
 }
 
-void RenderContext::ShareSurfaceAndVideoMode(RenderContext& other)
+void RenderContext::ShareSurfaceAndConfig(RenderContext& other)
 {
     surface_        = other.surface_;
     videoModeDesc_  = other.videoModeDesc_;
+    vsyncDesc_      = other.vsyncDesc_;
 }
 
 

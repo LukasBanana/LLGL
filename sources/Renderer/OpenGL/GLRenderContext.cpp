@@ -13,6 +13,7 @@ namespace LLGL
 
 
 GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext) :
+    RenderContext  { desc.vsync                                           },
     desc_          { desc                                                 },
     contextHeight_ { static_cast<GLint>(desc.videoMode.resolution.height) }
 {

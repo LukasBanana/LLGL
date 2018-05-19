@@ -345,6 +345,7 @@ class LLGL_EXPORT RenderSystem
         \param[in,out] texture Specifies the texture whose MIP-maps are to be generated.
         \remarks To generate only a small amout of MIP levels, use the secondary 'GenerateMips' function.
         \see GenerateMips(Texture&, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t)
+        \todo Maybe move this to "CommandBuffer" and no longer use the staging command buffer for this in Vulkan renderer.
         */
         virtual void GenerateMips(Texture& texture) = 0;
 
@@ -361,6 +362,7 @@ class LLGL_EXPORT RenderSystem
         e.g. only a single slice of a large 2D array texture, and use the primary 'GenerateMips' function otherwise.
         \see GenerateMips(Texture&)
         \see NumMipLevels
+        \todo Maybe move this to "CommandBuffer" and no longer use the staging command buffer for this in Vulkan renderer.
         */
         virtual void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer = 0, std::uint32_t numArrayLayers = 1) = 0;
 

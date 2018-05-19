@@ -142,8 +142,6 @@ class VKRenderContext : public RenderContext
 
         VKCommandBuffer*                    commandBuffer_              = nullptr;
 
-        VsyncDescriptor                     vsyncDesc_;
-
 };
 
 
