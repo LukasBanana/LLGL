@@ -167,13 +167,13 @@ void GLStateManager::NotifyRenderTargetHeight(GLint height)
     //TODO...
 }
 
-void GLStateManager::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+void GLStateManager::SetGraphicsAPIDependentState(const OpenGLDependentStateDescriptor& stateDesc)
 {
     /* Check for necessary updates */
-    bool updateFrontFace = (gfxDependentState_.stateOpenGL.invertFrontFace != state.stateOpenGL.invertFrontFace);
+    bool updateFrontFace = (apiDependentState_.invertFrontFace != stateDesc.invertFrontFace);
 
     /* Store new graphics state */
-    gfxDependentState_ = state;
+    apiDependentState_ = stateDesc;
 
     /* Update front face */
     if (updateFrontFace)
@@ -310,7 +310,7 @@ void GLStateManager::AdjustViewport(GLViewport& viewport)
 void GLStateManager::SetViewport(GLViewport& viewport)
 {
     /* Adjust viewport for vertical-flipped screen space origin */
-    if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
+    if (emulateClipControl_ && !apiDependentState_.originLowerLeft)
         AdjustViewport(viewport);
 
     glViewport(
@@ -340,7 +340,7 @@ void GLStateManager::SetViewportArray(GLuint first, GLsizei count, GLViewport* v
         AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
-        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
+        if (emulateClipControl_ && !apiDependentState_.originLowerLeft)
         {
             for (GLsizei i = 0; i < count; ++i)
                 AdjustViewport(viewports[i]);
@@ -398,7 +398,7 @@ void GLStateManager::SetScissorArray(GLuint first, GLsizei count, GLScissor* sci
         AssertExtViewportArray();
 
         /* Adjust viewports for vertical-flipped screen space origin */
-        if (emulateClipControl_ && !gfxDependentState_.stateOpenGL.screenSpaceOriginLowerLeft)
+        if (emulateClipControl_ && !apiDependentState_.originLowerLeft)
         {
             for (GLsizei i = 0; i < count; ++i)
                 AdjustScissor(scissors[0]);
@@ -575,7 +575,7 @@ void GLStateManager::SetFrontFace(GLenum mode)
     commonState_.frontFaceAct = mode;
 
     /* Check if mode must be inverted */
-    if (gfxDependentState_.stateOpenGL.invertFrontFace)
+    if (apiDependentState_.invertFrontFace)
         mode = (mode == GL_CW ? GL_CCW : GL_CW);
 
     /* Set front face */

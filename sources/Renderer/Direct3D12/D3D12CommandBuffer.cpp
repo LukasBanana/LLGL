@@ -34,7 +34,7 @@ D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
 
 /* ----- Configuration ----- */
 
-void D3D12CommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+void D3D12CommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
 {
     // dummy
 }

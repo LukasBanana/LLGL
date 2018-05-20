@@ -36,7 +36,7 @@ class D3D12CommandBuffer : public CommandBuffer
 
         /* ----- Configuration ----- */
 
-        void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
+        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
 
         /* ----- Viewport and Scissor ----- */
 
@@ -61,7 +61,7 @@ class D3D12CommandBuffer : public CommandBuffer
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
-        
+
         /* ----- Stream Output Buffers ------ */
 
         void SetStreamOutputBuffer(Buffer& buffer) override;

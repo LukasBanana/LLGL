@@ -37,9 +37,9 @@ DbgCommandBuffer::DbgCommandBuffer(
 
 /* ----- Configuration ----- */
 
-void DbgCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+void DbgCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
 {
-    instance.SetGraphicsAPIDependentState(state);
+    instance.SetGraphicsAPIDependentState(stateDesc, stateDescSize);
 }
 
 /* ----- Viewport and Scissor ----- */

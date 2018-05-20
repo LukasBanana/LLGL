@@ -134,35 +134,25 @@ struct AttachmentClear
 };
 
 /**
-\brief Low-level graphics API dependent state descriptor union.
-\remarks This descriptor is used to compensate a few differences between OpenGL and Direct3D.
+\brief Graphics API dependent state descriptor for the OpenGL renderer.
+\remarks This descriptor is used to compensate a few differences between OpenGL and the other rendering APIs.
 \see RenderContext::SetGraphicsAPIDependentState
 */
-union GraphicsAPIDependentStateDescriptor
+struct OpenGLDependentStateDescriptor
 {
-    inline GraphicsAPIDependentStateDescriptor()
-    {
-        stateOpenGL.screenSpaceOriginLowerLeft  = false;
-        stateOpenGL.invertFrontFace             = false;
-    }
+    /**
+    \brief Specifies whether the screen-space origin is on the lower-left. By default false.
+    \remarks If this is true, the viewports and scissor rectangles of OpenGL are NOT emulated to the upper-left,
+    which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
+    */
+    bool originLowerLeft = false;
 
-    struct StateOpenGL
-    {
-        /**
-        \brief Specifies whether the screen-space origin is on the lower-left. By default false.
-        \remarks If this is true, the viewports and scissor rectangles of OpenGL are NOT emulated to the upper-left,
-        which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
-        */
-        bool screenSpaceOriginLowerLeft;
-
-        /**
-        \brief Specifies whether to invert front-facing. By default false.
-        \remarks If this is true, the front facing (either GL_CW or GL_CCW) will be inverted,
-        i.e. CCW becomes CW, and CW becomes CCW.
-        */
-        bool invertFrontFace;
-    }
-    stateOpenGL;
+    /**
+    \brief Specifies whether to invert front-facing. By default false.
+    \remarks If this is true, the front facing (either GL_CW or GL_CCW) will be inverted,
+    i.e. CCW becomes CW, and CW becomes CCW.
+    */
+    bool invertFrontFace = false;
 };
 
 

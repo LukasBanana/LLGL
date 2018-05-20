@@ -36,7 +36,7 @@ class D3D11CommandBuffer : public CommandBufferExt
 
         /* ----- Configuration ----- */
 
-        void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) override;
+        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) override;
 
         /* ----- Viewport and Scissor ----- */
 

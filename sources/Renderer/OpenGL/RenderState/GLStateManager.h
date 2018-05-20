@@ -45,7 +45,7 @@ class GLStateManager
         void NotifyRenderTargetHeight(GLint height);
 
         // Sets and applies the specified OpenGL specific render state.
-        void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state);
+        void SetGraphicsAPIDependentState(const OpenGLDependentStateDescriptor& stateDesc);
 
         /* ----- Boolean states ----- */
 
@@ -321,28 +321,28 @@ class GLStateManager
 
         /* ----- Members ----- */
 
-        GLLimits                            limits_;
+        GLLimits                        limits_;
 
-        GraphicsAPIDependentStateDescriptor gfxDependentState_;
+        OpenGLDependentStateDescriptor  apiDependentState_;
 
-        GLCommonState                       commonState_;
-        GLRenderState                       renderState_;
-        GLBufferState                       bufferState_;
-        GLFramebufferState                  framebufferState_;
-        GLRenderbufferState                 renderbufferState_;
-        GLTextureState                      textureState_;
-        GLVertexArrayState                  vertexArrayState_;
-        GLShaderState                       shaderState_;
-        GLSamplerState                      samplerState_;
+        GLCommonState                   commonState_;
+        GLRenderState                   renderState_;
+        GLBufferState                   bufferState_;
+        GLFramebufferState              framebufferState_;
+        GLRenderbufferState             renderbufferState_;
+        GLTextureState                  textureState_;
+        GLVertexArrayState              vertexArrayState_;
+        GLShaderState                   shaderState_;
+        GLSamplerState                  samplerState_;
 
         #ifdef LLGL_GL_ENABLE_VENDOR_EXT
-        GLRenderStateExt                    renderStateExt_;
+        GLRenderStateExt                renderStateExt_;
         #endif
 
-        GLTextureLayer*                     activeTextureLayer_ = nullptr;
+        GLTextureLayer*                 activeTextureLayer_ = nullptr;
 
-        bool                                emulateClipControl_ = false;
-        GLint                               renderTargetHeight_ = 0;
+        bool                            emulateClipControl_ = false;
+        GLint                           renderTargetHeight_ = 0;
 
 };
 

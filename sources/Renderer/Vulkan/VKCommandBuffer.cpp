@@ -45,9 +45,9 @@ VKCommandBuffer::~VKCommandBuffer()
 
 /* ----- Configuration ----- */
 
-void VKCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+void VKCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
 {
-    //todo
+    // dummy
 }
 
 /* ----- Viewport and Scissor ----- */

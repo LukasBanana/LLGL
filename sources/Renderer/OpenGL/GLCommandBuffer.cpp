@@ -46,9 +46,14 @@ GLCommandBuffer::GLCommandBuffer(const std::shared_ptr<GLStateManager>& stateMng
 
 /* ----- Configuration ----- */
 
-void GLCommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
+void GLCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize)
 {
-    stateMngr_->SetGraphicsAPIDependentState(state);
+    if (stateDesc != nullptr && stateDescSize == sizeof(OpenGLDependentStateDescriptor))
+    {
+        stateMngr_->SetGraphicsAPIDependentState(
+            *reinterpret_cast<const OpenGLDependentStateDescriptor*>(stateDesc)
+        );
+    }
 }
 
 /* ----- Viewport and Scissor ----- */
@@ -68,7 +73,7 @@ void GLCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* v
 {
     GLViewport viewportsGL[g_maxNumViewportsGL];
     GLDepthRange depthRangesGL[g_maxNumViewportsGL];
-    
+
     for (std::uint32_t offset = 0; offset < numViewports; offset += g_maxNumViewportsGL)
     {
         /* Setup GL viewports and depth-ranges */

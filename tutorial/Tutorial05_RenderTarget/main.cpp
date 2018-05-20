@@ -50,11 +50,11 @@ class Tutorial05 : public Tutorial
 
     Gs::Matrix4f            renderTargetProj;
 
-    const Gs::Vector2ui     renderTargetSize        = Gs::Vector2ui(
+    const LLGL::Extent2D    renderTargetSize        = LLGL::Extent2D(
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
-        64
+        64, 64
         #else
-        512
+        512, 512
         #endif
     );
 
@@ -203,13 +203,13 @@ public:
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
         renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA8, renderTargetSize.x, renderTargetSize.y, multiSamplingDesc.samples)
+            LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA8, renderTargetSize.width, renderTargetSize.height, multiSamplingDesc.samples)
         );
 
         #else
 
         renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, renderTargetSize.x, renderTargetSize.y)
+            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, renderTargetSize.width, renderTargetSize.height)
         );
 
         #endif
@@ -218,7 +218,7 @@ public:
 
         // Create depth texture
         renderTargetDepthTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::D32, renderTargetSize.x, renderTargetSize.y)
+            LLGL::Texture2DDesc(LLGL::TextureFormat::D32, renderTargetSize.width, renderTargetSize.height)
         );
 
         #endif
@@ -226,7 +226,7 @@ public:
         #if 0//TEST
         // Create depth texture
         auto renderTargetDepthTex2 = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::D32, renderTargetSize.x, renderTargetSize.y)
+            LLGL::Texture2DDesc(LLGL::TextureFormat::D32, renderTargetSize.width, renderTargetSize.height)
         );
         #endif
 
@@ -241,7 +241,7 @@ public:
                 #ifdef ENABLE_DEPTH_TEXTURE
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetDepthTex },
                 #else
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetSize.x, renderTargetSize.y },
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetSize.width, renderTargetSize.height },
                 #endif
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
             };
@@ -303,11 +303,11 @@ private:
             To do this we flip the Y-axis of the world-view-projection matrix and invert the front-facing,
             so that the face-culling works as excepted.
             */
-            LLGL::GraphicsAPIDependentStateDescriptor apiState;
+            LLGL::OpenGLDependentStateDescriptor apiStateDesc;
             {
-                apiState.stateOpenGL.invertFrontFace = true;
+                apiStateDesc.invertFrontFace = true;
             }
-            commands->SetGraphicsAPIDependentState(apiState);
+            commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
         }
         #endif
 
@@ -315,7 +315,7 @@ private:
         commands->SetRenderTarget(*renderTarget);
         {
             // Set viewport for render target
-            commands->SetViewport({ 0, 0, static_cast<float>(renderTargetSize.x), static_cast<float>(renderTargetSize.y) });
+            commands->SetViewport({ { 0, 0 }, renderTargetSize });
 
             // Clear color and depth buffers of active framebuffer (i.e. the render target)
             commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
@@ -359,7 +359,8 @@ private:
         if (IsOpenGL())
         {
             // Reset graphics API dependent state
-            commands->SetGraphicsAPIDependentState({});
+            LLGL::OpenGLDependentStateDescriptor apiStateDesc;
+            commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
         }
         #endif
 

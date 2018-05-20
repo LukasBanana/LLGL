@@ -67,10 +67,21 @@ class LLGL_EXPORT CommandBuffer
 
         /**
         \brief Sets a few low-level graphics API dependent states.
-        \remarks This can be used to work around several differences between the low-level graphics APIs
-        (e.g. for a uniform render target behavior between OpenGL and Direct3D).
+        \param[in] stateDesc Specifies a pointer to the renderer spcific state descriptor. If this is a null pointer, the function has no effect.
+        \param[in] stateDescSize Specifies the size (in bytes) of the renderer spcific state descriptor structure.
+        If this value is not equal to the state descriptor structure that is required for the respective renderer, the function has no effect.
+        \remarks This can be used to work around several differences between the low-level graphics APIs,
+        e.g. for a uniform render target behavior between OpenGL and Direct3D.
+        Here is a usage example:
+        \code
+        LLGL::OpenGLDependentStateDescriptor myOpenGLStateDesc;
+        myOpenGLStateDesc.invertFrontFace = true;
+        myCommandBuffer->SetGraphicsAPIDependentState(&myOpenGLStateDesc, sizeof(myOpenGLStateDesc));
+        \endcode
+        \note Invalid arguments are ignored by this function silently (except for corrupted pointers).
+        \see OpenGLDependentStateDescriptor
         */
-        virtual void SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state) = 0;
+        virtual void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize) = 0;
 
         /* ----- Viewport and Scissor ----- */
 
