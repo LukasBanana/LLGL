@@ -343,7 +343,7 @@ private:
 
     void OnDrawFrame() override
     {
-        static const auto shaderStages = LLGL::ShaderStageFlags::VertexStage | LLGL::ShaderStageFlags::FragmentStage;
+        static const auto shaderStages = LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage;
 
         // Update rotation of inner model
         static float innerModelRotation;
@@ -384,10 +384,10 @@ private:
 
         // Set common buffers and sampler states
         commandsExt->SetConstantBuffer(*constantBufferScene, 0, shaderStages);
-        commandsExt->SetConstantBuffer(*constantBufferBlur, 1, LLGL::ShaderStageFlags::FragmentStage);
+        commandsExt->SetConstantBuffer(*constantBufferBlur, 1, LLGL::StageFlags::FragmentStage);
 
-        commandsExt->SetSampler(*colorMapSampler, 0, LLGL::ShaderStageFlags::FragmentStage);
-        commandsExt->SetSampler(*glossMapSampler, 1, LLGL::ShaderStageFlags::FragmentStage);
+        commandsExt->SetSampler(*colorMapSampler, 0, LLGL::StageFlags::FragmentStage);
+        commandsExt->SetSampler(*glossMapSampler, 1, LLGL::StageFlags::FragmentStage);
 
         // Set graphics pipeline and vertex buffer for scene rendering
         commands->SetGraphicsPipeline(*pipelineScene);
@@ -425,7 +425,7 @@ private:
             commands->SetViewport(viewportQuarter);
 
             // Set gloss map from scene rendering
-            commandsExt->SetTexture(*glossMap, 1, LLGL::ShaderStageFlags::FragmentStage);
+            commandsExt->SetTexture(*glossMap, 1, LLGL::StageFlags::FragmentStage);
 
             // Draw fullscreen triangle (triangle is spanned in the vertex shader)
             SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
@@ -436,7 +436,7 @@ private:
         commands->SetRenderTarget(*renderTargetBlurY);
         {
             // Set gloss map from previous blur pass (Blur X)
-            commandsExt->SetTexture(*glossMapBlurX, 1, LLGL::ShaderStageFlags::FragmentStage);
+            commandsExt->SetTexture(*glossMapBlurX, 1, LLGL::StageFlags::FragmentStage);
 
             // Draw fullscreen triangle (triangle is spanned in the vertex shader)
             SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
@@ -451,8 +451,8 @@ private:
             commands->SetViewport(viewportFull);
 
             // Set color map and gloss map from previous blur pass (Blur Y)
-            commandsExt->SetTexture(*colorMap, 0, LLGL::ShaderStageFlags::FragmentStage);
-            commandsExt->SetTexture(*glossMapBlurY, 1, LLGL::ShaderStageFlags::FragmentStage);
+            commandsExt->SetTexture(*colorMap, 0, LLGL::StageFlags::FragmentStage);
+            commandsExt->SetTexture(*glossMapBlurY, 1, LLGL::StageFlags::FragmentStage);
 
             // Draw fullscreen triangle (triangle is spanned in the vertex shader)
             commands->Draw(3, 0);

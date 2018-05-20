@@ -64,13 +64,13 @@ class D3D11CommandBuffer : public CommandBufferExt
         
         /* ----- Constant Buffers ------ */
 
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
         
         /* ----- Storage Buffers ------ */
 
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Stream Output Buffers ------ */
 
@@ -82,13 +82,13 @@ class D3D11CommandBuffer : public CommandBufferExt
 
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Render Targets ----- */
 
@@ -139,10 +139,10 @@ class D3D11CommandBuffer : public CommandBufferExt
 
         void SubmitFramebufferView();
 
-        void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long shaderStageFlags);
-        void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long shaderStageFlags);
-        void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long shaderStageFlags);
-        void SetUnorderedAccessViewsOnStages(UINT startSlot, UINT count, ID3D11UnorderedAccessView* const* views, const UINT* initialCounts, long shaderStageFlags);
+        void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long stageFlags);
+        void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long stageFlags);
+        void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long stageFlags);
+        void SetUnorderedAccessViewsOnStages(UINT startSlot, UINT count, ID3D11UnorderedAccessView* const* views, const UINT* initialCounts, long stageFlags);
 
         void ResolveBoundRenderTarget();
 

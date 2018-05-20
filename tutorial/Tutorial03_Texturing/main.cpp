@@ -79,8 +79,8 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::ShaderStageFlags::FragmentStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::ShaderStageFlags::FragmentStage, 1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::StageFlags::FragmentStage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::FragmentStage, 1 },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -234,8 +234,8 @@ private:
         else
         {
             // Set texture and sampler state on slot index 0
-            commandsExt->SetTextureArray(*textureArray, 0, LLGL::ShaderStageFlags::FragmentStage);
-            commandsExt->SetSampler(*sampler[samplerIndex], 0, LLGL::ShaderStageFlags::FragmentStage);
+            commandsExt->SetTextureArray(*textureArray, 0, LLGL::StageFlags::FragmentStage);
+            commandsExt->SetSampler(*sampler[samplerIndex], 0, LLGL::StageFlags::FragmentStage);
         }
 
         // Draw fullscreen triangle

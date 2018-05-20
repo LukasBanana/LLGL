@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
         {
             pipelineLayoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::StorageBuffer, LLGL::ShaderStageFlags::ComputeStage, 0 }
+                LLGL::BindingDescriptor { LLGL::ResourceType::StorageBuffer, LLGL::StageFlags::ComputeStage, 0 }
             };
         }
         auto pipelineLayout = renderer->CreatePipelineLayout(pipelineLayoutDesc);
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
         if (resourceViewHeap)
             commands->SetComputeResourceViewHeap(*resourceViewHeap, 0);
         else if (commandsExt)
-            commandsExt->SetStorageBuffer(*storageBuffer, 0, LLGL::ShaderStageFlags::ComputeStage);
+            commandsExt->SetStorageBuffer(*storageBuffer, 0, LLGL::StageFlags::ComputeStage);
 
         // Dispatch compute shader
         commands->Dispatch(static_cast<std::uint32_t>(inputData.size()), 1, 1);

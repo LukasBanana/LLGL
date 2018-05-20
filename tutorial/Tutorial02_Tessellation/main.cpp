@@ -153,7 +153,7 @@ public:
             {
                 LLGL::BindingDescriptor
                 {
-                    LLGL::ResourceType::ConstantBuffer, LLGL::ShaderStageFlags::AllTessStages, constantBufferIndex
+                    LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::AllTessStages, constantBufferIndex
                 }
             };
         }
@@ -282,9 +282,9 @@ private:
         {
             // Set constant buffer only to tessellation shader stages
             #ifdef _TEST_BUFFER_ARRAY_
-            commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+            commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::StageFlags::AllTessStages);
             #else
-            commandsExt->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::ShaderStageFlags::AllTessStages);
+            commandsExt->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::StageFlags::AllTessStages);
             #endif
         }
 

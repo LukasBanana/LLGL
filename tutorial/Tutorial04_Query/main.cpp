@@ -166,7 +166,7 @@ private:
         commands->SetVertexBuffer(*vertexBuffer);
         commands->SetIndexBuffer(*indexBuffer);
 
-        commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::ShaderStageFlags::VertexStage | LLGL::ShaderStageFlags::FragmentStage);
+        commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage);
 
         // Start with qeometry query
         commands->BeginQuery(*geometryQuery);

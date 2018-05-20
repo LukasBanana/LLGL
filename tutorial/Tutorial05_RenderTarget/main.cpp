@@ -151,10 +151,10 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::ShaderStageFlags::FragmentStage | LLGL::ShaderStageFlags::VertexStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::ShaderStageFlags::FragmentStage,                                       1 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::ShaderStageFlags::FragmentStage,                                       2 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::ShaderStageFlags::FragmentStage,                                       3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 2 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 3 },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -270,7 +270,7 @@ private:
 
     void OnDrawFrame() override
     {
-        static const auto shaderStages = LLGL::ShaderStageFlags::VertexStage | LLGL::ShaderStageFlags::FragmentStage;
+        static const auto shaderStages = LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage;
 
         // Update scene animation (simple rotation)
         static float rot0, rot1;

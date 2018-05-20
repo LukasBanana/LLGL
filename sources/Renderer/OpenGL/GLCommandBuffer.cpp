@@ -235,24 +235,24 @@ void GLCommandBuffer::SetIndexBuffer(Buffer& buffer)
 
 /* ----- Constant Buffers ------ */
 
-void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*stageFlags*/)
 {
     SetGenericBufferArray(GLBufferTarget::UNIFORM_BUFFER, bufferArray, startSlot);
 }
 
 /* ----- Storage Buffers ------ */
 
-void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*stageFlags*/)
 {
     SetGenericBufferArray(GLBufferTarget::SHADER_STORAGE_BUFFER, bufferArray, startSlot);
 }
@@ -299,7 +299,7 @@ void GLCommandBuffer::EndStreamOutput()
 
 /* ----- Textures ----- */
 
-void GLCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*stageFlags*/)
 {
     /* Bind texture to layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -307,7 +307,7 @@ void GLCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*sh
     stateMngr_->BindTexture(textureGL);
 }
 
-void GLCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long /*stageFlags*/)
 {
     /* Bind texture array to layers */
     auto& textureArrayGL = LLGL_CAST(GLTextureArray&, textureArray);
@@ -321,13 +321,13 @@ void GLCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t 
 
 /* ----- Sampler States ----- */
 
-void GLCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*stageFlags*/)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     stateMngr_->BindSampler(slot, samplerGL.GetID());
 }
 
-void GLCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long /*shaderStageFlags*/)
+void GLCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long /*stageFlags*/)
 {
     auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
     stateMngr_->BindSamplers(

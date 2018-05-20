@@ -14,22 +14,22 @@ namespace LLGL
 {
 
 
-// Converts the bitmask of LLGL::ShaderStageFlags to VkShaderStageFlags
+// Converts the bitmask of LLGL::StageFlags to VkShaderStageFlags
 static VkShaderStageFlags GetVkShaderStageFlags(long flags)
 {
     VkShaderStageFlags bitmask = 0;
 
-    if ((flags & ShaderStageFlags::VertexStage) != 0)
+    if ((flags & StageFlags::VertexStage) != 0)
         bitmask |= VK_SHADER_STAGE_VERTEX_BIT;
-    if ((flags & ShaderStageFlags::TessControlStage) != 0)
+    if ((flags & StageFlags::TessControlStage) != 0)
         bitmask |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-    if ((flags & ShaderStageFlags::TessEvaluationStage) != 0)
+    if ((flags & StageFlags::TessEvaluationStage) != 0)
         bitmask |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-    if ((flags & ShaderStageFlags::GeometryStage) != 0)
+    if ((flags & StageFlags::GeometryStage) != 0)
         bitmask |= VK_SHADER_STAGE_GEOMETRY_BIT;
-    if ((flags & ShaderStageFlags::FragmentStage) != 0)
+    if ((flags & StageFlags::FragmentStage) != 0)
         bitmask |= VK_SHADER_STAGE_FRAGMENT_BIT;
-    if ((flags & ShaderStageFlags::ComputeStage) != 0)
+    if ((flags & StageFlags::ComputeStage) != 0)
         bitmask |= VK_SHADER_STAGE_COMPUTE_BIT;
 
     return bitmask;

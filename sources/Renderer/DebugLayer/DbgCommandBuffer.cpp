@@ -214,7 +214,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
 
 /* ----- Constant Buffers ------ */
 
-void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
+void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
@@ -224,15 +224,15 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, lon
     {
         LLGL_DBG_SOURCE;
         ValidateBufferType(buffer.GetType(), BufferType::Constant);
-        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
-    instanceExt->SetConstantBuffer(bufferDbg.instance, slot, shaderStageFlags);
+    instanceExt->SetConstantBuffer(bufferDbg.instance, slot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
-void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
@@ -240,17 +240,17 @@ void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uin
     {
         LLGL_DBG_SOURCE;
         ValidateBufferType(bufferArray.GetType(), BufferType::Constant);
-        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
-    instanceExt->SetConstantBufferArray(bufferArray, startSlot, shaderStageFlags);
+    instanceExt->SetConstantBufferArray(bufferArray, startSlot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
 /* ----- Storage Buffers ------ */
 
-void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
+void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
@@ -260,15 +260,15 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long
     {
         LLGL_DBG_SOURCE;
         ValidateBufferType(buffer.GetType(), BufferType::Storage);
-        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages | ShaderStageFlags::ReadOnlyResource);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::ReadOnlyResource);
     }
 
-    instanceExt->SetStorageBuffer(bufferDbg.instance, slot, shaderStageFlags);
+    instanceExt->SetStorageBuffer(bufferDbg.instance, slot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
 
-void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
@@ -276,10 +276,10 @@ void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint
     {
         LLGL_DBG_SOURCE;
         ValidateBufferType(bufferArray.GetType(), BufferType::Storage);
-        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
-    instanceExt->SetStorageBufferArray(bufferArray, startSlot, shaderStageFlags);
+    instanceExt->SetStorageBufferArray(bufferArray, startSlot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
@@ -345,7 +345,7 @@ void DbgCommandBuffer::EndStreamOutput()
 
 /* ----- Textures ----- */
 
-void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags)
+void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
@@ -354,57 +354,57 @@ void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long sha
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
     
-    instanceExt->SetTexture(textureDbg.instance, slot, shaderStageFlags);
+    instanceExt->SetTexture(textureDbg.instance, slot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
-void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
     
-    instanceExt->SetTextureArray(textureArray, startSlot, shaderStageFlags);
+    instanceExt->SetTextureArray(textureArray, startSlot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
 /* ----- Sampler States ----- */
 
-void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags)
+void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
     
-    instanceExt->SetSampler(sampler, slot, shaderStageFlags);
+    instanceExt->SetSampler(sampler, slot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
 
-void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags)
+void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags)
 {
     AssertCommandBufferExt(__func__);
 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateShaderStageFlags(shaderStageFlags, ShaderStageFlags::AllStages);
+        ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
     
-    instanceExt->SetSamplerArray(samplerArray, startSlot, shaderStageFlags);
+    instanceExt->SetSamplerArray(samplerArray, startSlot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
@@ -940,11 +940,11 @@ void DbgCommandBuffer::ValidateAttachmentLimit(std::uint32_t attachmentIndex, st
     }
 }
 
-void DbgCommandBuffer::ValidateShaderStageFlags(long shaderStageFlags, long validFlags)
+void DbgCommandBuffer::ValidateStageFlags(long stageFlags, long validFlags)
 {
-    if ((shaderStageFlags & validFlags) == 0)
+    if ((stageFlags & validFlags) == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no shader stage is specified");
-    if ((shaderStageFlags & (~validFlags)) != 0)
+    if ((stageFlags & (~validFlags)) != 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "unknown shader stage flag is specified");
 }
 

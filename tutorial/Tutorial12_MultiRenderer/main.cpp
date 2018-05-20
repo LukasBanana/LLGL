@@ -265,9 +265,9 @@ int main(int argc, char* argv[])
                 commandsD3D->SetVertexBuffer(*vertexBufferD3D);
                 commandsD3D->SetIndexBuffer(*indexBufferD3D);
 
-                commandsD3D->SetConstantBuffer(*constBufferD3D, 0, LLGL::ShaderStageFlags::VertexStage);
-                commandsD3D->SetSampler(*samplerD3D, 0, LLGL::ShaderStageFlags::FragmentStage);
-                commandsD3D->SetTexture(*textureD3D, 0, LLGL::ShaderStageFlags::FragmentStage);
+                commandsD3D->SetConstantBuffer(*constBufferD3D, 0, LLGL::StageFlags::VertexStage);
+                commandsD3D->SetSampler(*samplerD3D, 0, LLGL::StageFlags::FragmentStage);
+                commandsD3D->SetTexture(*textureD3D, 0, LLGL::StageFlags::FragmentStage);
 
                 // Draw triangulated cube
                 commandsD3D->DrawIndexed(36, 0);

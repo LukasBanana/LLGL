@@ -45,7 +45,7 @@ struct BindingDescriptor
 
     /**
     \brief Specifies which shader stages are affected by this layout binding. By default 0.
-    \remarks This can be a bitwise OR combination of the ShaderStageFlags bitmasks.
+    \remarks This can be a bitwise OR combination of the StageFlags bitmasks.
     \see StageFlags
     */
     long            stageFlags  = 0;

@@ -67,16 +67,16 @@ class DbgCommandBuffer : public CommandBufferExt
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
-        
+
         /* ----- Constant Buffers ------ */
 
-        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        
+        void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
+
         /* ----- Storage Buffers ------ */
 
-        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Stream Output Buffers ------ */
 
@@ -88,13 +88,13 @@ class DbgCommandBuffer : public CommandBufferExt
 
         /* ----- Textures ----- */
 
-        void SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Sampler States ----- */
 
-        void SetSampler(Sampler& sampler, std::uint32_t slot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
-        void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long shaderStageFlags = ShaderStageFlags::AllStages) override;
+        void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
+        void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Resource View Heaps ----- */
 
@@ -165,7 +165,7 @@ class DbgCommandBuffer : public CommandBufferExt
         void ValidateThreadGroupLimit(std::uint32_t size, std::uint32_t limit);
         void ValidateAttachmentLimit(std::uint32_t attachmentIndex, std::uint32_t attachmentUpperBound);
 
-        void ValidateShaderStageFlags(long shaderStageFlags, long validFlags);
+        void ValidateStageFlags(long stageFlags, long validFlags);
         void ValidateBufferType(const BufferType bufferType, const BufferType compareType);
 
         void AssertGraphicsPipelineBound();
