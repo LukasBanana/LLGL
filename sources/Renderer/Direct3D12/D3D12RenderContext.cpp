@@ -43,7 +43,7 @@ D3D12RenderContext::D3D12RenderContext(
     CreateDeviceResources();
 
     /* Initialize v-sync */
-    SetVsync(desc_.vsync);
+    OnSetVsync(desc_.vsync);
 }
 
 D3D12RenderContext::~D3D12RenderContext()

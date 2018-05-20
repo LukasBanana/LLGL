@@ -34,7 +34,7 @@ D3D11RenderContext::D3D11RenderContext(
     CreateBackBuffer(desc.videoMode.resolution);
 
     /* Initialize v-sync */
-    SetVsync(desc_.vsync);
+    OnSetVsync(desc_.vsync);
 }
 
 void D3D11RenderContext::Present()
