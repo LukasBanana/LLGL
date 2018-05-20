@@ -12,6 +12,7 @@
 #include <LLGL/RenderTarget.h>
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
+#include "VKDepthStencilBuffer.h"
 
 
 namespace LLGL
@@ -23,7 +24,9 @@ class VKRenderTarget : public RenderTarget
 
     public:
 
-        VKRenderTarget(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
+        VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
+
+        void ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr);
 
         inline VkFramebuffer GetVkFramebuffer() const
         {
@@ -52,12 +55,16 @@ class VKRenderTarget : public RenderTarget
 
     private:
 
-        void CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
+        void CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
         void CreateFramebuffer(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
 
         VKPtr<VkFramebuffer>            framebuffer_;
         VKPtr<VkRenderPass>             renderPass_;
+
         std::vector<VKPtr<VkImageView>> imageViews_;
+
+        VKDepthStencilBuffer            depthStencilBuffer_;
+
         std::uint32_t                   numColorAttachments_        = 0;
         bool                            hasDepthStencilAttachment_  = false;
 

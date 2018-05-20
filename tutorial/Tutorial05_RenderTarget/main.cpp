@@ -30,7 +30,7 @@ class Tutorial05 : public Tutorial
 
     LLGL::ShaderProgram*    shaderProgram           = nullptr;
 
-    LLGL::GraphicsPipeline* pipeline                = nullptr;
+    LLGL::GraphicsPipeline* pipelines[2]            = {};
     LLGL::PipelineLayout*   pipelineLayout          = nullptr;
 
     LLGL::Buffer*           vertexBuffer            = nullptr;
@@ -49,6 +49,8 @@ class Tutorial05 : public Tutorial
     #endif
 
     Gs::Matrix4f            renderTargetProj;
+
+    Gs::Vector2f            rotation;
 
     const LLGL::Extent2D    renderTargetSize        = LLGL::Extent2D(
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
@@ -74,15 +76,18 @@ public:
         // Create all graphics objects
         auto vertexFormat = CreateBuffers();
         LoadShaders(vertexFormat);
-        CreatePipelines();
         CreateColorMap();
         CreateRenderTarget();
+        CreatePipelines();
+        CreateResourceHeaps();
 
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
         std::cout << "press RIGHT MOUSE BUTTON and move the mouse on the X-axis to rotate the INNER cube" << std::endl;
         std::cout << "press RETURN KEY to save the render target texture to a PNG file" << std::endl;
     }
+
+private:
 
     LLGL::VertexFormat CreateBuffers()
     {
@@ -154,12 +159,12 @@ public:
                 LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 2 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 3 },
+                //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 3 },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
-        // Create common graphics pipeline for scene rendering
+        // Create graphics pipeline for render context
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram              = shaderProgram;
@@ -173,7 +178,13 @@ public:
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
         }
-        pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipelines[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        // Create graphics pipeline for render target
+        {
+            pipelineDesc.renderTarget = renderTarget;
+        }
+        pipelines[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
 
     void CreateColorMap()
@@ -259,7 +270,34 @@ public:
         renderTargetProj = PerspectiveProjection(1.0f, 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
     }
 
-private:
+    void CreateResourceHeaps()
+    {
+        // Create resource heap for render target
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
+        {
+            resourceHeapDesc.pipelineLayout = pipelineLayout;
+            resourceHeapDesc.resourceViews =
+            {
+                LLGL::ResourceViewDesc(constantBuffer),
+                LLGL::ResourceViewDesc(samplerState),
+                LLGL::ResourceViewDesc(colorMap),
+                //LLGL::ResourceViewDesc(colorMap),
+            };
+        }
+        resourceHeaps[0] = renderer->CreateResourceHeap(resourceHeapDesc);
+
+        // Create resource heap for final render
+        {
+            resourceHeapDesc.resourceViews =
+            {
+                LLGL::ResourceViewDesc(constantBuffer),
+                LLGL::ResourceViewDesc(samplerState),
+                LLGL::ResourceViewDesc(renderTargetTex),
+                //LLGL::ResourceViewDesc(renderTargetTex),
+            };
+        }
+        resourceHeaps[1] = renderer->CreateResourceHeap(resourceHeapDesc);
+    }
 
     void UpdateModelTransform(const Gs::Matrix4f& proj, float rotation, const Gs::Vector3f& axis = { 0, 1, 0 })
     {
@@ -268,27 +306,42 @@ private:
         Gs::RotateFree(settings.wvpMatrix, axis.Normalized(), rotation);
     }
 
-    void OnDrawFrame() override
+    static const auto shaderStages = LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage;
+
+    void UpdateScene()
     {
-        static const auto shaderStages = LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage;
-
         // Update scene animation (simple rotation)
-        static float rot0, rot1;
-
         if (input->KeyPressed(LLGL::Key::LButton))
-            rot0 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
+            rotation.x += static_cast<float>(input->GetMouseMotion().x)*0.005f;
         if (input->KeyPressed(LLGL::Key::RButton))
-            rot1 += static_cast<float>(input->GetMouseMotion().x)*0.005f;
+            rotation.y += static_cast<float>(input->GetMouseMotion().x)*0.005f;
+
+        // Check if user wants to sage the render target texture to file
+        if (input->KeyDown(LLGL::Key::Return))
+            SaveTexture(*renderTargetTex, "RenderTargetTexture.png");
+    }
+
+    void DrawSceneIntoTexture()
+    {
+        // Draw scene into render-target and binds its graphics pipeline
+        commands->SetRenderTarget(*renderTarget);
+        commands->SetGraphicsPipeline(*pipelines[0]);
 
         // Set common buffers and sampler states
         commands->SetIndexBuffer(*indexBuffer);
         commands->SetVertexBuffer(*vertexBuffer);
 
-        commandsExt->SetConstantBuffer(*constantBuffer, 0, shaderStages);
-        commandsExt->SetSampler(*samplerState, 0, shaderStages);
-
-        // Set graphics pipeline state
-        commands->SetGraphicsPipeline(*pipeline);
+        if (resourceHeaps[0])
+        {
+            // Set graphics pipeline resources
+            commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
+        }
+        else
+        {
+            commandsExt->SetConstantBuffer(*constantBuffer, 0, shaderStages);
+            commandsExt->SetTexture(*colorMap, 0, shaderStages);
+            commandsExt->SetSampler(*samplerState, 0, shaderStages);
+        }
 
         #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
         if (IsOpenGL())
@@ -311,46 +364,45 @@ private:
         }
         #endif
 
-        // Draw scene into render-target
-        commands->SetRenderTarget(*renderTarget);
+        // Set viewport for render target
+        commands->SetViewport({ { 0, 0 }, renderTargetSize });
+
+        // Clear color and depth buffers of active framebuffer (i.e. the render target)
+        commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
+        commands->Clear(LLGL::ClearFlags::ColorDepth);
+
+        // Update model transformation with render-target projection
+        UpdateModelTransform(renderTargetProj, rotation.y, Gs::Vector3f(1));
+
+        #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
+        if (IsOpenGL())
         {
-            // Set viewport for render target
-            commands->SetViewport({ { 0, 0 }, renderTargetSize });
-
-            // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-            // Set color map texture
-            commandsExt->SetTexture(*colorMap, 0, shaderStages);
-
-            // Update model transformation with render-target projection
-            UpdateModelTransform(renderTargetProj, rot1, Gs::Vector3f(1));
-
-            #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
-            if (IsOpenGL())
-            {
-                /*
-                Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
-                world-view-projection matrix to render vertically flipped into the render-target
-                */
-                Gs::FlipAxis(settings.wvpMatrix, 1);
-            }
-            #endif
-
-            #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-            // Disable multi-sample texture in fragment shader
-            settings.useTexture2DMS = 0;
-
-            #endif
-
-            UpdateBuffer(constantBuffer, settings);
-
-            // Draw scene
-            commands->DrawIndexed(36, 0);
+            /*
+            Now flip the Y-axis (0 for X-axis, 1 for Y-axis, 2 for Z-axis) of the
+            world-view-projection matrix to render vertically flipped into the render-target
+            */
+            Gs::FlipAxis(settings.wvpMatrix, 1);
         }
+        #endif
+
+        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+
+        // Disable multi-sample texture in fragment shader
+        settings.useTexture2DMS = 0;
+
+        #endif
+
+        UpdateBuffer(constantBuffer, settings);
+
+        // Draw scene
+        commands->DrawIndexed(36, 0);
+    }
+
+    void DrawSceneOntoScreen()
+    {
+        // Draw scene into render-context and binds its graphics pipeline
         commands->SetRenderTarget(*context);
+        commands->SetGraphicsPipeline(*pipelines[1]);
 
         // Generate MIP-maps again after texture has been written by the render-target
         renderer->GenerateMips(*renderTargetTex);
@@ -369,40 +421,55 @@ private:
 
         // Clear color and depth buffers of active framebuffer (i.e. the screen)
         commands->SetClearColor(defaultClearColor);
-        commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
+        commands->Clear(LLGL::ClearFlags::ColorDepth);
 
-        #ifdef ENABLE_CUSTOM_MULTISAMPLING
+        if (resourceHeaps[1])
+        {
+            // Set graphics pipeline resources
+            commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
+        }
+        else
+        {
+            #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
-        // Set multi-sample render-target texture
-        commandsExt->SetTexture(*renderTargetTex, 1, shaderStages);
+            // Set multi-sample render-target texture
+            commandsExt->SetTexture(*renderTargetTex, 1, shaderStages);
 
-        #else
+            #else
 
-        // Set render-target texture
-        commandsExt->SetTexture(*renderTargetTex, 0, shaderStages);
+            // Set render-target texture
+            commandsExt->SetTexture(*renderTargetTex, 0, shaderStages);
 
-        #endif
+            #endif // /ENABLE_CUSTOM_MULTISAMPLING
+        }
 
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
         // Enable multi-sample texture in fragment shader
         settings.useTexture2DMS = 1;
 
-        #endif
+        #endif // ENABLE_CUSTOM_MULTISAMPLING
 
         // Update model transformation with standard projection
-        UpdateModelTransform(projection, rot0);
+        UpdateModelTransform(projection, rotation.x);
         UpdateBuffer(constantBuffer, settings);
 
         // Draw scene
         commands->DrawIndexed(36, 0);
+    }
+
+    void OnDrawFrame() override
+    {
+        // Update scene by user input
+        UpdateScene();
+
+        // Draw scene into texture, then draw scene onto screen
+        DrawSceneIntoTexture();
+        //DrawSceneOntoScreen();
+        commands->SetRenderTarget(*context);
 
         // Present result on the screen
         context->Present();
-
-        // Check if user wants to sage the render target texture to file
-        if (input->KeyDown(LLGL::Key::Return))
-            SaveTexture(*renderTargetTex, "RenderTargetTexture.png");
     }
 
 };

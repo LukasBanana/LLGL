@@ -21,7 +21,7 @@ namespace LLGL
 [[noreturn]]
 static void ErrDepthAttachmentFailed()
 {
-    throw std::runtime_error("attachment to render target failed, because render target already has a depth- or depth-stencil buffer");
+    throw std::runtime_error("attachment to render target failed, because render target already has a depth-stencil buffer");
 }
 
 GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :

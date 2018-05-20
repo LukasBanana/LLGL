@@ -7,6 +7,7 @@
 
 #include "VKRenderTarget.h"
 #include "VKTexture.h"
+#include "../Memory/VKDeviceMemoryManager.h"
 #include "../../CheckedCast.h"
 #include "../VKCore.h"
 #include "../VKTypes.h"
@@ -18,12 +19,18 @@ namespace LLGL
 {
 
 
-VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc) :
-    framebuffer_ { device, vkDestroyFramebuffer },
-    renderPass_  { device, vkDestroyRenderPass  }
+VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc) :
+    framebuffer_        { device, vkDestroyFramebuffer },
+    renderPass_         { device, vkDestroyRenderPass  },
+    depthStencilBuffer_ { device                       }
 {
-    CreateRenderPass(device, desc);
+    CreateRenderPass(device, deviceMemoryMngr, desc);
     CreateFramebuffer(device, desc);
+}
+
+void VKRenderTarget::ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr)
+{
+    depthStencilBuffer_.ReleaseDepthStencil(deviceMemoryMngr);
 }
 
 
@@ -32,39 +39,73 @@ VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, const RenderTarget
  */
 
 [[noreturn]]
-static void ErrMissingTextureRef()
+static void ErrDepthAttachmentFailed()
 {
-    throw std::runtime_error("render target attachment without texture not supported yet for Vulkan renderer");
+    throw std::runtime_error("attachment to render target failed, because render target already has a depth-stencil buffer");
 }
 
-void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc)
+static VkFormat GetDepthAttachmentVkFormat(const AttachmentType type)
+{
+    switch (type)
+    {
+        case AttachmentType::Color:         throw std::invalid_argument("invalid color attachment to render target that has no texture");
+        case AttachmentType::Depth:         return VK_FORMAT_D32_SFLOAT;
+        case AttachmentType::DepthStencil:  return VK_FORMAT_D24_UNORM_S8_UINT;
+        case AttachmentType::Stencil:       return VK_FORMAT_S8_UINT;
+    }
+    throw std::invalid_argument("unknown attachment type to render target that has no texture");
+}
+
+static bool HasStencilComponent(const AttachmentType type)
+{
+    return (type == AttachmentType::Stencil || type == AttachmentType::DepthStencil);
+}
+
+void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc)
 {
     /* Initialize attachment descriptors */
     std::vector<VkAttachmentDescription> attachmentDescs(desc.attachments.size());
 
     for (std::size_t i = 0; i < desc.attachments.size(); ++i)
     {
-        /* Get VkFormat from attachment texture */
-        if (auto texture = desc.attachments[i].texture)
-        {
-            auto textureVK = LLGL_CAST(VKTexture*, texture);
+        const auto& attachmentSrc = desc.attachments[i];
+        auto&       attachmentDst = attachmentDescs[i];
 
-            /* Write attachment descriptor */
-            auto& attachmentDesc = attachmentDescs[i];
-            {
-                attachmentDesc.flags                = 0;
-                attachmentDesc.format               = textureVK->GetVkFormat();
-                attachmentDesc.samples              = VK_SAMPLE_COUNT_1_BIT; //!!!
-                attachmentDesc.loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;//VK_ATTACHMENT_LOAD_OP_CLEAR;
-                attachmentDesc.storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
-                attachmentDesc.stencilLoadOp        = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                attachmentDesc.stencilStoreOp       = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachmentDesc.initialLayout        = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachmentDesc.finalLayout          = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-            }
+        /* Initialize format and sample count flags */
+        VkFormat                format          = VK_FORMAT_UNDEFINED;
+        VkSampleCountFlagBits   samplesFlags    = VK_SAMPLE_COUNT_1_BIT; //TODO: multi-sampling
+
+        if (auto texture = attachmentSrc.texture)
+        {
+            /* Get format from texture */
+            auto textureVK = LLGL_CAST(VKTexture*, texture);
+            format = textureVK->GetVkFormat();
         }
         else
-            ErrMissingTextureRef();
+        {
+            /* Validate attachment attributes */
+            if (attachmentSrc.width == 0 || attachmentSrc.height == 0)
+                throw std::invalid_argument("invalid attachment to render target that has no texture and no valid size specified");
+
+            format = GetDepthAttachmentVkFormat(attachmentSrc.type);
+
+            /* Create depth-stencil buffer */
+            if (depthStencilBuffer_.GetVkFormat() == VK_FORMAT_UNDEFINED)
+                depthStencilBuffer_.CreateDepthStencil(deviceMemoryMngr, { attachmentSrc.width, attachmentSrc.height }, format, samplesFlags);
+            else
+                ErrDepthAttachmentFailed();
+        }
+
+        /* Write attachment descriptor */
+        attachmentDst.flags            = 0;
+        attachmentDst.format           = format;
+        attachmentDst.samples          = samplesFlags;
+        attachmentDst.loadOp           = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachmentDst.storeOp          = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachmentDst.stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachmentDst.stencilStoreOp    = (HasStencilComponent(attachmentSrc.type) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE);
+        attachmentDst.initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachmentDst.finalLayout      = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     }
 
     /* Initialize attachment reference */
@@ -173,24 +214,22 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
             imageViewRefs[numAttachments] = imageViews_[numAttachments].Get();
 
             /* Apply texture resolution to render target (to validate correlation between attachments) */
-            ApplyResolution({ textureVK->GetVkExtent().width, textureVK->GetVkExtent().height});
+            ApplyResolution({ textureVK->GetVkExtent().width, textureVK->GetVkExtent().height });
 
+            /* Next attachment index */
             ++numAttachments;
         }
-        #if 0//TODO: not supported yet
         else
         {
-            if (attachment.width == 0 || attachment.height == 0)
-                throw std::invalid_argument("invalid attachment to render target that has no texture and no valid size specified");
-            if (attachment.type == AttachmentType::Color)
-                throw std::invalid_argument("invalid color attachment to render target that has no texture");
+            /* Add depth-stencil image view to attachments */
+            imageViewRefs[numAttachments] = depthStencilBuffer_.GetVkImageView();
 
-            //TODO: create texture just for this render target ...
+            /* Apply texture resolution to render target (to validate correlation between attachments) */
+            ApplyResolution({ attachment.width, attachment.height });
+
+            /* Next attachment index */
+            ++numAttachments;
         }
-        #else
-        else
-            ErrMissingTextureRef();
-        #endif
     }
 
     if (numAttachments == 0)

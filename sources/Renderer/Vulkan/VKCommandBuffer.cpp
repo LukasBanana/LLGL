@@ -638,6 +638,7 @@ void VKCommandBuffer::SetRenderPassNull()
     }
 }
 
+//private
 void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
 {
     /* Record begin of render pass */
@@ -655,6 +656,7 @@ void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer fra
     vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
+//private
 void VKCommandBuffer::EndRenderPass()
 {
     /* Record and of render pass */

@@ -77,7 +77,7 @@ void VKDeviceMemoryManager::PrintBlocks(std::ostream& s, const std::string& titl
     for (const auto& chunk : chunks_)
     {
         s << "chunk[" << (i++) << "]:";
-        
+
         if (!title.empty())
             s << " \"" << title << '\"';
 

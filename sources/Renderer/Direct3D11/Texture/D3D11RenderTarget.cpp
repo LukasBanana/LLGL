@@ -158,7 +158,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
     /* Initialize RTV descriptor with attachment procedure and create RTV */
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
     InitMemory(rtvDesc);
-    
+
     rtvDesc.Format = textureD3D.GetFormat();
 
     /*
@@ -247,7 +247,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttach
                 FillViewDescForTexture2DArrayMS(attachmentDesc, rtvDesc);
                 break;
         }
-    
+
         /* Create RTV for target texture */
         CreateAndAppendRTV(textureD3D.GetHwTexture().resource.Get(), rtvDesc);
     }

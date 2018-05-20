@@ -78,15 +78,18 @@ void VKDepthStencilBuffer::CreateDepthStencil(
 
 void VKDepthStencilBuffer::ReleaseDepthStencil(VKDeviceMemoryManager& deviceMemoryMngr)
 {
-    /* Release image and image view of depth-stencil buffer */
-    imageView_.Release();
-    ReleaseVkImage();
+    if (format_ != VK_FORMAT_UNDEFINED)
+    {
+        /* Release image and image view of depth-stencil buffer */
+        imageView_.Release();
+        ReleaseVkImage();
 
-    /* Release device memory region of depth-stencil buffer */
-    ReleaseMemoryRegion(deviceMemoryMngr);
+        /* Release device memory region of depth-stencil buffer */
+        ReleaseMemoryRegion(deviceMemoryMngr);
 
-    /* Reset depth-stencil format */
-    format_ = VK_FORMAT_UNDEFINED;
+        /* Reset depth-stencil format */
+        format_ = VK_FORMAT_UNDEFINED;
+    }
 }
 
 

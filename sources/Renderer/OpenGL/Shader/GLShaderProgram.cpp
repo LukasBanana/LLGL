@@ -418,7 +418,7 @@ void GLShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const Ver
     {
         for (const auto& attrib : vertexFormats[i].attributes)
         {
-            /* Bind attribute location (matrices only use the column) */
+            /* Bind attribute location (matrices only use the 1st column) */
             if (attrib.semanticIndex == 0)
                 glBindAttribLocation(id_, index, attrib.name.c_str());
             ++index;

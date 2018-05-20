@@ -83,12 +83,14 @@ struct AttachmentDescriptor
     /**
     \brief Specifies the width of the attachment resolution.
     \remarks If 'texture' is a valid pointer to a Texture object, this value is ignored and the required resolution is determined by that texture object.
+    \todo Maybe combine width and height with new attribute "Extent2D extent".
     */
     std::uint32_t   width       = 0;
 
     /**
     \brief Specifies the height of the attachment resolution.
     \remarks If 'texture' is a valid pointer to a Texture object, this value is ignored and the required resolution is determined by that texture object.
+    \todo Maybe combine width and height with new attribute "Extent2D extent".
     */
     std::uint32_t   height      = 0;
 
@@ -104,6 +106,8 @@ struct AttachmentDescriptor
     \brief Specifies the array texture layer which is to be used as render target attachment.
     \remarks This is only used for array textures (i.e. TextureType::Texture1DArray,
     TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    For cube array textures this can be used in combination with the cubeFace attribute.
+    \see cubeFace
     */
     std::uint32_t   layer       = 0;
 

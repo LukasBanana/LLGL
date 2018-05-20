@@ -10,7 +10,7 @@ layout(std140, binding = 0) uniform Settings
 
 layout(binding = 1) uniform sampler colorMapSampler;
 layout(binding = 2) uniform texture2D colorMap;
-layout(binding = 3) uniform sampler2DMS colorMapMS;
+//layout(binding = 3) uniform sampler2DMS colorMapMS;
 
 layout(location = 0) in vec2 vTexCoord;
 
@@ -18,6 +18,7 @@ layout(location = 0) out vec4 fragColor;
 
 void main()
 {
+    #if 0
 	if (useTexture2DMS != 0)
 	{
 		// Fetch texel from multi-sample texture
@@ -40,6 +41,7 @@ void main()
 		fragColor = c;
 	}
 	else
+    #endif
 	{
 		// Sample texel from standard texture
 		fragColor = texture(sampler2D(colorMap, colorMapSampler), vTexCoord);
