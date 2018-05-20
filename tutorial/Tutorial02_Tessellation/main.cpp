@@ -151,7 +151,7 @@ public:
         {
             plDesc.bindings =
             {
-                LLGL::LayoutBindingDescriptor
+                LLGL::BindingDescriptor
                 {
                     LLGL::ResourceType::ConstantBuffer, LLGL::ShaderStageFlags::AllTessStages, constantBufferIndex
                 }

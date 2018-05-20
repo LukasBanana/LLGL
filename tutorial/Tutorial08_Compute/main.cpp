@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
         {
             pipelineLayoutDesc.bindings =
             {
-                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::StorageBuffer, LLGL::ShaderStageFlags::ComputeStage, 0 }
+                LLGL::BindingDescriptor { LLGL::ResourceType::StorageBuffer, LLGL::ShaderStageFlags::ComputeStage, 0 }
             };
         }
         auto pipelineLayout = renderer->CreatePipelineLayout(pipelineLayoutDesc);

@@ -151,10 +151,10 @@ public:
         {
             layoutDesc.bindings =
             {
-                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::ShaderStageFlags::FragmentStage | LLGL::ShaderStageFlags::VertexStage, 0 },
-                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::ShaderStageFlags::FragmentStage,                                       1 },
-                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Texture,        LLGL::ShaderStageFlags::FragmentStage,                                       2 },
-                LLGL::LayoutBindingDescriptor { LLGL::ResourceType::Texture,        LLGL::ShaderStageFlags::FragmentStage,                                       3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::ShaderStageFlags::FragmentStage | LLGL::ShaderStageFlags::VertexStage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::ShaderStageFlags::FragmentStage,                                       1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::ShaderStageFlags::FragmentStage,                                       2 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::ShaderStageFlags::FragmentStage,                                       3 },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);

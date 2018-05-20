@@ -25,15 +25,14 @@ namespace LLGL
 /**
 \brief Layout structure for a single binding point of the pipeline layout descriptor.
 \see PipelineLayoutDescriptor
-\todo Rename to "BindingDescriptor".
 */
-struct LayoutBindingDescriptor
+struct BindingDescriptor
 {
-    LayoutBindingDescriptor() = default;
-    LayoutBindingDescriptor(const LayoutBindingDescriptor&) = default;
+    BindingDescriptor() = default;
+    BindingDescriptor(const BindingDescriptor&) = default;
 
     //! Constructors with all attributes and a default value for a uniform array.
-    inline LayoutBindingDescriptor(ResourceType type, long stageFlags, std::uint32_t slot, std::uint32_t arraySize = 1) :
+    inline BindingDescriptor(ResourceType type, long stageFlags, std::uint32_t slot, std::uint32_t arraySize = 1) :
         type       { type       },
         stageFlags { stageFlags },
         slot       { slot       },
@@ -70,7 +69,7 @@ struct LayoutBindingDescriptor
 */
 struct PipelineLayoutDescriptor
 {
-    std::vector<LayoutBindingDescriptor> bindings; //!< List of layout resource bindings.
+    std::vector<BindingDescriptor> bindings; //!< List of layout resource bindings.
 };
 
 
