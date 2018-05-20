@@ -289,6 +289,10 @@ BufferArray* VKRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer*
 
 void VKRenderSystem::Release(Buffer& buffer)
 {
+    /* Release device memory regions for primary buffer and internal staging buffer, then release buffer object */
+    auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    deviceMemoryMngr_->Release(bufferVK.GetMemoryRegion());
+    deviceMemoryMngr_->Release(bufferVK.GetMemoryRegionStaging());
     RemoveFromUniqueSet(buffers_, &buffer);
 }
 
@@ -462,23 +466,11 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     );
 
     /* Create device texture */
-    auto textureVK      = MakeUnique<VKTexture>(device_, textureDesc);
+    auto textureVK      = MakeUnique<VKTexture>(device_, *deviceMemoryMngr_, textureDesc);
+
     auto image          = textureVK->GetVkImage();
     auto mipLevels      = textureVK->GetNumMipLevels();
     auto arrayLayers    = textureVK->GetNumArrayLayers();
-
-    /* Allocate device memory */
-    VkMemoryRequirements requirements;
-    vkGetImageMemoryRequirements(device_, image, &requirements);
-
-    auto memoryRegion = deviceMemoryMngr_->Allocate(
-        requirements.size,
-        requirements.alignment,
-        requirements.memoryTypeBits,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-    );
-
-    textureVK->BindToMemory(device_, memoryRegion);
 
     /* Copy staging buffer into hardware texture, then transfer image into sampling-ready state */
     auto formatVK = VKTypes::Map(textureDesc.format);
@@ -509,6 +501,9 @@ TextureArray* VKRenderSystem::CreateTextureArray(std::uint32_t numTextures, Text
 
 void VKRenderSystem::Release(Texture& texture)
 {
+    /* Release device memory region, then release texture object */
+    auto& textureVK = LLGL_CAST(VKTexture&, texture);
+    deviceMemoryMngr_->Release(textureVK.GetMemoryRegion());
     RemoveFromUniqueSet(textures_, &texture);
 }
 

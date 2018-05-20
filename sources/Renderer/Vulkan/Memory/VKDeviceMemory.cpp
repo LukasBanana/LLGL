@@ -292,7 +292,7 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
     for (auto it = fragmentedBlocks_.begin(); it != fragmentedBlocks_.end(); ++it)
     {
         auto block = it->get();
-        
+
         /* Check if required size plus the additional aligned offset fits into the current block */
         const auto alignedOffset = GetAlignedSize(block->GetOffset(), alignment);
         if (alignedSize + alignedOffset - block->GetOffset() <= block->GetSize())
@@ -312,7 +312,7 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
             {
                 /* Allocate fragmented lower block (left to the current block) */
                 auto blockLower = MakeUniqueBlock(alignedOffset - block->GetOffset(), block->GetOffset());
-                
+
                 if (!prevBlock || !MergeFragmentedBlockWith(*prevBlock, *blockLower))
                 {
                     it = fragmentedBlocks_.insert(it, std::move(blockLower));
@@ -327,7 +327,7 @@ VKDeviceMemoryRegion* VKDeviceMemory::FindReusableBlock(VkDeviceSize alignedSize
                 /* Allocate fragmented upper block (right to the current block) */
                 auto blockUpperSize = block->GetSize() - alignedSizeWithOffset;
                 auto blockUpper     = MakeUniqueBlock(blockUpperSize, block->GetOffsetWithSize() - blockUpperSize);
-                
+
                 if (!nextBlock || !MergeFragmentedBlockWith(*blockUpper, *nextBlock))
                     fragmentedBlocks_.insert(it, std::move(blockUpper));
             }

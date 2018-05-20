@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Texture.h>
+#include "VKImageWrapper.h"
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
 #include <cstdint>
@@ -20,18 +21,21 @@ namespace LLGL
 
 
 class VKDeviceMemoryRegion;
+class VKDeviceMemoryManager;
 
 class VKTexture : public Texture
 {
 
     public:
 
-        VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& desc);
+        VKTexture(
+            const VKPtr<VkDevice>& device,
+            VKDeviceMemoryManager& deviceMemoryMngr,
+            const TextureDescriptor& desc
+        );
 
         Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const override;
         TextureDescriptor QueryDesc() const override;
-
-        void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
 
         void CreateImageView(
             VkDevice device,
@@ -45,7 +49,7 @@ class VKTexture : public Texture
         // Returns the Vulkan image object.
         inline VkImage GetVkImage() const
         {
-            return image_;
+            return imageWrapper_.GetVkImage();
         }
 
         // Returns the internal Vulkan image view object (created with 'CreateInternalImageView').
@@ -78,14 +82,18 @@ class VKTexture : public Texture
             return numArrayLayers_;
         }
 
+        // Returns the region of the hardware device memory.
+        inline VKDeviceMemoryRegion* GetMemoryRegion() const
+        {
+            return imageWrapper_.GetMemoryRegion();
+        }
+
     private:
 
         void CreateImage(VkDevice device, const TextureDescriptor& desc);
 
-        VKPtr<VkImage>          image_;
+        VKImageWrapper          imageWrapper_;
         VKPtr<VkImageView>      imageView_;
-
-        VKDeviceMemoryRegion*   memoryRegion_   = nullptr;
 
         VkFormat                format_         = VK_FORMAT_UNDEFINED;
         VkExtent3D              extent_;

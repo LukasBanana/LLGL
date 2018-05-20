@@ -96,8 +96,8 @@ class VKRenderContext : public RenderContext
         void CreateSwapChainFramebuffers();
 
         void CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc);
-        void CreateDepthStencilImage(const VideoModeDescriptor& videoModeDesc);
-        void CreateDepthStencilImageView(const VideoModeDescriptor& videoModeDesc);
+        void CreateDepthStencilImage(VkFormat depthStencilFormat, const Extent2D& extent);
+        void CreateDepthStencilImageView(bool stencilBufferBit);
         void CreateDepthStencilMemory();
         void ReleaseDepthStencilBuffer();
 

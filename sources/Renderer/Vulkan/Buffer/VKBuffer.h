@@ -80,6 +80,18 @@ class VKBuffer : public Buffer
             return mappingCPUAccess_;
         }
 
+        // Returns the region of the hardware device memory.
+        inline VKDeviceMemoryRegion* GetMemoryRegion() const
+        {
+            return memoryRegion_;
+        }
+
+        // Returns the region of the hardware device memory for the internal staging buffer.
+        inline VKDeviceMemoryRegion* GetMemoryRegionStaging() const
+        {
+            return memoryRegionStaging_;
+        }
+
     private:
 
         VKBufferWithRequirements    bufferObj_;

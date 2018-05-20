@@ -430,15 +430,18 @@ void VKRenderContext::CreateSwapChainFramebuffers()
 
 void VKRenderContext::CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc)
 {
-    CreateDepthStencilImage(videoModeDesc);
+    CreateDepthStencilImage(
+        (videoModeDesc.stencilBits > 0 ? PickDepthStencilFormat() : PickDepthFormat()),
+        videoModeDesc.resolution
+    );
     CreateDepthStencilMemory();
-    CreateDepthStencilImageView(videoModeDesc);
+    CreateDepthStencilImageView(videoModeDesc.stencilBits > 0);
 }
 
-void VKRenderContext::CreateDepthStencilImage(const VideoModeDescriptor& videoModeDesc)
+void VKRenderContext::CreateDepthStencilImage(VkFormat depthStencilFormat, const Extent2D& extent)
 {
     /* Pick depth-stencil format */
-    depthStencilFormat_ = (videoModeDesc.stencilBits > 0 ? PickDepthStencilFormat() : PickDepthFormat());
+    depthStencilFormat_ = depthStencilFormat;
 
     /* Create image object */
     VkImageCreateInfo createInfo;
@@ -448,8 +451,8 @@ void VKRenderContext::CreateDepthStencilImage(const VideoModeDescriptor& videoMo
         createInfo.flags                    = 0;
         createInfo.imageType                = VK_IMAGE_TYPE_2D;
         createInfo.format                   = depthStencilFormat_;
-        createInfo.extent.width             = videoModeDesc.resolution.width;
-        createInfo.extent.height            = videoModeDesc.resolution.height;
+        createInfo.extent.width             = extent.width;
+        createInfo.extent.height            = extent.height;
         createInfo.extent.depth             = 1;
         createInfo.mipLevels                = 1;
         createInfo.arrayLayers              = 1;
@@ -465,12 +468,12 @@ void VKRenderContext::CreateDepthStencilImage(const VideoModeDescriptor& videoMo
     VKThrowIfFailed(result, "failed to create Vulkan image for depth-stencil buffer");
 }
 
-void VKRenderContext::CreateDepthStencilImageView(const VideoModeDescriptor& videoModeDesc)
+void VKRenderContext::CreateDepthStencilImageView(bool stencilBufferBit)
 {
     /* Determine image aspect mask */
     VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-    if (videoModeDesc.stencilBits > 0)
+    if (stencilBufferBit)
         aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
     /* Create image view object */

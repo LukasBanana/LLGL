@@ -57,6 +57,12 @@ class VKDeviceMemoryManager
 
         #endif
 
+        // Returns the VkDevice object used for this device memory manager.
+        inline VkDevice GetVkDevice() const
+        {
+            return device_;
+        }
+
     private:
 
         // Finds a memory type index for the specified attributes.

@@ -16,13 +16,16 @@ namespace LLGL
 {
 
 
-VKTexture::VKTexture(const VKPtr<VkDevice>& device, const TextureDescriptor& desc) :
-    Texture    { desc.type                  },
-    image_     { device, vkDestroyImage     },
-    imageView_ { device, vkDestroyImageView },
-    format_    { VKTypes::Map(desc.format)  }
+VKTexture::VKTexture(
+    const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const TextureDescriptor& desc) :
+        Texture       { desc.type                  },
+        imageWrapper_ { device                     },
+        imageView_    { device, vkDestroyImageView },
+        format_       { VKTypes::Map(desc.format)  }
 {
+    /* Create Vulkan image and allocate memory region */
     CreateImage(device, desc);
+    imageWrapper_.AllocateAndBindMemoryRegion(deviceMemoryMngr);
 }
 
 Extent3D VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
@@ -72,40 +75,21 @@ TextureDescriptor VKTexture::QueryDesc() const
     return desc;
 }
 
-void VKTexture::BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
-{
-    if (memoryRegion)
-    {
-        memoryRegion_ = memoryRegion;
-        memoryRegion_->BindImage(device, GetVkImage());
-    }
-}
-
 void VKTexture::CreateImageView(
     VkDevice device, std::uint32_t baseMipLevel, std::uint32_t numMipLevels,
     std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, VkImageView* imageViewRef)
 {
-    /* Create image view object */
-    VkImageViewCreateInfo createInfo;
-    {
-        createInfo.sType                            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.pNext                            = nullptr;
-        createInfo.flags                            = 0;
-        createInfo.image                            = image_;
-        createInfo.viewType                         = VKTypes::Map(GetType());
-        createInfo.format                           = format_;
-        createInfo.components.r                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.subresourceRange.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-        createInfo.subresourceRange.baseMipLevel    = baseMipLevel;
-        createInfo.subresourceRange.levelCount      = numMipLevels;
-        createInfo.subresourceRange.baseArrayLayer  = baseArrayLayer;
-        createInfo.subresourceRange.layerCount      = numArrayLayers;
-    }
-    VkResult result = vkCreateImageView(device, &createInfo, nullptr, imageViewRef);
-    VKThrowIfFailed(result, "failed to create Vulkan image view");
+    imageWrapper_.CreateVkImageView(
+        device,
+        VKTypes::Map(GetType()),
+        format_,
+        VK_IMAGE_ASPECT_COLOR_BIT,
+        baseMipLevel,
+        numMipLevels,
+        baseArrayLayer,
+        numArrayLayers,
+        imageViewRef
+    );
 }
 
 void VKTexture::CreateInternalImageView(VkDevice device)
@@ -244,32 +228,25 @@ static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
 
 void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
 {
-    /* Create image object */
-    VkImageCreateInfo createInfo;
-    {
-        createInfo.sType                    = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
-        createInfo.flags                    = GetVkImageCreateFlags(desc);
-        createInfo.imageType                = GetVkImageType(desc.type);
-        createInfo.format                   = format_;
-        createInfo.extent                   = GetVkImageExtent3D(desc, createInfo.imageType);
-        createInfo.mipLevels                = GetVkImageMipLevels(desc, createInfo.extent);
-        createInfo.arrayLayers              = GetVkImageArrayLayers(desc, createInfo.imageType);
-        createInfo.samples                  = GetVkImageSampleCountFlags(desc);
-        createInfo.tiling                   = VK_IMAGE_TILING_OPTIMAL;
-        createInfo.usage                    = GetVkImageUsageFlags(desc);
-        createInfo.sharingMode              = VK_SHARING_MODE_EXCLUSIVE; // only used by graphics queue
-        createInfo.queueFamilyIndexCount    = 0;
-        createInfo.pQueueFamilyIndices      = nullptr;
-        createInfo.initialLayout            = VK_IMAGE_LAYOUT_UNDEFINED;
-    }
-    VkResult result = vkCreateImage(device, &createInfo, nullptr, image_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan image");
+    /* Setup texture parameters */
+    auto imageType  = GetVkImageType(desc.type);
 
-    /* Store number of MIP level and image extent */
-    extent_         = createInfo.extent;
-    numMipLevels_   = createInfo.mipLevels;
-    numArrayLayers_ = createInfo.arrayLayers;
+    extent_         = GetVkImageExtent3D(desc, imageType);
+    numMipLevels_   = GetVkImageMipLevels(desc, extent_);
+    numArrayLayers_ = GetVkImageArrayLayers(desc, imageType);
+
+    /* Create image object */
+    imageWrapper_.CreateVkImage(
+        device,
+        imageType,
+        format_,
+        extent_,
+        numMipLevels_,
+        numArrayLayers_,
+        GetVkImageCreateFlags(desc),
+        GetVkImageSampleCountFlags(desc),
+        GetVkImageUsageFlags(desc)
+    );
 }
 
 
