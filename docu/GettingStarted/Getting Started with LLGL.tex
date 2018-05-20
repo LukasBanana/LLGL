@@ -205,7 +205,7 @@ This project is still in its early steps. Here is a short overview of its progre
 \subsection{Renderers}
 \begin{itemize}
 	\item \textbf{OpenGL} \\
-	OpenGL renderer is almost done (\textasciitilde 85\% complete).
+	OpenGL renderer is almost done (\textasciitilde 90\% complete).
 	
 	\item \textbf{Direct3D 11} \\
 	Direct3D 11 renderer is almost done (\textasciitilde 85\% complete).
@@ -214,7 +214,7 @@ This project is still in its early steps. Here is a short overview of its progre
 	Direct3D 12 renderer is only in an experimental state (\textasciitilde 5\% complete).
 	
 	\item \textbf{Vulkan} \\
-	Vulkan renderer is only in an experimental state (\textasciitilde 5\% complete).
+	Vulkan renderer is under heavy construction (\textasciitilde 30\% complete).
 \end{itemize}
 
 
@@ -240,11 +240,9 @@ git clone --recursive https://github.com/LukasBanana/LLGL.git
 
 \subsection{Dependencies}
 
-\subsubsection{GaussianLib}
-
-The \href{https://github.com/LukasBanana/GaussianLib}{\textsc{GaussianLib}} is an optional header-only library which is only used in the tests and tutorials.
-It provides classes and functions for basic linear algebra with vectors and matrices.
-You can omit it if you only want to build the library and the renderer backends.
+Since version 0.02, LLGL has no longer any required base dependencies except the one for the repsective renderers.
+Previously, the \href{https://github.com/LukasBanana/GaussianLib}{\textsc{GaussianLib}} was required but has been replaced by a few plain-old-data structures.
+The GaussianLib is now only required for the Tutorials and Test projects.
 
 \subsubsection{OpenGL}
 
@@ -663,9 +661,6 @@ Before we start with the render main loop, we need a command buffer which can se
 \begin{lstlisting}
 // Create command buffer to submit subsequent graphics commands to the GPU
 LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
-
-// Set the render context as the initial render target
-commands->SetRenderTarget(*context);
 \end{lstlisting}
 We now have all render objects, so we can start with the main loop:
 \begin{lstlisting}
@@ -679,6 +674,9 @@ The rest of the code is pretty simple, since the most work is done during initia
 What we need to do is to clear the color buffer of the previous frame,
 set the graphics pipeline, set the vertex buffer, draw the primitives, and present the result on the frame buffer:
 \begin{lstlisting}
+// Set the render context as the initial render target
+commands->SetRenderTarget(*context);
+
 // Set viewport (left: 0, top: 0, width: 640, height: 480)
 commands->SetViewport({ 0, 0, 640, 480 });
 
@@ -739,13 +737,13 @@ class CustomSurface : public LLGL::Surface
 {
 public:
 	// Constructor and destructor
-	CustomSurface(const LLGL::Size& size, const std::string& title);
+	CustomSurface(const LLGL::Extent2D& size, const std::string& title);
 	~CustomSurface();
 	
 	// Interface implementation
 	void GetNativeHandle(void* nativeHandle) const override;
 	void Recreate() override;
-	LLGL::Size GetContentSize() const override;
+	LLGL::Extent2D GetContentSize() const override;
 	bool AdaptForVideoMode(LLGL::VideoModeDescriptor& videoModeDesc) override;
 	
 	// Additional class functions
@@ -754,8 +752,8 @@ public:
 private:
 	GLFWwindow* CreateGLFWWindow();
 	
-	std::string title_;
-	LLGL::Size  size_;
+	std::string    title_;
+	LLGL::Extent2D size_;
 	GLFWwindow* wnd_ = nullptr; // GLFW window pointer
 	
 };
@@ -763,10 +761,10 @@ private:
 This is an example of a minimal interface implementation.
 We start implementing the constructor, destructor, and the \texttt{CreateGLFWWindow} function:
 \begin{lstlisting}
-CustomSurface::CustomSurface(const LLGL::Size& size, const std::string& title) :
-	title_( title              ),
-	size_ ( size               ),
-	wnd_  ( CreateGLFWWindow() )
+CustomSurface::CustomSurface(const LLGL::Extent2D& size, const std::string& title) :
+	title_ { title              },
+	size_  { size               },
+	wnd_   { CreateGLFWWindow() }
 {
 }
 
@@ -779,7 +777,7 @@ CustomSurface::~CustomSurface()
 GLFWwindow* CustomSurface::CreateGLFWWindow()
 {
 	// Create GLFW window with class members
-	auto wnd = glfwCreateWindow(size_.x, size_.y, title_.c_str(), nullptr, nullptr);
+	auto wnd = glfwCreateWindow(size_.width, size_.height, title_.c_str(), nullptr, nullptr);
 	if (!wnd)
 		throw std::runtime_error("failed to create GLFW window");
 	return wnd;
@@ -815,7 +813,7 @@ void CustomSurface::GetNativeHandle(void* nativeHandle) const
 There are two (rather secondary) interface functions left.
 They are used inside the \texttt{RenderContext} class, to update or query the video mode suitable for the surface:
 \begin{lstlisting}
-LLGL::Size CustomSurface::GetContentSize() const
+LLGL::Extent2D CustomSurface::GetContentSize() const
 {
 	// Actually the client-area size of the window must be returned,
 	// but for this example the entire window size is sufficient.
@@ -826,7 +824,7 @@ bool CustomSurface::AdaptForVideoMode(LLGL::VideoModeDescriptor& videoModeDesc)
 {
 	// Resize GLFW window for the new video mode resolution.
 	size_ = videoModeDesc.resolution;
-	glfwSetWindowSize(wnd_, size_.x, size_.y);
+	glfwSetWindowSize(wnd_, size_.width, size_.height);
 	return true;
 }
 \end{lstlisting}
@@ -850,7 +848,7 @@ if (!glfwInit())
 	return -1;
 
 // Create an instance of our custom window class
-auto surface = std::make_shared<CustomSurface>(LLGL::Size(640, 480), L"LLGL test with GLFW");
+auto surface = std::make_shared<CustomSurface>({ 640, 480 }, L"LLGL test with GLFW");
 
 // Create render context and pass the custom window
 LLGL::RenderContextDescriptor contextDesc;
@@ -941,7 +939,7 @@ LLGL_EXPORT const char* LLGL_RenderSystem_Name()
 // Here you have to return a raw pointer of your custom implementation of the
 // LLGL::RenderSystem interface, where the instance must be allocated with "new",
 // so it can be moved into an std::unique_ptr.
-LLGL_EXPORT void* LLGL_RenderSystem_Alloc()
+LLGL_EXPORT void* LLGL_RenderSystem_Alloc(const void* renderSystemDesc)
 {
 	return new CustomOpenGLRenderSystem();
 }

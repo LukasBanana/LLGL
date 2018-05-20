@@ -486,4 +486,52 @@ if (myColorA == myColorB) {
 ```
 
 
+Renamed structures and enumerations:
+------------------------------------
+
+Various structures and enumerations have been renamed to either fit LLGL's nomenclature or to simplify their identifiers when they are frequently used.
+
+Before:
+```cpp
+struct LLGL::ShaderStageFlags;
+```
+
+After:
+```cpp
+struct LLGL::StageFlags;
+```
+
+
+Graphics API dependent state:
+-----------------------------
+
+The common graphics API dependent state structure `LLGL::GraphicsAPIDependentStateDescriptor` has been replaced by individual structures for the respective rendering API.
+
+Before:
+```cpp
+// Interface:
+bool LLGL::GraphicsAPIDependentStateDescriptor::StateOpenGL::screenSpaceOriginLowerLeft;
+bool LLGL::GraphicsAPIDependentStateDescriptor::StateOpenGL::invertFrontFace;
+
+// Usage:
+LLGL::GraphicsAPIDependentStateDescriptor myStateDesc;
+myStateDesc.stateOpenGL.screenSpaceOriginLowerLeft = true;
+myStateDesc.stateOpenGL.invertFrontFace            = true;
+myCommandBuffer->SetGraphicsAPIDependentState(myStateDesc);
+```
+
+After:
+```cpp
+// Interface:
+bool LLGL::OpenGLDependentStateDescriptor::originLowerLeft;
+bool LLGL::OpenGLDependentStateDescriptor::invertFrontFace;
+
+// Usage:
+LLGL::OpenGLDependentStateDescriptor myStateDesc;
+myStateDesc.originLowerLeft = true;
+myStateDesc.invertFrontFace = true;
+myCommandBuffer->SetGraphicsAPIDependentState(&myStateDesc, sizeof(myStateDesc));
+```
+
+
 
