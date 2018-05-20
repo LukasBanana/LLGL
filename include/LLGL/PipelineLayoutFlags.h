@@ -12,7 +12,7 @@
 #include "Export.h"
 #include "BufferFlags.h"
 #include "ShaderFlags.h"
-#include "ResourceViewHeapFlags.h"
+#include "ResourceHeapFlags.h"
 #include <vector>
 
 

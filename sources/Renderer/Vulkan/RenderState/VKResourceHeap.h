@@ -1,15 +1,15 @@
 /*
- * VKResourceViewHeap.h
+ * VKResourceHeap.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_VK_RESOURCE_VIEW_HEAP_H
-#define LLGL_VK_RESOURCE_VIEW_HEAP_H
+#ifndef LLGL_VK_RESOURCE_HEAP_H
+#define LLGL_VK_RESOURCE_HEAP_H
 
 
-#include <LLGL/ResourceViewHeap.h>
+#include <LLGL/ResourceHeap.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <vector>
@@ -19,13 +19,13 @@ namespace LLGL
 {
 
 
-class VKResourceViewHeap : public ResourceViewHeap
+class VKResourceHeap : public ResourceHeap
 {
 
     public:
 
-        VKResourceViewHeap(const VKPtr<VkDevice>& device, const ResourceViewHeapDescriptor& desc);
-        ~VKResourceViewHeap();
+        VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeapDescriptor& desc);
+        ~VKResourceHeap();
 
         inline VkPipelineLayout GetVkPipelineLayout() const
         {
@@ -44,9 +44,9 @@ class VKResourceViewHeap : public ResourceViewHeap
 
     private:
 
-        void CreateDescriptorPool(const ResourceViewHeapDescriptor& desc);
+        void CreateDescriptorPool(const ResourceHeapDescriptor& desc);
         void CreateDescriptorSets(std::uint32_t numSetLayouts, const VkDescriptorSetLayout* setLayouts);
-        void UpdateDescriptorSets(const ResourceViewHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings);
+        void UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings);
 
         VkDevice                        device_         = VK_NULL_HANDLE;
         VkPipelineLayout                pipelineLayout_ = VK_NULL_HANDLE;

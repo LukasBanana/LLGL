@@ -17,7 +17,7 @@ class Tutorial03 : public Tutorial
     LLGL::Buffer*           vertexBuffer        = nullptr;
     LLGL::Texture*          colorMap            = nullptr;
     LLGL::Sampler*          sampler[5]          = {};
-    LLGL::ResourceViewHeap* resourceHeaps[5]    = {};
+    LLGL::ResourceHeap*     resourceHeaps[5]    = {};
 
     LLGL::TextureArray*     textureArray    = nullptr;
     int                     samplerIndex    = 0;
@@ -192,16 +192,16 @@ public:
     {
         for (int i = 0; i < 5; ++i)
         {
-            LLGL::ResourceViewHeapDescriptor rvHeapDesc;
+            LLGL::ResourceHeapDescriptor resourceHeapDesc;
             {
-                rvHeapDesc.pipelineLayout   = pipelineLayout;
-                rvHeapDesc.resourceViews    =
+                resourceHeapDesc.pipelineLayout = pipelineLayout;
+                resourceHeapDesc.resourceViews  =
                 {
                     LLGL::ResourceViewDesc(sampler[i]),
                     LLGL::ResourceViewDesc(colorMap),
                 };
             }
-            resourceHeaps[i] = renderer->CreateResourceViewHeap(rvHeapDesc);
+            resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
         }
     }
 
@@ -229,7 +229,7 @@ private:
         if (resourceHeaps[samplerIndex])
         {
             // Set graphics shader resources
-            commands->SetGraphicsResourceViewHeap(*resourceHeaps[samplerIndex], 0);
+            commands->SetGraphicsResourceHeap(*resourceHeaps[samplerIndex], 0);
         }
         else
         {

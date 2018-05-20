@@ -23,7 +23,7 @@
 #include "TextureArray.h"
 #include "Sampler.h"
 #include "SamplerArray.h"
-#include "ResourceViewHeap.h"
+#include "ResourceHeap.h"
 
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
@@ -192,10 +192,10 @@ class LLGL_EXPORT RenderSystem
         /**
         \brief Creates a new extended command buffer (if supported) with dynamic state access for shader resources (i.e. Constant Buffers, Storage Buffers, Textures, and Samplers).
         \return Pointer to the new CommandBufferExt object, or null if the render system does not support extended command buffers.
-        \remarks For those render systems that do not support dynamic state access for shader resources, use the ResourceViewHeap interface.
+        \remarks For those render systems that do not support dynamic state access for shader resources, use the ResourceHeap interface.
         \note Only supported with: OpenGL, Direct3D 11.
         \see RenderingCapabilities::hasCommandBufferExt
-        \see CreateResourceViewHeap
+        \see CreateResourceHeap
         */
         virtual CommandBufferExt* CreateCommandBufferExt() = 0;
 
@@ -246,6 +246,7 @@ class LLGL_EXPORT RenderSystem
         This must be less then or equal to the size of the buffer.
         \param[in] offset Specifies the offset (in bytes) at which the buffer is to be updated.
         This offset plus the data block size (i.e. 'offset + dataSize') must be less than or equal to the size of the buffer.
+        \todo Maybe replace std::size_t with std::uint64_t here.
         */
         virtual void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) = 0;
 
@@ -390,13 +391,13 @@ class LLGL_EXPORT RenderSystem
         //! Releases the specified sampler array object. After this call, the specified object must no longer be used.
         virtual void Release(SamplerArray& samplerArray) = 0;
 
-        /* ----- Resource Views ----- */
-
-        //! \todo Document this and make it pure virtual. Rename to "CreateResourceHeap".
-        virtual ResourceViewHeap* CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc)/* = 0*/;
+        /* ----- Resource Heaps ----- */
 
         //! \todo Document this and make it pure virtual.
-        virtual void Release(ResourceViewHeap& resourceViewHeap)/* = 0*/;
+        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc)/* = 0*/;
+
+        //! \todo Document this and make it pure virtual.
+        virtual void Release(ResourceHeap& resourceHeap)/* = 0*/;
 
         /* ----- Render Targets ----- */
 

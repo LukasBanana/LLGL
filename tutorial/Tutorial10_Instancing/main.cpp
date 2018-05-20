@@ -21,7 +21,7 @@ class Tutorial10 : public Tutorial
     LLGL::GraphicsPipeline*     pipeline            = nullptr;
 
     LLGL::PipelineLayout*       pipelineLayout      = nullptr;
-    LLGL::ResourceViewHeap*     resourceHeaps[2]    = {};
+    LLGL::ResourceHeap*         resourceHeaps[2]    = {};
 
     // Two vertex buffer, one for per-vertex data, one for per-instance data
     LLGL::Buffer*               vertexBuffers[2]    = {};
@@ -277,17 +277,17 @@ private:
         // Create resource view heap
         for (std::size_t i = 0; i < 2; ++i)
         {
-            LLGL::ResourceViewHeapDescriptor rvhDesc;
+            LLGL::ResourceHeapDescriptor resourceHeapDesc;
             {
-                rvhDesc.pipelineLayout  = pipelineLayout;
-                rvhDesc.resourceViews   =
+                resourceHeapDesc.pipelineLayout = pipelineLayout;
+                resourceHeapDesc.resourceViews  =
                 {
                     LLGL::ResourceViewDesc(constantBuffer),
                     LLGL::ResourceViewDesc(arrayTexture),
                     LLGL::ResourceViewDesc(samplers[i]),
                 };
             }
-            resourceHeaps[i] = renderer->CreateResourceViewHeap(rvhDesc);
+            resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
         }
 
         // Create common graphics pipeline for scene rendering
@@ -367,11 +367,11 @@ private:
         if (pipelineLayout)
         {
             // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-            commands->SetGraphicsResourceViewHeap(*resourceHeaps[0], 0);
+            commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
             commands->DrawInstanced(4, 0, numPlantInstances);
 
             // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-            commands->SetGraphicsResourceViewHeap(*resourceHeaps[1], 0);
+            commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
             commands->DrawInstanced(4, 4, 1, numPlantInstances);
         }
         else

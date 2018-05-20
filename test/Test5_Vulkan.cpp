@@ -227,7 +227,7 @@ int main()
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
         // Create resource view heap
-        LLGL::ResourceViewHeapDescriptor rsvHeapDesc;
+        LLGL::ResourceHeapDescriptor rsvHeapDesc;
         {
             rsvHeapDesc.pipelineLayout  = pipelineLayout;
             rsvHeapDesc.resourceViews   =
@@ -238,7 +238,7 @@ int main()
                 LLGL::ResourceViewDesc(texture),
             };
         }
-        auto resourceViewHeap = renderer->CreateResourceViewHeap(rsvHeapDesc);
+        auto resourceViewHeap = renderer->CreateResourceHeap(rsvHeapDesc);
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -335,7 +335,7 @@ int main()
             commands->SetGraphicsPipeline(*pipeline);
 
             commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetGraphicsResourceViewHeap(*resourceViewHeap, 0);
+            commands->SetGraphicsResourceHeap(*resourceViewHeap, 0);
 
             //commands->UpdatePipelineLayout(*pipelineLayout);
 
@@ -355,7 +355,7 @@ int main()
             commands->Clear(LLGL::ClearFlags::Color);
             commands->SetGraphicsPipeline(*renderTargetPipeline);
             commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetGraphicsResourceViewHeap(*resourceViewHeap, 0);
+            commands->SetGraphicsResourceHeap(*resourceViewHeap, 0);
             commands->Draw(4, 0);
             #endif
 

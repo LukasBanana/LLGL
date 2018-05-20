@@ -29,7 +29,7 @@ class Tutorial02 : public Tutorial
     LLGL::Buffer*           constantBuffer      = nullptr;
 
     LLGL::PipelineLayout*   pipelineLayout      = nullptr;
-    LLGL::ResourceViewHeap* resourceHeap        = nullptr;
+    LLGL::ResourceHeap*     resourceHeap        = nullptr;
 
     #ifdef _TEST_BUFFER_ARRAY_
     LLGL::BufferArray*      constantBufferArray = nullptr;
@@ -160,12 +160,12 @@ public:
         pipelineLayout = renderer->CreatePipelineLayout(plDesc);
 
         // Create resource view heap
-        LLGL::ResourceViewHeapDescriptor rvhDesc;
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
-            rvhDesc.pipelineLayout  = pipelineLayout;
-            rvhDesc.resourceViews   = { LLGL::ResourceViewDesc(constantBuffer) };
+            resourceHeapDesc.pipelineLayout = pipelineLayout;
+            resourceHeapDesc.resourceViews  = { LLGL::ResourceViewDesc(constantBuffer) };
         }
-        resourceHeap = renderer->CreateResourceViewHeap(rvhDesc);
+        resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
 
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -276,7 +276,7 @@ private:
         if (resourceHeap)
         {
             // Bind resource view heap to graphics pipeline
-            commands->SetGraphicsResourceViewHeap(*resourceHeap, 0);
+            commands->SetGraphicsResourceHeap(*resourceHeap, 0);
         }
         else
         {

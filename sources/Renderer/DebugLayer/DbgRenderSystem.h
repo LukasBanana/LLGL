@@ -96,9 +96,9 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Resource Views ----- */
 
-        ResourceViewHeap* CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc) override;
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
-        void Release(ResourceViewHeap& resourceViewHeap) override;
+        void Release(ResourceHeap& resourceViewHeap) override;
 
         /* ----- Render Targets ----- */
 

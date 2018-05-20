@@ -72,7 +72,7 @@ class D3D12CommandBuffer : public CommandBuffer
 
         /* ----- Resource Views ----- */
 
-        //void SetResourceViewHeaps(std::uint32_t numHeaps, ResourceViewHeap* const * heapArray);
+        //void SetResourceViewHeaps(std::uint32_t numHeaps, ResourceHeap* const * heapArray);
 
         /* ----- Render Targets ----- */
 

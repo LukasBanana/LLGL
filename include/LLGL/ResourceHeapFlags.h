@@ -64,10 +64,11 @@ struct ResourceViewDescriptor
 };
 
 /**
-\brief Resource view heap descriptor structure.
-\todo Rename to "ResourceHeapDescriptor".
+\brief Resource heap descriptor structure.
+\remarks For the render systems of modern graphics APIs (i.e. Vulkan and Direct3D 12), a resource heap is the only way to bind hardware resources to a shader pipeline.
+The resource heap is a container for one or more resources such as textures, samplers, constant buffers etc.
 */
-struct ResourceViewHeapDescriptor
+struct ResourceHeapDescriptor
 {
     //! Reference to the pipeline layout.
     PipelineLayout*                     pipelineLayout = nullptr;

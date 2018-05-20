@@ -20,7 +20,7 @@
 #include "TextureArray.h"
 #include "Sampler.h"
 #include "SamplerArray.h"
-#include "ResourceViewHeap.h"
+#include "ResourceHeap.h"
 #include "PipelineLayoutFlags.h"
 
 #include "RenderTarget.h"
@@ -237,16 +237,16 @@ class LLGL_EXPORT CommandBuffer
         */
         virtual void EndStreamOutput() = 0;
 
-        /* ----- Resource View Heaps ----- */
+        /* ----- Resource Heaps ----- */
 
-        //TODO: testing for Vulkan renderer. Rename to "SetGraphicsResourceHeap".
-        virtual void SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
+        //! \todo Document this and make it pure virtual.
+        virtual void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
         {
             // dummy
         }
 
-        //TODO: testing for Vulkan renderer. Rename to "SetComputeResourceHeap".
-        virtual void SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
+        //! \todo Document this and make it pure virtual.
+        virtual void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
         {
             // dummy
         }
@@ -285,7 +285,7 @@ class LLGL_EXPORT CommandBuffer
         myRenderer->SetGraphicsPipeline(...);
 
         // Then perform drawing operations
-        myRenderer->SetGraphicsResourceViewHeap(...);
+        myRenderer->SetGraphicsResourceHeap(...);
         myRenderer->Draw(...);
         \endcode
         \see RenderSystem::CreateGraphicsPipeline

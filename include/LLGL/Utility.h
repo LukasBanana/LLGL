@@ -18,7 +18,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include "TextureFlags.h"
 #include "BufferFlags.h"
 #include "RenderTargetFlags.h"
-#include "ResourceViewHeapFlags.h"
+#include "ResourceHeapFlags.h"
 
 
 namespace LLGL

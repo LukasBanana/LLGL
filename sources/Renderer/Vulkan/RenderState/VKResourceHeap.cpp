@@ -1,11 +1,11 @@
 /*
- * VKResourceViewHeap.cpp
+ * VKResourceHeap.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include "VKResourceViewHeap.h"
+#include "VKResourceHeap.h"
 #include "VKPipelineLayout.h"
 #include "../Buffer/VKBuffer.h"
 #include "../Texture/VKSampler.h"
@@ -21,7 +21,7 @@ namespace LLGL
 {
 
 
-VKResourceViewHeap::VKResourceViewHeap(const VKPtr<VkDevice>& device, const ResourceViewHeapDescriptor& desc) :
+VKResourceHeap::VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeapDescriptor& desc) :
     device_         { device                          },
     descriptorPool_ { device, vkDestroyDescriptorPool }
 {
@@ -43,7 +43,7 @@ VKResourceViewHeap::VKResourceViewHeap(const VKPtr<VkDevice>& device, const Reso
     UpdateDescriptorSets(desc, pipelineLayoutVK->GetDstBindings());
 }
 
-VKResourceViewHeap::~VKResourceViewHeap()
+VKResourceHeap::~VKResourceHeap()
 {
     //INFO: is automatically deleted when pool is deleted
     #if 0
@@ -92,7 +92,7 @@ static void CompressDescriptorPoolSizes(std::vector<VkDescriptorPoolSize>& poolS
     );
 }
 
-void VKResourceViewHeap::CreateDescriptorPool(const ResourceViewHeapDescriptor& desc)
+void VKResourceHeap::CreateDescriptorPool(const ResourceHeapDescriptor& desc)
 {
     /* Initialize descriptor pool sizes */
     std::vector<VkDescriptorPoolSize> poolSizes(desc.resourceViews.size());
@@ -119,7 +119,7 @@ void VKResourceViewHeap::CreateDescriptorPool(const ResourceViewHeapDescriptor& 
     VKThrowIfFailed(result, "failed to create Vulkan descriptor pool");
 }
 
-void VKResourceViewHeap::CreateDescriptorSets(std::uint32_t numSetLayouts, const VkDescriptorSetLayout* setLayouts)
+void VKResourceHeap::CreateDescriptorSets(std::uint32_t numSetLayouts, const VkDescriptorSetLayout* setLayouts)
 {
     descriptorSets_.resize(1, VK_NULL_HANDLE);
 
@@ -137,7 +137,7 @@ void VKResourceViewHeap::CreateDescriptorSets(std::uint32_t numSetLayouts, const
 }
 
 //TODO: separate the switch statement into separate functions
-void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings)
+void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings)
 {
     /* Allocate local storage for buffer and image descriptors */
     const auto numResourceViewsMax = std::min(desc.resourceViews.size(), dstBindings.size());
@@ -251,7 +251,7 @@ void VKResourceViewHeap::UpdateDescriptorSets(const ResourceViewHeapDescriptor& 
             default:
             {
                 throw std::invalid_argument(
-                    "invalid resource view type to create ResourceViewHeap object: 0x" +
+                    "invalid resource view type to create ResourceHeap object: 0x" +
                     ToHex(static_cast<std::uint32_t>(rvDesc.type))
                 );
             }

@@ -121,12 +121,12 @@ int main(int argc, char* argv[])
         auto pipelineLayout = renderer->CreatePipelineLayout(pipelineLayoutDesc);
 
         // Create resource view heap
-        LLGL::ResourceViewHeapDescriptor viewHeapDesc;
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
-            viewHeapDesc.pipelineLayout = pipelineLayout;
-            viewHeapDesc.resourceViews  = { LLGL::ResourceViewDesc(storageBuffer) };
+            resourceHeapDesc.pipelineLayout = pipelineLayout;
+            resourceHeapDesc.resourceViews  = { LLGL::ResourceViewDesc(storageBuffer) };
         }
-        auto resourceViewHeap = renderer->CreateResourceViewHeap(viewHeapDesc);
+        auto resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
 
         // Create compute pipeline
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram, pipelineLayout });
@@ -135,8 +135,8 @@ int main(int argc, char* argv[])
         commands->SetComputePipeline(*pipeline);
 
         // Set storage buffer
-        if (resourceViewHeap)
-            commands->SetComputeResourceViewHeap(*resourceViewHeap, 0);
+        if (resourceHeap)
+            commands->SetComputeResourceHeap(*resourceHeap, 0);
         else if (commandsExt)
             commandsExt->SetStorageBuffer(*storageBuffer, 0, LLGL::StageFlags::ComputeStage);
 

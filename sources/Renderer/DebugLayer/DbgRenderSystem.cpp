@@ -353,7 +353,7 @@ void DbgRenderSystem::Release(SamplerArray& samplerArray)
 
 /* ----- Resource Views ----- */
 
-ResourceViewHeap* DbgRenderSystem::CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc)
+ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
 {
     auto instanceDesc = desc;
     {
@@ -374,10 +374,10 @@ ResourceViewHeap* DbgRenderSystem::CreateResourceViewHeap(const ResourceViewHeap
             }
         }
     }
-    return instance_->CreateResourceViewHeap(instanceDesc);
+    return instance_->CreateResourceHeap(instanceDesc);
 }
 
-void DbgRenderSystem::Release(ResourceViewHeap& resourceViewHeap)
+void DbgRenderSystem::Release(ResourceHeap& resourceViewHeap)
 {
     return instance_->Release(resourceViewHeap);
 }

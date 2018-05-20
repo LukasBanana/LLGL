@@ -225,9 +225,9 @@ void RenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 
 #if 1//TODO: make this functions pure virtual!!!
 
-ResourceViewHeap* RenderSystem::CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc) { return nullptr; }
+ResourceHeap* RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc) { return nullptr; }
 
-void RenderSystem::Release(ResourceViewHeap& resourceViewHeap) {}
+void RenderSystem::Release(ResourceHeap& resourceViewHeap) {}
 
 PipelineLayout* RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc) { return nullptr; }
 

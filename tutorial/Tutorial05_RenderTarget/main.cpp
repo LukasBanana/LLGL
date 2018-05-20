@@ -39,7 +39,7 @@ class Tutorial05 : public Tutorial
 
     LLGL::Texture*          colorMap                = nullptr;
     LLGL::Sampler*          samplerState            = nullptr;
-    LLGL::ResourceViewHeap* resourceHeaps[2]        = {};
+    LLGL::ResourceHeap*     resourceHeaps[2]        = {};
 
     LLGL::RenderTarget*     renderTarget            = nullptr;
     LLGL::Texture*          renderTargetTex         = nullptr;

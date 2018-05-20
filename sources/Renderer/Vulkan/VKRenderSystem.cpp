@@ -580,16 +580,16 @@ void VKRenderSystem::Release(SamplerArray& samplerArray)
     RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
-/* ----- Resource Views ----- */
+/* ----- Resource Heaps ----- */
 
-ResourceViewHeap* VKRenderSystem::CreateResourceViewHeap(const ResourceViewHeapDescriptor& desc)
+ResourceHeap* VKRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
 {
-    return TakeOwnership(resourceViewHeaps_, MakeUnique<VKResourceViewHeap>(device_, desc));
+    return TakeOwnership(resourceHeaps_, MakeUnique<VKResourceHeap>(device_, desc));
 }
 
-void VKRenderSystem::Release(ResourceViewHeap& resourceViewHeap)
+void VKRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    RemoveFromUniqueSet(resourceViewHeaps_, &resourceViewHeap);
+    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
 /* ----- Render Targets ----- */

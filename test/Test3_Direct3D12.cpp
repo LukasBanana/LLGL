@@ -191,7 +191,7 @@ int main()
         //INTERFACE DRAFT
         #if 0
 
-        LLGL::ResourceViewHeap* resourceViewHeap = renderer->CreateResourceViewHeap();
+        LLGL::ResourceHeap* resourceViewHeap = renderer->CreateResourceHeap();
         {
             resourceViewHeap->AppendResourceView(*constantBuffer);
             resourceViewHeap->AppendResourceView(*texture);

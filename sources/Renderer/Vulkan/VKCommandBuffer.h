@@ -21,7 +21,7 @@ namespace LLGL
 {
 
 
-class VKResourceViewHeap;
+class VKResourceHeap;
 
 class VKCommandBuffer : public CommandBuffer
 {
@@ -69,10 +69,10 @@ class VKCommandBuffer : public CommandBuffer
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
 
-        /* ----- Resource View Heaps ----- */
+        /* ----- Resource Heaps ----- */
 
-        void SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
-        void SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
 
         /* ----- Render Targets ----- */
 
@@ -154,7 +154,7 @@ class VKCommandBuffer : public CommandBuffer
         void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
         #endif
 
-        void BindResourceViewHeap(VKResourceViewHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t startSlot);
+        void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t startSlot);
 
         void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
         void EndRenderPass();

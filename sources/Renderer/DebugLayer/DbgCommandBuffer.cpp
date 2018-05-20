@@ -411,14 +411,14 @@ void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t
 
 /* ----- Resource View Heaps ----- */
 
-void DbgCommandBuffer::SetGraphicsResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)
+void DbgCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)
 {
-    instance.SetGraphicsResourceViewHeap(resourceHeap, startSlot);
+    instance.SetGraphicsResourceHeap(resourceHeap, startSlot);
 }
 
-void DbgCommandBuffer::SetComputeResourceViewHeap(ResourceViewHeap& resourceHeap, std::uint32_t startSlot)
+void DbgCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)
 {
-    instance.SetComputeResourceViewHeap(resourceHeap, startSlot);
+    instance.SetComputeResourceHeap(resourceHeap, startSlot);
 }
 
 /* ----- Render Targets ----- */
