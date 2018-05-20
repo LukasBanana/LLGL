@@ -25,7 +25,7 @@ VKTexture::VKTexture(
 {
     /* Create Vulkan image and allocate memory region */
     CreateImage(device, desc);
-    imageWrapper_.AllocateAndBindMemoryRegion(deviceMemoryMngr);
+    imageWrapper_.AllocateMemoryRegion(deviceMemoryMngr);
 }
 
 Extent3D VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const

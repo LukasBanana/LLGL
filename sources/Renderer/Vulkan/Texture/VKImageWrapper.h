@@ -28,8 +28,10 @@ class VKImageWrapper
     public:
 
         VKImageWrapper(const VKPtr<VkDevice>& device);
+        virtual ~VKImageWrapper();
 
-        void AllocateAndBindMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
+        void AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
+        void ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr);
 
         void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
 
@@ -44,6 +46,8 @@ class VKImageWrapper
             VkSampleCountFlagBits samplesFlags,
             VkImageUsageFlags usageFlags
         );
+
+        void ReleaseVkImage();
 
         void CreateVkImageView(
             VkDevice device,

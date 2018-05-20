@@ -8,9 +8,7 @@
 #include "VKImageWrapper.h"
 #include "../Memory/VKDeviceMemory.h"
 #include "../Memory/VKDeviceMemoryManager.h"
-#include "../VKTypes.h"
 #include "../VKCore.h"
-#include <algorithm>
 
 
 namespace LLGL
@@ -22,7 +20,11 @@ VKImageWrapper::VKImageWrapper(const VKPtr<VkDevice>& device) :
 {
 }
 
-void VKImageWrapper::AllocateAndBindMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
+VKImageWrapper::~VKImageWrapper()
+{
+}
+
+void VKImageWrapper::AllocateMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
 {
     auto device = deviceMemoryMngr.GetVkDevice();
 
@@ -43,6 +45,12 @@ void VKImageWrapper::AllocateAndBindMemoryRegion(VKDeviceMemoryManager& deviceMe
         memoryRegion_->BindImage(device, image_);
     else
         throw std::runtime_error("failed to allocate device memory for Vulkan image");
+}
+
+void VKImageWrapper::ReleaseMemoryRegion(VKDeviceMemoryManager& deviceMemoryMngr)
+{
+    deviceMemoryMngr.Release(memoryRegion_);
+    memoryRegion_ = nullptr;
 }
 
 void VKImageWrapper::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion)
@@ -81,6 +89,11 @@ void VKImageWrapper::CreateVkImage(
     }
     VkResult result = vkCreateImage(device, &createInfo, nullptr, image_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan image");
+}
+
+void VKImageWrapper::ReleaseVkImage()
+{
+    image_.Release();
 }
 
 void VKImageWrapper::CreateVkImageView(

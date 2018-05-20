@@ -13,6 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include "VKCore.h"
 #include "VKPtr.h"
+#include "Texture/VKDepthStencilBuffer.h"
 #include <memory>
 #include <vector>
 
@@ -96,9 +97,6 @@ class VKRenderContext : public RenderContext
         void CreateSwapChainFramebuffers();
 
         void CreateDepthStencilBuffer(const VideoModeDescriptor& videoModeDesc);
-        void CreateDepthStencilImage(VkFormat depthStencilFormat, const Extent2D& extent);
-        void CreateDepthStencilImageView(bool stencilBufferBit);
-        void CreateDepthStencilMemory();
         void ReleaseDepthStencilBuffer();
 
         VkSurfaceFormatKHR PickSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& surfaceFormats) const;
@@ -129,10 +127,7 @@ class VKRenderContext : public RenderContext
         std::vector<VKPtr<VkFramebuffer>>   swapChainFramebuffers_;
         std::uint32_t                       presentImageIndex_          = 0;
 
-        VkFormat                            depthStencilFormat_         = VK_FORMAT_UNDEFINED;
-        VKPtr<VkImage>                      depthImage_;
-        VKPtr<VkImageView>                  depthImageView_;
-        VKDeviceMemoryRegion*               depthImageMemoryRegion_     = nullptr;
+        VKDepthStencilBuffer                depthStencilBuffer_;
 
         VkQueue                             graphicsQueue_              = VK_NULL_HANDLE;
         VkQueue                             presentQueue_               = VK_NULL_HANDLE;
