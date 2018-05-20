@@ -196,13 +196,6 @@ int main(int argc, char* argv[])
             LLGL::Viewport { 320.0f, 0.0f, 320.0f, 480.0f },
         };
 
-        // For Direct3D12 and Vulkan
-        LLGL::Scissor scissors[2] =
-        {
-            LLGL::Scissor {   0, 0, 320, 480 },
-            LLGL::Scissor { 320, 0, 320, 480 },
-        };
-
         // Enter main loop
         while ( ( window1.ProcessEvents() || window2.ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
         {
@@ -211,7 +204,6 @@ int main(int argc, char* argv[])
             {
                 // Set viewport and scissor arrays
                 commands->SetViewports(2, viewports);
-                commands->SetScissors(2, scissors);
 
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);
@@ -233,7 +225,6 @@ int main(int argc, char* argv[])
             {
                 // Set viewport and scissor arrays
                 commands->SetViewports(2, viewports);
-                commands->SetScissors(2, scissors);
 
                 // Set graphics pipeline
                 commands->SetGraphicsPipeline(*pipeline);

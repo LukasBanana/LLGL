@@ -51,6 +51,12 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
             return primitiveTopology_;
         }
 
+        // Returns true if scissors are enabled.
+        inline bool IsScissorEnabled() const
+        {
+            return scissorEnabled_;
+        }
+
     private:
 
         void CreateRootSignature(D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc);
@@ -59,7 +65,9 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
         ComPtr<ID3D12RootSignature> rootSignature_;
         ComPtr<ID3D12PipelineState> pipelineState_;
 
-        D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_ = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+        D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+
+        bool                        scissorEnabled_     = false;
 
 };
 

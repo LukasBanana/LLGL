@@ -34,7 +34,10 @@ enum class ShaderType
 
 /* ----- Flags ----- */
 
-//! Shader compilation flags enumeration.
+/**
+\brief Shader compilation flags enumeration.
+\note Only supported with: Direct3D 11, Direct3D 12.
+*/
 struct ShaderCompileFlags
 {
     enum
@@ -61,7 +64,6 @@ struct ShaderDisassembleFlags
 \remarks Specifies which shader stages are affected by a state change,
 e.g. to which shader stages a constant buffer is set.
 For the render systems, which do not support these flags, always all shader stages are affected.
-\note Only supported with: Direct3D 11, Direct3D 12, Vulkan.
 */
 struct StageFlags
 {

@@ -207,9 +207,6 @@ int main(int argc, char* argv[])
 
             // Set viewport and scissor rectangle
             commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
-            #if 1//for D3D12
-            commands->SetScissor(LLGL::Scissor{ { 0, 0 }, resolution });
-            #endif
 
             // Clear color buffer
             commands->Clear(LLGL::ClearFlags::Color);

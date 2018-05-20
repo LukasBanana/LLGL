@@ -23,16 +23,14 @@ namespace LLGL
 
 
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/dn770370(v=vs.85).aspx
-D3D12GraphicsPipeline::D3D12GraphicsPipeline(
-    D3D12RenderSystem& renderSystem, const GraphicsPipelineDescriptor& desc)
+D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, const GraphicsPipelineDescriptor& desc) :
+    primitiveTopology_ { D3D12Types::Map(desc.primitiveTopology) },
+    scissorEnabled_    { desc.rasterizer.scissorTestEnabled      }
 {
     /* Validate pointers and get D3D shader program */
     LLGL_ASSERT_PTR(desc.shaderProgram);
 
     auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
-
-    /* Store D3D primitive topology */
-    primitiveTopology_ = D3D12Types::Map(desc.primitiveTopology);
 
     /* Create root signature and graphics pipeline state  */
     CreateRootSignature(renderSystem, *shaderProgramD3D, desc);
@@ -91,7 +89,7 @@ void D3D12GraphicsPipeline::CreateRootSignature(
         signature.ReleaseAndGetAddressOf(),
         error.ReleaseAndGetAddressOf()
     );
-    
+
     if (FAILED(hr) && error)
     {
         auto errorStr = DXGetBlobString(error.Get());

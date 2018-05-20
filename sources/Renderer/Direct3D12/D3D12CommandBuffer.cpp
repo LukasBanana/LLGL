@@ -82,6 +82,10 @@ void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport
 
         commandList_->RSSetViewports(numViewports, viewportsD3D);
     }
+
+    /* If scissor test is disabled, update remaining scissor rectangles to extent of active framebuffer */
+    if (!scissorEnabled_)
+        SetScissorRectsWithFramebufferExtent(numViewports);
 }
 
 void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
@@ -91,22 +95,25 @@ void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
 
 void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    numScissors = std::min(numScissors, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
-
-    D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-
-    for (std::uint32_t i = 0; i < numScissors; ++i)
+    if (scissorEnabled_)
     {
-        const auto& src = scissors[i];
-        auto& dest = scissorsD3D[i];
+        numScissors = std::min(numScissors, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
-        dest.left   = src.x;
-        dest.top    = src.y;
-        dest.right  = src.x + src.width;
-        dest.bottom = src.y + src.height;
+        D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+
+        for (std::uint32_t i = 0; i < numScissors; ++i)
+        {
+            const auto& src = scissors[i];
+            auto& dest = scissorsD3D[i];
+
+            dest.left   = src.x;
+            dest.top    = src.y;
+            dest.right  = src.x + src.width;
+            dest.bottom = src.y + src.height;
+        }
+
+        commandList_->RSSetScissorRects(numScissors, scissorsD3D);
     }
-
-    commandList_->RSSetScissorRects(numScissors, scissorsD3D);
 }
 
 /* ----- Clear ----- */
@@ -245,7 +252,16 @@ void D3D12CommandBuffer::SetRenderTarget(RenderContext& renderContext)
 
     renderContextD3D.SetCommandBuffer(this);
 
+    /* Set back-buffer RTVs */
     SetBackBufferRTV(renderContextD3D);
+
+    /* Store framebuffer extent */
+    const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
+    framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
+    framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
+
+    /* Reset information about default scissor rectangles */
+    numBoundScissorRects_ = 0;
 }
 
 /* ----- Pipeline States ----- */
@@ -259,7 +275,10 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     commandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
     commandList_->IASetPrimitiveTopology(graphicsPipelineD3D.GetPrimitiveTopology());
 
-    //TODO: set default scissor if scissor test is disabled
+    /* Scissor rectangle must be updated (if scissor test is disabled) */
+    scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
+    if (!scissorEnabled_)
+        SetScissorRectsWithFramebufferExtent(1);
 }
 
 void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
@@ -387,6 +406,30 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     rtvDescHandle_ = renderContextD3D.GetCurrentRTVDescHandle();
 
     commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
+}
+
+void D3D12CommandBuffer::SetScissorRectsWithFramebufferExtent(UINT numScissorRects)
+{
+    numScissorRects = std::min(numScissorRects, UINT(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+
+    if (numScissorRects > numBoundScissorRects_)
+    {
+        /* Set scissor to render target resolution */
+        D3D12_RECT scissorRects[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+
+        for (UINT i = 0; i < numScissorRects; ++i)
+        {
+            scissorRects[i].left    = 0;
+            scissorRects[i].top     = 0;
+            scissorRects[i].right   = framebufferWidth_;
+            scissorRects[i].bottom  = framebufferHeight_;
+        }
+
+        commandList_->RSSetScissorRects(numScissorRects, scissorRects);
+
+        /* Store new number of bound scissor rectangles */
+        numBoundScissorRects_ = numScissorRects;
+    }
 }
 
 

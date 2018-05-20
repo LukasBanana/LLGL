@@ -192,16 +192,12 @@ private:
             {
                 if (clientAreaSize.width >= 4 && clientAreaSize.height >= 4)
                 {
-                    auto videoMode = context_->GetVideoMode();
-
                     // Update video mode
-                    videoMode.resolution = clientAreaSize;
+                    auto videoMode = context_->GetVideoMode();
+                    {
+                        videoMode.resolution = clientAreaSize;
+                    }
                     context_->SetVideoMode(videoMode);
-                    commands_->SetRenderTarget(*context_);
-
-                    // Update viewport and scissor
-                    commands_->SetViewport(LLGL::Viewport{ { 0, 0 }, videoMode.resolution });
-                    commands_->SetScissor(LLGL::Scissor{ { 0, 0 }, videoMode.resolution });
 
                     // Update projection matrix
                     auto aspectRatio = static_cast<float>(videoMode.resolution.width) / static_cast<float>(videoMode.resolution.height);

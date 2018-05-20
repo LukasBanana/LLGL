@@ -131,14 +131,20 @@ class D3D12CommandBuffer : public CommandBuffer
         // Sets the current back buffer as render target view.
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
 
+        void SetScissorRectsWithFramebufferExtent(UINT numScissorRects);
+
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
         D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_;
 
-        //UINT64                              fenceValues_[maxNumBuffers] = { 0 };
-
         ClearValue                          clearValue_;
+
+        bool                                scissorEnabled_         = false;
+        UINT                                numBoundScissorRects_   = 0;
+
+        LONG                                framebufferWidth_       = 0;
+        LONG                                framebufferHeight_      = 0;
 
 };
 
