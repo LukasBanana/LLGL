@@ -142,10 +142,8 @@ union GraphicsAPIDependentStateDescriptor
 {
     inline GraphicsAPIDependentStateDescriptor()
     {
-        stateOpenGL.screenSpaceOriginLowerLeft      = false;
-        stateOpenGL.invertFrontFace                 = false;
-
-        stateDirect3D12.disableAutoStateSubmission  = false;
+        stateOpenGL.screenSpaceOriginLowerLeft  = false;
+        stateOpenGL.invertFrontFace             = false;
     }
 
     struct StateOpenGL
@@ -155,33 +153,16 @@ union GraphicsAPIDependentStateDescriptor
         \remarks If this is true, the viewports and scissor rectangles of OpenGL are NOT emulated to the upper-left,
         which is the default to be uniform with other rendering APIs such as Direct3D and Vulkan.
         */
-        bool        screenSpaceOriginLowerLeft;
+        bool screenSpaceOriginLowerLeft;
 
         /**
         \brief Specifies whether to invert front-facing. By default false.
         \remarks If this is true, the front facing (either GL_CW or GL_CCW) will be inverted,
         i.e. CCW becomes CW, and CW becomes CCW.
         */
-        bool        invertFrontFace;
+        bool invertFrontFace;
     }
     stateOpenGL;
-
-    //! \todo Remove this as soon as SetViewport and SetScissor are replaced by graphics pipeline states.
-    struct StateDirect3D12
-    {
-        /**
-        \brief Specifies whether persistent states are automatically submitted to the command buffer or not. By default false.
-        \remarks If this is true, "SetViewport" or "SetViewports", and "SetScissor" or "SetScissors" of the CommandBuffer interface
-        must be called every time after the command buffer has been submitted to the command queue (e.g. after the "RenderContext::Present" function has been called).
-        \see CommandBuffer::SetViewport
-        \see CommandBuffer::SetViewports
-        \see CommandBuffer::SetScissor
-        \see CommandBuffer::SetScissors
-        \deprecated Will be replaced by GraphicsPipelineDescriptor::viewports and CommandBuffer::SetViewport.
-        */
-        bool        disableAutoStateSubmission;
-    }
-    stateDirect3D12;
 };
 
 

@@ -33,16 +33,19 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
             const GraphicsPipelineDescriptor& desc
         );
 
+        // Returns the internal ID3D12RootSignature object.
         inline ID3D12RootSignature* GetRootSignature() const
         {
             return rootSignature_.Get();
         }
 
+        // Returns the internal ID3D12PipelineState object.
         inline ID3D12PipelineState* GetPipelineState() const
         {
             return pipelineState_.Get();
         }
 
+        // Returns the primitive topology.
         inline D3D12_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() const
         {
             return primitiveTopology_;

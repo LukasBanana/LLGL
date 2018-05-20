@@ -30,40 +30,83 @@ namespace LLGL
 D3D12CommandBuffer::D3D12CommandBuffer(D3D12RenderSystem& renderSystem)
 {
     CreateDevices(renderSystem);
-    //InitStateManager();
 }
 
 /* ----- Configuration ----- */
 
 void D3D12CommandBuffer::SetGraphicsAPIDependentState(const GraphicsAPIDependentStateDescriptor& state)
 {
-    disableAutoStateSubmission_ = state.stateDirect3D12.disableAutoStateSubmission;
+    // dummy
 }
 
 /* ----- Viewport and Scissor ----- */
 
 void D3D12CommandBuffer::SetViewport(const Viewport& viewport)
 {
-    stateMngr_.SetViewports(1, &viewport);
-    stateMngr_.SubmitViewports(commandList_.Get());
+    D3D12CommandBuffer::SetViewports(1, &viewport);
 }
 
 void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    stateMngr_.SetViewports(numViewports, viewports);
-    stateMngr_.SubmitViewports(commandList_.Get());
+    numViewports = std::min(numViewports, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+
+    /* Check if D3D12_VIEWPORT and Viewport structures can be safely reinterpret-casted */
+    if ( sizeof(D3D12_VIEWPORT)             == sizeof(Viewport)             &&
+         offsetof(D3D12_VIEWPORT, TopLeftX) == offsetof(Viewport, x       ) &&
+         offsetof(D3D12_VIEWPORT, TopLeftY) == offsetof(Viewport, y       ) &&
+         offsetof(D3D12_VIEWPORT, Width   ) == offsetof(Viewport, width   ) &&
+         offsetof(D3D12_VIEWPORT, Height  ) == offsetof(Viewport, height  ) &&
+         offsetof(D3D12_VIEWPORT, MinDepth) == offsetof(Viewport, minDepth) &&
+         offsetof(D3D12_VIEWPORT, MaxDepth) == offsetof(Viewport, maxDepth) )
+    {
+        /* Now it's safe to reinterpret cast the viewports into D3D viewports */
+        commandList_->RSSetViewports(numViewports, reinterpret_cast<const D3D12_VIEWPORT*>(viewports));
+    }
+    else
+    {
+        /* Convert viewport into D3D viewport */
+        D3D12_VIEWPORT viewportsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+
+        for (std::uint32_t i = 0; i < numViewports; ++i)
+        {
+            const auto& src = viewports[i];
+            auto& dest = viewportsD3D[i];
+
+            dest.TopLeftX   = src.x;
+            dest.TopLeftY   = src.y;
+            dest.Width      = src.width;
+            dest.Height     = src.height;
+            dest.MinDepth   = src.minDepth;
+            dest.MaxDepth   = src.maxDepth;
+        }
+
+        commandList_->RSSetViewports(numViewports, viewportsD3D);
+    }
 }
 
 void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
 {
-    stateMngr_.SetScissors(1, &scissor);
-    stateMngr_.SubmitScissors(commandList_.Get());
+    D3D12CommandBuffer::SetScissors(1, &scissor);
 }
 
 void D3D12CommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    stateMngr_.SetScissors(numScissors, scissors);
-    stateMngr_.SubmitScissors(commandList_.Get());
+    numScissors = std::min(numScissors, std::uint32_t(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
+
+    D3D12_RECT scissorsD3D[D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
+
+    for (std::uint32_t i = 0; i < numScissors; ++i)
+    {
+        const auto& src = scissors[i];
+        auto& dest = scissorsD3D[i];
+
+        dest.left   = src.x;
+        dest.top    = src.y;
+        dest.right  = src.x + src.width;
+        dest.bottom = src.y + src.height;
+    }
+
+    commandList_->RSSetScissorRects(numScissors, scissorsD3D);
 }
 
 /* ----- Clear ----- */
@@ -211,9 +254,12 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     /* Set graphics root signature, graphics pipeline state, and primitive topology */
     auto& graphicsPipelineD3D = LLGL_CAST(D3D12GraphicsPipeline&, graphicsPipeline);
+
     commandList_->SetGraphicsRootSignature(graphicsPipelineD3D.GetRootSignature());
     commandList_->SetPipelineState(graphicsPipelineD3D.GetPipelineState());
     commandList_->IASetPrimitiveTopology(graphicsPipelineD3D.GetPrimitiveTopology());
+
+    //TODO: set default scissor if scissor test is disabled
 }
 
 void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
@@ -312,10 +358,6 @@ void D3D12CommandBuffer::ResetCommandList(ID3D12CommandAllocator* commandAlloc, 
     /* Reset commanb list with command allocator and pipeline state */
     auto hr = commandList_->Reset(commandAlloc, pipelineState);
     DXThrowIfFailed(hr, "failed to reset D3D12 command list");
-
-    /* If not disabled, re-submit persistent states (viewport and scissor) */
-    if (!disableAutoStateSubmission_)
-        SubmitPersistentStates();
 }
 
 
@@ -328,16 +370,6 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
     /* Create command allocator and graphics command list */
     commandAlloc_   = renderSystem.CreateDXCommandAllocator();
     commandList_    = renderSystem.CreateDXCommandList(commandAlloc_.Get());
-}
-
-void D3D12CommandBuffer::InitStateManager(std::int32_t initialViewportWidth, std::int32_t initialViewportHeight)
-{
-    /* Initialize persistent viewport and scissor states */
-    Viewport viewport(0.0f, 0.0f, static_cast<float>(initialViewportWidth), static_cast<float>(initialViewportHeight));
-    stateMngr_.SetViewports(1, &viewport);
-
-    Scissor scissor(0, 0, initialViewportWidth, initialViewportHeight);
-    stateMngr_.SetScissors(1, &scissor);
 }
 
 void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
@@ -355,13 +387,6 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     rtvDescHandle_ = renderContextD3D.GetCurrentRTVDescHandle();
 
     commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
-}
-
-void D3D12CommandBuffer::SubmitPersistentStates()
-{
-    /* Submit all constistent states: viewports, scissors */
-    stateMngr_.SubmitViewports(commandList_.Get());
-    stateMngr_.SubmitScissors(commandList_.Get());
 }
 
 

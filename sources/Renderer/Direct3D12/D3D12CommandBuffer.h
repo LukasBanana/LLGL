@@ -13,7 +13,6 @@
 #include <cstddef>
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
-#include "RenderState/D3D12StateManager.h"
 
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -128,12 +127,9 @@ class D3D12CommandBuffer : public CommandBuffer
         static const UINT maxNumBuffers = 3;
 
         void CreateDevices(D3D12RenderSystem& renderSystem);
-        void InitStateManager(std::int32_t initialViewportWidth, std::int32_t initialViewportHeight);
 
         // Sets the current back buffer as render target view.
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
-
-        void SubmitPersistentStates();
 
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
@@ -142,10 +138,7 @@ class D3D12CommandBuffer : public CommandBuffer
 
         //UINT64                              fenceValues_[maxNumBuffers] = { 0 };
 
-        D3D12StateManager                   stateMngr_;
         ClearValue                          clearValue_;
-
-        bool                                disableAutoStateSubmission_ = false;
 
 };
 

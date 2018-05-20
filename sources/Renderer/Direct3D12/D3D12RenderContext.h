@@ -15,8 +15,6 @@
 #include "../DXCommon/ComPtr.h"
 #include "../DXCommon/DXCore.h"
 
-#include "RenderState/D3D12StateManager.h"
-
 #include <d3d12.h>
 #include <dxgi1_4.h>
 
@@ -72,25 +70,25 @@ class D3D12RenderContext : public RenderContext
 
         void ResolveRenderTarget(ID3D12GraphicsCommandList* commandList);
 
-        D3D12RenderSystem&                  renderSystem_;  // reference to its render system
-        D3D12CommandBuffer*                 commandBuffer_                  = nullptr;
+        D3D12RenderSystem&              renderSystem_;  // reference to its render system
+        D3D12CommandBuffer*             commandBuffer_                  = nullptr;
 
-        RenderContextDescriptor             desc_;
+        RenderContextDescriptor         desc_;
 
-        ComPtr<IDXGISwapChain3>             swapChain_;
-        UINT                                swapChainInterval_              = 0;
+        ComPtr<IDXGISwapChain3>         swapChain_;
+        UINT                            swapChainInterval_              = 0;
 
-        ComPtr<ID3D12DescriptorHeap>        rtvDescHeap_;
-        UINT                                rtvDescSize_                    = 0;
+        ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
+        UINT                            rtvDescSize_                    = 0;
 
-        ComPtr<ID3D12Resource>              renderTargets_[maxNumBuffers];
-        ComPtr<ID3D12Resource>              renderTargetsMS_[maxNumBuffers];
+        ComPtr<ID3D12Resource>          renderTargets_[maxNumBuffers];
+        ComPtr<ID3D12Resource>          renderTargetsMS_[maxNumBuffers];
 
-        ComPtr<ID3D12CommandAllocator>      commandAllocs_[maxNumBuffers];
-        UINT64                              fenceValues_[maxNumBuffers]     = { 0 };
+        ComPtr<ID3D12CommandAllocator>  commandAllocs_[maxNumBuffers];
+        UINT64                          fenceValues_[maxNumBuffers]     = { 0 };
 
-        UINT                                numFrames_                      = 0;
-        UINT                                currentFrame_                   = 0;
+        UINT                            numFrames_                      = 0;
+        UINT                            currentFrame_                   = 0;
 
 };
 
