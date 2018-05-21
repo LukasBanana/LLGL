@@ -1014,6 +1014,7 @@ void VKRenderSystem::CreateDefaultPipelineLayout()
 
 bool VKRenderSystem::IsLayerRequired(const std::string& name) const
 {
+    //TODO: make this statically optional
     #ifdef LLGL_DEBUG
     if (name == "VK_LAYER_LUNARG_core_validation")
         return true;

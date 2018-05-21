@@ -11,7 +11,7 @@
 #include "MapKey.h"
 #include <exception>
 
-#include <iostream>
+
 namespace LLGL
 {
 
