@@ -39,6 +39,7 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
         /* Create FB configuration for multi-sampling */
         const int fbAttribs[] =
         {
+            GLX_DOUBLEBUFFER,   True,
             GLX_X_RENDERABLE,   True,
             GLX_DRAWABLE_TYPE,  GLX_WINDOW_BIT,
             GLX_RENDER_TYPE,    GLX_RGBA_BIT,
@@ -46,10 +47,9 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
             GLX_RED_SIZE,       8,
             GLX_GREEN_SIZE,     8,
             GLX_BLUE_SIZE,      8,
-            GLX_ALPHA_SIZE,     8,
-            GLX_DEPTH_SIZE,     24,
-            GLX_STENCIL_SIZE,   8,
-            GLX_DOUBLEBUFFER,   True,
+            GLX_ALPHA_SIZE,     (desc_.videoMode.colorBits == 32 ? 8 : 0),
+            GLX_DEPTH_SIZE,     desc_.videoMode.depthBits,
+            GLX_STENCIL_SIZE,   desc_.videoMode.stencilBits,
             GLX_SAMPLE_BUFFERS, 1,
             GLX_SAMPLES,        static_cast<int>(desc_.multiSampling.samples),
             None
@@ -83,8 +83,15 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
         int visualAttribs[] =
         {
             GLX_RGBA,
-            GLX_DEPTH_SIZE, 24,
             GLX_DOUBLEBUFFER,
+            GLX_RED_SIZE,       8,
+            GLX_GREEN_SIZE,     8,
+            GLX_BLUE_SIZE,      8,
+            GLX_ALPHA_SIZE,     (desc_.videoMode.colorBits == 32 ? 8 : 0),
+            GLX_DEPTH_SIZE,     desc_.videoMode.depthBits,
+            GLX_STENCIL_SIZE,   desc_.videoMode.stencilBits,
+            GLX_SAMPLE_BUFFERS, 0,
+            GLX_SAMPLES,        0,
             None
         };
 

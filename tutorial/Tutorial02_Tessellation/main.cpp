@@ -12,7 +12,7 @@
 //#define AUTO_ROTATE
 
 // Enable multi-sampling anti-aliasing
-//#define ENABLE_MULTISAMPLING
+#define ENABLE_MULTISAMPLING
 
 // Test constant buffer array
 //#define _TEST_BUFFER_ARRAY_
