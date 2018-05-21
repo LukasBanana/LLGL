@@ -43,10 +43,11 @@ class VKShader : public Shader
 
     private:
 
+        // Note: "Success" is a reserved macro by X11 lib.
         enum class LoadBinaryResult
         {
             Undefined,
-            Success,
+            Successful,
             InvalidCodeSize,
             ReflectFailed,
         };

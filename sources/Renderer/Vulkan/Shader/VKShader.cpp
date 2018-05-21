@@ -84,7 +84,7 @@ bool VKShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor
     auto result = vkCreateShaderModule(device_, &createInfo, nullptr, shaderModule_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan shader module");
 
-    loadBinaryResult_ = LoadBinaryResult::Success;
+    loadBinaryResult_ = LoadBinaryResult::Successful;
 
     return true;
 }

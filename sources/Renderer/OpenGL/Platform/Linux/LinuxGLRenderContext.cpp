@@ -11,6 +11,7 @@
 #include "../../../../Platform/Linux/LinuxWindow.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include <LLGL/Log.h>
+#include <string.h>
 
 
 namespace LLGL
@@ -55,7 +56,7 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
         };
         
         int attribs[100];
-        memcpy(attribs, fbAttribs, sizeof(fbAttribs));
+        ::memcpy(attribs, fbAttribs, sizeof(fbAttribs));
         
         int fbCount = 0;
         GLXFBConfig* fbcList = glXChooseFBConfig(windowContext.display, windowContext.screen, attribs, &fbCount);

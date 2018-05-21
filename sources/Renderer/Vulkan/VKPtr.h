@@ -124,6 +124,8 @@ class VKPtr
             return *this;
         }
 
+        VKPtr<T>& operator = (const VKPtr& rhs) = default;
+        
         template <typename U>
         bool operator == (const U& rhs) const
         {

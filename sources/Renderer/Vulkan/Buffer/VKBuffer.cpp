@@ -7,6 +7,7 @@
 
 #include "VKBuffer.h"
 #include "../VKCore.h"
+#include <string.h>
 
 
 namespace LLGL

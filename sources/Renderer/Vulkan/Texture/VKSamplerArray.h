@@ -12,6 +12,7 @@
 #include <LLGL/SamplerArray.h>
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <cstdint>
 
 
 namespace LLGL
