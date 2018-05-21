@@ -54,7 +54,7 @@ class LinuxWindow : public Window
 
         void ProcessKeyEvent(XKeyEvent& event, bool down);
         void ProcessMouseKeyEvent(XButtonEvent& event, bool down);
-        void ProcessResizeRequestEvent(XResizeRequestEvent& event);
+        void ProcessExposeEvent();
         void ProcessClientMessage(XClientMessageEvent& event);
         void ProcessMotionEvent(XMotionEvent& event);
 

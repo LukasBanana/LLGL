@@ -124,7 +124,9 @@ void LinuxWindow::OnProcessEvents()
 {
     XEvent event;
 
-    while (XPending(display_) > 0)
+    XPending(display_);
+
+    while (XQLength(display_))
     {
         XNextEvent(display_, &event);
 
@@ -146,8 +148,8 @@ void LinuxWindow::OnProcessEvents()
                 ProcessMouseKeyEvent(event.xbutton, false);
                 break;
                 
-            case ResizeRequest:
-                ProcessResizeRequestEvent(event.xresizerequest);
+            case Expose:
+                ProcessExposeEvent();
                 break;
 
             case MotionNotify:
@@ -163,6 +165,8 @@ void LinuxWindow::OnProcessEvents()
                 break;
         }
     }
+
+    XFlush(display_);
 }
 
 
@@ -200,9 +204,10 @@ void LinuxWindow::OpenWindow()
     /* Setup window attributes */
     XSetWindowAttributes attribs;
     attribs.background_pixel    = WhitePixel(display_, screen);
-    attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ResizeRedirectMask);
+    attribs.border_pixel        = 0;
+    attribs.event_mask          = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
     
-    unsigned long valueMask     = CWEventMask;//(CWColormap | CWEventMask | CWOverrideRedirect)
+    unsigned long valueMask     = CWEventMask | CWBorderPixel;//(CWColormap | CWEventMask | CWOverrideRedirect)
 
     if (nativeHandle)
     {
@@ -223,7 +228,7 @@ void LinuxWindow::OpenWindow()
 
     if (desc_.centered)
         position = GetScreenCenteredPosition(desc_.size);
-        
+
     /* Create X11 window */
     wnd_ = XCreateWindow(
         display_,
@@ -239,7 +244,7 @@ void LinuxWindow::OpenWindow()
         valueMask,
         (&attribs)
     );
-
+    
     /* Set title and show window (if enabled) */
     SetTitle(desc_.title);
 
@@ -290,13 +295,17 @@ void LinuxWindow::ProcessMouseKeyEvent(XButtonEvent& event, bool down)
     }
 }
 
-void LinuxWindow::ProcessResizeRequestEvent(XResizeRequestEvent& event)
+void LinuxWindow::ProcessExposeEvent()
 {
+    XWindowAttributes attribs;
+    XGetWindowAttributes(display_, wnd_, &attribs);
+    
     const Extent2D size
     {
-        static_cast<std::uint32_t>(event.width),
-        static_cast<std::uint32_t>(event.height)
+        static_cast<std::uint32_t>(attribs.width),
+        static_cast<std::uint32_t>(attribs.height)
     };
+    
     PostResize(size);
 }
 
