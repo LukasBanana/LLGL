@@ -29,7 +29,7 @@ class IOSCanvas : public Canvas
 
         void Recreate() override;
 
-        Size GetContentSize() const override;
+        Extent2D GetContentSize() const override;
 
         void SetTitle(const std::wstring& title) override;
         std::wstring GetTitle() const override;

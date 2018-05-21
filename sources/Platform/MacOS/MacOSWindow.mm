@@ -15,7 +15,7 @@
 
 @interface AppDelegate : NSObject
 
-- (id)initWithWindow:(LLGL::MacOSWindow*)window windowDesc:(const LLGL::WindowDescriptor*)windowDescRef;
+- (id)initWithWindow:(LLGL::MacOSWindow*)window windowDesc:(LLGL::WindowDescriptor*)windowDescRef;
 - (BOOL)isQuit;
 
 @end

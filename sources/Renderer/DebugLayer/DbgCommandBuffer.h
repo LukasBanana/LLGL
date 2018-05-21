@@ -183,7 +183,7 @@ class DbgCommandBuffer : public CommandBufferExt
         RenderingProfiler*              profiler_               = nullptr;
         RenderingDebugger*              debugger_               = nullptr;
 
-        const RenderingCapabilities&    caps_;
+        //const RenderingCapabilities&    caps_;
         const RenderingFeatures&        features_;
         const RenderingLimits&          limits_;
 

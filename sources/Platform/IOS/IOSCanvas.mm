@@ -107,9 +107,9 @@ void IOSCanvas::Recreate()
     //todo...
 }
 
-Size IOSCanvas::GetContentSize() const
+Extent2D IOSCanvas::GetContentSize() const
 {
-    return {}; //todo...
+    return { 0u, 0u }; //todo...
 }
 
 void IOSCanvas::SetTitle(const std::wstring& title)

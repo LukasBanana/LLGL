@@ -29,7 +29,7 @@ DbgCommandBuffer::DbgCommandBuffer(
         instanceExt { instanceExt   },
         profiler_   { profiler      },
         debugger_   { debugger      },
-        caps_       { caps          },
+        //caps_       { caps          },
         features_   { caps.features },
         limits_     { caps.limits   }
 {

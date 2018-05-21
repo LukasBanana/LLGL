@@ -17,14 +17,15 @@ namespace Desktop
 {
 
 
-LLGL_EXPORT Size GetResolution()
+LLGL_EXPORT Extent2D GetResolution()
 {
     /* Get pixel size from main display */
     CGRect screenRect = [[UIScreen mainScreen] bounds];
-    return Size(
-        static_cast<int>(screenRect.size.width),
-        static_cast<int>(screenRect.size.height)
-    );
+    return
+    {
+        static_cast<std::uint32_t>(screenRect.size.width),
+        static_cast<std::uint32_t>(screenRect.size.height)
+    };
 }
 
 LLGL_EXPORT int GetColorDepth()
