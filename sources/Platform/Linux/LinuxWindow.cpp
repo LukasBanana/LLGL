@@ -11,7 +11,7 @@
 #include "MapKey.h"
 #include <exception>
 
-
+#include <iostream>
 namespace LLGL
 {
 
@@ -148,6 +148,10 @@ void LinuxWindow::OnProcessEvents()
                 
             case ResizeRequest:
                 ProcessResizeRequestEvent(event.xresizerequest);
+                break;
+
+            case MotionNotify:
+                ProcessMotionEvent(event.xmotion);
                 break;
 
             case DestroyNotify:
@@ -301,6 +305,14 @@ void LinuxWindow::ProcessClientMessage(XClientMessageEvent& event)
     Atom atom = static_cast<Atom>(event.data.l[0]);
     if (atom == closeWndAtom_)
         PostQuit();
+}
+
+void LinuxWindow::ProcessMotionEvent(XMotionEvent& event)
+{
+    const Offset2D mousePos { event.x, event.y };
+    PostLocalMotion(mousePos);
+    PostGlobalMotion({ mousePos.x - prevMousePos_.x, mousePos.y - prevMousePos_.y });
+    prevMousePos_ = mousePos;
 }
 
 void LinuxWindow::PostMouseKeyEvent(Key key, bool down)

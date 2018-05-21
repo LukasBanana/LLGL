@@ -56,6 +56,7 @@ class LinuxWindow : public Window
         void ProcessMouseKeyEvent(XButtonEvent& event, bool down);
         void ProcessResizeRequestEvent(XResizeRequestEvent& event);
         void ProcessClientMessage(XClientMessageEvent& event);
+        void ProcessMotionEvent(XMotionEvent& event);
 
         void PostMouseKeyEvent(Key key, bool down);
         
@@ -68,6 +69,8 @@ class LinuxWindow : public Window
         XVisualInfo*        visual_         = nullptr;
         
         ::Atom              closeWndAtom_;
+        
+        Offset2D            prevMousePos_;
 
 };
 

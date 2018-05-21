@@ -321,9 +321,9 @@ protected:
             #elif defined __linux__
             contextDesc.multiSampling.enabled           = false;
             contextDesc.multiSampling.samples           = 1;
-            contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
+            /*contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
             contextDesc.profileOpenGL.majorVersion      = 3;
-            contextDesc.profileOpenGL.minorVersion      = 3;
+            contextDesc.profileOpenGL.minorVersion      = 3;*/
             #endif
         }
         context = renderer->CreateRenderContext(contextDesc);
