@@ -188,16 +188,29 @@ void VKRenderContext::CreateGpuSurface()
     #if defined LLGL_OS_WIN32
 
     /* Setup Win32 surface descriptor */
-    VkWin32SurfaceCreateInfoKHR surfaceDesc;
+    VkWin32SurfaceCreateInfoKHR createInfo;
     {
-        surfaceDesc.sType       = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        surfaceDesc.pNext       = nullptr;
-        surfaceDesc.flags       = 0;
-        surfaceDesc.hinstance   = GetModuleHandle(NULL);
-        surfaceDesc.hwnd        = nativeHandle.window;
+        createInfo.sType        = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        createInfo.pNext        = nullptr;
+        createInfo.flags        = 0;
+        createInfo.hinstance    = GetModuleHandle(NULL);
+        createInfo.hwnd         = nativeHandle.window;
     }
-    auto result = vkCreateWin32SurfaceKHR(instance_, &surfaceDesc, nullptr, surface_.ReleaseAndGetAddressOf());
+    auto result = vkCreateWin32SurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Win32 surface for Vulkan render context");
+    
+    #elif defined LLGL_OS_LINUX
+    
+    VkXlibSurfaceCreateInfoKHR createInfo;
+    {
+        createInfo.sType    = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+        createInfo.pNext    = nullptr;
+        createInfo.flags    = 0;
+        createInfo.dpy      = nativeHandle.display;
+        createInfo.window   = nativeHandle.window;
+    }
+    auto result = vkCreateXlibSurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Xlib surface for Vulkan render context");
 
     #endif
 
