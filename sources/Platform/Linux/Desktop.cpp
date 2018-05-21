@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/Desktop.h>
+#include <X11/Xlib.h>
 
 
 namespace LLGL
@@ -17,12 +18,24 @@ namespace Desktop
 
 LLGL_EXPORT Extent2D GetResolution()
 {
-    return { 1920, 1080 };//!!!
+    if (auto dpy = XOpenDisplay(nullptr))
+    {
+        if (auto scr = DefaultScreenOfDisplay(dpy))
+        {
+            return
+            {
+                static_cast<std::uint32_t>(scr->width),
+                static_cast<std::uint32_t>(scr->height)
+            };
+        }
+        XCloseDisplay(dpy);
+    }
+    return { 0u, 0u };
 }
 
 LLGL_EXPORT int GetColorDepth()
 {
-    return 24;//!!!
+    return 24;
 }
 
 LLGL_EXPORT bool SetVideoMode(const VideoModeDescriptor& videoMode)
