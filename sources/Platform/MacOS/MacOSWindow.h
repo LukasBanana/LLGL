@@ -60,6 +60,8 @@ class MacOSWindow : public Window
         WindowDescriptor    desc_;
 
         NSWindow*           wnd_;
+    
+        Offset2D            prevMotionOffset_;
 
 };
 

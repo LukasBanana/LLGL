@@ -119,13 +119,33 @@ static NSString* ToNSString(const wchar_t* s)
 
 static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
 {
+    NSUInteger mask = 0;
+    
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
+    
+    /* Get NSWindow style mask with latest bitmasks */
     if (desc.borderless)
-        return NSBorderlessWindowMask;
+        mask |= NSWindowStyleMaskBorderless;
+    else
+    {
+        mask |= (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable);
+        if (desc.resizable)
+            mask |= NSWindowStyleMaskResizable;
+    }
     
-    NSUInteger mask = (NSTitledWindowMask + NSClosableWindowMask + NSMiniaturizableWindowMask);
+    #else
     
-    if (desc.resizable)
-        mask += NSResizableWindowMask;
+    /* Get NSWindow style mask with deprecated bitmasks */
+    if (desc.borderless)
+        mask |= NSBorderlessWindowMask;
+    else
+    {
+        mask |= (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask);
+        if (desc.resizable)
+            mask |= NSResizableWindowMask;
+    }
+    
+    #endif
     
     return mask;
 }
@@ -306,6 +326,60 @@ void MacOSWindow::OnProcessEvents()
 {
     NSEvent* event = nil;
     
+    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
+
+    /* Process NSWindow events with latest event types */
+    while ( ( event = [wnd_ nextEventMatchingMask:NSEventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES] ) != nil )
+    {
+        switch ([event type])
+        {
+            case NSEventTypeKeyDown:
+                ProcessKeyEvent(event, true);
+                break;
+                
+            case NSEventTypeKeyUp:
+                ProcessKeyEvent(event, false);
+                break;
+                
+            case NSEventTypeLeftMouseDragged:
+            case NSEventTypeRightMouseDragged:
+            case NSEventTypeMouseMoved:
+                ProcessMouseMoveEvent(event);
+                break;
+                
+            case NSEventTypeLeftMouseDown:
+                ProcessMouseKeyEvent(Key::LButton, true);
+                break;
+                
+            case NSEventTypeLeftMouseUp:
+                ProcessMouseKeyEvent(Key::LButton, false);
+                break;
+                
+            case NSEventTypeRightMouseDown:
+                ProcessMouseKeyEvent(Key::RButton, true);
+                break;
+                
+            case NSEventTypeRightMouseUp:
+                ProcessMouseKeyEvent(Key::RButton, false);
+                break;
+                
+            case NSEventTypeScrollWheel:
+                ProcessMouseWheelEvent(event);
+                break;
+                
+            default:
+                break;
+        }
+        
+        if ([event type] != NSEventTypeKeyDown && [event type] != NSEventTypeKeyUp)
+            [NSApp sendEvent:event];
+        
+        [event release];
+    }
+    
+    #else
+    
+    /* Process NSWindow events with deprecated event types */
     while ( ( event = [wnd_ nextEventMatchingMask:NSAnyEventMask untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES] ) != nil )
     {
         switch ([event type])
@@ -353,6 +427,8 @@ void MacOSWindow::OnProcessEvents()
         
         [event release];
     }
+    
+    #endif
 }
 
 void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
@@ -394,6 +470,7 @@ void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
 {
     NSPoint nativePos = [event locationInWindow];
     
+    /* Post local mouse motion */
     const Offset2D offset
     {
         static_cast<int>(nativePos.x),
@@ -401,18 +478,15 @@ void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
     };
     PostLocalMotion(offset);
     
-    #if 1//TODO: process this by another event!
-    static Offset2D lastOffset;
-    
+    /* Post global mouse motion */
     const Offset2D motion
     {
-        offset.x - lastOffset.x,
-        offset.y - lastOffset.y
+        offset.x - prevMotionOffset_.x,
+        offset.y - prevMotionOffset_.y
     };
     PostGlobalMotion(motion);
     
-    lastOffset = offset;
-    #endif
+    prevMotionOffset_ = offset;
 }
 
 void MacOSWindow::ProcessMouseWheelEvent(NSEvent* event)
