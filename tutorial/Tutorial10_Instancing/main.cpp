@@ -55,6 +55,7 @@ public:
         CreateTextures();
         CreateSamplers();
         CreatePipelines();
+        const auto caps = renderer->GetRenderingCaps();
 
         // Show info
         std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
@@ -383,9 +384,11 @@ private:
             commandsExt->SetSampler(*samplers[0], 0, LLGL::StageFlags::FragmentStage);
             commands->DrawInstanced(4, 0, numPlantInstances);
 
+            #ifndef __APPLE__
             // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
             commandsExt->SetSampler(*samplers[1], 0, LLGL::StageFlags::FragmentStage);
             commands->DrawInstanced(4, 4, 1, numPlantInstances);
+            #endif
         }
 
         // Present result on the screen

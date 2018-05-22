@@ -32,6 +32,10 @@ std::string GLDebugSeverityToStr(const GLenum severity);
 // Converts the boolean value into a GLboolean value.
 GLboolean GLBoolean(bool value);
 
+// Throws an std::runtime_error exception reporting a call to an unsupported OpenGL procedure.
+[[noreturn]]
+void ErrUnsupportedGLProc(const char* name);
+
 
 } // /namespace LLGL
 

@@ -8,6 +8,7 @@
 #include "GLCommandBuffer.h"
 #include "GLRenderContext.h"
 #include "../GLCommon/GLTypes.h"
+#include "../GLCommon/GLCore.h"
 #include "Ext/GLExtensions.h"
 #include "Ext/GLExtensionLoader.h"
 #include "../Assertion.h"
@@ -593,6 +594,8 @@ void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
         static_cast<GLsizei>(numInstances),
         instanceOffset
     );
+    #else
+    ErrUnsupportedGLProc("glDrawArraysInstancedBaseInstance");
     #endif
 }
 
@@ -634,6 +637,8 @@ void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint3
         vertexOffset,
         instanceOffset
     );
+    #else
+    ErrUnsupportedGLProc("glDrawElementsInstancedBaseVertexBaseInstance");
     #endif
 }
 
