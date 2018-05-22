@@ -21,16 +21,42 @@
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
 
 // NSWindow style masks with latest bitmasks
-static const auto g_WinStyleBorderless  = NSWindowStyleMaskBorderless;
-static const auto g_WinStyleResizable   = NSWindowStyleMaskResizable;
-static const auto g_WinStyleTitleBar    = (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable);
+static const auto g_WinStyleBorderless      = NSWindowStyleMaskBorderless;
+static const auto g_WinStyleResizable       = NSWindowStyleMaskResizable;
+static const auto g_WinStyleTitleBar        = (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable);
+
+// NSEvent masks with latest bitmasks
+static const auto g_EventMaskAny            = NSEventMaskAny;
+static const auto g_EventTypeKeyDown        = NSEventTypeKeyDown;
+static const auto g_EventTypeKeyUp          = NSEventTypeKeyUp;
+static const auto g_EventTypeLMouseDragged  = NSEventTypeLeftMouseDragged;
+static const auto g_EventTypeRMouseDragged  = NSEventTypeRightMouseDragged;
+static const auto g_EventTypeMouseMoved     = NSEventTypeMouseMoved;
+static const auto g_EventTypeLMouseDown     = NSEventTypeLeftMouseDown;
+static const auto g_EventTypeLMouseUp       = NSEventTypeLeftMouseUp;
+static const auto g_EventTypeRMouseDown     = NSEventTypeRightMouseDown;
+static const auto g_EventTypeRMouseUp       = NSEventTypeRightMouseUp;
+static const auto g_EventTypeScrollWheel    = NSEventTypeScrollWheel;
 
 #else
 
 // NSWindow style masks with obsolete bitmasks
-static const auto g_WinStyleBorderless  = NSBorderlessWindowMask;
-static const auto g_WinStyleResizable   = NSResizableWindowMask;
-static const auto g_WinStyleTitleBar    = (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask);
+static const auto g_WinStyleBorderless      = NSBorderlessWindowMask;
+static const auto g_WinStyleResizable       = NSResizableWindowMask;
+static const auto g_WinStyleTitleBar        = (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask);
+
+// NSEvent masks with obsolete bitmasks
+static const auto g_EventMaskAny            = NSAnyEventMask;
+static const auto g_EventTypeKeyDown        = NSKeyDown;
+static const auto g_EventTypeKeyUp          = NSKeyUp;
+static const auto g_EventTypeLMouseDragged  = NSLeftMouseDragged;
+static const auto g_EventTypeRMouseDragged  = NSRightMouseDragged;
+static const auto g_EventTypeMouseMoved     = NSMouseMoved;
+static const auto g_EventTypeLMouseDown     = NSLeftMouseDown;
+static const auto g_EventTypeLMouseUp       = NSLeftMouseUp;
+static const auto g_EventTypeRMouseDown     = NSRightMouseDown;
+static const auto g_EventTypeRMouseUp       = NSRightMouseUp;
+static const auto g_EventTypeScrollWheel    = NSScrollWheel;
 
 #endif
 
@@ -50,30 +76,55 @@ static const auto g_WinStyleTitleBar    = (NSTitledWindowMask | NSClosableWindow
  */
 
 @interface MacOSWindowDelegate : NSObject
+
+- (BOOL)popResizeSignal;
+- (BOOL)isFullscreenMode;
+
 @end
 
 @implementation MacOSWindowDelegate
 {
     LLGL::MacOSWindow*  window_;
     BOOL                resizable_;
-    BOOL                quit_;
+    BOOL                resizeSignaled_;
+    BOOL                fullscreenMode_;
 }
 
 - (instancetype)initWithWindow:(LLGL::MacOSWindow*)window isResizable:(BOOL)resizable
 {
     self = [super init];
     
-    window_     = window;
-    resizable_  = resizable;
-    quit_       = FALSE;
+    window_         = window;
+    resizable_      = resizable;
+    resizeSignaled_ = NO;
+    fullscreenMode_ = NO;
     
     return (self);
+}
+
+- (void)makeResizable:(BOOL)resizable
+{
+    resizable_ = resizable;
+}
+
+- (BOOL)popResizeSignal
+{
+    if (resizeSignaled_)
+    {
+        resizeSignaled_ = NO;
+        return YES;
+    }
+    return NO;
+}
+
+- (BOOL)isFullscreenMode
+{
+    return fullscreenMode_;
 }
 
 - (void)windowWillClose:(id)sender
 {
     window_->PostQuit();
-    quit_ = TRUE;
 }
 
 - (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)frameSize
@@ -86,6 +137,8 @@ static const auto g_WinStyleTitleBar    = (NSTitledWindowMask | NSClosableWindow
 
 - (void)windowDidResize:(NSNotification*)notification
 {
+    //TODO: callback (here PostResize) must currently not be called while the NSEvent polling has not finished!
+    #if 0
     /* Get size of the NSWindow's content view */
     NSWindow* sender = [notification object];
     NSRect frame = [[sender contentView] frame];
@@ -95,41 +148,46 @@ static const auto g_WinStyleTitleBar    = (NSTitledWindowMask | NSClosableWindow
 
     /* Notify event listeners about resize */
     window_->PostResize({ w, h });
+    #else
+    resizeSignaled_ = YES;
+    #endif
 }
-
-- (BOOL)isQuit
-{
-    return (quit_);
-}
-
-//INCOMPLETE
-#if 1
 
 - (NSApplicationPresentationOptions)window:(NSWindow *)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
 {
     return
         NSApplicationPresentationFullScreen |
         NSApplicationPresentationAutoHideMenuBar |
-        //NSApplicationPresentationAutoHideToolbar |
+        NSApplicationPresentationAutoHideToolbar |
         NSApplicationPresentationAutoHideDock;
 }
 
 - (void)windowWillEnterFullScreen:(NSNotification*)notification
 {
+    fullscreenMode_ = YES;
     [[NSApplication sharedApplication] setPresentationOptions:
         ( NSApplicationPresentationFullScreen |
           NSApplicationPresentationAutoHideMenuBar |
-          //NSApplicationPresentationAutoHideToolbar |
+          NSApplicationPresentationAutoHideToolbar |
           NSApplicationPresentationAutoHideDock )
     ];
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification*)notification
+{
+    //TODO: callback (here PostResize) must currently not be called while the NSEvent polling has not finished!
+    #if 0
+    window_->PostResize(window_->GetSize());
+    #else
+    resizeSignaled_ = YES;
+    #endif
 }
 
 - (void)windowDidExitFullScreen:(NSNotification*)notification
 {
     [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationDefault];
+    fullscreenMode_ = NO;
 }
-
-#endif
 
 @end
 
@@ -274,9 +332,6 @@ void MacOSWindow::SetSize(const Extent2D& size, bool useClientArea)
         frame.size = NSMakeSize(w, h);
         [wnd_ setFrame:frame display:YES animate:NO];
     }
-    
-    /* Update position due to different coordinate space between Windows and MacOS */
-    SetPosition(GetPosition());
 }
 
 Extent2D MacOSWindow::GetSize(bool useClientArea) const
@@ -317,15 +372,33 @@ bool MacOSWindow::IsShown() const
 
 void MacOSWindow::SetDesc(const WindowDescriptor& desc)
 {
+    MacOSWindowDelegate* wndDelegate = (MacOSWindowDelegate*)[wnd_ delegate];
+    
     /* Update NSWindow style, position, and size */
-    [wnd_ setStyleMask:GetNSWindowStyleMask(desc)];
+    if (![wndDelegate isFullscreenMode])
+    {
+        [wnd_ setStyleMask:GetNSWindowStyleMask(desc)];
+        [wndDelegate makeResizable:(desc.resizable)];
     
-    if (desc.centered)
-        [wnd_ center];
-    else
-        SetPosition(desc.position);
-    
-    SetSize(desc.size);
+        #if 0
+        /* Set window collection behavior for resize events */
+        if (desc.resizable)
+            [wnd_ setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary | NSWindowCollectionBehaviorManaged];
+        else
+            [wnd_ setCollectionBehavior:NSWindowCollectionBehaviorDefault];
+        #endif
+        
+        //TOOD: incomplete -> must be ignored right now, otherwise window is moved on a resize event
+        #if 0
+        if (desc.centered)
+            [wnd_ center];
+        else
+            SetPosition(desc.position);
+        #endif
+        
+        SetSize(desc.size);
+        SetTitle(desc.title);
+    }
 }
 
 WindowDescriptor MacOSWindow::GetDesc() const
@@ -335,7 +408,7 @@ WindowDescriptor MacOSWindow::GetDesc() const
         desc.title      = GetTitle();
         desc.position   = GetPosition();
         desc.size       = GetSize();
-        desc.visible    = ([wnd_ isVisible] ? true : false);
+        desc.visible    = IsShown();
         desc.borderless = (([wnd_ styleMask] & g_WinStyleBorderless) != 0);
         desc.resizable  = (([wnd_ styleMask] & g_WinStyleResizable) != 0);
     }
@@ -361,6 +434,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
             [MacOSAppDelegate alloc]
             autorelease
         ]];
+        [NSApp setDelegate:(id<NSApplicationDelegate>)[MacOSAppDelegate alloc]];
         
         [NSApp finishLaunching];
         
@@ -375,7 +449,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
         initWithContentRect:    NSMakeRect(0, 0, w, h)
         styleMask:              GetNSWindowStyleMask(desc)
         backing:                NSBackingStoreBuffered
-        defer:                  FALSE
+        defer:                  NO
     ];
     
     [wnd autorelease];
@@ -385,7 +459,7 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     [wnd setDelegate:wndDelegate];
     
     /* Enable mouse motion events */
-    [wnd setAcceptsMouseMovedEvents:TRUE];
+    [wnd setAcceptsMouseMovedEvents:YES];
     
     /* Set window title */
     [wnd setTitle:ToNSString(desc.title.c_str())];
@@ -397,9 +471,15 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     if (desc.centered)
         [wnd center];
     
+    #if 0
+    /* Set window collection behavior for resize events */
+    if (desc.resizable)
+        [wnd setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary | NSWindowCollectionBehaviorManaged];
+    #endif
+    
     /* Show window */
     if (desc.visible)
-        [wnd setIsVisible:TRUE];
+        [wnd setIsVisible:YES];
     
     return wnd;
 }
@@ -408,44 +488,55 @@ void MacOSWindow::OnProcessEvents()
 {
     NSEvent* event = nil;
     
-    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
-
     /* Process NSWindow events with latest event types */
-    while ( ( event = [wnd_ nextEventMatchingMask:NSEventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES] ) != nil )
+    for (;;)
     {
-        switch ([event type])
+        /* Get next event from queue */
+        event = [
+            NSApp nextEventMatchingMask:    g_EventMaskAny
+            untilDate:                      [NSDate distantPast]
+            inMode:                         NSDefaultRunLoopMode
+            dequeue:                        YES
+        ];
+        
+        if (event == nil)
+            break;
+        
+        /* Process event */
+        auto eventType = [event type];
+        switch (eventType)
         {
-            case NSEventTypeKeyDown:
+            case g_EventTypeKeyDown:
                 ProcessKeyEvent(event, true);
                 break;
                 
-            case NSEventTypeKeyUp:
+            case g_EventTypeKeyUp:
                 ProcessKeyEvent(event, false);
                 break;
                 
-            case NSEventTypeLeftMouseDragged:
-            case NSEventTypeRightMouseDragged:
-            case NSEventTypeMouseMoved:
+            case g_EventTypeLMouseDragged:
+            case g_EventTypeRMouseDragged:
+            case g_EventTypeMouseMoved:
                 ProcessMouseMoveEvent(event);
                 break;
                 
-            case NSEventTypeLeftMouseDown:
+            case g_EventTypeLMouseDown:
                 ProcessMouseKeyEvent(Key::LButton, true);
                 break;
                 
-            case NSEventTypeLeftMouseUp:
+            case g_EventTypeLMouseUp:
                 ProcessMouseKeyEvent(Key::LButton, false);
                 break;
                 
-            case NSEventTypeRightMouseDown:
+            case g_EventTypeRMouseDown:
                 ProcessMouseKeyEvent(Key::RButton, true);
                 break;
                 
-            case NSEventTypeRightMouseUp:
+            case g_EventTypeRMouseUp:
                 ProcessMouseKeyEvent(Key::RButton, false);
                 break;
                 
-            case NSEventTypeScrollWheel:
+            case g_EventTypeScrollWheel:
                 ProcessMouseWheelEvent(event);
                 break;
                 
@@ -453,64 +544,22 @@ void MacOSWindow::OnProcessEvents()
                 break;
         }
         
-        if ([event type] != NSEventTypeKeyDown && [event type] != NSEventTypeKeyUp)
-            [NSApp sendEvent:event];
-        
+        [NSApp sendEvent:event];
         [event release];
     }
     
-    #else
-    
-    /* Process NSWindow events with deprecated event types */
-    while ( ( event = [wnd_ nextEventMatchingMask:NSAnyEventMask untilDate:nil inMode:NSDefaultRunLoopMode dequeue:YES] ) != nil )
+    /* Check for window signales */
+    if ([(MacOSWindowDelegate*)[wnd_ delegate] popResizeSignal])
     {
-        switch ([event type])
-        {
-            case NSKeyDown:
-                ProcessKeyEvent(event, true);
-                break;
-                
-            case NSKeyUp:
-                ProcessKeyEvent(event, false);
-                break;
-                
-            case NSLeftMouseDragged:
-            case NSRightMouseDragged:
-            case NSMouseMoved:
-                ProcessMouseMoveEvent(event);
-                break;
-                
-            case NSLeftMouseDown:
-                ProcessMouseKeyEvent(Key::LButton, true);
-                break;
-                
-            case NSLeftMouseUp:
-                ProcessMouseKeyEvent(Key::LButton, false);
-                break;
-                
-            case NSRightMouseDown:
-                ProcessMouseKeyEvent(Key::RButton, true);
-                break;
-                
-            case NSRightMouseUp:
-                ProcessMouseKeyEvent(Key::RButton, false);
-                break;
-                
-            case NSScrollWheel:
-                ProcessMouseWheelEvent(event);
-                break;
-                
-            default:
-                break;
-        }
-        
-        if ([event type] != NSKeyDown && [event type] != NSKeyUp)
-            [NSApp sendEvent:event];
-        
-        [event release];
-    }
+        /* Get size of the NSWindow's content view */
+        NSRect frame = [[wnd_ contentView] frame];
     
-    #endif
+        auto w = static_cast<std::uint32_t>(frame.size.width);
+        auto h = static_cast<std::uint32_t>(frame.size.height);
+
+        /* Notify event listeners about resize */
+        PostResize({ w, h });
+    }
 }
 
 void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)

@@ -45,6 +45,12 @@ class MacOSWindow : public Window
 
         void SetDesc(const WindowDescriptor& desc) override;
         WindowDescriptor GetDesc() const override;
+    
+        // Returns the native NSWindow* object.
+        inline NSWindow* GetNSWindow() const
+        {
+            return wnd_;
+        }
 
     private:
         
