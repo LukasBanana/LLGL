@@ -16,15 +16,15 @@ static void printWindowSize(LLGL::Window& wnd)
 {
     std::wcout << L"window: \"" << wnd.GetTitle() << L"\"" << std::endl;
     auto s = wnd.GetSize(true);
-    std::cout << "  content size = " << s.width << " x " << s.height << std::endl;
+    std::wcout << "  content size = " << s.width << " x " << s.height << std::endl;
     s = wnd.GetSize(false);
-    std::cout << "  frame size   = " << s.width << " x " << s.height << std::endl;
+    std::wcout << "  frame size   = " << s.width << " x " << s.height << std::endl;
 };
 
 static void printWindowPos(LLGL::Window& wnd)
 {
     auto p = wnd.GetPosition();
-    std::cout << "window pos: x = " << p.x << ", y = " << p.y << std::endl;
+    std::wcout << "window pos: x = " << p.x << ", y = " << p.y << std::endl;
 }
 
 class WindowEventHandler : public LLGL::Window::EventListener
@@ -32,7 +32,7 @@ class WindowEventHandler : public LLGL::Window::EventListener
 public:
     void OnResize(LLGL::Window& sender, const LLGL::Extent2D& size) override
     {
-        std::cout << "OnResize: " << size.width << " x " << size.height << std::endl;
+        std::wcout << "OnResize: " << size.width << " x " << size.height << std::endl;
         printWindowSize(sender);
     }
 };
@@ -84,6 +84,9 @@ int main()
             std::cerr << e.what() << std::endl;
         }
 
+        auto desktopSize = LLGL::Desktop::GetResolution();
+        std::wcout << "Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height << std::endl;
+
         while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
         {
             timer->MeasureTime();
@@ -130,7 +133,6 @@ int main()
 
             #endif
 
-            #ifndef __linux__
             if (input->KeyPressed(LLGL::Key::Right) && pos.x < 1920)
             {
                 ++pos.x;
@@ -155,8 +157,6 @@ int main()
                 window->SetPosition(pos);
                 printWindowPos(*window);
             }
-            #endif
-
         }
     }
     catch (const std::exception& e)

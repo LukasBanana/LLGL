@@ -69,7 +69,9 @@ void LinuxWindow::SetPosition(const Offset2D& position)
 
 Offset2D LinuxWindow::GetPosition() const
 {
-    return {}; //TODO
+    XWindowAttributes attribs;
+    XGetWindowAttributes(display_, wnd_, &attribs);
+    return { attribs.x, attribs.y };
 }
 
 void LinuxWindow::SetSize(const Extent2D& size, bool useClientArea)
@@ -79,7 +81,13 @@ void LinuxWindow::SetSize(const Extent2D& size, bool useClientArea)
 
 Extent2D LinuxWindow::GetSize(bool useClientArea) const
 {
-    return {}; //TODO
+    XWindowAttributes attribs;
+    XGetWindowAttributes(display_, wnd_, &attribs);
+    return Extent2D
+    {
+        static_cast<std::uint32_t>(attribs.width),
+        static_cast<std::uint32_t>(attribs.height)
+    };
 }
 
 void LinuxWindow::SetTitle(const std::wstring& title)
