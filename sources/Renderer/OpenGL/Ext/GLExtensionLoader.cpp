@@ -746,18 +746,15 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_vertex_array_object          );
     ENABLE_GLEXT( ARB_framebuffer_object           );
     ENABLE_GLEXT( ARB_uniform_buffer_object        );
-    ENABLE_GLEXT( ARB_shader_storage_buffer_object );
 
     /* Enable drawing extensions */
     ENABLE_GLEXT( ARB_draw_instanced               );
-    ENABLE_GLEXT( ARB_base_instance                );
     ENABLE_GLEXT( ARB_draw_elements_base_vertex    );
 
     /* Enable shader extensions */
     ENABLE_GLEXT( ARB_shader_objects               );
     ENABLE_GLEXT( ARB_instanced_arrays             );
     ENABLE_GLEXT( ARB_tessellation_shader          );
-    ENABLE_GLEXT( ARB_compute_shader               );
     ENABLE_GLEXT( ARB_get_program_binary           );
     ENABLE_GLEXT( ARB_program_interface_query      );
     ENABLE_GLEXT( EXT_gpu_shader4                  );
@@ -782,14 +779,10 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( ARB_occlusion_query              );
     ENABLE_GLEXT( NV_conditional_render            );
     ENABLE_GLEXT( ARB_timer_query                  );
-    ENABLE_GLEXT( ARB_multi_bind                   );
     ENABLE_GLEXT( EXT_stencil_two_side             );
-    ENABLE_GLEXT( KHR_debug                        );
-    ENABLE_GLEXT( ARB_clip_control                 );
     ENABLE_GLEXT( ARB_draw_buffers                 );
     ENABLE_GLEXT( EXT_draw_buffers2                );
     ENABLE_GLEXT( EXT_transform_feedback           );
-    ENABLE_GLEXT( NV_transform_feedback            );
     ENABLE_GLEXT( ARB_sync                         );
     ENABLE_GLEXT( ARB_polygon_offset_clamp         );
 
@@ -798,8 +791,6 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     ENABLE_GLEXT( EXT_texture_array                );
     ENABLE_GLEXT( ARB_texture_cube_map_array       );
     ENABLE_GLEXT( ARB_geometry_shader4             );
-    ENABLE_GLEXT( NV_conservative_raster           );
-    ENABLE_GLEXT( INTEL_conservative_rasterization );
 
     #undef ENABLE_GLEXT
 
