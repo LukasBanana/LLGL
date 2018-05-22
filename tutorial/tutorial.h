@@ -179,11 +179,9 @@ private:
             ResizeEventHandler(
                 Tutorial& tutorial,
                 LLGL::RenderContext* context,
-                LLGL::CommandBuffer* commands,
                 Gs::Matrix4f& projection) :
                     tutorial_   { tutorial   },
                     context_    { context    },
-                    commands_   { commands   },
                     projection_ { projection }
             {
             }
@@ -220,7 +218,6 @@ private:
 
             Tutorial&               tutorial_;
             LLGL::RenderContext*    context_;
-            LLGL::CommandBuffer*    commands_;
             Gs::Matrix4f&           projection_;
 
     };
@@ -373,7 +370,7 @@ protected:
         window.SetBehavior(behavior);
 
         // Add window resize listener
-        window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, context, commands, projection));
+        window.AddEventListener(std::make_shared<ResizeEventHandler>(*this, context, projection));
 
         // Initialize default projection matrix
         projection = PerspectiveProjection(GetAspectRatio(), 0.1f, 100.0f, Gs::Deg2Rad(45.0f));
