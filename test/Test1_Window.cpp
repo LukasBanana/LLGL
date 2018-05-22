@@ -12,12 +12,28 @@
 #include <sstream>
 
 
+static void printWindowSize(LLGL::Window& wnd)
+{
+    std::wcout << L"window: \"" << wnd.GetTitle() << L"\"" << std::endl;
+    auto s = wnd.GetSize(true);
+    std::cout << "  content size = " << s.width << " x " << s.height << std::endl;
+    s = wnd.GetSize(false);
+    std::cout << "  frame size   = " << s.width << " x " << s.height << std::endl;
+};
+
+static void printWindowPos(LLGL::Window& wnd)
+{
+    auto p = wnd.GetPosition();
+    std::cout << "window pos: x = " << p.x << ", y = " << p.y << std::endl;
+}
+
 class WindowEventHandler : public LLGL::Window::EventListener
 {
 public:
     void OnResize(LLGL::Window& sender, const LLGL::Extent2D& size) override
     {
         std::cout << "OnResize: " << size.width << " x " << size.height << std::endl;
+        printWindowSize(sender);
     }
 };
 
@@ -44,6 +60,8 @@ int main()
         auto timer = LLGL::Timer::Create();
 
         auto pos = window->GetPosition();
+        
+        printWindowSize(*window);
 
         try
         {
@@ -117,21 +135,25 @@ int main()
             {
                 ++pos.x;
                 window->SetPosition(pos);
+                printWindowPos(*window);
             }
             if (input->KeyPressed(LLGL::Key::Left) && pos.x > 0)
             {
                 --pos.x;
                 window->SetPosition(pos);
+                printWindowPos(*window);
             }
             if (input->KeyPressed(LLGL::Key::Up) && pos.y > 0)
             {
                 --pos.y;
                 window->SetPosition(pos);
+                printWindowPos(*window);
             }
             if (input->KeyPressed(LLGL::Key::Down) && pos.y < 768)
             {
                 ++pos.y;
                 window->SetPosition(pos);
+                printWindowPos(*window);
             }
             #endif
 

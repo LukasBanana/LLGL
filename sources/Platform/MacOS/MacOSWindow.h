@@ -55,13 +55,11 @@ class MacOSWindow : public Window
         void ProcessMouseMoveEvent(NSEvent* event);
         void ProcessMouseWheelEvent(NSEvent* event);
 
-        NSWindow* CreateNSWindow();
+        NSWindow* CreateNSWindow(const WindowDescriptor& desc);
 
-        WindowDescriptor    desc_;
-
-        NSWindow*           wnd_;
+        NSWindow*   wnd_;
     
-        Offset2D            prevMotionOffset_;
+        Offset2D    prevMotionOffset_;
 
 };
 

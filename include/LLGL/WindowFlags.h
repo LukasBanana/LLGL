@@ -72,7 +72,10 @@ struct WindowDescriptor
     */
     bool            resizable           = false;
 
-    //! Specifies whether the window allows that files can be draged-and-droped onto the window. By default false.
+    /**
+    \brief Specifies whether the window allows that files can be draged-and-droped onto the window. By default false.
+    \note Only supported on: MS/Windows.
+    */
     bool            acceptDropFiles     = false;
 
     /**

@@ -11,29 +11,61 @@
 #include "MacOSWindow.h"
 #include "MapKey.h"
 #include <LLGL/Platform/NativeHandle.h>
+#include <cstdlib>
 
 
-@interface AppDelegate : NSObject
+/*
+ * Internal constants
+ */
 
-- (id)initWithWindow:(LLGL::MacOSWindow*)window windowDesc:(LLGL::WindowDescriptor*)windowDescRef;
-- (BOOL)isQuit;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
 
+// NSWindow style masks with latest bitmasks
+static const auto g_WinStyleBorderless  = NSWindowStyleMaskBorderless;
+static const auto g_WinStyleResizable   = NSWindowStyleMaskResizable;
+static const auto g_WinStyleTitleBar    = (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable);
+
+#else
+
+// NSWindow style masks with obsolete bitmasks
+static const auto g_WinStyleBorderless  = NSBorderlessWindowMask;
+static const auto g_WinStyleResizable   = NSResizableWindowMask;
+static const auto g_WinStyleTitleBar    = (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask);
+
+#endif
+
+/*
+ * Application delegate
+ */
+
+@interface MacOSAppDelegate : NSObject
 @end
 
-@implementation AppDelegate
+@implementation MacOSAppDelegate
+@end
+
+
+/*
+ * Window delegate
+ */
+
+@interface MacOSWindowDelegate : NSObject
+@end
+
+@implementation MacOSWindowDelegate
 {
-    LLGL::MacOSWindow*      window_;
-    LLGL::WindowDescriptor* windowDescRef_;
-    BOOL                    quit_;
+    LLGL::MacOSWindow*  window_;
+    BOOL                resizable_;
+    BOOL                quit_;
 }
 
-- (id)initWithWindow:(LLGL::MacOSWindow*)window windowDesc:(LLGL::WindowDescriptor*)windowDescRef
+- (instancetype)initWithWindow:(LLGL::MacOSWindow*)window isResizable:(BOOL)resizable
 {
     self = [super init];
     
-    window_         = window;
-    windowDescRef_  = windowDescRef;
-    quit_           = FALSE;
+    window_     = window;
+    resizable_  = resizable;
+    quit_       = FALSE;
     
     return (self);
 }
@@ -46,7 +78,7 @@
 
 - (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)frameSize
 {
-    if (windowDescRef_->resizable)
+    if (resizable_)
         return frameSize;
     else
         return [sender frame].size;
@@ -60,22 +92,19 @@
     
     auto w = static_cast<std::uint32_t>(frame.size.width);
     auto h = static_cast<std::uint32_t>(frame.size.height);
-    
-    /* Store new size in descriptor */
-    windowDescRef_->size.width  = w;
-    windowDescRef_->size.height = h;
 
     /* Notify event listeners about resize */
     window_->PostResize({ w, h });
 }
 
-- (BOOL) isQuit
+- (BOOL)isQuit
 {
     return (quit_);
 }
 
 //INCOMPLETE
 #if 1
+
 - (NSApplicationPresentationOptions)window:(NSWindow *)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
 {
     return
@@ -99,10 +128,15 @@
 {
     [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationDefault];
 }
+
 #endif
 
 @end
 
+
+/*
+ * MacOSWindow class
+ */
 
 namespace LLGL
 {
@@ -117,35 +151,34 @@ static NSString* ToNSString(const wchar_t* s)
     ];
 }
 
+static std::wstring ToStdWString(NSString* s)
+{
+    std::wstring out;
+    
+    if (s != nil)
+    {
+        const char* utf8Str = [s cStringUsingEncoding:NSUTF8StringEncoding];
+        auto utf8StrLen = ::strlen(utf8Str);
+        out.resize(utf8StrLen);
+        ::mbstowcs(&out[0], utf8Str, utf8StrLen);
+    }
+
+    return out;
+}
+
+// Returns the NSWindow style mask for the specified window descriptor
 static NSUInteger GetNSWindowStyleMask(const WindowDescriptor& desc)
 {
     NSUInteger mask = 0;
     
-    #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_12
-    
-    /* Get NSWindow style mask with latest bitmasks */
     if (desc.borderless)
-        mask |= NSWindowStyleMaskBorderless;
+        mask |= g_WinStyleBorderless;
     else
     {
-        mask |= (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable);
+        mask |= g_WinStyleTitleBar;
         if (desc.resizable)
-            mask |= NSWindowStyleMaskResizable;
+            mask |= g_WinStyleResizable;
     }
-    
-    #else
-    
-    /* Get NSWindow style mask with deprecated bitmasks */
-    if (desc.borderless)
-        mask |= NSBorderlessWindowMask;
-    else
-    {
-        mask |= (NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask);
-        if (desc.resizable)
-            mask |= NSResizableWindowMask;
-    }
-    
-    #endif
     
     return mask;
 }
@@ -156,11 +189,10 @@ std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)
 }
 
 MacOSWindow::MacOSWindow(const WindowDescriptor& desc) :
-    desc_ { desc             },
-    wnd_  { CreateNSWindow() }
+    wnd_ { CreateNSWindow(desc) }
 {
-    if (!desc_.centered)
-        SetPosition(desc_.position);
+    if (!desc.centered)
+        SetPosition(desc.position);
 }
 
 MacOSWindow::~MacOSWindow()
@@ -186,13 +218,15 @@ Extent2D MacOSWindow::GetContentSize() const
 
 void MacOSWindow::SetPosition(const Offset2D& position)
 {
-    desc_.position = position;
-    
     /* Get visible screen size (without dock and menu bar) */
     NSScreen* screen = [NSScreen mainScreen];
+    
     CGSize frameSize = [screen frame].size;
     NSRect visibleFrame = [screen visibleFrame];
     
+    [screen release];
+
+    /* Calculate menu bar height */
     CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
     
     /* Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS) */
@@ -200,20 +234,34 @@ void MacOSWindow::SetPosition(const Offset2D& position)
     CGFloat y = frameSize.height - menuBarHeight - (CGFloat)position.y;
     
     [wnd_ setFrameTopLeftPoint:NSMakePoint(x, y)];
-    
-    [screen release];
 }
 
 Offset2D MacOSWindow::GetPosition() const
 {
-    //[wnd_ frame].origin;
-    return desc_.position;
+    /* Get visible screen size (without dock and menu bar) */
+    NSScreen* screen = [NSScreen mainScreen];
+    
+    CGSize frameSize = [screen frame].size;
+    NSRect visibleFrame = [screen visibleFrame];
+    
+    [screen release];
+
+    /* Calculate menu bar height */
+    CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
+    
+    /* Set window position (inverse Y coordinate due to different coordinate space between Windows and MacOS) */
+    CGRect wndRect = [wnd_ frame];
+    wndRect.origin.y = frameSize.height - wndRect.size.height - menuBarHeight - wndRect.origin.y;
+    
+    return Offset2D
+    {
+        static_cast<int>(wndRect.origin.x),
+        static_cast<int>(wndRect.origin.y)
+    };
 }
 
 void MacOSWindow::SetSize(const Extent2D& size, bool useClientArea)
 {
-    desc_.size = size;
-    
     /* Set either content or frame size */
     auto w = static_cast<CGFloat>(size.width);
     auto h = static_cast<CGFloat>(size.height);
@@ -233,18 +281,28 @@ void MacOSWindow::SetSize(const Extent2D& size, bool useClientArea)
 
 Extent2D MacOSWindow::GetSize(bool useClientArea) const
 {
-    return desc_.size;
+    CGSize size { 0.0f, 0.0f };
+    
+    if (useClientArea)
+        size = [[wnd_ contentView] frame].size;
+    else
+        size = wnd_.frame.size;
+    
+    return Extent2D
+    {
+        static_cast<std::uint32_t>(size.width),
+        static_cast<std::uint32_t>(size.height)
+    };
 }
 
 void MacOSWindow::SetTitle(const std::wstring& title)
 {
-    desc_.title = title;
     [wnd_ setTitle:ToNSString(title.c_str())];
 }
 
 std::wstring MacOSWindow::GetTitle() const
 {
-    return desc_.title;
+    return ToStdWString([wnd_ title]);
 }
 
 void MacOSWindow::Show(bool show)
@@ -260,15 +318,28 @@ bool MacOSWindow::IsShown() const
 void MacOSWindow::SetDesc(const WindowDescriptor& desc)
 {
     /* Update NSWindow style, position, and size */
-    desc_ = desc;
     [wnd_ setStyleMask:GetNSWindowStyleMask(desc)];
-    //SetPosition(desc_.position);
-    //SetSize(desc_.size);
+    
+    if (desc.centered)
+        [wnd_ center];
+    else
+        SetPosition(desc.position);
+    
+    SetSize(desc.size);
 }
 
 WindowDescriptor MacOSWindow::GetDesc() const
 {
-    return desc_;
+    WindowDescriptor desc;
+    {
+        desc.title      = GetTitle();
+        desc.position   = GetPosition();
+        desc.size       = GetSize();
+        desc.visible    = ([wnd_ isVisible] ? true : false);
+        desc.borderless = (([wnd_ styleMask] & g_WinStyleBorderless) != 0);
+        desc.resizable  = (([wnd_ styleMask] & g_WinStyleResizable) != 0);
+    }
+    return desc;
 }
 
 
@@ -278,7 +349,7 @@ WindowDescriptor MacOSWindow::GetDesc() const
 
 static bool g_appDelegateCreated = false;
 
-NSWindow* MacOSWindow::CreateNSWindow()
+NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
 {
     if (!g_appDelegateCreated)
     {
@@ -287,7 +358,7 @@ NSWindow* MacOSWindow::CreateNSWindow()
         [NSApplication sharedApplication];
         
         [NSApp setDelegate:(id<NSApplicationDelegate>)[
-            [[AppDelegate alloc] initWithWindow:this windowDesc:(&desc_)]
+            [MacOSAppDelegate alloc]
             autorelease
         ]];
         
@@ -297,27 +368,38 @@ NSWindow* MacOSWindow::CreateNSWindow()
     }
     
     /* Create NSWindow object */
-    auto w = (CGFloat)(desc_.size.width);
-    auto h = (CGFloat)(desc_.size.height);
+    auto w = (CGFloat)(desc.size.width);
+    auto h = (CGFloat)(desc.size.height);
 
     NSWindow* wnd = [[NSWindow alloc]
-        initWithContentRect:NSMakeRect(0, 0, w, h)
-        styleMask:GetNSWindowStyleMask(desc_)
-        backing:NSBackingStoreBuffered
-        defer:FALSE
+        initWithContentRect:    NSMakeRect(0, 0, w, h)
+        styleMask:              GetNSWindowStyleMask(desc)
+        backing:                NSBackingStoreBuffered
+        defer:                  FALSE
     ];
     
-    id appController = [NSApp delegate];
+    [wnd autorelease];
     
-    [wnd center];
-    [wnd setDelegate:appController];
+    /* Set window application delegate */
+    id wndDelegate = [[[MacOSWindowDelegate alloc] autorelease] initWithWindow:this isResizable:(desc.resizable)];
+    [wnd setDelegate:wndDelegate];
+    
+    /* Enable mouse motion events */
     [wnd setAcceptsMouseMovedEvents:TRUE];
+    
+    /* Set window title */
+    [wnd setTitle:ToNSString(desc.title.c_str())];
+
+    /* Move window on top of screen list */
     [wnd makeKeyAndOrderFront:nil];
     
-    if (desc_.visible)
-        [wnd setIsVisible:TRUE];
+    /* Center window in the middle of the screen */
+    if (desc.centered)
+        [wnd center];
     
-    [wnd setTitle:ToNSString(desc_.title.c_str())];
+    /* Show window */
+    if (desc.visible)
+        [wnd setIsVisible:TRUE];
     
     return wnd;
 }
@@ -457,7 +539,7 @@ void MacOSWindow::ProcessKeyEvent(NSEvent* event, bool down)
     else
         PostKeyUp(key);
 }
-    
+
 void MacOSWindow::ProcessMouseKeyEvent(Key key, bool down)
 {
     if (down)
@@ -474,7 +556,7 @@ void MacOSWindow::ProcessMouseMoveEvent(NSEvent* event)
     const Offset2D offset
     {
         static_cast<int>(nativePos.x),
-        static_cast<int>(static_cast<float>(desc_.size.height) - nativePos.y)
+        static_cast<int>([[wnd_ contentView] frame].size.height - nativePos.y)
     };
     PostLocalMotion(offset);
     
