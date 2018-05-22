@@ -503,8 +503,7 @@ void MacOSWindow::OnProcessEvents()
             break;
         
         /* Process event */
-        auto eventType = [event type];
-        switch (eventType)
+        switch ([event type])
         {
             case g_EventTypeKeyDown:
                 ProcessKeyEvent(event, true);
@@ -544,7 +543,14 @@ void MacOSWindow::OnProcessEvents()
                 break;
         }
         
+        //TODO: ignore key events here to avoid 'failure sound'
+        #if 1
+        if ([event type] != g_EventTypeKeyDown && [event type] != g_EventTypeKeyUp)
+            [NSApp sendEvent:event];
+        #else
         [NSApp sendEvent:event];
+        #endif
+        
         [event release];
     }
     
