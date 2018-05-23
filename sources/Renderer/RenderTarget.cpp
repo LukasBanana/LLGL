@@ -15,10 +15,6 @@ namespace LLGL
 {
 
 
-RenderTarget::~RenderTarget()
-{
-}
-
 #if 1 // DEPRECATED
 
 void RenderTarget::AttachDepthBuffer(const Extent2D& size) { /* dummy */ }

@@ -9,8 +9,7 @@
 #define LLGL_COMMAND_QUEUE_H
 
 
-#include "Export.h"
-
+#include "RenderSystemChild.h"
 #include <cstdint>
 
 
@@ -28,19 +27,10 @@ to submit one ore more command buffers (or command lists) into the command queue
 For older rendering APIs (such as Direct3D 11 and OpenGL) submitting a command buffer has no effect.
 It also provides the functionality to submit small sized objects such as fences into the command queue.
 */
-class LLGL_EXPORT CommandQueue
+class LLGL_EXPORT CommandQueue : public RenderSystemChild
 {
 
     public:
-
-        /* ----- Common ----- */
-
-        CommandQueue(const CommandQueue&) = delete;
-        CommandQueue& operator = (const CommandQueue&) = delete;
-
-        virtual ~CommandQueue()
-        {
-        }
 
         /* ----- Command queues ----- */
 

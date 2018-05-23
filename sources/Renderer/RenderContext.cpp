@@ -20,10 +20,6 @@ RenderContext::RenderContext(const VsyncDescriptor& initialVsync) :
 {
 }
 
-RenderContext::~RenderContext()
-{
-}
-
 static bool IsVideoModeValid(const VideoModeDescriptor& videoModeDesc)
 {
     return (videoModeDesc.resolution.width > 0 && videoModeDesc.resolution.height > 0 && videoModeDesc.swapChainSize > 0);

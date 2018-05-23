@@ -15,10 +15,6 @@ namespace LLGL
 
 /* ----- Window EventListener class ----- */
 
-Window::EventListener::~EventListener()
-{
-}
-
 void Window::EventListener::OnProcessEvents(Window& sender)
 {
     // dummy
@@ -89,10 +85,6 @@ void Window::EventListener::OnTimer(Window& sender, std::uint32_t timerID)
 
 #define FOREACH_LISTENER_CALL(FUNC) \
     for (const auto& lst : eventListeners_) { lst->FUNC; }
-
-Window::~Window()
-{
-}
 
 #ifdef LLGL_MOBILE_PLATFORM
 

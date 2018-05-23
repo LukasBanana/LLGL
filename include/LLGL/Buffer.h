@@ -17,7 +17,10 @@ namespace LLGL
 {
 
 
-//! Hardware buffer interface.
+/**
+\brief Hardware buffer interface.
+\see RenderSystem::CreateBuffer
+*/
 class LLGL_EXPORT Buffer : public Resource
 {
 

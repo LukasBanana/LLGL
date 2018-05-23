@@ -12,10 +12,6 @@ namespace LLGL
 {
 
 
-Timer::~Timer()
-{
-}
-
 void Timer::MeasureTime()
 {
     auto elapsed = Stop();

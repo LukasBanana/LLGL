@@ -9,24 +9,20 @@
 #define LLGL_FENCE_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 
 
 namespace LLGL
 {
 
 
-//! Fence interface for CPU/GPU synchronization.
-class LLGL_EXPORT Fence
-{
-
-    public:
-
-        virtual ~Fence()
-        {
-        }
-
-};
+/**
+\brief Fence interface for CPU/GPU synchronization.
+\see RenderSystem::CreateFence
+\see CommandQueue::Submit(Fence&)
+\see CommandQueue::WaitFence
+*/
+class LLGL_EXPORT Fence : public RenderSystemChild { };
 
 
 } // /namespace LLGL

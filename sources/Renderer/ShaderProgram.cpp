@@ -12,11 +12,6 @@ namespace LLGL
 {
 
 
-ShaderProgram::~ShaderProgram()
-{
-}
-
-
 /*
  * ======= Protected: =======
  */

@@ -9,7 +9,7 @@
 #define LLGL_QUERY_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "QueryFlags.h"
 
 
@@ -17,16 +17,17 @@ namespace LLGL
 {
 
 
-//! Query interface.
-class LLGL_EXPORT Query
+/**
+\brief Query interface.
+\see RenderSystem::CreateQuery
+\see CommandBuffer::BeginQuery
+\see CommandBuffer::QueryResult
+\see CommandBuffer::BeginRenderCondition
+*/
+class LLGL_EXPORT Query : public RenderSystemChild
 {
 
     public:
-
-        Query(const Query&) = delete;
-        Query& operator = (const Query&) = delete;
-
-        virtual ~Query();
 
         //! Returns the type of this query.
         inline QueryType GetType() const

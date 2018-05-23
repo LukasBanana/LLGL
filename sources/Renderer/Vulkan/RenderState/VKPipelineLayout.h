@@ -10,6 +10,7 @@
 
 
 #include <LLGL/PipelineLayout.h>
+#include <LLGL/PipelineLayoutFlags.h>
 #include "../Vulkan.h"
 #include "../VKPtr.h"
 #include <vector>

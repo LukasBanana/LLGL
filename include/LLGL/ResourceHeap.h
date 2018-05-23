@@ -9,7 +9,7 @@
 #define LLGL_RESOURCE_HEAP_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "ResourceHeapFlags.h"
 
 
@@ -21,22 +21,11 @@ namespace LLGL
 \brief Resource heap interface.
 \remarks An instance of this interface provides a descriptor set (as called in Vulkan)
 or descriptor heap (as called in Direct3D 12) for graphics and compute pipelines.
+\see RenderSystem::CreateResourceHeap
+\see CommandBuffer::SetGraphicsResourceHeap
+\see CommandBuffer::SetComputeResourceHeap
 */
-class LLGL_EXPORT ResourceHeap
-{
-
-    public:
-
-        ResourceHeap(const ResourceHeap&) = delete;
-        ResourceHeap& operator = (const ResourceHeap&) = delete;
-
-        virtual ~ResourceHeap() = default;
-
-    protected:
-
-        ResourceHeap() = default;
-
-};
+class LLGL_EXPORT ResourceHeap : public RenderSystemChild { };
 
 
 } // /namespace LLGL

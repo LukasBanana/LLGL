@@ -69,6 +69,7 @@ struct UniformDescriptor
 /**
 \brief Shader uniform setter interface.
 \note Only supported with: OpenGL.
+\see ShaderProgram::LockShaderUniform
 */
 class LLGL_EXPORT ShaderUniform
 {

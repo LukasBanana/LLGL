@@ -17,10 +17,6 @@ Query::Query(const QueryType type) :
 {
 }
 
-Query::~Query()
-{
-}
-
 
 } // /namespace LLGL
 

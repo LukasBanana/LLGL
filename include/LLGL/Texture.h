@@ -20,7 +20,10 @@ namespace LLGL
 {
 
 
-//! Texture interface.
+/**
+\brief Texture interface.
+\see RenderSystem::CreateTexture
+*/
 class LLGL_EXPORT Texture : public Resource
 {
 

@@ -9,7 +9,7 @@
 #define LLGL_TIMER_H
 
 
-#include <LLGL/Export.h>
+#include "Export.h"
 #include <memory>
 #include <cstdint>
 
@@ -24,7 +24,7 @@ class LLGL_EXPORT Timer
 
     public:
 
-        virtual ~Timer();
+        virtual ~Timer() = default;
 
         //! Creates a platform specific timer object.
         static std::unique_ptr<Timer> Create();
@@ -63,7 +63,7 @@ class LLGL_EXPORT Timer
         }
 
     private:
-        
+
         double deltaTime_ = 0.0;
 
 };

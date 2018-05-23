@@ -19,6 +19,7 @@ namespace LLGL
 {
 
 
+struct GraphicsPipelineDescriptor;
 class D3D12RenderSystem;
 class D3D12ShaderProgram;
 

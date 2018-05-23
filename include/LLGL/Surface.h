@@ -31,9 +31,7 @@ class LLGL_EXPORT Surface
 
     public:
 
-        virtual ~Surface()
-        {
-        }
+        virtual ~Surface() = default;
 
         /**
         \brief Returns the native surface handle.

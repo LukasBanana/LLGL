@@ -9,7 +9,7 @@
 #define LLGL_RENDER_TARGET_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "RenderTargetFlags.h"
 #include "Types.h"
 
@@ -26,13 +26,13 @@ class Texture;
 which can be specified as the destination for drawing operations.
 After a texture has been attached to a render target, its image content is undefined
 until something has been rendered into the render target.
+\see RenderSystem::CreateRenderTarget
+\see CommandBuffer::SetRenderTarget(RenderTarget&)
 */
-class LLGL_EXPORT RenderTarget
+class LLGL_EXPORT RenderTarget : public RenderSystemChild
 {
 
     public:
-
-        virtual ~RenderTarget();
 
         #if 1 // DEPRECATED
 

@@ -9,7 +9,7 @@
 #define LLGL_RENDER_CONTEXT_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "Surface.h"
 #include "RenderContextFlags.h"
 #include "RenderSystemFlags.h"
@@ -37,18 +37,15 @@ namespace LLGL
 \brief Render context interface.
 \remarks Each render context has its own surface and back buffer (or rather swap-chain) to draw into.
 \todo Make this a sub class of RenderTarget as soon as all "Attach..." and "Detach..." functions have been removed.
+\see RenderSystem::CreateRenderContext
+\see CommandBuffer::SetRenderTarget(RenderContext&)
 */
-class LLGL_EXPORT RenderContext
+class LLGL_EXPORT RenderContext : public RenderSystemChild
 {
 
     public:
 
         /* ----- Common ----- */
-
-        RenderContext(const RenderContext&) = delete;
-        RenderContext& operator = (const RenderContext&) = delete;
-
-        virtual ~RenderContext();
 
         //! Swaps the back buffer with the front buffer to present it on the screen (or rather on this render context).
         virtual void Present() = 0;

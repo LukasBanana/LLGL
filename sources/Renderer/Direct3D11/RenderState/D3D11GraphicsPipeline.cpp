@@ -16,6 +16,7 @@
 #include "../../Assertion.h"
 #include "../../../Core/Helper.h"
 #include <algorithm>
+#include <LLGL/GraphicsPipelineFlags.h>
 
 
 namespace LLGL

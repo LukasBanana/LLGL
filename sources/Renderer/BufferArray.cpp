@@ -17,10 +17,6 @@ BufferArray::BufferArray(const BufferType type) :
 {
 }
 
-BufferArray::~BufferArray()
-{
-}
-
 
 } // /namespace LLGL
 

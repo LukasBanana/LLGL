@@ -9,7 +9,7 @@
 #define LLGL_COMMAND_BUFFER_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "CommandBufferFlags.h"
 #include "RenderSystemFlags.h"
 #include "ColorRGBA.h"
@@ -49,19 +49,10 @@ Assume that all states that can be changed with a setter function are not persis
 \see SetRenderTarget(RenderContext&)
 \see SetRenderTarget(RenderTarget&)
 */
-class LLGL_EXPORT CommandBuffer
+class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 {
 
     public:
-
-        /* ----- Common ----- */
-
-        CommandBuffer(const CommandBuffer&) = delete;
-        CommandBuffer& operator = (const CommandBuffer&) = delete;
-
-        virtual ~CommandBuffer()
-        {
-        }
 
         /* ----- Configuration ----- */
 

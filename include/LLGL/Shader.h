@@ -9,7 +9,7 @@
 #define LLGL_SHADER_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "ShaderFlags.h"
 
 
@@ -17,16 +17,14 @@ namespace LLGL
 {
 
 
-//! Shader interface.
-class LLGL_EXPORT Shader
+/**
+\brief Shader interface.
+\see RenderSystem::CreateShader
+*/
+class LLGL_EXPORT Shader : public RenderSystemChild
 {
 
     public:
-
-        Shader(const Shader&) = delete;
-        Shader& operator = (const Shader&) = delete;
-
-        virtual ~Shader();
 
         /**
         \brief Compiles the specified shader source.

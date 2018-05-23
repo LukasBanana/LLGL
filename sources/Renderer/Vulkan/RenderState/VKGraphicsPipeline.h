@@ -25,6 +25,7 @@ struct VKGraphicsPipelineLimits
     float lineWidthGranularity;
 };
 
+struct GraphicsPipelineDescriptor;
 class VKShaderProgram;
 
 class VKGraphicsPipeline : public GraphicsPipeline

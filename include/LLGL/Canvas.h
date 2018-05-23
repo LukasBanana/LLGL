@@ -48,7 +48,7 @@ class LLGL_EXPORT Canvas : public Surface
 
             public:
 
-                virtual ~EventListener();
+                virtual ~EventListener() = default;
 
             protected:
 
@@ -63,8 +63,6 @@ class LLGL_EXPORT Canvas : public Surface
         };
 
         /* --- Common --- */
-
-        virtual ~Canvas();
 
         /**
         \brief Creates a platform specific instance of the Canvas interface.

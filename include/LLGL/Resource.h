@@ -9,7 +9,7 @@
 #define LLGL_RESOURCE_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "ResourceFlags.h"
 
 
@@ -23,15 +23,10 @@ namespace LLGL
 \see Texture
 \see Sampler
 */
-class LLGL_EXPORT Resource
+class LLGL_EXPORT Resource : public RenderSystemChild
 {
 
     public:
-
-        Resource(const Resource&) = delete;
-        Resource& operator = (const Resource&) = delete;
-
-        virtual ~Resource();
 
         /**
         \brief Returns the type of this resource object.
@@ -39,10 +34,6 @@ class LLGL_EXPORT Resource
         \see ResourceType
         */
         virtual ResourceType QueryResourceType() const = 0;
-
-    protected:
-
-        Resource() = default;
 
 };
 

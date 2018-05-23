@@ -15,10 +15,6 @@ namespace LLGL
 
 /* ----- Canvas EventListener class ----- */
 
-Canvas::EventListener::~EventListener()
-{
-}
-
 void Canvas::EventListener::OnProcessEvents(Canvas& sender)
 {
     // dummy
@@ -29,10 +25,6 @@ void Canvas::EventListener::OnProcessEvents(Canvas& sender)
 
 #define FOREACH_LISTENER_CALL(FUNC) \
     for (const auto& lst : eventListeners_) { lst->FUNC; }
-
-Canvas::~Canvas()
-{
-}
 
 #ifndef LLGL_MOBILE_PLATFORM
 

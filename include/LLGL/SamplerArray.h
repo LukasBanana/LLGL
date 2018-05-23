@@ -9,7 +9,7 @@
 #define LLGL_SAMPLER_ARRAY_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 
 
 namespace LLGL
@@ -19,24 +19,9 @@ namespace LLGL
 /**
 \breif Sampler container interface.
 \todo Maybe rename this to "SamplerHeap".
+\see RenderSystem::CreateSamplerArray
 */
-class LLGL_EXPORT SamplerArray
-{
-
-    public:
-
-        SamplerArray(const SamplerArray&) = delete;
-        SamplerArray& operator = (const SamplerArray&) = delete;
-
-        virtual ~SamplerArray()
-        {
-        }
-
-    protected:
-
-        SamplerArray() = default;
-
-};
+class LLGL_EXPORT SamplerArray : public RenderSystemChild { };
 
 
 } // /namespace LLGL

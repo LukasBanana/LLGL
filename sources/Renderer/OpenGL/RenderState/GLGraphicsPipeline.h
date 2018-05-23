@@ -21,6 +21,8 @@ namespace LLGL
 {
 
 
+struct GraphicsPipelineDescriptor;
+
 class GLGraphicsPipeline : public GraphicsPipeline
 {
 

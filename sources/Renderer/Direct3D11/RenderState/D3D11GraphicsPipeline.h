@@ -19,6 +19,11 @@ namespace LLGL
 {
 
 
+struct GraphicsPipelineDescriptor;
+struct DepthDescriptor;
+struct StencilDescriptor;
+struct RasterizerDescriptor;
+struct BlendDescriptor;
 class D3D11ShaderProgram;
 class D3D11StateManager;
 

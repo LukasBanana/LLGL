@@ -9,7 +9,7 @@
 #define LLGL_COMPUTE_PIPELINE_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "ComputePipelineFlags.h"
 
 
@@ -18,16 +18,7 @@ namespace LLGL
 
 
 //! Compute pipeline interface.
-class LLGL_EXPORT ComputePipeline
-{
-
-    public:
-
-        virtual ~ComputePipeline()
-        {
-        }
-
-};
+class LLGL_EXPORT ComputePipeline : public RenderSystemChild { };
 
 
 } // /namespace LLGL

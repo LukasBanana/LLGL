@@ -9,8 +9,7 @@
 #define LLGL_PIPELINE_LAYOUT_H
 
 
-#include "Export.h"
-#include "PipelineLayoutFlags.h"
+#include "RenderSystemChild.h"
 
 
 namespace LLGL
@@ -22,17 +21,11 @@ namespace LLGL
 \remarks An instance of this interface provides all descriptor sets (as called in Vulkan)
 or descriptor heaps (as called in Direct3D 12) for graphics and compute pipelines.
 \todo Maybe rename "PipelineLayout" in "ResourceViewLayout"?
+\see RenderSystem::CreatePipelineLayout
+\see GraphicsPipelineDescriptor::pipelineLayout
+\see ResourceHeapDescriptor::pipelineLayout
 */
-class LLGL_EXPORT PipelineLayout
-{
-
-    public:
-
-        virtual ~PipelineLayout()
-        {
-        }
-
-};
+class LLGL_EXPORT PipelineLayout : public RenderSystemChild { };
 
 
 } // /namespace LLGL

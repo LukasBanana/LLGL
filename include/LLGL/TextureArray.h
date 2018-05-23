@@ -9,7 +9,7 @@
 #define LLGL_TEXTURE_ARRAY_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 
 
 namespace LLGL
@@ -19,24 +19,9 @@ namespace LLGL
 /**
 \brief Texture container interface.
 \todo Maybe rename this to "TextureHeap".
+\see RenderSystem::CreateTextureArray
 */
-class LLGL_EXPORT TextureArray
-{
-
-    public:
-
-        TextureArray(const TextureArray&) = delete;
-        TextureArray& operator = (const TextureArray&) = delete;
-
-        virtual ~TextureArray()
-        {
-        }
-
-    protected:
-
-        TextureArray() = default;
-
-};
+class LLGL_EXPORT TextureArray : public RenderSystemChild { };
 
 
 } // /namespace LLGL

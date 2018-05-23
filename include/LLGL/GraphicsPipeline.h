@@ -9,25 +9,19 @@
 #define LLGL_GRAPHICS_PIPELINE_H
 
 
-#include "Export.h"
-#include "GraphicsPipelineFlags.h"
+#include "RenderSystemChild.h"
 
 
 namespace LLGL
 {
 
 
-//! Graphics pipeline interface.
-class LLGL_EXPORT GraphicsPipeline
-{
-
-    public:
-
-        virtual ~GraphicsPipeline()
-        {
-        }
-
-};
+/**
+\brief Graphics pipeline interface.
+\see RenderSystem::CreateGraphicsPipeline
+\see CommandBuffer::SetGraphicsPipeline
+*/
+class LLGL_EXPORT GraphicsPipeline : public RenderSystemChild { };
 
 
 } // /namespace LLGL

@@ -17,10 +17,6 @@ Shader::Shader(const ShaderType type) :
 {
 }
 
-Shader::~Shader()
-{
-}
-
 
 } // /namespace LLGL
 

@@ -17,7 +17,10 @@ namespace LLGL
 {
 
 
-//! Sampler interface.
+/**
+\brief Sampler interface.
+\see RenderSystem::CreateSampler
+*/
 class LLGL_EXPORT Sampler : public Resource
 {
 

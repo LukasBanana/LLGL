@@ -39,7 +39,7 @@ class LLGL_EXPORT Window : public Surface
 
             public:
 
-                virtual ~EventListener();
+                virtual ~EventListener() = default;
 
             protected:
 
@@ -98,8 +98,6 @@ class LLGL_EXPORT Window : public Surface
         };
 
         /* --- Common --- */
-
-        virtual ~Window();
 
         /**
         \brief Creates a platform specific instance of the Window interface.

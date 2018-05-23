@@ -13,6 +13,7 @@
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
 #include <cstddef>
+#include <LLGL/GraphicsPipelineFlags.h>
 
 
 namespace LLGL

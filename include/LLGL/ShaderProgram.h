@@ -9,7 +9,7 @@
 #define LLGL_SHADER_PROGRAM_H
 
 
-#include "Export.h"
+#include "RenderSystemChild.h"
 #include "Shader.h"
 #include "VertexFormat.h"
 #include "StreamOutputFormat.h"
@@ -23,16 +23,15 @@ namespace LLGL
 {
 
 
-//! Shader program interface.
-class LLGL_EXPORT ShaderProgram
+/**
+\brief Shader program interface.
+\remarks A shader program combines multiple instances of the Shader class to be used in a complete shader pipeline.
+\see RenderSystem::CreateShaderProgram
+*/
+class LLGL_EXPORT ShaderProgram : public RenderSystemChild
 {
 
     public:
-
-        ShaderProgram(const ShaderProgram&) = delete;
-        ShaderProgram& operator = (const ShaderProgram&) = delete;
-
-        virtual ~ShaderProgram();
 
         /**
         \brief Attaches the specified shader to this shader program.
@@ -186,8 +185,6 @@ class LLGL_EXPORT ShaderProgram
 
         //! Returns a string representation for the specified shader linker error, or null if the no error is entered (i.e. LinkError::NoError).
         static const char* LinkErrorToString(const LinkError errorCode);
-
-        ShaderProgram() = default;
 
 };
 

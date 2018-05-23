@@ -10,6 +10,7 @@
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLCore.h"
 #include "../../CheckedCast.h"
+#include <LLGL/GraphicsPipelineFlags.h>
 
 
 namespace LLGL
