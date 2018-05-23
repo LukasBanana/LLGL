@@ -66,7 +66,9 @@ struct VsyncDescriptor
 /**
 \brief Video mode descriptor structure.
 \remarks This is mainly used to set the video mode of a RenderContext object.
+The counterpart for a physical display mode is the DisplayModeDescriptor structure.
 \see RenderContext::SetVideoMode
+\see DisplayModeDescriptor
 */
 struct VideoModeDescriptor
 {

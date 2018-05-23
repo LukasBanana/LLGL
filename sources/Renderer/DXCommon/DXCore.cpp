@@ -398,19 +398,19 @@ VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter)
         DXThrowIfFailed(hr, "failed to get display mode list with format DXGI_FORMAT_R8G8B8A8_UNORM");
 
         /* Add output information to the current adapter */
-        VideoOutput videoOutput;
-            
+        VideoOutputDescriptor videoOutput;
+
         for (UINT i = 0; i < numModes; ++i)
         {
-            VideoDisplayMode displayMode;
+            DisplayModeDescriptor displayMode;
             {
-                displayMode.width       = modeDesc[i].Width;
-                displayMode.height      = modeDesc[i].Height;
-                displayMode.refreshRate = (modeDesc[i].RefreshRate.Denominator > 0 ? modeDesc[i].RefreshRate.Numerator / modeDesc[i].RefreshRate.Denominator : 0);
+                displayMode.resolution.width    = modeDesc[i].Width;
+                displayMode.resolution.height   = modeDesc[i].Height;
+                displayMode.refreshRate         = (modeDesc[i].RefreshRate.Denominator > 0 ? modeDesc[i].RefreshRate.Numerator / modeDesc[i].RefreshRate.Denominator : 0);
             }
             videoOutput.displayModes.push_back(displayMode);
         }
-            
+
         /* Remove duplicate display modes */
         std::sort(videoOutput.displayModes.begin(), videoOutput.displayModes.end(), CompareSWO);
 

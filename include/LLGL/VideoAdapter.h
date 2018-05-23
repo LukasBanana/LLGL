@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "Types.h"
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -22,45 +23,58 @@ namespace LLGL
 /* ----- Structures ----- */
 
 /**
-\brief Video display mode structure.
-\todo Rename to "DisplayModeDescriptor"
+\brief Display mode descriptor structure.
+\remarks Describes the attributes of a physical display.
+The counterpart for a virtual video mode is the VideoModeDescriptor structure.
+\see VideoOutputDescriptor::displayModes
+\see VideoModeDescriptor
 */
-struct VideoDisplayMode
+struct DisplayModeDescriptor
 {
-    std::uint32_t width         = 0; //!< Display resolution width (in pixels).
-    std::uint32_t height        = 0; //!< Display resolution height (in pixels).
-    std::uint32_t refreshRate   = 0; //!< Refresh reate (in Hz).
+    //! Display resolution (in pixels).
+    Extent2D        resolution;
+
+    //! Display refresh rate (in Hz).
+    std::uint32_t   refreshRate = 0;
 };
 
 /**
 \brief Video output structure.
-\todo Rename to "VideoOutputDescriptor"
+\see VideoAdapterDescriptor::outputs
 */
-struct VideoOutput
+struct VideoOutputDescriptor
 {
-    std::vector<VideoDisplayMode> displayModes; //!< Video display mode list.
+    //! List of all display mode descriptors for this video output.
+    std::vector<DisplayModeDescriptor> displayModes;
 };
 
 //! Video adapter descriptor structure.
 struct VideoAdapterDescriptor
 {
-    std::wstring                name;               //!< Hardware adapter name (name of the GPU).
-    std::string                 vendor;             //!< Vendor name.
-    std::uint64_t               videoMemory = 0;    //!< Video memory size (in bytes).
-    std::vector<VideoOutput>    outputs;            //!< Adapter outputs.
+    //! Hardware adapter name (name of the GPU).
+    std::wstring                        name;
+
+    //! Vendor name (e.g. "NVIDIA Corporation", "Advanced Micro Devices, Inc." etc.).
+    std::string                         vendor;
+
+    //! Video memory size (in bytes).
+    std::uint64_t                       videoMemory = 0;
+
+    //! List of all adapter output descriptors.
+    std::vector<VideoOutputDescriptor>  outputs;
 };
 
 
 /* ----- Operators ----- */
 
-LLGL_EXPORT bool operator == (const VideoDisplayMode& lhs, const VideoDisplayMode& rhs);
-LLGL_EXPORT bool operator == (const VideoDisplayMode& lhs, const VideoDisplayMode& rhs);
+LLGL_EXPORT bool operator == (const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
+LLGL_EXPORT bool operator == (const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
 
 
 /* ----- Functions ----- */
 
-//! Compares the two video display modes in a strict-weak-order (SWO) fashion.
-LLGL_EXPORT bool CompareSWO(const VideoDisplayMode& lhs, const VideoDisplayMode& rhs);
+//! Compares the two display modes in a strict-weak-order (SWO) fashion.
+LLGL_EXPORT bool CompareSWO(const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
 
 
 } // /namespace LLGL
