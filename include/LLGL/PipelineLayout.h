@@ -21,6 +21,7 @@ namespace LLGL
 \brief Pipeline layout interface.
 \remarks An instance of this interface provides all descriptor sets (as called in Vulkan)
 or descriptor heaps (as called in Direct3D 12) for graphics and compute pipelines.
+\todo Maybe rename "PipelineLayout" in "ResourceViewLayout"?
 */
 class LLGL_EXPORT PipelineLayout
 {

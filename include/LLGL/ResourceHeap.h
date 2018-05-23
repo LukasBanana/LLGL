@@ -27,9 +27,14 @@ class LLGL_EXPORT ResourceHeap
 
     public:
 
-        virtual ~ResourceHeap()
-        {
-        }
+        ResourceHeap(const ResourceHeap&) = delete;
+        ResourceHeap& operator = (const ResourceHeap&) = delete;
+
+        virtual ~ResourceHeap() = default;
+
+    protected:
+
+        ResourceHeap() = default;
 
 };
 

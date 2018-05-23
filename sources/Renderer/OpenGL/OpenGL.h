@@ -14,6 +14,7 @@
 #define LLGL_OPENGL
 
 #if defined(LLGL_OS_WIN32)
+#   include "../../Platform/Win32/Win32LeanAndMean.h"
 #   include <Windows.h>
 #   include <GL/GL.h>
 #   include <GL/glext.h>

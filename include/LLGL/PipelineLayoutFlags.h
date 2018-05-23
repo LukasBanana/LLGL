@@ -40,8 +40,8 @@ struct BindingDescriptor
     {
     }
 
-    //! Resource view type for this layout binding. By default ResourceType::ConstantBuffer.
-    ResourceType    type        = ResourceType::ConstantBuffer;
+    //! Resource view type for this layout binding. By default ResourceType::Undefined.
+    ResourceType    type        = ResourceType::Undefined;
 
     /**
     \brief Specifies which shader stages are affected by this layout binding. By default 0.

@@ -25,10 +25,6 @@ struct VKLayoutBinding
     VkDescriptorType    descriptorType;
 };
 
-/*
-TODO:
-maybe rename "PipelineLayout" interface into "ResourceViewLayout"
-*/
 class VKPipelineLayout : public PipelineLayout
 {
 
