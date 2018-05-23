@@ -9,7 +9,7 @@
 #define LLGL_SURFACE_H
 
 
-#include "Export.h"
+#include "NonCopyable.h"
 #include "Types.h"
 #include "RenderContextFlags.h"
 
@@ -26,12 +26,10 @@ such as the access to the native handle and the ability to dynamically recreate 
 \see Window
 \see Canvas
 */
-class LLGL_EXPORT Surface
+class LLGL_EXPORT Surface : public NonCopyable
 {
 
     public:
-
-        virtual ~Surface() = default;
 
         /**
         \brief Returns the native surface handle.

@@ -242,11 +242,13 @@ struct RenderSystemDescriptor
     RenderSystemDescriptor(const RenderSystemDescriptor&) = default;
     RenderSystemDescriptor& operator = (const RenderSystemDescriptor&) = default;
 
+    //! Constructor to initialize the descriptor with the module name form an std::string.
     inline RenderSystemDescriptor(const std::string& moduleName) :
         moduleName { moduleName }
     {
     }
 
+    //! Constructor to initialize the descriptor with the module name form a null terminated string.
     inline RenderSystemDescriptor(const char* moduleName) :
         moduleName { moduleName }
     {

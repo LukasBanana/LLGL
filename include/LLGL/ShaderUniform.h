@@ -9,7 +9,7 @@
 #define LLGL_SHADER_UNIFORM_H
 
 
-#include "Export.h"
+#include "NonCopyable.h"
 #include <string>
 #include <cstdint>
 
@@ -70,16 +70,20 @@ struct UniformDescriptor
 \brief Shader uniform setter interface.
 \note Only supported with: OpenGL.
 \see ShaderProgram::LockShaderUniform
+\todo Complete documentation.
 */
-class LLGL_EXPORT ShaderUniform
+class LLGL_EXPORT ShaderUniform : public NonCopyable
 {
 
     public:
 
-        virtual ~ShaderUniform()
-        {
-        }
-
+        /**
+        \brief Sets an integral scalar uniform.
+        \remarks This can be used to set the binding slot for samplers, like in the following GLSL example:
+        \code
+        uniform sampler2D myColorSampler;
+        \endcode
+        */
         virtual void SetUniform1i(const UniformLocation location, int value0) = 0;
         virtual void SetUniform2i(const UniformLocation location, int value0, int value1) = 0;
         virtual void SetUniform3i(const UniformLocation location, int value0, int value1, int value2) = 0;

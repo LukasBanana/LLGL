@@ -32,10 +32,6 @@ namespace LLGL
 
 static std::map<RenderSystem*, std::unique_ptr<Module>> g_renderSystemModules;
 
-RenderSystem::~RenderSystem()
-{
-}
-
 std::vector<std::string> RenderSystem::FindModules()
 {
     /* Iterate over all known modules and return those that are available on the current platform */
@@ -46,7 +42,7 @@ std::vector<std::string> RenderSystem::FindModules()
         #else
         "OpenGL",
         #endif
-        
+
         #if defined(LLGL_OS_MACOS) || defined(LLGL_OS_IOS)
         "Metal",
         #else
@@ -58,15 +54,15 @@ std::vector<std::string> RenderSystem::FindModules()
         "Direct3D12",
         #endif
     };
-    
+
     std::vector<std::string> modules;
-    
+
     for (const auto& m : knownModules)
     {
         if (Module::IsAvailable(Module::GetModuleFilename(m)))
             modules.push_back(m);
     }
-    
+
     return modules;
 }
 
@@ -267,7 +263,7 @@ static void AssertCreateResourceArrayCommon(std::uint32_t numResources, void* co
     /* Validate array pointer */
     if (resourceArray == nullptr)
         throw std::invalid_argument("cannot create " + resourceName + " array with invalid array pointer");
-    
+
     /* Validate pointers in array */
     for (std::uint32_t i = 0; i < numResources; ++i)
     {
@@ -280,7 +276,7 @@ void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* con
 {
     /* Validate common resource array parameters */
     AssertCreateResourceArrayCommon(numBuffers, reinterpret_cast<void* const*>(bufferArray), "buffer");
-    
+
     /* Validate buffer types */
     auto refType = bufferArray[0]->GetType();
     for (std::uint32_t i = 1; i < numBuffers; ++i)

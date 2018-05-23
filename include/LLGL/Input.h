@@ -19,6 +19,23 @@ namespace LLGL
 {
 
 
+/**
+\brief Default window event listener to receive user input.
+\remarks This class stores all received user input for a simple evaluation.
+However, for efficient evaluation, write your own sub class and only respond to user input when the appropriate callback is invoked.
+Here is an example usage:
+\code
+auto myInput = std::make_shared<LLGL::Input>();
+myWindow->AddEventListener(myInput);
+while (myWindow->ProcessEvents()) {
+    // Quit main loop when user hit the escape key.
+    if (myInput->KeyDown(LLGL::Key::Escape))
+        break;
+
+    // Rendering goes here ...
+}
+\endcode
+*/
 class LLGL_EXPORT Input : public Window::EventListener
 {
 

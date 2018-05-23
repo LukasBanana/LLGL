@@ -33,7 +33,12 @@ class LLGL_EXPORT Window : public Surface
 
     public:
 
-        //! Interface for all window event listeners.
+        /**
+        \brief Interface for all window event listeners.
+        \remarks This is a design exception compared to most other interfaces in LLGL, because it does not inherit from the NonCopyable interface.
+        This is because there is no hidden implementation, so copying an instance of this interface is allowed.
+        \see Input
+        */
         class LLGL_EXPORT EventListener
         {
 

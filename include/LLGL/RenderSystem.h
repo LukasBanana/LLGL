@@ -9,7 +9,7 @@
 #define LLGL_RENDER_SYSTEM_H
 
 
-#include "Export.h"
+#include "NonCopyable.h"
 #include "RenderContext.h"
 #include "CommandQueue.h"
 #include "CommandBufferExt.h"
@@ -61,21 +61,16 @@ renderSystem->WriteBuffer(*buffer, modificationData, ...);
 renderSystem->Release(*buffer);
 \endcode
 */
-class LLGL_EXPORT RenderSystem
+class LLGL_EXPORT RenderSystem : public NonCopyable
 {
 
     public:
 
         /* ----- Common ----- */
 
-        RenderSystem(const RenderSystem&) = delete;
-        RenderSystem& operator = (const RenderSystem&) = delete;
-
-        virtual ~RenderSystem();
-
         /**
-        \brief Returns the list of all available render system modules for the current platform
-        (e.g. on Win32 this might be { "OpenGL", "Direct3D11", "Direct3D12" }, but on MacOS it might be only { "OpenGL" }).
+        \brief Returns the list of all available render system modules for the current platform.
+        \remarks For example, on Win32 this might be { "OpenGL", "Direct3D11", "Direct3D12" }, but on MacOS it might be only { "OpenGL" }.
         */
         static std::vector<std::string> FindModules();
 

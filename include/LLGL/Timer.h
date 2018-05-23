@@ -9,7 +9,7 @@
 #define LLGL_TIMER_H
 
 
-#include "Export.h"
+#include "NonCopyable.h"
 #include <memory>
 #include <cstdint>
 
@@ -18,13 +18,14 @@ namespace LLGL
 {
 
 
-// Interface for a Timer class
-class LLGL_EXPORT Timer
+/**
+\brief Interface for a Timer class.
+\remarks This basic class is also designed as interface, since the native timer is platform specific.
+*/
+class LLGL_EXPORT Timer : public NonCopyable
 {
 
     public:
-
-        virtual ~Timer() = default;
 
         //! Creates a platform specific timer object.
         static std::unique_ptr<Timer> Create();

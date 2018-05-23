@@ -30,7 +30,7 @@ enum class DataType
 
     Int32,  //!< 32-bit signed integer (int).
     UInt32, //!< 32-bit unsigned integer (unsiged int).
-    
+
     Float,  //!< 32-bit floating-point (float).
     Double, //!< 64-bit real type (double).
 };
