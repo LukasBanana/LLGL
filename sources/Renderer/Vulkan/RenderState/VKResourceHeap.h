@@ -20,26 +20,7 @@ namespace LLGL
 
 
 class VKBuffer;
-
-// Helper structure to handle buffer and image information for a descriptor set.
-struct VKWriteDescriptorContainer
-{
-    VKWriteDescriptorContainer() = default;
-    VKWriteDescriptorContainer(std::size_t numResourceViewsMax);
-
-    VkDescriptorBufferInfo* NextBufferInfo();
-    VkDescriptorImageInfo* NextImageInfo();
-    VkWriteDescriptorSet* NextWriteDescriptor();
-
-    std::vector<VkDescriptorBufferInfo> bufferInfos;
-    std::uint32_t                       numBufferInfos      = 0;
-
-    std::vector<VkDescriptorImageInfo>  imageInfos;
-    std::uint32_t                       numImageInfos       = 0;
-
-    std::vector<VkWriteDescriptorSet>   writeDescriptors;
-    std::uint32_t                       numWriteDescriptors = 0;
-};
+struct VKWriteDescriptorContainer;
 
 class VKResourceHeap : public ResourceHeap
 {
