@@ -163,7 +163,7 @@ struct TextureFlags
 \brief Texture descriptor structure.
 \remarks This is used to specifiy the dimensions of a texture which is to be created.
 */
-struct LLGL_EXPORT TextureDescriptor
+struct TextureDescriptor
 {
     //! 1D- and 1D-Array texture specific descriptor structure.
     struct Texture1D
@@ -253,7 +253,7 @@ struct LLGL_EXPORT TextureDescriptor
 \brief Sub-texture descriptor structure.
 \remarks This is used to write (or partially write) the image data of a texture MIP-map level.
 */
-struct LLGL_EXPORT SubTextureDescriptor
+struct SubTextureDescriptor
 {
     struct Texture1D
     {

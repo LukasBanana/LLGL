@@ -27,10 +27,10 @@ enum class QueryType
     AnySamplesPassedConservative,   //!< Non-zero if any samples passed the depth test within a conservative rasterization. This can be used as render condition.
 
     TimeElapsed,                    //!< Elapsed time (in nanoseconds) between the begin- and end query command.
-    
+
     StreamOutPrimitivesWritten,     //!< Number of vertices that have been written into a stream output (also called "Transform Feedback").
     StreamOutOverflow,              //!< Non-zero if any of the streaming output buffers (also called "Transform Feedback Buffers") has an overflow.
-    
+
     /**
     \brief Pipeline statistics such as number of shader invocations, generated primitives, etc.
     \see QueryPipelineStatistics
@@ -77,7 +77,7 @@ struct QueryDescriptor
 {
     QueryDescriptor() = default;
 
-    QueryDescriptor(QueryType type, bool renderCondition = false) :
+    inline QueryDescriptor(QueryType type, bool renderCondition = false) :
         type            { type            },
         renderCondition { renderCondition }
     {

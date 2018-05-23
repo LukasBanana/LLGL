@@ -21,7 +21,10 @@ namespace LLGL
 
 /* ----- Structures ----- */
 
-//! Video display mode structure.
+/**
+\brief Video display mode structure.
+\todo Rename to "DisplayModeDescriptor"
+*/
 struct VideoDisplayMode
 {
     std::uint32_t width         = 0; //!< Display resolution width (in pixels).
@@ -29,7 +32,10 @@ struct VideoDisplayMode
     std::uint32_t refreshRate   = 0; //!< Refresh reate (in Hz).
 };
 
-//! Video output structure.
+/**
+\brief Video output structure.
+\todo Rename to "VideoOutputDescriptor"
+*/
 struct VideoOutput
 {
     std::vector<VideoDisplayMode> displayModes; //!< Video display mode list.

@@ -13,7 +13,10 @@ namespace LLGL
 {
 
 
-//! Input key codes.
+/**
+\brief Input key codes.
+\see Window::EventListener
+*/
 enum class Key
 {
     LButton,            //!< Left mouse button.
@@ -40,7 +43,7 @@ enum class Key
     PageDown,           //!< Page down key.
     End,                //!< END key.
     Home,               //!< HOME (or POS1) key.
-    
+
     Left,               //!< Left arrow key.
     Up,                 //!< Up arrow key.
     Right,              //!< Right arrow key.

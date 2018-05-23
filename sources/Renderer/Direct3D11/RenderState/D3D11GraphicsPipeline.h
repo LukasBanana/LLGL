@@ -10,6 +10,7 @@
 
 
 #include <LLGL/GraphicsPipeline.h>
+#include <LLGL/ForwardDecls.h>
 #include "../../DXCommon/ComPtr.h"
 #include <vector>
 #include <d3d11.h>
@@ -19,11 +20,6 @@ namespace LLGL
 {
 
 
-struct GraphicsPipelineDescriptor;
-struct DepthDescriptor;
-struct StencilDescriptor;
-struct RasterizerDescriptor;
-struct BlendDescriptor;
 class D3D11ShaderProgram;
 class D3D11StateManager;
 

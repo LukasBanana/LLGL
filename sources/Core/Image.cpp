@@ -167,12 +167,12 @@ static void ConvertImageBufferDataTypeWorker(
     std::size_t idxBegin, std::size_t idxEnd)
 {
     double value = 0.0;
-    
+
     for (auto i = idxBegin; i < idxEnd; ++i)
     {
         /* Read normalized variant from source buffer */
         value = ReadNormalizedTypedVariant(srcDataType, srcBuffer, i);
-        
+
         /* Write normalized variant to destination buffer */
         WriteNormalizedTypedVariant(dstDataType, dstBuffer, i, value);
     }
@@ -196,19 +196,19 @@ static ByteBuffer ConvertImageBufferDataType(
     /* Get variant buffer for source and destination images */
     VariantConstBuffer src { srcBuffer };
     VariantBuffer dst { dstBuffer.get() };
-    
+
     threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
 
     if (threadCount > 1)
     {
         /* Create worker threads */
         std::vector<std::thread> workers(threadCount);
-        
+
         auto workSize = imageSize / threadCount;
         auto workSizeRemain = imageSize % threadCount;
-        
+
         std::size_t offset = 0;
-        
+
         for (std::size_t i = 0; i < threadCount; ++i)
         {
             workers[i] = std::thread(
@@ -219,11 +219,11 @@ static ByteBuffer ConvertImageBufferDataType(
             );
             offset += workSize;
         }
-        
+
         /* Execute conversion of remaining work on main thread */
         if (workSizeRemain > 0)
             ConvertImageBufferDataTypeWorker(srcDataType, src, dstDataType, dst, offset, offset + workSizeRemain);
-        
+
         /* Join worker threads */
         for (auto& w : workers)
             w.join();
@@ -451,12 +451,12 @@ static ByteBuffer ConvertImageBufferFormat(
     {
         /* Create worker threads */
         std::vector<std::thread> workers(threadCount);
-        
+
         auto workSize = imageSize / threadCount;
         auto workSizeRemain = imageSize % threadCount;
-        
+
         std::size_t offset = 0;
-        
+
         for (std::size_t i = 0; i < threadCount; ++i)
         {
             workers[i] = std::thread(
@@ -467,11 +467,11 @@ static ByteBuffer ConvertImageBufferFormat(
             );
             offset += workSize;
         }
-        
+
         /* Execute conversion of remaining work on main thread */
         if (workSizeRemain > 0)
             ConvertImageBufferFormatWorker(srcFormat, srcDataType, src, dstFormat, dst, offset, offset + workSizeRemain);
-        
+
         /* Join worker threads */
         for (auto& w : workers)
             w.join();
@@ -483,14 +483,6 @@ static ByteBuffer ConvertImageBufferFormat(
     }
 
     return dstBuffer;
-}
-
-
-/* ----- Public structures ----- */
-
-std::uint32_t ImageDescriptor::GetElementSize() const
-{
-    return (ImageFormatSize(format) * DataTypeSize(dataType));
 }
 
 
@@ -631,7 +623,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
 
     if (threadCount == maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
-    
+
     if (srcDataType != dstDataType)
     {
         /* Convert image data type */

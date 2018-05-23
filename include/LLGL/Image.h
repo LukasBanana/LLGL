@@ -36,7 +36,11 @@ using ByteBuffer = std::unique_ptr<char[]>;
 
 /* ----- Enumerations ----- */
 
-//! Image format used to write texture data.
+/**
+\brief Image format used to write texture data.
+\see ImageDescriptor::format
+\see ImageFormatSize
+*/
 enum class ImageFormat
 {
     /* Color formats */
@@ -65,7 +69,7 @@ enum class ImageFormat
 \brief Image descriptor structure.
 \remarks This kind of 'Image' is mainly used to fill the image data of a hardware texture.
 */
-struct LLGL_EXPORT ImageDescriptor
+struct ImageDescriptor
 {
     ImageDescriptor() = default;
 
@@ -84,12 +88,19 @@ struct LLGL_EXPORT ImageDescriptor
     ImageFormatSize(format) * DataTypeSize(dataType);
     \endcode
     */
-    std::uint32_t GetElementSize() const;
+    inline std::uint32_t GetElementSize() const;
 
-    ImageFormat format      = ImageFormat::RGBA;    //!< Specifies the image format. By default ImageFormat::RGBA.
-    DataType    dataType    = DataType::UInt8;      //!< Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
-    const void* data        = nullptr;              //!< Pointer to the image data.
-    std::size_t dataSize    = 0;                    //!< Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
+    //! Specifies the image format. By default ImageFormat::RGBA.
+    ImageFormat format      = ImageFormat::RGBA;
+
+    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
+    DataType    dataType    = DataType::UInt8;
+
+    //! Pointer to the image data.
+    const void* data        = nullptr;
+
+    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
+    std::size_t dataSize    = 0;
 };
 
 
@@ -192,6 +203,12 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 \return The new allocated and initialized byte buffer.
 */
 LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize);
+
+//! Implementation of the ImageDescriptor::GetElementSize function.
+inline std::uint32_t ImageDescriptor::GetElementSize() const
+{
+    return (ImageFormatSize(format) * DataTypeSize(dataType));
+}
 
 
 } // /namespace LLGL

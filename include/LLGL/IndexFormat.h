@@ -20,6 +20,7 @@ namespace LLGL
 /**
 \brief Index buffer format class.
 \see BufferDescriptor::IndexBuffer
+\todo Remove this class. Should be handled by individual DataType members and then class 'DataTypeSize' when necessary.
 */
 class LLGL_EXPORT IndexFormat
 {
@@ -27,7 +28,14 @@ class LLGL_EXPORT IndexFormat
     public:
 
         IndexFormat() = default;
+        IndexFormat(const IndexFormat&) = default;
+        IndexFormat& operator = (const IndexFormat&) = default;
 
+        /**
+        \brief Constructor to initialize the index format with the specified data type.
+        \remarks This will automatically determine the format size.
+        \see GetFormatSize
+        */
         IndexFormat(const DataType dataType);
 
         //! Returns the data type of this index format.
