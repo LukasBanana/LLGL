@@ -28,10 +28,11 @@ int main(int argc, char* argv[])
         // Create render context
         LLGL::RenderContextDescriptor contextDesc;
         {
-            contextDesc.videoMode.resolution    = { 800, 600 };
-            contextDesc.vsync.enabled           = true;
+            contextDesc.videoMode.resolution            = { 800, 600 };
+            contextDesc.vsync.enabled                   = true;
+            contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
             #ifdef ENABLE_MULTISAMPLING
-            contextDesc.multiSampling           = LLGL::MultiSamplingDescriptor { 8 };
+            contextDesc.multiSampling                   = LLGL::MultiSamplingDescriptor { 8 };
             #endif
         }
         LLGL::RenderContext* context = renderer->CreateRenderContext(contextDesc);
@@ -186,9 +187,11 @@ int main(int argc, char* argv[])
         // Get resolution to determine viewport size
         const auto resolution = contextDesc.videoMode.resolution;
 
+        #ifdef ENABLE_TIMER
         auto timer = LLGL::Timer::Create();
         auto start = std::chrono::system_clock::now();
-
+        #endif
+        
         // Enter main loop
         while (window.ProcessEvents())
         {
