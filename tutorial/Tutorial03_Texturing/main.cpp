@@ -195,11 +195,7 @@ public:
             LLGL::ResourceHeapDescriptor resourceHeapDesc;
             {
                 resourceHeapDesc.pipelineLayout = pipelineLayout;
-                resourceHeapDesc.resourceViews  =
-                {
-                    LLGL::ResourceViewDesc(sampler[i]),
-                    LLGL::ResourceViewDesc(colorMap),
-                };
+                resourceHeapDesc.resourceViews  = { sampler[i], colorMap };
             }
             resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
         }

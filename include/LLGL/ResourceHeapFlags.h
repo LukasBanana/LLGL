@@ -17,29 +17,8 @@ namespace LLGL
 {
 
 
-class Buffer;
-class Texture;
-class Sampler;
+class Resource;
 class PipelineLayout;
-
-/* ----- Enumerations ----- */
-
-/**
-\brief Shader resource type enumeration.
-\see BindingDescriptor::type
-\see ResourceViewDescriptor::type
-\see BufferType
-*/
-enum class ResourceType
-{
-    //VertexBuffer,       //!< Vertex buffer resource.
-    //IndexBuffer,        //!< Index buffer resource.
-    ConstantBuffer,     //!< Constant buffer (or uniform buffer) resource.
-    StorageBuffer,      //!< Storage buffer resource.
-    //StreamOutputBuffer, //!< Stream-output buffer resource.
-    Texture,            //!< Texture resource.
-    Sampler,            //!< Sampler state resource.
-};
 
 
 /* ----- Structures ----- */
@@ -47,20 +26,17 @@ enum class ResourceType
 //! Resource view descriptor structure.
 struct ResourceViewDescriptor
 {
-    inline ResourceViewDescriptor() :
-        buffer { nullptr }
+    //! Default constructor to initialize the resource view with a null pointer.
+    ResourceViewDescriptor() = default;
+
+    //! Constructor to initialize the descriptor with a Buffer resource view.
+    inline ResourceViewDescriptor(Resource* resource) :
+        resource { resource }
     {
     }
 
-    //! Resource view type for this layout binding. By default ResourceType::ConstantBuffer.
-    ResourceType    type    = ResourceType::ConstantBuffer;
-
-    union
-    {
-        Buffer*     buffer;
-        Texture*    texture;
-        Sampler*    sampler;
-    };
+    //! Pointer to the hardware resoudce.
+    Resource* resource = nullptr;
 };
 
 /**

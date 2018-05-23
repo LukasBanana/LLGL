@@ -78,17 +78,6 @@ LLGL_EXPORT BufferDescriptor ConstantBufferDesc(uint64_t size, long flags = Buff
 //! Returns a BufferDescriptor structure for a storage buffer.
 LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBufferType storageType, std::uint32_t stride, long flags = BufferFlags::MapReadAccess | BufferFlags::MapWriteAccess);
 
-/* ----- ResourceViewDescriptor utility functions ----- */
-
-//! Returns a ResourceViewDescriptor structure for the specified buffer.
-LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Buffer* buffer);
-
-//! Returns a ResourceViewDescriptor structure for the specified texture.
-LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Texture* texture);
-
-//! Returns a ResourceViewDescriptor structure for the specified sampler.
-LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Sampler* sampler);
-
 /** @} */
 
 

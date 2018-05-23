@@ -281,12 +281,7 @@ private:
             LLGL::ResourceHeapDescriptor resourceHeapDesc;
             {
                 resourceHeapDesc.pipelineLayout = pipelineLayout;
-                resourceHeapDesc.resourceViews  =
-                {
-                    LLGL::ResourceViewDesc(constantBuffer),
-                    LLGL::ResourceViewDesc(arrayTexture),
-                    LLGL::ResourceViewDesc(samplers[i]),
-                };
+                resourceHeapDesc.resourceViews  = { constantBuffer, arrayTexture, samplers[i] };
             }
             resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
         }

@@ -33,15 +33,20 @@ VKResourceHeap::VKResourceHeap(const VKPtr<VkDevice>& device, const ResourceHeap
 
     pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
 
+    /* Validate binding descriptors */
+    const auto& bindings = pipelineLayoutVK->GetBindings();
+    if (desc.resourceViews.size() != bindings.size())
+        throw std::invalid_argument("failed to create resource vied heap due to mismatch between number of resources and bindings");
+
     /* Create resource descriptor pool */
-    CreateDescriptorPool(desc);
+    CreateDescriptorPool(desc, bindings);
 
     /* Create resource descriptor set for pipeline layout */
     VkDescriptorSetLayout setLayouts[] = { pipelineLayoutVK->GetVkDescriptorSetLayout() };
     CreateDescriptorSets(1, setLayouts);
 
     /* Update write descriptors in descriptor set */
-    UpdateDescriptorSets(desc, pipelineLayoutVK->GetDstBindings());
+    UpdateDescriptorSets(desc, bindings);
 }
 
 VKResourceHeap::~VKResourceHeap()
@@ -93,13 +98,13 @@ static void CompressDescriptorPoolSizes(std::vector<VkDescriptorPoolSize>& poolS
     );
 }
 
-void VKResourceHeap::CreateDescriptorPool(const ResourceHeapDescriptor& desc)
+void VKResourceHeap::CreateDescriptorPool(const ResourceHeapDescriptor& desc, const std::vector<VKLayoutBinding>& bindings)
 {
     /* Initialize descriptor pool sizes */
     std::vector<VkDescriptorPoolSize> poolSizes(desc.resourceViews.size());
     for (std::size_t i = 0; i < desc.resourceViews.size(); ++i)
     {
-        poolSizes[i].type               = VKTypes::Map(desc.resourceViews[i].type);
+        poolSizes[i].type               = bindings[i].descriptorType;
         poolSizes[i].descriptorCount    = 1;
     }
 
@@ -137,10 +142,10 @@ void VKResourceHeap::CreateDescriptorSets(std::uint32_t numSetLayouts, const VkD
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
 }
 
-void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings)
+void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<VKLayoutBinding>& bindings)
 {
     /* Allocate local storage for buffer and image descriptors */
-    const auto numResourceViewsMax = std::min(desc.resourceViews.size(), dstBindings.size());
+    const auto numResourceViewsMax = std::min(desc.resourceViews.size(), bindings.size());
 
     VKWriteDescriptorContainer container { numResourceViewsMax };
 
@@ -148,26 +153,27 @@ void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, co
     {
         /* Get resource view information */
         const auto& rvDesc = desc.resourceViews[i];
+        auto descriptorType = bindings[i].descriptorType;
 
-        switch (rvDesc.type)
+        switch (descriptorType)
         {
-            case ResourceType::Sampler:
-                FillWriteDescriptorForSampler(rvDesc, dstBindings[i], container);
+            case VK_DESCRIPTOR_TYPE_SAMPLER:
+                FillWriteDescriptorForSampler(rvDesc, bindings[i], container);
                 break;
 
-            case ResourceType::Texture:
-                FillWriteDescriptorForTexture(rvDesc, dstBindings[i], container);
+            case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+                FillWriteDescriptorForTexture(rvDesc, bindings[i], container);
                 break;
 
-            case ResourceType::ConstantBuffer:
-            case ResourceType::StorageBuffer:
-                FillWriteDescriptorForBuffer(rvDesc, dstBindings[i], container);
+            case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                FillWriteDescriptorForBuffer(rvDesc, bindings[i], container);
                 break;
 
             default:
                 throw std::invalid_argument(
-                    "invalid resource view type to create ResourceHeap object: 0x" +
-                    ToHex(static_cast<std::uint32_t>(rvDesc.type))
+                    "invalid descriptor type to create ResourceHeap object: 0x" +
+                    ToHex(static_cast<std::uint32_t>(descriptorType))
                 );
                 break;
         }
@@ -185,9 +191,9 @@ void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, co
     }
 }
 
-void VKResourceHeap::FillWriteDescriptorForSampler(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container)
+void VKResourceHeap::FillWriteDescriptorForSampler(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container)
 {
-    auto samplerVK = LLGL_CAST(VKSampler*, resourceViewDesc.sampler);
+    auto samplerVK = LLGL_CAST(VKSampler*, resourceViewDesc.resource);
 
     /* Initialize image information */
     auto imageInfo = container.NextImageInfo();
@@ -201,19 +207,19 @@ void VKResourceHeap::FillWriteDescriptorForSampler(const ResourceViewDescriptor&
     auto writeDesc = container.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSets_[0];//numResourceViews];
-        writeDesc->dstBinding       = dstBinding;
+        writeDesc->dstBinding       = binding.dstBinding;
         writeDesc->dstArrayElement  = 0;
         writeDesc->descriptorCount  = 1;
-        writeDesc->descriptorType   = VKTypes::Map(resourceViewDesc.type);
+        writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = imageInfo;
         writeDesc->pBufferInfo      = nullptr;
         writeDesc->pTexelBufferView = nullptr;
     }
 }
 
-void VKResourceHeap::FillWriteDescriptorForTexture(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container)
+void VKResourceHeap::FillWriteDescriptorForTexture(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container)
 {
-    auto textureVK = LLGL_CAST(VKTexture*, resourceViewDesc.texture);
+    auto textureVK = LLGL_CAST(VKTexture*, resourceViewDesc.resource);
 
     /* Initialize image information */
     auto imageInfo = container.NextImageInfo();
@@ -227,19 +233,19 @@ void VKResourceHeap::FillWriteDescriptorForTexture(const ResourceViewDescriptor&
     auto writeDesc = container.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSets_[0];//numResourceViews];
-        writeDesc->dstBinding       = dstBinding;
+        writeDesc->dstBinding       = binding.dstBinding;
         writeDesc->dstArrayElement  = 0;
         writeDesc->descriptorCount  = 1;
-        writeDesc->descriptorType   = VKTypes::Map(resourceViewDesc.type);
+        writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = imageInfo;
         writeDesc->pBufferInfo      = nullptr;
         writeDesc->pTexelBufferView = nullptr;
     }
 }
 
-void VKResourceHeap::FillWriteDescriptorForBuffer(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container)
+void VKResourceHeap::FillWriteDescriptorForBuffer(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container)
 {
-    auto bufferVK = LLGL_CAST(VKBuffer*, resourceViewDesc.buffer);
+    auto bufferVK = LLGL_CAST(VKBuffer*, resourceViewDesc.resource);
 
     /* Initialize buffer information */
     auto bufferInfo = container.NextBufferInfo();
@@ -253,10 +259,10 @@ void VKResourceHeap::FillWriteDescriptorForBuffer(const ResourceViewDescriptor& 
     auto writeDesc = container.NextWriteDescriptor();
     {
         writeDesc->dstSet           = descriptorSets_[0];//numResourceViews];
-        writeDesc->dstBinding       = dstBinding;
+        writeDesc->dstBinding       = binding.dstBinding;
         writeDesc->dstArrayElement  = 0;
         writeDesc->descriptorCount  = 1;
-        writeDesc->descriptorType   = VKTypes::Map(resourceViewDesc.type);
+        writeDesc->descriptorType   = binding.descriptorType;
         writeDesc->pImageInfo       = nullptr;
         writeDesc->pBufferInfo      = bufferInfo;
         writeDesc->pTexelBufferView = nullptr;

@@ -9,7 +9,7 @@
 #define LLGL_BUFFER_H
 
 
-#include "Export.h"
+#include "Resource.h"
 #include "BufferFlags.h"
 
 
@@ -18,15 +18,13 @@ namespace LLGL
 
 
 //! Hardware buffer interface.
-class LLGL_EXPORT Buffer
+class LLGL_EXPORT Buffer : public Resource
 {
 
     public:
 
-        Buffer(const Buffer&) = delete;
-        Buffer& operator = (const Buffer&) = delete;
-
-        virtual ~Buffer();
+        //! Returns the ResourceType for the respective BufferType.
+        ResourceType QueryResourceType() const override;
 
         //! Returns the type of this buffer.
         inline BufferType GetType() const

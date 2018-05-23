@@ -230,13 +230,7 @@ int main()
         LLGL::ResourceHeapDescriptor rsvHeapDesc;
         {
             rsvHeapDesc.pipelineLayout  = pipelineLayout;
-            rsvHeapDesc.resourceViews   =
-            {
-                LLGL::ResourceViewDesc(constBufferMatrices),
-                LLGL::ResourceViewDesc(constBufferColors),
-                LLGL::ResourceViewDesc(sampler),
-                LLGL::ResourceViewDesc(texture),
-            };
+            rsvHeapDesc.resourceViews   = { constBufferMatrices, constBufferColors, sampler, texture };
         }
         auto resourceViewHeap = renderer->CreateResourceHeap(rsvHeapDesc);
 

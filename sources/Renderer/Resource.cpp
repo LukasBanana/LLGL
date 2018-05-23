@@ -1,25 +1,20 @@
 /*
- * Texture.cpp
+ * Resource.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/Texture.h>
+#include <LLGL/Resource.h>
 
 
 namespace LLGL
 {
 
 
-Texture::Texture(const TextureType type) :
-    type_ { type }
+Resource::~Resource()
 {
-}
-
-ResourceType Texture::QueryResourceType() const
-{
-    return ResourceType::Texture;
+    // dummy
 }
 
 

@@ -1,25 +1,20 @@
 /*
- * Texture.cpp
+ * Sampler.cpp
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/Texture.h>
+#include <LLGL/Sampler.h>
 
 
 namespace LLGL
 {
 
 
-Texture::Texture(const TextureType type) :
-    type_ { type }
+ResourceType Sampler::QueryResourceType() const
 {
-}
-
-ResourceType Texture::QueryResourceType() const
-{
-    return ResourceType::Texture;
+    return ResourceType::Sampler;
 }
 
 

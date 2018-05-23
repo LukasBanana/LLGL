@@ -276,25 +276,13 @@ private:
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
             resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews =
-            {
-                LLGL::ResourceViewDesc(constantBuffer),
-                LLGL::ResourceViewDesc(samplerState),
-                LLGL::ResourceViewDesc(colorMap),
-                //LLGL::ResourceViewDesc(colorMap),
-            };
+            resourceHeapDesc.resourceViews = { constantBuffer, samplerState, colorMap /*, colorMap*/ };
         }
         resourceHeaps[0] = renderer->CreateResourceHeap(resourceHeapDesc);
 
         // Create resource heap for final render
         {
-            resourceHeapDesc.resourceViews =
-            {
-                LLGL::ResourceViewDesc(constantBuffer),
-                LLGL::ResourceViewDesc(samplerState),
-                LLGL::ResourceViewDesc(renderTargetTex),
-                //LLGL::ResourceViewDesc(renderTargetTex),
-            };
+            resourceHeapDesc.resourceViews = { constantBuffer, samplerState, renderTargetTex /*, renderTargetTex*/ };
         }
         resourceHeaps[1] = renderer->CreateResourceHeap(resourceHeapDesc);
     }

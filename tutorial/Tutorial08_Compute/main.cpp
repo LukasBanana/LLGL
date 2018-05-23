@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
             resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews  = { LLGL::ResourceViewDesc(storageBuffer) };
+            resourceHeapDesc.resourceViews  = { storageBuffer };
         }
         auto resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
 

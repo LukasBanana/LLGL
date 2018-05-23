@@ -193,48 +193,6 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const Storage
     return desc;
 }
 
-/* ----- ResourceViewDescriptor utility functions ----- */
-
-LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Buffer* buffer)
-{
-    ResourceViewDescriptor desc;
-    {
-        switch (buffer->GetType())
-        {
-            case BufferType::Constant:
-                desc.type = ResourceType::ConstantBuffer;
-                break;
-            case BufferType::Storage:
-                desc.type = ResourceType::StorageBuffer;
-                break;
-            default:
-                break;
-        }
-        desc.buffer = buffer;
-    }
-    return desc;
-}
-
-LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Texture* texture)
-{
-    ResourceViewDescriptor desc;
-    {
-        desc.type       = ResourceType::Texture;
-        desc.texture    = texture;
-    }
-    return desc;
-}
-
-LLGL_EXPORT ResourceViewDescriptor ResourceViewDesc(Sampler* sampler)
-{
-    ResourceViewDescriptor desc;
-    {
-        desc.type       = ResourceType::Sampler;
-        desc.sampler    = sampler;
-    }
-    return desc;
-}
-
 
 } // /namespace LLGL
 

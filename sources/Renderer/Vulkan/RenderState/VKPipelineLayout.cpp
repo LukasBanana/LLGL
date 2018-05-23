@@ -99,9 +99,9 @@ VKPipelineLayout::VKPipelineLayout(const VKPtr<VkDevice>& device, const Pipeline
     VKThrowIfFailed(result, "failed to create Vulkan pipeline layout");
 
     /* Create list of binding points (for later pass to 'VkWriteDescriptorSet::dstBinding') */
-    dstBindings_.reserve(numBindings);
+    bindings_.reserve(numBindings);
     for (const auto& binding : desc.bindings)
-        dstBindings_.push_back(binding.slot);
+        bindings_.push_back({ binding.slot, VKTypes::Map(binding.type) });
 }
 
 

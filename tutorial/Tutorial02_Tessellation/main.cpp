@@ -163,7 +163,7 @@ public:
         LLGL::ResourceHeapDescriptor resourceHeapDesc;
         {
             resourceHeapDesc.pipelineLayout = pipelineLayout;
-            resourceHeapDesc.resourceViews  = { LLGL::ResourceViewDesc(constantBuffer) };
+            resourceHeapDesc.resourceViews  = { constantBuffer };
         }
         resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
 

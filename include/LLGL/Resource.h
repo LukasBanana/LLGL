@@ -1,0 +1,57 @@
+/*
+ * Resource.h
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#ifndef LLGL_RESOURCE_H
+#define LLGL_RESOURCE_H
+
+
+#include "Export.h"
+#include "ResourceFlags.h"
+
+
+namespace LLGL
+{
+
+
+/**
+\brief Base class for all hardware resource interfaces.
+\see Buffer
+\see Texture
+\see Sampler
+*/
+class LLGL_EXPORT Resource
+{
+
+    public:
+
+        Resource(const Resource&) = delete;
+        Resource& operator = (const Resource&) = delete;
+
+        virtual ~Resource();
+
+        /**
+        \brief Returns the type of this resource object.
+        \remarks This is queried by a virtual function call, so the resource type does not need to be stored per instance.
+        \see ResourceType
+        */
+        virtual ResourceType QueryResourceType() const = 0;
+
+    protected:
+
+        Resource() = default;
+
+};
+
+
+} // /namespace LLGL
+
+
+#endif
+
+
+
+// ================================================================================

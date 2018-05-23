@@ -21,6 +21,7 @@ namespace LLGL
 
 class VKBuffer;
 struct VKWriteDescriptorContainer;
+struct VKLayoutBinding;
 
 class VKResourceHeap : public ResourceHeap
 {
@@ -47,13 +48,13 @@ class VKResourceHeap : public ResourceHeap
 
     private:
 
-        void CreateDescriptorPool(const ResourceHeapDescriptor& desc);
+        void CreateDescriptorPool(const ResourceHeapDescriptor& desc, const std::vector<VKLayoutBinding>& bindings);
         void CreateDescriptorSets(std::uint32_t numSetLayouts, const VkDescriptorSetLayout* setLayouts);
-        void UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings);
+        void UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<VKLayoutBinding>& bindings);
 
-        void FillWriteDescriptorForSampler(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container);
-        void FillWriteDescriptorForTexture(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container);
-        void FillWriteDescriptorForBuffer(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container);
+        void FillWriteDescriptorForSampler(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container);
+        void FillWriteDescriptorForTexture(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container);
+        void FillWriteDescriptorForBuffer(const ResourceViewDescriptor& resourceViewDesc, const VKLayoutBinding& binding, VKWriteDescriptorContainer& container);
 
         VkDevice                        device_         = VK_NULL_HANDLE;
         VkPipelineLayout                pipelineLayout_ = VK_NULL_HANDLE;

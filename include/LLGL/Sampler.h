@@ -9,7 +9,7 @@
 #define LLGL_SAMPLER_H
 
 
-#include "Export.h"
+#include "Resource.h"
 #include "SamplerFlags.h"
 
 
@@ -18,17 +18,13 @@ namespace LLGL
 
 
 //! Sampler interface.
-class LLGL_EXPORT Sampler
+class LLGL_EXPORT Sampler : public Resource
 {
 
     public:
 
-        Sampler(const Sampler&) = delete;
-        Sampler& operator = (const Sampler&) = delete;
-
-        virtual ~Sampler()
-        {
-        }
+        //! Returns ResourceType::Sampler.
+        ResourceType QueryResourceType() const override;
 
     protected:
 

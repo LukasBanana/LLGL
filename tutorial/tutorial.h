@@ -298,9 +298,9 @@ protected:
     {
         // Create render system
         renderer = LLGL::RenderSystem::Load(
-            rendererModule_,
+            rendererModule_/*,
             (debugger ? profilerObj_.get() : nullptr),
-            (debugger ? debuggerObj_.get() : nullptr)
+            (debugger ? debuggerObj_.get() : nullptr)*/
         );
 
         // Create render context

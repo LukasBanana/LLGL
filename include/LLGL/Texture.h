@@ -9,7 +9,7 @@
 #define LLGL_TEXTURE_H
 
 
-#include "Export.h"
+#include "Resource.h"
 #include "Types.h"
 #include "Image.h"
 #include "TextureFlags.h"
@@ -21,15 +21,13 @@ namespace LLGL
 
 
 //! Texture interface.
-class LLGL_EXPORT Texture
+class LLGL_EXPORT Texture : public Resource
 {
 
     public:
 
-        Texture(const Texture&) = delete;
-        Texture& operator = (const Texture&) = delete;
-
-        virtual ~Texture();
+        //! Returns ResourceType::Texture.
+        ResourceType QueryResourceType() const override;
 
         //! Returns the type of this texture.
         inline TextureType GetType() const

@@ -19,6 +19,12 @@ namespace LLGL
 {
 
 
+struct VKLayoutBinding
+{
+    std::uint32_t       dstBinding;
+    VkDescriptorType    descriptorType;
+};
+
 /*
 TODO:
 maybe rename "PipelineLayout" interface into "ResourceViewLayout"
@@ -40,10 +46,10 @@ class VKPipelineLayout : public PipelineLayout
             return descriptorSetLayout_.Get();
         }
 
-        // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet::dstBinding' member.
-        inline const std::vector<std::uint32_t>& GetDstBindings() const
+        // Returns the list of binding points that must be passed to 'VkWriteDescriptorSet' members.
+        inline const std::vector<VKLayoutBinding>& GetBindings() const
         {
-            return dstBindings_;
+            return bindings_;
         }
 
     private:
@@ -52,7 +58,7 @@ class VKPipelineLayout : public PipelineLayout
         VKPtr<VkPipelineLayout>         pipelineLayout_;
         VKPtr<VkDescriptorSetLayout>    descriptorSetLayout_;
 
-        std::vector<std::uint32_t>      dstBindings_;
+        std::vector<VKLayoutBinding>    bindings_;
 
 };
 

@@ -359,19 +359,27 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
     {
         for (auto& resourceView : instanceDesc.resourceViews)
         {
-            switch (resourceView.type)
+            if (auto resource = resourceView.resource)
             {
-                case ResourceType::Sampler:
-                    //todo
-                    break;
-                case ResourceType::Texture:
-                    resourceView.texture = &(LLGL_CAST(DbgTexture*, resourceView.texture)->instance);
-                    break;
-                case ResourceType::ConstantBuffer:
-                case ResourceType::StorageBuffer:
-                    resourceView.buffer = &(LLGL_CAST(DbgBuffer*, resourceView.buffer)->instance);
-                    break;
+                switch (resource->QueryResourceType())
+                {
+                    case ResourceType::VertexBuffer:
+                    case ResourceType::IndexBuffer:
+                    case ResourceType::ConstantBuffer:
+                    case ResourceType::StorageBuffer:
+                    case ResourceType::StreamOutputBuffer:
+                        resourceView.resource = &(LLGL_CAST(DbgBuffer*, resourceView.resource)->instance);
+                        break;
+                    case ResourceType::Texture:
+                        resourceView.resource = &(LLGL_CAST(DbgTexture*, resourceView.resource)->instance);
+                        break;
+                    case ResourceType::Sampler:
+                        //TODO: DbgSampler
+                        break;
+                }
             }
+            else
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "null pointer passed to ResourceViewDescriptor");
         }
     }
     return instance_->CreateResourceHeap(instanceDesc);
