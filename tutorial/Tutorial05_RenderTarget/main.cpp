@@ -465,8 +465,8 @@ private:
 
         // Draw scene into texture, then draw scene onto screen
         DrawSceneIntoTexture();
-        //DrawSceneOntoScreen();
-        commands->SetRenderTarget(*context);
+        DrawSceneOntoScreen();
+        //commands->SetRenderTarget(*context);
 
         // Present result on the screen
         context->Present();

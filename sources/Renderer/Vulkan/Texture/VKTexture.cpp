@@ -68,9 +68,42 @@ TextureDescriptor VKTexture::QueryDesc() const
     TextureDescriptor desc;
 
     desc.type   = GetType();
-    //desc.format = ;
+    desc.format = VKTypes::Unmap(GetVkFormat());
+    //TODO: desc.flags
 
-    //todo...
+    switch (desc.type)
+    {
+        case TextureType::Texture1D:
+        case TextureType::Texture1DArray:
+            desc.texture1D.width            = extent_.width;
+            desc.texture1D.layers           = numArrayLayers_;
+            break;
+        case TextureType::Texture2D:
+        case TextureType::Texture2DArray:
+            desc.texture2D.width            = extent_.width;
+            desc.texture2D.height           = extent_.height;
+            desc.texture2D.layers           = numArrayLayers_;
+            break;
+        case TextureType::Texture3D:
+            desc.texture3D.width            = extent_.width;
+            desc.texture3D.height           = extent_.height;
+            desc.texture3D.depth            = extent_.depth;
+            break;
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+            desc.textureCube.width          = extent_.width;
+            desc.textureCube.height         = extent_.height;
+            desc.textureCube.layers         = numArrayLayers_ / 6;
+            break;
+        case TextureType::Texture2DMS:
+        case TextureType::Texture2DMSArray:
+            desc.texture2DMS.width          = extent_.width;
+            desc.texture2DMS.height         = extent_.height;
+            desc.texture2DMS.layers         = numArrayLayers_;
+            desc.texture2DMS.samples        = 0; //TODO
+            desc.texture2DMS.fixedSamples   = true;
+            break;
+    }
 
     return desc;
 }

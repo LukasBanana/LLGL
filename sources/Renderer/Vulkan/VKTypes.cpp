@@ -115,8 +115,8 @@ VkFormat Map(const TextureFormat textureFormat)
         case TextureFormat::RGBA32Float:    return VK_FORMAT_R32G32B32A32_SFLOAT;
 
         /* --- Depth-stencil formats --- */
-        case TextureFormat::D32: return VK_FORMAT_D32_SFLOAT;
-        case TextureFormat::D24S8:   return VK_FORMAT_D24_UNORM_S8_UINT;
+        case TextureFormat::D32:            return VK_FORMAT_D32_SFLOAT;
+        case TextureFormat::D24S8:          return VK_FORMAT_D24_UNORM_S8_UINT;
 
         /* --- Compressed color formats --- */
         case TextureFormat::RGB_DXT1:       return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
@@ -322,6 +322,69 @@ VkQueryType Map(const QueryType queryType)
         case QueryType::PipelineStatistics:             return VK_QUERY_TYPE_PIPELINE_STATISTICS;
     }
     MapFailed("QueryType", "VkQueryType");
+}
+
+TextureFormat Unmap(const VkFormat format)
+{
+    switch (format)
+    {
+        /* --- Color formats --- */
+        case VK_FORMAT_R8_UNORM:                return TextureFormat::R8;
+        case VK_FORMAT_R8_SNORM:                return TextureFormat::R8Sgn;
+
+        case VK_FORMAT_R16_UNORM:               return TextureFormat::R16;
+        case VK_FORMAT_R16_SNORM:               return TextureFormat::R16Sgn;
+        case VK_FORMAT_R16_SFLOAT:              return TextureFormat::R16Float;
+
+        case VK_FORMAT_R32_UINT:                return TextureFormat::R32UInt;
+        case VK_FORMAT_R32_SINT:                return TextureFormat::R32SInt;
+        case VK_FORMAT_R32_SFLOAT:              return TextureFormat::R32Float;
+
+        case VK_FORMAT_R8G8_UNORM:              return TextureFormat::RG8;
+        case VK_FORMAT_R8G8_SNORM:              return TextureFormat::RG8Sgn;
+
+        case VK_FORMAT_R16G16_UNORM:            return TextureFormat::RG16;
+        case VK_FORMAT_R16G16_SNORM:            return TextureFormat::RG16Sgn;
+        case VK_FORMAT_R16G16_SFLOAT:           return TextureFormat::RG16Float;
+
+        case VK_FORMAT_R32G32_UINT:             return TextureFormat::RG32UInt;
+        case VK_FORMAT_R32G32_SINT:             return TextureFormat::RG32SInt;
+        case VK_FORMAT_R32G32_SFLOAT:           return TextureFormat::RG32Float;
+
+        case VK_FORMAT_R8G8B8_UNORM:            return TextureFormat::RGB8;
+        case VK_FORMAT_R8G8B8_SNORM:            return TextureFormat::RGB8Sgn;
+
+        case VK_FORMAT_R16G16B16_UNORM:         return TextureFormat::RGB16;
+        case VK_FORMAT_R16G16B16_SNORM:         return TextureFormat::RGB16Sgn;
+        case VK_FORMAT_R16G16B16_SFLOAT:        return TextureFormat::RGB16Float;
+
+        case VK_FORMAT_R32G32B32_UINT:          return TextureFormat::RGB32UInt;
+        case VK_FORMAT_R32G32B32_SINT:          return TextureFormat::RGB32SInt;
+        case VK_FORMAT_R32G32B32_SFLOAT:        return TextureFormat::RGB32Float;
+
+        case VK_FORMAT_R8G8B8A8_UNORM:          return TextureFormat::RGBA8;
+        case VK_FORMAT_R8G8B8A8_SNORM:          return TextureFormat::RGBA8Sgn;
+
+        case VK_FORMAT_R16G16B16A16_UNORM:      return TextureFormat::RGBA16;
+        case VK_FORMAT_R16G16B16A16_SNORM:      return TextureFormat::RGBA16Sgn;
+        case VK_FORMAT_R16G16B16A16_SFLOAT:     return TextureFormat::RGBA16Float;
+
+        case VK_FORMAT_R32G32B32A32_UINT:       return TextureFormat::RGBA32UInt;
+        case VK_FORMAT_R32G32B32A32_SINT:       return TextureFormat::RGBA32SInt;
+        case VK_FORMAT_R32G32B32A32_SFLOAT:     return TextureFormat::RGBA32Float;
+
+        /* --- Depth-stencil formats --- */
+        case VK_FORMAT_D32_SFLOAT:              return TextureFormat::D32;
+        case VK_FORMAT_D24_UNORM_S8_UINT:       return TextureFormat::D24S8;
+
+        /* --- Compressed color formats --- */
+        case VK_FORMAT_BC1_RGB_UNORM_BLOCK:     return TextureFormat::RGB_DXT1;
+        case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:    return TextureFormat::RGBA_DXT1;
+        case VK_FORMAT_BC2_UNORM_BLOCK:         return TextureFormat::RGBA_DXT3;
+        case VK_FORMAT_BC3_UNORM_BLOCK:         return TextureFormat::RGBA_DXT5;
+
+        default:                                return TextureFormat::Unknown;
+    }
 }
 
 

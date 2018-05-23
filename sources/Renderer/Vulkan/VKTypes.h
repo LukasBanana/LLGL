@@ -47,6 +47,8 @@ VkSamplerAddressMode    Map( const TextureWrap       textureWrap       );
 VkDescriptorType        Map( const ResourceType      resourceViewType  );
 VkQueryType             Map( const QueryType         queryType         );
 
+TextureFormat           Unmap( const VkFormat format );
+
 
 /* ----- Convert functions ----- */
 
