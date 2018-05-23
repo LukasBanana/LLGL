@@ -520,14 +520,14 @@ void VKCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
     vkCmdDraw(commandBuffer_, numVertices, 1, firstVertex, 0);
 }
 
-void VKCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
+void VKCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, 0, 0);
+    vkCmdDrawIndexed(commandBuffer_, numIndices, 1, firstIndex, 0, 0);
 }
 
-void VKCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void VKCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    vkCmdDrawIndexed(commandBuffer_, numVertices, 1, firstIndex, vertexOffset, 0);
+    vkCmdDrawIndexed(commandBuffer_, numIndices, 1, firstIndex, vertexOffset, 0);
 }
 
 void VKCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
@@ -535,24 +535,24 @@ void VKCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, 0);
 }
 
-void VKCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
+void VKCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, instanceOffset);
+    vkCmdDraw(commandBuffer_, numVertices, numInstances, firstVertex, firstInstance);
 }
 
-void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex)
+void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, 0, 0);
+    vkCmdDrawIndexed(commandBuffer_, numIndices, numInstances, firstIndex, 0, 0);
 }
 
-void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, vertexOffset, 0);
+    vkCmdDrawIndexed(commandBuffer_, numIndices, numInstances, firstIndex, vertexOffset, 0);
 }
 
-void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
+void VKCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    vkCmdDrawIndexed(commandBuffer_, numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    vkCmdDrawIndexed(commandBuffer_, numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
 /* ----- Compute ----- */

@@ -328,14 +328,14 @@ void D3D12CommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVert
     commandList_->DrawInstanced(numVertices, 1, firstVertex, 0);
 }
 
-void D3D12CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
+void D3D12CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
-    commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, 0, 0);
+    commandList_->DrawIndexedInstanced(numIndices, 1, firstIndex, 0, 0);
 }
 
-void D3D12CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void D3D12CommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    commandList_->DrawIndexedInstanced(numVertices, 1, firstIndex, vertexOffset, 0);
+    commandList_->DrawIndexedInstanced(numIndices, 1, firstIndex, vertexOffset, 0);
 }
 
 void D3D12CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
@@ -343,24 +343,24 @@ void D3D12CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t 
     commandList_->DrawInstanced(numVertices, numInstances, firstVertex, 0);
 }
 
-void D3D12CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
+void D3D12CommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
-    commandList_->DrawInstanced(numVertices, numInstances, firstVertex, instanceOffset);
+    commandList_->DrawInstanced(numVertices, numInstances, firstVertex, firstInstance);
 }
 
-void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex)
+void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
-    commandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, 0, 0);
+    commandList_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, 0, 0);
 }
 
-void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
-    commandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, 0);
+    commandList_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, 0);
 }
 
-void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
+void D3D12CommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
-    commandList_->DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    commandList_->DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
 }
 
 /* ----- Compute ----- */

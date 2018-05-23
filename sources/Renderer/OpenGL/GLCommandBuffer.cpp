@@ -551,23 +551,23 @@ void GLCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
     );
 }
 
-void GLCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
+void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
     const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
     glDrawElements(
         renderState_.drawMode,
-        static_cast<GLsizei>(numVertices),
+        static_cast<GLsizei>(numIndices),
         renderState_.indexBufferDataType,
         reinterpret_cast<const GLvoid*>(indices)
     );
 }
 
-void GLCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void GLCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
     glDrawElementsBaseVertex(
         renderState_.drawMode,
-        static_cast<GLsizei>(numVertices),
+        static_cast<GLsizei>(numIndices),
         renderState_.indexBufferDataType,
         reinterpret_cast<const GLvoid*>(indices),
         vertexOffset
@@ -584,7 +584,7 @@ void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     );
 }
 
-void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
+void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
     #ifndef __APPLE__
     glDrawArraysInstancedBaseInstance(
@@ -592,31 +592,31 @@ void GLCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
         static_cast<GLint>(firstVertex),
         static_cast<GLsizei>(numVertices),
         static_cast<GLsizei>(numInstances),
-        instanceOffset
+        firstInstance
     );
     #else
     ErrUnsupportedGLProc("glDrawArraysInstancedBaseInstance");
     #endif
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex)
+void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
     const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
     glDrawElementsInstanced(
         renderState_.drawMode,
-        static_cast<GLsizei>(numVertices),
+        static_cast<GLsizei>(numIndices),
         renderState_.indexBufferDataType,
         reinterpret_cast<const GLvoid*>(indices),
         static_cast<GLsizei>(numInstances)
     );
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     auto indices = static_cast<GLsizeiptr>(firstIndex * renderState_.indexBufferStride);
     glDrawElementsInstancedBaseVertex(
         renderState_.drawMode,
-        static_cast<GLsizei>(numVertices),
+        static_cast<GLsizei>(numIndices),
         renderState_.indexBufferDataType,
         reinterpret_cast<const GLvoid*>(indices),
         static_cast<GLsizei>(numInstances),
@@ -624,18 +624,18 @@ void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint3
     );
 }
 
-void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
+void GLCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
     #ifndef __APPLE__
     const GLsizeiptr indices = firstIndex * renderState_.indexBufferStride;
     glDrawElementsInstancedBaseVertexBaseInstance(
         renderState_.drawMode,
-        static_cast<GLsizei>(numVertices),
+        static_cast<GLsizei>(numIndices),
         renderState_.indexBufferDataType,
         reinterpret_cast<const GLvoid*>(indices),
         static_cast<GLsizei>(numInstances),
         vertexOffset,
-        instanceOffset
+        firstInstance
     );
     #else
     ErrUnsupportedGLProc("glDrawElementsInstancedBaseVertexBaseInstance");

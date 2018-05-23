@@ -576,30 +576,30 @@ void DbgCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
 }
 
-void DbgCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex)
+void DbgCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateDrawIndexedCmd(numVertices, 1, firstIndex, 0, 0);
+        ValidateDrawIndexedCmd(numIndices, 1, firstIndex, 0, 0);
     }
     
-    instance.DrawIndexed(numVertices, firstIndex);
+    instance.DrawIndexed(numIndices, firstIndex);
     
-    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
+    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numIndices));
 }
 
-void DbgCommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void DbgCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        ValidateDrawIndexedCmd(numVertices, 1, firstIndex, vertexOffset, 0);
+        ValidateDrawIndexedCmd(numIndices, 1, firstIndex, vertexOffset, 0);
     }
     
-    instance.DrawIndexed(numVertices, firstIndex, vertexOffset);
+    instance.DrawIndexed(numIndices, firstIndex, vertexOffset);
     
-    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices));
+    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numIndices));
 }
 
 void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances)
@@ -616,62 +616,62 @@ void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fi
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
+void DbgCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertInstancingSupported();
         AssertOffsetInstancingSupported();
-        ValidateDrawCmd(numVertices, firstVertex, numInstances, instanceOffset);
+        ValidateDrawCmd(numVertices, firstVertex, numInstances, firstInstance);
     }
     
-    instance.DrawInstanced(numVertices, firstVertex, numInstances, instanceOffset);
+    instance.DrawInstanced(numVertices, firstVertex, numInstances, firstInstance);
     
     LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
 }
 
-void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex)
+void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertInstancingSupported();
-        ValidateDrawIndexedCmd(numVertices, numInstances, firstIndex, 0, 0);
+        ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, 0, 0);
     }
     
-    instance.DrawIndexedInstanced(numVertices, numInstances, firstIndex);
+    instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex);
     
-    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
+    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numIndices, numInstances));
 }
 
-void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
+void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertInstancingSupported();
-        ValidateDrawIndexedCmd(numVertices, numInstances, firstIndex, vertexOffset, 0);
+        ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, vertexOffset, 0);
     }
     
-    instance.DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset);
+    instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset);
     
-    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
+    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numIndices, numInstances));
 }
 
-void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
+void DbgCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
         AssertInstancingSupported();
         AssertOffsetInstancingSupported();
-        ValidateDrawIndexedCmd(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+        ValidateDrawIndexedCmd(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
     }
     
-    instance.DrawIndexedInstanced(numVertices, numInstances, firstIndex, vertexOffset, instanceOffset);
+    instance.DrawIndexedInstanced(numIndices, numInstances, firstIndex, vertexOffset, firstInstance);
     
-    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numVertices, numInstances));
+    LLGL_DBG_PROFILER_DO(RecordDrawCall(topology_, numIndices, numInstances));
 }
 
 /* ----- Compute ----- */
@@ -871,34 +871,35 @@ void DbgCommandBuffer::ValidateNumVertices(std::uint32_t numVertices)
     }
 }
 
-void DbgCommandBuffer::ValidateNumInstances(std::uint32_t numInstances, std::uint32_t instanceOffset)
+void DbgCommandBuffer::ValidateNumInstances(std::uint32_t numInstances, std::uint32_t firstInstance)
 {
+    //TODO: evaluate <firstInstance>
     if (numInstances == 0)
         LLGL_DBG_WARN(WarningType::PointlessOperation, "no instances will be generated");
 }
 
 void DbgCommandBuffer::ValidateDrawCmd(
-    std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t instanceOffset)
+    std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
     AssertGraphicsPipelineBound();
     AssertVertexBufferBound();
     ValidateVertexLayout();
     ValidateNumVertices(numVertices);
-    ValidateNumInstances(numInstances, instanceOffset);
+    ValidateNumInstances(numInstances, firstInstance);
 
     if (bindings_.numVertexBuffers > 0 && bindings_.anyShaderAttributes)
         ValidateVertexLimit(numVertices + firstVertex, static_cast<std::uint32_t>(bindings_.vertexBuffers[0]->elements));
 }
 
 void DbgCommandBuffer::ValidateDrawIndexedCmd(
-    std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t instanceOffset)
+    std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
     AssertGraphicsPipelineBound();
     AssertVertexBufferBound();
     AssertIndexBufferBound();
     ValidateVertexLayout();
     ValidateNumVertices(numVertices);
-    ValidateNumInstances(numInstances, instanceOffset);
+    ValidateNumInstances(numInstances, firstInstance);
 
     if (bindings_.indexBuffer)
         ValidateVertexLimit(numVertices + firstIndex, static_cast<std::uint32_t>(bindings_.indexBuffer->elements));
