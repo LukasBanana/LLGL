@@ -136,59 +136,12 @@ void VKResourceHeap::CreateDescriptorSets(std::uint32_t numSetLayouts, const VkD
     VKThrowIfFailed(result, "failed to allocate Vulkan descriptor sets");
 }
 
-//TODO: separate the switch statement into separate functions
 void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, const std::vector<std::uint32_t>& dstBindings)
 {
     /* Allocate local storage for buffer and image descriptors */
     const auto numResourceViewsMax = std::min(desc.resourceViews.size(), dstBindings.size());
 
-    std::vector<VkDescriptorBufferInfo> bufferInfos(numResourceViewsMax);
-    std::uint32_t numBufferInfos = 0;
-
-    std::vector<VkDescriptorImageInfo> imageInfos(numResourceViewsMax);
-    std::uint32_t numImageInfos = 0;
-
-    std::vector<VkWriteDescriptorSet> writeDescriptors(numResourceViewsMax);
-    std::uint32_t numWriteDescriptors = 0;
-
-    /* Acquires a new VkDescriptorBufferInfo from the local container */
-    auto NextBufferInfo = [&](VKBuffer& bufferVK)
-    {
-        auto resourceInfo = &(bufferInfos[numBufferInfos++]);
-
-        resourceInfo->buffer    = bufferVK.GetVkBuffer();
-        resourceInfo->offset    = 0;
-        resourceInfo->range     = bufferVK.GetSize();
-
-        return resourceInfo;
-    };
-
-    /* Acquires a new VkDescriptorImageInfo from the local container */
-    auto NextImageInfo = [&]()
-    {
-        return &(imageInfos[numImageInfos++]);
-    };
-
-    /* Acquires a new VkWriteDescriptorSet from the local container */
-    auto NextWriteDescriptor = [&](std::size_t resourceIndex)
-    {
-        const auto& rvDesc = desc.resourceViews[resourceIndex];
-
-        auto writeDesc = (&writeDescriptors[numWriteDescriptors++]);
-
-        writeDesc->sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writeDesc->pNext             = nullptr;
-        writeDesc->dstSet            = descriptorSets_[0];//numResourceViews];
-        writeDesc->dstBinding        = dstBindings[resourceIndex];
-        writeDesc->dstArrayElement   = 0;
-        writeDesc->descriptorCount   = 1;
-        writeDesc->descriptorType    = VKTypes::Map(rvDesc.type);
-        writeDesc->pImageInfo        = nullptr;
-        writeDesc->pBufferInfo       = nullptr;
-        writeDesc->pTexelBufferView  = nullptr;
-
-        return writeDesc;
-    };
+    VKWriteDescriptorContainer container { numResourceViewsMax };
 
     for (std::size_t i = 0; i < numResourceViewsMax; ++i)
     {
@@ -198,69 +151,147 @@ void VKResourceHeap::UpdateDescriptorSets(const ResourceHeapDescriptor& desc, co
         switch (rvDesc.type)
         {
             case ResourceType::Sampler:
-            {
-                auto samplerVK = LLGL_CAST(VKSampler*, rvDesc.sampler);
-
-                /* Initialize image information */
-                auto resourceInfo = NextImageInfo();
-
-                resourceInfo->sampler       = samplerVK->GetVkSampler();
-                resourceInfo->imageView     = VK_NULL_HANDLE;
-                resourceInfo->imageLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
-
-                /* Initialize write descriptor */
-                auto writeDesc = NextWriteDescriptor(i);
-
-                writeDesc->pImageInfo = resourceInfo;
-            }
-            break;
+                FillWriteDescriptorForSampler(rvDesc, dstBindings[i], container);
+                break;
 
             case ResourceType::Texture:
-            {
-                auto textureVK = LLGL_CAST(VKTexture*, rvDesc.texture);
-
-                /* Initialize image information */
-                auto resourceInfo = NextImageInfo();
-
-                resourceInfo->sampler       = VK_NULL_HANDLE;
-                resourceInfo->imageView     = textureVK->GetVkImageView();
-                resourceInfo->imageLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-                /* Initialize write descriptor */
-                auto writeDesc = NextWriteDescriptor(i);
-
-                writeDesc->pImageInfo = resourceInfo;
-            }
-            break;
+                FillWriteDescriptorForTexture(rvDesc, dstBindings[i], container);
+                break;
 
             case ResourceType::ConstantBuffer:
             case ResourceType::StorageBuffer:
-            {
-                auto bufferVK = LLGL_CAST(VKBuffer*, rvDesc.buffer);
-
-                /* Initialize buffer information */
-                auto resourceInfo = NextBufferInfo(*bufferVK);
-
-                /* Initialize write descriptor */
-                auto writeDesc = NextWriteDescriptor(i);
-
-                writeDesc->pBufferInfo = resourceInfo;
-            }
-            break;
+                FillWriteDescriptorForBuffer(rvDesc, dstBindings[i], container);
+                break;
 
             default:
-            {
                 throw std::invalid_argument(
                     "invalid resource view type to create ResourceHeap object: 0x" +
                     ToHex(static_cast<std::uint32_t>(rvDesc.type))
                 );
-            }
-            break;
+                break;
         }
     }
 
-    if (numWriteDescriptors > 0)
-        vkUpdateDescriptorSets(device_, numWriteDescriptors, writeDescriptors.data(), 0, nullptr);
+    if (container.numWriteDescriptors > 0)
+    {
+        vkUpdateDescriptorSets(
+            device_,
+            container.numWriteDescriptors,
+            container.writeDescriptors.data(),
+            0,
+            nullptr
+        );
+    }
+}
+
+void VKResourceHeap::FillWriteDescriptorForSampler(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container)
+{
+    auto samplerVK = LLGL_CAST(VKSampler*, resourceViewDesc.sampler);
+
+    /* Initialize image information */
+    auto imageInfo = container.NextImageInfo();
+    {
+        imageInfo->sampler          = samplerVK->GetVkSampler();
+        imageInfo->imageView        = VK_NULL_HANDLE;
+        imageInfo->imageLayout      = VK_IMAGE_LAYOUT_UNDEFINED;
+    }
+
+    /* Initialize write descriptor */
+    auto writeDesc = container.NextWriteDescriptor();
+    {
+        writeDesc->dstSet           = descriptorSets_[0];//numResourceViews];
+        writeDesc->dstBinding       = dstBinding;
+        writeDesc->dstArrayElement  = 0;
+        writeDesc->descriptorCount  = 1;
+        writeDesc->descriptorType   = VKTypes::Map(resourceViewDesc.type);
+        writeDesc->pImageInfo       = imageInfo;
+        writeDesc->pBufferInfo      = nullptr;
+        writeDesc->pTexelBufferView = nullptr;
+    }
+}
+
+void VKResourceHeap::FillWriteDescriptorForTexture(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container)
+{
+    auto textureVK = LLGL_CAST(VKTexture*, resourceViewDesc.texture);
+
+    /* Initialize image information */
+    auto imageInfo = container.NextImageInfo();
+    {
+        imageInfo->sampler       = VK_NULL_HANDLE;
+        imageInfo->imageView     = textureVK->GetVkImageView();
+        imageInfo->imageLayout   = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
+
+    /* Initialize write descriptor */
+    auto writeDesc = container.NextWriteDescriptor();
+    {
+        writeDesc->dstSet           = descriptorSets_[0];//numResourceViews];
+        writeDesc->dstBinding       = dstBinding;
+        writeDesc->dstArrayElement  = 0;
+        writeDesc->descriptorCount  = 1;
+        writeDesc->descriptorType   = VKTypes::Map(resourceViewDesc.type);
+        writeDesc->pImageInfo       = imageInfo;
+        writeDesc->pBufferInfo      = nullptr;
+        writeDesc->pTexelBufferView = nullptr;
+    }
+}
+
+void VKResourceHeap::FillWriteDescriptorForBuffer(const ResourceViewDescriptor& resourceViewDesc, std::uint32_t dstBinding, VKWriteDescriptorContainer& container)
+{
+    auto bufferVK = LLGL_CAST(VKBuffer*, resourceViewDesc.buffer);
+
+    /* Initialize buffer information */
+    auto bufferInfo = container.NextBufferInfo();
+    {
+        bufferInfo->buffer    = bufferVK->GetVkBuffer();
+        bufferInfo->offset    = 0;
+        bufferInfo->range     = bufferVK->GetSize();
+    }
+
+    /* Initialize write descriptor */
+    auto writeDesc = container.NextWriteDescriptor();
+    {
+        writeDesc->dstSet           = descriptorSets_[0];//numResourceViews];
+        writeDesc->dstBinding       = dstBinding;
+        writeDesc->dstArrayElement  = 0;
+        writeDesc->descriptorCount  = 1;
+        writeDesc->descriptorType   = VKTypes::Map(resourceViewDesc.type);
+        writeDesc->pImageInfo       = nullptr;
+        writeDesc->pBufferInfo      = bufferInfo;
+        writeDesc->pTexelBufferView = nullptr;
+    }
+}
+
+
+/*
+ * VKWriteDescriptorContainer structure
+ */
+
+VKWriteDescriptorContainer::VKWriteDescriptorContainer(std::size_t numResourceViewsMax) :
+    bufferInfos      { numResourceViewsMax },
+    imageInfos       { numResourceViewsMax },
+    writeDescriptors { numResourceViewsMax }
+{
+}
+
+VkDescriptorBufferInfo* VKWriteDescriptorContainer::NextBufferInfo()
+{
+    return &(bufferInfos[numBufferInfos++]);
+}
+
+VkDescriptorImageInfo* VKWriteDescriptorContainer::NextImageInfo()
+{
+    return &(imageInfos[numImageInfos++]);
+}
+
+VkWriteDescriptorSet* VKWriteDescriptorContainer::NextWriteDescriptor()
+{
+    auto desc = (&writeDescriptors[numWriteDescriptors++]);
+    {
+        desc->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        desc->pNext = nullptr;
+    }
+    return desc;
 }
 
 
