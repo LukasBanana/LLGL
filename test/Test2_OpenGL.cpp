@@ -79,7 +79,7 @@ int main()
         // Create command buffer
         auto commands = renderer->CreateCommandBufferExt();
 
-        const auto& renderCaps = renderer->GetRenderingCaps();
+        //const auto& renderCaps = renderer->GetRenderingCaps();
 
         // Setup window title
         auto title = "LLGL Test 2 ( " + renderer->GetName() + " )";
@@ -142,7 +142,7 @@ int main()
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
         // Create vertex buffer array
-        auto vertexBufferArray = renderer->CreateBufferArray(1, &vertexBuffer);
+        //auto vertexBufferArray = renderer->CreateBufferArray(1, &vertexBuffer);
 
         // Create vertex shader
         auto& vertShader = *renderer->CreateShader(LLGL::ShaderType::Vertex);

@@ -43,6 +43,8 @@ static void ErrIllegalUseOfDepthFormat()
     throw std::runtime_error("illegal use of depth-stencil format for texture");
 }
 
+#ifdef GL_ARB_texture_storage
+
 // Returns true if the specified GL texture target is a cube face other than GL_TEXTURE_CUBE_MAP_POSITIVE_X
 static bool IsSecondaryCubeFaceTarget(GLenum target)
 {
@@ -55,6 +57,8 @@ static bool IsSecondaryCubeFaceTarget(GLenum target)
         target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
     );
 }
+
+#endif // /GL_ARB_texture_storage
 
 /* ----- Back-end OpenGL functions ----- */
 

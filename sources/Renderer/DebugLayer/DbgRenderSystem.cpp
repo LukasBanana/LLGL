@@ -376,6 +376,9 @@ ResourceHeap* DbgRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& 
                     case ResourceType::Sampler:
                         //TODO: DbgSampler
                         break;
+                    default:
+                        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid resource type passed to ResourceViewDescriptor");
+                        break;
                 }
             }
             else
