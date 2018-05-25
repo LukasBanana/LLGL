@@ -267,7 +267,7 @@ void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor&
     instance_->WriteTexture(textureDbg.instance, subTextureDesc, imageDesc);
 }
 
-void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize)
+void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
     auto& textureDbg = LLGL_CAST(const DbgTexture&, texture);
 
@@ -284,14 +284,14 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel
             textureDbg.desc.texture3D.width *
             textureDbg.desc.texture3D.height *
             textureDbg.desc.texture3D.depth *
-            ImageFormatSize(imageFormat) *
-            DataTypeSize(dataType)
+            ImageFormatSize(imageDesc.format) *
+            DataTypeSize(imageDesc.dataType)
         );
 
-        ValidateTextureImageDataSize(dataSize, requiredDataSize);
+        ValidateTextureImageDataSize(imageDesc.dataSize, requiredDataSize);
     }
 
-    instance_->ReadTexture(textureDbg.instance, mipLevel, imageFormat, dataType, data, dataSize);
+    instance_->ReadTexture(textureDbg.instance, mipLevel, imageDesc);
 }
 
 void DbgRenderSystem::GenerateMips(Texture& texture)

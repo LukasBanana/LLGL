@@ -26,7 +26,7 @@ TextureDescriptor RenderSystem::QueryTextureDescriptor(const Texture& texture)
 void RenderSystem::ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer)
 {
     const std::size_t dataSize = TextureSize(texture.QueryDesc()) * ImageFormatSize(imageFormat) * DataTypeSize(dataType);
-    ReadTexture(texture, mipLevel, imageFormat, dataType, buffer, dataSize);
+    ReadTexture(texture, mipLevel, DstImageDescriptor { imageFormat, dataType, buffer, dataSize });
 }
 
 

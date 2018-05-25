@@ -173,9 +173,9 @@ void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& 
     }
 }
 
-void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize)
+void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
-    LLGL_ASSERT_PTR(data);
+    LLGL_ASSERT_PTR(imageDesc.data);
 
     auto& textureGL = LLGL_CAST(const GLTexture&, texture);
 
@@ -186,10 +186,10 @@ void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
         glGetTextureImage(
             textureGL.GetID(),
             static_cast<GLint>(mipLevel),
-            GLTypes::Map(imageFormat),
-            GLTypes::Map(dataType),
-            static_cast<GLsizei>(dataSize),
-            data
+            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.dataType),
+            static_cast<GLsizei>(imageDesc.dataSize),
+            imageDesc.data
         );
     }
     else
@@ -200,9 +200,9 @@ void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
         glGetTexImage(
             GLTypes::Map(textureGL.GetType()),
             static_cast<GLint>(mipLevel),
-            GLTypes::Map(imageFormat),
-            GLTypes::Map(dataType),
-            data
+            GLTypes::Map(imageDesc.format),
+            GLTypes::Map(imageDesc.dataType),
+            imageDesc.data
         );
     }
 }

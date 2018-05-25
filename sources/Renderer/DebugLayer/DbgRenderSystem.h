@@ -78,10 +78,10 @@ class DbgRenderSystem : public RenderSystem
 
         void Release(Texture& texture) override;
         void Release(TextureArray& textureArray) override;
-        
+
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
 
-        void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) override;
+        void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
 
         void GenerateMips(Texture& texture) override;
         void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer = 0, std::uint32_t numArrayLayers = 1) override;

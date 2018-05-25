@@ -69,7 +69,7 @@ class D3D12RenderSystem : public RenderSystem
 
         void Release(Buffer& buffer) override;
         void Release(BufferArray& bufferArray) override;
-        
+
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
 
         void* MapBuffer(Buffer& buffer, const CPUAccess access) override;
@@ -82,10 +82,10 @@ class D3D12RenderSystem : public RenderSystem
 
         void Release(Texture& texture) override;
         void Release(TextureArray& textureArray) override;
-        
+
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
 
-        void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) override;
+        void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
 
         void GenerateMips(Texture& texture) override;
         void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer = 0, std::uint32_t numArrayLayers = 1) override;
@@ -116,7 +116,7 @@ class D3D12RenderSystem : public RenderSystem
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
         ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
-        
+
         void Release(GraphicsPipeline& graphicsPipeline) override;
         void Release(ComputePipeline& computePipeline) override;
 
@@ -168,7 +168,7 @@ class D3D12RenderSystem : public RenderSystem
         }*/
 
     private:
-        
+
         #ifdef LLGL_DEBUG
         void EnableDebugLayer();
         #endif

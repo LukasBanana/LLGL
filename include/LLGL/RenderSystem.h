@@ -316,17 +316,18 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         auto textureDesc = texture->QueryDesc();
 
         // Allocate image buffer with elements in all dimensions
-        std::vector<LLGL::ColorRGBAub> image(textureDesc.texture3D.width * textureDesc.texture3D.height * textureDesc.texture3D.depth);
+        std::vector<LLGL::ColorRGBAub> myImage(textureDesc.texture3D.width * textureDesc.texture3D.height * textureDesc.texture3D.depth);
 
-        // Read texture data
-        renderSystem->ReadTexture(
-            *texture,                               // Texture whose image content is to be read
-            0,                                      // Highest MIP-map level
-            LLGL::ImageFormat::RGBA,                // RGBA image format, since we used LLGL::ColorRGBAub
-            LLGL::DataType::UInt8,                  // 8-bit unsigned integral data type: <std::uint8_t> or <unsigned char>
-            image.data(),                           // Output image buffer
-            image.size()*sizeof(LLGL::ColorRGBAub)  // Image buffer size: number of color elements and size of each color element
-        );
+        // Initialize destination image descriptor
+        const DstImageDescriptor myImageDesc {
+            LLGL::ImageFormat::RGBA,                    // RGBA image format, since we used LLGL::ColorRGBAub
+            LLGL::DataType::UInt8,                      // 8-bit unsigned integral data type: <std::uint8_t> or <unsigned char>
+            myImage.data(),                             // Output image buffer
+            myImage.size() * sizeof(LLGL::ColorRGBAub)  // Image buffer size: number of color elements and size of each color element
+        };
+
+        // Read texture data from first MIP-map level (index 0)
+        myRenderSystem->ReadTexture(*texture, 0, myImageDesc);
         \endcode
         \note The behavior is undefined if 'data' points to an invalid buffer,
         or 'data' points to a buffer that is smaller than specified by 'dataSize',
@@ -334,7 +335,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \throws std::invalid_argument If 'data' is null.
         \see Texture::QueryDesc
         */
-        virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) = 0;
+        virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;
 
         /**
         \brief Generates all MIP-maps for the specified texture.

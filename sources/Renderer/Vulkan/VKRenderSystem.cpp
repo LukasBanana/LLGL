@@ -514,7 +514,7 @@ void VKRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& 
     //todo
 }
 
-void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize)
+void VKRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc)
 {
     //todo
 }
