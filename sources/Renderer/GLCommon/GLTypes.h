@@ -11,7 +11,7 @@
 
 #include "GLImport.h"
 #include <LLGL/RenderSystemFlags.h>
-#include <LLGL/Image.h>
+#include <LLGL/ImageFlags.h>
 #include <LLGL/BufferFlags.h>
 #include <LLGL/CommandBufferFlags.h>
 #include <LLGL/TextureFlags.h>

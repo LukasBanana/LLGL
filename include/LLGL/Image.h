@@ -10,244 +10,165 @@
 
 
 #include "Export.h"
-#include "Format.h"
-#include "RenderSystemFlags.h"
-#include "TextureFlags.h"
-#include "ColorRGBA.h"
-#include <memory>
-#include <cstdint>
+#include "Types.h"
+#include "ImageFlags.h"
+#include "SamplerFlags.h"
 
 
 namespace LLGL
 {
 
 
-/* ----- Types ----- */
-
 /**
-\brief Common byte buffer type.
-\remarks Commonly this would be an std::vector<char>, but the buffer conversion is an optimized process,
-where the default initialization of an std::vector is undesired.
-Therefore, the byte buffer type is an std::unique_ptr<char[]>.
+\brief Utility class to manage the storage and attributes of an image.
+
+This class is not required for any interaction with the render system.
+It can be used as utility to handle 2D and 3D image data before passing it to a hardware texture.
+\remarks This class holds the ownership of an image buffer and its attributes.
+The primary functions are implemented as global functions like GenerateImageBuffer for instance.
+\note All image operations of this class do NOT make use of hardware acceleration.
+\see GenerateImageBuffer
 \see ConvertImageBuffer
 */
-using ByteBuffer = std::unique_ptr<char[]>;
-
-
-/* ----- Enumerations ----- */
-
-/**
-\brief Image format enumeration that applies to each pixel of an image.
-\see SrcImageDescriptor::format
-\see ImageFormatSize
-*/
-enum class ImageFormat
+class LLGL_EXPORT Image
 {
-    /* Color formats */
-    R,              //!< Single color component: Red.
-    RG,             //!< Two color components: Red, Green.
-    RGB,            //!< Three color components: Red, Green, Blue.
-    BGR,            //!< Three color components: Blue, Green, Red.
-    RGBA,           //!< Four color components: Red, Green, Blue, Alpha.
-    BGRA,           //!< Four color components: Blue, Green, Red, Alpha.
-    ARGB,           //!< Four color components: Alpha, Red, Green, Blue. Old format, mainly used in Direct3D 9.
-    ABGR,           //!< Four color components: Alpha, Blue, Green, Red. Old format, mainly used in Direct3D 9.
 
-    /* Depth-stencil formats */
-    Depth,          //!< Depth component.
-    DepthStencil,   //!< Depth component and stencil index.
+    public:
 
-    /* Compressed formats */
-    CompressedRGB,  //!< Generic compressed format with three color components: Red, Green, Blue.
-    CompressedRGBA, //!< Generic compressed format with four color components: Red, Green, Blue, Alpha.
+        /* ----- Common ----- */
+
+        Image() = default;
+
+        //! Copy constructor which copies the entire image buffer from the specified source image.
+        Image(const Image& rhs);
+
+        //! Move constructor which takes the ownership of the specified source image.
+        Image(Image&& rhs);
+
+        /* ----- Storage ----- */
+
+        /**
+        \brief Converts the image format and data type.
+        \see ConvertImageBuffer
+        */
+        void Convert(const ImageFormat format, const DataType dataType, std::size_t threadCount = 0);
+
+        /**
+        \brief Resizes the image and resets the image buffer.
+        \param[in] extent Specifies the new image size.
+        \note The new image buffer will be uninitialized!
+        */
+        void Resize(const Extent3D& extent);
+
+        /**
+        \brief Resizes the image and initializes the new pixels with the specified color.
+        \param[in] extent Specifies the new image size.
+        \param[in] fillColor Specifies the color to fill the pixels with.
+        \brief GenerateImageBuffer
+        */
+        void Resize(const Extent3D& extent, const ColorRGBAd& fillColor);
+
+        /**
+        \brief Resizes the image, moves the previous pixels by an offset, and initializes the new pixels outside the previous extent with the specified color.
+        \param[in] extent Specifies the new image size.
+        \param[in] fillColor Specifies the color to fill the pixels with that are outside the previous extent.
+        \param[in] offset Specifies the offset to move the previous pixels to.
+        \brief GenerateImageBuffer
+        \todo Not implemented yet.
+        */
+        void Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Offset2D& offset);
+
+        /**
+        \brief Resizes the image and resamples the pixels from the previous image buffer.
+        \param[in] extent Specifies the new image size.
+        \param[in] filter Specifies the sampling filter.
+        \brief GenerateImageBuffer
+        \todo Not implemented yet.
+        */
+        void Resize(const Extent3D& extent, const TextureFilter filter);
+
+        /* ----- Pixels ----- */
+
+        /**
+        \brief Copies a region of the specified source image into this image.
+        \param[in] srcImage Specifies the source image whose region is to be copied.
+        \param[in] offset Specifies the offset where to copy the region into this image. This can also be outside of the image.
+        \param[in] extent Specifies the extent of the region. This will be clamped if it exceeds the maximal possible extent.
+        \todo Not implemented yet.
+        */
+        void Blit(const Image& srcImage, Offset3D offset, Extent3D extent);
+
+        /**
+        \brief Fills a region of this image by the specified color.
+        \param[in] offset Specifies the offset where the region begins.
+        \param[in] extent Specifies the extent of the region.
+        \param[in] fillColor Specifies the color to fill the region with.
+        \todo Not implemented yet.
+        */
+        void Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor);
+
+        /* ----- Attributes ----- */
+
+        //! Returns a source image descriptor for this image with read-only access to the image data.
+        SrcImageDescriptor QuerySrcDesc() const;
+
+        //! Returns a destination image descriptor for this image with read/write access to the image data.
+        DstImageDescriptor QueryDstDesc();
+
+        //! Returns the format for each pixel. By default ImageFormat::RGBA.
+        inline ImageFormat GetFormat() const
+        {
+            return format_;
+        }
+
+        //! Returns the data type for each pixel component. By default DataType::UInt8.
+        inline DataType GetDataType() const
+        {
+            return dataType_;
+        }
+
+        //! Returns the image data buffer as constant raw pointer.
+        inline const void* GetData() const
+        {
+            return data_.get();
+        }
+
+        //! Returns the image data buffer as raw pointer.
+        inline void* GetData()
+        {
+            return data_.get();
+        }
+
+        //! Returns the size (in bytes) of the image buffer.
+        std::uint32_t GetDataSize() const;
+
+        /**
+        \brief Returns the number of pixels this image has.
+        \remarks This is equivalent to the following code example:
+        \code
+        const auto& extent = myImage.GetExtent();
+        return extent.width * extent.height * extent.depth;
+        \endcode
+        */
+        std::uint32_t GetNumPixels() const;
+
+        //! Returns the extent of the image as 3D vector.
+        inline const Extent3D& GetExtent() const
+        {
+            return extent_;
+        }
+
+        //! Releases the ownership of the image buffer and resets all attributes.
+        ByteBuffer Release();
+
+    private:
+
+        ImageFormat format_     = ImageFormat::RGBA;
+        DataType    dataType_   = DataType::UInt8;
+        ByteBuffer  data_;
+        Extent3D    extent_;
+
 };
-
-
-/* ----- Structures ----- */
-
-/**
-\brief Descriptor structure for an image that is used as source for reading the image data.
-\remarks This kind of 'Image' is mainly used to fill a MIP-map within a hardware texture by reading from a source image.
-The counterpart for reading a MIP-map from a hardware texture by writing to a destination image is the DstImageDescriptor structure.
-\see DstImageDescriptor
-\see ConvertImageBuffer
-\see RenderSystem::CreateTexture
-\see RenderSystem::WriteTexture
-*/
-struct SrcImageDescriptor
-{
-    SrcImageDescriptor() = default;
-    SrcImageDescriptor(const SrcImageDescriptor&) = default;
-
-    //! Constructor to initialize all attributes.
-    inline SrcImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
-        format   { format   },
-        dataType { dataType },
-        data     { data     },
-        dataSize { dataSize }
-    {
-    }
-
-    //! Specifies the image format. By default ImageFormat::RGBA.
-    ImageFormat format      = ImageFormat::RGBA;
-
-    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
-    DataType    dataType    = DataType::UInt8;
-
-    //! Pointer to the read-only image data.
-    const void* data        = nullptr;
-
-    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
-    std::size_t dataSize    = 0;
-};
-
-/**
-\brief Descriptor structure for an image that is used as destination for writing the image data.
-\remarks This kind of 'Image' is mainly used to fill the image data of a hardware texture.
-\see SrcImageDescriptor
-\see ConvertImageBuffer
-\see RenderSystem::ReadTexture
-*/
-struct DstImageDescriptor
-{
-    DstImageDescriptor() = default;
-    DstImageDescriptor(const DstImageDescriptor&) = default;
-
-    //! Constructor to initialize all attributes.
-    inline DstImageDescriptor(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
-        format   { format   },
-        dataType { dataType },
-        data     { data     },
-        dataSize { dataSize }
-    {
-    }
-
-    //! Specifies the image format. By default ImageFormat::RGBA.
-    ImageFormat format      = ImageFormat::RGBA;
-
-    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
-    DataType    dataType    = DataType::UInt8;
-
-    //! Pointer to the read/write image data.
-    void*       data        = nullptr;
-
-    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
-    std::size_t dataSize    = 0;
-};
-
-
-/* ----- Functions ----- */
-
-/**
-\defgroup group_image_util Global image utility functions to classify and convert image data.
-\addtogroup group_image_util
-@{
-*/
-
-/**
-\brief Returns the size (in number of components) of the specified image format.
-\param[in] imageFormat Specifies the image format.
-\return Number of components of the specified image format, or 0 if 'imageFormat' specifies a compressed color format.
-\note Compressed formats are not supported.
-\see IsCompressedFormat(const ImageFormat)
-\see ImageFormat
-*/
-LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat format);
-
-/**
-\brief Returns the required data size (in bytes) of an image with the specified format, data type, and number of pixels.
-\param[in] format Specifies the image format.
-\param[in] dataType Specifies the data type of each pixel component.
-\param[in] numPixels Specifies the number of picture elements (pixels).
-\remarks The counterpart for texture buffers is the function TextureBufferSize.
-\see TextureBufferSize
-*/
-LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat format, const DataType dataType, std::uint32_t numPixels);
-
-/**
-\brief Returns true if the specified color format is a compressed format,
-i.e. either ImageFormat::CompressedRGB, or ImageFormat::CompressedRGBA.
-\see ImageFormat
-*/
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format);
-
-/**
-\brief Returns true if the specified color format is a depth-stencil format,
-i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
-\see ImageFormat
-*/
-LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
-
-/**
-\brief Finds a suitable image format for the specified texture hardware format.
-\param[in] textureFormat Specifies the input texture format.
-\param[out] imageFormat Specifies the output image format.
-\param[out] dataType Specifies the output image data type.
-\return True if a suitable image format has been found. Otherwise, the output parameter 'imageFormat' and 'dataType' have not been modified.
-\remarks Texture formats that cannot be converted to an image format are all 16-bit floating-point types, and TextureFormat::Unknown.
-*/
-LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, ImageFormat& imageFormat, DataType& dataType);
-
-/**
-\brief Converts the image format and data type of the source image (only uncompressed color formats).
-\param[in] srcImageDesc Specifies the source image descriptor.
-\param[in] dstFormat Specifies the destination image format.
-\param[in] dstDataType Specifies the destination data type.
-\param[in] threadCount Specifies the number of threads to use for conversion.
-If this is less than 2, no multi-threading is used. If this is 'maxThreadCount',
-the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
-\return Byte buffer with the converted image data or null if no conversion is necessary.
-This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
-\remarks Compressed images and depth-stencil images cannot be converted.
-\throw std::invalid_argument If a compressed image format is specified either as source or destination,
-if a depth-stencil format is specified either as source or destination,
-if the source buffer size is not a multiple of the source data type size times the image format size,
-or if 'srcBuffer' is a null pointer.
-\see maxThreadCount
-\see ByteBuffer
-\see DataTypeSize
-*/
-LLGL_EXPORT ByteBuffer ConvertImageBuffer(
-    SrcImageDescriptor  srcImageDesc,
-    ImageFormat         dstFormat,
-    DataType            dstDataType,
-    std::size_t         threadCount = 0
-);
-
-/**
-\brief Generates an image buffer with the specified fill data for each pixel.
-\param[in] format Specifies the image format of each pixel in the output image.
-\param[in] dataType Specifies the data type of each component of each pixel in the output image.
-\param[in] imageSize Specifies the 1-Dimensional size (in pixels) of the output image. For a 2D image, this can be width times height for instance.
-\param[in] fillColor Specifies the color to fill the image for each pixel.
-\return The new allocated and initialized byte buffer.
-\remarks This can be used to generate a single-colored n-Dimensional image.
-Usage example for a 2D image:
-\code
-// Generate 2D image of size 512 x 512 with a half-transparent yellow color
-auto imageBuffer = LLGL::GenerateImageBuffer(
-    LLGL::ImageFormat::RGBA,
-    LLGL::DataType::UInt8,
-    512 * 512,
-    LLGL::ColorRGBAd { 1.0, 1.0, 0.0, 0.5 }
-);
-\endcode
-*/
-LLGL_EXPORT ByteBuffer GenerateImageBuffer(
-    ImageFormat         format,
-    DataType            dataType,
-    std::size_t         imageSize,
-    const ColorRGBAd&   fillColor
-);
-
-/**
-\brief Generates a new byte buffer with zeros in each byte.
-\param[in] bufferSize Specifies the size (in bytes) of the buffer.
-\return The new allocated and initialized byte buffer.
-*/
-LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize);
-
-/** @} */
 
 
 } // /namespace LLGL

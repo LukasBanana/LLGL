@@ -11,7 +11,6 @@
 
 #include "Resource.h"
 #include "Types.h"
-#include "Image.h"
 #include "TextureFlags.h"
 #include <cstdint>
 

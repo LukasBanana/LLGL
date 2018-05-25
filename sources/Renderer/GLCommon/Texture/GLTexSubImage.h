@@ -9,7 +9,7 @@
 #define LLGL_GL_TEX_SUB_IMAGE_H
 
 
-#include <LLGL/Image.h>
+#include <LLGL/ImageFlags.h>
 #include <LLGL/TextureFlags.h>
 
 

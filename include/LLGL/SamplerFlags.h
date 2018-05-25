@@ -22,7 +22,10 @@ namespace LLGL
 
 /* ----- Enumerations ----- */
 
-//! Texture coordinate wrap enumeration.
+/**
+\brief Technique for resolving texture coordinates that are outside of the range [0, 1].
+\todo Rename to "TextureAddressMode".
+*/
 enum class TextureWrap
 {
     Repeat,     //!< Repeat texture coordinates within the interval [0, 1).
@@ -32,7 +35,10 @@ enum class TextureWrap
     MirrorOnce, //!< Takes the absolute value of the texture coordinates and then clamps it to the interval [0, 1], i.e. mirror around 0.
 };
 
-//! Texture sampling filter enumeration.
+/**
+\brief Texture sampling filter enumeration.
+\todo Rename to "SamplerFilter".
+*/
 enum class TextureFilter
 {
     Nearest,    //!< Take the nearest texture sample. \image html TextureFilter_Nearest.png

@@ -20,6 +20,7 @@ namespace LLGL
 /**
 \brief Shader interface.
 \see RenderSystem::CreateShader
+\todo Replace "Compile" and "LoadBinary" functions by moving the descriptor structure to "RenderSystem::CreateShader".
 */
 class LLGL_EXPORT Shader : public RenderSystemChild
 {

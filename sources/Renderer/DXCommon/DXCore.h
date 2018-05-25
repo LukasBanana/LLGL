@@ -12,7 +12,7 @@
 #include <LLGL/ColorRGBA.h>
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/VideoAdapter.h>
-#include <LLGL/Image.h>
+#include <LLGL/ImageFlags.h>
 #include <dxgi.h>
 #include <string>
 #include <vector>
