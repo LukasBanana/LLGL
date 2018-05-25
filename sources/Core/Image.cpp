@@ -488,9 +488,9 @@ static ByteBuffer ConvertImageBufferFormat(
 
 /* ----- Public functions ----- */
 
-LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
+LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat format)
 {
-    switch (imageFormat)
+    switch (format)
     {
         case ImageFormat::R:                return 1;
         case ImageFormat::RG:               return 2;
@@ -506,6 +506,11 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
         case ImageFormat::CompressedRGBA:   return 0;
     }
     return 0;
+}
+
+LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat format, const DataType dataType, std::uint32_t numPixels)
+{
+    return (ImageFormatSize(format) * DataTypeSize(dataType) * numPixels);
 }
 
 LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format)

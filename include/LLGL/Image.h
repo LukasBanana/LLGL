@@ -37,7 +37,7 @@ using ByteBuffer = std::unique_ptr<char[]>;
 /* ----- Enumerations ----- */
 
 /**
-\brief Image format used to write texture data.
+\brief Image format enumeration that applies to each pixel of an image.
 \see ImageDescriptor::format
 \see ImageFormatSize
 */
@@ -72,6 +72,7 @@ enum class ImageFormat
 struct ImageDescriptor
 {
     ImageDescriptor() = default;
+    ImageDescriptor(const ImageDescriptor&) = default;
 
     inline ImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
         format   { format   },
@@ -80,15 +81,6 @@ struct ImageDescriptor
         dataSize { dataSize }
     {
     }
-
-    /**
-    \brief Returns the size (in bytes) for each image element (i.e. per "texel" or "pixel")
-    \return
-    \code
-    ImageFormatSize(format) * DataTypeSize(dataType);
-    \endcode
-    */
-    inline std::uint32_t GetElementSize() const;
 
     //! Specifies the image format. By default ImageFormat::RGBA.
     ImageFormat format      = ImageFormat::RGBA;
@@ -107,13 +99,30 @@ struct ImageDescriptor
 /* ----- Functions ----- */
 
 /**
+\defgroup group_image_util Global image utility functions to classify and convert image data.
+\addtogroup group_image_util
+@{
+*/
+
+/**
 \brief Returns the size (in number of components) of the specified image format.
 \param[in] imageFormat Specifies the image format.
 \return Number of components of the specified image format, or 0 if 'imageFormat' specifies a compressed color format.
+\note Compressed formats are not supported.
 \see IsCompressedFormat(const ImageFormat)
 \see ImageFormat
 */
-LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat);
+LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat format);
+
+/**
+\brief Returns the required data size (in bytes) of an image with the specified format, data type, and number of pixels.
+\param[in] format Specifies the image format.
+\param[in] dataType Specifies the data type of each pixel component.
+\param[in] numPixels Specifies the number of picture elements (pixels).
+\remarks The counterpart for texture buffers is the function TextureBufferSize.
+\see TextureBufferSize
+*/
+LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat format, const DataType dataType, std::uint32_t numPixels);
 
 /**
 \brief Returns true if the specified color format is a compressed format,
@@ -204,11 +213,7 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 */
 LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize);
 
-//! Implementation of the ImageDescriptor::GetElementSize function.
-inline std::uint32_t ImageDescriptor::GetElementSize() const
-{
-    return (ImageFormatSize(format) * DataTypeSize(dataType));
-}
+/** @} */
 
 
 } // /namespace LLGL

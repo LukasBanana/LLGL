@@ -425,7 +425,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
     std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers)
 {
     /* Update only the first MIP-map level for each array slice */
-    const auto layerStride = width * height * depth * imageDesc.GetElementSize();
+    const auto layerStride = width * height * depth * (ImageFormatSize(imageDesc.format) * DataTypeSize(imageDesc.dataType));
 
     for (std::uint32_t arraySlice = 0; arraySlice < numLayers; ++arraySlice)
     {
