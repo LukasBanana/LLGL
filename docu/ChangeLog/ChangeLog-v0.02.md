@@ -501,6 +501,7 @@ LLGL::BlendOp::InvDestColor;
 LLGL::BlendOp::DestAlpha;
 LLGL::BlendOp::InvDestAlpha;
 LLGL::ImageDescriptor;
+LLGL::BufferCPUAccess;
 ```
 
 After:
@@ -513,6 +514,7 @@ LLGL::BlendOp::InvDstColor;
 LLGL::BlendOp::DstAlpha;
 LLGL::BlendOp::InvDstAlpha;
 LLGL::SrcImageDescriptor;
+LLGL::CPUAccess;
 ```
 
 

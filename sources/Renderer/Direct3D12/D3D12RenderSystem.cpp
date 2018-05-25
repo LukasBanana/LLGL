@@ -202,7 +202,7 @@ void D3D12RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_
     //todo...
 }
 
-void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     return nullptr;//todo...
 }

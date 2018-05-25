@@ -52,18 +52,6 @@ enum class StorageBufferType
     ConsumeStructuredBuffer,    //!< Consume structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
 };
 
-/**
-\brief Hardware buffer CPU acccess enumeration.
-\see RenderSystem::MapBuffer
-\todo Rename to CPUAccess
-*/
-enum class BufferCPUAccess
-{
-    ReadOnly,   //!< CPU read access only.
-    WriteOnly,  //!< CPU write access only.
-    ReadWrite,  //!< CPU read and write access.
-};
-
 //! Buffer flags enumeration.
 struct BufferFlags
 {

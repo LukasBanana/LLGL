@@ -181,7 +181,7 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t 
     LLGL_DBG_PROFILER_DO(writeBuffer.Inc());
 }
 
-void* DbgRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     void* result = nullptr;
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
@@ -617,14 +617,14 @@ void DbgRenderSystem::ValidateBufferBoundary(std::uint64_t bufferSize, std::size
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "buffer size and offset out of bounds");
 }
 
-void DbgRenderSystem::ValidateBufferCPUAccess(DbgBuffer& bufferDbg, const BufferCPUAccess access)
+void DbgRenderSystem::ValidateBufferCPUAccess(DbgBuffer& bufferDbg, const CPUAccess access)
 {
-    if (access == BufferCPUAccess::ReadOnly || access == BufferCPUAccess::ReadWrite)
+    if (access == CPUAccess::ReadOnly || access == CPUAccess::ReadWrite)
     {
         if ((bufferDbg.desc.flags & BufferFlags::MapReadAccess) == 0)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot map buffer with CPU read access (buffer was not created with 'LLGL::BufferFlags::MapReadAccess' flag)");
     }
-    if (access == BufferCPUAccess::WriteOnly || access == BufferCPUAccess::ReadWrite)
+    if (access == CPUAccess::WriteOnly || access == CPUAccess::ReadWrite)
     {
         if ((bufferDbg.desc.flags & BufferFlags::MapWriteAccess) == 0)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot map buffer with CPU write access (buffer was not created with 'LLGL::BufferFlags::MapWriteAccess' flag)");

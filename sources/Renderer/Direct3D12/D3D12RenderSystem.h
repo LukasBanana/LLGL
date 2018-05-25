@@ -72,7 +72,7 @@ class D3D12RenderSystem : public RenderSystem
         
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
 
-        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
+        void* MapBuffer(Buffer& buffer, const CPUAccess access) override;
         void UnmapBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */

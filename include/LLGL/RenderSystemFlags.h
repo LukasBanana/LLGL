@@ -119,6 +119,17 @@ enum class ClippingRange
     ZeroToOne,
 };
 
+/**
+\brief Classifications of CPU access to hardware buffers and textures.
+\see RenderSystem::MapBuffer
+*/
+enum class CPUAccess
+{
+    ReadOnly,   //!< CPU read access only.
+    WriteOnly,  //!< CPU write access only.
+    ReadWrite,  //!< CPU read and write access.
+};
+
 
 /* ----- Structures ----- */
 

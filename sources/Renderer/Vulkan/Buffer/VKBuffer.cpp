@@ -80,7 +80,7 @@ void VKBuffer::TakeStagingBuffer(VKBufferWithRequirements&& buffer, VKDeviceMemo
     memoryRegionStaging_ = memoryRegionStaging;
 }
 
-void* VKBuffer::Map(VkDevice device, const BufferCPUAccess access)
+void* VKBuffer::Map(VkDevice device, const CPUAccess access)
 {
     if (memoryRegionStaging_)
     {

@@ -144,7 +144,7 @@ void D3D11RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_
     bufferD3D.UpdateSubresource(context_.Get(), data, static_cast<UINT>(dataSize), static_cast<UINT>(offset));
 }
 
-void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+void* D3D11RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferD3D = LLGL_CAST(D3D11Buffer&, buffer);
     mappedBufferCPUAccess_ = access;

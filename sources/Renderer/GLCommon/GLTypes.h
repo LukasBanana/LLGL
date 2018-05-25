@@ -30,7 +30,7 @@ namespace GLTypes
 
 GLenum MapOrZero(const TextureFormat textureFormat);
 
-GLenum Map( const BufferCPUAccess       cpuAccess           );
+GLenum Map( const CPUAccess             cpuAccess           );
 GLenum Map( const DataType              dataType            );
 GLenum Map( const PrimitiveType         primitiveType       );
 GLenum Map( const PrimitiveTopology     primitiveTopology   );

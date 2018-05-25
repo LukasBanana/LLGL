@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
         // Read result
         renderer->GetCommandQueue()->WaitIdle();
 
-        if (auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly))
+        if (auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::CPUAccess::ReadOnly))
         {
             ::memcpy(outputData.data(), outputBuffer, sizeof(DataBlock) * outputData.size());
             renderer->UnmapBuffer(*storageBuffer);

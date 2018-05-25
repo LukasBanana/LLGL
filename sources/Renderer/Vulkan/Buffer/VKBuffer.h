@@ -44,7 +44,7 @@ class VKBuffer : public Buffer
         void BindToMemory(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
         void TakeStagingBuffer(VKBufferWithRequirements&& buffer, VKDeviceMemoryRegion* memoryRegionStaging);
 
-        void* Map(VkDevice device, const BufferCPUAccess access);
+        void* Map(VkDevice device, const CPUAccess access);
         void Unmap(VkDevice device);
 
         // Updates the staging buffer (if it was created).
@@ -75,7 +75,7 @@ class VKBuffer : public Buffer
         }
 
         // Returns the CPU access previously set when "Map" was called.
-        inline BufferCPUAccess GetMappingCPUAccess() const
+        inline CPUAccess GetMappingCPUAccess() const
         {
             return mappingCPUAccess_;
         }
@@ -101,7 +101,7 @@ class VKBuffer : public Buffer
         VKDeviceMemoryRegion*       memoryRegionStaging_    = nullptr;
 
         VkDeviceSize                size_                   = 0;
-        BufferCPUAccess             mappingCPUAccess_       = BufferCPUAccess::ReadOnly;
+        CPUAccess                   mappingCPUAccess_       = CPUAccess::ReadOnly;
 
 };
 

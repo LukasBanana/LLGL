@@ -37,17 +37,17 @@ void D3D11Buffer::UpdateSubresource(ID3D11DeviceContext* context, const void* da
     context->UpdateSubresource(buffer_.Get(), 0, nullptr, data, 0, 0);
 }
 
-static bool HasReadAccess(const BufferCPUAccess access)
+static bool HasReadAccess(const CPUAccess access)
 {
-    return (access != BufferCPUAccess::WriteOnly);
+    return (access != CPUAccess::WriteOnly);
 }
 
-static bool HasWriteAccess(const BufferCPUAccess access)
+static bool HasWriteAccess(const CPUAccess access)
 {
-    return (access != BufferCPUAccess::ReadOnly);
+    return (access != CPUAccess::ReadOnly);
 }
 
-void* D3D11Buffer::Map(ID3D11DeviceContext* context, const BufferCPUAccess access)
+void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
 {
     HRESULT hr = 0;
     D3D11_MAPPED_SUBRESOURCE mapppedSubresource;
@@ -70,7 +70,7 @@ void* D3D11Buffer::Map(ID3D11DeviceContext* context, const BufferCPUAccess acces
     return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
 }
 
-void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const BufferCPUAccess access)
+void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const CPUAccess access)
 {
     if (cpuAccessBuffer_)
     {

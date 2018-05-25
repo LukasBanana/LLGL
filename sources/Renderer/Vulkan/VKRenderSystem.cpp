@@ -339,13 +339,13 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
     }
 }
 
-void* VKRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
     AssertBufferCPUAccess(bufferVK);
 
     /* Copy GPU local buffer into staging buffer for read accces */
-    if (access != BufferCPUAccess::WriteOnly)
+    if (access != CPUAccess::WriteOnly)
         CopyBuffer(bufferVK.GetVkBuffer(), bufferVK.GetStagingVkBuffer(), bufferVK.GetSize());
 
     /* Map staging buffer */
@@ -361,7 +361,7 @@ void VKRenderSystem::UnmapBuffer(Buffer& buffer)
     bufferVK.Unmap(device_);
 
     /* Copy staging buffer into GPU local buffer for write access */
-    if (bufferVK.GetMappingCPUAccess() != BufferCPUAccess::ReadOnly)
+    if (bufferVK.GetMappingCPUAccess() != CPUAccess::ReadOnly)
         CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), bufferVK.GetSize());
 }
 

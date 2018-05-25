@@ -238,17 +238,17 @@ D3D11_QUERY Map(const QueryDescriptor& queryDesc)
     DXTypes::MapFailed("QueryType", "D3D11_QUERY");
 }
 
-D3D11_MAP Map(const BufferCPUAccess cpuAccess)
+D3D11_MAP Map(const CPUAccess cpuAccess)
 {
     switch (cpuAccess)
     {
-        case BufferCPUAccess::ReadOnly:     return D3D11_MAP_READ;
-        case BufferCPUAccess::WriteOnly:    return D3D11_MAP_WRITE;
-        case BufferCPUAccess::ReadWrite:    return D3D11_MAP_READ_WRITE;
-                                          /*return D3D11_MAP_WRITE_DISCARD;
-                                            return D3D11_MAP_WRITE_NO_OVERWRITE;*/
+        case CPUAccess::ReadOnly:   return D3D11_MAP_READ;
+        case CPUAccess::WriteOnly:  return D3D11_MAP_WRITE;
+        case CPUAccess::ReadWrite:  return D3D11_MAP_READ_WRITE;
+                                  /*return D3D11_MAP_WRITE_DISCARD;
+                                    return D3D11_MAP_WRITE_NO_OVERWRITE;*/
     }
-    DXTypes::MapFailed("BufferCPUAccess", "D3D11_MAP");
+    DXTypes::MapFailed("CPUAccess", "D3D11_MAP");
 }
 
 D3D11_SRV_DIMENSION Map(const TextureType textureType)

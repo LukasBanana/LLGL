@@ -68,7 +68,7 @@ class DbgRenderSystem : public RenderSystem
 
         void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset) override;
 
-        void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) override;
+        void* MapBuffer(Buffer& buffer, const CPUAccess access) override;
         void UnmapBuffer(Buffer& buffer) override;
 
         /* ----- Textures ----- */
@@ -146,7 +146,7 @@ class DbgRenderSystem : public RenderSystem
         void ValidateBufferSize(std::uint64_t size);
         void ValidateConstantBufferSize(std::uint64_t size);
         void ValidateBufferBoundary(std::uint64_t bufferSize, std::size_t dataSize, std::size_t dataOffset);
-        void ValidateBufferCPUAccess(DbgBuffer& bufferDbg, const BufferCPUAccess access);
+        void ValidateBufferCPUAccess(DbgBuffer& bufferDbg, const CPUAccess access);
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
 
         void ValidateTextureDesc(const TextureDescriptor& desc);

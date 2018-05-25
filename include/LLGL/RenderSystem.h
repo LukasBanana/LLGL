@@ -252,7 +252,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \return Raw pointer to the mapped memory block. You should be aware of the storage buffer size, to not cause memory violations.
         \see UnmapBuffer
         */
-        virtual void* MapBuffer(Buffer& buffer, const BufferCPUAccess access) = 0;
+        virtual void* MapBuffer(Buffer& buffer, const CPUAccess access) = 0;
 
         /**
         \brief Unmaps the specified buffer.

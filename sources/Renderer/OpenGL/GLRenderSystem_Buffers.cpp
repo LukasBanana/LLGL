@@ -183,7 +183,7 @@ void GLRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
     }
 }
 
-void* GLRenderSystem::MapBuffer(Buffer& buffer, const BufferCPUAccess access)
+void* GLRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
 

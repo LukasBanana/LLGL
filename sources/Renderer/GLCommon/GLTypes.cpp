@@ -111,17 +111,17 @@ GLenum MapOrZero(const TextureFormat textureFormat)
 
 /* ----- Map functions ----- */
 
-GLenum Map(const BufferCPUAccess cpuAccess)
+GLenum Map(const CPUAccess cpuAccess)
 {
     #ifdef LLGL_OPENGL
     switch (cpuAccess)
     {
-        case BufferCPUAccess::ReadOnly:     return GL_READ_ONLY;
-        case BufferCPUAccess::WriteOnly:    return GL_WRITE_ONLY;
-        case BufferCPUAccess::ReadWrite:    return GL_READ_WRITE;
+        case CPUAccess::ReadOnly:   return GL_READ_ONLY;
+        case CPUAccess::WriteOnly:  return GL_WRITE_ONLY;
+        case CPUAccess::ReadWrite:  return GL_READ_WRITE;
     }
     #endif
-    MapFailed("BufferCPUAccess");
+    MapFailed("CPUAccess");
 }
 
 GLenum Map(const DataType dataType)

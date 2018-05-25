@@ -105,7 +105,7 @@ int main()
         renderer->GetCommandQueue()->WaitIdle();
 
         // Evaluate compute shader
-        auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::BufferCPUAccess::ReadOnly);
+        auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::CPUAccess::ReadOnly);
         {
             // Show result
             auto vecBuffer = reinterpret_cast<const Gs::Vector4f*>(mappedBuffer);

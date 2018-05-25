@@ -314,7 +314,7 @@ int main()
 
             #if 1
 
-            if (auto data = renderer->MapBuffer(*constBufferMatrices, LLGL::BufferCPUAccess::ReadWrite))
+            if (auto data = renderer->MapBuffer(*constBufferMatrices, LLGL::CPUAccess::ReadWrite))
             {
                 auto ptr = reinterpret_cast<Matrices*>(data);
                 Gs::RotateFree(ptr->modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.002f);

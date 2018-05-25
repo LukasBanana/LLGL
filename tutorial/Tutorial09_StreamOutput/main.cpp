@@ -147,7 +147,7 @@ private:
         // Read stream-output buffer
         renderer->GetCommandQueue()->WaitIdle();
 
-        if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::BufferCPUAccess::ReadOnly))
+        if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::CPUAccess::ReadOnly))
         {
             std::vector<Gs::Vector4f> output(36*3);
             ::memcpy(output.data(), outputBuffer, sizeof(Gs::Vector4f)*36*3);
