@@ -208,17 +208,20 @@ void D3D11Texture::UpdateSubresource(
     if (dstTexFormat.format != imageDesc.format || dstTexFormat.dataType != imageDesc.dataType)
     {
         /* Get source data stride */
-        auto srcRowPitch    = (dstBox.right - dstBox.left)*srcPitch;
-        auto srcDepthPitch  = (dstBox.bottom - dstBox.top)*srcRowPitch;
-        auto imageSize      = (dstBox.back - dstBox.front)*srcDepthPitch;
+        auto srcRowPitch        = (dstBox.right - dstBox.left)*srcPitch;
+        auto srcDepthPitch      = (dstBox.bottom - dstBox.top)*srcRowPitch;
+        auto requiredImageSize  = (dstBox.back - dstBox.front)*srcDepthPitch;
+
+        if (imageDesc.dataSize < requiredImageSize)
+        {
+            throw std::invalid_argument(
+                "image data size is too small to update subresource of Direct3D 11 texture (" +
+                std::to_string(requiredImageSize) + " is required but only " + std::to_string(imageDesc.dataSize) + " was specified)"
+            );
+        }
 
         /* Convert image data from RGB to RGBA */
-        auto tempData = ConvertImageBuffer(
-            imageDesc.format, imageDesc.dataType,
-            imageDesc.data, imageSize,
-            dstTexFormat.format, dstTexFormat.dataType,
-            threadCount
-        );
+        auto tempData = ConvertImageBuffer(imageDesc, dstTexFormat.format, dstTexFormat.dataType, threadCount);
 
         /* Get new source data stride */
         srcPitch        = DataTypeSize(dstTexFormat.dataType) * ImageFormatSize(dstTexFormat.format);

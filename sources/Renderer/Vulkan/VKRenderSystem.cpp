@@ -418,10 +418,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
         if (FindSuitableImageFormat(textureDesc.format, dstFormat, dstDataType))
         {
             /* Convert image format (will be null if no conversion is necessary) */
-            tempImageBuffer = ConvertImageBuffer(
-                imageDesc->format, imageDesc->dataType, imageDesc->data, imageDesc->dataSize,
-                dstFormat, dstDataType, cfg.threadCount
-            );
+            tempImageBuffer = ConvertImageBuffer(*imageDesc, dstFormat, dstDataType, cfg.threadCount);
         }
         else
         {

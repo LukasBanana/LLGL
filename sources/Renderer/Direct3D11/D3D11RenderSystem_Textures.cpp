@@ -211,10 +211,8 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
 
         /* Convert mapped data into requested format */
         auto tempData = ConvertImageBuffer(
-            srcTexFormat.format, srcTexFormat.dataType,
-            mappedSubresource.pData, srcImageSize,
-            imageFormat, dataType,
-            GetConfiguration().threadCount
+            SrcImageDescriptor { srcTexFormat.format, srcTexFormat.dataType, mappedSubresource.pData, srcImageSize },
+            imageFormat, dataType, GetConfiguration().threadCount
         );
 
         /* Copy temporary data into output buffer */

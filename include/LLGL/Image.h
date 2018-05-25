@@ -67,7 +67,12 @@ enum class ImageFormat
 
 /**
 \brief Descriptor structure for an image that is used as source for reading the image data.
-\remarks This kind of 'Image' is mainly used to fill the image data of a hardware texture.
+\remarks This kind of 'Image' is mainly used to fill a MIP-map within a hardware texture by reading from a source image.
+The counterpart for reading a MIP-map from a hardware texture by writing to a destination image is the DstImageDescriptor structure.
+\see DstImageDescriptor
+\see ConvertImageBuffer
+\see RenderSystem::CreateTexture
+\see RenderSystem::WriteTexture
 */
 struct SrcImageDescriptor
 {
@@ -89,8 +94,42 @@ struct SrcImageDescriptor
     //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
     DataType    dataType    = DataType::UInt8;
 
-    //! Pointer to the image data.
+    //! Pointer to the read-only image data.
     const void* data        = nullptr;
+
+    //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
+    std::size_t dataSize    = 0;
+};
+
+/**
+\brief Descriptor structure for an image that is used as destination for writing the image data.
+\remarks This kind of 'Image' is mainly used to fill the image data of a hardware texture.
+\see SrcImageDescriptor
+\see ConvertImageBuffer
+\see RenderSystem::ReadTexture
+*/
+struct DstImageDescriptor
+{
+    DstImageDescriptor() = default;
+    DstImageDescriptor(const DstImageDescriptor&) = default;
+
+    //! Constructor to initialize all attributes.
+    inline DstImageDescriptor(ImageFormat format, DataType dataType, void* data, std::size_t dataSize) :
+        format   { format   },
+        dataType { dataType },
+        data     { data     },
+        dataSize { dataSize }
+    {
+    }
+
+    //! Specifies the image format. By default ImageFormat::RGBA.
+    ImageFormat format      = ImageFormat::RGBA;
+
+    //! Specifies the image data type. This must be DataType::UInt8 for compressed images. By default DataType::UInt8.
+    DataType    dataType    = DataType::UInt8;
+
+    //! Pointer to the read/write image data.
+    void*       data        = nullptr;
 
     //! Specifies the size (in bytes) of the image data. This is primarily used for compressed images and serves for robustness.
     std::size_t dataSize    = 0;
@@ -151,10 +190,7 @@ LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, Imag
 
 /**
 \brief Converts the image format and data type of the source image (only uncompressed color formats).
-\param[in] srcFormat Specifies the source image format.
-\param[in] srcDataType Specifies the source data type.
-\param[in] srcBuffer Pointer to the source image buffer which is to be converted.
-\param[in] srcBufferSize Specifies the size (in bytes) of the source image buffer.
+\param[in] srcImageDesc Specifies the source image descriptor.
 \param[in] dstFormat Specifies the destination image format.
 \param[in] dstDataType Specifies the destination data type.
 \param[in] threadCount Specifies the number of threads to use for conversion.
@@ -172,13 +208,10 @@ or if 'srcBuffer' is a null pointer.
 \see DataTypeSize
 */
 LLGL_EXPORT ByteBuffer ConvertImageBuffer(
-    ImageFormat srcFormat,
-    DataType    srcDataType,
-    const void* srcBuffer,
-    std::size_t srcBufferSize,
-    ImageFormat dstFormat,
-    DataType    dstDataType,
-    std::size_t threadCount = 0
+    SrcImageDescriptor  srcImageDesc,
+    ImageFormat         dstFormat,
+    DataType            dstDataType,
+    std::size_t         threadCount = 0
 );
 
 /**

@@ -422,27 +422,21 @@ static void ConvertImageBufferFormatWorker(
     }
 }
 
-static ByteBuffer ConvertImageBufferFormat(
-    ImageFormat srcFormat,
-    DataType    srcDataType,
-    const void* srcBuffer,
-    std::size_t srcBufferSize,
-    ImageFormat dstFormat,
-    std::size_t threadCount)
+static ByteBuffer ConvertImageBufferFormat(const SrcImageDescriptor& srcImageDesc, ImageFormat dstFormat, std::size_t threadCount)
 {
     /* Allocate destination buffer */
-    auto dataTypeSize   = DataTypeSize(srcDataType);
-    auto srcFormatSize  = ImageFormatSize(srcFormat);
+    auto dataTypeSize   = DataTypeSize(srcImageDesc.dataType);
+    auto srcFormatSize  = ImageFormatSize(srcImageDesc.format);
     auto dstFormatSize  = ImageFormatSize(dstFormat);
 
-    auto imageSize      = srcBufferSize / srcFormatSize;
+    auto imageSize      = srcImageDesc.dataSize / srcFormatSize;
     auto dstBufferSize  = imageSize * dstFormatSize;
     imageSize /= dataTypeSize;
 
     auto dstBuffer = AllocByteArray(dstBufferSize);
 
     /* Get variant buffer for source and destination images */
-    VariantConstBuffer src { srcBuffer };
+    VariantConstBuffer src { srcImageDesc.data };
     VariantBuffer dst { dstBuffer.get() };
 
     threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
@@ -461,7 +455,7 @@ static ByteBuffer ConvertImageBufferFormat(
         {
             workers[i] = std::thread(
                 ConvertImageBufferFormatWorker,
-                srcFormat, srcDataType, std::ref(src),
+                srcImageDesc.format, srcImageDesc.dataType, std::ref(src),
                 dstFormat, std::ref(dst),
                 offset, offset + workSize
             );
@@ -470,7 +464,7 @@ static ByteBuffer ConvertImageBufferFormat(
 
         /* Execute conversion of remaining work on main thread */
         if (workSizeRemain > 0)
-            ConvertImageBufferFormatWorker(srcFormat, srcDataType, src, dstFormat, dst, offset, offset + workSizeRemain);
+            ConvertImageBufferFormatWorker(srcImageDesc.format, srcImageDesc.dataType, src, dstFormat, dst, offset, offset + workSizeRemain);
 
         /* Join worker threads */
         for (auto& w : workers)
@@ -479,7 +473,7 @@ static ByteBuffer ConvertImageBufferFormat(
     else
     {
         /* Execute conversion only on main thread */
-        ConvertImageBufferFormatWorker(srcFormat, srcDataType, src, dstFormat, dst, 0, imageSize);
+        ConvertImageBufferFormatWorker(srcImageDesc.format, srcImageDesc.dataType, src, dstFormat, dst, 0, imageSize);
     }
 
     return dstBuffer;
@@ -606,44 +600,38 @@ LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, Imag
 }
 
 LLGL_EXPORT ByteBuffer ConvertImageBuffer(
-    ImageFormat srcFormat,
-    DataType    srcDataType,
-    const void* srcBuffer,
-    std::size_t srcBufferSize,
-    ImageFormat dstFormat,
-    DataType    dstDataType,
-    std::size_t threadCount)
+    SrcImageDescriptor srcImageDesc, ImageFormat dstFormat, DataType dstDataType, std::size_t threadCount)
 {
     /* Validate input parameters */
-    LLGL_ASSERT_PTR(srcBuffer);
+    LLGL_ASSERT_PTR(srcImageDesc.data);
 
-    if (IsCompressedFormat(srcFormat) || IsCompressedFormat(dstFormat))
+    if (IsCompressedFormat(srcImageDesc.format) || IsCompressedFormat(dstFormat))
         throw std::invalid_argument("cannot convert compressed image formats");
-    if (IsDepthStencilFormat(srcFormat) || IsDepthStencilFormat(dstFormat))
+    if (IsDepthStencilFormat(srcImageDesc.format) || IsDepthStencilFormat(dstFormat))
         throw std::invalid_argument("cannot convert depth-stencil image formats");
-    if (srcBufferSize % (DataTypeSize(srcDataType) * ImageFormatSize(srcFormat)) != 0)
-        throw std::invalid_argument("source buffer size is not a multiple of the source data type size");
+    if (srcImageDesc.dataSize % (DataTypeSize(srcImageDesc.dataType) * ImageFormatSize(srcImageDesc.format)) != 0)
+        throw std::invalid_argument("source image data size is not a multiple of the source data type size");
 
     ByteBuffer dstImage;
 
     if (threadCount == maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
 
-    if (srcDataType != dstDataType)
+    if (srcImageDesc.dataType != dstDataType)
     {
         /* Convert image data type */
-        dstImage = ConvertImageBufferDataType(srcDataType, srcBuffer, srcBufferSize, dstDataType, threadCount);
+        dstImage = ConvertImageBufferDataType(srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize, dstDataType, threadCount);
 
         /* Set new source buffer and source data type */
-        srcBufferSize   = srcBufferSize / DataTypeSize(srcDataType) * DataTypeSize(dstDataType);
-        srcDataType     = dstDataType;
-        srcBuffer       = dstImage.get();
+        srcImageDesc.dataSize   = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstDataType);
+        srcImageDesc.dataType   = dstDataType;
+        srcImageDesc.data       = dstImage.get();
     }
 
-    if (srcFormat != dstFormat)
+    if (srcImageDesc.format != dstFormat)
     {
         /* Convert image format */
-        dstImage = ConvertImageBufferFormat(srcFormat, srcDataType, srcBuffer, srcBufferSize, dstFormat, threadCount);
+        dstImage = ConvertImageBufferFormat(srcImageDesc, dstFormat, threadCount);
     }
 
     return dstImage;
