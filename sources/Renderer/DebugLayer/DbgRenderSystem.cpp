@@ -218,7 +218,7 @@ void DbgRenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
+Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     if (debugger_)
     {
@@ -254,7 +254,7 @@ void DbgRenderSystem::Release(TextureArray& textureArray)
     //ReleaseDbg(textureArrays_, textureArray);
 }
 
-void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
+void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
 {
     auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
 

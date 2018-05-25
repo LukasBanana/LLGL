@@ -38,7 +38,7 @@ using ByteBuffer = std::unique_ptr<char[]>;
 
 /**
 \brief Image format enumeration that applies to each pixel of an image.
-\see ImageDescriptor::format
+\see SrcImageDescriptor::format
 \see ImageFormatSize
 */
 enum class ImageFormat
@@ -66,16 +66,16 @@ enum class ImageFormat
 /* ----- Structures ----- */
 
 /**
-\brief Image descriptor structure.
+\brief Descriptor structure for an image that is used as source for reading the image data.
 \remarks This kind of 'Image' is mainly used to fill the image data of a hardware texture.
 */
-struct ImageDescriptor
+struct SrcImageDescriptor
 {
-    ImageDescriptor() = default;
-    ImageDescriptor(const ImageDescriptor&) = default;
+    SrcImageDescriptor() = default;
+    SrcImageDescriptor(const SrcImageDescriptor&) = default;
 
     //! Constructor to initialize all attributes.
-    inline ImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
+    inline SrcImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
         format   { format   },
         dataType { dataType },
         data     { data     },

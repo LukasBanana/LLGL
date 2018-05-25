@@ -19,7 +19,7 @@ namespace LLGL
 
 /* ----- Textures ----- */
 
-Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
+Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     /* Create texture object and store type */
     auto texture = MakeUnique<D3D11Texture>(textureDesc.type);
@@ -94,7 +94,7 @@ void D3D11RenderSystem::Release(TextureArray& textureArray)
     RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
-void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
+void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
 {
     /* Determine update region */
     Offset3D offset;
@@ -291,7 +291,7 @@ static UINT GetDXTextureMiscFlags(const TextureDescriptor& desc)
     return flags;
 }
 
-void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE1D_DESC descDX;
@@ -314,7 +314,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const Te
     );
 }
 
-void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE2D_DESC descDX;
@@ -340,7 +340,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const Te
     );
 }
 
-void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE3D_DESC descDX;
@@ -386,7 +386,7 @@ void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const 
 
 void D3D11RenderSystem::UpdateGenericTexture(
     Texture& texture, std::uint32_t mipLevel, std::uint32_t layer,
-    const Offset3D& position, const Extent3D& size, const ImageDescriptor& imageDesc)
+    const Offset3D& position, const Extent3D& size, const SrcImageDescriptor& imageDesc)
 {
     /* Get D3D texture and update subresource */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
@@ -405,7 +405,7 @@ void D3D11RenderSystem::UpdateGenericTexture(
 }
 
 void D3D11RenderSystem::InitializeGpuTexture(
-    D3D11Texture& textureD3D, const TextureFormat format, const ImageDescriptor* imageDesc,
+    D3D11Texture& textureD3D, const TextureFormat format, const SrcImageDescriptor* imageDesc,
     std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers)
 {
     if (imageDesc)
@@ -421,7 +421,7 @@ void D3D11RenderSystem::InitializeGpuTexture(
 }
 
 void D3D11RenderSystem::InitializeGpuTextureWithImage(
-    D3D11Texture& textureD3D, const TextureFormat format, ImageDescriptor imageDesc,
+    D3D11Texture& textureD3D, const TextureFormat format, SrcImageDescriptor imageDesc,
     std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers)
 {
     /* Update only the first MIP-map level for each array slice */
@@ -444,7 +444,7 @@ void D3D11RenderSystem::InitializeGpuTextureWithDefault(
     std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers)
 {
     /* Find suitable image format for texture hardware format */
-    ImageDescriptor imageDescDefault;
+    SrcImageDescriptor imageDescDefault;
     if (FindSuitableImageFormat(format, imageDescDefault.format, imageDescDefault.dataType))
     {
         const auto& cfg = GetConfiguration();

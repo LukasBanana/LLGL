@@ -202,7 +202,7 @@ int main()
         if (!imageBuffer)
             throw std::runtime_error("failed to load texture from file: \"" + texFilename + "\"");
 
-        LLGL::ImageDescriptor imageDesc;
+        LLGL::SrcImageDescriptor imageDesc;
         {
             imageDesc.data      = imageBuffer;
             imageDesc.dataSize  = texWidth*texHeight*4;

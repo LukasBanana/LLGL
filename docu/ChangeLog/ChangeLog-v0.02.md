@@ -254,13 +254,13 @@ myImageDesc.compressedSize = myImageBufferSize;
 After:
 ```cpp
 // Interface:
-ImageFormat ImageDescriptor::format;
-DataType    ImageDescriptor::dataType;
-const void* ImageDescriptor::data;
-size_t      ImageDescriptor::dataSize;
+ImageFormat SrcImageDescriptor::format;
+DataType    SrcImageDescriptor::dataType;
+const void* SrcImageDescriptor::data;
+size_t      SrcImageDescriptor::dataSize;
 
 // Usage (for both compressed and uncompressed images):
-LLGL::ImageDescriptor myImageDesc;
+LLGL::SrcImageDescriptor myImageDesc;
 myImageDesc.format   = /* ... */;
 myImageDesc.dataType = /* ... */;
 myImageDesc.data     = myImageBuffer;
@@ -500,6 +500,7 @@ LLGL::BlendOp::DestColor;
 LLGL::BlendOp::InvDestColor;
 LLGL::BlendOp::DestAlpha;
 LLGL::BlendOp::InvDestAlpha;
+LLGL::ImageDescriptor;
 ```
 
 After:
@@ -511,6 +512,7 @@ LLGL::BlendOp::DstColor;
 LLGL::BlendOp::InvDstColor;
 LLGL::BlendOp::DstAlpha;
 LLGL::BlendOp::InvDstAlpha;
+LLGL::SrcImageDescriptor;
 ```
 
 

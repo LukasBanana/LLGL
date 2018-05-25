@@ -272,7 +272,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \see WriteTexture
         \see RenderSystemConfiguration::imageInitialization
         */
-        virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) = 0;
+        virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) = 0;
 
         /**
         \brief Creates a new texture array.
@@ -299,7 +299,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \remarks This function can only be used for non-multi-sample textures
         (i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray),
         */
-        virtual void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) = 0;
+        virtual void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) = 0;
 
         /**
         \brief Reads the image data from the specified texture.

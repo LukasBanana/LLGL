@@ -214,7 +214,7 @@ void D3D12RenderSystem::UnmapBuffer(Buffer& buffer)
 
 /* ----- Textures ----- */
 
-Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
+Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     auto textureD3D = MakeUnique<D3D12Texture>(device_.Get(), textureDesc);
 
@@ -257,7 +257,7 @@ void D3D12RenderSystem::Release(TextureArray& textureArray)
     //RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
-void D3D12RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
+void D3D12RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
 {
     //todo...
 }

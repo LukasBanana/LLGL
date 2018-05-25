@@ -579,8 +579,8 @@ public:
         if (!imageBuffer)
             throw std::runtime_error("failed to load texture from file: \"" + filename + "\"");
 
-        // Initialize image descriptor to upload image data onto hardware texture
-        LLGL::ImageDescriptor imageDesc;
+        // Initialize source image descriptor to upload image data onto hardware texture
+        LLGL::SrcImageDescriptor imageDesc;
         {
             // Set image color format
             imageDesc.format    = LLGL::ImageFormat::RGBA;

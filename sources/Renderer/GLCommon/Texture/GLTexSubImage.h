@@ -19,20 +19,20 @@ namespace LLGL
 
 #ifdef LLGL_OPENGL
 
-void GLTexSubImage1D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImage2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImage3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImageCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage1D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage2D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage3D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImageCube(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
 
 #else
 
-void GLTexSubImage2D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImage3D(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImageCube(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
-void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const ImageDescriptor& imageDesc);
+void GLTexSubImage2D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage3D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImageCube(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
+void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc);
 
 #endif
 

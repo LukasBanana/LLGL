@@ -255,7 +255,7 @@ int main()
             { 255, 0, 255 }
         };
 
-        LLGL::ImageDescriptor imageDesc;
+        LLGL::SrcImageDescriptor imageDesc;
         {
             imageDesc.format    = LLGL::ImageFormat::RGB;
             imageDesc.dataType  = LLGL::DataType::UInt8;

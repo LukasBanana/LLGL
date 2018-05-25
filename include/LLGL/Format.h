@@ -21,7 +21,7 @@ namespace LLGL
 
 /**
 \brief Renderer data types enumeration.
-\see ImageDescriptor::dataType
+\see SrcImageDescriptor::dataType
 */
 enum class DataType
 {

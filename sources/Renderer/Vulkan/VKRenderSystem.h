@@ -91,13 +91,13 @@ class VKRenderSystem : public RenderSystem
 
         /* ----- Textures ----- */
 
-        Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) override;
+        Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
         TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
         void Release(TextureArray& textureArray) override;
 
-        void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
+        void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
 
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) override;
 

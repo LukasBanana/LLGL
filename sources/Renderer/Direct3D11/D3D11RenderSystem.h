@@ -86,13 +86,13 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Textures ----- */
 
-        Texture* CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc = nullptr) override;
+        Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
         TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
         void Release(TextureArray& textureArray) override;
 
-        void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc) override;
+        void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
 
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, ImageFormat imageFormat, DataType dataType, void* data, std::size_t dataSize) override;
 
@@ -164,24 +164,24 @@ class D3D11RenderSystem : public RenderSystem
         void QueryRendererInfo();
         void QueryRenderingCaps();
 
-        void BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
-        void BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const ImageDescriptor* imageDesc);
+        void BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
+        void BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
+        void BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
         void BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc);
 
         void UpdateGenericTexture(
             Texture& texture, std::uint32_t mipLevel, std::uint32_t layer,
             const Offset3D& offset, const Extent3D& extent,
-            const ImageDescriptor& imageDesc
+            const SrcImageDescriptor& imageDesc
         );
 
         void InitializeGpuTexture(
-            D3D11Texture& textureD3D, const TextureFormat format, const ImageDescriptor* imageDesc,
+            D3D11Texture& textureD3D, const TextureFormat format, const SrcImageDescriptor* imageDesc,
             std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers
         );
 
         void InitializeGpuTextureWithImage(
-            D3D11Texture& textureD3D, const TextureFormat format, ImageDescriptor imageDesc,
+            D3D11Texture& textureD3D, const TextureFormat format, SrcImageDescriptor imageDesc,
             std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers
         );
 

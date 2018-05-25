@@ -29,7 +29,7 @@ static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
         return GL_LINEAR;
 }
 
-Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
+Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     auto texture = MakeUnique<GLTexture>(textureDesc.type);
 
@@ -126,7 +126,7 @@ void GLRenderSystem::Release(TextureArray& textureArray)
 
 /* ----- "WriteTexture..." functions ----- */
 
-void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
+void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
 {
     /* Bind texture and write texture sub data */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);

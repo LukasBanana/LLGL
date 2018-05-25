@@ -397,7 +397,7 @@ static std::uint32_t GetTextureLayertCount(const TextureDescriptor& desc)
     }
 }
 
-Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const ImageDescriptor* imageDesc)
+Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
     const auto& cfg = GetConfiguration();
 
@@ -512,7 +512,7 @@ void VKRenderSystem::Release(TextureArray& textureArray)
     //todo
 }
 
-void VKRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const ImageDescriptor& imageDesc)
+void VKRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
 {
     //todo
 }

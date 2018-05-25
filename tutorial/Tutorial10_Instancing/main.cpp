@@ -226,7 +226,7 @@ private:
         }
 
         // Create array texture object with 'numImages' layers
-        LLGL::ImageDescriptor imageDesc;
+        LLGL::SrcImageDescriptor imageDesc;
         {
             imageDesc.format    = LLGL::ImageFormat::RGBA;
             imageDesc.dataType  = LLGL::DataType::UInt8;

@@ -349,7 +349,7 @@ static void GLTexImage2DMultisampleArray(
 
 #ifdef LLGL_OPENGL
 
-void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -392,7 +392,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
 
 #endif
 
-void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -455,7 +455,7 @@ void GLTexImage2D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     }
 }
 
-void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -496,7 +496,7 @@ void GLTexImage3D(const TextureDescriptor& desc, const ImageDescriptor* imageDes
     }
 }
 
-void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     const std::array<AxisDirection, 6> cubeFaces
     {{
@@ -568,7 +568,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const ImageDescriptor* imageD
 
 #ifdef LLGL_OPENGL
 
-void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -611,7 +611,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
 
 #endif
 
-void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
@@ -675,7 +675,7 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const ImageDescriptor* ima
 
 #ifdef LLGL_OPENGL
 
-void GLTexImageCubeArray(const TextureDescriptor& desc, const ImageDescriptor* imageDesc)
+void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
     if (imageDesc)
     {
