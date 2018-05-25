@@ -486,19 +486,31 @@ if (myColorA == myColorB) {
 ```
 
 
-Renamed structures and enumerations:
-------------------------------------
+Renamed identifiers:
+--------------------
 
-Various structures and enumerations have been renamed to either fit LLGL's nomenclature or to simplify their identifiers when they are frequently used.
+Various structures, enumerations, and fields have been renamed to either fit LLGL's nomenclature or to simplify their identifiers when they are frequently used.
 
 Before:
 ```cpp
-struct LLGL::ShaderStageFlags;
+LLGL::ShaderStageFlags;
+LLGL::BlendTargetDescriptor::destColor;
+LLGL::BlendTargetDescriptor::destAlpha;
+LLGL::BlendOp::DestColor;
+LLGL::BlendOp::InvDestColor;
+LLGL::BlendOp::DestAlpha;
+LLGL::BlendOp::InvDestAlpha;
 ```
 
 After:
 ```cpp
-struct LLGL::StageFlags;
+LLGL::StageFlags;
+LLGL::BlendTargetDescriptor::dstColor;
+LLGL::BlendTargetDescriptor::dstAlpha;
+LLGL::BlendOp::DstColor;
+LLGL::BlendOp::InvDstColor;
+LLGL::BlendOp::DstAlpha;
+LLGL::BlendOp::InvDstAlpha;
 ```
 
 

@@ -39,7 +39,7 @@ GLenum MapOrZero(const TextureFormat textureFormat)
     switch (textureFormat)
     {
         case TextureFormat::Unknown:        return 0;
-        
+
         /* --- Color formats --- */
         case TextureFormat::R8:             return GL_R8;
         case TextureFormat::R8Sgn:          return GL_R8_SNORM;
@@ -104,7 +104,7 @@ GLenum MapOrZero(const TextureFormat textureFormat)
         case TextureFormat::RGBA_DXT3:      return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
         case TextureFormat::RGBA_DXT5:      return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
         #endif
-        
+
         default:                            return 0;
     }
 }
@@ -284,10 +284,10 @@ GLenum Map(const BlendOp blendOp)
         case BlendOp::InvSrcColor:      return GL_ONE_MINUS_SRC_COLOR;
         case BlendOp::SrcAlpha:         return GL_SRC_ALPHA;
         case BlendOp::InvSrcAlpha:      return GL_ONE_MINUS_SRC_ALPHA;
-        case BlendOp::DestColor:        return GL_DST_COLOR;
-        case BlendOp::InvDestColor:     return GL_ONE_MINUS_DST_COLOR;
-        case BlendOp::DestAlpha:        return GL_DST_ALPHA;
-        case BlendOp::InvDestAlpha:     return GL_ONE_MINUS_DST_ALPHA;
+        case BlendOp::DstColor:         return GL_DST_COLOR;
+        case BlendOp::InvDstColor:      return GL_ONE_MINUS_DST_COLOR;
+        case BlendOp::DstAlpha:         return GL_DST_ALPHA;
+        case BlendOp::InvDstAlpha:      return GL_ONE_MINUS_DST_ALPHA;
         case BlendOp::SrcAlphaSaturate: return GL_SRC_ALPHA_SATURATE;
         case BlendOp::BlendFactor:      return GL_CONSTANT_COLOR;
         case BlendOp::InvBlendFactor:   return GL_ONE_MINUS_CONSTANT_COLOR;
@@ -353,7 +353,7 @@ GLenum Map(const AxisDirection cubeFace)
     }
     MapFailed("AxisDirection");
 }
-    
+
 GLenum Map(const TextureWrap textureWrap)
 {
     switch (textureWrap)

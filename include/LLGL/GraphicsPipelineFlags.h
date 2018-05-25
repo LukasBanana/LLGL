@@ -162,10 +162,10 @@ enum class BlendOp
     InvSrcColor,        //!< Data source is inverted color data (1 - RGB) from a fragment shader.
     SrcAlpha,           //!< Data source is alpha data (A) from a fragment shader.
     InvSrcAlpha,        //!< Data source is inverted alpha data (1 - A) from a fragment shader.
-    DestColor,          //!< Data source is color data (RGB) from a framebuffer.
-    InvDestColor,       //!< Data source is inverted color data (1 - RGB) from a framebuffer.
-    DestAlpha,          //!< Data source is alpha data (A) from a framebuffer.
-    InvDestAlpha,       //!< Data source is inverted alpha data (1 - A) from a framebuffer.
+    DstColor,           //!< Data source is color data (RGB) from a framebuffer.
+    InvDstColor,        //!< Data source is inverted color data (1 - RGB) from a framebuffer.
+    DstAlpha,           //!< Data source is alpha data (A) from a framebuffer.
+    InvDstAlpha,        //!< Data source is inverted alpha data (1 - A) from a framebuffer.
     SrcAlphaSaturate,   //!< Data source is alpha data (A) from a fragment shader which is clamped to 1 or less.
     BlendFactor,        //!< Data source is the blend factor (RGBA) from the blend state. \see BlendDescriptor::blendFactor
     InvBlendFactor,     //!< Data source is the inverted blend factor (1 - RGBA) from the blend state. \see BlendDescriptor::blendFactor
@@ -208,6 +208,7 @@ enum class CullMode
 /**
 \brief Logical pixel operation enumeration.
 \remarks These logical pixel operations are bitwise operations.
+In the following documentation, 'src' denotes the source color and 'dst' denotes the destination color.
 \note Only supported with: OpenGL, Vulkan.
 */
 enum class LogicOp
@@ -217,18 +218,18 @@ enum class LogicOp
     Set,            //!< Resulting operation: 1.
     Copy,           //!< Resulting operation: src.
     CopyInverted,   //!< Resulting operation: ~src.
-    NoOp,           //!< Resulting operation: dest.
-    Invert,         //!< Resulting operation: ~dest.
-    AND,            //!< Resulting operation: src & dest.
-    ANDReverse,     //!< Resulting operation: src & ~dest.
-    ANDInverted,    //!< Resulting operation: ~src & dest.
-    NAND,           //!< Resulting operation: ~(src & dest).
-    OR,             //!< Resulting operation: src | dest.
-    ORReverse,      //!< Resulting operation: src | ~dest.
-    ORInverted,     //!< Resulting operation: ~src | dest.
-    NOR,            //!< Resulting operation: ~(src | dest).
-    XOR,            //!< Resulting operation: src ^ dest.
-    Equiv,          //!< Resulting operation: ~(src ^ dest).
+    NoOp,           //!< Resulting operation: dst.
+    Invert,         //!< Resulting operation: ~dst.
+    AND,            //!< Resulting operation: src & dst.
+    ANDReverse,     //!< Resulting operation: src & ~dst.
+    ANDInverted,    //!< Resulting operation: ~src & dst.
+    NAND,           //!< Resulting operation: ~(src & dst).
+    OR,             //!< Resulting operation: src | dst.
+    ORReverse,      //!< Resulting operation: src | ~dst.
+    ORInverted,     //!< Resulting operation: ~src | dst.
+    NOR,            //!< Resulting operation: ~(src | dst).
+    XOR,            //!< Resulting operation: src ^ dst.
+    Equiv,          //!< Resulting operation: ~(src ^ dst).
 };
 
 
@@ -527,7 +528,7 @@ struct BlendTargetDescriptor
     BlendOp         srcColor        = BlendOp::SrcAlpha;
 
     //! Destination color blending operation. By default BlendOp::InvSrcAlpha.
-    BlendOp         destColor       = BlendOp::InvSrcAlpha;
+    BlendOp         dstColor        = BlendOp::InvSrcAlpha;
 
     //! Color blending arithmetic. By default BlendArithmetic::Add.
     BlendArithmetic colorArithmetic = BlendArithmetic::Add;
@@ -536,7 +537,7 @@ struct BlendTargetDescriptor
     BlendOp         srcAlpha        = BlendOp::SrcAlpha;
 
     //! Destination alpha blending operation. By default BlendOp::InvSrcAlpha.
-    BlendOp         destAlpha       = BlendOp::InvSrcAlpha;
+    BlendOp         dstAlpha        = BlendOp::InvSrcAlpha;
 
     //! Alpha blending arithmetic. By default BlendArithmetic::Add.
     BlendArithmetic alphaArithmetic = BlendArithmetic::Add;

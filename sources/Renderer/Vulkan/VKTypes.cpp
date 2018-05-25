@@ -256,10 +256,10 @@ VkBlendFactor Map(const BlendOp blendOp)
         case BlendOp::InvSrcColor:      return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
         case BlendOp::SrcAlpha:         return VK_BLEND_FACTOR_SRC_ALPHA;
         case BlendOp::InvSrcAlpha:      return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        case BlendOp::DestColor:        return VK_BLEND_FACTOR_DST_COLOR;
-        case BlendOp::InvDestColor:     return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
-        case BlendOp::DestAlpha:        return VK_BLEND_FACTOR_DST_ALPHA;
-        case BlendOp::InvDestAlpha:     return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+        case BlendOp::DstColor:         return VK_BLEND_FACTOR_DST_COLOR;
+        case BlendOp::InvDstColor:      return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+        case BlendOp::DstAlpha:         return VK_BLEND_FACTOR_DST_ALPHA;
+        case BlendOp::InvDstAlpha:      return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
         case BlendOp::SrcAlphaSaturate: return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
         case BlendOp::BlendFactor:      return VK_BLEND_FACTOR_CONSTANT_COLOR;              // VK_BLEND_FACTOR_CONSTANT_ALPHA ???
         case BlendOp::InvBlendFactor:   return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;    // VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA ???

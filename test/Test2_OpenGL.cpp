@@ -323,7 +323,7 @@ int main()
 
             LLGL::BlendTargetDescriptor blendDesc;
             {
-                blendDesc.destColor = LLGL::BlendOp::Zero;
+                blendDesc.dstColor = LLGL::BlendOp::Zero;
             }
             pipelineDesc.blend.targets.push_back(blendDesc);
         }

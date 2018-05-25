@@ -162,10 +162,10 @@ void D3D11GraphicsPipeline::CreateBlendState(ID3D11Device* device, const BlendDe
 
                 targetState.BlendEnable             = desc.blendEnabled;
                 targetState.SrcBlend                = D3D11Types::Map(targetDesc.srcColor);
-                targetState.DestBlend               = D3D11Types::Map(targetDesc.destColor);
+                targetState.DestBlend               = D3D11Types::Map(targetDesc.dstColor);
                 targetState.BlendOp                 = D3D11Types::Map(targetDesc.colorArithmetic);
                 targetState.SrcBlendAlpha           = D3D11Types::Map(targetDesc.srcAlpha);
-                targetState.DestBlendAlpha          = D3D11Types::Map(targetDesc.destAlpha);
+                targetState.DestBlendAlpha          = D3D11Types::Map(targetDesc.dstAlpha);
                 targetState.BlendOpAlpha            = D3D11Types::Map(targetDesc.alphaArithmetic);
                 targetState.RenderTargetWriteMask   = GetColorWriteMask(targetDesc.colorMask);
             }

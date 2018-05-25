@@ -200,10 +200,10 @@ void D3D12GraphicsPipeline::CreatePipelineState(
             targetState.BlendEnable             = desc.blend.blendEnabled;
             targetState.LogicOpEnable           = FALSE;
             targetState.SrcBlend                = D3D12Types::Map(targetDesc.srcColor);
-            targetState.DestBlend               = D3D12Types::Map(targetDesc.destColor);
+            targetState.DestBlend               = D3D12Types::Map(targetDesc.dstColor);
             targetState.BlendOp                 = D3D12Types::Map(targetDesc.colorArithmetic);
             targetState.SrcBlendAlpha           = D3D12Types::Map(targetDesc.srcAlpha);
-            targetState.DestBlendAlpha          = D3D12Types::Map(targetDesc.destAlpha);
+            targetState.DestBlendAlpha          = D3D12Types::Map(targetDesc.dstAlpha);
             targetState.BlendOpAlpha            = D3D12Types::Map(targetDesc.alphaArithmetic);
             targetState.LogicOp                 = D3D12_LOGIC_OP_NOOP;
             targetState.RenderTargetWriteMask   = GetColorWriteMask(targetDesc.colorMask);

@@ -217,10 +217,10 @@ static void CreateColorBlendAttachmentState(VkPipelineColorBlendAttachmentState&
 {
     createInfo.blendEnable          = blendEnable;
     createInfo.srcColorBlendFactor  = VKTypes::Map(desc.srcColor);
-    createInfo.dstColorBlendFactor  = VKTypes::Map(desc.destColor);
+    createInfo.dstColorBlendFactor  = VKTypes::Map(desc.dstColor);
     createInfo.colorBlendOp         = VKTypes::Map(desc.colorArithmetic);
     createInfo.srcAlphaBlendFactor  = VKTypes::Map(desc.srcAlpha);
-    createInfo.dstAlphaBlendFactor  = VKTypes::Map(desc.destAlpha);
+    createInfo.dstAlphaBlendFactor  = VKTypes::Map(desc.dstAlpha);
     createInfo.alphaBlendOp         = VKTypes::Map(desc.alphaArithmetic);
     createInfo.colorWriteMask       = 0;
 

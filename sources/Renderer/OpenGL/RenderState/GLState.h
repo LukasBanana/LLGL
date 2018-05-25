@@ -142,10 +142,10 @@ struct GLStencil
 struct GLBlend
 {
     GLenum                  srcColor    = GL_ONE;
-    GLenum                  destColor   = GL_ZERO;
+    GLenum                  dstColor    = GL_ZERO;
     GLenum                  funcColor   = GL_FUNC_ADD;
     GLenum                  srcAlpha    = GL_ONE;
-    GLenum                  destAlpha   = GL_ZERO;
+    GLenum                  dstAlpha    = GL_ZERO;
     GLenum                  funcAlpha   = GL_FUNC_ADD;
     ColorRGBAT<GLboolean>   colorMask   = { GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE };
 };

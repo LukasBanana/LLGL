@@ -423,7 +423,7 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
         glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
         if (blendEnabled)
         {
-            glBlendFuncSeparate(state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
+            glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
             glBlendEquationSeparate(state.funcColor, state.funcAlpha);
         }
     }
@@ -445,7 +445,7 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
 
         if (blendEnabled)
         {
-            glBlendFuncSeparatei(drawBuffer, state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
+            glBlendFuncSeparatei(drawBuffer, state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
             glBlendEquationSeparatei(drawBuffer, state.funcColor, state.funcAlpha);
         }
     }
@@ -456,7 +456,7 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
 
         if (blendEnabled)
         {
-            glBlendFuncSeparate(state.srcColor, state.destColor, state.srcAlpha, state.destAlpha);
+            glBlendFuncSeparate(state.srcColor, state.dstColor, state.srcAlpha, state.dstAlpha);
             glBlendEquationSeparate(state.funcColor, state.funcAlpha);
         }
     }

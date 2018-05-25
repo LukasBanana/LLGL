@@ -71,10 +71,10 @@ D3D11_BLEND Map(const BlendOp blendOp)
         case BlendOp::InvSrcColor:      return D3D11_BLEND_INV_SRC_COLOR;
         case BlendOp::SrcAlpha:         return D3D11_BLEND_SRC_ALPHA;
         case BlendOp::InvSrcAlpha:      return D3D11_BLEND_INV_SRC_ALPHA;
-        case BlendOp::DestColor:        return D3D11_BLEND_DEST_COLOR;
-        case BlendOp::InvDestColor:     return D3D11_BLEND_INV_DEST_COLOR;
-        case BlendOp::DestAlpha:        return D3D11_BLEND_DEST_ALPHA;
-        case BlendOp::InvDestAlpha:     return D3D11_BLEND_INV_DEST_ALPHA;
+        case BlendOp::DstColor:         return D3D11_BLEND_DEST_COLOR;
+        case BlendOp::InvDstColor:      return D3D11_BLEND_INV_DEST_COLOR;
+        case BlendOp::DstAlpha:         return D3D11_BLEND_DEST_ALPHA;
+        case BlendOp::InvDstAlpha:      return D3D11_BLEND_INV_DEST_ALPHA;
         case BlendOp::SrcAlphaSaturate: return D3D11_BLEND_SRC_ALPHA_SAT;
         case BlendOp::BlendFactor:      return D3D11_BLEND_BLEND_FACTOR;
         case BlendOp::InvBlendFactor:   return D3D11_BLEND_INV_BLEND_FACTOR;

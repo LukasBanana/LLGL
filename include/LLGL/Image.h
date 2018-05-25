@@ -74,6 +74,7 @@ struct ImageDescriptor
     ImageDescriptor() = default;
     ImageDescriptor(const ImageDescriptor&) = default;
 
+    //! Constructor to initialize all attributes.
     inline ImageDescriptor(ImageFormat format, DataType dataType, const void* data, std::size_t dataSize) :
         format   { format   },
         dataType { dataType },

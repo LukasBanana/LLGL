@@ -19,7 +19,10 @@ namespace LLGL
 
 /* ----- Enumerations ----- */
 
-//! Renderer data types enumeration.
+/**
+\brief Renderer data types enumeration.
+\see ImageDescriptor::dataType
+*/
 enum class DataType
 {
     Int8,   //!< 8-bit signed integer (char).
@@ -35,7 +38,10 @@ enum class DataType
     Double, //!< 64-bit real type (double).
 };
 
-//! Renderer vector types enumeration.
+/**
+\brief Renderer vector types enumeration.
+\see VertexAttribute::vectorType
+*/
 enum class VectorType
 {
     Float,      //!< 1-Dimensional single precision floating-point vector (float in GLSL, float in HLSL).

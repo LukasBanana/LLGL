@@ -33,10 +33,10 @@ static void Convert(GLStencil& to, const StencilFaceDescriptor& from)
 static void Convert(GLBlend& to, const BlendTargetDescriptor& from)
 {
     to.srcColor     = GLTypes::Map(from.srcColor);
-    to.destColor    = GLTypes::Map(from.destColor);
+    to.dstColor     = GLTypes::Map(from.dstColor);
     to.funcColor    = GLTypes::Map(from.colorArithmetic);
     to.srcAlpha     = GLTypes::Map(from.srcAlpha);
-    to.destAlpha    = GLTypes::Map(from.destAlpha);
+    to.dstAlpha     = GLTypes::Map(from.dstAlpha);
     to.funcAlpha    = GLTypes::Map(from.alphaArithmetic);
     to.colorMask.r  = GLBoolean(from.colorMask.r);
     to.colorMask.g  = GLBoolean(from.colorMask.g);
@@ -65,10 +65,10 @@ static bool IsBlendColorNeeded(const BlendDescriptor& blendDesc)
 
     for (const auto& target : blendDesc.targets)
     {
-        if ( IsBlendColorNeeded(target.srcColor)  ||
-             IsBlendColorNeeded(target.srcAlpha)  ||
-             IsBlendColorNeeded(target.destColor) ||
-             IsBlendColorNeeded(target.destAlpha) )
+        if ( IsBlendColorNeeded(target.srcColor) ||
+             IsBlendColorNeeded(target.srcAlpha) ||
+             IsBlendColorNeeded(target.dstColor) ||
+             IsBlendColorNeeded(target.dstAlpha) )
         {
             return true;
         }
