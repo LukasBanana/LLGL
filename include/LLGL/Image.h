@@ -39,6 +39,26 @@ class LLGL_EXPORT Image
 
         Image() = default;
 
+        /**
+        \brief Constructor to initialize the image with a format, data type, and extent.
+        \note The image buffer will be uninitialized!
+        \see Fill
+        */
+        Image(const Extent3D& extent, const ImageFormat format, const DataType dataType);
+
+        /**
+        \brief Constructor to initialize the image with a format, data type, and extent. The image buffer will be filled with the specified color.
+        \see GenerateImageBuffer
+        */
+        Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, const ColorRGBAd& fillColor);
+
+        /**
+        \brief Constructor to initialize the image with all atributes, including the image buffer specified by the 'data' parameter.
+        \note If the specified data does not manage an image buffer of the specified extent and format, the behavior is undefined.
+        \see Reset(const Extent3D&, const ImageFormat, const DataType, ByteBuffer&&)
+        */
+        Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data);
+
         //! Copy constructor which copies the entire image buffer from the specified source image.
         Image(const Image& rhs);
 
@@ -87,16 +107,35 @@ class LLGL_EXPORT Image
         */
         void Resize(const Extent3D& extent, const TextureFilter filter);
 
+        //! Swaps all attributes with the specified image.
+        void Swap(Image& rhs);
+
+        //! Resets all image attributes to its default values.
+        void Reset();
+
+        /**
+        \brief Resets all image attributes to the specified values.
+        \note If the specified data does not manage an image buffer of the specified extent and format, the behavior is undefined.
+        \see GenerateImageBuffer
+        \see GenerateEmptyByteBuffer
+        */
+        void Reset(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data);
+
+        //! Releases the ownership of the image buffer and resets all attributes.
+        ByteBuffer Release();
+
         /* ----- Pixels ----- */
 
         /**
         \brief Copies a region of the specified source image into this image.
+        \param[in] dstRegionOffset Specifies the offset within the destination image (i.e. this Image instance). This can also be outside of the image area.
         \param[in] srcImage Specifies the source image whose region is to be copied.
-        \param[in] offset Specifies the offset where to copy the region into this image. This can also be outside of the image.
-        \param[in] extent Specifies the extent of the region. This will be clamped if it exceeds the maximal possible extent.
+        \param[in] srcRegionOffset Specifies the offset within the source image. This will be clamped if it exceeds the source image area.
+        \param[in] srcRegionExtent Specifies the extent of the region to copy. This will be clamped if it exceeds the source or destination image area.
+        \remarks If one of the region offsets is clamped, the region extent will be adjusted respectively.
         \todo Not implemented yet.
         */
-        void Blit(const Image& srcImage, Offset3D offset, Extent3D extent);
+        void Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRegionOffset, Extent3D srcRegionExtent);
 
         /**
         \brief Fills a region of this image by the specified color.
@@ -107,6 +146,33 @@ class LLGL_EXPORT Image
         */
         void Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor);
 
+        /**
+        \brief Reads a region of pixels from this image into the destination image buffer specified by 'imageDesc'.
+        \param[in] offset Specifies the region offset within this image to read from.
+        \param[in] extent Specifies the region extent within this image to read from.
+        \param[in] imageDesc Specifies the destination image descriptor to write the region to.
+        \remarks To read a single pixel, use the following code example:
+        \code
+        LLGL::ColorRGBAub ReadSinglePixelRGBAub(const LLGL::Image& image, const LLGL::Offset3D& position) {
+            LLGL::ColorRGBAub pixelColor;
+            const DstImageDescriptor imageDesc { LLGL::ImageFormat::RGBA, LLGL::DataType::UInt8, &pixelColor, sizeof(pixelColor) };
+            image.ReadPixels(position, { 1, 1, 1 }, imageDesc);
+            return pixelColor;
+        }
+        \endcode
+        \todo Not implemented yet.
+        */
+        void ReadPixels(Offset3D offset, Extent3D extent, const DstImageDescriptor& imageDesc) const;
+
+        /**
+        \brief Writes a region of pixels to this image from the source image buffer specified by 'imageDesc'.
+        \param[in] offset Specifies the region offset within this image to write to.
+        \param[in] extent Specifies the region extent within this image to write to.
+        \param[in] imageDesc Specifies the source image descriptor to read the region from.
+        \todo Not implemented yet.
+        */
+        void WritePixels(Offset3D offset, Extent3D extent, const SrcImageDescriptor& imageDesc);
+
         /* ----- Attributes ----- */
 
         //! Returns a source image descriptor for this image with read-only access to the image data.
@@ -114,6 +180,12 @@ class LLGL_EXPORT Image
 
         //! Returns a destination image descriptor for this image with read/write access to the image data.
         DstImageDescriptor QueryDstDesc();
+
+        //! Returns the extent of the image as 3D vector.
+        inline const Extent3D& GetExtent() const
+        {
+            return extent_;
+        }
 
         //! Returns the format for each pixel. By default ImageFormat::RGBA.
         inline ImageFormat GetFormat() const
@@ -152,21 +224,14 @@ class LLGL_EXPORT Image
         */
         std::uint32_t GetNumPixels() const;
 
-        //! Returns the extent of the image as 3D vector.
-        inline const Extent3D& GetExtent() const
-        {
-            return extent_;
-        }
-
-        //! Releases the ownership of the image buffer and resets all attributes.
-        ByteBuffer Release();
-
     private:
 
+        void ResetAttributes();
+
+        Extent3D    extent_;
         ImageFormat format_     = ImageFormat::RGBA;
         DataType    dataType_   = DataType::UInt8;
         ByteBuffer  data_;
-        Extent3D    extent_;
 
 };
 

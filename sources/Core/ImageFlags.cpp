@@ -674,10 +674,13 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
     return imageBuffer;
 }
 
-LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize)
+LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize, bool initialize)
 {
     auto buffer = AllocByteArray(bufferSize);
-    std::fill(buffer.get(), buffer.get() + bufferSize, 0);
+
+    if (initialize)
+        std::fill(buffer.get(), buffer.get() + bufferSize, 0);
+
     return buffer;
 }
 

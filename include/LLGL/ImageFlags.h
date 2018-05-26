@@ -243,9 +243,12 @@ LLGL_EXPORT ByteBuffer GenerateImageBuffer(
 /**
 \brief Generates a new byte buffer with zeros in each byte.
 \param[in] bufferSize Specifies the size (in bytes) of the buffer.
+\param[in] initialize Specifies whether to initialize the byte buffer with zeros. By default true.
 \return The new allocated and initialized byte buffer.
+\remarks Use GenerateImageBuffer to generate an image buffer with a fill color.
+\see GenerateImageBuffer
 */
-LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize);
+LLGL_EXPORT ByteBuffer GenerateEmptyByteBuffer(std::size_t bufferSize, bool initialize = true);
 
 /** @} */
 

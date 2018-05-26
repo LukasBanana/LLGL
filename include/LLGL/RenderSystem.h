@@ -304,19 +304,16 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /**
         \brief Reads the image data from the specified texture.
         \param[in] texture Specifies the texture object to read from.
-        \param[in] mipLevel Specifies the MIP-level from which to read the image data.
-        \param[in] imageFormat Specifies the output image format.
-        \param[in] dataType Specifies the output data type.
-        \param[out] data Specifies the output image data buffer. This must be a pointer to a memory block with at least 'dataSize' bytes. This must not be null.
-        \param[in] dataSize Specifies the size (in bytes) of the output data buffer.
+        \param[in] mipLevel Specifies the MIP-level from which to read the texture data.
+        \param[out] imageDesc Specifies the destination image descriptor to write the texture data to.
         \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
-        The "Texture::QueryDesc" function can be used to determine the texture dimensions.
+        The Texture::QueryDesc or Texture::QueryMipLevelSize functions can be used to determine the texture dimensions.
         \code
         // Query texture size attribute
-        auto textureDesc = texture->QueryDesc();
+        auto myTextureExtent = myTexture->QueryMipLevelSize(0);
 
         // Allocate image buffer with elements in all dimensions
-        std::vector<LLGL::ColorRGBAub> myImage(textureDesc.texture3D.width * textureDesc.texture3D.height * textureDesc.texture3D.depth);
+        std::vector<LLGL::ColorRGBAub> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth);
 
         // Initialize destination image descriptor
         const DstImageDescriptor myImageDesc {
@@ -327,13 +324,14 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         };
 
         // Read texture data from first MIP-map level (index 0)
-        myRenderSystem->ReadTexture(*texture, 0, myImageDesc);
+        myRenderSystem->ReadTexture(*myTexture, 0, myImageDesc);
         \endcode
-        \note The behavior is undefined if 'data' points to an invalid buffer,
-        or 'data' points to a buffer that is smaller than specified by 'dataSize',
-        or 'dataSize' is less than the required size (can be determined by 'Texture::QueryDesc').
-        \throws std::invalid_argument If 'data' is null.
+        \note The behavior is undefined if 'imageDesc.data' points to an invalid buffer,
+        or 'imageDesc.data' points to a buffer that is smaller than specified by 'imageDesc.dataSize',
+        or 'imageDesc.dataSize' is less than the required size.
+        \throws std::invalid_argument If 'imageDesc.data' is null.
         \see Texture::QueryDesc
+        \see Texture::QueryMipLevelSize
         */
         virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;
 

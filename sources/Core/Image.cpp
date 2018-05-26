@@ -13,41 +13,61 @@ namespace LLGL
 {
 
 
-//TODO: use the "AllocByteArray" function from <ImageFlags.cpp>
-static ByteBuffer AllocByteArray(std::size_t size)
-{
-    return ByteBuffer { new char[size] };
-}
-
 /* ----- Common ----- */
 
+Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType) :
+    extent_   { extent                                        },
+    format_   { format                                        },
+    dataType_ { dataType                                      },
+    data_     { GenerateEmptyByteBuffer(GetDataSize(), false) }
+{
+}
+
+Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, const ColorRGBAd& fillColor) :
+    extent_   { extent                                                           },
+    format_   { format                                                           },
+    dataType_ { dataType                                                         },
+    data_     { GenerateImageBuffer(format, dataType, GetNumPixels(), fillColor) }
+{
+}
+
+Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data) :
+    extent_   { extent          },
+    format_   { format          },
+    dataType_ { dataType        },
+    data_     { std::move(data) }
+{
+}
+
 Image::Image(const Image& rhs) :
-    format_   { rhs.format_                       },
-    dataType_ { rhs.dataType_                     },
-    data_     { AllocByteArray(rhs.GetDataSize()) },
-    extent_   { rhs.extent_                       }
+    Image { rhs.GetExtent(), rhs.GetFormat(), rhs.GetDataType() }
 {
     std::copy(rhs.data_.get(), rhs.data_.get() + rhs.GetDataSize(), data_.get());
 }
 
 Image::Image(Image&& rhs) :
+    extent_   { rhs.extent_          },
     format_   { rhs.format_          },
     dataType_ { rhs.dataType_        },
-    data_     { std::move(rhs.data_) },
-    extent_   { rhs.extent_          }
+    data_     { std::move(rhs.data_) }
 {
+    rhs.ResetAttributes();
 }
 
 /* ----- Storage ----- */
 
 void Image::Convert(const ImageFormat format, const DataType dataType, std::size_t threadCount)
 {
-    if (auto convertedData = ConvertImageBuffer(QuerySrcDesc(), format, dataType, threadCount))
+    /* Convert image buffer (if necessary) */
+    if (data_)
     {
-        format_     = format;
-        dataType_   = dataType;
-        data_       = std::move(convertedData);
+        if (auto convertedData = ConvertImageBuffer(QuerySrcDesc(), format, dataType, threadCount))
+            data_ = std::move(convertedData);
     }
+
+    /* Store new attributes */
+    format_     = format;
+    dataType_   = dataType;
 }
 
 void Image::Resize(const Extent3D& extent)
@@ -55,7 +75,7 @@ void Image::Resize(const Extent3D& extent)
     /* Allocate new image buffer or release it if the extent is zero */
     extent_ = extent;
     if (extent.width > 0 && extent.height > 0 && extent.depth > 0)
-        data_ = AllocByteArray(GetDataSize());
+        data_ = GenerateEmptyByteBuffer(GetDataSize(), false);
     else
         data_.reset();
 }
@@ -85,14 +105,52 @@ void Image::Resize(const Extent3D& extent, const TextureFilter filter)
     //todo
 }
 
+void Image::Swap(Image& rhs)
+{
+    std::swap(extent_,   rhs.extent_  );
+    std::swap(format_,   rhs.format_  );
+    std::swap(dataType_, rhs.dataType_);
+    std::swap(data_,     rhs.data_    );
+}
+
+void Image::Reset()
+{
+    ResetAttributes();
+    data_.reset();
+}
+
+void Image::Reset(const Extent3D& extent, const ImageFormat format, const DataType dataType, ByteBuffer&& data)
+{
+    extent_     = extent;
+    format_     = format;
+    dataType_   = dataType;
+    data_       = std::move(data);
+}
+
+ByteBuffer Image::Release()
+{
+    ResetAttributes();
+    return std::move(data_);
+}
+
 /* ----- Pixels ----- */
 
-void Image::Blit(const Image& srcImage, Offset3D offset, Extent3D extent)
+void Image::Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRegionOffset, Extent3D srcRegionExtent)
 {
     //todo
 }
 
 void Image::Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor)
+{
+    //todo
+}
+
+void Image::ReadPixels(Offset3D offset, Extent3D extent, const DstImageDescriptor& imageDesc) const
+{
+    //todo
+}
+
+void Image::WritePixels(Offset3D offset, Extent3D extent, const SrcImageDescriptor& imageDesc)
 {
     //todo
 }
@@ -133,14 +191,16 @@ std::uint32_t Image::GetNumPixels() const
     return (extent_.width * extent_.height * extent_.depth);
 }
 
-ByteBuffer Image::Release()
+
+/*
+ * ======= Private: =======
+ */
+
+void Image::ResetAttributes()
 {
-    format_         = ImageFormat::RGBA;
-    dataType_       = DataType::UInt8;
-    extent_.width   = 0;
-    extent_.height  = 0;
-    extent_.depth   = 0;
-    return std::move(data_);
+    format_     = ImageFormat::RGBA;
+    dataType_   = DataType::UInt8;
+    extent_     = { 0, 0, 0 };
 }
 
 
