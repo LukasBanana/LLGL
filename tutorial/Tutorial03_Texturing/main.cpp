@@ -173,11 +173,11 @@ public:
         sampler[1] = renderer->CreateSampler(samplerDesc);
 
         // Create 3rd sampler state with nearest filtering
-        samplerDesc.minFilter = LLGL::TextureFilter::Nearest;
+        samplerDesc.minFilter = LLGL::SamplerFilter::Nearest;
         sampler[2] = renderer->CreateSampler(samplerDesc);
 
         // Create 4th sampler state with clamped texture wrap mode
-        samplerDesc.minFilter = LLGL::TextureFilter::Linear;
+        samplerDesc.minFilter = LLGL::SamplerFilter::Linear;
         samplerDesc.mipMapLODBias = 0.0f;
         samplerDesc.textureWrapU = LLGL::TextureWrap::Clamp;
         sampler[3] = renderer->CreateSampler(samplerDesc);

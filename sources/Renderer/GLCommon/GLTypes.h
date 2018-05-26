@@ -45,8 +45,8 @@ GLenum Map( const PolygonMode           polygonMode         ); // GL_FILL, GL_LI
 GLenum Map( const CullMode              cullMode            ); // 0, GL_FRONT, GL_BACK
 GLenum Map( const AxisDirection         cubeFace            ); // GL_TEXTURE_CUBE_MAP_...
 GLenum Map( const TextureWrap           textureWrap         ); // GL_REPEAT, ...
-GLenum Map( const TextureFilter         textureFilter       ); // GL_NEAREST, GL_LINEAR
-GLenum Map( const TextureFilter         textureMinFilter, const TextureFilter textureMipMapFilter );
+GLenum Map( const SamplerFilter         textureFilter       ); // GL_NEAREST, GL_LINEAR
+GLenum Map( const SamplerFilter         textureMinFilter, const SamplerFilter textureMipMapFilter );
 GLenum Map( const ShaderType            shaderType          );
 GLenum Map( const BufferType            bufferType          );
 GLenum Map( const RenderConditionMode   renderConditionMode );

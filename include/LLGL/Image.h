@@ -105,7 +105,7 @@ class LLGL_EXPORT Image
         \brief GenerateImageBuffer
         \todo Not implemented yet.
         */
-        void Resize(const Extent3D& extent, const TextureFilter filter);
+        void Resize(const Extent3D& extent, const SamplerFilter filter);
 
         //! Swaps all attributes with the specified image.
         void Swap(Image& rhs);

@@ -332,8 +332,8 @@ int main()
         // Create sampler
         LLGL::SamplerDescriptor samplerDesc;
         {
-            samplerDesc.magFilter       = LLGL::TextureFilter::Nearest;
-            samplerDesc.minFilter       = LLGL::TextureFilter::Linear;
+            samplerDesc.magFilter       = LLGL::SamplerFilter::Nearest;
+            samplerDesc.minFilter       = LLGL::SamplerFilter::Linear;
             samplerDesc.textureWrapU    = LLGL::TextureWrap::Border;
             samplerDesc.textureWrapV    = LLGL::TextureWrap::Border;
             #ifdef __linux__

@@ -100,7 +100,7 @@ void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Of
     //todo
 }
 
-void Image::Resize(const Extent3D& extent, const TextureFilter filter)
+void Image::Resize(const Extent3D& extent, const SamplerFilter filter)
 {
     //todo
 }

@@ -36,10 +36,13 @@ enum class TextureWrap
 };
 
 /**
-\brief Texture sampling filter enumeration.
-\todo Rename to "SamplerFilter".
+\brief Sampling filter enumeration.
+\see SamplerDescriptor::minFilter
+\see SamplerDescriptor::magFilter
+\see SamplerDescriptor::mipMapFilter
+\see Image::Resize(const Extent3D&, const SamplerFilter)
 */
-enum class TextureFilter
+enum class SamplerFilter
 {
     Nearest,    //!< Take the nearest texture sample. \image html TextureFilter_Nearest.png
     Linear,     //!< Interpolate between multiple texture samples. \image html TextureFilter_Linear.png
@@ -60,14 +63,14 @@ struct LLGL_EXPORT SamplerDescriptor
     //! Texture coordinate wrap mode in W direction. By default TextureWrap::Repeat.
     TextureWrap     textureWrapW    = TextureWrap::Repeat;
 
-    //! Minification filter. By default TextureFilter::Linear.
-    TextureFilter   minFilter       = TextureFilter::Linear;
+    //! Minification filter. By default SamplerFilter::Linear.
+    SamplerFilter   minFilter       = SamplerFilter::Linear;
 
-    //! Magnification filter. By default TextureFilter::Linear.
-    TextureFilter   magFilter       = TextureFilter::Linear;
+    //! Magnification filter. By default SamplerFilter::Linear.
+    SamplerFilter   magFilter       = SamplerFilter::Linear;
 
-    //! MIP-mapping filter. By default TextureFilter::Linear.
-    TextureFilter   mipMapFilter    = TextureFilter::Linear;
+    //! MIP-mapping filter. By default SamplerFilter::Linear.
+    SamplerFilter   mipMapFilter    = SamplerFilter::Linear;
 
     /**
     \brief Specifies whether MIP-maps are used or not. By default true.

@@ -14,14 +14,14 @@ namespace LLGL
 {
 
 
-static VkFilter GetVkFilter(const TextureFilter filter)
+static VkFilter GetVkFilter(const SamplerFilter filter)
 {
-    return (filter == TextureFilter::Linear ? VK_FILTER_LINEAR : VK_FILTER_NEAREST);
+    return (filter == SamplerFilter::Linear ? VK_FILTER_LINEAR : VK_FILTER_NEAREST);
 }
 
-static VkSamplerMipmapMode GetVkSamplerMipmapMode(const TextureFilter filter)
+static VkSamplerMipmapMode GetVkSamplerMipmapMode(const SamplerFilter filter)
 {
-    return (filter == TextureFilter::Linear ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST);
+    return (filter == SamplerFilter::Linear ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST);
 }
 
 static VkBorderColor GetVkBorderColor(const ColorRGBAf& color)

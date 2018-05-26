@@ -502,6 +502,8 @@ LLGL::BlendOp::DestAlpha;
 LLGL::BlendOp::InvDestAlpha;
 LLGL::ImageDescriptor;
 LLGL::BufferCPUAccess;
+LLGL::TextureFilter;
+LLGL::TextureWrap;
 ```
 
 After:
@@ -515,6 +517,8 @@ LLGL::BlendOp::DstAlpha;
 LLGL::BlendOp::InvDstAlpha;
 LLGL::SrcImageDescriptor;
 LLGL::CPUAccess;
+LLGL::SamplerFilter;
+LLGL::TextureAddressMode;
 ```
 
 

@@ -371,37 +371,37 @@ GLenum Map(const TextureWrap textureWrap)
     MapFailed("TextureWrap");
 }
 
-GLenum Map(const TextureFilter textureFilter)
+GLenum Map(const SamplerFilter textureFilter)
 {
     switch (textureFilter)
     {
-        case TextureFilter::Nearest:    return GL_NEAREST;
-        case TextureFilter::Linear:     return GL_LINEAR;
+        case SamplerFilter::Nearest:    return GL_NEAREST;
+        case SamplerFilter::Linear:     return GL_LINEAR;
     }
-    MapFailed("TextureFilter");
+    MapFailed("SamplerFilter");
 }
 
-GLenum Map(const TextureFilter textureMinFilter, const TextureFilter textureMipMapFilter)
+GLenum Map(const SamplerFilter textureMinFilter, const SamplerFilter textureMipMapFilter)
 {
     switch (textureMinFilter)
     {
-        case TextureFilter::Nearest:
+        case SamplerFilter::Nearest:
             switch (textureMipMapFilter)
             {
-                case TextureFilter::Nearest:    return GL_NEAREST_MIPMAP_NEAREST;
-                case TextureFilter::Linear:     return GL_NEAREST_MIPMAP_LINEAR;
+                case SamplerFilter::Nearest:    return GL_NEAREST_MIPMAP_NEAREST;
+                case SamplerFilter::Linear:     return GL_NEAREST_MIPMAP_LINEAR;
             }
             break;
 
-        case TextureFilter::Linear:
+        case SamplerFilter::Linear:
             switch (textureMipMapFilter)
             {
-                case TextureFilter::Nearest:    return GL_LINEAR_MIPMAP_NEAREST;
-                case TextureFilter::Linear:     return GL_LINEAR_MIPMAP_LINEAR;
+                case SamplerFilter::Nearest:    return GL_LINEAR_MIPMAP_NEAREST;
+                case SamplerFilter::Linear:     return GL_LINEAR_MIPMAP_LINEAR;
             }
             break;
     }
-    MapFailed("Min/MipMap TextureFilter");
+    MapFailed("Min/MipMap SamplerFilter");
 }
 
 GLenum Map(const ShaderType shaderType)

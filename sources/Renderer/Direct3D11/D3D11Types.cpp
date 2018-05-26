@@ -138,26 +138,26 @@ D3D11_FILTER Map(const SamplerDescriptor& samplerDesc)
 
     switch (samplerDesc.minFilter)
     {
-        case TextureFilter::Nearest:
+        case SamplerFilter::Nearest:
         {
             switch (samplerDesc.magFilter)
             {
-                case TextureFilter::Nearest:
+                case SamplerFilter::Nearest:
                 {
                     switch (samplerDesc.mipMapFilter)
                     {
-                        case TextureFilter::Nearest:    return D3D11_FILTER_MIN_MAG_MIP_POINT;
-                        case TextureFilter::Linear:     return D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+                        case SamplerFilter::Nearest:    return D3D11_FILTER_MIN_MAG_MIP_POINT;
+                        case SamplerFilter::Linear:     return D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
                     }
                 }
                 break;
 
-                case TextureFilter::Linear:
+                case SamplerFilter::Linear:
                 {
                     switch (samplerDesc.mipMapFilter)
                     {
-                        case TextureFilter::Nearest:    return D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
-                        case TextureFilter::Linear:     return D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
+                        case SamplerFilter::Nearest:    return D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
+                        case SamplerFilter::Linear:     return D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
                     }
                 }
                 break;
@@ -165,26 +165,26 @@ D3D11_FILTER Map(const SamplerDescriptor& samplerDesc)
         }
         break;
 
-        case TextureFilter::Linear:
+        case SamplerFilter::Linear:
         {
             switch (samplerDesc.magFilter)
             {
-                case TextureFilter::Nearest:
+                case SamplerFilter::Nearest:
                 {
                     switch (samplerDesc.mipMapFilter)
                     {
-                        case TextureFilter::Nearest:    return D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT;
-                        case TextureFilter::Linear:     return D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+                        case SamplerFilter::Nearest:    return D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT;
+                        case SamplerFilter::Linear:     return D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
                     }
                 }
                 break;
 
-                case TextureFilter::Linear:
+                case SamplerFilter::Linear:
                 {
                     switch (samplerDesc.mipMapFilter)
                     {
-                        case TextureFilter::Nearest:    return D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-                        case TextureFilter::Linear:     return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+                        case SamplerFilter::Nearest:    return D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+                        case SamplerFilter::Linear:     return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
                     }
                 }
                 break;
