@@ -274,11 +274,15 @@ void GLCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     SetGenericBufferArray(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, bufferArray, 0);
 }
 
+#ifndef __APPLE__
+
 [[noreturn]]
 static void ErrTransformFeedbackNotSupported(const char* funcName)
 {
     ThrowNotSupportedExcept(funcName, "stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)");
 }
+
+#endif
 
 void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 {

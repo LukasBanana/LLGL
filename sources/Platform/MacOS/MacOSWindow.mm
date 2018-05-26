@@ -153,7 +153,7 @@ static const auto g_EventTypeScrollWheel    = NSScrollWheel;
     #endif
 }
 
-- (NSApplicationPresentationOptions)window:(NSWindow *)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
+- (NSApplicationPresentationOptions)window:(NSWindow*)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
 {
     return
         NSApplicationPresentationFullScreen |
