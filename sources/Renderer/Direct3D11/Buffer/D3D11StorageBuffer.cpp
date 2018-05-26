@@ -7,9 +7,9 @@
 
 #include "D3D11StorageBuffer.h"
 #include "../D3D11Types.h"
-#include "../../../Core/Helper.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../Assertion.h"
+#include "../../../Core/Helper.h"
+#include "../../../Core/Assertion.h"
 #include <algorithm>
 
 

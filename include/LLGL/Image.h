@@ -151,6 +151,7 @@ class LLGL_EXPORT Image
         \param[in] offset Specifies the region offset within this image to read from.
         \param[in] extent Specifies the region extent within this image to read from.
         \param[in] imageDesc Specifies the destination image descriptor to write the region to.
+        If the 'data' member of this descriptor is null, this function has no effect.
         \remarks To read a single pixel, use the following code example:
         \code
         LLGL::ColorRGBAub ReadSinglePixelRGBAub(const LLGL::Image& image, const LLGL::Offset3D& position) {
@@ -169,6 +170,7 @@ class LLGL_EXPORT Image
         \param[in] offset Specifies the region offset within this image to write to.
         \param[in] extent Specifies the region extent within this image to write to.
         \param[in] imageDesc Specifies the source image descriptor to read the region from.
+        If the 'data' member of this descriptor is null, this function has no effect.
         \todo Not implemented yet.
         */
         void WritePixels(Offset3D offset, Extent3D extent, const SrcImageDescriptor& imageDesc);

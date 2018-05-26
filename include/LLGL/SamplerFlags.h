@@ -78,14 +78,14 @@ enum class SamplerFilter
     /**
     \brief Take the nearest texture sample.
     \image html SamplerFilter_Nearest.png
-    \image latex SamplerFilter_Nearest.png "SamplerFilter::Nearest example" width=0.3\textwidth
+    \image latex SamplerFilter_Nearest.png "SamplerFilter::Nearest example" width=0.1\textwidth
     */
     Nearest,
 
     /**
     \brief Interpolate between multiple texture samples.
     \image html SamplerFilter_Linear.png
-    \image latex SamplerFilter_Linear.png "SamplerFilter::Linear example" width=0.3\textwidth
+    \image latex SamplerFilter_Linear.png "SamplerFilter::Linear example" width=0.1\textwidth
     */
     Linear,
 };

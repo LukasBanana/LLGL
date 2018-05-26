@@ -52,16 +52,16 @@ std::uint64_t Win32Timer::Stop()
     /* Query elapsed ticks */
     QueryPerformanceCounter(&t1_);
     auto elapsedTime = t1_.QuadPart - t0_.QuadPart;
-    
+
     #ifdef LLGL_LEAP_FORWARD_ADJUSTMENT
 
     /* Compute the number of millisecond ticks elapsed */
     auto msecTicks          = static_cast<long long>(1000 * elapsedTime / clockFrequency_.QuadPart);
-    
+
     /* Check for unexpected leaps */
     auto elapsedLowTicks    = static_cast<long long>(GetTickCount() - startTick_);
     auto msecOff            = msecTicks - elapsedLowTicks;
-    
+
     if (std::abs(msecOff) > 100)
     {
         /* Adjust the starting time forwards */
@@ -71,7 +71,7 @@ std::uint64_t Win32Timer::Stop()
         );
         elapsedTime -= msecAdjustment;
     }
-    
+
     /* Store the current elapsed time for adjustments next time */
     prevElapsedTime_ = elapsedTime;
 

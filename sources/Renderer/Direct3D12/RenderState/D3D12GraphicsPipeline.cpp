@@ -13,8 +13,8 @@
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
-#include "../../Assertion.h"
 #include "../../../Core/Helper.h"
+#include "../../../Core/Assertion.h"
 #include <algorithm>
 #include <LLGL/GraphicsPipelineFlags.h>
 

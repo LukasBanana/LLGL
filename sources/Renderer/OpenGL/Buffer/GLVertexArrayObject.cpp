@@ -48,7 +48,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
     if (!attribute.conversion && dataType != DataType::Float && dataType != DataType::Double)
     {
         if (!HasExtension(GLExt::EXT_gpu_shader4))
-            ThrowNotSupported("integral vertex attributes");
+            ThrowNotSupportedExcept(__FUNCTION__, "integral vertex attributes");
 
         glVertexAttribIPointer(
             index,

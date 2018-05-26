@@ -7,8 +7,8 @@
 
 #include "D3D11ConstantBuffer.h"
 #include "../../../Core/Helper.h"
+#include "../../../Core/Assertion.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../Assertion.h"
 #include <algorithm>
 
 
@@ -41,8 +41,7 @@ D3D11ConstantBuffer::D3D11ConstantBuffer(ID3D11Device* device, const BufferDescr
 void D3D11ConstantBuffer::UpdateSubresource(ID3D11DeviceContext* context, const void* data, UINT dataSize, UINT offset)
 {
     /* Validate parameters */
-    if (dataSize + offset > bufferSize_)
-        throw std::out_of_range(LLGL_ASSERT_INFO("size and offset out of range to update constant buffer subresource"));
+    LLGL_ASSERT_RANGE(dataSize + offset, bufferSize_);
 
     if (usage_ == D3D11_USAGE_DYNAMIC)
     {

@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <thread>
 #include <cstring>
-#include "../Renderer/Assertion.h"
+#include "../Core/Assertion.h"
 
 
 namespace LLGL

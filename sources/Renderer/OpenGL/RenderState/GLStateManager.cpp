@@ -9,8 +9,8 @@
 #include "../../GLCommon/GLImportExt.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
-#include "../../Assertion.h"
 #include "../../../Core/Helper.h"
+#include "../../../Core/Assertion.h"
 
 
 namespace LLGL
@@ -840,7 +840,7 @@ GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
 void GLStateManager::ActiveTexture(std::uint32_t layer)
 {
     #ifdef LLGL_DEBUG
-    LLGL_ASSERT_RANGE(layer, numTextureLayers);
+    LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
     #endif
 
     if (textureState_.activeTexture != layer)
@@ -899,7 +899,7 @@ void GLStateManager::BindTextures(GLuint first, GLsizei count, const GLTextureTa
 void GLStateManager::PushBoundTexture(std::uint32_t layer, GLTextureTarget target)
 {
     #ifdef LLGL_DEBUG
-    LLGL_ASSERT_RANGE(layer, numTextureLayers);
+    LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
     #endif
 
     textureState_.boundTextureStack.push(
@@ -947,7 +947,7 @@ void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target
 void GLStateManager::BindSampler(std::uint32_t layer, GLuint sampler)
 {
     #ifdef LLGL_DEBUG
-    LLGL_ASSERT_RANGE(layer, numTextureLayers);
+    LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
     #endif
 
     if (samplerState_.boundSamplers[layer] != sampler)

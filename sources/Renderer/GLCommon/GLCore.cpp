@@ -130,7 +130,7 @@ GLboolean GLBoolean(bool value)
 [[noreturn]]
 void ErrUnsupportedGLProc(const char* name)
 {
-    throw std::runtime_error("illegal use of unsupported OpenGL procedure: \"" + std::string(name) + "\"");
+    throw std::runtime_error("illegal use of unsupported OpenGL procedure: " + std::string(name));
 }
 
 #undef LLGL_CASE_TO_STR

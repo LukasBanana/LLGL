@@ -12,7 +12,7 @@
 #include "Ext/GLExtensions.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
-#include "../../Core/Exception.h"
+#include "../../Core/Assertion.h"
 #include "GLRenderingCaps.h"
 #include <LLGL/Desktop.h>
 
@@ -98,7 +98,7 @@ void GLRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 {
-    LLGL_ASSERT_CAP(hasSamplers);
+    LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
     auto sampler = MakeUnique<GLSampler>();
     sampler->SetDesc(desc);
     return TakeOwnership(samplers_, std::move(sampler));
@@ -106,7 +106,7 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 
 SamplerArray* GLRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
 {
-    LLGL_ASSERT_CAP(hasSamplers);
+    LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
     AssertCreateSamplerArray(numSamplers, samplerArray);
     return TakeOwnership(samplerArrays_, MakeUnique<GLSamplerArray>(numSamplers, samplerArray));
 }
@@ -123,7 +123,7 @@ void GLRenderSystem::Release(SamplerArray& samplerArray)
 {
     /* Notify GL state manager about object release, then release object */
     auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
-    
+
     for (auto samplerId : samplerArrayGL.GetIDArray())
         GLStateManager::NotifySamplerRelease(samplerId);
 
@@ -134,7 +134,7 @@ void GLRenderSystem::Release(SamplerArray& samplerArray)
 
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
-    LLGL_ASSERT_CAP(hasRenderTargets);
+    LLGL_ASSERT_FEATURE_SUPPORT(hasRenderTargets);
     return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(desc));
 }
 
@@ -154,14 +154,14 @@ Shader* GLRenderSystem::CreateShader(const ShaderType type)
     switch (type)
     {
         case ShaderType::Geometry:
-            LLGL_ASSERT_CAP(hasGeometryShaders);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasGeometryShaders);
             break;
         case ShaderType::TessControl:
         case ShaderType::TessEvaluation:
-            LLGL_ASSERT_CAP(hasTessellationShaders);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasTessellationShaders);
             break;
         case ShaderType::Compute:
-            LLGL_ASSERT_CAP(hasComputeShaders);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasComputeShaders);
             break;
         default:
             break;
@@ -350,20 +350,6 @@ void GLRenderSystem::QueryRenderingCaps()
     RenderingCapabilities caps;
     GLQueryRenderingCaps(caps);
     SetRenderingCaps(caps);
-}
-
-void GLRenderSystem::AssertCap(bool supported, const std::string& memberName)
-{
-    if (!supported)
-    {
-        /* Remove "has" from name */
-        auto feature = memberName;
-        if (feature.size() > 3 && feature.substr(0, 3) == "has")
-            feature = feature.substr(3);
-
-        /* Throw descriptive error */
-        ThrowNotSupported(feature);
-    }
 }
 
 

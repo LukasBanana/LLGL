@@ -6,9 +6,9 @@
  */
 
 #include "D3D12Buffer.h"
-#include "../../Assertion.h"
-#include "../../DXCommon/DXCore.h"
 #include "../D3DX12/d3dx12.h"
+#include "../../DXCommon/DXCore.h"
+#include "../../../Core/Assertion.h"
 #include <stdexcept>
 
 
@@ -25,8 +25,7 @@ void D3D12Buffer::UpdateStaticSubresource(
     ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
     const void* data, UINT64 bufferSize, UINT64 offset, D3D12_RESOURCE_STATES stateAfter)
 {
-    if (offset + bufferSize > bufferSize_)
-        throw std::out_of_range(LLGL_ASSERT_INFO("'bufferSize' and/or 'offset' are out of range"));
+    LLGL_ASSERT_RANGE(offset + bufferSize, bufferSize_);
 
     /* Create resource to upload memory from CPU to GPU */
     auto hr = device->CreateCommittedResource(
@@ -59,7 +58,7 @@ void D3D12Buffer::UpdateStaticSubresource(
 void D3D12Buffer::UpdateDynamicSubresource(const void* data, UINT64 bufferSize, UINT64 offset)
 {
     void* dest = nullptr;
-    
+
     auto hr = resource_->Map(0, nullptr, &dest);
     DXThrowIfFailed(hr, "failed to map D3D12 resource");
     {

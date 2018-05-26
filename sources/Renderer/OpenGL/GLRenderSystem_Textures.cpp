@@ -12,7 +12,7 @@
 #include "Ext/GLExtensions.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
-#include "../Assertion.h"
+#include "../../Core/Assertion.h"
 
 
 namespace LLGL
@@ -54,37 +54,37 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             break;
 
         case TextureType::Texture3D:
-            LLGL_ASSERT_CAP(has3DTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(has3DTextures);
             GLTexImage3D(textureDesc, imageDesc);
             break;
 
         case TextureType::TextureCube:
-            LLGL_ASSERT_CAP(hasCubeTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeTextures);
             GLTexImageCube(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture1DArray:
-            LLGL_ASSERT_CAP(hasArrayTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
             GLTexImage1DArray(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DArray:
-            LLGL_ASSERT_CAP(hasArrayTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
             GLTexImage2DArray(textureDesc, imageDesc);
             break;
 
         case TextureType::TextureCubeArray:
-            LLGL_ASSERT_CAP(hasCubeArrayTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeArrayTextures);
             GLTexImageCubeArray(textureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DMS:
-            LLGL_ASSERT_CAP(hasMultiSampleTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasMultiSampleTextures);
             GLTexImage2DMS(textureDesc);
             break;
 
         case TextureType::Texture2DMSArray:
-            LLGL_ASSERT_CAP(hasMultiSampleTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasMultiSampleTextures);
             GLTexImage2DMSArray(textureDesc);
             break;
 
@@ -144,27 +144,27 @@ void GLRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& 
             break;
 
         case TextureType::Texture3D:
-            LLGL_ASSERT_CAP(has3DTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(has3DTextures);
             GLTexSubImage3D(subTextureDesc, imageDesc);
             break;
 
         case TextureType::TextureCube:
-            LLGL_ASSERT_CAP(hasCubeTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeTextures);
             GLTexSubImageCube(subTextureDesc, imageDesc);
             break;
 
         case TextureType::Texture1DArray:
-            LLGL_ASSERT_CAP(hasArrayTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
             GLTexSubImage1DArray(subTextureDesc, imageDesc);
             break;
 
         case TextureType::Texture2DArray:
-            LLGL_ASSERT_CAP(hasArrayTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasArrayTextures);
             GLTexSubImage2DArray(subTextureDesc, imageDesc);
             break;
 
         case TextureType::TextureCubeArray:
-            LLGL_ASSERT_CAP(hasCubeArrayTextures);
+            LLGL_ASSERT_FEATURE_SUPPORT(hasCubeArrayTextures);
             GLTexSubImageCubeArray(subTextureDesc, imageDesc);
             break;
 

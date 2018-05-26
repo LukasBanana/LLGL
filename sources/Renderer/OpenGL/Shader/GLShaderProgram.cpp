@@ -262,7 +262,7 @@ std::vector<StreamOutputAttribute> GLShaderProgram::QueryStreamOutputAttributes(
         }
     }
     else
-        ThrowNotSupported("stream-outputs");
+        ThrowNotSupportedExcept(__FUNCTION__, "stream-outputs");
     #endif
 
     return streamOutputFormat.attributes;

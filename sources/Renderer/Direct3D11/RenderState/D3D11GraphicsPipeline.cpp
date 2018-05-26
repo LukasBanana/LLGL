@@ -13,8 +13,8 @@
 #include "../Shader/D3D11Shader.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
-#include "../../Assertion.h"
 #include "../../../Core/Helper.h"
+#include "../../../Core/Assertion.h"
 #include <algorithm>
 #include <LLGL/GraphicsPipelineFlags.h>
 

@@ -11,9 +11,8 @@
 #include "../GLCommon/GLCore.h"
 #include "Ext/GLExtensions.h"
 #include "Ext/GLExtensionLoader.h"
-#include "../Assertion.h"
 #include "../CheckedCast.h"
-#include "../../Core/Exception.h"
+#include "../../Core/Assertion.h"
 
 #include "Shader/GLShaderProgram.h"
 
@@ -275,6 +274,12 @@ void GLCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     SetGenericBufferArray(GLBufferTarget::TRANSFORM_FEEDBACK_BUFFER, bufferArray, 0);
 }
 
+[[noreturn]]
+static void ErrTransformFeedbackNotSupported(const char* funcName)
+{
+    ThrowNotSupportedExcept(funcName, "stream-outputs (GL_EXT_transform_feedback, NV_transform_feedback)");
+}
+
 void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 {
     #ifdef __APPLE__
@@ -285,7 +290,7 @@ void GLCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
     else if (HasExtension(GLExt::NV_transform_feedback))
         glBeginTransformFeedbackNV(GLTypes::Map(primitiveType));
     else
-        ThrowNotSupported("stream-outputs");
+        ErrTransformFeedbackNotSupported(__FUNCTION__);
     #endif
 }
 
@@ -299,7 +304,7 @@ void GLCommandBuffer::EndStreamOutput()
     else if (HasExtension(GLExt::NV_transform_feedback))
         glEndTransformFeedbackNV();
     else
-        ThrowNotSupported("stream-outputs");
+        ErrTransformFeedbackNotSupported(__FUNCTION__);
     #endif
 }
 
@@ -471,7 +476,7 @@ bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
 
         /* Parameter setup for 32-bit and 64-bit version of query function */
         static const std::size_t memberCount = sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t);
-        
+
         union
         {
             GLuint      ui32;
@@ -499,6 +504,10 @@ bool GLCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipelineS
                 glGetQueryObjectuiv(queryGL.GetIDs()[i], GL_QUERY_RESULT, &(params[i].ui32));
             }
         }
+
+        /* Reset remaining output parameters (just for safety) */
+        for (auto i = numResults; i < memberCount; ++i)
+            params[i].ui64 = 0;
 
         /* Copy result to output parameter */
         result.numPrimitivesGenerated               = params[0].ui64;

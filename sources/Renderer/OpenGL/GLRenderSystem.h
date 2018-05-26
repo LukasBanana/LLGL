@@ -44,10 +44,6 @@ namespace LLGL
 {
 
 
-#define LLGL_ASSERT_CAP(FEATURE) \
-    AssertCap(GetRenderingCaps().features.FEATURE, #FEATURE)
-
-
 class GLRenderSystem : public RenderSystem
 {
 
@@ -131,7 +127,7 @@ class GLRenderSystem : public RenderSystem
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
         ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
-        
+
         void Release(GraphicsPipeline& graphicsPipeline) override;
         void Release(ComputePipeline& computePipeline) override;
 
@@ -158,8 +154,6 @@ class GLRenderSystem : public RenderSystem
 
         void QueryRendererInfo();
         void QueryRenderingCaps();
-
-        void AssertCap(bool supported, const std::string& memberName);
 
         GLRenderContext* GetSharedRenderContext() const;
 

@@ -9,8 +9,8 @@
 #include "D3D11Types.h"
 #include "../DXCommon/DXCore.h"
 #include "../CheckedCast.h"
-#include "../Assertion.h"
 #include "../../Core/Helper.h"
+#include "../../Core/Assertion.h"
 
 
 namespace LLGL

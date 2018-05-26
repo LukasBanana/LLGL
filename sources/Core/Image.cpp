@@ -147,12 +147,18 @@ void Image::Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor)
 
 void Image::ReadPixels(Offset3D offset, Extent3D extent, const DstImageDescriptor& imageDesc) const
 {
-    //todo
+    if (imageDesc.data)
+    {
+        //todo
+    }
 }
 
 void Image::WritePixels(Offset3D offset, Extent3D extent, const SrcImageDescriptor& imageDesc)
 {
-    //todo
+    if (imageDesc.data)
+    {
+        //todo
+    }
 }
 
 /* ----- Attributes ----- */
