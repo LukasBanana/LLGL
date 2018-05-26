@@ -24,14 +24,13 @@ namespace LLGL
 
 /**
 \brief Technique for resolving texture coordinates that are outside of the range [0, 1].
-\todo Rename to "TextureAddressMode".
 */
-enum class TextureWrap
+enum class SamplerAddressMode
 {
     Repeat,     //!< Repeat texture coordinates within the interval [0, 1).
     Mirror,     //!< Flip texture coordinates at ever integer junction.
     Clamp,      //!< Clamp texture coordinates to the interval [0, 1].
-    Border,     //!< Clamp texture coordinates to their border.
+    Border,     //!< Sample border color for texture coordinates that are outside the interval [0, 1].
     MirrorOnce, //!< Takes the absolute value of the texture coordinates and then clamps it to the interval [0, 1], i.e. mirror around 0.
 };
 
@@ -44,8 +43,8 @@ enum class TextureWrap
 */
 enum class SamplerFilter
 {
-    Nearest,    //!< Take the nearest texture sample. \image html TextureFilter_Nearest.png
-    Linear,     //!< Interpolate between multiple texture samples. \image html TextureFilter_Linear.png
+    Nearest,    //!< Take the nearest texture sample. \image html SamplerFilter_Nearest.png
+    Linear,     //!< Interpolate between multiple texture samples. \image html SamplerFilter_Linear.png
 };
 
 
@@ -54,23 +53,23 @@ enum class SamplerFilter
 //! Texture sampler descriptor structure.
 struct LLGL_EXPORT SamplerDescriptor
 {
-    //! Texture coordinate wrap mode in U direction. By default TextureWrap::Repeat.
-    TextureWrap     textureWrapU    = TextureWrap::Repeat;
+    //! Sampler address mode in U direction (also X axis). By default SamplerAddressMode::Repeat.
+    SamplerAddressMode  addressModeU    = SamplerAddressMode::Repeat;
 
-    //! Texture coordinate wrap mode in V direction. By default TextureWrap::Repeat.
-    TextureWrap     textureWrapV    = TextureWrap::Repeat;
+    //! Sampler address mode in V direction (also Y axis). By default SamplerAddressMode::Repeat.
+    SamplerAddressMode  addressModeV    = SamplerAddressMode::Repeat;
 
-    //! Texture coordinate wrap mode in W direction. By default TextureWrap::Repeat.
-    TextureWrap     textureWrapW    = TextureWrap::Repeat;
+    //! Sampler address mode in W direction (also Z axis). By default SamplerAddressMode::Repeat.
+    SamplerAddressMode  addressModeW    = SamplerAddressMode::Repeat;
 
     //! Minification filter. By default SamplerFilter::Linear.
-    SamplerFilter   minFilter       = SamplerFilter::Linear;
+    SamplerFilter       minFilter       = SamplerFilter::Linear;
 
     //! Magnification filter. By default SamplerFilter::Linear.
-    SamplerFilter   magFilter       = SamplerFilter::Linear;
+    SamplerFilter       magFilter       = SamplerFilter::Linear;
 
     //! MIP-mapping filter. By default SamplerFilter::Linear.
-    SamplerFilter   mipMapFilter    = SamplerFilter::Linear;
+    SamplerFilter       mipMapFilter    = SamplerFilter::Linear;
 
     /**
     \brief Specifies whether MIP-maps are used or not. By default true.
@@ -78,31 +77,31 @@ struct LLGL_EXPORT SamplerDescriptor
     \see TextureFlags::GenerateMips
     \see TextureDescriptor::flags
     */
-    bool            mipMapping      = true;
+    bool                mipMapping      = true;
 
     //! MIP-mapping level-of-detail (LOD) bias (or rather offset). By default 0.
-    float           mipMapLODBias   = 0.0f;
+    float               mipMapLODBias   = 0.0f;
 
     //! Lower end of the MIP-map range. By default 0.
-    float           minLOD          = 0.0f;
+    float               minLOD          = 0.0f;
 
     //! Upper end of the MIP-map range. Must be greater than or equal to "minLOD". By default 1000.
-    float           maxLOD          = 1000.0f;
+    float               maxLOD          = 1000.0f;
 
     //! Maximal anisotropy in the range [1, 16].
-    std::uint32_t   maxAnisotropy   = 1;
+    std::uint32_t       maxAnisotropy   = 1;
 
     //! Specifies whether the compare operation for depth textures is to be used or not. By default false.
-    bool            compareEnabled  = false;
+    bool                compareEnabled  = false;
 
     //! Compare operation for depth textures. By default CompareOp::Less.
-    CompareOp       compareOp       = CompareOp::Less;
+    CompareOp           compareOp       = CompareOp::Less;
 
     /**
     \brief Border color. By default black (0, 0, 0, 0).
     \note For Vulkan, only three predefined border colors are supported: (0, 0, 0, 0), (0, 0, 0, 1), and (1, 1, 1, 1).
     */
-    ColorRGBAf      borderColor     = { 0.0f, 0.0f, 0.0f, 0.0f };
+    ColorRGBAf          borderColor     = { 0.0f, 0.0f, 0.0f, 0.0f };
 };
 
 

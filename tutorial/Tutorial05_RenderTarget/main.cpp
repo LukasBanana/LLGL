@@ -195,8 +195,8 @@ private:
         // Create common sampler state for all textures
         LLGL::SamplerDescriptor samplerDesc;
         {
-            samplerDesc.textureWrapU    = LLGL::TextureWrap::Border;
-            samplerDesc.textureWrapV    = LLGL::TextureWrap::Border;
+            samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
+            samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
             samplerDesc.maxAnisotropy   = 8;
             samplerDesc.borderColor     = { 0, 0, 0, 1 };
         }

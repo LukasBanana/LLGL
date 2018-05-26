@@ -29,9 +29,9 @@ using namespace GLTypes;
 void GLSampler::SetDesc(const SamplerDescriptor& desc)
 {
     /* Set texture coordinate wrap modes */
-    glSamplerParameteri(id_, GL_TEXTURE_WRAP_S, Map(desc.textureWrapU));
-    glSamplerParameteri(id_, GL_TEXTURE_WRAP_T, Map(desc.textureWrapV));
-    glSamplerParameteri(id_, GL_TEXTURE_WRAP_R, Map(desc.textureWrapW));
+    glSamplerParameteri(id_, GL_TEXTURE_WRAP_S, Map(desc.addressModeU));
+    glSamplerParameteri(id_, GL_TEXTURE_WRAP_T, Map(desc.addressModeV));
+    glSamplerParameteri(id_, GL_TEXTURE_WRAP_R, Map(desc.addressModeW));
 
     /* Set filter states */
     glSamplerParameteri(id_, GL_TEXTURE_MIN_FILTER, (desc.mipMapping ? Map(desc.minFilter, desc.mipMapFilter) : Map(desc.minFilter)));

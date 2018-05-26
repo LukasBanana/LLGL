@@ -37,7 +37,7 @@ D3D11_BLEND_OP              Map( const BlendArithmetic      blendArithmetic );
 D3D11_COMPARISON_FUNC       Map( const CompareOp            compareOp       );
 D3D11_STENCIL_OP            Map( const StencilOp            stencilOp       );
 D3D11_FILTER                Map( const SamplerDescriptor&   samplerDesc     );
-D3D11_TEXTURE_ADDRESS_MODE  Map( const TextureWrap          textureWrap     );
+D3D11_TEXTURE_ADDRESS_MODE  Map( const SamplerAddressMode   addressMode     );
 D3D11_QUERY                 Map( const QueryDescriptor&     queryDesc       );
 D3D11_MAP                   Map( const CPUAccess            cpuAccess       );
 D3D11_SRV_DIMENSION         Map( const TextureType          textureType     );

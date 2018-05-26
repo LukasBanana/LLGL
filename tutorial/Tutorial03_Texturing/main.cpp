@@ -179,12 +179,12 @@ public:
         // Create 4th sampler state with clamped texture wrap mode
         samplerDesc.minFilter = LLGL::SamplerFilter::Linear;
         samplerDesc.mipMapLODBias = 0.0f;
-        samplerDesc.textureWrapU = LLGL::TextureWrap::Clamp;
+        samplerDesc.addressModeU = LLGL::SamplerAddressMode::Clamp;
         sampler[3] = renderer->CreateSampler(samplerDesc);
 
         // Create 5th sampler state with mirrored texture wrap mode
-        samplerDesc.textureWrapU = LLGL::TextureWrap::Mirror;
-        samplerDesc.textureWrapV = LLGL::TextureWrap::Mirror;
+        samplerDesc.addressModeU = LLGL::SamplerAddressMode::Mirror;
+        samplerDesc.addressModeV = LLGL::SamplerAddressMode::Mirror;
         sampler[4] = renderer->CreateSampler(samplerDesc);
     }
 

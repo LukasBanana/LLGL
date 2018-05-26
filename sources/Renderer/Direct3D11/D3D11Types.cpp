@@ -196,17 +196,17 @@ D3D11_FILTER Map(const SamplerDescriptor& samplerDesc)
     DXTypes::MapFailed("SamplerDescriptor", "D3D11_FILTER");
 }
 
-D3D11_TEXTURE_ADDRESS_MODE Map(const TextureWrap textureWrap)
+D3D11_TEXTURE_ADDRESS_MODE Map(const SamplerAddressMode addressMode)
 {
-    switch (textureWrap)
+    switch (addressMode)
     {
-        case TextureWrap::Repeat:       return D3D11_TEXTURE_ADDRESS_WRAP;
-        case TextureWrap::Mirror:       return D3D11_TEXTURE_ADDRESS_MIRROR;
-        case TextureWrap::Clamp:        return D3D11_TEXTURE_ADDRESS_CLAMP;
-        case TextureWrap::Border:       return D3D11_TEXTURE_ADDRESS_BORDER;
-        case TextureWrap::MirrorOnce:   return D3D11_TEXTURE_ADDRESS_MIRROR_ONCE;
+        case SamplerAddressMode::Repeat:       return D3D11_TEXTURE_ADDRESS_WRAP;
+        case SamplerAddressMode::Mirror:       return D3D11_TEXTURE_ADDRESS_MIRROR;
+        case SamplerAddressMode::Clamp:        return D3D11_TEXTURE_ADDRESS_CLAMP;
+        case SamplerAddressMode::Border:       return D3D11_TEXTURE_ADDRESS_BORDER;
+        case SamplerAddressMode::MirrorOnce:   return D3D11_TEXTURE_ADDRESS_MIRROR_ONCE;
     }
-    DXTypes::MapFailed("TextureWrap", "D3D11_TEXTURE_ADDRESS_MODE");
+    DXTypes::MapFailed("SamplerAddressMode", "D3D11_TEXTURE_ADDRESS_MODE");
 }
 
 D3D11_QUERY Map(const QueryDescriptor& queryDesc)

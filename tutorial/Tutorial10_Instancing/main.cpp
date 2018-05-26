@@ -254,9 +254,9 @@ private:
 
         // Create sampler state object for the plants
         {
-            samplerDesc.textureWrapU = LLGL::TextureWrap::Clamp;
-            samplerDesc.textureWrapV = LLGL::TextureWrap::Clamp;
-            samplerDesc.textureWrapW = LLGL::TextureWrap::Clamp;
+            samplerDesc.addressModeU = LLGL::SamplerAddressMode::Clamp;
+            samplerDesc.addressModeV = LLGL::SamplerAddressMode::Clamp;
+            samplerDesc.addressModeW = LLGL::SamplerAddressMode::Clamp;
         }
         samplers[0] = renderer->CreateSampler(samplerDesc);
     }

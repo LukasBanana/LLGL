@@ -334,8 +334,8 @@ int main()
         {
             samplerDesc.magFilter       = LLGL::SamplerFilter::Nearest;
             samplerDesc.minFilter       = LLGL::SamplerFilter::Linear;
-            samplerDesc.textureWrapU    = LLGL::TextureWrap::Border;
-            samplerDesc.textureWrapV    = LLGL::TextureWrap::Border;
+            samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Border;
+            samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
             #ifdef __linux__
             samplerDesc.mipMapping = false;
             #endif

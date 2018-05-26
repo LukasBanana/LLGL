@@ -20,9 +20,9 @@ D3D11Sampler::D3D11Sampler(ID3D11Device* device, const SamplerDescriptor& desc)
     D3D11_SAMPLER_DESC samplerDesc;
     {
         samplerDesc.Filter          = D3D11Types::Map(desc);
-        samplerDesc.AddressU        = D3D11Types::Map(desc.textureWrapU);
-        samplerDesc.AddressV        = D3D11Types::Map(desc.textureWrapV);
-        samplerDesc.AddressW        = D3D11Types::Map(desc.textureWrapW);
+        samplerDesc.AddressU        = D3D11Types::Map(desc.addressModeU);
+        samplerDesc.AddressV        = D3D11Types::Map(desc.addressModeV);
+        samplerDesc.AddressW        = D3D11Types::Map(desc.addressModeW);
         samplerDesc.MipLODBias      = desc.mipMapLODBias;
         samplerDesc.MaxAnisotropy   = desc.maxAnisotropy;
         samplerDesc.ComparisonFunc  = (desc.compareEnabled ? D3D11Types::Map(desc.compareOp) : D3D11_COMPARISON_ALWAYS);

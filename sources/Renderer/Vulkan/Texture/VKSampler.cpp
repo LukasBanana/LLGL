@@ -47,9 +47,9 @@ VKSampler::VKSampler(const VKPtr<VkDevice>& device, const SamplerDescriptor& des
         createInfo.flags                    = 0;
         createInfo.magFilter                = GetVkFilter(desc.magFilter);
         createInfo.minFilter                = GetVkFilter(desc.minFilter);
-        createInfo.addressModeU             = VKTypes::Map(desc.textureWrapU);
-        createInfo.addressModeV             = VKTypes::Map(desc.textureWrapV);
-        createInfo.addressModeW             = VKTypes::Map(desc.textureWrapW);
+        createInfo.addressModeU             = VKTypes::Map(desc.addressModeU);
+        createInfo.addressModeV             = VKTypes::Map(desc.addressModeV);
+        createInfo.addressModeW             = VKTypes::Map(desc.addressModeW);
         createInfo.mipLodBias               = desc.mipMapLODBias;
         createInfo.anisotropyEnable         = VKBoolean(desc.maxAnisotropy > 1);
         createInfo.maxAnisotropy            = static_cast<float>(desc.maxAnisotropy);

@@ -354,21 +354,21 @@ GLenum Map(const AxisDirection cubeFace)
     MapFailed("AxisDirection");
 }
 
-GLenum Map(const TextureWrap textureWrap)
+GLenum Map(const SamplerAddressMode addressMode)
 {
-    switch (textureWrap)
+    switch (addressMode)
     {
-        case TextureWrap::Repeat:       return GL_REPEAT;
-        case TextureWrap::Mirror:       return GL_MIRRORED_REPEAT;
-        case TextureWrap::Clamp:        return GL_CLAMP_TO_EDGE;
+        case SamplerAddressMode::Repeat:       return GL_REPEAT;
+        case SamplerAddressMode::Mirror:       return GL_MIRRORED_REPEAT;
+        case SamplerAddressMode::Clamp:        return GL_CLAMP_TO_EDGE;
         #ifdef LLGL_OPENGL
-        case TextureWrap::Border:       return GL_CLAMP_TO_BORDER;
-        case TextureWrap::MirrorOnce:   return GL_MIRROR_CLAMP_TO_EDGE;
+        case SamplerAddressMode::Border:       return GL_CLAMP_TO_BORDER;
+        case SamplerAddressMode::MirrorOnce:   return GL_MIRROR_CLAMP_TO_EDGE;
         #else
         default:                        break;
         #endif
     }
-    MapFailed("TextureWrap");
+    MapFailed("SamplerAddressMode");
 }
 
 GLenum Map(const SamplerFilter textureFilter)

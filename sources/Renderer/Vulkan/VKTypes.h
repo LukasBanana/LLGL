@@ -31,21 +31,21 @@ namespace VKTypes
 [[noreturn]]
 void MapFailed(const std::string& typeName, const std::string& vknTypeName);
 
-VkShaderStageFlagBits   Map( const ShaderType        shaderType        );
-VkFormat                Map( const VectorType        vectorType        );
-VkFormat                Map( const TextureFormat     textureFormat     );
-VkImageViewType         Map( const TextureType       textureType       );
-VkPrimitiveTopology     Map( const PrimitiveTopology primitiveTopology );
-VkPolygonMode           Map( const PolygonMode       polygonMode       );
-VkCullModeFlags         Map( const CullMode          cullMode          );
-VkCompareOp             Map( const CompareOp         compareOp         );
-VkStencilOp             Map( const StencilOp         stencilOp         );
-VkLogicOp               Map( const LogicOp           logicOp           );
-VkBlendFactor           Map( const BlendOp           blendOp           );
-VkBlendOp               Map( const BlendArithmetic   blendArithmetic   );
-VkSamplerAddressMode    Map( const TextureWrap       textureWrap       );
-VkDescriptorType        Map( const ResourceType      resourceViewType  );
-VkQueryType             Map( const QueryType         queryType         );
+VkShaderStageFlagBits   Map( const ShaderType           shaderType        );
+VkFormat                Map( const VectorType           vectorType        );
+VkFormat                Map( const TextureFormat        textureFormat     );
+VkImageViewType         Map( const TextureType          textureType       );
+VkPrimitiveTopology     Map( const PrimitiveTopology    primitiveTopology );
+VkPolygonMode           Map( const PolygonMode          polygonMode       );
+VkCullModeFlags         Map( const CullMode             cullMode          );
+VkCompareOp             Map( const CompareOp            compareOp         );
+VkStencilOp             Map( const StencilOp            stencilOp         );
+VkLogicOp               Map( const LogicOp              logicOp           );
+VkBlendFactor           Map( const BlendOp              blendOp           );
+VkBlendOp               Map( const BlendArithmetic      blendArithmetic   );
+VkSamplerAddressMode    Map( const SamplerAddressMode   addressMode       );
+VkDescriptorType        Map( const ResourceType         resourceViewType  );
+VkQueryType             Map( const QueryType            queryType         );
 
 TextureFormat           Unmap( const VkFormat format );
 

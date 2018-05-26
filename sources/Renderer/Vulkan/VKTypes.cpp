@@ -284,17 +284,17 @@ VkBlendOp Map(const BlendArithmetic blendArithmetic)
     MapFailed("BlendArithmetic", "VkBlendOp");
 }
 
-VkSamplerAddressMode Map(const TextureWrap textureWrap)
+VkSamplerAddressMode Map(const SamplerAddressMode addressMode)
 {
-    switch (textureWrap)
+    switch (addressMode)
     {
-        case TextureWrap::Repeat:       return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        case TextureWrap::Mirror:       return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-        case TextureWrap::Clamp:        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        case TextureWrap::Border:       return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        case TextureWrap::MirrorOnce:   return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+        case SamplerAddressMode::Repeat:        return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        case SamplerAddressMode::Mirror:        return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case SamplerAddressMode::Clamp:         return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case SamplerAddressMode::Border:        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        case SamplerAddressMode::MirrorOnce:    return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
     }
-    MapFailed("TextureWrap", "VkSamplerAddressMode");
+    MapFailed("SamplerAddressMode", "VkSamplerAddressMode");
 }
 
 VkDescriptorType Map(ResourceType resourceViewType)
