@@ -24,14 +24,46 @@ namespace LLGL
 
 /**
 \brief Technique for resolving texture coordinates that are outside of the range [0, 1].
+\see SamplerDescriptor::addressModeU
+\see SamplerDescriptor::addressModeV
+\see SamplerDescriptor::addressModeW
 */
 enum class SamplerAddressMode
 {
-    Repeat,     //!< Repeat texture coordinates within the interval [0, 1).
-    Mirror,     //!< Flip texture coordinates at ever integer junction.
-    Clamp,      //!< Clamp texture coordinates to the interval [0, 1].
-    Border,     //!< Sample border color for texture coordinates that are outside the interval [0, 1].
-    MirrorOnce, //!< Takes the absolute value of the texture coordinates and then clamps it to the interval [0, 1], i.e. mirror around 0.
+    /**
+    \brief Repeat texture coordinates within the interval [0, 1).
+    \image html SamplerAddressMode_Repeat.png
+    \image latex SamplerAddressMode_Repeat.png "SamplerAddressMode::Repeat example" width=0.3\textwidth
+    */
+    Repeat,
+
+    /**
+    \brief Flip texture coordinates at ever integer junction.
+    \image html SamplerAddressMode_Mirror.png
+    \image latex SamplerAddressMode_Mirror.png "SamplerAddressMode::Mirror example" width=0.3\textwidth
+    */
+    Mirror,
+
+    /**
+    \brief Clamp texture coordinates to the interval [0, 1].
+    \image html SamplerAddressMode_Clamp.png
+    \image latex SamplerAddressMode_Clamp.png "SamplerAddressMode::Clamp example" width=0.3\textwidth
+    */
+    Clamp,
+
+    /**
+    \brief Sample border color for texture coordinates that are outside the interval [0, 1].
+    \image html SamplerAddressMode_Border.png
+    \image latex SamplerAddressMode_Border.png "SamplerAddressMode::Border example" width=0.3\textwidth
+    */
+    Border,
+
+    /**
+    \brief Takes the absolute value of the texture coordinates and then clamps it to the interval [0, 1], i.e. mirror around 0.
+    \image html SamplerAddressMode_MirrorOnce.png
+    \image latex SamplerAddressMode_MirrorOnce.png "SamplerAddressMode::MirrorOnce example" width=0.3\textwidth
+    */
+    MirrorOnce,
 };
 
 /**
@@ -43,8 +75,19 @@ enum class SamplerAddressMode
 */
 enum class SamplerFilter
 {
-    Nearest,    //!< Take the nearest texture sample. \image html SamplerFilter_Nearest.png
-    Linear,     //!< Interpolate between multiple texture samples. \image html SamplerFilter_Linear.png
+    /**
+    \brief Take the nearest texture sample.
+    \image html SamplerFilter_Nearest.png
+    \image latex SamplerFilter_Nearest.png "SamplerFilter::Nearest example" width=0.3\textwidth
+    */
+    Nearest,
+
+    /**
+    \brief Interpolate between multiple texture samples.
+    \image html SamplerFilter_Linear.png
+    \image latex SamplerFilter_Linear.png "SamplerFilter::Linear example" width=0.3\textwidth
+    */
+    Linear,
 };
 
 

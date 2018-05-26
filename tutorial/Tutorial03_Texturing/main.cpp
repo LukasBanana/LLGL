@@ -61,9 +61,10 @@ public:
 
         std::vector<Vertex> vertices =
         {
-            { { -1, -3 }, { 0, 4 } },
-            { { -1,  1 }, { 0, 0 } },
-            { {  3,  1 }, { 4, 0 } },
+            { { -1,  1 }, { -2, -2 } },
+            { { -1, -1 }, { -2,  2 } },
+            { {  1,  1 }, {  2, -2 } },
+            { {  1, -1 }, {  2,  2 } },
         };
 
         // Create vertex buffer
@@ -88,8 +89,9 @@ public:
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram  = shaderProgram;
-            pipelineDesc.pipelineLayout = pipelineLayout;
+            pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.pipelineLayout     = pipelineLayout;
+            pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
         }
         pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -179,7 +181,8 @@ public:
         // Create 4th sampler state with clamped texture wrap mode
         samplerDesc.minFilter = LLGL::SamplerFilter::Linear;
         samplerDesc.mipMapLODBias = 0.0f;
-        samplerDesc.addressModeU = LLGL::SamplerAddressMode::Clamp;
+        samplerDesc.addressModeU = LLGL::SamplerAddressMode::MirrorOnce;
+        samplerDesc.addressModeV = LLGL::SamplerAddressMode::Border;
         sampler[3] = renderer->CreateSampler(samplerDesc);
 
         // Create 5th sampler state with mirrored texture wrap mode
@@ -234,8 +237,8 @@ private:
             commandsExt->SetSampler(*sampler[samplerIndex], 0, LLGL::StageFlags::FragmentStage);
         }
 
-        // Draw fullscreen triangle
-        commands->Draw(3, 0);
+        // Draw fullscreen quad
+        commands->Draw(4, 0);
 
         // Present result on the screen
         context->Present();

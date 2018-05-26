@@ -401,7 +401,7 @@ struct RenderingFeatures
     bool hasOffsetInstancing            = false;
 
     /**
-    \brief Specifies whether multiple viewports, depth-ranges, and scissors are supported at once.
+    \brief Specifies whether multiple viewports, depth-ranges, and scissors at once are supported.
     \see RenderingLimits::maxNumViewports
     */
     bool hasViewportArrays              = false;

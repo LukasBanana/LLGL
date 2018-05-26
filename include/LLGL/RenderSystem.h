@@ -366,7 +366,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /**
         \brief Creates a new Sampler object.
         \throws std::runtime_error If the renderer does not support Sampler objects (e.g. if OpenGL 3.1 or lower is used).
-        \see RenderContext::QueryRenderingCaps
+        \see GetRenderingCaps
         */
         virtual Sampler* CreateSampler(const SamplerDescriptor& desc) = 0;
 
