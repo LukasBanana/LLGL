@@ -263,6 +263,7 @@ set(FilesTest2 ${PROJECT_SOURCE_DIR}/test/Test2_OpenGL.cpp)
 set(FilesTest3 ${PROJECT_SOURCE_DIR}/test/Test3_Direct3D12.cpp)
 set(FilesTest4 ${PROJECT_SOURCE_DIR}/test/Test4_Compute.cpp)
 set(FilesTest5 ${PROJECT_SOURCE_DIR}/test/Test5_Vulkan.cpp)
+set(FilesTest6 ${PROJECT_SOURCE_DIR}/test/Test6_Performance.cpp)
 
 # Tutorial files
 set(FilesTutorial01 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial01_HelloTriangle/main.cpp)
@@ -549,6 +550,7 @@ if(GaussLib_INCLUDE_DIR)
         if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
             ADD_TEST_PROJECT(Test5_Vulkan ${FilesTest5} ${TEST_PROJECT_LIBS})
         endif()
+        ADD_TEST_PROJECT(Test6_Performance ${FilesTest6} ${TEST_PROJECT_LIBS})
     endif()
 
     # Tutorial Projects
