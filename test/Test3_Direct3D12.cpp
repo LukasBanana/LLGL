@@ -35,7 +35,7 @@ int main()
         contextDesc.vsync.enabled           = true;
 
         auto context = renderer->CreateRenderContext(contextDesc);
-        
+
         auto window = static_cast<LLGL::Window*>(&(context->GetSurface()));
 
         auto title = "LLGL Test 3 ( " + renderer->GetName() + " )";

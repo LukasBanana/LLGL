@@ -26,7 +26,7 @@ int main()
         std::shared_ptr<LLGL::RenderingDebugger> debugger;
 
         profiler = std::make_shared<LLGL::RenderingProfiler>();
-        debugger = std::make_shared<TestDebugger>();
+        debugger = std::make_shared<LLGL::RenderingDebugger>();
 
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("OpenGL", profiler.get(), debugger.get());
@@ -54,13 +54,13 @@ int main()
         #endif
 
         #ifdef __linux__
-        
+
         auto context = renderer->CreateRenderContext(contextDesc);
-        
+
         auto window = static_cast<LLGL::Window*>(&(context->GetSurface()));
 
         #else
-        
+
         LLGL::WindowDescriptor windowDesc;
         {
             windowDesc.size             = contextDesc.videoMode.resolution;
@@ -71,7 +71,7 @@ int main()
         auto window = std::shared_ptr<LLGL::Window>(LLGL::Window::Create(windowDesc));
 
         auto context = renderer->CreateRenderContext(contextDesc, window);
-        
+
         #endif
 
         window->Show();

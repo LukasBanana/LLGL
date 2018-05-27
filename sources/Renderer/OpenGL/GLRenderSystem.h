@@ -157,6 +157,8 @@ class GLRenderSystem : public RenderSystem
 
         GLRenderContext* GetSharedRenderContext() const;
 
+        void GenerateSubMips(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers);
+
         struct MipGenerationFBOPair
         {
             ~MipGenerationFBOPair();

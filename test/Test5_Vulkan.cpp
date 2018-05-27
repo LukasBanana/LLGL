@@ -371,7 +371,7 @@ int main()
             #endif
 
             #else
-            
+
             commands->BeginRenderPass(*contextRenderPass);
             {
                 commands->Clear();

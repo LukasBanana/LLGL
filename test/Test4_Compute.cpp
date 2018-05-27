@@ -27,7 +27,7 @@ int main()
     {
         // Setup profiler and debugger
         auto profiler = std::make_shared<LLGL::RenderingProfiler>();
-        auto debugger = std::make_shared<TestDebugger>();
+        auto debugger = std::make_shared<LLGL::RenderingDebugger>();
 
         // Load render system module
         auto renderer = LLGL::RenderSystem::Load("OpenGL", profiler.get(), debugger.get());
