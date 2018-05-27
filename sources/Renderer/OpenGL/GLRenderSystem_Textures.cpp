@@ -245,6 +245,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
 
         #else
 
+        #ifdef GL_ARB_texture_View
         if (HasExtension(GLExt::ARB_texture_view))
         {
             /* Generate MIP-maps in GL_ARB_texture_view extension process */
@@ -259,6 +260,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
             );
         }
         else
+        #endif
         {
             /* Generate MIP-maps in default process */
             GLRenderSystem::GenerateMips(texture);
@@ -465,7 +467,9 @@ void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D
     // dummy
 }
 
-#endif
+#endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
+
+#ifdef GL_ARB_texture_View
 
 void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers)
 {
@@ -492,6 +496,15 @@ void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint
     /* Release temporary texture view */
     glDeleteTextures(1, &texViewID);
 }
+
+#else
+
+void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers)
+{
+    // dummy
+}
+
+#endif // /GL_ARB_texture_View
 
 
 } // /namespace LLGL
