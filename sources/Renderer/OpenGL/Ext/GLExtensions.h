@@ -390,6 +390,10 @@ extern PFNGLBUFFERSTORAGEPROC                               glBufferStorage;
 
 extern PFNGLPOLYGONOFFSETCLAMPPROC                          glPolygonOffsetClamp;
 
+/* GL_ARB_texture_view */
+
+extern PFNGLTEXTUREVIEWPROC                                 glTextureView;
+
 /* GL_ARB_direct_state_access */
 
 extern PFNGLCREATETRANSFORMFEEDBACKSPROC                    glCreateTransformFeedbacks;

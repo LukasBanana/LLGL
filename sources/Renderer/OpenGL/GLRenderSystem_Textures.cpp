@@ -209,50 +209,94 @@ void GLRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
 
 void GLRenderSystem::GenerateMips(Texture& texture)
 {
-    /* Bind texture to active layer */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-
-    /* Generate MIP-maps and update texture minification filter to a default value */
-    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
-    if (HasExtension(GLExt::ARB_direct_state_access))
-    {
-        /* Generate MIP-maps of named texture object */
-        glGenerateTextureMipmap(textureGL.GetID());
-    }
-    else
-    #endif
-    {
-        /* Restore previously bound texture on active layer */
-        GLStateManager::active->PushBoundTexture(GLStateManager::GetTextureTarget(textureGL.GetType()));
-        {
-            /* Bind texture and generate MIP-maps */
-            auto target = GLTypes::Map(textureGL.GetType());
-            GLStateManager::active->BindTexture(textureGL);
-            glGenerateMipmap(target);
-        }
-        GLStateManager::active->PopBoundTexture();
-    }
+    GenerateMipsPrimary(textureGL.GetID(), textureGL.GetType());
 }
+
+//TODO: performance tests show that the manual MIP-map generation is almost always slower than the default MIP-map generation
+//#define LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
     if (numMipLevels > 0 && numArrayLayers > 0)
     {
+        #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
+
         if (texture.GetType() == TextureType::Texture3D)
         {
-            /* Generate texture in default MIP-map generation process */
+            /* Generate MIP-maps in default process */
             GLRenderSystem::GenerateMips(texture);
         }
         else
         {
-            /* Generate texture in custom sub MIP-map generation process */
+            /* Generate MIP-maps in custom sub generation process */
+            auto& textureGL = LLGL_CAST(GLTexture&, texture);
+            auto extent = textureGL.GLTexture::QueryMipLevelSize(baseMipLevel);
+
+            GenerateSubMipsWithFBO(
+                textureGL,
+                extent,
+                static_cast<GLint>(baseMipLevel),
+                static_cast<GLint>(numMipLevels),
+                static_cast<GLint>(baseArrayLayer),
+                static_cast<GLint>(numArrayLayers)
+            );
+        }
+
+        #else
+
+        if (HasExtension(GLExt::ARB_texture_view))
+        {
+            /* Generate MIP-maps in GL_ARB_texture_view extension process */
             auto& textureGL = LLGL_CAST(GLTexture&, texture);
 
-            auto extent = textureGL.GLTexture::QueryMipLevelSize(baseMipLevel);
-            GenerateSubMips(textureGL, extent, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
+            GenerateSubMipsWithTextureView(
+                textureGL,
+                static_cast<GLuint>(baseMipLevel),
+                static_cast<GLuint>(numMipLevels),
+                static_cast<GLuint>(baseArrayLayer),
+                static_cast<GLuint>(numArrayLayers)
+            );
         }
+        else
+        {
+            /* Generate MIP-maps in default process */
+            GLRenderSystem::GenerateMips(texture);
+        }
+
+        #endif
     }
 }
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GLRenderSystem::GenerateMipsPrimary(GLuint texID, const TextureType texType)
+{
+    #if defined GL_ARB_direct_state_access && defined LLGL_GL_ENABLE_DSA_EXT
+    if (HasExtension(GLExt::ARB_direct_state_access))
+    {
+        /* Generate MIP-maps of named texture object */
+        glGenerateTextureMipmap(texID);
+    }
+    else
+    #endif
+    {
+        /* Restore previously bound texture on active layer */
+        auto texTarget = GLStateManager::GetTextureTarget(texType);
+        GLStateManager::active->PushBoundTexture(texTarget);
+        {
+            /* Bind texture and generate MIP-maps */
+            GLStateManager::active->BindTexture(texTarget, texID);
+            glGenerateMipmap(GLTypes::Map(texType));
+        }
+        GLStateManager::active->PopBoundTexture();
+    }
+}
+
+#ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 static void GetNextMipSize(GLint& s)
 {
@@ -335,8 +379,7 @@ static void GenerateSubMipsTextureLayer(const Extent3D& extent, GLuint texID, GL
     }
 }
 
-// private
-void GLRenderSystem::GenerateSubMips(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers)
+void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers)
 {
     /* Get GL texture ID and texture target */
     auto texID      = textureGL.GetID();
@@ -413,6 +456,41 @@ void GLRenderSystem::GenerateSubMips(GLTexture& textureGL, const Extent3D& exten
     }
     GLStateManager::active->PopBoundFramebuffer();
     GLStateManager::active->PopBoundFramebuffer();
+}
+
+#else
+
+void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers)
+{
+    // dummy
+}
+
+#endif
+
+void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers)
+{
+    /* Get GL texture ID and texture target */
+    auto texID          = textureGL.GetID();
+    auto texType        = textureGL.GetType();
+    auto texTarget      = GLTypes::Map(texType);
+    auto internalFormat = textureGL.QueryGLInternalFormat();
+
+    /* Generate new texture to be used as view (due to immutable storage) */
+    GLuint texViewID = 0;
+    glGenTextures(1, &texViewID);
+
+    /*
+    Create texture view as storage alias from the specified input texture.
+    Note: texture views can only be created with textures that have been allocated with glTexStorage!
+    see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_view.txt
+    */
+    glTextureView(texViewID, texTarget, texID, internalFormat, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
+
+    /* Generate MIP-maps for texture view */
+    GenerateMipsPrimary(texViewID, texType);
+
+    /* Release temporary texture view */
+    glDeleteTextures(1, &texViewID);
 }
 
 

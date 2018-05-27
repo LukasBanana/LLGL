@@ -563,6 +563,12 @@ static bool Load_GL_ARB_polygon_offset_clamp(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_texture_view(bool usePlaceholder)
+{
+    LOAD_GLPROC( glTextureView );
+    return true;
+}
+
 static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -899,6 +905,7 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_texture_storage_multisample  );
     LOAD_GLEXT( ARB_buffer_storage               );
     LOAD_GLEXT( ARB_polygon_offset_clamp         );
+    LOAD_GLEXT( ARB_texture_view                 );
     #ifdef LLGL_GL_ENABLE_DSA_EXT
     LOAD_GLEXT( ARB_direct_state_access          );
     #endif

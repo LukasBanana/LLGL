@@ -11,14 +11,28 @@
 #include <functional>
 
 
+
+static unsigned int g_seed;
+
+void FastSRand(int seed)
+{
+    g_seed = seed;
+}
+
+int FastRand()
+{
+    g_seed = (214013 * g_seed + 2531011);
+    return (g_seed >> 16) & RAND_MAX;
+}
+
 int RandInt(int max)
 {
-    return (rand() % (max + 1));
+    return (FastRand() % (max + 1));
 }
 
 float RandFloat()
 {
-    return (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
+    return (static_cast<float>(FastRand()) / static_cast<float>(RAND_MAX));
 }
 
 LLGL::ColorRGBAub RandColorRGBA()
@@ -59,6 +73,8 @@ class PerformanceTest
         void CreateTextures(std::size_t numTextures)
         {
             // Create source image for textures
+            std::cout << "generate random image ..." << std::endl;
+
             LLGL::Image image
             {
                 { config.textureSize, config.textureSize, config.arrayLayers },
@@ -85,7 +101,12 @@ class PerformanceTest
                 textureDesc.texture2D.layers    = image.GetExtent().depth;
             }
             for (std::size_t i = 0; i < numTextures; ++i)
+            {
+                std::cout << "create texture " << (i + 1) << '/' << numTextures << '\r';
                 textures.push_back(renderer->CreateTexture(textureDesc, &imageDesc));
+            }
+
+            std::cout << std::endl;
         }
 
         void MeasureTime(const std::string& title, const std::function<void()>& callback)
@@ -180,9 +201,9 @@ int main(int argc, char* argv[])
     auto rendererModule = GetSelectedRendererModule(argc, argv);
 
     TestConfig testConfig;
-    testConfig.numTextures  = 100;
+    testConfig.numTextures  = 2;
     testConfig.textureSize  = 512;
-    testConfig.arrayLayers  = 512;//512 or 32
+    testConfig.arrayLayers  = 32;//512 or 32
     testConfig.numMipMaps   = 3;
 
     PerformanceTest test;

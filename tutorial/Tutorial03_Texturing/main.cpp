@@ -147,10 +147,10 @@ public:
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping
         // see http://whatis.techtarget.com/definition/MIP-map
-        #if 1
+        #if 0
         renderer->GenerateMips(*colorMap);
         #else
-        renderer->GenerateMips(*colorMap, 0, 3, 0, 1);
+        renderer->GenerateMips(*colorMap, 0, 4, 0, 1);
         #endif
 
         // Release image data

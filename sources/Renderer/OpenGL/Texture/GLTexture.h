@@ -29,8 +29,8 @@ class GLTexture : public Texture
 
         TextureDescriptor QueryDesc() const override;
 
-        // Recreates the internal texture object. This will invalidate the previous texture ID.
-        void Recreate();
+        // Queries the GL_TEXTURE_INTERNAL_FORMAT parameter of this texture.
+        GLenum QueryGLInternalFormat() const;
 
         // Returns the hardware texture ID.
         inline GLuint GetID() const
@@ -40,8 +40,7 @@ class GLTexture : public Texture
 
     private:
 
-        void AllocHwTexture();
-        void FreeHwTexture();
+        void QueryTexParams(GLint* internalFormat, GLint* extent) const;
 
         GLuint id_ = 0;
 

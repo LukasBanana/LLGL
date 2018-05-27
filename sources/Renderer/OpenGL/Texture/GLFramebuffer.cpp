@@ -34,12 +34,15 @@ void GLFramebuffer::Unbind(const GLFramebufferTarget target) const
     GLStateManager::active->BindFramebuffer(target, 0);
 }
 
+//TODO: remove this as soon as "RenderTarget::Detach" is removed!
+#if 1
 void GLFramebuffer::Recreate()
 {
     /* Delete previous framebuffer and create a new one */
     glDeleteFramebuffers(1, &id_);
     glGenFramebuffers(1, &id_);
 }
+#endif
 
 void GLFramebuffer::AttachTexture1D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel)
 {

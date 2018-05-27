@@ -387,6 +387,10 @@ PFNGLBUFFERSTORAGEPROC                                  glBufferStorage         
 
 PFNGLPOLYGONOFFSETCLAMPPROC                             glPolygonOffsetClamp                            = nullptr;
 
+/* GL_ARB_texture_view */
+
+PFNGLTEXTUREVIEWPROC                                    glTextureView                                   = nullptr;
+
 /* GL_ARB_direct_state_access */
 
 PFNGLCREATETRANSFORMFEEDBACKSPROC                       glCreateTransformFeedbacks                      = nullptr;

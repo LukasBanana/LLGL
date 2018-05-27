@@ -417,6 +417,10 @@ DECL_GLPROC(void, glBufferStorage, (GLenum, GLsizeiptr, const void*, GLbitfield)
 
 DECL_GLPROC(void, glPolygonOffsetClamp, (GLfloat, GLfloat, GLfloat));
 
+/* GL_ARB_texture_view */
+
+DECL_GLPROC(void, glTextureView, (GLuint, GLenum, GLuint, GLenum, GLuint, GLuint, GLuint, GLuint));
+
 /* GL_ARB_direct_state_access */
 
 DECL_GLPROC(void, glCreateTransformFeedbacks, (GLsizei, GLuint*));
