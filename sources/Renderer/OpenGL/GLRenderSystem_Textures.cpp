@@ -245,7 +245,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
 
         #else
 
-        #ifdef GL_ARB_texture_View
+        #ifdef GL_ARB_texture_view
         if (HasExtension(GLExt::ARB_texture_view))
         {
             /* Generate MIP-maps in GL_ARB_texture_view extension process */
@@ -469,7 +469,7 @@ void GLRenderSystem::GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D
 
 #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
-#ifdef GL_ARB_texture_View
+#ifdef GL_ARB_texture_view
 
 void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers)
 {
@@ -504,7 +504,7 @@ void GLRenderSystem::GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint
     // dummy
 }
 
-#endif // /GL_ARB_texture_View
+#endif // /GL_ARB_texture_view
 
 
 } // /namespace LLGL
