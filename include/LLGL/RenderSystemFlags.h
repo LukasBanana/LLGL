@@ -11,6 +11,7 @@
 
 #include "CommandBufferFlags.h"
 #include "TextureFlags.h"
+#include "Constants.h"
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -19,16 +20,6 @@
 
 namespace LLGL
 {
-
-
-/* ----- Constants ----- */
-
-/**
-\brief Specifies the maximal number of threads the system supports.
-\see ConvertImageBuffer
-\todo Move global constants into class or namespace.
-*/
-static const std::size_t maxThreadCount = ~0;
 
 
 /* ----- Enumerations ----- */
@@ -158,12 +149,12 @@ struct RenderSystemConfiguration
     ImageInitialization imageInitialization;
 
     /**
-    \brief Specifies the number of threads that will be used internally by the render system. By default maxThreadCount.
+    \brief Specifies the number of threads that will be used internally by the render system. By default Constants::maxThreadCount.
     \remarks This is mainly used by the Direct3D render systems, e.g. inside the "CreateTexture" and "WriteTexture" functions
     to convert the image data into the respective hardware texture format. OpenGL does this automatically.
-    \see maxThreadCount
+    \see Constants::maxThreadCount
     */
-    std::size_t         threadCount         { maxThreadCount };
+    std::size_t         threadCount         = Constants::maxThreadCount;
 };
 
 /**

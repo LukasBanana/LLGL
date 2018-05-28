@@ -30,7 +30,7 @@ void VertexFormat::AppendAttribute(const VertexAttribute& attrib, std::uint32_t 
     /* Overwrite attribute offset */
     auto& attr = attributes.back();
 
-    if (offset == OffsetAppend)
+    if (offset == Constants::ignoreOffset)
     {
         /* Set offset after the previous attribute */
         if (attributes.size() > 1)

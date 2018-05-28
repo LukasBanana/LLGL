@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "Constants.h"
 #include "VertexAttribute.h"
 #include <vector>
 #include <cstdint>
@@ -28,25 +29,20 @@ namespace LLGL
 struct LLGL_EXPORT VertexFormat
 {
     /**
-    \brief Offset value to determine the offset automatically, so that a vertex attribute is appended at the end of a vertex format.
-    \see AppendAttribute
-    */
-    static const std::uint32_t OffsetAppend = ~0;
-
-    /**
     \brief Appends the specified vertex attribute to this vertex format.
     \param[in] attrib Specifies the new attribute which is appended to this vertex format.
     \param[in] offset Specifies the optional offset (in bytes) for this attribute.
-    If this is 'OffsetAppend', the offset is determined by the previous vertex attribute offset plus its size.
-    If there is no previous vertex attribute, the determined offset is 0. By default OffsetAppend.
+    If this is 'Constants::ignoreOffset', the offset is determined by the previous vertex attribute offset plus its size.
+    If there is no previous vertex attribute, the determined offset is 0. By default Constants::ignoreOffset.
     \remarks This function will always overwrite the 'offset' and 'inputSlot' members before the attribute is appended to this vertex format.
     The 'inputSlot' member will be set to the input slot value of the previous vertex attribute and is increased by one,
     if the new offset of the new vertex attribute is less than the offset plus size of the previous vertex attribute.
     \throws std::invalid_argument If 'attrib.components' is neither 1, 2, 3, nor 4.
     \see VertexAttribute::offset
     \see VertexAttribute::inputSlot
+    \see Constants::ignoreOffset
     */
-    void AppendAttribute(const VertexAttribute& attrib, std::uint32_t offset = OffsetAppend);
+    void AppendAttribute(const VertexAttribute& attrib, std::uint32_t offset = Constants::ignoreOffset);
 
     /**
     \brief Specifies the list of vertex attributes.

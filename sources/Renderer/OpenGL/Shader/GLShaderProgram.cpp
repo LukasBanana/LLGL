@@ -14,6 +14,7 @@
 #include "../RenderState/GLStateManager.h"
 #include "../../GLCommon/GLTypes.h"
 #include <LLGL/VertexFormat.h>
+#include <LLGL/Constants.h>
 #include <vector>
 #include <stdexcept>
 
@@ -682,7 +683,7 @@ void GLShaderProgram::QueryBufferProperties(ShaderReflectionDescriptor::Resource
     {
         /* Set binding slot to invalid index */
         resourceView.stageFlags = StageFlags::AllStages;
-        resourceView.slot       = 0xffffffff;
+        resourceView.slot       = Constants::invalidSlot;
     }
 }
 

@@ -194,7 +194,7 @@ LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, Imag
 \param[in] dstFormat Specifies the destination image format.
 \param[in] dstDataType Specifies the destination data type.
 \param[in] threadCount Specifies the number of threads to use for conversion.
-If this is less than 2, no multi-threading is used. If this is 'maxThreadCount',
+If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
@@ -203,7 +203,7 @@ This can be casted to the respective target data type (e.g. "unsigned char", "in
 if a depth-stencil format is specified either as source or destination,
 if the source buffer size is not a multiple of the source data type size times the image format size,
 or if 'srcBuffer' is a null pointer.
-\see maxThreadCount
+\see Constants::maxThreadCount
 \see ByteBuffer
 \see DataTypeSize
 */

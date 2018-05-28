@@ -68,7 +68,7 @@ GLQuery::GLQuery(const QueryDescriptor& desc) :
         if (HasExtension(GLExt::ARB_pipeline_statistics_query))
         {
             /* Allocate IDs for all pipeline statistics queries */
-            ids_.resize(QueryPipelineStatistics::memberCount);
+            ids_.resize(sizeof(QueryPipelineStatistics) / sizeof(std::uint64_t));
         }
         else
         {

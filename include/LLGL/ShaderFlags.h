@@ -185,7 +185,8 @@ struct ShaderReflectionDescriptor
 
         /**
         \brief Specifies the zero-based binding slot. By default 0.
-        \remarks If the binding slot could be not queried by the shader reflection, the value is 0xffffffff.
+        \remarks If the binding slot could be not queried by the shader reflection, the value is Constants::invalidSlot.
+        \see Constants::invalidSlot
         */
         std::uint32_t       slot                = 0;
 

@@ -617,7 +617,7 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
 
     ByteBuffer dstImage;
 
-    if (threadCount == maxThreadCount)
+    if (threadCount == Constants::maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
 
     if (srcImageDesc.dataType != dstDataType)
