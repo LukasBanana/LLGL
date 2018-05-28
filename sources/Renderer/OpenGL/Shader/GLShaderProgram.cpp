@@ -605,6 +605,14 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
                 resourceView.name = std::string(uniformName.data());
                 resourceView.type = ResourceType::Texture;
 
+                /* Get binding slot from uniform value */
+                GLint uniformValue      = 0;
+                GLint uniformLocation   = glGetUniformLocation(id_, uniformName.data());
+
+                glGetUniformiv(id_, uniformLocation, &uniformValue);
+
+                resourceView.slot = static_cast<std::uint32_t>(uniformValue);
+
                 /* Query resource properties */
                 const GLenum props[] =
                 {
@@ -620,16 +628,14 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
 
                 if (GLGetProgramResourceProperties(id_, GL_UNIFORM, i, 7, props, params))
                 {
-                    //resourceView.slot       = static_cast<std::uint32_t>(params[0]);
+                    /* Determine stage flags by program resource properties */
                     resourceView.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
-                    resourceView.slot       = 0xffffffff;
                     resourceView.arraySize  = static_cast<std::uint32_t>(params[6]);
                 }
                 else
                 {
                     /* Set binding slot to invalid index */
                     resourceView.stageFlags = StageFlags::AllStages;
-                    resourceView.slot       = 0xffffffff;
                     resourceView.arraySize  = 1;
                 }
             }

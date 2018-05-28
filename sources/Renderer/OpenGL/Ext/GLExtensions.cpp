@@ -243,6 +243,8 @@ PFNGLUNIFORM4IVPROC                                     glUniform4iv            
 PFNGLUNIFORMMATRIX2FVPROC                               glUniformMatrix2fv                              = nullptr;
 PFNGLUNIFORMMATRIX3FVPROC                               glUniformMatrix3fv                              = nullptr;
 PFNGLUNIFORMMATRIX4FVPROC                               glUniformMatrix4fv                              = nullptr;
+PFNGLGETUNIFORMIVPROC                                   glGetUniformiv                                  = nullptr;
+PFNGLGETUNIFORMFVPROC                                   glGetUniformfv                                  = nullptr;
 
 /* GL_ARB_tessellation_shader */
 
