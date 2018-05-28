@@ -102,7 +102,7 @@ void D3D11Shader::Reflect(ShaderReflectionDescriptor& reflectionDesc) const
 
 void D3D11Shader::CreateNativeShader(const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage)
 {
-    nativeShader_.vs.Reset();
+    native_.vs.Reset();
 
     HRESULT hr = 0;
 
@@ -110,21 +110,21 @@ void D3D11Shader::CreateNativeShader(const ShaderDescriptor::StreamOutput& strea
     {
         case ShaderType::Vertex:
         {
-            hr = device_->CreateVertexShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.vs.ReleaseAndGetAddressOf());
+            hr = device_->CreateVertexShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.vs.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 vertex shader");
         }
         break;
 
         case ShaderType::TessControl:
         {
-            hr = device_->CreateHullShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.hs.ReleaseAndGetAddressOf());
+            hr = device_->CreateHullShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.hs.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 hull shader");
         }
         break;
 
         case ShaderType::TessEvaluation:
         {
-            hr = device_->CreateDomainShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.ds.ReleaseAndGetAddressOf());
+            hr = device_->CreateDomainShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.ds.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 domain shader");
         }
         break;
@@ -156,11 +156,11 @@ void D3D11Shader::CreateNativeShader(const ShaderDescriptor::StreamOutput& strea
                 hr = device_->CreateGeometryShaderWithStreamOutput(
                     byteCode_.data(), byteCode_.size(),
                     outputElements.data(), static_cast<UINT>(outputElements.size()), nullptr, 0, 0,
-                    classLinkage, nativeShader_.gs.ReleaseAndGetAddressOf()
+                    classLinkage, native_.gs.ReleaseAndGetAddressOf()
                 );
             }
             else
-                hr = device_->CreateGeometryShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.gs.ReleaseAndGetAddressOf());
+                hr = device_->CreateGeometryShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.gs.ReleaseAndGetAddressOf());
 
             DXThrowIfFailed(hr, "failed to create D3D11 geometry shader");
         }
@@ -168,14 +168,14 @@ void D3D11Shader::CreateNativeShader(const ShaderDescriptor::StreamOutput& strea
 
         case ShaderType::Fragment:
         {
-            hr = device_->CreatePixelShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.ps.ReleaseAndGetAddressOf());
+            hr = device_->CreatePixelShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.ps.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 pixel shader");
         }
         break;
 
         case ShaderType::Compute:
         {
-            hr = device_->CreateComputeShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.cs.ReleaseAndGetAddressOf());
+            hr = device_->CreateComputeShader(byteCode_.data(), byteCode_.size(), classLinkage, native_.cs.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 compute shader");
         }
         break;

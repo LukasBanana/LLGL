@@ -33,7 +33,7 @@ class GLShader : public Shader
 
         std::string QueryInfoLog() override;
 
-        //! Returns the hardware shader ID.
+        // Returns the native shader ID.
         inline GLuint GetID() const
         {
             return id_;

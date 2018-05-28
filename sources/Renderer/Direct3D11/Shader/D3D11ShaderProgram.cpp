@@ -56,7 +56,7 @@ bool D3D11ShaderProgram::LinkShaders()
     /* Validate native shader objects */
     for (std::size_t i = 0; i < 6; ++i)
     {
-        if (shaders_[i] != nullptr && shaders_[i]->GetNativeShader().vs == nullptr)
+        if (shaders_[i] != nullptr && shaders_[i]->GetNative().vs == nullptr)
             linkError_ = LinkError::InvalidByteCode;
     }
 

@@ -183,7 +183,7 @@ void D3D11RenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLev
     auto& textureD3D = LLGL_CAST(const D3D11Texture&, texture);
 
     /* Create a copy of the hardware texture with CPU read access */
-    D3D11HardwareTexture hwTextureCopy;
+    D3D11NativeTexture hwTextureCopy;
     textureD3D.CreateSubresourceCopyWithCPUAccess(device_.Get(), context_.Get(), hwTextureCopy, D3D11_CPU_ACCESS_READ, mipLevel);
 
     /* Map subresource for reading */

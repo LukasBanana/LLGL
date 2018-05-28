@@ -19,13 +19,13 @@ namespace LLGL
 {
 
 
-union D3D11HardwareTexture
+union D3D11NativeTexture
 {
-    D3D11HardwareTexture() :
+    D3D11NativeTexture() :
         resource { nullptr }
     {
     }
-    ~D3D11HardwareTexture()
+    ~D3D11NativeTexture()
     {
     }
 
@@ -80,7 +80,7 @@ class D3D11Texture : public Texture
         // Creates a copy of the specified subresource of the hardware texture with CPU read access.
         void CreateSubresourceCopyWithCPUAccess(
             ID3D11Device* device, ID3D11DeviceContext* context,
-            D3D11HardwareTexture& textureCopy,
+            D3D11NativeTexture& textureCopy,
             UINT cpuAccessFlags,
             UINT mipLevel
         ) const;
@@ -97,10 +97,10 @@ class D3D11Texture : public Texture
 
         /* ----- Hardware texture objects ----- */
 
-        // Returns the union of D3D hardware textures.
-        inline const D3D11HardwareTexture& GetHwTexture() const
+        // Returns the native D3D texture object.
+        inline const D3D11NativeTexture& GetNative() const
         {
-            return hwTexture_;
+            return native_;
         }
 
         // Returns the standard shader-resource-view (SRV) of the hardware texture object (full view of all layers and MIP levels).
@@ -135,7 +135,7 @@ class D3D11Texture : public Texture
 
         void SetResourceParams(DXGI_FORMAT format, const Extent3D& size, UINT arraySize);
 
-        D3D11HardwareTexture                hwTexture_;
+        D3D11NativeTexture                  native_;
 
         ComPtr<ID3D11ShaderResourceView>    srv_;
         //ComPtr<ID3D11UnorderedAccessView>   uav_; //TODO: use this to support UAV of textures

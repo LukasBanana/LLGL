@@ -60,11 +60,13 @@ class D3D11Shader : public Shader
 
         void Reflect(ShaderReflectionDescriptor& reflectionDesc) const;
 
-        inline const D3D11NativeShader& GetNativeShader() const
+        // Returns the native D3D shader object.
+        inline const D3D11NativeShader& GetNative() const
         {
-            return nativeShader_;
+            return native_;
         }
 
+        // Returns the shader byte code container.
         inline const std::vector<char>& GetByteCode() const
         {
             return byteCode_;
@@ -78,7 +80,7 @@ class D3D11Shader : public Shader
 
         ID3D11Device*       device_         = nullptr;
 
-        D3D11NativeShader   nativeShader_;
+        D3D11NativeShader   native_;
 
         std::vector<char>   byteCode_;
         ComPtr<ID3DBlob>    errors_;
