@@ -154,7 +154,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
         if (wglCreateContextAttribsARB || LoadCreateContextProcs())
         {
             auto extRenderContext = CreateGLContext(true, sharedContext);
-            
+
             if (extRenderContext)
             {
                 /* Use the extended profile and delete the old standard render context */
@@ -244,10 +244,10 @@ HGLRC Win32GLContext::CreateGLContext(bool useExtProfile, Win32GLContext* shared
         hasSharedContext_ = true;
         renderContext = sharedContext->hGLRC_;
     }
-    
+
     if (!renderContext)
         return 0;
-        
+
     /* Activate new render context */
     if (wglMakeCurrent(hDC_, renderContext) != TRUE)
     {
@@ -377,7 +377,7 @@ void Win32GLContext::SelectPixelFormat()
         formatDesc.dwVisibleMask    = 0;
         formatDesc.dwDamageMask     = 0;
     }
-    
+
     /* Try to find suitable pixel format */
     const bool wantAntiAliasFormat = (desc_.multiSampling.enabled && !pixelFormatsMS_.empty());
 
@@ -391,25 +391,25 @@ void Win32GLContext::SelectPixelFormat()
             /* Choose anti-aliasing pixel format */
             pixelFormat_ = pixelFormatsMS_[msPixelFormatIndex++];
         }
-        
+
         if (!pixelFormat_)
         {
             /* Choose standard pixel format */
             pixelFormat_ = ChoosePixelFormat(hDC_, &formatDesc);
-            
+
             if (wantAntiAliasFormat)
                 ErrAntiAliasingNotSupported();
-            
+
             wasStandardFormatUsed = true;
         }
-        
+
         /* Check for errors */
         if (!pixelFormat_)
             throw std::runtime_error("failed to select pixel format");
-        
+
         /* Set pixel format */
         auto wasFormatSelected = SetPixelFormat(hDC_, pixelFormat_, &formatDesc);
-        
+
         if (!wasFormatSelected)
         {
             if (wasStandardFormatUsed)
@@ -435,7 +435,7 @@ bool Win32GLContext::SetupAntiAliasing()
     /* Setup pixel format for anti-aliasing */
     const auto queriedMultiSamples = desc_.multiSampling.samples;
     const auto& videoMode = desc_.videoMode;
-    
+
     while (desc_.multiSampling.samples > 0)
     {
         float attribsFlt[] = { 0.0f, 0.0f };

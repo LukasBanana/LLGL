@@ -24,18 +24,24 @@ GLSampler::~GLSampler()
     glDeleteSamplers(1, &id_);
 }
 
-using namespace GLTypes;
+static GLenum GetGLSamplerMinFilter(const SamplerDescriptor& desc)
+{
+    if (desc.mipMapping)
+        return GLTypes::Map(desc.minFilter, desc.mipMapFilter);
+    else
+        return GLTypes::Map(desc.minFilter);
+}
 
 void GLSampler::SetDesc(const SamplerDescriptor& desc)
 {
     /* Set texture coordinate wrap modes */
-    glSamplerParameteri(id_, GL_TEXTURE_WRAP_S, Map(desc.addressModeU));
-    glSamplerParameteri(id_, GL_TEXTURE_WRAP_T, Map(desc.addressModeV));
-    glSamplerParameteri(id_, GL_TEXTURE_WRAP_R, Map(desc.addressModeW));
+    glSamplerParameteri(id_, GL_TEXTURE_WRAP_S, GLTypes::Map(desc.addressModeU));
+    glSamplerParameteri(id_, GL_TEXTURE_WRAP_T, GLTypes::Map(desc.addressModeV));
+    glSamplerParameteri(id_, GL_TEXTURE_WRAP_R, GLTypes::Map(desc.addressModeW));
 
     /* Set filter states */
-    glSamplerParameteri(id_, GL_TEXTURE_MIN_FILTER, (desc.mipMapping ? Map(desc.minFilter, desc.mipMapFilter) : Map(desc.minFilter)));
-    glSamplerParameteri(id_, GL_TEXTURE_MAG_FILTER, Map(desc.magFilter));
+    glSamplerParameteri(id_, GL_TEXTURE_MIN_FILTER, GetGLSamplerMinFilter(desc));
+    glSamplerParameteri(id_, GL_TEXTURE_MAG_FILTER, GLTypes::Map(desc.magFilter));
     glSamplerParameterf(id_, GL_TEXTURE_MAX_ANISOTROPY_EXT, static_cast<float>(desc.maxAnisotropy));
 
     /* Set MIP-map level selection */
@@ -47,7 +53,7 @@ void GLSampler::SetDesc(const SamplerDescriptor& desc)
     if (desc.compareEnabled)
     {
         glSamplerParameteri(id_, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-        glSamplerParameteri(id_, GL_TEXTURE_COMPARE_FUNC, Map(desc.compareOp));
+        glSamplerParameteri(id_, GL_TEXTURE_COMPARE_FUNC, GLTypes::Map(desc.compareOp));
     }
     else
         glSamplerParameteri(id_, GL_TEXTURE_COMPARE_MODE, GL_NONE);

@@ -311,7 +311,16 @@ protected:
             contextDesc.multiSampling.enabled           = (multiSampling > 1);
             contextDesc.multiSampling.samples           = multiSampling;
 
-            #if defined __APPLE__
+            #if defined _DEBUG && 0
+            contextDesc.debugCallback = [](const std::string& type, const std::string& message)
+            {
+                std::cerr << type << ": " << message << std::endl;
+            };
+            #endif
+
+            #if defined _WIN32
+            contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
+            #elif defined __APPLE__
             contextDesc.profileOpenGL.contextProfile    = LLGL::OpenGLContextProfile::CoreProfile;
             contextDesc.profileOpenGL.majorVersion      = 4;
             contextDesc.profileOpenGL.minorVersion      = 1;

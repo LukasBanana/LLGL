@@ -161,7 +161,7 @@ void D3D11Shader::CreateHardwareShader(const ShaderDescriptor::StreamOutput& str
             }
             else
                 hr = device_->CreateGeometryShader(byteCode_.data(), byteCode_.size(), classLinkage, hardwareShader_.gs.ReleaseAndGetAddressOf());
-            
+
             DXThrowIfFailed(hr, "failed to create D3D11 geometry shader");
         }
         break;
@@ -206,7 +206,7 @@ void D3D11Shader::ReflectShader()
 
             if (FAILED(hr))
             {
-                std::string info = "failed to retrieve D3D11 signature parameter descriptor (" + std::to_string(i + 1) + " of " + std::to_string(shaderDesc.InputParameters) + ")";
+                std::string info = "failed to retrieve D3D11 signature parameter descriptor " + std::to_string(i + 1) + " of " + std::to_string(shaderDesc.InputParameters);
                 DXThrowIfFailed(hr, info.c_str());
             }
 

@@ -68,7 +68,7 @@ class GLShaderProgram : public ShaderProgram
         bool LinkShaderProgram();
 
         void BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
-    
+
         #ifndef __APPLE__
         void BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
         #endif

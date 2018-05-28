@@ -169,9 +169,14 @@ struct BufferDescriptor
 */
 struct ConstantBufferViewDescriptor
 {
-    std::string     name;           //!< Constant buffer name.
-    std::uint32_t   index   = 0;    //!< Index of the constant buffer within the respective shader.
-    std::uint32_t   size    = 0;    //!< Buffer size (in bytes).
+    //! Constant buffer name, i.e. the identifier used in the shader.
+    std::string     name;
+
+    //! Index of the constant buffer within the respective shader.
+    std::uint32_t   index   = 0;
+
+    //! Buffer size (in bytes).
+    std::uint32_t   size    = 0;
 };
 
 /**
@@ -180,8 +185,11 @@ struct ConstantBufferViewDescriptor
 */
 struct StorageBufferViewDescriptor
 {
-    std::string         name;           //!< Storage buffer name.
-    std::uint32_t       index   = 0;    //!< Index of the storage buffer within the respective shader.
+    //! Storage buffer name, i.e. the identifier used in the shader.
+    std::string         name;
+
+    //! Index of the storage buffer within the respective shader.
+    std::uint32_t       index   = 0;
 
     /**
     \brief Storage buffer type.
