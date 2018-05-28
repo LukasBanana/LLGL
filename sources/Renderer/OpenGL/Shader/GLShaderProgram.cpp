@@ -444,7 +444,7 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflectionDescriptor& re
     reflection.streamOutputAttributes = std::move(streamOutputFormat.attributes);
 }
 
-static bool QueryProgramResourceProperties(
+static bool GLGetProgramResourceProperties(
     GLuint program, GLenum programInterface, GLuint resourceIndex,
     GLsizei count, const GLenum* props, GLint* params)
 {
@@ -618,7 +618,7 @@ void GLShaderProgram::QueryUniforms(ShaderReflectionDescriptor& reflection) cons
                 };
                 GLint params[7] = {};
 
-                if (QueryProgramResourceProperties(id_, GL_UNIFORM, i, 7, props, params))
+                if (GLGetProgramResourceProperties(id_, GL_UNIFORM, i, 7, props, params))
                 {
                     //resourceView.slot       = static_cast<std::uint32_t>(params[0]);
                     resourceView.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
@@ -667,7 +667,7 @@ void GLShaderProgram::QueryBufferProperties(ShaderReflectionDescriptor::Resource
     };
     GLint params[7] = {};
 
-    if (QueryProgramResourceProperties(id_, programInterface, resourceIndex, 7, props, params))
+    if (GLGetProgramResourceProperties(id_, programInterface, resourceIndex, 7, props, params))
     {
         resourceView.stageFlags = GetStageFlagsFromResourceProperties(6, props, params);
         resourceView.slot       = static_cast<std::uint32_t>(params[6]);

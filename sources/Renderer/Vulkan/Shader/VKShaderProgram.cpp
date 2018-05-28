@@ -91,30 +91,9 @@ std::string VKShaderProgram::QueryInfoLog()
         return "";
 }
 
-
-std::vector<VertexAttribute> VKShaderProgram::QueryVertexAttributes() const
+ShaderReflectionDescriptor VKShaderProgram::QueryReflectionDesc() const
 {
-    return {}; //todo
-}
-
-std::vector<StreamOutputAttribute> VKShaderProgram::QueryStreamOutputAttributes() const
-{
-    return {}; //todo
-}
-
-std::vector<ConstantBufferViewDescriptor> VKShaderProgram::QueryConstantBuffers() const
-{
-    return {}; //todo
-}
-
-std::vector<StorageBufferViewDescriptor> VKShaderProgram::QueryStorageBuffers() const
-{
-    return {}; //todo
-}
-
-std::vector<UniformDescriptor> VKShaderProgram::QueryUniforms() const
-{
-    return {}; //todo
+    return {}; //TODO
 }
 
 void VKShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
