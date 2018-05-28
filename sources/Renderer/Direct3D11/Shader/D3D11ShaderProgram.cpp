@@ -109,11 +109,11 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 
 void D3D11ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
 {
-    if (!vs_ || vs_->GetByteCode().empty())
-        throw std::runtime_error("cannot build input layout without valid vertex shader");
-
     if (numVertexFormats == 0 || vertexFormats == nullptr)
         return;
+
+    if (!vs_ || vs_->GetByteCode().empty())
+        throw std::runtime_error("cannot build input layout without valid vertex shader");
 
     /* Setup input element descriptors */
     std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;

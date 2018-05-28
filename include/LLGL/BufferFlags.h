@@ -164,7 +164,7 @@ struct BufferDescriptor
     StorageBuffer   storageBuffer;
 };
 
-#if 1//TODO: replace by ShaderReflection
+#if 0//TODO: replace by ShaderReflection
 
 /**
 \brief Constant buffer shader-view descriptor structure.
