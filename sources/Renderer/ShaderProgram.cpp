@@ -6,11 +6,18 @@
  */
 
 #include <LLGL/ShaderProgram.h>
+#include <algorithm>
 
 
 namespace LLGL
 {
 
+
+//TODO: remove as soon as this is pure virtual
+ShaderReflectionDescriptor ShaderProgram::QueryReflectionDesc() const
+{
+    return {};//dummy
+}
 
 /*
  * ======= Protected: =======
@@ -61,6 +68,22 @@ bool ShaderProgram::ValidateShaderComposition(Shader* const * shaders, std::size
     }
 
     return false;
+}
+
+void ShaderProgram::FinalizeShaderReflection(ShaderReflectionDescriptor& reflectionDesc)
+{
+    std::sort(
+        reflectionDesc.resourceViews.begin(),
+        reflectionDesc.resourceViews.end(),
+        [](const ShaderReflectionDescriptor::ResourceView& lhs, const ShaderReflectionDescriptor::ResourceView& rhs)
+        {
+            if (lhs.type < rhs.type)
+                return true;
+            if (lhs.type > rhs.type)
+                return false;
+            return (lhs.slot < rhs.slot);
+        }
+    );
 }
 
 const char* ShaderProgram::LinkErrorToString(const LinkError errorCode)

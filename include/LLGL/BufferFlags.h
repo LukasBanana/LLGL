@@ -42,14 +42,15 @@ enum class BufferType
 */
 enum class StorageBufferType
 {
-    Buffer,                     //!< Typed buffer. \note Only supported with: Direct3D 11, Direct3D 12.
-    StructuredBuffer,           //!< Structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
-    ByteAddressBuffer,          //!< Byte-address buffer. \note Only supported with: Direct3D 11, Direct3D 12.
-    RWBuffer,                   //!< Typed read/write buffer. \note Only supported with: Direct3D 11, Direct3D 12.
-    RWStructuredBuffer,         //!< Structured read/write buffer. \note Only supported with: Direct3D 11, Direct3D 12.
-    RWByteAddressBuffer,        //!< Byte-address read/write buffer. \note Only supported with: Direct3D 11, Direct3D 12.
-    AppendStructuredBuffer,     //!< Append structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
-    ConsumeStructuredBuffer,    //!< Consume structured buffer. \note Only supported with: Direct3D 11, Direct3D 12.
+    Undefined,                  //!< Undefined storage buffer type.
+    Buffer,                     //!< Typed buffer.
+    StructuredBuffer,           //!< Structured buffer.
+    ByteAddressBuffer,          //!< Byte-address buffer.
+    RWBuffer,                   //!< Typed read/write buffer.
+    RWStructuredBuffer,         //!< Structured read/write buffer.
+    RWByteAddressBuffer,        //!< Byte-address read/write buffer.
+    AppendStructuredBuffer,     //!< Append structured buffer.
+    ConsumeStructuredBuffer,    //!< Consume structured buffer.
 };
 
 //! Buffer flags enumeration.
@@ -163,6 +164,8 @@ struct BufferDescriptor
     StorageBuffer   storageBuffer;
 };
 
+#if 1//TODO: replace by ShaderReflection
+
 /**
 \brief Constant buffer shader-view descriptor structure.
 \remarks This structure is used to describe the view of a constant buffer within a shader.
@@ -173,10 +176,10 @@ struct ConstantBufferViewDescriptor
     std::string     name;
 
     //! Index of the constant buffer within the respective shader.
-    std::uint32_t   index   = 0;
+    std::uint32_t   index       = 0;
 
     //! Buffer size (in bytes).
-    std::uint32_t   size    = 0;
+    std::uint32_t   size        = 0;
 };
 
 /**
@@ -205,6 +208,8 @@ struct StorageBufferViewDescriptor
     */
     StorageBufferType   type    = StorageBufferType::Buffer;
 };
+
+#endif
 
 
 } // /namespace LLGL

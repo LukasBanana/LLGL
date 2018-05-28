@@ -64,6 +64,12 @@ std::string DbgShaderProgram::QueryInfoLog()
     return instance.QueryInfoLog();
 }
 
+ShaderReflectionDescriptor DbgShaderProgram::QueryReflectionDesc() const
+{
+    return instance.QueryReflectionDesc();
+}
+
+#if 1//TODO: remove
 std::vector<VertexAttribute> DbgShaderProgram::QueryVertexAttributes() const
 {
     return instance.QueryVertexAttributes();
@@ -88,6 +94,7 @@ std::vector<UniformDescriptor> DbgShaderProgram::QueryUniforms() const
 {
     return instance.QueryUniforms();
 }
+#endif
 
 void DbgShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
 {

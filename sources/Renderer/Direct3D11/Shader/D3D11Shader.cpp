@@ -7,6 +7,7 @@
 
 #include "D3D11Shader.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../DXCommon/DXTypes.h"
 #include <algorithm>
 #include <stdexcept>
 #include <d3dcompiler.h>
@@ -51,14 +52,11 @@ bool D3D11Shader::Compile(const std::string& sourceCode, const ShaderDescriptor&
     if (code)
     {
         byteCode_ = DXGetBlobData(code.Get());
-        CreateHardwareShader(shaderDesc.streamOutput, nullptr);
+        CreateNativeShader(shaderDesc.streamOutput, nullptr);
     }
 
     if (FAILED(hr))
         return false;
-
-    /* Get shader reflection */
-    ReflectShader();
 
     return true;
 }
@@ -69,8 +67,7 @@ bool D3D11Shader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescrip
     {
         /* Move binary code into byte code container, create hardware shader, and perform code reflection */
         byteCode_ = std::move(binaryCode);
-        CreateHardwareShader(shaderDesc.streamOutput, nullptr);
-        ReflectShader();
+        CreateNativeShader(shaderDesc.streamOutput, nullptr);
         return true;
     }
     return false;
@@ -95,14 +92,20 @@ std::string D3D11Shader::QueryInfoLog()
     return (errors_.Get() != nullptr ? DXGetBlobString(errors_.Get()) : "");
 }
 
+void D3D11Shader::Reflect(ShaderReflectionDescriptor& reflectionDesc) const
+{
+    if (!byteCode_.empty())
+        ReflectShaderByteCode(reflectionDesc);
+}
+
 
 /*
  * ======= Private: =======
  */
 
-void D3D11Shader::CreateHardwareShader(const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage)
+void D3D11Shader::CreateNativeShader(const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage)
 {
-    hardwareShader_.vs.Reset();
+    nativeShader_.vs.Reset();
 
     HRESULT hr = 0;
 
@@ -110,21 +113,21 @@ void D3D11Shader::CreateHardwareShader(const ShaderDescriptor::StreamOutput& str
     {
         case ShaderType::Vertex:
         {
-            hr = device_->CreateVertexShader(byteCode_.data(), byteCode_.size(), classLinkage, hardwareShader_.vs.ReleaseAndGetAddressOf());
+            hr = device_->CreateVertexShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.vs.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 vertex shader");
         }
         break;
 
         case ShaderType::TessControl:
         {
-            hr = device_->CreateHullShader(byteCode_.data(), byteCode_.size(), classLinkage, hardwareShader_.hs.ReleaseAndGetAddressOf());
+            hr = device_->CreateHullShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.hs.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 hull shader");
         }
         break;
 
         case ShaderType::TessEvaluation:
         {
-            hr = device_->CreateDomainShader(byteCode_.data(), byteCode_.size(), classLinkage, hardwareShader_.ds.ReleaseAndGetAddressOf());
+            hr = device_->CreateDomainShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.ds.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 domain shader");
         }
         break;
@@ -156,11 +159,11 @@ void D3D11Shader::CreateHardwareShader(const ShaderDescriptor::StreamOutput& str
                 hr = device_->CreateGeometryShaderWithStreamOutput(
                     byteCode_.data(), byteCode_.size(),
                     outputElements.data(), static_cast<UINT>(outputElements.size()), nullptr, 0, 0,
-                    classLinkage, hardwareShader_.gs.ReleaseAndGetAddressOf()
+                    classLinkage, nativeShader_.gs.ReleaseAndGetAddressOf()
                 );
             }
             else
-                hr = device_->CreateGeometryShader(byteCode_.data(), byteCode_.size(), classLinkage, hardwareShader_.gs.ReleaseAndGetAddressOf());
+                hr = device_->CreateGeometryShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.gs.ReleaseAndGetAddressOf());
 
             DXThrowIfFailed(hr, "failed to create D3D11 geometry shader");
         }
@@ -168,21 +171,225 @@ void D3D11Shader::CreateHardwareShader(const ShaderDescriptor::StreamOutput& str
 
         case ShaderType::Fragment:
         {
-            hr = device_->CreatePixelShader(byteCode_.data(), byteCode_.size(), classLinkage, hardwareShader_.ps.ReleaseAndGetAddressOf());
+            hr = device_->CreatePixelShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.ps.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 pixel shader");
         }
         break;
 
         case ShaderType::Compute:
         {
-            hr = device_->CreateComputeShader(byteCode_.data(), byteCode_.size(), classLinkage, hardwareShader_.cs.ReleaseAndGetAddressOf());
+            hr = device_->CreateComputeShader(byteCode_.data(), byteCode_.size(), classLinkage, nativeShader_.cs.ReleaseAndGetAddressOf());
             DXThrowIfFailed(hr, "failed to create D3D11 compute shader");
         }
         break;
     }
 }
 
-void D3D11Shader::ReflectShader()
+static ShaderReflectionDescriptor::ResourceView* FetchOrInsertResource(
+    ShaderReflectionDescriptor& reflectionDesc, const char* name, const ResourceType type, std::uint32_t slot)
+{
+    /* Fetch resource from list */
+    for (auto& resource : reflectionDesc.resourceViews)
+    {
+        if (resource.type == type && resource.slot == slot && resource.name.compare(name) == 0)
+            return (&resource);
+    }
+
+    /* Allocate new resource and initialize parameters */
+    reflectionDesc.resourceViews.resize(reflectionDesc.resourceViews.size() + 1);
+    auto ref = &(reflectionDesc.resourceViews.back());
+    {
+        ref->name = std::string(name);
+        ref->type = type;
+        ref->slot = slot;
+    }
+    return ref;
+}
+
+static VectorType GetVertexAttribType(const D3D11_SIGNATURE_PARAMETER_DESC& paramDesc)
+{
+    switch (paramDesc.ComponentType)
+    {
+        case D3D_REGISTER_COMPONENT_UINT32:
+        {
+            switch (paramDesc.Mask)
+            {
+                case 0x01: return VectorType::UInt;
+                case 0x03: return VectorType::UInt2;
+                case 0x07: return VectorType::UInt3;
+                case 0x0f: return VectorType::UInt4;
+            }
+        }
+        break;
+
+        case D3D_REGISTER_COMPONENT_SINT32:
+        {
+            switch (paramDesc.Mask)
+            {
+                case 0x01: return VectorType::Int;
+                case 0x03: return VectorType::Int2;
+                case 0x07: return VectorType::Int3;
+                case 0x0f: return VectorType::Int4;
+            }
+        }
+        break;
+
+        case D3D_REGISTER_COMPONENT_FLOAT32:
+        {
+            switch (paramDesc.Mask)
+            {
+                case 0x01: return VectorType::Float;
+                case 0x03: return VectorType::Float2;
+                case 0x07: return VectorType::Float3;
+                case 0x0f: return VectorType::Float4;
+            }
+        }
+        break;
+
+        default:
+        break;
+    }
+    throw std::runtime_error("failed to map D3D11 signature parameter to VectorType");
+}
+
+static void ReflectShaderVertexAttributes(
+    ID3D11ShaderReflection* reflection, const D3D11_SHADER_DESC& shaderDesc, ShaderReflectionDescriptor& reflectionDesc)
+{
+    for (UINT i = 0; i < shaderDesc.InputParameters; ++i)
+    {
+        /* Get signature parameter descriptor */
+        D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
+        auto hr = reflection->GetInputParameterDesc(i, &paramDesc);
+
+        if (FAILED(hr))
+        {
+            std::string info = "failed to retrieve D3D11 signature parameter descriptor " + std::to_string(i + 1) + " of " + std::to_string(shaderDesc.InputParameters);
+            DXThrowIfFailed(hr, info.c_str());
+        }
+
+        /* Add vertex attribute to output list */
+        VertexAttribute vertexAttrib;
+        {
+            vertexAttrib.name           = std::string(paramDesc.SemanticName);
+            vertexAttrib.vectorType     = GetVertexAttribType(paramDesc);
+            vertexAttrib.semanticIndex  = paramDesc.SemanticIndex;
+        }
+        reflectionDesc.vertexAttributes.push_back(vertexAttrib);
+    }
+}
+
+static void ReflectShaderResourceGeneric(
+    const D3D11_SHADER_INPUT_BIND_DESC& inputBindDesc, long stageFlags, const ResourceType resourceType, ShaderReflectionDescriptor& reflectionDesc)
+{
+    /* Initialize resource view descriptor for a generic resource (texture, sampler etc.) */
+    auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, resourceType, inputBindDesc.BindPoint);
+    {
+        resourceView->stageFlags    = (resourceView->stageFlags | stageFlags);
+        resourceView->arraySize     = inputBindDesc.BindCount;
+    }
+}
+
+static void ReflectShaderStorageBuffer(
+    const D3D11_SHADER_INPUT_BIND_DESC& inputBindDesc, long stageFlags, const StorageBufferType storageBufferType, ShaderReflectionDescriptor& reflectionDesc)
+{
+    /* Initialize resource view descriptor for storage buffer */
+    auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, ResourceType::StorageBuffer, inputBindDesc.BindPoint);
+    {
+        resourceView->stageFlags        = (resourceView->stageFlags | stageFlags);
+        resourceView->arraySize         = inputBindDesc.BindCount;
+        resourceView->storageBufferType = storageBufferType;
+    }
+}
+
+static void ReflectShaderConstantBuffer(
+    ID3D11ShaderReflection* reflection, const D3D11_SHADER_DESC& shaderDesc, const D3D11_SHADER_INPUT_BIND_DESC& inputBindDesc,
+    long stageFlags, UINT& cbufferIdx, ShaderReflectionDescriptor& reflectionDesc)
+{
+    /* Initialize resource view descriptor for constant buffer */
+    auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, ResourceType::ConstantBuffer, inputBindDesc.BindPoint);
+    {
+        resourceView->stageFlags    = (resourceView->stageFlags | stageFlags);
+        resourceView->arraySize     = inputBindDesc.BindCount;
+    }
+
+    /* Determine constant buffer size */
+    if (cbufferIdx < shaderDesc.ConstantBuffers)
+    {
+        auto cbufferReflection = reflection->GetConstantBufferByIndex(cbufferIdx++);
+
+        D3D11_SHADER_BUFFER_DESC shaderBufferDesc;
+        auto hr = cbufferReflection->GetDesc(&shaderBufferDesc);
+        DXThrowIfFailed(hr, "failed to retrieve D3D11 shader buffer descriptor");
+
+        if (shaderBufferDesc.Type == D3D_CT_CBUFFER)
+        {
+            /* Store constant buffer size in output descriptor */
+            resourceView->constantBufferSize = shaderBufferDesc.Size;
+        }
+        else
+        {
+            /* Type mismatch in descriptors */
+            throw std::runtime_error(
+                "failed to match D3D11 shader buffer descriptor \"" + std::string(shaderBufferDesc.Name) +
+                "\" with input binding descriptor for constant buffer \"" + std::string(inputBindDesc.Name) + "\""
+            );
+        }
+    }
+    else
+    {
+        /* Resource index mismatch in descriptor */
+        throw std::runtime_error(
+            "failed to find D3D11 shader buffer descriptor for input binding descriptor \"" +
+            std::string(inputBindDesc.Name) + "\""
+        );
+    }
+}
+
+static void ReflectShaderInputBindings(
+    ID3D11ShaderReflection* reflection, const D3D11_SHADER_DESC& shaderDesc, long stageFlags, ShaderReflectionDescriptor& reflectionDesc)
+{
+    UINT cbufferIdx = 0;
+
+    for (UINT i = 0; i < shaderDesc.BoundResources; ++i)
+    {
+        /* Get shader input resource descriptor */
+        D3D11_SHADER_INPUT_BIND_DESC inputBindDesc;
+        auto hr = reflection->GetResourceBindingDesc(i, &inputBindDesc);
+        DXThrowIfFailed(hr, "failed to retrieve D3D11 shader input binding descriptor");
+
+        /* Reflect shader resource view */
+        switch (inputBindDesc.Type)
+        {
+            case D3D_SIT_CBUFFER:
+            {
+                ReflectShaderConstantBuffer(reflection, shaderDesc, inputBindDesc, stageFlags, cbufferIdx, reflectionDesc);
+            }
+            break;
+
+            case D3D_SIT_TEXTURE:
+            {
+                ReflectShaderResourceGeneric(inputBindDesc, stageFlags, ResourceType::Texture, reflectionDesc);
+            }
+            break;
+
+            case D3D_SIT_SAMPLER:
+            {
+                ReflectShaderResourceGeneric(inputBindDesc, stageFlags, ResourceType::Sampler, reflectionDesc);
+            }
+            break;
+
+            default:
+            {
+                auto storageBufferType = DXTypes::Unmap(inputBindDesc.Type);
+                if (storageBufferType != StorageBufferType::Undefined)
+                    ReflectShaderStorageBuffer(inputBindDesc, stageFlags, storageBufferType, reflectionDesc);
+            }
+            break;
+        }
+    }
+}
+
+void D3D11Shader::ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const
 {
     HRESULT hr = 0;
 
@@ -197,101 +404,10 @@ void D3D11Shader::ReflectShader()
 
     /* Get input parameter descriptors */
     if (GetType() == ShaderType::Vertex)
-    {
-        for (UINT i = 0; i < shaderDesc.InputParameters; ++i)
-        {
-            /* Get signature parameter descriptor */
-            D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
-            hr = reflection->GetInputParameterDesc(i, &paramDesc);
+        ReflectShaderVertexAttributes(reflection.Get(), shaderDesc, reflectionDesc);
 
-            if (FAILED(hr))
-            {
-                std::string info = "failed to retrieve D3D11 signature parameter descriptor " + std::to_string(i + 1) + " of " + std::to_string(shaderDesc.InputParameters);
-                DXThrowIfFailed(hr, info.c_str());
-            }
-
-            /* Add vertex attribute to output list */
-            VertexAttribute vertexAttrib;
-            {
-                vertexAttrib.name           = std::string(paramDesc.SemanticName);
-                vertexAttrib.semanticIndex  = paramDesc.SemanticIndex;
-            }
-            vertexAttributes_.push_back(vertexAttrib);
-        }
-    }
-
-    /* Get constant buffer descriptors */
-    std::uint32_t bufferIdx = 0;
-    for (UINT i = 0; i < shaderDesc.ConstantBuffers; ++i)
-    {
-        /* Get shader buffer descriptor */
-        auto constBufferReflection = reflection->GetConstantBufferByIndex(i);
-
-        D3D11_SHADER_BUFFER_DESC shaderBufferDesc;
-        hr = constBufferReflection->GetDesc(&shaderBufferDesc);
-        DXThrowIfFailed(hr, "failed to retrieve D3D11 shader buffer descriptor");
-
-        if (shaderBufferDesc.Type == D3D_CT_CBUFFER)
-        {
-            /* Add constant buffer descriptor to output list */
-            ConstantBufferViewDescriptor constBufferDesc;
-            {
-                constBufferDesc.name    = std::string(shaderBufferDesc.Name);
-                constBufferDesc.index   = bufferIdx++;
-                constBufferDesc.size    = shaderBufferDesc.Size;
-            }
-            constantBufferDescs_.push_back(constBufferDesc);
-        }
-    }
-
-    /* Get storage buffer descriptors */
-    bufferIdx = 0;
-    for (UINT i = 0; i < shaderDesc.BoundResources; ++i)
-    {
-        /* Get shader input resource descriptor */
-        D3D11_SHADER_INPUT_BIND_DESC inputBindDesc;
-        hr = reflection->GetResourceBindingDesc(i, &inputBindDesc);
-        DXThrowIfFailed(hr, "failed to retrieve D3D11 shader input binding descriptor");
-
-        if ( inputBindDesc.Type >= D3D_SIT_UAV_RWTYPED &&
-             inputBindDesc.Type <= D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER )
-        {
-            /* Add storage buffer descriptor to output list */
-            StorageBufferViewDescriptor storeBufferDesc;
-            {
-                storeBufferDesc.name    = std::string(inputBindDesc.Name);
-                storeBufferDesc.index   = bufferIdx++;
-
-                /* Determine type from D3D_SHADER_INPUT_TYPE enum */
-                switch (inputBindDesc.Type)
-                {
-                    case D3D_SIT_UAV_RWTYPED:
-                        storeBufferDesc.type = StorageBufferType::Buffer;
-                        break;
-                    case D3D_SIT_STRUCTURED:
-                        storeBufferDesc.type = StorageBufferType::StructuredBuffer;
-                        break;
-                    case D3D_SIT_UAV_RWSTRUCTURED:
-                    case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-                        storeBufferDesc.type = StorageBufferType::RWStructuredBuffer;
-                        break;
-                    case D3D_SIT_BYTEADDRESS:
-                        storeBufferDesc.type = StorageBufferType::ByteAddressBuffer;
-                        break;
-                    case D3D_SIT_UAV_RWBYTEADDRESS:
-                        storeBufferDesc.type = StorageBufferType::RWByteAddressBuffer;
-                        break;
-                    case D3D_SIT_UAV_APPEND_STRUCTURED:
-                        storeBufferDesc.type = StorageBufferType::AppendStructuredBuffer;
-                        break;
-                    case D3D_SIT_UAV_CONSUME_STRUCTURED:
-                        storeBufferDesc.type = StorageBufferType::ConsumeStructuredBuffer;
-                        break;
-                }
-            }
-            storageBufferDescs_.push_back(storeBufferDesc);
-        }
-    }
+    /* Get input bindings */
+    ReflectShaderInputBindings(reflection.Get(), shaderDesc, GetStageFlags(), reflectionDesc);
 }
 
 

@@ -81,11 +81,11 @@ void D3D11GraphicsPipeline::Bind(D3D11StateManager& stateMngr)
 
 void D3D11GraphicsPipeline::GetShaderObjects(D3D11ShaderProgram& shaderProgramD3D)
 {
-    if (shaderProgramD3D.GetVS()) { vs_ = shaderProgramD3D.GetVS()->GetHardwareShader().vs; }
-    if (shaderProgramD3D.GetHS()) { hs_ = shaderProgramD3D.GetHS()->GetHardwareShader().hs; }
-    if (shaderProgramD3D.GetDS()) { ds_ = shaderProgramD3D.GetDS()->GetHardwareShader().ds; }
-    if (shaderProgramD3D.GetGS()) { gs_ = shaderProgramD3D.GetGS()->GetHardwareShader().gs; }
-    if (shaderProgramD3D.GetPS()) { ps_ = shaderProgramD3D.GetPS()->GetHardwareShader().ps; }
+    if (shaderProgramD3D.GetVS()) { vs_ = shaderProgramD3D.GetVS()->GetNativeShader().vs; }
+    if (shaderProgramD3D.GetHS()) { hs_ = shaderProgramD3D.GetHS()->GetNativeShader().hs; }
+    if (shaderProgramD3D.GetDS()) { ds_ = shaderProgramD3D.GetDS()->GetNativeShader().ds; }
+    if (shaderProgramD3D.GetGS()) { gs_ = shaderProgramD3D.GetGS()->GetNativeShader().gs; }
+    if (shaderProgramD3D.GetPS()) { ps_ = shaderProgramD3D.GetPS()->GetNativeShader().ps; }
 }
 
 static void Convert(D3D11_DEPTH_STENCILOP_DESC& to, const StencilFaceDescriptor& from)

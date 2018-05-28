@@ -234,6 +234,22 @@ TextureFormat Unmap(const DXGI_FORMAT format)
     return TextureFormat::Unknown;
 }
 
+StorageBufferType Unmap(const D3D_SHADER_INPUT_TYPE inputType)
+{
+    switch (inputType)
+    {
+        case D3D_SIT_UAV_RWTYPED:                   return StorageBufferType::Buffer;
+        case D3D_SIT_STRUCTURED:                    return StorageBufferType::StructuredBuffer;
+        case D3D_SIT_UAV_RWSTRUCTURED:              return StorageBufferType::RWStructuredBuffer;
+        case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER: return StorageBufferType::RWStructuredBuffer;
+        case D3D_SIT_BYTEADDRESS:                   return StorageBufferType::ByteAddressBuffer;
+        case D3D_SIT_UAV_RWBYTEADDRESS:             return StorageBufferType::RWByteAddressBuffer;
+        case D3D_SIT_UAV_APPEND_STRUCTURED:         return StorageBufferType::AppendStructuredBuffer;
+        case D3D_SIT_UAV_CONSUME_STRUCTURED:        return StorageBufferType::ConsumeStructuredBuffer;
+        default:                                    return StorageBufferType::Undefined;
+    }
+}
+
 
 } // /namespace DXTypes
 

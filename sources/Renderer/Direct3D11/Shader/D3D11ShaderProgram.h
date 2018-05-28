@@ -35,11 +35,15 @@ class D3D11ShaderProgram : public ShaderProgram
 
         std::string QueryInfoLog() override;
 
+        ShaderReflectionDescriptor QueryReflectionDesc() const override;
+
+        #if 1//TODO: remove
         std::vector<VertexAttribute> QueryVertexAttributes() const override;
         std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const override;
         std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const override;
         std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
         std::vector<UniformDescriptor> QueryUniforms() const override;
+        #endif
 
         void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
@@ -64,22 +68,25 @@ class D3D11ShaderProgram : public ShaderProgram
 
     private:
 
-        ID3D11Device*                               device_                 = nullptr;
+        ID3D11Device*               device_         = nullptr;
 
-        ComPtr<ID3D11InputLayout>                   inputLayout_;
+        ComPtr<ID3D11InputLayout>   inputLayout_;
 
-        D3D11Shader*                                vs_                     = nullptr;
-        D3D11Shader*                                hs_                     = nullptr;
-        D3D11Shader*                                ds_                     = nullptr;
-        D3D11Shader*                                gs_                     = nullptr;
-        D3D11Shader*                                ps_                     = nullptr;
-        D3D11Shader*                                cs_                     = nullptr;
+        union
+        {
+            struct
+            {
+                D3D11Shader*        vs_;
+                D3D11Shader*        hs_;
+                D3D11Shader*        ds_;
+                D3D11Shader*        gs_;
+                D3D11Shader*        ps_;
+                D3D11Shader*        cs_;
+            };
+            D3D11Shader*            shaders_[6]     = {};
+        };
 
-        std::vector<VertexAttribute>                vertexAttributes_;
-        std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
-        std::vector<StorageBufferViewDescriptor>    storageBufferDescs_;
-
-        LinkError                                   linkError_              = LinkError::NoError;
+        LinkError                   linkError_      = LinkError::NoError;
 
 };
 

@@ -10,6 +10,7 @@
 #include "../D3D11Types.h"
 #include "../../CheckedCast.h"
 #include "../../DXCommon/DXCore.h"
+#include "../../../Core/Helper.h"
 #include <LLGL/Log.h>
 #include <LLGL/VertexFormat.h>
 #include <algorithm>
@@ -25,81 +26,25 @@ D3D11ShaderProgram::D3D11ShaderProgram(ID3D11Device* device) :
 {
 }
 
-template <typename T>
-void InsertBufferDesc(std::vector<T>& container, const std::vector<T>& entries)
-{
-    for (const auto& desc : entries)
-    {
-        auto it = std::find_if(
-            container.begin(), container.end(), 
-            [&desc](const T& entry)
-            {
-                return (entry.name == desc.name);
-            }
-        );
-        if (it == container.end())
-            container.push_back(desc);
-    }
-}
-
 void D3D11ShaderProgram::AttachShader(Shader& shader)
 {
     /* Store D3D11 shader */
     auto shaderD3D = LLGL_CAST(D3D11Shader*, &shader);
 
-    switch (shader.GetType())
-    {
-        case ShaderType::Vertex:
-            vs_ = shaderD3D;
-            vertexAttributes_ = vs_->GetVertexAttributes();
-            break;
-        case ShaderType::Fragment:
-            ps_ = shaderD3D;
-            break;
-        case ShaderType::TessControl:
-            hs_ = shaderD3D;
-            break;
-        case ShaderType::TessEvaluation:
-            ds_ = shaderD3D;
-            break;
-        case ShaderType::Geometry:
-            gs_ = shaderD3D;
-            break;
-        case ShaderType::Compute:
-            cs_ = shaderD3D;
-            break;
-    }
+    const auto shaderType0Idx = static_cast<std::size_t>(ShaderType::Vertex);
+    const auto shaderTypeNIdx = (static_cast<std::size_t>(shader.GetType()) - shaderType0Idx);
 
-    /* Add constant- and storage buffer descriptors */
-    InsertBufferDesc(constantBufferDescs_, shaderD3D->GetConstantBufferDescs());
-    InsertBufferDesc(storageBufferDescs_, shaderD3D->GetStorageBufferDescs());
-
-    /* Update buffer view indices */
-    std::uint32_t bufferIdx = 0;
-    for (auto& desc : constantBufferDescs_)
-        desc.index = bufferIdx++;
-
-    bufferIdx = 0;
-    for (auto& desc : storageBufferDescs_)
-        desc.index = bufferIdx++;
+    if (shaderTypeNIdx < 6)
+        shaders_[shaderTypeNIdx] = shaderD3D;
+    else
+        throw std::runtime_error("cannot attach shader with invalid type: 0x" + ToHex(shaderTypeNIdx));
 }
 
 void D3D11ShaderProgram::DetachAll()
 {
     /* Reset all shader attributes */
     inputLayout_.Reset();
-
-    vs_ = nullptr;
-    hs_ = nullptr;
-    ds_ = nullptr;
-    gs_ = nullptr;
-    ps_ = nullptr;
-    cs_ = nullptr;
-
-    vertexAttributes_.clear();
-    constantBufferDescs_.clear();
-    storageBufferDescs_.clear();
-
+    std::fill(std::begin(shaders_), std::end(shaders_), nullptr);
     linkError_ = LinkError::NoError;
 }
 
@@ -109,16 +54,17 @@ bool D3D11ShaderProgram::LinkShaders()
     linkError_ = LinkError::NoError;
 
     /* Validate hardware shader objects */
-    Shader* shaders[] = { vs_, hs_, ds_, gs_, ps_, cs_ };
-
     for (std::size_t i = 0; i < 6; ++i)
     {
-        if (shaders[i] != nullptr && static_cast<D3D11Shader*>(shaders[i])->GetHardwareShader().vs == nullptr)
+        if (shaders_[i] != nullptr && shaders_[i]->GetNativeShader().vs == nullptr)
             linkError_ = LinkError::InvalidByteCode;
     }
 
-    /* Validate composition of attached shaders */
-    if (!ValidateShaderComposition(shaders, 6))
+    /*
+    Validate composition of attached shaders
+    Note: reinterpret_cast allowed here, because no multiple inheritance is used, just plain pointers!
+    */
+    if (!ValidateShaderComposition(reinterpret_cast<Shader* const*>(shaders_), 6))
         linkError_ = LinkError::InvalidComposition;
 
     return (linkError_ == LinkError::NoError);
@@ -132,9 +78,28 @@ std::string D3D11ShaderProgram::QueryInfoLog()
         return "";
 }
 
+ShaderReflectionDescriptor D3D11ShaderProgram::QueryReflectionDesc() const
+{
+    ShaderReflectionDescriptor reflection;
+
+    /* Reflect all shaders */
+    for (auto shader : shaders_)
+    {
+        if (shader != nullptr)
+            shader->Reflect(reflection);
+    }
+
+    /* Sort output to meet the interface requirements */
+    ShaderProgram::FinalizeShaderReflection(reflection);
+
+    return reflection;
+}
+
+#if 1//TODO: remove
+
 std::vector<VertexAttribute> D3D11ShaderProgram::QueryVertexAttributes() const
 {
-    return vertexAttributes_;
+    return {};
 }
 
 std::vector<StreamOutputAttribute> D3D11ShaderProgram::QueryStreamOutputAttributes() const
@@ -144,18 +109,20 @@ std::vector<StreamOutputAttribute> D3D11ShaderProgram::QueryStreamOutputAttribut
 
 std::vector<ConstantBufferViewDescriptor> D3D11ShaderProgram::QueryConstantBuffers() const
 {
-    return constantBufferDescs_;
+    return {};
 }
 
 std::vector<StorageBufferViewDescriptor> D3D11ShaderProgram::QueryStorageBuffers() const
 {
-    return storageBufferDescs_;
+    return {};
 }
 
 std::vector<UniformDescriptor> D3D11ShaderProgram::QueryUniforms() const
 {
     return {}; // dummy
 }
+
+#endif
 
 static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {

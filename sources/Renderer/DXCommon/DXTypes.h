@@ -13,6 +13,7 @@
 #include <LLGL/RenderSystemFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
 #include <LLGL/TextureFlags.h>
+#include <LLGL/BufferFlags.h>
 #include <dxgiformat.h>
 #include <d3dcommon.h>
 
@@ -31,12 +32,13 @@ void MapFailed(const std::string& typeName, const std::string& dxTypeName);
 void UnmapFailed(const std::string& typeName, const std::string& dxTypeName);
 
 
-DXGI_FORMAT             Map( const VectorType           vectorType      );
-DXGI_FORMAT             Map( const DataType             dataType        );
-DXGI_FORMAT             Map( const TextureFormat        textureFormat   );
-D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology        );
+DXGI_FORMAT             Map( const VectorType           vectorType    );
+DXGI_FORMAT             Map( const DataType             dataType      );
+DXGI_FORMAT             Map( const TextureFormat        textureFormat );
+D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology      );
 
-TextureFormat           Unmap( const DXGI_FORMAT format );
+TextureFormat           Unmap( const DXGI_FORMAT            format    );
+StorageBufferType       Unmap( const D3D_SHADER_INPUT_TYPE  inputType );
 
 
 } // /namespace DXTypes
