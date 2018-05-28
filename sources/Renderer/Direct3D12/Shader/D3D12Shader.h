@@ -43,31 +43,14 @@ class D3D12Shader : public Shader
 
         D3D12_SHADER_BYTECODE GetByteCode() const;
 
-        inline const std::vector<VertexAttribute>& GetVertexAttributes() const
-        {
-            return vertexAttributes_;
-        }
-
-        inline const std::vector<ConstantBufferViewDescriptor>& GetConstantBufferDescs() const
-        {
-            return constantBufferDescs_;
-        }
-
-        inline const std::vector<StorageBufferViewDescriptor>& GetStorageBufferDescs() const
-        {
-            return storageBufferDescs_;
-        }
+        void Reflect(ShaderReflectionDescriptor& reflectionDesc) const;
 
     private:
 
-        void ReflectShader();
+        void ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const;
 
-        std::vector<char>                           byteCode_;
-        ComPtr<ID3DBlob>                            errors_;
-
-        std::vector<VertexAttribute>                vertexAttributes_;
-        std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
-        std::vector<StorageBufferViewDescriptor>    storageBufferDescs_;
+        std::vector<char>   byteCode_;
+        ComPtr<ID3DBlob>    errors_;
 
 };
 

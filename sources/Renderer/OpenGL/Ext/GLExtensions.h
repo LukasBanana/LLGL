@@ -246,6 +246,8 @@ extern PFNGLUNIFORM4IVPROC                                  glUniform4iv;
 extern PFNGLUNIFORMMATRIX2FVPROC                            glUniformMatrix2fv;
 extern PFNGLUNIFORMMATRIX3FVPROC                            glUniformMatrix3fv;
 extern PFNGLUNIFORMMATRIX4FVPROC                            glUniformMatrix4fv;
+extern PFNGLGETUNIFORMIVPROC                                glGetUniformiv;
+extern PFNGLGETUNIFORMFVPROC                                glGetUniformfv;
 
 /* GL_ARB_tessellation_shader */
 

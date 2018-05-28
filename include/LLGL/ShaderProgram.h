@@ -62,35 +62,23 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         //! Returns the information log after the shader linkage.
         virtual std::string QueryInfoLog() = 0;
 
-        //! Returns a list of vertex attributes, which describe all vertex attributes within this shader program.
-        virtual std::vector<VertexAttribute> QueryVertexAttributes() const = 0;
-
-        //! Returns a list of stream-output attributes, which describes all stream-output attributes within this shader program.
-        virtual std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const = 0;
-
         /**
-        \brief Returns a list of constant buffer view descriptors, which describe all constant buffers within this shader program.
-        \remarks Also called "Uniform Buffer Object".
+        \brief Returns a descriptor of the shader pipeline layout with all required shader resources.
+        \remarks The list of resource views in the output descriptor (i.e. 'resourceViews' attribute) is always sorted in the following manner:
+        First sorting criterion is the resource type (in descending order), second sorting criterion is the binding slot (in descending order).
+        Here is an example of such a sorted list (pseudocode):
+        \code{.txt}
+        resourceViews[0] = { type: ResourceType::ConstantBuffer, slot: 0 }
+        resourceViews[1] = { type: ResourceType::ConstantBuffer, slot: 2 }
+        resourceViews[2] = { type: ResourceType::Texture, slot: 0 }
+        resourceViews[3] = { type: ResourceType::Texture, slot: 1 }
+        resourceViews[4] = { type: ResourceType::Texture, slot: 2 }
+        resourceViews[5] = { type: ResourceType::Sampler, slot: 2 }
+        \endcode
+        \see ShaderReflectionDescriptor::resourceViews
+        \throws std::runtime_error If shader reflection failed.
         */
-        virtual std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const = 0;
-
-        /**
-        \brief Returns a list of storage buffer view descriptors, which describe all storage buffers within this shader program.
-        \remarks Also called "Shader Storage Buffer Object" or "Read/Write Buffer".
-        */
-        virtual std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const = 0;
-
-        /**
-        \brief Returns a list of uniform descriptors, which describe all uniforms within this shader program.
-        \remarks Shader uniforms are only supported in OpenGL 2.0+.
-        */
-        virtual std::vector<UniformDescriptor> QueryUniforms() const = 0;
-
-        //TODO: maybe replace "QueryConstantBuffers", "QueryStorageBuffers", and "QueryUniforms" by this function
-        #if 0
-        //! Returns a descriptor of the shader pipeline layout with all required shader resources.
-        virtual PipelineLayoutDescriptor QueryPipelineLayoutDesc() const;
-        #endif
+        virtual ShaderReflectionDescriptor QueryReflectionDesc() const = 0;
 
         /**
         \brief Builds the input layout with the specified vertex format for this shader program.
@@ -135,12 +123,11 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \return Pointer to the shader uniform handler or null if the render system does not support individual shader uniforms.
         \remarks This must be called to set individual shader uniforms.
         \code
-        if (auto uniform = shaderProgram->LockShaderUniform())
-        {
-            uniform->SetUniform1i("mySampler1", 0);
-            uniform->SetUniform1i("mySampler2", 1);
-            uniform->SetUniform4x4fv("projection", &myProjectionMatrix[0]);
-            shaderProgram->UnlockShaderUniform();
+        if (auto myUniformHandler = myShaderProgram->LockShaderUniform()) {
+            myUniformHandler->SetUniform1i("mySampler1", 0);
+            myUniformHandler->SetUniform1i("mySampler2", 1);
+            myUniformHandler->SetUniform4x4fv("projection", &myProjectionMatrix[0]);
+            myShaderProgram->UnlockShaderUniform();
         }
         \endcode
         \note Only supported with: OpenGL.
@@ -181,7 +168,13 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \remarks For example, a composition of a compute shader and a fragment shader is invalid,
         but a composition of a vertex shader and a fragment shader is valid.
         */
-        bool ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders) const;
+        /*static*/ bool ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders) const;
+
+        /**
+        \brief Sorts the resource views of the specified shader reflection descriptor as described in the QueryReflectionDesc function.
+        \see QueryReflectionDesc
+        */
+        static void FinalizeShaderReflection(ShaderReflectionDescriptor& reflectionDesc);
 
         //! Returns a string representation for the specified shader linker error, or null if the no error is entered (i.e. LinkError::NoError).
         static const char* LinkErrorToString(const LinkError errorCode);

@@ -252,6 +252,8 @@ static bool Load_GL_ARB_shader_objects(bool usePlaceholder)
     LOAD_GLPROC( glUniformMatrix2fv   );
     LOAD_GLPROC( glUniformMatrix3fv   );
     LOAD_GLPROC( glUniformMatrix4fv   );
+    LOAD_GLPROC( glGetUniformiv       );
+    LOAD_GLPROC( glGetUniformfv       );
     return true;
 }
 

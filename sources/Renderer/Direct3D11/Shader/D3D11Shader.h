@@ -22,13 +22,13 @@ namespace LLGL
 {
 
 
-union D3D11HardwareShader
+union D3D11NativeShader
 {
-    D3D11HardwareShader() :
+    D3D11NativeShader() :
         vs { nullptr }
     {
     }
-    ~D3D11HardwareShader()
+    ~D3D11NativeShader()
     {
     }
 
@@ -58,9 +58,11 @@ class D3D11Shader : public Shader
 
         /* ----- Extended internal functions ---- */
 
-        inline const D3D11HardwareShader& GetHardwareShader() const
+        void Reflect(ShaderReflectionDescriptor& reflectionDesc) const;
+
+        inline const D3D11NativeShader& GetNativeShader() const
         {
-            return hardwareShader_;
+            return nativeShader_;
         }
 
         inline const std::vector<char>& GetByteCode() const
@@ -68,36 +70,18 @@ class D3D11Shader : public Shader
             return byteCode_;
         }
 
-        inline const std::vector<VertexAttribute>& GetVertexAttributes() const
-        {
-            return vertexAttributes_;
-        }
-
-        inline const std::vector<ConstantBufferViewDescriptor>& GetConstantBufferDescs() const
-        {
-            return constantBufferDescs_;
-        }
-
-        inline const std::vector<StorageBufferViewDescriptor>& GetStorageBufferDescs() const
-        {
-            return storageBufferDescs_;
-        }
-
     private:
 
-        void CreateHardwareShader(const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage);
-        void ReflectShader();
+        void CreateNativeShader(const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage);
 
-        ID3D11Device*                               device_             = nullptr;
+        void ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const;
 
-        D3D11HardwareShader                         hardwareShader_;
+        ID3D11Device*       device_         = nullptr;
 
-        std::vector<char>                           byteCode_;
-        ComPtr<ID3DBlob>                            errors_;
+        D3D11NativeShader   nativeShader_;
 
-        std::vector<VertexAttribute>                vertexAttributes_;
-        std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
-        std::vector<StorageBufferViewDescriptor>    storageBufferDescs_;
+        std::vector<char>   byteCode_;
+        ComPtr<ID3DBlob>    errors_;
 
 };
 

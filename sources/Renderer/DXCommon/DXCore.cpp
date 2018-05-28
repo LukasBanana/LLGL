@@ -466,6 +466,52 @@ D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format)
     throw std::invalid_argument("failed to map hardware texture format into image buffer format");
 }
 
+VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
+{
+    switch (componentType)
+    {
+        case D3D_REGISTER_COMPONENT_UINT32:
+        {
+            switch (componentMask)
+            {
+                case 0x01: return VectorType::UInt;
+                case 0x03: return VectorType::UInt2;
+                case 0x07: return VectorType::UInt3;
+                case 0x0f: return VectorType::UInt4;
+            }
+        }
+        break;
+
+        case D3D_REGISTER_COMPONENT_SINT32:
+        {
+            switch (componentMask)
+            {
+                case 0x01: return VectorType::Int;
+                case 0x03: return VectorType::Int2;
+                case 0x07: return VectorType::Int3;
+                case 0x0f: return VectorType::Int4;
+            }
+        }
+        break;
+
+        case D3D_REGISTER_COMPONENT_FLOAT32:
+        {
+            switch (componentMask)
+            {
+                case 0x01: return VectorType::Float;
+                case 0x03: return VectorType::Float2;
+                case 0x07: return VectorType::Float3;
+                case 0x0f: return VectorType::Float4;
+            }
+        }
+        break;
+
+        default:
+        break;
+    }
+    throw std::runtime_error("failed to map Direct3D signature parameter to VectorType");
+}
+
 
 } // /namespace LLGL
 

@@ -11,7 +11,12 @@
 
 #include "Export.h"
 #include "StreamOutputFormat.h"
+#include "VertexAttribute.h"
+#include "ShaderUniformFlags.h"
+#include "ResourceFlags.h"
+#include "BufferFlags.h"
 #include <string>
+#include <vector>
 
 
 namespace LLGL
@@ -137,6 +142,88 @@ struct ShaderDescriptor
 
     //! Optional stream output descriptor for a geometry shader (or a vertex shader when used with OpenGL).
     StreamOutput    streamOutput;
+};
+
+/**
+\brief Shader reflection descriptor structure.
+\remarks Contains all information of resources and attributes that can be queried from a shader program.
+\see ShaderProgram::QueryReflectionDesc
+*/
+struct ShaderReflectionDescriptor
+{
+    /**
+    \brief Shader reflection resource view structure.
+    \remarks A mapping between this structure and a binding descriptor may look like this:
+    \code
+    auto myShaderReflectionDesc = myShaderProgram->QueryReflectionDesc();
+    LLGL::PipelineLayoutDescriptor myPipelineLayoutDesc;
+    for (const auto& myResourceView : myShaderReflectionDesc) {
+        BindingDescriptor myBindingDesc;
+        myBindingDesc.type          = myResourceView.type;
+        myBindingDesc.stageFlags    = myResourceView.stageFlags;
+        myBindingDesc.slot          = myResourceView.slot;
+        myBindingDesc.arraySize     = myResourceView.arraySize;
+        myPipelineLayoutDesc.bindings.push_back(myBindingDesc);
+    }
+    \endcode
+    \see BindingDescriptor
+    */
+    struct ResourceView
+    {
+        //! Name of the shader resource, i.e. the identifier used in the shader.
+        std::string         name;
+
+        //! Resource view type for this layout binding. By default ResourceType::Undefined.
+        ResourceType        type                = ResourceType::Undefined;
+
+        /**
+        \brief Specifies in which shader stages the resource is located. By default 0.
+        \remarks This can be a bitwise OR combination of the StageFlags bitmasks.
+        \see StageFlags
+        */
+        long                stageFlags          = 0;
+
+        /**
+        \brief Specifies the zero-based binding slot. By default 0.
+        \remarks If the binding slot could be not queried by the shader reflection, the value is 0xffffffff.
+        */
+        std::uint32_t       slot                = 0;
+
+        /**
+        \brief Specifies the number of binding slots for an array resource. By default 1.
+        \note For Vulkan, this number specifies the size of an array of resources (e.g. an array of uniform buffers).
+        */
+        std::uint32_t       arraySize           = 1;
+
+        /**
+        \brief Specifies the size (in bytes) for a constant buffer resource.
+        \remarks Additional attribute exclusively used for constant buffer resources.
+        For all other resources, i.e. when 'type' is not equal to 'ResourceType::ConstantBuffer', this attribute is zero.
+        \see ResourceType::ConstantBuffer
+        */
+        std::uint32_t       constantBufferSize  = 0;
+
+        /**
+        \brief Specifies the sub-type of a storage buffer resource.
+        \remarks Additional attribute exclusively used for storage buffer resources.
+        */
+        StorageBufferType   storageBufferType   = StorageBufferType::Undefined;
+    };
+
+    //! List of all vertex attributes.
+    std::vector<VertexAttribute>        vertexAttributes;
+
+    //! List of all stream-output attributes.
+    std::vector<StreamOutputAttribute>  streamOutputAttributes;
+
+    //! List of all shader reflection resource views.
+    std::vector<ResourceView>           resourceViews;
+
+    /**
+    \brief List of all uniforms.
+    \note Only supported with: OpenGL, Vulkan.
+    */
+    std::vector<UniformDescriptor>      uniforms;
 };
 
 

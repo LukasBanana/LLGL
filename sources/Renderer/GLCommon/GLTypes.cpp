@@ -496,17 +496,39 @@ GLenum Map(const LogicOp logicOp)
 static UniformType UnmapUniformType(const GLenum uniformType)
 {
     #ifdef LLGL_OPENGLES3
-    
+
     switch (uniformType)
     {
-        case GL_FLOAT:
-            return UniformType::Float;
-        case GL_FLOAT_VEC2:
-            return UniformType::Float2;
-        case GL_FLOAT_VEC3:
-            return UniformType::Float3;
-        case GL_FLOAT_VEC4:
-            return UniformType::Float4;
+        /* ----- Scalars/Vectors ----- */
+        case GL_FLOAT:              return UniformType::Float;
+        case GL_FLOAT_VEC2:         return UniformType::Float2;
+        case GL_FLOAT_VEC3:         return UniformType::Float3;
+        case GL_FLOAT_VEC4:         return UniformType::Float4;
+        case GL_INT:                return UniformType::Int;
+        case GL_INT_VEC2:           return UniformType::Int2;
+        case GL_INT_VEC3:           return UniformType::Int3;
+        case GL_INT_VEC4:           return UniformType::Int4;
+        case GL_UNSIGNED_INT:       return UniformType::UInt;
+        case GL_UNSIGNED_INT_VEC2:  return UniformType::UInt2;
+        case GL_UNSIGNED_INT_VEC3:  return UniformType::UInt3;
+        case GL_UNSIGNED_INT_VEC4:  return UniformType::UInt4;
+        case GL_BOOL:               return UniformType::Bool;
+        case GL_BOOL_VEC2:          return UniformType::Bool2;
+        case GL_BOOL_VEC3:          return UniformType::Bool3;
+        case GL_BOOL_VEC4:          return UniformType::Bool4;
+
+        /* ----- Matrices ----- */
+        case GL_FLOAT_MAT2:         return UniformType::Float2x2;
+        case GL_FLOAT_MAT3:         return UniformType::Float3x3;
+        case GL_FLOAT_MAT4:         return UniformType::Float4x4;
+        case GL_FLOAT_MAT2x3:       return UniformType::Float2x3;
+        case GL_FLOAT_MAT2x4:       return UniformType::Float2x4;
+        case GL_FLOAT_MAT3x2:       return UniformType::Float3x2;
+        case GL_FLOAT_MAT3x4:       return UniformType::Float3x4;
+        case GL_FLOAT_MAT4x2:       return UniformType::Float4x2;
+        case GL_FLOAT_MAT4x3:       return UniformType::Float4x3;
+
+        /* ----- Samplers ----- */
         case GL_SAMPLER_2D:
         case GL_SAMPLER_3D:
         case GL_SAMPLER_CUBE:
@@ -518,42 +540,60 @@ static UniformType UnmapUniformType(const GLenum uniformType)
         case GL_INT_SAMPLER_3D:
         case GL_INT_SAMPLER_CUBE:
         case GL_INT_SAMPLER_2D_ARRAY:
-        case GL_INT:
-            return UniformType::Int;
-        case GL_INT_VEC2:
-            return UniformType::Int2;
-        case GL_INT_VEC3:
-            return UniformType::Int3;
-        case GL_INT_VEC4:
-            return UniformType::Int4;
-        case GL_FLOAT_MAT2:
-            return UniformType::Float2x2;
-        case GL_FLOAT_MAT3:
-            return UniformType::Float3x3;
-        case GL_FLOAT_MAT4:
-            return UniformType::Float4x4;
+        case GL_UNSIGNED_INT_SAMPLER_2D:
+        case GL_UNSIGNED_INT_SAMPLER_3D:
+        case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+            return UniformType::Sampler;
     }
-    
+
     #else
-    
+
     switch (uniformType)
     {
-        case GL_FLOAT:
-            return UniformType::Float;
-        case GL_FLOAT_VEC2:
-            return UniformType::Float2;
-        case GL_FLOAT_VEC3:
-            return UniformType::Float3;
-        case GL_FLOAT_VEC4:
-            return UniformType::Float4;
-        case GL_DOUBLE:
-            return UniformType::Double;
-        case GL_DOUBLE_VEC2:
-            return UniformType::Double2;
-        case GL_DOUBLE_VEC3:
-            return UniformType::Double3;
-        case GL_DOUBLE_VEC4:
-            return UniformType::Double4;
+        /* ----- Scalars/Vectors ----- */
+        case GL_FLOAT:              return UniformType::Float;
+        case GL_FLOAT_VEC2:         return UniformType::Float2;
+        case GL_FLOAT_VEC3:         return UniformType::Float3;
+        case GL_FLOAT_VEC4:         return UniformType::Float4;
+        case GL_DOUBLE:             return UniformType::Double;
+        case GL_DOUBLE_VEC2:        return UniformType::Double2;
+        case GL_DOUBLE_VEC3:        return UniformType::Double3;
+        case GL_DOUBLE_VEC4:        return UniformType::Double4;
+        case GL_INT:                return UniformType::Int;
+        case GL_INT_VEC2:           return UniformType::Int2;
+        case GL_INT_VEC3:           return UniformType::Int3;
+        case GL_INT_VEC4:           return UniformType::Int4;
+        case GL_UNSIGNED_INT:       return UniformType::UInt;
+        case GL_UNSIGNED_INT_VEC2:  return UniformType::UInt2;
+        case GL_UNSIGNED_INT_VEC3:  return UniformType::UInt3;
+        case GL_UNSIGNED_INT_VEC4:  return UniformType::UInt4;
+        case GL_BOOL:               return UniformType::Bool;
+        case GL_BOOL_VEC2:          return UniformType::Bool2;
+        case GL_BOOL_VEC3:          return UniformType::Bool3;
+        case GL_BOOL_VEC4:          return UniformType::Bool4;
+
+        /* ----- Matrices ----- */
+        case GL_FLOAT_MAT2:         return UniformType::Float2x2;
+        case GL_FLOAT_MAT3:         return UniformType::Float3x3;
+        case GL_FLOAT_MAT4:         return UniformType::Float4x4;
+        case GL_FLOAT_MAT2x3:       return UniformType::Float2x3;
+        case GL_FLOAT_MAT2x4:       return UniformType::Float2x4;
+        case GL_FLOAT_MAT3x2:       return UniformType::Float3x2;
+        case GL_FLOAT_MAT3x4:       return UniformType::Float3x4;
+        case GL_FLOAT_MAT4x2:       return UniformType::Float4x2;
+        case GL_FLOAT_MAT4x3:       return UniformType::Float4x3;
+        case GL_DOUBLE_MAT2:        return UniformType::Double2x2;
+        case GL_DOUBLE_MAT3:        return UniformType::Double3x3;
+        case GL_DOUBLE_MAT4:        return UniformType::Double4x4;
+        case GL_DOUBLE_MAT2x3:      return UniformType::Double2x3;
+        case GL_DOUBLE_MAT2x4:      return UniformType::Double2x4;
+        case GL_DOUBLE_MAT3x2:      return UniformType::Double3x2;
+        case GL_DOUBLE_MAT3x4:      return UniformType::Double3x4;
+        case GL_DOUBLE_MAT4x2:      return UniformType::Double4x2;
+        case GL_DOUBLE_MAT4x3:      return UniformType::Double4x3;
+
+        /* ----- Samplers ----- */
         case GL_SAMPLER_1D:
         case GL_SAMPLER_2D:
         case GL_SAMPLER_3D:
@@ -580,7 +620,30 @@ static UniformType UnmapUniformType(const GLenum uniformType)
         case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_INT_SAMPLER_BUFFER:
         case GL_INT_SAMPLER_2D_RECT:
+        case GL_UNSIGNED_INT_SAMPLER_1D:
+        case GL_UNSIGNED_INT_SAMPLER_2D:
+        case GL_UNSIGNED_INT_SAMPLER_3D:
+        case GL_UNSIGNED_INT_SAMPLER_CUBE:
+        case GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+        case GL_UNSIGNED_INT_SAMPLER_BUFFER:
+        case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+            return UniformType::Sampler;
+
         #ifndef __APPLE__
+        /* ----- Images ----- */
+        case GL_UNSIGNED_INT_IMAGE_1D:
+        case GL_UNSIGNED_INT_IMAGE_2D:
+        case GL_UNSIGNED_INT_IMAGE_3D:
+        case GL_UNSIGNED_INT_IMAGE_2D_RECT:
+        case GL_UNSIGNED_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_IMAGE_BUFFER:
+        case GL_UNSIGNED_INT_IMAGE_1D_ARRAY:
+        case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
+        case GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY:
         case GL_IMAGE_1D:
         case GL_IMAGE_2D:
         case GL_IMAGE_3D:
@@ -601,75 +664,17 @@ static UniformType UnmapUniformType(const GLenum uniformType)
         case GL_INT_IMAGE_2D_ARRAY:
         case GL_INT_IMAGE_2D_MULTISAMPLE:
         case GL_INT_IMAGE_2D_MULTISAMPLE_ARRAY:
-        #endif
-        case GL_UNSIGNED_INT_SAMPLER_1D:
-        case GL_UNSIGNED_INT_SAMPLER_2D:
-        case GL_UNSIGNED_INT_SAMPLER_3D:
-        case GL_UNSIGNED_INT_SAMPLER_CUBE:
-        case GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:
-        case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
-        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
-        case GL_UNSIGNED_INT_SAMPLER_BUFFER:
-        case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
-        #ifndef __APPLE__
-        case GL_UNSIGNED_INT_IMAGE_1D:
-        case GL_UNSIGNED_INT_IMAGE_2D:
-        case GL_UNSIGNED_INT_IMAGE_3D:
-        case GL_UNSIGNED_INT_IMAGE_2D_RECT:
-        case GL_UNSIGNED_INT_IMAGE_CUBE:
-        case GL_UNSIGNED_INT_IMAGE_BUFFER:
-        case GL_UNSIGNED_INT_IMAGE_1D_ARRAY:
-        case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
-        case GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE:
-        case GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY:
+            return UniformType::Image;
+
+        /* ----- Misc ----- */
         case GL_UNSIGNED_INT_ATOMIC_COUNTER:
-        #endif
-        case GL_INT:
-            return UniformType::Int;
-        case GL_INT_VEC2:
-            return UniformType::Int2;
-        case GL_INT_VEC3:
-            return UniformType::Int3;
-        case GL_INT_VEC4:
-            return UniformType::Int4;
-        /*case GL_UNSIGNED_INT:
-        case GL_UNSIGNED_INT_VEC2:
-        case GL_UNSIGNED_INT_VEC3:
-        case GL_UNSIGNED_INT_VEC4:*/
-        /*case GL_BOOL:
-        case GL_BOOL_VEC2:
-        case GL_BOOL_VEC3:
-        case GL_BOOL_VEC4:*/
-        case GL_FLOAT_MAT2:
-            return UniformType::Float2x2;
-        case GL_FLOAT_MAT3:
-            return UniformType::Float3x3;
-        case GL_FLOAT_MAT4:
-            return UniformType::Float4x4;
-        /*case GL_FLOAT_MAT2x3:
-        case GL_FLOAT_MAT2x4:
-        case GL_FLOAT_MAT3x2:
-        case GL_FLOAT_MAT3x4:
-        case GL_FLOAT_MAT4x2:
-        case GL_FLOAT_MAT4x3:*/
-        case GL_DOUBLE_MAT2:
-            return UniformType::Double2x2;
-        case GL_DOUBLE_MAT3:
-            return UniformType::Double3x3;
-        case GL_DOUBLE_MAT4:
-            return UniformType::Double4x4;
-        /*case GL_DOUBLE_MAT2x3:
-        case GL_DOUBLE_MAT2x4:
-        case GL_DOUBLE_MAT3x2:
-        case GL_DOUBLE_MAT3x4:
-        case GL_DOUBLE_MAT4x2:
-        case GL_DOUBLE_MAT4x3:*/
+            return UniformType::AtomicCounter;
+        #endif // /__APPLE__
     }
-    
-    #endif
-    
-    UnmapFailed("UniformType");
+
+    #endif // /LLGL_OPENGLES3
+
+    return UniformType::Undefined;
 }
 
 void Unmap(UniformType& result, const GLenum uniformType)

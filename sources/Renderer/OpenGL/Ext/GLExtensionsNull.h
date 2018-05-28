@@ -273,6 +273,8 @@ DECL_GLPROC(void, glUniform4iv, (GLint, GLsizei, const GLint*));
 DECL_GLPROC(void, glUniformMatrix2fv, (GLint, GLsizei, GLboolean, const GLfloat*));
 DECL_GLPROC(void, glUniformMatrix3fv, (GLint, GLsizei, GLboolean, const GLfloat*));
 DECL_GLPROC(void, glUniformMatrix4fv, (GLint, GLsizei, GLboolean, const GLfloat*));
+DECL_GLPROC(void, glGetUniformiv, (GLuint, GLint, GLint*));
+DECL_GLPROC(void, glGetUniformfv, (GLuint, GLint, GLfloat*));
 
 /* GL_ARB_tessellation_shader */
 

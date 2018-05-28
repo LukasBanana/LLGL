@@ -64,29 +64,9 @@ std::string DbgShaderProgram::QueryInfoLog()
     return instance.QueryInfoLog();
 }
 
-std::vector<VertexAttribute> DbgShaderProgram::QueryVertexAttributes() const
+ShaderReflectionDescriptor DbgShaderProgram::QueryReflectionDesc() const
 {
-    return instance.QueryVertexAttributes();
-}
-
-std::vector<StreamOutputAttribute> DbgShaderProgram::QueryStreamOutputAttributes() const
-{
-    return instance.QueryStreamOutputAttributes();
-}
-
-std::vector<ConstantBufferViewDescriptor> DbgShaderProgram::QueryConstantBuffers() const
-{
-    return instance.QueryConstantBuffers();
-}
-
-std::vector<StorageBufferViewDescriptor> DbgShaderProgram::QueryStorageBuffers() const
-{
-    return instance.QueryStorageBuffers();
-}
-
-std::vector<UniformDescriptor> DbgShaderProgram::QueryUniforms() const
-{
-    return instance.QueryUniforms();
+    return instance.QueryReflectionDesc();
 }
 
 void DbgShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)

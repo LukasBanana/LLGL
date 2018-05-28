@@ -35,11 +35,7 @@ class D3D12ShaderProgram : public ShaderProgram
 
         std::string QueryInfoLog() override;
 
-        std::vector<VertexAttribute> QueryVertexAttributes() const override;
-        std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const override;
-        std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const override;
-        std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
-        std::vector<UniformDescriptor> QueryUniforms() const override;
+        ShaderReflectionDescriptor QueryReflectionDesc() const override;
 
         void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
@@ -66,32 +62,37 @@ class D3D12ShaderProgram : public ShaderProgram
 
         inline UINT GetNumCBV() const
         {
-            return static_cast<UINT>(constantBufferDescs_.size());
+            return numCBV_;
         }
 
         inline UINT GetNumUAV() const
         {
-            return static_cast<UINT>(storageBufferDescs_.size());
+            return numUAV_;
         }
 
     private:
 
-        std::vector<D3D12_INPUT_ELEMENT_DESC>       inputElements_;
+        std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
 
-        D3D12Shader*                                vs_                     = nullptr;
-        D3D12Shader*                                hs_                     = nullptr;
-        D3D12Shader*                                ds_                     = nullptr;
-        D3D12Shader*                                gs_                     = nullptr;
-        D3D12Shader*                                ps_                     = nullptr;
-        D3D12Shader*                                cs_                     = nullptr;
+        union
+        {
+            struct
+            {
+                D3D12Shader*                    vs_;
+                D3D12Shader*                    hs_;
+                D3D12Shader*                    ds_;
+                D3D12Shader*                    gs_;
+                D3D12Shader*                    ps_;
+                D3D12Shader*                    cs_;
+            };
+            D3D12Shader*                        shaders_[6] = {};
+        };
 
-        std::vector<VertexAttribute>                vertexAttributes_;
-        std::vector<ConstantBufferViewDescriptor>   constantBufferDescs_;
-        std::vector<StorageBufferViewDescriptor>    storageBufferDescs_;
+        LinkError                               linkError_  = LinkError::NoError;
 
-        LinkError                                   linkError_              = LinkError::NoError;
-
-        UINT                                        numSRV_                 = 0;//TODO: use "TextureViewDescriptor" or the like
+        UINT                                    numSRV_     = 0;//TODO: use "TextureViewDescriptor" or the like
+        UINT                                    numCBV_     = 0;
+        UINT                                    numUAV_     = 0;
 
 };
 

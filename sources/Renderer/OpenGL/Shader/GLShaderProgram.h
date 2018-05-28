@@ -33,11 +33,7 @@ class GLShaderProgram : public ShaderProgram
 
         std::string QueryInfoLog() override;
 
-        std::vector<VertexAttribute> QueryVertexAttributes() const override;
-        std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const override;
-        std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const override;
-        std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
-        std::vector<UniformDescriptor> QueryUniforms() const override;
+        ShaderReflectionDescriptor QueryReflectionDesc() const override;
 
         void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
@@ -68,10 +64,18 @@ class GLShaderProgram : public ShaderProgram
         bool LinkShaderProgram();
 
         void BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
-
         #ifndef __APPLE__
         void BuildTransformFeedbackVaryingsNV(const std::vector<StreamOutputAttribute>& attributes);
         #endif
+
+        void Reflect(ShaderReflectionDescriptor& reflection) const;
+        void QueryVertexAttributes(ShaderReflectionDescriptor& reflection) const;
+        void QueryStreamOutputAttributes(ShaderReflectionDescriptor& reflection) const;
+        void QueryConstantBuffers(ShaderReflectionDescriptor& reflection) const;
+        void QueryStorageBuffers(ShaderReflectionDescriptor& reflection) const;
+        void QueryUniforms(ShaderReflectionDescriptor& reflection) const;
+
+        void QueryBufferProperties(ShaderReflectionDescriptor::ResourceView& resourceView, GLenum programInterface, GLuint resourceIndex) const;
 
         GLuint              id_ = 0;
 
