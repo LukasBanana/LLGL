@@ -78,35 +78,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \see ShaderReflectionDescriptor::resourceViews
         \throws std::runtime_error If shader reflection failed.
         */
-        virtual ShaderReflectionDescriptor QueryReflectionDesc() const/* = 0*/;
-
-        #if 1 //TODO: replace this by "QueryReflectionDesc"
-
-        //! Returns a list of vertex attributes, which describe all vertex attributes within this shader program.
-        virtual std::vector<VertexAttribute> QueryVertexAttributes() const = 0;
-
-        //! Returns a list of stream-output attributes, which describes all stream-output attributes within this shader program.
-        virtual std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const = 0;
-
-        /**
-        \brief Returns a list of constant buffer view descriptors, which describe all constant buffers within this shader program.
-        \remarks Also called "Uniform Buffer Object".
-        */
-        virtual std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const = 0;
-
-        /**
-        \brief Returns a list of storage buffer view descriptors, which describe all storage buffers within this shader program.
-        \remarks Also called "Shader Storage Buffer Object" or "Read/Write Buffer".
-        */
-        virtual std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const = 0;
-
-        /**
-        \brief Returns a list of uniform descriptors, which describe all uniforms within this shader program.
-        \remarks Shader uniforms are only supported in OpenGL 2.0+.
-        */
-        virtual std::vector<UniformDescriptor> QueryUniforms() const = 0;
-
-        #endif
+        virtual ShaderReflectionDescriptor QueryReflectionDesc() const = 0;
 
         /**
         \brief Builds the input layout with the specified vertex format for this shader program.
@@ -151,12 +123,11 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \return Pointer to the shader uniform handler or null if the render system does not support individual shader uniforms.
         \remarks This must be called to set individual shader uniforms.
         \code
-        if (auto uniform = shaderProgram->LockShaderUniform())
-        {
-            uniform->SetUniform1i("mySampler1", 0);
-            uniform->SetUniform1i("mySampler2", 1);
-            uniform->SetUniform4x4fv("projection", &myProjectionMatrix[0]);
-            shaderProgram->UnlockShaderUniform();
+        if (auto myUniformHandler = myShaderProgram->LockShaderUniform()) {
+            myUniformHandler->SetUniform1i("mySampler1", 0);
+            myUniformHandler->SetUniform1i("mySampler2", 1);
+            myUniformHandler->SetUniform4x4fv("projection", &myProjectionMatrix[0]);
+            myShaderProgram->UnlockShaderUniform();
         }
         \endcode
         \note Only supported with: OpenGL.

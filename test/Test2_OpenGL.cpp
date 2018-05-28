@@ -203,7 +203,7 @@ int main()
         if (!shaderProgram.LinkShaders())
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;
 
-        auto vertAttribs = shaderProgram.QueryVertexAttributes();
+        auto reflectionDesc = shaderProgram.QueryReflectionDesc();
 
         // Set shader uniforms
         auto projection = Gs::ProjectionMatrix4f::Planar(
@@ -241,9 +241,9 @@ int main()
         }
         #endif
 
-        for (const auto& desc : shaderProgram.QueryUniforms())
+        for (const auto& uniform : reflectionDesc.uniforms)
         {
-            std::cout << "uniform: name = \"" << desc.name << "\", location = " << desc.location << ", size = " << desc.size << std::endl;
+            std::cout << "uniform: name = \"" << uniform.name << "\", location = " << uniform.location << ", size = " << uniform.size << std::endl;
         }
 
         // Create texture

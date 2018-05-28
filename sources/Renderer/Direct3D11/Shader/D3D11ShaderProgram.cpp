@@ -53,7 +53,7 @@ bool D3D11ShaderProgram::LinkShaders()
     /* Validate shader composition */
     linkError_ = LinkError::NoError;
 
-    /* Validate hardware shader objects */
+    /* Validate native shader objects */
     for (std::size_t i = 0; i < 6; ++i)
     {
         if (shaders_[i] != nullptr && shaders_[i]->GetNativeShader().vs == nullptr)
@@ -94,35 +94,6 @@ ShaderReflectionDescriptor D3D11ShaderProgram::QueryReflectionDesc() const
 
     return reflection;
 }
-
-#if 1//TODO: remove
-
-std::vector<VertexAttribute> D3D11ShaderProgram::QueryVertexAttributes() const
-{
-    return {};
-}
-
-std::vector<StreamOutputAttribute> D3D11ShaderProgram::QueryStreamOutputAttributes() const
-{
-    return {}; //todo...
-}
-
-std::vector<ConstantBufferViewDescriptor> D3D11ShaderProgram::QueryConstantBuffers() const
-{
-    return {};
-}
-
-std::vector<StorageBufferViewDescriptor> D3D11ShaderProgram::QueryStorageBuffers() const
-{
-    return {};
-}
-
-std::vector<UniformDescriptor> D3D11ShaderProgram::QueryUniforms() const
-{
-    return {}; // dummy
-}
-
-#endif
 
 static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {

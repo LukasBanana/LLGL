@@ -13,12 +13,6 @@ namespace LLGL
 {
 
 
-//TODO: remove as soon as this is pure virtual
-ShaderReflectionDescriptor ShaderProgram::QueryReflectionDesc() const
-{
-    return {};//dummy
-}
-
 /*
  * ======= Protected: =======
  */

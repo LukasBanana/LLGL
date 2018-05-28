@@ -42,14 +42,6 @@ class DbgShaderProgram : public ShaderProgram
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
 
-        #if 1//TODO: remove
-        std::vector<VertexAttribute> QueryVertexAttributes() const override;
-        std::vector<StreamOutputAttribute> QueryStreamOutputAttributes() const override;
-        std::vector<ConstantBufferViewDescriptor> QueryConstantBuffers() const override;
-        std::vector<StorageBufferViewDescriptor> QueryStorageBuffers() const override;
-        std::vector<UniformDescriptor> QueryUniforms() const override;
-        #endif
-
         void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
         void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;

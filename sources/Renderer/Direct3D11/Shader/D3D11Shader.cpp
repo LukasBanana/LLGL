@@ -55,10 +55,7 @@ bool D3D11Shader::Compile(const std::string& sourceCode, const ShaderDescriptor&
         CreateNativeShader(shaderDesc.streamOutput, nullptr);
     }
 
-    if (FAILED(hr))
-        return false;
-
-    return true;
+    return !FAILED(hr);
 }
 
 bool D3D11Shader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
@@ -206,52 +203,6 @@ static ShaderReflectionDescriptor::ResourceView* FetchOrInsertResource(
     return ref;
 }
 
-static VectorType GetVertexAttribType(const D3D11_SIGNATURE_PARAMETER_DESC& paramDesc)
-{
-    switch (paramDesc.ComponentType)
-    {
-        case D3D_REGISTER_COMPONENT_UINT32:
-        {
-            switch (paramDesc.Mask)
-            {
-                case 0x01: return VectorType::UInt;
-                case 0x03: return VectorType::UInt2;
-                case 0x07: return VectorType::UInt3;
-                case 0x0f: return VectorType::UInt4;
-            }
-        }
-        break;
-
-        case D3D_REGISTER_COMPONENT_SINT32:
-        {
-            switch (paramDesc.Mask)
-            {
-                case 0x01: return VectorType::Int;
-                case 0x03: return VectorType::Int2;
-                case 0x07: return VectorType::Int3;
-                case 0x0f: return VectorType::Int4;
-            }
-        }
-        break;
-
-        case D3D_REGISTER_COMPONENT_FLOAT32:
-        {
-            switch (paramDesc.Mask)
-            {
-                case 0x01: return VectorType::Float;
-                case 0x03: return VectorType::Float2;
-                case 0x07: return VectorType::Float3;
-                case 0x0f: return VectorType::Float4;
-            }
-        }
-        break;
-
-        default:
-        break;
-    }
-    throw std::runtime_error("failed to map D3D11 signature parameter to VectorType");
-}
-
 static void ReflectShaderVertexAttributes(
     ID3D11ShaderReflection* reflection, const D3D11_SHADER_DESC& shaderDesc, ShaderReflectionDescriptor& reflectionDesc)
 {
@@ -271,7 +222,7 @@ static void ReflectShaderVertexAttributes(
         VertexAttribute vertexAttrib;
         {
             vertexAttrib.name           = std::string(paramDesc.SemanticName);
-            vertexAttrib.vectorType     = GetVertexAttribType(paramDesc);
+            vertexAttrib.vectorType     = DXGetSignatureParameterType(paramDesc.ComponentType, paramDesc.Mask);
             vertexAttrib.semanticIndex  = paramDesc.SemanticIndex;
         }
         reflectionDesc.vertexAttributes.push_back(vertexAttrib);

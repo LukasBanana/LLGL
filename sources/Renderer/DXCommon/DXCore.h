@@ -69,6 +69,9 @@ VideoAdapterDescriptor DXGetVideoAdapterDesc(IDXGIAdapter* adapter);
 // Returns the LLGL format and data type for the specified DXGI format.
 D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format);
 
+// Returns the vector type for the specified signature parameter type (by its component type and mask).
+VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask);
+
 
 } // /namespace LLGL
 
