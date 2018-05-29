@@ -99,7 +99,7 @@ static const auto g_EventTypeScrollWheel    = NSScrollWheel;
     resizeSignaled_ = NO;
     fullscreenMode_ = NO;
     
-    return (self);
+    return self;
 }
 
 - (void)makeResizable:(BOOL)resizable
@@ -202,10 +202,13 @@ namespace LLGL
 
 static NSString* ToNSString(const wchar_t* s)
 {
-    return [[NSString alloc]
-        initWithBytes: s
-        length: sizeof(*s)*wcslen(s)
-        encoding:NSUTF32LittleEndianStringEncoding
+    return
+    [
+        [[NSString alloc]
+            initWithBytes: s
+            length: sizeof(*s)*wcslen(s)
+            encoding:NSUTF32LittleEndianStringEncoding
+        ] autorelease
     ];
 }
 
@@ -281,8 +284,6 @@ void MacOSWindow::SetPosition(const Offset2D& position)
     
     CGSize frameSize = [screen frame].size;
     NSRect visibleFrame = [screen visibleFrame];
-    
-    [screen release];
 
     /* Calculate menu bar height */
     CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
@@ -301,8 +302,6 @@ Offset2D MacOSWindow::GetPosition() const
     
     CGSize frameSize = [screen frame].size;
     NSRect visibleFrame = [screen visibleFrame];
-    
-    [screen release];
 
     /* Calculate menu bar height */
     CGFloat menuBarHeight = frameSize.height - visibleFrame.size.height - visibleFrame.origin.y;
@@ -434,7 +433,6 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
             [MacOSAppDelegate alloc]
             autorelease
         ]];
-        [NSApp setDelegate:(id<NSApplicationDelegate>)[MacOSAppDelegate alloc]];
         
         [NSApp finishLaunching];
         
@@ -455,7 +453,12 @@ NSWindow* MacOSWindow::CreateNSWindow(const WindowDescriptor& desc)
     [wnd autorelease];
     
     /* Set window application delegate */
-    id wndDelegate = [[[MacOSWindowDelegate alloc] autorelease] initWithWindow:this isResizable:(desc.resizable)];
+    id wndDelegate = [
+        [[MacOSWindowDelegate alloc]
+            initWithWindow:this isResizable:(desc.resizable)
+        ]
+        autorelease
+    ];
     [wnd setDelegate:wndDelegate];
     
     /* Enable mouse motion events */
@@ -550,8 +553,6 @@ void MacOSWindow::OnProcessEvents()
         #else
         [NSApp sendEvent:event];
         #endif
-        
-        [event release];
     }
     
     /* Check for window signales */
