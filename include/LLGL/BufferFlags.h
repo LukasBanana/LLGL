@@ -164,53 +164,6 @@ struct BufferDescriptor
     StorageBuffer   storageBuffer;
 };
 
-#if 0//TODO: replace by ShaderReflection
-
-/**
-\brief Constant buffer shader-view descriptor structure.
-\remarks This structure is used to describe the view of a constant buffer within a shader.
-*/
-struct ConstantBufferViewDescriptor
-{
-    //! Constant buffer name, i.e. the identifier used in the shader.
-    std::string     name;
-
-    //! Index of the constant buffer within the respective shader.
-    std::uint32_t   index       = 0;
-
-    //! Buffer size (in bytes).
-    std::uint32_t   size        = 0;
-};
-
-/**
-\brief Storage buffer shader-view descriptor structure.
-\remarks This structure is used to describe the view of a storage buffer within a shader.
-*/
-struct StorageBufferViewDescriptor
-{
-    //! Storage buffer name, i.e. the identifier used in the shader.
-    std::string         name;
-
-    //! Index of the storage buffer within the respective shader.
-    std::uint32_t       index   = 0;
-
-    /**
-    \brief Storage buffer type.
-    \remarks For the OpenGL render system, this type is always 'StorageBufferType::Buffer',
-    since GLSL only supports generic shader storage buffers. Here is an example:
-    \code
-    layout(std430, binding=0) buffer myBuffer
-    {
-        vec4 myBufferArray[];
-    };
-    \endcode
-    \note Only supported with: Direct3D 11, Direct3D 12
-    */
-    StorageBufferType   type    = StorageBufferType::Buffer;
-};
-
-#endif
-
 
 } // /namespace LLGL
 
