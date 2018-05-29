@@ -39,21 +39,32 @@ using DebugCallback = std::function<void(const std::string& type, const std::str
 */
 enum class OpenGLContextProfile
 {
-    CompatibilityProfile,   //!< OpenGL compatibility profile. This is the default.
-    CoreProfile,            //!< OpenGL core profile.
-    ESProfile,              //!< OpenGL ES profile. \todo This is incomplete, do not use!
+    //! OpenGL compatibility profile. This is the default.
+    CompatibilityProfile,
+
+    //! OpenGL core profile.
+    CoreProfile,
+
+    //! OpenGL ES profile. \todo This is incomplete, do not use!
+    ESProfile,
 };
 
 
 /* ----- Structures ----- */
 
-//! Vertical-synchronization (Vsync) descriptor structure.
+/**
+\brief Vertical-synchronization (Vsync) descriptor structure.
+\todo Maybe remove this entire structure and only use a "vsyncInterval" parameter.
+*/
 struct VsyncDescriptor
 {
     //! Specifies whether vertical-synchronisation (Vsync) is enabled or disabled. By default disabled.
     bool            enabled     = false;
 
-    //! Refresh rate (in Hz). By default 60.
+    /**
+    \brief Refresh rate (in Hz). By default 60.
+    \todo Maybe remove this.
+    */
     std::uint32_t   refreshRate = 60;
 
     /**
@@ -153,10 +164,16 @@ struct RenderContextDescriptor
 
 /* ----- Operators ----- */
 
+//! Compares the two specified V-sync descriptors on equality.
 LLGL_EXPORT bool operator == (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs);
+
+//! Compares the two specified V-sync descriptors on inequality.
 LLGL_EXPORT bool operator != (const VsyncDescriptor& lhs, const VsyncDescriptor& rhs);
 
+//! Compares the two specified video mode descriptors on equality.
 LLGL_EXPORT bool operator == (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
+
+//! Compares the two specified video mode descriptors on inequality.
 LLGL_EXPORT bool operator != (const VideoModeDescriptor& lhs, const VideoModeDescriptor& rhs);
 
 

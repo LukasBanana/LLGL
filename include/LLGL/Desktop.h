@@ -17,6 +17,7 @@
 namespace LLGL
 {
 
+//! \todo Refactor whole namespace into a class named "Display".
 namespace Desktop
 {
 

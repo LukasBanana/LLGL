@@ -70,7 +70,7 @@ void VKThrowIfFailed(const VkResult result, const char* info)
         else
         {
             s += "0x";
-            s += ToHex(result);
+            s += ToHex(static_cast<int>(result));
         }
 
         s += ")";

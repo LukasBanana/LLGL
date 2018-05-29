@@ -6,6 +6,7 @@
  */
 
 #include "../tutorial.h"
+#include <LLGL/Display.h>
 
 
 class Tutorial10 : public Tutorial

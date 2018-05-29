@@ -65,7 +65,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         /**
         \brief Returns a descriptor of the shader pipeline layout with all required shader resources.
         \remarks The list of resource views in the output descriptor (i.e. 'resourceViews' attribute) is always sorted in the following manner:
-        First sorting criterion is the resource type (in descending order), second sorting criterion is the binding slot (in descending order).
+        First sorting criterion is the resource type (in ascending order), second sorting criterion is the binding slot (in ascending order).
         Here is an example of such a sorted list (pseudocode):
         \code{.txt}
         resourceViews[0] = { type: ResourceType::ConstantBuffer, slot: 0 }

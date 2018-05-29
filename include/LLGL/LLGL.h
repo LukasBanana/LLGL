@@ -120,6 +120,10 @@
  * 
  */
 
+/**
+\defgroup group_compare_swo Global functions for Strict-Weak-Order (SWO) comparisons.
+*/
+
 
 #endif
 

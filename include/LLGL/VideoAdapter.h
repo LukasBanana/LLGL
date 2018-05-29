@@ -10,7 +10,7 @@
 
 
 #include "Export.h"
-#include "Types.h"
+#include "DisplayFlags.h"
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -23,24 +23,9 @@ namespace LLGL
 /* ----- Structures ----- */
 
 /**
-\brief Display mode descriptor structure.
-\remarks Describes the attributes of a physical display.
-The counterpart for a virtual video mode is the VideoModeDescriptor structure.
-\see VideoOutputDescriptor::displayModes
-\see VideoModeDescriptor
-*/
-struct DisplayModeDescriptor
-{
-    //! Display resolution (in pixels).
-    Extent2D        resolution;
-
-    //! Display refresh rate (in Hz).
-    std::uint32_t   refreshRate = 0;
-};
-
-/**
 \brief Video output structure.
 \see VideoAdapterDescriptor::outputs
+\todo Currently unused in the interface.
 */
 struct VideoOutputDescriptor
 {
@@ -48,7 +33,11 @@ struct VideoOutputDescriptor
     std::vector<DisplayModeDescriptor> displayModes;
 };
 
-//! Video adapter descriptor structure.
+/**
+\brief Video adapter descriptor structure.
+\remarks A video adapter determines the output capabilities of a GPU.
+\todo Currently unused in the interface.
+*/
 struct VideoAdapterDescriptor
 {
     //! Hardware adapter name (name of the GPU).
@@ -63,18 +52,6 @@ struct VideoAdapterDescriptor
     //! List of all adapter output descriptors.
     std::vector<VideoOutputDescriptor>  outputs;
 };
-
-
-/* ----- Operators ----- */
-
-LLGL_EXPORT bool operator == (const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
-LLGL_EXPORT bool operator == (const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
-
-
-/* ----- Functions ----- */
-
-//! Compares the two display modes in a strict-weak-order (SWO) fashion.
-LLGL_EXPORT bool CompareSWO(const DisplayModeDescriptor& lhs, const DisplayModeDescriptor& rhs);
 
 
 } // /namespace LLGL
