@@ -75,7 +75,9 @@ class GLShaderProgram : public ShaderProgram
         void QueryStorageBuffers(ShaderReflectionDescriptor& reflection) const;
         void QueryUniforms(ShaderReflectionDescriptor& reflection) const;
 
+        #ifdef GL_ARB_program_interface_query
         void QueryBufferProperties(ShaderReflectionDescriptor::ResourceView& resourceView, GLenum programInterface, GLuint resourceIndex) const;
+        #endif // /GL_ARB_program_interface_query
 
         GLuint              id_ = 0;
 

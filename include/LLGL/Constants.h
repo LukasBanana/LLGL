@@ -33,7 +33,7 @@ static const std::size_t    maxThreadCount      = ~0;
 \brief Offset value to determine the offset automatically, e.g. to append a vertex attribute at the end of a vertex format.
 \see VertexFormat::AppendAttribute
 */
-static const std::size_t    ignoreOffset        = ~0;
+static const std::uint32_t  ignoreOffset        = ~0;
 
 /**
 \brief Specifies an invalid binding slot for shader resources.

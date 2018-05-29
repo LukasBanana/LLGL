@@ -25,11 +25,11 @@ static void MapFailed(const std::string& typeName)
     throw std::invalid_argument("failed to map '" + typeName + "' to OpenGL parameter");
 }
 
-[[noreturn]]
+/*[[noreturn]]
 static void UnmapFailed(const std::string& typeName)
 {
     throw std::invalid_argument("failed to unmap '" + typeName + "' from OpenGL parameter");
-}
+}*/
 
 
 /* ----- MapOrZero functions ----- */
