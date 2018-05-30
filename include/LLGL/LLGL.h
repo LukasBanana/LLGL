@@ -9,15 +9,15 @@
 #define LLGL_INCLUDE_H
 
 
+#include "Version.h"
 #include "Window.h"
 #include "Canvas.h"
+#include "Display.h"
 #include "Input.h"
 #include "Timer.h"
-#include "RenderSystem.h"
 #include "ColorRGB.h"
 #include "ColorRGBA.h"
-#include "Desktop.h"
-#include "Version.h"
+#include "RenderSystem.h"
 
 
 //DOXYGEN MAIN PAGE

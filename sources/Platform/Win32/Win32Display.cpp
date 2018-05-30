@@ -46,6 +46,18 @@ static BOOL CALLBACK Win32MonitorEnumProc(HMONITOR monitor, HDC hDC, LPRECT rect
     return FALSE;
 }
 
+static bool IsCursorVisible(bool& visible)
+{
+    CURSORINFO info;
+    info.cbSize = sizeof(CURSORINFO);
+    if (::GetCursorInfo(&info))
+    {
+        visible = ((info.flags & CURSOR_SHOWING) != 0);
+        return true;
+    }
+    return false;
+}
+
 
 /*
  * Display class
@@ -68,6 +80,33 @@ std::unique_ptr<Display> Display::QueryPrimary()
 {
     auto monitor = MonitorFromPoint({}, MONITOR_DEFAULTTOPRIMARY);
     return MakeUnique<Win32Display>(monitor);
+}
+
+bool Display::ShowCursor(bool show)
+{
+    bool visible = false;
+    if (IsCursorVisible(visible))
+    {
+        if (visible)
+        {
+            if (!show)
+                ::ShowCursor(FALSE);
+        }
+        else
+        {
+            if (show)
+                ::ShowCursor(TRUE);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool Display::IsCursorShown()
+{
+    bool visible = true;
+    IsCursorVisible(visible);
+    return visible;
 }
 
 

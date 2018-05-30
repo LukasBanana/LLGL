@@ -14,9 +14,6 @@
 #include "../../Core/Helper.h"
 #include "../../Core/Assertion.h"
 #include "GLRenderingCaps.h"
-#include <LLGL/Desktop.h>
-
-#include <LLGL/Log.h>
 
 
 namespace LLGL
@@ -24,15 +21,6 @@ namespace LLGL
 
 
 /* ----- Render System ----- */
-
-GLRenderSystem::GLRenderSystem()
-{
-}
-
-GLRenderSystem::~GLRenderSystem()
-{
-    Desktop::ResetVideoMode();
-}
 
 void GLRenderSystem::SetConfiguration(const RenderSystemConfiguration& config)
 {
@@ -242,9 +230,11 @@ void GLRenderSystem::Release(Fence& fence)
 
 RenderContext* GLRenderSystem::AddRenderContext(std::unique_ptr<GLRenderContext>&& renderContext, const RenderContextDescriptor& desc)
 {
+    #if 0
     /* Switch to fullscreen mode (if enabled) */
     if (desc.videoMode.fullscreen)
         Desktop::SetVideoMode(desc.videoMode);
+    #endif
 
     /* Load all OpenGL extensions for the first time */
     if (renderContexts_.empty())

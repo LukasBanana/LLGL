@@ -42,6 +42,8 @@ class LLGL_EXPORT Display : public NonCopyable
 
     public:
 
+        /* ----- Global ----- */
+
         //! Queries the list of all connected displays.
         static std::vector<std::unique_ptr<Display>> QueryList();
 
@@ -50,6 +52,24 @@ class LLGL_EXPORT Display : public NonCopyable
         \return Unique pointer to a Display instance that represents the primary display, or null on failure.
         */
         static std::unique_ptr<Display> QueryPrimary();
+
+        /**
+        \brief Shows or hides the cursor for the running application from all displays.
+        \param[in] show Specifies whether to show or hide the cursor.
+        \remarks In contrast to the Win32 API, this function only shows or hides the cursor,
+        while the Win32 API function with the same name either increments or decrements an internal visibility counter for the cursor.
+        \return True on success, otherwise cursor visibility changes are not supported.
+        \see IsCursorShown
+        */
+        static bool ShowCursor(bool show);
+
+        /**
+        \brief Returns true if the cursor is currently being shown on any display.
+        \see ShowCursor
+        */
+        static bool IsCursorShown();
+
+        /* ----- Instance ----- */
 
         //! Returns true if this is the primary display, as configured by the host system.
         virtual bool IsPrimary() const = 0;

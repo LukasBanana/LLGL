@@ -84,7 +84,10 @@ int main()
             std::cerr << e.what() << std::endl;
         }
 
-        auto desktopSize = LLGL::Desktop::GetResolution();
+        LLGL::Extent2D desktopSize;
+        if (auto display = LLGL::Display::QueryPrimary())
+            desktopSize = display->GetDisplayMode().resolution;
+
         std::wcout << "Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height << std::endl;
 
         while (window->ProcessEvents() && !input->KeyPressed(LLGL::Key::Escape))
@@ -120,7 +123,6 @@ int main()
             s << "X = " << mousePos.x << ", Y = " << mousePos.y;
             //window->SetTitle(s.str());
 
-            auto desktopSize = LLGL::Desktop::GetResolution();
             s << ", Screen Width = " << desktopSize.width << ", Screen Height = " << desktopSize.height;
             window->SetTitle(s.str());
 
