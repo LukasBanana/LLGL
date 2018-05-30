@@ -100,7 +100,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
         swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swapChainDesc.BufferCount                           = (videoMode.swapChainSize == 3 ? 2 : 1);
         swapChainDesc.OutputWindow                          = wndHandle.window;
-        swapChainDesc.Windowed                              = (videoMode.fullscreen ? FALSE : TRUE);
+        swapChainDesc.Windowed                              = TRUE;//(videoMode.fullscreen ? FALSE : TRUE);
         swapChainDesc.SwapEffect                            = DXGI_SWAP_EFFECT_DISCARD;
     }
     auto hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());

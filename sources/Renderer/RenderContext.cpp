@@ -96,6 +96,10 @@ void RenderContext::SetOrCreateSurface(const std::shared_ptr<Surface>& surface, 
 
     /* Store video mode settings */
     videoModeDesc_ = videoModeDesc;
+
+    /* Switch to fullscreen mode before storing new video mode */
+    if (auto primaryDisplay = Display::QueryPrimary())
+        SetDisplayModeByVideoMode(*primaryDisplay, videoModeDesc_);
 }
 
 void RenderContext::ShareSurfaceAndConfig(RenderContext& other)

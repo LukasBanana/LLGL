@@ -126,7 +126,7 @@ class LLGL_EXPORT RenderContext : public RenderSystemChild
         virtual bool OnSetVsync(const VsyncDescriptor& vsyncDesc) = 0;
 
         /**
-        \brief Sets the render context surface or creates one if 'surface' is null.
+        \brief Sets the render context surface or creates one if 'surface' is null, and switches to fullscreen mode if enabled.
         \param[in] surface Optional shared pointer to a surface which will be used as main render target.
         If this is null, a new surface is created for this render context.
         \param[in] videoModeDesc Specifies the video mode descriptor.
@@ -137,6 +137,7 @@ class LLGL_EXPORT RenderContext : public RenderSystemChild
         \see WindowDescriptor::windowContext
         \see Surface::GetContentSize
         \see GetVideoMode
+        \see SwitchFullscreenMode
         */
         void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, VideoModeDescriptor videoModeDesc, const void* windowContext);
 
