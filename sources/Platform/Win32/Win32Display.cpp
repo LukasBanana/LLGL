@@ -15,8 +15,26 @@ namespace LLGL
 {
 
 
+/*
+ * Internals
+ */
+
 // Thread local reference to the output list of the Display::QueryList function
 thread_local static std::vector<std::unique_ptr<Display>>* g_displayListRef;
+
+static void Convert(DisplayModeDescriptor& dst, const DEVMODE& src)
+{
+    dst.resolution.width    = static_cast<std::uint32_t>(src.dmPelsWidth);
+    dst.resolution.height   = static_cast<std::uint32_t>(src.dmPelsHeight);
+    dst.refreshRate         = static_cast<std::uint32_t>(src.dmDisplayFrequency);
+}
+
+static void Convert(DEVMODE& dst, const DisplayModeDescriptor& src)
+{
+    dst.dmPelsWidth         = static_cast<DWORD>(src.resolution.width);
+    dst.dmPelsHeight        = static_cast<DWORD>(src.resolution.height);
+    dst.dmDisplayFrequency  = static_cast<DWORD>(src.refreshRate);
+}
 
 static BOOL CALLBACK Win32MonitorEnumProc(HMONITOR monitor, HDC hDC, LPRECT rect, LPARAM data)
 {
@@ -27,6 +45,11 @@ static BOOL CALLBACK Win32MonitorEnumProc(HMONITOR monitor, HDC hDC, LPRECT rect
     }
     return FALSE;
 }
+
+
+/*
+ * Display class
+ */
 
 std::vector<std::unique_ptr<Display>> Display::QueryList()
 {
@@ -40,6 +63,17 @@ std::vector<std::unique_ptr<Display>> Display::QueryList()
 
     return displayList;
 }
+
+std::unique_ptr<Display> Display::QueryPrimary()
+{
+    auto monitor = MonitorFromPoint({}, MONITOR_DEFAULTTOPRIMARY);
+    return MakeUnique<Win32Display>(monitor);
+}
+
+
+/*
+ * Win32Display class
+ */
 
 Win32Display::Win32Display(HMONITOR monitor) :
     monitor_ { monitor }
@@ -76,23 +110,54 @@ Offset2D Win32Display::GetOffset() const
     };
 }
 
+bool Win32Display::ResetDisplayMode()
+{
+    /* Get display device name */
+    MONITORINFOEX infoEx;
+    GetInfo(infoEx);
+
+    /* Change settings for this display to default l*/
+    auto result = ChangeDisplaySettingsEx(infoEx.szDevice, nullptr, nullptr, 0, nullptr);
+
+    return (result == DISP_CHANGE_SUCCESSFUL);
+}
+
 bool Win32Display::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
 {
-    //TODO
-    return false;
+    /* Get display device name */
+    MONITORINFOEX infoEx;
+    GetInfo(infoEx);
+
+    /* Change settings for this display */
+    DEVMODE devMode = {};
+    {
+        devMode.dmSize      = sizeof(devMode);
+        devMode.dmFields    = (DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY);
+        Convert(devMode, displayModeDesc);
+    }
+    auto result = ChangeDisplaySettingsEx(infoEx.szDevice, &devMode, nullptr, CDS_FULLSCREEN, nullptr);
+
+    return (result == DISP_CHANGE_SUCCESSFUL);
 }
 
 DisplayModeDescriptor Win32Display::GetDisplayMode() const
 {
-    MONITORINFO info;
-    GetInfo(info);
-    DisplayModeDescriptor displayModeDesc;
+    /* Get display device name */
+    MONITORINFOEX infoEx;
+    GetInfo(infoEx);
+
+    /* Get current display settings */
+    DEVMODE devMode;
+    devMode.dmSize = sizeof(devMode);
+
+    if (EnumDisplaySettings(infoEx.szDevice, ENUM_CURRENT_SETTINGS, &devMode) != FALSE)
     {
-        displayModeDesc.resolution.width    = static_cast<std::uint32_t>(info.rcMonitor.right - info.rcMonitor.left);
-        displayModeDesc.resolution.height   = static_cast<std::uint32_t>(info.rcMonitor.bottom - info.rcMonitor.top);
-        displayModeDesc.refreshRate         = 60;
+        DisplayModeDescriptor displayModeDesc;
+        Convert(displayModeDesc, devMode);
+        return displayModeDesc;
     }
-    return displayModeDesc;
+
+    return {};
 }
 
 std::vector<DisplayModeDescriptor> Win32Display::QuerySupportedDisplayModes() const
@@ -107,17 +172,15 @@ std::vector<DisplayModeDescriptor> Win32Display::QuerySupportedDisplayModes() co
     const DWORD fieldBits = (DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY);
 
     DEVMODE devMode;
+    devMode.dmSize = sizeof(devMode);
+
     for (DWORD modeNum = 0; EnumDisplaySettings(infoEx.szDevice, modeNum, &devMode) != FALSE; ++modeNum)
     {
         /* Only enumerate display settings where the width, height, and frequency fields have been initialized */
         if ((devMode.dmFields & fieldBits) == fieldBits)
         {
             DisplayModeDescriptor outputDesc;
-            {
-                outputDesc.resolution.width   = static_cast<std::uint32_t>(devMode.dmPelsWidth);
-                outputDesc.resolution.height  = static_cast<std::uint32_t>(devMode.dmPelsHeight);
-                outputDesc.refreshRate        = static_cast<std::uint32_t>(devMode.dmDisplayFrequency);
-            }
+            Convert(outputDesc, devMode);
             displayModeDescs.push_back(outputDesc);
         }
     }

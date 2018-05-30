@@ -45,6 +45,12 @@ class LLGL_EXPORT Display : public NonCopyable
         //! Queries the list of all connected displays.
         static std::vector<std::unique_ptr<Display>> QueryList();
 
+        /**
+        \brief Queries the primary display.
+        \return Unique pointer to a Display instance that represents the primary display, or null on failure.
+        */
+        static std::unique_ptr<Display> QueryPrimary();
+
         //! Returns true if this is the primary display, as configured by the host system.
         virtual bool IsPrimary() const = 0;
 
@@ -57,6 +63,12 @@ class LLGL_EXPORT Display : public NonCopyable
         \see Window::SetPosition
         */
         virtual Offset2D GetOffset() const = 0;
+
+        /**
+        \brief Resets the display mode to its default value depending on the host system configuration.
+        \see SetDisplayMode
+        */
+        virtual bool ResetDisplayMode() = 0;
 
         /**
         \brief Sets the new display mode for this display.

@@ -31,6 +31,7 @@ class Win32Display : public Display
 
         Offset2D GetOffset() const override;
 
+        bool ResetDisplayMode() override;
         bool SetDisplayMode(const DisplayModeDescriptor& displayModeDesc) override;
         DisplayModeDescriptor GetDisplayMode() const override;
 

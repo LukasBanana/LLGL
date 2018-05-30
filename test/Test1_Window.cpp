@@ -60,7 +60,7 @@ int main()
         auto timer = LLGL::Timer::Create();
 
         auto pos = window->GetPosition();
-        
+
         printWindowSize(*window);
 
         try
