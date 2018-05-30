@@ -8,7 +8,9 @@
 #include <LLGL/RenderContext.h>
 #include <LLGL/Window.h>
 #include <LLGL/Canvas.h>
+#include <LLGL/Display.h>
 #include "CheckedCast.h"
+#include "../Core/Helper.h"
 
 
 namespace LLGL
@@ -30,22 +32,9 @@ bool RenderContext::SetVideoMode(const VideoModeDescriptor& videoModeDesc)
     if (IsVideoModeValid(videoModeDesc))
     {
         if (videoModeDesc_ != videoModeDesc)
-        {
-            /* Adapt surface for the new video mode */
-            auto finalVideoMode = videoModeDesc;
-            GetSurface().AdaptForVideoMode(finalVideoMode);
-
-            /* Call primary video mode function */
-            if (OnSetVideoMode(finalVideoMode))
-            {
-                /* Store video mode on success */
-                videoModeDesc_ = finalVideoMode;
-                return true;
-            }
-
-            return false;
-        }
-        return true;
+            return SetVideoModePrimary(videoModeDesc);
+        else
+            return true;
     }
     return false;
 }
@@ -113,6 +102,90 @@ void RenderContext::ShareSurfaceAndConfig(RenderContext& other)
     surface_        = other.surface_;
     videoModeDesc_  = other.videoModeDesc_;
     vsyncDesc_      = other.vsyncDesc_;
+}
+
+bool RenderContext::SetDisplayModeByVideoMode(Display& display, const VideoModeDescriptor& videoModeDesc)
+{
+    if (videoModeDesc.fullscreen)
+    {
+        /* Change display mode resolution to video mode setting */
+        auto displayModeDesc = display.GetDisplayMode();
+        displayModeDesc.resolution = videoModeDesc.resolution;
+        return display.SetDisplayMode(displayModeDesc);
+    }
+    else
+    {
+        /* Reset display mode to default */
+        return display.ResetDisplayMode();
+    }
+}
+
+bool RenderContext::SwitchFullscreenMode(const VideoModeDescriptor& videoModeDesc)
+{
+    if (GetVideoMode().fullscreen != videoModeDesc.fullscreen)
+    {
+        if (auto primaryDisplay = Display::QueryPrimary())
+            return SetDisplayModeByVideoMode(*primaryDisplay, videoModeDesc);
+    }
+    return true;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool RenderContext::SetVideoModePrimary(const VideoModeDescriptor& videoModeDesc)
+{
+    bool result = true;
+
+    auto& surface = GetSurface();
+
+    /* Store current surface position if the render context is in windowed mode */
+    if (!videoModeDesc_.fullscreen && videoModeDesc.fullscreen)
+        StoreSurfacePosition();
+
+    /* Adapt surface for the new video mode */
+    auto finalVideoMode = videoModeDesc;
+    surface.AdaptForVideoMode(finalVideoMode);
+
+    /* Call primary video mode function */
+    if (OnSetVideoMode(finalVideoMode))
+    {
+        /* Store video mode on success */
+        videoModeDesc_ = finalVideoMode;
+    }
+    else
+    {
+        /* Reset surface for previous video mode */
+        surface.AdaptForVideoMode(videoModeDesc_);
+        result = false;
+    }
+
+    if (!videoModeDesc_.fullscreen)
+        RestoreSurfacePosition();
+
+    return result;
+}
+
+void RenderContext::StoreSurfacePosition()
+{
+    #ifndef LLGL_MOBILE_PLATFORM
+    auto& window = static_cast<Window&>(GetSurface());
+    cachedSurfacePos_ = MakeUnique<Offset2D>(window.GetPosition());
+    #endif
+}
+
+void RenderContext::RestoreSurfacePosition()
+{
+    #ifndef LLGL_MOBILE_PLATFORM
+    if (cachedSurfacePos_)
+    {
+        auto& window = static_cast<Window&>(GetSurface());
+        window.SetPosition(*cachedSurfacePos_);
+        cachedSurfacePos_.reset();
+    }
+    #endif
 }
 
 

@@ -31,7 +31,7 @@ D3D11RenderContext::D3D11RenderContext(
 
     /* Create D3D objects */
     CreateSwapChain(factory);
-    CreateBackBuffer(desc.videoMode.resolution);
+    CreateBackBuffer(desc_.videoMode);
 
     /* Initialize v-sync */
     OnSetVsync(desc_.vsync);
@@ -48,11 +48,20 @@ bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc
 
     /* Resize back buffer */
     if (prevVideoMode.resolution != videoModeDesc.resolution)
-        ResizeBackBuffer(videoModeDesc.resolution);
+        ResizeBackBuffer(videoModeDesc);
 
     /* Switch fullscreen mode */
+    #if 0
     if (prevVideoMode.fullscreen != videoModeDesc.fullscreen)
-        swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
+    {
+        auto hr = swapChain_->SetFullscreenState(videoModeDesc.fullscreen ? TRUE : FALSE, nullptr);
+        return SUCCEEDED(hr);
+    }
+    #else
+    /* Switch fullscreen mode */
+    if (!SwitchFullscreenMode(videoModeDesc))
+        return false;
+    #endif
 
     return true;
 }
@@ -95,7 +104,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 }
 
-void D3D11RenderContext::CreateBackBuffer(const Extent2D& extent)
+void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDesc)
 {
     HRESULT hr = 0;
 
@@ -110,11 +119,11 @@ void D3D11RenderContext::CreateBackBuffer(const Extent2D& extent)
     /* Create depth stencil texture */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width               = extent.width;
-        texDesc.Height              = extent.height;
+        texDesc.Width               = videoModeDesc.resolution.width;
+        texDesc.Height              = videoModeDesc.resolution.height;
         texDesc.MipLevels           = 1;
         texDesc.ArraySize           = 1;
-        texDesc.Format              = PickDepthStencilFormat(desc_.videoMode);
+        texDesc.Format              = PickDepthStencilFormat(videoModeDesc);
         texDesc.SampleDesc.Count    = (desc_.multiSampling.enabled ? std::max(1u, desc_.multiSampling.samples) : 1);
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
@@ -130,7 +139,7 @@ void D3D11RenderContext::CreateBackBuffer(const Extent2D& extent)
     DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for swap-chain");
 }
 
-void D3D11RenderContext::ResizeBackBuffer(const Extent2D& extent)
+void D3D11RenderContext::ResizeBackBuffer(const VideoModeDescriptor& videoModeDesc)
 {
     /* Check if the current RTV and DSV is from this render context */
     /*ID3D11RenderTargetView* rtv = nullptr;
@@ -158,7 +167,7 @@ void D3D11RenderContext::ResizeBackBuffer(const Extent2D& extent)
     DXThrowIfFailed(hr, "failed to resize DXGI swap-chain buffers");
 
     /* Recreate back buffer and reset default render target */
-    CreateBackBuffer(extent);
+    CreateBackBuffer(videoModeDesc);
 
     /* Reset render target (if the previous RTV and DSV was from this render context) */
     //if (rtvFromThis)

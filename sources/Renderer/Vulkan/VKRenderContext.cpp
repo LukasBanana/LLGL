@@ -131,6 +131,8 @@ bool VKRenderContext::HasDepthStencilBuffer() const
 
 bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
+    const auto& prevVideoMode = GetVideoMode();
+
     /* Wait until graphics queue is idle before resources are destroyed and recreated */
     vkQueueWaitIdle(graphicsQueue_);
 
@@ -145,6 +147,10 @@ bool VKRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 
     /* Recreate only swap-chain but keep render pass (independent of swap-chain object) */
     CreateSwapChain(videoModeDesc, GetVsync());
+
+    /* Switch fullscreen mode */
+    if (!SwitchFullscreenMode(videoModeDesc))
+        return false;
 
     return true;
 }

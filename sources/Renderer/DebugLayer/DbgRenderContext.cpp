@@ -30,12 +30,16 @@ void DbgRenderContext::Present()
 
 bool DbgRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
-    return instance.SetVideoMode(videoModeDesc);
+    auto result = instance.SetVideoMode(videoModeDesc);
+    ShareSurfaceAndConfig(instance);
+    return result;
 }
 
 bool DbgRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
-    return instance.SetVsync(vsyncDesc);
+    auto result = instance.SetVsync(vsyncDesc);
+    ShareSurfaceAndConfig(instance);
+    return result;
 }
 
 

@@ -59,8 +59,8 @@ class D3D11RenderContext : public RenderContext
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void CreateSwapChain(IDXGIFactory* factory);
-        void CreateBackBuffer(const Extent2D& extent);
-        void ResizeBackBuffer(const Extent2D& extent);
+        void CreateBackBuffer(const VideoModeDescriptor& videoModeDesc);
+        void ResizeBackBuffer(const VideoModeDescriptor& videoModeDesc);
 
         DXGI_FORMAT PickDepthStencilFormat(const VideoModeDescriptor& videoMode) const;
 

@@ -33,6 +33,8 @@ namespace LLGL
 {
 
 
+class Display;
+
 /**
 \brief Render context interface.
 \remarks Each render context has its own surface and back buffer (or rather swap-chain) to draw into.
@@ -69,7 +71,8 @@ class LLGL_EXPORT RenderContext : public RenderSystemChild
         \brief Sets the new video mode for this render context.
         \param[in] videoModeDesc Specifies the descriptor of the new video mode.
         \return True on success, otherwise the specified video mode was invalid (e.g. if the resolution contains a zero).
-        \remarks This may invalidate the currently set render target if the back buffer is required,
+        \remarks When the video mode is changed from fullscreen to non-fullscreen, the previous surface position is restored.
+        \note This may invalidate the currently set render target if the back buffer is required,
         so a subsequent call to "CommandBuffer::SetRenderTarget" is necessary!
         \see CommandBuffer::SetRenderTarget(RenderContext&)
         */
@@ -135,12 +138,33 @@ class LLGL_EXPORT RenderContext : public RenderSystemChild
         */
         void ShareSurfaceAndConfig(RenderContext& other);
 
+        /**
+        \brief Sets the display mode for the specified display by the parameters of the video mode descriptor.
+        \return Return value of the Display::SetDisplayMode function.
+        \see Display::SetDisplayMode
+        */
+        bool SetDisplayModeByVideoMode(Display& display, const VideoModeDescriptor& videoModeDesc);
+
+        /**
+        \briefs Switches the fullscreen mode for the primary display if the specified fullscreen mode is different to the current fullscreen setting.
+        \see SetDisplayModeByVideoMode
+        \see GetVideoMode
+        */
+        bool SwitchFullscreenMode(const VideoModeDescriptor& videoModeDesc);
+
     private:
+
+        bool SetVideoModePrimary(const VideoModeDescriptor& videoModeDesc);
+
+        void StoreSurfacePosition();
+        void RestoreSurfacePosition();
 
         std::shared_ptr<Surface>    surface_;
 
         VideoModeDescriptor         videoModeDesc_;
         VsyncDescriptor             vsyncDesc_;
+
+        std::unique_ptr<Offset2D>   cachedSurfacePos_;
 
 };
 
