@@ -151,7 +151,7 @@ class LLGL_EXPORT Image
         \param[in] offset Specifies the region offset within this image to read from.
         \param[in] extent Specifies the region extent within this image to read from.
         \param[in] imageDesc Specifies the destination image descriptor to write the region to.
-        If the 'data' member of this descriptor is null, this function has no effect.
+        If the 'data' member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
         \remarks To read a single pixel, use the following code example:
         \code
         LLGL::ColorRGBAub ReadSinglePixelRGBAub(const LLGL::Image& image, const LLGL::Offset3D& position) {
@@ -161,19 +161,21 @@ class LLGL_EXPORT Image
             return pixelColor;
         }
         \endcode
-        \todo Not implemented yet.
+        \throws std::invalid_argument If the 'data' member of the image descriptor is non-null, the sub-image region is inside the image,
+        but the 'dataSize' member of the image descriptor is too small.
+        \see IsRegionInside
         */
-        void ReadPixels(Offset3D offset, Extent3D extent, const DstImageDescriptor& imageDesc) const;
+        void ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc) const;
 
         /**
         \brief Writes a region of pixels to this image from the source image buffer specified by 'imageDesc'.
         \param[in] offset Specifies the region offset within this image to write to.
         \param[in] extent Specifies the region extent within this image to write to.
         \param[in] imageDesc Specifies the source image descriptor to read the region from.
-        If the 'data' member of this descriptor is null, this function has no effect.
-        \todo Not implemented yet.
+        If the 'data' member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
+        \see IsRegionInside
         */
-        void WritePixels(Offset3D offset, Extent3D extent, const SrcImageDescriptor& imageDesc);
+        void WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc);
 
         /* ----- Attributes ----- */
 
@@ -213,8 +215,20 @@ class LLGL_EXPORT Image
             return data_.get();
         }
 
-        //! Returns the size (in bytes) of the image buffer.
-        std::uint32_t GetDataSize() const;
+        /**
+        \brief Returns the size (in bytes) for each pixel.
+        \see GetFormat
+        \see ImageFormatSize
+        \see GetDataType
+        \see DataTypeSize
+        */
+        std::uint32_t GetBytesPerPixel() const;
+
+        //! Returns the stride (in bytes) for each row.
+        std::uint32_t GetRowStride() const;
+
+        //! Returns the stride (in bytes) for each depth slice.
+        std::uint32_t GetDepthStride() const;
 
         /**
         \brief Returns the number of pixels this image has.
@@ -223,12 +237,25 @@ class LLGL_EXPORT Image
         const auto& extent = myImage.GetExtent();
         return extent.width * extent.height * extent.depth;
         \endcode
+        \see GetExtent
         */
         std::uint32_t GetNumPixels() const;
+
+        /**
+        \brief Returns the size (in bytes) of the image buffer.
+        \see GetBytesPerPixel
+        \see GetNumPixels
+        */
+        std::uint32_t GetDataSize() const;
+
+        //! Returns true if the specified sub-image region is inside the image.
+        bool IsRegionInside(const Offset3D& offset, const Extent3D& extent) const;
 
     private:
 
         void ResetAttributes();
+
+        std::size_t GetDataPtrOffset(const Offset3D& offset) const;
 
         Extent3D    extent_;
         ImageFormat format_     = ImageFormat::RGBA;

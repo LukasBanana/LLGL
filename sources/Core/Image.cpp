@@ -13,6 +13,59 @@ namespace LLGL
 {
 
 
+static void BitBlit(
+    const Extent3D& copyExtent,
+    char* dst, std::uint32_t dstRowStride, std::uint32_t dstDepthStride,
+    const char* src, std::uint32_t srcRowStride, std::uint32_t srcDepthStride)
+{
+    const auto copyRowStride    = std::min(dstRowStride, srcRowStride);
+    const auto copyDepthStride  = std::min(dstDepthStride, srcDepthStride);
+
+    srcDepthStride -= srcRowStride * copyExtent.height;
+
+    if (srcRowStride == dstRowStride)
+    {
+        if (srcDepthStride == dstDepthStride)
+        {
+            /* Copy region directly into output data */
+            ::memcpy(dst, src, copyDepthStride * copyExtent.depth);
+        }
+        else
+        {
+            /* Copy region directly into output data */
+            for (std::uint32_t z = 0; z < copyExtent.depth; ++z)
+            {
+                /* Copy current slice */
+                ::memcpy(dst, src, copyDepthStride);
+
+                /* Move pointers to next slice */
+                dst += dstDepthStride;
+                src += srcDepthStride;
+            }
+        }
+    }
+    else
+    {
+        /* Copy region directly into output data */
+        for (std::uint32_t z = 0; z < copyExtent.depth; ++z)
+        {
+            /* Copy current slice */
+            for (std::uint32_t y = 0; y < copyExtent.height; ++y)
+            {
+                /* Copy current row */
+                ::memcpy(dst, src, copyRowStride);
+
+                /* Move pointers to next row */
+                dst += dstRowStride;
+                src += srcRowStride;
+            }
+
+            /* Move pointers to next slice */
+            src += srcDepthStride;
+        }
+    }
+}
+
 /* ----- Common ----- */
 
 Image::Image(const Extent3D& extent, const ImageFormat format, const DataType dataType) :
@@ -145,19 +198,125 @@ void Image::Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor)
     //todo
 }
 
-void Image::ReadPixels(Offset3D offset, Extent3D extent, const DstImageDescriptor& imageDesc) const
+static std::size_t GetRequiredImageDataSize(const Extent3D& extent, const ImageFormat format, const DataType dataType)
 {
-    if (imageDesc.data)
+    return static_cast<std::size_t>(ImageFormatSize(format) * DataTypeSize(dataType) * extent.width * extent.height * extent.height);
+}
+
+static void ValidateImageDataSize(const Extent3D& extent, const DstImageDescriptor& imageDesc)
+{
+    const auto requiredDataSize = GetRequiredImageDataSize(extent, imageDesc.format, imageDesc.dataType);
+    if (imageDesc.dataSize < requiredDataSize)
     {
-        //todo
+        throw std::invalid_argument(
+            "data size of destinaton image descriptor is too small (" + std::to_string(requiredDataSize) +
+            " is required, but only " + std::to_string(imageDesc.dataSize) + " was specified)"
+        );
     }
 }
 
-void Image::WritePixels(Offset3D offset, Extent3D extent, const SrcImageDescriptor& imageDesc)
+static void ValidateImageDataSize(const Extent3D& extent, const SrcImageDescriptor& imageDesc)
 {
-    if (imageDesc.data)
+    const auto requiredDataSize = GetRequiredImageDataSize(extent, imageDesc.format, imageDesc.dataType);
+    if (imageDesc.dataSize < requiredDataSize)
     {
-        //todo
+        throw std::invalid_argument(
+            "data size of source image descriptor is too small (" + std::to_string(requiredDataSize) +
+            " is required, but only " + std::to_string(imageDesc.dataSize) + " was specified)"
+        );
+    }
+}
+
+void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc) const
+{
+    if (imageDesc.data && IsRegionInside(offset, extent))
+    {
+        /* Validate required size */
+        ValidateImageDataSize(extent, imageDesc);
+
+        /* Get source image parameters */
+        const auto  bpp             = GetBytesPerPixel();
+        const auto  srcRowStride    = bpp * GetExtent().width;
+        const auto  srcDepthStride  = srcRowStride * GetExtent().height;
+        auto        src             = data_.get() + GetDataPtrOffset(offset);
+
+        if (GetFormat() == imageDesc.format && GetDataType() == imageDesc.dataType)
+        {
+            /* Get destination image parameters */
+            const auto  dstRowStride    = bpp * extent.width;
+            const auto  dstDepthStride  = dstRowStride * extent.height;
+            auto        dst             = reinterpret_cast<char*>(imageDesc.data);
+
+            /* Blit region into destination image */
+            BitBlit(
+                extent,
+                dst, dstRowStride, dstDepthStride,
+                src, srcRowStride, srcDepthStride
+            );
+        }
+        else
+        {
+            /* Copy region into temporary sub-image */
+            Image subImage { extent, GetFormat(), GetDataType() };
+
+            BitBlit(
+                extent,
+                reinterpret_cast<char*>(subImage.GetData()), subImage.GetRowStride(), subImage.GetDepthStride(),
+                src, srcRowStride, srcDepthStride
+            );
+
+            /* Convert sub-image */
+            subImage.Convert(imageDesc.format, imageDesc.dataType);
+
+            /* Copy sub-image into output data */
+            ::memcpy(imageDesc.data, subImage.GetData(), imageDesc.dataSize);
+        }
+    }
+}
+
+void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc)
+{
+    if (imageDesc.data && IsRegionInside(offset, extent))
+    {
+        /* Validate required size */
+        ValidateImageDataSize(extent, imageDesc);
+
+        /* Get destination image parameters */
+        const auto  bpp             = GetBytesPerPixel();
+        const auto  dstRowStride    = bpp * GetExtent().width;
+        const auto  dstDepthStride  = dstRowStride * GetExtent().height;
+        auto        dst             = data_.get() + GetDataPtrOffset(offset);
+
+        if (GetFormat() == imageDesc.format && GetDataType() == imageDesc.dataType)
+        {
+            /* Get source image parameters */
+            const auto  srcRowStride    = bpp * extent.width;
+            const auto  srcDepthStride  = srcRowStride * extent.height;
+            auto        src             = reinterpret_cast<const char*>(imageDesc.data);
+
+            /* Blit source image into region */
+            BitBlit(
+                extent,
+                dst, dstRowStride, dstDepthStride,
+                src, srcRowStride, srcDepthStride
+            );
+        }
+        else
+        {
+            /* Copy input data into sub-image into */
+            Image subImage { extent, imageDesc.format, imageDesc.dataType };
+            ::memcpy(subImage.GetData(), imageDesc.data, imageDesc.dataSize);
+
+            /* Convert sub-image */
+            subImage.Convert(GetFormat(), GetDataType());
+
+            /* Copy temporary sub-image into region */
+            BitBlit(
+                extent,
+                dst, dstRowStride, dstDepthStride,
+                reinterpret_cast<const char*>(subImage.GetData()), subImage.GetRowStride(), subImage.GetDepthStride()
+            );
+        }
     }
 }
 
@@ -187,14 +346,44 @@ DstImageDescriptor Image::QueryDstDesc()
     return imageDesc;
 }
 
+std::uint32_t Image::GetBytesPerPixel() const
+{
+    return (ImageFormatSize(format_) * DataTypeSize(dataType_));
+}
+
+std::uint32_t Image::GetRowStride() const
+{
+    return (GetBytesPerPixel() * GetExtent().width);
+}
+
+std::uint32_t Image::GetDepthStride() const
+{
+    return (GetRowStride() * GetExtent().height);
+}
+
 std::uint32_t Image::GetDataSize() const
 {
-    return (GetNumPixels() * ImageFormatSize(format_) * DataTypeSize(dataType_));
+    return (GetNumPixels() * GetBytesPerPixel());
 }
 
 std::uint32_t Image::GetNumPixels() const
 {
     return (extent_.width * extent_.height * extent_.depth);
+}
+
+static bool Is1DRegionValid(std::int32_t offset, std::uint32_t extent, std::uint32_t limit)
+{
+    return (offset >= 0 && static_cast<std::uint32_t>(offset) + extent < limit);
+}
+
+bool Image::IsRegionInside(const Offset3D& offset, const Extent3D& extent) const
+{
+    return
+    (
+        Is1DRegionValid(offset.x, extent.width , extent_.width ) &&
+        Is1DRegionValid(offset.y, extent.height, extent_.height) &&
+        Is1DRegionValid(offset.z, extent.depth , extent_.depth )
+    );
 }
 
 
@@ -207,6 +396,17 @@ void Image::ResetAttributes()
     format_     = ImageFormat::RGBA;
     dataType_   = DataType::UInt8;
     extent_     = { 0, 0, 0 };
+}
+
+std::size_t Image::GetDataPtrOffset(const Offset3D& offset) const
+{
+    const auto bpp  = static_cast<std::size_t>(GetBytesPerPixel());
+    const auto x    = static_cast<std::size_t>(offset.x);
+    const auto y    = static_cast<std::size_t>(offset.y);
+    const auto z    = static_cast<std::size_t>(offset.z);
+    const auto w    = static_cast<std::size_t>(GetExtent().width);
+    const auto h    = static_cast<std::size_t>(GetExtent().height);
+    return (bpp * (x + (y + z * h) * w));
 }
 
 

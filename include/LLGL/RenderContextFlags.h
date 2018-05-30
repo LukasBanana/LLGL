@@ -63,7 +63,7 @@ struct VsyncDescriptor
 
     /**
     \brief Refresh rate (in Hz). By default 60.
-    \todo Maybe remove this.
+    \note Only supported with: Direct3D 11, Direct3D 12.
     */
     std::uint32_t   refreshRate = 60;
 
