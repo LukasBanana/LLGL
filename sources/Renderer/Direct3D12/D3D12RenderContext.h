@@ -73,10 +73,9 @@ class D3D12RenderContext : public RenderContext
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
         D3D12CommandBuffer*             commandBuffer_                  = nullptr;
 
-        RenderContextDescriptor         desc_;
-
         ComPtr<IDXGISwapChain3>         swapChain_;
         UINT                            swapChainInterval_              = 0;
+        UINT                            swapChainSamples_               = 1;
 
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
         UINT                            rtvDescSize_                    = 0;

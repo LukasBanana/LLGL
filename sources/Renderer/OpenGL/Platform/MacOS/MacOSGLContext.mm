@@ -17,20 +17,20 @@ namespace LLGL
 {
 
 
-std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(const RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
 {
     MacOSGLContext* sharedContextGLNS = (sharedContext != nullptr ? LLGL_CAST(MacOSGLContext*, sharedContext) : nullptr);
     return MakeUnique<MacOSGLContext>(desc, surface, sharedContextGLNS);
 }
 
-MacOSGLContext::MacOSGLContext(RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext) :
+MacOSGLContext::MacOSGLContext(const RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext) :
     LLGL::GLContext { sharedContext }
 {
     CreatePixelFormat(desc);
-    
+
     NativeHandle nativeHandle;
     surface.GetNativeHandle(&nativeHandle);
-    
+
     CreateNSGLContext(nativeHandle, sharedContext);
 }
 
@@ -98,17 +98,17 @@ void MacOSGLContext::CreatePixelFormat(const RenderContextDescriptor& desc)
         NSOpenGLPFASamples,         desc.multiSampling.SampleCount(),
         0
     };
-    
+
     while (true)
     {
         /* Allocate NS-OpenGL pixel format */
         pixelFormat_ = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
         if (pixelFormat_)
             break;
-        
+
         /* Find best suitable pixel format */
         //todo...
-        
+
         throw std::runtime_error("failed to find suitable OpenGL pixel format");
     }
 }
@@ -117,7 +117,7 @@ void MacOSGLContext::CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGL
 {
     /* Get shared NS-OpenGL context */
     auto sharedNSGLCtx = (sharedContext != nullptr ? sharedContext->ctx_ : nullptr);
-    
+
     if (sharedNSGLCtx/* && if not create custom GL context */)
     {
         /* Share this NS-OpenGL context */
@@ -130,10 +130,10 @@ void MacOSGLContext::CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGL
         if (!ctx_)
             throw std::runtime_error("failed to create NSOpenGLContext");
     }
-    
+
     /* Store native window handle */
     wnd_ = nativeHandle.window;
-    
+
     /* Make current and set view to specified window */
     Activate(true);
 }

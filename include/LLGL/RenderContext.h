@@ -99,7 +99,11 @@ class LLGL_EXPORT RenderContext : public RenderSystemChild
 
     protected:
 
-        RenderContext(const VsyncDescriptor& initialVsync = {});
+        //! Default constructor with no effect.
+        RenderContext() = default;
+
+        //! Constructor to initialize the render context with the specified video mode and V-sync.
+        RenderContext(const VideoModeDescriptor& initialVideoMode, const VsyncDescriptor& initialVsync);
 
         /**
         \brief Callback when the video mode is about to get changed.
@@ -125,12 +129,16 @@ class LLGL_EXPORT RenderContext : public RenderSystemChild
         \brief Sets the render context surface or creates one if 'surface' is null.
         \param[in] surface Optional shared pointer to a surface which will be used as main render target.
         If this is null, a new surface is created for this render context.
-        \param[in,out] videoModeDesc Specifies the video mode descriptor. This is used for reading only if 'surface' is null,
-        otherwise it is used for writing only and the 'resolution' field will be set to the size of the specified surface.
+        \param[in] videoModeDesc Specifies the video mode descriptor.
+        The resolution of this video mode is only used if 'surface' is null,
+        otherwise the resolution is determined by the content size of the specified surface (i.e. with the Surface::GetContentSize function).
+        To determine the final video mode, use the GetVideoMode function.
         \param[in] Optional pointer to a NativeContextHandle structure. This is only used for desktop platforms.
         \see WindowDescriptor::windowContext
+        \see Surface::GetContentSize
+        \see GetVideoMode
         */
-        void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, VideoModeDescriptor& videoModeDesc, const void* windowContext);
+        void SetOrCreateSurface(const std::shared_ptr<Surface>& surface, VideoModeDescriptor videoModeDesc, const void* windowContext);
 
         /**
         \brief Shares the surface and video mode with another render context.

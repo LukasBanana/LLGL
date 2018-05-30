@@ -21,20 +21,20 @@ D3D11RenderContext::D3D11RenderContext(
     const ComPtr<ID3D11DeviceContext>& context,
     const RenderContextDescriptor& desc,
     const std::shared_ptr<Surface>& surface) :
-        RenderContext { desc.vsync },
-        device_       { device     },
-        context_      { context    },
-        desc_         { desc       }
+        RenderContext     { desc.videoMode, desc.vsync       },
+        device_           { device                           },
+        context_          { context                          },
+        swapChainSamples_ { desc.multiSampling.SampleCount() }
 {
     /* Setup surface for the render context */
-    SetOrCreateSurface(surface, desc_.videoMode, nullptr);
+    SetOrCreateSurface(surface, desc.videoMode, nullptr);
 
     /* Create D3D objects */
     CreateSwapChain(factory);
-    CreateBackBuffer(desc_.videoMode);
+    CreateBackBuffer(GetVideoMode());
 
     /* Initialize v-sync */
-    OnSetVsync(desc_.vsync);
+    OnSetVsync(desc.vsync);
 }
 
 void D3D11RenderContext::Present()
@@ -68,7 +68,6 @@ bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc
 
 bool D3D11RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
-    desc_.vsync = vsyncDesc;
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
     return true;
 }
@@ -80,6 +79,10 @@ bool D3D11RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 
 void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
 {
+    /* Get current settings */
+    const auto& videoMode = GetVideoMode();
+    const auto& vsync = GetVsync();
+
     /* Create swap chain for window handle */
     NativeHandle wndHandle;
     GetSurface().GetNativeHandle(&wndHandle);
@@ -87,17 +90,17 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     InitMemory(swapChainDesc);
     {
-        swapChainDesc.BufferDesc.Width                      = desc_.videoMode.resolution.width;
-        swapChainDesc.BufferDesc.Height                     = desc_.videoMode.resolution.height;
+        swapChainDesc.BufferDesc.Width                      = videoMode.resolution.width;
+        swapChainDesc.BufferDesc.Height                     = videoMode.resolution.height;
         swapChainDesc.BufferDesc.Format                     = DXGI_FORMAT_R8G8B8A8_UNORM;
-        swapChainDesc.BufferDesc.RefreshRate.Numerator      = desc_.vsync.refreshRate;
-        swapChainDesc.BufferDesc.RefreshRate.Denominator    = desc_.vsync.interval;
-        swapChainDesc.SampleDesc.Count                      = (desc_.multiSampling.enabled ? std::max(1u, desc_.multiSampling.samples) : 1);
+        swapChainDesc.BufferDesc.RefreshRate.Numerator      = vsync.refreshRate;
+        swapChainDesc.BufferDesc.RefreshRate.Denominator    = vsync.interval;
+        swapChainDesc.SampleDesc.Count                      = swapChainSamples_;
         swapChainDesc.SampleDesc.Quality                    = 0;
         swapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapChainDesc.BufferCount                           = (desc_.videoMode.swapChainSize == 3 ? 2 : 1);
+        swapChainDesc.BufferCount                           = (videoMode.swapChainSize == 3 ? 2 : 1);
         swapChainDesc.OutputWindow                          = wndHandle.window;
-        swapChainDesc.Windowed                              = (desc_.videoMode.fullscreen ? FALSE : TRUE);
+        swapChainDesc.Windowed                              = (videoMode.fullscreen ? FALSE : TRUE);
         swapChainDesc.SwapEffect                            = DXGI_SWAP_EFFECT_DISCARD;
     }
     auto hr = factory->CreateSwapChain(device_.Get(), &swapChainDesc, swapChain_.ReleaseAndGetAddressOf());
@@ -124,7 +127,7 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
         texDesc.MipLevels           = 1;
         texDesc.ArraySize           = 1;
         texDesc.Format              = PickDepthStencilFormat(videoModeDesc);
-        texDesc.SampleDesc.Count    = (desc_.multiSampling.enabled ? std::max(1u, desc_.multiSampling.samples) : 1);
+        texDesc.SampleDesc.Count    = swapChainSamples_;
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
         texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;

@@ -31,9 +31,9 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
 
     windowContext.parentWindow  = DefaultRootWindow(windowContext.display);
     windowContext.screen        = DefaultScreen(windowContext.display);
-    
+
     GLXFBConfig fbc = 0;
-    
+
     if (desc_.multiSampling.enabled)
     {
         /* Create FB configuration for multi-sampling */
@@ -54,13 +54,13 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
             GLX_SAMPLES,        static_cast<int>(desc_.multiSampling.samples),
             None
         };
-        
+
         int attribs[100];
         ::memcpy(attribs, fbAttribs, sizeof(fbAttribs));
-        
+
         int fbCount = 0;
         GLXFBConfig* fbcList = glXChooseFBConfig(windowContext.display, windowContext.screen, attribs, &fbCount);
-        
+
         if (fbcList)
         {
             if (fbCount > 0)
@@ -68,7 +68,7 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
             XFree(fbcList);
         }
     }
-    
+
     if (fbc)
     {
         /* Choose XVisualInfo from FB config */
@@ -78,7 +78,7 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
     {
         if (desc_.multiSampling.enabled)
             Log::StdErr() << "failed to choose XVisualInfo for multi-sampling" << std::endl;
-        
+
         /* Choose standard XVisualInfo structure */
         int visualAttribs[] =
         {
@@ -97,10 +97,10 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
 
         windowContext.visual = glXChooseVisual(windowContext.display, windowContext.screen, visualAttribs);
     }
-    
+
     /* Create Colormap structure */
     windowContext.colorMap = XCreateColormap(windowContext.display, windowContext.parentWindow, windowContext.visual->visual, AllocNone);
-    
+
     if (!windowContext.visual)
         throw std::runtime_error("failed to choose X11 visual for OpenGL");
 }

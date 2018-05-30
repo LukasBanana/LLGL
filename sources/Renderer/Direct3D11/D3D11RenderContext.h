@@ -64,13 +64,12 @@ class D3D11RenderContext : public RenderContext
 
         DXGI_FORMAT PickDepthStencilFormat(const VideoModeDescriptor& videoMode) const;
 
-        RenderContextDescriptor     desc_;
-
         ComPtr<ID3D11Device>        device_;
         ComPtr<ID3D11DeviceContext> context_;
 
         ComPtr<IDXGISwapChain>      swapChain_;
         UINT                        swapChainInterval_  = 0;
+        UINT                        swapChainSamples_   = 1;
 
         D3D11BackBuffer             backBuffer_;
 

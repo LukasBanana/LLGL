@@ -13,8 +13,7 @@ namespace LLGL
 
 
 GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext) :
-    RenderContext  { desc.vsync                                           },
-    desc_          { desc                                                 },
+    RenderContext  { desc.videoMode, desc.vsync                           },
     contextHeight_ { static_cast<GLint>(desc.videoMode.resolution.height) }
 {
     #ifdef __linux__
@@ -31,11 +30,15 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
 
     #endif
 
+    /* Update video mode of descriptor after surface has been set or created */
+    desc.videoMode = GetVideoMode();
+
     /* Create platform dependent OpenGL context */
-    context_ = GLContext::Create(desc_, GetSurface(), (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr));
+    GLContext* sharedGLContext = (sharedRenderContext != nullptr ? sharedRenderContext->context_.get() : nullptr);
+    context_ = GLContext::Create(desc, GetSurface(), sharedGLContext);
 
     /* Setup swap interval (for v-sync) */
-    UpdateSwapInterval();
+    OnSetVsync(desc.vsync);
 
     /* Get state manager and notify about the current render context */
     stateMngr_ = context_->GetStateManager();
@@ -89,9 +92,8 @@ bool GLRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 
 bool GLRenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
-    desc_.vsync = vsyncDesc;
-    UpdateSwapInterval();
-    return true;
+    int swapInterval = (vsyncDesc.enabled ? static_cast<int>(vsyncDesc.interval) : 0);
+    return context_->SetSwapInterval(swapInterval);
 }
 
 void GLRenderContext::InitRenderStates()
@@ -108,11 +110,6 @@ void GLRenderContext::InitRenderStates()
     This is required so that texture formats like RGB (which is not word-aligned) can be used.
     */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-}
-
-void GLRenderContext::UpdateSwapInterval()
-{
-    context_->SetSwapInterval(desc_.vsync.enabled ? static_cast<int>(desc_.vsync.interval) : 0);
 }
 
 

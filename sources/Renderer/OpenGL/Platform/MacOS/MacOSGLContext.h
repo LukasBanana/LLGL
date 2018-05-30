@@ -19,34 +19,34 @@
 namespace LLGL
 {
 
-    
+
 class MacOSGLContext : public GLContext
 {
-    
+
     public:
-        
-        MacOSGLContext(RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext);
+
+        MacOSGLContext(const RenderContextDescriptor& desc, Surface& surface, MacOSGLContext* sharedContext);
         ~MacOSGLContext();
-        
+
         bool SetSwapInterval(int interval) override;
         bool SwapBuffers() override;
         void Resize(const Extent2D& resolution) override;
-        
+
     private:
-        
+
         bool Activate(bool activate) override;
-    
+
         void CreatePixelFormat(const RenderContextDescriptor& desc);
-        
+
         void CreateNSGLContext(const NativeHandle& nativeHandle, MacOSGLContext* sharedContext);
         void DeleteNSGLContext();
-    
+
         NSOpenGLPixelFormat*    pixelFormat_    = nullptr;
         NSOpenGLContext*        ctx_            = nullptr;
         NSWindow*               wnd_            = nullptr;
-    
+
 };
-    
+
 
 } // /namespace LLGL
 

@@ -24,7 +24,7 @@ class Win32GLContext : public GLContext
 
     public:
 
-        Win32GLContext(RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext);
+        Win32GLContext(const RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext);
         ~Win32GLContext();
 
         bool SetSwapInterval(int interval) override;
@@ -52,18 +52,18 @@ class Win32GLContext : public GLContext
 
         void RecreateWindow();
 
-        static const UINT           maxNumPixelFormatsMS_   = 8;
+        static const UINT       maxNumPixelFormatsMS_   = 8;
 
-        int                         pixelFormat_            = 0;    //!< Standard pixel format.
-        std::vector<int>            pixelFormatsMS_;                 //!< Multi-sampled pixel formats.
+        int                     pixelFormat_            = 0;    //!< Standard pixel format.
+        std::vector<int>        pixelFormatsMS_;                 //!< Multi-sampled pixel formats.
 
-        HDC                         hDC_                    = 0;    //!< Device context handle.
-        HGLRC                       hGLRC_                  = 0;    //!< OpenGL render context handle.
+        HDC                     hDC_                    = 0;    //!< Device context handle.
+        HGLRC                   hGLRC_                  = 0;    //!< OpenGL render context handle.
 
-        RenderContextDescriptor&    desc_;
-        Surface&                    surface_;
+        RenderContextDescriptor desc_;
+        Surface&                surface_;
 
-        bool                        hasSharedContext_       = false;
+        bool                    hasSharedContext_       = false;
 
 };
 

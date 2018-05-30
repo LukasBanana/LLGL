@@ -32,7 +32,7 @@ VKRenderContext::VKRenderContext(
     VKDeviceMemoryManager& deviceMemoryMngr,
     RenderContextDescriptor desc,
     const std::shared_ptr<Surface>& surface) :
-        RenderContext        { desc.vsync                    },
+        RenderContext        { desc.videoMode, desc.vsync    },
         instance_            { instance                      },
         physicalDevice_      { physicalDevice                },
         device_              { device                        },
@@ -43,6 +43,7 @@ VKRenderContext::VKRenderContext(
         depthStencilBuffer_  { device                        }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
+    desc.videoMode = GetVideoMode();
 
     CreatePresentSemaphores();
     CreateGpuSurface();

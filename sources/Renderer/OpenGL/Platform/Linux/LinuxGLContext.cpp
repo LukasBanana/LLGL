@@ -33,7 +33,7 @@ typedef GLXContext (*GXLCREATECONTEXTATTRIBARBPROC)(Display*, GLXFBConfig, GLXCo
  * GLContext class
  */
 
-std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(const RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
 {
     LinuxGLContext* sharedContextGLX = (sharedContext != nullptr ? LLGL_CAST(LinuxGLContext*, sharedContext) : nullptr);
     return MakeUnique<LinuxGLContext>(desc, surface, sharedContextGLX);
@@ -44,7 +44,7 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surf
  * LinuxGLContext class
  */
 
-LinuxGLContext::LinuxGLContext(RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext) :
+LinuxGLContext::LinuxGLContext(const RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext) :
     GLContext { sharedContext }
 {
     NativeHandle nativeHandle;
@@ -93,30 +93,30 @@ bool LinuxGLContext::Activate(bool activate)
 void LinuxGLContext::CreateContext(const RenderContextDescriptor& contextDesc, const NativeHandle& nativeHandle, LinuxGLContext* sharedContext)
 {
     GLXContext glcShared = (sharedContext != nullptr ? sharedContext->glc_ : nullptr);
-    
+
     /* Get X11 display, window, and visual information */
     display_    = nativeHandle.display;
     wnd_        = nativeHandle.window;
     visual_     = nativeHandle.visual;
-    
+
     if (!display_ || !wnd_ || !visual_)
         throw std::invalid_argument("failed to create OpenGL context on X11 client, due to missing arguments");
-    
+
     /* Create OpenGL context with X11 lib */
     const auto& profileDesc = contextDesc.profileOpenGL;
-    
+
     if (profileDesc.contextProfile == OpenGLContextProfile::CoreProfile)
     {
         /* Create core profile */
         glc_ = CreateContextCoreProfile(glcShared, profileDesc.majorVersion, profileDesc.minorVersion);
     }
-    
+
     if (!glc_)
     {
         /* Create compatibility profile */
         glc_ = CreateContextCompatibilityProfile(glcShared);
     }
-    
+
     /* Make new OpenGL context current */
     if (glXMakeCurrent(display_, wnd_, glc_) != True)
         Log::StdErr() << "failed to make OpenGL render context current (glXMakeCurrent)" << std::endl;
@@ -161,15 +161,15 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
             //GLX_SAMPLES,        1,//static_cast<int>(desc_.multiSampling.samples),
             None
         };
-        
+
         int attribs[100];
-        memcpy(attribs, fbAttribs, sizeof(fbAttribs));
-        
+        ::memcpy(attribs, fbAttribs, sizeof(fbAttribs));
+
         int screen = DefaultScreen(display_);
-        
+
         int fbCount = 0;
         GLXFBConfig* fbcList = glXChooseFBConfig(display_, screen, attribs, &fbCount);
-        
+
         if (fbcList != nullptr)
         {
             int contextAttribs[] =
@@ -180,18 +180,18 @@ GLXContext LinuxGLContext::CreateContextCoreProfile(GLXContext glcShared, int ma
                 //GLX_CONTEXT_FLAGS_ARB      , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
                 None
             };
-            
+
             auto glc = glXCreateContextAttribsARB(display_, fbcList[0], nullptr, True, contextAttribs);
-            
+
             XFree(fbcList);
-            
+
             return glc;
         }
     }
-    
+
     /* Context creation failed */
     Log::StdErr() << "failed to create OpenGL core profile" << std::endl;
-    
+
     return nullptr;
 }
 

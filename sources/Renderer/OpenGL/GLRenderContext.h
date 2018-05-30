@@ -60,13 +60,10 @@ class GLRenderContext : public RenderContext
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void InitRenderStates();
-        void UpdateSwapInterval();
 
         #ifdef __linux__
         void GetNativeContextHandle(NativeContextHandle& windowContext);
         #endif
-
-        RenderContextDescriptor         desc_;
 
         std::unique_ptr<GLContext>      context_;
 

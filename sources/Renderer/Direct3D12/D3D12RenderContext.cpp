@@ -28,22 +28,23 @@ D3D12RenderContext::D3D12RenderContext(
     D3D12RenderSystem& renderSystem,
     RenderContextDescriptor desc,
     const std::shared_ptr<Surface>& surface) :
-        RenderContext { desc.vsync   },
-        renderSystem_ { renderSystem },
-        desc_         { desc         }
+        RenderContext     { desc.videoMode, desc.vsync       },
+        renderSystem_     { renderSystem                     },
+        swapChainSamples_ { desc.multiSampling.SampleCount() }
 {
     #if 1 //TODO: multi-sampling currently not supported!
-    desc_.multiSampling.enabled = false;
-    desc_.multiSampling.samples = 1;
+    swapChainSamples_ = 1;
     #endif
 
     /* Setup surface for the render context */
-    SetOrCreateSurface(surface, desc_.videoMode, nullptr);
-    CreateWindowSizeDependentResources(desc_.videoMode);
+    SetOrCreateSurface(surface, GetVideoMode(), nullptr);
+
+    /* Create window and device resource */
+    CreateWindowSizeDependentResources(GetVideoMode());
     CreateDeviceResources();
 
     /* Initialize v-sync */
-    OnSetVsync(desc_.vsync);
+    OnSetVsync(desc.vsync);
 }
 
 D3D12RenderContext::~D3D12RenderContext()
@@ -61,7 +62,7 @@ void D3D12RenderContext::Present()
     auto commandList = commandBuffer_->GetCommandList();
 
     /* Resolve current render target if multi-sampling is used */
-    if (desc_.multiSampling.enabled)
+    if (HasMultiSampling())
         ResolveRenderTarget(commandList);
     else
     {
@@ -95,7 +96,7 @@ void D3D12RenderContext::Present()
 
 ID3D12Resource* D3D12RenderContext::GetCurrentRenderTarget()
 {
-    if (desc_.multiSampling.enabled)
+    if (HasMultiSampling())
         return renderTargetsMS_[currentFrame_].Get();
     else
         return renderTargets_[currentFrame_].Get();
@@ -105,7 +106,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCurrentRTVDescHandle() const
 {
     return CD3DX12_CPU_DESCRIPTOR_HANDLE(
         rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(),
-        (desc_.multiSampling.enabled ? (numFrames_ + currentFrame_) : currentFrame_),
+        (HasMultiSampling() ? (numFrames_ + currentFrame_) : currentFrame_),
         rtvDescSize_
     );
 }
@@ -125,7 +126,7 @@ void D3D12RenderContext::TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefor
 
 bool D3D12RenderContext::HasMultiSampling() const
 {
-    return desc_.multiSampling.enabled;
+    return (swapChainSamples_ > 1);
 }
 
 void D3D12RenderContext::SyncGPU()
@@ -155,7 +156,6 @@ bool D3D12RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc
 
 bool D3D12RenderContext::OnSetVsync(const VsyncDescriptor& vsyncDesc)
 {
-    desc_.vsync = vsyncDesc;
     swapChainInterval_ = (vsyncDesc.enabled ? std::max(1u, std::min(vsyncDesc.interval, 4u)) : 0u);
     return true;
 }
@@ -225,7 +225,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
     InitMemory(descHeapDesc);
     {
-        descHeapDesc.NumDescriptors = (desc_.multiSampling.enabled ? numFrames_ * 2 : numFrames_);
+        descHeapDesc.NumDescriptors = (HasMultiSampling() ? numFrames_ * 2 : numFrames_);
         descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     }
@@ -264,7 +264,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
         rtvDescHandle.Offset(1, rtvDescSize_);
     }
 
-    if (desc_.multiSampling.enabled)
+    if (HasMultiSampling())
     {
         /* Create multi-sampled render targets */
         auto texture2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
@@ -273,7 +273,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
             framebufferHeight,
             1, // arraySize
             1, // mipLevels
-            std::max(1u, desc_.multiSampling.samples),
+            swapChainSamples_,
             0,
             D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
         );

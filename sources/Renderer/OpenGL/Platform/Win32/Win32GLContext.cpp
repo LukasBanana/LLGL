@@ -23,7 +23,7 @@ namespace LLGL
  * GLContext class
  */
 
-std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
+std::unique_ptr<GLContext> GLContext::Create(const RenderContextDescriptor& desc, Surface& surface, GLContext* sharedContext)
 {
     Win32GLContext* sharedContextWGL = (sharedContext != nullptr ? LLGL_CAST(Win32GLContext*, sharedContext) : nullptr);
     return MakeUnique<Win32GLContext>(desc, surface, sharedContextWGL);
@@ -34,7 +34,7 @@ std::unique_ptr<GLContext> GLContext::Create(RenderContextDescriptor& desc, Surf
  * Win32GLContext class
  */
 
-Win32GLContext::Win32GLContext(RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext) :
+Win32GLContext::Win32GLContext(const RenderContextDescriptor& desc, Surface& surface, Win32GLContext* sharedContext) :
     GLContext { sharedContext },
     desc_     { desc          },
     surface_  { surface       }
@@ -172,7 +172,7 @@ void Win32GLContext::CreateContext(Win32GLContext* sharedContext)
         {
             /* Print warning and disable profile settings */
             Log::StdErr() << "failed to select OpenGL profile" << std::endl;
-            desc_.profileOpenGL .contextProfile = OpenGLContextProfile::CompatibilityProfile;
+            desc_.profileOpenGL.contextProfile = OpenGLContextProfile::CompatibilityProfile;
         }
     }
 

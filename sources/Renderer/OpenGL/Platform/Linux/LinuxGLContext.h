@@ -24,7 +24,7 @@ class LinuxGLContext : public GLContext
 
     public:
 
-        LinuxGLContext(RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext);
+        LinuxGLContext(const RenderContextDescriptor& desc, Surface& surface, LinuxGLContext* sharedContext);
         ~LinuxGLContext();
 
         bool SetSwapInterval(int interval) override;
@@ -37,7 +37,7 @@ class LinuxGLContext : public GLContext
 
         void CreateContext(const RenderContextDescriptor& contextDesc, const NativeHandle& nativeHandle, LinuxGLContext* sharedContext);
         void DeleteContext();
-        
+
         GLXContext CreateContextCoreProfile(GLXContext glcShared, int major, int minor);
         GLXContext CreateContextCompatibilityProfile(GLXContext glcShared);
 
