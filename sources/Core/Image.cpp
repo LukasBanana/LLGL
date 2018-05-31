@@ -14,18 +14,16 @@ namespace LLGL
 
 
 static void BitBlit(
-    const Extent3D& copyExtent,
+    const Extent3D& copyExtent, std::uint32_t bpp,
     char* dst, std::uint32_t dstRowStride, std::uint32_t dstDepthStride,
     const char* src, std::uint32_t srcRowStride, std::uint32_t srcDepthStride)
 {
-    const auto copyRowStride    = std::min(dstRowStride, srcRowStride);
-    const auto copyDepthStride  = std::min(dstDepthStride, srcDepthStride);
+    const auto copyRowStride    = bpp * copyExtent.width;
+    const auto copyDepthStride  = copyRowStride * copyExtent.height;
 
-    srcDepthStride -= srcRowStride * copyExtent.height;
-
-    if (srcRowStride == dstRowStride)
+    if (srcRowStride == dstRowStride && copyRowStride == dstRowStride)
     {
-        if (srcDepthStride == dstDepthStride)
+        if (srcDepthStride == dstDepthStride && copyDepthStride && dstDepthStride)
         {
             /* Copy region directly into output data */
             ::memcpy(dst, src, copyDepthStride * copyExtent.depth);
@@ -46,6 +44,9 @@ static void BitBlit(
     }
     else
     {
+        /* Adjust depth stride */
+        srcDepthStride -= srcRowStride * copyExtent.height;
+
         /* Copy region directly into output data */
         for (std::uint32_t z = 0; z < copyExtent.depth; ++z)
         {
@@ -105,6 +106,25 @@ Image::Image(Image&& rhs) :
     data_     { std::move(rhs.data_) }
 {
     rhs.ResetAttributes();
+}
+
+/* ----- Operators ----- */
+
+Image& Image::operator = (const Image& rhs)
+{
+    extent_     = rhs.GetExtent();
+    format_     = rhs.GetFormat();
+    dataType_   = rhs.GetDataType();
+    data_       = GenerateEmptyByteBuffer(GetDataSize(), false);
+    std::copy(rhs.data_.get(), rhs.data_.get() + rhs.GetDataSize(), data_.get());
+    return *this;
+}
+
+Image& Image::operator = (Image&& rhs)
+{
+    Reset(rhs.GetExtent(), rhs.GetFormat(), rhs.GetDataType(), std::move(rhs.data_));
+    rhs.ResetAttributes();
+    return *this;
 }
 
 /* ----- Storage ----- */
@@ -188,9 +208,104 @@ ByteBuffer Image::Release()
 
 /* ----- Pixels ----- */
 
+static bool ShiftNegative1DRegion(std::int32_t& dstOffset, std::uint32_t dstExtent, std::int32_t& srcOffset, std::uint32_t& srcExtent)
+{
+    if (dstOffset < 0)
+    {
+        auto dstOffsetInv = static_cast<std::uint32_t>(-dstOffset);
+        if (dstOffsetInv < srcExtent)
+        {
+            /* Reduce source region extent, and clamp destination offset to zero */
+            srcExtent -= dstOffsetInv;
+            srcOffset -= dstOffset;
+            dstOffset = 0;
+        }
+        else
+        {
+            /* Shift operation will set the extent to zero, so no blitting is necessary */
+            return false;
+        }
+    }
+    else if (static_cast<std::uint32_t>(dstOffset) + srcExtent > dstExtent)
+    {
+        auto shift = static_cast<std::uint32_t>(dstOffset) + srcExtent - dstExtent;
+        if (shift < srcExtent)
+        {
+            /* Reduce source region extent */
+            srcExtent -= shift;
+        }
+        else
+        {
+            /* Shift operation will set the extent to zero, so no blitting is necessary */
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool Overlap1DRegion(std::int32_t dstOffset, std::int32_t srcOffset, std::uint32_t extent)
+{
+    auto dstOffsetMin = static_cast<std::uint32_t>(dstOffset);
+    auto dstOffsetMax = dstOffsetMin + extent;
+
+    auto srcOffsetMin = static_cast<std::uint32_t>(srcOffset);
+    auto srcOffsetMax = srcOffsetMin + extent;
+
+    return (dstOffsetMin <= srcOffsetMax && dstOffsetMax >= srcOffsetMin);
+}
+
+static bool Overlap3DRegion(const Offset3D& dstOffset, const Offset3D& srcOffset, const Extent3D& extent)
+{
+    return
+    (
+        Overlap1DRegion(dstOffset.x, srcOffset.x, extent.width ) &&
+        Overlap1DRegion(dstOffset.y, srcOffset.y, extent.height) &&
+        Overlap1DRegion(dstOffset.z, srcOffset.z, extent.depth )
+    );
+}
+
 void Image::Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRegionOffset, Extent3D srcRegionExtent)
 {
-    //TODO
+    if (GetFormat() == srcImage.GetFormat() && GetDataType() == srcImage.GetDataType())
+    {
+        /* First clamp source region to source image dimension */
+        srcImage.ClampRegion(srcRegionOffset, srcRegionExtent);
+
+        /* Then shift negative destination region */
+        if ( ShiftNegative1DRegion(dstRegionOffset.x, GetExtent().width,  srcRegionOffset.x, srcRegionExtent.width ) &&
+             ShiftNegative1DRegion(dstRegionOffset.y, GetExtent().height, srcRegionOffset.y, srcRegionExtent.height) &&
+             ShiftNegative1DRegion(dstRegionOffset.z, GetExtent().depth,  srcRegionOffset.z, srcRegionExtent.depth ) )
+        {
+            /* Check if a temporary copy of the source image must be allocated */
+            Image srcImageTemp;
+            const Image* srcImageRef = &srcImage;
+
+            if (srcImageRef == this && Overlap3DRegion(dstRegionOffset, srcRegionOffset, srcRegionExtent))
+            {
+                /* Copy source image */
+                srcImageTemp = *this;
+                srcImageRef = &srcImageTemp;
+            }
+
+            /* Get destination image parameters */
+            const auto  bpp             = GetBytesPerPixel();
+            const auto  dstRowStride    = bpp * GetExtent().width;
+            const auto  dstDepthStride  = dstRowStride * GetExtent().height;
+            auto        dst             = data_.get() + GetDataPtrOffset(dstRegionOffset);
+
+            /* Get source image parameters */
+            const auto  srcRowStride    = bpp * srcImageRef->GetExtent().width;
+            const auto  srcDepthStride  = srcRowStride * srcImageRef->GetExtent().height;
+            auto        src             = srcImageRef->data_.get() + srcImageRef->GetDataPtrOffset(srcRegionOffset);
+
+            /* Blit source image into region */
+            BitBlit(
+                srcRegionExtent, bpp,
+                dst, dstRowStride, dstDepthStride,
+                src, srcRowStride, srcDepthStride
+            );
+        }
+    }
 }
 
 void Image::Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor)
@@ -251,7 +366,7 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
 
             /* Blit region into destination image */
             BitBlit(
-                extent,
+                extent, bpp,
                 dst, dstRowStride, dstDepthStride,
                 src, srcRowStride, srcDepthStride
             );
@@ -262,7 +377,7 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
             Image subImage { extent, GetFormat(), GetDataType() };
 
             BitBlit(
-                extent,
+                extent, bpp,
                 reinterpret_cast<char*>(subImage.GetData()), subImage.GetRowStride(), subImage.GetDepthStride(),
                 src, srcRowStride, srcDepthStride
             );
@@ -298,7 +413,7 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
 
             /* Blit source image into region */
             BitBlit(
-                extent,
+                extent, bpp,
                 dst, dstRowStride, dstDepthStride,
                 src, srcRowStride, srcDepthStride
             );
@@ -314,7 +429,7 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
 
             /* Copy temporary sub-image into region */
             BitBlit(
-                extent,
+                extent, bpp,
                 dst, dstRowStride, dstDepthStride,
                 reinterpret_cast<const char*>(subImage.GetData()), subImage.GetRowStride(), subImage.GetDepthStride()
             );

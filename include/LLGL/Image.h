@@ -65,6 +65,14 @@ class LLGL_EXPORT Image
         //! Move constructor which takes the ownership of the specified source image.
         Image(Image&& rhs);
 
+        /* ----- Operators ----- */
+
+        //! Copy operator which copies the entire image buffer and attributes.
+        Image& operator = (const Image& rhs);
+
+        //! Move operator which takes the ownership of the image buffer.
+        Image& operator = (Image&& rhs);
+
         /* ----- Storage ----- */
 
         /**
@@ -129,11 +137,13 @@ class LLGL_EXPORT Image
         /**
         \brief Copies a region of the specified source image into this image.
         \param[in] dstRegionOffset Specifies the offset within the destination image (i.e. this Image instance). This can also be outside of the image area.
-        \param[in] srcImage Specifies the source image whose region is to be copied.
+        \param[in] srcImage Specifies the source image whose region is to be copied. This must have the same format and data type as this image.
+        If the source image is the same object as this image and the destination and source regions overlap, an internal temporary copy is allocated for reading the data.
         \param[in] srcRegionOffset Specifies the offset within the source image. This will be clamped if it exceeds the source image area.
         \param[in] srcRegionExtent Specifies the extent of the region to copy. This will be clamped if it exceeds the source or destination image area.
         \remarks If one of the region offsets is clamped, the region extent will be adjusted respectively.
-        \todo Not implemented yet.
+        If the source image has a different format or data type compared to this image, the function has no effect.
+        \see ConvertImageBuffer
         */
         void Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRegionOffset, Extent3D srcRegionExtent);
 
@@ -152,7 +162,7 @@ class LLGL_EXPORT Image
         \param[in] extent Specifies the region extent within this image to read from.
         \param[in] imageDesc Specifies the destination image descriptor to write the region to.
         If the 'data' member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
-        \param[in] threadCount Specifies the number of threads to use if the data needs to be converted (see ConvertImageBuffer for more details).
+        \param[in] threadCount Specifies the number of threads to use if the data needs to be converted (see ConvertImageBuffer for more details). By default 0.
         \remarks To read a single pixel, use the following code example:
         \code
         LLGL::ColorRGBAub ReadSinglePixelRGBAub(const LLGL::Image& image, const LLGL::Offset3D& position) {
@@ -175,7 +185,7 @@ class LLGL_EXPORT Image
         \param[in] extent Specifies the region extent within this image to write to.
         \param[in] imageDesc Specifies the source image descriptor to read the region from.
         If the 'data' member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
-        \param[in] threadCount Specifies the number of threads to use if the data needs to be converted (see ConvertImageBuffer for more details).
+        \param[in] threadCount Specifies the number of threads to use if the data needs to be converted (see ConvertImageBuffer for more details). By default 0.
         \see IsRegionInside
         \see ConvertImageBuffer
         */

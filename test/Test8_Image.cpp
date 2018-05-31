@@ -66,8 +66,17 @@ void Test_PixelOperations()
     SaveImagePNG(img1, "Output/img1.png");
     #elif 1
     img1.WritePixels(LLGL::Offset3D { 0, 220, 0 }, LLGL::Extent3D { img1.GetExtent().width, 110, 1 }, img1.QuerySrcDesc());
-    SaveImagePNG(img1, "Output/img1.png");
+    SaveImagePNG(img1, "Output/img1-write.png");
     #endif
+}
+
+void Test_Blit()
+{
+    auto img1 = LoadImage("Media/Textures/Grid.png", LLGL::ImageFormat::RGBA);
+
+    img1.Blit(LLGL::Offset3D { -27, 0, 0 }, img1, LLGL::Offset3D { 383, 383, 0 }, LLGL::Extent3D { 54, 55, 1 });
+
+    SaveImagePNG(img1, "Output/img1-blit.png");
 }
 
 int main(int argc, char* argv[])
@@ -75,6 +84,7 @@ int main(int argc, char* argv[])
     try
     {
         Test_PixelOperations();
+        Test_Blit();
     }
     catch (const std::exception& e)
     {
