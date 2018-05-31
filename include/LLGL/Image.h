@@ -152,6 +152,7 @@ class LLGL_EXPORT Image
         \param[in] extent Specifies the region extent within this image to read from.
         \param[in] imageDesc Specifies the destination image descriptor to write the region to.
         If the 'data' member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
+        \param[in] threadCount Specifies the number of threads to use if the data needs to be converted (see ConvertImageBuffer for more details).
         \remarks To read a single pixel, use the following code example:
         \code
         LLGL::ColorRGBAub ReadSinglePixelRGBAub(const LLGL::Image& image, const LLGL::Offset3D& position) {
@@ -164,8 +165,9 @@ class LLGL_EXPORT Image
         \throws std::invalid_argument If the 'data' member of the image descriptor is non-null, the sub-image region is inside the image,
         but the 'dataSize' member of the image descriptor is too small.
         \see IsRegionInside
+        \see ConvertImageBuffer
         */
-        void ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc) const;
+        void ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc, std::size_t threadCount = 0) const;
 
         /**
         \brief Writes a region of pixels to this image from the source image buffer specified by 'imageDesc'.
@@ -173,9 +175,11 @@ class LLGL_EXPORT Image
         \param[in] extent Specifies the region extent within this image to write to.
         \param[in] imageDesc Specifies the source image descriptor to read the region from.
         If the 'data' member of this descriptor is null or if the sub-image region is not inside the image, this function has no effect.
+        \param[in] threadCount Specifies the number of threads to use if the data needs to be converted (see ConvertImageBuffer for more details).
         \see IsRegionInside
+        \see ConvertImageBuffer
         */
-        void WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc);
+        void WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, std::size_t threadCount = 0);
 
         /* ----- Attributes ----- */
 
@@ -256,6 +260,8 @@ class LLGL_EXPORT Image
         void ResetAttributes();
 
         std::size_t GetDataPtrOffset(const Offset3D& offset) const;
+
+        void ClampRegion(Offset3D& offset, Extent3D& extent) const;
 
         Extent3D    extent_;
         ImageFormat format_     = ImageFormat::RGBA;

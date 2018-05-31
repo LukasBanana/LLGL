@@ -190,17 +190,19 @@ ByteBuffer Image::Release()
 
 void Image::Blit(Offset3D dstRegionOffset, const Image& srcImage, Offset3D srcRegionOffset, Extent3D srcRegionExtent)
 {
-    //todo
+    //TODO
 }
 
 void Image::Fill(Offset3D offset, Extent3D extent, const ColorRGBAd& fillColor)
 {
-    //todo
+    //ClampRegion(offset, extent);
+
+    //TODO
 }
 
 static std::size_t GetRequiredImageDataSize(const Extent3D& extent, const ImageFormat format, const DataType dataType)
 {
-    return static_cast<std::size_t>(ImageFormatSize(format) * DataTypeSize(dataType) * extent.width * extent.height * extent.height);
+    return static_cast<std::size_t>(ImageFormatSize(format) * DataTypeSize(dataType) * extent.width * extent.height * extent.depth);
 }
 
 static void ValidateImageDataSize(const Extent3D& extent, const DstImageDescriptor& imageDesc)
@@ -227,7 +229,7 @@ static void ValidateImageDataSize(const Extent3D& extent, const SrcImageDescript
     }
 }
 
-void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc) const
+void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const DstImageDescriptor& imageDesc, std::size_t threadCount) const
 {
     if (imageDesc.data && IsRegionInside(offset, extent))
     {
@@ -266,7 +268,7 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
             );
 
             /* Convert sub-image */
-            subImage.Convert(imageDesc.format, imageDesc.dataType);
+            subImage.Convert(imageDesc.format, imageDesc.dataType, threadCount);
 
             /* Copy sub-image into output data */
             ::memcpy(imageDesc.data, subImage.GetData(), imageDesc.dataSize);
@@ -274,7 +276,7 @@ void Image::ReadPixels(const Offset3D& offset, const Extent3D& extent, const Dst
     }
 }
 
-void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc)
+void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, std::size_t threadCount)
 {
     if (imageDesc.data && IsRegionInside(offset, extent))
     {
@@ -308,7 +310,7 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
             ::memcpy(subImage.GetData(), imageDesc.data, imageDesc.dataSize);
 
             /* Convert sub-image */
-            subImage.Convert(GetFormat(), GetDataType());
+            subImage.Convert(GetFormat(), GetDataType(), threadCount);
 
             /* Copy temporary sub-image into region */
             BitBlit(
@@ -373,7 +375,7 @@ std::uint32_t Image::GetNumPixels() const
 
 static bool Is1DRegionValid(std::int32_t offset, std::uint32_t extent, std::uint32_t limit)
 {
-    return (offset >= 0 && static_cast<std::uint32_t>(offset) + extent < limit);
+    return (offset >= 0 && static_cast<std::uint32_t>(offset) + extent <= limit);
 }
 
 bool Image::IsRegionInside(const Offset3D& offset, const Extent3D& extent) const
@@ -407,6 +409,17 @@ std::size_t Image::GetDataPtrOffset(const Offset3D& offset) const
     const auto w    = static_cast<std::size_t>(GetExtent().width);
     const auto h    = static_cast<std::size_t>(GetExtent().height);
     return (bpp * (x + (y + z * h) * w));
+}
+
+void Image::ClampRegion(Offset3D& offset, Extent3D& extent) const
+{
+    offset.x        = std::max(offset.x, 0);
+    offset.y        = std::max(offset.y, 0);
+    offset.z        = std::max(offset.z, 0);
+
+    extent.width    = std::min(extent.width, GetExtent().width);
+    extent.height   = std::min(extent.height, GetExtent().height);
+    extent.depth    = std::min(extent.depth, GetExtent().depth);
 }
 
 

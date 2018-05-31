@@ -141,8 +141,8 @@ public:
             }
             colorMap = renderer->CreateTexture(texDesc, &imageDesc);
         }
-        auto texCreationTime = timer->Stop();
-        std::cout << "texture creation time: " << texCreationTime << " microseconds" << std::endl;
+        auto texCreationTime = static_cast<double>(timer->Stop()) / static_cast<double>(timer->GetFrequency());
+        std::cout << "texture creation time: " << (texCreationTime * 1000.0) << " ms" << std::endl;
 
         // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
         // see https://developer.valvesoftware.com/wiki/MIP_Mapping
