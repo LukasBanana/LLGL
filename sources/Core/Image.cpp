@@ -158,8 +158,8 @@ void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor)
     if (extent_ != extent)
     {
         /* Generate new image buffer with fill color */
-        data_   = GenerateImageBuffer(GetFormat(), GetDataType(), GetNumPixels(), fillColor);
         extent_ = extent;
+        data_   = GenerateImageBuffer(GetFormat(), GetDataType(), GetNumPixels(), fillColor);
     }
     else
     {
@@ -168,9 +168,36 @@ void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor)
     }
 }
 
-void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Offset2D& offset)
+void Image::Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Offset3D& offset)
 {
-    //todo
+    if (extent != GetExtent())
+    {
+        /* Store ownership of current image buffer in temporary image */
+        Image prevImage;
+
+        prevImage.extent_   = GetExtent();
+        prevImage.format_   = GetFormat();
+        prevImage.dataType_ = GetDataType();
+        prevImage.data_     = std::move(data_);
+
+        if ( extent.width  > GetExtent().width  ||
+             extent.height > GetExtent().height ||
+             extent.depth  > GetExtent().depth )
+        {
+            /* Resize image buffer with fill color */
+            extent_ = extent;
+            data_   = GenerateImageBuffer(GetFormat(), GetDataType(), GetNumPixels(), fillColor);
+        }
+        else
+        {
+            /* Resize image buffer with uninitialized image buffer */
+            extent_ = extent;
+            data_   = GenerateEmptyByteBuffer(GetDataSize(), false);
+        }
+
+        /* Copy previous image into new image */
+        Blit(offset, prevImage, { 0, 0, 0 }, prevImage.GetExtent());
+    }
 }
 
 void Image::Resize(const Extent3D& extent, const SamplerFilter filter)
@@ -226,7 +253,8 @@ static bool ShiftNegative1DRegion(std::int32_t& dstOffset, std::uint32_t dstExte
             return false;
         }
     }
-    else if (static_cast<std::uint32_t>(dstOffset) + srcExtent > dstExtent)
+
+    if (static_cast<std::uint32_t>(dstOffset) + srcExtent > dstExtent)
     {
         auto shift = static_cast<std::uint32_t>(dstOffset) + srcExtent - dstExtent;
         if (shift < srcExtent)
@@ -240,6 +268,7 @@ static bool ShiftNegative1DRegion(std::int32_t& dstOffset, std::uint32_t dstExte
             return false;
         }
     }
+
     return true;
 }
 

@@ -79,12 +79,42 @@ void Test_Blit()
     SaveImagePNG(img1, "Output/img1-blit.png");
 }
 
+void Test_Resize()
+{
+    auto img1 = LoadImage("Media/Textures/Grid.png", LLGL::ImageFormat::RGB);
+
+    const auto& extent = img1.GetExtent();
+
+    #if 1
+    img1.Resize(
+        LLGL::Extent3D { 512, 512, 1 },
+        LLGL::ColorRGBAd { 0.0, 1.0, 0.0 },
+        LLGL::Offset3D { (512 - static_cast<int>(extent.width))/2, (512 - static_cast<int>(extent.height)) / 2, 0 }
+    );
+    #else
+    img1.Resize(
+        img1.GetExtent() + LLGL::Extent3D{ 6, 6, 0 },
+        LLGL::ColorRGBAd { 1.0, 0.0, 1.0 },
+        LLGL::Offset3D { 3, 3, 0 }
+    );
+    #endif
+    SaveImagePNG(img1, "Output/img1-resize-larger.png");
+
+    img1.Resize(
+        LLGL::Extent3D { 128, 128, 1 },
+        LLGL::ColorRGBAd { 0.0, 1.0, 0.0 },
+        LLGL::Offset3D { (128 - static_cast<int>(extent.width)) / 2, (128 - static_cast<int>(extent.height)) / 2, 0u }
+    );
+    SaveImagePNG(img1, "Output/img1-resize-smaller.png");
+}
+
 int main(int argc, char* argv[])
 {
     try
     {
-        Test_PixelOperations();
-        Test_Blit();
+        //Test_PixelOperations();
+        //Test_Blit();
+        Test_Resize();
     }
     catch (const std::exception& e)
     {

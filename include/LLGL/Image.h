@@ -100,11 +100,10 @@ class LLGL_EXPORT Image
         \brief Resizes the image, moves the previous pixels by an offset, and initializes the new pixels outside the previous extent with the specified color.
         \param[in] extent Specifies the new image size.
         \param[in] fillColor Specifies the color to fill the pixels with that are outside the previous extent.
-        \param[in] offset Specifies the offset to move the previous pixels to.
+        \param[in] offset Specifies the offset to move the previous pixels to. This will be clamped if it exceeds the image area.
         \brief GenerateImageBuffer
-        \todo Not implemented yet.
         */
-        void Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Offset2D& offset);
+        void Resize(const Extent3D& extent, const ColorRGBAd& fillColor, const Offset3D& offset);
 
         /**
         \brief Resizes the image and resamples the pixels from the previous image buffer.
