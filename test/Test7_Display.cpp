@@ -7,6 +7,8 @@
 
 #include <LLGL/Display.h>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 
 int main(int argc, char* argv[])
@@ -46,7 +48,27 @@ int main(int argc, char* argv[])
             std::cout << std::endl;
         }
     }
-
+    
+    #if 0
+    if (auto display = LLGL::Display::QueryPrimary())
+    {
+        LLGL::DisplayModeDescriptor mode;
+        mode.resolution.width = 1024;
+        mode.resolution.height = 768;
+        display->SetDisplayMode(mode);
+        
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        display->ResetDisplayMode();
+    }
+    
+    std::cout << "Wainting";
+    for (int i = 0; i < 5; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::cout << '.';
+    }
+    std::cout << std::endl;
+    #endif
 
     #ifdef _WIN32
     system("pause");

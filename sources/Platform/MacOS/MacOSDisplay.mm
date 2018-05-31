@@ -14,6 +14,29 @@ namespace LLGL
 
 
 /*
+ * Internal functions
+ */
+
+// Converts a CGDisplayMode to a descriptor structure
+static void Convert(DisplayModeDescriptor& dst, CGDisplayModeRef src)
+{
+    dst.resolution.width    = static_cast<std::uint32_t>(CGDisplayModeGetWidth(src));
+    dst.resolution.height   = static_cast<std::uint32_t>(CGDisplayModeGetHeight(src));
+    dst.refreshRate         = static_cast<std::uint32_t>(CGDisplayModeGetRefreshRate(src));
+}
+
+// Returns true if the specified descriptor matches the display mode
+static bool MatchDisplayMode(const DisplayModeDescriptor& displayModeDesc, CGDisplayModeRef modeRef)
+{
+    return
+    (
+        static_cast<std::size_t>(displayModeDesc.resolution.width ) == CGDisplayModeGetWidth (modeRef) &&
+        static_cast<std::size_t>(displayModeDesc.resolution.height) == CGDisplayModeGetHeight(modeRef)
+    );
+}
+
+
+/*
  * Display class
  */
 
@@ -66,8 +89,14 @@ bool Display::IsCursorShown()
  */
 
 MacOSDisplay::MacOSDisplay(CGDirectDisplayID displayID) :
-    displayID_ { displayID }
+    displayID_             { displayID                            },
+    defaultDisplayModeRef_ { CGDisplayCopyDisplayMode(displayID_) }
 {
+}
+
+MacOSDisplay::~MacOSDisplay()
+{
+    CGDisplayModeRelease(defaultDisplayModeRef_);
 }
 
 bool MacOSDisplay::IsPrimary() const
@@ -93,21 +122,30 @@ Offset2D MacOSDisplay::GetOffset() const
 
 bool MacOSDisplay::ResetDisplayMode()
 {
-    //TODO
-    return false;
+    return (CGDisplaySetDisplayMode(displayID_, defaultDisplayModeRef_, nullptr) == kCGErrorSuccess);
 }
 
 bool MacOSDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
 {
-    //TODO
-    return false;
-}
+    bool result = false;
+    
+    CFArrayRef modeArrayRef = CGDisplayCopyAllDisplayModes(displayID_, nullptr);
+    
+    for (CFIndex i = 0, n = CFArrayGetCount(modeArrayRef); i < n; ++i)
+    {
+        /* Check if current display mode matches the input descriptor */
+        CGDisplayModeRef modeRef = (CGDisplayModeRef)CFArrayGetValueAtIndex(modeArrayRef, i);
+        
+        if (MatchDisplayMode(displayModeDesc, modeRef))
+        {
+            result = (CGDisplaySetDisplayMode(displayID_, modeRef, nullptr) == kCGErrorSuccess);
+            break;
+        }
+    }
 
-static void Convert(DisplayModeDescriptor& dst, CGDisplayModeRef src)
-{
-    dst.resolution.width    = static_cast<std::uint32_t>(CGDisplayModeGetWidth(src));
-    dst.resolution.height   = static_cast<std::uint32_t>(CGDisplayModeGetHeight(src));
-    dst.refreshRate         = static_cast<std::uint32_t>(CGDisplayModeGetRefreshRate(src));
+    CFRelease(modeArrayRef);
+    
+    return result;
 }
 
 DisplayModeDescriptor MacOSDisplay::GetDisplayMode() const

@@ -24,6 +24,7 @@ class MacOSDisplay : public Display
     public:
 
         MacOSDisplay(CGDirectDisplayID displayID);
+        ~MacOSDisplay();
 
         bool IsPrimary() const override;
 
@@ -39,7 +40,8 @@ class MacOSDisplay : public Display
 
     private:
 
-        CGDirectDisplayID displayID_ = 0;
+        CGDirectDisplayID   displayID_              = 0;
+        CGDisplayModeRef    defaultDisplayModeRef_  = nullptr;
 
 };
 
