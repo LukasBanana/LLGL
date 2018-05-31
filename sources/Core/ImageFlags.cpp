@@ -631,9 +631,9 @@ static void ValidateImageConversionParams(
 }
 
 LLGL_EXPORT bool ConvertImageBuffer(
-    const SrcImageDescriptor& srcImageDesc,
-    const DstImageDescriptor& dstImageDesc,
-    std::size_t threadCount)
+    const SrcImageDescriptor&   srcImageDesc,
+    const DstImageDescriptor&   dstImageDesc,
+    std::size_t                 threadCount)
 {
     /* Validate input parameters */
     ValidateImageConversionParams(srcImageDesc, dstImageDesc.format, dstImageDesc.dataType);
@@ -689,10 +689,10 @@ LLGL_EXPORT bool ConvertImageBuffer(
 }
 
 LLGL_EXPORT ByteBuffer ConvertImageBuffer(
-    SrcImageDescriptor  srcImageDesc,
-    ImageFormat         dstFormat,
-    DataType            dstDataType,
-    std::size_t         threadCount)
+    const SrcImageDescriptor&   srcImageDesc,
+    ImageFormat                 dstFormat,
+    DataType                    dstDataType,
+    std::size_t                 threadCount)
 {
     /* Validate input parameters */
     ValidateImageConversionParams(srcImageDesc, dstFormat, dstDataType);

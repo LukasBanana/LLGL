@@ -466,6 +466,21 @@ void Image::WritePixels(const Offset3D& offset, const Extent3D& extent, const Sr
     }
 }
 
+void Image::MirrorYZPlane()
+{
+    //TODO
+}
+
+void Image::MirrorXZPlane()
+{
+    //TODO
+}
+
+void Image::MirrorXYPlane()
+{
+    //TODO
+}
+
 /* ----- Attributes ----- */
 
 SrcImageDescriptor Image::QuerySrcDesc() const

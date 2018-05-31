@@ -200,8 +200,8 @@ the maximal count of threads the system supports will be used (e.g. 4 on a quad-
 \throw std::invalid_argument If a compressed image format is specified either as source or destination.
 \throw std::invalid_argument If a depth-stencil format is specified either as source or destination.
 \throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
-\throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
 \throw std::invalid_argument If the source buffer is a null pointer.
+\throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
 \throw std::invalid_argument If the destination buffer is a null pointer.
 \see Constants::maxThreadCount
 \see DataTypeSize
@@ -227,19 +227,17 @@ This can be casted to the respective target data type (e.g. "unsigned char", "in
 \throw std::invalid_argument If a compressed image format is specified either as source or destination.
 \throw std::invalid_argument If a depth-stencil format is specified either as source or destination.
 \throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
-\throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
 \throw std::invalid_argument If the source buffer is a null pointer.
-\throw std::invalid_argument If the destination buffer is a null pointer.
 \see Constants::maxThreadCount
 \see ByteBuffer
 \see DataTypeSize
 \see ImageFormatSize
 */
 LLGL_EXPORT ByteBuffer ConvertImageBuffer(
-    SrcImageDescriptor  srcImageDesc,
-    ImageFormat         dstFormat,
-    DataType            dstDataType,
-    std::size_t         threadCount = 0
+    const SrcImageDescriptor&   srcImageDesc,
+    ImageFormat                 dstFormat,
+    DataType                    dstDataType,
+    std::size_t                 threadCount = 0
 );
 
 /**

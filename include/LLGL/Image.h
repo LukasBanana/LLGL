@@ -190,6 +190,24 @@ class LLGL_EXPORT Image
         */
         void WritePixels(const Offset3D& offset, const Extent3D& extent, const SrcImageDescriptor& imageDesc, std::size_t threadCount = 0);
 
+        /**
+        \brief Mirrors the image at the YZ plane.
+        \todo Not implemented yet
+        */
+        void MirrorYZPlane();
+
+        /**
+        \brief Mirrors the image at the XZ plane.
+        \todo Not implemented yet
+        */
+        void MirrorXZPlane();
+
+        /**
+        \brief Mirrors the image at the XY plane.
+        \todo Not implemented yet
+        */
+        void MirrorXYPlane();
+
         /* ----- Attributes ----- */
 
         //! Returns a source image descriptor for this image with read-only access to the image data.
