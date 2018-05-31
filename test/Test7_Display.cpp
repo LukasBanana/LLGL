@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
         std::cout << "|-Y       = " << displayOffset.y << std::endl;
         std::cout << "|-Width   = " << displayMode.resolution.width << std::endl;
         std::cout << "|-Height  = " << displayMode.resolution.height << std::endl;
-        std::cout << "`-Hz      = " << displayMode.refreshRate << std::endl;
+        std::cout << "|-Hz      = " << displayMode.refreshRate << std::endl;
 
         std::cout << "`-Settings:" << std::endl;
         auto supportedModes = display->QuerySupportedDisplayModes();

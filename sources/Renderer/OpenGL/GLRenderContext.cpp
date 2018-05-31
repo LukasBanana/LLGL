@@ -74,8 +74,6 @@ bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 
 bool GLRenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
-    const auto& prevVideoMode = GetVideoMode();
-
     /* Update context height */
     contextHeight_ = static_cast<GLint>(videoModeDesc.resolution.height);
     stateMngr_->NotifyRenderTargetHeight(contextHeight_);
