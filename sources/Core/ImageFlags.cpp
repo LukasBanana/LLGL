@@ -181,21 +181,25 @@ static void ConvertImageBufferDataTypeWorker(
 // Minimal number of entries each worker thread shall process
 static const std::size_t g_threadMinWorkSize = 64;
 
-static ByteBuffer ConvertImageBufferDataType(
+static void ConvertImageBufferDataType(
     DataType    srcDataType,
     const void* srcBuffer,
     std::size_t srcBufferSize,
     DataType    dstDataType,
+    void*       dstBuffer,
+    std::size_t dstBufferSize,
     std::size_t threadCount)
 {
-    /* Allocate destination buffer */
-    auto imageSize      = srcBufferSize / DataTypeSize(srcDataType);
-    auto dstBufferSize  = imageSize * DataTypeSize(dstDataType);
-    auto dstBuffer      = AllocByteArray(dstBufferSize);
+    /* Validate destination buffer size */
+    auto imageSize              = srcBufferSize / DataTypeSize(srcDataType);
+    auto requiredDstBufferSize  = imageSize * DataTypeSize(dstDataType);
+
+    if (dstBufferSize != requiredDstBufferSize)
+        throw std::invalid_argument("cannot convert image data type with destination buffer size mismatch");
 
     /* Get variant buffer for source and destination images */
     VariantConstBuffer src { srcBuffer };
-    VariantBuffer dst { dstBuffer.get() };
+    VariantBuffer dst { dstBuffer };
 
     threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
 
@@ -204,7 +208,7 @@ static ByteBuffer ConvertImageBufferDataType(
         /* Create worker threads */
         std::vector<std::thread> workers(threadCount);
 
-        auto workSize = imageSize / threadCount;
+        auto workSize       = imageSize / threadCount;
         auto workSizeRemain = imageSize % threadCount;
 
         std::size_t offset = 0;
@@ -233,8 +237,6 @@ static ByteBuffer ConvertImageBufferDataType(
         /* Execute conversion only on main thread */
         ConvertImageBufferDataTypeWorker(srcDataType, src, dstDataType, dst, 0, imageSize);
     }
-
-    return dstBuffer;
 }
 
 static void SetVariantMinMax(DataType dataType, Variant& var, bool setMin)
@@ -422,22 +424,29 @@ static void ConvertImageBufferFormatWorker(
     }
 }
 
-static ByteBuffer ConvertImageBufferFormat(const SrcImageDescriptor& srcImageDesc, ImageFormat dstFormat, std::size_t threadCount)
+static void ConvertImageBufferFormat(
+    const SrcImageDescriptor&   srcImageDesc,
+    const DstImageDescriptor&   dstImageDesc,
+    std::size_t                 threadCount)
 {
-    /* Allocate destination buffer */
+    /* Get image parameters */
     auto dataTypeSize   = DataTypeSize(srcImageDesc.dataType);
     auto srcFormatSize  = ImageFormatSize(srcImageDesc.format);
-    auto dstFormatSize  = ImageFormatSize(dstFormat);
+    auto dstFormatSize  = ImageFormatSize(dstImageDesc.format);
 
-    auto imageSize      = srcImageDesc.dataSize / srcFormatSize;
-    auto dstBufferSize  = imageSize * dstFormatSize;
+    /* Validate destination buffer size */
+    auto imageSize              = srcImageDesc.dataSize / srcFormatSize;
+    auto requiredDstBufferSize  = imageSize * dstFormatSize;
+
+    if (dstImageDesc.dataSize != requiredDstBufferSize)
+        throw std::invalid_argument("cannot convert image format with destination buffer size mismatch");
+
+    /* Allocate destination buffer */
     imageSize /= dataTypeSize;
-
-    auto dstBuffer = AllocByteArray(dstBufferSize);
 
     /* Get variant buffer for source and destination images */
     VariantConstBuffer src { srcImageDesc.data };
-    VariantBuffer dst { dstBuffer.get() };
+    VariantBuffer dst { dstImageDesc.data };
 
     threadCount = std::min(threadCount, imageSize / g_threadMinWorkSize);
 
@@ -446,7 +455,7 @@ static ByteBuffer ConvertImageBufferFormat(const SrcImageDescriptor& srcImageDes
         /* Create worker threads */
         std::vector<std::thread> workers(threadCount);
 
-        auto workSize = imageSize / threadCount;
+        auto workSize       = imageSize / threadCount;
         auto workSizeRemain = imageSize % threadCount;
 
         std::size_t offset = 0;
@@ -456,7 +465,7 @@ static ByteBuffer ConvertImageBufferFormat(const SrcImageDescriptor& srcImageDes
             workers[i] = std::thread(
                 ConvertImageBufferFormatWorker,
                 srcImageDesc.format, srcImageDesc.dataType, std::ref(src),
-                dstFormat, std::ref(dst),
+                dstImageDesc.format, std::ref(dst),
                 offset, offset + workSize
             );
             offset += workSize;
@@ -464,7 +473,13 @@ static ByteBuffer ConvertImageBufferFormat(const SrcImageDescriptor& srcImageDes
 
         /* Execute conversion of remaining work on main thread */
         if (workSizeRemain > 0)
-            ConvertImageBufferFormatWorker(srcImageDesc.format, srcImageDesc.dataType, src, dstFormat, dst, offset, offset + workSizeRemain);
+        {
+            ConvertImageBufferFormatWorker(
+                srcImageDesc.format, srcImageDesc.dataType, src,
+                dstImageDesc.format, dst,
+                offset, offset + workSizeRemain
+            );
+        }
 
         /* Join worker threads */
         for (auto& w : workers)
@@ -473,10 +488,12 @@ static ByteBuffer ConvertImageBufferFormat(const SrcImageDescriptor& srcImageDes
     else
     {
         /* Execute conversion only on main thread */
-        ConvertImageBufferFormatWorker(srcImageDesc.format, srcImageDesc.dataType, src, dstFormat, dst, 0, imageSize);
+        ConvertImageBufferFormatWorker(
+            srcImageDesc.format, srcImageDesc.dataType, src,
+            dstImageDesc.format, dst,
+            0, imageSize
+        );
     }
-
-    return dstBuffer;
 }
 
 
@@ -599,6 +616,78 @@ LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, Imag
     return false;
 }
 
+static void ValidateImageConversionParams(
+    const SrcImageDescriptor&   srcImageDesc,
+    ImageFormat                 dstFormat,
+    DataType                    dstDataType)
+{
+    LLGL_ASSERT_PTR(srcImageDesc.data);
+    if (IsCompressedFormat(srcImageDesc.format) || IsCompressedFormat(dstFormat))
+        throw std::invalid_argument("cannot convert compressed image formats");
+    if (IsDepthStencilFormat(srcImageDesc.format) || IsDepthStencilFormat(dstFormat))
+        throw std::invalid_argument("cannot convert depth-stencil image formats");
+    if (srcImageDesc.dataSize % (DataTypeSize(srcImageDesc.dataType) * ImageFormatSize(srcImageDesc.format)) != 0)
+        throw std::invalid_argument("source image data size is not a multiple of the source data type size");
+}
+
+LLGL_EXPORT bool ConvertImageBuffer(
+    const SrcImageDescriptor& srcImageDesc,
+    const DstImageDescriptor& dstImageDesc,
+    std::size_t threadCount)
+{
+    /* Validate input parameters */
+    ValidateImageConversionParams(srcImageDesc, dstImageDesc.format, dstImageDesc.dataType);
+    LLGL_ASSERT_PTR(dstImageDesc.data);
+
+    if (threadCount == Constants::maxThreadCount)
+        threadCount = std::thread::hardware_concurrency();
+
+    if (srcImageDesc.dataType != dstImageDesc.dataType && srcImageDesc.format != dstImageDesc.format)
+    {
+        /* Convert image data type with intermediate buffer */
+        auto intermediateBufferSize = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstImageDesc.dataType);
+        auto intermediateBuffer     = AllocByteArray(intermediateBufferSize);
+
+        ConvertImageBufferDataType(
+            srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
+            dstImageDesc.dataType, intermediateBuffer.get(), intermediateBufferSize,
+            threadCount
+        );
+
+        /* Set new source buffer and source data type */
+        const SrcImageDescriptor intermediateImageDesc
+        {
+            srcImageDesc.format,
+            dstImageDesc.dataType,
+            intermediateBuffer.get(),
+            intermediateBufferSize
+        };
+
+        /* Convert image format */
+        ConvertImageBufferFormat(intermediateImageDesc, dstImageDesc, threadCount);
+
+        return true;
+    }
+    else if (srcImageDesc.dataType != dstImageDesc.dataType)
+    {
+        /* Convert image data type */
+        ConvertImageBufferDataType(
+            srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
+            dstImageDesc.dataType, dstImageDesc.data, dstImageDesc.dataSize,
+            threadCount
+        );
+        return true;
+    }
+    else if (srcImageDesc.format != dstImageDesc.format)
+    {
+        /* Convert image format */
+        ConvertImageBufferFormat(srcImageDesc, dstImageDesc, threadCount);
+        return true;
+    }
+
+    return false;
+}
+
 LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     SrcImageDescriptor  srcImageDesc,
     ImageFormat         dstFormat,
@@ -606,38 +695,77 @@ LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     std::size_t         threadCount)
 {
     /* Validate input parameters */
-    LLGL_ASSERT_PTR(srcImageDesc.data);
-
-    if (IsCompressedFormat(srcImageDesc.format) || IsCompressedFormat(dstFormat))
-        throw std::invalid_argument("cannot convert compressed image formats");
-    if (IsDepthStencilFormat(srcImageDesc.format) || IsDepthStencilFormat(dstFormat))
-        throw std::invalid_argument("cannot convert depth-stencil image formats");
-    if (srcImageDesc.dataSize % (DataTypeSize(srcImageDesc.dataType) * ImageFormatSize(srcImageDesc.format)) != 0)
-        throw std::invalid_argument("source image data size is not a multiple of the source data type size");
-
-    ByteBuffer dstImage;
+    ValidateImageConversionParams(srcImageDesc, dstFormat, dstDataType);
 
     if (threadCount == Constants::maxThreadCount)
         threadCount = std::thread::hardware_concurrency();
 
-    if (srcImageDesc.dataType != dstDataType)
+    /* Initialize destination image descriptor */
+    auto srcNumPixels = srcImageDesc.dataSize / (DataTypeSize(srcImageDesc.dataType) * ImageFormatSize(srcImageDesc.format));
+
+    DstImageDescriptor dstImageDesc
+    {
+        dstFormat,
+        dstDataType,
+        nullptr,
+        srcNumPixels * DataTypeSize(dstDataType) * ImageFormatSize(dstFormat)
+    };
+
+    if (srcImageDesc.dataType != dstDataType && srcImageDesc.format != dstFormat)
+    {
+        auto dstImage = AllocByteArray(dstImageDesc.dataSize);
+        {
+            /* Convert image data type with intermediate buffer */
+            auto intermediateBufferSize = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstDataType);
+            auto intermediateBuffer     = AllocByteArray(intermediateBufferSize);
+
+            ConvertImageBufferDataType(
+                srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
+                dstDataType, intermediateBuffer.get(), intermediateBufferSize,
+                threadCount
+            );
+
+            /* Set new source buffer and source data type */
+            const SrcImageDescriptor intermediateImageDesc
+            {
+                srcImageDesc.format,
+                dstDataType,
+                intermediateBuffer.get(),
+                intermediateBufferSize
+            };
+
+            /* Convert image format */
+            dstImageDesc.data = dstImage.get();
+            ConvertImageBufferFormat(intermediateImageDesc, dstImageDesc, threadCount);
+        }
+        return dstImage;
+    }
+    else if (srcImageDesc.dataType != dstDataType)
     {
         /* Convert image data type */
-        dstImage = ConvertImageBufferDataType(srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize, dstDataType, threadCount);
-
-        /* Set new source buffer and source data type */
-        srcImageDesc.dataSize   = srcImageDesc.dataSize / DataTypeSize(srcImageDesc.dataType) * DataTypeSize(dstDataType);
-        srcImageDesc.dataType   = dstDataType;
-        srcImageDesc.data       = dstImage.get();
+        auto dstImage = AllocByteArray(dstImageDesc.dataSize);
+        {
+            dstImageDesc.data = dstImage.get();
+            ConvertImageBufferDataType(
+                srcImageDesc.dataType, srcImageDesc.data, srcImageDesc.dataSize,
+                dstDataType, dstImageDesc.data, dstImageDesc.dataSize,
+                threadCount
+            );
+        }
+        return dstImage;
     }
-
-    if (srcImageDesc.format != dstFormat)
+    else if (srcImageDesc.format != dstFormat)
     {
         /* Convert image format */
-        dstImage = ConvertImageBufferFormat(srcImageDesc, dstFormat, threadCount);
+        auto dstImage = AllocByteArray(dstImageDesc.dataSize);
+        {
+            dstImageDesc.data = dstImage.get();
+            ConvertImageBufferFormat(srcImageDesc, dstImageDesc, threadCount);
+        }
+        return dstImage;
     }
 
-    return dstImage;
+    return nullptr;
 }
 
 LLGL_EXPORT ByteBuffer GenerateImageBuffer(

@@ -191,21 +191,49 @@ LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, Imag
 /**
 \brief Converts the image format and data type of the source image (only uncompressed color formats).
 \param[in] srcImageDesc Specifies the source image descriptor.
+\param[out] dstImageDesc Specifies the destination image descriptor.
+\param[in] threadCount Specifies the number of threads to use for conversion.
+If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
+the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
+\return True if any conversion was necessary. Otherwise, no conversion was necessary and the destination buffer is not modified!
+\note Compressed images and depth-stencil images cannot be converted.
+\throw std::invalid_argument If a compressed image format is specified either as source or destination.
+\throw std::invalid_argument If a depth-stencil format is specified either as source or destination.
+\throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
+\throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
+\throw std::invalid_argument If the source buffer is a null pointer.
+\throw std::invalid_argument If the destination buffer is a null pointer.
+\see Constants::maxThreadCount
+\see DataTypeSize
+\see ImageFormatSize
+*/
+LLGL_EXPORT bool ConvertImageBuffer(
+    const SrcImageDescriptor&   srcImageDesc,
+    const DstImageDescriptor&   dstImageDesc,
+    std::size_t                 threadCount = 0
+);
+
+/**
+\brief Converst the image format and data type of the source image (only uncompressed color formats) and returns the new generated image buffer.
+\param[in] srcImageDesc Specifies the source image descriptor.
 \param[in] dstFormat Specifies the destination image format.
-\param[in] dstDataType Specifies the destination data type.
+\param[in] dstDataType Specifies the destination image data type.
 \param[in] threadCount Specifies the number of threads to use for conversion.
 If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the converted image data or null if no conversion is necessary.
 This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
-\remarks Compressed images and depth-stencil images cannot be converted.
-\throw std::invalid_argument If a compressed image format is specified either as source or destination,
-if a depth-stencil format is specified either as source or destination,
-if the source buffer size is not a multiple of the source data type size times the image format size,
-or if 'srcBuffer' is a null pointer.
+\note Compressed images and depth-stencil images cannot be converted.
+\throw std::invalid_argument If a compressed image format is specified either as source or destination.
+\throw std::invalid_argument If a depth-stencil format is specified either as source or destination.
+\throw std::invalid_argument If the source buffer size is not a multiple of the source data type size times the image format size.
+\throw std::invalid_argument If the destination buffer size does not match the required output buffer size.
+\throw std::invalid_argument If the source buffer is a null pointer.
+\throw std::invalid_argument If the destination buffer is a null pointer.
 \see Constants::maxThreadCount
 \see ByteBuffer
 \see DataTypeSize
+\see ImageFormatSize
 */
 LLGL_EXPORT ByteBuffer ConvertImageBuffer(
     SrcImageDescriptor  srcImageDesc,
