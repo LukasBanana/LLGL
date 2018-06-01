@@ -10,6 +10,7 @@
 #include <locale>
 #include <codecvt>
 #include <X11/extensions/xf86vmode.h>
+#include <X11/extensions/Xrandr.h>
 
 
 namespace LLGL
@@ -101,8 +102,13 @@ std::wstring LinuxDisplay::GetDeviceName() const
 
 Offset2D LinuxDisplay::GetOffset() const
 {
-    //TODO
-    return {};
+    /* Get display offset from position of root window */
+    XWindowAttributes attribs = {};
+    XGetWindowAttributes(GetNative(), RootWindow(GetNative(), screen_), &attribs);
+    return Offset2D
+    {
+        attribs.x, attribs.y
+    };
 }
 
 bool LinuxDisplay::ResetDisplayMode()
@@ -119,38 +125,53 @@ bool LinuxDisplay::SetDisplayMode(const DisplayModeDescriptor& displayModeDesc)
 
 DisplayModeDescriptor LinuxDisplay::GetDisplayMode() const
 {
-    DisplayModeDescriptor displayModeDesc;
+    DisplayModeDescriptor modeDesc;
+    
+    auto dpy = GetNative();
+    if (auto scr = ScreenOfDisplay(dpy, screen_))
     {
-        if (auto scr = ScreenOfDisplay(GetNative(), screen_))
+        auto rootWnd = RootWindow(dpy, screen_);
+        
+        /* Get screen resolution from X11 screen */
+        modeDesc.resolution.width   = static_cast<std::uint32_t>(scr->width);
+        modeDesc.resolution.height  = static_cast<std::uint32_t>(scr->height);
+        
+        /* Get refresh reate from X11 extension Xrandr */
+        if (auto scrCfg = XRRGetScreenInfo(dpy, rootWnd))
         {
-            displayModeDesc.resolution.width    = static_cast<std::uint32_t>(scr->width);
-            displayModeDesc.resolution.height   = static_cast<std::uint32_t>(scr->height);
+            modeDesc.refreshRate = static_cast<std::uint32_t>(XRRConfigCurrentRate(scrCfg));
+            XRRFreeScreenConfigInfo(scrCfg);
         }
     }
-    return displayModeDesc;
+    
+    return modeDesc;
 }
 
 std::vector<DisplayModeDescriptor> LinuxDisplay::QuerySupportedDisplayModes() const
 {
     std::vector<DisplayModeDescriptor> displayModeDescs;
-
-    /* Get all video modes from X11 extension xf86 */
-    int numModes = 0;
-    XF86VidModeModeInfo** vidModes;
     
-    if (XF86VidModeGetAllModeLines(GetNative(), screen_, &numModes, &vidModes))
+    DisplayModeDescriptor modeDesc;
+    
+    /* Get all screen sizes from X11 extension Xrandr */
+    int numSizes = 0;
+    auto scrSizes = XRRSizes(GetNative(), screen_, &numSizes);
+    
+    for (int i = 0; i < numSizes; ++i)
     {
-        for (int i = 0; i < numModes; ++i)
+        /* Initialize resolution */
+        modeDesc.resolution.width   = static_cast<std::uint32_t>(scrSizes[i].width);
+        modeDesc.resolution.height  = static_cast<std::uint32_t>(scrSizes[i].height);
+        
+        /* Add one display mode for each rate */
+        int numRates = 0;
+        auto rates = XRRRates(GetNative(), screen_, i, &numRates);
+        
+        for (int j = 0; j < numRates; ++j)
         {
-            DisplayModeDescriptor modeDesc;
-            {
-                modeDesc.resolution.width   = static_cast<std::uint32_t>(vidModes[i]->hdisplay);
-                modeDesc.resolution.height  = static_cast<std::uint32_t>(vidModes[i]->vdisplay);
-                modeDesc.refreshRate        = static_cast<std::uint32_t>(vidModes[i]->hsyncend - vidModes[i]->hsyncstart);
-            }
+            modeDesc.refreshRate = static_cast<std::uint32_t>(rates[j]);
             displayModeDescs.push_back(modeDesc);
         }
-        XFree(vidModes);
     }
 
     /* Sort final display mode list and remove duplciate entries */
