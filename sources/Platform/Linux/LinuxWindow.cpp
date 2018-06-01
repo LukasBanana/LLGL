@@ -5,8 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include <LLGL/Desktop.h>
 #include <LLGL/Platform/NativeHandle.h>
+#include <LLGL/Display.h>
 #include "LinuxWindow.h"
 #include "MapKey.h"
 #include <exception>
@@ -18,12 +18,16 @@ namespace LLGL
 
 static Offset2D GetScreenCenteredPosition(const Extent2D& size)
 {
-    const auto resolution = Desktop::GetResolution();
-    return
+    if (auto display = Display::QueryPrimary())
     {
-        static_cast<int>((resolution.width  - size.width )/2),
-        static_cast<int>((resolution.height - size.height)/2),
-    };
+        const auto resolution = display->GetDisplayMode().resolution;
+        return
+        {
+            static_cast<int>((resolution.width  - size.width )/2),
+            static_cast<int>((resolution.height - size.height)/2),
+        };
+    }
+    return {};
 }
 
 std::unique_ptr<Window> Window::Create(const WindowDescriptor& desc)

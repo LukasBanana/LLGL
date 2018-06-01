@@ -66,7 +66,7 @@ class LinuxWindow : public Window
         //::Colormap          colorMap_;
         ::Window            wnd_;
         //::Cursor            cursor_;
-        XVisualInfo*        visual_         = nullptr;
+        ::XVisualInfo*      visual_         = nullptr;
         
         ::Atom              closeWndAtom_;
         

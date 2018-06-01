@@ -17,29 +17,33 @@ namespace LLGL
 {
 
 
-//! Shader uniform type enumeration.
+/**
+\brief Shader uniform type enumeration.
+\remarks Because "Bool" is a reserved identifier for an Xlib macro on GNU/Linux,
+all scalar types also have a component index (e.g. "Bool1" instead of "Bool").
+*/
 enum class UniformType
 {
     Undefined,      //!< Undefined uniform type.
 
     /* ----- Scalars & Vectors ----- */
-    Float,          //!< float uniform.
+    Float1,         //!< float uniform.
     Float2,         //!< float2/ vec2 uniform.
     Float3,         //!< float3/ vec3 uniform.
     Float4,         //!< float4/ vec4 uniform.
-    Double,         //!< double uniform.
+    Double1,        //!< double uniform.
     Double2,        //!< double2/ dvec2 uniform.
     Double3,        //!< double3/ dvec3 uniform.
     Double4,        //!< double4/ dvec4 uniform.
-    Int,            //!< int uniform.
+    Int1,           //!< int uniform.
     Int2,           //!< int2/ ivec2 uniform.
     Int3,           //!< int3/ ivec3 uniform.
     Int4,           //!< int4/ ivec4 uniform.
-    UInt,           //!< uint uniform.
+    UInt1,          //!< uint uniform.
     UInt2,          //!< uint2/ uvec2 uniform.
     UInt3,          //!< uint3/ uvec3 uniform.
     UInt4,          //!< uint4/ uvec4 uniform.
-    Bool,           //!< bool uniform.
+    Bool1,          //!< bool uniform.
     Bool2,          //!< bool2/ bvec2 uniform.
     Bool3,          //!< bool3/ bvec3 uniform.
     Bool4,          //!< bool4/ bvec4 uniform.

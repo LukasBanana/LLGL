@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         LLGL::Extent2D desktopResolution;
         if (auto display = LLGL::Display::QueryPrimary())
             desktopResolution = display->GetDisplayMode().resolution;
-
+            
         const LLGL::Offset2D desktopCenter
         {
             static_cast<int>(desktopResolution.width)/2,

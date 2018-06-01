@@ -22,7 +22,8 @@ namespace LLGL
  * ======= Private: =======
  */
 
-void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
+void GLRenderContext::GetNativeContextHandle(
+    NativeContextHandle& windowContext, const VideoModeDescriptor& videoModeDesc, const MultiSamplingDescriptor& multiSamplingDesc)
 {
     /* Open X11 display */
     windowContext.display = XOpenDisplay(nullptr);
@@ -34,7 +35,7 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
 
     GLXFBConfig fbc = 0;
 
-    if (desc_.multiSampling.enabled)
+    if (multiSamplingDesc.enabled)
     {
         /* Create FB configuration for multi-sampling */
         const int fbAttribs[] =
@@ -47,11 +48,11 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
             GLX_RED_SIZE,       8,
             GLX_GREEN_SIZE,     8,
             GLX_BLUE_SIZE,      8,
-            GLX_ALPHA_SIZE,     (desc_.videoMode.colorBits == 32 ? 8 : 0),
-            GLX_DEPTH_SIZE,     desc_.videoMode.depthBits,
-            GLX_STENCIL_SIZE,   desc_.videoMode.stencilBits,
+            GLX_ALPHA_SIZE,     (videoModeDesc.colorBits == 32 ? 8 : 0),
+            GLX_DEPTH_SIZE,     videoModeDesc.depthBits,
+            GLX_STENCIL_SIZE,   videoModeDesc.stencilBits,
             GLX_SAMPLE_BUFFERS, 1,
-            GLX_SAMPLES,        static_cast<int>(desc_.multiSampling.samples),
+            GLX_SAMPLES,        static_cast<int>(multiSamplingDesc.samples),
             None
         };
 
@@ -76,7 +77,7 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
     }
     else
     {
-        if (desc_.multiSampling.enabled)
+        if (multiSamplingDesc.enabled)
             Log::StdErr() << "failed to choose XVisualInfo for multi-sampling" << std::endl;
 
         /* Choose standard XVisualInfo structure */
@@ -87,9 +88,9 @@ void GLRenderContext::GetNativeContextHandle(NativeContextHandle& windowContext)
             GLX_RED_SIZE,       8,
             GLX_GREEN_SIZE,     8,
             GLX_BLUE_SIZE,      8,
-            GLX_ALPHA_SIZE,     (desc_.videoMode.colorBits == 32 ? 8 : 0),
-            GLX_DEPTH_SIZE,     desc_.videoMode.depthBits,
-            GLX_STENCIL_SIZE,   desc_.videoMode.stencilBits,
+            GLX_ALPHA_SIZE,     (videoModeDesc.colorBits == 32 ? 8 : 0),
+            GLX_DEPTH_SIZE,     videoModeDesc.depthBits,
+            GLX_STENCIL_SIZE,   videoModeDesc.stencilBits,
             GLX_SAMPLE_BUFFERS, 0,
             GLX_SAMPLES,        0,
             None

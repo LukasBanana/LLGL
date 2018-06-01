@@ -552,23 +552,23 @@ static UniformType UnmapUniformType(const GLenum uniformType)
     switch (uniformType)
     {
         /* ----- Scalars/Vectors ----- */
-        case GL_FLOAT:              return UniformType::Float;
+        case GL_FLOAT:              return UniformType::Float1;
         case GL_FLOAT_VEC2:         return UniformType::Float2;
         case GL_FLOAT_VEC3:         return UniformType::Float3;
         case GL_FLOAT_VEC4:         return UniformType::Float4;
-        case GL_DOUBLE:             return UniformType::Double;
+        case GL_DOUBLE:             return UniformType::Double1;
         case GL_DOUBLE_VEC2:        return UniformType::Double2;
         case GL_DOUBLE_VEC3:        return UniformType::Double3;
         case GL_DOUBLE_VEC4:        return UniformType::Double4;
-        case GL_INT:                return UniformType::Int;
+        case GL_INT:                return UniformType::Int1;
         case GL_INT_VEC2:           return UniformType::Int2;
         case GL_INT_VEC3:           return UniformType::Int3;
         case GL_INT_VEC4:           return UniformType::Int4;
-        case GL_UNSIGNED_INT:       return UniformType::UInt;
+        case GL_UNSIGNED_INT:       return UniformType::UInt1;
         case GL_UNSIGNED_INT_VEC2:  return UniformType::UInt2;
         case GL_UNSIGNED_INT_VEC3:  return UniformType::UInt3;
         case GL_UNSIGNED_INT_VEC4:  return UniformType::UInt4;
-        case GL_BOOL:               return UniformType::Bool;
+        case GL_BOOL:               return UniformType::Bool1;
         case GL_BOOL_VEC2:          return UniformType::Bool2;
         case GL_BOOL_VEC3:          return UniformType::Bool3;
         case GL_BOOL_VEC4:          return UniformType::Bool4;

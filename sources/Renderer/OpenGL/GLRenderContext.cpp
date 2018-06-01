@@ -20,7 +20,7 @@ GLRenderContext::GLRenderContext(RenderContextDescriptor desc, const std::shared
 
     /* Setup surface for the render context and pass native context handle */
     NativeContextHandle windowContext;
-    GetNativeContextHandle(windowContext);
+    GetNativeContextHandle(windowContext, desc.videoMode, desc.multiSampling);
     SetOrCreateSurface(surface, desc.videoMode, &windowContext);
 
     #else

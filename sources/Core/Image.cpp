@@ -7,6 +7,7 @@
 
 #include <LLGL/Image.h>
 #include <algorithm>
+#include <string.h>
 
 
 namespace LLGL

@@ -348,7 +348,10 @@ struct Scissor
     std::int32_t height  = 0; //!< Right-bottom height.
 };
 
-//! Multi-sampling descriptor structure.
+/**
+\brief Multi-sampling descriptor structure.
+\todo Maybe remove this and only use a single unsigned integral value "samples".
+*/
 struct MultiSamplingDescriptor
 {
     MultiSamplingDescriptor() = default;

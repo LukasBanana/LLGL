@@ -19,7 +19,11 @@ int main(int argc, char* argv[])
         auto displayOffset  = display->GetOffset();
         auto displayMode    = display->GetDisplayMode();
 
+        #ifdef __linux__
+        std::cout << "Display:" << std::endl;
+        #else
         std::wcout << "Display: \"" << display->GetDeviceName().c_str() << "\"" << std::endl;
+        #endif
         std::cout << "|-Primary = " << std::boolalpha << display->IsPrimary() << std::endl;
         std::cout << "|-X       = " << displayOffset.x << std::endl;
         std::cout << "|-Y       = " << displayOffset.y << std::endl;

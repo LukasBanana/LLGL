@@ -62,7 +62,11 @@ class GLRenderContext : public RenderContext
         void InitRenderStates();
 
         #ifdef __linux__
-        void GetNativeContextHandle(NativeContextHandle& windowContext);
+        void GetNativeContextHandle(
+            NativeContextHandle& windowContext,
+            const VideoModeDescriptor& videoModeDesc,
+            const MultiSamplingDescriptor& multiSamplingDesc
+        );
         #endif
 
         std::unique_ptr<GLContext>      context_;
