@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
             auto displayOffset  = display->GetOffset();
             auto displayMode    = display->GetDisplayMode();
             auto displayName    = display->GetDeviceName();
-            
+
             std::cout << "Display: \"" << utf8converter.to_bytes(displayName.c_str()) << "\"" << std::endl;
             std::cout << "|-Primary = " << std::boolalpha << display->IsPrimary() << std::endl;
             std::cout << "|-X       = " << displayOffset.x << std::endl;
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
                 std::cout << std::endl;
             }
         }
-        
+
         #if 0
         if (auto display = LLGL::Display::QueryPrimary())
         {
@@ -63,11 +63,11 @@ int main(int argc, char* argv[])
             mode.resolution.width = 1024;
             mode.resolution.height = 768;
             display->SetDisplayMode(mode);
-            
+
             std::this_thread::sleep_for(std::chrono::seconds(1));
             display->ResetDisplayMode();
         }
-        
+
         std::cout << "Wainting";
         for (int i = 0; i < 5; ++i)
         {
@@ -80,10 +80,11 @@ int main(int argc, char* argv[])
     catch (const std::exception& e)
     {
         std::cerr << e.what() << std::endl;
-        #ifdef _WIN32
-        system("pause");
-        #endif
     }
+
+    #ifdef _WIN32
+    system("pause");
+    #endif
 
     return 0;
 }
