@@ -9,21 +9,22 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <locale>
+#include <codecvt>
 
 
 int main(int argc, char* argv[])
 {
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> utf8converter;
+
     auto displayList = LLGL::Display::QueryList();
     for (const auto& display : displayList)
     {
         auto displayOffset  = display->GetOffset();
         auto displayMode    = display->GetDisplayMode();
-
-        #ifdef __linux__
-        std::cout << "Display:" << std::endl;
-        #else
-        std::wcout << "Display: \"" << display->GetDeviceName().c_str() << "\"" << std::endl;
-        #endif
+        auto displayName    = display->GetDeviceName();
+        
+        std::cout << "Display: \"" << utf8converter.to_bytes(displayName.c_str()) << "\"" << std::endl;
         std::cout << "|-Primary = " << std::boolalpha << display->IsPrimary() << std::endl;
         std::cout << "|-X       = " << displayOffset.x << std::endl;
         std::cout << "|-Y       = " << displayOffset.y << std::endl;

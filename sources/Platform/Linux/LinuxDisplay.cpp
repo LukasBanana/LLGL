@@ -9,6 +9,7 @@
 #include "../../Core/Helper.h"
 #include <locale>
 #include <codecvt>
+#include <X11/extensions/xf86vmode.h>
 
 
 namespace LLGL
@@ -93,8 +94,9 @@ bool LinuxDisplay::IsPrimary() const
 
 std::wstring LinuxDisplay::GetDeviceName() const
 {
-    //TODO
-    return L"";
+    const char* name = DisplayString(GetNative());
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.from_bytes(name);
 }
 
 Offset2D LinuxDisplay::GetOffset() const
@@ -132,7 +134,24 @@ std::vector<DisplayModeDescriptor> LinuxDisplay::QuerySupportedDisplayModes() co
 {
     std::vector<DisplayModeDescriptor> displayModeDescs;
 
-    //TODO
+    /* Get all video modes from X11 extension xf86 */
+    int numModes = 0;
+    XF86VidModeModeInfo** vidModes;
+    
+    if (XF86VidModeGetAllModeLines(GetNative(), screen_, &numModes, &vidModes))
+    {
+        for (int i = 0; i < numModes; ++i)
+        {
+            DisplayModeDescriptor modeDesc;
+            {
+                modeDesc.resolution.width   = static_cast<std::uint32_t>(vidModes[i]->hdisplay);
+                modeDesc.resolution.height  = static_cast<std::uint32_t>(vidModes[i]->vdisplay);
+                modeDesc.refreshRate        = static_cast<std::uint32_t>(vidModes[i]->hsyncend - vidModes[i]->hsyncstart);
+            }
+            displayModeDescs.push_back(modeDesc);
+        }
+        XFree(vidModes);
+    }
 
     /* Sort final display mode list and remove duplciate entries */
     FinalizeDisplayModes(displayModeDescs);

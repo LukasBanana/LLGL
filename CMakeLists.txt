@@ -429,7 +429,7 @@ if(APPLE)
 		target_link_libraries(LLGL ${COCOA_LIBRARY})
 	endif()
 elseif(UNIX)
-	target_link_libraries(LLGL X11 pthread)
+	target_link_libraries(LLGL X11 pthread Xxf86vm)
 endif()
 
 set_target_properties(LLGL PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
