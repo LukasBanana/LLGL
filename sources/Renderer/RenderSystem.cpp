@@ -116,7 +116,7 @@ static RenderSystem* LoadRenderSystem(Module& module, const std::string& moduleF
     return reinterpret_cast<RenderSystem*>(RenderSystem_Alloc(&renderSystemDesc));
 }
 
-#endif
+#endif // /LLGL_BUILD_STATIC_LIB
 
 std::unique_ptr<RenderSystem> RenderSystem::Load(
     const RenderSystemDescriptor& renderSystemDesc, RenderingProfiler* profiler, RenderingDebugger* debugger)
@@ -144,7 +144,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
 
         Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
 
-        #endif
+        #endif // /LLGL_ENABLE_DEBUG_LAYER
     }
 
     renderSystem->name_         = LLGL_RenderSystem_Name();
@@ -182,7 +182,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
 
             Log::StdErr() << "LLGL was not compiled with debug layer support" << std::endl;
 
-            #endif
+            #endif // /LLGL_ENABLE_DEBUG_LAYER
         }
 
         renderSystem->name_         = LoadRenderSystemName(*module);
@@ -201,7 +201,7 @@ std::unique_ptr<RenderSystem> RenderSystem::Load(
         throw;
     }
 
-    #endif
+    #endif // /LLGL_BUILD_STATIC_LIB
 }
 
 void RenderSystem::Unload(std::unique_ptr<RenderSystem>&& renderSystem)

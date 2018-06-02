@@ -32,12 +32,15 @@ static std::string GetSelectedRendererModule(int argc, char* argv[])
     /* Select renderer module */
     std::string rendererModule;
 
+    //NOTE: strange new default arguments with Xcode 9.4 (9F1027a)
+    #ifndef __APPLE__
     if (argc > 1)
     {
         /* Get renderer module name from command line argument */
         rendererModule = argv[1];
     }
     else
+    #endif
     {
         /* Find available modules */
         auto modules = LLGL::RenderSystem::FindModules();
