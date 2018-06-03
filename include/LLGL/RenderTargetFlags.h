@@ -82,6 +82,7 @@ struct AttachmentDescriptor
     /**
     \brief Specifies the resolution of a depth-stencil attachment.
     \remarks If 'texture' is a valid pointer to a Texture object, this member is ignored and the required resolution is determined by that texture object.
+    \see texture
     */
     Extent2D        resolution;
 

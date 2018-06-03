@@ -118,6 +118,18 @@ void GLRenderSystem::Release(SamplerArray& samplerArray)
     RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
+/* ----- Resource Heaps ----- */
+
+ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+{
+    return TakeOwnership(resourceHeaps_, MakeUnique<GLResourceHeap>(desc));
+}
+
+void GLRenderSystem::Release(ResourceHeap& resourceViewHeap)
+{
+    RemoveFromUniqueSet(resourceHeaps_, &resourceViewHeap);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
@@ -175,6 +187,18 @@ void GLRenderSystem::Release(ShaderProgram& shaderProgram)
     auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
     GLStateManager::NotifyShaderProgramRelease(shaderProgramGL.GetID());
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
+}
+
+/* ----- Pipeline Layouts ----- */
+
+PipelineLayout* GLRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+{
+    return TakeOwnership(pipelineLayouts_, MakeUnique<GLPipelineLayout>(desc));
+}
+
+void GLRenderSystem::Release(PipelineLayout& pipelineLayout)
+{
+    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */

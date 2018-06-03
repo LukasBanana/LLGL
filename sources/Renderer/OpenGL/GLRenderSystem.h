@@ -31,8 +31,10 @@
 
 #include "RenderState/GLQuery.h"
 #include "RenderState/GLFence.h"
+#include "RenderState/GLPipelineLayout.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
+#include "RenderState/GLResourceHeap.h"
 
 #include <string>
 #include <memory>
@@ -106,6 +108,12 @@ class GLRenderSystem : public RenderSystem
         void Release(Sampler& sampler) override;
         void Release(SamplerArray& samplerArray) override;
 
+        /* ----- Resource Heaps ----- */
+
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
+
+        void Release(ResourceHeap& resourceViewHeap) override;
+
         /* ----- Render Targets ----- */
 
         RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;
@@ -119,6 +127,12 @@ class GLRenderSystem : public RenderSystem
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
+
+        /* ----- Pipeline Layouts ----- */
+
+        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) override;
+
+        void Release(PipelineLayout& pipelineLayout) override;
 
         /* ----- Pipeline States ----- */
 
@@ -182,8 +196,10 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLRenderTarget>       renderTargets_;
         HWObjectContainer<GLShader>             shaders_;
         HWObjectContainer<GLShaderProgram>      shaderPrograms_;
+        HWObjectContainer<GLPipelineLayout>     pipelineLayouts_;
         HWObjectContainer<GLGraphicsPipeline>   graphicsPipelines_;
         HWObjectContainer<GLComputePipeline>    computePipelines_;
+        HWObjectContainer<GLResourceHeap>       resourceHeaps_;
         HWObjectContainer<GLQuery>              queries_;
         HWObjectContainer<GLFence>              fences_;
 

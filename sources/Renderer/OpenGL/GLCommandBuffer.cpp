@@ -29,6 +29,7 @@
 #include "RenderState/GLStateManager.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
+#include "RenderState/GLResourceHeap.h"
 #include "RenderState/GLQuery.h"
 
 
@@ -347,9 +348,21 @@ void GLCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t 
     auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
     stateMngr_->BindSamplers(
         startSlot,
-        static_cast<std::uint32_t>(samplerArrayGL.GetIDArray().size()),
+        static_cast<GLsizei>(samplerArrayGL.GetIDArray().size()),
         samplerArrayGL.GetIDArray().data()
     );
+}
+
+/* ----- Resource Heaps ----- */
+
+void GLCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
+{
+    SetResourceHeap(resourceHeap);
+}
+
+void GLCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*startSlot*/)
+{
+    SetResourceHeap(resourceHeap);
 }
 
 /* ----- Render Targets ----- */
@@ -686,6 +699,12 @@ void GLCommandBuffer::SetGenericBufferArray(const GLBufferTarget bufferTarget, B
         static_cast<GLsizei>(bufferArrayGL.GetIDArray().size()),
         bufferArrayGL.GetIDArray().data()
     );
+}
+
+void GLCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
+{
+    auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
+    resourceHeapGL.Bind(*stateMngr_);
 }
 
 

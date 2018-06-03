@@ -86,6 +86,11 @@ class GLCommandBuffer : public CommandBufferExt
         void SetSampler(Sampler& sampler, std::uint32_t layer, long stageFlags = StageFlags::AllStages) override;
         void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
+        /* ----- Resource Heaps ----- */
+
+        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;
@@ -136,6 +141,8 @@ class GLCommandBuffer : public CommandBufferExt
 
         void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
         void SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot);
+
+        void SetResourceHeap(ResourceHeap& resourceHeap);
 
         // Blits the currently bound render target
         void BlitBoundRenderTarget();

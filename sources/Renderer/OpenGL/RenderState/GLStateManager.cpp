@@ -946,7 +946,7 @@ void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target
 
 /* ----- Sampler ----- */
 
-void GLStateManager::BindSampler(std::uint32_t layer, GLuint sampler)
+void GLStateManager::BindSampler(GLuint layer, GLuint sampler)
 {
     #ifdef LLGL_DEBUG
     LLGL_ASSERT_UPPER_BOUND(layer, numTextureLayers);
@@ -959,24 +959,24 @@ void GLStateManager::BindSampler(std::uint32_t layer, GLuint sampler)
     }
 }
 
-void GLStateManager::BindSamplers(std::uint32_t first, std::uint32_t count, const GLuint* samplers)
+void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* samplers)
 {
     #ifdef GL_ARB_multi_bind
     if (HasExtension(GLExt::ARB_multi_bind))
     {
         /* Bind all samplers at once */
-        glBindSamplers(first, static_cast<GLsizei>(count), samplers);
+        glBindSamplers(first, count, samplers);
 
         /* Store bound textures */
-        for (std::uint32_t i = 0; i < count; ++i)
+        for (GLsizei i = 0; i < count; ++i)
             samplerState_.boundSamplers[i] = samplers[i];
     }
     else
     #endif
     {
         /* Bind each sampler individually */
-        for (std::uint32_t i = 0; i < count; ++i)
-            BindSampler(first + i, samplers[i]);
+        for (GLsizei i = 0; i < count; ++i)
+            BindSampler(first + static_cast<GLuint>(i), samplers[i]);
     }
 }
 

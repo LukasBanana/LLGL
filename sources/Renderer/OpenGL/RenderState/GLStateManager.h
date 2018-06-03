@@ -153,8 +153,8 @@ class GLStateManager
 
         /* ----- Sampler ----- */
 
-        void BindSampler(std::uint32_t layer, GLuint sampler);
-        void BindSamplers(std::uint32_t first, std::uint32_t count, const GLuint* samplers);
+        void BindSampler(GLuint layer, GLuint sampler);
+        void BindSamplers(GLuint first, GLsizei count, const GLuint* samplers);
 
         static void NotifySamplerRelease(GLuint sampler);
 
