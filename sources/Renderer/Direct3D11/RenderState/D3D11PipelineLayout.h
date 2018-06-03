@@ -1,12 +1,12 @@
 /*
- * GLPipelineLayout.h
+ * D3D11PipelineLayout.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
  */
 
-#ifndef LLGL_GL_PIPELINE_LAYOUT_H
-#define LLGL_GL_PIPELINE_LAYOUT_H
+#ifndef LLGL_D3D11_PIPELINE_LAYOUT_H
+#define LLGL_D3D11_PIPELINE_LAYOUT_H
 
 
 #include "../../BasicPipelineLayout.h"
@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-using GLPipelineLayout = BasicPipelineLayout;
+using D3D11PipelineLayout = BasicPipelineLayout;
 
 
 } // /namespace LLGL

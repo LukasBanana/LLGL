@@ -80,8 +80,21 @@ public:
         {
             layoutDesc.bindings =
             {
+                #if 1
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::StageFlags::FragmentStage, 0 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::FragmentStage, 1 },
+                #else
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::StageFlags::FragmentStage, 0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::StageFlags::FragmentStage, 1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::FragmentStage, 5 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::StageFlags::FragmentStage, 3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::FragmentStage, 4 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::StageFlags::FragmentStage, 4 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLGL::StageFlags::FragmentStage, 5 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::FragmentStage, 3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::FragmentStage, 1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLGL::StageFlags::FragmentStage, 2 },
+                #endif
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -198,7 +211,23 @@ public:
             LLGL::ResourceHeapDescriptor resourceHeapDesc;
             {
                 resourceHeapDesc.pipelineLayout = pipelineLayout;
+                #if 1
                 resourceHeapDesc.resourceViews  = { sampler[i], colorMap };
+                #else
+                resourceHeapDesc.resourceViews =
+                {
+                    sampler[i],
+                    sampler[i],
+                    colorMap,
+                    sampler[i],
+                    colorMap,
+                    sampler[i],
+                    sampler[i],
+                    colorMap,
+                    colorMap,
+                    colorMap,
+                };
+                #endif
             }
             resourceHeaps[i] = renderer->CreateResourceHeap(resourceHeapDesc);
         }

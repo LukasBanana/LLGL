@@ -31,7 +31,7 @@ Here is an illustration of the buffer layout for one Texture resouce (at binding
 Offset      Attribute                                   Value   Description                                         Segment
 --------------------------------------------------------------------------------------------------------------------------------------------
 0x00000000  GLResourceViewHeapSegment2::segmentSize     24      Size of this segment                                \
-0x00000004  GLResourceViewHeapSegment2::offsetEnd0      20      Points to first texture[0] (at offset 0x00000014)    |
+0x00000004  GLResourceViewHeapSegment2::offsetEnd0      20      Relative offset to texture[0] (at 0x00000014)        |
 0x00000008  GLResourceViewHeapSegment2::first           4       First binding point                                  |-- Texture segment
 0x0000000C  GLResourceViewHeapSegment2::count           1       Number of binding points                             |
 0x00000010  target[0]                                   1       Texture target (GLTextureTarget::TEXTURE_2D = 1)     |
@@ -270,7 +270,7 @@ void GLResourceHeap::BuildAllSegments(
 {
     if (!compressedBindings.empty())
     {
-        /* Build constant buffer segments */
+        /* Initialize iterators for sub-ranges of input bindings */
         auto    itStart = compressedBindings.begin();
         auto    itPrev  = itStart;
         auto    it      = itStart;
