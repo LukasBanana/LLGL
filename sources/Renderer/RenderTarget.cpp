@@ -39,21 +39,22 @@ void RenderTarget::ApplyResolution(const Extent2D& resolution)
 {
     /* Validate texture attachment size */
     if (resolution.width == 0 || resolution.height == 0)
-        throw std::invalid_argument("attachment to render target failed, due to invalid size of zero");
+        throw std::invalid_argument("invalid resolution of render tartget attachment (at least one component is zero)");
 
     /* Check if size matches the current resolution */
-    if (resolution_ != Extent2D{ 0, 0 })
+    if (resolution_ == Extent2D{ 0, 0 })
     {
-        if (resolution != resolution_)
-        {
-            throw std::invalid_argument(
-                "attachment to render target failed, due to resolution mismatch (" +
-                Extent2DToString(resolution) + " given, but expected " + Extent2DToString(resolution_) + ")"
-            );
-        }
-    }
-    else
+        /* Initialize resolution of this render target */
         resolution_ = resolution;
+    }
+    else if (resolution_ != resolution)
+    {
+        /* Attachment resolution mismatch -> throw exception */
+        throw std::invalid_argument(
+            "resolution mismatch of render target attachment (" +
+            Extent2DToString(resolution) + " is specified, but expected " + Extent2DToString(resolution_) + ")"
+        );
+    }
 }
 
 void RenderTarget::ApplyMipResolution(Texture& texture, std::uint32_t mipLevel)
@@ -65,8 +66,7 @@ void RenderTarget::ApplyMipResolution(Texture& texture, std::uint32_t mipLevel)
 
 void RenderTarget::ResetResolution()
 {
-    resolution_.width   = 0;
-    resolution_.height  = 0;
+    resolution_ = { 0, 0 };
 }
 
 

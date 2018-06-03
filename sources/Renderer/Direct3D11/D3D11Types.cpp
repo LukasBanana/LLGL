@@ -345,6 +345,8 @@ void Convert(D3D11_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
     dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
 }
 
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+
 // Direct3D 11.3
 void Convert(D3D11_RASTERIZER_DESC2& dst, const RasterizerDescriptor& src)
 {
@@ -361,6 +363,8 @@ void Convert(D3D11_RASTERIZER_DESC2& dst, const RasterizerDescriptor& src)
     dst.ForcedSampleCount       = 0;
     dst.ConservativeRaster      = (src.conservativeRasterization ? D3D11_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D11_CONSERVATIVE_RASTERIZATION_MODE_OFF);
 }
+
+#endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
 
 static UINT8 GetColorWriteMask(const ColorRGBAb& color)
 {
@@ -411,6 +415,8 @@ void Convert(D3D11_BLEND_DESC& dst, const BlendDescriptor& src)
         }
     }
 }
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 
 // Direct3D 11.1
 static void Convert(D3D11_RENDER_TARGET_BLEND_DESC1& dst, const BlendTargetDescriptor& src, BOOL blendEnabled)
@@ -469,6 +475,8 @@ void Convert(D3D11_BLEND_DESC1& dst, const BlendDescriptor& src)
             SetBlendDescToDefaut(dst.RenderTarget[i], TRUE, logicOp);
     }
 }
+
+#endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
 
 
 } // /namespace D3D11Types

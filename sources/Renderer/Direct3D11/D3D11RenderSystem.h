@@ -38,7 +38,7 @@
 #include "../DXCommon/ComPtr.h"
 
 #include <dxgi.h>
-#include <d3d11_3.h>
+#include "Direct3D11.h"
 
 
 namespace LLGL
@@ -199,9 +199,18 @@ class D3D11RenderSystem : public RenderSystem
         ComPtr<IDXGIFactory>                            factory_;
 
         ComPtr<ID3D11Device>                            device_;
+
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
         ComPtr<ID3D11Device1>                           device1_;
+        #endif
+
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
         ComPtr<ID3D11Device2>                           device2_;
+        #endif
+
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
         ComPtr<ID3D11Device3>                           device3_;
+        #endif
 
         ComPtr<ID3D11DeviceContext>                     context_;
 

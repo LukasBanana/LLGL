@@ -8,6 +8,8 @@
 #ifndef LLGL_D3D11_GRAPHICS_PIPELINE3_H
 #define LLGL_D3D11_GRAPHICS_PIPELINE3_H
 
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+
 
 #include "D3D11GraphicsPipelineBase.h"
 #include <d3d11_3.h>
@@ -45,6 +47,8 @@ class D3D11GraphicsPipeline3 : public D3D11GraphicsPipelineBase
 
 } // /namespace LLGL
 
+
+#endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
 
 #endif
 

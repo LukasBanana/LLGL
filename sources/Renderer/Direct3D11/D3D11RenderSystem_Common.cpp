@@ -226,14 +226,32 @@ void D3D11RenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* D3D11RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     if (device3_)
+    {
+        /* Create graphics pipeline for Direct3D 11.3 */
         return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline3>(device3_.Get(), desc));
-    else if (device2_)
+    }
+    #endif
+
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
+    if (device2_)
+    {
+        /* Create graphics pipeline for Direct3D 11.1 (there is no dedicated class for 11.2) */
         return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline1>(device2_.Get(), desc));
-    else if (device1_)
+    }
+    #endif
+
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+    if (device1_)
+    {
+        /* Create graphics pipeline for Direct3D 11.1 */
         return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline1>(device1_.Get(), desc));
-    else
-        return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline>(device_.Get(), desc));
+    }
+    #endif
+
+    /* Create graphics pipeline for Direct3D 11.0 */
+    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline>(device_.Get(), desc));
 }
 
 ComputePipeline* D3D11RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -415,9 +433,15 @@ void D3D11RenderSystem::QueryRenderingCaps()
 
 int D3D11RenderSystem::GetMinorVersion() const
 {
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     if (device3_) { return 3; }
+    #endif
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
     if (device2_) { return 2; }
+    #endif
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
     if (device1_) { return 1; }
+    #endif
     return 0;
 }
 

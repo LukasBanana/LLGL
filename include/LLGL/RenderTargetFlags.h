@@ -81,6 +81,11 @@ struct AttachmentDescriptor
     Texture*        texture     = nullptr;
 
     /**
+
+    */
+    Extent2D        resolution;
+
+    /**
     \brief Specifies the width of the attachment resolution.
     \remarks If 'texture' is a valid pointer to a Texture object, this value is ignored and the required resolution is determined by that texture object.
     \todo Maybe combine width and height with new attribute "Extent2D extent".

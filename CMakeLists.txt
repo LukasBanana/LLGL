@@ -96,6 +96,9 @@ set(SUMMARY_LIBRARY_TYPE "Unknown")
 
 # === Options ===
 
+set(LLGL_D3D11_ENABLE_FEATURELEVEL "Direct3D 11.0" CACHE STRING "Enable maximum Direct3D 11 feature level (requires <d3d11.h>, <d3d11_1.h>, <d3d11_2.h>, or <d3d11_3.h> header files")
+set_property(CACHE LLGL_D3D11_ENABLE_FEATURELEVEL PROPERTY STRINGS "Direct3D 11.0" "Direct3D 11.1" "Direct3D 11.2" "Direct3D 11.3")
+
 option(LLGL_ENABLE_CHECKED_CAST "Enable dynamic checked cast (only in Debug mode)" ON)
 option(LLGL_ENABLE_DEBUG_LAYER "Enable renderer debug layer (for both Debug and Release mode)" ON)
 option(LLGL_ENABLE_UTILITY "Enable utility functions (LLGL/Utility.h)" ON)
@@ -160,6 +163,16 @@ endif()
 
 if(LLGL_BUILD_STATIC_LIB)
 	ADD_DEFINE(LLGL_BUILD_STATIC_LIB)
+endif()
+
+if(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.3")
+    add_definitions(-DLLGL_D3D11_ENABLE_FEATURELEVEL=3)
+elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.2")
+    add_definitions(-DLLGL_D3D11_ENABLE_FEATURELEVEL=2)
+elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.1")
+    add_definitions(-DLLGL_D3D11_ENABLE_FEATURELEVEL=1)
+else()
+    add_definitions(-DLLGL_D3D11_ENABLE_FEATURELEVEL=0)
 endif()
 
 
@@ -604,12 +617,20 @@ if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
-	message("Build Renderer: Direct3D 11")
+    if(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.3")
+        message("Build Renderer: Direct3D 11.3")
+    elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.2")
+        message("Build Renderer: Direct3D 11.2")
+    elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.1")
+        message("Build Renderer: Direct3D 11.1")
+    else()
+        message("Build Renderer: Direct3D 11.0")
+    endif()
 	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
-	message("Build Renderer: Direct3D 12")
+	message("Build Renderer: Direct3D 12.0")
 	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 

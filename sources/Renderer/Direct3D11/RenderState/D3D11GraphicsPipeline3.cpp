@@ -5,6 +5,9 @@
  * See "LICENSE.txt" for license information.
  */
 
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
+
+
 #include "D3D11GraphicsPipeline3.h"
 #include "D3D11StateManager.h"
 #include "../D3D11Types.h"
@@ -67,6 +70,9 @@ void D3D11GraphicsPipeline3::CreateBlendState(ID3D11Device3* device, const Blend
 
 
 } // /namespace LLGL
+
+
+#endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
 
 
 

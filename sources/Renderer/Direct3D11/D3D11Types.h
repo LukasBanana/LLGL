@@ -16,7 +16,7 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/BufferFlags.h>
 #include <LLGL/Query.h>
-#include <d3d11_3.h>
+#include "Direct3D11.h"
 
 
 namespace LLGL
@@ -46,10 +46,18 @@ D3D11_LOGIC_OP              Map( const LogicOp              logicOp         );
 TextureFormat               Unmap( const DXGI_FORMAT format );
 
 void Convert(D3D11_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil);
+
 void Convert(D3D11_RASTERIZER_DESC& dst, const RasterizerDescriptor& src);
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
 void Convert(D3D11_RASTERIZER_DESC2& dst, const RasterizerDescriptor& src);
+#endif
+
 void Convert(D3D11_BLEND_DESC& dst, const BlendDescriptor& src);
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 void Convert(D3D11_BLEND_DESC1& dst, const BlendDescriptor& src);
+#endif
 
 
 } // /namespace D3D11Types

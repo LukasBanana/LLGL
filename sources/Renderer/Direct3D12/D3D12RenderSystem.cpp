@@ -633,12 +633,13 @@ void D3D12RenderSystem::QueryRenderingCaps()
         DXGetRenderingCaps(caps, GetFeatureLevel());
 
         /* Set extended attributes */
-        caps.features.hasLogicOp            = true;
-        caps.limits.maxNumViewports         = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
-        caps.limits.maxViewportSize[0]      = D3D12_VIEWPORT_BOUNDS_MAX;
-        caps.limits.maxViewportSize[1]      = D3D12_VIEWPORT_BOUNDS_MAX;
-        caps.limits.maxBufferSize           = std::numeric_limits<UINT64>::max();
-        caps.limits.maxConstantBufferSize   = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+        caps.features.hasConservativeRasterization  = (GetFeatureLevel() >= D3D_FEATURE_LEVEL_12_0);
+
+        caps.limits.maxNumViewports                 = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+        caps.limits.maxViewportSize[0]              = D3D12_VIEWPORT_BOUNDS_MAX;
+        caps.limits.maxViewportSize[1]              = D3D12_VIEWPORT_BOUNDS_MAX;
+        caps.limits.maxBufferSize                   = std::numeric_limits<UINT64>::max();
+        caps.limits.maxConstantBufferSize           = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
     }
     SetRenderingCaps(caps);
 }
