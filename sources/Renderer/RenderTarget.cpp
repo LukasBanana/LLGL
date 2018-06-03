@@ -15,7 +15,7 @@ namespace LLGL
 {
 
 
-#if 1 // DEPRECATED
+#if 0 // DEPRECATED
 
 void RenderTarget::AttachDepthBuffer(const Extent2D& size) { /* dummy */ }
 void RenderTarget::AttachStencilBuffer(const Extent2D& size) { /* dummy */ }

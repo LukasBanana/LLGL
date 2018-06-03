@@ -29,13 +29,9 @@ class GLRenderTarget : public RenderTarget
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
 
-        void AttachDepthBuffer(const Extent2D& size) override;
-        void AttachStencilBuffer(const Extent2D& size) override;
-        void AttachDepthStencilBuffer(const Extent2D& size) override;
-
-        void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
-
-        void DetachAll() override;
+        #if 0
+        void DetachAll();
+        #endif
 
         /* ----- Extended Internal Functions ----- */
 
@@ -49,6 +45,11 @@ class GLRenderTarget : public RenderTarget
         const GLFramebuffer& GetFramebuffer() const;
 
     private:
+
+        void AttachDepthBuffer(const Extent2D& size);
+        void AttachStencilBuffer(const Extent2D& size);
+        void AttachDepthStencilBuffer(const Extent2D& size);
+        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc);
 
         void InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat);
         GLenum AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLenum attachment);

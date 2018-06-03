@@ -41,43 +41,6 @@ DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debu
     }
 }
 
-void DbgRenderTarget::AttachDepthBuffer(const Extent2D& size)
-{
-    instance.AttachDepthBuffer(size);
-}
-
-void DbgRenderTarget::AttachStencilBuffer(const Extent2D& size)
-{
-    instance.AttachStencilBuffer(size);
-}
-
-void DbgRenderTarget::AttachDepthStencilBuffer(const Extent2D& size)
-{
-    instance.AttachDepthStencilBuffer(size);
-}
-
-void DbgRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc)
-{
-    auto& textureDbg = LLGL_CAST(DbgTexture&, texture);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-
-        if (desc_.multiSampling.SampleCount() > 1 && desc_.customMultiSampling && !IsMultiSampleTexture(texture.GetType()))
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "attempt to attach non-multi-sample texture to render-target with custom multi-sampling");
-    }
-
-    instance.AttachTexture(textureDbg.instance, attachmentDesc);
-    ApplyResolution(instance.GetResolution());
-}
-
-void DbgRenderTarget::DetachAll()
-{
-    instance.DetachAll();
-    ResetResolution();
-}
-
 
 } // /namespace LLGL
 

@@ -80,10 +80,14 @@ struct AttachmentDescriptor
     */
     Texture*        texture     = nullptr;
 
+    #if 0//TODO
+
     /**
 
     */
     Extent2D        resolution;
+
+    #else
 
     /**
     \brief Specifies the width of the attachment resolution.
@@ -98,6 +102,8 @@ struct AttachmentDescriptor
     \todo Maybe combine width and height with new attribute "Extent2D extent".
     */
     std::uint32_t   height      = 0;
+
+    #endif
 
     /**
     \brief Specifies the MIP-map level which is to be attached to a render target.
@@ -123,7 +129,7 @@ struct AttachmentDescriptor
     AxisDirection   cubeFace    = AxisDirection::XPos;
 };
 
-#if 1 // DEPRECATED
+#if 0 // DEPRECATED
 
 /**
 \brief Render target attachment descriptor structure.

@@ -25,14 +25,6 @@ class DbgRenderTarget : public RenderTarget
 
         DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc);
 
-        void AttachDepthBuffer(const Extent2D& size) override;
-        void AttachStencilBuffer(const Extent2D& size) override;
-        void AttachDepthStencilBuffer(const Extent2D& size) override;
-
-        void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
-
-        void DetachAll() override;
-
         // Returns the render target descriptor of this debug layer object.
         inline const RenderTargetDescriptor& GetDesc() const
         {

@@ -30,13 +30,9 @@ class D3D11RenderTarget : public RenderTarget
 
         D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
 
-        void AttachDepthBuffer(const Extent2D& size) override;
-        void AttachStencilBuffer(const Extent2D& size) override;
-        void AttachDepthStencilBuffer(const Extent2D& size) override;
-
-        void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) override;
-
-        void DetachAll() override;
+        #if 0
+        void DetachAll();
+        #endif
 
         /* ----- Extended Internal Functions ----- */
 
@@ -54,6 +50,11 @@ class D3D11RenderTarget : public RenderTarget
         }
 
     private:
+
+        void AttachDepthBuffer(const Extent2D& size);
+        void AttachStencilBuffer(const Extent2D& size);
+        void AttachDepthStencilBuffer(const Extent2D& size);
+        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc);
 
         void CreateDepthStencilAndDSV(const Extent2D& size, DXGI_FORMAT format);
         void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc);

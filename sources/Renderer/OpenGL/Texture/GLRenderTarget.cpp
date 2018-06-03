@@ -36,13 +36,7 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
         if (attachment.texture)
         {
             /* Attach texture */
-            RenderTargetAttachmentDescriptor attachmentDesc;
-            {
-                attachmentDesc.mipLevel = attachment.mipLevel;
-                attachmentDesc.layer    = attachment.layer;
-                attachmentDesc.cubeFace = attachment.cubeFace;
-            }
-            AttachTexture(*attachment.texture, attachmentDesc);
+            AttachTexture(*attachment.texture, attachment);
         }
         else
         {
@@ -65,6 +59,92 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
         }
     }
 }
+
+#if 0
+
+void GLRenderTarget::DetachAll()
+{
+    /* Reset framebuffer and renderbuffer objects */
+    ResetResolution();
+
+    framebuffer_.Recreate();
+
+    renderbuffer_.reset();
+
+    if (framebufferMS_)
+        framebufferMS_->Recreate();
+
+    colorAttachments_.clear();
+    renderbuffersMS_.clear();
+
+    blitMask_ = 0;
+}
+
+#endif
+
+/* ----- Extended Internal Functions ----- */
+
+//private
+void GLRenderTarget::BlitFramebuffer()
+{
+    GLFramebuffer::Blit(
+        static_cast<GLint>(GetResolution().width),
+        static_cast<GLint>(GetResolution().height),
+        blitMask_
+    );
+}
+
+/*
+Blit (or rather copy) each multi-sample attachment from the
+multi-sample framebuffer (read) into the main framebuffer (draw)
+*/
+void GLRenderTarget::BlitOntoFramebuffer()
+{
+    if (framebufferMS_)
+    {
+        framebuffer_.Bind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+        framebufferMS_->Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
+
+        for (auto attachment : colorAttachments_)
+        {
+            glReadBuffer(attachment);
+            glDrawBuffer(attachment);
+            BlitFramebuffer();
+        }
+
+        framebufferMS_->Unbind(GLFramebufferTarget::READ_FRAMEBUFFER);
+        framebuffer_.Unbind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
+    }
+}
+
+/*
+Blit (or rather copy) each multi-sample attachment from the
+multi-sample framebuffer (read) into the back buffer (draw)
+*/
+void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
+{
+    if (colorAttachmentIndex < colorAttachments_.size())
+    {
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFramebuffer().GetID());
+        {
+            glReadBuffer(colorAttachments_[colorAttachmentIndex]);
+            glDrawBuffer(GL_BACK);
+            BlitFramebuffer();
+        }
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
+    }
+}
+
+const GLFramebuffer& GLRenderTarget::GetFramebuffer() const
+{
+    return (framebufferMS_ != nullptr ? *framebufferMS_ : framebuffer_);
+}
+
+
+/*
+ * ======= Private: =======
+ */
 
 void GLRenderTarget::AttachDepthBuffer(const Extent2D& size)
 {
@@ -100,7 +180,7 @@ static GLint GetTexInternalFormat(const GLTexture& textureGL)
     return internalFormat;
 }
 
-void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc)
+void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc)
 {
     /* Get OpenGL texture object */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -184,88 +264,6 @@ void GLRenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmen
         renderbuffersMS_.emplace_back(std::move(renderbuffer));
     }
 }
-
-void GLRenderTarget::DetachAll()
-{
-    /* Reset framebuffer and renderbuffer objects */
-    ResetResolution();
-
-    framebuffer_.Recreate();
-
-    renderbuffer_.reset();
-
-    if (framebufferMS_)
-        framebufferMS_->Recreate();
-
-    colorAttachments_.clear();
-    renderbuffersMS_.clear();
-
-    blitMask_ = 0;
-}
-
-/* ----- Extended Internal Functions ----- */
-
-//private
-void GLRenderTarget::BlitFramebuffer()
-{
-    GLFramebuffer::Blit(
-        static_cast<GLint>(GetResolution().width),
-        static_cast<GLint>(GetResolution().height),
-        blitMask_
-    );
-}
-
-/*
-Blit (or rather copy) each multi-sample attachment from the
-multi-sample framebuffer (read) into the main framebuffer (draw)
-*/
-void GLRenderTarget::BlitOntoFramebuffer()
-{
-    if (framebufferMS_)
-    {
-        framebuffer_.Bind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
-        framebufferMS_->Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
-
-        for (auto attachment : colorAttachments_)
-        {
-            glReadBuffer(attachment);
-            glDrawBuffer(attachment);
-            BlitFramebuffer();
-        }
-
-        framebufferMS_->Unbind(GLFramebufferTarget::READ_FRAMEBUFFER);
-        framebuffer_.Unbind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
-    }
-}
-
-/*
-Blit (or rather copy) each multi-sample attachment from the
-multi-sample framebuffer (read) into the back buffer (draw)
-*/
-void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
-{
-    if (colorAttachmentIndex < colorAttachments_.size())
-    {
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, GetFramebuffer().GetID());
-        {
-            glReadBuffer(colorAttachments_[colorAttachmentIndex]);
-            glDrawBuffer(GL_BACK);
-            BlitFramebuffer();
-        }
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::READ_FRAMEBUFFER, 0);
-    }
-}
-
-const GLFramebuffer& GLRenderTarget::GetFramebuffer() const
-{
-    return (framebufferMS_ != nullptr ? *framebufferMS_ : framebuffer_);
-}
-
-
-/*
- * ======= Private: =======
- */
 
 void GLRenderTarget::InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat)
 {

@@ -34,7 +34,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
 
     public:
 
-        #if 1 // DEPRECATED
+        #if 0 // DEPRECATED
 
         /**
         \brief Attaches an internal depth buffer to this render target.
