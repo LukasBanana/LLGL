@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
         {
             contextDesc.videoMode.resolution = { 640, 480 };
         }
-        /*auto context = */renderer->CreateRenderContext(contextDesc);
+        auto context = renderer->CreateRenderContext(contextDesc);
 
         // Create command buffer
         union

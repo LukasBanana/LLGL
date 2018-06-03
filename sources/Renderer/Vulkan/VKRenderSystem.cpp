@@ -884,7 +884,7 @@ void VKRenderSystem::QueryDeviceProperties()
         caps.features.hasOffsetInstancing               = true;
         caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
         caps.features.hasConservativeRasterization      = false;
-        caps.features.hasStreamOutputs                  = true;
+        caps.features.hasStreamOutputs                  = false;
 
         /* Query limits */
         caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];
@@ -1094,6 +1094,12 @@ VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkB
         {
             FillBufferCreateInfo(createInfo, static_cast<VkDeviceSize>(desc.size), (usage | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT));
             return TakeOwnership(buffers_, MakeUnique<VKBuffer>(BufferType::Storage, device_, createInfo));
+        }
+        break;
+
+        case BufferType::StreamOutput:
+        {
+            throw std::runtime_error("stream output buffer not supported by Vulkan renderer");
         }
         break;
 

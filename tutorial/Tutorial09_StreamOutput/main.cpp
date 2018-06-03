@@ -116,6 +116,10 @@ private:
 
     void OnDrawFrame() override
     {
+        // Set render target and viewport
+        commands->SetRenderTarget(*context);
+        commands->SetViewport(LLGL::Viewport { {}, context->GetVideoMode().resolution });
+
         // Clear color and depth buffers
         commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
 

@@ -672,7 +672,7 @@ void GLStateManager::BindBuffersBase(GLBufferTarget target, GLuint first, GLsize
     /* Always bind buffers with a base index */
     auto targetIdx = static_cast<std::size_t>(target);
     auto targetGL = g_bufferTargetsEnum[targetIdx];
-    
+
     #ifdef GL_ARB_multi_bind
     if (HasExtension(GLExt::ARB_multi_bind))
     {
@@ -1052,7 +1052,7 @@ void GLStateManager::DetermineLimits()
 void GLStateManager::DetermineVendorSpecificExtensions()
 {
     #if defined GL_NV_conservative_raster || defined GL_INTEL_conservative_rasterization
-    
+
     /* Initialize extenstion states */
     auto InitStateExt = [&](GLStateExt state, const GLExt extension, GLenum cap)
     {
@@ -1074,7 +1074,7 @@ void GLStateManager::DetermineVendorSpecificExtensions()
     // see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     InitStateExt(GLStateExt::CONSERVATIVE_RASTERIZATION, GLExt::INTEL_conservative_rasterization, GL_CONSERVATIVE_RASTERIZATION_INTEL);
     #endif
-    
+
     #endif
 }
 

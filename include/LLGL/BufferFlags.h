@@ -29,11 +29,23 @@ namespace LLGL
 */
 enum class BufferType
 {
-    Vertex,         //!< Vertex buffer type.
-    Index,          //!< Index buffer type.
-    Constant,       //!< Constant buffer type (also called "Uniform Buffer Object").
-    Storage,        //!< Storage buffer type (also called "Shader Storage Buffer Object" or "Read/Write Buffer").
-    StreamOutput,   //!< Stream output buffer type (also called "Transform Feedback Buffer").
+    //! Vertex buffer type.
+    Vertex,
+
+    //! Index buffer type.
+    Index,
+
+    //! Constant buffer type (also called "Uniform Buffer Object").
+    Constant,
+
+    //! Storage buffer type (also called "Shader Storage Buffer Object" or "Read/Write Buffer").
+    Storage,
+
+    /**
+    \brief Stream output buffer type (also called "Transform Feedback Buffer").
+    \note Only supported with: OpenGL, Direct3D 11, Direct3D 12.
+    */
+    StreamOutput,
 };
 
 /**
