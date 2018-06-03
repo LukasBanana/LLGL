@@ -127,7 +127,7 @@ template <typename BaseType, typename SubType>
 SubType* TakeOwnership(std::set<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
 {
     auto ref = object.get();
-    objectSet.emplace(std::move(object));
+    objectSet.emplace(std::forward<std::unique_ptr<SubType>>(object));
     return ref;
 }
 
@@ -135,7 +135,7 @@ template <typename BaseType, typename SubType>
 SubType* TakeOwnership(std::vector<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
 {
     auto ref = object.get();
-    objectSet.emplace_back(std::move(object));
+    objectSet.emplace_back(std::forward<std::unique_ptr<SubType>>(object));
     return ref;
 }
 
@@ -143,7 +143,7 @@ template <typename BaseType, typename SubType>
 SubType* TakeOwnership(std::list<std::unique_ptr<BaseType>>& objectSet, std::unique_ptr<SubType>&& object)
 {
     auto ref = object.get();
-    objectSet.emplace_back(std::move(object));
+    objectSet.emplace_back(std::forward<std::unique_ptr<SubType>>(object));
     return ref;
 }
 

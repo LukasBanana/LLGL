@@ -14,7 +14,7 @@
 #include <algorithm>
 
 #include "RenderState/D3D11StateManager.h"
-#include "RenderState/D3D11GraphicsPipeline.h"
+#include "RenderState/D3D11GraphicsPipelineBase.h"
 #include "RenderState/D3D11ComputePipeline.h"
 #include "RenderState/D3D11Query.h"
 
@@ -393,7 +393,7 @@ void D3D11CommandBuffer::SetRenderTarget(RenderContext& renderContext)
 
 void D3D11CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    auto& graphicsPipelineD3D = LLGL_CAST(D3D11GraphicsPipeline&, graphicsPipeline);
+    auto& graphicsPipelineD3D = LLGL_CAST(D3D11GraphicsPipelineBase&, graphicsPipeline);
     graphicsPipelineD3D.Bind(stateMngr_);
 }
 

@@ -22,7 +22,7 @@ namespace VKTypes
 [[noreturn]]
 void MapFailed(const std::string& typeName, const std::string& vknTypeName)
 {
-    throw std::invalid_argument("failed to map '" + typeName + "' to '" + vknTypeName + "' Vulkan parameter");
+    throw std::invalid_argument("failed to map <LLGL::" + typeName + "> to <" + vknTypeName + "> Vulkan parameter");
 }
 
 VkShaderStageFlagBits Map(const ShaderType shaderType)

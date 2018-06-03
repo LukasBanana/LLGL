@@ -7,6 +7,7 @@
 
 #include "D3D11Types.h"
 #include "../DXCommon/DXTypes.h"
+#include "../DXCommon/DXCore.h"
 #include <stdexcept>
 #include <string>
 
@@ -17,6 +18,8 @@ namespace LLGL
 namespace D3D11Types
 {
 
+
+/* ----- Map Functions ----- */
 
 DXGI_FORMAT Map(const VectorType vectorType)
 {
@@ -268,9 +271,203 @@ D3D11_SRV_DIMENSION Map(const TextureType textureType)
     DXTypes::MapFailed("TextureType", "D3D11_SRV_DIMENSION");
 }
 
+D3D11_LOGIC_OP Map(const LogicOp logicOp)
+{
+    switch (logicOp)
+    {
+        case LogicOp::Disabled:     return D3D11_LOGIC_OP_NOOP; // use default value when it's disabled
+        case LogicOp::Clear:        return D3D11_LOGIC_OP_CLEAR;
+        case LogicOp::Set:          return D3D11_LOGIC_OP_SET;
+        case LogicOp::Copy:         return D3D11_LOGIC_OP_COPY;
+        case LogicOp::CopyInverted: return D3D11_LOGIC_OP_COPY_INVERTED;
+        case LogicOp::NoOp:         return D3D11_LOGIC_OP_NOOP;
+        case LogicOp::Invert:       return D3D11_LOGIC_OP_INVERT;
+        case LogicOp::AND:          return D3D11_LOGIC_OP_AND;
+        case LogicOp::ANDReverse:   return D3D11_LOGIC_OP_AND_REVERSE;
+        case LogicOp::ANDInverted:  return D3D11_LOGIC_OP_AND_INVERTED;
+        case LogicOp::NAND:         return D3D11_LOGIC_OP_NAND;
+        case LogicOp::OR:           return D3D11_LOGIC_OP_OR;
+        case LogicOp::ORReverse:    return D3D11_LOGIC_OP_OR_REVERSE;
+        case LogicOp::ORInverted:   return D3D11_LOGIC_OP_OR_INVERTED;
+        case LogicOp::NOR:          return D3D11_LOGIC_OP_NOR;
+        case LogicOp::XOR:          return D3D11_LOGIC_OP_XOR;
+        case LogicOp::Equiv:        return D3D11_LOGIC_OP_EQUIV;
+    }
+    DXTypes::MapFailed("LogicOp", "D3D11_LOGIC_OP");
+}
+
+
+/* ----- Unmap Functions ----- */
+
 TextureFormat Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);
+}
+
+
+/* ----- Convert Functions ----- */
+
+static void Convert(D3D11_DEPTH_STENCILOP_DESC& dst, const StencilFaceDescriptor& src)
+{
+    dst.StencilFailOp       = Map(src.stencilFailOp);
+    dst.StencilDepthFailOp  = Map(src.depthFailOp);
+    dst.StencilPassOp       = Map(src.depthPassOp);
+    dst.StencilFunc         = Map(src.compareOp);
+}
+
+void Convert(D3D11_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil)
+{
+    dst.DepthEnable       = DXBoolean(srcDepth.testEnabled);
+    dst.DepthWriteMask    = (srcDepth.writeEnabled ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO);
+    dst.DepthFunc         = Map(srcDepth.compareOp);
+    dst.StencilEnable     = DXBoolean(srcStencil.testEnabled);
+    dst.StencilReadMask   = static_cast<UINT8>(srcStencil.front.readMask);
+    dst.StencilWriteMask  = static_cast<UINT8>(srcStencil.front.writeMask);
+
+    Convert(dst.FrontFace, srcStencil.front);
+    Convert(dst.BackFace, srcStencil.back);
+}
+
+void Convert(D3D11_RASTERIZER_DESC& dst, const RasterizerDescriptor& src)
+{
+    if (src.conservativeRasterization)
+        DXTypes::ParamNotSupported("LLGL::RasterizerDescriptor::conservativeRasterization", "Direct3D 11.3");
+
+    dst.FillMode                = Map(src.polygonMode);
+    dst.CullMode                = Map(src.cullMode);
+    dst.FrontCounterClockwise   = DXBoolean(src.frontCCW);
+    dst.DepthBias               = static_cast<INT>(src.depthBias.constantFactor);
+    dst.DepthBiasClamp          = src.depthBias.clamp;
+    dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
+    dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
+    dst.ScissorEnable           = DXBoolean(src.scissorTestEnabled);
+    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
+    dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
+}
+
+// Direct3D 11.3
+void Convert(D3D11_RASTERIZER_DESC2& dst, const RasterizerDescriptor& src)
+{
+    dst.FillMode                = Map(src.polygonMode);
+    dst.CullMode                = Map(src.cullMode);
+    dst.FrontCounterClockwise   = DXBoolean(src.frontCCW);
+    dst.DepthBias               = static_cast<INT>(src.depthBias.constantFactor);
+    dst.DepthBiasClamp          = src.depthBias.clamp;
+    dst.SlopeScaledDepthBias    = src.depthBias.slopeFactor;
+    dst.DepthClipEnable         = DXBoolean(!src.depthClampEnabled);
+    dst.ScissorEnable           = DXBoolean(src.scissorTestEnabled);
+    dst.MultisampleEnable       = DXBoolean(src.multiSampling.enabled);
+    dst.AntialiasedLineEnable   = DXBoolean(src.antiAliasedLineEnabled);
+    dst.ForcedSampleCount       = 0;
+    dst.ConservativeRaster      = (src.conservativeRasterization ? D3D11_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D11_CONSERVATIVE_RASTERIZATION_MODE_OFF);
+}
+
+static UINT8 GetColorWriteMask(const ColorRGBAb& color)
+{
+    UINT8 mask = 0;
+
+    if (color.r) { mask |= D3D11_COLOR_WRITE_ENABLE_RED;   }
+    if (color.g) { mask |= D3D11_COLOR_WRITE_ENABLE_GREEN; }
+    if (color.b) { mask |= D3D11_COLOR_WRITE_ENABLE_BLUE;  }
+    if (color.a) { mask |= D3D11_COLOR_WRITE_ENABLE_ALPHA; }
+
+    return mask;
+}
+
+void Convert(D3D11_BLEND_DESC& dst, const BlendDescriptor& src)
+{
+    if (src.logicOp != LogicOp::Disabled)
+        DXTypes::ParamNotSupported("LLGL::BlendDescriptor::logicOp", "Direct3D 11.1");
+
+    dst.AlphaToCoverageEnable  = DXBoolean(src.alphaToCoverageEnabled);
+    dst.IndependentBlendEnable = DXBoolean(src.targets.size() > 1);
+
+    for (UINT i = 0, n = static_cast<UINT>(src.targets.size()); i < 8u; ++i)
+    {
+        auto& dstTarget = dst.RenderTarget[i];
+
+        if (i < n)
+        {
+            const auto& srcTarget = src.targets[i];
+            dstTarget.BlendEnable           = DXBoolean(src.blendEnabled);
+            dstTarget.SrcBlend              = Map(srcTarget.srcColor);
+            dstTarget.DestBlend             = Map(srcTarget.dstColor);
+            dstTarget.BlendOp               = Map(srcTarget.colorArithmetic);
+            dstTarget.SrcBlendAlpha         = Map(srcTarget.srcAlpha);
+            dstTarget.DestBlendAlpha        = Map(srcTarget.dstAlpha);
+            dstTarget.BlendOpAlpha          = Map(srcTarget.alphaArithmetic);
+            dstTarget.RenderTargetWriteMask = GetColorWriteMask(srcTarget.colorMask);
+        }
+        else
+        {
+            dstTarget.BlendEnable           = FALSE;
+            dstTarget.SrcBlend              = D3D11_BLEND_ONE;
+            dstTarget.DestBlend             = D3D11_BLEND_ZERO;
+            dstTarget.BlendOp               = D3D11_BLEND_OP_ADD;
+            dstTarget.SrcBlendAlpha         = D3D11_BLEND_ONE;
+            dstTarget.DestBlendAlpha        = D3D11_BLEND_ZERO;
+            dstTarget.BlendOpAlpha          = D3D11_BLEND_OP_ADD;
+            dstTarget.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        }
+    }
+}
+
+// Direct3D 11.1
+static void Convert(D3D11_RENDER_TARGET_BLEND_DESC1& dst, const BlendTargetDescriptor& src, BOOL blendEnabled)
+{
+    dst.BlendEnable             = blendEnabled;
+    dst.LogicOpEnable           = FALSE;
+    dst.SrcBlend                = Map(src.srcColor);
+    dst.DestBlend               = Map(src.dstColor);
+    dst.BlendOp                 = Map(src.colorArithmetic);
+    dst.SrcBlendAlpha           = Map(src.srcAlpha);
+    dst.DestBlendAlpha          = Map(src.dstAlpha);
+    dst.BlendOpAlpha            = Map(src.alphaArithmetic);
+    dst.LogicOp                 = D3D11_LOGIC_OP_NOOP;
+    dst.RenderTargetWriteMask   = GetColorWriteMask(src.colorMask);
+}
+
+// Direct3D 11.1
+static void SetBlendDescToDefaut(D3D11_RENDER_TARGET_BLEND_DESC1& dst, BOOL logicOpEnabled, D3D11_LOGIC_OP logicOp)
+{
+    dst.BlendEnable             = FALSE;
+    dst.LogicOpEnable           = logicOpEnabled;
+    dst.SrcBlend                = D3D11_BLEND_ONE;
+    dst.DestBlend               = D3D11_BLEND_ZERO;
+    dst.BlendOp                 = D3D11_BLEND_OP_ADD;
+    dst.SrcBlendAlpha           = D3D11_BLEND_ONE;
+    dst.DestBlendAlpha          = D3D11_BLEND_ZERO;
+    dst.BlendOpAlpha            = D3D11_BLEND_OP_ADD;
+    dst.LogicOp                 = logicOp;
+    dst.RenderTargetWriteMask   = D3D11_COLOR_WRITE_ENABLE_ALL;
+}
+
+// Direct3D 11.1
+void Convert(D3D11_BLEND_DESC1& dst, const BlendDescriptor& src)
+{
+    dst.AlphaToCoverageEnable  = DXBoolean(src.alphaToCoverageEnabled);
+
+    if (src.logicOp == LogicOp::Disabled)
+    {
+        dst.IndependentBlendEnable = DXBoolean(src.targets.size() > 1);
+
+        for (UINT i = 0, n = static_cast<UINT>(src.targets.size()); i < 8u; ++i)
+        {
+            if (i < n)
+                Convert(dst.RenderTarget[i], src.targets[i], DXBoolean(src.blendEnabled));
+            else
+                SetBlendDescToDefaut(dst.RenderTarget[i], FALSE, D3D11_LOGIC_OP_NOOP);
+        }
+    }
+    else
+    {
+        const auto logicOp = Map(src.logicOp);
+
+        dst.IndependentBlendEnable = FALSE;
+
+        for (UINT i = 0, n = static_cast<UINT>(src.targets.size()); i < 8u; ++i)
+            SetBlendDescToDefaut(dst.RenderTarget[i], TRUE, logicOp);
+    }
 }
 
 

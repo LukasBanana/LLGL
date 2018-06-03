@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         LLGL::Extent2D desktopResolution;
         if (auto display = LLGL::Display::QueryPrimary())
             desktopResolution = display->GetDisplayMode().resolution;
-            
+
         const LLGL::Offset2D desktopCenter
         {
             static_cast<int>(desktopResolution.width)/2,
@@ -188,13 +188,23 @@ int main(int argc, char* argv[])
             throw std::runtime_error(shaderProgram->QueryInfoLog());
 
         // Create graphics pipeline
+        LLGL::GraphicsPipeline* pipeline[2] = {};
+        const bool logicOpSupported = renderer->GetRenderingCaps().features.hasLogicOp;
+
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.shaderProgram              = shaderProgram;
             pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
         }
-        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        {
+            // Only enable logic operations if it's supported, otherwise an exception is thrown
+            if (logicOpSupported)
+                pipelineDesc.blend.logicOp = LLGL::LogicOp::CopyInverted;
+        }
+        pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Initialize viewport array
         LLGL::Viewport viewports[2] =
@@ -203,9 +213,29 @@ int main(int argc, char* argv[])
             LLGL::Viewport { 320.0f, 0.0f, 320.0f, 480.0f },
         };
 
+        bool enableLogicOp = false;
+
+        if (logicOpSupported)
+            std::cout << "Press SPACE to enabled/disable logic fragment operations" << std::endl;
+
         // Enter main loop
         while ( ( window1.ProcessEvents() || window2.ProcessEvents() ) && !input->KeyPressed(LLGL::Key::Escape) )
         {
+            // Switch between pipeline states
+            if (input->KeyDown(LLGL::Key::Space))
+            {
+                if (logicOpSupported)
+                {
+                    enableLogicOp = !enableLogicOp;
+                    if (enableLogicOp)
+                        std::cout << "Logic Fragment Operation Enabled" << std::endl;
+                    else
+                        std::cout << "Logic Fragment Operation Disabled" << std::endl;
+                }
+                else
+                    std::cout << "Logic Fragment Operation Not Supported" << std::endl;
+            }
+
             // Draw content in 1st render context
             commands->SetRenderTarget(*context1);
             {
@@ -213,7 +243,7 @@ int main(int argc, char* argv[])
                 commands->SetViewports(2, viewports);
 
                 // Set graphics pipeline
-                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
 
                 // Set vertex buffer
                 commands->SetVertexBuffer(*vertexBuffer);
@@ -234,7 +264,7 @@ int main(int argc, char* argv[])
                 commands->SetViewports(2, viewports);
 
                 // Set graphics pipeline
-                commands->SetGraphicsPipeline(*pipeline);
+                commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
 
                 // Set vertex buffer
                 commands->SetVertexBuffer(*vertexBuffer);

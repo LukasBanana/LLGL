@@ -21,6 +21,20 @@ class Resource;
 class PipelineLayout;
 
 
+/* ----- Enumerations ----- */
+
+#if 0//TODO
+//! Texture flags enumeration.
+struct ResourceViewFlags
+{
+    enum
+    {
+        UnorderedAccess = (1 << 0),
+    };
+};
+#endif
+
+
 /* ----- Structures ----- */
 
 //! Resource view descriptor structure.
@@ -36,7 +50,11 @@ struct ResourceViewDescriptor
     }
 
     //! Pointer to the hardware resoudce.
-    Resource* resource = nullptr;
+    Resource*   resource    = nullptr;
+
+    #if 0//TODO
+    long        flags       = 0;
+    #endif
 };
 
 /**

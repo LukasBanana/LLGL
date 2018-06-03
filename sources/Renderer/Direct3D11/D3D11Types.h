@@ -16,7 +16,7 @@
 #include <LLGL/TextureFlags.h>
 #include <LLGL/BufferFlags.h>
 #include <LLGL/Query.h>
-#include <d3d11.h>
+#include <d3d11_3.h>
 
 
 namespace LLGL
@@ -41,8 +41,15 @@ D3D11_TEXTURE_ADDRESS_MODE  Map( const SamplerAddressMode   addressMode     );
 D3D11_QUERY                 Map( const QueryDescriptor&     queryDesc       );
 D3D11_MAP                   Map( const CPUAccess            cpuAccess       );
 D3D11_SRV_DIMENSION         Map( const TextureType          textureType     );
+D3D11_LOGIC_OP              Map( const LogicOp              logicOp         );
 
 TextureFormat               Unmap( const DXGI_FORMAT format );
+
+void Convert(D3D11_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil);
+void Convert(D3D11_RASTERIZER_DESC& dst, const RasterizerDescriptor& src);
+void Convert(D3D11_RASTERIZER_DESC2& dst, const RasterizerDescriptor& src);
+void Convert(D3D11_BLEND_DESC& dst, const BlendDescriptor& src);
+void Convert(D3D11_BLEND_DESC1& dst, const BlendDescriptor& src);
 
 
 } // /namespace D3D11Types

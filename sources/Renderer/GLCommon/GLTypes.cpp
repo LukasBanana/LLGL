@@ -20,15 +20,15 @@ namespace GLTypes
 /* ----- Internal functions ----- */
 
 [[noreturn]]
-static void MapFailed(const std::string& typeName)
+static void MapFailed(const char* typeName)
 {
-    throw std::invalid_argument("failed to map '" + typeName + "' to OpenGL parameter");
+    throw std::invalid_argument("failed to map <LLGL::" + std::string(typeName) + "> to OpenGL parameter");
 }
 
 /*[[noreturn]]
-static void UnmapFailed(const std::string& typeName)
+static void UnmapFailed(const char* typeName)
 {
-    throw std::invalid_argument("failed to unmap '" + typeName + "' from OpenGL parameter");
+    throw std::invalid_argument("failed to unmap <LLGL::" + std::string(typeName) + "> from OpenGL parameter");
 }*/
 
 

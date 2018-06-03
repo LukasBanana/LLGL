@@ -19,7 +19,7 @@
 #include "Buffer/D3D11Buffer.h"
 #include "Buffer/D3D11BufferArray.h"
 
-#include "RenderState/D3D11GraphicsPipeline.h"
+#include "RenderState/D3D11GraphicsPipelineBase.h"
 #include "RenderState/D3D11ComputePipeline.h"
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11Query.h"
@@ -36,8 +36,9 @@
 
 #include "../ContainerTypes.h"
 #include "../DXCommon/ComPtr.h"
-#include <d3d11.h>
+
 #include <dxgi.h>
+#include <d3d11_3.h>
 
 
 namespace LLGL
@@ -164,6 +165,9 @@ class D3D11RenderSystem : public RenderSystem
         void QueryRendererInfo();
         void QueryRenderingCaps();
 
+        // Returns the minor version of Direct3D 11.X.
+        int GetMinorVersion() const;
+
         void BuildGenericTexture1D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
         void BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
         void BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc);
@@ -192,37 +196,43 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Common objects ----- */
 
-        ComPtr<IDXGIFactory>                        factory_;
-        ComPtr<ID3D11Device>                        device_;
-        ComPtr<ID3D11DeviceContext>                 context_;
-        D3D_FEATURE_LEVEL                           featureLevel_ = D3D_FEATURE_LEVEL_9_1;
+        ComPtr<IDXGIFactory>                            factory_;
 
-        std::unique_ptr<D3D11StateManager>          stateMngr_;
+        ComPtr<ID3D11Device>                            device_;
+        ComPtr<ID3D11Device1>                           device1_;
+        ComPtr<ID3D11Device2>                           device2_;
+        ComPtr<ID3D11Device3>                           device3_;
+
+        ComPtr<ID3D11DeviceContext>                     context_;
+
+        D3D_FEATURE_LEVEL                               featureLevel_           = D3D_FEATURE_LEVEL_9_1;
+
+        std::unique_ptr<D3D11StateManager>              stateMngr_;
 
         /* ----- Hardware object containers ----- */
 
-        HWObjectContainer<D3D11RenderContext>       renderContexts_;
-        HWObjectInstance<D3D11CommandQueue>         commandQueue_;
-        HWObjectContainer<D3D11CommandBuffer>       commandBuffers_;
-        HWObjectContainer<D3D11Buffer>              buffers_;
-        HWObjectContainer<D3D11BufferArray>         bufferArrays_;
-        HWObjectContainer<D3D11Texture>             textures_;
-        HWObjectContainer<D3D11TextureArray>        textureArrays_;
-        HWObjectContainer<D3D11Sampler>             samplers_;
-        HWObjectContainer<D3D11SamplerArray>        samplerArrays_;
-        HWObjectContainer<D3D11RenderTarget>        renderTargets_;
-        HWObjectContainer<D3D11Shader>              shaders_;
-        HWObjectContainer<D3D11ShaderProgram>       shaderPrograms_;
-        HWObjectContainer<D3D11GraphicsPipeline>    graphicsPipelines_;
-        HWObjectContainer<D3D11ComputePipeline>     computePipelines_;
-        HWObjectContainer<D3D11Query>               queries_;
-        HWObjectContainer<D3D11Fence>               fences_;
+        HWObjectContainer<D3D11RenderContext>           renderContexts_;
+        HWObjectInstance<D3D11CommandQueue>             commandQueue_;
+        HWObjectContainer<D3D11CommandBuffer>           commandBuffers_;
+        HWObjectContainer<D3D11Buffer>                  buffers_;
+        HWObjectContainer<D3D11BufferArray>             bufferArrays_;
+        HWObjectContainer<D3D11Texture>                 textures_;
+        HWObjectContainer<D3D11TextureArray>            textureArrays_;
+        HWObjectContainer<D3D11Sampler>                 samplers_;
+        HWObjectContainer<D3D11SamplerArray>            samplerArrays_;
+        HWObjectContainer<D3D11RenderTarget>            renderTargets_;
+        HWObjectContainer<D3D11Shader>                  shaders_;
+        HWObjectContainer<D3D11ShaderProgram>           shaderPrograms_;
+        HWObjectContainer<D3D11GraphicsPipelineBase>    graphicsPipelines_;
+        HWObjectContainer<D3D11ComputePipeline>         computePipelines_;
+        HWObjectContainer<D3D11Query>                   queries_;
+        HWObjectContainer<D3D11Fence>                   fences_;
 
         /* ----- Other members ----- */
 
-        std::vector<VideoAdapterDescriptor>         videoAdatperDescs_;
+        std::vector<VideoAdapterDescriptor>             videoAdatperDescs_;
 
-        CPUAccess                             mappedBufferCPUAccess_  = CPUAccess::ReadOnly;
+        CPUAccess                                       mappedBufferCPUAccess_  = CPUAccess::ReadOnly;
 
 };
 

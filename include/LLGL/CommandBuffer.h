@@ -230,7 +230,12 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /* ----- Resource Heaps ----- */
 
-        //! \todo Document this and make it pure virtual.
+        /**
+        \todo Document this and make it pure virtual.
+        \todo Rename to "SetGraphicsResourceViews"
+        \todo Rename "ResourceHeap" to "ResourceViewHeap"
+        \todo Add interface "ResourceView" to store a single resource view
+        */
         virtual void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
         {
             // dummy
@@ -270,14 +275,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         and a valid render target (or render context) must always be set before any graphics pipeline can be set:
         \code
         // First set render target
-        myRenderer->SetRenderTarget(...);
+        myCmdBuffer->SetRenderTarget(...);
 
         // Then set graphics pipeline
-        myRenderer->SetGraphicsPipeline(...);
+        myCmdBuffer->SetGraphicsPipeline(...);
 
         // Then perform drawing operations
-        myRenderer->SetGraphicsResourceHeap(...);
-        myRenderer->Draw(...);
+        myCmdBuffer->SetGraphicsResourceHeap(...);
+        myCmdBuffer->Draw(...);
         \endcode
         \see RenderSystem::CreateGraphicsPipeline
         */

@@ -885,6 +885,7 @@ void VKRenderSystem::QueryDeviceProperties()
         caps.features.hasViewportArrays                 = (features_.multiViewport != VK_FALSE);
         caps.features.hasConservativeRasterization      = false;
         caps.features.hasStreamOutputs                  = false;
+        caps.features.hasLogicOp                        = true;
 
         /* Query limits */
         caps.limits.lineWidthRange[0]                   = limits.lineWidthRange[0];

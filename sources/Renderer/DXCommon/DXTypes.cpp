@@ -18,15 +18,27 @@ namespace DXTypes
 
 
 [[noreturn]]
-void MapFailed(const std::string& typeName, const std::string& dxTypeName)
+void MapFailed(const char* typeName, const char* dxTypeName)
 {
-    throw std::invalid_argument("failed to map <LLGL::" + typeName + "> to <" + dxTypeName + "> Direct3D parameter");
+    throw std::invalid_argument(
+        "failed to map <LLGL::" + std::string(typeName) + "> to <" + std::string(dxTypeName) + "> Direct3D parameter"
+    );
 }
 
 [[noreturn]]
-void UnmapFailed(const std::string& typeName, const std::string& dxTypeName)
+void UnmapFailed(const char* typeName, const char* dxTypeName)
 {
-    throw std::invalid_argument("failed to unmap <LLGL::" + typeName + "> from <" + dxTypeName + "> Direct3D parameter");
+    throw std::invalid_argument(
+        "failed to unmap <LLGL::" + std::string(typeName) + "> from <" + std::string(dxTypeName) + "> Direct3D parameter"
+    );
+}
+
+[[noreturn]]
+void ParamNotSupported(const char* paramName, const char* requirement)
+{
+    throw std::runtime_error(
+        "parameter '" + std::string(paramName) + "' requires " + std::string(requirement)
+    );
 }
 
 DXGI_FORMAT Map(const VectorType vectorType)

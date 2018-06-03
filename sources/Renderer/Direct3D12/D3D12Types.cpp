@@ -135,7 +135,7 @@ D3D12_LOGIC_OP Map(const LogicOp logicOp)
 {
     switch (logicOp)
     {
-        case LogicOp::Disabled:     return D3D12_LOGIC_OP_NOOP; // use default value 'D3D12_LOGIC_OP_NOOP' when it's disabled
+        case LogicOp::Disabled:     return D3D12_LOGIC_OP_NOOP; // use default value when it's disabled
         case LogicOp::Clear:        return D3D12_LOGIC_OP_CLEAR;
         case LogicOp::Set:          return D3D12_LOGIC_OP_SET;
         case LogicOp::Copy:         return D3D12_LOGIC_OP_COPY;

@@ -506,8 +506,8 @@ struct RasterizerDescriptor
     bool                    antiAliasedLineEnabled      = false;
 
     /**
-    \brief If true, conservative rasterization is enabled.
-    \note Only supported with: Direct3D 12 (or OpenGL if the extension "GL_NV_conservative_raster" or "GL_INTEL_conservative_rasterization" is supported).
+    \brief If true, conservative rasterization is enabled. By default disabled.
+    \note Only supported with: Direct3D 12, Direct3D 11.3, OpenGL (if the extension "GL_NV_conservative_raster" or "GL_INTEL_conservative_rasterization" is supported).
     \see https://www.opengl.org/registry/specs/NV/conservative_raster.txt
     \see https://www.opengl.org/registry/specs/INTEL/conservative_rasterization.txt
     \see RenderingCapabilities::hasConservativeRasterization
@@ -570,8 +570,12 @@ struct BlendDescriptor
     bool                                alphaToCoverageEnabled  = false;
 
     /**
-    \brief Specifies the logical fragment operation. By default LogicOp::Disabled.
-    \note Only supported with: OpenGL, Vulkan, Direct3D 12.
+    \brief Specifies the logic fragment operation. By default LogicOp::Disabled.
+    \remarks Logic pixel operations can not be used in combination with color and alpha blending.
+    Therefore, if this is not LogicOp::Disabled, 'blendEnabled' will be ignored.
+    If logic fragment operations are not supported by the renderer, this must be LogicOp::Disabled.
+    \note For Direct3D 11, feature level 11.1 is required.
+    \see RenderingFeatures::hasLogicOp
     */
     LogicOp                             logicOp                 = LogicOp::Disabled;
 

@@ -25,6 +25,10 @@
 #include "Buffer/D3D11StreamOutputBuffer.h"
 #include "Buffer/D3D11StreamOutputBufferArray.h"
 
+#include "RenderState/D3D11GraphicsPipeline.h"
+#include "RenderState/D3D11GraphicsPipeline1.h"
+#include "RenderState/D3D11GraphicsPipeline3.h"
+
 
 namespace LLGL
 {
@@ -222,7 +226,14 @@ void D3D11RenderSystem::Release(ShaderProgram& shaderProgram)
 
 GraphicsPipeline* D3D11RenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline>(device_.Get(), desc));
+    if (device3_)
+        return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline3>(device3_.Get(), desc));
+    else if (device2_)
+        return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline1>(device2_.Get(), desc));
+    else if (device1_)
+        return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline1>(device1_.Get(), desc));
+    else
+        return TakeOwnership(graphicsPipelines_, MakeUnique<D3D11GraphicsPipeline>(device_.Get(), desc));
 }
 
 ComputePipeline* D3D11RenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -309,6 +320,15 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
     #endif
 
     DXThrowIfFailed(hr, "failed to create D3D11 device");
+
+    /* Try to get an extended D3D11 device */
+    hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
+    if (FAILED(hr))
+    {
+        hr = device_->QueryInterface(IID_PPV_ARGS(&device2_));
+        if (FAILED(hr))
+            device_->QueryInterface(IID_PPV_ARGS(&device1_));
+    }
 }
 
 bool D3D11RenderSystem::CreateDeviceWithFlags(IDXGIAdapter* adapter, const std::vector<D3D_FEATURE_LEVEL>& featureLevels, UINT flags, HRESULT& hr)
@@ -345,9 +365,20 @@ void D3D11RenderSystem::QueryRendererInfo()
 {
     RendererInfo info;
 
-    info.rendererName           = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
-    info.shadingLanguageName    = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
+    /* Initialize Direct3D version string */
+    if (device3_ != nullptr)
+        info.rendererName = "Direct3D 11.3";
+    else if (device2_ != nullptr)
+        info.rendererName = "Direct3D 11.2";
+    else if (device1_ != nullptr)
+        info.rendererName = "Direct3D 11.1";
+    else
+        info.rendererName = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
 
+    /* Initialize HLSL version string */
+    info.shadingLanguageName = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());
+
+    /* Initialize video adapter strings */
     if (!videoAdatperDescs_.empty())
     {
         const auto& videoAdapterDesc = videoAdatperDescs_.front();
@@ -368,14 +399,26 @@ void D3D11RenderSystem::QueryRenderingCaps()
         DXGetRenderingCaps(caps, GetFeatureLevel());
 
         /* Set extended attributes */
-        caps.features.hasCommandBufferExt   = true;
-        caps.limits.maxNumViewports         = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
-        caps.limits.maxViewportSize[0]      = D3D11_VIEWPORT_BOUNDS_MAX;
-        caps.limits.maxViewportSize[1]      = D3D11_VIEWPORT_BOUNDS_MAX;
-        caps.limits.maxBufferSize           = std::numeric_limits<UINT>::max();
-        caps.limits.maxConstantBufferSize   = D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+        const auto minorVersion = GetMinorVersion();
+
+        caps.features.hasCommandBufferExt           = true;
+        caps.features.hasConservativeRasterization  = (minorVersion >= 3);
+
+        caps.limits.maxNumViewports                 = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+        caps.limits.maxViewportSize[0]              = D3D11_VIEWPORT_BOUNDS_MAX;
+        caps.limits.maxViewportSize[1]              = D3D11_VIEWPORT_BOUNDS_MAX;
+        caps.limits.maxBufferSize                   = std::numeric_limits<UINT>::max();
+        caps.limits.maxConstantBufferSize           = D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
     }
     SetRenderingCaps(caps);
+}
+
+int D3D11RenderSystem::GetMinorVersion() const
+{
+    if (device3_) { return 3; }
+    if (device2_) { return 2; }
+    if (device1_) { return 1; }
+    return 0;
 }
 
 

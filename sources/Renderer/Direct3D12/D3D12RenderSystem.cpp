@@ -633,6 +633,7 @@ void D3D12RenderSystem::QueryRenderingCaps()
         DXGetRenderingCaps(caps, GetFeatureLevel());
 
         /* Set extended attributes */
+        caps.features.hasLogicOp            = true;
         caps.limits.maxNumViewports         = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
         caps.limits.maxViewportSize[0]      = D3D12_VIEWPORT_BOUNDS_MAX;
         caps.limits.maxViewportSize[1]      = D3D12_VIEWPORT_BOUNDS_MAX;

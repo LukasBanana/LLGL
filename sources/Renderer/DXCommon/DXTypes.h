@@ -26,10 +26,13 @@ namespace DXTypes
 
 
 [[noreturn]]
-void MapFailed(const std::string& typeName, const std::string& dxTypeName);
+void MapFailed(const char* typeName, const char* dxTypeName);
 
 [[noreturn]]
-void UnmapFailed(const std::string& typeName, const std::string& dxTypeName);
+void UnmapFailed(const char* typeName, const char* dxTypeName);
+
+[[noreturn]]
+void ParamNotSupported(const char* paramName, const char* requirement);
 
 
 DXGI_FORMAT             Map( const VectorType           vectorType    );

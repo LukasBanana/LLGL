@@ -409,6 +409,13 @@ struct RenderingFeatures
     \see CommandBuffer::BeginStreamOutput
     */
     bool hasStreamOutputs               = false;
+
+    /**
+    \brief Specifies whether logic fragment operations are supported.
+    \note For Direct3D 11, feature level 11.1 is required.
+    \see BlendDescriptor::logicOp
+    */
+    bool hasLogicOp                     = false;
 };
 
 /**
