@@ -252,7 +252,7 @@ private:
                 #ifdef ENABLE_DEPTH_TEXTURE
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetDepthTex },
                 #else
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetSize.width, renderTargetSize.height },
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetSize },
                 #endif
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
             };

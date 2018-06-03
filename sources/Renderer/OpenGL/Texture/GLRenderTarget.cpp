@@ -47,13 +47,13 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
                     throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
                     break;
                 case AttachmentType::Depth:
-                    AttachDepthBuffer({ attachment.width, attachment.height });
+                    AttachDepthBuffer(attachment.resolution);
                     break;
                 case AttachmentType::DepthStencil:
-                    AttachDepthStencilBuffer({ attachment.width, attachment.height });
+                    AttachDepthStencilBuffer(attachment.resolution);
                     break;
                 case AttachmentType::Stencil:
-                    AttachStencilBuffer({ attachment.width, attachment.height });
+                    AttachStencilBuffer(attachment.resolution);
                     break;
             }
         }

@@ -84,14 +84,14 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMem
         else
         {
             /* Validate attachment attributes */
-            if (attachmentSrc.width == 0 || attachmentSrc.height == 0)
+            if (attachmentSrc.resolution.width == 0 || attachmentSrc.resolution.height == 0)
                 throw std::invalid_argument("invalid attachment to render target that has no texture and no valid size specified");
 
             format = GetDepthAttachmentVkFormat(attachmentSrc.type);
 
             /* Create depth-stencil buffer */
             if (depthStencilBuffer_.GetVkFormat() == VK_FORMAT_UNDEFINED)
-                depthStencilBuffer_.CreateDepthStencil(deviceMemoryMngr, { attachmentSrc.width, attachmentSrc.height }, format, samplesFlags);
+                depthStencilBuffer_.CreateDepthStencil(deviceMemoryMngr, attachmentSrc.resolution, format, samplesFlags);
             else
                 ErrDepthAttachmentFailed();
         }
@@ -225,7 +225,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
             imageViewRefs[numAttachments] = depthStencilBuffer_.GetVkImageView();
 
             /* Apply texture resolution to render target (to validate correlation between attachments) */
-            ApplyResolution({ attachment.width, attachment.height });
+            ApplyResolution(attachment.resolution);
 
             /* Next attachment index */
             ++numAttachments;

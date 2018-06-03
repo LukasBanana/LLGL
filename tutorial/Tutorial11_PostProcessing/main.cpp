@@ -244,7 +244,7 @@ public:
         {
             renderTargetDesc.attachments =
             {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, resolution.width, resolution.height },
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, resolution },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, colorMap },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMap },
             };

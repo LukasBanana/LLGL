@@ -58,10 +58,9 @@ struct AttachmentDescriptor
     }
 
     //! Constructor for the specified depth-, or stencil attachment.
-    inline AttachmentDescriptor(AttachmentType type, std::uint32_t width, std::uint32_t height) :
-        type   { type   },
-        width  { width  },
-        height { height }
+    inline AttachmentDescriptor(AttachmentType type, const Extent2D& resolution) :
+        type       { type       },
+        resolution { resolution }
     {
     }
 
@@ -80,30 +79,11 @@ struct AttachmentDescriptor
     */
     Texture*        texture     = nullptr;
 
-    #if 0//TODO
-
     /**
-
+    \brief Specifies the resolution of a depth-stencil attachment.
+    \remarks If 'texture' is a valid pointer to a Texture object, this member is ignored and the required resolution is determined by that texture object.
     */
     Extent2D        resolution;
-
-    #else
-
-    /**
-    \brief Specifies the width of the attachment resolution.
-    \remarks If 'texture' is a valid pointer to a Texture object, this value is ignored and the required resolution is determined by that texture object.
-    \todo Maybe combine width and height with new attribute "Extent2D extent".
-    */
-    std::uint32_t   width       = 0;
-
-    /**
-    \brief Specifies the height of the attachment resolution.
-    \remarks If 'texture' is a valid pointer to a Texture object, this value is ignored and the required resolution is determined by that texture object.
-    \todo Maybe combine width and height with new attribute "Extent2D extent".
-    */
-    std::uint32_t   height      = 0;
-
-    #endif
 
     /**
     \brief Specifies the MIP-map level which is to be attached to a render target.

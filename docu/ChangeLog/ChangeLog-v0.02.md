@@ -183,7 +183,7 @@ LLGL::RenderTargetDescriptor myRenderTargetDesc;
 auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
 
 // Attach depth buffer
-/* myRenderTargetSize ... */
+Gs::Vector2ui myRenderTargetSize = { 512, 512 };
 myRenderTarget->AttachDepthBuffer(myRenderTargetSize);
 
 // Attach color texture
@@ -197,8 +197,7 @@ After:
 // Interface:
 AttachmentType AttachmentDescriptor::type;
 Texture*       AttachmentDescriptor::texture;
-uint32_t       AttachmentDescriptor::width;
-uint32_t       AttachmentDescriptor::height;
+Extent2D       AttachmentDescriptor::resolution;
 uint32_t       AttachmentDescriptor::mipLevel;
 uint32_t       AttachmentDescriptor::layer;
 AxisDirection  AttachmentDescriptor::cubeFace;
@@ -210,13 +209,12 @@ bool                         RenderTargetDescriptor::customMultiSampling;
 // Usage:
 LLGL::RenderTargetDescriptor myRenderTargetDesc;
 
-myRenderTargetDesc.attachments.resize(2);
-
 // Specify depth and color attachments
-/* myRenderTargetSize ... */
+LLGL::Extent2D myRenderTargetSize = { 512, 512 };
+
 myRenderTargetDesc.attachments =
 {
-    LLGL::AttachmentDesc(LLGL::AttachmentType::Depth, myRenderTargetSize.x, myRenderTargetSize.y),
+    LLGL::AttachmentDesc(LLGL::AttachmentType::Depth, myRenderTargetSize),
     LLGL::AttachmentDesc(LLGL::AttachmentType::Color, myColorTexture)
 };
 
