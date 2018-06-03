@@ -34,50 +34,6 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
 
     public:
 
-        #if 0 // DEPRECATED
-
-        /**
-        \brief Attaches an internal depth buffer to this render target.
-        \param[in] size Specifies the size of the depth buffer. This must be the same as for all other attachemnts.
-        \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
-        \see AttachDepthStencilBuffer
-        \deprecated Use RenderTargetDescriptor::attachments instead.
-        */
-        virtual void AttachDepthBuffer(const Extent2D& size);
-
-        /**
-        \brief Attaches an internal stencil buffer to this render target.
-        \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
-        \see AttachDepthBuffer
-        \deprecated Use RenderTargetDescriptor::attachments instead.
-        */
-        virtual void AttachStencilBuffer(const Extent2D& size);
-
-        /**
-        \brief Attaches an internal depth-stencil buffer to this render target.
-        \remarks Only a single depth buffer, stencil buffer, or depth-stencil buffer can be attached.
-        \see AttachDepthBuffer
-        \deprecated Use RenderTargetDescriptor::attachments instead.
-        */
-        virtual void AttachDepthStencilBuffer(const Extent2D& size);
-
-        /**
-        \brief Attaches the specified texture to this render target.
-        \param[in] attachmnetDesc Specifies the attachment descriptor.
-        Unused members will be ignored, e.g. the 'layer' member is ignored when a non-array texture is passed.
-        \note A mixed attachment of multi-sample and non-multi-sample textures to a render-target is currently only supported with: Direct3D 11.
-        \deprecated Use RenderTargetDescriptor::attachments instead.
-        */
-        virtual void AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc);
-
-        /**
-        \brief Detaches all textures and depth-stencil buffers from this render target.
-        \deprecated Use RenderSystem::CreateRenderTarget instead, to create a new render target.
-        */
-        virtual void DetachAll();
-
-        #endif // /DEPRECATED
-
         /**
         \brief Returns the render target resolution.
         \remarks This will be determined by the first texture attachment. Every further attachment must have the same size.

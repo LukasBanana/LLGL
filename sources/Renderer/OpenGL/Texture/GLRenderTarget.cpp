@@ -60,28 +60,6 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
     }
 }
 
-#if 0
-
-void GLRenderTarget::DetachAll()
-{
-    /* Reset framebuffer and renderbuffer objects */
-    ResetResolution();
-
-    framebuffer_.Recreate();
-
-    renderbuffer_.reset();
-
-    if (framebufferMS_)
-        framebufferMS_->Recreate();
-
-    colorAttachments_.clear();
-    renderbuffersMS_.clear();
-
-    blitMask_ = 0;
-}
-
-#endif
-
 /* ----- Extended Internal Functions ----- */
 
 //private

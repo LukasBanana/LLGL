@@ -50,24 +50,6 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
     }
 }
 
-#if 0
-
-void D3D11RenderTarget::DetachAll()
-{
-    /* Reset all ComPtr instances */
-    ResetResolution();
-
-    renderTargetViews_.clear();
-    renderTargetViewsRef_.clear();
-
-    depthStencil_.Reset();
-    depthStencilView_.Reset();
-
-    multiSampledAttachments_.clear();
-}
-
-#endif
-
 /* ----- Extended Internal Functions ----- */
 
 void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)

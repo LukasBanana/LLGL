@@ -129,39 +129,6 @@ struct AttachmentDescriptor
     AxisDirection   cubeFace    = AxisDirection::XPos;
 };
 
-#if 0 // DEPRECATED
-
-/**
-\brief Render target attachment descriptor structure.
-\deprecated Use 'AttachmentDescriptor' instead
-\see AttachmentDescriptor
-*/
-struct RenderTargetAttachmentDescriptor
-{
-    /**
-    \brief Specifies the MIP-map level which is to be attached to a render target.
-    \remarks This is only used for non-multi-sample textures.
-    All multi-sample textures will always use the first MIP-map level
-    (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
-    */
-    std::uint32_t   mipLevel    = 0;
-
-    /**
-    \brief Array texture layer.
-    \remarks This is only used for array textures (i.e. TextureType::Texture1DArray,
-    TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
-    */
-    std::uint32_t   layer       = 0;
-
-    /**
-    \brief Cube texture face.
-    \remarks This is only used for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
-    */
-    AxisDirection   cubeFace    = AxisDirection::XPos;
-};
-
-#endif // /DEPRECATED
-
 /**
 \brief Render target descriptor structure.
 \remarks Here is a small example of a render target descriptor with a color attachmnet

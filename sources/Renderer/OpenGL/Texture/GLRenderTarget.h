@@ -29,10 +29,6 @@ class GLRenderTarget : public RenderTarget
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
 
-        #if 0
-        void DetachAll();
-        #endif
-
         /* ----- Extended Internal Functions ----- */
 
         // Blits the multi-sample framebuffer onto the default framebuffer.

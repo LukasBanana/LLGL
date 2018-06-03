@@ -28,26 +28,31 @@ class VKRenderTarget : public RenderTarget
 
         void ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr);
 
+        // Returns the Vulkan framebuffer object.
         inline VkFramebuffer GetVkFramebuffer() const
         {
             return framebuffer_;
         }
 
+        // Returns the Vulkan render pass object.
         inline VkRenderPass GetVkRenderPass() const
         {
             return renderPass_;
         }
 
+        // Returns the render target resolution as VkExtent2D.
         inline VkExtent2D GetVkExtent() const
         {
             return { GetResolution().width, GetResolution().height };
         }
 
+        // Returns the number of render target color attachments.
         inline std::uint32_t GetNumColorAttachments() const
         {
             return numColorAttachments_;
         }
 
+        // Returns true if this render target has a depth-stencil attachment.
         inline bool HasDepthStencilAttachment() const
         {
             return hasDepthStencilAttachment_;

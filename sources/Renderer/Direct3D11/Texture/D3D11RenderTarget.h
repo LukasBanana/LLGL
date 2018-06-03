@@ -30,10 +30,6 @@ class D3D11RenderTarget : public RenderTarget
 
         D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
 
-        #if 0
-        void DetachAll();
-        #endif
-
         /* ----- Extended Internal Functions ----- */
 
         // Resolves all multi-sampled subresources.

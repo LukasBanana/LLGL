@@ -15,17 +15,6 @@ namespace LLGL
 {
 
 
-#if 0 // DEPRECATED
-
-void RenderTarget::AttachDepthBuffer(const Extent2D& size) { /* dummy */ }
-void RenderTarget::AttachStencilBuffer(const Extent2D& size) { /* dummy */ }
-void RenderTarget::AttachDepthStencilBuffer(const Extent2D& size) { /* dummy */ }
-void RenderTarget::AttachTexture(Texture& texture, const RenderTargetAttachmentDescriptor& attachmentDesc) { /* dummy */ }
-void RenderTarget::DetachAll() { /* dummy */ }
-
-#endif // /DEPRECATED
-
-
 /*
  * ======= Protected: =======
  */
