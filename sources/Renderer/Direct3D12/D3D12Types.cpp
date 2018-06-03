@@ -131,6 +131,31 @@ D3D12_STENCIL_OP Map(const StencilOp stencilOp)
     DXTypes::MapFailed("StencilOp", "D3D12_STENCIL_OP");
 }
 
+D3D12_LOGIC_OP Map(const LogicOp logicOp)
+{
+    switch (logicOp)
+    {
+        case LogicOp::Disabled:     return D3D12_LOGIC_OP_NOOP; // use default value 'D3D12_LOGIC_OP_NOOP' when it's disabled
+        case LogicOp::Clear:        return D3D12_LOGIC_OP_CLEAR;
+        case LogicOp::Set:          return D3D12_LOGIC_OP_SET;
+        case LogicOp::Copy:         return D3D12_LOGIC_OP_COPY;
+        case LogicOp::CopyInverted: return D3D12_LOGIC_OP_COPY_INVERTED;
+        case LogicOp::NoOp:         return D3D12_LOGIC_OP_NOOP;
+        case LogicOp::Invert:       return D3D12_LOGIC_OP_INVERT;
+        case LogicOp::AND:          return D3D12_LOGIC_OP_AND;
+        case LogicOp::ANDReverse:   return D3D12_LOGIC_OP_AND_REVERSE;
+        case LogicOp::ANDInverted:  return D3D12_LOGIC_OP_AND_INVERTED;
+        case LogicOp::NAND:         return D3D12_LOGIC_OP_NAND;
+        case LogicOp::OR:           return D3D12_LOGIC_OP_OR;
+        case LogicOp::ORReverse:    return D3D12_LOGIC_OP_OR_REVERSE;
+        case LogicOp::ORInverted:   return D3D12_LOGIC_OP_OR_INVERTED;
+        case LogicOp::NOR:          return D3D12_LOGIC_OP_NOR;
+        case LogicOp::XOR:          return D3D12_LOGIC_OP_XOR;
+        case LogicOp::Equiv:        return D3D12_LOGIC_OP_EQUIV;
+    }
+    DXTypes::MapFailed("LogicOp", "D3D12_LOGIC_OP");
+}
+
 TextureFormat Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);

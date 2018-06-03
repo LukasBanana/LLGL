@@ -546,14 +546,14 @@ struct BlendTargetDescriptor
     BlendArithmetic alphaArithmetic = BlendArithmetic::Add;
 
     //! Specifies which color components are enabled for writing. By default (true, true, true, true).
-    ColorRGBAb      colorMask;
+    ColorRGBAb      colorMask       = { true, true, true, true };
 };
 
 //! Blending state descriptor structure.
 struct BlendDescriptor
 {
     //! Specifies whether blending is enabled or disabled. This applies to all blending targets.
-    bool                                blendEnabled    = false;
+    bool                                blendEnabled            = false;
 
     /**
     \brief Specifies the blending color factor. By default (0, 0, 0, 0).
@@ -561,18 +561,25 @@ struct BlendDescriptor
     \see BlendOp::BlendFactor
     \see BlendOp::InvBlendFactor
     */
-    ColorRGBAf                          blendFactor { 0.0f, 0.0f, 0.0f, 0.0f };
+    ColorRGBAf                          blendFactor             = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+    /**
+    \brief Specifies whether to use alpha-to-coverage as a multi-sampling technique when setting a pixel to a render target. By default disabled.
+    \remarks This is useful when multi-sampling is enabled and alpha tests are implemented in a fragment shader (e.g. to render fences, plants, or other transparent geometries).
+    */
+    bool                                alphaToCoverageEnabled  = false;
 
     /**
     \brief Specifies the logical fragment operation. By default LogicOp::Disabled.
-    \note Only supported with: OpenGL, Vulkan.
+    \note Only supported with: OpenGL, Vulkan, Direct3D 12.
     */
-    LogicOp                             logicOp         = LogicOp::Disabled;
+    LogicOp                             logicOp                 = LogicOp::Disabled;
 
     /**
     \brief Render-target blend states. A maximum of 8 targets is supported. Further targets will be ignored.
     \remarks If the number of targets is not equal to the number of attachments of the respective render target (either RenderTarget or RenderContext), the behavior is undefined.
     Especially for low-level APIs such as Vulkan, this must be compatible to the render target that is used with the graphics pipeline state of this blend descriptor.
+    \todo Change this to a fixed size array of 8 elements (like in D3D11 and D3D12), and move 'blendEnabled' attribute into 'BlendTargetDescriptor'.
     */
     std::vector<BlendTargetDescriptor>  targets;
 };

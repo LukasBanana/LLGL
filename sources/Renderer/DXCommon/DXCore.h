@@ -39,6 +39,9 @@ struct D3DTextureFormatDescriptor
 // Throws an std::runtime_error exception if 'hr' is not S_OK.
 void DXThrowIfFailed(const HRESULT hr, const char* info);
 
+// Returns the specified value as a DirectX BOOL type.
+BOOL DXBoolean(bool value);
+
 // Returns the blob data as string.
 std::string DXGetBlobString(ID3DBlob* blob);
 

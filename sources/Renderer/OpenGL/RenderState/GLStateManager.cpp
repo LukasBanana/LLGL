@@ -439,6 +439,7 @@ void GLStateManager::SetBlendStates(const std::vector<GLBlend>& blendStates, boo
 
 void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled)
 {
+    #ifdef GL_ARB_draw_buffers_blend
     if (HasExtension(GLExt::ARB_draw_buffers_blend))
     {
         glColorMaski(drawBuffer, state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
@@ -450,6 +451,7 @@ void GLStateManager::SetBlendState(GLuint drawBuffer, const GLBlend& state, bool
         }
     }
     else
+    #endif
     {
         glDrawBuffer(drawBuffer);
         glColorMask(state.colorMask.r, state.colorMask.g, state.colorMask.b, state.colorMask.a);
@@ -1022,8 +1024,12 @@ void GLStateManager::NotifyShaderProgramRelease(GLuint program)
 
 void GLStateManager::AssertExtViewportArray()
 {
+    #ifdef GL_ARB_viewport_array
     if (!HasExtension(GLExt::ARB_viewport_array))
+    #endif
+    {
         throw std::runtime_error("renderer does not support viewport, depth-range, and scissor arrays");
+    }
 }
 
 void GLStateManager::SetActiveTextureLayer(std::uint32_t layer)

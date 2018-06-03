@@ -186,8 +186,8 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.GS = GetShaderByteCode(shaderProgram.GetGS());
 
     /* Convert blend state */
-    stateDesc.BlendState.AlphaToCoverageEnable  = FALSE;
-    stateDesc.BlendState.IndependentBlendEnable = (desc.blend.targets.size() > 1 ? TRUE : FALSE);
+    stateDesc.BlendState.AlphaToCoverageEnable  = DXBoolean(desc.blend.alphaToCoverageEnabled);
+    stateDesc.BlendState.IndependentBlendEnable = DXBoolean(desc.blend.targets.size() > 1);
 
     for (UINT i = 0, n = static_cast<UINT>(desc.blend.targets.size()); i < 8u; ++i)
     {
@@ -197,15 +197,15 @@ void D3D12GraphicsPipeline::CreatePipelineState(
         {
             const auto& targetDesc = desc.blend.targets[i];
 
-            targetState.BlendEnable             = desc.blend.blendEnabled;
-            targetState.LogicOpEnable           = FALSE;
+            targetState.BlendEnable             = DXBoolean(desc.blend.blendEnabled);
+            targetState.LogicOpEnable           = DXBoolean(desc.blend.logicOp != LogicOp::Disabled);
             targetState.SrcBlend                = D3D12Types::Map(targetDesc.srcColor);
             targetState.DestBlend               = D3D12Types::Map(targetDesc.dstColor);
             targetState.BlendOp                 = D3D12Types::Map(targetDesc.colorArithmetic);
             targetState.SrcBlendAlpha           = D3D12Types::Map(targetDesc.srcAlpha);
             targetState.DestBlendAlpha          = D3D12Types::Map(targetDesc.dstAlpha);
             targetState.BlendOpAlpha            = D3D12Types::Map(targetDesc.alphaArithmetic);
-            targetState.LogicOp                 = D3D12_LOGIC_OP_NOOP;
+            targetState.LogicOp                 = D3D12Types::Map(desc.blend.logicOp);
             targetState.RenderTargetWriteMask   = GetColorWriteMask(targetDesc.colorMask);
         }
         else
@@ -226,25 +226,25 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     /* Convert rasterizer state */
     stateDesc.RasterizerState.FillMode              = D3D12Types::Map(desc.rasterizer.polygonMode);
     stateDesc.RasterizerState.CullMode              = D3D12Types::Map(desc.rasterizer.cullMode);
-    stateDesc.RasterizerState.FrontCounterClockwise = (desc.rasterizer.frontCCW ? TRUE : FALSE);
+    stateDesc.RasterizerState.FrontCounterClockwise = DXBoolean(desc.rasterizer.frontCCW);
     stateDesc.RasterizerState.DepthBias             = static_cast<INT>(desc.rasterizer.depthBias.constantFactor);
     stateDesc.RasterizerState.DepthBiasClamp        = desc.rasterizer.depthBias.clamp;
     stateDesc.RasterizerState.SlopeScaledDepthBias  = desc.rasterizer.depthBias.slopeFactor;
-    stateDesc.RasterizerState.DepthClipEnable       = (desc.rasterizer.depthClampEnabled ? FALSE : TRUE);
+    stateDesc.RasterizerState.DepthClipEnable       = DXBoolean(!desc.rasterizer.depthClampEnabled);
     #if 1//TODO: currently not supported
     stateDesc.RasterizerState.MultisampleEnable     = FALSE; //!!!
     #else
-    stateDesc.RasterizerState.MultisampleEnable     = (desc.rasterizer.multiSampling.enabled ? TRUE : FALSE);
+    stateDesc.RasterizerState.MultisampleEnable     = DXBoolean(desc.rasterizer.multiSampling.enabled);
     #endif
-    stateDesc.RasterizerState.AntialiasedLineEnable = (desc.rasterizer.antiAliasedLineEnabled ? TRUE : FALSE);
+    stateDesc.RasterizerState.AntialiasedLineEnable = DXBoolean(desc.rasterizer.antiAliasedLineEnabled);
     stateDesc.RasterizerState.ForcedSampleCount     = 0; // no forced sample count
     stateDesc.RasterizerState.ConservativeRaster    = GetConservativeRaster(desc.rasterizer.conservativeRasterization);
 
     /* Convert depth-stencil state */
-    stateDesc.DepthStencilState.DepthEnable         = (desc.depth.testEnabled ? TRUE : FALSE);
+    stateDesc.DepthStencilState.DepthEnable         = DXBoolean(desc.depth.testEnabled);
     stateDesc.DepthStencilState.DepthWriteMask      = (desc.depth.writeEnabled ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO);
     stateDesc.DepthStencilState.DepthFunc           = D3D12Types::Map(desc.depth.compareOp);
-    stateDesc.DepthStencilState.StencilEnable       = (desc.stencil.testEnabled ? TRUE : FALSE);
+    stateDesc.DepthStencilState.StencilEnable       = DXBoolean(desc.stencil.testEnabled);
     stateDesc.DepthStencilState.StencilReadMask     = static_cast<UINT8>(desc.stencil.front.readMask);
     stateDesc.DepthStencilState.StencilWriteMask    = static_cast<UINT8>(desc.stencil.front.writeMask);
 

@@ -173,16 +173,16 @@ static VkSampleCountFlagBits GetSampleCountBitmask(const MultiSamplingDescriptor
     return VK_SAMPLE_COUNT_1_BIT;
 }
 
-static void CreateMultisampleState(const MultiSamplingDescriptor& desc, VkPipelineMultisampleStateCreateInfo& createInfo)
+static void CreateMultisampleState(const MultiSamplingDescriptor& multiSampleDesc, const BlendDescriptor& blendDesc, VkPipelineMultisampleStateCreateInfo& createInfo)
 {
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
     createInfo.flags                    = 0;
-    createInfo.rasterizationSamples     = GetSampleCountBitmask(desc);
+    createInfo.rasterizationSamples     = GetSampleCountBitmask(multiSampleDesc);
     createInfo.sampleShadingEnable      = VK_FALSE;
     createInfo.minSampleShading         = 0.0f;
     createInfo.pSampleMask              = nullptr;
-    createInfo.alphaToCoverageEnable    = VK_FALSE;
+    createInfo.alphaToCoverageEnable    = VKBoolean(blendDesc.alphaToCoverageEnabled);
     createInfo.alphaToOneEnable         = VK_FALSE;
 }
 
@@ -325,7 +325,7 @@ void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor
 
     /* Initialize multi-sample state */
     VkPipelineMultisampleStateCreateInfo multisampleState;
-    CreateMultisampleState(desc.rasterizer.multiSampling, multisampleState);
+    CreateMultisampleState(desc.rasterizer.multiSampling, desc.blend, multisampleState);
 
     /* Initialize depth-stencil state */
     VkPipelineDepthStencilStateCreateInfo depthStencilState;

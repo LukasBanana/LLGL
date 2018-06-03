@@ -107,6 +107,11 @@ void DXThrowIfFailed(const HRESULT hr, const char* info)
     }
 }
 
+BOOL DXBoolean(bool value)
+{
+    return (value ? TRUE : FALSE);
+}
+
 template <typename Cont>
 Cont GetBlobDataTmpl(ID3DBlob* blob)
 {

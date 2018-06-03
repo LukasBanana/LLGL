@@ -159,6 +159,7 @@ GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, c
     blendColor_             = desc.blend.blendFactor;
     blendColorNeeded_       = IsBlendColorNeeded(desc.blend);
     Convert(blendStates_, desc.blend.targets);
+    sampleAlphaToCoverage_  = desc.blend.alphaToCoverageEnabled;
 
     /* Convert color logic operation state */
     if (desc.blend.logicOp != LogicOp::Disabled)
@@ -235,6 +236,9 @@ void GLGraphicsPipeline::Bind(GLStateManager& stateMngr)
 
     if (blendColorNeeded_)
         stateMngr.SetBlendColor(blendColor_);
+
+    if (multiSampleEnabled_)
+        stateMngr.Set(GLState::SAMPLE_ALPHA_TO_COVERAGE, sampleAlphaToCoverage_);
 
     /* Setup color logic operation */
     if (logicOpEnabled_)

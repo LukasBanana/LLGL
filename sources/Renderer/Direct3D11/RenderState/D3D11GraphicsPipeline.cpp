@@ -100,10 +100,10 @@ void D3D11GraphicsPipeline::CreateDepthStencilState(ID3D11Device* device, const 
 {
     D3D11_DEPTH_STENCIL_DESC stateDesc;
     {
-        stateDesc.DepthEnable       = (depthDesc.testEnabled ? TRUE : FALSE);
+        stateDesc.DepthEnable       = DXBoolean(depthDesc.testEnabled);
         stateDesc.DepthWriteMask    = (depthDesc.writeEnabled ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO);
         stateDesc.DepthFunc         = D3D11Types::Map(depthDesc.compareOp);
-        stateDesc.StencilEnable     = (stencilDesc.testEnabled ? TRUE : FALSE);
+        stateDesc.StencilEnable     = DXBoolean(stencilDesc.testEnabled);
         stateDesc.StencilReadMask   = static_cast<UINT8>(stencilDesc.front.readMask);
         stateDesc.StencilWriteMask  = static_cast<UINT8>(stencilDesc.front.writeMask);
 
@@ -120,14 +120,14 @@ void D3D11GraphicsPipeline::CreateRasterizerState(ID3D11Device* device, const Ra
     {
         stateDesc.FillMode              = D3D11Types::Map(desc.polygonMode);
         stateDesc.CullMode              = D3D11Types::Map(desc.cullMode);
-        stateDesc.FrontCounterClockwise = (desc.frontCCW ? TRUE : FALSE);
+        stateDesc.FrontCounterClockwise = DXBoolean(desc.frontCCW);
         stateDesc.DepthBias             = static_cast<INT>(desc.depthBias.constantFactor);
         stateDesc.DepthBiasClamp        = desc.depthBias.clamp;
         stateDesc.SlopeScaledDepthBias  = desc.depthBias.slopeFactor;
-        stateDesc.DepthClipEnable       = (desc.depthClampEnabled ? FALSE : TRUE);
-        stateDesc.ScissorEnable         = (desc.scissorTestEnabled ? TRUE : FALSE);
-        stateDesc.MultisampleEnable     = (desc.multiSampling.enabled ? TRUE : FALSE);
-        stateDesc.AntialiasedLineEnable = (desc.antiAliasedLineEnabled ? TRUE : FALSE);
+        stateDesc.DepthClipEnable       = DXBoolean(!desc.depthClampEnabled);
+        stateDesc.ScissorEnable         = DXBoolean(desc.scissorTestEnabled);
+        stateDesc.MultisampleEnable     = DXBoolean(desc.multiSampling.enabled);
+        stateDesc.AntialiasedLineEnable = DXBoolean(desc.antiAliasedLineEnabled);
     }
     auto hr = device->CreateRasterizerState(&stateDesc, rasterizerState_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 rasterizer state");
@@ -149,8 +149,8 @@ void D3D11GraphicsPipeline::CreateBlendState(ID3D11Device* device, const BlendDe
 {
     D3D11_BLEND_DESC stateDesc;
     {
-        stateDesc.AlphaToCoverageEnable  = FALSE;
-        stateDesc.IndependentBlendEnable = (desc.targets.size() > 1 ? TRUE : FALSE);
+        stateDesc.AlphaToCoverageEnable  = DXBoolean(desc.alphaToCoverageEnabled);
+        stateDesc.IndependentBlendEnable = DXBoolean(desc.targets.size() > 1);
 
         for (UINT i = 0, n = static_cast<UINT>(desc.targets.size()); i < 8u; ++i)
         {
@@ -160,7 +160,7 @@ void D3D11GraphicsPipeline::CreateBlendState(ID3D11Device* device, const BlendDe
             {
                 const auto& targetDesc = desc.targets[i];
 
-                targetState.BlendEnable             = desc.blendEnabled;
+                targetState.BlendEnable             = DXBoolean(desc.blendEnabled);
                 targetState.SrcBlend                = D3D11Types::Map(targetDesc.srcColor);
                 targetState.DestBlend               = D3D11Types::Map(targetDesc.dstColor);
                 targetState.BlendOp                 = D3D11Types::Map(targetDesc.colorArithmetic);

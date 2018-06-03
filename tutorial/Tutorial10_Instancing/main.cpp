@@ -19,7 +19,7 @@ class Tutorial10 : public Tutorial
 
     LLGL::ShaderProgram*        shaderProgram       = nullptr;
 
-    LLGL::GraphicsPipeline*     pipeline            = nullptr;
+    LLGL::GraphicsPipeline*     pipeline[2]         = {};//   = nullptr;
 
     LLGL::PipelineLayout*       pipelineLayout      = nullptr;
     LLGL::ResourceHeap*         resourceHeaps[2]    = {};
@@ -290,14 +290,20 @@ private:
         // Create common graphics pipeline for scene rendering
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram              = shaderProgram;
-            pipelineDesc.pipelineLayout             = pipelineLayout;
-            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
-            pipelineDesc.depth.testEnabled          = true;
-            pipelineDesc.depth.writeEnabled         = true;
-            //pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.shaderProgram                  = shaderProgram;
+            pipelineDesc.pipelineLayout                 = pipelineLayout;
+            pipelineDesc.primitiveTopology              = LLGL::PrimitiveTopology::TriangleStrip;
+            pipelineDesc.depth.testEnabled              = true;
+            pipelineDesc.depth.writeEnabled             = true;
         }
-        pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+        pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        // Create graphics pipeline with multi-sampling and alpha-to-coverage enabled
+        {
+            pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
+            pipelineDesc.blend.alphaToCoverageEnabled   = true;
+        }
+        pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
 
     void UpdateAnimation()
@@ -335,7 +341,8 @@ private:
         {
             if (ReloadShaderProgram(shaderProgram))
             {
-                renderer->Release(*pipeline);
+                renderer->Release(*pipeline[0]);
+                renderer->Release(*pipeline[1]);
                 CreatePipelines();
             }
         }
@@ -343,7 +350,18 @@ private:
 
     void OnDrawFrame() override
     {
+        // Update scene animationa and user input
         UpdateAnimation();
+
+        static bool multiSamplingEnabled = true;
+        if (input->KeyDown(LLGL::Key::Return))
+        {
+            multiSamplingEnabled = !multiSamplingEnabled;
+            if (multiSamplingEnabled)
+                std::cout << "Alpha-To-Coverage Enabled" << std::endl;
+            else
+                std::cout << "Alpha-To-Coverage Disabled" << std::endl;
+        }
 
         // Set the render context as the initial render target
         commands->SetRenderTarget(*context);
@@ -359,7 +377,7 @@ private:
         commands->SetVertexBufferArray(*vertexBufferArray);
 
         // Set graphics pipeline state
-        commands->SetGraphicsPipeline(*pipeline);
+        commands->SetGraphicsPipeline(*pipeline[multiSamplingEnabled ? 1 : 0]);
 
         if (pipelineLayout)
         {

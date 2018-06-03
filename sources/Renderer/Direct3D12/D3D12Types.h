@@ -33,6 +33,7 @@ D3D12_BLEND             Map( const BlendOp              blendOp         );
 D3D12_BLEND_OP          Map( const BlendArithmetic      blendArithmetic );
 D3D12_COMPARISON_FUNC   Map( const CompareOp            compareOp       );
 D3D12_STENCIL_OP        Map( const StencilOp            stencilOp       );
+D3D12_LOGIC_OP          Map( const LogicOp              logicOp         );
 
 TextureFormat           Unmap( const DXGI_FORMAT format );
 
