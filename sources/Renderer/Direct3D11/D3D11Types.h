@@ -41,7 +41,10 @@ D3D11_TEXTURE_ADDRESS_MODE  Map( const SamplerAddressMode   addressMode     );
 D3D11_QUERY                 Map( const QueryDescriptor&     queryDesc       );
 D3D11_MAP                   Map( const CPUAccess            cpuAccess       );
 D3D11_SRV_DIMENSION         Map( const TextureType          textureType     );
+
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
 D3D11_LOGIC_OP              Map( const LogicOp              logicOp         );
+#endif
 
 TextureFormat               Unmap( const DXGI_FORMAT format );
 

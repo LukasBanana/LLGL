@@ -340,12 +340,20 @@ void D3D11RenderSystem::CreateDevice(IDXGIAdapter* adapter)
     DXThrowIfFailed(hr, "failed to create D3D11 device");
 
     /* Try to get an extended D3D11 device */
+    #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 3
     hr = device_->QueryInterface(IID_PPV_ARGS(&device3_));
     if (FAILED(hr))
+    #endif
     {
+        #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 2
         hr = device_->QueryInterface(IID_PPV_ARGS(&device2_));
         if (FAILED(hr))
+        #endif
+        {
+            #if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
             device_->QueryInterface(IID_PPV_ARGS(&device1_));
+            #endif
+        }
     }
 }
 
@@ -384,14 +392,22 @@ void D3D11RenderSystem::QueryRendererInfo()
     RendererInfo info;
 
     /* Initialize Direct3D version string */
-    if (device3_ != nullptr)
-        info.rendererName = "Direct3D 11.3";
-    else if (device2_ != nullptr)
-        info.rendererName = "Direct3D 11.2";
-    else if (device1_ != nullptr)
-        info.rendererName = "Direct3D 11.1";
-    else
-        info.rendererName = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
+    const auto minorVersion = GetMinorVersion();
+    switch (minorVersion)
+    {
+        case 3:
+            info.rendererName = "Direct3D 11.3";
+            break;
+        case 2:
+            info.rendererName = "Direct3D 11.2";
+            break;
+        case 1:
+            info.rendererName = "Direct3D 11.1";
+            break;
+        default:
+            info.rendererName = "Direct3D " + DXFeatureLevelToVersion(GetFeatureLevel());
+            break;
+    }
 
     /* Initialize HLSL version string */
     info.shadingLanguageName = "HLSL " + DXFeatureLevelToShaderModel(GetFeatureLevel());

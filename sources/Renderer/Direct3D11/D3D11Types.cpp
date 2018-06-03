@@ -271,6 +271,9 @@ D3D11_SRV_DIMENSION Map(const TextureType textureType)
     DXTypes::MapFailed("TextureType", "D3D11_SRV_DIMENSION");
 }
 
+#if LLGL_D3D11_ENABLE_FEATURELEVEL >= 1
+
+// Direct3D 11.1
 D3D11_LOGIC_OP Map(const LogicOp logicOp)
 {
     switch (logicOp)
@@ -295,6 +298,8 @@ D3D11_LOGIC_OP Map(const LogicOp logicOp)
     }
     DXTypes::MapFailed("LogicOp", "D3D11_LOGIC_OP");
 }
+
+#endif // /LLGL_D3D11_ENABLE_FEATURELEVEL
 
 
 /* ----- Unmap Functions ----- */
