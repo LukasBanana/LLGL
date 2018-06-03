@@ -23,6 +23,27 @@ namespace LLGL
  * Internal structures
  */
 
+/*
+
+The internal buffer of GLResourceHeap is tightly packed which stores all segments of binding points consecutively.
+Here is an illustration of the buffer layout for one Texture resouce (at binding point 4) and two Sampler resources (at binding points 5 and 6) on a 32-bit build:
+
+Offset      Attribute                                   Value   Description                                         Segment
+--------------------------------------------------------------------------------------------------------------------------------------------
+0x00000000  GLResourceViewHeapSegment2::segmentSize     24      Size of this segment                                \
+0x00000004  GLResourceViewHeapSegment2::offsetEnd0      20      Points to first texture[0] (at offset 0x00000014)    |
+0x00000008  GLResourceViewHeapSegment2::first           4       First binding point                                  |-- Texture segment
+0x0000000C  GLResourceViewHeapSegment2::count           1       Number of binding points                             |
+0x00000010  target[0]                                   1       Texture target (GLTextureTarget::TEXTURE_2D = 1)     |
+0x00000014  texture[0]                                  1       1st OpenGL texture ID (from 'glGenTextures')        /
+0x00000018  GLResourceViewHeapSegment1::segmentSize     20      Size of this segment                                \
+0x0000001C  GLResourceViewHeapSegment1::first           5       First binding point                                  |
+0x00000020  GLResourceViewHeapSegment1::count           2       Number of binding points                             |-- Sampler segment
+0x00000024  sampler[0]                                  1       1st OpenGL sampler ID (from 'glGenTextures')         |
+0x00000028  sampler[1]                                  2       2nd OpenGL sampler ID (from 'glGenSamplers')        /
+
+*/
+
 // Resource view heap (RVH) segment structure with one dynamic sub-buffer for <GLuint>
 struct GLResourceViewHeapSegment1
 {

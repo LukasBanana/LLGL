@@ -962,12 +962,12 @@ void GLStateManager::BindSampler(GLuint layer, GLuint sampler)
 void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* samplers)
 {
     #ifdef GL_ARB_multi_bind
-    if (HasExtension(GLExt::ARB_multi_bind))
+    if (count >= 2 && HasExtension(GLExt::ARB_multi_bind))
     {
         /* Bind all samplers at once */
         glBindSamplers(first, count, samplers);
 
-        /* Store bound textures */
+        /* Store bound samplers */
         for (GLsizei i = 0; i < count; ++i)
             samplerState_.boundSamplers[i] = samplers[i];
     }
