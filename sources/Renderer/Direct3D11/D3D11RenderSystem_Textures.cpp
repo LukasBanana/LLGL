@@ -235,13 +235,27 @@ void D3D11RenderSystem::GenerateMips(Texture& texture)
 {
     /* Generate MIP-maps for the default SRV */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    context_->GenerateMips(textureD3D.GetSRV());
+    if (auto srv = textureD3D.GetSRV())
+    {
+        /* Generate MIP-maps for default SRV */
+        context_->GenerateMips(srv);
+    }
+    else
+    {
+        /* Generate MIP-maps with a temporary subresource SRV */
+        GenerateMipsWithSubresourceSRV(textureD3D, 0, textureD3D.GetNumMipLevels(), 0, textureD3D.GetNumArrayLayers());
+    }
 }
 
 void D3D11RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    if (baseMipLevel == 0 && numMipLevels == textureD3D.GetNumMipLevels() && baseArrayLayer == 0 && numArrayLayers == textureD3D.GetNumArrayLayers())
+
+    if ( baseMipLevel        == 0                              &&
+         numMipLevels        == textureD3D.GetNumMipLevels()   &&
+         baseArrayLayer      == 0                              &&
+         numArrayLayers      == textureD3D.GetNumArrayLayers() &&
+         textureD3D.GetSRV() != nullptr )
     {
         /* Generate MIP-maps for the default SRV */
         context_->GenerateMips(textureD3D.GetSRV());
@@ -249,9 +263,7 @@ void D3D11RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLeve
     else
     {
         /* Generate MIP-maps for a subresource SRV */
-        ComPtr<ID3D11ShaderResourceView> srv;
-        textureD3D.CreateSubresourceSRV(device_.Get(), srv.GetAddressOf(), baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
-        context_->GenerateMips(srv.Get());
+        GenerateMipsWithSubresourceSRV(textureD3D, baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
     }
 }
 
@@ -303,7 +315,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const Te
         descDX.CPUAccessFlags   = 0;
         descDX.MiscFlags        = GetDXTextureMiscFlags(desc);
     }
-    textureD3D.CreateTexture1D(device_.Get(), descDX);
+    textureD3D.CreateTexture1D(device_.Get(), descDX, desc.flags);
 
     /* Initialize texture image data */
     InitializeGpuTexture(
@@ -329,7 +341,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const Te
         descDX.CPUAccessFlags       = 0;
         descDX.MiscFlags            = GetDXTextureMiscFlags(desc);
     }
-    textureD3D.CreateTexture2D(device_.Get(), descDX);
+    textureD3D.CreateTexture2D(device_.Get(), descDX, desc.flags);
 
     /* Initialize texture image data */
     InitializeGpuTexture(
@@ -353,7 +365,7 @@ void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const Te
         descDX.CPUAccessFlags   = 0;
         descDX.MiscFlags        = GetDXTextureMiscFlags(desc);
     }
-    textureD3D.CreateTexture3D(device_.Get(), descDX);
+    textureD3D.CreateTexture3D(device_.Get(), descDX, desc.flags);
 
     /* Initialize texture image data */
     InitializeGpuTexture(
@@ -379,17 +391,23 @@ void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const 
         descDX.CPUAccessFlags       = 0;
         descDX.MiscFlags            = 0;
     }
-    textureD3D.CreateTexture2D(device_.Get(), descDX);
+    textureD3D.CreateTexture2D(device_.Get(), descDX, desc.flags);
 }
 
 void D3D11RenderSystem::UpdateGenericTexture(
-    Texture& texture, std::uint32_t mipLevel, std::uint32_t layer,
-    const Offset3D& position, const Extent3D& size, const SrcImageDescriptor& imageDesc)
+    Texture&                    texture,
+    std::uint32_t               mipLevel,
+    std::uint32_t               layer,
+    const Offset3D&             position,
+    const Extent3D&             size,
+    const SrcImageDescriptor&   imageDesc)
 {
     /* Get D3D texture and update subresource */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
     textureD3D.UpdateSubresource(
-        context_.Get(), static_cast<UINT>(mipLevel), layer,
+        context_.Get(),
+        static_cast<UINT>(mipLevel),
+        layer,
         CD3D11_BOX(
             position.x,
             position.y,
@@ -398,13 +416,19 @@ void D3D11RenderSystem::UpdateGenericTexture(
             position.y + static_cast<LONG>(size.height),
             position.z + static_cast<LONG>(size.depth)
         ),
-        imageDesc, GetConfiguration().threadCount
+        imageDesc,
+        GetConfiguration().threadCount
     );
 }
 
 void D3D11RenderSystem::InitializeGpuTexture(
-    D3D11Texture& textureD3D, const TextureFormat format, const SrcImageDescriptor* imageDesc,
-    std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers)
+    D3D11Texture&               textureD3D,
+    const TextureFormat         format,
+    const SrcImageDescriptor*   imageDesc,
+    std::uint32_t               width,
+    std::uint32_t               height,
+    std::uint32_t               depth,
+    std::uint32_t               numLayers)
 {
     if (imageDesc)
     {
@@ -419,8 +443,13 @@ void D3D11RenderSystem::InitializeGpuTexture(
 }
 
 void D3D11RenderSystem::InitializeGpuTextureWithImage(
-    D3D11Texture& textureD3D, const TextureFormat format, SrcImageDescriptor imageDesc,
-    std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers)
+    D3D11Texture&       textureD3D,
+    const TextureFormat format,
+    SrcImageDescriptor  imageDesc,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    std::uint32_t       numLayers)
 {
     /* Update only the first MIP-map level for each array slice */
     const auto layerStride = width * height * depth * (ImageFormatSize(imageDesc.format) * DataTypeSize(imageDesc.dataType));
@@ -428,9 +457,12 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
     for (std::uint32_t arraySlice = 0; arraySlice < numLayers; ++arraySlice)
     {
         textureD3D.UpdateSubresource(
-            context_.Get(), 0, arraySlice,
+            context_.Get(),
+            0, // mipSlice
+            arraySlice,
             CD3D11_BOX(0, 0, 0, width, height, depth),
-            imageDesc, GetConfiguration().threadCount
+            imageDesc,
+            GetConfiguration().threadCount
         );
 
         imageDesc.data = reinterpret_cast<const char*>(imageDesc.data) + layerStride;
@@ -438,8 +470,12 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
 }
 
 void D3D11RenderSystem::InitializeGpuTextureWithDefault(
-    D3D11Texture& textureD3D, const TextureFormat format,
-    std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers)
+    D3D11Texture&       textureD3D,
+    const TextureFormat format,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    std::uint32_t       numLayers)
 {
     /* Find suitable image format for texture hardware format */
     SrcImageDescriptor imageDescDefault;
@@ -459,12 +495,28 @@ void D3D11RenderSystem::InitializeGpuTextureWithDefault(
         for (std::uint32_t arraySlice = 0; arraySlice < numLayers; ++arraySlice)
         {
             textureD3D.UpdateSubresource(
-                context_.Get(), 0, arraySlice,
+                context_.Get(),
+                0,
+                arraySlice,
                 CD3D11_BOX(0, 0, 0, width, height, depth),
-                imageDescDefault, cfg.threadCount
+                imageDescDefault,
+                cfg.threadCount
             );
         }
     }
+}
+
+void D3D11RenderSystem::GenerateMipsWithSubresourceSRV(
+    D3D11Texture& textureD3D,
+    std::uint32_t baseMipLevel,
+    std::uint32_t numMipLevels,
+    std::uint32_t baseArrayLayer,
+    std::uint32_t numArrayLayers)
+{
+    /* Generate MIP-maps for a subresource SRV */
+    ComPtr<ID3D11ShaderResourceView> srv;
+    textureD3D.CreateSubresourceSRV(device_.Get(), srv.GetAddressOf(), baseMipLevel, numMipLevels, baseArrayLayer, numArrayLayers);
+    context_->GenerateMips(srv.Get());
 }
 
 

@@ -137,12 +137,14 @@ void VKTexture::CreateInternalImageView(VkDevice device)
 
 static VkImageCreateFlags GetVkImageCreateFlags(const TextureDescriptor& desc)
 {
-    VkImageCreateFlags flags = 0;
+    VkImageCreateFlags createFlags = 0;
 
     if (IsCubeTexture(desc.type))
-        flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        createFlags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+    if (desc.type == TextureType::Texture2DArray || desc.type == TextureType::Texture2DMSArray)
+        createFlags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT_KHR;
 
-    return flags;
+    return createFlags;
 }
 
 static VkImageType GetVkImageType(const TextureType textureType)
@@ -241,22 +243,30 @@ static VkSampleCountFlagBits GetVkImageSampleCountFlags(const TextureDescriptor&
 
 static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
 {
-    VkImageUsageFlags flags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     /* Enable TRANSFER_SRC_BIT image usage when MIP-maps are enabled */
     if (HasTextureMipMaps(desc))
-        flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     /* Enable either color or depth-stencil ATTACHMENT_BIT image usage when attachment usage is enabled */
     if ((desc.flags & TextureFlags::AttachmentUsage) != 0)
     {
         if (IsDepthStencilFormat(desc.format))
-            flags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+            usageFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
         else
-            flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     }
 
-    return flags;
+    /* Enable sampling the image */
+    if ((desc.flags & TextureFlags::SampleUsage) != 0)
+        usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+
+    /* Enable load/store operations on the image */
+    if ((desc.flags & TextureFlags::StorageUsage) != 0)
+        usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
+
+    return usageFlags;
 }
 
 void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)

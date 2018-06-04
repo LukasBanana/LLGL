@@ -61,6 +61,7 @@ public:
         // Show info
         std::cout << "press LEFT/RIGHT MOUSE BUTTON to rotate the camera around the scene" << std::endl;
         std::cout << "press R KEY to reload the shader program" << std::endl;
+        std::cout << "press SPACE KEY to switch between pipeline states with and without alpha-to-coverage" << std::endl;
     }
 
 private:
@@ -354,7 +355,7 @@ private:
         UpdateAnimation();
 
         static bool multiSamplingEnabled = true;
-        if (input->KeyDown(LLGL::Key::Return))
+        if (input->KeyDown(LLGL::Key::Space))
         {
             multiSamplingEnabled = !multiSamplingEnabled;
             if (multiSamplingEnabled)

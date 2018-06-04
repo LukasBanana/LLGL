@@ -174,24 +174,49 @@ class D3D11RenderSystem : public RenderSystem
         void BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc);
 
         void UpdateGenericTexture(
-            Texture& texture, std::uint32_t mipLevel, std::uint32_t layer,
-            const Offset3D& offset, const Extent3D& extent,
-            const SrcImageDescriptor& imageDesc
+            Texture&                    texture,
+            std::uint32_t               mipLevel,
+            std::uint32_t               layer,
+            const Offset3D&             offset,
+            const Extent3D&             extent,
+            const SrcImageDescriptor&   imageDesc
         );
 
         void InitializeGpuTexture(
-            D3D11Texture& textureD3D, const TextureFormat format, const SrcImageDescriptor* imageDesc,
-            std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers
+            D3D11Texture&               textureD3D,
+            const TextureFormat         format,
+            const SrcImageDescriptor*   imageDesc,
+            std::uint32_t               width,
+            std::uint32_t               height,
+            std::uint32_t               depth,
+            std::uint32_t               numLayers
         );
 
         void InitializeGpuTextureWithImage(
-            D3D11Texture& textureD3D, const TextureFormat format, SrcImageDescriptor imageDesc,
-            std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers
+            D3D11Texture&       textureD3D,
+            const TextureFormat format,
+            SrcImageDescriptor  imageDesc,
+            std::uint32_t       width,
+            std::uint32_t       height,
+            std::uint32_t       depth,
+            std::uint32_t       numLayers
         );
 
         void InitializeGpuTextureWithDefault(
-            D3D11Texture& textureD3D, const TextureFormat format,
-            std::uint32_t width, std::uint32_t height, std::uint32_t depth, std::uint32_t numLayers
+            D3D11Texture&       textureD3D,
+            const TextureFormat format,
+            std::uint32_t       width,
+            std::uint32_t       height,
+            std::uint32_t       depth,
+            std::uint32_t       numLayers
+        );
+
+        void GenerateMipsWithSubresourceSRV(
+            D3D11Texture& textureD3D,
+            std::uint32_t baseMipLevel,
+            std::uint32_t numMipLevels,
+            std::uint32_t baseArrayLayer,
+            std::uint32_t numArrayLayers
         );
 
         /* ----- Common objects ----- */

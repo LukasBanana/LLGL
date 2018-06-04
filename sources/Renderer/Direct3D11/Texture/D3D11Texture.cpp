@@ -171,32 +171,68 @@ static ComPtr<ID3D11Texture3D> DXCreateTexture3D(
 }
 
 void D3D11Texture::CreateTexture1D(
-    ID3D11Device* device, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
+    ID3D11Device*                           device,
+    const D3D11_TEXTURE1D_DESC&             desc,
+    long                                    flags,
+    const D3D11_SUBRESOURCE_DATA*           initialData,
+    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc)
 {
+    /* Create native D3D texture */
     native_.tex1D = DXCreateTexture1D(device, desc, initialData);
-    CreateDefaultSRV(device, srvDesc);
+
+    /* Create resource views */
+    if ((flags & TextureFlags::SampleUsage) != 0)
+        CreateDefaultSRV(device, srvDesc);
+    //if ((flags & TextureFlags::StorageUsage) != 0)
+    //    CreateDefaultUAV(device, uavDesc);
+
+    /* Store resource parameters */
     SetResourceParams(desc.Format, { desc.Width, 1u, 1u }, desc.ArraySize);
 }
 
 void D3D11Texture::CreateTexture2D(
-    ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
+    ID3D11Device*                           device,
+    const D3D11_TEXTURE2D_DESC&             desc,
+    long                                    flags,
+    const D3D11_SUBRESOURCE_DATA*           initialData,
+    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc)
 {
+    /* Create native D3D texture */
     native_.tex2D = DXCreateTexture2D(device, desc, initialData);
-    CreateDefaultSRV(device, srvDesc);
+
+    /* Create resource views */
+    if ((flags & TextureFlags::SampleUsage) != 0)
+        CreateDefaultSRV(device, srvDesc);
+
+    /* Store resource parameters */
     SetResourceParams(desc.Format, { desc.Width, desc.Height, 1u }, desc.ArraySize);
 }
 
 void D3D11Texture::CreateTexture3D(
-    ID3D11Device* device, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA* initialData, const D3D11_SHADER_RESOURCE_VIEW_DESC* srvDesc)
+    ID3D11Device*                           device,
+    const D3D11_TEXTURE3D_DESC&             desc,
+    long                                    flags,
+    const D3D11_SUBRESOURCE_DATA*           initialData,
+    const D3D11_SHADER_RESOURCE_VIEW_DESC*  srvDesc)
 {
+    /* Create native D3D texture */
     native_.tex3D = DXCreateTexture3D(device, desc, initialData);
-    CreateDefaultSRV(device, srvDesc);
+
+    /* Create resource views */
+    if ((flags & TextureFlags::SampleUsage) != 0)
+        CreateDefaultSRV(device, srvDesc);
+
+    /* Store resource parameters */
     SetResourceParams(desc.Format, { desc.Width, desc.Height, desc.Depth }, 1);
 }
 
 void D3D11Texture::UpdateSubresource(
-    ID3D11DeviceContext* context, UINT mipSlice, UINT arraySlice, const D3D11_BOX& dstBox,
-    const SrcImageDescriptor& imageDesc, std::size_t threadCount)
+    ID3D11DeviceContext*        context,
+    UINT                        mipSlice,
+    UINT                        arraySlice,
+    const D3D11_BOX&            dstBox,
+    const SrcImageDescriptor&   imageDesc,
+    std::size_t                 threadCount)
 {
     /* Get destination subresource index */
     auto dstSubresource = D3D11CalcSubresource(mipSlice, arraySlice, numMipLevels_);
@@ -249,8 +285,11 @@ void D3D11Texture::UpdateSubresource(
 }
 
 void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
-    ID3D11Device* device, ID3D11DeviceContext* context,
-    D3D11NativeTexture& textureCopy, UINT cpuAccessFlags, UINT mipLevel) const
+    ID3D11Device*           device,
+    ID3D11DeviceContext*    context,
+    D3D11NativeTexture&     textureCopy,
+    UINT                    cpuAccessFlags,
+    UINT                    mipLevel) const
 {
     D3D11_RESOURCE_DIMENSION dimension;
     native_.resource->GetType(&dimension);
@@ -324,8 +363,12 @@ void D3D11Texture::CreateSubresourceCopyWithCPUAccess(
 }
 
 void D3D11Texture::CreateSubresourceSRV(
-    ID3D11Device* device, ID3D11ShaderResourceView** srvOutput,
-    UINT baseMipLevel, UINT numMipLevels, UINT baseArrayLayer, UINT numArrayLayers)
+    ID3D11Device*               device,
+    ID3D11ShaderResourceView**  srvOutput,
+    UINT                        baseMipLevel,
+    UINT                        numMipLevels,
+    UINT                        baseArrayLayer,
+    UINT                        numArrayLayers)
 {
     /* Create SRV for subresource */
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;

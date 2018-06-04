@@ -109,7 +109,10 @@ enum class AxisDirection
     ZNeg,       //!< Z- direction.
 };
 
-//! Texture flags enumeration.
+/**
+\brief Texture creation flags enumeration.
+\see TextureDescriptor::flags
+*/
 struct TextureFlags
 {
     enum
@@ -133,26 +136,47 @@ struct TextureFlags
         \see TextureFlags::MapWriteAccess
         */
         MapReadWriteAccess  = (MapReadAccess | MapWriteAccess),
+
+        /**
+        \brief Hint to the renderer that the texture will be frequently updated from the CPU.
+        \see RenderSystem::WriteTexture
+        */
+        DynamicUsage        = (1 << 2),
         #endif
 
         /**
         \brief Texture will be used with MIP-mapping. This will create all MIP-map levels at texture creation time.
+        \remarks This is part of the default flags.
         \see RenderSystem::GenerateMips
+        \see Default
         */
         GenerateMips        = (1 << 3),
 
         /**
         \brief Texture can be used as render target attachment.
+        \remarks This is part of the default flags.
         \see AttachmentDescriptor::texture
+        \see Default
         */
         AttachmentUsage     = (1 << 4),
 
         /**
-        \brief Default texture flags: (GenerateMips | AttachmentUsage).
+        \brief Texture can be used for sampling (e.g. "sampler2D" in GLSL, or "Texture2D" in HLSL).
+        \remarks This is part of the default flags.
+        \see Default
+        */
+        SampleUsage         = (1 << 5),
+
+        //! Texture can be used as storage texture (e.g. "image2D" in GLSL, or "RWTexture2D" in HLSL).
+        StorageUsage        = (1 << 6),
+
+        /**
+        \brief Default texture flags: (GenerateMips | AttachmentUsage | SampleUsage).
         \see GenerateMips
         \see AttachmentUsage
+        \see SampleUsage
         */
-        Default             = (GenerateMips | AttachmentUsage),
+        Default             = (GenerateMips | AttachmentUsage | SampleUsage),
     };
 };
 
