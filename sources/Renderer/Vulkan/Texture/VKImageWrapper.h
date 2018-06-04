@@ -36,29 +36,29 @@ class VKImageWrapper
         void BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* memoryRegion);
 
         void CreateVkImage(
-            VkDevice device,
-            VkImageType imageType,
-            VkFormat format,
-            const VkExtent3D& extent,
-            std::uint32_t numMipLevels,
-            std::uint32_t numArrayLayers,
-            VkImageCreateFlags createFlags,
-            VkSampleCountFlagBits samplesFlags,
-            VkImageUsageFlags usageFlags
+            VkDevice                device,
+            VkImageType             imageType,
+            VkFormat                format,
+            const VkExtent3D&       extent,
+            std::uint32_t           numMipLevels,
+            std::uint32_t           numArrayLayers,
+            VkImageCreateFlags      createFlags,
+            VkSampleCountFlagBits   samplesFlags,
+            VkImageUsageFlags       usageFlags
         );
 
         void ReleaseVkImage();
 
         void CreateVkImageView(
-            VkDevice device,
-            VkImageViewType viewType,
-            VkFormat format,
-            VkImageAspectFlags aspectFlags,
-            std::uint32_t baseMipLevel,
-            std::uint32_t numMipLevels,
-            std::uint32_t baseArrayLayer,
-            std::uint32_t numArrayLayers,
-            VkImageView* imageViewRef
+            VkDevice            device,
+            VkImageViewType     viewType,
+            VkFormat            format,
+            VkImageAspectFlags  aspectFlags,
+            std::uint32_t       baseMipLevel,
+            std::uint32_t       numMipLevels,
+            std::uint32_t       baseArrayLayer,
+            std::uint32_t       numArrayLayers,
+            VkImageView*        imageViewRef
         );
 
         // Returns the Vulkan image object.

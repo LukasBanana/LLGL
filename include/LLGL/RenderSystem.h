@@ -296,8 +296,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \param[in] texture Specifies the texture whose data is to be updated.
         \param[in] subTextureDesc Specifies the sub-texture descriptor.
         \param[in] imageDesc Specifies the image data descriptor. Its "data" member must not be null!
-        \remarks This function can only be used for non-multi-sample textures
-        (i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray),
+        \remarks This function can only be used for non-multi-sample textures, i.e. from types other than TextureType::Texture2DMS and TextureType::Texture2DMSArray.
         */
         virtual void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) = 0;
 

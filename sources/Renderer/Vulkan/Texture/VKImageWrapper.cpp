@@ -63,10 +63,15 @@ void VKImageWrapper::BindMemoryRegion(VkDevice device, VKDeviceMemoryRegion* mem
 }
 
 void VKImageWrapper::CreateVkImage(
-    VkDevice device,
-    VkImageType imageType, VkFormat format,
-    const VkExtent3D& extent, std::uint32_t numMipLevels, std::uint32_t numArrayLayers,
-    VkImageCreateFlags createFlags, VkSampleCountFlagBits samplesFlags, VkImageUsageFlags usageFlags)
+    VkDevice                device,
+    VkImageType             imageType,
+    VkFormat                format,
+    const VkExtent3D&       extent,
+    std::uint32_t           numMipLevels,
+    std::uint32_t           numArrayLayers,
+    VkImageCreateFlags      createFlags,
+    VkSampleCountFlagBits   samplesFlags,
+    VkImageUsageFlags       usageFlags)
 {
     /* Create image object */
     VkImageCreateInfo createInfo;
@@ -97,11 +102,15 @@ void VKImageWrapper::ReleaseVkImage()
 }
 
 void VKImageWrapper::CreateVkImageView(
-    VkDevice device,
-    VkImageViewType viewType, VkFormat format, VkImageAspectFlags aspectFlags,
-    std::uint32_t baseMipLevel, std::uint32_t numMipLevels,
-    std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers,
-    VkImageView* imageViewRef)
+    VkDevice            device,
+    VkImageViewType     viewType,
+    VkFormat            format,
+    VkImageAspectFlags  aspectFlags,
+    std::uint32_t       baseMipLevel,
+    std::uint32_t       numMipLevels,
+    std::uint32_t       baseArrayLayer,
+    std::uint32_t       numArrayLayers,
+    VkImageView*        imageViewRef)
 {
     /* Create image view object */
     VkImageViewCreateInfo createInfo;
