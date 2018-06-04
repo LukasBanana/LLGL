@@ -65,8 +65,14 @@ static bool IsSecondaryCubeFaceTarget(GLenum target)
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1DBase(
-    GLenum target, std::uint32_t mipLevels, const TextureFormat textureFormat, std::uint32_t width,
-    GLenum format, GLenum type, const void* data, std::size_t dataSize)
+    GLenum              target,
+    std::uint32_t       mipLevels,
+    const TextureFormat textureFormat,
+    std::uint32_t       width,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         dataSize)
 {
     auto internalFormat = GLTypes::Map(textureFormat);
     auto sx             = static_cast<GLsizei>(width);
@@ -110,9 +116,15 @@ static void GLTexImage1DBase(
 #endif
 
 static void GLTexImage2DBase(
-    GLenum target, std::uint32_t mipLevels, const TextureFormat textureFormat,
-    std::uint32_t width, std::uint32_t height,
-    GLenum format, GLenum type, const void* data, std::size_t dataSize)
+    GLenum              target,
+    std::uint32_t       mipLevels,
+    const TextureFormat textureFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         dataSize)
 {
     auto internalFormat = GLTypes::Map(textureFormat);
     auto sx             = static_cast<GLsizei>(width);
@@ -168,9 +180,16 @@ static void GLTexImage2DBase(
 }
 
 static void GLTexImage3DBase(
-    GLenum target, std::uint32_t mipLevels, const TextureFormat textureFormat,
-    std::uint32_t width, std::uint32_t height, std::uint32_t depth,
-    GLenum format, GLenum type, const void* data, std::size_t dataSize)
+    GLenum              target,
+    std::uint32_t       mipLevels,
+    const TextureFormat textureFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         dataSize)
 {
     auto internalFormat = GLTypes::Map(textureFormat);
     auto sx             = static_cast<GLsizei>(width);
@@ -230,8 +249,12 @@ static void GLTexImage3DBase(
 #ifdef LLGL_OPENGL
 
 static void GLTexImage2DMultisampleBase(
-    GLenum target, std::uint32_t samples, const TextureFormat textureFormat,
-    std::uint32_t width, std::uint32_t height, bool fixedSamples)
+    GLenum              target,
+    std::uint32_t       samples,
+    const TextureFormat textureFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    bool                fixedSamples)
 {
     auto internalFormat         = GLTypes::Map(textureFormat);
     auto sampleCount            = static_cast<GLsizei>(samples);
@@ -254,8 +277,13 @@ static void GLTexImage2DMultisampleBase(
 }
 
 static void GLTexImage3DMultisampleBase(
-    GLenum target, std::uint32_t samples, const TextureFormat internalFormat,
-    std::uint32_t width, std::uint32_t height, std::uint32_t depth, bool fixedSamples)
+    GLenum              target,
+    std::uint32_t       samples,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    bool                fixedSamples)
 {
     glTexImage3DMultisample(
         target,
@@ -275,8 +303,13 @@ static void GLTexImage3DMultisampleBase(
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1D(
-    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width,
-    GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
+    std::uint32_t       mipLevels,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         compressedSize = 0)
 {
     GLTexImage1DBase(GL_TEXTURE_1D, mipLevels, internalFormat, width, format, type, data, compressedSize);
 }
@@ -284,22 +317,42 @@ static void GLTexImage1D(
 #endif
 
 static void GLTexImage2D(
-    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height,
-    GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
+    std::uint32_t       mipLevels,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         compressedSize = 0)
 {
     GLTexImage2DBase(GL_TEXTURE_2D, mipLevels, internalFormat, width, height, format, type, data, compressedSize);
 }
 
 static void GLTexImage3D(
-    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth,
-    GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
+    std::uint32_t       mipLevels,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         compressedSize = 0)
 {
     GLTexImage3DBase(GL_TEXTURE_3D, mipLevels, internalFormat, width, height, depth, format, type, data, compressedSize);
 }
 
 static void GLTexImageCube(
-    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, AxisDirection cubeFace,
-    GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
+    std::uint32_t       mipLevels,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    AxisDirection       cubeFace,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         compressedSize = 0)
 {
     GLTexImage2DBase(GLTypes::Map(cubeFace), mipLevels, internalFormat, width, height, format, type, data, compressedSize);
 }
@@ -307,8 +360,14 @@ static void GLTexImageCube(
 #ifdef LLGL_OPENGL
 
 static void GLTexImage1DArray(
-    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t layers,
-    GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
+    std::uint32_t       mipLevels,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       layers,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         compressedSize = 0)
 {
     GLTexImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevels, internalFormat, width, layers, format, type, data, compressedSize);
 }
@@ -316,8 +375,15 @@ static void GLTexImage1DArray(
 #endif
 
 static void GLTexImage2DArray(
-    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t layers,
-    GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
+    std::uint32_t       mipLevels,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       layers,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         compressedSize = 0)
 {
     GLTexImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevels, internalFormat, width, height, layers, format, type, data, compressedSize);
 }
@@ -325,20 +391,36 @@ static void GLTexImage2DArray(
 #ifdef LLGL_OPENGL
 
 static void GLTexImageCubeArray(
-    std::uint32_t mipLevels, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t layers,
-    GLenum format, GLenum type, const void* data, std::size_t compressedSize = 0)
+    std::uint32_t       mipLevels,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       layers,
+    GLenum              format,
+    GLenum              type,
+    const void*         data,
+    std::size_t         compressedSize = 0)
 {
     GLTexImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevels, internalFormat, width, height, layers*6, format, type, data, compressedSize);
 }
 
 static void GLTexImage2DMultisample(
-    std::uint32_t samples, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, bool fixedSamples)
+    std::uint32_t       samples,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    bool                fixedSamples)
 {
     GLTexImage2DMultisampleBase(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, fixedSamples);
 }
 
 static void GLTexImage2DMultisampleArray(
-    std::uint32_t samples, const TextureFormat internalFormat, std::uint32_t width, std::uint32_t height, std::uint32_t depth, bool fixedSamples)
+    std::uint32_t       samples,
+    const TextureFormat internalFormat,
+    std::uint32_t       width,
+    std::uint32_t       height,
+    std::uint32_t       depth,
+    bool                fixedSamples)
 {
     GLTexImage3DMultisampleBase(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, samples, internalFormat, width, height, depth, fixedSamples);
 }
@@ -355,9 +437,13 @@ void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     {
         /* Setup texture image from descriptor */
         GLTexImage1D(
-            NumMipLevels(desc), desc.format,
+            NumMipLevels(desc),
+            desc.format,
             desc.texture1D.width,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
+            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->dataType),
+            imageDesc->data,
+            imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -369,9 +455,12 @@ void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     {
         /* Allocate texture without initial data */
         GLTexImage1D(
-            NumMipLevels(desc), desc.format,
+            NumMipLevels(desc),
+            desc.format,
             desc.texture1D.width,
-            GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr
         );
     }
     else
@@ -383,9 +472,12 @@ void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         );
 
         GLTexImage1D(
-            NumMipLevels(desc), desc.format,
+            NumMipLevels(desc),
+            desc.format,
             desc.texture1D.width,
-            GL_RGBA, GL_FLOAT, image.data()
+            GL_RGBA,
+            GL_FLOAT,
+            image.data()
         );
     }
 }
@@ -398,9 +490,14 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     {
         /* Setup texture image from descriptor */
         GLTexImage2D(
-            NumMipLevels(desc), desc.format,
-            desc.texture2D.width, desc.texture2D.height,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture2D.width,
+            desc.texture2D.height,
+            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->dataType),
+            imageDesc->data,
+            imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -415,18 +512,26 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
             );
 
             GLTexImage2D(
-                NumMipLevels(desc), desc.format,
-                desc.texture2D.width, desc.texture2D.height,
-                GL_DEPTH_COMPONENT, GL_FLOAT, image.data()
+                NumMipLevels(desc),
+                desc.format,
+                desc.texture2D.width,
+                desc.texture2D.height,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                image.data()
             );
         }
         else
         {
             /* Allocate depth texture image without initial data */
             GLTexImage2D(
-                NumMipLevels(desc), desc.format,
-                desc.texture2D.width, desc.texture2D.height,
-                GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+                NumMipLevels(desc),
+                desc.format,
+                desc.texture2D.width,
+                desc.texture2D.height,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                nullptr
             );
         }
     }
@@ -434,9 +539,13 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     {
         /* Allocate texture without initial data */
         GLTexImage2D(
-            NumMipLevels(desc), desc.format,
-            desc.texture2D.width, desc.texture2D.height,
-            GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture2D.width,
+            desc.texture2D.height,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr
         );
     }
     else
@@ -448,9 +557,13 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         );
 
         GLTexImage2D(
-            NumMipLevels(desc), desc.format,
-            desc.texture2D.width, desc.texture2D.height,
-            GL_RGBA, GL_FLOAT, image.data()
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture2D.width,
+            desc.texture2D.height,
+            GL_RGBA,
+            GL_FLOAT,
+            image.data()
         );
     }
 }
@@ -461,9 +574,15 @@ void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     {
         /* Setup texture image from descriptor */
         GLTexImage3D(
-            NumMipLevels(desc), desc.format,
-            desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture3D.width,
+            desc.texture3D.height,
+            desc.texture3D.depth,
+            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->dataType),
+            imageDesc->data,
+            imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -475,9 +594,14 @@ void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     {
         /* Allocate texture without initial data */
         GLTexImage3D(
-            NumMipLevels(desc), desc.format,
-            desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
-            GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture3D.width,
+            desc.texture3D.height,
+            desc.texture3D.depth,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr
         );
     }
     else
@@ -489,9 +613,14 @@ void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         );
 
         GLTexImage3D(
-            NumMipLevels(desc), desc.format,
-            desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth,
-            GL_RGBA, GL_FLOAT, image.data()
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture3D.width,
+            desc.texture3D.height,
+            desc.texture3D.depth,
+            GL_RGBA,
+            GL_FLOAT,
+            image.data()
         );
     }
 }
@@ -523,9 +652,15 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                NumMipLevels(desc), desc.format,
-                desc.textureCube.width, desc.textureCube.height, face,
-                dataFormatGL, dataTypeGL, imageFace, imageDesc->dataSize
+                NumMipLevels(desc),
+                desc.format,
+                desc.textureCube.width,
+                desc.textureCube.height,
+                face,
+                dataFormatGL,
+                dataTypeGL,
+                imageFace,
+                imageDesc->dataSize
             );
             imageFace += imageFaceStride;
         }
@@ -541,9 +676,14 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                NumMipLevels(desc), desc.format,
-                desc.textureCube.width, desc.textureCube.height, face,
-                GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+                NumMipLevels(desc),
+                desc.format,
+                desc.textureCube.width,
+                desc.textureCube.height,
+                face,
+                GL_RGBA,
+                GL_UNSIGNED_BYTE,
+                nullptr
             );
         }
     }
@@ -558,9 +698,14 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                NumMipLevels(desc), desc.format,
-                desc.textureCube.width, desc.textureCube.height, face,
-                GL_RGBA, GL_FLOAT, image.data()
+                NumMipLevels(desc),
+                desc.format,
+                desc.textureCube.width,
+                desc.textureCube.height,
+                face,
+                GL_RGBA,
+                GL_FLOAT,
+                image.data()
             );
         }
     }
@@ -574,9 +719,14 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
     {
         /* Setup texture image from descriptor */
         GLTexImage1DArray(
-            NumMipLevels(desc), desc.format,
-            desc.texture1D.width, desc.texture1D.layers,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture1D.width,
+            desc.texture1D.layers,
+            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->dataType),
+            imageDesc->data,
+            imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -588,9 +738,13 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
     {
         /* Allocate texture without initial data */
         GLTexImage1DArray(
-            NumMipLevels(desc), desc.format,
-            desc.texture1D.width, desc.texture1D.layers,
-            GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture1D.width,
+            desc.texture1D.layers,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr
         );
     }
     else
@@ -602,9 +756,13 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
         );
 
         GLTexImage1DArray(
-            NumMipLevels(desc), desc.format,
-            desc.texture1D.width, desc.texture1D.layers,
-            GL_RGBA, GL_FLOAT, image.data()
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture1D.width,
+            desc.texture1D.layers,
+            GL_RGBA,
+            GL_FLOAT,
+            image.data()
         );
     }
 }
@@ -617,9 +775,15 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
     {
         /* Setup texture image from descriptor */
         GLTexImage2DArray(
-            NumMipLevels(desc), desc.format,
-            desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture2D.width,
+            desc.texture2D.height,
+            desc.texture2D.layers,
+            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->dataType),
+            imageDesc->data,
+            imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -633,18 +797,28 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
             );
 
             GLTexImage2DArray(
-                NumMipLevels(desc), desc.format,
-                desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
-                GL_DEPTH_COMPONENT, GL_FLOAT, image.data()
+                NumMipLevels(desc),
+                desc.format,
+                desc.texture2D.width,
+                desc.texture2D.height,
+                desc.texture2D.layers,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                image.data()
             );
         }
         else
         {
             /* Allocate depth texture image without initial data */
             GLTexImage2DArray(
-                NumMipLevels(desc), desc.format,
-                desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
-                GL_DEPTH_COMPONENT, GL_FLOAT, nullptr
+                NumMipLevels(desc),
+                desc.format,
+                desc.texture2D.width,
+                desc.texture2D.height,
+                desc.texture2D.layers,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                nullptr
             );
         }
     }
@@ -652,9 +826,14 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
     {
         /* Allocate texture without initial data */
         GLTexImage2DArray(
-            NumMipLevels(desc), desc.format,
-            desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
-            GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture2D.width,
+            desc.texture2D.height,
+            desc.texture2D.layers,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr
         );
     }
     else
@@ -666,9 +845,14 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
         );
 
         GLTexImage2DArray(
-            NumMipLevels(desc), desc.format,
-            desc.texture2D.width, desc.texture2D.height, desc.texture2D.layers,
-            GL_RGBA, GL_FLOAT, image.data()
+            NumMipLevels(desc),
+            desc.format,
+            desc.texture2D.width,
+            desc.texture2D.height,
+            desc.texture2D.layers,
+            GL_RGBA,
+            GL_FLOAT,
+            image.data()
         );
     }
 }
@@ -681,9 +865,15 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor
     {
         /* Setup texture image cube-faces from descriptor */
         GLTexImageCubeArray(
-            NumMipLevels(desc), desc.format,
-            desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
-            GLTypes::Map(imageDesc->format), GLTypes::Map(imageDesc->dataType), imageDesc->data, imageDesc->dataSize
+            NumMipLevels(desc),
+            desc.format,
+            desc.textureCube.width,
+            desc.textureCube.height,
+            desc.textureCube.layers,
+            GLTypes::Map(imageDesc->format),
+            GLTypes::Map(imageDesc->dataType),
+            imageDesc->data,
+            imageDesc->dataSize
         );
     }
     else if (IsDepthStencilFormat(desc.format))
@@ -695,9 +885,14 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor
     {
         /* Allocate texture without initial data */
         GLTexImageCubeArray(
-            NumMipLevels(desc), desc.format,
-            desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
-            GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+            NumMipLevels(desc),
+            desc.format,
+            desc.textureCube.width,
+            desc.textureCube.height,
+            desc.textureCube.layers,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr
         );
     }
     else
@@ -709,9 +904,14 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor
         );
 
         GLTexImageCubeArray(
-            NumMipLevels(desc), desc.format,
-            desc.textureCube.width, desc.textureCube.height, desc.textureCube.layers,
-            GL_RGBA, GL_FLOAT, image.data()
+            NumMipLevels(desc),
+            desc.format,
+            desc.textureCube.width,
+            desc.textureCube.height,
+            desc.textureCube.layers,
+            GL_RGBA,
+            GL_FLOAT,
+            image.data()
         );
     }
 }
@@ -720,8 +920,10 @@ void GLTexImage2DMS(const TextureDescriptor& desc)
 {
     /* Setup multi-sampled texture storage from descriptor */
     GLTexImage2DMultisample(
-        desc.texture2DMS.samples, desc.format,
-        desc.texture2DMS.width, desc.texture2DMS.height,
+        desc.texture2DMS.samples,
+        desc.format,
+        desc.texture2DMS.width,
+        desc.texture2DMS.height,
         desc.texture2DMS.fixedSamples
     );
 }
@@ -730,8 +932,11 @@ void GLTexImage2DMSArray(const TextureDescriptor& desc)
 {
     /* Setup multi-sampled array texture storage from descriptor */
     GLTexImage2DMultisampleArray(
-        desc.texture2DMS.samples, desc.format,
-        desc.texture2DMS.width, desc.texture2DMS.height, desc.texture2DMS.layers,
+        desc.texture2DMS.samples,
+        desc.format,
+        desc.texture2DMS.width,
+        desc.texture2DMS.height,
+        desc.texture2DMS.layers,
         desc.texture2DMS.fixedSamples
     );
 }

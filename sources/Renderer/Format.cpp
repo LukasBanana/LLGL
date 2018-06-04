@@ -32,6 +32,21 @@ LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType)
     return 0;
 }
 
+LLGL_EXPORT bool IsIntDataType(const DataType dataType)
+{
+    return (dataType == DataType::Int8 || dataType == DataType::Int16 || dataType == DataType::Int32);
+}
+
+LLGL_EXPORT bool IsUIntDataType(const DataType dataType)
+{
+    return (dataType == DataType::UInt8 || dataType == DataType::UInt16 || dataType == DataType::UInt32);
+}
+
+LLGL_EXPORT bool IsFloatDataType(const DataType dataType)
+{
+    return (dataType == DataType::Float || dataType == DataType::Double);
+}
+
 LLGL_EXPORT std::uint32_t VectorTypeSize(const VectorType vectorType)
 {
     DataType dataType   = DataType::Float;

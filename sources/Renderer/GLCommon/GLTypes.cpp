@@ -219,9 +219,9 @@ GLenum Map(const TextureFormat textureFormat)
     MapFailed("TextureFormat");
 }
 
-GLenum Map(const ImageFormat colorFormat)
+static GLenum MapImageFormat(const ImageFormat imageFormat)
 {
-    switch (colorFormat)
+    switch (imageFormat)
     {
         case ImageFormat::R:                return GL_RED;
         case ImageFormat::RG:               return GL_RG;
@@ -231,7 +231,7 @@ GLenum Map(const ImageFormat colorFormat)
         #endif
         case ImageFormat::RGBA:             return GL_RGBA;
         case ImageFormat::BGRA:             return GL_BGRA;
-        case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;  
+        case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
         case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
         #ifdef LLGL_OPENGL
         case ImageFormat::CompressedRGB:    return GL_COMPRESSED_RGB;
@@ -241,6 +241,42 @@ GLenum Map(const ImageFormat colorFormat)
     }
     MapFailed("ImageFormat");
 }
+
+static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
+{
+    switch (imageFormat)
+    {
+        case ImageFormat::R:                return GL_RED_INTEGER;
+        case ImageFormat::RG:               return GL_RG_INTEGER;
+        case ImageFormat::RGB:              return GL_RGB_INTEGER;
+        #ifdef LLGL_OPENGL
+        case ImageFormat::BGR:              return GL_BGR_INTEGER;
+        #endif
+        case ImageFormat::RGBA:             return GL_RGBA_INTEGER;
+        case ImageFormat::BGRA:             return GL_BGRA_INTEGER;
+        case ImageFormat::Depth:            return GL_DEPTH_COMPONENT;
+        case ImageFormat::DepthStencil:     return GL_DEPTH_STENCIL;
+        #ifdef LLGL_OPENGL
+        case ImageFormat::CompressedRGB:    return GL_COMPRESSED_RGB;
+        case ImageFormat::CompressedRGBA:   return GL_COMPRESSED_RGBA;
+        #endif
+        default:                            break;
+    }
+    MapFailed("ImageFormat");
+}
+
+GLenum Map(const ImageFormat imageFormat)
+{
+    return MapImageFormat(imageFormat);
+}
+
+/*GLenum Map(const ImageFormat imageFormat, bool integerFormat)
+{
+    if (integerFormat)
+        return MapIntegerImageFormat(imageFormat);
+    else
+        return MapImageFormat(imageFormat);
+}*/
 
 GLenum Map(const CompareOp compareOp)
 {

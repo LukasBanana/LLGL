@@ -93,6 +93,24 @@ enum class MatrixType
 //! Returns the size (in bytes) of the specified data type.
 LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType);
 
+/**
+\brief Determines if the argument refers to a signed integer data type.
+\return True if the specified data type equals one of the following enumeration entries: DataType::Int8, DataType::Int16, DataType::Int32.
+*/
+LLGL_EXPORT bool IsIntDataType(const DataType dataType);
+
+/**
+\brief Determines if the argument refers to an unsigned integer data type.
+\return True if the specified data type equals one of the following enumeration entries: DataType::UInt8, DataType::UInt16, DataType::UInt32.
+*/
+LLGL_EXPORT bool IsUIntDataType(const DataType dataType);
+
+/**
+\brief Determines if the argument refers to a floating-pointer data type.
+\return True if the specified data type equals one of the following enumeration entries: DataType::Float, DataType::Double.
+*/
+LLGL_EXPORT bool IsFloatDataType(const DataType dataType);
+
 //! Returns the size (in bytes) of the specified vector type.
 LLGL_EXPORT std::uint32_t VectorTypeSize(const VectorType vectorType);
 
