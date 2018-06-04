@@ -123,6 +123,7 @@
 /**
 \defgroup group_compare_swo Global functions for Strict-Weak-Order (SWO) comparisons.
 \defgroup group_operators Global operators for basic data structures.
+\defgroup group_callbacks Global type aliases to callback interfaces.
 */
 
 

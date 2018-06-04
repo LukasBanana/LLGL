@@ -16,6 +16,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include "ShaderFlags.h"
 #include "TextureFlags.h"
 #include "RenderingDebugger.h"
+#include "RenderSystemFlags.h"
 
 
 namespace LLGL
@@ -28,14 +29,35 @@ namespace LLGL
 @{
 */
 
-//! Returns a string representation for the spcified ShaderType value, e.g. "vertex", "tessellation control", or null if the input type is invalid.
+/**
+\brief Returns a string representation for the spcified ShaderType value, or null if the input type is invalid.
+\remarks Return value example are "vertex", "tessellation control".
+*/
 LLGL_EXPORT const char* ToString(const ShaderType t);
 
-//! Returns a string representation for the specified ErrorType value, e.g. "invalid argument", "unsupported feature", or null if the input type is invalid.
+/**
+\brief Returns a string representation for the specified ErrorType value, or null if the input type is invalid.
+\remarks Return value examples are "invalid argument", "unsupported feature".
+*/
 LLGL_EXPORT const char* ToString(const ErrorType t);
 
-//! Returns a string representation for the specified WarningType value, e.g. "improper argument", "pointless operation", or null if the input type is invalid.
+/**
+\brief Returns a string representation for the specified WarningType value, or null if the input type is invalid.
+\remarks Return value examples are "improper argument", "pointless operation".
+*/
 LLGL_EXPORT const char* ToString(const WarningType t);
+
+/**
+\brief Returns a string representation for the specified ShadingLanguage value, or null if the input type is invalid.
+\remarks Return value examples are "GLSL 450", "HLSL 2.0c".
+*/
+LLGL_EXPORT const char* ToString(const ShadingLanguage t);
+
+/**
+\brief Returns a string representation for the specified TextureFormat value, or null if the input type is invalid.
+\remarks Return value examples are "R8", "RGBA16Float", "D24S8", "RGB DXT1".
+*/
+LLGL_EXPORT const char* ToString(const TextureFormat t);
 
 /** @} */
 

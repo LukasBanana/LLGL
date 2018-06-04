@@ -27,6 +27,7 @@ namespace LLGL
 \param[in] type Descriptive type of the message.
 \param[in] message Specifies the debug output message.
 \remarks This output is renderer dependent.
+\ingroup group_callbacks
 */
 using DebugCallback = std::function<void(const std::string& type, const std::string& message)>;
 

@@ -46,10 +46,17 @@ void InitMemory(T& data)
 }
 
 // Fills the specified container with 'value' (using std::fill).
-template <typename Container, typename Value>
-void Fill(Container& container, Value&& value)
+template <class Container, class T>
+void Fill(Container& cont, const T& value)
 {
-    std::fill(container.begin(), container.end(), value);
+    std::fill(std::begin(cont), std::end(cont), value);
+}
+
+// Returns true if the specified container contains the entry specified by 'value' (using std::find).
+template <class Container, class T>
+bool Contains(const Container& cont, const T& value)
+{
+    return (std::find(std::begin(cont), std::end(cont), value) != std::end(cont));
 }
 
 template <class Container, class T>

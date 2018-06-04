@@ -9,6 +9,7 @@
 #define LLGL_RENDER_SYSTEM_FLAGS_H
 
 
+#include "Export.h"
 #include "CommandBufferFlags.h"
 #include "TextureFlags.h"
 #include "Constants.h"
@@ -16,6 +17,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <functional>
 
 
 namespace LLGL
@@ -133,7 +135,7 @@ struct ImageInitialization
     If this is false and a texture is created without initial image data, the texture remains uninitialized.
     \note Reading or sampling uninitialized textures is undefined behavior.
     */
-    bool        enabled     { true };
+    bool        enabled     = true;
 
     /**
     \brief Specifies the default value to clear uninitialized textures.
@@ -460,7 +462,7 @@ struct RenderingLimits
 
     /**
     \brief Specifies the maximum number of work groups in a compute shader.
-    \see RenderContext::Dispatch
+    \see CommandBuffer::Dispatch
     */
     std::uint32_t   maxNumComputeShaderWorkGroups[3]    = { 0, 0, 0 };
 
@@ -535,6 +537,59 @@ struct RenderingCapabilities
     */
     RenderingLimits                 limits;
 };
+
+
+/* ----- Functions ----- */
+
+/**
+\brief Callback interface for the ValidateRenderingCaps function.
+\param[in] info Specifies a description why an attribute did not fulfill the requirement.
+\param[in] attrib Name of the attribute which did not fulfill the requirement.
+\return True to continue the validation process, or false to break the validation process.
+\see ValidateRenderingCaps
+\ingroup group_callbacks
+*/
+using ValidateRenderingCapsFunc = std::function<bool(const std::string& info, const std::string& attrib)>;
+
+/**
+\brief Validates the presence of the specified required rendering capabilities.
+\param[in] presentCaps Specifies the rendering capabilities that are present for a certain renderer.
+\param[in] requiredCaps Specifies the rendering capabilities that are required for the host application to work properly.
+\param[in] callback Optional callback to retrieve information about the attributes that did not fulfill the requirement.
+If this is null the validation process breaks with the first attribute that did not fulfill the requirement. By default null.
+\return True on success, otherwise at least one attribute did not fulfill the requirement.
+\remarks Here is an example usage to print out all attributes that did not fulfill the requirement:
+\code
+// Initialize the requirements
+LLGL::RenderingCapabilities myRequirements;
+myRequirements.features.hasStorageBuffers = true;
+myRequirements.features.hasComputeShaders = true;
+myRequirements.limits.maxNumComputeShaderWorkGroups[0] = 1024;
+myRequirements.limits.maxNumComputeShaderWorkGroups[1] = 1024;
+myRequirements.limits.maxNumComputeShaderWorkGroups[2] = 1;
+myRequirements.limits.maxComputeShaderWorkGroupSize[0] = 8;
+myRequirements.limits.maxComputeShaderWorkGroupSize[1] = 8;
+myRequirements.limits.maxComputeShaderWorkGroupSize[2] = 8;
+
+// Validate rendering capabilities supported by the render system
+LLGL::ValidateRenderingCaps(
+    myRenderer->GetRenderingCaps(),
+    myRequirements,
+    [](const std::string& info, const std::string& attrib) {
+        std::cerr << info << ": " << attrib << std::endl;
+        return true;
+    }
+);
+\endcode
+\note The following attributes of the RenderingCapabilities structure are ignored: 'screenOrigin' and 'clippingRange'.
+\see RenderingCapabilities
+\see ValidateRenderingCapsFunc
+*/
+LLGL_EXPORT bool ValidateRenderingCaps(
+    const RenderingCapabilities&        presentCaps,
+    const RenderingCapabilities&        requiredCaps,
+    const ValidateRenderingCapsFunc&    callback = nullptr
+);
 
 
 } // /namespace LLGL
