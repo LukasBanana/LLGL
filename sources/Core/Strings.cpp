@@ -102,6 +102,8 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage t)
 
         case T::SPIRV:      return "SPIR-V";
         case T::SPIRV_100:  return "SPIR-V 1.00";
+        
+        default:            break;
     }
 
     return nullptr;

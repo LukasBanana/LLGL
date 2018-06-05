@@ -53,7 +53,6 @@ class DbgRenderTarget : public RenderTarget
 
     private:
 
-        RenderingDebugger*      debugger_               = nullptr;
         RenderTargetDescriptor  desc_;
         std::uint32_t           numColorAttachments_    = 0;
         bool                    hasDepthAttachment_     = false;

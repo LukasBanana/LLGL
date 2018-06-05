@@ -242,7 +242,7 @@ static GLenum MapImageFormat(const ImageFormat imageFormat)
     MapFailed("ImageFormat");
 }
 
-static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
+/*static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
 {
     switch (imageFormat)
     {
@@ -263,7 +263,7 @@ static GLenum MapIntegerImageFormat(const ImageFormat imageFormat)
         default:                            break;
     }
     MapFailed("ImageFormat");
-}
+}*/
 
 GLenum Map(const ImageFormat imageFormat)
 {
