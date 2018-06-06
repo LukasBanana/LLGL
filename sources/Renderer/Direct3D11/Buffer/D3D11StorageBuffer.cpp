@@ -80,7 +80,7 @@ bool D3D11StorageBuffer::IsByteAddressable() const
 UINT D3D11StorageBuffer::GetBindFlags() const
 {
     UINT flags = D3D11_BIND_SHADER_RESOURCE;
-    
+
     if (HasUAV())
         flags |= D3D11_BIND_UNORDERED_ACCESS;
 
@@ -131,7 +131,7 @@ void D3D11StorageBuffer::CreateSRV(ID3D11Device* device, DXGI_FORMAT format, UIN
         desc.Buffer.FirstElement    = firstElement;
         desc.Buffer.NumElements     = numElements;
     }
-    auto hr = device->CreateShaderResourceView(Get(), &desc, srv_.ReleaseAndGetAddressOf());
+    auto hr = device->CreateShaderResourceView(GetNative(), &desc, srv_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 shader-resource-view (SRV) for storage buffer");
 }
 
@@ -146,7 +146,7 @@ void D3D11StorageBuffer::CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UIN
         desc.Buffer.NumElements     = numElements;
         desc.Buffer.Flags           = GetUAVFlags();
     }
-    auto hr = device->CreateUnorderedAccessView(Get(), &desc, uav_.ReleaseAndGetAddressOf());
+    auto hr = device->CreateUnorderedAccessView(GetNative(), &desc, uav_.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 unordered-acces-view (UAV) for storage buffer");
 }
 

@@ -171,7 +171,7 @@ void D3D11CommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& vertexBufferD3D = LLGL_CAST(D3D11VertexBuffer&, buffer);
 
-    ID3D11Buffer* buffers[] = { vertexBufferD3D.Get() };
+    ID3D11Buffer* buffers[] = { vertexBufferD3D.GetNative() };
     UINT strides[] = { vertexBufferD3D.GetStride() };
     UINT offsets[] = { 0 };
 
@@ -194,7 +194,7 @@ void D3D11CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 void D3D11CommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
     auto& indexBufferD3D = LLGL_CAST(D3D11IndexBuffer&, buffer);
-    context_->IASetIndexBuffer(indexBufferD3D.Get(), indexBufferD3D.GetFormat(), 0);
+    context_->IASetIndexBuffer(indexBufferD3D.GetNative(), indexBufferD3D.GetFormat(), 0);
 }
 
 /* ----- Constant Buffers ------ */
@@ -203,7 +203,7 @@ void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, l
 {
     /* Set constant buffer resource to all shader stages */
     auto& constantBufferD3D = LLGL_CAST(D3D11ConstantBuffer&, buffer);
-    auto resource = constantBufferD3D.Get();
+    auto resource = constantBufferD3D.GetNative();
     SetConstantBuffersOnStages(slot, 1, &resource, stageFlags);
 }
 
@@ -273,7 +273,7 @@ void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 {
     auto& streamOutputBufferD3D = LLGL_CAST(D3D11StreamOutputBuffer&, buffer);
 
-    ID3D11Buffer* buffers[] = { streamOutputBufferD3D.Get() };
+    ID3D11Buffer* buffers[] = { streamOutputBufferD3D.GetNative() };
     UINT offsets[] = { 0 };
 
     context_->SOSetTargets(1, buffers, offsets);
@@ -329,7 +329,7 @@ void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long s
 {
     /* Set sampler state object to all shader stages */
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
-    auto resource = samplerD3D.GetSamplerState();
+    auto resource = samplerD3D.GetNative();
     SetSamplersOnStages(slot, 1, &resource, stageFlags);
 }
 

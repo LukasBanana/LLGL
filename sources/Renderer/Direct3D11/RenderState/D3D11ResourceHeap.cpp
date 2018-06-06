@@ -12,6 +12,7 @@
 #include "../Texture/D3D11Texture.h"
 #include "../../CheckedCast.h"
 #include "../../ResourceBindingIterator.h"
+#include "../../../Core/Helper.h"
 
 
 namespace LLGL
@@ -30,14 +31,14 @@ on a 32-bit build, both for the fragment shader stage only:
 
 Offset      Attribute                                   Value   Description                                         Segment
 --------------------------------------------------------------------------------------------------------------------------------------------
-0x00000000  GLResourceViewHeapSegment2::segmentSize     16      Size of this segment                                \
-0x00000004  GLResourceViewHeapSegment2::startSlot       4       First binding point                                  |-- Texture segment
-0x00000008  GLResourceViewHeapSegment2::numSlots        1       Number of binding points                             |
+0x00000000  D3DResourceViewHeapSegment2::segmentSize    16      Size of this segment                                \
+0x00000004  D3DResourceViewHeapSegment2::startSlot      4       First binding point                                  |-- Texture segment
+0x00000008  D3DResourceViewHeapSegment2::numSlots       1       Number of binding points                             |
 0x0000000C  srv[0]                                      <ptr>   1st ID3D11ShaderResourceView for texture            /
-0x00000010  GLResourceViewHeapSegment1::segmentSize     20      Size of this segment                                \
-0x00000014  GLResourceViewHeapSegment1::offsetEnd0      20      Relative offset to initialCount[0] (at 0x00000028)   |
-0x00000018  GLResourceViewHeapSegment1::startSlot       5       First binding point                                  |
-0x0000001C  GLResourceViewHeapSegment1::numSlots        2       Number of binding points                             |-- StorageBuffer segment
+0x00000010  D3DResourceViewHeapSegment1::segmentSize    20      Size of this segment                                \
+0x00000014  D3DResourceViewHeapSegment1::offsetEnd0     20      Relative offset to initialCount[0] (at 0x00000028)   |
+0x00000018  D3DResourceViewHeapSegment1::startSlot      5       First binding point                                  |
+0x0000001C  D3DResourceViewHeapSegment1::numSlots       2       Number of binding points                             |-- StorageBuffer segment
 0x00000020  uav[0]                                      <ptr>   1st ID3D11UnorderedAccessView for storage buffer     |
 0x00000024  uav[1]                                      <ptr>   2nd ID3D11UnorderedAccessView for storage buffer     |
 0x00000028  initialCount[0]                             0       1st initial count                                    |
@@ -51,9 +52,9 @@ for <ID3D11SamplerState*>, <ID3D11ShaderResourceView*>, or <ID3D11Buffer*>
 */
 struct D3DResourceViewHeapSegment1
 {
-    std::size_t segmentSize;
-    UINT        startSlot;
-    UINT        numViews;
+    std::size_t segmentSize;    // TODO: maybe use std::uint16_t for optimization
+    UINT        startSlot;      // TODO: maybe use std::uint8_t for optimization
+    UINT        numViews;       // TODO: maybe use std::uint8_t for optimization
 };
 
 /*
@@ -62,17 +63,19 @@ one for <ID3D11UnorderedAccessView*> and one for <UINT>
 */
 struct D3DResourceViewHeapSegment2
 {
-    std::size_t segmentSize;
-    std::size_t offsetEnd0;
-    UINT        startSlot;
-    UINT        numViews;
+    std::size_t segmentSize;    // TODO: maybe use std::uint16_t for optimization
+    std::size_t offsetEnd0;     // TODO: maybe use std::uint16_t for optimization
+    UINT        startSlot;      // TODO: maybe use std::uint8_t for optimization
+    UINT        numViews;       // TODO: maybe use std::uint8_t for optimization
 };
 
 struct D3DResourceBinding
 {
     UINT                            slot;
+    long                            stages; // bitwise OR combination of StageFlags entries
     union
     {
+        ID3D11DeviceChild*          obj;
         ID3D11Buffer*               buffer;
         ID3D11UnorderedAccessView*  uav;
         ID3D11ShaderResourceView*   srv;
@@ -87,26 +90,36 @@ struct D3DResourceBinding
 
 D3D11ResourceHeap::D3D11ResourceHeap(const ResourceHeapDescriptor& desc)
 {
+    /* Initialize segmentation header */
+    InitMemory(segmentationHeader_);
+
     /* Get pipeline layout object */
     auto pipelineLayoutD3D = LLGL_CAST(D3D11PipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutD3D)
-        throw std::invalid_argument("failed to create resource view heap due to missing pipeline layout");
+        throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Validate binding descriptors */
     const auto& bindings = pipelineLayoutD3D->GetBindings();
     if (desc.resourceViews.size() != bindings.size())
-        throw std::invalid_argument("failed to create resource vied heap due to mismatch between number of resources and bindings");
+        throw std::invalid_argument("failed to create resource heap due to mismatch between number of resources and bindings");
 
-    /* Build buffer segments */
+    /* Build buffer segments (stage after stage, so the internal buffer is constructed in the correct order) */
     ResourceBindingIterator resourceIterator { desc.resourceViews, bindings };
 
-    //TODO
-    #if 0
-    BuildConstantBufferSegments(resourceIterator);
-    BuildStorageBufferSegments(resourceIterator);
-    BuildTextureSegments(resourceIterator);
-    BuildSamplerSegments(resourceIterator);
-    #endif
+    BuildSegmentsForStage(resourceIterator, StageFlags::VertexStage);
+    BuildSegmentsForStage(resourceIterator, StageFlags::TessControlStage);
+    BuildSegmentsForStage(resourceIterator, StageFlags::TessEvaluationStage);
+    BuildSegmentsForStage(resourceIterator, StageFlags::GeometryStage);
+    BuildSegmentsForStage(resourceIterator, StageFlags::FragmentStage);
+
+    /* Store buffer offset for compute shader and check for boundary */
+    if (buffer_.size() > static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max()))
+        throw std::out_of_range("internal buffer for resource heap exceeded limit of 2^16 (65536) bytes");
+
+    bufferOffsetCS_ = static_cast<std::uint16_t>(buffer_.size());
+    BuildSegmentsForStage(resourceIterator, StageFlags::ComputeStage);
+
+    StoreResourceUsage();
 }
 
 void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context)
@@ -122,6 +135,7 @@ void D3D11ResourceHeap::BindForGraphicsPipeline(ID3D11DeviceContext* context)
 void D3D11ResourceHeap::BindForComputePipeline(ID3D11DeviceContext* context)
 {
     auto byteAlignedBuffer = buffer_.data();
+    byteAlignedBuffer += bufferOffsetCS_;
     if (segmentationHeader_.hasCSResources) { BindCSResources(context, byteAlignedBuffer); }
 }
 
@@ -129,6 +143,237 @@ void D3D11ResourceHeap::BindForComputePipeline(ID3D11DeviceContext* context)
 /*
  * ======= Private: =======
  */
+
+using D3DResourceBindingFunc = std::function<D3DResourceBinding(Resource* resource, std::uint32_t slot, long stageFlags)>;
+
+static std::vector<D3DResourceBinding> CollectD3DResourceBindings(
+    ResourceBindingIterator&        resourceIterator,
+    const ResourceType              resourceType,
+    long                            affectedStage,
+    const D3DResourceBindingFunc&   resourceFunc)
+{
+    /* Collect all binding points of the specified resource type */
+    BindingDescriptor bindingDesc;
+    resourceIterator.Reset(resourceType, affectedStage);
+
+    std::vector<D3DResourceBinding> resourceBindings;
+    resourceBindings.reserve(resourceIterator.GetCount());
+
+    while (auto resource = resourceIterator.Next(bindingDesc))
+        resourceBindings.push_back(resourceFunc(resource, bindingDesc.slot, bindingDesc.stageFlags));
+
+    /* Sort resources by slot index */
+    std::sort(
+        resourceBindings.begin(), resourceBindings.end(),
+        [](const D3DResourceBinding& lhs, const D3DResourceBinding& rhs)
+        {
+            return (lhs.slot < rhs.slot);
+        }
+    );
+
+    return resourceBindings;
+}
+
+void D3D11ResourceHeap::BuildSegmentsForStage(ResourceBindingIterator& resourceIterator, long stage)
+{
+    BuildConstantBufferSegments(resourceIterator, stage);
+    BuildSamplerSegments(resourceIterator, stage);
+    BuildShaderResourceViewSegments(resourceIterator, stage);
+    BuildUnorderedAccessViewSegments(resourceIterator, stage);
+}
+
+void D3D11ResourceHeap::BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator, long stage)
+{
+    /* Collect all constant buffers */
+    auto resourceBindings = CollectD3DResourceBindings(
+        resourceIterator,
+        ResourceType::ConstantBuffer,
+        stage,
+        [](Resource* resource, std::uint32_t slot, long stageFlags) -> D3DResourceBinding
+        {
+            auto bufferD3D = LLGL_CAST(D3D11Buffer*, resource);
+            D3DResourceBinding resourceBinding;
+            {
+                resourceBinding.slot    = slot;
+                resourceBinding.stages  = stageFlags;
+                resourceBinding.buffer  = bufferD3D->GetNative();
+            }
+            return resourceBinding;
+        }
+    );
+
+    /* Build all resource segments for type <D3DResourceViewHeapSegment1> */
+    std::uint8_t numSegments = 0;
+    BuildAllSegmentsType1(resourceBindings, stage, numSegments);
+
+    switch (stage)
+    {
+        case StageFlags::VertexStage:           segmentationHeader_.numVSConstantBufferSegments = numSegments; break;
+        case StageFlags::TessControlStage:      segmentationHeader_.numHSConstantBufferSegments = numSegments; break;
+        case StageFlags::TessEvaluationStage:   segmentationHeader_.numDSConstantBufferSegments = numSegments; break;
+        case StageFlags::GeometryStage:         segmentationHeader_.numGSConstantBufferSegments = numSegments; break;
+        case StageFlags::FragmentStage:         segmentationHeader_.numPSConstantBufferSegments = numSegments; break;
+        case StageFlags::ComputeStage:          segmentationHeader_.numCSConstantBufferSegments = numSegments; break;
+    }
+}
+
+void D3D11ResourceHeap::BuildShaderResourceViewSegments(ResourceBindingIterator& resourceIterator, long stage)
+{
+    /* Collect all shader resource views */
+    auto resourceBindings = CollectD3DResourceBindings(
+        resourceIterator,
+        ResourceType::Texture,
+        stage,
+        [](Resource* resource, std::uint32_t slot, long stageFlags) -> D3DResourceBinding
+        {
+            auto textureD3D = LLGL_CAST(D3D11Texture*, resource);
+            D3DResourceBinding resourceBinding;
+            {
+                resourceBinding.slot    = slot;
+                resourceBinding.stages  = stageFlags;
+                resourceBinding.srv     = textureD3D->GetSRV();
+            }
+            return resourceBinding;
+        }
+    );
+
+    /* Build all resource segments for type <D3DResourceViewHeapSegment1> */
+    std::uint8_t numSegments = 0;
+    BuildAllSegmentsType1(resourceBindings, stage, numSegments);
+
+    switch (stage)
+    {
+        case StageFlags::VertexStage:           segmentationHeader_.numVSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::TessControlStage:      segmentationHeader_.numHSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::TessEvaluationStage:   segmentationHeader_.numDSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::GeometryStage:         segmentationHeader_.numGSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::FragmentStage:         segmentationHeader_.numPSShaderResourceViewSegments = numSegments; break;
+        case StageFlags::ComputeStage:          segmentationHeader_.numCSShaderResourceViewSegments = numSegments; break;
+    }
+}
+
+void D3D11ResourceHeap::BuildUnorderedAccessViewSegments(ResourceBindingIterator& resourceIterator, long stage)
+{
+    //TODO
+}
+
+void D3D11ResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceIterator, long stage)
+{
+    /* Collect all sampler states */
+    auto resourceBindings = CollectD3DResourceBindings(
+        resourceIterator,
+        ResourceType::Sampler,
+        stage,
+        [](Resource* resource, std::uint32_t slot, long stageFlags) -> D3DResourceBinding
+        {
+            auto samplerD3D = LLGL_CAST(D3D11Sampler*, resource);
+            D3DResourceBinding resourceBinding;
+            {
+                resourceBinding.slot    = slot;
+                resourceBinding.stages  = stageFlags;
+                resourceBinding.sampler = samplerD3D->GetNative();
+            }
+            return resourceBinding;
+        }
+    );
+
+    /* Build all resource segments for type <D3DResourceViewHeapSegment1> */
+    std::uint8_t numSegments = 0;
+    BuildAllSegmentsType1(resourceBindings, stage, numSegments);
+
+    switch (stage)
+    {
+        case StageFlags::VertexStage:           segmentationHeader_.numVSSamplerSegments = numSegments; break;
+        case StageFlags::TessControlStage:      segmentationHeader_.numHSSamplerSegments = numSegments; break;
+        case StageFlags::TessEvaluationStage:   segmentationHeader_.numDSSamplerSegments = numSegments; break;
+        case StageFlags::GeometryStage:         segmentationHeader_.numGSSamplerSegments = numSegments; break;
+        case StageFlags::FragmentStage:         segmentationHeader_.numPSSamplerSegments = numSegments; break;
+        case StageFlags::ComputeStage:          segmentationHeader_.numCSSamplerSegments = numSegments; break;
+    }
+}
+
+void D3D11ResourceHeap::BuildAllSegments(
+    const std::vector<D3DResourceBinding>&  resourceBindings,
+    const BuildSegmentFunc&                 buildSegmentFunc,
+    long                                    affectedStage,
+    std::uint8_t&                           numSegments)
+{
+    if (!resourceBindings.empty())
+    {
+        /* Initialize iterators for sub-ranges of input bindings */
+        auto itStart = resourceBindings.begin();
+        auto itPrev  = itStart;
+        auto it      = itStart;
+        UINT count   = 0;
+
+        for (++it, ++count; it != resourceBindings.end(); ++it, ++count)
+        {
+            if (it->slot > itPrev->slot + 1)
+            {
+                /* Build next segment */
+                buildSegmentFunc(itStart, count);
+                ++numSegments;
+                count   = 0;
+                itStart = it;
+            }
+            itPrev = it;
+        }
+
+        if (itStart != resourceBindings.end())
+        {
+            /* Add last segment */
+            buildSegmentFunc(itStart, count);
+            ++numSegments;
+        }
+    }
+}
+
+void D3D11ResourceHeap::BuildAllSegmentsType1(const std::vector<D3DResourceBinding>& resourceBindings, long affectedStage, std::uint8_t& numSegments)
+{
+    BuildAllSegments(
+        resourceBindings,
+        std::bind(&D3D11ResourceHeap::BuildSegment1, this, std::placeholders::_1, std::placeholders::_2),
+        affectedStage,
+        numSegments
+    );
+}
+
+void D3D11ResourceHeap::BuildAllSegmentsType2(const std::vector<D3DResourceBinding>& resourceBindings, long affectedStage, std::uint8_t& numSegments)
+{
+    BuildAllSegments(
+        resourceBindings,
+        std::bind(&D3D11ResourceHeap::BuildSegment2, this, std::placeholders::_1, std::placeholders::_2),
+        affectedStage,
+        numSegments
+    );
+}
+
+void D3D11ResourceHeap::BuildSegment1(D3DResourceBindingIter it, UINT count)
+{
+    std::size_t startOffset = buffer_.size();
+
+    /* Allocate space for segment */
+    const auto segmentSize = sizeof(D3DResourceViewHeapSegment1) + sizeof(ID3D11DeviceChild*) * count;
+    buffer_.resize(startOffset + segmentSize);
+
+    /* Write segment header */
+    auto segment = reinterpret_cast<D3DResourceViewHeapSegment1*>(&buffer_[startOffset]);
+    {
+        segment->segmentSize    = segmentSize;
+        segment->startSlot      = it->slot;
+        segment->numViews       = count;
+    }
+
+    /* Write segment body */
+    auto segmentObjs = reinterpret_cast<ID3D11DeviceChild**>(&buffer_[startOffset + sizeof(D3DResourceViewHeapSegment1)]);
+    for (UINT i = 0; i < count; ++i, ++it)
+        segmentObjs[i] = it->obj;
+}
+
+void D3D11ResourceHeap::BuildSegment2(D3DResourceBindingIter it, UINT count)
+{
+    //TODO
+}
 
 template <typename T>
 T* const* CastToD3DViews(const std::int8_t* byteAlignedBuffer)
@@ -154,6 +399,27 @@ static ID3D11ShaderResourceView* const* CastToD3D11ShaderResourceViews(const std
 static ID3D11UnorderedAccessView* const* CastToD3D11UnorderedAccessView(const std::int8_t* byteAlignedBuffer)
 {
     return CastToD3DViews<ID3D11UnorderedAccessView>(byteAlignedBuffer);
+}
+
+void D3D11ResourceHeap::StoreResourceUsage()
+{
+    /* Store information for which stages any resources have been specified */
+    #define LLGL_STORE_STAGE_RESOURCE_USAGE(STAGE)                              \
+        if ( segmentationHeader_.num##STAGE##SamplerSegments            > 0 ||  \
+             segmentationHeader_.num##STAGE##ConstantBufferSegments     > 0 ||  \
+             segmentationHeader_.num##STAGE##ShaderResourceViewSegments > 0 )   \
+        {                                                                       \
+            segmentationHeader_.has##STAGE##Resources = 1;                      \
+        }
+
+    LLGL_STORE_STAGE_RESOURCE_USAGE(VS);
+    LLGL_STORE_STAGE_RESOURCE_USAGE(HS);
+    LLGL_STORE_STAGE_RESOURCE_USAGE(DS);
+    LLGL_STORE_STAGE_RESOURCE_USAGE(GS);
+    LLGL_STORE_STAGE_RESOURCE_USAGE(PS);
+    LLGL_STORE_STAGE_RESOURCE_USAGE(CS);
+
+    #undef LLGL_STORE_STAGE_RESOURCE_USAGE
 }
 
 void D3D11ResourceHeap::BindVSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer)

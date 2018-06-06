@@ -56,7 +56,7 @@ void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
     {
         /* On read access -> copy storage buffer to CPU-access buffer */
         if (HasReadAccess(access))
-            context->CopyResource(cpuAccessBuffer_.Get(), Get());
+            context->CopyResource(cpuAccessBuffer_.Get(), GetNative());
 
         /* Map CPU-access buffer */
         hr = context->Map(cpuAccessBuffer_.Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
@@ -64,7 +64,7 @@ void* D3D11Buffer::Map(ID3D11DeviceContext* context, const CPUAccess access)
     else
     {
         /* Map buffer */
-        hr = context->Map(Get(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
+        hr = context->Map(GetNative(), 0, D3D11Types::Map(access), 0, &mapppedSubresource);
     }
 
     return (SUCCEEDED(hr) ? mapppedSubresource.pData : nullptr);
@@ -79,12 +79,12 @@ void D3D11Buffer::Unmap(ID3D11DeviceContext* context, const CPUAccess access)
 
         /* On write access -> copy CPU-access buffer to storage buffer */
         if (HasWriteAccess(access))
-            context->CopyResource(Get(), cpuAccessBuffer_.Get());
+            context->CopyResource(GetNative(), cpuAccessBuffer_.Get());
     }
     else
     {
         /* Unmap buffer */
-        context->Unmap(Get(), 0);
+        context->Unmap(GetNative(), 0);
     }
 }
 

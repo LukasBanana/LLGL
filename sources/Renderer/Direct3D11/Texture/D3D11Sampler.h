@@ -25,7 +25,8 @@ class D3D11Sampler : public Sampler
 
         D3D11Sampler(ID3D11Device* device, const SamplerDescriptor& desc);
 
-        inline ID3D11SamplerState* GetSamplerState() const
+        // Returns the native ID3D11SamplerState object.
+        inline ID3D11SamplerState* GetNative() const
         {
             return samplerState_.Get();
         }

@@ -47,9 +47,9 @@ Offset      Attribute                                   Value   Description     
 // Resource view heap (RVH) segment structure with one dynamic sub-buffer for <GLuint>
 struct GLResourceViewHeapSegment1
 {
-    std::size_t segmentSize;
-    GLuint      first;
-    GLsizei     count;
+    std::size_t segmentSize;    // TODO: maybe use std::uint16_t for optimization
+    GLuint      first;          // TODO: maybe use std::uint8_t for optimization
+    GLsizei     count;          // TODO: maybe use std::uint8_t for optimization
 };
 
 // Resource view heap (RVH) segment structure with two dynamic sub-buffers, one for <GLTextureTarget> and one for <GLuint>
@@ -78,12 +78,12 @@ GLResourceHeap::GLResourceHeap(const ResourceHeapDescriptor& desc)
     /* Get pipeline layout object */
     auto pipelineLayoutGL = LLGL_CAST(GLPipelineLayout*, desc.pipelineLayout);
     if (!pipelineLayoutGL)
-        throw std::invalid_argument("failed to create resource view heap due to missing pipeline layout");
+        throw std::invalid_argument("failed to create resource heap due to missing pipeline layout");
 
     /* Validate binding descriptors */
     const auto& bindings = pipelineLayoutGL->GetBindings();
     if (desc.resourceViews.size() != bindings.size())
-        throw std::invalid_argument("failed to create resource vied heap due to mismatch between number of resources and bindings");
+        throw std::invalid_argument("failed to create resource heap due to mismatch between number of resources and bindings");
 
     /* Build buffer segments */
     ResourceBindingIterator resourceIterator { desc.resourceViews, bindings };
@@ -168,32 +168,32 @@ static std::vector<GLResourceBinding> CollectGLResourceBindings(
     const ResourceType              resourceType,
     const GLResourceBindingFunc&    resourceFunc)
 {
-    /* Collect all constant buffers */
+    /* Collect all binding points of the specified resource type */
     BindingDescriptor bindingDesc;
     resourceIterator.Reset(resourceType);
 
-    std::vector<GLResourceBinding> compressedBindings;
-    compressedBindings.reserve(resourceIterator.GetCount());
+    std::vector<GLResourceBinding> resourceBindings;
+    resourceBindings.reserve(resourceIterator.GetCount());
 
     while (auto resource = resourceIterator.Next(bindingDesc))
-        compressedBindings.push_back(resourceFunc(resource, bindingDesc.slot));
+        resourceBindings.push_back(resourceFunc(resource, bindingDesc.slot));
 
-    /* Sort resource by slot index */
+    /* Sort resources by slot index */
     std::sort(
-        compressedBindings.begin(), compressedBindings.end(),
+        resourceBindings.begin(), resourceBindings.end(),
         [](const GLResourceBinding& lhs, const GLResourceBinding& rhs)
         {
             return (lhs.slot < rhs.slot);
         }
     );
 
-    return compressedBindings;
+    return resourceBindings;
 }
 
 void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterator, const ResourceType resourceType, std::uint8_t& numSegments)
 {
     /* Collect all buffers */
-    auto compressedBindings = CollectGLResourceBindings(
+    auto resourceBindings = CollectGLResourceBindings(
         resourceIterator,
         ResourceType::ConstantBuffer,
         [](Resource* resource, std::uint32_t slot) -> GLResourceBinding
@@ -205,7 +205,7 @@ void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterat
 
     /* Build all resource segments for type <GLResourceViewHeapSegment1> */
     BuildAllSegments(
-        compressedBindings,
+        resourceBindings,
         std::bind(&GLResourceHeap::BuildSegment1, this, std::placeholders::_1, std::placeholders::_2),
         numSegments
     );
@@ -224,7 +224,7 @@ void GLResourceHeap::BuildStorageBufferSegments(ResourceBindingIterator& resourc
 void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceIterator)
 {
     /* Collect all textures */
-    auto compressedBindings = CollectGLResourceBindings(
+    auto resourceBindings = CollectGLResourceBindings(
         resourceIterator,
         ResourceType::Texture,
         [](Resource* resource, std::uint32_t slot) -> GLResourceBinding
@@ -236,7 +236,7 @@ void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceItera
 
     /* Build all resource segments for type <GLResourceViewHeapSegment2> */
     BuildAllSegments(
-        compressedBindings,
+        resourceBindings,
         std::bind(&GLResourceHeap::BuildSegment2, this, std::placeholders::_1, std::placeholders::_2),
         segmentationHeader_.numTextureSegments
     );
@@ -244,8 +244,8 @@ void GLResourceHeap::BuildTextureSegments(ResourceBindingIterator& resourceItera
 
 void GLResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceIterator)
 {
-    /* Collect all samplers*/
-    auto compressedBindings = CollectGLResourceBindings(
+    /* Collect all samplers */
+    auto resourceBindings = CollectGLResourceBindings(
         resourceIterator,
         ResourceType::Sampler,
         [](Resource* resource, std::uint32_t slot) -> GLResourceBinding
@@ -257,26 +257,26 @@ void GLResourceHeap::BuildSamplerSegments(ResourceBindingIterator& resourceItera
 
     /* Build all resource segments for type <GLResourceViewHeapSegment1> */
     BuildAllSegments(
-        compressedBindings,
+        resourceBindings,
         std::bind(&GLResourceHeap::BuildSegment1, this, std::placeholders::_1, std::placeholders::_2),
         segmentationHeader_.numSamplerSegments
     );
 }
 
 void GLResourceHeap::BuildAllSegments(
-    const std::vector<GLResourceBinding>&   compressedBindings,
+    const std::vector<GLResourceBinding>&   resourceBindings,
     const BuildSegmentFunc&                 buildSegmentFunc,
     std::uint8_t&                           numSegments)
 {
-    if (!compressedBindings.empty())
+    if (!resourceBindings.empty())
     {
         /* Initialize iterators for sub-ranges of input bindings */
-        auto    itStart = compressedBindings.begin();
+        auto    itStart = resourceBindings.begin();
         auto    itPrev  = itStart;
         auto    it      = itStart;
         GLsizei count   = 0;
 
-        for (++it, ++count; it != compressedBindings.end(); ++it, ++count)
+        for (++it, ++count; it != resourceBindings.end(); ++it, ++count)
         {
             if (it->slot > itPrev->slot + 1)
             {
@@ -289,7 +289,7 @@ void GLResourceHeap::BuildAllSegments(
             itPrev = it;
         }
 
-        if (itStart != compressedBindings.end())
+        if (itStart != resourceBindings.end())
         {
             /* Add last segment */
             buildSegmentFunc(itStart, count);
@@ -298,7 +298,7 @@ void GLResourceHeap::BuildAllSegments(
     }
 }
 
-void GLResourceHeap::BuildSegment1(GLResourceBindingIter begin, GLsizei count)
+void GLResourceHeap::BuildSegment1(GLResourceBindingIter it, GLsizei count)
 {
     std::size_t startOffset = buffer_.size();
 
@@ -310,17 +310,17 @@ void GLResourceHeap::BuildSegment1(GLResourceBindingIter begin, GLsizei count)
     auto segment = reinterpret_cast<GLResourceViewHeapSegment1*>(&buffer_[startOffset]);
     {
         segment->segmentSize    = segmentSize;
-        segment->first          = begin->slot;
+        segment->first          = it->slot;
         segment->count          = count;
     }
 
     /* Write segment body */
     auto segmentIDs = reinterpret_cast<GLuint*>(&buffer_[startOffset + sizeof(GLResourceViewHeapSegment1)]);
-    for (GLsizei i = 0; i < count; ++i, ++begin)
-        segmentIDs[i] = begin->object;
+    for (GLsizei i = 0; i < count; ++i, ++it)
+        segmentIDs[i] = it->object;
 }
 
-void GLResourceHeap::BuildSegment2(GLResourceBindingIter begin, GLsizei count)
+void GLResourceHeap::BuildSegment2(GLResourceBindingIter it, GLsizei count)
 {
     std::size_t startOffset = buffer_.size();
 
@@ -334,13 +334,13 @@ void GLResourceHeap::BuildSegment2(GLResourceBindingIter begin, GLsizei count)
     {
         segment->segmentSize    = segmentSize;
         segment->offsetEnd0     = segmentOffsetEnd0;
-        segment->first          = begin->slot;
+        segment->first          = it->slot;
         segment->count          = count;
     }
 
     /* Write first part of segment body (of type <GLTextureTarget>) */
     auto segmentTargets = reinterpret_cast<GLTextureTarget*>(&buffer_[startOffset + sizeof(GLResourceViewHeapSegment2)]);
-    auto it = begin;
+    auto begin = it;
     for (GLsizei i = 0; i < count; ++i, ++it)
         segmentTargets[i] = it->target;
 

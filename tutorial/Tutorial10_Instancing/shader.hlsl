@@ -52,8 +52,8 @@ OutputVS VS(InputVS inp)
 
 // PIXEL SHADER
 
-Texture2DArray tex : register(t0);
-SamplerState texSampler : register(s0);
+Texture2DArray tex : register(t1);
+SamplerState texSampler : register(s2);
 
 float4 PS(OutputVS inp) : SV_Target
 {

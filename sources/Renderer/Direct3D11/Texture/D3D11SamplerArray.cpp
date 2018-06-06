@@ -19,7 +19,7 @@ D3D11SamplerArray::D3D11SamplerArray(std::uint32_t numSamplers, Sampler* const *
     /* Store the pointer of each SRV inside the array */
     samplerStates_.reserve(numSamplers);
     while (auto next = NextArrayResource<D3D11Sampler>(numSamplers, samplerArray))
-        samplerStates_.push_back(next->GetSamplerState());
+        samplerStates_.push_back(next->GetNative());
 }
 
 

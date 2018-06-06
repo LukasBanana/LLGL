@@ -21,7 +21,12 @@ namespace LLGL
 
 
 class ResourceBindingIterator;
+struct D3DResourceBinding;
 
+/*
+This class emulates the behavior of a descriptor heap like in D3D12,
+by binding all shader resources within one bind call in the command buffer.
+*/
 class D3D11ResourceHeap : public ResourceHeap
 {
 
@@ -34,14 +39,32 @@ class D3D11ResourceHeap : public ResourceHeap
 
     private:
 
-        //TODO
-        #if 0
-        void BuildBufferSegments(ResourceBindingIterator& resourceIterator, const ResourceType resourceType, std::uint8_t& numSegments);
-        void BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator);
-        void BuildShaderResourceViewSegments(ResourceBindingIterator& resourceIterator);
-        void BuildUnorderedAccessViewSegments(ResourceBindingIterator& resourceIterator);
-        void BuildSamplerSegments(ResourceBindingIterator& resourceIterator);
-        #endif
+        using D3DResourceBindingIter = std::vector<D3DResourceBinding>::const_iterator;
+        using BuildSegmentFunc = std::function<void(D3DResourceBindingIter begin, UINT count)>;
+
+        void BuildSegmentsForStage(ResourceBindingIterator& resourceIterator, long stage);
+        void BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator, long stage);
+        void BuildShaderResourceViewSegments(ResourceBindingIterator& resourceIterator, long stage);
+        void BuildUnorderedAccessViewSegments(ResourceBindingIterator& resourceIterator, long stage);
+        void BuildSamplerSegments(ResourceBindingIterator& resourceIterator, long stage);
+
+        void BuildAllSegments(
+            const std::vector<D3DResourceBinding>&  resourceBindings,
+            const BuildSegmentFunc&                 buildSegmentFunc,
+            long                                    affectedStage,
+            std::uint8_t&                           numSegments
+        );
+
+        void BuildAllSegmentsType1(
+            const std::vector<D3DResourceBinding>& resourceBindings,
+            long affectedStage,
+            std::uint8_t& numSegments);
+        void BuildAllSegmentsType2(const std::vector<D3DResourceBinding>& resourceBindings, long affectedStage, std::uint8_t& numSegments);
+
+        void BuildSegment1(D3DResourceBindingIter it, UINT count);
+        void BuildSegment2(D3DResourceBindingIter it, UINT count);
+
+        void StoreResourceUsage();
 
         void BindVSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
         void BindHSResources(ID3D11DeviceContext* context, std::int8_t*& byteAlignedBuffer);
@@ -60,8 +83,8 @@ class D3D11ResourceHeap : public ResourceHeap
         struct SegmentationHeader
         {
             std::uint8_t hasVSResources                     : 1;
-            std::uint8_t numVSSamplerSegments               : 5;
             std::uint8_t numVSConstantBufferSegments        : 4;
+            std::uint8_t numVSSamplerSegments               : 5;
             std::uint8_t numVSShaderResourceViewSegments;
 
             std::uint8_t hasHSResources                     : 1;
@@ -93,6 +116,7 @@ class D3D11ResourceHeap : public ResourceHeap
         };
 
         SegmentationHeader          segmentationHeader_;
+        std::uint16_t               bufferOffsetCS_         = 0;
         std::vector<std::int8_t>    buffer_;
 
 };

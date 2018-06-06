@@ -21,7 +21,7 @@ D3D11BufferArray::D3D11BufferArray(const BufferType type, std::uint32_t numBuffe
     /* Store the pointer of each ID3D11Buffer inside the array */
     buffers_.reserve(numBuffers);
     while (auto next = NextArrayResource<D3D11Buffer>(numBuffers, bufferArray))
-        buffers_.push_back(next->Get());
+        buffers_.push_back(next->GetNative());
 }
 
 

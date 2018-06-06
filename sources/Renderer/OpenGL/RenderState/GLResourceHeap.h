@@ -24,6 +24,10 @@ class GLStateManager;
 class ResourceBindingIterator;
 struct GLResourceBinding;
 
+/*
+This class emulates the behavior of a descriptor set like in Vulkan,
+by binding all shader resources within one bind call in the command buffer.
+*/
 class GLResourceHeap : public ResourceHeap
 {
 
@@ -37,7 +41,7 @@ class GLResourceHeap : public ResourceHeap
     private:
 
         using GLResourceBindingIter = std::vector<GLResourceBinding>::const_iterator;
-        using BuildSegmentFunc = std::function<void(GLResourceBindingIter, GLsizei)>;
+        using BuildSegmentFunc = std::function<void(GLResourceBindingIter begin, GLsizei count)>;
 
         void BuildBufferSegments(ResourceBindingIterator& resourceIterator, const ResourceType resourceType, std::uint8_t& numSegments);
         void BuildConstantBufferSegments(ResourceBindingIterator& resourceIterator);
@@ -46,13 +50,13 @@ class GLResourceHeap : public ResourceHeap
         void BuildSamplerSegments(ResourceBindingIterator& resourceIterator);
 
         void BuildAllSegments(
-            const std::vector<GLResourceBinding>&   compressedBindings,
+            const std::vector<GLResourceBinding>&   resourceBindings,
             const BuildSegmentFunc&                 buildSegmentFunc,
             std::uint8_t&                           numSegments
         );
 
-        void BuildSegment1(GLResourceBindingIter begin, GLsizei count);
-        void BuildSegment2(GLResourceBindingIter begin, GLsizei count);
+        void BuildSegment1(GLResourceBindingIter it, GLsizei count);
+        void BuildSegment2(GLResourceBindingIter it, GLsizei count);
 
         // Header structure to describe all segments within the raw buffer.
         struct SegmentationHeader

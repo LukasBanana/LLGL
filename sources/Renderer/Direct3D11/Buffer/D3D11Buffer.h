@@ -32,8 +32,8 @@ class D3D11Buffer : public Buffer
         void* Map(ID3D11DeviceContext* context, const CPUAccess access);
         void Unmap(ID3D11DeviceContext* context, const CPUAccess access);
 
-        //! Returns the ID3D11Buffer object.
-        inline ID3D11Buffer* Get() const
+        // Returns the native ID3D11Buffer object.
+        inline ID3D11Buffer* GetNative() const
         {
             return buffer_.Get();
         }

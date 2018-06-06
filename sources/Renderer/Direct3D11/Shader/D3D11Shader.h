@@ -22,13 +22,14 @@ namespace LLGL
 {
 
 
+// Native objects of D3D11 shaders.
 union D3D11NativeShader
 {
-    D3D11NativeShader() :
+    inline D3D11NativeShader() :
         vs { nullptr }
     {
     }
-    ~D3D11NativeShader()
+    inline ~D3D11NativeShader()
     {
     }
 

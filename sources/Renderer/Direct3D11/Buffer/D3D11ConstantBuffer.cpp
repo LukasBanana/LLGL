@@ -47,11 +47,11 @@ void D3D11ConstantBuffer::UpdateSubresource(ID3D11DeviceContext* context, const 
     {
         /* Update partial subresource by mapping buffer from GPU into CPU memory space */
         D3D11_MAPPED_SUBRESOURCE subresource;
-        context->Map(Get(), 0, (dataSize < bufferSize_ ? D3D11_MAP_WRITE : D3D11_MAP_WRITE_DISCARD), 0, &subresource);
+        context->Map(GetNative(), 0, (dataSize < bufferSize_ ? D3D11_MAP_WRITE : D3D11_MAP_WRITE_DISCARD), 0, &subresource);
         {
             ::memcpy(reinterpret_cast<char*>(subresource.pData) + offset, data, dataSize);
         }
-        context->Unmap(Get(), 0);
+        context->Unmap(GetNative(), 0);
     }
     else
     {

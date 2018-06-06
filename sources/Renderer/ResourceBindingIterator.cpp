@@ -22,10 +22,11 @@ ResourceBindingIterator::ResourceBindingIterator(
 {
 }
 
-void ResourceBindingIterator::Reset(const ResourceType typesOfInterest)
+void ResourceBindingIterator::Reset(const ResourceType typesOfInterest, long stagesOfInterest)
 {
-    iterator_       = 0;
-    typeOfInterest_ = typesOfInterest;
+    iterator_           = 0;
+    typeOfInterest_     = typesOfInterest;
+    stagesOfInterest_   = stagesOfInterest;
 }
 
 // Returns the specified resource type as string
@@ -59,7 +60,7 @@ Resource* ResourceBindingIterator::Next(BindingDescriptor& bindingDesc)
     {
         /* Search for resource type of interest */
         auto resourceType = bindings_[iterator_].type;
-        if (resourceType == typeOfInterest_)
+        if (resourceType == typeOfInterest_ && (bindings_[iterator_].stageFlags & stagesOfInterest_) != 0)
         {
             /* Check for null pointer exception */
             if (auto resource = resourceViews_[iterator_].resource)
