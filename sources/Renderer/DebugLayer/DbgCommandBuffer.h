@@ -98,8 +98,8 @@ class DbgCommandBuffer : public CommandBufferExt
 
         /* ----- Resource View Heaps ----- */
 
-        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
-        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
+        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
         /* ----- Render Targets ----- */
 

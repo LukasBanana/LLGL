@@ -116,7 +116,7 @@ class VKRenderSystem : public RenderSystem
 
         ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
-        void Release(ResourceHeap& resourceViewHeap) override;
+        void Release(ResourceHeap& resourceHeap) override;
 
         /* ----- Render Targets ----- */
 

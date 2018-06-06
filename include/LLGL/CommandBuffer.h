@@ -231,21 +231,22 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /* ----- Resource Heaps ----- */
 
         /**
-        \todo Document this and make it pure virtual.
-        \todo Rename to "SetGraphicsResourceViews"
-        \todo Rename "ResourceHeap" to "ResourceViewHeap"
-        \todo Add interface "ResourceView" to store a single resource view
+        \brief Binds the specified resource heap to the graphics pipeline.
+        \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
+        \param[in] firstSet Specifies the set number of the first layout descriptor.
+        \remarks This may invalidate the previously bound resource heap for both the graphics and compute pipeline.
+        \note Parameter 'firstSet' is only supported with: Vulkan.
         */
-        virtual void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
-        {
-            // dummy
-        }
+        virtual void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
 
-        //! \todo Document this and make it pure virtual.
-        virtual void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)/* = 0;*/
-        {
-            // dummy
-        }
+        /**
+        \brief Binds the specified resource heap to the compute pipeline.
+        \param[in] resourceHeap Specifies the resource heap that contains all shader resources that will be bound to the shader pipeline.
+        \param[in] firstSet Specifies the set number of the first layout descriptor.
+        \remarks This may invalidate the previously bound resource heap for both the graphics and compute pipeline.
+        \note Parameter 'firstSet' is only supported with: Vulkan.
+        */
+        virtual void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
 
         /* ----- Render Targets ----- */
 

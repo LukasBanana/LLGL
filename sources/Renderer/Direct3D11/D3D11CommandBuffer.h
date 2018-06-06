@@ -61,12 +61,12 @@ class D3D11CommandBuffer : public CommandBufferExt
         void SetVertexBufferArray(BufferArray& bufferArray) override;
 
         void SetIndexBuffer(Buffer& buffer) override;
-        
+
         /* ----- Constant Buffers ------ */
 
         void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
         void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
-        
+
         /* ----- Storage Buffers ------ */
 
         void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
@@ -89,6 +89,11 @@ class D3D11CommandBuffer : public CommandBufferExt
 
         void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
         void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
+
+        /* ----- Resource Heaps ----- */
+
+        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
+        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
         /* ----- Render Targets ----- */
 

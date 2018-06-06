@@ -125,9 +125,9 @@ ResourceHeap* GLRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& d
     return TakeOwnership(resourceHeaps_, MakeUnique<GLResourceHeap>(desc));
 }
 
-void GLRenderSystem::Release(ResourceHeap& resourceViewHeap)
+void GLRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    RemoveFromUniqueSet(resourceHeaps_, &resourceViewHeap);
+    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
 /* ----- Render Targets ----- */

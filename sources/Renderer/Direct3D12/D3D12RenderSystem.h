@@ -98,6 +98,12 @@ class D3D12RenderSystem : public RenderSystem
         void Release(Sampler& sampler) override;
         void Release(SamplerArray& samplerArray) override;
 
+        /* ----- Resource Heaps ----- */
+
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
+
+        void Release(ResourceHeap& resourceHeap) override;
+
         /* ----- Render Targets ----- */
 
         RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;
@@ -111,6 +117,12 @@ class D3D12RenderSystem : public RenderSystem
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
+
+        /* ----- Pipeline Layouts ----- */
+
+        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) override;
+
+        void Release(PipelineLayout& pipelineLayout) override;
 
         /* ----- Pipeline States ----- */
 

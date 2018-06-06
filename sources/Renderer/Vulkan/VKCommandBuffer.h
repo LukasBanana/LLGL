@@ -71,8 +71,8 @@ class VKCommandBuffer : public CommandBuffer
 
         /* ----- Resource Heaps ----- */
 
-        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
-        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
+        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
+        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
         /* ----- Render Targets ----- */
 
@@ -154,7 +154,7 @@ class VKCommandBuffer : public CommandBuffer
         void EndClearImage(VkImageMemoryBarrier& clearToPresentBarrier);
         #endif
 
-        void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t startSlot);
+        void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
 
         void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
         void EndRenderPass();

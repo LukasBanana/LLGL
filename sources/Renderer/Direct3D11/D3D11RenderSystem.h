@@ -24,6 +24,8 @@
 #include "RenderState/D3D11StateManager.h"
 #include "RenderState/D3D11Query.h"
 #include "RenderState/D3D11Fence.h"
+#include "RenderState/D3D11ResourceHeap.h"
+#include "RenderState/D3D11PipelineLayout.h"
 
 #include "Shader/D3D11Shader.h"
 #include "Shader/D3D11ShaderProgram.h"
@@ -108,6 +110,12 @@ class D3D11RenderSystem : public RenderSystem
         void Release(Sampler& sampler) override;
         void Release(SamplerArray& samplerArray) override;
 
+        /* ----- Resource Heaps ----- */
+
+        ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
+
+        void Release(ResourceHeap& resourceHeap) override;
+
         /* ----- Render Targets ----- */
 
         RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;
@@ -121,6 +129,12 @@ class D3D11RenderSystem : public RenderSystem
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
+
+        /* ----- Pipeline Layouts ----- */
+
+        PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) override;
+
+        void Release(PipelineLayout& pipelineLayout) override;
 
         /* ----- Pipeline States ----- */
 
@@ -257,8 +271,10 @@ class D3D11RenderSystem : public RenderSystem
         HWObjectContainer<D3D11RenderTarget>            renderTargets_;
         HWObjectContainer<D3D11Shader>                  shaders_;
         HWObjectContainer<D3D11ShaderProgram>           shaderPrograms_;
+        HWObjectContainer<D3D11PipelineLayout>          pipelineLayouts_;
         HWObjectContainer<D3D11GraphicsPipelineBase>    graphicsPipelines_;
         HWObjectContainer<D3D11ComputePipeline>         computePipelines_;
+        HWObjectContainer<D3D11ResourceHeap>            resourceHeaps_;
         HWObjectContainer<D3D11Query>                   queries_;
         HWObjectContainer<D3D11Fence>                   fences_;
 

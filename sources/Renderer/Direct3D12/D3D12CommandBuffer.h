@@ -70,9 +70,10 @@ class D3D12CommandBuffer : public CommandBuffer
         void BeginStreamOutput(const PrimitiveType primitiveType) override;
         void EndStreamOutput() override;
 
-        /* ----- Resource Views ----- */
+        /* ----- Resource Heaps ----- */
 
-        //void SetResourceViewHeaps(std::uint32_t numHeaps, ResourceHeap* const * heapArray);
+        void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
+        void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
         /* ----- Render Targets ----- */
 

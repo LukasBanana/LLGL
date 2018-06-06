@@ -299,6 +299,18 @@ void D3D12RenderSystem::Release(SamplerArray& samplerArray)
     //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
+/* ----- Resource Heaps ----- */
+
+ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+{
+    return nullptr;//todo...
+}
+
+void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
+{
+    //todo...
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* D3D12RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
@@ -331,6 +343,18 @@ void D3D12RenderSystem::Release(Shader& shader)
 void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 {
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
+}
+
+/* ----- Pipeline Layouts ----- */
+
+PipelineLayout* D3D12RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+{
+    return nullptr;//todo...
+}
+
+void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
+{
+    //todo...
 }
 
 /* ----- Pipeline States ----- */

@@ -17,6 +17,7 @@
 #include "RenderState/D3D11GraphicsPipelineBase.h"
 #include "RenderState/D3D11ComputePipeline.h"
 #include "RenderState/D3D11Query.h"
+#include "RenderState/D3D11ResourceHeap.h"
 
 #include "Buffer/D3D11VertexBuffer.h"
 #include "Buffer/D3D11VertexBufferArray.h"
@@ -342,6 +343,20 @@ void D3D11CommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32
         samplerArrayD3D.GetSamplerStates().data(),
         stageFlags
     );
+}
+
+/* ----- Resource Heaps ----- */
+
+void D3D11CommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*firstSet*/)
+{
+    auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
+    resourceHeapD3D.BindForGraphicsPipeline(context_.Get());
+}
+
+void D3D11CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t /*firstSet*/)
+{
+    auto& resourceHeapD3D = LLGL_CAST(D3D11ResourceHeap&, resourceHeap);
+    resourceHeapD3D.BindForComputePipeline(context_.Get());
 }
 
 /* ----- Render Targets ----- */

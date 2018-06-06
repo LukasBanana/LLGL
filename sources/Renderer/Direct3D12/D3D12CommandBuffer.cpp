@@ -225,6 +225,18 @@ void D3D12CommandBuffer::EndStreamOutput()
     // dummy
 }
 
+/* ----- Resource Heaps ----- */
+
+void D3D12CommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
+{
+    //todo...
+}
+
+void D3D12CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
+{
+    //todo...
+}
+
 #if 0
 /* ----- Textures ----- */
 

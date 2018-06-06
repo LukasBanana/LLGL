@@ -124,7 +124,7 @@ class DbgRenderSystem : public RenderSystem
 
         GraphicsPipeline* CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc) override;
         ComputePipeline* CreateComputePipeline(const ComputePipelineDescriptor& desc) override;
-        
+
         void Release(GraphicsPipeline& graphicsPipeline) override;
         void Release(ComputePipeline& computePipeline) override;
 

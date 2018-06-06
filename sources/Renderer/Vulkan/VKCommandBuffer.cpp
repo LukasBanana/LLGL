@@ -315,13 +315,13 @@ void VKCommandBuffer::EndStreamOutput()
 /* ----- Resource Heaps ----- */
 
 //private
-void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t startSlot)
+void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet)
 {
     vkCmdBindDescriptorSets(
         commandBuffer_,
         bindingPoint,
         resourceHeapVK.GetVkPipelineLayout(),
-        startSlot,
+        firstSet,
         static_cast<std::uint32_t>(resourceHeapVK.GetVkDescriptorSets().size()),
         resourceHeapVK.GetVkDescriptorSets().data(),
         0,
@@ -329,16 +329,16 @@ void VKCommandBuffer::BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelin
     );
 }
 
-void VKCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)
+void VKCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
     auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
-    BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_GRAPHICS, startSlot);
+    BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_GRAPHICS, firstSet);
 }
 
-void VKCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot)
+void VKCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
     auto& resourceHeapVK = LLGL_CAST(VKResourceHeap&, resourceHeap);
-    BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, startSlot);
+    BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, firstSet);
 }
 
 /* ----- Render Targets ----- */

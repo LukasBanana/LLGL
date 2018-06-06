@@ -24,6 +24,7 @@ or descriptor heap (as called in Direct3D 12) for graphics and compute pipelines
 \see RenderSystem::CreateResourceHeap
 \see CommandBuffer::SetGraphicsResourceHeap
 \see CommandBuffer::SetComputeResourceHeap
+\todo Maybe rename to "ResourceViewHeap" again?
 */
 class LLGL_EXPORT ResourceHeap : public RenderSystemChild { };
 

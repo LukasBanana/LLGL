@@ -188,6 +188,18 @@ void D3D11RenderSystem::Release(SamplerArray& samplerArray)
     RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
+/* ----- Resource Heaps ----- */
+
+ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
+{
+    return TakeOwnership(resourceHeaps_, MakeUnique<D3D11ResourceHeap>(desc));
+}
+
+void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
+{
+    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* D3D11RenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
@@ -220,6 +232,18 @@ void D3D11RenderSystem::Release(Shader& shader)
 void D3D11RenderSystem::Release(ShaderProgram& shaderProgram)
 {
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
+}
+
+/* ----- Pipeline Layouts ----- */
+
+PipelineLayout* D3D11RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
+{
+    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D11PipelineLayout>(desc));
+}
+
+void D3D11RenderSystem::Release(PipelineLayout& pipelineLayout)
+{
+    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */

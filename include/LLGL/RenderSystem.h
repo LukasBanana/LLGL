@@ -386,11 +386,19 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         /* ----- Resource Heaps ----- */
 
-        //! \todo Document this and make it pure virtual.
-        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc)/* = 0*/;
+        /**
+        \brief Creates a new resource heap.
+        \param[in] desc Specifies the descriptor which determines all shader resource.
+        \remarks Resources heaps are used in combination with a pipeline layout.
+        The pipeline layout determines to which binding points the resources are bound.
+        \see CreatePipelineLayout
+        \see CommandBuffer::SetGraphicsResourceHeap
+        \see CommandBuffer::SetComputeResourceHeap
+        */
+        virtual ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) = 0;
 
-        //! \todo Document this and make it pure virtual.
-        virtual void Release(ResourceHeap& resourceHeap)/* = 0*/;
+        //! Releases the specified ResourceHeap object. After this call, the specified object must no longer be used.
+        virtual void Release(ResourceHeap& resourceHeap) = 0;
 
         /* ----- Render Targets ----- */
 
@@ -430,14 +438,17 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /**
         \brief Creates a new and initialized pipeline layout object, if and only if the renderer supports pipeline layouts.
         \param[in] desc Specifies the pipeline layout descriptor with all layout bindings.
-        \remarks This is only required for modern graphics APIs such as Direct3D 12 and Vulkan.
-        \note Only supported with: Direct3D 12, Vulkan.
+        \remarks A pipeline layout is required in combination with a ResourceHeap to bind multiple resources at once.
+        For modern graphics APIs (i.e. Direct3D 12 and Vulkan), this is only way to bind shader resources.
+        For legacy graphics APIs (i.e. Direct3D 11 and OpenGL), shader resources can also be bound individually with the extended command buffer.
         \return Pointer to the new PipelineLayout object or null if the renderer does not support pipeline layouts.
+        \see CommandBufferExt
+        \see CreateResourceHeap
         */
-        virtual PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc)/* = 0*/;
+        virtual PipelineLayout* CreatePipelineLayout(const PipelineLayoutDescriptor& desc) = 0;
 
         //! Releases the specified PipelineLayout object. After this call, the specified object must no longer be used.
-        virtual void Release(PipelineLayout& pipelineLayout)/* = 0*/;
+        virtual void Release(PipelineLayout& pipelineLayout) = 0;
 
         /* ----- Pipeline States ----- */
 
