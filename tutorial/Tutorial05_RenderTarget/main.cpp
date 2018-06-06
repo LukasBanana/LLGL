@@ -79,7 +79,10 @@ public:
         CreateColorMap();
         CreateRenderTarget();
         CreatePipelines();
+        
+        #ifndef __APPLE__
         CreateResourceHeaps();
+        #endif
 
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse on the X-axis to rotate the OUTER cube" << std::endl;
