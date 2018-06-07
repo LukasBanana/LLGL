@@ -55,21 +55,6 @@ class D3D12ShaderProgram : public ShaderProgram
         inline D3D12Shader* GetGS() const { return gs_; }
         inline D3D12Shader* GetCS() const { return cs_; }
 
-        inline UINT GetNumSRV() const
-        {
-            return numSRV_;
-        }
-
-        inline UINT GetNumCBV() const
-        {
-            return numCBV_;
-        }
-
-        inline UINT GetNumUAV() const
-        {
-            return numUAV_;
-        }
-
     private:
 
         std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
@@ -89,10 +74,6 @@ class D3D12ShaderProgram : public ShaderProgram
         };
 
         LinkError                               linkError_  = LinkError::NoError;
-
-        UINT                                    numSRV_     = 0;//TODO: use "TextureViewDescriptor" or the like
-        UINT                                    numCBV_     = 0;
-        UINT                                    numUAV_     = 0;
 
 };
 

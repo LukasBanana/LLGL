@@ -22,8 +22,13 @@ D3D12Buffer::D3D12Buffer(const BufferType type) :
 }
 
 void D3D12Buffer::UpdateStaticSubresource(
-    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
-    const void* data, UINT64 bufferSize, UINT64 offset, D3D12_RESOURCE_STATES stateAfter)
+    ID3D12Device*               device,
+    ID3D12GraphicsCommandList*  commandList,
+    ComPtr<ID3D12Resource>&     uploadBuffer,
+    const void*                 data,
+    UINT64                      bufferSize,
+    UINT64                      offset,
+    D3D12_RESOURCE_STATES       stateAfter)
 {
     LLGL_ASSERT_RANGE(offset + bufferSize, bufferSize_);
 
@@ -40,7 +45,7 @@ void D3D12Buffer::UpdateStaticSubresource(
     DXThrowIfFailed(hr, "failed to create D3D12 committed resource for upload buffer");
 
     #ifdef LLGL_DEBUG
-    uploadBuffer->SetName(L"D3D12Buffer/UploadBuffer");
+    uploadBuffer->SetName(L"D3D12Buffer.uploadBuffer");
     #endif
 
     /* Copy data into upload buffer, then copy upload buffer into destination resource */

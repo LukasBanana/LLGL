@@ -24,14 +24,19 @@ class D3D12Buffer : public Buffer
     public:
 
         void UpdateStaticSubresource(
-            ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
-            const void* data, UINT64 bufferSize, UINT64 offset, D3D12_RESOURCE_STATES stateAfter
+            ID3D12Device*               device,
+            ID3D12GraphicsCommandList*  commandList,
+            ComPtr<ID3D12Resource>&     uploadBuffer,
+            const void*                 data,
+            UINT64                      bufferSize,
+            UINT64                      offset,
+            D3D12_RESOURCE_STATES       stateAfter
         );
 
         void UpdateDynamicSubresource(const void* data, UINT64 bufferSize, UINT64 offset);
 
-        //! Returns the ID3D12Resource object.
-        inline ID3D12Resource* Get() const
+        //! Returns the native ID3D12Resource object.
+        inline ID3D12Resource* GetNative() const
         {
             return resource_.Get();
         }

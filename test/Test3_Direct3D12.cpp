@@ -29,8 +29,10 @@ int main()
         contextDesc.videoMode.resolution    = { 800, 600 };
         //contextDesc.videoMode.fullscreen    = true;
 
-        contextDesc.multiSampling.enabled   = !true;
+        #if 0
+        contextDesc.multiSampling.enabled   = true;
         contextDesc.multiSampling.samples   = 8;
+        #endif
 
         contextDesc.vsync.enabled           = true;
 
@@ -142,14 +144,27 @@ int main()
 
         auto reflectionDesc = shaderProgram->QueryReflectionDesc();
 
+        // Create pipeline layout
+        LLGL::PipelineLayoutDescriptor layoutDesc;
+        {
+            layoutDesc.bindings =
+            {
+                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage, 0 }
+            };
+        }
+        auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram          = shaderProgram;
+            pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.pipelineLayout             = pipelineLayout;
 
-            //pipelineDesc.depth.testEnabled      = true;
-            //pipelineDesc.depth.writeEnabled     = true;
-            //pipelineDesc.depth.compareOp        = LLGL::CompareOp::Less;
+            #if 0
+            pipelineDesc.depth.testEnabled          = true;
+            pipelineDesc.depth.writeEnabled         = true;
+            pipelineDesc.depth.compareOp            = LLGL::CompareOp::Less;
+            #endif
 
             pipelineDesc.rasterizer.multiSampling    = contextDesc.multiSampling;
         }

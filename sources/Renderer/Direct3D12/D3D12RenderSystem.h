@@ -21,6 +21,8 @@
 
 #include "RenderState/D3D12Fence.h"
 #include "RenderState/D3D12GraphicsPipeline.h"
+#include "RenderState/D3D12PipelineLayout.h"
+#include "RenderState/D3D12ResourceHeap.h"
 
 #include "Shader/D3D12Shader.h"
 #include "Shader/D3D12ShaderProgram.h"
@@ -229,8 +231,11 @@ class D3D12RenderSystem : public RenderSystem
         //HWObjectContainer<D3D12RenderTarget>        renderTargets_;
         HWObjectContainer<D3D12Shader>              shaders_;
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
+        HWObjectContainer<D3D12PipelineLayout>      pipelineLayouts_;
         HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
         //HWObjectContainer<D3D12Sampler>             samplers_;
+        HWObjectContainer<D3D12ResourceHeap>        resourceHeaps_;
+        //HWObjectContainer<D3D12Query>               queries_;
         HWObjectContainer<D3D12Fence>               fences_;
 
         /* ----- Other members ----- */

@@ -14,11 +14,18 @@ namespace LLGL
 {
 
 
+struct D3DRootSignatureContext
+{
+    CD3DX12_ROOT_SIGNATURE_DESC             signatureDesc;
+    std::vector<CD3DX12_ROOT_PARAMETER>     rootParameters;
+    std::vector<CD3DX12_DESCRIPTOR_RANGE>   descriptorRanges;
+};
+
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
 {
-    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
-    BuildRootSignatureDesc(signatureDesc, desc);
-    CreateRootSignature(device, signatureDesc);
+    D3DRootSignatureContext signatureContext;
+    BuildRootSignatureDesc(signatureContext, desc);
+    CreateRootSignature(device, signatureContext.signatureDesc);
 }
 
 
@@ -27,48 +34,44 @@ D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLay
  */
 
 void D3D12PipelineLayout::BuildRootSignatureDesc(
-    CD3DX12_ROOT_SIGNATURE_DESC&    signatureDesc,
+    D3DRootSignatureContext&        signatureContext,
     const PipelineLayoutDescriptor& layoutDesc)
 {
     /* Build root parameter for each descriptor range type */
-    std::vector<CD3DX12_ROOT_PARAMETER> rootParameters;
-    std::vector<CD3DX12_DESCRIPTOR_RANGE> descriptorRanges;
+    signatureContext.descriptorRanges.reserve(layoutDesc.bindings.size());
 
-    descriptorRanges.reserve(layoutDesc.bindings.size());
-
-    BuildRootParameter(rootParameters, descriptorRanges, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     layoutDesc, ResourceType::Texture       );
-    BuildRootParameter(rootParameters, descriptorRanges, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     layoutDesc, ResourceType::StorageBuffer );
-    BuildRootParameter(rootParameters, descriptorRanges, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     layoutDesc, ResourceType::ConstantBuffer);
-    BuildRootParameter(rootParameters, descriptorRanges, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, layoutDesc, ResourceType::Sampler       );
+    BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     layoutDesc, ResourceType::Texture       );
+    BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     layoutDesc, ResourceType::StorageBuffer );
+    BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     layoutDesc, ResourceType::ConstantBuffer);
+    BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, layoutDesc, ResourceType::Sampler       );
 
     /* Get root signature flags */
     D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
     BuildRootSignatureFlags(signatureFlags, layoutDesc);
 
     /* Build final root signature descriptor */
-    if (!rootParameters.empty())
+    if (!signatureContext.rootParameters.empty())
     {
-        signatureDesc.Init(
-            static_cast<UINT>(rootParameters.size()),
-            rootParameters.data(),
+        signatureContext.signatureDesc.Init(
+            static_cast<UINT>(signatureContext.rootParameters.size()),
+            signatureContext.rootParameters.data(),
             0,          // numStaticSamplers
             nullptr,    // pStaticSamplers
             signatureFlags
         );
     }
     else
-        signatureDesc.Init(0, nullptr, 0, nullptr, signatureFlags);
+        signatureContext.signatureDesc.Init(0, nullptr, 0, nullptr, signatureFlags);
 
 }
 
 void D3D12PipelineLayout::BuildRootParameter(
-    std::vector<CD3DX12_ROOT_PARAMETER>&    rootParameters,
-    std::vector<CD3DX12_DESCRIPTOR_RANGE>   descriptorRanges,
-    D3D12_DESCRIPTOR_RANGE_TYPE             descRangeType,
-    const PipelineLayoutDescriptor&         layoutDesc,
-    const ResourceType                      resourceType)
+    D3DRootSignatureContext&        signatureContext,
+    D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
+    const PipelineLayoutDescriptor& layoutDesc,
+    const ResourceType              resourceType)
 {
-    auto firstDescRange = descriptorRanges.size();
+    auto firstDescRange = signatureContext.descriptorRanges.size();
 
     /*
     Add all binding points for current descriptor range type.
@@ -82,19 +85,19 @@ void D3D12PipelineLayout::BuildRootParameter(
             /* Append descriptor range */
             CD3DX12_DESCRIPTOR_RANGE descRange;
             descRange.Init(descRangeType, 1, binding.slot);
-            descriptorRanges.push_back(descRange);
+            signatureContext.descriptorRanges.push_back(descRange);
         }
     }
 
     /* Append root parameter (if any ranges are used) */
-    if (descriptorRanges.size() > firstDescRange)
+    if (signatureContext.descriptorRanges.size() > firstDescRange)
     {
         CD3DX12_ROOT_PARAMETER rootParam;
         {
-            auto numRanges = static_cast<UINT>(descriptorRanges.size() - firstDescRange);
-            rootParam.InitAsDescriptorTable(numRanges, &descriptorRanges[firstDescRange]);
+            auto numRanges = static_cast<UINT>(signatureContext.descriptorRanges.size() - firstDescRange);
+            rootParam.InitAsDescriptorTable(numRanges, &signatureContext.descriptorRanges[firstDescRange]);
         }
-        rootParameters.push_back(rootParam);
+        signatureContext.rootParameters.push_back(rootParam);
     }
 }
 

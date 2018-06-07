@@ -94,7 +94,10 @@ TextureDescriptor D3D12Texture::QueryDesc() const
 }
 
 void D3D12Texture::UpdateSubresource(
-    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, D3D12_SUBRESOURCE_DATA& subresourceData)
+    ID3D12Device*               device,
+    ID3D12GraphicsCommandList*  commandList,
+    ComPtr<ID3D12Resource>&     uploadBuffer,
+    D3D12_SUBRESOURCE_DATA&     subresourceData)
 {
     /* Create the GPU upload buffer */
     auto uploadBufferSize = GetRequiredIntermediateSize(resource_.Get(), 0, 1);

@@ -54,7 +54,7 @@ void D3D12ConstantBuffer::CreateResourceAndPutView(ID3D12Device* device, UINT bu
     /* Create constant buffer view (CBV) */
     D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc;
     {
-        viewDesc.BufferLocation = Get()->GetGPUVirtualAddress();
+        viewDesc.BufferLocation = GetNative()->GetGPUVirtualAddress();
         viewDesc.SizeInBytes    = bufferSize;
     }
     device->CreateConstantBufferView(&viewDesc, descHeap_->GetCPUDescriptorHandleForHeapStart());

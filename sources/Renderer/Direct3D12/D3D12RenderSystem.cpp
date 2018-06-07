@@ -303,12 +303,12 @@ void D3D12RenderSystem::Release(SamplerArray& samplerArray)
 
 ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
 {
-    return nullptr;//todo...
+    return TakeOwnership(resourceHeaps_, MakeUnique<D3D12ResourceHeap>(device_.Get(), desc));
 }
 
 void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    //todo...
+    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
 /* ----- Render Targets ----- */
@@ -349,12 +349,12 @@ void D3D12RenderSystem::Release(ShaderProgram& shaderProgram)
 
 PipelineLayout* D3D12RenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
 {
-    return nullptr;//todo...
+    return TakeOwnership(pipelineLayouts_, MakeUnique<D3D12PipelineLayout>(device_.Get(), desc));
 }
 
 void D3D12RenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    //todo...
+    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */

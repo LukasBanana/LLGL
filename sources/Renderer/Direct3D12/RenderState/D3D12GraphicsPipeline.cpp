@@ -10,13 +10,14 @@
 #include "../D3D12Types.h"
 #include "../Shader/D3D12ShaderProgram.h"
 #include "../Shader/D3D12Shader.h"
+#include "D3D12PipelineLayout.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
 #include "../../../Core/Helper.h"
 #include "../../../Core/Assertion.h"
-#include <algorithm>
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <algorithm>
 
 
 namespace LLGL
@@ -33,51 +34,27 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, co
 
     auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
 
-    /* Create root signature and graphics pipeline state  */
-    CreateRootSignature(renderSystem, *shaderProgramD3D, desc);
-    CreatePipelineState(renderSystem, *shaderProgramD3D, desc);
-}
-
-void D3D12GraphicsPipeline::CreateRootSignature(
-    D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& /*desc*/)
-{
-    /* Setup root signature flags */
-    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags =
-    (
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT/* |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS*/
-    );
-
-    /* Setup descritpor structures for root signature */
-    std::vector<CD3DX12_DESCRIPTOR_RANGE> signatureRange;
-
-    auto AddSignatureRange = [&](D3D12_DESCRIPTOR_RANGE_TYPE type, UINT count)
+    if (auto pipelineLayout = desc.pipelineLayout)
     {
-        if (count > 0)
-        {
-            CD3DX12_DESCRIPTOR_RANGE rangeDesc;
-            rangeDesc.Init(type, count, 0);
-            signatureRange.push_back(rangeDesc);
-        }
-    };
-
-    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, shaderProgram.GetNumSRV());
-    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, shaderProgram.GetNumCBV());
-    AddSignatureRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, shaderProgram.GetNumUAV());
-
-    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
-    if (!signatureRange.empty())
-    {
-        CD3DX12_ROOT_PARAMETER signatureParam;
-        signatureParam.InitAsDescriptorTable(static_cast<UINT>(signatureRange.size()), signatureRange.data(), D3D12_SHADER_VISIBILITY_ALL);
-
-        signatureDesc.Init(1, &signatureParam, 0, nullptr, signatureFlags);
+        /* Create pipeline state with root signature from pipeline layout */
+        auto pipelineLayoutD3D = LLGL_CAST(D3D12PipelineLayout*, pipelineLayout);
+        CreatePipelineState(renderSystem, *shaderProgramD3D, pipelineLayoutD3D->GetRootSignature(), desc);
     }
     else
-        signatureDesc.Init(0, nullptr, 0, nullptr, signatureFlags);
+    {
+        /* Create pipeline state with default root signature */
+        CreateDefaultRootSignature(renderSystem.GetDevice());
+        CreatePipelineState(renderSystem, *shaderProgramD3D, rootSignature_.Get(), desc);
+    }
+}
+
+void D3D12GraphicsPipeline::CreateDefaultRootSignature(ID3D12Device* device)
+{
+    /* Setup root signature flags */
+    D3D12_ROOT_SIGNATURE_FLAGS signatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+    CD3DX12_ROOT_SIGNATURE_DESC signatureDesc;
+    signatureDesc.Init(0, nullptr, 0, nullptr, signatureFlags);
 
     /* Create serialized root signature */
     HRESULT             hr          = 0;
@@ -100,7 +77,7 @@ void D3D12GraphicsPipeline::CreateRootSignature(
     DXThrowIfFailed(hr, "failed to serialize D3D12 root signature");
 
     /* Create actual root signature */
-    hr = renderSystem.GetDevice()->CreateRootSignature(
+    hr = device->CreateRootSignature(
         0,
         signature->GetBufferPointer(),
         signature->GetBufferSize(),
@@ -212,7 +189,10 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopo
 }
 
 void D3D12GraphicsPipeline::CreatePipelineState(
-    D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc)
+    D3D12RenderSystem&                  renderSystem,
+    D3D12ShaderProgram&                 shaderProgram,
+    ID3D12RootSignature*                rootSignature,
+    const GraphicsPipelineDescriptor&   desc)
 {
     /* Get number of render-target attachments */
     UINT numAttachments = 1u; //TODO
@@ -220,7 +200,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     /* Setup D3D12 graphics pipeline descriptor */
     D3D12_GRAPHICS_PIPELINE_STATE_DESC stateDesc = {};
 
-    stateDesc.pRootSignature = rootSignature_.Get();
+    stateDesc.pRootSignature = rootSignature;
 
     /* Get shader byte codes */
     stateDesc.VS = GetShaderByteCode(shaderProgram.GetVS());

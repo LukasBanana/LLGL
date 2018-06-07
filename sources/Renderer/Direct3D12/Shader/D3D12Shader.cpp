@@ -108,7 +108,7 @@ void D3D12Shader::Reflect(ShaderReflectionDescriptor& reflectionDesc) const
 /*
 NOTE:
 Most of this code for shader reflection is 1:1 copied from the D3D11 renderer.
-However, all descriptors have the "D3D12" prefix, so a generalization is tricky.
+However, all descriptors have the "D3D12" prefix, so a generalization (without macros) is tricky.
 */
 
 static ShaderReflectionDescriptor::ResourceView* FetchOrInsertResource(

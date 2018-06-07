@@ -16,13 +16,11 @@
 #include <vector>
 
 
-struct CD3DX12_ROOT_SIGNATURE_DESC;
-struct CD3DX12_ROOT_PARAMETER;
-struct CD3DX12_DESCRIPTOR_RANGE;
-
 namespace LLGL
 {
 
+
+struct D3DRootSignatureContext;
 
 class D3D12PipelineLayout : public PipelineLayout
 {
@@ -32,7 +30,7 @@ class D3D12PipelineLayout : public PipelineLayout
         D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc);
 
         // Returns the native ID3D12RootSignature object.
-        inline ID3D12RootSignature* GetNative() const
+        inline ID3D12RootSignature* GetRootSignature() const
         {
             return rootSignature_.Get();
         }
@@ -40,16 +38,15 @@ class D3D12PipelineLayout : public PipelineLayout
     private:
 
         void BuildRootSignatureDesc(
-            CD3DX12_ROOT_SIGNATURE_DESC&    signatureDesc,
+            D3DRootSignatureContext&        signatureContext,
             const PipelineLayoutDescriptor& layoutDesc
         );
 
         void BuildRootParameter(
-            std::vector<CD3DX12_ROOT_PARAMETER>&    rootParameters,
-            std::vector<CD3DX12_DESCRIPTOR_RANGE>   descriptorRanges,
-            D3D12_DESCRIPTOR_RANGE_TYPE             descRangeType,
-            const PipelineLayoutDescriptor&         layoutDesc,
-            const ResourceType                      resourceType
+            D3DRootSignatureContext&        signatureContext,
+            D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
+            const PipelineLayoutDescriptor& layoutDesc,
+            const ResourceType              resourceType
         );
 
         void BuildRootSignatureFlags(

@@ -34,7 +34,7 @@ class D3D12ConstantBuffer : public D3D12Buffer
 
         void CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize);
 
-        ComPtr<ID3D12DescriptorHeap> descHeap_; // descriptor heap for constant buffer views (CBV)
+        ComPtr<ID3D12DescriptorHeap> descHeap_; //TODO: replace this by D3D12ResourceHeap
 
 };
 

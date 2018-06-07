@@ -19,7 +19,7 @@ D3D12VertexBuffer::D3D12VertexBuffer(ID3D12Device* device, const BufferDescripto
     /* Create resource and initialize buffer view */
     CreateResource(device, desc.size);
 
-    view_.BufferLocation    = Get()->GetGPUVirtualAddress();
+    view_.BufferLocation    = GetNative()->GetGPUVirtualAddress();
     view_.SizeInBytes       = static_cast<UINT>(GetBufferSize());
     view_.StrideInBytes     = desc.vertexBuffer.format.stride;
 }
@@ -29,7 +29,9 @@ void D3D12VertexBuffer::UpdateSubresource(
     const void* data, UINT bufferSize, UINT64 offset)
 {
     UpdateStaticSubresource(
-        device, commandList, uploadBuffer, data, bufferSize, offset, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+        device, commandList, uploadBuffer,
+        data, bufferSize, offset,
+        D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
     );
 }
 

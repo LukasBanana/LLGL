@@ -60,10 +60,16 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
 
     private:
 
-        void CreateRootSignature(D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc);
-        void CreatePipelineState(D3D12RenderSystem& renderSystem, D3D12ShaderProgram& shaderProgram, const GraphicsPipelineDescriptor& desc);
+        void CreateDefaultRootSignature(ID3D12Device* device);
 
-        ComPtr<ID3D12RootSignature> rootSignature_; //TODO remove this and use D3D12PipelineLayout instead
+        void CreatePipelineState(
+            D3D12RenderSystem&                  renderSystem,
+            D3D12ShaderProgram&                 shaderProgram,
+            ID3D12RootSignature*                rootSignature,
+            const GraphicsPipelineDescriptor&   desc
+        );
+
+        ComPtr<ID3D12RootSignature> rootSignature_; //TODO: replace this by D3D12PipelineLayout
         ComPtr<ID3D12PipelineState> pipelineState_;
 
         D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;

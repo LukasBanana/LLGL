@@ -32,17 +32,19 @@ class D3D12Texture : public Texture
         /* ----- Extended internal functions ---- */
 
         void UpdateSubresource(
-            ID3D12Device* device, ID3D12GraphicsCommandList* commandList,
-            ComPtr<ID3D12Resource>& uploadBuffer, D3D12_SUBRESOURCE_DATA& subresourceData
+            ID3D12Device*               device,
+            ID3D12GraphicsCommandList*  commandList,
+            ComPtr<ID3D12Resource>&     uploadBuffer,
+            D3D12_SUBRESOURCE_DATA&     subresourceData
         );
 
-        //! Returns the ID3D12Resource object.
-        inline ID3D12Resource* Get() const
+        //! Returns the native ID3D12Resource object.
+        inline ID3D12Resource* GetNative() const
         {
             return resource_.Get();
         }
 
-        // Returns the descriptor heap for shader-resource-views (SRV).
+        //TODO: replace this by D3D12ResourceHeap
         inline ID3D12DescriptorHeap* GetDescriptorHeap() const
         {
             return descHeap_.Get();
@@ -67,7 +69,7 @@ class D3D12Texture : public Texture
         );
 
         ComPtr<ID3D12Resource>          resource_;
-        ComPtr<ID3D12DescriptorHeap>    descHeap_; // descriptor heap for shader resource views (SRV)
+        ComPtr<ID3D12DescriptorHeap>    descHeap_; //TODO: replace this by D3D12ResourceHeap
 
         DXGI_FORMAT                     format_         = DXGI_FORMAT_UNKNOWN;
         UINT                            numMipLevels_   = 0;
