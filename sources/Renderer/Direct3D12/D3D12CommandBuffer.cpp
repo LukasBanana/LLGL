@@ -22,6 +22,8 @@
 
 #include "Texture/D3D12Texture.h"
 
+#include "RenderState/D3D12ResourceHeap.h"
+
 
 namespace LLGL
 {
@@ -229,7 +231,21 @@ void D3D12CommandBuffer::EndStreamOutput()
 
 void D3D12CommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
-    //todo...
+    /* Get descriptor heaps */
+    auto& resourceHeapD3D = LLGL_CAST(D3D12ResourceHeap&, resourceHeap);
+
+    auto descHeaps = resourceHeapD3D.GetDescriptorHeaps();
+    auto heapCount = resourceHeapD3D.GetNumDescriptorHeaps();
+
+    if (heapCount > 0)
+    {
+        /* Bind descriptor heaps */
+        commandList_->SetDescriptorHeaps(heapCount, descHeaps);
+
+        /* Bind root descriptor tables to graphics pipeline */
+        for (UINT i = 0; i < heapCount; ++i)
+            commandList_->SetGraphicsRootDescriptorTable(i, descHeaps[i]->GetGPUDescriptorHandleForHeapStart());
+    }
 }
 
 void D3D12CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)

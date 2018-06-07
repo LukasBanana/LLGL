@@ -91,6 +91,9 @@ int main()
         float orthoSize = 0.0025f;
         matrices.projection = Gs::ProjectionMatrix4f::Orthogonal(800.0f * orthoSize, 600.0f * orthoSize, 0.1f, 100.0f).ToMatrix4();
 
+        float rotation = 45.0f;
+        Gs::RotateFree(matrices.projection, Gs::Vector3f(0, 0, 1), Gs::Deg2Rad(rotation));
+
         LLGL::BufferDescriptor constantBufferDesc;
         {
             constantBufferDesc.type     = LLGL::BufferType::Constant;
@@ -154,6 +157,14 @@ int main()
         }
         auto pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
 
+        // Create resource heap
+        LLGL::ResourceHeapDescriptor resourceHeapDesc;
+        {
+            resourceHeapDesc.pipelineLayout = pipelineLayout;
+            resourceHeapDesc.resourceViews  = { constantBuffer };
+        }
+        auto resourceHeap = renderer->CreateResourceHeap(resourceHeapDesc);
+
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
@@ -166,7 +177,9 @@ int main()
             pipelineDesc.depth.compareOp            = LLGL::CompareOp::Less;
             #endif
 
+            #if 0
             pipelineDesc.rasterizer.multiSampling    = contextDesc.multiSampling;
+            #endif
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
@@ -202,32 +215,18 @@ int main()
 
         #endif
 
-        //INTERFACE DRAFT
-        #if 0
-
-        LLGL::ResourceHeap* resourceViewHeap = renderer->CreateResourceHeap();
-        {
-            resourceViewHeap->AppendResourceView(*constantBuffer);
-            resourceViewHeap->AppendResourceView(*texture);
-        }
-        commands->SetResourceViewHeaps(1, resourceViewHeap);
-
-        #endif
-
-        commands->SetViewport(LLGL::Viewport(0, 0, 800, 600));
-        commands->SetScissor(LLGL::Scissor(0, 0, 800, 600));
-
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             commands->SetRenderTarget(*context);
+            commands->SetViewport(LLGL::Viewport { { 0, 0 }, contextDesc.videoMode.resolution });
+            commands->SetScissor(LLGL::Scissor { { 0, 0 }, contextDesc.videoMode.resolution });
 
             commands->Clear(LLGL::ClearFlags::Color);
 
             commands->SetGraphicsPipeline(*pipeline);
             commands->SetVertexBuffer(*vertexBuffer);
-
-            //commands->SetConstantBuffer(*constantBuffer, 0);
+            commands->SetGraphicsResourceHeap(*resourceHeap);
 
             commands->Draw(3, 0);
 

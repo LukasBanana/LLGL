@@ -40,9 +40,9 @@ void D3D12PipelineLayout::BuildRootSignatureDesc(
     /* Build root parameter for each descriptor range type */
     signatureContext.descriptorRanges.reserve(layoutDesc.bindings.size());
 
+    BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     layoutDesc, ResourceType::ConstantBuffer);
     BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     layoutDesc, ResourceType::Texture       );
     BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     layoutDesc, ResourceType::StorageBuffer );
-    BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     layoutDesc, ResourceType::ConstantBuffer);
     BuildRootParameter(signatureContext, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, layoutDesc, ResourceType::Sampler       );
 
     /* Get root signature flags */

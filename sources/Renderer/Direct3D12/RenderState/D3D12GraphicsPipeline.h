@@ -37,7 +37,7 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
         // Returns the internal ID3D12RootSignature object.
         inline ID3D12RootSignature* GetRootSignature() const
         {
-            return rootSignature_.Get();
+            return rootSignature_;
         }
 
         // Returns the internal ID3D12PipelineState object.
@@ -69,12 +69,16 @@ class D3D12GraphicsPipeline : public GraphicsPipeline
             const GraphicsPipelineDescriptor&   desc
         );
 
-        ComPtr<ID3D12RootSignature> rootSignature_; //TODO: replace this by D3D12PipelineLayout
         ComPtr<ID3D12PipelineState> pipelineState_;
+        ID3D12RootSignature*        rootSignature_      = nullptr;
 
         D3D12_PRIMITIVE_TOPOLOGY    primitiveTopology_  = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 
         bool                        scissorEnabled_     = false;
+
+        #if 1//TODO: replace this by D3D12PipelineLayout
+        ComPtr<ID3D12RootSignature> defaultRootSignature_;
+        #endif
 
 };
 

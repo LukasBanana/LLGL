@@ -44,7 +44,7 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, co
     {
         /* Create pipeline state with default root signature */
         CreateDefaultRootSignature(renderSystem.GetDevice());
-        CreatePipelineState(renderSystem, *shaderProgramD3D, rootSignature_.Get(), desc);
+        CreatePipelineState(renderSystem, *shaderProgramD3D, defaultRootSignature_.Get(), desc);
     }
 }
 
@@ -81,7 +81,7 @@ void D3D12GraphicsPipeline::CreateDefaultRootSignature(ID3D12Device* device)
         0,
         signature->GetBufferPointer(),
         signature->GetBufferSize(),
-        IID_PPV_ARGS(rootSignature_.ReleaseAndGetAddressOf())
+        IID_PPV_ARGS(defaultRootSignature_.ReleaseAndGetAddressOf())
     );
 
     DXThrowIfFailed(hr, "failed to create D3D12 root signature");
@@ -194,6 +194,9 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     ID3D12RootSignature*                rootSignature,
     const GraphicsPipelineDescriptor&   desc)
 {
+    /* Store used root signature */
+    rootSignature_ = rootSignature;
+
     /* Get number of render-target attachments */
     UINT numAttachments = 1u; //TODO
 
@@ -238,7 +241,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
             {
                 /* Initialize blend target to default values */
                 SetBlendDescToDefault(stateDesc.BlendState.RenderTarget[i]);
-                stateDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
+                stateDesc.RTVFormats[i] = (i > 0 ? DXGI_FORMAT_UNKNOWN : DXGI_FORMAT_B8G8R8A8_UNORM);
             }
         }
     }
@@ -264,7 +267,7 @@ void D3D12GraphicsPipeline::CreatePipelineState(
             {
                 /* Initialize blend target to default values */
                 SetBlendDescToDefault(stateDesc.BlendState.RenderTarget[i]);
-                stateDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
+                stateDesc.RTVFormats[i] = (i > 0 ? DXGI_FORMAT_UNKNOWN : DXGI_FORMAT_B8G8R8A8_UNORM);
             }
         }
     }

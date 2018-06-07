@@ -79,7 +79,7 @@ public:
         CreateColorMap();
         CreateRenderTarget();
         CreatePipelines();
-        
+
         #ifndef __APPLE__
         CreateResourceHeaps();
         #endif

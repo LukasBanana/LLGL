@@ -25,11 +25,33 @@ class D3D12ResourceHeap : public ResourceHeap
 
         D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDescriptor& desc);
 
+        inline ID3D12DescriptorHeap* const* GetDescriptorHeaps() const
+        {
+            return descriptorHeaps_;
+        }
+
+        inline UINT GetNumDescriptorHeaps() const
+        {
+            return numDescriptorHeaps_;
+        }
 
     private:
 
-        ComPtr<ID3D12DescriptorHeap> descriptorHeapForViews_;
-        ComPtr<ID3D12DescriptorHeap> descriptorHeapForSamplers_;
+        void CreateHeapTypeCbvSrvUav(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+        void CreateHeapTypeSampler(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+
+        void CreateConstantBufferViews(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+        void CreateShaderResourceViews(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+        void CreateUnorderedAccessViews(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+        void CreateSamplers(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+
+        void AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap);
+
+        ComPtr<ID3D12DescriptorHeap>    heapTypeCbvSrvUav_;
+        ComPtr<ID3D12DescriptorHeap>    heapTypeSampler_;
+
+        ID3D12DescriptorHeap*           descriptorHeaps_[2] = {};   // References to the ComPtr objects
+        UINT                            numDescriptorHeaps_ = 0;
 
 };
 

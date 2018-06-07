@@ -25,16 +25,15 @@ class D3D12ConstantBuffer : public D3D12Buffer
 
         void UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset = 0);
 
-        inline ID3D12DescriptorHeap* GetDescriptorHeap() const
-        {
-            return descHeap_.Get();
-        }
+        void CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap* descriptorHeap);
 
     private:
 
-        void CreateResourceAndPutView(ID3D12Device* device, UINT bufferSize);
+        void CreateResourceWithAlignment(ID3D12Device* device, UINT bufferSize);
 
-        ComPtr<ID3D12DescriptorHeap> descHeap_; //TODO: replace this by D3D12ResourceHeap
+        UINT bufferSize_ = 0;
+
+        //ComPtr<ID3D12DescriptorHeap> descHeap_; //TODO: replace this by D3D12ResourceHeap
 
 };
 
