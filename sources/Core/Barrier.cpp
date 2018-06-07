@@ -21,7 +21,7 @@ Barrier::Barrier(std::size_t threadCount) :
 void Barrier::Wait()
 {
     std::unique_lock<std::mutex> lock { mutex_ };
-    
+
     if (--counter_ == 0)
     {
         counter_ = threadCount_;

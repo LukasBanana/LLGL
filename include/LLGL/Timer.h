@@ -58,7 +58,7 @@ class LLGL_EXPORT Timer : public NonCopyable
         \remarks This requires that "MeasureTime" is called once every frame.
         \see MeasureTime
         */
-        double GetDeltaTime() const
+        inline double GetDeltaTime() const
         {
             return deltaTime_;
         }
