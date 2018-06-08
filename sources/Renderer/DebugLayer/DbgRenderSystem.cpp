@@ -664,9 +664,8 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
 
         case TextureType::TextureCube:
             AssertCubeTextures();
-            ValidateCubeTextureSize(desc.texture2D.width);
-            ValidateCubeTextureSize(desc.texture2D.height);
-            if (desc.texture2D.layers > 1)
+            ValidateCubeTextureSize(desc.textureCube.width, desc.textureCube.height);
+            if (desc.textureCube.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
@@ -692,9 +691,8 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
 
         case TextureType::TextureCubeArray:
             AssertCubeArrayTextures();
-            ValidateCubeTextureSize(desc.texture2D.width);
-            ValidateCubeTextureSize(desc.texture2D.height);
-            ValidateArrayTextureLayers(desc.texture2D.layers);
+            ValidateCubeTextureSize(desc.textureCube.width, desc.textureCube.height);
+            ValidateArrayTextureLayers(desc.textureCube.layers);
             break;
 
         case TextureType::Texture2DMS:
@@ -740,23 +738,26 @@ void DbgRenderSystem::Validate1DTextureSize(std::uint32_t size)
 
 void DbgRenderSystem::Validate2DTextureSize(std::uint32_t size)
 {
-    ValidateTextureSize(size, limits_.max1DTextureSize, "2D");
+    ValidateTextureSize(size, limits_.max2DTextureSize, "2D");
 }
 
 void DbgRenderSystem::Validate3DTextureSize(std::uint32_t size)
 {
-    ValidateTextureSize(size, limits_.max1DTextureSize, "3D");
+    ValidateTextureSize(size, limits_.max3DTextureSize, "3D");
 }
 
-void DbgRenderSystem::ValidateCubeTextureSize(std::uint32_t size)
+void DbgRenderSystem::ValidateCubeTextureSize(std::uint32_t width, std::uint32_t height)
 {
-    ValidateTextureSize(size, limits_.max1DTextureSize, "cube");
+    ValidateTextureSize(width, limits_.maxCubeTextureSize, "cube");
+    ValidateTextureSize(height, limits_.maxCubeTextureSize, "cube");
+    if (width != height)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "width and height of cube textures must be equal");
 }
 
 void DbgRenderSystem::ValidateArrayTextureLayers(std::uint32_t layers)
 {
     if (layers == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of texture layers must not be zero for array texutres");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of texture layers must not be zero for array textures");
 
     const auto maxNumLayers = limits_.maxNumTextureArrayLayers;
 
