@@ -38,10 +38,25 @@ GLTexture::~GLTexture()
     glDeleteTextures(1, &id_);
 }
 
+static GLenum GLGetTextureParamTarget(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:        return GL_TEXTURE_1D;
+        case TextureType::Texture2D:        return GL_TEXTURE_2D;
+        case TextureType::Texture3D:        return GL_TEXTURE_3D;
+        case TextureType::TextureCube:      return GL_TEXTURE_CUBE_MAP_POSITIVE_X; // use first cube face instead of texture type
+        case TextureType::Texture1DArray:   return GL_TEXTURE_1D_ARRAY;
+        case TextureType::Texture2DArray:   return GL_TEXTURE_2D_ARRAY;
+        case TextureType::TextureCubeArray: return GL_TEXTURE_CUBE_MAP_POSITIVE_X; // use first cube face instead of texture type
+        case TextureType::Texture2DMS:      return GL_TEXTURE_2D_MULTISAMPLE;
+        case TextureType::Texture2DMSArray: return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+    }
+    return 0;
+}
+
 Extent3D GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
 {
-    auto target = GLTypes::Map(GetType());
-
     GLint texSize[3] = { 0 };
     GLint level = static_cast<GLint>(mipLevel);
 
@@ -61,12 +76,17 @@ Extent3D GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
         {
             /* Bind texture and query attributes */
             GLStateManager::active->BindTexture(*this);
+            auto target = GLGetTextureParamTarget(GetType());
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_WIDTH,  &texSize[0]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_HEIGHT, &texSize[1]);
             glGetTexLevelParameteriv(target, level, GL_TEXTURE_DEPTH,  &texSize[2]);
         }
         GLStateManager::active->PopBoundTexture();
     }
+
+    /* Adjust depth value for cube texture to be uniform with D3D */
+    if (IsCubeTexture(GetType()))
+        texSize[2] *= 6;
 
     return
     {

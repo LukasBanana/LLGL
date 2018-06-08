@@ -134,7 +134,9 @@ static void GLTexImage2DBase(
     if (HasExtension(GLExt::ARB_texture_storage))
     {
         /* Allocate immutable texture storage (only once, not for ever cube face!) */
-        if (!IsSecondaryCubeFaceTarget(target))
+        if (target == GL_TEXTURE_CUBE_MAP_POSITIVE_X)
+            glTexStorage2D(GL_TEXTURE_CUBE_MAP, static_cast<GLsizei>(mipLevels), internalFormat, sx, sy);
+        else if (!IsSecondaryCubeFaceTarget(target))
             glTexStorage2D(target, static_cast<GLsizei>(mipLevels), internalFormat, sx, sy);
 
         /* Initialize highest MIP level */
@@ -637,6 +639,8 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         AxisDirection::ZNeg
     }};
 
+    auto numMipLevels = NumMipLevels(desc);
+
     if (imageDesc)
     {
         /* Setup texture image cube-faces from descriptor */
@@ -652,7 +656,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                NumMipLevels(desc),
+                numMipLevels,
                 desc.format,
                 desc.textureCube.width,
                 desc.textureCube.height,
@@ -676,7 +680,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                NumMipLevels(desc),
+                numMipLevels,
                 desc.format,
                 desc.textureCube.width,
                 desc.textureCube.height,
@@ -698,7 +702,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
-                NumMipLevels(desc),
+                numMipLevels,
                 desc.format,
                 desc.textureCube.width,
                 desc.textureCube.height,
