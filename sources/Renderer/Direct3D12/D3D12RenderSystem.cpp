@@ -108,7 +108,10 @@ static std::unique_ptr<D3D12Buffer> MakeD3D12VertexBuffer(
     ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, const BufferDescriptor& desc, const void* initialData)
 {
     auto bufferD3D = MakeUnique<D3D12VertexBuffer>(device, desc);
-    bufferD3D->UpdateSubresource(device, commandList, uploadBuffer, initialData, static_cast<UINT>(desc.size));
+
+    if (initialData)
+        bufferD3D->UpdateSubresource(device, commandList, uploadBuffer, initialData, static_cast<UINT>(desc.size));
+
     return std::move(bufferD3D);
 }
 
@@ -116,7 +119,10 @@ static std::unique_ptr<D3D12Buffer> MakeD3D12IndexBuffer(
     ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, const BufferDescriptor& desc, const void* initialData)
 {
     auto bufferD3D = MakeUnique<D3D12IndexBuffer>(device, desc);
-    bufferD3D->UpdateSubresource(device, commandList, uploadBuffer, initialData, static_cast<UINT>(desc.size));
+
+    if (initialData)
+        bufferD3D->UpdateSubresource(device, commandList, uploadBuffer, initialData, static_cast<UINT>(desc.size));
+
     return std::move(bufferD3D);
 }
 
@@ -124,14 +130,19 @@ static std::unique_ptr<D3D12Buffer> MakeD3D12ConstantBuffer(
     ID3D12Device* device, const BufferDescriptor& desc, const void* initialData)
 {
     auto bufferD3D = MakeUnique<D3D12ConstantBuffer>(device, desc);
-    bufferD3D->UpdateSubresource(initialData, static_cast<UINT>(desc.size));
+
+    if (initialData)
+        bufferD3D->UpdateSubresource(initialData, static_cast<UINT>(desc.size));
+
     return std::move(bufferD3D);
 }
 
 static std::unique_ptr<D3D12Buffer> MakeD3D12StorageBuffer(ID3D12Device* device, const BufferDescriptor& desc, const void* /*initialData*/)
 {
     auto bufferD3D = MakeUnique<D3D12StorageBuffer>(device, desc);
-    //todo...
+
+    //TODO...
+
     return std::move(bufferD3D);
 }
 

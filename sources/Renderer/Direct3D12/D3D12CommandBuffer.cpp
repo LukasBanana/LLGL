@@ -193,18 +193,6 @@ void D3D12CommandBuffer::SetIndexBuffer(Buffer& buffer)
     commandList_->IASetIndexBuffer(&(indexBufferD3D.GetView()));
 }
 
-#if 0
-void D3D12CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long shaderStageFlags)
-{
-    auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, buffer);
-
-    /* Set CBV descriptor heap */
-    ID3D12DescriptorHeap* descHeaps[1] = { constantBufferD3D.GetDescriptorHeap() };
-    commandList_->SetDescriptorHeaps(1, descHeaps);
-    commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
-}
-#endif
-
 /* ----- Stream Output Buffers ------ */
 
 void D3D12CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
@@ -252,20 +240,6 @@ void D3D12CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
 {
     //todo...
 }
-
-#if 0
-/* ----- Textures ----- */
-
-void D3D12CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long shaderStageFlags)
-{
-    auto& textureD3D = LLGL_CAST(D3D12Texture&, texture);
-
-    /* Set SRV descriptor heap */
-    ID3D12DescriptorHeap* descHeaps[1] = { textureD3D.GetDescriptorHeap() };
-    commandList_->SetDescriptorHeaps(1, descHeaps);
-    commandList_->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
-}
-#endif
 
 /* ----- Render Targets ----- */
 

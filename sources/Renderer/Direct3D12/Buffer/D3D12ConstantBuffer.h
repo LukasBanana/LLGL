@@ -33,8 +33,6 @@ class D3D12ConstantBuffer : public D3D12Buffer
 
         UINT bufferSize_ = 0;
 
-        //ComPtr<ID3D12DescriptorHeap> descHeap_; //TODO: replace this by D3D12ResourceHeap
-
 };
 
 

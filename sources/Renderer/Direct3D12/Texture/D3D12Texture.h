@@ -38,16 +38,12 @@ class D3D12Texture : public Texture
             D3D12_SUBRESOURCE_DATA&     subresourceData
         );
 
+        void CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap* descriptorHeap);
+
         //! Returns the native ID3D12Resource object.
         inline ID3D12Resource* GetNative() const
         {
             return resource_.Get();
-        }
-
-        //TODO: replace this by D3D12ResourceHeap
-        inline ID3D12DescriptorHeap* GetDescriptorHeap() const
-        {
-            return descHeap_.Get();
         }
 
         // Returns the hardware resource format.
@@ -56,23 +52,27 @@ class D3D12Texture : public Texture
             return format_;
         }
 
-        // Returns the number of MIP-map levels.
+        // Returns the number of MIP-map levels specified at creation time.
         inline UINT GetNumMipLevels() const
         {
             return numMipLevels_;
         }
 
+        // Returns the number of array layers of the hardware resource (for cube textures, this is a multiple of 6)
+        inline UINT GetNumArrayLayers() const
+        {
+            return numArrayLayers_;
+        }
+
     private:
 
-        void CreateResource(
-            ID3D12Device* device, const D3D12_RESOURCE_DESC& desc, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc = nullptr
-        );
+        void CreateResource(ID3D12Device* device, const D3D12_RESOURCE_DESC& desc);
 
-        ComPtr<ID3D12Resource>          resource_;
-        ComPtr<ID3D12DescriptorHeap>    descHeap_; //TODO: replace this by D3D12ResourceHeap
+        ComPtr<ID3D12Resource>  resource_;
 
-        DXGI_FORMAT                     format_         = DXGI_FORMAT_UNKNOWN;
-        UINT                            numMipLevels_   = 0;
+        DXGI_FORMAT             format_         = DXGI_FORMAT_UNKNOWN;
+        UINT                    numMipLevels_   = 0;
+        UINT                    numArrayLayers_ = 0;
 
 };
 
