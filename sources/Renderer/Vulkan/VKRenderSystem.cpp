@@ -81,7 +81,7 @@ static void TestVulkanMemoryMngr(VKDeviceMemoryManager& mngr)
 {
     std::uint32_t typeBits = 1665;
     VkDeviceSize alignment = 1;
-    
+
     auto reg0 = mngr.Allocate(6, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     auto reg1 = mngr.Allocate(7, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     auto reg2 = mngr.Allocate(12, alignment, typeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -403,7 +403,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
     /* Determine size of image for staging buffer */
     const auto imageSize        = TextureSize(textureDesc);
-    const auto imageDataSize    = static_cast<VkDeviceSize>(TextureBufferSize(textureDesc.format, imageSize));
+    const auto initialDataSize  = static_cast<VkDeviceSize>(TextureBufferSize(textureDesc.format, imageSize));
 
     /* Set up initial image data */
     const void* initialData = nullptr;
@@ -420,17 +420,26 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             /* Convert image format (will be null if no conversion is necessary) */
             tempImageBuffer = ConvertImageBuffer(*imageDesc, dstFormat, dstDataType, cfg.threadCount);
         }
+
+        if (tempImageBuffer)
+        {
+            /*
+            Validate that source image data was large enough so conversion is valid,
+            then use temporary image buffer as source for initial data
+            */
+            const auto srcImageDataSize = imageSize * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType);
+            AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(srcImageDataSize));
+            initialData = tempImageBuffer.get();
+        }
         else
         {
-            /* Assert image data is large enough */
-            AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(imageDataSize));
-        }
-
-        /* Use data buffer from temporary image buffer or image descriptor */
-        if (tempImageBuffer)
-            initialData = tempImageBuffer.get();
-        else
+            /*
+            Validate that image data is large enough,
+            then use input data as source for initial data
+            */
+            AssertImageDataSize(imageDesc->dataSize, static_cast<std::size_t>(initialDataSize));
             initialData = imageDesc->data;
+        }
     }
     else if (cfg.imageInitialization.enabled)
     {
@@ -444,14 +453,14 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
             tempImageBuffer = GenerateImageBuffer(imageFormat, imageDataType, imageSize, fillColor);
         }
         else
-            tempImageBuffer = GenerateEmptyByteBuffer(static_cast<std::size_t>(imageDataSize));
+            tempImageBuffer = GenerateEmptyByteBuffer(static_cast<std::size_t>(initialDataSize));
 
         initialData = tempImageBuffer.get();
     }
 
     /* Create staging buffer */
     VkBufferCreateInfo stagingCreateInfo;
-    FillBufferCreateInfo(stagingCreateInfo, imageDataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT); // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.flags)
+    FillBufferCreateInfo(stagingCreateInfo, initialDataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT); // <-- TODO: support read/write mapping //GetStagingVkBufferUsageFlags(desc.flags)
 
     VKBufferWithRequirements stagingBuffer { device_ };
     VKDeviceMemoryRegion* memoryRegionStaging = nullptr;
@@ -459,7 +468,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     std::tie(stagingBuffer, memoryRegionStaging) = CreateStagingBuffer(
         stagingCreateInfo,
         initialData,
-        static_cast<std::size_t>(imageDataSize)
+        static_cast<std::size_t>(initialDataSize)
     );
 
     /* Create device texture */
