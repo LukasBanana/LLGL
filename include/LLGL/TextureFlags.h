@@ -37,6 +37,7 @@ enum class TextureType
 /**
 \brief Hardware texture format enumeration.
 \note All 32-bit integral formats are un-normalized!
+\todo Rename "R8" to "R8UNorm", "R8Sgn" to "R8SNorm" and add "R8UInt", "R8SInt" etc.
 */
 enum class TextureFormat
 {
@@ -212,11 +213,15 @@ struct TextureDescriptor
         std::uint32_t   depth;          //!< Texture depth.
     };
 
-    //! Cube- and Cube-Array texture specific descriptor structure.
+    /**
+    \brief Cube- and Cube-Array texture specific descriptor structure.
+    \remarks Cube textures must have the same value for width and height.
+    However, two parameters are used for convenience in rendering APIs.
+    */
     struct TextureCube
     {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
+        std::uint32_t   width;          //!< Texture width. Must be equal to height.
+        std::uint32_t   height;         //!< Texture height. Must be equal to width.
 
         /**
         \brief Number of texture array layers, one for each cube.

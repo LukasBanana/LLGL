@@ -30,10 +30,10 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
             case TextureType::Texture1D:        return NumMipLevels(textureDesc.texture1D.width);
             case TextureType::Texture2D:        return NumMipLevels(textureDesc.texture2D.width, textureDesc.texture2D.height);
             case TextureType::Texture3D:        return NumMipLevels(textureDesc.texture3D.width, textureDesc.texture3D.height, textureDesc.texture3D.depth);
-            case TextureType::TextureCube:      return NumMipLevels(textureDesc.textureCube.width);
+            case TextureType::TextureCube:      return NumMipLevels(textureDesc.textureCube.width, textureDesc.textureCube.height);
             case TextureType::Texture1DArray:   return NumMipLevels(textureDesc.texture1D.width);
             case TextureType::Texture2DArray:   return NumMipLevels(textureDesc.texture2D.width, textureDesc.texture2D.height);
-            case TextureType::TextureCubeArray: return NumMipLevels(textureDesc.textureCube.width);
+            case TextureType::TextureCubeArray: return NumMipLevels(textureDesc.textureCube.width, textureDesc.textureCube.height);
             case TextureType::Texture2DMS:      return 1u;
             case TextureType::Texture2DMSArray: return 1u;
         }
