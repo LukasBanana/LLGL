@@ -88,7 +88,8 @@ TextureDescriptor D3D11Texture::QueryDesc() const
     /* Initialize texture descriptor */
     TextureDescriptor texDesc;
 
-    texDesc.type = GetType();
+    texDesc.type    = GetType();
+    texDesc.flags   = 0;
 
     /* Get resource dimension to query the respective D3D descriptor */
     D3D11_RESOURCE_DIMENSION dimension;

@@ -98,25 +98,26 @@ Extent3D GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
 
 TextureDescriptor GLTexture::QueryDesc() const
 {
-    TextureDescriptor desc;
+    TextureDescriptor texDesc;
 
-    desc.type = GetType();
+    texDesc.type    = GetType();
+    texDesc.flags   = 0;
 
     /* Query hardware texture format and size */
     GLint internalFormat = 0, extent[3] = { 0 };
     QueryTexParams(&internalFormat, extent);
 
-    /* Transform data from OpenGL to LLGL */
-    GLTypes::Unmap(desc.format, static_cast<GLenum>(internalFormat));
+    /*
+    Transform data from OpenGL to LLGL
+    NOTE: for cube textures, depth extent can also be copied directly without transformation (no need to multiply by 6)
+    */
+    GLTypes::Unmap(texDesc.format, static_cast<GLenum>(internalFormat));
 
-    desc.texture3D.width    = static_cast<std::uint32_t>(extent[0]);
-    desc.texture3D.height   = static_cast<std::uint32_t>(extent[1]);
-    desc.texture3D.depth    = static_cast<std::uint32_t>(extent[2]);
+    texDesc.texture3D.width     = static_cast<std::uint32_t>(extent[0]);
+    texDesc.texture3D.height    = static_cast<std::uint32_t>(extent[1]);
+    texDesc.texture3D.depth     = static_cast<std::uint32_t>(extent[2]);
 
-    if (desc.type == TextureType::TextureCube || desc.type == TextureType::TextureCubeArray)
-        desc.texture3D.depth /= 6;
-
-    return desc;
+    return texDesc;
 }
 
 GLenum GLTexture::QueryGLInternalFormat() const
@@ -156,7 +157,7 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
         {
             /* Bind texture and query attributes */
             GLStateManager::active->BindTexture(*this);
-            auto target = GLTypes::Map(GetType());
+            auto target = GLGetTextureParamTarget(GetType());
 
             if (internalFormat)
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, internalFormat);
