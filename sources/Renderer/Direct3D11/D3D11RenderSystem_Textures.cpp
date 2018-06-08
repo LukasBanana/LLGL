@@ -451,21 +451,29 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
     std::uint32_t       depth,
     std::uint32_t       numLayers)
 {
-    /* Update only the first MIP-map level for each array slice */
+    /* Update only the first MIP-map level for each array layer */
     const auto layerStride = width * height * depth * (ImageFormatSize(imageDesc.format) * DataTypeSize(imageDesc.dataType));
 
-    for (std::uint32_t arraySlice = 0; arraySlice < numLayers; ++arraySlice)
+    /* Remap image data size for a single array layer to update each subresource individually */
+    if (imageDesc.dataSize % numLayers != 0)
+        throw std::invalid_argument("image data size is not a multiple of the layer count for D3D11 texture");
+
+    imageDesc.dataSize /= numLayers;
+
+    for (std::uint32_t arrayLayer = 0; arrayLayer < numLayers; ++arrayLayer)
     {
+        /* Update subresource of current array layer */
         textureD3D.UpdateSubresource(
             context_.Get(),
-            0, // mipSlice
-            arraySlice,
+            0, // mipLevel
+            arrayLayer,
             CD3D11_BOX(0, 0, 0, width, height, depth),
             imageDesc,
             GetConfiguration().threadCount
         );
 
-        imageDesc.data = reinterpret_cast<const char*>(imageDesc.data) + layerStride;
+        /* Move to next region of initial data */
+        imageDesc.data = (reinterpret_cast<const std::int8_t*>(imageDesc.data) + layerStride);
     }
 }
 

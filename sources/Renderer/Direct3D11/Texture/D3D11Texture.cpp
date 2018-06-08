@@ -251,7 +251,7 @@ void D3D11Texture::UpdateSubresource(
         if (imageDesc.dataSize < requiredImageSize)
         {
             throw std::invalid_argument(
-                "image data size is too small to update subresource of Direct3D 11 texture (" +
+                "image data size is too small to update subresource of D3D11 texture (" +
                 std::to_string(requiredImageSize) + " is required but only " + std::to_string(imageDesc.dataSize) + " was specified)"
             );
         }
