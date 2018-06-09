@@ -41,6 +41,18 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
     return 1u;
 }
 
+LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc)
+{
+    switch (textureDesc.type)
+    {
+        case TextureType::Texture1DArray:   return textureDesc.texture1D.layers;
+        case TextureType::Texture2DArray:   return textureDesc.texture2D.layers;
+        case TextureType::TextureCubeArray: return textureDesc.textureCube.layers;
+        case TextureType::Texture2DMSArray: return textureDesc.texture2DMS.layers;
+        default:                            return 1u;
+    }
+}
+
 std::uint32_t TextureBufferSize(const TextureFormat textureFormat, std::uint32_t numTexels)
 {
     switch (textureFormat)

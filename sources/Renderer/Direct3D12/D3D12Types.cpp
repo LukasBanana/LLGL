@@ -236,6 +236,23 @@ D3D12_LOGIC_OP Map(const LogicOp logicOp)
     DXTypes::MapFailed("LogicOp", "D3D12_LOGIC_OP");
 }
 
+D3D12_SRV_DIMENSION Map(const TextureType textureType)
+{
+    switch (textureType)
+    {
+        case TextureType::Texture1D:        return D3D12_SRV_DIMENSION_TEXTURE1D;
+        case TextureType::Texture2D:        return D3D12_SRV_DIMENSION_TEXTURE2D;
+        case TextureType::Texture3D:        return D3D12_SRV_DIMENSION_TEXTURE3D;
+        case TextureType::TextureCube:      return D3D12_SRV_DIMENSION_TEXTURECUBE;
+        case TextureType::Texture1DArray:   return D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+        case TextureType::Texture2DArray:   return D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+        case TextureType::TextureCubeArray: return D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
+        case TextureType::Texture2DMS:      return D3D12_SRV_DIMENSION_TEXTURE2DMS;
+        case TextureType::Texture2DMSArray: return D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+    }
+    DXTypes::MapFailed("TextureType", "D3D12_SRV_DIMENSION");
+}
+
 TextureFormat Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);

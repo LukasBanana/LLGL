@@ -257,7 +257,7 @@ void D3D11Texture::UpdateSubresource(
             );
         }
 
-        /* Convert image data from RGB to RGBA */
+        /* Convert image data (e.g. from RGB to RGBA) */
         auto tempData = ConvertImageBuffer(imageDesc, dstTexFormat.format, dstTexFormat.dataType, threadCount);
 
         /* Get new source data stride */

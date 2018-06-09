@@ -9,6 +9,7 @@
 //#include "D3D12PipelineLayout.h"
 #include "../Buffer/D3D12ConstantBuffer.h"
 #include "../Texture/D3D12Sampler.h"
+#include "../Texture/D3D12Texture.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
@@ -154,7 +155,14 @@ void D3D12ResourceHeap::CreateConstantBufferViews(ID3D12Device* device, const Re
 
 void D3D12ResourceHeap::CreateShaderResourceViews(ID3D12Device* device, const ResourceHeapDescriptor& desc)
 {
-    //TODO
+    ForEachResourceViewOfType(
+        desc, ResourceType::Texture,
+        [&](Resource& resource)
+        {
+            auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
+            textureD3D.CreateResourceView(device, heapTypeCbvSrvUav_.Get());
+        }
+    );
 }
 
 void D3D12ResourceHeap::CreateUnorderedAccessViews(ID3D12Device* device, const ResourceHeapDescriptor& desc)

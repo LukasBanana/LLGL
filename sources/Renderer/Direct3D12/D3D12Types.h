@@ -37,6 +37,7 @@ D3D12_STENCIL_OP            Map( const StencilOp            stencilOp       );
 D3D12_FILTER                Map( const SamplerDescriptor&   samplerDesc     );
 D3D12_TEXTURE_ADDRESS_MODE  Map( const SamplerAddressMode   addressMode     );
 D3D12_LOGIC_OP              Map( const LogicOp              logicOp         );
+D3D12_SRV_DIMENSION         Map( const TextureType          textureType     );
 
 TextureFormat               Unmap( const DXGI_FORMAT format );
 

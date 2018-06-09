@@ -37,7 +37,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 {
     dst.Dimension           = GetResourceDimension(src.type);
     dst.Alignment           = 0;
-    dst.MipLevels           = 1;
+    dst.MipLevels           = NumMipLevels(src);
     dst.Format              = D3D12Types::Map(src.format);
     dst.SampleDesc.Count    = 1;
     dst.SampleDesc.Quality  = 0;
@@ -84,7 +84,10 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 }
 
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
-    Texture { desc.type }
+    Texture         { desc.type                    },
+    format_         { D3D12Types::Map(desc.format) },
+    numMipLevels_   { NumMipLevels(desc)           },
+    numArrayLayers_ { NumArrayLayers(desc)         }
 {
     /* Setup resource descriptor by texture descriptor and create hardware resource */
     D3D12_RESOURCE_DESC descD3D;
@@ -216,23 +219,84 @@ void D3D12Texture::UpdateSubresource(
 
 void D3D12Texture::CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap* descriptorHeap)
 {
-    //D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
-
-    #if 0
-    /* Create descriptor heap */
-    D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc;
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
     {
-        srvHeapDesc.Type            = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        srvHeapDesc.NumDescriptors  = 1;
-        srvHeapDesc.Flags           = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        srvHeapDesc.NodeMask        = 0;
-    }
-    hr = device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(descHeap_.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap for texture");
+        srvDesc.Format          = format_;
+        srvDesc.ViewDimension   = D3D12Types::Map(GetType());
 
-    /* Create SRV in the descriptor heap for the texture */
-    device->CreateShaderResourceView(resource_.Get(), srvDesc, descHeap_->GetCPUDescriptorHandleForHeapStart());
-    #endif
+        /* Initialize texture swizzling (R,G,B,A) */
+        srvDesc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(
+            D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0,
+            D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_1,
+            D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_2,
+            D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_3
+        );
+
+        switch (srvDesc.ViewDimension)
+        {
+            case D3D12_SRV_DIMENSION_TEXTURE1D:
+                srvDesc.Texture1D.MostDetailedMip               = 0;
+                srvDesc.Texture1D.MipLevels                     = numMipLevels_;
+                srvDesc.Texture1D.ResourceMinLODClamp           = 0.0f;
+                break;
+
+            case D3D12_SRV_DIMENSION_TEXTURE1DARRAY:
+                srvDesc.Texture1DArray.MostDetailedMip          = 0;
+                srvDesc.Texture1DArray.MipLevels                = numMipLevels_;
+                srvDesc.Texture1DArray.FirstArraySlice          = 0;
+                srvDesc.Texture1DArray.ArraySize                = numArrayLayers_;
+                srvDesc.Texture1DArray.ResourceMinLODClamp      = 0.0f;
+                break;
+
+            case D3D12_SRV_DIMENSION_TEXTURE2D:
+                srvDesc.Texture2D.MostDetailedMip               = 0;
+                srvDesc.Texture2D.MipLevels                     = numMipLevels_;
+                srvDesc.Texture2D.PlaneSlice                    = 0;
+                srvDesc.Texture2D.ResourceMinLODClamp           = 0.0f;
+                break;
+
+            case D3D12_SRV_DIMENSION_TEXTURE2DARRAY:
+                srvDesc.Texture2DArray.MostDetailedMip          = 0;
+                srvDesc.Texture2DArray.MipLevels                = numMipLevels_;
+                srvDesc.Texture2DArray.FirstArraySlice          = 0;
+                srvDesc.Texture2DArray.ArraySize                = numArrayLayers_;
+                srvDesc.Texture2DArray.PlaneSlice               = 0;
+                srvDesc.Texture2DArray.ResourceMinLODClamp      = 0.0f;
+                break;
+
+            case D3D12_SRV_DIMENSION_TEXTURE2DMS:
+                break;
+
+            case D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY:
+                srvDesc.Texture2DMSArray.FirstArraySlice        = 0;
+                srvDesc.Texture2DMSArray.ArraySize              = numArrayLayers_;
+                break;
+
+            case D3D12_SRV_DIMENSION_TEXTURE3D:
+                srvDesc.Texture3D.MostDetailedMip               = 0;
+                srvDesc.Texture3D.MipLevels                     = numMipLevels_;
+                srvDesc.Texture3D.ResourceMinLODClamp           = 0.0f;
+                break;
+
+            case D3D12_SRV_DIMENSION_TEXTURECUBE:
+                srvDesc.TextureCube.MostDetailedMip             = 0;
+                srvDesc.TextureCube.MipLevels                   = numMipLevels_;
+                srvDesc.TextureCube.ResourceMinLODClamp         = 0.0f;
+                break;
+
+            case D3D12_SRV_DIMENSION_TEXTURECUBEARRAY:
+                srvDesc.TextureCubeArray.MostDetailedMip        = 0;
+                srvDesc.TextureCubeArray.MipLevels              = numMipLevels_;
+                srvDesc.TextureCubeArray.First2DArrayFace       = 0;
+                srvDesc.TextureCubeArray.NumCubes               = numArrayLayers_;
+                srvDesc.TextureCubeArray.ResourceMinLODClamp    = 0.0f;
+                break;
+
+            default:
+                break;
+        }
+    }
+    device->CreateShaderResourceView(resource_.Get(), &srvDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 

@@ -237,10 +237,24 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
         auto texWidth   = textureDesc.texture1D.width;
         auto texHeight  = (textureDesc.type == TextureType::Texture1D || textureDesc.type == TextureType::Texture1DArray ? 1 : textureDesc.texture2D.height);
 
+        /* Check if image data conversion is necessary */
+        auto initialData    = imageDesc->data;
+        auto dstTexFormat   = DXGetTextureFormatDesc(textureD3D->GetFormat());
+
+        ByteBuffer tempImageData;
+
+        if (dstTexFormat.format != imageDesc->format || dstTexFormat.dataType != imageDesc->dataType)
+        {
+            /* Convert image data (e.g. from RGB to RGBA) */
+            tempImageData = ConvertImageBuffer(*imageDesc, dstTexFormat.format, dstTexFormat.dataType, GetConfiguration().threadCount);
+            initialData = tempImageData.get();
+        }
+
+        /* Upload image data to subresource */
         D3D12_SUBRESOURCE_DATA subresourceData;
         {
-            subresourceData.pData       = imageDesc->data;
-            subresourceData.RowPitch    = ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType) * texWidth;
+            subresourceData.pData       = initialData;
+            subresourceData.RowPitch    = ImageFormatSize(dstTexFormat.format) * DataTypeSize(dstTexFormat.dataType) * texWidth;
             subresourceData.SlicePitch  = subresourceData.RowPitch * texHeight;
         }
         textureD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, subresourceData);
