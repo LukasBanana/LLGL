@@ -150,8 +150,8 @@ void GLShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const Ver
         if (numVertexAttribs > static_cast<std::size_t>(maxSupportedVertexAttribs))
         {
             throw std::invalid_argument(
-                "failed build input layout, because too many vertex attributes are specified (maximum is " +
-                std::to_string(maxSupportedVertexAttribs) + ")"
+                "failed build input layout, because too many vertex attributes are specified (" +
+                std::to_string(numVertexAttribs) + " is specified, but maximum is " + std::to_string(maxSupportedVertexAttribs) + ")"
             );
         }
     }

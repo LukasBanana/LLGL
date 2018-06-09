@@ -85,7 +85,7 @@ public:
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
-        shaderProgram->QueryReflectionDesc();
+        //shaderProgram->QueryReflectionDesc();
 
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
@@ -140,6 +140,13 @@ public:
                 texDesc.texture2D.width     = texWidth;
                 texDesc.texture2D.height    = texHeight;
             }
+            #if 1//TEST
+            texDesc.type = LLGL::TextureType::TextureCube;
+            texDesc.textureCube.width = 16;
+            texDesc.textureCube.height = 16;
+            imageDesc.format = LLGL::ImageFormat::RGBA;
+            imageDesc.dataSize = 16*16*4*6;
+            #endif
             colorMap = renderer->CreateTexture(texDesc, &imageDesc);
         }
         auto texCreationTime = static_cast<double>(timer->Stop()) / static_cast<double>(timer->GetFrequency());
@@ -159,6 +166,7 @@ public:
 
         // Query texture descriptor to see what is really stored on the GPU
         auto textureDesc = colorMap->QueryDesc();
+        auto textureExtent = colorMap->QueryMipLevelSize(0);
 
         // Create array of textures, which is generally done to bind multiple textures at once, but here it is only for demonstration purposes
         // Note: Not to be confused with an "array texture" which is an arrayed texture type, e.g. LLGL::TextureType::Texture2DArray

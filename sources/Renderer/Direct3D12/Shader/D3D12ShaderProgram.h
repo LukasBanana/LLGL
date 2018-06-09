@@ -58,6 +58,7 @@ class D3D12ShaderProgram : public ShaderProgram
     private:
 
         std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
+        std::vector<std::string>                inputElementNames_; // custom string container to hold valid string pointers.
 
         union
         {

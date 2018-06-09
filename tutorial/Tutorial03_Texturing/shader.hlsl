@@ -1,7 +1,7 @@
 // HLSL texturing shader
 
 
-Texture2D colorMap : register(t0);
+Texture2D colorMap : register(t1);
 SamplerState samplerState : register(s0);
 
 struct InputVS
