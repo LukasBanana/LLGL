@@ -18,6 +18,7 @@
 
 #include "Buffer/D3D12Buffer.h"
 #include "Texture/D3D12Texture.h"
+#include "Texture/D3D12Sampler.h"
 
 #include "RenderState/D3D12Fence.h"
 #include "RenderState/D3D12GraphicsPipeline.h"
@@ -233,7 +234,7 @@ class D3D12RenderSystem : public RenderSystem
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
         HWObjectContainer<D3D12PipelineLayout>      pipelineLayouts_;
         HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
-        //HWObjectContainer<D3D12Sampler>             samplers_;
+        HWObjectContainer<D3D12Sampler>             samplers_;
         HWObjectContainer<D3D12ResourceHeap>        resourceHeaps_;
         //HWObjectContainer<D3D12Query>               queries_;
         HWObjectContainer<D3D12Fence>               fences_;

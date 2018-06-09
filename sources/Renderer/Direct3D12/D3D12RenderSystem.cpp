@@ -292,7 +292,7 @@ void D3D12RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLeve
 
 Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(samplers_, MakeUnique<D3D12Sampler>(desc));
 }
 
 SamplerArray* D3D12RenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
@@ -302,7 +302,7 @@ SamplerArray* D3D12RenderSystem::CreateSamplerArray(std::uint32_t numSamplers, S
 
 void D3D12RenderSystem::Release(Sampler& sampler)
 {
-    //RemoveFromUniqueSet(samplers_, &sampler);
+    RemoveFromUniqueSet(samplers_, &sampler);
 }
 
 void D3D12RenderSystem::Release(SamplerArray& samplerArray)

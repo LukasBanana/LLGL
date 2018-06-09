@@ -136,66 +136,68 @@ D3D11_STENCIL_OP Map(const StencilOp stencilOp)
 
 D3D11_FILTER Map(const SamplerDescriptor& samplerDesc)
 {
-    if (samplerDesc.maxAnisotropy > 1)
-        return D3D11_FILTER_ANISOTROPIC;
-
-    switch (samplerDesc.minFilter)
+    if (samplerDesc.compareEnabled)
     {
-        case SamplerFilter::Nearest:
+        if (samplerDesc.maxAnisotropy > 1)
+            return D3D11_FILTER_COMPARISON_ANISOTROPIC;
+        else if (samplerDesc.minFilter == SamplerFilter::Nearest)
         {
-            switch (samplerDesc.magFilter)
+            if (samplerDesc.magFilter == SamplerFilter::Nearest)
             {
-                case SamplerFilter::Nearest:
-                {
-                    switch (samplerDesc.mipMapFilter)
-                    {
-                        case SamplerFilter::Nearest:    return D3D11_FILTER_MIN_MAG_MIP_POINT;
-                        case SamplerFilter::Linear:     return D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
-                    }
-                }
-                break;
-
-                case SamplerFilter::Linear:
-                {
-                    switch (samplerDesc.mipMapFilter)
-                    {
-                        case SamplerFilter::Nearest:    return D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
-                        case SamplerFilter::Linear:     return D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
-                    }
-                }
-                break;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D11_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR;
+            }
+            else if (samplerDesc.magFilter == SamplerFilter::Linear)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D11_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D11_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR;
             }
         }
-        break;
-
-        case SamplerFilter::Linear:
+        else if (samplerDesc.minFilter == SamplerFilter::Linear)
         {
-            switch (samplerDesc.magFilter)
+            if (samplerDesc.magFilter == SamplerFilter::Nearest)
             {
-                case SamplerFilter::Nearest:
-                {
-                    switch (samplerDesc.mipMapFilter)
-                    {
-                        case SamplerFilter::Nearest:    return D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT;
-                        case SamplerFilter::Linear:     return D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
-                    }
-                }
-                break;
-
-                case SamplerFilter::Linear:
-                {
-                    switch (samplerDesc.mipMapFilter)
-                    {
-                        case SamplerFilter::Nearest:    return D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-                        case SamplerFilter::Linear:     return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-                    }
-                }
-                break;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+            }
+            else if (samplerDesc.magFilter == SamplerFilter::Linear)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
             }
         }
-        break;
     }
-
+    else
+    {
+        if (samplerDesc.maxAnisotropy > 1)
+            return D3D11_FILTER_ANISOTROPIC;
+        else if (samplerDesc.minFilter == SamplerFilter::Nearest)
+        {
+            if (samplerDesc.magFilter == SamplerFilter::Nearest)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D11_FILTER_MIN_MAG_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+            }
+            else if (samplerDesc.magFilter == SamplerFilter::Linear)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
+            }
+        }
+        else if (samplerDesc.minFilter == SamplerFilter::Linear)
+        {
+            if (samplerDesc.magFilter == SamplerFilter::Nearest)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+            }
+            else if (samplerDesc.magFilter == SamplerFilter::Linear)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+            }
+        }
+    }
     DXTypes::MapFailed("SamplerDescriptor", "D3D11_FILTER");
 }
 

@@ -140,7 +140,7 @@ public:
                 texDesc.texture2D.width     = texWidth;
                 texDesc.texture2D.height    = texHeight;
             }
-            #if 1//TEST
+            #if 0//TEST
             texDesc.type = LLGL::TextureType::TextureCube;
             texDesc.textureCube.width = 16;
             texDesc.textureCube.height = 16;

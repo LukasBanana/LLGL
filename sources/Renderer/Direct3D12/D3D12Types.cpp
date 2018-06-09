@@ -131,6 +131,86 @@ D3D12_STENCIL_OP Map(const StencilOp stencilOp)
     DXTypes::MapFailed("StencilOp", "D3D12_STENCIL_OP");
 }
 
+D3D12_FILTER Map(const SamplerDescriptor& samplerDesc)
+{
+    if (samplerDesc.compareEnabled)
+    {
+        if (samplerDesc.maxAnisotropy > 1)
+            return D3D12_FILTER_COMPARISON_ANISOTROPIC;
+        else if (samplerDesc.minFilter == SamplerFilter::Nearest)
+        {
+            if (samplerDesc.magFilter == SamplerFilter::Nearest)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D12_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR;
+            }
+            else if (samplerDesc.magFilter == SamplerFilter::Linear)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D12_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D12_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR;
+            }
+        }
+        else if (samplerDesc.minFilter == SamplerFilter::Linear)
+        {
+            if (samplerDesc.magFilter == SamplerFilter::Nearest)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+            }
+            else if (samplerDesc.magFilter == SamplerFilter::Linear)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+            }
+        }
+    }
+    else
+    {
+        if (samplerDesc.maxAnisotropy > 1)
+            return D3D12_FILTER_ANISOTROPIC;
+        else if (samplerDesc.minFilter == SamplerFilter::Nearest)
+        {
+            if (samplerDesc.magFilter == SamplerFilter::Nearest)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D12_FILTER_MIN_MAG_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+            }
+            else if (samplerDesc.magFilter == SamplerFilter::Linear)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR;
+            }
+        }
+        else if (samplerDesc.minFilter == SamplerFilter::Linear)
+        {
+            if (samplerDesc.magFilter == SamplerFilter::Nearest)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+            }
+            else if (samplerDesc.magFilter == SamplerFilter::Linear)
+            {
+                if (samplerDesc.mipMapFilter == SamplerFilter::Nearest) return D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+                if (samplerDesc.mipMapFilter == SamplerFilter::Linear ) return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+            }
+        }
+    }
+    DXTypes::MapFailed("SamplerDescriptor", "D3D12_FILTER");
+}
+
+D3D12_TEXTURE_ADDRESS_MODE Map(const SamplerAddressMode addressMode)
+{
+    switch (addressMode)
+    {
+        case SamplerAddressMode::Repeat:       return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        case SamplerAddressMode::Mirror:       return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+        case SamplerAddressMode::Clamp:        return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        case SamplerAddressMode::Border:       return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        case SamplerAddressMode::MirrorOnce:   return D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
+    }
+    DXTypes::MapFailed("SamplerAddressMode", "D3D12_TEXTURE_ADDRESS_MODE");
+}
+
 D3D12_LOGIC_OP Map(const LogicOp logicOp)
 {
     switch (logicOp)

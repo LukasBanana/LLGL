@@ -8,6 +8,7 @@
 #include "D3D12ResourceHeap.h"
 //#include "D3D12PipelineLayout.h"
 #include "../Buffer/D3D12ConstantBuffer.h"
+#include "../Texture/D3D12Sampler.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../CheckedCast.h"
@@ -163,7 +164,14 @@ void D3D12ResourceHeap::CreateUnorderedAccessViews(ID3D12Device* device, const R
 
 void D3D12ResourceHeap::CreateSamplers(ID3D12Device* device, const ResourceHeapDescriptor& desc)
 {
-    //TODO
+    ForEachResourceViewOfType(
+        desc, ResourceType::Sampler,
+        [&](Resource& resource)
+        {
+            auto& samplerD3D = LLGL_CAST(D3D12Sampler&, resource);
+            samplerD3D.CreateResourceView(device, heapTypeSampler_.Get());
+        }
+    );
 }
 
 void D3D12ResourceHeap::AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap)
