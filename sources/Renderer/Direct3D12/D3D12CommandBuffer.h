@@ -137,7 +137,8 @@ class D3D12CommandBuffer : public CommandBuffer
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
 
-        D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_;
+        D3D12_CPU_DESCRIPTOR_HANDLE         rtvDescHandle_          = {};
+        D3D12_CPU_DESCRIPTOR_HANDLE         dsvDescHandle_          = {};
 
         ClearValue                          clearValue_;
 

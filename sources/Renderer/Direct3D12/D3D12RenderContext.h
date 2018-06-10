@@ -43,15 +43,17 @@ class D3D12RenderContext : public RenderContext
 
         /* --- Extended functions --- */
 
-        ID3D12Resource* GetCurrentRenderTarget();
+        ID3D12Resource* GetCurrentColorBuffer();
 
-        D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVDescHandle() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForCurrentRTV() const;
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForDSV() const;
 
         void SetCommandBuffer(D3D12CommandBuffer* commandBuffer);
 
         void TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
 
         bool HasMultiSampling() const;
+        bool HasDepthBuffer() const;
 
         void SyncGPU();
 
@@ -63,6 +65,8 @@ class D3D12RenderContext : public RenderContext
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
         void CreateWindowSizeDependentResources(const VideoModeDescriptor& videoModeDesc);
+        void CreateColorBufferRTVs(const VideoModeDescriptor& videoModeDesc);
+        void CreateDepthStencil(const VideoModeDescriptor& videoModeDesc);
         void CreateDeviceResources();
         void UpdateFenceValues();
 
@@ -79,9 +83,14 @@ class D3D12RenderContext : public RenderContext
 
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
         UINT                            rtvDescSize_                    = 0;
+        ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
 
-        ComPtr<ID3D12Resource>          renderTargets_[maxNumBuffers];
-        ComPtr<ID3D12Resource>          renderTargetsMS_[maxNumBuffers];
+        ComPtr<ID3D12Resource>          colorBuffers_[maxNumBuffers];
+        ComPtr<ID3D12Resource>          colorBuffersMS_[maxNumBuffers];
+        DXGI_FORMAT                     colorBufferFormat_              = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+        ComPtr<ID3D12Resource>          depthStencil_;
+        DXGI_FORMAT                     depthStencilFormat_             = DXGI_FORMAT_UNKNOWN;
 
         ComPtr<ID3D12CommandAllocator>  commandAllocs_[maxNumBuffers];
         UINT64                          fenceValues_[maxNumBuffers]     = { 0 };

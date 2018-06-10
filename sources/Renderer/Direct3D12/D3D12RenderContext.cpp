@@ -24,6 +24,12 @@ namespace LLGL
 {
 
 
+#ifdef LLGL_DEBUG
+#   define LLGL_D3D12_SET_NAME(OBJ, NAME) (OBJ)->SetName(L"LLGL::D3D12RenderContext::" NAME)
+#else
+#   define LLGL_D3D12_SET_NAME(OBJ, NAME)
+#endif
+
 D3D12RenderContext::D3D12RenderContext(
     D3D12RenderSystem& renderSystem,
     RenderContextDescriptor desc,
@@ -61,16 +67,15 @@ void D3D12RenderContext::Present()
 
     auto commandList = commandBuffer_->GetCommandList();
 
-    /* Resolve current render target if multi-sampling is used */
     if (HasMultiSampling())
+    {
+        /* Blit multi-sampled texture into back-buffer */
         ResolveRenderTarget(commandList);
+    }
     else
     {
         /* Indicate that the render target will now be used to present when the command list is done executing */
-        TransitionRenderTarget(
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_PRESENT
-        );
+        TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     }
 
     /* Execute pending command list */
@@ -94,21 +99,29 @@ void D3D12RenderContext::Present()
 
 /* --- Extended functions --- */
 
-ID3D12Resource* D3D12RenderContext::GetCurrentRenderTarget()
+ID3D12Resource* D3D12RenderContext::GetCurrentColorBuffer()
 {
     if (HasMultiSampling())
-        return renderTargetsMS_[currentFrame_].Get();
+        return colorBuffersMS_[currentFrame_].Get();
     else
-        return renderTargets_[currentFrame_].Get();
+        return colorBuffers_[currentFrame_].Get();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCurrentRTVDescHandle() const
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForCurrentRTV() const
 {
     return CD3DX12_CPU_DESCRIPTOR_HANDLE(
         rtvDescHeap_->GetCPUDescriptorHandleForHeapStart(),
         (HasMultiSampling() ? (numFrames_ + currentFrame_) : currentFrame_),
         rtvDescSize_
     );
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForDSV() const
+{
+    if (dsvDescHeap_)
+        return dsvDescHeap_->GetCPUDescriptorHandleForHeapStart();
+    else
+        return {};
 }
 
 void D3D12RenderContext::SetCommandBuffer(D3D12CommandBuffer* commandBuffer)
@@ -120,13 +133,18 @@ void D3D12RenderContext::TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefor
 {
     /* Indicate a transition in the render-target usage and synchronize with the resource barrier */
     commandBuffer_->GetCommandList()->ResourceBarrier(
-        1, &CD3DX12_RESOURCE_BARRIER::Transition(renderTargets_[currentFrame_].Get(), stateBefore, stateAfter)
+        1, &CD3DX12_RESOURCE_BARRIER::Transition(colorBuffers_[currentFrame_].Get(), stateBefore, stateAfter)
     );
 }
 
 bool D3D12RenderContext::HasMultiSampling() const
 {
     return (swapChainSamples_ > 1);
+}
+
+bool D3D12RenderContext::HasDepthBuffer() const
+{
+    return (depthStencilFormat_ != DXGI_FORMAT_UNKNOWN);
 }
 
 void D3D12RenderContext::SyncGPU()
@@ -168,11 +186,13 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     /* Release previous window size dependent resources */
     for (UINT i = 0; i < numFrames_; ++i)
     {
-        renderTargets_[i].Reset();
-        renderTargetsMS_[i].Reset();
+        colorBuffers_[i].Reset();
+        colorBuffersMS_[i].Reset();
     }
 
     rtvDescHeap_.Reset();
+    dsvDescHeap_.Reset();
+    depthStencil_.Reset();
 
     /* Get framebuffer size */
     auto framebufferWidth   = videoModeDesc.resolution.width;
@@ -181,7 +201,13 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     if (swapChain_)
     {
         /* Resize swap chain */
-        auto hr = swapChain_->ResizeBuffers(numFrames_, framebufferWidth, framebufferHeight, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+        auto hr = swapChain_->ResizeBuffers(
+            numFrames_,
+            framebufferWidth,
+            framebufferHeight,
+            colorBufferFormat_,
+            0
+        );
 
         if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
         {
@@ -201,51 +227,66 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
         GetSurface().GetNativeHandle(&wndHandle);
 
         DXGI_SWAP_CHAIN_DESC1 swapChainDesc;
-        InitMemory(swapChainDesc);
         {
             swapChainDesc.Width                 = framebufferWidth;
             swapChainDesc.Height                = framebufferHeight;
-            swapChainDesc.Format                = DXGI_FORMAT_B8G8R8A8_UNORM;
-            swapChainDesc.Stereo                = false;
+            swapChainDesc.Format                = colorBufferFormat_;
+            swapChainDesc.Stereo                = FALSE;
             swapChainDesc.SampleDesc.Count      = 1; // always 1 because D3D12 does not allow (directly) multi-sampled swap-chains
             swapChainDesc.SampleDesc.Quality    = 0;
             swapChainDesc.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
             swapChainDesc.BufferCount           = numFrames_;
-            swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-            swapChainDesc.Flags                 = 0;
             swapChainDesc.Scaling               = DXGI_SCALING_NONE;
+            swapChainDesc.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
             swapChainDesc.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
+            swapChainDesc.Flags                 = 0;
         }
         auto swapChain = renderSystem_.CreateDXSwapChain(swapChainDesc, wndHandle.window);
 
         swapChain.As(&swapChain_);
     }
 
+    /* Create color buffer render target views (RTV) */
+    CreateColorBufferRTVs(videoModeDesc);
+
+    /* Create depth-stencil buffer (is used) */
+    if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
+        CreateDepthStencil(videoModeDesc);
+    else
+        depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
+
+    /*
+    All pending GPU work was already finished;
+    now update tracked fence values to the last value signaled
+    */
+    UpdateFenceValues();
+}
+
+void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoModeDesc)
+{
+    auto device = renderSystem_.GetDevice();
+
     /* Create RTV descriptor heap */
     D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
-    InitMemory(descHeapDesc);
     {
-        descHeapDesc.NumDescriptors = (HasMultiSampling() ? numFrames_ * 2 : numFrames_);
         descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+        descHeapDesc.NumDescriptors = (HasMultiSampling() ? numFrames_ * 2 : numFrames_);
         descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        descHeapDesc.NodeMask       = 0;
     }
     rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
 
-    #ifdef LLGL_DEBUG
-    rtvDescHeap_->SetName(L"LLGL::D3D12RenderContext::rtvDescHeap");
-    #endif
-
-    auto device = renderSystem_.GetDevice();
+    LLGL_D3D12_SET_NAME(rtvDescHeap_, L"rtvDescHeap");
 
     rtvDescSize_ = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-    /* Create render targets */
+    /* Create color buffers */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
 
     for (UINT i = 0; i < numFrames_; ++i)
     {
         /* Get render target resource from swap-chain buffer */
-        auto hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(renderTargets_[i].ReleaseAndGetAddressOf()));
+        auto hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(colorBuffers_[i].ReleaseAndGetAddressOf()));
 
         if (FAILED(hr))
         {
@@ -254,11 +295,11 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
         }
 
         /* Create render target view (RTV) */
-        device->CreateRenderTargetView(renderTargets_[i].Get(), nullptr, rtvDescHandle);
+        device->CreateRenderTargetView(colorBuffers_[i].Get(), nullptr, rtvDescHandle);
 
         #ifdef LLGL_DEBUG
-        std::wstring name = L"LLGL::D3D12RenderContext::renderTargets[" + std::to_wstring(i) + L"]";
-        renderTargets_[i]->SetName(name.c_str());
+        std::wstring name = L"LLGL::D3D12RenderContext::colorBuffer" + std::to_wstring(i);
+        colorBuffers_[i]->SetName(name.c_str());
         #endif
 
         rtvDescHandle.Offset(1, rtvDescSize_);
@@ -267,10 +308,10 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     if (HasMultiSampling())
     {
         /* Create multi-sampled render targets */
-        auto texture2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-            DXGI_FORMAT_R8G8B8A8_UNORM,
-            framebufferWidth,
-            framebufferHeight,
+        auto tex2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+            colorBufferFormat_,
+            videoModeDesc.resolution.width,
+            videoModeDesc.resolution.height,
             1, // arraySize
             1, // mipLevels
             swapChainSamples_,
@@ -284,10 +325,10 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
             auto hr = device->CreateCommittedResource(
                 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
                 D3D12_HEAP_FLAG_NONE,
-                &texture2DMSDesc,
+                &tex2DMSDesc,
                 D3D12_RESOURCE_STATE_COMMON,
                 nullptr,
-                IID_PPV_ARGS(renderTargetsMS_[i].ReleaseAndGetAddressOf())
+                IID_PPV_ARGS(colorBuffersMS_[i].ReleaseAndGetAddressOf())
             );
 
             if (FAILED(hr))
@@ -297,17 +338,63 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
             }
 
             /* Create render target view (RTV) */
-            device->CreateRenderTargetView(renderTargetsMS_[i].Get(), nullptr, rtvDescHandle);
+            device->CreateRenderTargetView(colorBuffersMS_[i].Get(), nullptr, rtvDescHandle);
 
             rtvDescHandle.Offset(1, rtvDescSize_);
         }
     }
+}
 
-    /*
-    All pending GPU work was already finished;
-    now update tracked fence values to the last value signaled
-    */
-    UpdateFenceValues();
+void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoModeDesc)
+{
+    auto device = renderSystem_.GetDevice();
+
+    /* Pick-depth stencil format */
+    depthStencilFormat_ = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
+
+    /* Create DSV descriptor heap */
+    D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc;
+    {
+        descHeapDesc.Type           = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        descHeapDesc.NumDescriptors = 1;
+        descHeapDesc.Flags          = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        descHeapDesc.NodeMask       = 0;
+    }
+    dsvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
+
+    LLGL_D3D12_SET_NAME(dsvDescHeap_, L"dsvDescHeap");
+
+    /* Speciy DSV clear value that is most optimized */
+    D3D12_CLEAR_VALUE optimizedClearValue;
+    optimizedClearValue.Format               = depthStencilFormat_;
+    optimizedClearValue.DepthStencil.Depth   = 1.0f;
+    optimizedClearValue.DepthStencil.Stencil = 0;
+
+    /* Create depth-stencil buffer */
+    auto tex2DDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+        depthStencilFormat_,
+        videoModeDesc.resolution.width,
+        videoModeDesc.resolution.height,
+        1, // arraySize
+        1, // mipLevels
+        1,
+        0,
+        (D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
+    );
+
+    auto hr = device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &tex2DDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &optimizedClearValue,
+        IID_PPV_ARGS(depthStencil_.ReleaseAndGetAddressOf())
+    );
+
+    LLGL_D3D12_SET_NAME(depthStencil_, L"depthStencil");
+
+    /* Create depth-stencil view (DSV) */
+    device->CreateDepthStencilView(depthStencil_.Get(), nullptr, dsvDescHeap_->GetCPUDescriptorHandleForHeapStart());
 }
 
 void D3D12RenderContext::CreateDeviceResources()
@@ -346,11 +433,11 @@ void D3D12RenderContext::ResolveRenderTarget(ID3D12GraphicsCommandList* commandL
     D3D12_RESOURCE_BARRIER resourceBarriersBefore[2] =
     {
         CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargets_[currentFrame_].Get(),
+            colorBuffers_[currentFrame_].Get(),
             D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST
         ),
         CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargetsMS_[currentFrame_].Get(),
+            colorBuffersMS_[currentFrame_].Get(),
             D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE
         ),
     };
@@ -358,25 +445,27 @@ void D3D12RenderContext::ResolveRenderTarget(ID3D12GraphicsCommandList* commandL
 
     /* Resolve multi-sampled render targets */
     commandList->ResolveSubresource(
-        renderTargets_[currentFrame_].Get(), 0,
-        renderTargetsMS_[currentFrame_].Get(), 0,
-        DXGI_FORMAT_R8G8B8A8_UNORM
+        colorBuffers_[currentFrame_].Get(), 0,
+        colorBuffersMS_[currentFrame_].Get(), 0,
+        colorBufferFormat_
     );
 
     /* Prepare render-targets for presenting */
     D3D12_RESOURCE_BARRIER resourceBarriersAfter[2] =
     {
         CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargets_[currentFrame_].Get(),
+            colorBuffers_[currentFrame_].Get(),
             D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT
         ),
         CD3DX12_RESOURCE_BARRIER::Transition(
-            renderTargetsMS_[currentFrame_].Get(),
+            colorBuffersMS_[currentFrame_].Get(),
             D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
         ),
     };
     commandList->ResourceBarrier(2, resourceBarriersAfter);
 }
+
+#undef LLGL_D3D12_SET_NAME
 
 
 } // /namespace LLGL

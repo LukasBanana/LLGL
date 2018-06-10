@@ -137,28 +137,34 @@ void D3D12CommandBuffer::SetClearStencil(std::uint32_t stencil)
 
 void D3D12CommandBuffer::Clear(long flags)
 {
-    /* Clear color buffer */
-    if ((flags & ClearFlags::Color) != 0)
-        commandList_->ClearRenderTargetView(rtvDescHandle_, clearValue_.color.Ptr(), 0, nullptr);
-
-    /* Clear depth-stencil buffer */
-    INT dsvClearFlags = 0;
-
-    if ((flags & ClearFlags::Depth) != 0)
-        dsvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
-    if ((flags & ClearFlags::Stencil) != 0)
-        dsvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
-
-    if (dsvClearFlags)
+    if (rtvDescHandle_.ptr != 0)
     {
-        commandList_->ClearDepthStencilView(
-            rtvDescHandle_,
-            static_cast<D3D12_CLEAR_FLAGS>(dsvClearFlags),
-            clearValue_.depth,
-            static_cast<UINT8>(clearValue_.stencil),
-            0,
-            nullptr
-        );
+        /* Clear color buffers */
+        if ((flags & ClearFlags::Color) != 0)
+            commandList_->ClearRenderTargetView(rtvDescHandle_, clearValue_.color.Ptr(), 0, nullptr);
+    }
+
+    if (dsvDescHandle_.ptr != 0)
+    {
+        /* Clear depth-stencil buffer */
+        INT dsvClearFlags = 0;
+
+        if ((flags & ClearFlags::Depth) != 0)
+            dsvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
+        if ((flags & ClearFlags::Stencil) != 0)
+            dsvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
+
+        if (dsvClearFlags)
+        {
+            commandList_->ClearDepthStencilView(
+                dsvDescHandle_,
+                static_cast<D3D12_CLEAR_FLAGS>(dsvClearFlags),
+                clearValue_.depth,
+                static_cast<UINT8>(clearValue_.stencil),
+                0,
+                nullptr
+            );
+        }
     }
 }
 
@@ -405,9 +411,19 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     }
 
     /* Set current back buffer as RTV */
-    rtvDescHandle_ = renderContextD3D.GetCurrentRTVDescHandle();
+    rtvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForCurrentRTV();
+    dsvDescHandle_ = renderContextD3D.GetCPUDescriptorHandleForDSV();
 
-    commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
+    if (dsvDescHandle_.ptr != 0)
+    {
+        /* Set current RTV and DSV */
+        commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, &dsvDescHandle_);
+    }
+    else
+    {
+        /* Set only current RTV */
+        commandList_->OMSetRenderTargets(1, &rtvDescHandle_, FALSE, nullptr);
+    }
 }
 
 void D3D12CommandBuffer::SetScissorRectsWithFramebufferExtent(UINT numScissorRects)

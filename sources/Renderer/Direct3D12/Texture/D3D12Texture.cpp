@@ -221,16 +221,9 @@ void D3D12Texture::CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
     {
-        srvDesc.Format          = format_;
-        srvDesc.ViewDimension   = D3D12Types::Map(GetType());
-
-        /* Initialize texture swizzling (R,G,B,A) */
-        srvDesc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(
-            D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0,
-            D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_1,
-            D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_2,
-            D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_3
-        );
+        srvDesc.Format                  = format_;
+        srvDesc.ViewDimension           = D3D12Types::Map(GetType());
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
         switch (srvDesc.ViewDimension)
         {

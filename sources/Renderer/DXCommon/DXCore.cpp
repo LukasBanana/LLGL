@@ -517,6 +517,21 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
     throw std::runtime_error("failed to map Direct3D signature parameter to VectorType");
 }
 
+DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits)
+{
+    if (depthBits == 32)
+    {
+        if (stencilBits == 8)
+            return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+        else
+            return DXGI_FORMAT_D32_FLOAT;
+    }
+    else if (depthBits == 24 || stencilBits == 8)
+        return DXGI_FORMAT_D24_UNORM_S8_UINT;
+    else
+        return DXGI_FORMAT_D16_UNORM;
+}
+
 
 } // /namespace LLGL
 

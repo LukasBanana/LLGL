@@ -75,6 +75,9 @@ D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format);
 // Returns the vector type for the specified signature parameter type (by its component type and mask).
 VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask);
 
+// Returns a suitable DXGI format for the specified depth-stencil mode.
+DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits);
+
 
 } // /namespace LLGL
 

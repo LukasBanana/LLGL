@@ -126,7 +126,7 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
         texDesc.Height              = videoModeDesc.resolution.height;
         texDesc.MipLevels           = 1;
         texDesc.ArraySize           = 1;
-        texDesc.Format              = PickDepthStencilFormat(videoModeDesc);
+        texDesc.Format              = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
         texDesc.SampleDesc.Count    = swapChainSamples_;
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
@@ -178,21 +178,6 @@ void D3D11RenderContext::ResizeBackBuffer(const VideoModeDescriptor& videoModeDe
         ID3D11RenderTargetView* rtvList[] = { backBuffer_.rtv.Get() };
         context_->OMSetRenderTargets(1, rtvList, backBuffer_.dsv.Get());
     }*/
-}
-
-DXGI_FORMAT D3D11RenderContext::PickDepthStencilFormat(const VideoModeDescriptor& videoMode) const
-{
-    if (videoMode.depthBits == 32)
-    {
-        if (videoMode.stencilBits == 8)
-            return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-        else
-            return DXGI_FORMAT_D32_FLOAT;
-    }
-    else if (videoMode.depthBits == 24 || videoMode.stencilBits == 8)
-        return DXGI_FORMAT_D24_UNORM_S8_UINT;
-    else
-        return DXGI_FORMAT_D16_UNORM;
 }
 
 

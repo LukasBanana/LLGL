@@ -149,6 +149,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color previously set by SetClearColor.
         \remarks To specify the clear values for each buffer type, use the respective "SetClear..." function.
         To clear only a specific render-target color buffer, use the "ClearAttachments" function.
+        Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
         \see ClearFlags
         \see SetClearColor
         \see SetClearDepth
@@ -162,6 +163,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] numAttachments Specifies the number of attachments to clear.
         \param[in] attachments Pointer to the array of attachment clear commands. This must not be null!
         \remarks To clear all color buffers with the same value, use the "Clear" function.
+        Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
         \see Clear
         */
         virtual void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) = 0;

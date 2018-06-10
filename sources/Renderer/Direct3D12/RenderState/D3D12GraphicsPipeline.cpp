@@ -221,6 +221,9 @@ void D3D12GraphicsPipeline::CreatePipelineState(
     stateDesc.StreamOutput.RasterizedStream = 0;
     #endif
 
+    /* Initialize depth-stencil format */
+    stateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
     /* Convert blend state */
     stateDesc.BlendState.AlphaToCoverageEnable  = DXBoolean(desc.blend.alphaToCoverageEnabled);
 

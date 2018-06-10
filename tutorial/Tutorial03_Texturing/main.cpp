@@ -228,10 +228,6 @@ private:
         // Set viewports
         commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
 
-        #if 1//TODO: for D3D12 only
-        commands->SetScissor(LLGL::Scissor{ { 0, 0 }, context->GetVideoMode().resolution });
-        #endif
-
         // Clear color buffer
         commands->Clear(LLGL::ClearFlags::Color);
 
