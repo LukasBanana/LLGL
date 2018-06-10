@@ -211,7 +211,8 @@ void D3D12RenderSystem::Release(BufferArray& bufferArray)
 
 void D3D12RenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    //todo...
+    auto& bufferD3D = LLGL_CAST(D3D12Buffer&, buffer);
+    bufferD3D.UpdateDynamicSubresource(data, static_cast<UINT64>(dataSize), static_cast<UINT64>(offset));
 }
 
 void* D3D12RenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)

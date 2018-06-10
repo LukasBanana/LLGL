@@ -229,14 +229,14 @@ void D3D11Texture::CreateTexture3D(
 
 void D3D11Texture::UpdateSubresource(
     ID3D11DeviceContext*        context,
-    UINT                        mipSlice,
-    UINT                        arraySlice,
+    UINT                        mipLevel,
+    UINT                        arrayLayer,
     const D3D11_BOX&            dstBox,
     const SrcImageDescriptor&   imageDesc,
     std::size_t                 threadCount)
 {
     /* Get destination subresource index */
-    auto dstSubresource = D3D11CalcSubresource(mipSlice, arraySlice, numMipLevels_);
+    auto dstSubresource = D3D11CalcSubresource(mipLevel, arrayLayer, numMipLevels_);
     auto srcPitch       = DataTypeSize(imageDesc.dataType) * ImageFormatSize(imageDesc.format);
 
     /* Check if source image must be converted */

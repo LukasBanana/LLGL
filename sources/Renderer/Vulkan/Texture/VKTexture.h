@@ -38,10 +38,12 @@ class VKTexture : public Texture
         TextureDescriptor QueryDesc() const override;
 
         void CreateImageView(
-            VkDevice device,
-            std::uint32_t baseMipLevel, std::uint32_t numMipLevels,
-            std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers,
-            VkImageView* imageViewRef
+            VkDevice        device,
+            std::uint32_t   baseMipLevel,
+            std::uint32_t   numMipLevels,
+            std::uint32_t   baseArrayLayer,
+            std::uint32_t   numArrayLayers,
+            VkImageView*    imageViewRef
         );
 
         void CreateInternalImageView(VkDevice device);

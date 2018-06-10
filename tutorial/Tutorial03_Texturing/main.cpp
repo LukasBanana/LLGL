@@ -177,7 +177,6 @@ public:
     {
         // Create 1st sampler state with default settings
         LLGL::SamplerDescriptor samplerDesc;
-        samplerDesc.mipMapping = false;
         sampler[0] = renderer->CreateSampler(samplerDesc);
 
         // Create 2nd sampler state with MIP-map bias

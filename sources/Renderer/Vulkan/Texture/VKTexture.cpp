@@ -113,8 +113,12 @@ TextureDescriptor VKTexture::QueryDesc() const
 }
 
 void VKTexture::CreateImageView(
-    VkDevice device, std::uint32_t baseMipLevel, std::uint32_t numMipLevels,
-    std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, VkImageView* imageViewRef)
+    VkDevice        device,
+    std::uint32_t   baseMipLevel,
+    std::uint32_t   numMipLevels,
+    std::uint32_t   baseArrayLayer,
+    std::uint32_t   numArrayLayers,
+    VkImageView*    imageViewRef)
 {
     imageWrapper_.CreateVkImageView(
         device,

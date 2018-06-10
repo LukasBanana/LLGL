@@ -228,14 +228,16 @@ void D3D12Texture::UpdateSubresource(
     for (UINT arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
     {
         /* Update subresource for current array layer */
+        UINT subresourceIndex = D3D12CalcSubresource(0, firstArrayLayer + arrayLayer, 0, numMipLevels_, numArrayLayers_);
+
         UpdateSubresources(
-            commandList,                    // pCmdList
-            resource_.Get(),                // pDestinationResource
-            uploadBuffer.Get(),             // pIntermediate
-            uploadBufferOffset,                              // IntermediateOffset
-            firstArrayLayer + arrayLayer,   // FirstSubresource
-            1,                              // NumSubresources
-            &subresourceData                // pSrcData
+            commandList,        // pCmdList
+            resource_.Get(),    // pDestinationResource
+            uploadBuffer.Get(), // pIntermediate
+            uploadBufferOffset, // IntermediateOffset
+            subresourceIndex,   // FirstSubresource
+            1,                  // NumSubresources
+            &subresourceData    // pSrcData
         );
 
         /* Move to next buffer region */
