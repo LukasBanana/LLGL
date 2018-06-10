@@ -110,6 +110,23 @@ enum class AxisDirection
     ZNeg,       //!< Z- direction.
 };
 
+#if 0//TODO: currently unused
+/**
+\brief Texture component swizzle enumeration.
+\remarks Can be used to change the order of texel components independently of a shader.
+\see TextureSwizzleRGBA
+*/
+enum class TextureSwizzle
+{
+    Zero,   //!< The component is replaced by the constant zero.
+    One,    //!< The component is replaced by the constant one.
+    Red,    //!< The component is replaced by red component.
+    Green,  //!< The component is replaced by green component.
+    Blue,   //!< The component is replaced by blue component.
+    Alpha   //!< The component is replaced by alpha component.
+};
+#endif
+
 /**
 \brief Texture creation flags enumeration.
 \see TextureDescriptor::flags
@@ -183,6 +200,20 @@ struct TextureFlags
 
 
 /* ----- Structures ----- */
+
+#if 0//TODO: currently unused
+/**
+\brief Texture component swizzle structure for red, green, blue, and alpha components.
+\remarks Can be used to change the order of texel components independently of a shader.
+*/
+struct TextureSwizzleRGBA
+{
+    TextureSwizzle r = TextureSwizzle::Red;     //!< Red component swizzle. By default TextureSwizzle::Red.
+    TextureSwizzle g = TextureSwizzle::Green;   //!< Green component swizzle. By default TextureSwizzle::Green.
+    TextureSwizzle b = TextureSwizzle::Blue;    //!< Blue component swizzle. By default TextureSwizzle::Blue.
+    TextureSwizzle a = TextureSwizzle::Alpha;   //!< Alpha component swizzle. By default TextureSwizzle::Alpha.
+};
+#endif
 
 /**
 \brief Texture descriptor structure.

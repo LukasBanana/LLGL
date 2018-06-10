@@ -59,7 +59,7 @@ class D3D12RenderContext : public RenderContext
 
     private:
 
-        static const UINT maxNumBuffers = 3;
+        static const UINT g_maxSwapChainSize = 3;
 
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
@@ -68,35 +68,34 @@ class D3D12RenderContext : public RenderContext
         void CreateColorBufferRTVs(const VideoModeDescriptor& videoModeDesc);
         void CreateDepthStencil(const VideoModeDescriptor& videoModeDesc);
         void CreateDeviceResources();
-        void UpdateFenceValues();
 
         void MoveToNextFrame();
 
         void ResolveRenderTarget(ID3D12GraphicsCommandList* commandList);
 
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
-        D3D12CommandBuffer*             commandBuffer_                  = nullptr;
+        D3D12CommandBuffer*             commandBuffer_                      = nullptr;
 
         ComPtr<IDXGISwapChain3>         swapChain_;
-        UINT                            swapChainInterval_              = 0;
-        UINT                            swapChainSamples_               = 1;
+        UINT                            swapChainInterval_                  = 0;
+        UINT                            swapChainSamples_                   = 1;
 
         ComPtr<ID3D12DescriptorHeap>    rtvDescHeap_;
-        UINT                            rtvDescSize_                    = 0;
+        UINT                            rtvDescSize_                        = 0;
         ComPtr<ID3D12DescriptorHeap>    dsvDescHeap_;
 
-        ComPtr<ID3D12Resource>          colorBuffers_[maxNumBuffers];
-        ComPtr<ID3D12Resource>          colorBuffersMS_[maxNumBuffers];
-        DXGI_FORMAT                     colorBufferFormat_              = DXGI_FORMAT_B8G8R8A8_UNORM;
+        ComPtr<ID3D12Resource>          colorBuffers_[g_maxSwapChainSize];
+        ComPtr<ID3D12Resource>          colorBuffersMS_[g_maxSwapChainSize];
+        DXGI_FORMAT                     colorBufferFormat_                  = DXGI_FORMAT_B8G8R8A8_UNORM;
 
         ComPtr<ID3D12Resource>          depthStencil_;
-        DXGI_FORMAT                     depthStencilFormat_             = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;
 
-        ComPtr<ID3D12CommandAllocator>  commandAllocs_[maxNumBuffers];
-        UINT64                          fenceValues_[maxNumBuffers]     = { 0 };
+        ComPtr<ID3D12CommandAllocator>  commandAllocs_[g_maxSwapChainSize];
+        UINT64                          fenceValues_[g_maxSwapChainSize]    = {};
 
-        UINT                            numFrames_                      = 0;
-        UINT                            currentFrame_                   = 0;
+        UINT                            numFrames_                          = 0;
+        UINT                            currentFrame_                       = 0;
 
 };
 

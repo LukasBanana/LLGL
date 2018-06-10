@@ -45,9 +45,9 @@ D3D12RenderContext::D3D12RenderContext(
     /* Setup surface for the render context */
     SetOrCreateSurface(surface, GetVideoMode(), nullptr);
 
-    /* Create window and device resource */
-    CreateWindowSizeDependentResources(GetVideoMode());
+    /* Create device resources and window dependent resource */
     CreateDeviceResources();
+    CreateWindowSizeDependentResources(GetVideoMode());
 
     /* Initialize v-sync */
     OnSetVsync(desc.vsync);
@@ -183,16 +183,20 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     /* Wait until all previous GPU work is complete */
     SyncGPU();
 
-    /* Release previous window size dependent resources */
+    /* Release previous window size dependent resources, and reset fence values to current value */
     for (UINT i = 0; i < numFrames_; ++i)
     {
         colorBuffers_[i].Reset();
         colorBuffersMS_[i].Reset();
+        fenceValues_[i] = fenceValues_[currentFrame_];
     }
 
+    depthStencil_.Reset();
     rtvDescHeap_.Reset();
     dsvDescHeap_.Reset();
-    depthStencil_.Reset();
+
+    /* Setup swap chain meta data */
+    numFrames_ = std::max(1u, std::min(videoModeDesc.swapChainSize, g_maxSwapChainSize));
 
     /* Get framebuffer size */
     auto framebufferWidth   = videoModeDesc.resolution.width;
@@ -219,9 +223,6 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     }
     else
     {
-        /* Setup swap chain meta data */
-        numFrames_ = videoModeDesc.swapChainSize;
-
         /* Create swap chain for window handle */
         NativeHandle wndHandle;
         GetSurface().GetNativeHandle(&wndHandle);
@@ -249,17 +250,14 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
     /* Create color buffer render target views (RTV) */
     CreateColorBufferRTVs(videoModeDesc);
 
+    /* Update current back buffer index */
+    currentFrame_ = swapChain_->GetCurrentBackBufferIndex();
+
     /* Create depth-stencil buffer (is used) */
     if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
         CreateDepthStencil(videoModeDesc);
     else
         depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
-
-    /*
-    All pending GPU work was already finished;
-    now update tracked fence values to the last value signaled
-    */
-    UpdateFenceValues();
 }
 
 void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoModeDesc)
@@ -277,8 +275,6 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
     rtvDescHeap_ = renderSystem_.CreateDXDescriptorHeap(descHeapDesc);
 
     LLGL_D3D12_SET_NAME(rtvDescHeap_, L"rtvDescHeap");
-
-    rtvDescSize_ = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     /* Create color buffers */
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvDescHandle(rtvDescHeap_->GetCPUDescriptorHandleForHeapStart());
@@ -399,16 +395,12 @@ void D3D12RenderContext::CreateDepthStencil(const VideoModeDescriptor& videoMode
 
 void D3D12RenderContext::CreateDeviceResources()
 {
-    /* Create command allocators */
-    for (UINT i = 0; i < numFrames_; ++i)
-        commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
-}
+    /* Store size of RTV descriptor */
+    rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-void D3D12RenderContext::UpdateFenceValues()
-{
-    /* Update tracked fence values to the last value signaled */
-    for (UINT i = 0; i < numFrames_; ++i)
-        fenceValues_[i] = fenceValues_[currentFrame_];
+    /* Create command allocators */
+    for (UINT i = 0; i < g_maxSwapChainSize; ++i)
+        commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
 }
 
 void D3D12RenderContext::MoveToNextFrame()
