@@ -24,8 +24,12 @@ class D3D12VertexBuffer : public D3D12Buffer
         D3D12VertexBuffer(ID3D12Device* device, const BufferDescriptor& desc);
 
         void UpdateSubresource(
-            ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
-            const void* data, UINT bufferSize, UINT64 offset = 0
+            ID3D12Device*               device,
+            ID3D12GraphicsCommandList*  commandList,
+            ComPtr<ID3D12Resource>&     uploadBuffer,
+            const void*                 data,
+            UINT                        bufferSize,
+            UINT64                      offset = 0
         );
 
         inline const D3D12_VERTEX_BUFFER_VIEW& GetView() const
@@ -34,7 +38,7 @@ class D3D12VertexBuffer : public D3D12Buffer
         }
 
     private:
-        
+
         D3D12_VERTEX_BUFFER_VIEW view_;
 
 };

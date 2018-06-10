@@ -37,13 +37,13 @@ class D3D12ResourceHeap : public ResourceHeap
 
     private:
 
-        void CreateHeapTypeCbvSrvUav(ID3D12Device* device, const ResourceHeapDescriptor& desc);
-        void CreateHeapTypeSampler(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+        D3D12_CPU_DESCRIPTOR_HANDLE CreateHeapTypeCbvSrvUav(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+        D3D12_CPU_DESCRIPTOR_HANDLE CreateHeapTypeSampler(ID3D12Device* device, const ResourceHeapDescriptor& desc);
 
-        void CreateConstantBufferViews(ID3D12Device* device, const ResourceHeapDescriptor& desc);
-        void CreateShaderResourceViews(ID3D12Device* device, const ResourceHeapDescriptor& desc);
-        void CreateUnorderedAccessViews(ID3D12Device* device, const ResourceHeapDescriptor& desc);
-        void CreateSamplers(ID3D12Device* device, const ResourceHeapDescriptor& desc);
+        void CreateConstantBufferViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
+        void CreateShaderResourceViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
+        void CreateUnorderedAccessViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
+        void CreateSamplers(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc);
 
         void AppendDescriptorHeapToArray(ID3D12DescriptorHeap* descriptorHeap);
 

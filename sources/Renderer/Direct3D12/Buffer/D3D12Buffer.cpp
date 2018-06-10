@@ -91,7 +91,7 @@ void D3D12Buffer::CreateResource(ID3D12Device* device, UINT64 bufferSize, D3D12_
         &bufferDesc,
         resourceState, // initial resource state
         nullptr,
-        IID_PPV_ARGS(&resource_)
+        IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf())
     );
 
     DXThrowIfFailed(hr, "failed to create comitted resource for D3D12 hardware buffer");

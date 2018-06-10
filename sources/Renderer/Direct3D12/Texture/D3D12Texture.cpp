@@ -10,6 +10,7 @@
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
 #include "../D3D12Types.h"
+#include <algorithm>
 
 
 namespace LLGL
@@ -37,7 +38,11 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 {
     dst.Dimension           = GetResourceDimension(src.type);
     dst.Alignment           = 0;
+    #if 0//TODO: mipmapping is not supported yet
     dst.MipLevels           = NumMipLevels(src);
+    #else
+    dst.MipLevels           = 1;
+    #endif
     dst.Format              = D3D12Types::Map(src.format);
     dst.SampleDesc.Count    = 1;
     dst.SampleDesc.Quality  = 0;
@@ -86,7 +91,11 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
     Texture         { desc.type                    },
     format_         { D3D12Types::Map(desc.format) },
+    #if 0//TODO: mipmapping not supported yet
     numMipLevels_   { NumMipLevels(desc)           },
+    #else
+    numMipLevels_   { 1                            },
+    #endif
     numArrayLayers_ { NumArrayLayers(desc)         }
 {
     /* Setup resource descriptor by texture descriptor and create hardware resource */
@@ -194,10 +203,17 @@ void D3D12Texture::UpdateSubresource(
     ID3D12Device*               device,
     ID3D12GraphicsCommandList*  commandList,
     ComPtr<ID3D12Resource>&     uploadBuffer,
-    D3D12_SUBRESOURCE_DATA&     subresourceData)
+    D3D12_SUBRESOURCE_DATA&     subresourceData,
+    UINT                        firstArrayLayer,
+    UINT                        numArrayLayers)
 {
+    /* Clamp arguments */
+    firstArrayLayer = std::min(firstArrayLayer, numArrayLayers_ - 1u);
+    numArrayLayers  = std::min(numArrayLayers, numArrayLayers_ - firstArrayLayer);
+
     /* Create the GPU upload buffer */
-    auto uploadBufferSize = GetRequiredIntermediateSize(resource_.Get(), 0, 1);
+    UINT64 uploadBufferSize     = GetRequiredIntermediateSize(resource_.Get(), 0, numArrayLayers);
+    UINT64 uploadBufferOffset   = 0;
 
     auto hr = device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -208,16 +224,36 @@ void D3D12Texture::UpdateSubresource(
         IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())
     );
 
-    UpdateSubresources(commandList, resource_.Get(), uploadBuffer.Get(), 0, 0, 1, &subresourceData);
+    /* Upload subresource for each array layer */
+    for (UINT arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
+    {
+        /* Update subresource for current array layer */
+        UpdateSubresources(
+            commandList,                    // pCmdList
+            resource_.Get(),                // pDestinationResource
+            uploadBuffer.Get(),             // pIntermediate
+            uploadBufferOffset,                              // IntermediateOffset
+            firstArrayLayer + arrayLayer,   // FirstSubresource
+            1,                              // NumSubresources
+            &subresourceData                // pSrcData
+        );
 
+        /* Move to next buffer region */
+        subresourceData.pData = (reinterpret_cast<const std::int8_t*>(subresourceData.pData) + subresourceData.SlicePitch);
+        uploadBufferOffset += subresourceData.SlicePitch;
+    }
+
+    /* Transition texture resource for shader access */
     auto resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        resource_.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
 
     commandList->ResourceBarrier(1, &resourceBarrier);
 }
 
-void D3D12Texture::CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap* descriptorHeap)
+void D3D12Texture::CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle)
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
     {
@@ -289,7 +325,7 @@ void D3D12Texture::CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap
                 break;
         }
     }
-    device->CreateShaderResourceView(resource_.Get(), &srvDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    device->CreateShaderResourceView(resource_.Get(), &srvDesc, cpuDescriptorHandle);
 }
 
 

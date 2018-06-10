@@ -19,6 +19,12 @@ namespace LLGL
 /**
 \brief Base class for all interfaces in LLGL.
 \remarks Sub classes of this interface cannot be copied on its own, since its copy constructor and copy operator are deleted functions.
+\see Display
+\see RenderSystem
+\see RenderSystemChild
+\see ShaderUniform
+\see Surface
+\see Timer
 */
 class LLGL_EXPORT NonCopyable
 {

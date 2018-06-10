@@ -50,6 +50,8 @@ public:
     Tutorial10() :
         Tutorial { L"LLGL Tutorial 10: Instancing" }
     {
+        UpdateAnimation();
+
         // Create all graphics objects
         auto vertexFormats = CreateBuffers();
         shaderProgram = LoadStandardShaderProgram(vertexFormats);
@@ -335,7 +337,8 @@ private:
         settings.animationVector.y = std::cos(animationTime) * animationRadius;
 
         // Upload new data to the constant buffer on the GPU
-        UpdateBuffer(constantBuffer, settings);
+        if (constantBuffer)
+            UpdateBuffer(constantBuffer, settings);
 
         // Allow dynamic shader reloading (for debugging)
         if (input->KeyDown(LLGL::Key::R))
@@ -354,11 +357,11 @@ private:
         // Update scene animationa and user input
         UpdateAnimation();
 
-        static bool multiSamplingEnabled = true;
+        static bool alphaToCoverageEnabled = true;
         if (input->KeyDown(LLGL::Key::Space))
         {
-            multiSamplingEnabled = !multiSamplingEnabled;
-            if (multiSamplingEnabled)
+            alphaToCoverageEnabled = !alphaToCoverageEnabled;
+            if (alphaToCoverageEnabled)
                 std::cout << "Alpha-To-Coverage Enabled" << std::endl;
             else
                 std::cout << "Alpha-To-Coverage Disabled" << std::endl;
@@ -378,7 +381,7 @@ private:
         commands->SetVertexBufferArray(*vertexBufferArray);
 
         // Set graphics pipeline state
-        commands->SetGraphicsPipeline(*pipeline[multiSamplingEnabled ? 1 : 0]);
+        commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
 
         if (pipelineLayout)
         {

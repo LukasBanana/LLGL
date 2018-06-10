@@ -24,14 +24,14 @@ namespace LLGL
 D3D12ResourceHeap::D3D12ResourceHeap(ID3D12Device* device, const ResourceHeapDescriptor& desc)
 {
     /* Create descriptor heaps */
-    CreateHeapTypeCbvSrvUav(device, desc);
-    CreateHeapTypeSampler(device, desc);
+    auto cpuDescHandleCbvSrvUav = CreateHeapTypeCbvSrvUav(device, desc);
+    auto cpuDescHandleSampler   = CreateHeapTypeSampler(device, desc);
 
     /* Create descriptors */
-    CreateConstantBufferViews(device, desc);
-    CreateShaderResourceViews(device, desc);
-    CreateUnorderedAccessViews(device, desc);
-    CreateSamplers(device, desc);
+    CreateConstantBufferViews(device, cpuDescHandleCbvSrvUav, desc);
+    CreateShaderResourceViews(device, cpuDescHandleCbvSrvUav, desc);
+    CreateUnorderedAccessViews(device, cpuDescHandleCbvSrvUav, desc);
+    CreateSamplers(device, cpuDescHandleSampler, desc);
 }
 
 
@@ -44,7 +44,7 @@ static void ErrNullPointerInResource()
     throw std::invalid_argument("cannot create resource heap with null pointer in resource view");
 }
 
-void D3D12ResourceHeap::CreateHeapTypeCbvSrvUav(ID3D12Device* device, const ResourceHeapDescriptor& desc)
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeCbvSrvUav(ID3D12Device* device, const ResourceHeapDescriptor& desc)
 {
     /* Determine number of view descriptors */
     UINT numDescriptors = 0;
@@ -81,12 +81,20 @@ void D3D12ResourceHeap::CreateHeapTypeCbvSrvUav(ID3D12Device* device, const Reso
         auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heapTypeCbvSrvUav_.ReleaseAndGetAddressOf()));
         DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap of type D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV");
 
+        #ifdef LLGL_DEBUG
+        heapTypeCbvSrvUav_->SetName(L"LLGL::D3D12ResourceHeap::heapTypeCbvSrvUav");
+        #endif
+
         /* Store in array for quick access */
         AppendDescriptorHeapToArray(heapTypeCbvSrvUav_.Get());
+
+        return heapTypeCbvSrvUav_->GetCPUDescriptorHandleForHeapStart();
     }
+
+    return {};
 }
 
-void D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Device* device, const ResourceHeapDescriptor& desc)
+D3D12_CPU_DESCRIPTOR_HANDLE D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Device* device, const ResourceHeapDescriptor& desc)
 {
     /* Determine number of samplers descriptors */
     UINT numDescriptors = 0;
@@ -121,9 +129,17 @@ void D3D12ResourceHeap::CreateHeapTypeSampler(ID3D12Device* device, const Resour
         auto hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heapTypeSampler_.ReleaseAndGetAddressOf()));
         DXThrowIfFailed(hr, "failed to create D3D12 descriptor heap of type D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER");
 
+        #ifdef LLGL_DEBUG
+        heapTypeSampler_->SetName(L"LLGL::D3D12ResourceHeap::heapTypeSampler");
+        #endif
+
         /* Store in array for quick access */
         AppendDescriptorHeapToArray(heapTypeSampler_.Get());
+
+        return heapTypeSampler_->GetCPUDescriptorHandleForHeapStart();
     }
+
+    return {};
 }
 
 static void ForEachResourceViewOfType(
@@ -141,43 +157,52 @@ static void ForEachResourceViewOfType(
     }
 }
 
-void D3D12ResourceHeap::CreateConstantBufferViews(ID3D12Device* device, const ResourceHeapDescriptor& desc)
+void D3D12ResourceHeap::CreateConstantBufferViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc)
 {
+    UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
     ForEachResourceViewOfType(
         desc, ResourceType::ConstantBuffer,
         [&](Resource& resource)
         {
             auto& constantBufferD3D = LLGL_CAST(D3D12ConstantBuffer&, resource);
-            constantBufferD3D.CreateResourceView(device, heapTypeCbvSrvUav_.Get());
+            constantBufferD3D.CreateResourceView(device, cpuDescHandle);
+            cpuDescHandle.ptr += cpuDescStride;
         }
     );
 }
 
-void D3D12ResourceHeap::CreateShaderResourceViews(ID3D12Device* device, const ResourceHeapDescriptor& desc)
+void D3D12ResourceHeap::CreateShaderResourceViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc)
 {
+    UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
     ForEachResourceViewOfType(
         desc, ResourceType::Texture,
         [&](Resource& resource)
         {
             auto& textureD3D = LLGL_CAST(D3D12Texture&, resource);
-            textureD3D.CreateResourceView(device, heapTypeCbvSrvUav_.Get());
+            textureD3D.CreateResourceView(device, cpuDescHandle);
+            cpuDescHandle.ptr += cpuDescStride;
         }
     );
 }
 
-void D3D12ResourceHeap::CreateUnorderedAccessViews(ID3D12Device* device, const ResourceHeapDescriptor& desc)
+void D3D12ResourceHeap::CreateUnorderedAccessViews(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc)
 {
     //TODO
 }
 
-void D3D12ResourceHeap::CreateSamplers(ID3D12Device* device, const ResourceHeapDescriptor& desc)
+void D3D12ResourceHeap::CreateSamplers(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE& cpuDescHandle, const ResourceHeapDescriptor& desc)
 {
+    UINT cpuDescStride = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
     ForEachResourceViewOfType(
         desc, ResourceType::Sampler,
         [&](Resource& resource)
         {
             auto& samplerD3D = LLGL_CAST(D3D12Sampler&, resource);
-            samplerD3D.CreateResourceView(device, heapTypeSampler_.Get());
+            samplerD3D.CreateResourceView(device, cpuDescHandle);
+            cpuDescHandle.ptr += cpuDescStride;
         }
     );
 }

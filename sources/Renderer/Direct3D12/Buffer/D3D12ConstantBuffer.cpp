@@ -24,7 +24,7 @@ void D3D12ConstantBuffer::UpdateSubresource(const void* data, UINT bufferSize, U
     UpdateDynamicSubresource(data, bufferSize, offset);
 }
 
-void D3D12ConstantBuffer::CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap* descriptorHeap)
+void D3D12ConstantBuffer::CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle)
 {
     /* Create constant buffer view (CBV) */
     D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc;
@@ -32,7 +32,7 @@ void D3D12ConstantBuffer::CreateResourceView(ID3D12Device* device, ID3D12Descrip
         viewDesc.BufferLocation = GetNative()->GetGPUVirtualAddress();
         viewDesc.SizeInBytes    = bufferSize_;
     }
-    device->CreateConstantBufferView(&viewDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    device->CreateConstantBufferView(&viewDesc, cpuDescriptorHandle);
 }
 
 

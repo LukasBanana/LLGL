@@ -164,6 +164,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
 {
     /* Create buffer and upload data to GPU */
     ComPtr<ID3D12Resource> uploadBuffer;
+
     auto buffer = MakeD3D12Buffer(device_.Get(), commandList_.Get(), uploadBuffer, desc, initialData);
 
     /* Execute upload commands and wait for GPU to finish execution */
@@ -234,8 +235,12 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
 
     if (imageDesc)
     {
-        auto texWidth   = textureDesc.texture1D.width;
-        auto texHeight  = (textureDesc.type == TextureType::Texture1D || textureDesc.type == TextureType::Texture1DArray ? 1 : textureDesc.texture2D.height);
+        /* Get texture dimensions */
+        auto texWidth   = textureDesc.texture2D.width;
+        auto texHeight  = textureDesc.texture2D.height;
+
+        if (textureDesc.type == TextureType::Texture1D || textureDesc.type == TextureType::Texture1DArray)
+            texHeight = 1u;
 
         /* Check if image data conversion is necessary */
         auto initialData    = imageDesc->data;

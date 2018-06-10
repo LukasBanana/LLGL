@@ -42,9 +42,9 @@ class Tutorial02 : public Tutorial
     struct Settings
     {
         Gs::Matrix4f    wvpMatrix;
-        float           tessLevelInner  = 50.0f;
-        float           tessLevelOuter  = 50.0f;
-        float           twist           = 10.0f;
+        float           tessLevelInner  = 5.0f;
+        float           tessLevelOuter  = 5.0f;
+        float           twist           = 0.0f;
         float           _pad0;                  // <-- padding for 16 byte pack alignment of constant buffers
     }
     settings;

@@ -25,12 +25,20 @@ D3D12VertexBuffer::D3D12VertexBuffer(ID3D12Device* device, const BufferDescripto
 }
 
 void D3D12VertexBuffer::UpdateSubresource(
-    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer,
-    const void* data, UINT bufferSize, UINT64 offset)
+    ID3D12Device*               device,
+    ID3D12GraphicsCommandList*  commandList,
+    ComPtr<ID3D12Resource>&     uploadBuffer,
+    const void*                 data,
+    UINT                        bufferSize,
+    UINT64                      offset)
 {
     UpdateStaticSubresource(
-        device, commandList, uploadBuffer,
-        data, bufferSize, offset,
+        device,
+        commandList,
+        uploadBuffer,
+        data,
+        bufferSize,
+        offset,
         D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
     );
 }

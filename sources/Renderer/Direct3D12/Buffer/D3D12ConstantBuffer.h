@@ -25,7 +25,7 @@ class D3D12ConstantBuffer : public D3D12Buffer
 
         void UpdateSubresource(const void* data, UINT bufferSize, UINT64 offset = 0);
 
-        void CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap* descriptorHeap);
+        void CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
 
     private:
 

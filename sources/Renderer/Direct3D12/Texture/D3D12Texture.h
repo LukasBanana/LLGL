@@ -35,10 +35,12 @@ class D3D12Texture : public Texture
             ID3D12Device*               device,
             ID3D12GraphicsCommandList*  commandList,
             ComPtr<ID3D12Resource>&     uploadBuffer,
-            D3D12_SUBRESOURCE_DATA&     subresourceData
+            D3D12_SUBRESOURCE_DATA&     subresourceData,
+            UINT                        firstArrayLayer = 0,
+            UINT                        numArrayLayers  = ~0
         );
 
-        void CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap* descriptorHeap);
+        void CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
 
         //! Returns the native ID3D12Resource object.
         inline ID3D12Resource* GetNative() const

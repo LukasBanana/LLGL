@@ -24,7 +24,7 @@ class D3D12Sampler : public Sampler
 
         D3D12Sampler(const SamplerDescriptor& desc);
 
-        void CreateResourceView(ID3D12Device* device, ID3D12DescriptorHeap* descriptorHeap);
+        void CreateResourceView(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptorHandle);
 
     private:
 

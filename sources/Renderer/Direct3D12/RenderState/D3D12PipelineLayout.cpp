@@ -16,9 +16,10 @@ namespace LLGL
 
 struct D3DRootSignatureContext
 {
-    CD3DX12_ROOT_SIGNATURE_DESC             signatureDesc;
+    CD3DX12_ROOT_SIGNATURE_DESC             signatureDesc       = {};
     std::vector<CD3DX12_ROOT_PARAMETER>     rootParameters;
     std::vector<CD3DX12_DESCRIPTOR_RANGE>   descriptorRanges;
+    std::size_t                             rangeOffset         = 0;
 };
 
 D3D12PipelineLayout::D3D12PipelineLayout(ID3D12Device* device, const PipelineLayoutDescriptor& desc)
@@ -65,13 +66,26 @@ void D3D12PipelineLayout::BuildRootSignatureDesc(
 
 }
 
+static bool AreRangeTypesCompatible(D3D12_DESCRIPTOR_RANGE_TYPE lhs, D3D12_DESCRIPTOR_RANGE_TYPE rhs)
+{
+    /*
+    Samplers are not allowed in the same descriptor table as CBVs, SRVs, and UAVs.
+    see https://msdn.microsoft.com/en-us/library/windows/desktop/dn859382(v=vs.85).aspx
+    */
+    return
+    (
+        ( lhs == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER && rhs == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER ) ||
+        ( lhs != D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER && rhs != D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER )
+    );
+}
+
 void D3D12PipelineLayout::BuildRootParameter(
     D3DRootSignatureContext&        signatureContext,
     D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
     const PipelineLayoutDescriptor& layoutDesc,
     const ResourceType              resourceType)
 {
-    auto firstDescRange = signatureContext.descriptorRanges.size();
+    auto prevRangeCount = signatureContext.descriptorRanges.size();
 
     /*
     Add all binding points for current descriptor range type.
@@ -90,14 +104,33 @@ void D3D12PipelineLayout::BuildRootParameter(
     }
 
     /* Append root parameter (if any ranges are used) */
-    if (signatureContext.descriptorRanges.size() > firstDescRange)
+    if (signatureContext.descriptorRanges.size() > prevRangeCount)
     {
-        CD3DX12_ROOT_PARAMETER rootParam;
+        /* Check if new descriptor ranges can be appended to previous root parameter */
+        if ( !signatureContext.rootParameters.empty() &&
+             signatureContext.rangeOffset < signatureContext.descriptorRanges.size() &&
+             AreRangeTypesCompatible(signatureContext.descriptorRanges[signatureContext.rangeOffset].RangeType, descRangeType))
         {
-            auto numRanges = static_cast<UINT>(signatureContext.descriptorRanges.size() - firstDescRange);
-            rootParam.InitAsDescriptorTable(numRanges, &signatureContext.descriptorRanges[firstDescRange]);
+            /* Re-initialize root parameter as descriptor table with new descriptor ranges */
+            auto& rootParam = signatureContext.rootParameters.back();
+            {
+                auto numRanges = static_cast<UINT>(signatureContext.descriptorRanges.size() - signatureContext.rangeOffset);
+                rootParam.InitAsDescriptorTable(numRanges, &signatureContext.descriptorRanges[signatureContext.rangeOffset]);
+            }
         }
-        signatureContext.rootParameters.push_back(rootParam);
+        else
+        {
+            /* Add new root parameter */
+            CD3DX12_ROOT_PARAMETER rootParam;
+            {
+                auto numRanges = static_cast<UINT>(signatureContext.descriptorRanges.size() - prevRangeCount);
+                rootParam.InitAsDescriptorTable(numRanges, &signatureContext.descriptorRanges[prevRangeCount]);
+            }
+            signatureContext.rootParameters.push_back(rootParam);
+
+            /* Store offset to first descriptor range of the new root parameter */
+            signatureContext.rangeOffset = prevRangeCount;
+        }
     }
 }
 

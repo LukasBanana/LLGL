@@ -220,7 +220,6 @@ int main()
         {
             commands->SetRenderTarget(*context);
             commands->SetViewport(LLGL::Viewport { { 0, 0 }, contextDesc.videoMode.resolution });
-            commands->SetScissor(LLGL::Scissor { { 0, 0 }, contextDesc.videoMode.resolution });
 
             commands->Clear(LLGL::ClearFlags::Color);
 
