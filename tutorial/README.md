@@ -1,10 +1,5 @@
-LLGL Tutorials
-==============
-
-<p align="center"><img src="docu/LLGL_Logo.png"/></p>
-
 Tutorials and Examples
-----------------------
+======================
 
 This repository contains several tutorials and examples which show how to use LLGL.
 Here is a brief overview:
