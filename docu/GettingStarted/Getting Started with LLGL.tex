@@ -283,7 +283,7 @@ Then your project files should be located in the build directory you just set up
 
 \begin{figure}[ht]
 	\centering
-	\includegraphics[width=0.85\textwidth]{cmake_mask1c}
+	\includegraphics[width=0.85\textwidth]{cmake_mask1}
 	\caption{CMake GUI mask to set up the project files for VisualStudio 2015 (MSVC14).}
 	\label{fig:cmake_mask1}
 \end{figure}
@@ -292,6 +292,11 @@ There are several options you can enable or disable to build the project:
 \begin{itemize}
 	\item \texttt{LLGL\_BUILD\_(TESTS/TUTORIALS/RENDERER\_\dots)} \\
 	Specifies whether to include all test, all tutorials, or the repsective renderer projects.
+	
+	\item \texttt{LLGL\_D3D11\_ENABLE\_FEATURELEVEL} \\
+	Specifies which feature level is enabled in the Direct3D 11 renderer.
+	For example, feature level 11.1 requires that your development environment can find the \texttt{<d3d11\_1.h>} header file.
+	Feature level 11.1 enables logic fragment operations, and feature level 11.3 enables conservative rasterization for the D3D11 renderer.
 	
 	\item \texttt{LLGL\_ENABLE\_CHECKED\_CAST} \\
 	Specifies whether to enable or disable dynamic checked casts.
