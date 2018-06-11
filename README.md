@@ -18,13 +18,7 @@ Documentation
 with Introduction, Hello Triangle Tutorial, and Extensibility Example with [GLFW](http://www.glfw.org/)
 - [LLGL Reference Manual](docu/refman.pdf) (PDF)
 - [LLGL Coding Conventions](docu/CodingConventions/Coding%20Conventions%20for%20LLGL.pdf) (PDF)
-
-
-Tutorials and Examples
-----------------------
-
-This repository contains several tutorials and examples which show how to use LLGL.
-For more information see [tutorial/README](tutorial) folder.
+- [Tutorials and Examples](tutorial) (Overview)
 
 
 Progress
