@@ -1,5 +1,5 @@
 External Dependencies to Build LLGL
 -----------------------------------
 
-* `OpenGL/include/` contains the extended OpenGL header files to include `<GL/glext.h>` and `<GL/wglext.h>`.
-* `SPIRV/include/` contains the optional SPIR-V header file to include `<spirv/1.2/spirv.hpp11>`.
+* `OpenGL/include/` contains the extended OpenGL header files to include `<GL/glext.h>` and `<GL/wglext.h>` (only required if `LLGL_GL_INCLUDE_EXTERNAL` is defined).
+* `SPIRV/include/` contains the optional submodule to include `<spirv/1.2/spirv.hpp11>` (only required if `LLGL_ENABLE_SPIRV_REFLECT` is defined).
