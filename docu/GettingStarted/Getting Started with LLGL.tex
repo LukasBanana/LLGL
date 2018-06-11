@@ -306,6 +306,9 @@ There are several options you can enable or disable to build the project:
 	Specifies whether to enable or disable the debug layer.
 	This is a wrapper around the render system and all other render objects for effective debugging.
 	
+	\item \texttt{LLGL\_ENABLE\_SPIRV\_REFLECT} \\
+	Specifies whether to include the submodule \texttt{external/SPIRV} to enable code reflection of SPIR-V shader modules for the Vulkan renderer.
+	
 	\item \texttt{LLGL\_ENABLE\_UTILITY} \\
 	Specifies whether to enable or disable utility functions, which can be used to easily initialize descriptor structures.
 	They must be included separately with the \texttt{LLGL/Utility.h} header file.
