@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../tutorial.h"
+#include <tutorial.h>
 
 
 class Tutorial09 : public Tutorial

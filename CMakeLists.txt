@@ -280,6 +280,7 @@ set(FilesTest7 ${PROJECT_SOURCE_DIR}/test/Test7_Display.cpp)
 set(FilesTest8 ${PROJECT_SOURCE_DIR}/test/Test8_Image.cpp)
 
 # Tutorial files
+file(GLOB FilesTutorialBase ${PROJECT_SOURCE_DIR}/tutorial/TutorialBase/*.*)
 set(FilesTutorial01 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial01_HelloTriangle/main.cpp)
 set(FilesTutorial02 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial02_Tessellation/main.cpp)
 set(FilesTutorial03 ${PROJECT_SOURCE_DIR}/tutorial/Tutorial03_Texturing/main.cpp)
@@ -343,12 +344,18 @@ source_group("Sources\\Direct3D12\\RenderState" FILES ${FilesRendererD3D12Render
 source_group("Sources\\Direct3D12\\Shader" FILES ${FilesRendererD3D12Shader})
 source_group("Sources\\Direct3D12\\Texture" FILES ${FilesRendererD3D12Texture})
 
+source_group("Sources" FILES ${FilesTutorialBase})
+
 
 # === Include directories ===
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 
 include(cmake/FindGaussianLib.cmake)
+
+if(LLGL_BUILD_TUTORIALS)
+    include_directories("${PROJECT_SOURCE_DIR}/tutorial/TutorialBase")
+endif()
 
 
 # === Projects ===
@@ -555,34 +562,41 @@ endif()
 if(GaussLib_INCLUDE_DIR)
     # Test Projects
     if(LLGL_BUILD_TESTS)
-        ADD_TEST_PROJECT(Test1_Window ${FilesTest1} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Test2_OpenGL ${FilesTest2} ${TEST_PROJECT_LIBS})
+        ADD_TEST_PROJECT(Test1_Window "${FilesTest1}" "${TEST_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Test2_OpenGL "${FilesTest2}" "${TEST_PROJECT_LIBS}")
         if(WIN32)
-            ADD_TEST_PROJECT(Test3_Direct3D12 ${FilesTest3} ${TEST_PROJECT_LIBS})
+            ADD_TEST_PROJECT(Test3_Direct3D12 "${FilesTest3}" "${TEST_PROJECT_LIBS}")
         endif()
-        ADD_TEST_PROJECT(Test4_Compute ${FilesTest4} ${TEST_PROJECT_LIBS})
+        ADD_TEST_PROJECT(Test4_Compute "${FilesTest4}" "${TEST_PROJECT_LIBS}")
         if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
-            ADD_TEST_PROJECT(Test5_Vulkan ${FilesTest5} ${TEST_PROJECT_LIBS})
+            ADD_TEST_PROJECT(Test5_Vulkan "${FilesTest5}" "${TEST_PROJECT_LIBS}")
         endif()
-        ADD_TEST_PROJECT(Test6_Performance ${FilesTest6} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Test7_Display ${FilesTest7} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Test8_Image ${FilesTest8} ${TEST_PROJECT_LIBS})
+        ADD_TEST_PROJECT(Test6_Performance "${FilesTest6}" "${TEST_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Test7_Display "${FilesTest7}" "${TEST_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Test8_Image "${FilesTest8}" "${TEST_PROJECT_LIBS}")
     endif()
 
     # Tutorial Projects
     if(LLGL_BUILD_TUTORIALS)
-        ADD_TEST_PROJECT(Tutorial01_HelloTriangle ${FilesTutorial01} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial02_Tessellation ${FilesTutorial02} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial03_Texturing ${FilesTutorial03} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial04_Query ${FilesTutorial04} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial05_RenderTarget ${FilesTutorial05} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial06_MultiContext ${FilesTutorial06} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial07_Array ${FilesTutorial07} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial08_Compute ${FilesTutorial08} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial09_StreamOutput ${FilesTutorial09} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial10_Instancing ${FilesTutorial10} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial11_PostProcessing ${FilesTutorial11} ${TEST_PROJECT_LIBS})
-        ADD_TEST_PROJECT(Tutorial12_MultiRenderer ${FilesTutorial12} ${TEST_PROJECT_LIBS})
+        add_library(TutorialBase STATIC ${FilesTutorialBase})
+		set_target_properties(TutorialBase PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(TutorialBase "${TEST_PROJECT_LIBS}")
+		ENABLE_CXX11(TutorialBase)
+        
+        set(TUTORIAL_PROJECT_LIBS ${TEST_PROJECT_LIBS} TutorialBase)
+        
+        ADD_TEST_PROJECT(Tutorial01_HelloTriangle "${FilesTutorial01}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial02_Tessellation "${FilesTutorial02}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial03_Texturing "${FilesTutorial03}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial04_Query "${FilesTutorial04}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial05_RenderTarget "${FilesTutorial05}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial06_MultiContext "${FilesTutorial06}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial07_Array "${FilesTutorial07}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial08_Compute "${FilesTutorial08}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial09_StreamOutput "${FilesTutorial09}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial10_Instancing "${FilesTutorial10}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial11_PostProcessing "${FilesTutorial11}" "${TUTORIAL_PROJECT_LIBS}")
+        ADD_TEST_PROJECT(Tutorial12_MultiRenderer "${FilesTutorial12}" "${TUTORIAL_PROJECT_LIBS}")
     endif()
 else()
     if(LLGL_BUILD_TESTS)

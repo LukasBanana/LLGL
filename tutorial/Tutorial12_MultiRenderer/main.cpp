@@ -7,7 +7,7 @@
 
 #ifdef _WIN32
 
-#include "../tutorial.h"
+#include <tutorial.h>
 
 #include <LLGL/Platform/NativeHandle.h>
 
@@ -22,6 +22,41 @@ static void CompileShader(LLGL::Shader* shader, const std::string& source, const
     if (!log.empty())
         std::cerr << log << std::endl;
 };
+
+static void RecordCommandBuffer(
+    LLGL::RenderSystem*     renderer,
+    LLGL::RenderContext*    context,
+    LLGL::CommandBufferExt* cmdBuffer,
+    LLGL::GraphicsPipeline* pipeline,
+    LLGL::Buffer*           constantBuffer,
+    LLGL::Buffer*           vertexBuffer,
+    LLGL::Buffer*           indexBuffer,
+    LLGL::Sampler*          sampler,
+    LLGL::Texture*          texture,
+    const Gs::Matrix4f&     wvpMatrix)
+{
+    // Clear color buffer
+    cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth);
+
+    // Update constant buffer
+    renderer->WriteBuffer(*constantBuffer, &wvpMatrix, sizeof(wvpMatrix), 0);
+
+    // Set graphics pipeline and vertex buffer
+    cmdBuffer->SetGraphicsPipeline(*pipeline);
+
+    cmdBuffer->SetVertexBuffer(*vertexBuffer);
+    cmdBuffer->SetIndexBuffer(*indexBuffer);
+
+    cmdBuffer->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
+    cmdBuffer->SetSampler(*sampler, 0, LLGL::StageFlags::FragmentStage);
+    cmdBuffer->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
+
+    // Draw triangulated cube
+    cmdBuffer->DrawIndexed(36, 0);
+
+    // Present the result on the screen
+    context->Present();
+}
 
 int main(int argc, char* argv[])
 {
@@ -84,8 +119,8 @@ int main(int argc, char* argv[])
         mainWindow->Show();
 
         // Vertex data (3 vertices for our triangle)
-        auto cubeVertices = Tutorial::GenerateTexturedCubeVertices();
-        auto cubeIndices = Tutorial::GenerateTexturedCubeTriangleIndices();
+        auto cubeVertices = GenerateTexturedCubeVertices();
+        auto cubeIndices = GenerateTexturedCubeTriangleIndices();
 
         // Vertex format
         LLGL::VertexFormat vertexFormat;
@@ -93,7 +128,7 @@ int main(int argc, char* argv[])
         vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
 
         // Create vertex buffers
-        const auto vertexBufferDesc = LLGL::VertexBufferDesc(sizeof(Tutorial::VertexPositionTexCoord) * cubeVertices.size(), vertexFormat);
+        const auto vertexBufferDesc = LLGL::VertexBufferDesc(sizeof(VertexPos3Tex2) * cubeVertices.size(), vertexFormat);
         auto vertexBufferGL = rendererGL->CreateBuffer(vertexBufferDesc, cubeVertices.data());
         auto vertexBufferD3D = rendererD3D->CreateBuffer(vertexBufferDesc, cubeVertices.data());
 
@@ -103,13 +138,9 @@ int main(int argc, char* argv[])
         auto indexBufferD3D = rendererD3D->CreateBuffer(indexBufferDesc, cubeIndices.data());
 
         // Create constant buffers
-        struct Matrices
-        {
-            Gs::Matrix4f wvpMatrix;
-        }
-        matrices;
+        Gs::Matrix4f wvpMatrix;
 
-        const auto constBufferDesc = LLGL::ConstantBufferDesc(sizeof(matrices));
+        const auto constBufferDesc = LLGL::ConstantBufferDesc(sizeof(wvpMatrix));
         auto constBufferGL = rendererGL->CreateBuffer(constBufferDesc);
         auto constBufferD3D = rendererD3D->CreateBuffer(constBufferDesc);
 
@@ -142,7 +173,7 @@ int main(int argc, char* argv[])
 
             // Bind vertex attribute layout (this is not required for a compute shader program)
             shaderProgram->BuildInputLayout(1, &vertexFormat);
-        
+
             // Link shader program and check for errors
             if (!shaderProgram->LinkShaders())
                 throw std::runtime_error(shaderProgram->QueryInfoLog());
@@ -151,8 +182,8 @@ int main(int argc, char* argv[])
         };
 
         // Create textures
-        auto textureGL = Tutorial::LoadTextureWithRenderer(*rendererGL, "../Media/Textures/Logo_OpenGL.png");
-        auto textureD3D = Tutorial::LoadTextureWithRenderer(*rendererD3D, "../Media/Textures/Logo_Direct3D.png");
+        auto textureGL = LoadTextureWithRenderer(*rendererGL, "../Media/Textures/Logo_OpenGL.png");
+        auto textureD3D = LoadTextureWithRenderer(*rendererD3D, "../Media/Textures/Logo_Direct3D.png");
 
         // Create samplers
         LLGL::SamplerDescriptor samplerDesc;
@@ -223,57 +254,41 @@ int main(int argc, char* argv[])
             // Draw scene for OpenGL
             {
                 // Set transformation matrix for OpenGL
-                matrices.wvpMatrix = projMatrixGL * viewMatrix * worldMatrix;
+                wvpMatrix = projMatrixGL * viewMatrix * worldMatrix;
 
-                // Clear color buffer
-                commandsGL->Clear(LLGL::ClearFlags::ColorDepth);
-
-                // Update constant buffer
-                rendererGL->WriteBuffer(*constBufferGL, &matrices, sizeof(matrices), 0);
-
-                // Set graphics pipeline and vertex buffer
-                commandsGL->SetGraphicsPipeline(*pipelineGL);
-
-                commandsGL->SetVertexBuffer(*vertexBufferGL);
-                commandsGL->SetIndexBuffer(*indexBufferGL);
-
-                commandsGL->SetConstantBuffer(*constBufferGL, 0);
-                commandsGL->SetSampler(*samplerGL, 0);
-                commandsGL->SetTexture(*textureGL, 0);
-
-                // Draw triangulated cube
-                commandsGL->DrawIndexed(36, 0);
-
-                // Present the result on the screen
-                contextGL->Present();
+                // Record command buffer and present result on screen for OpenGL renderer
+                RecordCommandBuffer(
+                    rendererGL.get(),
+                    contextGL,
+                    commandsGL,
+                    pipelineGL,
+                    constBufferGL,
+                    vertexBufferGL,
+                    indexBufferGL,
+                    samplerGL,
+                    textureGL,
+                    wvpMatrix
+                );
             }
 
             // Draw scene for Direct3D
             {
                 // Set transformation matrix for Direct3D
-                matrices.wvpMatrix = projMatrixD3D * viewMatrix * worldMatrix;
+                wvpMatrix = projMatrixD3D * viewMatrix * worldMatrix;
 
-                // Clear color buffer
-                commandsD3D->Clear(LLGL::ClearFlags::ColorDepth);
-
-                // Update constant buffer
-                rendererD3D->WriteBuffer(*constBufferD3D, &matrices, sizeof(matrices), 0);
-
-                // Set graphics pipeline and vertex buffer
-                commandsD3D->SetGraphicsPipeline(*pipelineD3D);
-
-                commandsD3D->SetVertexBuffer(*vertexBufferD3D);
-                commandsD3D->SetIndexBuffer(*indexBufferD3D);
-
-                commandsD3D->SetConstantBuffer(*constBufferD3D, 0, LLGL::StageFlags::VertexStage);
-                commandsD3D->SetSampler(*samplerD3D, 0, LLGL::StageFlags::FragmentStage);
-                commandsD3D->SetTexture(*textureD3D, 0, LLGL::StageFlags::FragmentStage);
-
-                // Draw triangulated cube
-                commandsD3D->DrawIndexed(36, 0);
-
-                // Present the result on the screen
-                contextD3D->Present();
+                // Record command buffer and present result on screen for OpenGL renderer
+                RecordCommandBuffer(
+                    rendererD3D.get(),
+                    contextD3D,
+                    commandsD3D,
+                    pipelineD3D,
+                    constBufferD3D,
+                    vertexBufferD3D,
+                    indexBufferD3D,
+                    samplerD3D,
+                    textureD3D,
+                    wvpMatrix
+                );
             }
         }
     }

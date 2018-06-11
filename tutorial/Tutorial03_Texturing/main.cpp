@@ -5,7 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../tutorial.h"
+#include <tutorial.h>
+#include <stb/stb_image.h>
 
 
 class Tutorial03 : public Tutorial
