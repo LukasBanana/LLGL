@@ -119,27 +119,32 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
     hr = device_->CreateRenderTargetView(backBuffer_.colorBuffer.Get(), nullptr, backBuffer_.rtv.ReleaseAndGetAddressOf());
     DXThrowIfFailed(hr, "failed to create D3D11 render-target-view (RTV) for back buffer");
 
-    /* Create depth stencil texture */
-    D3D11_TEXTURE2D_DESC texDesc;
+    #if 0//TODO: allow to avoid a depth-buffer
+    if (videoModeDesc.depthBits > 0 || videoModeDesc.stencilBits > 0)
+    #endif
     {
-        texDesc.Width               = videoModeDesc.resolution.width;
-        texDesc.Height              = videoModeDesc.resolution.height;
-        texDesc.MipLevels           = 1;
-        texDesc.ArraySize           = 1;
-        texDesc.Format              = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
-        texDesc.SampleDesc.Count    = swapChainSamples_;
-        texDesc.SampleDesc.Quality  = 0;
-        texDesc.Usage               = D3D11_USAGE_DEFAULT;
-        texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
-        texDesc.CPUAccessFlags      = 0;
-        texDesc.MiscFlags           = 0;
-    }
-    hr = device_->CreateTexture2D(&texDesc, nullptr, backBuffer_.depthStencil.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 depth-texture for swap-chain");
+        /* Create depth stencil texture */
+        D3D11_TEXTURE2D_DESC texDesc;
+        {
+            texDesc.Width               = videoModeDesc.resolution.width;
+            texDesc.Height              = videoModeDesc.resolution.height;
+            texDesc.MipLevels           = 1;
+            texDesc.ArraySize           = 1;
+            texDesc.Format              = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
+            texDesc.SampleDesc.Count    = swapChainSamples_;
+            texDesc.SampleDesc.Quality  = 0;
+            texDesc.Usage               = D3D11_USAGE_DEFAULT;
+            texDesc.BindFlags           = D3D11_BIND_DEPTH_STENCIL;
+            texDesc.CPUAccessFlags      = 0;
+            texDesc.MiscFlags           = 0;
+        }
+        hr = device_->CreateTexture2D(&texDesc, nullptr, backBuffer_.depthStencil.ReleaseAndGetAddressOf());
+        DXThrowIfFailed(hr, "failed to create D3D11 depth-texture for swap-chain");
 
-    /* Create DSV */
-    hr = device_->CreateDepthStencilView(backBuffer_.depthStencil.Get(), nullptr, backBuffer_.dsv.ReleaseAndGetAddressOf());
-    DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for swap-chain");
+        /* Create DSV */
+        hr = device_->CreateDepthStencilView(backBuffer_.depthStencil.Get(), nullptr, backBuffer_.dsv.ReleaseAndGetAddressOf());
+        DXThrowIfFailed(hr, "failed to create D3D11 depth-stencil-view (DSV) for swap-chain");
+    }
 }
 
 void D3D11RenderContext::ResizeBackBuffer(const VideoModeDescriptor& videoModeDesc)
