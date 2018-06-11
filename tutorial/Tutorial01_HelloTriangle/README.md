@@ -1,6 +1,8 @@
 Hello Triangle
 ==============
 
+<p align="center"><img src="../Tutorial01_HelloTriangle.png"/></p>
+
 Initialization:
 ---------------
 
