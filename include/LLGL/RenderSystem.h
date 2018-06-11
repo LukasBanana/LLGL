@@ -495,16 +495,6 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         //! Releases the specified Fence object. After this call, the specified object must no longer be used.
         virtual void Release(Fence& fence) = 0;
 
-        #ifdef LLGL_ENABLE_BACKWARDS_COMPATIBILITY
-
-        [[deprecated("use 'LLGL::Texture::QueryDesc' instead")]]
-        TextureDescriptor QueryTextureDescriptor(const Texture& texture);
-
-        [[deprecated("use extended version of 'LLGL::RenderSystem::ReadTexture' instead")]]
-        void ReadTexture(const Texture& texture, int mipLevel, ImageFormat imageFormat, DataType dataType, void* buffer);
-
-        #endif // /LLGL_ENABLE_BACKWARDS_COMPATIBILITY
-
     protected:
 
         RenderSystem() = default;

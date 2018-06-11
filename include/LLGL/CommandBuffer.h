@@ -443,22 +443,6 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) = 0;
 
-        #ifdef LLGL_ENABLE_BACKWARDS_COMPATIBILITY
-
-        [[deprecated("use 'LLGL::CommandBuffer::SetViewports' instead")]]
-        void SetViewportArray(unsigned int numViewports, const Viewport* viewportArray);
-
-        [[deprecated("use 'LLGL::CommandBuffer::SetScissors' instead")]]
-        void SetScissorArray(unsigned int numScissors, const Scissor* scissorArray);
-
-        [[deprecated("use 'LLGL::CommandBuffer::ClearAttachments' instead")]]
-        void ClearTarget(unsigned int targetIndex, const LLGL::ColorRGBAf& color);
-
-        [[deprecated("use 'LLGL::CommandQueue::WaitIdle' instead")]]
-        void SyncGPU();
-
-        #endif // /LLGL_ENABLE_BACKWARDS_COMPATIBILITY
-
     protected:
 
         CommandBuffer() = default;
