@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
         auto timer = LLGL::Timer::Create();
         auto start = std::chrono::system_clock::now();
         #endif
-        
+
         // Enter main loop
         while (window.ProcessEvents())
         {
