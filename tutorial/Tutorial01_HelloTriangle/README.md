@@ -10,7 +10,7 @@ The first thing we need to use LLGL is an instance of the `RenderSystem` interfa
 ```cpp
 std::unique_ptr<LLGL::RenderSystem> myRenderer = LLGL::RenderSystem::Load("Vulkan");
 ```
-This is one of the few functions that takes a string rather than an enumeration to select something. This is because LLGL loads a render system dynamically at runtime from a module (i.e. a shared library, **.dll** on Windows, **.so** on GNU/Linux, and **.dylib** on macOS). On the one hand, we only need to link our project against the **LLGL.lib**, and on the other hand we can catch an exception if our desired Vulkan renderer is not supported on the target platform. In this case we can load another renderer (e.g. "OpenGL") instead of anoying the user with an error message such as "vulkan-1.dll could not be loaded".
+This is one of the few functions that takes a string rather than an enumeration to select something. This is because LLGL loads a render system dynamically at runtime from a module (i.e. a shared library, **.dll** on Windows, **.so** on GNU/Linux, and **.dylib** on macOS). On the one hand, we only need to link our project against **LLGL.lib**, and on the other hand we can catch an exception if our desired Vulkan renderer is not supported on the target platform. In this case we can load another renderer (e.g. "OpenGL") rather than disturbing the user with an error message such as "vulkan-1.dll could not be loaded".
 
 The exception handling to find a suitable render system can look like this:
 ```cpp
@@ -196,6 +196,8 @@ The last thing we have to do is to present the result on the screen:
 ```cpp
 myContext->Present();
 ```
+
+
 That's all folks :-)
 
 
