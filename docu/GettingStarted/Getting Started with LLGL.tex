@@ -121,6 +121,19 @@ void D3D11CommandBuffer::DrawIndexed(std::uint32_t numVertices, std::uint32_t fi
 	Where close access to the hardware is not necessary, \LLGL provides useful simplifications.
 	For example, creating a render context as well as a device context across multiple platforms requires a lot of work when done manually.
 	With \LLGL, this can be done with a few lines of code, but still have plenty of control thanks to the rich descriptor structures.
+	
+	\item \textbf{Debug Layer} \\
+	In debug mode, \LLGL makes use of the native debug layers for the respective renderer.
+	These debug layers, however, vary in quality depending on the API.
+	\LLGL offers another debug layer on top of it that can be easily enabled or disabled.
+	This layer performs state validation, parameter checks, warnings and errors messages before each draw call.
+	This can be a powerful tool to find invalid render states or erronous descriptors.
+	
+	\item \textbf{Extension Support} \\
+	Especially OpenGL is a complex system due to its many extensions.
+	For texturing alone, \LLGL manages eight different extensions.
+	Depending on which extension is available on the host platform, \LLGL uses the most efficient or otherwise emulates the functionality.
+	Even a few vendor specific extensions are supported.
 \end{itemize}
 
 
@@ -198,8 +211,8 @@ This project is still in its early steps. Here is a short overview of its progre
 	The development environment for the MacOS port is \emph{macOS Sierra}.
 	
 	\item \textbf{Linux} \\
-	Kubuntu 16 (GNU/Linux) is used inside a virtual machine by the author to develop the linux port.
-	This platform is partially supported (i.e. anti-aliasing or other features are not complete on this platform).
+	Ubuntu 17 (GNU/Linux) is used by the author to develop the linux port. GNU/Linux is supported for the most part.
+	Both OpenGL and the Vulkan back-end are available.
 \end{itemize}
 	
 \subsection{Renderers}
@@ -211,7 +224,7 @@ This project is still in its early steps. Here is a short overview of its progre
 	Direct3D 11 renderer is almost done (\textasciitilde 85\% complete).
 	
 	\item \textbf{Direct3D 12} \\
-	Direct3D 12 renderer is only in an experimental state (\textasciitilde 5\% complete).
+	Direct3D 12 renderer is only in an experimental state (\textasciitilde 15\% complete).
 	
 	\item \textbf{Vulkan} \\
 	Vulkan renderer is under heavy construction (\textasciitilde 30\% complete).
