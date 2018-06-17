@@ -83,6 +83,7 @@ struct AttachmentDescriptor
     \brief Specifies the resolution of a depth-stencil attachment.
     \remarks If 'texture' is a valid pointer to a Texture object, this member is ignored and the required resolution is determined by that texture object.
     \see texture
+    \todo Move this parameter into "RenderTargetDescriptor" struct, and make use of "GL_ARB_framebuffer_no_attachments" extension.
     */
     Extent2D        resolution;
 

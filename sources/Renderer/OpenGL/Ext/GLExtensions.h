@@ -396,6 +396,16 @@ extern PFNGLPOLYGONOFFSETCLAMPPROC                          glPolygonOffsetClamp
 
 extern PFNGLTEXTUREVIEWPROC                                 glTextureView;
 
+/* GL_ARB_shader_image_load_store */
+
+extern PFNGLBINDIMAGETEXTUREPROC                            glBindImageTexture;
+extern PFNGLMEMORYBARRIERPROC                               glMemoryBarrier;
+
+/* GL_ARB_framebuffer_no_attachments */
+
+extern PFNGLFRAMEBUFFERPARAMETERIPROC                       glFramebufferParameteri;
+extern PFNGLGETFRAMEBUFFERPARAMETERIVPROC                   glGetFramebufferParameteriv;
+
 /* GL_ARB_direct_state_access */
 
 extern PFNGLCREATETRANSFORMFEEDBACKSPROC                    glCreateTransformFeedbacks;
