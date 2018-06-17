@@ -18,7 +18,7 @@
 //#define ENABLE_DEPTH_TEXTURE
 
 // Enable to emulate the clip-control functionality for OpenGL renderer (since 'GL_ARB_clip_control' is not integrated in LLGL yet)
-#define ENABLE_OPENGL_CLIPCONTROL_EMULATION
+//#define ENABLE_OPENGL_INVERT_FRONTFACE
 
 
 #ifndef ENABLE_MULTISAMPLING
@@ -173,10 +173,13 @@ private:
             pipelineDesc.shaderProgram              = shaderProgram;
             pipelineDesc.pipelineLayout             = pipelineLayout;
 
+            // Enable depth test and writing
             pipelineDesc.depth.testEnabled          = true;
             pipelineDesc.depth.writeEnabled         = true;
 
-            //pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
+            // Enable culling of back-facing polygons
+            pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
+
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
@@ -186,6 +189,23 @@ private:
         // Create graphics pipeline for render target
         {
             pipelineDesc.renderTarget = renderTarget;
+
+            #ifndef ENABLE_OPENGL_INVERT_FRONTFACE
+            if (IsOpenGL())
+            {
+                /*
+                Set front face to counter-clock wise (CCW) to be uniform between OpenGL and Direct3D:
+                A huge difference between OpenGL and Direct3D is,
+                that OpenGL stores image data from the lower-left to the upper-right in a texture,
+                but Direct3D stores image data from the upper-left to the lower-right in a texture.
+                The default screen-space origin of LLGL is the upper-left, so when rendering into a texture,
+                we need to render vertically flipped when OpenGL is used.
+                To do this we flip the Y-axis of the world-view-projection matrix and invert the front-facing,
+                so that the face-culling works as excepted.
+                */
+                pipelineDesc.rasterizer.frontCCW = true;
+            }
+            #endif
         }
         pipelines[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
     }
@@ -336,7 +356,7 @@ private:
             commandsExt->SetSampler(*samplerState, 0, shaderStages);
         }
 
-        #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
+        #ifdef ENABLE_OPENGL_INVERT_FRONTFACE
         if (IsOpenGL())
         {
             /*
@@ -367,7 +387,6 @@ private:
         // Update model transformation with render-target projection
         UpdateModelTransform(renderTargetProj, rotation.y, Gs::Vector3f(1));
 
-        #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
         if (IsOpenGL())
         {
             /*
@@ -376,7 +395,6 @@ private:
             */
             Gs::FlipAxis(settings.wvpMatrix, 1);
         }
-        #endif
 
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
@@ -400,7 +418,7 @@ private:
         // Generate MIP-maps again after texture has been written by the render-target
         renderer->GenerateMips(*renderTargetTex);
 
-        #ifdef ENABLE_OPENGL_CLIPCONTROL_EMULATION
+        #ifdef ENABLE_OPENGL_INVERT_FRONTFACE
         if (IsOpenGL())
         {
             // Reset graphics API dependent state
