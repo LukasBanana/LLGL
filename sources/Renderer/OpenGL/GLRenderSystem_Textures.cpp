@@ -112,15 +112,8 @@ void GLRenderSystem::Release(Texture& texture)
 
 void GLRenderSystem::Release(TextureArray& textureArray)
 {
-    /* Notify GL state manager about object release, then release object */
+    /* Release texture array (no notification to state manager necessary, no GL object is destroyed) */
     auto& textureArrayGL = LLGL_CAST(GLTextureArray&, textureArray);
-
-    const auto& texIDs      = textureArrayGL.GetIDArray();
-    const auto& texTargets  = textureArrayGL.GetTargetArray();
-
-    for (std::size_t i = 0, n = texIDs.size(); i < n; ++i)
-        GLStateManager::NotifyTextureRelease(texIDs[i], texTargets[i]);
-
     RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 

@@ -109,12 +109,8 @@ void GLRenderSystem::Release(Sampler& sampler)
 
 void GLRenderSystem::Release(SamplerArray& samplerArray)
 {
-    /* Notify GL state manager about object release, then release object */
+    /* Release sampler array (no notification to state manager necessary, no GL object is destroyed) */
     auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
-
-    for (auto samplerId : samplerArrayGL.GetIDArray())
-        GLStateManager::NotifySamplerRelease(samplerId);
-
     RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
