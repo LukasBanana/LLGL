@@ -29,6 +29,10 @@ class GLRenderTarget : public RenderTarget
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
 
+        std::uint32_t GetNumColorAttachments() const override;
+        bool HasDepthAttachment() const override;
+        bool HasStencilAttachment() const override;
+
         /* ----- Extended Internal Functions ----- */
 
         // Blits the multi-sample framebuffer onto the default framebuffer.
@@ -42,15 +46,16 @@ class GLRenderTarget : public RenderTarget
 
     private:
 
-        void AttachDepthBuffer(const Extent2D& size);
-        void AttachStencilBuffer(const Extent2D& size);
-        void AttachDepthStencilBuffer(const Extent2D& size);
+        void Attach(const AttachmentDescriptor& attachmentDesc);
+        void AttachDepthBuffer();
+        void AttachStencilBuffer();
+        void AttachDepthStencilBuffer();
         void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc);
 
         void InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat);
         GLenum AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLenum attachment);
 
-        void AttachRenderbuffer(const Extent2D& size, GLenum internalFormat, GLenum attachment);
+        void AttachRenderbuffer(GLenum internalFormat, GLenum attachment);
 
         GLenum MakeFramebufferAttachment(GLint internalFormat);
 
@@ -63,7 +68,7 @@ class GLRenderTarget : public RenderTarget
 
         bool HasMultiSampling() const;
         bool HasCustomMultiSampling() const;
-        bool HasDepthAttachment() const;
+        bool HasDepthStencilAttachment() const;
 
         void BlitFramebuffer();
 

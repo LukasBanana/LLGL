@@ -158,7 +158,7 @@ Render target attachments are now defined by the `RenderTargetDescriptor` struct
 
 ***Under Construction***
 
-Dynamic attachment functions may be removed such as `AttachTexture` and `DetachAll`.
+Dynamic attachment functions have been removed such as `AttachTexture` and `DetachAll`.
 
 Before:
 ```cpp
@@ -197,24 +197,24 @@ After:
 // Interface:
 AttachmentType AttachmentDescriptor::type;
 Texture*       AttachmentDescriptor::texture;
-Extent2D       AttachmentDescriptor::resolution;
 uint32_t       AttachmentDescriptor::mipLevel;
 uint32_t       AttachmentDescriptor::layer;
 AxisDirection  AttachmentDescriptor::cubeFace;
 
-vector<AttachmentDescriptor> RenderTargetDescriptor::attachments;
+Extent2D                     RenderTargetDescriptor::resolution;
 MultiSamplingDescriptor      RenderTargetDescriptor::multiSampling;
 bool                         RenderTargetDescriptor::customMultiSampling;
+vector<AttachmentDescriptor> RenderTargetDescriptor::attachments;
 
 // Usage:
 LLGL::RenderTargetDescriptor myRenderTargetDesc;
 
-// Specify depth and color attachments
-LLGL::Extent2D myRenderTargetSize = { 512, 512 };
+// Specify render-target resolution
+myRenderTargetDesc.resolution = { 512, 512 };
 
-myRenderTargetDesc.attachments =
-{
-    LLGL::AttachmentDesc(LLGL::AttachmentType::Depth, myRenderTargetSize),
+// Specify depth and color attachments
+myRenderTargetDesc.attachments = {
+    LLGL::AttachmentDesc(LLGL::AttachmentType::Depth),
     LLGL::AttachmentDesc(LLGL::AttachmentType::Color, myColorTexture)
 };
 

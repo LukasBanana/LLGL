@@ -32,12 +32,6 @@ class GLFramebuffer
         void Bind(const GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
         void Unbind(const GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
 
-        //TODO: remove this as soon as "RenderTarget::Detach" is removed!
-        #if 1
-        // Recreates the internal framebuffer object. This will invalidate the previous buffer ID.
-        void Recreate();
-        #endif
-
         static void AttachTexture1D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel);
         static void AttachTexture2D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel);
         static void AttachTexture3D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel, GLint zOffset);
@@ -48,9 +42,12 @@ class GLFramebuffer
         static void Blit(GLint width, GLint height, GLenum mask);
 
         static void Blit(
-            const Offset2D& srcPos0, const Offset2D& srcPos1,
-            const Offset2D& destPos0, const Offset2D& destPos1,
-            GLenum mask, GLenum filter
+            const Offset2D& srcPos0,
+            const Offset2D& srcPos1,
+            const Offset2D& destPos0,
+            const Offset2D& destPos1,
+            GLenum          mask,
+            GLenum          filter
         );
 
         // Returns the hardware buffer ID.

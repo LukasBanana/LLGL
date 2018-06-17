@@ -250,15 +250,7 @@ private:
         // Create render-target with multi-sampling
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
-            renderTargetDesc.attachments =
-            {
-                #ifdef ENABLE_DEPTH_TEXTURE
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetDepthTex },
-                #else
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetSize },
-                #endif
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
-            };
+            renderTargetDesc.resolution = renderTargetSize;
 
             #ifdef ENABLE_MULTISAMPLING
             renderTargetDesc.multiSampling          = multiSamplingDesc;
@@ -266,6 +258,16 @@ private:
             renderTargetDesc.customMultiSampling    = true;
             #   endif
             #endif
+
+            renderTargetDesc.attachments =
+            {
+                #ifdef ENABLE_DEPTH_TEXTURE
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, renderTargetDepthTex },
+                #else
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth },
+                #endif
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
+            };
         }
         renderTarget = renderer->CreateRenderTarget(renderTargetDesc);
 

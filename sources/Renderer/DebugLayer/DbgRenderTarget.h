@@ -25,28 +25,14 @@ class DbgRenderTarget : public RenderTarget
 
         DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc);
 
+        std::uint32_t GetNumColorAttachments() const override;
+        bool HasDepthAttachment() const override;
+        bool HasStencilAttachment() const override;
+
         // Returns the render target descriptor of this debug layer object.
         inline const RenderTargetDescriptor& GetDesc() const
         {
             return desc_;
-        }
-
-        // Returns the number of color attachments this render target has.
-        inline std::uint32_t GetNumColorAttachments() const
-        {
-            return numColorAttachments_;
-        }
-
-        // Returns true if this render target has a depth attachment.
-        inline bool HasDepthAttachment() const
-        {
-            return hasDepthAttachment_;
-        }
-
-        // Returns true if this render target has a stencil attachment.
-        inline bool HasStencilAttachment() const
-        {
-            return hasStencilAttachment_;
         }
 
         RenderTarget&           instance;
@@ -54,9 +40,6 @@ class DbgRenderTarget : public RenderTarget
     private:
 
         RenderTargetDescriptor  desc_;
-        std::uint32_t           numColorAttachments_    = 0;
-        bool                    hasDepthAttachment_     = false;
-        bool                    hasStencilAttachment_   = false;
 
 };
 

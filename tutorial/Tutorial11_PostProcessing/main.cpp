@@ -242,9 +242,10 @@ public:
         // Create render-target for scene rendering
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
+            renderTargetDesc.resolution = resolution;
             renderTargetDesc.attachments =
             {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, resolution },
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, colorMap },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMap },
             };
@@ -253,8 +254,12 @@ public:
         renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
 
         // Create render-target for horizontal blur pass (no depth buffer needed)
+        resolution.width    /= 4;
+        resolution.height   /= 4;
+
         LLGL::RenderTargetDescriptor renderTargetBlurXDesc;
         {
+            renderTargetBlurXDesc.resolution = resolution;
             renderTargetBlurXDesc.attachments =
             {
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMapBlurX }
@@ -265,6 +270,7 @@ public:
         // Create render-target for vertical blur pass (no depth buffer needed)
         LLGL::RenderTargetDescriptor renderTargetBlurYDesc;
         {
+            renderTargetBlurYDesc.resolution = resolution;
             renderTargetBlurYDesc.attachments =
             {
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMapBlurY }

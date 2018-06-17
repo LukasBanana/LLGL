@@ -17,37 +17,37 @@ namespace LLGL
 
 
 D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc) :
+    RenderTarget  { desc.resolution                  },
     device_       { device                           },
     multiSamples_ { desc.multiSampling.SampleCount() }
 {
-    /* Initialize all attachments */
-    for (const auto& attachment : desc.attachments)
+    #if 0
+    if (desc.attachments.empty())
     {
-        if (attachment.texture)
-        {
-            /* Attach texture */
-            AttachTexture(*attachment.texture, attachment);
-        }
-        else
-        {
-            /* Attach (and create) depth-stencil buffer */
-            switch (attachment.type)
-            {
-                case AttachmentType::Color:
-                    throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
-                    break;
-                case AttachmentType::Depth:
-                    AttachDepthBuffer(attachment.resolution);
-                    break;
-                case AttachmentType::DepthStencil:
-                    AttachDepthStencilBuffer(attachment.resolution);
-                    break;
-                case AttachmentType::Stencil:
-                    AttachStencilBuffer(attachment.resolution);
-                    break;
-            }
-        }
+        //TODO...
     }
+    else
+    #endif
+    {
+        /* Initialize all attachments */
+        for (const auto& attachment : desc.attachments)
+            Attach(attachment);
+    }
+}
+
+std::uint32_t D3D11RenderTarget::GetNumColorAttachments() const
+{
+    return static_cast<std::uint32_t>(renderTargetViews_.size());
+}
+
+bool D3D11RenderTarget::HasDepthAttachment() const
+{
+    return (depthStencilView_.Get() != nullptr);
+}
+
+bool D3D11RenderTarget::HasStencilAttachment() const
+{
+    return (depthStencilView_.Get() != nullptr && depthStencilFormat_ == DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
 /* ----- Extended Internal Functions ----- */
@@ -71,19 +71,47 @@ void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)
  * ======= Private: =======
  */
 
-void D3D11RenderTarget::AttachDepthBuffer(const Extent2D& size)
+void D3D11RenderTarget::Attach(const AttachmentDescriptor& attachmentDesc)
 {
-    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D32_FLOAT);
+    if (auto texture = attachmentDesc.texture)
+    {
+        /* Attach texture */
+        AttachTexture(*texture, attachmentDesc);
+    }
+    else
+    {
+        /* Attach (and create) depth-stencil buffer */
+        switch (attachmentDesc.type)
+        {
+            case AttachmentType::Color:
+                throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
+                break;
+            case AttachmentType::Depth:
+                AttachDepthBuffer();
+                break;
+            case AttachmentType::DepthStencil:
+                AttachDepthStencilBuffer();
+                break;
+            case AttachmentType::Stencil:
+                AttachStencilBuffer();
+                break;
+        }
+    }
 }
 
-void D3D11RenderTarget::AttachStencilBuffer(const Extent2D& size)
+void D3D11RenderTarget::AttachDepthBuffer()
 {
-    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
+    CreateDepthStencilAndDSV(DXGI_FORMAT_D32_FLOAT);
 }
 
-void D3D11RenderTarget::AttachDepthStencilBuffer(const Extent2D& size)
+void D3D11RenderTarget::AttachStencilBuffer()
 {
-    CreateDepthStencilAndDSV(size, DXGI_FORMAT_D24_UNORM_S8_UINT);
+    CreateDepthStencilAndDSV(DXGI_FORMAT_D24_UNORM_S8_UINT);
+}
+
+void D3D11RenderTarget::AttachDepthStencilBuffer()
+{
+    CreateDepthStencilAndDSV(DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
 static void FillViewDescForTexture1D(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
@@ -168,7 +196,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
 {
     /* Get D3D texture object and apply resolution for MIP-map level */
     auto& textureD3D = LLGL_CAST(D3D11Texture&, texture);
-    ApplyMipResolution(texture, attachmentDesc.mipLevel);
+    ValidateMipResolution(texture, attachmentDesc.mipLevel);
 
     /* Initialize RTV descriptor with attachment procedure and create RTV */
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
@@ -268,21 +296,19 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
     }
 }
 
-void D3D11RenderTarget::CreateDepthStencilAndDSV(const Extent2D& size, DXGI_FORMAT format)
+void D3D11RenderTarget::CreateDepthStencilAndDSV(DXGI_FORMAT format)
 {
+    depthStencilFormat_ = format;
     HRESULT hr = 0;
-
-    /* Apply size to render target resolution, and create depth-stencil */
-    ApplyResolution(size);
 
     /* Create depth stencil texture */
     D3D11_TEXTURE2D_DESC texDesc;
     {
-        texDesc.Width               = size.width;
-        texDesc.Height              = size.height;
+        texDesc.Width               = GetResolution().width;
+        texDesc.Height              = GetResolution().height;
         texDesc.MipLevels           = 1;
         texDesc.ArraySize           = 1;
-        texDesc.Format              = format;
+        texDesc.Format              = depthStencilFormat_;
         texDesc.SampleDesc.Count    = std::max(1u, multiSamples_);
         texDesc.SampleDesc.Quality  = 0;
         texDesc.Usage               = D3D11_USAGE_DEFAULT;
