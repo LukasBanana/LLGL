@@ -23,11 +23,14 @@ class GLFramebuffer
 
     public:
 
+        GLFramebuffer() = default;
+        ~GLFramebuffer();
+
         GLFramebuffer(const GLFramebuffer&) = delete;
         GLFramebuffer& operator = (const GLFramebuffer&) = delete;
 
-        GLFramebuffer() = default;
-        ~GLFramebuffer();
+        GLFramebuffer(GLFramebuffer&& rhs);
+        GLFramebuffer& operator = (GLFramebuffer&& rhs);
 
         void GenFramebuffer();
         void DeleteFramebuffer();

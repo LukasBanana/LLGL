@@ -20,6 +20,23 @@ GLFramebuffer::~GLFramebuffer()
     DeleteFramebuffer();
 }
 
+GLFramebuffer::GLFramebuffer(GLFramebuffer&& rhs) :
+    id_ { rhs.id_ }
+{
+    rhs.id_ = 0;
+}
+
+GLFramebuffer& GLFramebuffer::operator = (GLFramebuffer&& rhs)
+{
+    if (id_ != rhs.id_)
+    {
+        DeleteFramebuffer();
+        id_ = rhs.id_;
+        rhs.id_ = 0;
+    }
+    return *this;
+}
+
 void GLFramebuffer::GenFramebuffer()
 {
     DeleteFramebuffer();

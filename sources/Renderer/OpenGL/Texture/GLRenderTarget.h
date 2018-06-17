@@ -77,22 +77,22 @@ class GLRenderTarget : public RenderTarget
 
         /* === Members === */
 
-        GLFramebuffer                                   framebuffer_;   // primary FBO
-        GLFramebuffer                                   framebufferMS_; // secondary FBO for multi-sampling
+        GLFramebuffer               framebuffer_;   // primary FBO
+        GLFramebuffer               framebufferMS_; // secondary FBO for multi-sampling
 
-        GLRenderbuffer                                  renderbuffer_;
+        GLRenderbuffer              renderbuffer_;
 
         /*
         For multi-sampled render targets we also need a renderbuffer for each attached texture.
         Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
         which is only supported since OpenGL 3.2+, but renderbuffers are supported since OpenGL 3.0+.
         */
-        std::vector<std::unique_ptr<GLRenderbuffer>>    renderbuffersMS_;
+        std::vector<GLRenderbuffer> renderbuffersMS_;
 
-        std::vector<GLenum>                             colorAttachments_;
+        std::vector<GLenum>         colorAttachments_;
 
-        GLsizei                                         multiSamples_           = 0;
-        GLbitfield                                      blitMask_               = 0;
+        GLsizei                     multiSamples_       = 0;
+        GLbitfield                  blitMask_           = 0;
 
 };
 

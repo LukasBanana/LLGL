@@ -376,15 +376,14 @@ void GLRenderTarget::CreateRenderbuffersMS(const GLenum* internalFormats)
 
 void GLRenderTarget::CreateRenderbufferMS(GLenum attachment, GLenum internalFormat)
 {
-    auto renderbuffer = MakeUnique<GLRenderbuffer>();
+    GLRenderbuffer renderbuffer;
+    renderbuffer.GenRenderbuffer();
     {
-        renderbuffer->GenRenderbuffer();
-
         /* Setup renderbuffer storage by texture's internal format */
-        InitRenderbufferStorage(*renderbuffer, internalFormat);
+        InitRenderbufferStorage(renderbuffer, internalFormat);
 
         /* Attach renderbuffer to multi-sample framebuffer */
-        GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer->GetID());
+        GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer.GetID());
     }
     renderbuffersMS_.emplace_back(std::move(renderbuffer));
 }
