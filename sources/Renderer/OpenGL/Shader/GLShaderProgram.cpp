@@ -32,6 +32,7 @@ GLShaderProgram::GLShaderProgram() :
 GLShaderProgram::~GLShaderProgram()
 {
     glDeleteProgram(id_);
+    GLStateManager::active->NotifyShaderProgramRelease(id_);
 }
 
 void GLShaderProgram::AttachShader(Shader& shader)

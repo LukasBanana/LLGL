@@ -108,6 +108,8 @@ class GLStateManager
 
         void BindVertexArray(GLuint vertexArray);
 
+        void NotifyVertexArrayRelease(GLuint vertexArray);
+
         /**
         \brief Binds the specified GL_ELEMENT_ARRAY_BUFFER (i.e. index buffer) to the next VAO (or the current one).
         \see BindVertexArray
@@ -119,7 +121,7 @@ class GLStateManager
 
         void BindBuffer(const GLBuffer& buffer);
 
-        static void NotifyBufferRelease(GLuint buffer, GLBufferTarget target);
+        void NotifyBufferRelease(GLuint buffer, GLBufferTarget target);
 
         /* ----- Framebuffer ----- */
 
@@ -128,13 +130,13 @@ class GLStateManager
         void PushBoundFramebuffer(GLFramebufferTarget target);
         void PopBoundFramebuffer();
 
-        static void NotifyFramebufferRelease(GLuint framebuffer);
+        void NotifyFramebufferRelease(GLuint framebuffer);
 
         /* ----- Renderbuffer ----- */
 
         void BindRenderbuffer(GLuint renderbuffer);
 
-        static void NotifyRenderbufferRelease(GLuint renderbuffer);
+        void NotifyRenderbufferRelease(GLuint renderbuffer);
 
         /* ----- Texture ----- */
 
@@ -151,14 +153,14 @@ class GLStateManager
 
         void BindTexture(const GLTexture& texture);
 
-        static void NotifyTextureRelease(GLuint texture, GLTextureTarget target);
+        void NotifyTextureRelease(GLuint texture, GLTextureTarget target);
 
         /* ----- Sampler ----- */
 
         void BindSampler(GLuint layer, GLuint sampler);
         void BindSamplers(GLuint first, GLsizei count, const GLuint* samplers);
 
-        static void NotifySamplerRelease(GLuint sampler);
+        void NotifySamplerRelease(GLuint sampler);
 
         /* ----- Shader Program ----- */
 
@@ -167,7 +169,7 @@ class GLStateManager
         void PushShaderProgram();
         void PopShaderProgram();
 
-        static void NotifyShaderProgramRelease(GLuint program);
+        void NotifyShaderProgramRelease(GLuint program);
 
     private:
 

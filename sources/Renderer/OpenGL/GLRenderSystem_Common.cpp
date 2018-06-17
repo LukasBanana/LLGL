@@ -101,15 +101,12 @@ SamplerArray* GLRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Samp
 
 void GLRenderSystem::Release(Sampler& sampler)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
-    GLStateManager::NotifySamplerRelease(samplerGL.GetID());
     RemoveFromUniqueSet(samplers_, &sampler);
 }
 
 void GLRenderSystem::Release(SamplerArray& samplerArray)
 {
-    /* Release sampler array (no notification to state manager necessary, no GL object is destroyed) */
     auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
     RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
@@ -178,9 +175,7 @@ void GLRenderSystem::Release(Shader& shader)
 
 void GLRenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
-    GLStateManager::NotifyShaderProgramRelease(shaderProgramGL.GetID());
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 

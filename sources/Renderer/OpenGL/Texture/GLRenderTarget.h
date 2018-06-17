@@ -28,7 +28,6 @@ class GLRenderTarget : public RenderTarget
     public:
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
-        ~GLRenderTarget();
 
         std::uint32_t GetNumColorAttachments() const override;
         bool HasDepthAttachment() const override;

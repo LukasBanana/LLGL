@@ -31,6 +31,7 @@ void GLFramebuffer::DeleteFramebuffer()
     if (id_ != 0)
     {
         glDeleteFramebuffers(1, &id_);
+        GLStateManager::active->NotifyFramebufferRelease(id_);
         id_ = 0;
     }
 }

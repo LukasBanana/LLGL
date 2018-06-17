@@ -726,6 +726,11 @@ void GLStateManager::BindVertexArray(GLuint vertexArray)
     }
 }
 
+void GLStateManager::NotifyVertexArrayRelease(GLuint vertexArray)
+{
+    InvalidateBoundGLObject(vertexArrayState_.boundVertexArray, vertexArray);
+}
+
 void GLStateManager::BindElementArrayBufferToVAO(GLuint buffer)
 {
     /* Always store buffer ID to bind the index buffer the next time "BindVertexArray" is called */
@@ -763,8 +768,7 @@ void GLStateManager::BindBuffer(const GLBuffer& buffer)
 void GLStateManager::NotifyBufferRelease(GLuint buffer, GLBufferTarget target)
 {
     auto targetIdx = static_cast<std::size_t>(target);
-    for (auto stateMngr : g_GLStateManagerList)
-        InvalidateBoundGLObject(stateMngr->bufferState_.boundBuffers[targetIdx], buffer);
+    InvalidateBoundGLObject(bufferState_.boundBuffers[targetIdx], buffer);
 }
 
 /* ----- Framebuffer ----- */
@@ -801,11 +805,8 @@ void GLStateManager::PopBoundFramebuffer()
 
 void GLStateManager::NotifyFramebufferRelease(GLuint framebuffer)
 {
-    for (auto stateMngr : g_GLStateManagerList)
-    {
-        for (auto& boundFramebuffer : stateMngr->framebufferState_.boundFramebuffers)
-            InvalidateBoundGLObject(boundFramebuffer, framebuffer);
-    }
+    for (auto& boundFramebuffer : framebufferState_.boundFramebuffers)
+        InvalidateBoundGLObject(boundFramebuffer, framebuffer);
 }
 
 /* ----- Renderbuffer ----- */
@@ -821,8 +822,7 @@ void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
 
 void GLStateManager::NotifyRenderbufferRelease(GLuint renderbuffer)
 {
-    for (auto stateMngr : g_GLStateManagerList)
-        InvalidateBoundGLObject(stateMngr->renderbufferState_.boundRenderbuffer, renderbuffer);
+    InvalidateBoundGLObject(renderbufferState_.boundRenderbuffer, renderbuffer);
 }
 
 /* ----- Texture ----- */
@@ -942,12 +942,8 @@ void GLStateManager::BindTexture(const GLTexture& texture)
 void GLStateManager::NotifyTextureRelease(GLuint texture, GLTextureTarget target)
 {
     auto targetIdx = static_cast<std::size_t>(target);
-
-    for (auto stateMngr : g_GLStateManagerList)
-    {
-        for (auto& layer : stateMngr->textureState_.layers)
-            InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
-    }
+    for (auto& layer : textureState_.layers)
+        InvalidateBoundGLObject(layer.boundTextures[targetIdx], texture);
 }
 
 /* ----- Sampler ----- */
@@ -988,11 +984,8 @@ void GLStateManager::BindSamplers(GLuint first, GLsizei count, const GLuint* sam
 
 void GLStateManager::NotifySamplerRelease(GLuint sampler)
 {
-    for (auto stateMngr : g_GLStateManagerList)
-    {
-        for (auto& boundSampler : stateMngr->samplerState_.boundSamplers)
-            InvalidateBoundGLObject(boundSampler, sampler);
-    }
+    for (auto& boundSampler : samplerState_.boundSamplers)
+        InvalidateBoundGLObject(boundSampler, sampler);
 }
 
 /* ----- Shader binding ----- */
@@ -1019,8 +1012,7 @@ void GLStateManager::PopShaderProgram()
 
 void GLStateManager::NotifyShaderProgramRelease(GLuint program)
 {
-    for (auto stateMngr : g_GLStateManagerList)
-        InvalidateBoundGLObject(stateMngr->shaderState_.boundProgram, program);
+    InvalidateBoundGLObject(shaderState_.boundProgram, program);
 }
 
 

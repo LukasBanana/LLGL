@@ -36,6 +36,7 @@ GLTexture::GLTexture(const TextureType type) :
 GLTexture::~GLTexture()
 {
     glDeleteTextures(1, &id_);
+    GLStateManager::active->NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
 }
 
 static GLenum GLGetTextureParamTarget(const TextureType type)

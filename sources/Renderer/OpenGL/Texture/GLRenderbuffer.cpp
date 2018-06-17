@@ -47,6 +47,7 @@ void GLRenderbuffer::DeleteRenderbuffer()
     if (id_ != 0)
     {
         glDeleteRenderbuffers(1, &id_);
+        GLStateManager::active->NotifyRenderbufferRelease(id_);
         id_ = 0;
     }
 }

@@ -78,20 +78,6 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
         CreateFramebufferWithAttachments(desc);
 }
 
-GLRenderTarget::~GLRenderTarget()
-{
-    /* Notify GL state manager about object releases */
-    GLStateManager::NotifyFramebufferRelease(framebuffer_.GetID());
-
-    if (framebufferMS_)
-        GLStateManager::NotifyFramebufferRelease(framebufferMS_.GetID());
-
-    if (renderbuffer_)
-        GLStateManager::NotifyRenderbufferRelease(renderbuffer_.GetID());
-
-    //TODO: renderbuffersMS_
-}
-
 std::uint32_t GLRenderTarget::GetNumColorAttachments() const
 {
     return static_cast<std::uint32_t>(colorAttachments_.size());
