@@ -40,16 +40,6 @@ static void ErrTooManyColorAttachments(std::size_t numColorAttchments)
     );
 }
 
-static void ErrOnIncompleteFramebuffer(const GLenum status, const char* info)
-{
-    GLThrowIfFailed(status, GL_FRAMEBUFFER_COMPLETE, info);
-}
-
-static GLenum GetFramebufferStatus()
-{
-    return glCheckFramebufferStatus(GL_FRAMEBUFFER);
-}
-
 static void ValidateFramebufferStatus(const char* info)
 {
     auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -81,9 +71,6 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
     RenderTarget  { desc.resolution                                        },
     multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) }
 {
-    if (HasMultiSampling() && !desc.customMultiSampling)
-        framebufferMS_ = MakeUnique<GLFramebuffer>();
-
     if (desc.attachments.empty())
         CreateFramebufferWithNoAttachments(desc);
     else
@@ -171,6 +158,10 @@ const GLFramebuffer& GLRenderTarget::GetFramebuffer() const
 
 void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescriptor& desc)
 {
+    /* Create secondary FBO if standard multi-sampling is enabled */
+    if (HasMultiSampling() && !desc.customMultiSampling)
+        framebufferMS_ = MakeUnique<GLFramebuffer>();
+
     /* Determine number of color attachments */
     GLenum internalFormats[g_maxFramebufferAttachments];
     auto numColorAttachments = CountColorAttachments(desc.attachments);
@@ -195,8 +186,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
         }
 
         /* Validate framebuffer status */
-        auto status = GetFramebufferStatus();
-        ErrOnIncompleteFramebuffer(status, "color attachment to framebuffer object (FBO) failed");
+        ValidateFramebufferStatus("color attachment to framebuffer object (FBO) failed");
     }
 
     /* Create renderbuffers for multi-sampled render-target */
@@ -216,14 +206,39 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
 
 void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescriptor& desc)
 {
+    #ifdef GL_ARB_framebuffer_no_attachments
     if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
     {
-        //TODO...
+        /* Set default framebuffer parameters */
+        framebuffer_.FramebufferParameters(
+            static_cast<GLint>(desc.resolution.width),
+            static_cast<GLint>(desc.resolution.height),
+            1,
+            static_cast<GLint>(multiSamples_),
+            0
+        );
     }
     else
+    #endif // /GL_ARB_framebuffer_no_attachments
     {
-        //TODO...
+        /* Bind primary FBO */
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebuffer_.GetID());
+
+        /* Create dummy renderbuffer attachment */
+        renderbuffer_ = MakeUnique<GLRenderbuffer>();
+        renderbuffer_->Storage(
+            GL_RED,
+            static_cast<GLsizei>(desc.resolution.width),
+            static_cast<GLsizei>(desc.resolution.height),
+            multiSamples_
+        );
+
+        /* Attach dummy renderbuffer to first color attachment slot */
+        framebuffer_.AttachRenderbuffer(GL_COLOR_ATTACHMENT0, renderbuffer_->GetID());
     }
+
+    /* Validate framebuffer status */
+    ValidateFramebufferStatus("initializing default parameters for framebuffer object (FBO) failed");
 }
 
 void GLRenderTarget::AttachAllTextures(const std::vector<AttachmentDescriptor>& attachmentDescs, GLenum* internalFormats)
@@ -355,8 +370,7 @@ void GLRenderTarget::CreateRenderbuffersMS(const GLenum* internalFormats)
     SetDrawBuffers();
 
     /* Validate framebuffer status */
-    auto status = GetFramebufferStatus();
-    ErrOnIncompleteFramebuffer(status, "color attachments to multi-sample framebuffer object (FBO) failed");
+    ValidateFramebufferStatus("color attachments to multi-sample framebuffer object (FBO) failed");
 }
 
 void GLRenderTarget::CreateRenderbufferMS(GLenum attachment, GLenum internalFormat)

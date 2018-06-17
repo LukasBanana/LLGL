@@ -6,6 +6,7 @@
  */
 
 #include "GLFramebuffer.h"
+#include "../../GLCommon/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 
@@ -26,7 +27,7 @@ GLFramebuffer::~GLFramebuffer()
 
 void GLFramebuffer::Bind(const GLFramebufferTarget target) const
 {
-    GLStateManager::active->BindFramebuffer(target, id_);
+    GLStateManager::active->BindFramebuffer(target, GetID());
 }
 
 void GLFramebuffer::Unbind(const GLFramebufferTarget target) const
@@ -81,6 +82,28 @@ void GLFramebuffer::Blit(
         destPos0.x, destPos0.y, destPos1.x, destPos1.y,
         mask, filter
     );
+}
+
+bool GLFramebuffer::FramebufferParameters(
+    GLint width,
+    GLint height,
+    GLint layers,
+    GLint samples,
+    GLint fixedSampleLocations)
+{
+    #ifdef GL_ARB_framebuffer_no_attachments
+    if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
+    {
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, GetID());
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, layers);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, samples);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, fixedSampleLocations);
+        return true;
+    }
+    #endif // /GL_ARB_framebuffer_no_attachments
+    return false;
 }
 
 

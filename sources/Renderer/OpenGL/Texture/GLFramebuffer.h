@@ -50,6 +50,15 @@ class GLFramebuffer
             GLenum          filter
         );
 
+        // Sets the default framebuffer parameters and return true on success, otherwise the "GL_ARB_framebuffer_no_attachments" extension is not supported.
+        bool FramebufferParameters(
+            GLint width,
+            GLint height,
+            GLint layers,
+            GLint samples,
+            GLint fixedSampleLocations
+        );
+
         // Returns the hardware buffer ID.
         inline GLuint GetID() const
         {
