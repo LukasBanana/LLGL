@@ -15,14 +15,24 @@ namespace LLGL
 {
 
 
-GLFramebuffer::GLFramebuffer()
+GLFramebuffer::~GLFramebuffer()
 {
+    DeleteFramebuffer();
+}
+
+void GLFramebuffer::GenFramebuffer()
+{
+    DeleteFramebuffer();
     glGenFramebuffers(1, &id_);
 }
 
-GLFramebuffer::~GLFramebuffer()
+void GLFramebuffer::DeleteFramebuffer()
 {
-    glDeleteFramebuffers(1, &id_);
+    if (id_ != 0)
+    {
+        glDeleteFramebuffers(1, &id_);
+        id_ = 0;
+    }
 }
 
 void GLFramebuffer::Bind(const GLFramebufferTarget target) const

@@ -28,6 +28,7 @@ class GLRenderTarget : public RenderTarget
     public:
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
+        ~GLRenderTarget();
 
         std::uint32_t GetNumColorAttachments() const override;
         bool HasDepthAttachment() const override;
@@ -77,12 +78,10 @@ class GLRenderTarget : public RenderTarget
 
         /* === Members === */
 
-        GLFramebuffer                                   framebuffer_;
+        GLFramebuffer                                   framebuffer_;   // primary FBO
+        GLFramebuffer                                   framebufferMS_; // secondary FBO for multi-sampling
 
-        std::unique_ptr<GLRenderbuffer>                 renderbuffer_;
-
-        // Multi-sampled framebuffer; required since we cannot directly draw into a texture when using multi-sampling.
-        std::unique_ptr<GLFramebuffer>                  framebufferMS_;
+        GLRenderbuffer                                  renderbuffer_;
 
         /*
         For multi-sampled render targets we also need a renderbuffer for each attached texture.

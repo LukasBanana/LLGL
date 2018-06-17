@@ -134,6 +134,8 @@ class GLStateManager
 
         void BindRenderbuffer(GLuint renderbuffer);
 
+        static void NotifyRenderbufferRelease(GLuint renderbuffer);
+
         /* ----- Texture ----- */
 
         static GLTextureTarget GetTextureTarget(const TextureType type);

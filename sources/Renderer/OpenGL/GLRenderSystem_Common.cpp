@@ -140,9 +140,8 @@ RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& d
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)
 {
-    /* Notify GL state manager about object release, then release object */
+    /* Release render target (GLRenderTarget destructor notifies GL state manager about object releases) */
     auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
-    GLStateManager::NotifyFramebufferRelease(renderTargetGL.GetFramebuffer().GetID());
     RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 

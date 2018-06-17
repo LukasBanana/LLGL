@@ -71,10 +71,25 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
     RenderTarget  { desc.resolution                                        },
     multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) }
 {
+    framebuffer_.GenFramebuffer();
     if (desc.attachments.empty())
         CreateFramebufferWithNoAttachments(desc);
     else
         CreateFramebufferWithAttachments(desc);
+}
+
+GLRenderTarget::~GLRenderTarget()
+{
+    /* Notify GL state manager about object releases */
+    GLStateManager::NotifyFramebufferRelease(framebuffer_.GetID());
+
+    if (framebufferMS_)
+        GLStateManager::NotifyFramebufferRelease(framebufferMS_.GetID());
+
+    if (renderbuffer_)
+        GLStateManager::NotifyRenderbufferRelease(renderbuffer_.GetID());
+
+    //TODO: renderbuffersMS_
 }
 
 std::uint32_t GLRenderTarget::GetNumColorAttachments() const
@@ -113,7 +128,7 @@ void GLRenderTarget::BlitOntoFramebuffer()
     if (framebufferMS_ && !colorAttachments_.empty())
     {
         framebuffer_.Bind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
-        framebufferMS_->Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
+        framebufferMS_.Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
 
         for (auto attachment : colorAttachments_)
         {
@@ -122,7 +137,7 @@ void GLRenderTarget::BlitOntoFramebuffer()
             BlitFramebuffer();
         }
 
-        framebufferMS_->Unbind(GLFramebufferTarget::READ_FRAMEBUFFER);
+        framebufferMS_.Unbind(GLFramebufferTarget::READ_FRAMEBUFFER);
         framebuffer_.Unbind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
     }
 }
@@ -148,7 +163,7 @@ void GLRenderTarget::BlitOntoScreen(std::size_t colorAttachmentIndex)
 
 const GLFramebuffer& GLRenderTarget::GetFramebuffer() const
 {
-    return (framebufferMS_ != nullptr ? *framebufferMS_ : framebuffer_);
+    return (framebufferMS_.Valid() ? framebufferMS_ : framebuffer_);
 }
 
 
@@ -160,7 +175,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
 {
     /* Create secondary FBO if standard multi-sampling is enabled */
     if (HasMultiSampling() && !desc.customMultiSampling)
-        framebufferMS_ = MakeUnique<GLFramebuffer>();
+        framebufferMS_.GenFramebuffer();
 
     /* Determine number of color attachments */
     GLenum internalFormats[g_maxFramebufferAttachments];
@@ -193,7 +208,7 @@ void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescript
     if (framebufferMS_)
     {
         /* Bind multi-sampled FBO */
-        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebufferMS_->GetID());
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebufferMS_.GetID());
         {
             /* Create depth-stencil attachmnets */
             AttachAllDepthStencilBuffers(desc.attachments);
@@ -225,8 +240,8 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescri
         GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebuffer_.GetID());
 
         /* Create dummy renderbuffer attachment */
-        renderbuffer_ = MakeUnique<GLRenderbuffer>();
-        renderbuffer_->Storage(
+        renderbuffer_.GenRenderbuffer();
+        renderbuffer_.Storage(
             GL_RED,
             static_cast<GLsizei>(desc.resolution.width),
             static_cast<GLsizei>(desc.resolution.height),
@@ -234,7 +249,7 @@ void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescri
         );
 
         /* Attach dummy renderbuffer to first color attachment slot */
-        framebuffer_.AttachRenderbuffer(GL_COLOR_ATTACHMENT0, renderbuffer_->GetID());
+        framebuffer_.AttachRenderbuffer(GL_COLOR_ATTACHMENT0, renderbuffer_.GetID());
     }
 
     /* Validate framebuffer status */
@@ -377,6 +392,8 @@ void GLRenderTarget::CreateRenderbufferMS(GLenum attachment, GLenum internalForm
 {
     auto renderbuffer = MakeUnique<GLRenderbuffer>();
     {
+        renderbuffer->GenRenderbuffer();
+
         /* Setup renderbuffer storage by texture's internal format */
         InitRenderbufferStorage(*renderbuffer, internalFormat);
 
@@ -398,16 +415,16 @@ void GLRenderTarget::InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenu
 
 void GLRenderTarget::CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum attachment)
 {
-    if (renderbuffer_ == nullptr)
+    if (!renderbuffer_)
     {
         /* Create renderbuffer for depth-stencil attachment */
-        renderbuffer_ = MakeUnique<GLRenderbuffer>();
+        renderbuffer_.GenRenderbuffer();
 
         /* Setup renderbuffer storage */
-        InitRenderbufferStorage(*renderbuffer_, internalFormat);
+        InitRenderbufferStorage(renderbuffer_, internalFormat);
 
         /* Attach renderbuffer to framebuffer (or multi-sample framebuffer if multi-sampling is used) */
-        GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer_->GetID());
+        GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer_.GetID());
     }
     else
         ErrDepthAttachmentFailed();
@@ -468,7 +485,7 @@ bool GLRenderTarget::HasMultiSampling() const
 
 bool GLRenderTarget::HasCustomMultiSampling() const
 {
-    return (framebufferMS_ == nullptr);
+    return (framebufferMS_.Valid());
 }
 
 bool GLRenderTarget::HasDepthStencilAttachment() const

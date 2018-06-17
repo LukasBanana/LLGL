@@ -26,8 +26,11 @@ class GLFramebuffer
         GLFramebuffer(const GLFramebuffer&) = delete;
         GLFramebuffer& operator = (const GLFramebuffer&) = delete;
 
-        GLFramebuffer();
+        GLFramebuffer() = default;
         ~GLFramebuffer();
+
+        void GenFramebuffer();
+        void DeleteFramebuffer();
 
         void Bind(const GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
         void Unbind(const GLFramebufferTarget target = GLFramebufferTarget::FRAMEBUFFER) const;
@@ -63,6 +66,18 @@ class GLFramebuffer
         inline GLuint GetID() const
         {
             return id_;
+        }
+
+        // Returns true if this framebuffer object has a valid ID.
+        inline bool Valid() const
+        {
+            return (GetID() != 0);
+        }
+
+        // Equivalent to Valid().
+        inline operator bool () const
+        {
+            return Valid();
         }
 
     private:

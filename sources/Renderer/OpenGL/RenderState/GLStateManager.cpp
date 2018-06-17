@@ -819,6 +819,12 @@ void GLStateManager::BindRenderbuffer(GLuint renderbuffer)
     }
 }
 
+void GLStateManager::NotifyRenderbufferRelease(GLuint renderbuffer)
+{
+    for (auto stateMngr : g_GLStateManagerList)
+        InvalidateBoundGLObject(stateMngr->renderbufferState_.boundRenderbuffer, renderbuffer);
+}
+
 /* ----- Texture ----- */
 
 GLTextureTarget GLStateManager::GetTextureTarget(const TextureType type)
