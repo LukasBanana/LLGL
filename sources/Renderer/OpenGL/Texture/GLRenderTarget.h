@@ -46,25 +46,28 @@ class GLRenderTarget : public RenderTarget
 
     private:
 
-        void Attach(const AttachmentDescriptor& attachmentDesc);
+        void CreateFramebufferWithAttachments(const RenderTargetDescriptor& desc);
+        void CreateFramebufferWithNoAttachments(const RenderTargetDescriptor& desc);
+
+        void AttachAllTextures(const std::vector<AttachmentDescriptor>& attachmentDescs, GLenum* internalFormats);
+        void AttachAllDepthStencilBuffers(const std::vector<AttachmentDescriptor>& attachmentDescs);
+
         void AttachDepthBuffer();
         void AttachStencilBuffer();
         void AttachDepthStencilBuffer();
-        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc);
+        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc, GLenum& internalFormat);
 
         void InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat);
-        GLenum AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLenum attachment);
 
-        void AttachRenderbuffer(GLenum internalFormat, GLenum attachment);
+        void CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum attachment);
 
-        GLenum MakeFramebufferAttachment(GLint internalFormat);
+        GLenum MakeFramebufferAttachment(GLenum internalFormat);
+
+        void CreateRenderbuffersMS(const GLenum* internalFormats);
+        void CreateRenderbufferMS(GLenum attachment, GLenum internalFormat);
 
         // Sets the draw buffers for the currently bound FBO.
         void SetDrawBuffers();
-
-        void ErrOnIncompleteFramebuffer(const GLenum status, const char* info);
-
-        void CreateOnceFramebufferMS();
 
         bool HasMultiSampling() const;
         bool HasCustomMultiSampling() const;

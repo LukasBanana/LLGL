@@ -24,25 +24,12 @@ GLRenderbuffer::~GLRenderbuffer()
     glDeleteRenderbuffers(1, &id_);
 }
 
-void GLRenderbuffer::Bind() const
-{
-    GLStateManager::active->BindRenderbuffer(id_);
-}
-
-void GLRenderbuffer::Unbind() const
-{
-    GLStateManager::active->BindRenderbuffer(0);
-}
-
-void GLRenderbuffer::Recreate()
-{
-    /* Delete previous renderbuffer and create a new one */
-    glDeleteRenderbuffers(1, &id_);
-    glGenRenderbuffers(1, &id_);
-}
-
 void GLRenderbuffer::Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
+    /* Bind renderbuffer */
+    GLStateManager::active->BindRenderbuffer(id_);
+
+    /* Initialize renderbuffer storage */
     if (samples > 1)
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, internalFormat, width, height);
     else

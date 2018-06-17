@@ -19,31 +19,75 @@ namespace LLGL
 {
 
 
+/*
+ * Internals
+ */
+
+static const std::size_t g_maxFramebufferAttachments = 32;
+
 [[noreturn]]
 static void ErrDepthAttachmentFailed()
 {
     throw std::runtime_error("attachment to render target failed, because render target already has a depth-stencil buffer");
 }
 
+[[noreturn]]
+static void ErrTooManyColorAttachments(std::size_t numColorAttchments)
+{
+    throw std::runtime_error(
+        "too many color attachments for render target (" +
+        std::to_string(numColorAttchments) + " is specified, but limit is " +  std::to_string(g_maxFramebufferAttachments) + ")"
+    );
+}
+
+static void ErrOnIncompleteFramebuffer(const GLenum status, const char* info)
+{
+    GLThrowIfFailed(status, GL_FRAMEBUFFER_COMPLETE, info);
+}
+
+static GLenum GetFramebufferStatus()
+{
+    return glCheckFramebufferStatus(GL_FRAMEBUFFER);
+}
+
+static void ValidateFramebufferStatus(const char* info)
+{
+    auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLThrowIfFailed(status, GL_FRAMEBUFFER_COMPLETE, info);
+}
+
+static std::size_t CountColorAttachments(const std::vector<AttachmentDescriptor>& attachmentDescs)
+{
+    std::size_t numColorAttachments = 0;
+
+    for (const auto& attachmentDesc : attachmentDescs)
+    {
+        if (attachmentDesc.type == AttachmentType::Color)
+            ++numColorAttachments;
+    }
+
+    if (numColorAttachments > g_maxFramebufferAttachments)
+        ErrTooManyColorAttachments(g_maxFramebufferAttachments);
+
+    return numColorAttachments;
+}
+
+
+/*
+ * GLRenderTarget class
+ */
+
 GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
     RenderTarget  { desc.resolution                                        },
     multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) }
 {
     if (HasMultiSampling() && !desc.customMultiSampling)
-        CreateOnceFramebufferMS();
+        framebufferMS_ = MakeUnique<GLFramebuffer>();
 
-    #if 0
     if (desc.attachments.empty())
-    {
-        //TODO...
-    }
+        CreateFramebufferWithNoAttachments(desc);
     else
-    #endif
-    {
-        /* Initialize all attachments */
-        for (const auto& attachment : desc.attachments)
-            Attach(attachment);
-    }
+        CreateFramebufferWithAttachments(desc);
 }
 
 std::uint32_t GLRenderTarget::GetNumColorAttachments() const
@@ -79,7 +123,7 @@ multi-sample framebuffer (read) into the main framebuffer (draw)
 */
 void GLRenderTarget::BlitOntoFramebuffer()
 {
-    if (framebufferMS_)
+    if (framebufferMS_ && !colorAttachments_.empty())
     {
         framebuffer_.Bind(GLFramebufferTarget::DRAW_FRAMEBUFFER);
         framebufferMS_->Bind(GLFramebufferTarget::READ_FRAMEBUFFER);
@@ -125,55 +169,119 @@ const GLFramebuffer& GLRenderTarget::GetFramebuffer() const
  * ======= Private: =======
  */
 
-void GLRenderTarget::Attach(const AttachmentDescriptor& attachmentDesc)
+void GLRenderTarget::CreateFramebufferWithAttachments(const RenderTargetDescriptor& desc)
 {
-    if (auto texture = attachmentDesc.texture)
+    /* Determine number of color attachments */
+    GLenum internalFormats[g_maxFramebufferAttachments];
+    auto numColorAttachments = CountColorAttachments(desc.attachments);
+
+    /* Reserve storage for color attachment slots */
+    colorAttachments_.reserve(numColorAttachments);
+
+    /* Bind primary FBO */
+    GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebuffer_.GetID());
     {
-        /* Attach texture as color attachment */
-        AttachTexture(*texture, attachmentDesc);
+        if (framebufferMS_)
+        {
+            /* Only attach textures (renderbuffers are only attached to multi-sampled FBO) */
+            AttachAllTextures(desc.attachments, internalFormats);
+        }
+        else
+        {
+            /* Attach all depth-stencil buffers and textures if multi-sampling is disabled */
+            AttachAllDepthStencilBuffers(desc.attachments);
+            AttachAllTextures(desc.attachments, internalFormats);
+            SetDrawBuffers();
+        }
+
+        /* Validate framebuffer status */
+        auto status = GetFramebufferStatus();
+        ErrOnIncompleteFramebuffer(status, "color attachment to framebuffer object (FBO) failed");
+    }
+
+    /* Create renderbuffers for multi-sampled render-target */
+    if (framebufferMS_)
+    {
+        /* Bind multi-sampled FBO */
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, framebufferMS_->GetID());
+        {
+            /* Create depth-stencil attachmnets */
+            AttachAllDepthStencilBuffers(desc.attachments);
+
+            /* Create all renderbuffers as storage source for multi-sampled render target */
+            CreateRenderbuffersMS(internalFormats);
+        }
+    }
+}
+
+void GLRenderTarget::CreateFramebufferWithNoAttachments(const RenderTargetDescriptor& desc)
+{
+    if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
+    {
+        //TODO...
     }
     else
     {
-        /* Attach (and create) depth-stencil buffer */
-        switch (attachmentDesc.type)
+        //TODO...
+    }
+}
+
+void GLRenderTarget::AttachAllTextures(const std::vector<AttachmentDescriptor>& attachmentDescs, GLenum* internalFormats)
+{
+    std::size_t colorAttachmentIndex = 0;
+
+    for (const auto& attachmentDesc : attachmentDescs)
+    {
+        if (auto texture = attachmentDesc.texture)
         {
-            case AttachmentType::Color:
-                throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
-                break;
-            case AttachmentType::Depth:
-                AttachDepthBuffer();
-                break;
-            case AttachmentType::DepthStencil:
-                AttachDepthStencilBuffer();
-                break;
-            case AttachmentType::Stencil:
-                AttachStencilBuffer();
-                break;
+            /* Attach texture as color attachment */
+            AttachTexture(*texture, attachmentDesc, internalFormats[colorAttachmentIndex++]);
+        }
+    }
+}
+
+void GLRenderTarget::AttachAllDepthStencilBuffers(const std::vector<AttachmentDescriptor>& attachmentDescs)
+{
+    for (const auto& attachmentDesc : attachmentDescs)
+    {
+        if (attachmentDesc.texture == nullptr)
+        {
+            /* Attach (and create) depth-stencil buffer */
+            switch (attachmentDesc.type)
+            {
+                case AttachmentType::Color:
+                    throw std::invalid_argument("cannot have color attachment in render target without a valid texture");
+                    break;
+                case AttachmentType::Depth:
+                    AttachDepthBuffer();
+                    break;
+                case AttachmentType::DepthStencil:
+                    AttachDepthStencilBuffer();
+                    break;
+                case AttachmentType::Stencil:
+                    AttachStencilBuffer();
+                    break;
+            }
         }
     }
 }
 
 void GLRenderTarget::AttachDepthBuffer()
 {
-    AttachRenderbuffer(GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
+    CreateAndAttachRenderbuffer(GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
     blitMask_ |= (GL_DEPTH_BUFFER_BIT);
 }
 
 void GLRenderTarget::AttachStencilBuffer()
 {
-    AttachRenderbuffer(GL_STENCIL_INDEX, GL_STENCIL_ATTACHMENT);
+    CreateAndAttachRenderbuffer(GL_STENCIL_INDEX, GL_STENCIL_ATTACHMENT);
     blitMask_ |= (GL_STENCIL_BUFFER_BIT);
 }
 
 void GLRenderTarget::AttachDepthStencilBuffer()
 {
-    AttachRenderbuffer(GL_DEPTH_STENCIL, GL_DEPTH_STENCIL_ATTACHMENT);
+    CreateAndAttachRenderbuffer(GL_DEPTH_STENCIL, GL_DEPTH_STENCIL_ATTACHMENT);
     blitMask_ |= (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-}
-
-static GLenum GetFramebufferStatus()
-{
-    return glCheckFramebufferStatus(GL_FRAMEBUFFER);
 }
 
 // Returns the GL internal format for the specified texture object
@@ -187,7 +295,7 @@ static GLint GetTexInternalFormat(const GLTexture& textureGL)
     return internalFormat;
 }
 
-void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc)
+void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc, GLenum& internalFormat)
 {
     /* Get OpenGL texture object */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
@@ -198,136 +306,100 @@ void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor&
     ValidateMipResolution(texture, mipLevel);
 
     /* Make color or depth-stencil attachment */
-    const auto internalFormat   = GetTexInternalFormat(textureGL);
-    const auto attachment       = MakeFramebufferAttachment(internalFormat);
+    internalFormat = static_cast<GLenum>(GetTexInternalFormat(textureGL));
+    auto attachment = MakeFramebufferAttachment(internalFormat);
 
     /* Attach texture to framebuffer */
-    GLenum status = 0;
-
-    framebuffer_.Bind();
+    switch (texture.GetType())
     {
-        switch (texture.GetType())
-        {
-            case TextureType::Texture1D:
-                GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, mipLevel);
-                break;
-            case TextureType::Texture2D:
-                GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, mipLevel);
-                break;
-            case TextureType::Texture3D:
-                GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, mipLevel, attachmentDesc.layer);
-                break;
-            case TextureType::TextureCube:
-                GLFramebuffer::AttachTexture2D(attachment, GLTypes::Map(attachmentDesc.cubeFace), textureID, mipLevel);
-                break;
-            case TextureType::Texture1DArray:
-                GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer);
-                break;
-            case TextureType::Texture2DArray:
-                GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer);
-                break;
-            case TextureType::TextureCubeArray:
-                GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
-                break;
-            case TextureType::Texture2DMS:
-                GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
-                break;
-            case TextureType::Texture2DMSArray:
-                GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, attachmentDesc.layer);
-                break;
-        }
-
-        status = GetFramebufferStatus();
-
-        /* Set draw buffers for this framebuffer if multi-sampling is disabled */
-        if (!framebufferMS_)
-            SetDrawBuffers();
+        case TextureType::Texture1D:
+            GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, mipLevel);
+            break;
+        case TextureType::Texture2D:
+            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, mipLevel);
+            break;
+        case TextureType::Texture3D:
+            GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, mipLevel, attachmentDesc.layer);
+            break;
+        case TextureType::TextureCube:
+            GLFramebuffer::AttachTexture2D(attachment, GLTypes::Map(attachmentDesc.cubeFace), textureID, mipLevel);
+            break;
+        case TextureType::Texture1DArray:
+            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer);
+            break;
+        case TextureType::Texture2DArray:
+            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer);
+            break;
+        case TextureType::TextureCubeArray:
+            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
+            break;
+        case TextureType::Texture2DMS:
+            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
+            break;
+        case TextureType::Texture2DMSArray:
+            GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, attachmentDesc.layer);
+            break;
     }
-    framebuffer_.Unbind();
+}
 
-    ErrOnIncompleteFramebuffer(status, "color attachment to framebuffer object (FBO) failed");
-
+void GLRenderTarget::CreateRenderbuffersMS(const GLenum* internalFormats)
+{
     /* Create renderbuffer for attachment if multi-sample framebuffer is used */
-    if (framebufferMS_)
+    renderbuffersMS_.reserve(colorAttachments_.size());
+
+    /* Create alll renderbuffers as storage for multi-sampled attachments */
+    for (std::size_t i = 0; i < colorAttachments_.size(); ++i)
+        CreateRenderbufferMS(colorAttachments_[i], internalFormats[i]);
+
+    /* Set draw buffers for this framebuffer is multi-sampling is enabled */
+    SetDrawBuffers();
+
+    /* Validate framebuffer status */
+    auto status = GetFramebufferStatus();
+    ErrOnIncompleteFramebuffer(status, "color attachments to multi-sample framebuffer object (FBO) failed");
+}
+
+void GLRenderTarget::CreateRenderbufferMS(GLenum attachment, GLenum internalFormat)
+{
+    auto renderbuffer = MakeUnique<GLRenderbuffer>();
     {
-        auto renderbuffer = MakeUnique<GLRenderbuffer>();
-        {
-            /* Setup renderbuffer storage by texture's internal format */
-            InitRenderbufferStorage(*renderbuffer, static_cast<GLenum>(internalFormat));
+        /* Setup renderbuffer storage by texture's internal format */
+        InitRenderbufferStorage(*renderbuffer, internalFormat);
 
-            /* Attach renderbuffer to multi-sample framebuffer */
-            framebufferMS_->Bind();
-            {
-                GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer->GetID());
-                status = GetFramebufferStatus();
-
-                /* Set draw buffers for this framebuffer is multi-sampling is enabled */
-                SetDrawBuffers();
-            }
-            framebufferMS_->Unbind();
-
-            ErrOnIncompleteFramebuffer(status, "color attachment to multi-sample framebuffer object (FBO) failed");
-        }
-        renderbuffersMS_.emplace_back(std::move(renderbuffer));
+        /* Attach renderbuffer to multi-sample framebuffer */
+        GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer->GetID());
     }
+    renderbuffersMS_.emplace_back(std::move(renderbuffer));
 }
 
 void GLRenderTarget::InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat)
 {
-    renderbuffer.Bind();
-    {
-        GLRenderbuffer::Storage(
-            internalFormat,
-            static_cast<GLsizei>(GetResolution().width),
-            static_cast<GLsizei>(GetResolution().height),
-            multiSamples_
-        );
-    }
-    renderbuffer.Unbind();
+    renderbuffer.Storage(
+        internalFormat,
+        static_cast<GLsizei>(GetResolution().width),
+        static_cast<GLsizei>(GetResolution().height),
+        multiSamples_
+    );
 }
 
-GLenum GLRenderTarget::AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLenum attachment)
+void GLRenderTarget::CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum attachment)
 {
-    GLenum status = 0;
-
-    framebuffer.Bind();
+    if (renderbuffer_ == nullptr)
     {
-        GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer_->GetID());
-        status = GetFramebufferStatus();
-    }
-    framebuffer.Unbind();
-
-    return status;
-}
-
-void GLRenderTarget::AttachRenderbuffer(GLenum internalFormat, GLenum attachment)
-{
-    if (!HasDepthStencilAttachment())
-    {
+        /* Create renderbuffer for depth-stencil attachment */
         renderbuffer_ = MakeUnique<GLRenderbuffer>();
 
         /* Setup renderbuffer storage */
         InitRenderbufferStorage(*renderbuffer_, internalFormat);
 
         /* Attach renderbuffer to framebuffer (or multi-sample framebuffer if multi-sampling is used) */
-        GLenum status = 0;
-
-        if (framebufferMS_)
-        {
-            status = AttachDefaultRenderbuffer(*framebufferMS_, attachment);
-            ErrOnIncompleteFramebuffer(status, "depth- or depth-stencil attachment to multi-sample framebuffer object (FBO) failed");
-        }
-        else
-        {
-            status = AttachDefaultRenderbuffer(framebuffer_, attachment);
-            ErrOnIncompleteFramebuffer(status, "depth- or depth-stencil attachment to framebuffer object (FBO) failed");
-        }
+        GLFramebuffer::AttachRenderbuffer(attachment, renderbuffer_->GetID());
     }
     else
         ErrDepthAttachmentFailed();
 }
 
-GLenum GLRenderTarget::MakeFramebufferAttachment(GLint internalFormat)
+GLenum GLRenderTarget::MakeFramebufferAttachment(GLenum internalFormat)
 {
     if (internalFormat == GL_DEPTH_COMPONENT)
     {
@@ -373,17 +445,6 @@ void GLRenderTarget::SetDrawBuffers()
         glDrawBuffer(colorAttachments_.front());
     else
         glDrawBuffers(static_cast<GLsizei>(colorAttachments_.size()), colorAttachments_.data());
-}
-
-void GLRenderTarget::ErrOnIncompleteFramebuffer(const GLenum status, const char* info)
-{
-    GLThrowIfFailed(status, GL_FRAMEBUFFER_COMPLETE, info);
-}
-
-void GLRenderTarget::CreateOnceFramebufferMS()
-{
-    if (!framebufferMS_)
-        framebufferMS_ = MakeUnique<GLFramebuffer>();
 }
 
 bool GLRenderTarget::HasMultiSampling() const
