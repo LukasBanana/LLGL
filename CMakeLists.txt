@@ -121,6 +121,10 @@ else()
 	option(LLGL_BUILD_RENDERER_OPENGL "Include OpenGL renderer project" ON)
 endif()
 
+if(APPLE)
+	option(LLGL_BUILD_RENDERER_METAL "Include Metal renderer project (experimental)" OFF)
+endif()
+
 if(NOT APPLE)
 	option(LLGL_BUILD_RENDERER_VULKAN "Include Vulkan renderer project (experimental)" OFF)
 endif()
@@ -249,6 +253,9 @@ file(GLOB FilesRendererVKRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Vul
 file(GLOB FilesRendererVKShader				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Shader/*.*)
 file(GLOB FilesRendererVKTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/Texture/*.*)
 
+# Metal renderer files
+file(GLOB FilesRendererMTL					${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/*.*)
+
 # Direct3D common renderer files
 file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
 
@@ -265,9 +272,6 @@ file(GLOB FilesRendererD3D11Buffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Dire
 file(GLOB FilesRendererD3D11RenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/RenderState/*.*)
 file(GLOB FilesRendererD3D11Shader			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Shader/*.*)
 file(GLOB FilesRendererD3D11Texture			${PROJECT_SOURCE_DIR}/sources/Renderer/Direct3D11/Texture/*.*)
-
-# Vulkan renderer files
-#file(GLOB FilesRendererVulkan				${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan/*.*)
 
 # Test files
 set(FilesTest1 ${PROJECT_SOURCE_DIR}/test/Test1_Window.cpp)
@@ -328,6 +332,8 @@ source_group("Sources\\Vulkan\\Memory" FILES ${FilesRendererVKMemory})
 source_group("Sources\\Vulkan\\RenderState" FILES ${FilesRendererVKRenderState})
 source_group("Sources\\Vulkan\\Shader" FILES ${FilesRendererVKShader})
 source_group("Sources\\Vulkan\\Texture" FILES ${FilesRendererVKTexture})
+
+source_group("Sources\\Metal" FILES ${FilesRendererMTL})
 
 source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
@@ -398,6 +404,11 @@ set(
 	${FilesRendererVKRenderState}
 	${FilesRendererVKShader}
 	${FilesRendererVKTexture}
+)
+
+set(
+	FilesMTL
+	${FilesRendererMTL}
 )
 
 if(LLGL_ENABLE_SPIRV_REFLECT)
@@ -521,6 +532,25 @@ if(LLGL_BUILD_RENDERER_VULKAN)
     endif()
 endif()
 
+if(APPLE AND LLGL_BUILD_RENDERER_METAL)
+	# Metal Renderer
+	include(cmake/FindMetal.cmake)
+	if(METAL_FOUND)
+		if(LLGL_BUILD_STATIC_LIB)
+			add_library(LLGL_Metal STATIC ${FilesMTL})
+			set(TEST_PROJECT_LIBS LLGL_Metal)
+		else()
+			add_library(LLGL_Metal SHARED ${FilesMTL})
+		endif()
+		
+		set_target_properties(LLGL_Metal PROPERTIES LINKER_LANGUAGE CXX DEBUG_POSTFIX "D")
+		target_link_libraries(LLGL_Metal LLGL ${METAL_LIBRARY})
+		ENABLE_CXX11(LLGL_Metal)
+	else()
+		message("Missing Metal -> LLGL_Metal renderer will be excluded from project")
+	endif()
+endif()
+
 if(WIN32)
 	if(LLGL_BUILD_RENDERER_DIRECT3D11)
 		# Direct3D 11 Renderer
@@ -612,10 +642,17 @@ if(LLGL_BUILD_RENDERER_OPENGLES3 AND OPENGLES_FOUND)
 endif()
 
 if(LLGL_BUILD_RENDERER_VULKAN AND VULKAN_FOUND)
+	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
     message("Build Renderer: Vulkan")
 endif()
 
+if(LLGL_BUILD_RENDERER_METAL)
+	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
+	message("Build Renderer: Metal")
+endif()
+
 if(LLGL_BUILD_RENDERER_DIRECT3D11)
+	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
     if(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.3")
         message("Build Renderer: Direct3D 11.3")
     elseif(${LLGL_D3D11_ENABLE_FEATURELEVEL} STREQUAL "Direct3D 11.2")
@@ -625,12 +662,11 @@ if(LLGL_BUILD_RENDERER_DIRECT3D11)
     else()
         message("Build Renderer: Direct3D 11.0")
     endif()
-	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
 endif()
 
 if(LLGL_BUILD_RENDERER_DIRECT3D12)
-	message("Build Renderer: Direct3D 12.0")
 	math(EXPR RENDERER_COUNT "${RENDERER_COUNT}+1")
+	message("Build Renderer: Direct3D 12.0")
 endif()
 
 if(LLGL_BUILD_STATIC_LIB AND NOT(${RENDERER_COUNT} EQUAL 1))
