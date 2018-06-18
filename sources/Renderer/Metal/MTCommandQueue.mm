@@ -13,8 +13,14 @@ namespace LLGL
 {
 
 
-MTCommandQueue::MTCommandQueue()
+MTCommandQueue::MTCommandQueue(id<MTLDevice> device)
 {
+    queue_ = [device newCommandQueue];
+}
+
+MTCommandQueue::~MTCommandQueue()
+{
+    [queue_ release];
 }
 
 /* ----- Command queues ----- */

@@ -63,8 +63,7 @@ class MacOSWindow : public Window
 
         NSWindow* CreateNSWindow(const WindowDescriptor& desc);
 
-        NSWindow*   wnd_;
-    
+        NSWindow*   wnd_                = nullptr;
         Offset2D    prevMotionOffset_;
 
 };

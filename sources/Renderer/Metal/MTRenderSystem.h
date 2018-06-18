@@ -135,6 +135,7 @@ class MTRenderSystem : public RenderSystem
     private:
 
         void CreateDevice();
+        void CreateCommandQueue();
 
         /* ----- Common objects ----- */
 

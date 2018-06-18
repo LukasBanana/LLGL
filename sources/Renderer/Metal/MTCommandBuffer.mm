@@ -8,20 +8,23 @@
 #include "MTCommandBuffer.h"
 #include "MTRenderContext.h"
 #include "../CheckedCast.h"
+#include <algorithm>
 
 
 namespace LLGL
 {
 
 
-MTCommandBuffer::MTCommandBuffer(id<MTLCommandQueue> commandQueue)
+static const std::uint32_t g_maxNumViewportsAndScissors = 32;
+
+MTCommandBuffer::MTCommandBuffer(id<MTLCommandQueue> commandQueue) :
+    cmdQueue_ { commandQueue }
 {
-    commandBuffer_ = [commandQueue commandBuffer];
 }
 
 MTCommandBuffer::~MTCommandBuffer()
 {
-    [commandBuffer_ release];
+    [cmdBuffer_ release];
 }
 
 /* ----- Configuration ----- */
@@ -33,20 +36,58 @@ void MTCommandBuffer::SetGraphicsAPIDependentState(const void* stateDesc, std::s
 
 /* ----- Viewport and Scissor ----- */
 
+static void Convert(MTLViewport& dst, const Viewport& src)
+{
+    dst.originX = static_cast<double>(src.x);
+    dst.originY = static_cast<double>(src.y);
+    dst.width   = static_cast<double>(src.width);
+    dst.height  = static_cast<double>(src.height);
+    dst.znear   = static_cast<double>(src.minDepth);
+    dst.zfar    = static_cast<double>(src.maxDepth);
+}
+
 void MTCommandBuffer::SetViewport(const Viewport& viewport)
 {
+    MTLViewport viewportMT;
+    Convert(viewportMT, viewport);
+    [renderEncoder_ setViewport:viewportMT];
 }
 
 void MTCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
+    MTLViewport viewportsML[g_maxNumViewportsAndScissors];
+    
+    numViewports = std::min(numViewports, g_maxNumViewportsAndScissors);
+    for (std::uint32_t i = 0; i < numViewports; ++i)
+        Convert(viewportsML[i], viewports[i]);
+    
+    [renderEncoder_ setViewports:viewportsML count:(NSUInteger)numViewports];
+}
+
+static void Convert(MTLScissorRect& dst, const Scissor& scissor)
+{
+    dst.x       = static_cast<NSUInteger>(std::max(0, scissor.x));
+    dst.y       = static_cast<NSUInteger>(std::max(0, scissor.y));
+    dst.width   = static_cast<NSUInteger>(std::max(0, scissor.width));
+    dst.height  = static_cast<NSUInteger>(std::max(0, scissor.height));
 }
 
 void MTCommandBuffer::SetScissor(const Scissor& scissor)
 {
+    MTLScissorRect rect;
+    Convert(rect, scissor);
+    [renderEncoder_ setScissorRect:rect];
 }
 
 void MTCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
+    MTLScissorRect rects[g_maxNumViewportsAndScissors];
+    
+    numScissors = std::min(numScissors, g_maxNumViewportsAndScissors);
+    for (std::uint32_t i = 0; i < numScissors; ++i)
+        Convert(rects[i], scissors[i]);
+    
+    [renderEncoder_ setScissorRects:rects count:(NSUInteger)numScissors];
 }
 
 /* ----- Clear ----- */
@@ -136,7 +177,9 @@ void MTCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 
 void MTCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
-    //todo
+    auto& renderContextMT = LLGL_CAST(MTRenderContext&, renderContext);
+    cmdBuffer_ = [cmdQueue_ commandBuffer];
+    renderContextMT.SetCommandBufferForPresent(cmdBuffer_);
 }
 
 

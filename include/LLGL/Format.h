@@ -35,7 +35,7 @@ enum class DataType
     UInt32, //!< 32-bit unsigned integer (unsiged int).
 
     Float,  //!< 32-bit floating-point (float).
-    Double, //!< 64-bit real type (double).
+    Double, //!< 64-bit real type (double). \note Only supported with: OpenGL
 };
 
 /**

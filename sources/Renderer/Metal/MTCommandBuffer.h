@@ -110,8 +110,8 @@ class MTCommandBuffer : public CommandBuffer
 
     private:
 
-        //id<MTLCommandQueue>             commandQueue_           = nil;
-        id<MTLCommandBuffer>            commandBuffer_          = nil;
+        id<MTLCommandQueue>             cmdQueue_               = nil;
+        id<MTLCommandBuffer>            cmdBuffer_              = nil;
 
         id<MTLRenderCommandEncoder>     renderEncoder_          = nil;
         //id<MTLComputeCommandEncoder>    computeEncoder_         = nil;

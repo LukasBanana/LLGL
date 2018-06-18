@@ -73,9 +73,9 @@ enum class TextureFormat
     RGB16Sgn,       //!< Color format: red, green, blue 16-bit normalized signed interger components. \note Only supported with: OpenGL, Vulkan.
     RGB16Float,     //!< Color format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL, Vulkan.
 
-    RGB32UInt,      //!< Color format: red, green, blue 32-bit un-normalized unsigned interger components.
-    RGB32SInt,      //!< Color format: red, green, blue 32-bit un-normalized signed interger components.
-    RGB32Float,     //!< Color format: red, green, blue 32-bit floating point components.
+    RGB32UInt,      //!< Color format: red, green, blue 32-bit un-normalized unsigned interger components. \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    RGB32SInt,      //!< Color format: red, green, blue 32-bit un-normalized signed interger components. \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    RGB32Float,     //!< Color format: red, green, blue 32-bit floating point components. \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
 
     RGBA8,          //!< Color format: red, green, blue, alpha 8-bit normalized unsigned integer components.
     RGBA8Sgn,       //!< Color format: red, green, blue, alpha 8-bit normalized signed integer components.

@@ -8,6 +8,7 @@
 #include "MTRenderSystem.h"
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
+#include "../../Core/Vendor.h"
 
 
 namespace LLGL
@@ -19,6 +20,7 @@ namespace LLGL
 MTRenderSystem::MTRenderSystem()
 {
     CreateDevice();
+    CreateCommandQueue();
 }
 
 MTRenderSystem::~MTRenderSystem()
@@ -29,39 +31,36 @@ MTRenderSystem::~MTRenderSystem()
 
 RenderContext* MTRenderSystem::CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface)
 {
-    return nullptr;//todo
+    return TakeOwnership(renderContexts_, MakeUnique<MTRenderContext>(device_, desc, surface));
 }
 
 void MTRenderSystem::Release(RenderContext& renderContext)
 {
-    //todo
-    //RemoveFromUniqueSet(renderContexts_, &renderContext);
+    RemoveFromUniqueSet(renderContexts_, &renderContext);
 }
 
 /* ----- Command queues ----- */
 
 CommandQueue* MTRenderSystem::GetCommandQueue()
 {
-    return nullptr;//todo
-    //return commandQueue_.get();
+    return commandQueue_.get();
 }
 
 /* ----- Command buffers ----- */
 
 CommandBuffer* MTRenderSystem::CreateCommandBuffer()
 {
-    return nullptr;//todo
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(commandQueue_->GetNative()));
 }
 
 CommandBufferExt* MTRenderSystem::CreateCommandBufferExt()
 {
-    return nullptr;//todo
+    return nullptr; // dummy
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
 {
-    //todo
-    //RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
+    RemoveFromUniqueSet(commandBuffers_, &commandBuffer);
 }
 
 /* ----- Buffers ------ */
@@ -287,9 +286,25 @@ void MTRenderSystem::Release(Fence& fence)
 
 void MTRenderSystem::CreateDevice()
 {
+    /* Create Metal device */
     device_ = MTLCreateSystemDefaultDevice();
     if (device_ == nil)
         throw std::runtime_error("failed to create Metal device");
+    
+    /* Initialize renderer information */
+    RendererInfo info;
+    {
+        info.rendererName           = "???";
+        info.deviceName             = [[device_ name] cStringUsingEncoding:NSUTF8StringEncoding];
+        info.vendorName             = "???";
+        info.shadingLanguageName    = "Metal";
+    }
+    SetRendererInfo(info);
+}
+
+void MTRenderSystem::CreateCommandQueue()
+{
+    commandQueue_ = MakeUnique<MTCommandQueue>(device_);
 }
 
 

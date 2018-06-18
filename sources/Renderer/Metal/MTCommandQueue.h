@@ -25,7 +25,8 @@ class MTCommandQueue : public CommandQueue
 
         /* ----- Common ----- */
 
-        MTCommandQueue();
+        MTCommandQueue(id<MTLDevice> device);
+        ~MTCommandQueue();
 
         /* ----- Command queues ----- */
 
@@ -37,9 +38,18 @@ class MTCommandQueue : public CommandQueue
 
         bool WaitFence(Fence& fence, std::uint64_t timeout) override;
         void WaitIdle() override;
+    
+        /* ----- Extended functions ----- */
+
+        // Returns the native MTLCommandQueue object.
+        inline id<MTLCommandQueue> GetNative() const
+        {
+            return queue_;
+        }
 
     private:
 
+        id<MTLCommandQueue> queue_;
 
 };
 
