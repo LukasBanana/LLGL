@@ -400,7 +400,7 @@ void D3D12RenderContext::CreateDeviceResources()
 
     /* Create command allocators */
     for (UINT i = 0; i < g_maxSwapChainSize; ++i)
-        commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator();
+        commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
 void D3D12RenderContext::MoveToNextFrame()

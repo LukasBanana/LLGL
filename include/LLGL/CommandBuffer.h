@@ -256,7 +256,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets the specified render target as the new target for subsequent rendering commands.
         \param[in] renderTarget Specifies the render target to set.
         \remarks Subsequent drawing operations will be rendered into the textures that are attached to the specified render target.
-        \note If the specified render-target has not the same resolution as this render context, the viewports and scissor rectangles may be invalidated!
+        \note This function may invalidate the viewports and scissor rectangles.
+        It is hence advisable to always set the viewports (and scissor rectangles, if enabled) after a new render target is bound.
         \see SetRenderTarget(RenderContext&)
         */
         virtual void SetRenderTarget(RenderTarget& renderTarget) = 0;

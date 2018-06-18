@@ -5,11 +5,11 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../tutorial/tutorial.h"
+#include <LLGL/LLGL.h>
 #include <LLGL/Image.h>
 #include <vector>
 #include <functional>
-
+#include <iostream>
 
 
 static unsigned int g_seed;
@@ -198,7 +198,7 @@ class PerformanceTest
 
 int main(int argc, char* argv[])
 {
-    auto rendererModule = GetSelectedRendererModule(argc, argv);
+    std::string rendererModule = "OpenGL";
 
     TestConfig testConfig;
     testConfig.numTextures  = 2;

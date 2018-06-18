@@ -20,7 +20,7 @@ namespace LLGL
 {
 
 
-struct D3DRootSignatureContext;
+class D3D12RootSignature;
 
 class D3D12PipelineLayout : public PipelineLayout
 {
@@ -37,13 +37,8 @@ class D3D12PipelineLayout : public PipelineLayout
 
     private:
 
-        void BuildRootSignatureDesc(
-            D3DRootSignatureContext&        signatureContext,
-            const PipelineLayoutDescriptor& layoutDesc
-        );
-
         void BuildRootParameter(
-            D3DRootSignatureContext&        signatureContext,
+            D3D12RootSignature&             rootSignature,
             D3D12_DESCRIPTOR_RANGE_TYPE     descRangeType,
             const PipelineLayoutDescriptor& layoutDesc,
             const ResourceType              resourceType
@@ -52,13 +47,6 @@ class D3D12PipelineLayout : public PipelineLayout
         void BuildRootSignatureFlags(
             D3D12_ROOT_SIGNATURE_FLAGS&     signatureFlags,
             const PipelineLayoutDescriptor& layoutDesc
-        );
-
-        void CreateRootSignature(ID3D12Device* device, const D3D12_ROOT_SIGNATURE_DESC& signatureDesc);
-
-        ComPtr<ID3DBlob> SerializeRootSignature(
-            const D3D12_ROOT_SIGNATURE_DESC& signatureDesc,
-            const D3D_ROOT_SIGNATURE_VERSION signatureversion
         );
 
         ComPtr<ID3D12RootSignature> rootSignature_;

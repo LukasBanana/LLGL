@@ -67,6 +67,8 @@ enum class GLExt
     ARB_direct_state_access,
     ARB_polygon_offset_clamp,
     ARB_texture_view,
+    ARB_shader_image_load_store,
+    ARB_framebuffer_no_attachments,
 
     /* Extensions without procedures */
     ARB_texture_cube_map,

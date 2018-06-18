@@ -40,12 +40,16 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateGPUSynchObjects();
 
     /* Create command queue, command allocator, and graphics command list */
-    queue_          = CreateDXCommandQueue();
-    commandAlloc_   = CreateDXCommandAllocator();
-    commandList_    = CreateDXCommandList();
+    queue_              = CreateDXCommandQueue();
+
+    graphicsCmdAlloc_   = CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    graphicsCmdList_    = CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, graphicsCmdAlloc_.Get());
+
+    computeCmdAlloc_    = CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
+    computeCmdList_     = CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
 
     /* Create command queue interface */
-    commandQueue_ = MakeUnique<D3D12CommandQueue>(queue_, commandAlloc_);
+    commandQueue_ = MakeUnique<D3D12CommandQueue>(queue_, graphicsCmdAlloc_);
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -165,7 +169,7 @@ std::unique_ptr<D3D12Buffer> D3D12RenderSystem::MakeBufferAndInitialize(const Bu
     /* Create buffer and upload data to GPU */
     ComPtr<ID3D12Resource> uploadBuffer;
 
-    auto buffer = MakeD3D12Buffer(device_.Get(), commandList_.Get(), uploadBuffer, desc, initialData);
+    auto buffer = MakeD3D12Buffer(device_.Get(), graphicsCmdList_.Get(), uploadBuffer, desc, initialData);
 
     /* Execute upload commands and wait for GPU to finish execution */
     ExecuteCommandList();
@@ -263,7 +267,7 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
             subresourceData.RowPitch    = ImageFormatSize(dstTexFormat.format) * DataTypeSize(dstTexFormat.dataType) * texWidth;
             subresourceData.SlicePitch  = subresourceData.RowPitch * texHeight;
         }
-        textureD3D->UpdateSubresource(device_.Get(), commandList_.Get(), uploadBuffer, subresourceData);
+        textureD3D->UpdateSubresource(device_.Get(), graphicsCmdList_.Get(), uploadBuffer, subresourceData);
     }
 
     /* Execute upload commands and wait for GPU to finish execution */
@@ -461,25 +465,22 @@ ComPtr<ID3D12CommandQueue> D3D12RenderSystem::CreateDXCommandQueue()
     return cmdQueue;
 }
 
-ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator()
+ComPtr<ID3D12CommandAllocator> D3D12RenderSystem::CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type)
 {
     ComPtr<ID3D12CommandAllocator> commandAlloc;
 
-    auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(commandAlloc.ReleaseAndGetAddressOf()));
+    auto hr = device_->CreateCommandAllocator(type, IID_PPV_ARGS(commandAlloc.ReleaseAndGetAddressOf()));
     DXThrowIfFailed(hr, "failed to create D3D12 command allocator");
 
     return commandAlloc;
 }
 
-ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXCommandList(ID3D12CommandAllocator* commandAlloc)
+ComPtr<ID3D12GraphicsCommandList> D3D12RenderSystem::CreateDXCommandList(D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* cmdAllocator)
 {
-    if (!commandAlloc)
-        commandAlloc = commandAlloc_.Get();
-
     ComPtr<ID3D12GraphicsCommandList> commandList;
 
-    auto hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc, nullptr, IID_PPV_ARGS(commandList.ReleaseAndGetAddressOf()));
-    DXThrowIfFailed(hr, "failed to create D3D12 graphics command list");
+    auto hr = device_->CreateCommandList(0, type, cmdAllocator, nullptr, IID_PPV_ARGS(commandList.ReleaseAndGetAddressOf()));
+    DXThrowIfFailed(hr, "failed to create D3D12 command list");
 
     return commandList;
 }
@@ -508,10 +509,10 @@ ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D
 void D3D12RenderSystem::ExecuteCommandList()
 {
     /* Close and execute command list */
-    CloseAndExecuteCommandList(commandList_.Get());
+    CloseAndExecuteCommandList(graphicsCmdList_.Get());
 
     /* Reset command list */
-    auto hr = commandList_->Reset(commandAlloc_.Get(), nullptr);
+    auto hr = graphicsCmdList_->Reset(graphicsCmdAlloc_.Get(), nullptr);
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 }
 

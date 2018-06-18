@@ -423,6 +423,16 @@ DECL_GLPROC(void, glPolygonOffsetClamp, (GLfloat, GLfloat, GLfloat));
 
 DECL_GLPROC(void, glTextureView, (GLuint, GLenum, GLuint, GLenum, GLuint, GLuint, GLuint, GLuint));
 
+/* GL_ARB_shader_image_load_store */
+
+DECL_GLPROC(void, glBindImageTexture, (GLuint, GLuint, GLint, GLboolean, GLint, GLenum, GLenum));
+DECL_GLPROC(void, glMemoryBarrier, (GLbitfield));
+
+/* GL_ARB_framebuffer_no_attachments */
+
+DECL_GLPROC(void, glFramebufferParameteri, (GLenum, GLenum, GLint));
+DECL_GLPROC(void, glGetFramebufferParameteriv, (GLenum, GLenum, GLint*));
+
 /* GL_ARB_direct_state_access */
 
 DECL_GLPROC(void, glCreateTransformFeedbacks, (GLsizei, GLuint*));

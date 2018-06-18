@@ -199,7 +199,7 @@ void VKCommandBuffer::Clear(long flags)
     }
 
     /* Fill clear descriptor for depth-stencil attachment */
-    if ((flags & ClearFlags::DepthStencil) != 0 && hasDepthStencilAttachment_)
+    if ((flags & ClearFlags::DepthStencil) != 0 && hasDSVAttachment_)
     {
         auto& attachment = attachments[numAttachments++];
         {
@@ -236,7 +236,7 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
             dst.clearValue.color.float32[3]  = src.clearValue.color.a;
             ++numAttachmentsVK;
         }
-        else if (hasDepthStencilAttachment_)
+        else if (hasDSVAttachment_)
         {
             /* Convert depth-stencil clear command */
             dst.aspectMask      = 0;
@@ -359,8 +359,8 @@ void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
     );
 
     /* Store information about framebuffer attachments */
-    numColorAttachments_        = renderTargetVK.GetNumColorAttachments();
-    hasDepthStencilAttachment_  = renderTargetVK.HasDepthStencilAttachment();
+    numColorAttachments_    = (renderTargetVK.GetNumColorAttachments());
+    hasDSVAttachment_       = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
 }
 
 /*
@@ -389,8 +389,8 @@ void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
     );
 
     /* Store information about framebuffer attachments */
-    numColorAttachments_        = 1;
-    hasDepthStencilAttachment_  = renderContextVK.HasDepthStencilBuffer();
+    numColorAttachments_    = 1;
+    hasDSVAttachment_       = renderContextVK.HasDepthStencilBuffer();
 }
 
 

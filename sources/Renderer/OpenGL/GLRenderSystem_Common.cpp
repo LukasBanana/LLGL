@@ -101,20 +101,13 @@ SamplerArray* GLRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Samp
 
 void GLRenderSystem::Release(Sampler& sampler)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
-    GLStateManager::NotifySamplerRelease(samplerGL.GetID());
     RemoveFromUniqueSet(samplers_, &sampler);
 }
 
 void GLRenderSystem::Release(SamplerArray& samplerArray)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
-
-    for (auto samplerId : samplerArrayGL.GetIDArray())
-        GLStateManager::NotifySamplerRelease(samplerId);
-
     RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
@@ -140,9 +133,8 @@ RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& d
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)
 {
-    /* Notify GL state manager about object release, then release object */
+    /* Release render target (GLRenderTarget destructor notifies GL state manager about object releases) */
     auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
-    GLStateManager::NotifyFramebufferRelease(renderTargetGL.GetFramebuffer().GetID());
     RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
@@ -183,9 +175,7 @@ void GLRenderSystem::Release(Shader& shader)
 
 void GLRenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
-    GLStateManager::NotifyShaderProgramRelease(shaderProgramGL.GetID());
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 

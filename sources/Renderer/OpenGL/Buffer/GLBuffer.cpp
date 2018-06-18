@@ -9,6 +9,7 @@
 #include "../../GLCommon/GLTypes.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
+#include "../RenderState/GLStateManager.h"
 
 
 namespace LLGL
@@ -35,6 +36,7 @@ GLBuffer::GLBuffer(const BufferType type) :
 GLBuffer::~GLBuffer()
 {
     glDeleteBuffers(1, &id_);
+    GLStateManager::active->NotifyBufferRelease(id_, GLStateManager::GetBufferTarget(GetType()));
 }
 
 

@@ -17,6 +17,8 @@ namespace LLGL
 {
 
 
+#define _DEB_DISABLE_MIPS
+
 static D3D12_RESOURCE_DIMENSION GetResourceDimension(const TextureType type)
 {
     switch (type)
@@ -38,7 +40,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 {
     dst.Dimension           = GetResourceDimension(src.type);
     dst.Alignment           = 0;
-    #if 0//TODO: mipmapping is not supported yet
+    #ifndef _DEB_DISABLE_MIPS//TODO: mipmapping is not supported yet
     dst.MipLevels           = NumMipLevels(src);
     #else
     dst.MipLevels           = 1;
@@ -91,7 +93,7 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) :
     Texture         { desc.type                    },
     format_         { D3D12Types::Map(desc.format) },
-    #if 0//TODO: mipmapping not supported yet
+    #ifndef _DEB_DISABLE_MIPS//TODO: mipmapping not supported yet
     numMipLevels_   { NumMipLevels(desc)           },
     #else
     numMipLevels_   { 1                            },

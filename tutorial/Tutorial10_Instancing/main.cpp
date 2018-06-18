@@ -5,7 +5,8 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../tutorial.h"
+#include <tutorial.h>
+#include <stb/stb_image.h>
 #include <LLGL/Display.h>
 
 

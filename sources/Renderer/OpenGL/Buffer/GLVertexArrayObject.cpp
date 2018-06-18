@@ -25,6 +25,7 @@ GLVertexArrayObject::GLVertexArrayObject()
 GLVertexArrayObject::~GLVertexArrayObject()
 {
     glDeleteVertexArrays(1, &id_);
+    GLStateManager::active->NotifyVertexArrayRelease(id_);
 }
 
 void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute, std::uint32_t stride, std::uint32_t index)

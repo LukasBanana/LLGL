@@ -5,7 +5,7 @@
  * See "LICENSE.txt" for license information.
  */
 
-#include "../tutorial.h"
+#include <tutorial.h>
 #include <chrono>
 
 
@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
         auto timer = LLGL::Timer::Create();
         auto start = std::chrono::system_clock::now();
         #endif
-        
+
         // Enter main loop
         while (window.ProcessEvents())
         {

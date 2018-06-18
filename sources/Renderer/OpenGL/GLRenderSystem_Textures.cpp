@@ -104,23 +104,13 @@ TextureArray* GLRenderSystem::CreateTextureArray(std::uint32_t numTextures, Text
 
 void GLRenderSystem::Release(Texture& texture)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::NotifyTextureRelease(textureGL.GetID(), GLStateManager::GetTextureTarget(textureGL.GetType()));
     RemoveFromUniqueSet(textures_, &texture);
 }
 
 void GLRenderSystem::Release(TextureArray& textureArray)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& textureArrayGL = LLGL_CAST(GLTextureArray&, textureArray);
-
-    const auto& texIDs      = textureArrayGL.GetIDArray();
-    const auto& texTargets  = textureArrayGL.GetTargetArray();
-
-    for (std::size_t i = 0, n = texIDs.size(); i < n; ++i)
-        GLStateManager::NotifyTextureRelease(texIDs[i], texTargets[i]);
-
     RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
