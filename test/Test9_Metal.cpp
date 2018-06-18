@@ -88,6 +88,8 @@ int main()
         shaderProgram->AttachShader(*vertShader);
         shaderProgram->AttachShader(*fragShader);
         
+        shaderProgram->BuildInputLayout(1, &(vertexBufferDesc.vertexBuffer.format));
+        
         if (!shaderProgram->LinkShaders())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
         
@@ -104,6 +106,8 @@ int main()
         while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
             commands->SetRenderTarget(*context);
+            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+            
             commands->Clear(LLGL::ClearFlags::Color);
 
             commands->SetGraphicsPipeline(*pipeline);

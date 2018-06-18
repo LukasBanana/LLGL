@@ -231,7 +231,7 @@ void MTRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 GraphicsPipeline* MTRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(graphicsPipelines_, MakeUnique<MTGraphicsPipeline>(device_, desc));
 }
 
 ComputePipeline* MTRenderSystem::CreateComputePipeline(const ComputePipelineDescriptor& desc)
@@ -241,8 +241,7 @@ ComputePipeline* MTRenderSystem::CreateComputePipeline(const ComputePipelineDesc
 
 void MTRenderSystem::Release(GraphicsPipeline& graphicsPipeline)
 {
-    //todo
-    //RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
+    RemoveFromUniqueSet(graphicsPipelines_, &graphicsPipeline);
 }
 
 void MTRenderSystem::Release(ComputePipeline& computePipeline)

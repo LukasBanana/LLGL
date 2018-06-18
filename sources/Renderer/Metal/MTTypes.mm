@@ -44,28 +44,28 @@ MTLDataType Map(const DataType dataType)
     MapFailed("DataType", "MTLDataType");
 }
 
-MTLDataType Map(const VectorType vectorType)
+MTLVertexFormat Map(const VectorType vectorType)
 {
     switch (vectorType)
     {
-    	case VectorType::Float:     return MTLDataTypeFloat;
-        case VectorType::Float2:    return MTLDataTypeFloat2;
-        case VectorType::Float3:    return MTLDataTypeFloat3;
-        case VectorType::Float4:    return MTLDataTypeFloat4;
+    	case VectorType::Float:     return MTLVertexFormatFloat;
+        case VectorType::Float2:    return MTLVertexFormatFloat2;
+        case VectorType::Float3:    return MTLVertexFormatFloat3;
+        case VectorType::Float4:    return MTLVertexFormatFloat4;
         case VectorType::Double:    break;
         case VectorType::Double2:   break;
         case VectorType::Double3:   break;
         case VectorType::Double4:   break;
-        case VectorType::Int:       return MTLDataTypeInt;
-        case VectorType::Int2:      return MTLDataTypeInt2;
-        case VectorType::Int3:      return MTLDataTypeInt3;
-        case VectorType::Int4:      return MTLDataTypeInt4;
-        case VectorType::UInt:      return MTLDataTypeUInt;
-        case VectorType::UInt2:     return MTLDataTypeUInt2;
-        case VectorType::UInt3:     return MTLDataTypeUInt3;
-        case VectorType::UInt4:     return MTLDataTypeUInt4;
+        case VectorType::Int:       return MTLVertexFormatInt;
+        case VectorType::Int2:      return MTLVertexFormatInt2;
+        case VectorType::Int3:      return MTLVertexFormatInt3;
+        case VectorType::Int4:      return MTLVertexFormatInt4;
+        case VectorType::UInt:      return MTLVertexFormatUInt;
+        case VectorType::UInt2:     return MTLVertexFormatUInt2;
+        case VectorType::UInt3:     return MTLVertexFormatUInt3;
+        case VectorType::UInt4:     return MTLVertexFormatUInt4;
     }
-    MapFailed("VectorType", "MTLDataType");
+    MapFailed("VectorType", "MTLVertexFormat");
 }
 
 MTLPixelFormat Map(const TextureFormat textureFormat)
@@ -172,6 +172,22 @@ MTLCullMode Map(const CullMode cullMode)
         case CullMode::Back:        return MTLCullModeBack;
     }
     MapFailed("CullMode", "MTLCullMode");
+}
+
+MTLCompareFunction Map(const CompareOp compareOp)
+{
+    switch (compareOp)
+    {
+        case CompareOp::Never:          return MTLCompareFunctionNever;
+        case CompareOp::Less:           return MTLCompareFunctionLess;
+        case CompareOp::Equal:          return MTLCompareFunctionEqual;
+        case CompareOp::LessEqual:      return MTLCompareFunctionLessEqual;
+        case CompareOp::Greater:        return MTLCompareFunctionGreater;
+        case CompareOp::NotEqual:       return MTLCompareFunctionNotEqual;
+        case CompareOp::GreaterEqual:   return MTLCompareFunctionGreaterEqual;
+        case CompareOp::Ever:           return MTLCompareFunctionAlways;
+    }
+    MapFailed("CompareOp", "MTLCompareFunction");
 }
 
 

@@ -40,11 +40,21 @@ class MTShader : public Shader
             return native_;
         }
 
+        // Returns true if the shader has an error report.
+        bool HasError() const
+        {
+            return (error_ != nullptr);
+        }
+
     private:
+    
+        void ReleaseError();
 
         id<MTLDevice>   device_     = nil;
         id<MTLLibrary>  library_    = nil;
         id<MTLFunction> native_     = nil;
+    
+        NSError*        error_      = nullptr;
 
 };
 

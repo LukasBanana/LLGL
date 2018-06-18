@@ -18,6 +18,8 @@ namespace LLGL
 {
 
 
+class MTShader;
+
 class MTShaderProgram : public ShaderProgram
 {
 
@@ -48,14 +50,31 @@ class MTShaderProgram : public ShaderProgram
             return vertexDesc_;
         }
 
+        inline id<MTLFunction> GetVertexMTLFunction() const
+        {
+            return vertexFunc_;
+        }
+    
+        inline id<MTLFunction> GetFragmentMTLFunction() const
+        {
+            return fragmentFunc_;
+        }
+        
+        inline id<MTLFunction> GetKernelMTLFunction() const
+        {
+            return kernelFunc_;
+        }
+    
     private:
     
         void ReleaseVertexDesc();
 
-        MTLVertexDescriptor*    vertexDesc_     = nullptr;
-        id<MTLFunction>         vertexFunc_     = nil;
-        id<MTLFunction>         fragmentFunc_   = nil;
-        id<MTLFunction>         kernelFunc_     = nil;
+        MTLVertexDescriptor*    vertexDesc_     	= nullptr;
+        id<MTLFunction>         vertexFunc_         = nil;
+        id<MTLFunction>         fragmentFunc_       = nil;
+        id<MTLFunction>         kernelFunc_         = nil;
+    
+        MTShader*               shaderWithError_    = nullptr;
 
 };
 

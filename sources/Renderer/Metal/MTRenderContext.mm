@@ -33,7 +33,10 @@ MTRenderContext::MTRenderContext(
     [wnd setContentView:view_];
     [wnd.contentViewController setView:view_];
     
-    //TODO: create swap-chain
+    #if 1//TEST
+    view_.colorPixelFormat          = MTLPixelFormatBGRA8Unorm_sRGB;
+    view_.depthStencilPixelFormat   = MTLPixelFormatDepth32Float_Stencil8;
+    #endif
 }
 
 MTRenderContext::~MTRenderContext()
@@ -42,15 +45,17 @@ MTRenderContext::~MTRenderContext()
 
 void MTRenderContext::Present()
 {
-    [commandBuffer_ presentDrawable:view_.currentDrawable];
-    [commandBuffer_ commit];
+    [renderCmdEncoder_ endEncoding];
+    [cmdBuffer_ presentDrawable:view_.currentDrawable];
+    [cmdBuffer_ commit];
 }
 
 /* ----- Extended functions ----- */
 
-void MTRenderContext::SetCommandBufferForPresent(id<MTLCommandBuffer> commandBuffer)
+void MTRenderContext::MakeCurrent(id<MTLCommandBuffer> cmdBuffer, id<MTLRenderCommandEncoder> renderCmdEncoder)
 {
-    commandBuffer_ = commandBuffer;
+    cmdBuffer_          = cmdBuffer;
+    renderCmdEncoder_   = renderCmdEncoder;
 }
 
 

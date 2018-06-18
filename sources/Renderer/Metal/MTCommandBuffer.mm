@@ -7,7 +7,9 @@
 
 #include "MTCommandBuffer.h"
 #include "MTRenderContext.h"
+#include "MTTypes.h"
 #include "Buffer/MTBuffer.h"
+#include "RenderState/MTGraphicsPipeline.h"
 #include "../CheckedCast.h"
 #include <algorithm>
 
@@ -191,8 +193,8 @@ void MTCommandBuffer::SetRenderTarget(RenderContext& renderContext)
     if (renderPassDesc != nullptr)
     {
         /* Get next render command encoder */
-        renderContextMT.SetCommandBufferForPresent(cmdBuffer_);
         renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+        renderContextMT.MakeCurrent(cmdBuffer_, renderEncoder_);
     }
 }
 
@@ -201,7 +203,9 @@ void MTCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 
 void MTCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
-    //todo
+    auto& graphicsPipelineMT = LLGL_CAST(MTGraphicsPipeline&, graphicsPipeline);
+    graphicsPipelineMT.Bind(renderEncoder_);
+    primitiveType_ = graphicsPipelineMT.GetMTLPrimitiveType();
 }
 
 void MTCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)

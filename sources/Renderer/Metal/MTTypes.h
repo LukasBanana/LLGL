@@ -23,7 +23,7 @@
 namespace LLGL
 {
 
-namespace VKTypes
+namespace MTTypes
 {
 
 
@@ -33,14 +33,15 @@ namespace VKTypes
 void MapFailed(const std::string& typeName, const std::string& vknTypeName);
 
 MTLDataType         Map( const DataType             dataType          );
-MTLDataType         Map( const VectorType           vectorType        );
+MTLVertexFormat     Map( const VectorType           vectorType        );
 MTLPixelFormat      Map( const TextureFormat        textureFormat     );
 MTLTextureType      Map( const TextureType          textureType       );
 MTLPrimitiveType    Map( const PrimitiveTopology    primitiveTopology );
 MTLCullMode         Map( const CullMode             cullMode          );
+MTLCompareFunction  Map( const CompareOp            compareOp         );
 
 
-} // /namespace VKTypes
+} // /namespace MTTypes
 
 } // /namespace LLGL
 

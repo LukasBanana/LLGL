@@ -20,6 +20,7 @@ MTShader::MTShader(id<MTLDevice> device, const ShaderType type) :
 
 MTShader::~MTShader()
 {
+    ReleaseError();
     if (native_)
         [native_ release];
     if (library_)
@@ -46,12 +47,13 @@ bool MTShader::Compile(const std::string& sourceCode, const ShaderDescriptor& sh
     [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
 
     /* Load shader library */
-    NSError* error = [NSError alloc];
+    ReleaseError();
+    error_ = [NSError alloc];
     
     library_ = [device_
         newLibraryWithSource:   sourceString
         options:                opt
-        error:                  &error
+        error:                  &error_
     ];
     
     bool result = false;
@@ -61,12 +63,10 @@ bool MTShader::Compile(const std::string& sourceCode, const ShaderDescriptor& sh
         /* Create shader function */
         native_ = [library_ newFunctionWithName:entryPoint];
         if (native_)
+        {
             result = true;
-    }
-    else
-    {
-        /* Query error message */
-        //TODO
+            ReleaseError();
+        }
     }
     
     /* Release NSString objects */
@@ -88,7 +88,16 @@ std::string MTShader::Disassemble(int flags)
 
 std::string MTShader::QueryInfoLog()
 {
-    return ""; //todo
+    std::string s;
+    
+    if (error_ != nullptr)
+    {
+        NSString* errorMsg = [error_ localizedDescription];
+        s = [errorMsg cStringUsingEncoding:NSUTF8StringEncoding];
+        [errorMsg release];
+    }
+    
+    return s;
 }
 
 
@@ -96,6 +105,14 @@ std::string MTShader::QueryInfoLog()
  * ======= Private: =======
  */
 
+void MTShader::ReleaseError()
+{
+    if (error_ != nullptr)
+    {
+        [error_ release];
+        error_ = nullptr;
+    }
+}
 
 
 } // /namespace LLGL
