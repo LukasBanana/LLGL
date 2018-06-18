@@ -73,7 +73,30 @@ int main()
         }
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
         
-        //TODO...
+        // Create shaders
+        auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
+        auto fragShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
+        
+        auto shaderSource = ReadFileContent("TestShader.metal");
+        
+        vertShader->Compile(shaderSource, { "VMain", "1.1" });
+        fragShader->Compile(shaderSource, { "FMain", "1.1" });
+
+        // Create shader program
+        auto shaderProgram = renderer->CreateShaderProgram();
+        
+        shaderProgram->AttachShader(*vertShader);
+        shaderProgram->AttachShader(*fragShader);
+        
+        if (!shaderProgram->LinkShaders())
+            throw std::runtime_error(shaderProgram->QueryInfoLog());
+        
+        // Create graphics pipeline
+        LLGL::GraphicsPipelineDescriptor pipelineDesc;
+        {
+            pipelineDesc.shaderProgram = shaderProgram;
+        }
+        auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
         // Main loop
         commands->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
@@ -83,7 +106,7 @@ int main()
             commands->SetRenderTarget(*context);
             commands->Clear(LLGL::ClearFlags::Color);
 
-            //commands->SetGraphicsPipeline(*pipeline);
+            commands->SetGraphicsPipeline(*pipeline);
             commands->SetVertexBuffer(*vertexBuffer);
 
             commands->Draw(3, 0);

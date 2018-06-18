@@ -39,6 +39,12 @@ class MTRenderContext : public RenderContext
         /* ----- Extended functions ----- */
     
         void SetCommandBufferForPresent(id<MTLCommandBuffer> commandBuffer);
+    
+        // Returns the native MTKView object.
+        inline MTKView* GetMTKView() const
+        {
+            return view_;
+        }
 
     private:
     

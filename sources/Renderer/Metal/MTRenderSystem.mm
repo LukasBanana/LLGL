@@ -1,5 +1,5 @@
 /*
- * MTRenderSystem.cpp
+ * MTRenderSystem.mm
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -19,12 +19,12 @@ namespace LLGL
 
 MTRenderSystem::MTRenderSystem()
 {
-    CreateDevice();
-    CreateCommandQueue();
+    CreateDeviceResources();
 }
 
 MTRenderSystem::~MTRenderSystem()
 {
+    [device_ release];
 }
 
 /* ----- Render Context ----- */
@@ -67,7 +67,7 @@ void MTRenderSystem::Release(CommandBuffer& commandBuffer)
 
 Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* initialData)
 {
-    return nullptr;//todo
+    return TakeOwnership(buffers_, MakeUnique<MTBuffer>(device_, desc, initialData));
 }
 
 BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
@@ -77,7 +77,7 @@ BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer*
 
 void MTRenderSystem::Release(Buffer& buffer)
 {
-    //todo
+    RemoveFromUniqueSet(buffers_, &buffer);
 }
 
 void MTRenderSystem::Release(BufferArray& bufferArray)
@@ -196,24 +196,22 @@ void MTRenderSystem::Release(RenderTarget& renderTarget)
 
 Shader* MTRenderSystem::CreateShader(const ShaderType type)
 {
-    return nullptr;//todo
+    return TakeOwnership(shaders_, MakeUnique<MTShader>(device_, type));
 }
 
 ShaderProgram* MTRenderSystem::CreateShaderProgram()
 {
-    return nullptr;//todo
+    return TakeOwnership(shaderPrograms_, MakeUnique<MTShaderProgram>());
 }
 
 void MTRenderSystem::Release(Shader& shader)
 {
-    //todo
-    //RemoveFromUniqueSet(shaders_, &shader);
+    RemoveFromUniqueSet(shaders_, &shader);
 }
 
 void MTRenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    //todo
-    //RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
+    RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
 /* ----- Pipeline Layouts ----- */
@@ -284,7 +282,7 @@ void MTRenderSystem::Release(Fence& fence)
  * ======= Private: =======
  */
 
-void MTRenderSystem::CreateDevice()
+void MTRenderSystem::CreateDeviceResources()
 {
     /* Create Metal device */
     device_ = MTLCreateSystemDefaultDevice();
@@ -300,10 +298,8 @@ void MTRenderSystem::CreateDevice()
         info.shadingLanguageName    = "Metal";
     }
     SetRendererInfo(info);
-}
-
-void MTRenderSystem::CreateCommandQueue()
-{
+    
+    /* Create command queue */
     commandQueue_ = MakeUnique<MTCommandQueue>(device_);
 }
 

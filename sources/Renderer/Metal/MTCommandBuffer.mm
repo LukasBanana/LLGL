@@ -1,5 +1,5 @@
 /*
- * MTCommandBuffer.cpp
+ * MTCommandBuffer.mm
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -7,6 +7,7 @@
 
 #include "MTCommandBuffer.h"
 #include "MTRenderContext.h"
+#include "Buffer/MTBuffer.h"
 #include "../CheckedCast.h"
 #include <algorithm>
 
@@ -121,7 +122,8 @@ void MTCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
 
 void MTCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    [renderEncoder_ setVertexBuffer:bufferMT.GetNative() offset:0 atIndex:0];
 }
 
 void MTCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
@@ -178,8 +180,20 @@ void MTCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 void MTCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
     auto& renderContextMT = LLGL_CAST(MTRenderContext&, renderContext);
+    
+    /* Get next command buffer */
     cmdBuffer_ = [cmdQueue_ commandBuffer];
-    renderContextMT.SetCommandBufferForPresent(cmdBuffer_);
+    
+    /* Get next render pass descriptor from MetalKit view */
+    MTKView* view = renderContextMT.GetMTKView();
+    MTLRenderPassDescriptor* renderPassDesc = view.currentRenderPassDescriptor;
+    
+    if (renderPassDesc != nullptr)
+    {
+        /* Get next render command encoder */
+        renderContextMT.SetCommandBufferForPresent(cmdBuffer_);
+        renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+    }
 }
 
 

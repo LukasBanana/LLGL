@@ -255,6 +255,8 @@ file(GLOB FilesRendererVKTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/Vulkan
 
 # Metal renderer files
 file(GLOB FilesRendererMTL					${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/*.*)
+file(GLOB FilesRendererMTLBuffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Buffer/*.*)
+file(GLOB FilesRendererMTLShader			${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Shader/*.*)
 
 # Direct3D common renderer files
 file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
@@ -336,6 +338,8 @@ source_group("Sources\\Vulkan\\Shader" FILES ${FilesRendererVKShader})
 source_group("Sources\\Vulkan\\Texture" FILES ${FilesRendererVKTexture})
 
 source_group("Sources\\Metal" FILES ${FilesRendererMTL})
+source_group("Sources\\Metal\\Buffer" FILES ${FilesRendererMTLBuffer})
+source_group("Sources\\Metal\\Shader" FILES ${FilesRendererMTLShader})
 
 source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
@@ -417,6 +421,8 @@ set(
 set(
 	FilesMTL
 	${FilesRendererMTL}
+	${FilesRendererMTLBuffer}
+	${FilesRendererMTLShader}
 )
 
 if(LLGL_ENABLE_SPIRV_REFLECT)

@@ -18,6 +18,11 @@
 #include "MTCommandBuffer.h"
 #include "MTRenderContext.h"
 
+#include "Buffer/MTBuffer.h"
+
+#include "Shader/MTShader.h"
+#include "Shader/MTShaderProgram.h"
+
 
 namespace LLGL
 {
@@ -134,27 +139,26 @@ class MTRenderSystem : public RenderSystem
 
     private:
 
-        void CreateDevice();
-        void CreateCommandQueue();
+        void CreateDeviceResources();
 
         /* ----- Common objects ----- */
 
-        id<MTLDevice>                           device_;
+        id<MTLDevice>                           device_             = nil;
 
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<MTRenderContext>      renderContexts_;
         HWObjectInstance<MTCommandQueue>        commandQueue_;
         HWObjectContainer<MTCommandBuffer>      commandBuffers_;
-        //HWObjectContainer<MTBuffer>             buffers_;
+        HWObjectContainer<MTBuffer>             buffers_;
         //HWObjectContainer<MTBufferArray>        bufferArrays_;
         //HWObjectContainer<MTTexture>            textures_;
         //HWObjectContainer<MTTextureArray>       textureArrays_;
         //HWObjectContainer<MTSampler>            samplers_;
         //HWObjectContainer<MTSamplerArray>       samplerArrays_;
         //HWObjectContainer<MTRenderTarget>       renderTargets_;
-        //HWObjectContainer<MTShader>             shaders_;
-        //HWObjectContainer<MTShaderProgram>      shaderPrograms_;
+        HWObjectContainer<MTShader>             shaders_;
+        HWObjectContainer<MTShaderProgram>      shaderPrograms_;
         //HWObjectContainer<MTPipelineLayout>     pipelineLayouts_;
         //HWObjectContainer<MTGraphicsPipeline>   graphicsPipelines_;
         //HWObjectContainer<MTComputePipeline>    computePipelines_;
