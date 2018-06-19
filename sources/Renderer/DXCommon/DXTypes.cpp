@@ -41,28 +41,6 @@ void ParamNotSupported(const char* paramName, const char* requirement)
     );
 }
 
-#if 0//TODO: remove
-DXGI_FORMAT Map(const VectorType vectorType)
-{
-    switch (vectorType)
-    {
-        case VectorType::Float:     return DXGI_FORMAT_R32_FLOAT;
-        case VectorType::Float2:    return DXGI_FORMAT_R32G32_FLOAT;
-        case VectorType::Float3:    return DXGI_FORMAT_R32G32B32_FLOAT;
-        case VectorType::Float4:    return DXGI_FORMAT_R32G32B32A32_FLOAT;
-        case VectorType::Int:       return DXGI_FORMAT_R32_SINT;
-        case VectorType::Int2:      return DXGI_FORMAT_R32G32_SINT;
-        case VectorType::Int3:      return DXGI_FORMAT_R32G32B32_SINT;
-        case VectorType::Int4:      return DXGI_FORMAT_R32G32B32A32_SINT;
-        case VectorType::UInt:      return DXGI_FORMAT_R32_UINT;
-        case VectorType::UInt2:     return DXGI_FORMAT_R32G32_UINT;
-        case VectorType::UInt3:     return DXGI_FORMAT_R32G32B32_UINT;
-        case VectorType::UInt4:     return DXGI_FORMAT_R32G32B32A32_UINT;
-    }
-    MapFailed("VectorType", "DXGI_FORMAT");
-}
-#endif
-
 DXGI_FORMAT Map(const DataType dataType)
 {
     switch (dataType)

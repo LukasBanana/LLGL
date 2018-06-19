@@ -35,7 +35,6 @@ void UnmapFailed(const char* typeName, const char* dxTypeName);
 void ParamNotSupported(const char* paramName, const char* requirement);
 
 
-//DXGI_FORMAT             Map( const VectorType           vectorType );
 DXGI_FORMAT             Map( const DataType             dataType   );
 DXGI_FORMAT             Map( const Format               format     );
 D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology   );

@@ -26,7 +26,6 @@ namespace D3D11Types
 {
 
 
-//DXGI_FORMAT                 Map( const VectorType           vectorType      );
 DXGI_FORMAT                 Map( const DataType             dataType        );
 DXGI_FORMAT                 Map( const Format        textureFormat   );
 D3D_PRIMITIVE_TOPOLOGY      Map( const PrimitiveTopology    topology        );

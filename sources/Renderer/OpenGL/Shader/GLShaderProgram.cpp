@@ -295,52 +295,6 @@ void GLShaderProgram::Reflect(ShaderReflectionDescriptor& reflection) const
     QueryUniforms(reflection);
 }
 
-#if 0//TODO: replace by "Format" enum
-
-static std::pair<VectorType, std::uint32_t> UnmapAttribType(GLenum type)
-{
-    switch (type)
-    {
-        case GL_FLOAT:              return { VectorType::Float,   1 };
-        case GL_FLOAT_VEC2:         return { VectorType::Float2,  1 };
-        case GL_FLOAT_VEC3:         return { VectorType::Float3,  1 };
-        case GL_FLOAT_VEC4:         return { VectorType::Float4,  1 };
-        case GL_FLOAT_MAT2:         return { VectorType::Float2,  2 };
-        case GL_FLOAT_MAT3:         return { VectorType::Float3,  3 };
-        case GL_FLOAT_MAT4:         return { VectorType::Float4,  4 };
-        case GL_FLOAT_MAT2x3:       return { VectorType::Float3,  2 };
-        case GL_FLOAT_MAT2x4:       return { VectorType::Float4,  2 };
-        case GL_FLOAT_MAT3x2:       return { VectorType::Float2,  3 };
-        case GL_FLOAT_MAT3x4:       return { VectorType::Float4,  3 };
-        case GL_FLOAT_MAT4x2:       return { VectorType::Float2,  4 };
-        case GL_FLOAT_MAT4x3:       return { VectorType::Float3,  4 };
-        case GL_INT:                return { VectorType::Int,     1 };
-        case GL_INT_VEC2:           return { VectorType::Int2,    1 };
-        case GL_INT_VEC3:           return { VectorType::Int3,    1 };
-        case GL_INT_VEC4:           return { VectorType::Int4,    1 };
-        case GL_UNSIGNED_INT:       return { VectorType::UInt,    1 };
-        case GL_UNSIGNED_INT_VEC2:  return { VectorType::UInt2,   1 };
-        case GL_UNSIGNED_INT_VEC3:  return { VectorType::UInt3,   1 };
-        case GL_UNSIGNED_INT_VEC4:  return { VectorType::UInt4,   1 };
-        case GL_DOUBLE:             return { VectorType::Double,  1 };
-        case GL_DOUBLE_VEC2:        return { VectorType::Double2, 1 };
-        case GL_DOUBLE_VEC3:        return { VectorType::Double3, 1 };
-        case GL_DOUBLE_VEC4:        return { VectorType::Double4, 1 };
-        case GL_DOUBLE_MAT2:        return { VectorType::Double2, 2 };
-        case GL_DOUBLE_MAT3:        return { VectorType::Double3, 3 };
-        case GL_DOUBLE_MAT4:        return { VectorType::Double4, 4 };
-        case GL_DOUBLE_MAT2x3:      return { VectorType::Double3, 2 };
-        case GL_DOUBLE_MAT2x4:      return { VectorType::Double4, 2 };
-        case GL_DOUBLE_MAT3x2:      return { VectorType::Double2, 3 };
-        case GL_DOUBLE_MAT3x4:      return { VectorType::Double4, 3 };
-        case GL_DOUBLE_MAT4x2:      return { VectorType::Double2, 4 };
-        case GL_DOUBLE_MAT4x3:      return { VectorType::Double3, 4 };
-    }
-    return { VectorType::Float, 0 };
-}
-
-#else
-
 // Vector format and number of vectors, e.g. mat2x3 --> { RGB32Float, 2 }
 static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
 {
@@ -383,8 +337,6 @@ static std::pair<Format, std::uint32_t> UnmapAttribType(GLenum type)
     }
     return { Format::R32Float, 0 };
 }
-
-#endif
 
 void GLShaderProgram::QueryVertexAttributes(ShaderReflectionDescriptor& reflection) const
 {

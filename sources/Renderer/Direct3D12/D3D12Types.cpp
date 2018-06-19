@@ -18,13 +18,6 @@ namespace D3D12Types
 {
 
 
-#if 0//TODO: remove
-DXGI_FORMAT Map(const VectorType vectorType)
-{
-    return DXTypes::Map(vectorType);
-}
-#endif
-
 DXGI_FORMAT Map(const DataType dataType)
 {
     return DXTypes::Map(dataType);

@@ -13,34 +13,6 @@ namespace LLGL
 {
 
 
-#if 0 // TODO: replace by "Format"-specific functions
-
-LLGL_EXPORT std::uint32_t VectorTypeSize(const VectorType vectorType)
-{
-    DataType dataType   = DataType::Float;
-    std::uint32_t components = 0;
-    VectorTypeFormat(vectorType, dataType, components);
-
-    return (DataTypeSize(dataType) * components);
-}
-
-LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, std::uint32_t& components)
-{
-    /* Get data type and components by indexed vector type */
-    auto vectorTypeIdx = (static_cast<std::uint32_t>(vectorType) - static_cast<std::uint32_t>(VectorType::Float));
-    auto componentsIdx = vectorTypeIdx % 4;
-    vectorTypeIdx /= 4;
-
-    if (vectorTypeIdx < 4)
-    {
-        static const DataType vecDataTypes[] = { DataType::Float, DataType::Double, DataType::Int32, DataType::UInt32 };
-        dataType    = vecDataTypes[vectorTypeIdx];
-        components  = (componentsIdx + 1);
-    }
-}
-
-#else
-
 LLGL_EXPORT std::uint32_t FormatBitSize(const Format format)
 {
     switch (format)
@@ -220,8 +192,6 @@ LLGL_EXPORT bool SplitFormat(const Format format, DataType& dataType, std::uint3
 
     return false;
 }
-
-#endif
 
 LLGL_EXPORT bool IsCompressedFormat(const Format format)
 {

@@ -39,32 +39,6 @@ VkShaderStageFlagBits Map(const ShaderType shaderType)
     MapFailed("ShaderType", "VkShaderStageFlagBits");
 }
 
-#if 0//TODO: remove
-VkFormat Map(const VectorType vectorType)
-{
-    switch (vectorType)
-    {
-        case VectorType::Float:     return VK_FORMAT_R32_SFLOAT;
-        case VectorType::Float2:    return VK_FORMAT_R32G32_SFLOAT;
-        case VectorType::Float3:    return VK_FORMAT_R32G32B32_SFLOAT;
-        case VectorType::Float4:    return VK_FORMAT_R32G32B32A32_SFLOAT;
-        case VectorType::Double:    return VK_FORMAT_R64_SFLOAT;
-        case VectorType::Double2:   return VK_FORMAT_R64G64_SFLOAT;
-        case VectorType::Double3:   return VK_FORMAT_R64G64B64_SFLOAT;
-        case VectorType::Double4:   return VK_FORMAT_R64G64B64A64_SFLOAT;
-        case VectorType::Int:       return VK_FORMAT_R32_SINT;
-        case VectorType::Int2:      return VK_FORMAT_R32G32_SINT;
-        case VectorType::Int3:      return VK_FORMAT_R32G32B32_SINT;
-        case VectorType::Int4:      return VK_FORMAT_R32G32B32A32_SINT;
-        case VectorType::UInt:      return VK_FORMAT_R32_UINT;
-        case VectorType::UInt2:     return VK_FORMAT_R32G32_UINT;
-        case VectorType::UInt3:     return VK_FORMAT_R32G32B32_UINT;
-        case VectorType::UInt4:     return VK_FORMAT_R32G32B32A32_UINT;
-    }
-    MapFailed("VectorType", "VkFormat");
-}
-#endif
-
 VkFormat Map(const Format format)
 {
     switch (format)

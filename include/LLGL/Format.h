@@ -136,33 +136,6 @@ enum class DataType
     #endif
 };
 
-#if 0//TODO: replace by "Format" enum
-/**
-\brief Renderer vector types enumeration.
-\see VertexAttribute::vectorType
-\todo Replace by "Format" enum.
-*/
-enum class VectorType
-{
-    Float,      //!< 1-Dimensional single precision floating-point vector (float in GLSL, float in HLSL).
-    Float2,     //!< 2-Dimensional single precision floating-point vector (vec2 in GLSL, float2 in HLSL).
-    Float3,     //!< 3-Dimensional single precision floating-point vector (vec3 in GLSL, float3 in HLSL).
-    Float4,     //!< 4-Dimensional single precision floating-point vector (vec4 in GLSL, float4 in HLSL).
-    Double,     //!< 1-Dimensional double precision floating-point vector (double in GLSL, double in HLSL).
-    Double2,    //!< 2-Dimensional double precision floating-point vector (dvec2 in GLSL, double2 in HLSL).
-    Double3,    //!< 3-Dimensional double precision floating-point vector (dvec3 in GLSL, double3 in HLSL).
-    Double4,    //!< 4-Dimensional double precision floating-point vector (dvec4 in GLSL, double4 in HLSL).
-    Int,        //!< 1-Dimensional signed integer vector (int in GLSL, int in HLSL).
-    Int2,       //!< 2-Dimensional signed integer vector (ivec2 in GLSL, int2 in HLSL).
-    Int3,       //!< 3-Dimensional signed integer vector (ivec3 in GLSL, int3 in HLSL).
-    Int4,       //!< 4-Dimensional signed integer vector (ivec4 in GLSL, int4 in HLSL).
-    UInt,       //!< 1-Dimensional unsigned integer vector (uint in GLSL, uint in HLSL).
-    UInt2,      //!< 2-Dimensional unsigned integer vector (uvec2 in GLSL, uint2 in HLSL).
-    UInt3,      //!< 3-Dimensional unsigned integer vector (uvec3 in GLSL, uint3 in HLSL).
-    UInt4,      //!< 4-Dimensional unsigned integer vector (uvec4 in GLSL, uint4 in HLSL).
-};
-#endif
-
 
 /* ----- Functions ----- */
 
@@ -171,21 +144,6 @@ enum class VectorType
 \addtogroup group_format_util
 @{
 */
-
-#if 0 // TODO: replace by "Format"-specific functions
-
-//! Returns the size (in bytes) of the specified vector type.
-LLGL_EXPORT std::uint32_t VectorTypeSize(const VectorType vectorType);
-
-/**
-\brief Retrieves the format of the specified vector type.
-\param[in] vectorType Specifies the vector type whose format is to be retrieved.
-\param[out] dataType Specifies the output parameter for the resulting data type.
-\param[out] components Specifiefs the output parameter for the resulting number of vector components.
-*/
-LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, std::uint32_t& components);
-
-#else
 
 /**
 \brief Returns the bit size of the specified hardware format.
@@ -201,8 +159,6 @@ LLGL_EXPORT std::uint32_t FormatBitSize(const Format format);
 \see Format
 */
 LLGL_EXPORT bool SplitFormat(const Format format, DataType& dataType, std::uint32_t& components);
-
-#endif // /TODO
 
 /**
 \brief Returns true if the specified hardware format is a compressed format,

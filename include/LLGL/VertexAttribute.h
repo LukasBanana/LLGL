@@ -78,23 +78,6 @@ struct LLGL_EXPORT VertexAttribute
     //! Vertex attribute name (for GLSL) or semantic name (for HLSL).
     std::string     name;
 
-    #if 0//TODO: replace by "format"
-    /**
-    \brief Vector type of the vertex attribute. By default VectorType::Float4.
-    \note The double types are only supported with OpenGL, i.e. the vector types:
-    VectorType::Double, VectorType::Double2, VectorType::Double3, and VectorType::Double4.
-    \remarks To specifies an attribute of a matrix type, use multiple vector types with ascending values for the semanticIndex field.
-    Here is an example for a 4x4 matrix type:
-    \code
-    myVertexFormat.AppendAttribute({ "myMatrix", 0, LLGL::VectorType::Float4 });
-    myVertexFormat.AppendAttribute({ "myMatrix", 1, LLGL::VectorType::Float4 });
-    myVertexFormat.AppendAttribute({ "myMatrix", 2, LLGL::VectorType::Float4 });
-    myVertexFormat.AppendAttribute({ "myMatrix", 3, LLGL::VectorType::Float4 });
-    \endcode
-    \see semanticIndex
-    */
-    VectorType      vectorType      = VectorType::Float4;
-    #else
     /**
     \brief Vertex attribute format. By default Format::RGBA32Float.
     \remarks Not all hardware formats are allowed for vertex attributes.
@@ -108,7 +91,6 @@ struct LLGL_EXPORT VertexAttribute
     \endcode
     */
     Format          format          = Format::RGBA32Float;
-    #endif
 
     /**
     \brief Instance data divisor (or instance data step rate).
@@ -116,11 +98,6 @@ struct LLGL_EXPORT VertexAttribute
     If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
     */
     std::uint32_t   instanceDivisor = 0;
-
-    #if 0//TODO: remove
-    //! Specifies whether non-floating-point data types are to be converted to floating-points. By default false.
-    bool            conversion      = false;
-    #endif
 
     //! Byte offset within each vertex and each buffer. By default 0.
     std::uint32_t   offset          = 0;
