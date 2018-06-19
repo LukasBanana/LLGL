@@ -120,9 +120,13 @@ LLGL_EXPORT const char* ToString(const Format t)
         /* --- Color formats --- */
         case T::R8UNorm:            return "R8UNorm";
         case T::R8SNorm:            return "R8SNorm";
+        case T::R8UInt:             return "R8UInt";
+        case T::R8SInt:             return "R8SInt";
 
         case T::R16UNorm:           return "R16UNorm";
         case T::R16SNorm:           return "R16SNorm";
+        case T::R16UInt:            return "R16UInt";
+        case T::R16SInt:            return "R16SInt";
         case T::R16Float:           return "R16Float";
 
         case T::R32UInt:            return "R32UInt";
@@ -131,9 +135,13 @@ LLGL_EXPORT const char* ToString(const Format t)
 
         case T::RG8UNorm:           return "RG8UNorm";
         case T::RG8SNorm:           return "RG8SNorm";
+        case T::RG8UInt:            return "RG8UInt";
+        case T::RG8SInt:            return "RG8SInt";
 
         case T::RG16UNorm:          return "RG16UNorm";
         case T::RG16SNorm:          return "RG16SNorm";
+        case T::RG16UInt:           return "RG16UInt";
+        case T::RG16SInt:           return "RG16SInt";
         case T::RG16Float:          return "RG16Float";
 
         case T::RG32UInt:           return "RG32UInt";
@@ -142,9 +150,13 @@ LLGL_EXPORT const char* ToString(const Format t)
 
         case T::RGB8UNorm:          return "RGB8UNorm";
         case T::RGB8SNorm:          return "RGB8SNorm";
+        case T::RGB8UInt:           return "RGB8UInt";
+        case T::RGB8SInt:           return "RGB8SInt";
 
         case T::RGB16UNorm:         return "RGB16UNorm";
         case T::RGB16SNorm:         return "RGB16SNorm";
+        case T::RGB16UInt:          return "RGB16UInt";
+        case T::RGB16SInt:          return "RGB16SInt";
         case T::RGB16Float:         return "RGB16Float";
 
         case T::RGB32UInt:          return "RGB32UInt";
@@ -153,9 +165,13 @@ LLGL_EXPORT const char* ToString(const Format t)
 
         case T::RGBA8UNorm:         return "RGBA8UNorm";
         case T::RGBA8SNorm:         return "RGBA8SNorm";
+        case T::RGBA8UInt:          return "RGBA8UInt";
+        case T::RGBA8SInt:          return "RGBA8SInt";
 
         case T::RGBA16UNorm:        return "RGBA16UNorm";
         case T::RGBA16SNorm:        return "RGBA16SNorm";
+        case T::RGBA16UInt:         return "RGBA16UInt";
+        case T::RGBA16SInt:         return "RGBA16SInt";
         case T::RGBA16Float:        return "RGBA16Float";
 
         case T::RGBA32UInt:         return "RGBA32UInt";
@@ -163,8 +179,10 @@ LLGL_EXPORT const char* ToString(const Format t)
         case T::RGBA32Float:        return "RGBA32Float";
 
         /* --- Depth-stencil formats --- */
+        case T::D16UNorm:           return "D16UNorm";
         case T::D32Float:           return "D32Float";
         case T::D24UNormS8UInt:     return "D24UNormS8UInt";
+        case T::D32FloatS8X24UInt:  return "D32FloatS8X24UInt";
 
         /* --- Compressed color formats --- */
         case T::BC1RGB:             return "BC1 RGB";

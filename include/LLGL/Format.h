@@ -21,8 +21,11 @@ namespace LLGL
 
 /**
 \brief Hardware vector and pixel format enumeration.
+\remarks This enumeration is used for hardware texture formats and vertex attribute formats.
 \see TextureDescriptor::format
 \see RenderingCapabilities::textureFormats
+\see Vulkan counterpart <code>VkFormat</code>: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkFormat.html
+\see Direct3D counterpart <code>DXGI_FORMAT</code>: https://msdn.microsoft.com/en-us/library/windows/desktop/bb173059(v=vs.85).aspx
 */
 enum class Format
 {
@@ -31,69 +34,69 @@ enum class Format
     /* --- Color formats --- */
     R8UNorm,            //!< Color format: red 8-bit normalized unsigned integer component.
     R8SNorm,            //!< Color format: red 8-bit normalized signed integer component.
-    //R8UInt,
-    //R8SInt,
+    R8UInt,             //!< Color format: red 8-bit unsigned integer component.
+    R8SInt,             //!< Color format: red 8-bit signed integer component.
 
     R16UNorm,           //!< Color format: red 16-bit normalized unsigned interger component.
     R16SNorm,           //!< Color format: red 16-bit normalized signed interger component.
-    //R16UInt,
-    //R16SInt,
+    R16UInt,            //!< Color format: red 16-bit unsigned interger component.
+    R16SInt,            //!< Color format: red 16-bit signed interger component.
     R16Float,           //!< Color format: red 16-bit floating point component.
 
-    R32UInt,            //!< Color format: red 32-bit un-normalized unsigned interger component.
-    R32SInt,            //!< Color format: red 32-bit un-normalized signed interger component.
+    R32UInt,            //!< Color format: red 32-bit unsigned interger component.
+    R32SInt,            //!< Color format: red 32-bit signed interger component.
     R32Float,           //!< Color format: red 32-bit floating point component.
 
     RG8UNorm,           //!< Color format: red, green 8-bit normalized unsigned integer components.
     RG8SNorm,           //!< Color format: red, green 8-bit normalized signed integer components.
-    //RG8UInt,
-    //RG8SInt,
+    RG8UInt,            //!< Color format: red, green 8-bit unsigned integer components.
+    RG8SInt,            //!< Color format: red, green 8-bit signed integer components.
 
     RG16UNorm,          //!< Color format: red, green 16-bit normalized unsigned interger components.
     RG16SNorm,          //!< Color format: red, green 16-bit normalized signed interger components.
-    //RG16UInt,
-    //RG16SInt,
+    RG16UInt,           //!< Color format: red, green 16-bit unsigned interger components.
+    RG16SInt,           //!< Color format: red, green 16-bit signed interger components.
     RG16Float,          //!< Color format: red, green 16-bit floating point components.
 
-    RG32UInt,           //!< Color format: red, green 32-bit un-normalized unsigned interger components.
-    RG32SInt,           //!< Color format: red, green 32-bit un-normalized signed interger components.
+    RG32UInt,           //!< Color format: red, green 32-bit unsigned interger components.
+    RG32SInt,           //!< Color format: red, green 32-bit signed interger components.
     RG32Float,          //!< Color format: red, green 32-bit floating point components.
 
     RGB8UNorm,          //!< Color format: red, green, blue 8-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan.
     RGB8SNorm,          //!< Color format: red, green, blue 8-bit normalized signed integer components. \note Only supported with: OpenGL, Vulkan.
-    //RGB8UInt,
-    //RGB8SInt,
+    RGB8UInt,           //!< Color format: red, green, blue 8-bit unsigned integer components. \note Only supported with: OpenGL, Vulkan.
+    RGB8SInt,           //!< Color format: red, green, blue 8-bit signed integer components. \note Only supported with: OpenGL, Vulkan.
 
     RGB16UNorm,         //!< Color format: red, green, blue 16-bit normalized unsigned interger components. \note Only supported with: OpenGL, Vulkan.
     RGB16SNorm,         //!< Color format: red, green, blue 16-bit normalized signed interger components. \note Only supported with: OpenGL, Vulkan.
-    //RGB16UInt,
-    //RGB16SInt,
+    RGB16UInt,          //!< Color format: red, green, blue 16-bit unsigned interger components. \note Only supported with: OpenGL, Vulkan.
+    RGB16SInt,          //!< Color format: red, green, blue 16-bit signed interger components. \note Only supported with: OpenGL, Vulkan.
     RGB16Float,         //!< Color format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL, Vulkan.
 
-    RGB32UInt,          //!< Color format: red, green, blue 32-bit un-normalized unsigned interger components.
-    RGB32SInt,          //!< Color format: red, green, blue 32-bit un-normalized signed interger components.
+    RGB32UInt,          //!< Color format: red, green, blue 32-bit unsigned interger components.
+    RGB32SInt,          //!< Color format: red, green, blue 32-bit signed interger components.
     RGB32Float,         //!< Color format: red, green, blue 32-bit floating point components.
 
     RGBA8UNorm,         //!< Color format: red, green, blue, alpha 8-bit normalized unsigned integer components.
     RGBA8SNorm,         //!< Color format: red, green, blue, alpha 8-bit normalized signed integer components.
-    //RGBA8UInt,
-    //RGBA8SInt,
+    RGBA8UInt,          //!< Color format: red, green, blue, alpha 8-bit unsigned integer components.
+    RGBA8SInt,          //!< Color format: red, green, blue, alpha 8-bit signed integer components.
 
     RGBA16UNorm,        //!< Color format: red, green, blue, alpha 16-bit normalized unsigned interger components.
     RGBA16SNorm,        //!< Color format: red, green, blue, alpha 16-bit normalized signed interger components.
-    //RGBA16UInt,
-    //RGBA16SInt,
+    RGBA16UInt,         //!< Color format: red, green, blue, alpha 16-bit unsigned interger components.
+    RGBA16SInt,         //!< Color format: red, green, blue, alpha 16-bit signed interger components.
     RGBA16Float,        //!< Color format: red, green, blue, alpha 16-bit floating point components.
 
-    RGBA32UInt,         //!< Color format: red, green, blue, alpha 32-bit un-normalized unsigned interger components.
-    RGBA32SInt,         //!< Color format: red, green, blue, alpha 32-bit un-normalized signed interger components.
+    RGBA32UInt,         //!< Color format: red, green, blue, alpha 32-bit unsigned interger components.
+    RGBA32SInt,         //!< Color format: red, green, blue, alpha 32-bit signed interger components.
     RGBA32Float,        //!< Color format: red, green, blue, alpha 32-bit floating point components.
 
     /* --- Depth-stencil formats --- */
-    //D16UNorm,
-    D24UNormS8UInt,     //!< Depth-stencil format: depth 24-bit normalized unsigned integer, and 8-bit unsigned integer stencil components.
+    D16UNorm,           //!< Depth-stencil format: depth 16-bit normalized unsigned integer component.
+    D24UNormS8UInt,     //!< Depth-stencil format: depth 24-bit normalized unsigned integer component, and 8-bit unsigned integer stencil component.
     D32Float,           //!< Depth-stencil format: depth 32-bit floating point component.
-    //D32FloatS8X24UInt,  //!< Depth-stencil format: depth 32-bit floating point component, and 8-bit unsigned integer stencil components (where the remaining 24 bits are unused).
+    D32FloatS8X24UInt,  //!< Depth-stencil format: depth 32-bit floating point component, and 8-bit unsigned integer stencil components (where the remaining 24 bits are unused).
 
     /* --- Compressed color formats --- */
     BC1RGB,             //!< Compressed color format: RGB S3TC DXT1 with 8 bytes per 4x4 block. \note Only supported with: OpenGL, Vulkan.
@@ -108,17 +111,23 @@ enum class Format
 */
 enum class DataType
 {
-    Int8,   //!< 8-bit signed integer (char).
-    UInt8,  //!< 8-bit unsigned integer (unsigned char).
+    Int8,       //!< 8-bit signed integer (char).
+    UInt8,      //!< 8-bit unsigned integer (unsigned char).
 
-    Int16,  //!< 16-bit signed integer (short).
-    UInt16, //!< 16-bit unsigned integer (unsigned short).
+    Int16,      //!< 16-bit signed integer (short).
+    UInt16,     //!< 16-bit unsigned integer (unsigned short).
 
-    Int32,  //!< 32-bit signed integer (int).
-    UInt32, //!< 32-bit unsigned integer (unsiged int).
+    Int32,      //!< 32-bit signed integer (int).
+    UInt32,     //!< 32-bit unsigned integer (unsiged int).
 
-    Float,  //!< 32-bit floating-point (float).
-    Double, //!< 64-bit real type (double).
+    #if 1//TODO: replace this by "Float16", etc.
+    Float,      //!< 32-bit floating-point (float).
+    Double,     //!< 64-bit real type (double).
+    #else
+    Float16,    //!< 16-bit floating-point (half).
+    Float32,    //!< 32-bit floating-point (float).
+    Float64,    //!< 32-bit floating-point (double).
+    #endif
 };
 
 /**
