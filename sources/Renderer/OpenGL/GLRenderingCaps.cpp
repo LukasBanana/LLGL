@@ -108,40 +108,40 @@ static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
 {
     return
     {
-        TextureFormat::R8,
-        TextureFormat::R8Sgn,
-        TextureFormat::R16,
-        TextureFormat::R16Sgn,
+        TextureFormat::R8UNorm,
+        TextureFormat::R8SNorm,
+        TextureFormat::R16UNorm,
+        TextureFormat::R16SNorm,
         TextureFormat::R16Float,
         TextureFormat::R32UInt,
         TextureFormat::R32SInt,
         TextureFormat::R32Float,
-        TextureFormat::RG8,
-        TextureFormat::RG8Sgn,
-        TextureFormat::RG16,
-        TextureFormat::RG16Sgn,
+        TextureFormat::RG8UNorm,
+        TextureFormat::RG8SNorm,
+        TextureFormat::RG16UNorm,
+        TextureFormat::RG16SNorm,
         TextureFormat::RG16Float,
         TextureFormat::RG32UInt,
         TextureFormat::RG32SInt,
         TextureFormat::RG32Float,
-        TextureFormat::RGB8,
-        TextureFormat::RGB8Sgn,
-        TextureFormat::RGB16,
-        TextureFormat::RGB16Sgn,
+        TextureFormat::RGB8UNorm,
+        TextureFormat::RGB8SNorm,
+        TextureFormat::RGB16UNorm,
+        TextureFormat::RGB16SNorm,
         TextureFormat::RGB16Float,
         TextureFormat::RGB32UInt,
         TextureFormat::RGB32SInt,
         TextureFormat::RGB32Float,
-        TextureFormat::RGBA8,
-        TextureFormat::RGBA8Sgn,
-        TextureFormat::RGBA16,
-        TextureFormat::RGBA16Sgn,
+        TextureFormat::RGBA8UNorm,
+        TextureFormat::RGBA8SNorm,
+        TextureFormat::RGBA16UNorm,
+        TextureFormat::RGBA16SNorm,
         TextureFormat::RGBA16Float,
         TextureFormat::RGBA32UInt,
         TextureFormat::RGBA32SInt,
         TextureFormat::RGBA32Float,
-        TextureFormat::D32,
-        TextureFormat::D24S8,
+        TextureFormat::D32Float,
+        TextureFormat::D24UNormS8UInt,
     };
 }
 
@@ -190,16 +190,16 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
         switch (format)
         {
             case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-                textureFormats.push_back(TextureFormat::RGB_DXT1);
+                textureFormats.push_back(TextureFormat::BC1RGB);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-                textureFormats.push_back(TextureFormat::RGBA_DXT1);
+                textureFormats.push_back(TextureFormat::BC1RGBA);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-                textureFormats.push_back(TextureFormat::RGBA_DXT3);
+                textureFormats.push_back(TextureFormat::BC2RGBA);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-                textureFormats.push_back(TextureFormat::RGBA_DXT5);
+                textureFormats.push_back(TextureFormat::BC3RGBA);
                 break;
             default:
                 break;

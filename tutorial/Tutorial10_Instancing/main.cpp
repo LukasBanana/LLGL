@@ -240,7 +240,7 @@ private:
         };
 
         arrayTexture = renderer->CreateTexture(
-            LLGL::Texture2DArrayDesc(LLGL::TextureFormat::RGBA8, width, height, numImages),
+            LLGL::Texture2DArrayDesc(LLGL::TextureFormat::RGBA8UNorm, width, height, numImages),
             &imageDesc
         );
 

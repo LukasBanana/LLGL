@@ -135,7 +135,7 @@ public:
                 texDesc.type                = LLGL::TextureType::Texture2D;
 
                 // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format              = LLGL::TextureFormat::RGBA8;
+                texDesc.format              = LLGL::TextureFormat::RGBA8UNorm;
 
                 // Texture size
                 texDesc.texture2D.width     = texWidth;

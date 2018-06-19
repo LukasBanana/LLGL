@@ -36,67 +36,84 @@ enum class TextureType
 
 /**
 \brief Hardware texture format enumeration.
-\note All 32-bit integral formats are un-normalized!
-\todo Rename "R8" to "R8UNorm", "R8Sgn" to "R8SNorm" and add "R8UInt", "R8SInt" etc.
+\see TextureDescriptor::format
 */
 enum class TextureFormat
 {
-    Unknown,        //!< Unknown texture format.
+    Unknown,            //!< Unknown texture format.
 
     /* --- Color formats --- */
-    R8,             //!< Color format: red 8-bit normalized unsigned integer component.
-    R8Sgn,          //!< Color format: red 8-bit normalized signed integer component.
+    R8UNorm,            //!< Color format: red 8-bit normalized unsigned integer component.
+    R8SNorm,            //!< Color format: red 8-bit normalized signed integer component.
+    //R8UInt,
+    //R8SInt,
 
-    R16,            //!< Color format: red 16-bit normalized unsigned interger component.
-    R16Sgn,         //!< Color format: red 16-bit normalized signed interger component.
-    R16Float,       //!< Color format: red 16-bit floating point component.
+    R16UNorm,           //!< Color format: red 16-bit normalized unsigned interger component.
+    R16SNorm,           //!< Color format: red 16-bit normalized signed interger component.
+    //R16UInt,
+    //R16SInt,
+    R16Float,           //!< Color format: red 16-bit floating point component.
 
-    R32UInt,        //!< Color format: red 32-bit un-normalized unsigned interger component.
-    R32SInt,        //!< Color format: red 32-bit un-normalized signed interger component.
-    R32Float,       //!< Color format: red 32-bit floating point component.
+    R32UInt,            //!< Color format: red 32-bit un-normalized unsigned interger component.
+    R32SInt,            //!< Color format: red 32-bit un-normalized signed interger component.
+    R32Float,           //!< Color format: red 32-bit floating point component.
 
-    RG8,            //!< Color format: red, green 8-bit normalized unsigned integer components.
-    RG8Sgn,         //!< Color format: red, green 8-bit normalized signed integer components.
+    RG8UNorm,           //!< Color format: red, green 8-bit normalized unsigned integer components.
+    RG8SNorm,           //!< Color format: red, green 8-bit normalized signed integer components.
+    //RG8UInt,
+    //RG8SInt,
 
-    RG16,           //!< Color format: red, green 16-bit normalized unsigned interger components.
-    RG16Sgn,        //!< Color format: red, green 16-bit normalized signed interger components.
-    RG16Float,      //!< Color format: red, green 16-bit floating point components.
+    RG16UNorm,          //!< Color format: red, green 16-bit normalized unsigned interger components.
+    RG16SNorm,          //!< Color format: red, green 16-bit normalized signed interger components.
+    //RG16UInt,
+    //RG16SInt,
+    RG16Float,          //!< Color format: red, green 16-bit floating point components.
 
-    RG32UInt,       //!< Color format: red, green 32-bit un-normalized unsigned interger components.
-    RG32SInt,       //!< Color format: red, green 32-bit un-normalized signed interger components.
-    RG32Float,      //!< Color format: red, green 32-bit floating point components.
+    RG32UInt,           //!< Color format: red, green 32-bit un-normalized unsigned interger components.
+    RG32SInt,           //!< Color format: red, green 32-bit un-normalized signed interger components.
+    RG32Float,          //!< Color format: red, green 32-bit floating point components.
 
-    RGB8,           //!< Color format: red, green, blue 8-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan.
-    RGB8Sgn,        //!< Color format: red, green, blue 8-bit normalized signed integer components. \note Only supported with: OpenGL, Vulkan.
+    RGB8UNorm,          //!< Color format: red, green, blue 8-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan.
+    RGB8SNorm,          //!< Color format: red, green, blue 8-bit normalized signed integer components. \note Only supported with: OpenGL, Vulkan.
+    //RGB8UInt,
+    //RGB8SInt,
 
-    RGB16,          //!< Color format: red, green, blue 16-bit normalized unsigned interger components. \note Only supported with: OpenGL, Vulkan.
-    RGB16Sgn,       //!< Color format: red, green, blue 16-bit normalized signed interger components. \note Only supported with: OpenGL, Vulkan.
-    RGB16Float,     //!< Color format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL, Vulkan.
+    RGB16UNorm,         //!< Color format: red, green, blue 16-bit normalized unsigned interger components. \note Only supported with: OpenGL, Vulkan.
+    RGB16SNorm,         //!< Color format: red, green, blue 16-bit normalized signed interger components. \note Only supported with: OpenGL, Vulkan.
+    //RGB16UInt,
+    //RGB16SInt,
+    RGB16Float,         //!< Color format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL, Vulkan.
 
-    RGB32UInt,      //!< Color format: red, green, blue 32-bit un-normalized unsigned interger components.
-    RGB32SInt,      //!< Color format: red, green, blue 32-bit un-normalized signed interger components.
-    RGB32Float,     //!< Color format: red, green, blue 32-bit floating point components.
+    RGB32UInt,          //!< Color format: red, green, blue 32-bit un-normalized unsigned interger components.
+    RGB32SInt,          //!< Color format: red, green, blue 32-bit un-normalized signed interger components.
+    RGB32Float,         //!< Color format: red, green, blue 32-bit floating point components.
 
-    RGBA8,          //!< Color format: red, green, blue, alpha 8-bit normalized unsigned integer components.
-    RGBA8Sgn,       //!< Color format: red, green, blue, alpha 8-bit normalized signed integer components.
+    RGBA8UNorm,         //!< Color format: red, green, blue, alpha 8-bit normalized unsigned integer components.
+    RGBA8SNorm,         //!< Color format: red, green, blue, alpha 8-bit normalized signed integer components.
+    //RGBA8UInt,
+    //RGBA8SInt,
 
-    RGBA16,         //!< Color format: red, green, blue, alpha 16-bit normalized unsigned interger components.
-    RGBA16Sgn,      //!< Color format: red, green, blue, alpha 16-bit normalized signed interger components.
-    RGBA16Float,    //!< Color format: red, green, blue, alpha 16-bit floating point components.
+    RGBA16UNorm,        //!< Color format: red, green, blue, alpha 16-bit normalized unsigned interger components.
+    RGBA16SNorm,        //!< Color format: red, green, blue, alpha 16-bit normalized signed interger components.
+    //RGBA16UInt,
+    //RGBA16SInt,
+    RGBA16Float,        //!< Color format: red, green, blue, alpha 16-bit floating point components.
 
-    RGBA32UInt,     //!< Color format: red, green, blue, alpha 32-bit un-normalized unsigned interger components.
-    RGBA32SInt,     //!< Color format: red, green, blue, alpha 32-bit un-normalized signed interger components.
-    RGBA32Float,    //!< Color format: red, green, blue, alpha 32-bit floating point components.
+    RGBA32UInt,         //!< Color format: red, green, blue, alpha 32-bit un-normalized unsigned interger components.
+    RGBA32SInt,         //!< Color format: red, green, blue, alpha 32-bit un-normalized signed interger components.
+    RGBA32Float,        //!< Color format: red, green, blue, alpha 32-bit floating point components.
 
     /* --- Depth-stencil formats --- */
-    D32,            //!< Depth-stencil format: depth 32-bit floating point component.
-    D24S8,          //!< Depth-stencil format: depth 24-bit normalized unsigned integer, and 8-bit unsigned integer stencil components.
+    //D16UNorm,
+    D24UNormS8UInt,     //!< Depth-stencil format: depth 24-bit normalized unsigned integer, and 8-bit unsigned integer stencil components.
+    D32Float,           //!< Depth-stencil format: depth 32-bit floating point component.
+    //D32FloatS8X24UInt,  //!< Depth-stencil format: depth 32-bit floating point component, and 8-bit unsigned integer stencil components (where the remaining 24 bits are unused).
 
     /* --- Compressed color formats --- */
-    RGB_DXT1,       //!< Compressed color format: RGB S3TC DXT1 with 8 bytes per 4x4 block. \note Only supported with: OpenGL.
-    RGBA_DXT1,      //!< Compressed color format: RGBA S3TC DXT1 with 8 bytes per 4x4 block.
-    RGBA_DXT3,      //!< Compressed color format: RGBA S3TC DXT3 with 16 bytes per 4x4 block.
-    RGBA_DXT5,      //!< Compressed color format: RGBA S3TC DXT5 with 16 bytes per 4x4 block.
+    BC1RGB,             //!< Compressed color format: RGB S3TC DXT1 with 8 bytes per 4x4 block. \note Only supported with: OpenGL, Vulkan.
+    BC1RGBA,            //!< Compressed color format: RGBA S3TC DXT1 with 8 bytes per 4x4 block.
+    BC2RGBA,            //!< Compressed color format: RGBA S3TC DXT3 with 16 bytes per 4x4 block.
+    BC3RGBA,            //!< Compressed color format: RGBA S3TC DXT5 with 16 bytes per 4x4 block.
 };
 
 //! Axis direction (also used for texture cube face).
@@ -289,8 +306,8 @@ struct TextureDescriptor
     //! Hardware texture type. By default TextureType::Texture1D.
     TextureType     type        = TextureType::Texture1D;
 
-    //! Hardware texture format. By default TextureFormat::RGBA8.
-    TextureFormat   format      = TextureFormat::RGBA8;
+    //! Hardware texture format. By default TextureFormat::RGBA8UNorm.
+    TextureFormat   format      = TextureFormat::RGBA8UNorm;
 
     /**
     \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default TextureFlags::Default.
@@ -436,7 +453,7 @@ LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc);
 
 /**
 \brief Returns true if the specified texture format is a compressed format,
-i.e. either TextureFormat::RGB_DXT1, TextureFormat::RGBA_DXT1, TextureFormat::RGBA_DXT3, or TextureFormat::RGBA_DXT5.
+i.e. either TextureFormat::BC1RGB, TextureFormat::BC1RGBA, TextureFormat::BC2RGBA, or TextureFormat::BC3RGBA.
 \see TextureFormat
 */
 LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format);

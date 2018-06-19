@@ -207,7 +207,7 @@ int main()
             imageDesc.data      = imageBuffer;
             imageDesc.dataSize  = texWidth*texHeight*4;
         };
-        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, texWidth, texHeight), &imageDesc);
+        auto texture = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8UNorm, texWidth, texHeight), &imageDesc);
 
         renderer->GenerateMips(*texture);
 
@@ -252,7 +252,7 @@ int main()
 
         // Create texture for render target attachment
         const std::uint32_t renderTargetSize = 512;
-        auto renderTargetTex = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, renderTargetSize, renderTargetSize));
+        auto renderTargetTex = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8UNorm, renderTargetSize, renderTargetSize));
 
         // Create render target
         LLGL::RenderTargetDescriptor rtDesc;

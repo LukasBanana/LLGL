@@ -38,74 +38,74 @@ GLenum MapOrZero(const TextureFormat textureFormat)
 {
     switch (textureFormat)
     {
-        case TextureFormat::Unknown:        return 0;
+        case TextureFormat::Unknown:            return 0;
 
         /* --- Color formats --- */
-        case TextureFormat::R8:             return GL_R8;
-        case TextureFormat::R8Sgn:          return GL_R8_SNORM;
+        case TextureFormat::R8UNorm:            return GL_R8;
+        case TextureFormat::R8SNorm:            return GL_R8_SNORM;
 
         #ifdef LLGL_OPENGL
-        case TextureFormat::R16:            return GL_R16;
-        case TextureFormat::R16Sgn:         return GL_R16_SNORM;
+        case TextureFormat::R16UNorm:           return GL_R16;
+        case TextureFormat::R16SNorm:           return GL_R16_SNORM;
         #endif
-        case TextureFormat::R16Float:       return GL_R16F;
+        case TextureFormat::R16Float:           return GL_R16F;
 
-        case TextureFormat::R32UInt:        return GL_R32I;
-        case TextureFormat::R32SInt:        return GL_R32UI;
-        case TextureFormat::R32Float:       return GL_R32F;
+        case TextureFormat::R32UInt:            return GL_R32I;
+        case TextureFormat::R32SInt:            return GL_R32UI;
+        case TextureFormat::R32Float:           return GL_R32F;
 
-        case TextureFormat::RG8:            return GL_RG8;
-        case TextureFormat::RG8Sgn:         return GL_RG8_SNORM;
+        case TextureFormat::RG8UNorm:           return GL_RG8;
+        case TextureFormat::RG8SNorm:           return GL_RG8_SNORM;
 
         #ifdef LLGL_OPENGL
-        case TextureFormat::RG16:           return GL_RG16;
-        case TextureFormat::RG16Sgn:        return GL_RG16_SNORM;
+        case TextureFormat::RG16UNorm:          return GL_RG16;
+        case TextureFormat::RG16SNorm:          return GL_RG16_SNORM;
         #endif
-        case TextureFormat::RG16Float:      return GL_RG16F;
+        case TextureFormat::RG16Float:          return GL_RG16F;
 
-        case TextureFormat::RG32UInt:       return GL_RG32UI;
-        case TextureFormat::RG32SInt:       return GL_RG32I;
-        case TextureFormat::RG32Float:      return GL_RG32F;
+        case TextureFormat::RG32UInt:           return GL_RG32UI;
+        case TextureFormat::RG32SInt:           return GL_RG32I;
+        case TextureFormat::RG32Float:          return GL_RG32F;
 
-        case TextureFormat::RGB8:           return GL_RGB8;
-        case TextureFormat::RGB8Sgn:        return GL_RGB8_SNORM;
+        case TextureFormat::RGB8UNorm:          return GL_RGB8;
+        case TextureFormat::RGB8SNorm:          return GL_RGB8_SNORM;
 
         #ifdef LLGL_OPENGL
-        case TextureFormat::RGB16:          return GL_RGB16;
-        case TextureFormat::RGB16Sgn:       return GL_RGB16_SNORM;
+        case TextureFormat::RGB16UNorm:         return GL_RGB16;
+        case TextureFormat::RGB16SNorm:         return GL_RGB16_SNORM;
         #endif
-        case TextureFormat::RGB16Float:     return GL_RGB16F;
+        case TextureFormat::RGB16Float:         return GL_RGB16F;
 
-        case TextureFormat::RGB32UInt:      return GL_RGB32UI;
-        case TextureFormat::RGB32SInt:      return GL_RGB32I;
-        case TextureFormat::RGB32Float:     return GL_RGB32F;
+        case TextureFormat::RGB32UInt:          return GL_RGB32UI;
+        case TextureFormat::RGB32SInt:          return GL_RGB32I;
+        case TextureFormat::RGB32Float:         return GL_RGB32F;
 
-        case TextureFormat::RGBA8:          return GL_RGBA8;
-        case TextureFormat::RGBA8Sgn:       return GL_RGBA8_SNORM;
+        case TextureFormat::RGBA8UNorm:         return GL_RGBA8;
+        case TextureFormat::RGBA8SNorm:         return GL_RGBA8_SNORM;
 
         #ifdef LLGL_OPENGL
-        case TextureFormat::RGBA16:         return GL_RGBA16;
-        case TextureFormat::RGBA16Sgn:      return GL_RGBA16_SNORM;
+        case TextureFormat::RGBA16UNorm:        return GL_RGBA16;
+        case TextureFormat::RGBA16SNorm:        return GL_RGBA16_SNORM;
         #endif
-        case TextureFormat::RGBA16Float:    return GL_RGBA16F;
+        case TextureFormat::RGBA16Float:        return GL_RGBA16F;
 
-        case TextureFormat::RGBA32UInt:     return GL_RGBA32UI;
-        case TextureFormat::RGBA32SInt:     return GL_RGBA32I;
-        case TextureFormat::RGBA32Float:    return GL_RGBA32F;
+        case TextureFormat::RGBA32UInt:         return GL_RGBA32UI;
+        case TextureFormat::RGBA32SInt:         return GL_RGBA32I;
+        case TextureFormat::RGBA32Float:        return GL_RGBA32F;
 
         /* --- Depth-stencil formats --- */
-        case TextureFormat::D32:            return GL_DEPTH_COMPONENT;
-        case TextureFormat::D24S8:          return GL_DEPTH_STENCIL;
+        case TextureFormat::D32Float:           return GL_DEPTH_COMPONENT;
+        case TextureFormat::D24UNormS8UInt:     return GL_DEPTH_STENCIL;
 
         #ifdef GL_EXT_texture_compression_s3tc
         /* --- Compressed color formats --- */
-        case TextureFormat::RGB_DXT1:       return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-        case TextureFormat::RGBA_DXT1:      return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-        case TextureFormat::RGBA_DXT3:      return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-        case TextureFormat::RGBA_DXT5:      return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        case TextureFormat::BC1RGB:           return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+        case TextureFormat::BC1RGBA:          return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+        case TextureFormat::BC2RGBA:          return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+        case TextureFormat::BC3RGBA:          return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
         #endif
 
-        default:                            return 0;
+        default:                                return 0;
     }
 }
 
@@ -723,18 +723,18 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
     switch (internalFormat)
     {
         /* --- Base internal formats --- */
-        case GL_RED:                            return TextureFormat::R8;
-        case GL_RG:                             return TextureFormat::RG8;
-        case GL_RGB:                            return TextureFormat::RGB8;
-        case GL_RGBA:                           return TextureFormat::RGBA8;
+        case GL_RED:                            return TextureFormat::R8UNorm;
+        case GL_RG:                             return TextureFormat::RG8UNorm;
+        case GL_RGB:                            return TextureFormat::RGB8UNorm;
+        case GL_RGBA:                           return TextureFormat::RGBA8UNorm;
 
         /* --- Color formats --- */
-        case GL_R8:                             return TextureFormat::R8;
-        case GL_R8_SNORM:                       return TextureFormat::R8Sgn;
+        case GL_R8:                             return TextureFormat::R8UNorm;
+        case GL_R8_SNORM:                       return TextureFormat::R8SNorm;
 
         #ifdef LLGL_OPENGL
-        case GL_R16:                            return TextureFormat::R16;
-        case GL_R16_SNORM:                      return TextureFormat::R16Sgn;
+        case GL_R16:                            return TextureFormat::R16UNorm;
+        case GL_R16_SNORM:                      return TextureFormat::R16SNorm;
         #endif
         case GL_R16F:                           return TextureFormat::R16Float;
 
@@ -742,12 +742,12 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_R32UI:                          return TextureFormat::R32SInt;
         case GL_R32F:                           return TextureFormat::R32Float;
 
-        case GL_RG8:                            return TextureFormat::RG8;
-        case GL_RG8_SNORM:                      return TextureFormat::RG8Sgn;
+        case GL_RG8:                            return TextureFormat::RG8UNorm;
+        case GL_RG8_SNORM:                      return TextureFormat::RG8SNorm;
 
         #ifdef LLGL_OPENGL
-        case GL_RG16:                           return TextureFormat::RG16;
-        case GL_RG16_SNORM:                     return TextureFormat::RG16Sgn;
+        case GL_RG16:                           return TextureFormat::RG16UNorm;
+        case GL_RG16_SNORM:                     return TextureFormat::RG16SNorm;
         #endif
         case GL_RG16F:                          return TextureFormat::RG16Float;
 
@@ -755,12 +755,12 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_RG32I:                          return TextureFormat::RG32SInt;
         case GL_RG32F:                          return TextureFormat::RG32Float;
 
-        case GL_RGB8:                           return TextureFormat::RGB8;
-        case GL_RGB8_SNORM:                     return TextureFormat::RGB8Sgn;
+        case GL_RGB8:                           return TextureFormat::RGB8UNorm;
+        case GL_RGB8_SNORM:                     return TextureFormat::RGB8SNorm;
 
         #ifdef LLGL_OPENGL
-        case GL_RGB16:                          return TextureFormat::RGB16;
-        case GL_RGB16_SNORM:                    return TextureFormat::RGB16Sgn;
+        case GL_RGB16:                          return TextureFormat::RGB16UNorm;
+        case GL_RGB16_SNORM:                    return TextureFormat::RGB16SNorm;
         #endif
         case GL_RGB16F:                         return TextureFormat::RGB16Float;
 
@@ -768,12 +768,12 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_RGB32I:                         return TextureFormat::RGB32SInt;
         case GL_RGB32F:                         return TextureFormat::RGB32Float;
 
-        case GL_RGBA8:                          return TextureFormat::RGBA8;
-        case GL_RGBA8_SNORM:                    return TextureFormat::RGBA8Sgn;
+        case GL_RGBA8:                          return TextureFormat::RGBA8UNorm;
+        case GL_RGBA8_SNORM:                    return TextureFormat::RGBA8SNorm;
 
         #ifdef LLGL_OPENGL
-        case GL_RGBA16:                         return TextureFormat::RGBA16;
-        case GL_RGBA16_SNORM:                   return TextureFormat::RGBA16Sgn;
+        case GL_RGBA16:                         return TextureFormat::RGBA16UNorm;
+        case GL_RGBA16_SNORM:                   return TextureFormat::RGBA16SNorm;
         #endif
         case GL_RGBA16F:                        return TextureFormat::RGBA16Float;
 
@@ -782,15 +782,15 @@ static TextureFormat UnmapTextureFormat(const GLenum internalFormat)
         case GL_RGBA32F:                        return TextureFormat::RGBA32Float;
 
         /* --- Depth-stencil formats --- */
-        case GL_DEPTH_COMPONENT:                return TextureFormat::D32;
-        case GL_DEPTH_STENCIL:                  return TextureFormat::D24S8;
+        case GL_DEPTH_COMPONENT:                return TextureFormat::D32Float;
+        case GL_DEPTH_STENCIL:                  return TextureFormat::D24UNormS8UInt;
 
         #ifdef LLGL_OPENGL
         /* --- Compressed color formats --- */
-        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:   return TextureFormat::RGB_DXT1;
-        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:  return TextureFormat::RGBA_DXT1;
-        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:  return TextureFormat::RGBA_DXT3;
-        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:  return TextureFormat::RGBA_DXT5;
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:   return TextureFormat::BC1RGB;
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:  return TextureFormat::BC1RGBA;
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:  return TextureFormat::BC2RGBA;
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:  return TextureFormat::BC3RGBA;
         #endif
         
         default:                                break;
