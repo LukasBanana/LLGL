@@ -552,4 +552,32 @@ myCommandBuffer->SetGraphicsAPIDependentState(&myStateDesc, sizeof(myStateDesc))
 ```
 
 
+`TextureFormat` and `VectorType` enumerations:
+----------------------------------------------
+
+Both `TextureFormat` and `VectorType` enumerations have been merged into the new `Format` enumeration.
+
+Before:
+```cpp
+// Usage:
+LLGL::TextureDescriptor myTextureDesc;
+myTextureDesc.format = LLGL::TextureFormat::RGBA8; // 8-bit normalized unsigned byte format
+
+LLGL::VertexAttribute myVertexPositionAttrib { "myPosition", LLGL::VectorType::Float3 }; // 32-bit floating-point format
+LLGL::VertexAttribute myVertexColorAttrib    { "myColor",    LLGL::VectorType::Float4 }; // 32-bit floating-point format
+LLGL::VertexAttribute myVertexFlagsAttrib    { "myFlags",    LLGL::VectorType::UInt   }; // 32-bit unsigned integer format
+```
+
+After:
+```cpp
+// Usage:
+LLGL::TextureDescriptor myTextureDesc;
+myTextureDesc.format = LLGL::TextureFormat::RGBA8UNorm; // 8-bit normalized unsigned byte format
+
+LLGL::VertexAttribute myVertexPositionAttrib { "myPosition", LLGL::Format::RGB32Float }; // 32-bit floating-point format
+LLGL::VertexAttribute myVertexColorAttrib    { "myColor",    LLGL::Format::RGBA8UNorm }; // 8-bit normalized unsigned byte format
+LLGL::VertexAttribute myVertexFlagsAttrib    { "myFlags",    LLGL::Format::R32UInt    }; // 32-bit unsigned integer format
+```
+
+
 
