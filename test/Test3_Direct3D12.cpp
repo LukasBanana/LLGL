@@ -200,7 +200,7 @@ int main()
         LLGL::TextureDescriptor texDesc;
         {
             texDesc.type                = LLGL::TextureType::Texture2D;
-            texDesc.format              = LLGL::TextureFormat::RGBA;
+            texDesc.format              = LLGL::Format::RGBA;
             texDesc.texture2D.width     = 2;
             texDesc.texture2D.height    = 2;
             texDesc.texture2D.layers    = 1;

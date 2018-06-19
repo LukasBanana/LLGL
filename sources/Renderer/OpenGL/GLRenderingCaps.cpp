@@ -104,44 +104,44 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
     return languages;
 }
 
-static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
+static std::vector<Format> GetDefaultSupportedGLTextureFormats()
 {
     return
     {
-        TextureFormat::R8UNorm,
-        TextureFormat::R8SNorm,
-        TextureFormat::R16UNorm,
-        TextureFormat::R16SNorm,
-        TextureFormat::R16Float,
-        TextureFormat::R32UInt,
-        TextureFormat::R32SInt,
-        TextureFormat::R32Float,
-        TextureFormat::RG8UNorm,
-        TextureFormat::RG8SNorm,
-        TextureFormat::RG16UNorm,
-        TextureFormat::RG16SNorm,
-        TextureFormat::RG16Float,
-        TextureFormat::RG32UInt,
-        TextureFormat::RG32SInt,
-        TextureFormat::RG32Float,
-        TextureFormat::RGB8UNorm,
-        TextureFormat::RGB8SNorm,
-        TextureFormat::RGB16UNorm,
-        TextureFormat::RGB16SNorm,
-        TextureFormat::RGB16Float,
-        TextureFormat::RGB32UInt,
-        TextureFormat::RGB32SInt,
-        TextureFormat::RGB32Float,
-        TextureFormat::RGBA8UNorm,
-        TextureFormat::RGBA8SNorm,
-        TextureFormat::RGBA16UNorm,
-        TextureFormat::RGBA16SNorm,
-        TextureFormat::RGBA16Float,
-        TextureFormat::RGBA32UInt,
-        TextureFormat::RGBA32SInt,
-        TextureFormat::RGBA32Float,
-        TextureFormat::D32Float,
-        TextureFormat::D24UNormS8UInt,
+        Format::R8UNorm,
+        Format::R8SNorm,
+        Format::R16UNorm,
+        Format::R16SNorm,
+        Format::R16Float,
+        Format::R32UInt,
+        Format::R32SInt,
+        Format::R32Float,
+        Format::RG8UNorm,
+        Format::RG8SNorm,
+        Format::RG16UNorm,
+        Format::RG16SNorm,
+        Format::RG16Float,
+        Format::RG32UInt,
+        Format::RG32SInt,
+        Format::RG32Float,
+        Format::RGB8UNorm,
+        Format::RGB8SNorm,
+        Format::RGB16UNorm,
+        Format::RGB16SNorm,
+        Format::RGB16Float,
+        Format::RGB32UInt,
+        Format::RGB32SInt,
+        Format::RGB32Float,
+        Format::RGBA8UNorm,
+        Format::RGBA8SNorm,
+        Format::RGBA16UNorm,
+        Format::RGBA16SNorm,
+        Format::RGBA16Float,
+        Format::RGBA32UInt,
+        Format::RGBA32SInt,
+        Format::RGBA32Float,
+        Format::D32Float,
+        Format::D24UNormS8UInt,
     };
 }
 
@@ -153,7 +153,7 @@ static void GLGetRenderingAttribs(RenderingCapabilities& caps)
     caps.shadingLanguages   = GLQueryShadingLanguages();
 }
 
-static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureFormats)
+static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 {
     textureFormats = GetDefaultSupportedGLTextureFormats();
 
@@ -163,7 +163,7 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
     {
         RemoveAllFromListIf(
             textureFormats,
-            [](TextureFormat format) -> bool
+            [](Format format) -> bool
             {
                 if (auto internalformat = GLTypes::MapOrZero(format))
                 {
@@ -190,16 +190,16 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
         switch (format)
         {
             case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-                textureFormats.push_back(TextureFormat::BC1RGB);
+                textureFormats.push_back(Format::BC1RGB);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-                textureFormats.push_back(TextureFormat::BC1RGBA);
+                textureFormats.push_back(Format::BC1RGBA);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-                textureFormats.push_back(TextureFormat::BC2RGBA);
+                textureFormats.push_back(Format::BC2RGBA);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-                textureFormats.push_back(TextureFormat::BC3RGBA);
+                textureFormats.push_back(Format::BC3RGBA);
                 break;
             default:
                 break;

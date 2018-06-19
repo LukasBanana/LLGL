@@ -28,7 +28,7 @@ namespace D3D11Types
 
 DXGI_FORMAT                 Map( const VectorType           vectorType      );
 DXGI_FORMAT                 Map( const DataType             dataType        );
-DXGI_FORMAT                 Map( const TextureFormat        textureFormat   );
+DXGI_FORMAT                 Map( const Format        textureFormat   );
 D3D_PRIMITIVE_TOPOLOGY      Map( const PrimitiveTopology    topology        );
 D3D11_FILL_MODE             Map( const PolygonMode          polygonMode     );
 D3D11_CULL_MODE             Map( const CullMode             cullMode        );
@@ -46,7 +46,7 @@ D3D11_SRV_DIMENSION         Map( const TextureType          textureType     );
 D3D11_LOGIC_OP              Map( const LogicOp              logicOp         );
 #endif
 
-TextureFormat               Unmap( const DXGI_FORMAT format );
+Format               Unmap( const DXGI_FORMAT format );
 
 void Convert(D3D11_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil);
 

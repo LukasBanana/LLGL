@@ -265,7 +265,7 @@ int main()
         LLGL::TextureDescriptor textureDesc;
         {
             textureDesc.type                = LLGL::TextureType::Texture2D;
-            textureDesc.format              = LLGL::TextureFormat::RGBA8UNorm;
+            textureDesc.format              = LLGL::Format::RGBA8UNorm;
             textureDesc.texture2D.width     = 2;
             textureDesc.texture2D.height    = 2;
         }
@@ -300,7 +300,7 @@ int main()
         LLGL::TextureDescriptor texDesc;
         {
             texDesc.type                    = LLGL::TextureType::Texture2D;
-            texDesc.format                  = LLGL::TextureFormat::RGBA8UNorm;
+            texDesc.format                  = LLGL::Format::RGBA8UNorm;
             texDesc.texture2DDesc.width     = renderTargetSize.x;
             texDesc.texture2DDesc.height    = renderTargetSize.y;
         }

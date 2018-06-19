@@ -53,66 +53,66 @@ LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc)
     }
 }
 
-std::uint32_t TextureBufferSize(const TextureFormat textureFormat, std::uint32_t numTexels)
+std::uint32_t TextureBufferSize(const Format textureFormat, std::uint32_t numTexels)
 {
     switch (textureFormat)
     {
         /* --- Color formats --- */
-        case TextureFormat::R8UNorm:            return numTexels;
-        case TextureFormat::R8SNorm:            return numTexels;
+        case Format::R8UNorm:           return numTexels;
+        case Format::R8SNorm:           return numTexels;
 
-        case TextureFormat::R16UNorm:           return numTexels * 2;
-        case TextureFormat::R16SNorm:           return numTexels * 2;
-        case TextureFormat::R16Float:           return numTexels * 2;
+        case Format::R16UNorm:          return numTexels * 2;
+        case Format::R16SNorm:          return numTexels * 2;
+        case Format::R16Float:          return numTexels * 2;
 
-        case TextureFormat::R32UInt:            return numTexels * 4;
-        case TextureFormat::R32SInt:            return numTexels * 4;
-        case TextureFormat::R32Float:           return numTexels * 4;
+        case Format::R32UInt:           return numTexels * 4;
+        case Format::R32SInt:           return numTexels * 4;
+        case Format::R32Float:          return numTexels * 4;
 
-        case TextureFormat::RG8UNorm:           return numTexels * 2;
-        case TextureFormat::RG8SNorm:           return numTexels * 2;
+        case Format::RG8UNorm:          return numTexels * 2;
+        case Format::RG8SNorm:          return numTexels * 2;
 
-        case TextureFormat::RG16UNorm:          return numTexels * 4;
-        case TextureFormat::RG16SNorm:          return numTexels * 4;
-        case TextureFormat::RG16Float:          return numTexels * 4;
+        case Format::RG16UNorm:         return numTexels * 4;
+        case Format::RG16SNorm:         return numTexels * 4;
+        case Format::RG16Float:         return numTexels * 4;
 
-        case TextureFormat::RG32UInt:           return numTexels * 8;
-        case TextureFormat::RG32SInt:           return numTexels * 8;
-        case TextureFormat::RG32Float:          return numTexels * 8;
+        case Format::RG32UInt:          return numTexels * 8;
+        case Format::RG32SInt:          return numTexels * 8;
+        case Format::RG32Float:         return numTexels * 8;
 
-        case TextureFormat::RGB8UNorm:          return numTexels * 3;
-        case TextureFormat::RGB8SNorm:          return numTexels * 3;
+        case Format::RGB8UNorm:         return numTexels * 3;
+        case Format::RGB8SNorm:         return numTexels * 3;
 
-        case TextureFormat::RGB16UNorm:         return numTexels * 6;
-        case TextureFormat::RGB16SNorm:         return numTexels * 6;
-        case TextureFormat::RGB16Float:         return numTexels * 6;
+        case Format::RGB16UNorm:        return numTexels * 6;
+        case Format::RGB16SNorm:        return numTexels * 6;
+        case Format::RGB16Float:        return numTexels * 6;
 
-        case TextureFormat::RGB32UInt:          return numTexels * 12;
-        case TextureFormat::RGB32SInt:          return numTexels * 12;
-        case TextureFormat::RGB32Float:         return numTexels * 12;
+        case Format::RGB32UInt:         return numTexels * 12;
+        case Format::RGB32SInt:         return numTexels * 12;
+        case Format::RGB32Float:        return numTexels * 12;
 
-        case TextureFormat::RGBA8UNorm:         return numTexels * 4;
-        case TextureFormat::RGBA8SNorm:         return numTexels * 4;
+        case Format::RGBA8UNorm:        return numTexels * 4;
+        case Format::RGBA8SNorm:        return numTexels * 4;
 
-        case TextureFormat::RGBA16UNorm:        return numTexels * 8;
-        case TextureFormat::RGBA16SNorm:        return numTexels * 8;
-        case TextureFormat::RGBA16Float:        return numTexels * 8;
+        case Format::RGBA16UNorm:       return numTexels * 8;
+        case Format::RGBA16SNorm:       return numTexels * 8;
+        case Format::RGBA16Float:       return numTexels * 8;
 
-        case TextureFormat::RGBA32UInt:         return numTexels * 16;
-        case TextureFormat::RGBA32SInt:         return numTexels * 16;
-        case TextureFormat::RGBA32Float:        return numTexels * 16;
+        case Format::RGBA32UInt:        return numTexels * 16;
+        case Format::RGBA32SInt:        return numTexels * 16;
+        case Format::RGBA32Float:       return numTexels * 16;
 
         /* --- Depth-stencil formats --- */
-        case TextureFormat::D32Float:           return numTexels * 4; // 32-bit depth
-        case TextureFormat::D24UNormS8UInt:     return numTexels * 4; // 24-bit depth, 8-bit stencil
+        case Format::D32Float:          return numTexels * 4; // 32-bit depth
+        case Format::D24UNormS8UInt:    return numTexels * 4; // 24-bit depth, 8-bit stencil
 
         /* --- Compressed color formats --- */
-        case TextureFormat::BC1RGB:             return numTexels / 4; // 64-bit per 4x4 block
-        case TextureFormat::BC1RGBA:            return numTexels / 4; // 64-bit per 4x4 block
-        case TextureFormat::BC2RGBA:            return numTexels / 8; // 128-bit per 4x4 block
-        case TextureFormat::BC3RGBA:            return numTexels / 8; // 128-bit per 4x4 block
+        case Format::BC1RGB:            return numTexels / 4; // 64-bit per 4x4 block
+        case Format::BC1RGBA:           return numTexels / 4; // 64-bit per 4x4 block
+        case Format::BC2RGBA:           return numTexels / 8; // 128-bit per 4x4 block
+        case Format::BC3RGBA:           return numTexels / 8; // 128-bit per 4x4 block
 
-        default:                                return 0;
+        default:                        return 0;
     }
 }
 
@@ -131,16 +131,6 @@ LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)
         case TextureType::Texture2DMSArray: return textureDesc.texture2D.width * textureDesc.texture2D.height * textureDesc.texture2D.layers;
         default:                            return 0;
     }
-}
-
-LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format)
-{
-    return (format >= TextureFormat::BC1RGB);
-}
-
-LLGL_EXPORT bool IsDepthStencilFormat(const TextureFormat format)
-{
-    return (format == TextureFormat::D32Float || format == TextureFormat::D24UNormS8UInt);
 }
 
 LLGL_EXPORT bool IsArrayTexture(const TextureType type)

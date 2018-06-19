@@ -237,13 +237,13 @@ private:
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
         renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DMSDesc(LLGL::TextureFormat::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height, multiSamplingDesc.samples)
+            LLGL::Texture2DMSDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height, multiSamplingDesc.samples)
         );
 
         #else
 
         renderTargetTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height)
+            LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, renderTargetSize.width, renderTargetSize.height)
         );
 
         #endif
@@ -252,7 +252,7 @@ private:
 
         // Create depth texture
         renderTargetDepthTex = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::D32Float, renderTargetSize.width, renderTargetSize.height)
+            LLGL::Texture2DDesc(LLGL::Format::D32Float, renderTargetSize.width, renderTargetSize.height)
         );
 
         #endif
@@ -260,7 +260,7 @@ private:
         #if 0//TEST
         // Create depth texture
         auto renderTargetDepthTex2 = renderer->CreateTexture(
-            LLGL::Texture2DDesc(LLGL::TextureFormat::D32Float, renderTargetSize.width, renderTargetSize.height)
+            LLGL::Texture2DDesc(LLGL::Format::D32Float, renderTargetSize.width, renderTargetSize.height)
         );
         #endif
 

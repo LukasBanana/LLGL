@@ -109,13 +109,13 @@ LLGL_EXPORT const char* ToString(const ShadingLanguage t)
     return nullptr;
 }
 
-LLGL_EXPORT const char* ToString(const TextureFormat t)
+LLGL_EXPORT const char* ToString(const Format t)
 {
-    using T = TextureFormat;
+    using T = Format;
 
     switch (t)
     {
-        case T::Unknown:            return "unknown";
+        case T::Undefined:          return "undefined";
 
         /* --- Color formats --- */
         case T::R8UNorm:            return "R8UNorm";

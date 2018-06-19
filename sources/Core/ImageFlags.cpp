@@ -534,71 +534,71 @@ LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format)
     return (format == ImageFormat::Depth || format == ImageFormat::DepthStencil);
 }
 
-static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const TextureFormat textureFormat)
+static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Format textureFormat)
 {
     using T = std::tuple<ImageFormat, DataType>;
     switch (textureFormat)
     {
-        case TextureFormat::Unknown:        break;
+        case Format::Undefined:         break;
 
-        case TextureFormat::R8UNorm:        return T{ ImageFormat::R, DataType::UInt8 };
-        case TextureFormat::R8SNorm:        return T{ ImageFormat::R, DataType::Int8 };
+        case Format::R8UNorm:           return  T{ ImageFormat::R, DataType::UInt8 };
+        case Format::R8SNorm:           return  T{ ImageFormat::R, DataType::Int8 };
 
-        case TextureFormat::R16UNorm:       return T{ ImageFormat::R, DataType::UInt16 };
-        case TextureFormat::R16SNorm:       return T{ ImageFormat::R, DataType::Int16 };
-        case TextureFormat::R16Float:       break;
+        case Format::R16UNorm:          return  T{ ImageFormat::R, DataType::UInt16 };
+        case Format::R16SNorm:          return  T{ ImageFormat::R, DataType::Int16 };
+        case Format::R16Float:          break;
 
-        case TextureFormat::R32UInt:        return T{ ImageFormat::R, DataType::UInt32 };
-        case TextureFormat::R32SInt:        return T{ ImageFormat::R, DataType::Int32 };
-        case TextureFormat::R32Float:       return T{ ImageFormat::R, DataType::Float };
+        case Format::R32UInt:           return  T{ ImageFormat::R, DataType::UInt32 };
+        case Format::R32SInt:           return  T{ ImageFormat::R, DataType::Int32 };
+        case Format::R32Float:          return  T{ ImageFormat::R, DataType::Float };
 
-        case TextureFormat::RG8UNorm:       return T{ ImageFormat::RG, DataType::UInt8 };
-        case TextureFormat::RG8SNorm:       return T{ ImageFormat::RG, DataType::Int8 };
+        case Format::RG8UNorm:          return  T{ ImageFormat::RG, DataType::UInt8 };
+        case Format::RG8SNorm:          return  T{ ImageFormat::RG, DataType::Int8 };
 
-        case TextureFormat::RG16UNorm:      return T{ ImageFormat::RG, DataType::UInt16 };
-        case TextureFormat::RG16SNorm:      return T{ ImageFormat::RG, DataType::Int16 };
-        case TextureFormat::RG16Float:      break;
+        case Format::RG16UNorm:         return  T{ ImageFormat::RG, DataType::UInt16 };
+        case Format::RG16SNorm:         return  T{ ImageFormat::RG, DataType::Int16 };
+        case Format::RG16Float:         break;
 
-        case TextureFormat::RG32UInt:       return T{ ImageFormat::RG, DataType::UInt32 };
-        case TextureFormat::RG32SInt:       return T{ ImageFormat::RG, DataType::Int32 };
-        case TextureFormat::RG32Float:      return T{ ImageFormat::RG, DataType::Float };
+        case Format::RG32UInt:          return  T{ ImageFormat::RG, DataType::UInt32 };
+        case Format::RG32SInt:          return  T{ ImageFormat::RG, DataType::Int32 };
+        case Format::RG32Float:         return  T{ ImageFormat::RG, DataType::Float };
 
-        case TextureFormat::RGB8UNorm:      return T{ ImageFormat::RGB, DataType::UInt8 };
-        case TextureFormat::RGB8SNorm:      return T{ ImageFormat::RGB, DataType::Int8 };
+        case Format::RGB8UNorm:         return  T{ ImageFormat::RGB, DataType::UInt8 };
+        case Format::RGB8SNorm:         return  T{ ImageFormat::RGB, DataType::Int8 };
 
-        case TextureFormat::RGB16UNorm:     return T{ ImageFormat::RGB, DataType::UInt16 };
-        case TextureFormat::RGB16SNorm:     return T{ ImageFormat::RGB, DataType::Int16 };
-        case TextureFormat::RGB16Float:     break;
+        case Format::RGB16UNorm:        return  T{ ImageFormat::RGB, DataType::UInt16 };
+        case Format::RGB16SNorm:        return  T{ ImageFormat::RGB, DataType::Int16 };
+        case Format::RGB16Float:        break;
 
-        case TextureFormat::RGB32UInt:      return T{ ImageFormat::RGB, DataType::UInt32 };
-        case TextureFormat::RGB32SInt:      return T{ ImageFormat::RGB, DataType::Int32 };
-        case TextureFormat::RGB32Float:     return T{ ImageFormat::RGB, DataType::Float };
+        case Format::RGB32UInt:         return  T{ ImageFormat::RGB, DataType::UInt32 };
+        case Format::RGB32SInt:         return  T{ ImageFormat::RGB, DataType::Int32 };
+        case Format::RGB32Float:        return  T{ ImageFormat::RGB, DataType::Float };
 
-        case TextureFormat::RGBA8UNorm:     return T{ ImageFormat::RGBA, DataType::UInt8 };
-        case TextureFormat::RGBA8SNorm:     return T{ ImageFormat::RGBA, DataType::Int8 };
+        case Format::RGBA8UNorm:        return  T{ ImageFormat::RGBA, DataType::UInt8 };
+        case Format::RGBA8SNorm:        return  T{ ImageFormat::RGBA, DataType::Int8 };
 
-        case TextureFormat::RGBA16UNorm:    return T{ ImageFormat::RGBA, DataType::UInt16 };
-        case TextureFormat::RGBA16SNorm:    return T{ ImageFormat::RGBA, DataType::Int16 };
-        case TextureFormat::RGBA16Float:    break;
+        case Format::RGBA16UNorm:       return  T{ ImageFormat::RGBA, DataType::UInt16 };
+        case Format::RGBA16SNorm:       return  T{ ImageFormat::RGBA, DataType::Int16 };
+        case Format::RGBA16Float:       break;
 
-        case TextureFormat::RGBA32UInt:     return T{ ImageFormat::RGBA, DataType::UInt32 };
-        case TextureFormat::RGBA32SInt:     return T{ ImageFormat::RGBA, DataType::Int32 };
-        case TextureFormat::RGBA32Float:    return T{ ImageFormat::RGBA, DataType::Float };
+        case Format::RGBA32UInt:        return  T{ ImageFormat::RGBA, DataType::UInt32 };
+        case Format::RGBA32SInt:        return  T{ ImageFormat::RGBA, DataType::Int32 };
+        case Format::RGBA32Float:       return  T{ ImageFormat::RGBA, DataType::Float };
 
-        case TextureFormat::D32Float:       return T{ ImageFormat::Depth, DataType::Float };
-        case TextureFormat::D24UNormS8UInt: return T{ ImageFormat::DepthStencil, DataType::Float };
+        case Format::D32Float:          return  T{ ImageFormat::Depth, DataType::Float };
+        case Format::D24UNormS8UInt:    return  T{ ImageFormat::DepthStencil, DataType::Float };
 
-        case TextureFormat::BC1RGB:         return T{ ImageFormat::CompressedRGB, DataType::Int8 };
-        case TextureFormat::BC1RGBA:        return T{ ImageFormat::CompressedRGBA, DataType::Int8 };
-        case TextureFormat::BC2RGBA:        return T{ ImageFormat::CompressedRGBA, DataType::Int16 };
-        case TextureFormat::BC3RGBA:        return T{ ImageFormat::CompressedRGBA, DataType::Int16 };
+        case Format::BC1RGB:            return T{ ImageFormat::CompressedRGB, DataType::Int8 };
+        case Format::BC1RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int8 };
+        case Format::BC2RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int16 };
+        case Format::BC3RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int16 };
     }
 
     /* Return an invalid image format */
     return T{ ImageFormat::CompressedRGBA, DataType::Double };
 }
 
-LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, ImageFormat& imageFormat, DataType& dataType)
+LLGL_EXPORT bool FindSuitableImageFormat(const Format textureFormat, ImageFormat& imageFormat, DataType& dataType)
 {
     /* Find suitable format and check for invalid output */
     ImageFormat imageFormatTmp;

@@ -184,9 +184,9 @@ LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
 \param[out] imageFormat Specifies the output image format.
 \param[out] dataType Specifies the output image data type.
 \return True if a suitable image format has been found. Otherwise, the output parameter 'imageFormat' and 'dataType' have not been modified.
-\remarks Texture formats that cannot be converted to an image format are all 16-bit floating-point types, and TextureFormat::Unknown.
+\remarks Texture formats that cannot be converted to an image format are all 16-bit floating-point types, and Format::Undefined.
 */
-LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, ImageFormat& imageFormat, DataType& dataType);
+LLGL_EXPORT bool FindSuitableImageFormat(const Format textureFormat, ImageFormat& imageFormat, DataType& dataType);
 
 /**
 \brief Converts the image format and data type of the source image (only uncompressed color formats).

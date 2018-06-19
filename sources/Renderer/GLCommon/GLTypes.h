@@ -28,14 +28,14 @@ namespace GLTypes
 {
 
 
-GLenum MapOrZero(const TextureFormat textureFormat);
+GLenum MapOrZero(const Format textureFormat);
 
 GLenum Map( const CPUAccess             cpuAccess           );
 GLenum Map( const DataType              dataType            );
 GLenum Map( const PrimitiveType         primitiveType       );
 GLenum Map( const PrimitiveTopology     primitiveTopology   );
 GLenum Map( const TextureType           textureType         );
-GLenum Map( const TextureFormat         textureFormat       );
+GLenum Map( const Format                format              );
 GLenum Map( const ImageFormat           imageFormat         );
 //GLenum Map( const ImageFormat           imageFormat, bool integerFormat );
 GLenum Map( const CompareOp             compareOp           );
@@ -54,7 +54,7 @@ GLenum Map( const RenderConditionMode   renderConditionMode );
 GLenum Map( const LogicOp               logicOp             );
 
 void Unmap( UniformType& result,    const GLenum uniformType    );
-void Unmap( TextureFormat& result,  const GLenum internalFormat );
+void Unmap( Format& result,         const GLenum internalFormat );
 
 
 } // /namespace GLTypes

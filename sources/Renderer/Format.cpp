@@ -12,6 +12,16 @@ namespace LLGL
 {
 
 
+LLGL_EXPORT bool IsCompressedFormat(const Format format)
+{
+    return (format >= Format::BC1RGB);
+}
+
+LLGL_EXPORT bool IsDepthStencilFormat(const Format format)
+{
+    return (format == Format::D32Float || format == Format::D24UNormS8UInt);
+}
+
 LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType)
 {
     switch (dataType)

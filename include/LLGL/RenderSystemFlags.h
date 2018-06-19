@@ -522,8 +522,11 @@ struct RenderingCapabilities
     */
     std::vector<ShadingLanguage>    shadingLanguages;
 
-    //! Specifies the list of supported texture formats.
-    std::vector<TextureFormat>      textureFormats;
+    /**
+    \brief Specifies the list of supported texture formats.
+    \see Format
+    */
+    std::vector<Format>             textureFormats;
 
     /**
     \brief Specifies all supported hardware features.

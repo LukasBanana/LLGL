@@ -31,7 +31,7 @@ DXGI_FORMAT Map(const DataType dataType)
     return DXTypes::Map(dataType);
 }
 
-DXGI_FORMAT Map(const TextureFormat textureFormat)
+DXGI_FORMAT Map(const Format textureFormat)
 {
     return DXTypes::Map(textureFormat);
 }
@@ -306,7 +306,7 @@ D3D11_LOGIC_OP Map(const LogicOp logicOp)
 
 /* ----- Unmap Functions ----- */
 
-TextureFormat Unmap(const DXGI_FORMAT format)
+Format Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);
 }
