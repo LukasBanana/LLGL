@@ -43,7 +43,7 @@ public:
     void CreateBuffers(LLGL::VertexFormat& vertexFormat, LLGL::StreamOutputFormat& streamOutputFormat)
     {
         // Specify vertex format
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float3 });
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
 
         // Create vertex, index, and constant buffers
         vertexBuffer = CreateVertexBuffer(GenerateCubeVertices(), vertexFormat);

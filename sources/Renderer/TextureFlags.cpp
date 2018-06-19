@@ -53,67 +53,9 @@ LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc)
     }
 }
 
-std::uint32_t TextureBufferSize(const Format textureFormat, std::uint32_t numTexels)
+std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
 {
-    switch (textureFormat)
-    {
-        /* --- Color formats --- */
-        case Format::R8UNorm:           return numTexels;
-        case Format::R8SNorm:           return numTexels;
-
-        case Format::R16UNorm:          return numTexels * 2;
-        case Format::R16SNorm:          return numTexels * 2;
-        case Format::R16Float:          return numTexels * 2;
-
-        case Format::R32UInt:           return numTexels * 4;
-        case Format::R32SInt:           return numTexels * 4;
-        case Format::R32Float:          return numTexels * 4;
-
-        case Format::RG8UNorm:          return numTexels * 2;
-        case Format::RG8SNorm:          return numTexels * 2;
-
-        case Format::RG16UNorm:         return numTexels * 4;
-        case Format::RG16SNorm:         return numTexels * 4;
-        case Format::RG16Float:         return numTexels * 4;
-
-        case Format::RG32UInt:          return numTexels * 8;
-        case Format::RG32SInt:          return numTexels * 8;
-        case Format::RG32Float:         return numTexels * 8;
-
-        case Format::RGB8UNorm:         return numTexels * 3;
-        case Format::RGB8SNorm:         return numTexels * 3;
-
-        case Format::RGB16UNorm:        return numTexels * 6;
-        case Format::RGB16SNorm:        return numTexels * 6;
-        case Format::RGB16Float:        return numTexels * 6;
-
-        case Format::RGB32UInt:         return numTexels * 12;
-        case Format::RGB32SInt:         return numTexels * 12;
-        case Format::RGB32Float:        return numTexels * 12;
-
-        case Format::RGBA8UNorm:        return numTexels * 4;
-        case Format::RGBA8SNorm:        return numTexels * 4;
-
-        case Format::RGBA16UNorm:       return numTexels * 8;
-        case Format::RGBA16SNorm:       return numTexels * 8;
-        case Format::RGBA16Float:       return numTexels * 8;
-
-        case Format::RGBA32UInt:        return numTexels * 16;
-        case Format::RGBA32SInt:        return numTexels * 16;
-        case Format::RGBA32Float:       return numTexels * 16;
-
-        /* --- Depth-stencil formats --- */
-        case Format::D32Float:          return numTexels * 4; // 32-bit depth
-        case Format::D24UNormS8UInt:    return numTexels * 4; // 24-bit depth, 8-bit stencil
-
-        /* --- Compressed color formats --- */
-        case Format::BC1RGB:            return numTexels / 4; // 64-bit per 4x4 block
-        case Format::BC1RGBA:           return numTexels / 4; // 64-bit per 4x4 block
-        case Format::BC2RGBA:           return numTexels / 8; // 128-bit per 4x4 block
-        case Format::BC3RGBA:           return numTexels / 8; // 128-bit per 4x4 block
-
-        default:                        return 0;
-    }
+    return ((FormatBitSize(format) * numTexels) / 8);
 }
 
 LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)

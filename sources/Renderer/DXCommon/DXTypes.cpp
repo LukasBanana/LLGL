@@ -41,6 +41,7 @@ void ParamNotSupported(const char* paramName, const char* requirement)
     );
 }
 
+#if 0//TODO: remove
 DXGI_FORMAT Map(const VectorType vectorType)
 {
     switch (vectorType)
@@ -60,6 +61,7 @@ DXGI_FORMAT Map(const VectorType vectorType)
     }
     MapFailed("VectorType", "DXGI_FORMAT");
 }
+#endif
 
 DXGI_FORMAT Map(const DataType dataType)
 {
@@ -143,6 +145,12 @@ DXGI_FORMAT Map(const Format format)
         case Format::RGBA32UInt:        return DXGI_FORMAT_R32G32B32A32_UINT;
         case Format::RGBA32SInt:        return DXGI_FORMAT_R32G32B32A32_SINT;
         case Format::RGBA32Float:       return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+        /* --- Extended color formats --- */
+        case Format::R64Float:          break;
+        case Format::RG64Float:         break;
+        case Format::RGB64Float:        break;
+        case Format::RGBA64Float:       break;
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return DXGI_FORMAT_R16_TYPELESS;        // typeless format to be used with SRV and DSV

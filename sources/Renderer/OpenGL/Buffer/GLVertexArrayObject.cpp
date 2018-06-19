@@ -11,6 +11,7 @@
 #include "../../../Core/Exception.h"
 #include "../RenderState/GLStateManager.h"
 #include "../../GLCommon/GLTypes.h"
+#include "../../GLCommon/GLCore.h"
 
 
 namespace LLGL
@@ -40,24 +41,29 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
     /* Get data type and components of vector type */
     DataType        dataType    = DataType::Float;
     std::uint32_t   components  = 0;
-    VectorTypeFormat(attribute.vectorType, dataType, components);
+    SplitFormat(attribute.format, dataType, components);
+
+    auto isNormalizedFormat = IsNormalizedFormat(attribute.format);
+    auto isFloatFormat      = IsFloatFormat(attribute.format);
 
     /* Convert offset to pointer sized type (for 32- and 64 bit builds) */
     const GLsizeiptr offsetPtrSized = attribute.offset;
 
     /* Use currently bound VBO for VertexAttribPointer functions */
-    if (!attribute.conversion && dataType != DataType::Float && dataType != DataType::Double)
+    if (!isNormalizedFormat && !isFloatFormat)
     {
-        if (!HasExtension(GLExt::EXT_gpu_shader4))
+        if (HasExtension(GLExt::EXT_gpu_shader4))
+        {
+            glVertexAttribIPointer(
+                index,
+                components,
+                GLTypes::Map(dataType),
+                stride,
+                reinterpret_cast<const void*>(offsetPtrSized)
+            );
+        }
+        else
             ThrowNotSupportedExcept(__FUNCTION__, "integral vertex attributes");
-
-        glVertexAttribIPointer(
-            index,
-            components,
-            GLTypes::Map(dataType),
-            stride,
-            reinterpret_cast<const void*>(offsetPtrSized)
-        );
     }
     else
     {
@@ -65,7 +71,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
             index,
             components,
             GLTypes::Map(dataType),
-            GL_FALSE,
+            GLBoolean(isNormalizedFormat),
             stride,
             reinterpret_cast<const void*>(offsetPtrSized)
         );

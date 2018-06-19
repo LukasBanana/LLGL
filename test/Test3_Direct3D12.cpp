@@ -55,8 +55,8 @@ int main()
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "POSITION", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "COLOR", LLGL::VectorType::Float3 });
+        vertexFormat.AppendAttribute({ "POSITION", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "COLOR", LLGL::Format::RGB32Float });
 
         const float triSize = 0.5f;
 

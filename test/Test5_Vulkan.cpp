@@ -149,9 +149,9 @@ int main()
         // Create vertex format
         LLGL::VertexFormat vertexFormat;
 
-        vertexFormat.AppendAttribute({ "coord",    LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "color",    LLGL::VectorType::Float3 });
+        vertexFormat.AppendAttribute({ "coord",    LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB32Float });
 
         shaderProgram->BuildInputLayout(1, &vertexFormat);
 

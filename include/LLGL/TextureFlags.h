@@ -322,7 +322,7 @@ struct SubTextureDescriptor
 /* ----- Functions ----- */
 
 /**
-\defgroup group_tex_util Global texture utility functions to determine texture dimension and buffer sizes.
+\defgroup group_tex_util Texture utility functions to determine texture dimension and buffer sizes.
 \addtogroup group_tex_util
 @{
 */

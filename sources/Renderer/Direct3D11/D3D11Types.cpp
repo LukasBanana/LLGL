@@ -21,10 +21,12 @@ namespace D3D11Types
 
 /* ----- Map Functions ----- */
 
+#if 0//TODO: remove
 DXGI_FORMAT Map(const VectorType vectorType)
 {
     return DXTypes::Map(vectorType);
 }
+#endif
 
 DXGI_FORMAT Map(const DataType dataType)
 {

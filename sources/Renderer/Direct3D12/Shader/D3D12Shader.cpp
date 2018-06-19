@@ -151,7 +151,7 @@ static void ReflectShaderVertexAttributes(
         VertexAttribute vertexAttrib;
         {
             vertexAttrib.name           = std::string(paramDesc.SemanticName);
-            vertexAttrib.vectorType     = DXGetSignatureParameterType(paramDesc.ComponentType, paramDesc.Mask);
+            vertexAttrib.format         = DXGetSignatureParameterType(paramDesc.ComponentType, paramDesc.Mask);
             vertexAttrib.semanticIndex  = paramDesc.SemanticIndex;
         }
         reflectionDesc.vertexAttributes.push_back(vertexAttrib);

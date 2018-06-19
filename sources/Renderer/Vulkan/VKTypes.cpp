@@ -39,6 +39,7 @@ VkShaderStageFlagBits Map(const ShaderType shaderType)
     MapFailed("ShaderType", "VkShaderStageFlagBits");
 }
 
+#if 0//TODO: remove
 VkFormat Map(const VectorType vectorType)
 {
     switch (vectorType)
@@ -62,6 +63,7 @@ VkFormat Map(const VectorType vectorType)
     }
     MapFailed("VectorType", "VkFormat");
 }
+#endif
 
 VkFormat Map(const Format format)
 {
@@ -129,6 +131,12 @@ VkFormat Map(const Format format)
         case Format::RGBA32UInt:        return VK_FORMAT_R32G32B32A32_UINT;
         case Format::RGBA32SInt:        return VK_FORMAT_R32G32B32A32_SINT;
         case Format::RGBA32Float:       return VK_FORMAT_R32G32B32A32_SFLOAT;
+
+        /* --- Extended color formats --- */
+        case Format::R64Float:          return VK_FORMAT_R64_SFLOAT;
+        case Format::RG64Float:         return VK_FORMAT_R64G64_SFLOAT;
+        case Format::RGB64Float:        return VK_FORMAT_R64G64B64_SFLOAT;
+        case Format::RGBA64Float:       return VK_FORMAT_R64G64B64A64_SFLOAT;
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return VK_FORMAT_D16_UNORM;

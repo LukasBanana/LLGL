@@ -471,7 +471,7 @@ D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format)
     throw std::invalid_argument("failed to map hardware texture format into image buffer format");
 }
 
-VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
+Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
 {
     switch (componentType)
     {
@@ -479,10 +479,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::UInt;
-                case 0x03: return VectorType::UInt2;
-                case 0x07: return VectorType::UInt3;
-                case 0x0f: return VectorType::UInt4;
+                case 0x01: return Format::R32UInt;
+                case 0x03: return Format::RG32UInt;
+                case 0x07: return Format::RGB32UInt;
+                case 0x0f: return Format::RGBA32UInt;
             }
         }
         break;
@@ -491,10 +491,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::Int;
-                case 0x03: return VectorType::Int2;
-                case 0x07: return VectorType::Int3;
-                case 0x0f: return VectorType::Int4;
+                case 0x01: return Format::R32SInt;
+                case 0x03: return Format::RG32SInt;
+                case 0x07: return Format::RGB32SInt;
+                case 0x0f: return Format::RGBA32SInt;
             }
         }
         break;
@@ -503,10 +503,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::Float;
-                case 0x03: return VectorType::Float2;
-                case 0x07: return VectorType::Float3;
-                case 0x0f: return VectorType::Float4;
+                case 0x01: return Format::R32Float;
+                case 0x03: return Format::RG32Float;
+                case 0x07: return Format::RGB32Float;
+                case 0x0f: return Format::RGBA32Float;
             }
         }
         break;

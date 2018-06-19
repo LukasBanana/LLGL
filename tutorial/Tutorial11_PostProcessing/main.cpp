@@ -82,8 +82,8 @@ public:
     void CreateBuffers()
     {
         // Specify vertex format for scene
-        vertexFormatScene.AppendAttribute({ "position", LLGL::VectorType::Float3 });
-        vertexFormatScene.AppendAttribute({ "normal", LLGL::VectorType::Float3 });
+        vertexFormatScene.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+        vertexFormatScene.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
 
         // Create scene buffers
         auto sceneVertices = LoadObjModel("../Media/Models/WiredBox.obj");

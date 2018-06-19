@@ -122,8 +122,8 @@ int main()
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
 
         const Gs::Vector2f vertices[] =
         {

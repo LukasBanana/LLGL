@@ -139,11 +139,19 @@ struct BufferDescriptor
         */
         StorageBufferType   storageType = StorageBufferType::Buffer;
 
+        #if 0//TODO: replace by "Format" enum
         /**
         \brief Specifies the vector type of a typed buffer.
         \remarks This is only used if the storage type is either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
         */
         VectorType          vectorType  = VectorType::Float4;
+        #else
+        /**
+        \brief Specifies the vector format of a typed buffer.
+        \remarks This is only used if the storage type is either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
+        */
+        Format              format      = Format::RGBA32Float;
+        #endif
 
         /**
         \brief Specifies the stride (in bytes) of each element in a storage buffer.

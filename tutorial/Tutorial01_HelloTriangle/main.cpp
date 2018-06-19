@@ -54,8 +54,8 @@ int main(int argc, char* argv[])
         // Vertex data structure
         struct Vertex
         {
-            Gs::Vector2f    position;
-            LLGL::ColorRGBf color;
+            Gs::Vector2f        position;
+            LLGL::ColorRGBAub   color;
         };
 
         // Vertex data (3 vertices for our triangle)
@@ -63,15 +63,22 @@ int main(int argc, char* argv[])
 
         Vertex vertices[] =
         {
-            { {  0,  s }, { 1, 0, 0 } }, // 1st vertex: center-top, red
-            { {  s, -s }, { 0, 1, 0 } }, // 2nd vertex: right-bottom, green
-            { { -s, -s }, { 0, 0, 1 } }, // 3rd vertex: left-bottom, blue
+            { {  0,  s }, { 255, 0, 0, 255 } }, // 1st vertex: center-top, red
+            { {  s, -s }, { 0, 255, 0, 255 } }, // 2nd vertex: right-bottom, green
+            { { -s, -s }, { 0, 0, 255, 255 } }, // 3rd vertex: left-bottom, blue
         };
 
         // Vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 }); // position has 2 float components
-        vertexFormat.AppendAttribute({ "color",    LLGL::VectorType::Float3 }); // color has 3 float components
+
+        // Append 2D float vector for position attribute
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
+
+        // Append 3D unsigned byte vector for color
+        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
+
+        // Update stride in case out vertex structure is not 4-byte aligned
+        vertexFormat.stride = sizeof(Vertex);
 
         // Create vertex buffer
         LLGL::BufferDescriptor vertexBufferDesc;

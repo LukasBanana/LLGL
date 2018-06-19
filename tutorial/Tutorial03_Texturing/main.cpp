@@ -50,8 +50,8 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
 
         // Define vertex buffer data
         struct Vertex

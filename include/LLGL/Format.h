@@ -92,6 +92,12 @@ enum class Format
     RGBA32SInt,         //!< Color format: red, green, blue, alpha 32-bit signed interger components.
     RGBA32Float,        //!< Color format: red, green, blue, alpha 32-bit floating point components.
 
+    /* --- Extended color formats --- */
+    R64Float,           //!< Color format: red 64-bit floating point component. \note Only supported with: OpenGL, Vulkan.
+    RG64Float,          //!< Color format: red, green 64-bit floating point components. \note Only supported with: OpenGL, Vulkan.
+    RGB64Float,         //!< Color format: red, green, blue 64-bit floating point components. \note Only supported with: OpenGL, Vulkan.
+    RGBA64Float,        //!< Color format: red, green, blue, alpha 64-bit floating point components. \note Only supported with: OpenGL, Vulkan.
+
     /* --- Depth-stencil formats --- */
     D16UNorm,           //!< Depth-stencil format: depth 16-bit normalized unsigned integer component.
     D24UNormS8UInt,     //!< Depth-stencil format: depth 24-bit normalized unsigned integer component, and 8-bit unsigned integer stencil component.
@@ -130,6 +136,7 @@ enum class DataType
     #endif
 };
 
+#if 0//TODO: replace by "Format" enum
 /**
 \brief Renderer vector types enumeration.
 \see VertexAttribute::vectorType
@@ -154,48 +161,96 @@ enum class VectorType
     UInt3,      //!< 3-Dimensional unsigned integer vector (uvec3 in GLSL, uint3 in HLSL).
     UInt4,      //!< 4-Dimensional unsigned integer vector (uvec4 in GLSL, uint4 in HLSL).
 };
-
-/*
-//! Renderer matrix types enumeration.
-enum class MatrixType
-{
-    Float2x2,   //!< 2x2 single precision floating-point matrix (mat2 in GLSL, float2x2 in HLSL).
-    Float3x3,   //!< 3x3 single precision floating-point matrix (mat3 in GLSL, float3x3 in HLSL).
-    Float4x4,   //!< 4x4 single precision floating-point matrix (mat4 in GLSL, float4x4 in HLSL).
-    Float2x3,   //!< 2x3 single precision floating-point matrix (mat2x3 in GLSL, float2x3 in HLSL).
-    Float2x4,   //!< 2x4 single precision floating-point matrix (mat2x4 in GLSL, float2x4 in HLSL).
-    Float3x2,   //!< 3x2 single precision floating-point matrix (mat3x2 in GLSL, float3x2 in HLSL).
-    Float3x4,   //!< 3x4 single precision floating-point matrix (mat3x4 in GLSL, float3x4 in HLSL).
-    Float4x2,   //!< 4x2 single precision floating-point matrix (mat4x2 in GLSL, float4x2 in HLSL).
-    Float4x3,   //!< 4x3 single precision floating-point matrix (mat4x3 in GLSL, float4x3 in HLSL).
-
-    Double2x2,  //!< 2x2 double precision floating-point matrix (dmat2 in GLSL, double2x2 in HLSL).
-    Double3x3,  //!< 3x3 double precision floating-point matrix (dmat3 in GLSL, double3x3 in HLSL).
-    Double4x4,  //!< 4x4 double precision floating-point matrix (dmat4 in GLSL, double4x4 in HLSL).
-    Double2x3,  //!< 2x3 double precision floating-point matrix (dmat2x3 in GLSL, double2x3 in HLSL).
-    Double2x4,  //!< 2x4 double precision floating-point matrix (dmat2x4 in GLSL, double2x4 in HLSL).
-    Double3x2,  //!< 3x2 double precision floating-point matrix (dmat3x2 in GLSL, double3x2 in HLSL).
-    Double3x4,  //!< 3x4 double precision floating-point matrix (dmat3x4 in GLSL, double3x4 in HLSL).
-    Double4x2,  //!< 4x2 double precision floating-point matrix (dmat4x2 in GLSL, double4x2 in HLSL).
-    Double4x3,  //!< 4x3 double precision floating-point matrix (dmat4x3 in GLSL, double4x3 in HLSL).
-};*/
+#endif
 
 
 /* ----- Functions ----- */
 
 /**
-\brief Returns true if the specified texture format is a compressed format,
+\defgroup group_format_util Hardware format utility functions.
+\addtogroup group_format_util
+@{
+*/
+
+#if 0 // TODO: replace by "Format"-specific functions
+
+//! Returns the size (in bytes) of the specified vector type.
+LLGL_EXPORT std::uint32_t VectorTypeSize(const VectorType vectorType);
+
+/**
+\brief Retrieves the format of the specified vector type.
+\param[in] vectorType Specifies the vector type whose format is to be retrieved.
+\param[out] dataType Specifies the output parameter for the resulting data type.
+\param[out] components Specifiefs the output parameter for the resulting number of vector components.
+*/
+LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, std::uint32_t& components);
+
+#else
+
+/**
+\brief Returns the bit size of the specified hardware format.
+\return Number of bits for one vector of the specified hardware format.
+\remarks This function does not return the size in bytes because some compressed block formats require less than one byte for a single color vector.
+\see Format
+*/
+LLGL_EXPORT std::uint32_t FormatBitSize(const Format format);
+
+/**
+\brief Splits the specified hardware format into a data type and the number of components.
+\see DataType
+\see Format
+*/
+LLGL_EXPORT bool SplitFormat(const Format format, DataType& dataType, std::uint32_t& components);
+
+#endif // /TODO
+
+/**
+\brief Returns true if the specified hardware format is a compressed format,
 i.e. either Format::BC1RGB, Format::BC1RGBA, Format::BC2RGBA, or Format::BC3RGBA.
 \see Format
 */
 LLGL_EXPORT bool IsCompressedFormat(const Format format);
 
 /**
-\brief Returns true if the specified texture format is a depth or depth-stencil format,
+\brief Returns true if the specified hardware format is a depth or depth-stencil format,
 i.e. either Format::DepthComponent, or Format::DepthStencil.
 \see Format
 */
 LLGL_EXPORT bool IsDepthStencilFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is a normalized format (like Format::RGBA8UNorm, Format::R8SNorm etc.).
+\remarks This does not include depth-stencil formats or compressed formats.
+\see IsDepthStencilFormat
+\see IsCompressedFormat
+\see Format
+*/
+LLGL_EXPORT bool IsNormalizedFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is an integral format (like Format::RGBA8UInt, Format::R8SInt etc.).
+\remarks This also includes all normalized formats.
+\see IsNormalizedFormat
+\see Format
+*/
+LLGL_EXPORT bool IsIntegralFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is a floating-point format (like Format::RGBA32Float, Format::R32Float etc.).
+\remarks This does not include depth-stencil formats or compressed formats.
+\see IsDepthStencilFormat
+\see IsCompressedFormat
+\see Format
+*/
+LLGL_EXPORT bool IsFloatFormat(const Format format);
+
+/** @} */
+
+/**
+\defgroup group_datatype_util Data type utility functions.
+\addtogroup group_datatype_util
+@{
+*/
 
 //! Returns the size (in bytes) of the specified data type.
 LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType);
@@ -218,16 +273,7 @@ LLGL_EXPORT bool IsUIntDataType(const DataType dataType);
 */
 LLGL_EXPORT bool IsFloatDataType(const DataType dataType);
 
-//! Returns the size (in bytes) of the specified vector type.
-LLGL_EXPORT std::uint32_t VectorTypeSize(const VectorType vectorType);
-
-/**
-\brief Retrieves the format of the specified vector type.
-\param[in] vectorType Specifies the vector type whose format is to be retrieved.
-\param[out] dataType Specifies the output parameter for the resulting data type.
-\param[out] components Specifiefs the output parameter for the resulting number of vector components.
-*/
-LLGL_EXPORT void VectorTypeFormat(const VectorType vectorType, DataType& dataType, std::uint32_t& components);
+/** @} */
 
 
 } // /namespace LLGL
