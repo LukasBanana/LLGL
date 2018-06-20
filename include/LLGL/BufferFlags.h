@@ -140,10 +140,10 @@ struct BufferDescriptor
         StorageBufferType   storageType = StorageBufferType::Buffer;
 
         /**
-        \brief Specifies the vector type of a typed buffer.
+        \brief Specifies the vector format of a typed buffer.
         \remarks This is only used if the storage type is either StorageBufferType::Buffer or StorageBufferType::RWBuffer.
         */
-        VectorType          vectorType  = VectorType::Float4;
+        Format              format      = Format::RGBA32Float;
 
         /**
         \brief Specifies the stride (in bytes) of each element in a storage buffer.

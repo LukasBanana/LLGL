@@ -114,7 +114,7 @@ void VKShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const Ver
             {
                 vertexAttrib.location   = location++;
                 vertexAttrib.binding    = vertexFormats[i].inputSlot;
-                vertexAttrib.format     = VKTypes::Map(attr.vectorType);
+                vertexAttrib.format     = VKTypes::Map(attr.format);
                 vertexAttrib.offset     = attr.offset;
             }
             vertexAttribDescs_.push_back(vertexAttrib);

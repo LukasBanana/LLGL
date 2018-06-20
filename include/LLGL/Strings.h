@@ -54,10 +54,10 @@ LLGL_EXPORT const char* ToString(const WarningType t);
 LLGL_EXPORT const char* ToString(const ShadingLanguage t);
 
 /**
-\brief Returns a string representation for the specified TextureFormat value, or null if the input type is invalid.
-\remarks Return value examples are "R8", "RGBA16Float", "D24S8", "RGB DXT1".
+\brief Returns a string representation for the specified Format value, or null if the input type is invalid.
+\remarks Return value examples are "R8UNorm", "RGBA16Float", "D24UNormS8UInt", "RGB DXT1".
 */
-LLGL_EXPORT const char* ToString(const TextureFormat t);
+LLGL_EXPORT const char* ToString(const Format t);
 
 /** @} */
 

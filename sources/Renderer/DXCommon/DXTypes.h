@@ -35,12 +35,11 @@ void UnmapFailed(const char* typeName, const char* dxTypeName);
 void ParamNotSupported(const char* paramName, const char* requirement);
 
 
-DXGI_FORMAT             Map( const VectorType           vectorType    );
-DXGI_FORMAT             Map( const DataType             dataType      );
-DXGI_FORMAT             Map( const TextureFormat        textureFormat );
-D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology      );
+DXGI_FORMAT             Map( const DataType             dataType   );
+DXGI_FORMAT             Map( const Format               format     );
+D3D_PRIMITIVE_TOPOLOGY  Map( const PrimitiveTopology    topology   );
 
-TextureFormat           Unmap( const DXGI_FORMAT            format    );
+Format                  Unmap( const DXGI_FORMAT            format    );
 StorageBufferType       Unmap( const D3D_SHADER_INPUT_TYPE  inputType );
 
 

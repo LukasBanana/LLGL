@@ -114,7 +114,7 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {
     try
     {
-        return D3D12Types::Map(attrib.vectorType);
+        return D3D12Types::Map(attrib.format);
     }
     catch (const std::exception& e)
     {

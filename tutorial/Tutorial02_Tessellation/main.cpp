@@ -79,7 +79,7 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float3 });
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
 
         UpdateUserInput();
 

@@ -38,7 +38,7 @@ D3D11StorageBuffer::D3D11StorageBuffer(ID3D11Device* device, const BufferDescrip
     CreateResource(device, bufferDesc, initialData, desc.flags);
 
     /* Create either UAV or SRV */
-    auto format         = GetFormat(desc.storageBuffer.vectorType);
+    auto format         = GetFormat(desc.storageBuffer.format);
     auto numElements    = static_cast<UINT>(desc.size) / desc.storageBuffer.stride;
 
     CreateSRV(device, format, 0, numElements);
@@ -108,14 +108,14 @@ UINT D3D11StorageBuffer::GetUAVFlags() const
     return 0;
 }
 
-DXGI_FORMAT D3D11StorageBuffer::GetFormat(const VectorType vectorType) const
+DXGI_FORMAT D3D11StorageBuffer::GetFormat(const Format format) const
 {
     /*
     D3D11_BUFFER_UAV_FLAG_RAW buffer flag for ByteAddressBuffer requires the UAV to have the DXGI_FORMAT_R32_TYPELESS format.
     -> see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476096(v=vs.85).aspx
     */
     if (IsTyped())
-        return D3D11Types::Map(vectorType);
+        return D3D11Types::Map(format);
     if (IsByteAddressable())
         return DXGI_FORMAT_R32_TYPELESS;
     return DXGI_FORMAT_UNKNOWN;

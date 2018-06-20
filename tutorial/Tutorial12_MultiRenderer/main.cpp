@@ -124,8 +124,8 @@ int main(int argc, char* argv[])
 
         // Vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float3 });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float  });
 
         // Create vertex buffers
         const auto vertexBufferDesc = LLGL::VertexBufferDesc(sizeof(VertexPos3Tex2) * cubeVertices.size(), vertexFormat);

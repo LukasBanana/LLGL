@@ -122,8 +122,8 @@ int main()
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
 
         const Gs::Vector2f vertices[] =
         {
@@ -265,7 +265,7 @@ int main()
         LLGL::TextureDescriptor textureDesc;
         {
             textureDesc.type                = LLGL::TextureType::Texture2D;
-            textureDesc.format              = LLGL::TextureFormat::RGBA8;
+            textureDesc.format              = LLGL::Format::RGBA8UNorm;
             textureDesc.texture2D.width     = 2;
             textureDesc.texture2D.height    = 2;
         }
@@ -300,7 +300,7 @@ int main()
         LLGL::TextureDescriptor texDesc;
         {
             texDesc.type                    = LLGL::TextureType::Texture2D;
-            texDesc.format                  = LLGL::TextureFormat::RGBA8;
+            texDesc.format                  = LLGL::Format::RGBA8UNorm;
             texDesc.texture2DDesc.width     = renderTargetSize.x;
             texDesc.texture2DDesc.height    = renderTargetSize.y;
         }

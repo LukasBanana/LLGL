@@ -180,42 +180,56 @@ static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureL
     return languages;
 }
 
-static std::vector<TextureFormat> DXGetSupportedTextureFormats()
+static std::vector<Format> DXGetSupportedTextureFormats()
 {
     return
     {
-        TextureFormat::R8,
-        TextureFormat::R8Sgn,
-        TextureFormat::R16,
-        TextureFormat::R16Sgn,
-        TextureFormat::R16Float,
-        TextureFormat::R32UInt,
-        TextureFormat::R32SInt,
-        TextureFormat::R32Float,
-        TextureFormat::RG8,
-        TextureFormat::RG8Sgn,
-        TextureFormat::RG16,
-        TextureFormat::RG16Sgn,
-        TextureFormat::RG16Float,
-        TextureFormat::RG32UInt,
-        TextureFormat::RG32SInt,
-        TextureFormat::RG32Float,
-        TextureFormat::RGB32UInt,
-        TextureFormat::RGB32SInt,
-        TextureFormat::RGB32Float,
-        TextureFormat::RGBA8,
-        TextureFormat::RGBA8Sgn,
-        TextureFormat::RGBA16,
-        TextureFormat::RGBA16Sgn,
-        TextureFormat::RGBA16Float,
-        TextureFormat::RGBA32UInt,
-        TextureFormat::RGBA32SInt,
-        TextureFormat::RGBA32Float,
-        TextureFormat::D32,
-        TextureFormat::D24S8,
-        TextureFormat::RGBA_DXT1,
-        TextureFormat::RGBA_DXT3,
-        TextureFormat::RGBA_DXT5,
+        Format::R8UNorm,
+        Format::R8SNorm,
+        Format::R8UInt,
+        Format::R8SInt,
+        Format::R16UNorm,
+        Format::R16SNorm,
+        Format::R16UInt,
+        Format::R16SInt,
+        Format::R16Float,
+        Format::R32UInt,
+        Format::R32SInt,
+        Format::R32Float,
+        Format::RG8UNorm,
+        Format::RG8SNorm,
+        Format::RG8UInt,
+        Format::RG8SInt,
+        Format::RG16UNorm,
+        Format::RG16SNorm,
+        Format::RG16UInt,
+        Format::RG16SInt,
+        Format::RG16Float,
+        Format::RG32UInt,
+        Format::RG32SInt,
+        Format::RG32Float,
+        Format::RGB32UInt,
+        Format::RGB32SInt,
+        Format::RGB32Float,
+        Format::RGBA8UNorm,
+        Format::RGBA8SNorm,
+        Format::RGBA8UInt,
+        Format::RGBA8SInt,
+        Format::RGBA16UNorm,
+        Format::RGBA16SNorm,
+        Format::RGBA16UInt,
+        Format::RGBA16SInt,
+        Format::RGBA16Float,
+        Format::RGBA32UInt,
+        Format::RGBA32SInt,
+        Format::RGBA32Float,
+        Format::D16UNorm,
+        Format::D32Float,
+        Format::D24UNormS8UInt,
+        Format::D32FloatS8X24UInt,
+        Format::BC1RGBA,
+        Format::BC2RGBA,
+        Format::BC3RGBA,
     };
 }
 
@@ -471,7 +485,7 @@ D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format)
     throw std::invalid_argument("failed to map hardware texture format into image buffer format");
 }
 
-VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
+Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
 {
     switch (componentType)
     {
@@ -479,10 +493,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::UInt;
-                case 0x03: return VectorType::UInt2;
-                case 0x07: return VectorType::UInt3;
-                case 0x0f: return VectorType::UInt4;
+                case 0x01: return Format::R32UInt;
+                case 0x03: return Format::RG32UInt;
+                case 0x07: return Format::RGB32UInt;
+                case 0x0f: return Format::RGBA32UInt;
             }
         }
         break;
@@ -491,10 +505,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::Int;
-                case 0x03: return VectorType::Int2;
-                case 0x07: return VectorType::Int3;
-                case 0x0f: return VectorType::Int4;
+                case 0x01: return Format::R32SInt;
+                case 0x03: return Format::RG32SInt;
+                case 0x07: return Format::RGB32SInt;
+                case 0x0f: return Format::RGBA32SInt;
             }
         }
         break;
@@ -503,10 +517,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::Float;
-                case 0x03: return VectorType::Float2;
-                case 0x07: return VectorType::Float3;
-                case 0x0f: return VectorType::Float4;
+                case 0x01: return Format::R32Float;
+                case 0x03: return Format::RG32Float;
+                case 0x07: return Format::RGB32Float;
+                case 0x0f: return Format::RGBA32Float;
             }
         }
         break;
@@ -514,7 +528,7 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         default:
         break;
     }
-    throw std::runtime_error("failed to map Direct3D signature parameter to VectorType");
+    throw std::runtime_error("failed to map Direct3D signature parameter to LLGL::Format");
 }
 
 DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits)

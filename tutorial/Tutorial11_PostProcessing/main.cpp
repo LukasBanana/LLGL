@@ -82,8 +82,8 @@ public:
     void CreateBuffers()
     {
         // Specify vertex format for scene
-        vertexFormatScene.AppendAttribute({ "position", LLGL::VectorType::Float3 });
-        vertexFormatScene.AppendAttribute({ "normal", LLGL::VectorType::Float3 });
+        vertexFormatScene.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+        vertexFormatScene.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
 
         // Create scene buffers
         auto sceneVertices = LoadObjModel("../Media/Models/WiredBox.obj");
@@ -225,14 +225,14 @@ public:
     {
         // Create empty color and gloss map
         auto resolution = context->GetVideoMode().resolution;
-        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
-        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
+        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
+        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
 
         // Create empty blur pass maps (in quarter resolution)
         resolution.width  /= 4;
         resolution.height /= 4;
-        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
-        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
+        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
+        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
     }
 
     void CreateRenderTargets()

@@ -38,31 +38,31 @@ class Sampler;
 /* ----- TextureDescriptor utility functions ----- */
 
 //! Returns a TextureDescriptor structure with the TextureType::Texture1D type.
-LLGL_EXPORT TextureDescriptor Texture1DDesc(TextureFormat format, std::uint32_t width, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture1DDesc(Format format, std::uint32_t width, long flags = TextureFlags::Default);
 
 //! Returns a TextureDescriptor structure with the TextureType::Texture2D type.
-LLGL_EXPORT TextureDescriptor Texture2DDesc(TextureFormat format, std::uint32_t width, std::uint32_t height, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture2DDesc(Format format, std::uint32_t width, std::uint32_t height, long flags = TextureFlags::Default);
 
 //! Returns a TextureDescriptor structure with the TextureType::Texture3D type.
-LLGL_EXPORT TextureDescriptor Texture3DDesc(TextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t depth, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture3DDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t depth, long flags = TextureFlags::Default);
 
 //! Returns a TextureDescriptor structure with the TextureType::TextureCube type.
-LLGL_EXPORT TextureDescriptor TextureCubeDesc(TextureFormat format, std::uint32_t width, std::uint32_t height, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width, std::uint32_t height, long flags = TextureFlags::Default);
 
 //! Returns a TextureDescriptor structure with the TextureType::Texture1DArray type.
-LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(TextureFormat format, std::uint32_t width, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t layers, long flags = TextureFlags::Default);
 
 //! Returns a TextureDescriptor structure with the TextureType::Texture2DArray type.
-LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(TextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags = TextureFlags::Default);
 
 //! Returns a TextureDescriptor structure with the TextureType::TextureCubeArray type.
-LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(TextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags = TextureFlags::Default);
 
 //! Returns a TextureDescriptor structure with the TextureType::Texture2DMS type.
-LLGL_EXPORT TextureDescriptor Texture2DMSDesc(TextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t samples, bool fixedSamples = true, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t samples, bool fixedSamples = true, long flags = TextureFlags::Default);
 
 //! Returns a TextureDescriptor structure with the TextureType::Texture2DMSArray type.
-LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(TextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, std::uint32_t samples, bool fixedSamples = true, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, std::uint32_t samples, bool fixedSamples = true, long flags = TextureFlags::Default);
 
 /* ----- BufferDescriptor utility functions ----- */
 

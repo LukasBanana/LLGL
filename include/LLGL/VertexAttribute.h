@@ -32,45 +32,46 @@ struct LLGL_EXPORT VertexAttribute
     /**
     \brief Constructs a vertex attribute with a specified name (used for GLSL).
     \param[in] name Specifies the attribute name (for GLSL).
-    \param[in] vectorType Specifies the vector type of the attribute.
+    \param[in] format Specifies the attribute format (interpreted as vector format rather than color format).
+    For a 3D-vector type, for example, Format::RGB32Float can be used.
     \param[in] instanceDivisor Specifies the divisor (or step rate) for instance data.
     If this is 0, this vertex attribute is considered to be per-vertex. By default 0.
     \remarks This is equivalent to:
     \code
     VertexAttribute(name, 0, dataType, components, instanceDivisor);
     \endcode
+    \see Format
     */
     VertexAttribute(
-        const std::string& name,
-        const VectorType vectorType,
-        std::uint32_t instanceDivisor = 0
+        const std::string&  name,
+        const Format        format,
+        std::uint32_t       instanceDivisor = 0
     );
 
     /**
     \brief Constructs a vertex attribute with a specified semantic (used for HLSL).
     \param[in] semanticName Specifies the semantic name (for HLSL).
     \param[in] semanticIndex Specifies the semantic index (for HLSL).
-    \param[in] vectorType Specifies the vector type of the attribute.
+    \param[in] format Specifies the attribute format (interpreted as vector format rather than color format).
+    For a 3D-vector type, for example, Format::RGB32Float can be used.
     \param[in] instanceDivisor Specifies the divisor (or step rate) for instance data.
     If this is 0, this vertex attribute is considered to be per-vertex. By default 0.
     \remarks This is equivalent to:
     \code
     VertexAttribute(name, 0, dataType, components, instanceDivisor);
     \endcode
+    \see Format
     */
     VertexAttribute(
-        const std::string& semanticName,
-        std::uint32_t semanticIndex,
-        const VectorType vectorType,
-        std::uint32_t instanceDivisor = 0
+        const std::string&  semanticName,
+        std::uint32_t       semanticIndex,
+        const Format        format,
+        std::uint32_t       instanceDivisor = 0
     );
 
     /**
     \brief Returns the size (in bytes) which is required for this vertex attribute.
-    \return
-    \code
-    VectorTypeSize(vectorType).
-    \endcode
+    \return The format bit size converted to byte size: <code>FormatBitSize(format) / 8</code>.
     */
     std::uint32_t GetSize() const;
 
@@ -78,20 +79,18 @@ struct LLGL_EXPORT VertexAttribute
     std::string     name;
 
     /**
-    \brief Vector type of the vertex attribute. By default VectorType::Float4.
-    \note The double types are only supported with OpenGL, i.e. the vector types:
-    VectorType::Double, VectorType::Double2, VectorType::Double3, and VectorType::Double4.
-    \remarks To specifies an attribute of a matrix type, use multiple vector types with ascending values for the semanticIndex field.
-    Here is an example for a 4x4 matrix type:
+    \brief Vertex attribute format. By default Format::RGBA32Float.
+    \remarks Not all hardware formats are allowed for vertex attributes.
+    In particular, depth-stencil formats and compressed formats are not allowed.
+    To specify a vertex attribute of a matrix type, multiple attributes with ascending semantic indices must be used:
     \code
-    myVertexFormat.AppendAttribute({ "myMatrix", 0, LLGL::VectorType::Float4 });
-    myVertexFormat.AppendAttribute({ "myMatrix", 1, LLGL::VectorType::Float4 });
-    myVertexFormat.AppendAttribute({ "myMatrix", 2, LLGL::VectorType::Float4 });
-    myVertexFormat.AppendAttribute({ "myMatrix", 3, LLGL::VectorType::Float4 });
+    myVertexFormat.AppendAttribute({ "myMatrix", 0, LLGL::Format::RGBA32Float });
+    myVertexFormat.AppendAttribute({ "myMatrix", 1, LLGL::Format::RGBA32Float });
+    myVertexFormat.AppendAttribute({ "myMatrix", 2, LLGL::Format::RGBA32Float });
+    myVertexFormat.AppendAttribute({ "myMatrix", 3, LLGL::Format::RGBA32Float });
     \endcode
-    \see semanticIndex
     */
-    VectorType      vectorType      = VectorType::Float4;
+    Format          format          = Format::RGBA32Float;
 
     /**
     \brief Instance data divisor (or instance data step rate).
@@ -99,9 +98,6 @@ struct LLGL_EXPORT VertexAttribute
     If this is greater than 0, this attribute is considered to be stored per every instanceDivisor's instance.
     */
     std::uint32_t   instanceDivisor = 0;
-
-    //! Specifies whether non-floating-point data types are to be converted to floating-points. By default false.
-    bool            conversion      = false;
 
     //! Byte offset within each vertex and each buffer. By default 0.
     std::uint32_t   offset          = 0;

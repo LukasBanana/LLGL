@@ -18,17 +18,12 @@ namespace D3D12Types
 {
 
 
-DXGI_FORMAT Map(const VectorType vectorType)
-{
-    return DXTypes::Map(vectorType);
-}
-
 DXGI_FORMAT Map(const DataType dataType)
 {
     return DXTypes::Map(dataType);
 }
 
-DXGI_FORMAT Map(const TextureFormat textureFormat)
+DXGI_FORMAT Map(const Format textureFormat)
 {
     return DXTypes::Map(textureFormat);
 }
@@ -253,7 +248,7 @@ D3D12_SRV_DIMENSION Map(const TextureType textureType)
     DXTypes::MapFailed("TextureType", "D3D12_SRV_DIMENSION");
 }
 
-TextureFormat Unmap(const DXGI_FORMAT format)
+Format Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);
 }

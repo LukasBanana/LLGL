@@ -423,7 +423,7 @@ void D3D11RenderSystem::UpdateGenericTexture(
 
 void D3D11RenderSystem::InitializeGpuTexture(
     D3D11Texture&               textureD3D,
-    const TextureFormat         format,
+    const Format                format,
     const SrcImageDescriptor*   imageDesc,
     std::uint32_t               width,
     std::uint32_t               height,
@@ -444,7 +444,7 @@ void D3D11RenderSystem::InitializeGpuTexture(
 
 void D3D11RenderSystem::InitializeGpuTextureWithImage(
     D3D11Texture&       textureD3D,
-    const TextureFormat format,
+    const Format        format,
     SrcImageDescriptor  imageDesc,
     std::uint32_t       width,
     std::uint32_t       height,
@@ -478,12 +478,12 @@ void D3D11RenderSystem::InitializeGpuTextureWithImage(
 }
 
 void D3D11RenderSystem::InitializeGpuTextureWithDefault(
-    D3D11Texture&       textureD3D,
-    const TextureFormat format,
-    std::uint32_t       width,
-    std::uint32_t       height,
-    std::uint32_t       depth,
-    std::uint32_t       numLayers)
+    D3D11Texture&   textureD3D,
+    const Format    format,
+    std::uint32_t   width,
+    std::uint32_t   height,
+    std::uint32_t   depth,
+    std::uint32_t   numLayers)
 {
     /* Find suitable image format for texture hardware format */
     SrcImageDescriptor imageDescDefault;

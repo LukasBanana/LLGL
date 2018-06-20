@@ -139,7 +139,7 @@ struct DstImageDescriptor
 /* ----- Functions ----- */
 
 /**
-\defgroup group_image_util Global image utility functions to classify and convert image data.
+\defgroup group_image_util Image utility functions to classify and convert image data.
 \addtogroup group_image_util
 @{
 */
@@ -152,31 +152,31 @@ struct DstImageDescriptor
 \see IsCompressedFormat(const ImageFormat)
 \see ImageFormat
 */
-LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat format);
+LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat);
 
 /**
 \brief Returns the required data size (in bytes) of an image with the specified format, data type, and number of pixels.
-\param[in] format Specifies the image format.
+\param[in] imageFormat Specifies the image format.
 \param[in] dataType Specifies the data type of each pixel component.
 \param[in] numPixels Specifies the number of picture elements (pixels).
 \remarks The counterpart for texture buffers is the function TextureBufferSize.
 \see TextureBufferSize
 */
-LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat format, const DataType dataType, std::uint32_t numPixels);
+LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat imageFormat, const DataType dataType, std::uint32_t numPixels);
 
 /**
 \brief Returns true if the specified color format is a compressed format,
 i.e. either ImageFormat::CompressedRGB, or ImageFormat::CompressedRGBA.
 \see ImageFormat
 */
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format);
+LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat);
 
 /**
 \brief Returns true if the specified color format is a depth-stencil format,
 i.e. either ImageFormat::Depth or ImageFormat::DepthStencil.
 \see ImageFormat
 */
-LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
+LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat);
 
 /**
 \brief Finds a suitable image format for the specified texture hardware format.
@@ -184,9 +184,9 @@ LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format);
 \param[out] imageFormat Specifies the output image format.
 \param[out] dataType Specifies the output image data type.
 \return True if a suitable image format has been found. Otherwise, the output parameter 'imageFormat' and 'dataType' have not been modified.
-\remarks Texture formats that cannot be converted to an image format are all 16-bit floating-point types, and TextureFormat::Unknown.
+\remarks Texture formats that cannot be converted to an image format are all 16-bit floating-point types, and Format::Undefined.
 */
-LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, ImageFormat& imageFormat, DataType& dataType);
+LLGL_EXPORT bool FindSuitableImageFormat(const Format format, ImageFormat& imageFormat, DataType& dataType);
 
 /**
 \brief Converts the image format and data type of the source image (only uncompressed color formats).

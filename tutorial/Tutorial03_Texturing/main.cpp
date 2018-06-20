@@ -50,8 +50,8 @@ public:
     {
         // Specify vertex format
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::VectorType::Float2 });
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
 
         // Define vertex buffer data
         struct Vertex
@@ -135,7 +135,7 @@ public:
                 texDesc.type                = LLGL::TextureType::Texture2D;
 
                 // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format              = LLGL::TextureFormat::RGBA8;
+                texDesc.format              = LLGL::Format::RGBA8UNorm;
 
                 // Texture size
                 texDesc.texture2D.width     = texWidth;
