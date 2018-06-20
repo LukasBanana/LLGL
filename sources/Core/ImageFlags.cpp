@@ -541,6 +541,7 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
     {
         case Format::Undefined:         break;
 
+        /* --- Color formats --- */
         case Format::R8UNorm:           return T{ ImageFormat::R, DataType::UInt8 };
         case Format::R8SNorm:           return T{ ImageFormat::R, DataType::Int8 };
         case Format::R8UInt:            return T{ ImageFormat::R, DataType::UInt8 };
@@ -600,12 +601,20 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::RGBA32UInt:        return T{ ImageFormat::RGBA, DataType::UInt32 };
         case Format::RGBA32SInt:        return T{ ImageFormat::RGBA, DataType::Int32 };
         case Format::RGBA32Float:       return T{ ImageFormat::RGBA, DataType::Float };
+        
+        /* --- Extended color formats --- */
+        case Format::R64Float:          return T{ ImageFormat::R, DataType::Double };
+        case Format::RG64Float:         return T{ ImageFormat::RG, DataType::Double };
+        case Format::RGB64Float:        return T{ ImageFormat::RGB, DataType::Double };
+        case Format::RGBA64Float:       return T{ ImageFormat::RGBA, DataType::Double };
 
+        /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          break;//T{ ImageFormat::Depth, DataType::Float16 }; //TODO
         case Format::D32Float:          return T{ ImageFormat::Depth, DataType::Float };
         case Format::D24UNormS8UInt:    return T{ ImageFormat::DepthStencil, DataType::Float };
         case Format::D32FloatS8X24UInt: break;
 
+        /* --- Compressed color formats --- */
         case Format::BC1RGB:            return T{ ImageFormat::CompressedRGB, DataType::Int8 };
         case Format::BC1RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int8 };
         case Format::BC2RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int16 };

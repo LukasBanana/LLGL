@@ -177,6 +177,12 @@ LLGL_EXPORT const char* ToString(const Format t)
         case T::RGBA32UInt:         return "RGBA32UInt";
         case T::RGBA32SInt:         return "RGBA32SInt";
         case T::RGBA32Float:        return "RGBA32Float";
+        
+        /* --- Extended color formats --- */
+        case T::R64Float:           return "R64Float";
+        case T::RG64Float:          return "RG64Float";
+        case T::RGB64Float:         return "RGB64Float";
+        case T::RGBA64Float:        return "RGBA64Float";
 
         /* --- Depth-stencil formats --- */
         case T::D16UNorm:           return "D16UNorm";

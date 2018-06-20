@@ -124,7 +124,7 @@ void MTShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const Ver
         {
             MTLVertexAttributeDescriptor* attribDesc = vertexDesc_.attributes[attribIdx++];
             
-            attribDesc.format       = MTTypes::Map(attribs[j].vectorType);
+            attribDesc.format       = MTTypes::ToMTLVertexFormat(attribs[j].format);
             attribDesc.offset       = (NSUInteger)attribs[j].offset;
             attribDesc.bufferIndex  = inputSlot;
         }

@@ -44,92 +44,92 @@ MTLDataType Map(const DataType dataType)
     MapFailed("DataType", "MTLDataType");
 }
 
-MTLVertexFormat Map(const VectorType vectorType)
+MTLPixelFormat Map(const Format format)
 {
-    switch (vectorType)
+    switch (format)
     {
-    	case VectorType::Float:     return MTLVertexFormatFloat;
-        case VectorType::Float2:    return MTLVertexFormatFloat2;
-        case VectorType::Float3:    return MTLVertexFormatFloat3;
-        case VectorType::Float4:    return MTLVertexFormatFloat4;
-        case VectorType::Double:    break;
-        case VectorType::Double2:   break;
-        case VectorType::Double3:   break;
-        case VectorType::Double4:   break;
-        case VectorType::Int:       return MTLVertexFormatInt;
-        case VectorType::Int2:      return MTLVertexFormatInt2;
-        case VectorType::Int3:      return MTLVertexFormatInt3;
-        case VectorType::Int4:      return MTLVertexFormatInt4;
-        case VectorType::UInt:      return MTLVertexFormatUInt;
-        case VectorType::UInt2:     return MTLVertexFormatUInt2;
-        case VectorType::UInt3:     return MTLVertexFormatUInt3;
-        case VectorType::UInt4:     return MTLVertexFormatUInt4;
-    }
-    MapFailed("VectorType", "MTLVertexFormat");
-}
-
-MTLPixelFormat Map(const TextureFormat textureFormat)
-{
-    switch (textureFormat)
-    {
-        case TextureFormat::Unknown:        break;
+        case Format::Undefined:       	break;
 
         /* --- Color formats --- */
-        case TextureFormat::R8:             return MTLPixelFormatR8Unorm;
-        case TextureFormat::R8Sgn:          return MTLPixelFormatR8Snorm;
+        case Format::R8UNorm:        	return MTLPixelFormatR8Unorm;
+        case Format::R8SNorm:        	return MTLPixelFormatR8Snorm;
+        case Format::R8UInt:         	return MTLPixelFormatR8Uint;
+        case Format::R8SInt:         	return MTLPixelFormatR8Sint;
 
-        case TextureFormat::R16:            return MTLPixelFormatR16Unorm;
-        case TextureFormat::R16Sgn:         return MTLPixelFormatR16Snorm;
-        case TextureFormat::R16Float:       return MTLPixelFormatR16Float;
+        case Format::R16UNorm:       	return MTLPixelFormatR16Unorm;
+        case Format::R16SNorm:       	return MTLPixelFormatR16Snorm;
+        case Format::R16UInt:       	return MTLPixelFormatR16Uint;
+        case Format::R16SInt:       	return MTLPixelFormatR16Sint;
+        case Format::R16Float:       	return MTLPixelFormatR16Float;
 
-        case TextureFormat::R32UInt:        return MTLPixelFormatR32Uint;
-        case TextureFormat::R32SInt:        return MTLPixelFormatR32Sint;
-        case TextureFormat::R32Float:       return MTLPixelFormatR32Float;
+        case Format::R32UInt:        	return MTLPixelFormatR32Uint;
+        case Format::R32SInt:           return MTLPixelFormatR32Sint;
+        case Format::R32Float:          return MTLPixelFormatR32Float;
 
-        case TextureFormat::RG8:            return MTLPixelFormatRG8Unorm;
-        case TextureFormat::RG8Sgn:         return MTLPixelFormatRG8Snorm;
+        case Format::RG8UNorm:       	return MTLPixelFormatRG8Unorm;
+        case Format::RG8SNorm:       	return MTLPixelFormatRG8Snorm;
+        case Format::RG8UInt:       	return MTLPixelFormatRG8Unorm;
+        case Format::RG8SInt:           return MTLPixelFormatRG8Snorm;
 
-        case TextureFormat::RG16:           return MTLPixelFormatRG16Unorm;
-        case TextureFormat::RG16Sgn:        return MTLPixelFormatRG16Snorm;
-        case TextureFormat::RG16Float:      return MTLPixelFormatRG16Float;
+        case Format::RG16UNorm:      	return MTLPixelFormatRG16Unorm;
+        case Format::RG16SNorm:      	return MTLPixelFormatRG16Snorm;
+        case Format::RG16UInt:          return MTLPixelFormatRG16Uint;
+        case Format::RG16SInt:          return MTLPixelFormatRG16Sint;
+        case Format::RG16Float:         return MTLPixelFormatRG16Float;
 
-        case TextureFormat::RG32UInt:       return MTLPixelFormatRG32Uint;
-        case TextureFormat::RG32SInt:       return MTLPixelFormatRG32Sint;
-        case TextureFormat::RG32Float:      return MTLPixelFormatRG32Float;
+        case Format::RG32UInt:          return MTLPixelFormatRG32Uint;
+        case Format::RG32SInt:          return MTLPixelFormatRG32Sint;
+        case Format::RG32Float:         return MTLPixelFormatRG32Float;
 
-        case TextureFormat::RGB8:           break;
-        case TextureFormat::RGB8Sgn:        break;
+        case Format::RGB8UNorm:      	break;
+        case Format::RGB8SNorm:         break;
+        case Format::RGB8UInt:          break;
+        case Format::RGB8SInt:          break;
 
-        case TextureFormat::RGB16:          break;
-        case TextureFormat::RGB16Sgn:       break;
-        case TextureFormat::RGB16Float:     break;
+        case Format::RGB16UNorm:        break;
+        case Format::RGB16SNorm:        break;
+        case Format::RGB16UInt:         break;
+        case Format::RGB16SInt:         break;
+        case Format::RGB16Float:     	break;
 
-        case TextureFormat::RGB32UInt:      break;
-        case TextureFormat::RGB32SInt:      break;
-        case TextureFormat::RGB32Float:     break;
+        case Format::RGB32UInt:         break;
+        case Format::RGB32SInt:         break;
+        case Format::RGB32Float:        break;
 
-        case TextureFormat::RGBA8:          return MTLPixelFormatRGBA8Unorm;
-        case TextureFormat::RGBA8Sgn:       return MTLPixelFormatRGBA8Snorm;
+        case Format::RGBA8UNorm:        return MTLPixelFormatRGBA8Unorm;
+        case Format::RGBA8SNorm:        return MTLPixelFormatRGBA8Snorm;
+        case Format::RGBA8UInt:         return MTLPixelFormatRGBA8Unorm;
+        case Format::RGBA8SInt:         return MTLPixelFormatRGBA8Snorm;
 
-        case TextureFormat::RGBA16:         return MTLPixelFormatRGBA16Unorm;
-        case TextureFormat::RGBA16Sgn:      return MTLPixelFormatRGBA16Snorm;
-        case TextureFormat::RGBA16Float:    return MTLPixelFormatRGBA16Float;
+        case Format::RGBA16UNorm:       return MTLPixelFormatRGBA16Unorm;
+        case Format::RGBA16SNorm:       return MTLPixelFormatRGBA16Snorm;
+        case Format::RGBA16UInt:        return MTLPixelFormatRGBA16Uint;
+        case Format::RGBA16SInt:        return MTLPixelFormatRGBA16Sint;
+        case Format::RGBA16Float:       return MTLPixelFormatRGBA16Float;
 
-        case TextureFormat::RGBA32UInt:     return MTLPixelFormatRGBA32Uint;
-        case TextureFormat::RGBA32SInt:     return MTLPixelFormatRGBA32Sint;
-        case TextureFormat::RGBA32Float:    return MTLPixelFormatRGBA32Float;
+        case Format::RGBA32UInt:        return MTLPixelFormatRGBA32Uint;
+        case Format::RGBA32SInt:        return MTLPixelFormatRGBA32Sint;
+        case Format::RGBA32Float:       return MTLPixelFormatRGBA32Float;
+
+        /* --- Extended color formats --- */
+        case Format::R64Float:          break;
+        case Format::RG64Float:         break;
+        case Format::RGB64Float:        break;
+        case Format::RGBA64Float:       break;
 
         /* --- Depth-stencil formats --- */
-        case TextureFormat::D32:            return MTLPixelFormatDepth32Float;
-        case TextureFormat::D24S8:          return MTLPixelFormatDepth24Unorm_Stencil8;
+        case Format::D16UNorm:          return MTLPixelFormatDepth16Unorm;
+        case Format::D32Float:          return MTLPixelFormatDepth32Float;
+        case Format::D24UNormS8UInt:    return MTLPixelFormatDepth24Unorm_Stencil8;
+        case Format::D32FloatS8X24UInt: return MTLPixelFormatDepth32Float_Stencil8;
 
         /* --- Compressed color formats --- */
-        case TextureFormat::RGB_DXT1:       break;
-        case TextureFormat::RGBA_DXT1:      return MTLPixelFormatBC1_RGBA;
-        case TextureFormat::RGBA_DXT3:      return MTLPixelFormatBC2_RGBA;
-        case TextureFormat::RGBA_DXT5:      return MTLPixelFormatBC3_RGBA;
+        case Format::BC1RGB:            break;
+        case Format::BC1RGBA:           return MTLPixelFormatBC1_RGBA;
+        case Format::BC2RGBA:           return MTLPixelFormatBC2_RGBA;
+        case Format::BC3RGBA:           return MTLPixelFormatBC3_RGBA;
     }
-    MapFailed("TextureFormat", "MTLPixelFormat");
+    MapFailed("Format", "MTLPixelFormat");
 }
 
 MTLTextureType Map(const TextureType textureType)
@@ -188,6 +188,76 @@ MTLCompareFunction Map(const CompareOp compareOp)
         case CompareOp::Ever:           return MTLCompareFunctionAlways;
     }
     MapFailed("CompareOp", "MTLCompareFunction");
+}
+
+MTLVertexFormat ToMTLVertexFormat(const Format format)
+{
+    switch (format)
+    {
+        /* --- Color formats --- */
+        case Format::R8UNorm:       return MTLVertexFormatUCharNormalized;
+        case Format::R8SNorm:       return MTLVertexFormatCharNormalized;
+        case Format::R8UInt:           return MTLVertexFormatUChar;
+        case Format::R8SInt:        return MTLVertexFormatChar;
+        
+        case Format::R16UNorm:      return MTLVertexFormatUShortNormalized;
+        case Format::R16SNorm:      return MTLVertexFormatShortNormalized;
+        case Format::R16UInt:       return MTLVertexFormatUShort;
+        case Format::R16SInt:       return MTLVertexFormatShort;
+        case Format::R16Float:      break;
+
+        case Format::R32UInt:       return MTLVertexFormatUInt;
+        case Format::R32SInt:       return MTLVertexFormatInt;
+        case Format::R32Float:      return MTLVertexFormatFloat;
+
+        case Format::RG8UNorm:      return MTLVertexFormatUChar2Normalized;
+        case Format::RG8SNorm:      return MTLVertexFormatChar2Normalized;
+        case Format::RG8UInt:       return MTLVertexFormatUChar2;
+        case Format::RG8SInt:       return MTLVertexFormatChar2;
+
+        case Format::RG16UNorm:     return MTLVertexFormatUShort2Normalized;
+        case Format::RG16SNorm:     return MTLVertexFormatShort2Normalized;
+        case Format::RG16UInt:      return MTLVertexFormatUShort2;
+        case Format::RG16SInt:      return MTLVertexFormatShort2;
+        case Format::RG16Float:     break;
+
+        case Format::RG32UInt:      return MTLVertexFormatUInt2;
+        case Format::RG32SInt:      return MTLVertexFormatInt2;
+        case Format::RG32Float:     return MTLVertexFormatFloat2;
+
+        case Format::RGB8UNorm:     return MTLVertexFormatUChar3Normalized;
+        case Format::RGB8SNorm:     return MTLVertexFormatChar3Normalized;
+        case Format::RGB8UInt:      return MTLVertexFormatUChar3;
+        case Format::RGB8SInt:      return MTLVertexFormatChar3;
+
+        case Format::RGB16UNorm:    return MTLVertexFormatUShort3Normalized;
+        case Format::RGB16SNorm:    return MTLVertexFormatShort3Normalized;
+        case Format::RGB16UInt:     return MTLVertexFormatUShort3;
+        case Format::RGB16SInt:     return MTLVertexFormatShort3;
+        case Format::RGB16Float:    break;
+
+        case Format::RGB32UInt:     return MTLVertexFormatUInt3;
+        case Format::RGB32SInt:     return MTLVertexFormatInt3;
+        case Format::RGB32Float:    return MTLVertexFormatFloat3;
+
+        case Format::RGBA8UNorm:    return MTLVertexFormatUChar4Normalized;
+        case Format::RGBA8SNorm:    return MTLVertexFormatChar4Normalized;
+        case Format::RGBA8UInt:     return MTLVertexFormatUChar4;
+        case Format::RGBA8SInt:     return MTLVertexFormatChar4;
+
+        case Format::RGBA16UNorm:   return MTLVertexFormatUShort4Normalized;
+        case Format::RGBA16SNorm:   return MTLVertexFormatShort4Normalized;
+        case Format::RGBA16UInt:    return MTLVertexFormatUShort4;
+        case Format::RGBA16SInt:    return MTLVertexFormatShort4;
+        case Format::RGBA16Float:   break;
+
+        case Format::RGBA32UInt:    return MTLVertexFormatUInt4;
+        case Format::RGBA32SInt:    return MTLVertexFormatInt4;
+        case Format::RGBA32Float:   return MTLVertexFormatFloat4;
+        
+        default:                    break;
+    }
+    MapFailed("Format", "MTLVertexFormat");
 }
 
 

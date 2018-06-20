@@ -49,21 +49,22 @@ int main()
         window.AddEventListener(input);
 
         // Create vertex buffer
-        LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "color", LLGL::VectorType::Float3 });
-
         struct Vertex
         {
-            Gs::Vector2f    position;
-            LLGL::ColorRGBf color;
+            Gs::Vector2f     position;
+            LLGL::ColorRGBub color;
         }
         vertices[] =
         {
-            { {  0.0f,  0.5f }, { 1.0f, 0.0f, 0.0f } },
-            { {  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f } },
-            { { -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f } },
+            { {  0.0f,  0.5f }, { 255, 0, 0 } },
+            { {  0.5f, -0.5f }, { 0, 255, 0 } },
+            { { -0.5f, -0.5f }, { 0, 0, 255 } },
         };
+
+        LLGL::VertexFormat vertexFormat;
+        vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB8UNorm });
+        vertexFormat.stride = sizeof(Vertex);
 
         LLGL::BufferDescriptor vertexBufferDesc;
         {
