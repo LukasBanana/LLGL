@@ -32,14 +32,13 @@ namespace MTTypes
 [[noreturn]]
 void MapFailed(const std::string& typeName, const std::string& vknTypeName);
 
-MTLDataType         Map( const DataType             dataType          );
-MTLPixelFormat      Map( const Format               format            );
-MTLTextureType      Map( const TextureType          textureType       );
-MTLPrimitiveType    Map( const PrimitiveTopology    primitiveTopology );
-MTLCullMode         Map( const CullMode             cullMode          );
-MTLCompareFunction  Map( const CompareOp            compareOp         );
-
-MTLVertexFormat     ToMTLVertexFormat(const Format format);
+MTLDataType         ToMTLDataType       ( const DataType            dataType          );
+MTLPixelFormat      ToMTLPixelFormat    ( const Format              format            );
+MTLVertexFormat     ToMTLVertexFormat   ( const Format              format            );
+MTLTextureType      ToMTLTextureType    ( const TextureType         textureType       );
+MTLPrimitiveType    ToMTLPrimitiveType  ( const PrimitiveTopology   primitiveTopology );
+MTLCullMode         ToMTLCullMode       ( const CullMode            cullMode          );
+MTLCompareFunction  ToMTLCompareFunction( const CompareOp           compareOp         );
 
 
 } // /namespace MTTypes

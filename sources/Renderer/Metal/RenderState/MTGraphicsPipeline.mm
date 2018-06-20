@@ -57,7 +57,7 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
     
     /* Convert standalone parameters */
-    primitiveType_ = MTTypes::Map(desc.primitiveTopology);
+    primitiveType_ = MTTypes::ToMTLPrimitiveType(desc.primitiveTopology);
 
     /* Create render pipeline state */
     MTLRenderPipelineDescriptor* renderPipelineDesc = [[MTLRenderPipelineDescriptor alloc] init];
@@ -94,8 +94,11 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
     MTLDepthStencilDescriptor* depthStencilDesc = [[MTLDepthStencilDescriptor alloc] init];
     {
         /* Convert depth descriptor */
-        depthStencilDesc.depthWriteEnabled      = MTBoolean(desc.depth.writeEnabled);
-        depthStencilDesc.depthCompareFunction   = (desc.depth.testEnabled ? MTTypes::Map(desc.depth.compareOp) : MTLCompareFunctionAlways);
+        depthStencilDesc.depthWriteEnabled          = MTBoolean(desc.depth.writeEnabled);
+        if (desc.depth.testEnabled)
+            depthStencilDesc.depthCompareFunction   = MTTypes::ToMTLCompareFunction(desc.depth.compareOp);
+        else
+            depthStencilDesc.depthCompareFunction   = MTLCompareFunctionAlways;
         
         /* Convert stencil descriptor */
         //TODO...

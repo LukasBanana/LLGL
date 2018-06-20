@@ -25,7 +25,7 @@ void MapFailed(const std::string& typeName, const std::string& mtlTypeName)
     throw std::invalid_argument("failed to map <LLGL::" + typeName + "> to <" + mtlTypeName + "> Metal parameter");
 }
 
-MTLDataType Map(const DataType dataType)
+MTLDataType ToMTLDataType(const DataType dataType)
 {
     switch (dataType)
     {
@@ -44,7 +44,7 @@ MTLDataType Map(const DataType dataType)
     MapFailed("DataType", "MTLDataType");
 }
 
-MTLPixelFormat Map(const Format format)
+MTLPixelFormat ToMTLPixelFormat(const Format format)
 {
     switch (format)
     {
@@ -132,64 +132,6 @@ MTLPixelFormat Map(const Format format)
     MapFailed("Format", "MTLPixelFormat");
 }
 
-MTLTextureType Map(const TextureType textureType)
-{
-    switch (textureType)
-    {
-        case TextureType::Texture1D:        return MTLTextureType1D;
-        case TextureType::Texture2D:        return MTLTextureType2D;
-        case TextureType::Texture3D:        return MTLTextureType3D;
-        case TextureType::TextureCube:      return MTLTextureTypeCube;
-        case TextureType::Texture1DArray:   return MTLTextureType1DArray;
-        case TextureType::Texture2DArray:   return MTLTextureType2DArray;
-        case TextureType::TextureCubeArray: return MTLTextureTypeCubeArray;
-        case TextureType::Texture2DMS:      return MTLTextureType2DMultisample;
-        case TextureType::Texture2DMSArray: break;//return MTLTextureType2DMultisampleArray; // Beta
-    }
-    MapFailed("TextureType", "MTLTextureType");
-}
-
-MTLPrimitiveType Map(const PrimitiveTopology primitiveTopology)
-{
-    switch (primitiveTopology)
-    {
-        case PrimitiveTopology::PointList:      return MTLPrimitiveTypePoint;
-        case PrimitiveTopology::LineList:       return MTLPrimitiveTypeLine;
-        case PrimitiveTopology::LineStrip:      return MTLPrimitiveTypeLineStrip;
-        case PrimitiveTopology::TriangleList:   return MTLPrimitiveTypeTriangle;
-        case PrimitiveTopology::TriangleStrip:  return MTLPrimitiveTypeTriangleStrip;
-        default:                                break;
-    }
-    MapFailed("PrimitiveTopology", "MTLPrimitiveType");
-}
-
-MTLCullMode Map(const CullMode cullMode)
-{
-    switch (cullMode)
-    {
-        case CullMode::Disabled:    return MTLCullModeNone;
-        case CullMode::Front:       return MTLCullModeFront;
-        case CullMode::Back:        return MTLCullModeBack;
-    }
-    MapFailed("CullMode", "MTLCullMode");
-}
-
-MTLCompareFunction Map(const CompareOp compareOp)
-{
-    switch (compareOp)
-    {
-        case CompareOp::Never:          return MTLCompareFunctionNever;
-        case CompareOp::Less:           return MTLCompareFunctionLess;
-        case CompareOp::Equal:          return MTLCompareFunctionEqual;
-        case CompareOp::LessEqual:      return MTLCompareFunctionLessEqual;
-        case CompareOp::Greater:        return MTLCompareFunctionGreater;
-        case CompareOp::NotEqual:       return MTLCompareFunctionNotEqual;
-        case CompareOp::GreaterEqual:   return MTLCompareFunctionGreaterEqual;
-        case CompareOp::Ever:           return MTLCompareFunctionAlways;
-    }
-    MapFailed("CompareOp", "MTLCompareFunction");
-}
-
 MTLVertexFormat ToMTLVertexFormat(const Format format)
 {
     switch (format)
@@ -258,6 +200,64 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
         default:                    break;
     }
     MapFailed("Format", "MTLVertexFormat");
+}
+
+MTLTextureType ToMTLTextureType(const TextureType textureType)
+{
+    switch (textureType)
+    {
+        case TextureType::Texture1D:        return MTLTextureType1D;
+        case TextureType::Texture2D:        return MTLTextureType2D;
+        case TextureType::Texture3D:        return MTLTextureType3D;
+        case TextureType::TextureCube:      return MTLTextureTypeCube;
+        case TextureType::Texture1DArray:   return MTLTextureType1DArray;
+        case TextureType::Texture2DArray:   return MTLTextureType2DArray;
+        case TextureType::TextureCubeArray: return MTLTextureTypeCubeArray;
+        case TextureType::Texture2DMS:      return MTLTextureType2DMultisample;
+        case TextureType::Texture2DMSArray: break;//return MTLTextureType2DMultisampleArray; // Beta
+    }
+    MapFailed("TextureType", "MTLTextureType");
+}
+
+MTLPrimitiveType ToMTLPrimitiveType(const PrimitiveTopology primitiveTopology)
+{
+    switch (primitiveTopology)
+    {
+        case PrimitiveTopology::PointList:      return MTLPrimitiveTypePoint;
+        case PrimitiveTopology::LineList:       return MTLPrimitiveTypeLine;
+        case PrimitiveTopology::LineStrip:      return MTLPrimitiveTypeLineStrip;
+        case PrimitiveTopology::TriangleList:   return MTLPrimitiveTypeTriangle;
+        case PrimitiveTopology::TriangleStrip:  return MTLPrimitiveTypeTriangleStrip;
+        default:                                break;
+    }
+    MapFailed("PrimitiveTopology", "MTLPrimitiveType");
+}
+
+MTLCullMode ToMTLCullMode(const CullMode cullMode)
+{
+    switch (cullMode)
+    {
+        case CullMode::Disabled:    return MTLCullModeNone;
+        case CullMode::Front:       return MTLCullModeFront;
+        case CullMode::Back:        return MTLCullModeBack;
+    }
+    MapFailed("CullMode", "MTLCullMode");
+}
+
+MTLCompareFunction ToMTLCompareFunction(const CompareOp compareOp)
+{
+    switch (compareOp)
+    {
+        case CompareOp::Never:          return MTLCompareFunctionNever;
+        case CompareOp::Less:           return MTLCompareFunctionLess;
+        case CompareOp::Equal:          return MTLCompareFunctionEqual;
+        case CompareOp::LessEqual:      return MTLCompareFunctionLessEqual;
+        case CompareOp::Greater:        return MTLCompareFunctionGreater;
+        case CompareOp::NotEqual:       return MTLCompareFunctionNotEqual;
+        case CompareOp::GreaterEqual:   return MTLCompareFunctionGreaterEqual;
+        case CompareOp::Ever:           return MTLCompareFunctionAlways;
+    }
+    MapFailed("CompareOp", "MTLCompareFunction");
 }
 
 
