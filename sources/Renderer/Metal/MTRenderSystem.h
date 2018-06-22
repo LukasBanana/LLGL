@@ -25,6 +25,8 @@
 #include "Shader/MTShader.h"
 #include "Shader/MTShaderProgram.h"
 
+#include "Texture/MTTexture.h"
+
 
 namespace LLGL
 {
@@ -154,7 +156,7 @@ class MTRenderSystem : public RenderSystem
         HWObjectContainer<MTCommandBuffer>      commandBuffers_;
         HWObjectContainer<MTBuffer>             buffers_;
         //HWObjectContainer<MTBufferArray>        bufferArrays_;
-        //HWObjectContainer<MTTexture>            textures_;
+        HWObjectContainer<MTTexture>            textures_;
         //HWObjectContainer<MTTextureArray>       textureArrays_;
         //HWObjectContainer<MTSampler>            samplers_;
         //HWObjectContainer<MTSamplerArray>       samplerArrays_;

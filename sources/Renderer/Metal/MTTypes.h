@@ -11,6 +11,7 @@
 
 #import <Metal/Metal.h>
 
+#include <LLGL/Types.h>
 #include <LLGL/ShaderFlags.h>
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
@@ -41,6 +42,9 @@ MTLCullMode         ToMTLCullMode       ( const CullMode            cullMode    
 MTLCompareFunction  ToMTLCompareFunction( const CompareOp           compareOp         );
 
 Format              ToFormat            ( const MTLPixelFormat      pixelFormat       );
+
+void Convert(MTLOrigin& dst, const Offset3D& src);
+void Convert(MTLSize& dst, const Extent3D& src);
 
 
 } // /namespace MTTypes

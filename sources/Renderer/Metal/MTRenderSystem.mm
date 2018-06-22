@@ -105,7 +105,12 @@ void MTRenderSystem::UnmapBuffer(Buffer& buffer)
 
 Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc)
 {
-    return nullptr;//todo
+    auto textureMT = MakeUnique<MTTexture>(device_, textureDesc);
+    
+    if (imageDesc)
+        textureMT->Write(*imageDesc, { 0, 0, 0 }, textureMT->QueryMipLevelSize(0));
+    
+    return TakeOwnership(textures_, std::move(textureMT));
 }
 
 TextureArray* MTRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
@@ -115,7 +120,7 @@ TextureArray* MTRenderSystem::CreateTextureArray(std::uint32_t numTextures, Text
 
 void MTRenderSystem::Release(Texture& texture)
 {
-    //todo
+    RemoveFromUniqueSet(textures_, &texture);
 }
 
 void MTRenderSystem::Release(TextureArray& textureArray)

@@ -18,17 +18,21 @@ namespace LLGL
 {
 
 
+struct SrcImageDescriptor;
+
 class MTTexture : public Texture
 {
 
     public:
 
-        MTTexture(id<MTLDevice> device, const TextureDescriptor& desc, const TextureType type);
+        MTTexture(id<MTLDevice> device, const TextureDescriptor& desc);
         ~MTTexture();
 
         Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
+
+        void Write(const SrcImageDescriptor& imageDesc, const Offset3D& offset, const Extent3D& extent);
 
         // Returns the native MTLTexture object.
         inline id<MTLTexture> GetNative() const

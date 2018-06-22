@@ -8,6 +8,7 @@
 #include "MTTexture.h"
 #include "../MTTypes.h"
 #include <LLGL/TextureFlags.h>
+#include <LLGL/ImageFlags.h>
 #include <algorithm>
 
 
@@ -15,13 +16,56 @@ namespace LLGL
 {
 
 
-static void Convert(MTLTextureDescriptor* dst, const TextureDescriptor& src)
+static NSUInteger GetTextureWidth(const TextureDescriptor& desc)
 {
-    //TODO
+    return desc.texture3D.width;
 }
 
-MTTexture::MTTexture(id<MTLDevice> device, const TextureDescriptor& desc, const TextureType type) :
-    Texture { type }
+static NSUInteger GetTextureHeight(const TextureDescriptor& desc)
+{
+    if (desc.type == TextureType::Texture1D || desc.type == TextureType::Texture1DArray)
+        return 1u;
+    else
+        return desc.texture3D.height;
+}
+
+static NSUInteger GetTextureDepth(const TextureDescriptor& desc)
+{
+    if (desc.type == TextureType::Texture3D)
+        return desc.texture3D.width;
+    else
+        return 1u;
+}
+
+static MTLTextureUsage GetTextureUsage(const TextureDescriptor& desc)
+{
+    MTLTextureUsage usage = 0;
+    
+    if ((desc.flags & TextureFlags::SampleUsage) != 0)
+        usage |= MTLTextureUsageShaderRead;
+    if ((desc.flags & TextureFlags::AttachmentUsage) != 0)
+        usage |= MTLTextureUsageRenderTarget;
+    if ((desc.flags & TextureFlags::StorageUsage) != 0)
+        usage |= MTLTextureUsageShaderWrite;
+    
+    return usage;
+}
+
+static void Convert(MTLTextureDescriptor* dst, const TextureDescriptor& src)
+{
+    dst.textureType         = MTTypes::ToMTLTextureType(src.type);
+    dst.pixelFormat         = MTTypes::ToMTLPixelFormat(src.format);
+    dst.width               = GetTextureWidth(src);
+    dst.height              = GetTextureHeight(src);
+    dst.depth               = GetTextureDepth(src);
+    dst.mipmapLevelCount    = static_cast<NSUInteger>(NumMipLevels(src));
+    dst.sampleCount         = static_cast<NSUInteger>(std::max(1u, src.texture2DMS.samples));
+    dst.arrayLength         = static_cast<NSUInteger>(NumArrayLayers(src));
+    dst.usage               = GetTextureUsage(src);
+}
+
+MTTexture::MTTexture(id<MTLDevice> device, const TextureDescriptor& desc) :
+    Texture { desc.type }
 {
     MTLTextureDescriptor* texDesc = [[MTLTextureDescriptor alloc] init];
     Convert(texDesc, desc);
@@ -117,6 +161,25 @@ TextureDescriptor MTTexture::QueryDesc() const
     }
 
     return texDesc;
+}
+
+void MTTexture::Write(const SrcImageDescriptor& imageDesc, const Offset3D& offset, const Extent3D& extent)
+{
+    //TODO: convert data if necessary
+    
+    /* Replace region of native texture with source image data */
+    MTLRegion region;
+    MTTypes::Convert(region.origin, offset);
+    MTTypes::Convert(region.size, extent);
+    
+    auto format = MTTypes::ToFormat([native_ pixelFormat]);
+
+    [native_
+        replaceRegion:  region
+        mipmapLevel:    0
+        withBytes:      imageDesc.data
+        bytesPerRow:    ([native_ width] * FormatBitSize(format) / 8)
+    ];
 }
 
 

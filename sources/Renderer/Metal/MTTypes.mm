@@ -332,6 +332,20 @@ Format ToFormat(const MTLPixelFormat pixelFormat)
     UnmapFailed("Format", "MTLPixelFormat");
 }
 
+void Convert(MTLOrigin& dst, const Offset3D& src)
+{
+    dst.x = static_cast<NSUInteger>(std::max(0, src.x));
+    dst.y = static_cast<NSUInteger>(std::max(0, src.y));
+    dst.z = static_cast<NSUInteger>(std::max(0, src.z));
+}
+
+void Convert(MTLSize& dst, const Extent3D& src)
+{
+    dst.width   = static_cast<NSUInteger>(src.width );
+    dst.height  = static_cast<NSUInteger>(src.height);
+    dst.depth   = static_cast<NSUInteger>(src.depth );
+}
+
 
 } // /namespace MTTypes
 
