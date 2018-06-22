@@ -78,6 +78,35 @@ void VKCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
 {
     vkCmdDrawIndexed(commandBuffer_, numIndices, 1, firstIndex, 0, 0);
 }
+
+// Metal implementation
+void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstIndex)
+{
+    if (numPatchControlPoints_ > 0)
+    {
+        [renderEncoder_
+            drawIndexedPatches:             numPatchControlPoints_
+            patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
+            patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
+            patchIndexBuffer:               nil
+            patchIndexBufferOffset:         0
+            controlPointIndexBuffer:        indexBuffer_
+            controlPointIndexBufferOffset:  indexTypeSize_ * (static_cast<NSUInteger>(firstIndex))
+            instanceCount:                  1
+            baseInstance:                   0
+        ];
+    }
+    else
+    {
+        [renderEncoder_
+            drawIndexedPrimitives:  primitiveType_
+            indexCount:             static_cast<NSUInteger>(numIndices)
+            indexType:              indexType_
+            indexBuffer:            indexBuffer_
+            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+        ];
+    }
+}
 ```
 
 
