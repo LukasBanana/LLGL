@@ -87,7 +87,7 @@ private:
             ResizeEventHandler(Tutorial& tutorial, LLGL::RenderContext* context, Gs::Matrix4f& projection);
 
             void OnResize(LLGL::Window& sender, const LLGL::Extent2D& clientAreaSize) override;
-            void OnTimer(LLGL::Window& sender, std::uint32_t timerID);
+            void OnTimer(LLGL::Window& sender, std::uint32_t timerID) override;
 
         private:
 

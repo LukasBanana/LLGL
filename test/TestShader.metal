@@ -7,13 +7,15 @@ using namespace metal;
 typedef struct
 {
     float2 position [[attribute(0)]];
-    float3 color    [[attribute(1)]];
+    float2 texCoord [[attribute(1)]];
+    float3 color    [[attribute(2)]];
 }
 VertexIn;
 
 typedef struct
 {
     float4 position [[position]];
+    float2 texCoord;
     float4 color;
 }
 VertexOut;
@@ -23,12 +25,20 @@ vertex VertexOut VMain(VertexIn inp [[stage_in]])
     VertexOut outp;
 
     outp.position = float4(inp.position, 0.0, 1.0);
+    outp.texCoord = inp.texCoord;
     outp.color    = float4(inp.color, 1.0);
 
     return outp;
 }
 
-fragment float4 FMain(VertexOut inp [[stage_in]])
+fragment float4 FMain(
+    VertexOut           inp [[stage_in]],
+    texture2d<float>    tex [[texture(0)]])
 {
-    return inp.color;
+    constexpr sampler texSampler(mag_filter::linear, min_filter::linear);
+    #if 0
+    return inp.color * tex.sample(texSampler, inp.texCoord);
+    #else
+    return tex.sample(texSampler, inp.texCoord);
+    #endif
 }

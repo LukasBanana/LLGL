@@ -10,6 +10,7 @@
 #include "MTTypes.h"
 #include "Buffer/MTBuffer.h"
 #include "RenderState/MTGraphicsPipeline.h"
+#include "Texture/MTTexture.h"
 #include "../CheckedCast.h"
 #include <algorithm>
 
@@ -156,6 +157,68 @@ void MTCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
 }
 
 void MTCommandBuffer::EndStreamOutput()
+{
+    //todo
+}
+
+/* ----- Constant Buffers ------ */
+
+void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    //todo
+}
+
+void MTCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
+{
+    //todo
+}
+
+/* ----- Storage Buffers ----- */
+
+void MTCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
+{
+    //todo
+}
+
+void MTCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
+{
+    //todo
+}
+
+/* ----- Textures ----- */
+
+void MTCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stageFlags)
+{
+    auto& textureMT = LLGL_CAST(MTTexture&, texture);
+    if ((stageFlags & StageFlags::VertexStage) != 0)
+    {
+        [renderEncoder_
+            setVertexTexture:   textureMT.GetNative()
+            atIndex:            static_cast<NSUInteger>(slot)
+        ];
+    }
+    if ((stageFlags & StageFlags::FragmentStage) != 0)
+    {
+        [renderEncoder_
+            setFragmentTexture: textureMT.GetNative()
+            atIndex:            static_cast<NSUInteger>(slot)
+        ];
+    }
+}
+
+void MTCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags)
+{
+    //todo
+}
+
+/* ----- Samplers ----- */
+
+void MTCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
+{
+    //todo
+}
+
+void MTCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags)
 {
     //todo
 }

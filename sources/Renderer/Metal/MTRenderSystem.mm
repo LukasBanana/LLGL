@@ -55,7 +55,7 @@ CommandBuffer* MTRenderSystem::CreateCommandBuffer()
 
 CommandBufferExt* MTRenderSystem::CreateCommandBufferExt()
 {
-    return nullptr; // dummy
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(commandQueue_->GetNative()));
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)

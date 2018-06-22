@@ -6,10 +6,14 @@
  */
 
 #include "Helper.h"
+#include <LLGL/Utility.h>
 #include <memory>
 #include <iostream>
 #include <string>
 #include <sstream>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "../tutorial/TutorialBase/stb/stb_image.h"
 
 
 int main()
@@ -36,7 +40,7 @@ int main()
         std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
 
         // Create command buffer
-        auto commands = renderer->CreateCommandBuffer();
+        auto commands = renderer->CreateCommandBufferExt();
 
         auto& window = static_cast<LLGL::Window&>(context->GetSurface());
         
@@ -52,17 +56,20 @@ int main()
         struct Vertex
         {
             Gs::Vector2f     position;
+            Gs::Vector2f     texCoord;
             LLGL::ColorRGBub color;
         }
         vertices[] =
         {
-            { {  0.0f,  0.5f }, { 255, 0, 0 } },
-            { {  0.5f, -0.5f }, { 0, 255, 0 } },
-            { { -0.5f, -0.5f }, { 0, 0, 255 } },
+            { { -0.5f, -0.5f }, { 0.0f, 1.0f }, { 255, 0, 0 } },
+            { { -0.5f,  0.5f }, { 0.0f, 0.0f }, { 0, 255, 0 } },
+            { {  0.5f, -0.5f }, { 1.0f, 1.0f }, { 0, 0, 255 } },
+            { {  0.5f,  0.5f }, { 1.0f, 0.0f }, { 255, 0, 255 } },
         };
 
         LLGL::VertexFormat vertexFormat;
         vertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
         vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB8UNorm });
         vertexFormat.stride = sizeof(Vertex);
 
@@ -73,6 +80,28 @@ int main()
             vertexBufferDesc.vertexBuffer.format    = vertexFormat;
         }
         auto vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
+        
+        // Create texture
+        const std::string textureFilename = "Media/Textures/Grid.png";
+        int width = 0, height = 0, components = 0;
+        auto imageBuffer = stbi_load(textureFilename.c_str(), &width, &height, &components, 4);
+        if (!imageBuffer)
+            throw std::runtime_error("failed to load texture from file: \"" + textureFilename + "\"");
+
+        LLGL::SrcImageDescriptor imageDesc;
+        {
+            imageDesc.format    = LLGL::ImageFormat::RGBA;
+            imageDesc.dataType  = LLGL::DataType::UInt8;
+            imageDesc.data      = imageBuffer;
+            imageDesc.dataSize  = static_cast<std::size_t>(width*height*4);
+        }
+
+        // Create texture and upload image data onto hardware texture
+        auto texture = renderer->CreateTexture(
+            LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, width, height), &imageDesc
+        );
+        
+        stbi_image_free(imageBuffer);
         
         // Create shaders
         auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
@@ -97,7 +126,8 @@ int main()
         // Create graphics pipeline
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.shaderProgram = shaderProgram;
+            pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
         }
         auto pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
 
@@ -113,8 +143,10 @@ int main()
 
             commands->SetGraphicsPipeline(*pipeline);
             commands->SetVertexBuffer(*vertexBuffer);
+            
+            commands->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
 
-            commands->Draw(3, 0);
+            commands->Draw(4, 0);
 
             context->Present();
         }
