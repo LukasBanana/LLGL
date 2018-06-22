@@ -40,6 +40,8 @@ MTLPrimitiveType    ToMTLPrimitiveType  ( const PrimitiveTopology   primitiveTop
 MTLCullMode         ToMTLCullMode       ( const CullMode            cullMode          );
 MTLCompareFunction  ToMTLCompareFunction( const CompareOp           compareOp         );
 
+Format              ToFormat            ( const MTLPixelFormat      pixelFormat       );
+
 
 } // /namespace MTTypes
 

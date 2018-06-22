@@ -25,6 +25,12 @@ void MapFailed(const std::string& typeName, const std::string& mtlTypeName)
     throw std::invalid_argument("failed to map <LLGL::" + typeName + "> to <" + mtlTypeName + "> Metal parameter");
 }
 
+[[noreturn]]
+void UnmapFailed(const std::string& typeName, const std::string& mtlTypeName)
+{
+    throw std::invalid_argument("failed to unmap <LLGL::" + typeName + "> from <" + mtlTypeName + "> Metal parameter");
+}
+
 MTLDataType ToMTLDataType(const DataType dataType)
 {
     switch (dataType)
@@ -68,8 +74,8 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
 
         case Format::RG8UNorm:       	return MTLPixelFormatRG8Unorm;
         case Format::RG8SNorm:       	return MTLPixelFormatRG8Snorm;
-        case Format::RG8UInt:       	return MTLPixelFormatRG8Unorm;
-        case Format::RG8SInt:           return MTLPixelFormatRG8Snorm;
+        case Format::RG8UInt:       	return MTLPixelFormatRG8Uint;
+        case Format::RG8SInt:           return MTLPixelFormatRG8Sint;
 
         case Format::RG16UNorm:      	return MTLPixelFormatRG16Unorm;
         case Format::RG16SNorm:      	return MTLPixelFormatRG16Snorm;
@@ -98,8 +104,8 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
 
         case Format::RGBA8UNorm:        return MTLPixelFormatRGBA8Unorm;
         case Format::RGBA8SNorm:        return MTLPixelFormatRGBA8Snorm;
-        case Format::RGBA8UInt:         return MTLPixelFormatRGBA8Unorm;
-        case Format::RGBA8SInt:         return MTLPixelFormatRGBA8Snorm;
+        case Format::RGBA8UInt:         return MTLPixelFormatRGBA8Uint;
+        case Format::RGBA8SInt:         return MTLPixelFormatRGBA8Sint;
 
         case Format::RGBA16UNorm:       return MTLPixelFormatRGBA16Unorm;
         case Format::RGBA16SNorm:       return MTLPixelFormatRGBA16Snorm;
@@ -139,7 +145,7 @@ MTLVertexFormat ToMTLVertexFormat(const Format format)
         /* --- Color formats --- */
         case Format::R8UNorm:       return MTLVertexFormatUCharNormalized;
         case Format::R8SNorm:       return MTLVertexFormatCharNormalized;
-        case Format::R8UInt:           return MTLVertexFormatUChar;
+        case Format::R8UInt:        return MTLVertexFormatUChar;
         case Format::R8SInt:        return MTLVertexFormatChar;
         
         case Format::R16UNorm:      return MTLVertexFormatUShortNormalized;
@@ -258,6 +264,72 @@ MTLCompareFunction ToMTLCompareFunction(const CompareOp compareOp)
         case CompareOp::Ever:           return MTLCompareFunctionAlways;
     }
     MapFailed("CompareOp", "MTLCompareFunction");
+}
+
+Format ToFormat(const MTLPixelFormat pixelFormat)
+{
+    switch (pixelFormat)
+    {
+        /* --- Color formats --- */
+        case MTLPixelFormatR8Unorm:            		return Format::R8UNorm;
+        case MTLPixelFormatR8Snorm:            		return Format::R8SNorm;
+        case MTLPixelFormatR8Uint:             		return Format::R8UInt;
+        case MTLPixelFormatR8Sint:             		return Format::R8SInt;
+
+        case MTLPixelFormatR16Unorm:           		return Format::R16UNorm;
+        case MTLPixelFormatR16Snorm:           		return Format::R16SNorm;
+        case MTLPixelFormatR16Uint:                 return Format::R16UInt;
+        case MTLPixelFormatR16Sint:           		return Format::R16SInt;
+        case MTLPixelFormatR16Float:           		return Format::R16Float;
+
+        case MTLPixelFormatR32Uint:            		return Format::R32UInt;
+        case MTLPixelFormatR32Sint:           		return Format::R32SInt;
+        case MTLPixelFormatR32Float:          		return Format::R32Float;
+
+        case MTLPixelFormatRG8Unorm:           		return Format::RG8UNorm;
+        case MTLPixelFormatRG8Snorm:           		return Format::RG8SNorm;
+        case MTLPixelFormatRG8Uint:           		return Format::RG8UInt;
+        case MTLPixelFormatRG8Sint:           		return Format::RG8SInt;
+
+        case MTLPixelFormatRG16Unorm:          		return Format::RG16UNorm;
+        case MTLPixelFormatRG16Snorm:          		return Format::RG16SNorm;
+        case MTLPixelFormatRG16Uint:          		return Format::RG16UInt;
+        case MTLPixelFormatRG16Sint:          		return Format::RG16SInt;
+        case MTLPixelFormatRG16Float:         		return Format::RG16Float;
+
+        case MTLPixelFormatRG32Uint:          		return Format::RG32UInt;
+        case MTLPixelFormatRG32Sint:          		return Format::RG32SInt;
+        case MTLPixelFormatRG32Float:         		return Format::RG32Float;
+
+        case MTLPixelFormatRGBA8Unorm:        		return Format::RGBA8UNorm;
+        case MTLPixelFormatRGBA8Snorm:        		return Format::RGBA8SNorm;
+        case MTLPixelFormatRGBA8Uint:         		return Format::RGBA8UInt;
+        case MTLPixelFormatRGBA8Sint:         		return Format::RGBA8SInt;
+
+        case MTLPixelFormatRGBA16Unorm:             return Format::RGBA16UNorm;
+        case MTLPixelFormatRGBA16Snorm:       	    return Format::RGBA16SNorm;
+        case MTLPixelFormatRGBA16Uint:              return Format::RGBA16UInt;
+        case MTLPixelFormatRGBA16Sint:              return Format::RGBA16SInt;
+        case MTLPixelFormatRGBA16Float:             return Format::RGBA16Float;
+
+        case MTLPixelFormatRGBA32Uint:              return Format::RGBA32UInt;
+        case MTLPixelFormatRGBA32Sint:              return Format::RGBA32SInt;
+        case MTLPixelFormatRGBA32Float:             return Format::RGBA32Float;
+
+        /* --- Depth-stencil formats --- */
+        case MTLPixelFormatDepth16Unorm:            return Format::D16UNorm;
+        case MTLPixelFormatDepth32Float:            return Format::D32Float;
+        case MTLPixelFormatDepth24Unorm_Stencil8:   return Format::D24UNormS8UInt;
+        case MTLPixelFormatDepth32Float_Stencil8:   return Format::D32FloatS8X24UInt;
+
+        /* --- Compressed color formats --- */
+        case MTLPixelFormatBC1_RGBA:                return Format::BC1RGBA;
+        case MTLPixelFormatBC2_RGBA:                return Format::BC2RGBA;
+        case MTLPixelFormatBC3_RGBA:                return Format::BC3RGBA;
+        
+        default:                                    break;
+    }
+    UnmapFailed("Format", "MTLPixelFormat");
 }
 
 

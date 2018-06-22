@@ -258,6 +258,7 @@ file(GLOB FilesRendererMTL					${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/*.*)
 file(GLOB FilesRendererMTLBuffer			${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Buffer/*.*)
 file(GLOB FilesRendererMTLRenderState		${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/RenderState/*.*)
 file(GLOB FilesRendererMTLShader			${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Shader/*.*)
+file(GLOB FilesRendererMTLTexture			${PROJECT_SOURCE_DIR}/sources/Renderer/Metal/Texture/*.*)
 
 # Direct3D common renderer files
 file(GLOB FilesRendererDXCommon				${PROJECT_SOURCE_DIR}/sources/Renderer/DXCommon/*.*)
@@ -342,6 +343,7 @@ source_group("Sources\\Metal" FILES ${FilesRendererMTL})
 source_group("Sources\\Metal\\Buffer" FILES ${FilesRendererMTLBuffer})
 source_group("Sources\\Metal\\RenderState" FILES ${FilesRendererMTLRenderState})
 source_group("Sources\\Metal\\Shader" FILES ${FilesRendererMTLShader})
+source_group("Sources\\Metal\\Texture" FILES ${FilesRendererMTLTexture})
 
 source_group("Sources\\DXCommon" FILES ${FilesRendererDXCommon})
 
@@ -426,6 +428,7 @@ set(
 	${FilesRendererMTLBuffer}
 	${FilesRendererMTLRenderState}
 	${FilesRendererMTLShader}
+	${FilesRendererMTLTexture}
 )
 
 if(LLGL_ENABLE_SPIRV_REFLECT)
