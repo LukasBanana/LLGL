@@ -32,12 +32,13 @@ Progress
 | Direct3D 11 | ~85% | Depth-textures are incomplete |
 | Direct3D 12 | ~15% | Experimental state; Tutorials working: 01, (02), (03), 06, 07, (10) |
 | Vulkan | ~30% | Experimental state; Tutorials working: 01, 02, 03, 06, 07, 10 |
+| Metal | ~5% | Experimental state |
 
 | Platform | Progress | Remarks |
 |----------|:--------:|---------|
 | Windows | 100% | Tested on *Windows 10* |
-| Linux | 50% | Tested on *Kubuntu 16*; Anti-aliasing is currently not supported |
-| macOS | 50% | Tested on *macOS Sierra*; Not all tutorials are running |
+| GNU/Linux | 70% | Tested on *Kubuntu 16* |
+| macOS | 70% | Tested on *macOS Sierra* |
 | iOS | 1% | Currently not compilable |
 
 
