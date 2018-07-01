@@ -103,9 +103,9 @@ static std::tuple<DataType, std::uint32_t> SplitFormatPrimary(const Format forma
         case Format::R16SInt:           return T{ DataType::Int16,   1 };
         case Format::R16Float:          return T{ DataType::Float16, 1 };
 
-        case Format::R32UInt:           return T{ DataType::UInt32,  2 };
-        case Format::R32SInt:           return T{ DataType::Int32,   2 };
-        case Format::R32Float:          return T{ DataType::Float32, 2 };
+        case Format::R32UInt:           return T{ DataType::UInt32,  1 };
+        case Format::R32SInt:           return T{ DataType::Int32,   1 };
+        case Format::R32Float:          return T{ DataType::Float32, 1 };
 
         case Format::RG8UNorm:          return T{ DataType::UInt8,   2 };
         case Format::RG8SNorm:          return T{ DataType::Int8,    2 };

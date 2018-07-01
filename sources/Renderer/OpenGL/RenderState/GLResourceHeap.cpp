@@ -195,7 +195,7 @@ void GLResourceHeap::BuildBufferSegments(ResourceBindingIterator& resourceIterat
     /* Collect all buffers */
     auto resourceBindings = CollectGLResourceBindings(
         resourceIterator,
-        ResourceType::ConstantBuffer,
+        resourceType,
         [](Resource* resource, std::uint32_t slot) -> GLResourceBinding
         {
             auto bufferGL = LLGL_CAST(GLBuffer*, resource);
