@@ -55,37 +55,37 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            dst.Width               = src.texture1D.width;
+            dst.Width               = src.width;
             dst.Height              = 1;
-            dst.DepthOrArraySize    = std::max(1u, src.texture1D.layers);
+            dst.DepthOrArraySize    = std::max(1u, src.layers);
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-            dst.Width               = src.texture2D.width;
-            dst.Height              = src.texture2D.height;
-            dst.DepthOrArraySize    = std::max(1u, src.texture2D.layers);
+            dst.Width               = src.width;
+            dst.Height              = src.height;
+            dst.DepthOrArraySize    = std::max(1u, src.layers);
             break;
 
         case TextureType::Texture3D:
-            dst.Width               = src.texture3D.width;
-            dst.Height              = src.texture3D.height;
-            dst.DepthOrArraySize    = src.texture3D.depth;
+            dst.Width               = src.width;
+            dst.Height              = src.height;
+            dst.DepthOrArraySize    = src.depth;
             break;
 
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
-            dst.Width               = src.textureCube.width;
-            dst.Height              = src.textureCube.height;
-            dst.DepthOrArraySize    = std::max(1u, src.textureCube.layers) * 6;
+            dst.Width               = src.width;
+            dst.Height              = src.height;
+            dst.DepthOrArraySize    = std::max(1u, src.layers) * 6;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            dst.Width               = src.texture2DMS.width;
-            dst.Height              = src.texture2DMS.height;
-            dst.DepthOrArraySize    = src.texture2DMS.layers;
-            dst.SampleDesc.Count    = std::max(1u, src.texture2DMS.samples);
+            dst.Width               = src.width;
+            dst.Height              = src.height;
+            dst.DepthOrArraySize    = src.layers;
+            dst.SampleDesc.Count    = std::max(1u, src.samples);
             break;
     }
 }
@@ -169,32 +169,37 @@ TextureDescriptor D3D12Texture::QueryDesc() const
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            texDesc.texture1D.width     = static_cast<std::uint32_t>(desc.Width);
-            texDesc.texture1D.layers    = desc.DepthOrArraySize;
+            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
+            texDesc.layers  = desc.DepthOrArraySize;
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
+            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
+            texDesc.height  = desc.Height;
+            texDesc.layers  = desc.DepthOrArraySize;
+            break;
+
         case TextureType::Texture3D:
-            texDesc.texture3D.width     = static_cast<std::uint32_t>(desc.Width);
-            texDesc.texture3D.height    = desc.Height;
-            texDesc.texture3D.depth     = desc.DepthOrArraySize;
+            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
+            texDesc.height  = desc.Height;
+            texDesc.depth   = desc.DepthOrArraySize;
             break;
 
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
-            texDesc.textureCube.width   = static_cast<std::uint32_t>(desc.Width);
-            texDesc.textureCube.height  = desc.Height;
-            texDesc.textureCube.layers  = desc.DepthOrArraySize / 6;
+            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
+            texDesc.height  = desc.Height;
+            texDesc.layers  = desc.DepthOrArraySize / 6;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            texDesc.texture2DMS.width           = static_cast<std::uint32_t>(desc.Width);
-            texDesc.texture2DMS.height          = desc.Height;
-            texDesc.texture2DMS.layers          = desc.DepthOrArraySize;
-            texDesc.texture2DMS.samples         = desc.SampleDesc.Count;
-            texDesc.texture2DMS.fixedSamples    = true;
+            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
+            texDesc.height  = desc.Height;
+            texDesc.layers  = desc.DepthOrArraySize;
+            texDesc.samples = desc.SampleDesc.Count;
+            texDesc.flags   |= TextureFlags::FixedSamples;
             break;
     }
 

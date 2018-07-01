@@ -125,12 +125,21 @@ struct TextureFlags
         StorageUsage        = (1 << 6),
 
         /**
-        \brief Default texture flags: (GenerateMips | AttachmentUsage | SampleUsage).
+        \brief Multi-sampled texture has fixed sample locations.
+        \remarks This can only be used with multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray).
+        \see TextureType
+        \see Default
+        */
+        FixedSamples        = (1 << 7),
+
+        /**
+        \brief Default texture flags: (GenerateMips | AttachmentUsage | SampleUsage | FixedSamples).
         \see GenerateMips
         \see AttachmentUsage
         \see SampleUsage
+        \see FixedSamples
         */
-        Default             = (GenerateMips | AttachmentUsage | SampleUsage),
+        Default             = (GenerateMips | AttachmentUsage | SampleUsage | FixedSamples),
     };
 };
 
@@ -157,71 +166,6 @@ struct TextureSwizzleRGBA
 */
 struct TextureDescriptor
 {
-    //! 1D- and 1D-Array texture specific descriptor structure.
-    struct Texture1D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-    };
-
-    //! 2D- and 2D-Array texture specific descriptor structure.
-    struct Texture2D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-    };
-
-    //! 3D texture specific descriptor structure.
-    struct Texture3D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   depth;          //!< Texture depth.
-    };
-
-    /**
-    \brief Cube- and Cube-Array texture specific descriptor structure.
-    \remarks Cube textures must have the same value for width and height.
-    However, two parameters are used for convenience in rendering APIs.
-    */
-    struct TextureCube
-    {
-        std::uint32_t   width;          //!< Texture width. Must be equal to height.
-        std::uint32_t   height;         //!< Texture height. Must be equal to width.
-
-        /**
-        \brief Number of texture array layers, one for each cube.
-        \remarks Most rendering APIs only use the actual number of array layers, so for cube maps they are always a multiple of 6.
-        This attribute, however, specifies the number of cubes in the array texture and LLGL will multiply it by 6 automatically if necessary.
-        */
-        std::uint32_t   layers;
-    };
-
-    //! Multi-sampled 2D- and 2D-Array texture specific descriptor structure.
-    struct Texture2DMS
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-        std::uint32_t   samples;        //!< Number of samples.
-        bool            fixedSamples;   //!< Specifies whether the sample locations are fixed or not. By default true. \note Only supported with: OpenGL.
-    };
-
-    inline TextureDescriptor()
-    {
-        texture2DMS.width           = 0;
-        texture2DMS.height          = 0;
-        texture2DMS.layers          = 0;
-        texture2DMS.samples         = 0;
-        texture2DMS.fixedSamples    = true;
-    }
-
-    inline ~TextureDescriptor()
-    {
-        // Dummy
-    }
-
     //! Hardware texture type. By default TextureType::Texture1D.
     TextureType     type        = TextureType::Texture1D;
 
@@ -235,14 +179,38 @@ struct TextureDescriptor
     */
     long            flags       = TextureFlags::Default;
 
-    union
-    {
-        Texture1D   texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2D   texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3D   texture3D;      //!< Descriptor for 3D textures.
-        TextureCube textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
-        Texture2DMS texture2DMS;    //!< Descriptor for multi-sampled 2D- and 2D-Array textures.
-    };
+    //! Texture width. By default 1.
+    std::uint32_t   width       = 1;
+
+    /**
+    \brief Texture height. By default 1.
+    \remarks This is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
+    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, TextureType::Texture2DMSArray).
+    \see TextureType
+    */
+    std::uint32_t   height      = 1;
+
+    /**
+    \brief Texture depth. By default 1.
+    \remarks This is only used for 3D textures (i.e. TextureType::Texture3D).
+    \see TextureType
+    */
+    std::uint32_t   depth       = 1;
+
+    /**
+    \brief Number of array layers. By default 1.
+    \remarks This is only used for array textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
+    \see TextureType
+    */
+    std::uint32_t   layers      = 1;
+
+    /**
+    \brief Number of samples per texel. By default 1.
+    \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
+    \see TextureType
+    */
+    std::uint32_t   samples     = 1;
 };
 
 /**
@@ -350,6 +318,7 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc);
 \param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of array layers.
 \return Number of array layers, or 1 if the texture type is not an array texture.
 \see IsArrayTexture
+\deprecated Use TextureDescriptor::layers instead.
 */
 LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc);
 

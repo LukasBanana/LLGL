@@ -281,9 +281,10 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel
         /* Validate output data size */
         const auto requiredDataSize =
         (
-            textureDbg.desc.texture3D.width *
-            textureDbg.desc.texture3D.height *
-            textureDbg.desc.texture3D.depth *
+            textureDbg.desc.width *
+            textureDbg.desc.height *
+            textureDbg.desc.depth *
+            textureDbg.desc.layers *
             ImageFormatSize(imageDesc.format) *
             DataTypeSize(imageDesc.dataType)
         );
@@ -650,65 +651,67 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
     switch (desc.type)
     {
         case TextureType::Texture1D:
-            Validate1DTextureSize(desc.texture1D.width);
-            if (desc.texture1D.layers > 1)
+            Validate1DTextureSize(desc.width);
+            if (desc.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::Texture2D:
-            Validate2DTextureSize(desc.texture2D.width);
-            Validate2DTextureSize(desc.texture2D.height);
-            if (desc.texture2D.layers > 1)
+            Validate2DTextureSize(desc.width);
+            Validate2DTextureSize(desc.height);
+            if (desc.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::TextureCube:
             AssertCubeTextures();
-            ValidateCubeTextureSize(desc.textureCube.width, desc.textureCube.height);
-            if (desc.textureCube.layers > 1)
+            ValidateCubeTextureSize(desc.width, desc.height);
+            if (desc.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::Texture3D:
             Assert3DTextures();
-            Validate3DTextureSize(desc.texture3D.width);
-            Validate3DTextureSize(desc.texture3D.height);
-            Validate3DTextureSize(desc.texture3D.depth);
+            Validate3DTextureSize(desc.width);
+            Validate3DTextureSize(desc.height);
+            Validate3DTextureSize(desc.depth);
+            if (desc.layers > 1)
+                WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::Texture1DArray:
             AssertArrayTextures();
-            Validate1DTextureSize(desc.texture1D.width);
-            ValidateArrayTextureLayers(desc.texture1D.layers);
+            Validate1DTextureSize(desc.width);
+            ValidateArrayTextureLayers(desc.layers);
             break;
 
         case TextureType::Texture2DArray:
             AssertArrayTextures();
-            Validate1DTextureSize(desc.texture2D.width);
-            Validate1DTextureSize(desc.texture2D.height);
-            ValidateArrayTextureLayers(desc.texture2D.layers);
+            Validate1DTextureSize(desc.width);
+            Validate1DTextureSize(desc.height);
+            ValidateArrayTextureLayers(desc.layers);
             break;
 
         case TextureType::TextureCubeArray:
             AssertCubeArrayTextures();
-            ValidateCubeTextureSize(desc.textureCube.width, desc.textureCube.height);
-            ValidateArrayTextureLayers(desc.textureCube.layers);
+            ValidateCubeTextureSize(desc.width, desc.height);
+            ValidateArrayTextureLayers(desc.layers);
             break;
 
         case TextureType::Texture2DMS:
             AssertMultiSampleTextures();
-            Validate2DTextureSize(desc.texture2DMS.width);
-            Validate2DTextureSize(desc.texture2DMS.height);
-            if (desc.texture2DMS.layers > 1)
+            Validate2DTextureSize(desc.width);
+            Validate2DTextureSize(desc.height);
+            if (desc.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::Texture2DMSArray:
             AssertMultiSampleTextures();
             AssertArrayTextures();
-            Validate2DTextureSize(desc.texture2DMS.width);
-            Validate2DTextureSize(desc.texture2DMS.height);
-            ValidateArrayTextureLayers(desc.texture2DMS.layers);
+            Validate2DTextureSize(desc.width);
+            Validate2DTextureSize(desc.height);
+            ValidateArrayTextureLayers(desc.layers);
             break;
 
         default:
@@ -820,25 +823,10 @@ void DbgRenderSystem::ValidateTextureMipRange(const DbgTexture& textureDbg, std:
 
 void DbgRenderSystem::ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
-    switch (textureDbg.GetType())
-    {
-        case TextureType::Texture1DArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture1D.layers);
-            break;
-        case TextureType::Texture2DArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture2D.layers);
-            break;
-        case TextureType::TextureCubeArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.textureCube.layers);
-            break;
-        case TextureType::Texture2DMSArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture2DMS.layers);
-            break;
-        default:
-            if (baseArrayLayer > 0 || numArrayLayers > 1)
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "array layer out of range for non-array texture type");
-            break;
-    }
+    if (IsArrayTexture(textureDbg.GetType()))
+        ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.layers);
+    else if (baseArrayLayer > 0 || numArrayLayers > 1)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "array layer out of range for non-array texture type");
 }
 
 void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit)

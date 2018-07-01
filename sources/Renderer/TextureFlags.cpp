@@ -27,13 +27,13 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
     {
         switch (textureDesc.type)
         {
-            case TextureType::Texture1D:        return NumMipLevels(textureDesc.texture1D.width);
-            case TextureType::Texture2D:        return NumMipLevels(textureDesc.texture2D.width, textureDesc.texture2D.height);
-            case TextureType::Texture3D:        return NumMipLevels(textureDesc.texture3D.width, textureDesc.texture3D.height, textureDesc.texture3D.depth);
-            case TextureType::TextureCube:      return NumMipLevels(textureDesc.textureCube.width, textureDesc.textureCube.height);
-            case TextureType::Texture1DArray:   return NumMipLevels(textureDesc.texture1D.width);
-            case TextureType::Texture2DArray:   return NumMipLevels(textureDesc.texture2D.width, textureDesc.texture2D.height);
-            case TextureType::TextureCubeArray: return NumMipLevels(textureDesc.textureCube.width, textureDesc.textureCube.height);
+            case TextureType::Texture1D:        return NumMipLevels(textureDesc.width);
+            case TextureType::Texture2D:        return NumMipLevels(textureDesc.width, textureDesc.height);
+            case TextureType::Texture3D:        return NumMipLevels(textureDesc.width, textureDesc.height, textureDesc.depth);
+            case TextureType::TextureCube:      return NumMipLevels(textureDesc.width, textureDesc.height);
+            case TextureType::Texture1DArray:   return NumMipLevels(textureDesc.width);
+            case TextureType::Texture2DArray:   return NumMipLevels(textureDesc.width, textureDesc.height);
+            case TextureType::TextureCubeArray: return NumMipLevels(textureDesc.width, textureDesc.height);
             case TextureType::Texture2DMS:      return 1u;
             case TextureType::Texture2DMSArray: return 1u;
         }
@@ -41,16 +41,10 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
     return 1u;
 }
 
+//DEPRECATED
 LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc)
 {
-    switch (textureDesc.type)
-    {
-        case TextureType::Texture1DArray:   return textureDesc.texture1D.layers;
-        case TextureType::Texture2DArray:   return textureDesc.texture2D.layers;
-        case TextureType::TextureCubeArray: return textureDesc.textureCube.layers;
-        case TextureType::Texture2DMSArray: return textureDesc.texture2DMS.layers;
-        default:                            return 1u;
-    }
+    return textureDesc.layers;
 }
 
 std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
@@ -62,15 +56,15 @@ LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)
 {
     switch (textureDesc.type)
     {
-        case TextureType::Texture1D:        return textureDesc.texture1D.width;
-        case TextureType::Texture2D:        return textureDesc.texture2D.width * textureDesc.texture2D.height;
-        case TextureType::Texture3D:        return textureDesc.texture3D.width * textureDesc.texture3D.height * textureDesc.texture3D.depth;
-        case TextureType::TextureCube:      return textureDesc.textureCube.width * textureDesc.textureCube.height * 6;
-        case TextureType::Texture1DArray:   return textureDesc.texture1D.width * textureDesc.texture1D.layers;
-        case TextureType::Texture2DArray:   return textureDesc.texture2D.width * textureDesc.texture2D.height * textureDesc.texture2D.layers;
-        case TextureType::TextureCubeArray: return textureDesc.textureCube.width * textureDesc.textureCube.height * 6 * textureDesc.textureCube.layers;
-        case TextureType::Texture2DMS:      return textureDesc.texture2D.width * textureDesc.texture2D.height;
-        case TextureType::Texture2DMSArray: return textureDesc.texture2D.width * textureDesc.texture2D.height * textureDesc.texture2D.layers;
+        case TextureType::Texture1D:        return textureDesc.width;
+        case TextureType::Texture2D:        return textureDesc.width * textureDesc.height;
+        case TextureType::Texture3D:        return textureDesc.width * textureDesc.height * textureDesc.depth;
+        case TextureType::TextureCube:      return textureDesc.width * textureDesc.height * 6;
+        case TextureType::Texture1DArray:   return textureDesc.width * textureDesc.layers;
+        case TextureType::Texture2DArray:   return textureDesc.width * textureDesc.height * textureDesc.layers;
+        case TextureType::TextureCubeArray: return textureDesc.width * textureDesc.height * 6 * textureDesc.layers;
+        case TextureType::Texture2DMS:      return textureDesc.width * textureDesc.height;
+        case TextureType::Texture2DMSArray: return textureDesc.width * textureDesc.height * textureDesc.layers;
         default:                            return 0;
     }
 }

@@ -75,37 +75,37 @@ TextureDescriptor VKTexture::QueryDesc() const
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            texDesc.texture1D.width             = extent_.width;
-            texDesc.texture1D.layers            = numArrayLayers_;
+            texDesc.width   = extent_.width;
+            texDesc.layers  = numArrayLayers_;
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-            texDesc.texture2D.width             = extent_.width;
-            texDesc.texture2D.height            = extent_.height;
-            texDesc.texture2D.layers            = numArrayLayers_;
+            texDesc.width   = extent_.width;
+            texDesc.height  = extent_.height;
+            texDesc.layers  = numArrayLayers_;
             break;
 
         case TextureType::Texture3D:
-            texDesc.texture3D.width             = extent_.width;
-            texDesc.texture3D.height            = extent_.height;
-            texDesc.texture3D.depth             = extent_.depth;
+            texDesc.width   = extent_.width;
+            texDesc.height  = extent_.height;
+            texDesc.depth   = extent_.depth;
             break;
 
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
-            texDesc.textureCube.width           = extent_.width;
-            texDesc.textureCube.height          = extent_.height;
-            texDesc.textureCube.layers          = numArrayLayers_ / 6;
+            texDesc.width   = extent_.width;
+            texDesc.height  = extent_.height;
+            texDesc.layers  = numArrayLayers_ / 6;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            texDesc.texture2DMS.width           = extent_.width;
-            texDesc.texture2DMS.height          = extent_.height;
-            texDesc.texture2DMS.layers          = numArrayLayers_;
-            texDesc.texture2DMS.samples         = 0; //TODO
-            texDesc.texture2DMS.fixedSamples    = true;
+            texDesc.width   = extent_.width;
+            texDesc.height  = extent_.height;
+            texDesc.layers  = numArrayLayers_;
+            texDesc.samples = 0; //TODO
+            texDesc.flags   |= TextureFlags::FixedSamples;
             break;
     }
 
@@ -171,7 +171,7 @@ static VkExtent3D GetVkImageExtent3D(const TextureDescriptor& desc, const VkImag
     switch (imageType)
     {
         case VK_IMAGE_TYPE_1D:
-            extent.width    = std::max(1u, desc.texture1D.width);
+            extent.width    = std::max(1u, desc.width);
             extent.height   = 1u;
             extent.depth    = 1u;
             break;
@@ -180,21 +180,21 @@ static VkExtent3D GetVkImageExtent3D(const TextureDescriptor& desc, const VkImag
             if (IsCubeTexture(desc.type))
             {
                 /* Width and height must be equal for cube textures in Vulkan */
-                extent.width    = std::max(1u, std::max(desc.textureCube.width, desc.textureCube.height));
+                extent.width    = std::max(1u, std::max(desc.width, desc.height));
                 extent.height   = extent.width;
             }
             else
             {
-                extent.width    = std::max(1u, desc.texture2D.width);
-                extent.height   = std::max(1u, desc.texture2D.height);
+                extent.width    = std::max(1u, desc.width);
+                extent.height   = std::max(1u, desc.height);
             }
             extent.depth    = 1u;
             break;
 
         case VK_IMAGE_TYPE_3D:
-            extent.width    = std::max(1u, desc.texture3D.width);
-            extent.height   = std::max(1u, desc.texture3D.height);
-            extent.depth    = std::max(1u, desc.texture3D.depth);
+            extent.width    = std::max(1u, desc.width);
+            extent.height   = std::max(1u, desc.height);
+            extent.depth    = std::max(1u, desc.depth);
             break;
 
         default:
@@ -225,13 +225,13 @@ static std::uint32_t GetVkImageArrayLayers(const TextureDescriptor& desc, const 
     switch (imageType)
     {
         case VK_IMAGE_TYPE_1D:
-            return std::max(1u, desc.texture1D.layers);
+            return std::max(1u, desc.layers);
 
         case VK_IMAGE_TYPE_2D:
             if (IsCubeTexture(desc.type))
-                return std::max(1u, desc.textureCube.layers) * 6;
+                return std::max(1u, desc.layers) * 6;
             else
-                return std::max(1u, desc.texture2D.layers);
+                return std::max(1u, desc.layers);
 
         default:
             return 1u;

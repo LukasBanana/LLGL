@@ -264,10 +264,10 @@ int main()
         }
         LLGL::TextureDescriptor textureDesc;
         {
-            textureDesc.type                = LLGL::TextureType::Texture2D;
-            textureDesc.format              = LLGL::Format::RGBA8UNorm;
-            textureDesc.texture2D.width     = 2;
-            textureDesc.texture2D.height    = 2;
+            textureDesc.type    = LLGL::TextureType::Texture2D;
+            textureDesc.format  = LLGL::Format::RGBA8UNorm;
+            textureDesc.width   = 2;
+            textureDesc.height  = 2;
         }
         auto& texture = *renderer->CreateTexture(textureDesc, &imageDesc);
 

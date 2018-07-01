@@ -373,14 +373,14 @@ static VkExtent3D GetTextureVkExtent(const TextureDescriptor& desc)
     switch (desc.type)
     {
         case TextureType::Texture1D:        /*pass*/
-        case TextureType::Texture1DArray:   return { desc.texture1D.width, 1u, 1u };
+        case TextureType::Texture1DArray:   return { desc.width, 1u, 1u };
         case TextureType::Texture2D:        /*pass*/
         case TextureType::Texture2DArray:   /*pass*/
         case TextureType::TextureCube:      /*pass*/
         case TextureType::TextureCubeArray: /*pass*/
         case TextureType::Texture2DMS:      /*pass*/
-        case TextureType::Texture2DMSArray: return { desc.texture2D.width, desc.texture2D.height, 1u };
-        case TextureType::Texture3D:        return { desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth };
+        case TextureType::Texture2DMSArray: return { desc.width, desc.height, 1u };
+        case TextureType::Texture3D:        return { desc.width, desc.height, desc.depth };
     }
     throw std::invalid_argument("cannot determine texture extent for unknown texture type");
 }
@@ -389,10 +389,10 @@ static std::uint32_t GetTextureLayertCount(const TextureDescriptor& desc)
 {
     switch (desc.type)
     {
-        case TextureType::Texture1DArray:   return desc.texture1D.layers;
-        case TextureType::Texture2DArray:   return desc.texture2D.layers;
-        case TextureType::TextureCubeArray: return desc.textureCube.layers * 6;
-        case TextureType::Texture2DMSArray: return desc.texture2DMS.layers;
+        case TextureType::Texture1DArray:   return desc.layers;
+        case TextureType::Texture2DArray:   return desc.layers;
+        case TextureType::TextureCubeArray: return desc.layers * 6;
+        case TextureType::Texture2DMSArray: return desc.layers;
         default:                            return 1;
     }
 }
