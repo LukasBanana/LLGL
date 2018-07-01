@@ -44,13 +44,14 @@ enum class ShaderType
 /**
 \brief Shader source type enumeration.
 \see ShaderDescriptor::sourceType
+\see ShaderDescriptor::sourceSize
 */
 enum class ShaderSourceType
 {
-    CodeString,     //!< Refers to sourceSize+1 bytes, describing shader high-level code (including null terminator)
-    CodeFile,       //!< Refers to sourceSize+1 bytes, describing the filename of the shader high-level code (including null terminator)
-    BinaryBuffer,   //!< Refers to sourceSize bytes, describing shader binary code
-    BinaryFile,     //!< Refers to sourceSize+1 bytes, describing the filename of the shader binary code (including null terminator)
+    CodeString,     //!< Refers to <code>sourceSize+1</code> bytes, describing shader high-level code (including null terminator).
+    CodeFile,       //!< Refers to <code>sourceSize+1</code> bytes, describing the filename of the shader high-level code (including null terminator).
+    BinaryBuffer,   //!< Refers to <code>sourceSize</code> bytes, describing shader binary code.
+    BinaryFile,     //!< Refers to <code>sourceSize+1</code> bytes, describing the filename of the shader binary code (including null terminator).
 };
 
 

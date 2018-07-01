@@ -98,7 +98,7 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     #else
     numMipLevels_   { 1                            },
     #endif
-    numArrayLayers_ { NumArrayLayers(desc)         }
+    numArrayLayers_ { desc.layers                  }
 {
     /* Setup resource descriptor by texture descriptor and create hardware resource */
     D3D12_RESOURCE_DESC descD3D;

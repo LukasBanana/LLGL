@@ -41,12 +41,6 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
     return 1u;
 }
 
-//DEPRECATED
-LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc)
-{
-    return textureDesc.layers;
-}
-
 std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
 {
     return ((FormatBitSize(format) * numTexels) / 8);

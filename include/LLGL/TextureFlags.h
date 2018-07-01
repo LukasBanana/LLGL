@@ -268,15 +268,6 @@ LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc);
 
 /**
-\briefs Returns the number of array layers for the specified texture descriptor.
-\param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of array layers.
-\return Number of array layers, or 1 if the texture type is not an array texture.
-\see IsArrayTexture
-\deprecated Use TextureDescriptor::layers instead.
-*/
-LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc);
-
-/**
 \brief Returns the required buffer size (in bytes) of a texture with the specified hardware format and number of texels.
 \param[in] format Specifies the texture format.
 \param[in] numTexels Specifies the number of texture elements (texels).
