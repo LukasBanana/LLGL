@@ -152,9 +152,10 @@ GLenum Map(const DataType dataType)
         case DataType::UInt16:  return GL_UNSIGNED_SHORT;
         case DataType::Int32:   return GL_INT;
         case DataType::UInt32:  return GL_UNSIGNED_INT;
-        case DataType::Float:   return GL_FLOAT;
+        case DataType::Float16: return GL_HALF_FLOAT;
+        case DataType::Float32: return GL_FLOAT;
         #ifdef LLGL_OPENGL
-        case DataType::Double:  return GL_DOUBLE;
+        case DataType::Float64: return GL_DOUBLE;
         #else
         default:                break;
         #endif

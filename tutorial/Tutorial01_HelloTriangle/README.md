@@ -45,25 +45,25 @@ Vertex Buffer:
 Next we create our vertex data for our triangle we want to render and then declare the vertex format which will be passed to the vertex buffer and shader program:
 ```cpp
 struct MyVertex {
-    float position[2]; // 2D vector for X and Y coordinates
-    float color[3];    // 3D vector for red, green, and blue color components
+    float   position[2]; // 2D vector for X and Y coordinates
+    uint8_t color[4];    // 4D vector for red, green, blue, alpha color components
 };
 ```
 For this tutorial we only want to render a single triangle so we define our 3 vertices:
 ```cpp
 MyVertex myVertices[3] = {
-    MyVertex { {  0.0f,  0.5f }, { 1.0f, 0.0f, 0.0f } },
-    MyVertex { {  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f } },
-    MyVertex { { -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f } },
+    MyVertex { {  0.0f,  0.5f }, { 255,   0,   0, 255 } },
+    MyVertex { {  0.5f, -0.5f }, {   0, 255,   0, 255 } },
+    MyVertex { { -0.5f, -0.5f }, {   0,   0, 255, 255 } },
 };
 ```
 The `VertexFormat` structure has a couple of member functions to simplify the description of a vertex format, but we could also use the member variables directly. The `AppendAttribute` function determines the data offset for each vertex attribute automatically:
 ```cpp
 LLGL::VertexFormat myVertexFormat;
-myVertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 });
-myVertexFormat.AppendAttribute({ "color",    LLGL::VectorType::Float3 });
+myVertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float  });
+myVertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
 ```
-The strings "position" and "color" must be equal to the identifiers used in the shader, not the one we used in our `MyVertex` structure!
+The strings "position" and "color" must be equal to the identifiers used in the shader, not the one we used in our `MyVertex` structure! We use an RGBA format for the color components even though the alpha channel is not used, because RGB formats are only supported by OpenGL and Vulkan. The identifier `UNorm` denotes a 'normalized unsigned integral' format, i.e. the unsigned byte values in the range [0, 255] will be normalized to the range [0, 1].
 
 Now we can create the GPU vertex buffer:
 ```cpp

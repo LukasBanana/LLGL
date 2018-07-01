@@ -51,8 +51,9 @@ DXGI_FORMAT Map(const DataType dataType)
         case DataType::UInt16:  return DXGI_FORMAT_R16_UINT;
         case DataType::Int32:   return DXGI_FORMAT_R32_SINT;
         case DataType::UInt32:  return DXGI_FORMAT_R32_UINT;
-        case DataType::Float:   return DXGI_FORMAT_R32_FLOAT;
-        case DataType::Double:  break;
+        case DataType::Float16: return DXGI_FORMAT_R16_FLOAT;
+        case DataType::Float32: return DXGI_FORMAT_R32_FLOAT;
+        case DataType::Float64: break;
     }
     MapFailed("DataType", "DXGI_FORMAT");
 }

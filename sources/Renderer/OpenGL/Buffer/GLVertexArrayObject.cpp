@@ -39,7 +39,7 @@ void GLVertexArrayObject::BuildVertexAttribute(const VertexAttribute& attribute,
         glVertexAttribDivisor(index, attribute.instanceDivisor);
 
     /* Get data type and components of vector type */
-    DataType        dataType    = DataType::Float;
+    DataType        dataType    = DataType::Float32;
     std::uint32_t   components  = 0;
     SplitFormat(attribute.format, dataType, components);
 

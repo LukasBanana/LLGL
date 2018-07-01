@@ -445,7 +445,7 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     {
         /* Allocate default image data */
         ImageFormat imageFormat = ImageFormat::RGBA;
-        DataType imageDataType = DataType::Double;
+        DataType imageDataType = DataType::Float64;
 
         if (FindSuitableImageFormat(textureDesc.format, imageFormat, imageDataType))
         {

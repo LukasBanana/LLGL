@@ -126,14 +126,9 @@ enum class DataType
     Int32,      //!< 32-bit signed integer (int).
     UInt32,     //!< 32-bit unsigned integer (unsiged int).
 
-    #if 1//TODO: replace this by "Float16", etc.
-    Float,      //!< 32-bit floating-point (float).
-    Double,     //!< 64-bit real type (double).
-    #else
     Float16,    //!< 16-bit floating-point (half).
     Float32,    //!< 32-bit floating-point (float).
-    Float64,    //!< 32-bit floating-point (double).
-    #endif
+    Float64,    //!< 64-bit real type (double).
 };
 
 
@@ -225,7 +220,7 @@ LLGL_EXPORT bool IsUIntDataType(const DataType dataType);
 
 /**
 \brief Determines if the argument refers to a floating-pointer data type.
-\return True if the specified data type equals one of the following enumeration entries: DataType::Float, DataType::Double.
+\return True if the specified data type equals one of the following enumeration entries: DataType::Float32, DataType::Float64.
 */
 LLGL_EXPORT bool IsFloatDataType(const DataType dataType);
 

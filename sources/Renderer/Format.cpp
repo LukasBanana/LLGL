@@ -69,16 +69,16 @@ LLGL_EXPORT std::uint32_t FormatBitSize(const Format format)
         case Format::RGBA64Float:       return 256;
 
         /* --- Depth-stencil formats --- */
-        case Format::D16UNorm:          return 16; // 16-bit depth
-        case Format::D32Float:          return 32; // 32-bit depth
-        case Format::D24UNormS8UInt:    return 32; // 24-bit depth, 8-bit stencil
-        case Format::D32FloatS8X24UInt: return 64; // 32-bit depth, 8-bit stencil, 24-bit unused
+        case Format::D16UNorm:          return 16;  // 16-bit depth
+        case Format::D32Float:          return 32;  // 32-bit depth
+        case Format::D24UNormS8UInt:    return 32;  // 24-bit depth, 8-bit stencil
+        case Format::D32FloatS8X24UInt: return 64;  // 32-bit depth, 8-bit stencil, 24-bit unused
 
         /* --- Compressed color formats --- */
-        case Format::BC1RGB:            return 4; // 64-bit per 4x4 block
-        case Format::BC1RGBA:           return 4; // 64-bit per 4x4 block
-        case Format::BC2RGBA:           return 8; // 128-bit per 4x4 block
-        case Format::BC3RGBA:           return 8; // 128-bit per 4x4 block
+        case Format::BC1RGB:            return 4;   // 64-bit per 4x4 block
+        case Format::BC1RGBA:           return 4;   // 64-bit per 4x4 block
+        case Format::BC2RGBA:           return 8;   // 128-bit per 4x4 block
+        case Format::BC3RGBA:           return 8;   // 128-bit per 4x4 block
 
         default:                        return 0;
     }
@@ -101,11 +101,11 @@ static std::tuple<DataType, std::uint32_t> SplitFormatPrimary(const Format forma
         case Format::R16SNorm:          return T{ DataType::Int16,   1 };
         case Format::R16UInt:           return T{ DataType::UInt16,  1 };
         case Format::R16SInt:           return T{ DataType::Int16,   1 };
-        case Format::R16Float:          break;//T{ DataType::Float16,   1 };
+        case Format::R16Float:          return T{ DataType::Float16, 1 };
 
         case Format::R32UInt:           return T{ DataType::UInt32,  2 };
         case Format::R32SInt:           return T{ DataType::Int32,   2 };
-        case Format::R32Float:          return T{ DataType::Float,   2 };
+        case Format::R32Float:          return T{ DataType::Float32, 2 };
 
         case Format::RG8UNorm:          return T{ DataType::UInt8,   2 };
         case Format::RG8SNorm:          return T{ DataType::Int8,    2 };
@@ -116,11 +116,11 @@ static std::tuple<DataType, std::uint32_t> SplitFormatPrimary(const Format forma
         case Format::RG16SNorm:         return T{ DataType::Int16,   2 };
         case Format::RG16UInt:          return T{ DataType::UInt16,  2 };
         case Format::RG16SInt:          return T{ DataType::Int16,   2 };
-        case Format::RG16Float:         break;//T{ DataType::Float16, 2 }; //TODO
+        case Format::RG16Float:         return T{ DataType::Float16, 2 };
 
         case Format::RG32UInt:          return T{ DataType::UInt32,  2 };
         case Format::RG32SInt:          return T{ DataType::Int32,   2 };
-        case Format::RG32Float:         return T{ DataType::Float,   2 };
+        case Format::RG32Float:         return T{ DataType::Float32, 2 };
 
         case Format::RGB8UNorm:         return T{ DataType::UInt8,   3 };
         case Format::RGB8SNorm:         return T{ DataType::Int8,    3 };
@@ -131,11 +131,11 @@ static std::tuple<DataType, std::uint32_t> SplitFormatPrimary(const Format forma
         case Format::RGB16SNorm:        return T{ DataType::Int16,   3 };
         case Format::RGB16UInt:         return T{ DataType::UInt16,  3 };
         case Format::RGB16SInt:         return T{ DataType::Int16,   3 };
-        case Format::RGB16Float:        break;//T{ DataType::Float16, 3 }; //TODO
+        case Format::RGB16Float:        return T{ DataType::Float16, 3 };
 
         case Format::RGB32UInt:         return T{ DataType::UInt32,  3 };
         case Format::RGB32SInt:         return T{ DataType::Int32,   3 };
-        case Format::RGB32Float:        return T{ DataType::Float,   3 };
+        case Format::RGB32Float:        return T{ DataType::Float32, 3 };
 
         case Format::RGBA8UNorm:        return T{ DataType::UInt8,   4 };
         case Format::RGBA8SNorm:        return T{ DataType::Int8,    4 };
@@ -146,17 +146,17 @@ static std::tuple<DataType, std::uint32_t> SplitFormatPrimary(const Format forma
         case Format::RGBA16SNorm:       return T{ DataType::Int16,   4 };
         case Format::RGBA16UInt:        return T{ DataType::UInt16,  4 };
         case Format::RGBA16SInt:        return T{ DataType::Int16,   4 };
-        case Format::RGBA16Float:       break;//T{ DataType::Float16, 4 }; //TODO
+        case Format::RGBA16Float:       return T{ DataType::Float16, 4 };
 
         case Format::RGBA32UInt:        return T{ DataType::UInt32,  4 };
         case Format::RGBA32SInt:        return T{ DataType::Int32,   4 };
-        case Format::RGBA32Float:       return T{ DataType::Float,   4 };
+        case Format::RGBA32Float:       return T{ DataType::Float32, 4 };
 
         /* --- Extended color formats --- */
-        case Format::R64Float:          return T{ DataType::Double,  1 };
-        case Format::RG64Float:         return T{ DataType::Double,  2 };
-        case Format::RGB64Float:        return T{ DataType::Double,  3 };
-        case Format::RGBA64Float:       return T{ DataType::Double,  4 };
+        case Format::R64Float:          return T{ DataType::Float64, 1 };
+        case Format::RG64Float:         return T{ DataType::Float64, 2 };
+        case Format::RGB64Float:        return T{ DataType::Float64, 3 };
+        case Format::RGBA64Float:       return T{ DataType::Float64, 4 };
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          break;
@@ -269,8 +269,9 @@ LLGL_EXPORT std::uint32_t DataTypeSize(const DataType dataType)
         case DataType::UInt16:  return 2;
         case DataType::Int32:   return 4;
         case DataType::UInt32:  return 4;
-        case DataType::Float:   return 4;
-        case DataType::Double:  return 8;
+        case DataType::Float16: return 2;
+        case DataType::Float32: return 4;
+        case DataType::Float64: return 8;
     }
     return 0;
 }
@@ -287,7 +288,7 @@ LLGL_EXPORT bool IsUIntDataType(const DataType dataType)
 
 LLGL_EXPORT bool IsFloatDataType(const DataType dataType)
 {
-    return (dataType == DataType::Float || dataType == DataType::Double);
+    return (dataType >= DataType::Float16 && dataType <= DataType::Float64);
 }
 
 
