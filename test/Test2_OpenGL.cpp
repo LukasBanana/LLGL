@@ -278,10 +278,10 @@ int main()
         LLGL::SubTextureDescriptor subTexDesc;
         {
             subTexDesc.mipLevel         = 0;
-            subTexDesc.texture2D.x      = 0;
-            subTexDesc.texture2D.y      = 1;
-            subTexDesc.texture2D.width  = 2;
-            subTexDesc.texture2D.height = 1;
+            subTexDesc.offset.x         = 0;
+            subTexDesc.offset.y         = 1;
+            subTexDesc.extent.width     = 2;
+            subTexDesc.extent.height    = 1;
         }
         //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
 

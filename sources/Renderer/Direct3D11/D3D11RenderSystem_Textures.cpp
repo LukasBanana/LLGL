@@ -96,79 +96,8 @@ void D3D11RenderSystem::Release(TextureArray& textureArray)
 
 void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
 {
-    /* Determine update region */
-    Offset3D offset;
-    Extent3D extent;
-
-    switch (texture.GetType())
-    {
-        case TextureType::Texture1D:
-            offset.x        = subTextureDesc.texture1D.x;
-            extent.width    = subTextureDesc.texture1D.width;
-            extent.height   = 1;
-            extent.depth    = 1;
-            break;
-
-        case TextureType::Texture2D:
-            offset.x        = subTextureDesc.texture2D.x;
-            offset.y        = subTextureDesc.texture2D.y;
-            extent.width    = subTextureDesc.texture2D.width;
-            extent.height   = subTextureDesc.texture2D.height;
-            extent.depth    = 1;
-            break;
-
-        case TextureType::Texture3D:
-            offset.x        = subTextureDesc.texture3D.x;
-            offset.y        = subTextureDesc.texture3D.y;
-            offset.z        = subTextureDesc.texture3D.z;
-            extent.width    = subTextureDesc.texture3D.width;
-            extent.height   = subTextureDesc.texture3D.height;
-            extent.depth    = subTextureDesc.texture3D.depth;
-            break;
-
-        case TextureType::TextureCube:
-            offset.x        = subTextureDesc.textureCube.x;
-            offset.y        = subTextureDesc.textureCube.y;
-            offset.z        = static_cast<std::uint32_t>(subTextureDesc.textureCube.cubeFaceOffset);
-            extent.width    = subTextureDesc.textureCube.width;
-            extent.height   = subTextureDesc.textureCube.height;
-            extent.depth    = 1;
-            break;
-
-        case TextureType::Texture1DArray:
-            offset.x        = subTextureDesc.texture1D.x;
-            offset.y        = subTextureDesc.texture1D.layerOffset;
-            offset.z        = 0;
-            extent.width    = subTextureDesc.texture1D.width;
-            extent.height   = subTextureDesc.texture1D.layers;
-            extent.depth    = 1;
-            break;
-
-        case TextureType::Texture2DArray:
-            offset.x        = subTextureDesc.texture2D.x;
-            offset.y        = subTextureDesc.texture2D.y;
-            offset.z        = subTextureDesc.texture2D.layerOffset;
-            extent.width    = subTextureDesc.texture2D.width;
-            extent.height   = subTextureDesc.texture2D.height;
-            extent.depth    = subTextureDesc.texture2D.layers;
-            break;
-
-        case TextureType::TextureCubeArray:
-            offset.x        = subTextureDesc.textureCube.x;
-            offset.y        = subTextureDesc.textureCube.y;
-            offset.z        = subTextureDesc.textureCube.layerOffset * 6 + static_cast<std::uint32_t>(subTextureDesc.textureCube.cubeFaceOffset);
-            extent.width    = subTextureDesc.textureCube.width;
-            extent.height   = subTextureDesc.textureCube.height;
-            extent.depth    = subTextureDesc.textureCube.cubeFaces;
-            break;
-
-        default:
-            /* Ignore multi-sample textures */
-            return;
-    }
-
     /* Update generic texture at determined region */
-    UpdateGenericTexture(texture, subTextureDesc.mipLevel, 0, offset, extent, imageDesc);
+    UpdateGenericTexture(texture, subTextureDesc.mipLevel, 0, subTextureDesc.offset, subTextureDesc.extent, imageDesc);
 }
 
 static void ValidateImageDataSize(std::size_t dataSize, std::size_t requiredDataSize)

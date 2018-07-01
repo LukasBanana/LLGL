@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "Types.h"
 #include "Format.h"
 #include <cstddef>
 #include <cstdint>
@@ -219,71 +220,24 @@ struct TextureDescriptor
 */
 struct SubTextureDescriptor
 {
-    struct Texture1D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t layers;         //!< Number of texture array layers.
-    };
+    //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    std::uint32_t   mipLevel    = 0;
 
-    struct Texture2D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t layers;         //!< Number of texture array layers.
-    };
+    /**
+    \brief Sub-texture offset. By default (0, 0, 0).
+    \remarks For array textures, the Z component specifies the array layer.
+    For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
+    The layer offset for the respective cube face can be determined by the values of the AxisDirection enumeration
+    \see AxisDirection
+    */
+    Offset3D        offset      = { 0, 0, 0 };
 
-    struct Texture3D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t z;              //!< Sub-texture Z-axis offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t depth;          //!< Number of texture array layers.
-    };
-
-    struct TextureCube
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be N*6.
-        AxisDirection cubeFaceOffset; //!< First cube face in the current layer.
-    };
-
-    inline SubTextureDescriptor()
-    {
-        mipLevel                    = 0;
-        textureCube.x               = 0;
-        textureCube.y               = 0;
-        textureCube.layerOffset     = 0;
-        textureCube.width           = 0;
-        textureCube.height          = 0;
-        textureCube.cubeFaces       = 0;
-        textureCube.cubeFaceOffset  = AxisDirection::XPos;
-    }
-
-    inline ~SubTextureDescriptor()
-    {
-    }
-
-    //! MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
-    std::uint32_t   mipLevel;
-
-    union
-    {
-        Texture1D   texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2D   texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3D   texture3D;      //!< Descriptor for 3D textures.
-        TextureCube textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
-    };
+    /**
+    \brief Sub-texture extent. By default (1, 1, 1).
+    \remarks For array textures, the depth component specifies the number of array layers (for 1D-array textures it's the height component).
+    For cube textures, the depthj component specifies the number of array layers and cube faces (where each cube has 6 faces).
+    */
+    Extent3D        extent      = { 1, 1, 1 };
 };
 
 

@@ -221,22 +221,20 @@ static void GLTexSubImageCubeArray(
     std::uint32_t             x,
     std::uint32_t             y,
     std::uint32_t             layerOffset,
-    AxisDirection             cubeFaceOffset,
     std::uint32_t             width,
     std::uint32_t             height,
-    std::uint32_t             cubeFaces,
+    std::uint32_t             layers,
     const SrcImageDescriptor& imageDesc)
 {
-    layerOffset = layerOffset * 6 + static_cast<std::uint32_t>(cubeFaceOffset);
-    GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, layerOffset, width, height, cubeFaces, imageDesc);
+    GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, layerOffset, width, height, layers, imageDesc);
 }
 
 void GLTexSubImage1D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage1D(
         desc.mipLevel,
-        desc.texture1D.x,
-        desc.texture1D.width,
+        desc.offset.x,
+        desc.extent.width,
         imageDesc
     );
 }
@@ -247,10 +245,10 @@ void GLTexSubImage2D(const SubTextureDescriptor& desc, const SrcImageDescriptor&
 {
     GLTexSubImage2D(
         desc.mipLevel,
-        desc.texture2D.x,
-        desc.texture2D.y,
-        desc.texture2D.width,
-        desc.texture2D.height,
+        desc.offset.x,
+        desc.offset.y,
+        desc.extent.width,
+        desc.extent.height,
         imageDesc
     );
 }
@@ -259,12 +257,12 @@ void GLTexSubImage3D(const SubTextureDescriptor& desc, const SrcImageDescriptor&
 {
     GLTexSubImage3D(
         desc.mipLevel,
-        desc.texture3D.x,
-        desc.texture3D.y,
-        desc.texture3D.z,
-        desc.texture3D.width,
-        desc.texture3D.height,
-        desc.texture3D.depth,
+        desc.offset.x,
+        desc.offset.y,
+        desc.offset.z,
+        desc.extent.width,
+        desc.extent.height,
+        desc.extent.depth,
         imageDesc
     );
 }
@@ -273,11 +271,11 @@ void GLTexSubImageCube(const SubTextureDescriptor& desc, const SrcImageDescripto
 {
     GLTexSubImageCube(
         desc.mipLevel,
-        desc.textureCube.x,
-        desc.textureCube.y,
-        desc.textureCube.width,
-        desc.textureCube.height,
-        desc.textureCube.cubeFaceOffset,
+        desc.offset.x,
+        desc.offset.y,
+        desc.extent.width,
+        desc.extent.height,
+        static_cast<AxisDirection>(desc.offset.z),
         imageDesc
     );
 }
@@ -288,10 +286,10 @@ void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const SrcImageDescri
 {
     GLTexSubImage1DArray(
         desc.mipLevel,
-        desc.texture1D.x,
-        desc.texture1D.layerOffset,
-        desc.texture1D.width,
-        desc.texture1D.layers,
+        desc.offset.x,
+        desc.offset.y,
+        desc.extent.width,
+        desc.extent.height,
         imageDesc
     );
 }
@@ -302,12 +300,12 @@ void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const SrcImageDescri
 {
     GLTexSubImage2DArray(
         desc.mipLevel,
-        desc.texture2D.x,
-        desc.texture2D.y,
-        desc.texture2D.layerOffset,
-        desc.texture2D.width,
-        desc.texture2D.height,
-        desc.texture2D.layers,
+        desc.offset.x,
+        desc.offset.y,
+        desc.offset.z,
+        desc.extent.width,
+        desc.extent.height,
+        desc.extent.depth,
         imageDesc
     );
 }
@@ -318,13 +316,12 @@ void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const SrcImageDesc
 {
     GLTexSubImageCubeArray(
         desc.mipLevel,
-        desc.textureCube.x,
-        desc.textureCube.y,
-        desc.textureCube.layerOffset,
-        desc.textureCube.cubeFaceOffset,
-        desc.textureCube.width,
-        desc.textureCube.height,
-        desc.textureCube.cubeFaces,
+        desc.offset.x,
+        desc.offset.y,
+        desc.offset.z,
+        desc.extent.width,
+        desc.extent.height,
+        desc.extent.depth,
         imageDesc
     );
 }
