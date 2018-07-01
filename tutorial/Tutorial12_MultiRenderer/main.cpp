@@ -12,17 +12,6 @@
 #include <LLGL/Platform/NativeHandle.h>
 
 
-static void CompileShader(LLGL::Shader* shader, const std::string& source, const LLGL::ShaderDescriptor& shaderDesc = {})
-{
-    // Compile shader
-    shader->Compile(source, shaderDesc);
-
-    // Print info log (warnings and errors)
-    std::string log = shader->QueryInfoLog();
-    if (!log.empty())
-        std::cerr << log << std::endl;
-};
-
 static void RecordCommandBuffer(
     LLGL::RenderSystem*     renderer,
     LLGL::RenderContext*    context,
@@ -147,21 +136,28 @@ int main(int argc, char* argv[])
         auto CreateSceneShader = [&vertexFormat](LLGL::RenderSystem* renderer)
         {
             // Create shaders
-            auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
-            auto fragShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
+            LLGL::Shader* vertShader = nullptr;
+            LLGL::Shader* fragShader = nullptr;
 
             const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
             if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
             {
-                auto shaderCode = ReadFileContent("shader.hlsl");
-                CompileShader(vertShader, shaderCode, { "VS", "vs_4_0" });
-                CompileShader(fragShader, shaderCode, { "PS", "ps_4_0" });
+                vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "shader.hlsl", "VS", "vs_4_0" });
+                fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_4_0" });
             }
             else
             {
-                CompileShader(vertShader, ReadFileContent("shader.VS.vert"));
-                CompileShader(fragShader, ReadFileContent("shader.PS.frag"));
+                vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "shader.VS.vert" });
+                fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "shader.PS.frag" });
+            }
+
+            // Print info log (warnings and errors)
+            for (auto shader : { vertShader, fragShader })
+            {
+                std::string log = shader->QueryInfoLog();
+                if (!log.empty())
+                    std::cerr << log << std::endl;
             }
 
             // Create shader program which is used as composite

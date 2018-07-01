@@ -19,6 +19,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include "BufferFlags.h"
 #include "RenderTargetFlags.h"
 #include "ResourceHeapFlags.h"
+#include "ShaderFlags.h"
 
 
 namespace LLGL
@@ -77,6 +78,16 @@ LLGL_EXPORT BufferDescriptor ConstantBufferDesc(uint64_t size, long flags = Buff
 
 //! Returns a BufferDescriptor structure for a storage buffer.
 LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBufferType storageType, std::uint32_t stride, long flags = BufferFlags::MapReadAccess | BufferFlags::MapWriteAccess);
+
+/* ----- ShaderDescriptor utility functions ----- */
+
+/**
+\brief Returns a ShaderDescriptor structure.
+\remarks The source type is determined by the filename extension using the following rules:
+- .hlsl, .fx, .glsl, .vert, .tesc, .tese, .geom, .frag, .comp ==> code file (i.e. ShaderSourceType::CodeFile)
+- Otherwise ==> binary file (i.e. ShaderSourceType::BinaryFile).
+*/
+LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const char* filename, const char* entryPoint = nullptr, const char* profile = nullptr, long flags = 0);
 
 /** @} */
 

@@ -422,9 +422,9 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* DbgRenderSystem::CreateShader(const ShaderType type)
+Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(type), type, debugger_));
+    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc.type, debugger_));
 }
 
 ShaderProgram* DbgRenderSystem::CreateShaderProgram()

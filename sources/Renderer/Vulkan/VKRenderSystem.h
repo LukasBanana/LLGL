@@ -126,7 +126,7 @@ class VKRenderSystem : public RenderSystem
 
         /* ----- Shader ----- */
 
-        Shader* CreateShader(const ShaderType type) override;
+        Shader* CreateShader(const ShaderDescriptor& desc) override;
         ShaderProgram* CreateShaderProgram() override;
 
         void Release(Shader& shader) override;

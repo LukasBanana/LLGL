@@ -26,14 +26,9 @@ class D3D12Shader : public Shader
 
     public:
 
-        D3D12Shader(const D3D12Shader&) = delete;
-        D3D12Shader& operator = (const D3D12Shader&) = delete;
+        D3D12Shader(const ShaderDescriptor& desc);
 
-        D3D12Shader(const ShaderType type);
-
-        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
-
-        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
+        bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
 
@@ -47,10 +42,15 @@ class D3D12Shader : public Shader
 
     private:
 
+        bool Build(const ShaderDescriptor& shaderDesc);
+        bool CompileSource(const ShaderDescriptor& shaderDesc);
+        bool LoadBinary(const ShaderDescriptor& shaderDesc);
+
         void ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const;
 
         std::vector<char>   byteCode_;
         ComPtr<ID3DBlob>    errors_;
+        bool                hasErrors_  = false;
 
 };
 

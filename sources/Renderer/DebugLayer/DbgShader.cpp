@@ -20,16 +20,9 @@ DbgShader::DbgShader(Shader& instance, const ShaderType type, RenderingDebugger*
 {
 }
 
-bool DbgShader::Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc)
+bool DbgShader::HasErrors() const
 {
-    compiled_ = instance.Compile(sourceCode, shaderDesc);
-    return compiled_;
-}
-
-bool DbgShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
-{
-    compiled_ = instance.LoadBinary(std::move(binaryCode), shaderDesc);
-    return compiled_;
+    return instance.HasErrors();
 }
 
 std::string DbgShader::Disassemble(int flags)

@@ -125,11 +125,11 @@ Tutorial::TutorialShaderDescriptor::TutorialShaderDescriptor(
     LLGL::ShaderType    type,
     const std::string&  filename,
     const std::string&  entryPoint,
-    const std::string&  target) :
+    const std::string&  profile) :
         type       { type       },
         filename   { filename   },
         entryPoint { entryPoint },
-        target     { target     }
+        profile    { profile    }
 {
 }
 
@@ -316,24 +316,9 @@ LLGL::ShaderProgram* Tutorial::LoadShaderProgram(
     for (const auto& desc : shaderDescs)
     {
         // Create shader
-        auto shader = renderer->CreateShader(desc.type);
-
-        LLGL::ShaderDescriptor shaderDesc { desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug };
+        auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
         shaderDesc.streamOutput.format = streamOutputFormat;
-
-        // Read shader file
-        if (desc.filename.size() > 4 && desc.filename.substr(desc.filename.size() - 4) == ".spv")
-        {
-            // Load binary
-            auto byteCode = ReadFileBuffer(desc.filename);
-            shader->LoadBinary(std::move(byteCode), shaderDesc);
-        }
-        else
-        {
-            // Compile shader
-            auto shaderCode = ReadFileContent(desc.filename);
-            shader->Compile(shaderCode, shaderDesc);
-        }
+        auto shader = renderer->CreateShader(shaderDesc);
 
         // Print info log (warnings and errors)
         std::string log = shader->QueryInfoLog();
@@ -387,13 +372,9 @@ bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram)
             auto shaderCode = ReadFileContent(desc.filename);
 
             // Create shader
-            auto shader = renderer->CreateShader(desc.type);
-
-            // Compile shader
-            LLGL::ShaderDescriptor shaderDesc(desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug);
+            auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
             shaderDesc.streamOutput.format = recall.streamOutputFormat;
-
-            shader->Compile(shaderCode, shaderDesc);
+            auto shader = renderer->CreateShader(shaderDesc);
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();

@@ -11,6 +11,7 @@
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
+#include <cstring>
 
 
 namespace LLGL
@@ -188,6 +189,42 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const Storage
         desc.storageBuffer.storageType  = storageType;
         desc.storageBuffer.stride       = stride;
     }
+    return desc;
+}
+
+/* ----- ShaderDescriptor utility functions ----- */
+
+LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const char* filename, const char* entryPoint, const char* profile, long flags)
+{
+    ShaderDescriptor desc;
+
+    if (filename != nullptr)
+    {
+        if (auto fileExt = std::strrchr(filename, '.'))
+        {
+            /* Check if filename refers to a text-based source file */
+            bool isTextFile = false;
+
+            for (auto ext : { "hlsl", "fx", "glsl", "vert", "tesc", "tese", "geom", "comp" })
+            {
+                if (std::strcmp(fileExt + 1, ext) == 0)
+                {
+                    isTextFile = true;
+                    break;
+                }
+            }
+
+            /* Initialize descriptor */
+            desc.type       = type;
+            desc.source     = filename;
+            desc.sourceSize = 0;
+            desc.sourceType = (isTextFile ? ShaderSourceType::CodeFile : ShaderSourceType::BinaryFile);
+            desc.entryPoint = entryPoint;
+            desc.profile    = profile;
+            desc.flags      = flags;
+        }
+    }
+
     return desc;
 }
 

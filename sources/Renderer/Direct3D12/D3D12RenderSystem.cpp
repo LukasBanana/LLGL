@@ -360,9 +360,10 @@ void D3D12RenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* D3D12RenderSystem::CreateShader(const ShaderType type)
+Shader* D3D12RenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<D3D12Shader>(type));
+    AssertCreateShader(desc);
+    return TakeOwnership(shaders_, MakeUnique<D3D12Shader>(desc));
 }
 
 ShaderProgram* D3D12RenderSystem::CreateShaderProgram()

@@ -295,6 +295,14 @@ void RenderSystem::AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* 
     AssertCreateResourceArrayCommon(numSamplers, reinterpret_cast<void* const*>(samplerArray), "sampler");
 }
 
+void RenderSystem::AssertCreateShader(const ShaderDescriptor& desc)
+{
+    if (desc.source == nullptr)
+        throw std::invalid_argument("cannot create shader with <source> being a null pointer");
+    if (desc.sourceType == ShaderSourceType::BinaryBuffer && desc.sourceSize == 0)
+        throw std::invalid_argument("cannot create shader from binary buffer with <sourceSize> being zero");
+}
+
 void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info)
 {
     if (dataSize < requiredDataSize)

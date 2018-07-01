@@ -145,9 +145,7 @@ int main()
         //auto vertexBufferArray = renderer->CreateBufferArray(1, &vertexBuffer);
 
         // Create vertex shader
-        auto& vertShader = *renderer->CreateShader(LLGL::ShaderType::Vertex);
-
-        std::string shaderSource =
+        auto vertShaderSource =
         (
             #ifdef TEST_STORAGE_BUFFER
             "#version 430\n"
@@ -171,13 +169,19 @@ int main()
             "}\n"
         );
 
-        if (!vertShader.Compile(shaderSource))
+        LLGL::ShaderDescriptor vertShaderDesc;
+        {
+            vertShaderDesc.type         = LLGL::ShaderType::Vertex;
+            vertShaderDesc.source       = vertShaderSource;
+            vertShaderDesc.sourceType   = LLGL::ShaderSourceType::CodeString;
+        }
+        auto& vertShader = *renderer->CreateShader(vertShaderDesc);
+
+        if (vertShader.HasErrors())
             std::cerr << vertShader.QueryInfoLog() << std::endl;
 
         // Create fragment shader
-        auto& fragShader = *renderer->CreateShader(LLGL::ShaderType::Fragment);
-
-        shaderSource =
+        auto fragShaderSource =
         (
             "#version 130\n"
             "out vec4 fragColor;\n"
@@ -189,7 +193,15 @@ int main()
             "}\n"
         );
 
-        if (!fragShader.Compile(shaderSource))
+        LLGL::ShaderDescriptor fragShaderDesc;
+        {
+            fragShaderDesc.type         = LLGL::ShaderType::Fragment;
+            fragShaderDesc.source       = fragShaderSource;
+            fragShaderDesc.sourceType   = LLGL::ShaderSourceType::CodeString;
+        }
+        auto& fragShader = *renderer->CreateShader(fragShaderDesc);
+
+        if (fragShader.HasErrors())
             std::cerr << fragShader.QueryInfoLog() << std::endl;
 
         // Create shader program

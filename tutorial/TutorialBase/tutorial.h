@@ -68,13 +68,13 @@ protected:
             LLGL::ShaderType    type,
             const std::string&  filename,
             const std::string&  entryPoint,
-            const std::string&  target
+            const std::string&  profile
         );
 
         LLGL::ShaderType    type;
         std::string         filename;
         std::string         entryPoint;
-        std::string         target;
+        std::string         profile;
     };
 
 private:

@@ -90,86 +90,48 @@ int main(int argc, char* argv[])
         LLGL::Buffer* vertexBuffer = renderer->CreateBuffer(vertexBufferDesc, vertices);
 
         // Create shaders
-        LLGL::Shader* vertexShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
-        LLGL::Shader* fragmentShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
-
-        // Define the lambda function to read an entire text file
-        auto ReadTextFile = [](const std::string& filename)
-        {
-            // Read file and check for failure
-            std::ifstream file { filename };
-
-            if (!file.good())
-                throw std::runtime_error("failed to read file: \"" + filename + "\"");
-
-            return std::string(
-                ( std::istreambuf_iterator<char>(file) ),
-                ( std::istreambuf_iterator<char>() )
-            );
-        };
-
-        auto ReadBinaryFile = [](const std::string& filename)
-        {
-            // Read file and for failure
-            std::ifstream file { filename, std::ios_base::binary | std::ios_base::ate };
-
-            if (!file.good())
-                throw std::runtime_error("failed to read file: \"" + filename + "\"");
-
-            const auto fileSize = static_cast<size_t>(file.tellg());
-            std::vector<char> buffer(fileSize);
-
-            file.seekg(0);
-            file.read(buffer.data(), fileSize);
-
-            return buffer;
-        };
-
-        // Load vertex - and fragment shader code from file
-        auto CompileShader = [](LLGL::Shader* shader, const std::string& source, std::vector<char> byteCode = {}, const LLGL::ShaderDescriptor& shaderDesc = {})
-        {
-            // Compile shader
-            if (byteCode.empty())
-                shader->Compile(source, shaderDesc);
-            else
-                shader->LoadBinary(std::move(byteCode), shaderDesc);
-
-            // Print info log (warnings and errors)
-            std::string log = shader->QueryInfoLog();
-            if (!log.empty())
-                std::cerr << log << std::endl;
-        };
+        LLGL::Shader* vertShader = nullptr;
+        LLGL::Shader* fragShader = nullptr;
 
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
 
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
             #ifdef __APPLE__
-            CompileShader(vertexShader, ReadTextFile("vertex.140core.glsl"));
-            CompileShader(fragmentShader, ReadTextFile("fragment.140core.glsl"));
+            CompileShader(vertShader, ReadTextFile("vertex.140core.glsl"));
+            CompileShader(fragShader, ReadTextFile("fragment.140core.glsl"));
             #else
-            CompileShader(vertexShader, ReadTextFile("vertex.glsl"));
-            CompileShader(fragmentShader, ReadTextFile("fragment.glsl"));
+            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "vertex.glsl"   });
+            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "fragment.glsl" });
             #endif
         }
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
         {
-            CompileShader(vertexShader, "", ReadBinaryFile("vertex.450core.spv"));
-            CompileShader(fragmentShader, "", ReadBinaryFile("fragment.450core.spv"));
+            vertShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex, "vertex.450core.spv"));
+            fragShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "fragment.450core.spv"));
         }
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
         {
-            auto shaderCode = ReadTextFile("shader.hlsl");
-            CompileShader(vertexShader, shaderCode, {}, LLGL::ShaderDescriptor("VS", "vs_4_0"));
-            CompileShader(fragmentShader, shaderCode, {}, LLGL::ShaderDescriptor("PS", "ps_4_0"));
+            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "shader.hlsl", "VS", "vs_4_0" });
+            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_4_0" });
+        }
+
+        for (auto shader : { vertShader, fragShader })
+        {
+            if (shader != nullptr)
+            {
+                std::string log = shader->QueryInfoLog();
+                if (!log.empty())
+                    std::cerr << log << std::endl;
+            }
         }
 
         // Create shader program which is used as composite
         LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
 
         // Attach vertex- and fragment shader to the shader program
-        shaderProgram->AttachShader(*vertexShader);
-        shaderProgram->AttachShader(*fragmentShader);
+        shaderProgram->AttachShader(*vertShader);
+        shaderProgram->AttachShader(*fragShader);
 
         // Bind vertex attribute layout (this is not required for a compute shader program)
         shaderProgram->BuildInputLayout(1, &vertexFormat);

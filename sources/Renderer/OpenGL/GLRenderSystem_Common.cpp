@@ -140,10 +140,12 @@ void GLRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* GLRenderSystem::CreateShader(const ShaderType type)
+Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
+    AssertCreateShader(desc);
+
     /* Validate rendering capabilities for required shader type */
-    switch (type)
+    switch (desc.type)
     {
         case ShaderType::Geometry:
             LLGL_ASSERT_FEATURE_SUPPORT(hasGeometryShaders);
@@ -160,7 +162,7 @@ Shader* GLRenderSystem::CreateShader(const ShaderType type)
     }
 
     /* Make and return shader object */
-    return TakeOwnership(shaders_, MakeUnique<GLShader>(type));
+    return TakeOwnership(shaders_, MakeUnique<GLShader>(desc));
 }
 
 ShaderProgram* GLRenderSystem::CreateShaderProgram()

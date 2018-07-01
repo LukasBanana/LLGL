@@ -94,27 +94,8 @@ int main()
         auto commands = renderer->CreateCommandBuffer();
 
         // Load shaders
-        auto LoadSPIRVModule = [](const std::string& filename)
-        {
-            std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-            if (!file.good())
-                throw std::runtime_error("failed to read file: \"" + filename + "\"");
-
-            auto fileSize = static_cast<size_t>(file.tellg());
-            std::vector<char> buffer(fileSize);
-
-            file.seekg(0);
-            file.read(buffer.data(), fileSize);
-
-            return buffer;
-        };
-
-        auto shaderVert = renderer->CreateShader(LLGL::ShaderType::Vertex);
-        auto shaderFrag = renderer->CreateShader(LLGL::ShaderType::Fragment);
-
-        shaderVert->LoadBinary(LoadSPIRVModule("Triangle.vert.spv"));
-        shaderFrag->LoadBinary(LoadSPIRVModule("Triangle.frag.spv"));
+        auto shaderVert = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex, "Triangle.vert.spv"));
+        auto shaderFrag = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Triangle.frag.spv"));
 
         // Create shader program
         auto shaderProgram = renderer->CreateShaderProgram();

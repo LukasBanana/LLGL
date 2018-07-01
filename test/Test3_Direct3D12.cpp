@@ -103,16 +103,14 @@ int main()
         auto constantBuffer = renderer->CreateBuffer(constantBufferDesc, &matrices);
 
         // Load shader
-        auto shaderSource = ReadFileContent("TestShader.hlsl");
-
-        auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
-        auto fragShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
+        auto vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "TestShader.hlsl", "VS", "vs_5_0" });
+        auto fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "TestShader.hlsl", "PS", "ps_5_0" });
 
         #ifdef TEST_PRINT_SHADER_INFO
         std::cout << "VERTEX OUTPUT:" << std::endl;
         #endif
 
-        if (!vertShader->Compile(shaderSource, { "VS", "vs_5_0" }))
+        if (vertShader->HasErrors())
             std::cerr << vertShader->QueryInfoLog() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else
@@ -123,7 +121,7 @@ int main()
         std::cout << "PIXEL OUTPUT:" << std::endl;
         #endif
 
-        if (!fragShader->Compile(shaderSource, { "PS", "ps_5_0" }))
+        if (fragShader->HasErrors())
             std::cerr << fragShader->QueryInfoLog() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else

@@ -610,9 +610,10 @@ void VKRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* VKRenderSystem::CreateShader(const ShaderType type)
+Shader* VKRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<VKShader>(device_, type));
+    AssertCreateShader(desc);
+    return TakeOwnership(shaders_, MakeUnique<VKShader>(device_, desc));
 }
 
 ShaderProgram* VKRenderSystem::CreateShaderProgram()

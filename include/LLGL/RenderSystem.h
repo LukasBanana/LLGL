@@ -414,11 +414,13 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /* ----- Shader ----- */
 
         /**
-        \brief Creates a new and empty Shader object of the specified type.
-        \param[in] type Specifies the type of the shader, i.e. if it is either a vertex or fragment shader or the like.
+        \brief Creates a new and Shader object and compiles the specified source.
+        \remarks To check whether the compilation was successful or not, use the 'HasErrors' and 'QueryInfoLog' functions of the Shader interface.
         \see Shader
+        \see Shader::HasErrors
+        \see Shader::QueryInfoLog
         */
-        virtual Shader* CreateShader(const ShaderType type) = 0;
+        virtual Shader* CreateShader(const ShaderDescriptor& desc) = 0;
 
         /**
         \brief Creates a new and empty shader program.
@@ -516,6 +518,9 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         //! Validates the specified arguments to be used for sampler array creation.
         void AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray);
+
+        //! Validates the specified shader descriptor.
+        void AssertCreateShader(const ShaderDescriptor& desc);
 
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);

@@ -24,9 +24,7 @@ class DbgShader : public Shader
 
         DbgShader(Shader& instance, const ShaderType type, RenderingDebugger* debugger);
 
-        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
-
-        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
+        bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
 
@@ -34,15 +32,14 @@ class DbgShader : public Shader
 
         inline bool IsCompiled() const
         {
-            return compiled_;
+            return !instance.HasErrors();
         }
 
         Shader& instance;
 
     private:
 
-        RenderingDebugger*  debugger_ = nullptr;
-        bool                compiled_ = false;
+        RenderingDebugger* debugger_ = nullptr;
 
 };
 
