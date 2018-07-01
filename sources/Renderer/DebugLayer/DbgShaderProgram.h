@@ -10,6 +10,7 @@
 
 
 #include <LLGL/ShaderProgram.h>
+#include <LLGL/ShaderFlags.h>
 #include <LLGL/RenderingDebugger.h>
 #include <vector>
 

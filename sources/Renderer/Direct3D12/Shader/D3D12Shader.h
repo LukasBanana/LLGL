@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Shader.h>
+#include <LLGL/ShaderProgramFlags.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/BufferFlags.h>
 #include "../../DXCommon/ComPtr.h"

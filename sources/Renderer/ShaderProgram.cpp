@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/ShaderProgram.h>
+#include <LLGL/Shader.h>
 #include <algorithm>
 
 

@@ -26,6 +26,7 @@
 #include "ResourceHeap.h"
 
 #include "RenderTarget.h"
+#include "Shader.h"
 #include "ShaderProgram.h"
 #include "PipelineLayout.h"
 #include "GraphicsPipeline.h"

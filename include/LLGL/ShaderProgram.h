@@ -10,13 +10,8 @@
 
 
 #include "RenderSystemChild.h"
-#include "Shader.h"
-#include "VertexFormat.h"
-#include "StreamOutputFormat.h"
-#include "BufferFlags.h"
+#include "ShaderProgramFlags.h"
 #include "ShaderUniform.h"
-#include <string>
-#include <vector>
 
 
 namespace LLGL
