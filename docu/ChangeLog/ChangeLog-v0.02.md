@@ -675,6 +675,43 @@ LLGL::Texture* my3DTex = myRenderer->CreateTexture(my3DTexDesc);
 ```
 
 
+Removal of `TextureArray` and `SamplerArray` interfaces:
+--------------------------------------------------------
+
+The `TextureArray` and `SamplerArray` interfaces have been removed. The new `ResourceHeap` interface can be used instead.
+
+Before:
+```cpp
+// Usage:
+LLGL::Texture* myTextures[] = { myTex0, myTex1 };
+LLGL::TextureArray* myTextureArray = myRenderer->CreateTextureArray(2, myTextures);
+
+LLGL::Sampler* mySamplers[] = { mySmp0, mySmp1 };
+LLGL::SamplerArray* mySamplerArray = myRenderer->CreateSamplerArray(2, mySamplers);
+
+myCmdBuffer->SetTextureArray(*myTextureArray, 2, LLG::StageFlags::FragmentStage);
+myCmdBuffer->SetSamplerArray(*mySamplerArray, 7, LLG::StageFlags::FragmentStage);
+```
+
+After:
+```cpp
+LLGL::PipelineLayoutDescriptor myLayoutDesc;
+myLayoutDesc.bindings = {
+    LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLG::StageFlags::FragmentStage, 2 },
+    LLGL::BindingDescriptor { LLGL::ResourceType::Texture, LLG::StageFlags::FragmentStage, 3 },
+    LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLG::StageFlags::FragmentStage, 7 },
+    LLGL::BindingDescriptor { LLGL::ResourceType::Sampler, LLG::StageFlags::FragmentStage, 8 },
+};
+LLGL::PipelineLayout* myPipelineLayout = myRenderer->CreatePipelineLayout(myLayoutDesc);
+
+LLGL::ResourceHeapDescriptor myHeapDesc;
+myHeapDesc.pipelineLayout = myPipelineLayout;
+myHeapDesc.resourceViews  = { myTex0, myTex1, mySmp0, mySmp1 };
+LLGL::ResourceHeap* myResourceHeap = myRenderer->CreateResourceHeap(myHeapDesc);
+
+myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
+```
+
 
 
 
