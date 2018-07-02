@@ -1,31 +1,82 @@
 ChangeLog v0.02
 ===============
 
-Vertex layout in `ShaderProgram` interface:
---------------------------
+`Shader` interface:
+-------------------
 
-Multiple `VertexFormat` instances can now be passed to a `ShaderProgram` when multiple vertex buffers are used. Previously, multiple vertex buffer formats were defined by a single `VertexFormat` instance.
+There is no longer the possibility to compile the shader source or load binary shaders from the `Shader` interface. Instead the compilation process is done by the `CreateShader` function.
 
 Before:
 ```cpp
 // Interface:
-void ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat);
+bool Shader::Compile(const std::string&, const ShaderDescriptor&);
+bool Shader::LoadBinary(std::vector<char>&&, const ShaderDescriptor&);
 
 // Usage:
-LLGL::VertexFormat myVertexFormat;
-/* ... */
-myShaderProgram->BuildInputLayout(myVertexFormat);
+LLGL::Shader* myShader = myRenderer->CreateShader(LLGL::ShaderType::Vertex);
+myShader->Compile(myShaderSource, { "VMain", "vs_4_0" });
 ```
 
 After:
 ```cpp
 // Interface:
-void ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats);
+bool Shader::HasErrors() const;
 
 // Usage:
-LLGL::VertexFormat myVertexFormat;
-/* ... */
-myShaderProgram->BuildInputLayout(1, &myVertexFormat);
+LLGL::ShaderDescritpor myShaderDesc;
+myShaderDesc.type       = LLGL::ShaderType::Vertex;
+myShaderDesc.source     = myShaderSource.c_str();
+myShaderDesc.sourceSize = myShaderSource.size();
+myShaderDesc.entryPoint = "VMain";
+myShaderDesc.profile    = "vs_4_0";
+LLGL::Shader* myShader = myRenderer->CreateShader(myShaderDesc);
+
+// Usage (loading from file):
+LLGL::Shader* myShader = myRenderer->CreateShader({ LLGL::ShaderType::Vertex, "myShader.hlsl", "VMain", "vs_4_0" });
+```
+
+
+`ShaderProgram` interface:
+--------------------------
+
+Shaders can no longer be attached or detached after a shader program has been created. All shader linking is done at creation time.
+
+Before:
+```cpp
+// Interface:
+void ShaderProgram::AttachShader(Shader&);
+void ShaderProgram::DetachAll();
+bool ShaderProgram::LinkShaders();
+void ShaderProgram::BuildInputLayout(const VertexFormat& vertexFormat);
+
+// Usage:
+myShaderProgram->BuildInputLayout(myVertexFormat);
+
+myShaderProgram->AttachShader(*myVertexShader);
+myShaderProgram->AttachShader(*myFragmentShader);
+
+if (!myShaderProgram->LinkShaders()) {
+    throw std::runtime_error(myShaderProgram->QueryInfoLog());
+}
+```
+
+After:
+```cpp
+// Interface:
+bool ShaderProgram::HasErrors();
+
+// Usage:
+LLGL::ShaderProgramDescriptor myProgramDesc;
+
+myProgramDesc.vertexFormats  = { myVertexFormat };
+myProgramDesc.vertexShader   = myVertexShader;
+myProgramDesc.fragmentShader = myFragmentShader;
+
+myShaderProgram = myRenderer->CreateShaderProgram(myProgramDesc);
+
+if (myShaderProgram->HasErrors()) {
+    throw std::runtime_error(myShaderProgram->QueryInfoLog());
+}
 ```
 
 
