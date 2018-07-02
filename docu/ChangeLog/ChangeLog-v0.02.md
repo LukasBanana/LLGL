@@ -1,8 +1,30 @@
-ChangeLog v0.02
-===============
+# ChangeLog v0.02
 
-`Shader` interface:
--------------------
+## Table of Contents
+
+- [`Shader` interface](#shader-interface)
+- [`ShaderProgram` interface](#shaderprogram-interface)
+- [`LogicOp` usage](#LogicOp-usage)
+- [Rasterization line width (OpenGL and Vulkan only)](#rasterization-line-width-opengl-and-vulkan-only)
+- [OpenGL profile selection](#opengl-profile-selection)
+- [Query texture descriptor](#query-texture-descriptor)
+- [Render target attachments](#render-target-attachments)
+- [Texture initialization with `ImageDescriptor` interface](#texture-initialization-with-imagedescriptor-interface)
+- [Dynamic state access for shader resources](#dynamic-state-access-for-shader-resources)
+- [Clear specific attachments of active render target](#clear-specific-attachments-of-active-render-target)
+- [Viewport and scissor arrays](#viewport-and-scissor-arrays)
+- [Persistent states in `CommandBuffer` interface](#persistent-states-in-commandbuffer-interface)
+- [Depth biasing in `RasterizerDescriptor` interface](#depth-biasing-in-rasterizerdescriptor-interface)
+- [`ShaderUniform` interface](#shaderuniform-interface)
+- [Dependency removal of GaussianLib](#dependency-removal-of-gaussianlib)
+- [Renamed identifiers](#renamed-identifiers)
+- [Graphics API dependent state](#graphics-api-dependent-state)
+- [`TextureFormat` and `VectorType` enumerations](#textureformat-and-vectortype-enumerations)
+- [`TextureDescriptor` struct](#texturedescriptor-struct)
+- [Removal of `TextureArray` and `SamplerArray` interfaces](#removal-of-texturearray-and-samplerarray-interfaces)
+
+
+## `Shader` interface
 
 There is no longer the possibility to compile the shader source or load binary shaders from the `Shader` interface. Instead the compilation process is done by the `CreateShader` function.
 
@@ -36,8 +58,7 @@ LLGL::Shader* myShader = myRenderer->CreateShader({ LLGL::ShaderType::Vertex, "m
 ```
 
 
-`ShaderProgram` interface:
---------------------------
+## `ShaderProgram` interface
 
 Shaders can no longer be attached or detached after a shader program has been created. All shader linking is done at creation time.
 
@@ -80,8 +101,7 @@ if (myShaderProgram->HasErrors()) {
 ```
 
 
-`LogicOp` usage:
-----------------
+## `LogicOp` usage
 
 Logic pixel operation parameter has been moved from `GraphicsAPIDependentStateDescriptor` into `BlendDescriptor` of a graphics pipeline.
 
@@ -109,8 +129,7 @@ myRenderer->CreateGraphicsPipeline(myGfxPipelineDesc);
 ```
 
 
-Rasterization line width (OpenGL and Vulkan only):
---------------------------------------------------
+## Rasterization line width (OpenGL and Vulkan only)
 
 Line width rasterization parameter has been moved from `GraphicsAPIDependentStateDescriptor` into `RasterizerDescriptor` of a graphics pipeline.
 
@@ -138,8 +157,7 @@ myRenderer->CreateGraphicsPipeline(myGfxPipelineDesc);
 ```
 
 
-OpenGL profile selection:
--------------------------
+## OpenGL profile selection
 
 The OpenGL profile can now be selected with dynamic version numbers instead of fixed enumeration entries. For the profile type, the boolean members `extProfile` and `coreProfile` have been replaced by the enumeration `OpenGLContextProfile`.
 
@@ -178,8 +196,7 @@ myRenderer->CreateRenderContext(myContextDesc);
 ```
 
 
-Query texture descriptor:
--------------------------
+## Query texture descriptor
 
 The function to query the `TextureDescriptor` from a `Texture` object has been moved from the `RenderSystem` interface into the `Texture` interface.
 
@@ -202,8 +219,7 @@ auto myTextureDesc = myTexture->QueryDesc();
 ```
 
 
-Render target attachments:
---------------------------
+## Render target attachments
 
 Render target attachments are now defined by the `RenderTargetDescriptor` structure when the render target is created. Instead of detaching all attachments (i.e. `DetachAll`), release the render target and create a new one.
 
@@ -272,8 +288,7 @@ auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
 ```
 
 
-Texture initialization with `ImageDescriptor` interface:
---------------------------------------------------------
+## Texture initialization with `ImageDescriptor` interface
 
 Member `buffer` has been renamed to `data` to be consistent with the nomenclature (like in the `RenderSystem::ReadTexture` function for instance. Member `compressedSize` has been renamed to `dataSize` to be used for robustness checks and not only for compressed image data.
 
@@ -315,8 +330,7 @@ myImageDesc.dataSize = myImageBufferSize;
 ```
 
 
-Dynamic state access for shader resources:
-------------------------------------------
+## Dynamic state access for shader resources
 
 Dynamic state access for constant buffers, storage buffers, textures, and samplers is only supported for the legacy rendering APIs auch as OpenGL and Direct3D 11. For the new APIs such as Direct3D 12 and Vulkan the `ResourceViewHeap` interface can be used to bind all shader resources for a graphics pipeline at once.
 
@@ -363,8 +377,7 @@ myCmdBufferExt->SetSamplerArray(/* ... */);
 ```
 
 
-Clear specific attachments of active render target:
----------------------------------------------------
+## Clear specific attachments of active render target
 
 Now multiple attachments (both color and depth-stencil) of the active render target *can* be cleared at once.
 
@@ -404,8 +417,7 @@ myCmdBuffer->ClearAttachments(3, myClearCmds);
 ```
 
 
-Viewport and scissor arrays:
-----------------------------
+## Viewport and scissor arrays
 
 Functions to set viewport and scissor arrays have been renamed for a persistent nomenclature. A `Set...Array` function in the `CommandBuffer` interface is only used for `...Array` objects (such as `BufferArray`). For basic C/C++ arrays functions like `SetViewports`, `SetScissors`, or `ClearAttachments` are used.
 
@@ -422,14 +434,12 @@ void SetScissors(uint32_t numScissors, const Scissors* scissors);
 ```
 
 
-Persistent states in `CommandBuffer` interface:
------------------------------------------------
+## Persistent states in `CommandBuffer` interface
 
 Viewports and scissors are no longer guaranteed to be a persistent state. They must be updated after a new render target is set.
 
 
-Depth biasing in `RasterizerDescriptor` interface:
---------------------------------------------------
+## Depth biasing in `RasterizerDescriptor` interface
 
 The rasterizer parameters for depth biasing have been moved into a separate structure named `DepthBiasDescriptor`.
 
@@ -451,8 +461,7 @@ DepthBiasDescriptor RasterizerDescriptor::depthBias;
 ```
 
 
-`ShaderUniform` interface:
---------------------------
+## `ShaderUniform` interface
 
 All string parameters have been changed from `const std::string&` to `const char*`, and all vector and matrix types from the GaussianLib have been replaced by pointers to base types.
 
@@ -494,8 +503,7 @@ if (auto myUniforms = myShaderProgram->LockShaderUniforms()) {
 ```
 
 
-Dependency removal of GaussianLib:
-----------------------------------
+## Dependency removal of GaussianLib
 
 All dependencies to the GaussianLib project have been removed from the project (except the tutorials and tests!).
 
@@ -533,8 +541,7 @@ if (myColorA == myColorB) {
 ```
 
 
-Renamed identifiers:
---------------------
+## Renamed identifiers
 
 Various structures, enumerations, and fields have been renamed to either fit LLGL's nomenclature or to simplify their identifiers when they are frequently used.
 
@@ -569,8 +576,7 @@ LLGL::SamplerAddressMode;
 ```
 
 
-Graphics API dependent state:
------------------------------
+## Graphics API dependent state
 
 The common graphics API dependent state structure `LLGL::GraphicsAPIDependentStateDescriptor` has been replaced by individual structures for the respective rendering API.
 
@@ -601,8 +607,7 @@ myCommandBuffer->SetGraphicsAPIDependentState(&myStateDesc, sizeof(myStateDesc))
 ```
 
 
-`TextureFormat` and `VectorType` enumerations:
-----------------------------------------------
+## `TextureFormat` and `VectorType` enumerations
 
 Both `TextureFormat` and `VectorType` enumerations have been merged into the new `Format` enumeration.
 
@@ -629,8 +634,7 @@ LLGL::VertexAttribute myVertexFlagsAttrib    { "myFlags",    LLGL::Format::R32UI
 ```
 
 
-`TextureDescriptor` struct:
----------------------------
+## `TextureDescriptor` struct
 
 The descriptor structure `TextureDescriptor` has been simplified and generalized. All nested structures have been removed.
 
@@ -675,8 +679,7 @@ LLGL::Texture* my3DTex = myRenderer->CreateTexture(my3DTexDesc);
 ```
 
 
-Removal of `TextureArray` and `SamplerArray` interfaces:
---------------------------------------------------------
+## Removal of `TextureArray` and `SamplerArray` interfaces
 
 The `TextureArray` and `SamplerArray` interfaces have been removed. The new `ResourceHeap` interface can be used instead.
 
