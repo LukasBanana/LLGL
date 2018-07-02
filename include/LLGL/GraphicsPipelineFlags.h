@@ -209,7 +209,7 @@ enum class CullMode
 \brief Logical pixel operation enumeration.
 \remarks These logical pixel operations are bitwise operations.
 In the following documentation, 'src' denotes the source color and 'dst' denotes the destination color.
-\note Only supported with: OpenGL, Vulkan.
+\note Only supported with: OpenGL, Vulkan, Direct3D 11.1+, Direct3D 12.0.
 */
 enum class LogicOp
 {

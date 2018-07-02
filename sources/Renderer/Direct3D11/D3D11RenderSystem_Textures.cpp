@@ -78,20 +78,9 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     return TakeOwnership(textures_, std::move(texture));
 }
 
-TextureArray* D3D11RenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    AssertCreateTextureArray(numTextures, textureArray);
-    return TakeOwnership(textureArrays_, MakeUnique<D3D11TextureArray>(numTextures, textureArray));
-}
-
 void D3D11RenderSystem::Release(Texture& texture)
 {
     RemoveFromUniqueSet(textures_, &texture);
-}
-
-void D3D11RenderSystem::Release(TextureArray& textureArray)
-{
-    RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
 void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)

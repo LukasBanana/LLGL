@@ -92,23 +92,10 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, std::move(sampler));
 }
 
-SamplerArray* GLRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
-    AssertCreateSamplerArray(numSamplers, samplerArray);
-    return TakeOwnership(samplerArrays_, MakeUnique<GLSamplerArray>(numSamplers, samplerArray));
-}
-
 void GLRenderSystem::Release(Sampler& sampler)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void GLRenderSystem::Release(SamplerArray& samplerArray)
-{
-    auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
-    RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Heaps ----- */
@@ -354,6 +341,8 @@ void GLRenderSystem::QueryRenderingCaps()
 }
 
 
+#ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
+
 /*
  * MipGenerationFBOPair structure
  */
@@ -378,6 +367,8 @@ void GLRenderSystem::MipGenerationFBOPair::ReleaseFBOs()
         fbos[1] = 0;
     }
 }
+
+#endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 
 } // /namespace LLGL

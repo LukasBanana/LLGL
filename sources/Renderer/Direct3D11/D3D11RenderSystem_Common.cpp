@@ -172,20 +172,9 @@ Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, MakeUnique<D3D11Sampler>(device_.Get(), desc));
 }
 
-SamplerArray* D3D11RenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    AssertCreateSamplerArray(numSamplers, samplerArray);
-    return TakeOwnership(samplerArrays_, MakeUnique<D3D11SamplerArray>(numSamplers, samplerArray));
-}
-
 void D3D11RenderSystem::Release(Sampler& sampler)
 {
     RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void D3D11RenderSystem::Release(SamplerArray& samplerArray)
-{
-    RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Heaps ----- */

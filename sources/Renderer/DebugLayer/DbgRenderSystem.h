@@ -74,13 +74,10 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
-        TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
-        void Release(TextureArray& textureArray) override;
 
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
-
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
 
         void GenerateMips(Texture& texture) override;
@@ -89,10 +86,8 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
-        SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
-        void Release(SamplerArray& samplerArray) override;
 
         /* ----- Resource Views ----- */
 

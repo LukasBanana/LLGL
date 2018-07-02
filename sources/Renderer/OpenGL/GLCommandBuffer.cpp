@@ -17,9 +17,7 @@
 #include "Shader/GLShaderProgram.h"
 
 #include "Texture/GLTexture.h"
-#include "Texture/GLTextureArray.h"
 #include "Texture/GLSampler.h"
-#include "Texture/GLSamplerArray.h"
 #include "Texture/GLRenderTarget.h"
 
 #include "Buffer/GLVertexBuffer.h"
@@ -246,21 +244,11 @@ void GLCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long
     SetGenericBuffer(GLBufferTarget::UNIFORM_BUFFER, buffer, slot);
 }
 
-void GLCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*stageFlags*/)
-{
-    SetGenericBufferArray(GLBufferTarget::UNIFORM_BUFFER, bufferArray, startSlot);
-}
-
 /* ----- Storage Buffers ------ */
 
 void GLCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long /*stageFlags*/)
 {
     SetGenericBuffer(GLBufferTarget::SHADER_STORAGE_BUFFER, buffer, slot);
-}
-
-void GLCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long /*stageFlags*/)
-{
-    SetGenericBufferArray(GLBufferTarget::SHADER_STORAGE_BUFFER, bufferArray, startSlot);
 }
 
 /* ----- Stream Output Buffers ------ */
@@ -323,34 +311,12 @@ void GLCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long /*st
     stateMngr_->BindTexture(textureGL);
 }
 
-void GLCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long /*stageFlags*/)
-{
-    /* Bind texture array to layers */
-    auto& textureArrayGL = LLGL_CAST(GLTextureArray&, textureArray);
-    stateMngr_->BindTextures(
-        startSlot,
-        static_cast<GLsizei>(textureArrayGL.GetIDArray().size()),
-        textureArrayGL.GetTargetArray().data(),
-        textureArrayGL.GetIDArray().data()
-    );
-}
-
 /* ----- Sampler States ----- */
 
 void GLCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long /*stageFlags*/)
 {
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     stateMngr_->BindSampler(slot, samplerGL.GetID());
-}
-
-void GLCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long /*stageFlags*/)
-{
-    auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
-    stateMngr_->BindSamplers(
-        startSlot,
-        static_cast<GLsizei>(samplerArrayGL.GetIDArray().size()),
-        samplerArrayGL.GetIDArray().data()
-    );
 }
 
 /* ----- Resource Heaps ----- */

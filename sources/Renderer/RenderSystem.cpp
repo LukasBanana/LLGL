@@ -283,18 +283,6 @@ void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* con
     }
 }
 
-void RenderSystem::AssertCreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    /* Validate common resource array parameters */
-    AssertCreateResourceArrayCommon(numTextures, reinterpret_cast<void* const*>(textureArray), "texture");
-}
-
-void RenderSystem::AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    /* Validate common resource array parameters */
-    AssertCreateResourceArrayCommon(numSamplers, reinterpret_cast<void* const*>(samplerArray), "sampler");
-}
-
 void RenderSystem::AssertCreateShader(const ShaderDescriptor& desc)
 {
     if (desc.source == nullptr)

@@ -20,9 +20,7 @@
 #include "Buffer.h"
 #include "BufferArray.h"
 #include "Texture.h"
-#include "TextureArray.h"
 #include "Sampler.h"
-#include "SamplerArray.h"
 #include "ResourceHeap.h"
 
 #include "RenderTarget.h"
@@ -225,6 +223,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \throws std::invalid_argument If 'numBuffers' is 0, if 'bufferArray' is null,
         if any of the pointers in the array are null, if not all buffers have the same type, or if the buffer array type is
         not one of these: BufferType::Vertex, BufferType::Constant, BufferType::Storage, or BufferType::StreamOutput.
+        \todo Rename to "CreateVertexArray".
         */
         virtual BufferArray* CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray) = 0;
 
@@ -275,26 +274,8 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         */
         virtual Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) = 0;
 
-        /**
-        \brief Creates a new texture array.
-        \param[in] numTextures Specifies the number of textures in the array. This must be greater than 0.
-        \param[in] textureArray Pointer to an array of Texture object pointers. This must not be null.
-        \remarks This texture array is not an "array texture" (like TextureType::Texture2DArray for instance).
-        It is just a container of multiple texture objects, which can be used to bind several hardware textures at once, to improve performance.
-        \throws std::invalid_argument If 'numTextures' is 0, if 'textureArray' is null,
-        or if any of the pointers in the array are null.
-        \deprecated TextureArray interface will be removed soon, use ResourceHeap interface instead.
-        */
-        virtual TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) = 0;
-
         //! Releases the specified texture object. After this call, the specified object must no longer be used.
         virtual void Release(Texture& texture) = 0;
-
-        /**
-        \brief Releases the specified texture array object. After this call, the specified object must no longer be used.
-        \deprecated TextureArray interface will be removed soon, use ResourceHeap interface instead.
-        */
-        virtual void Release(TextureArray& textureArray) = 0;
 
         /**
         \brief Updates the image data of the specified texture.
@@ -374,24 +355,8 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         */
         virtual Sampler* CreateSampler(const SamplerDescriptor& desc) = 0;
 
-        /**
-        \brief Creates a new sampler array.
-        \param[in] numSamplers Specifies the number of samplers in the array. This must be greater than 0.
-        \param[in] samplerArray Pointer to an array of Sampler object pointers. This must not be null.
-        \throws std::invalid_argument If 'numSamplers' is 0, if 'samplerArray' is null,
-        or if any of the pointers in the array are null.
-        \deprecated SamplerArray interface will be removed soon, use ResourceHeap interface instead.
-        */
-        virtual SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) = 0;
-
         //! Releases the specified Sampler object. After this call, the specified object must no longer be used.
         virtual void Release(Sampler& sampler) = 0;
-
-        /**
-        \brief Releases the specified sampler array object. After this call, the specified object must no longer be used.
-        \deprecated SamplerArray interface will be removed soon, use ResourceHeap interface instead.
-        */
-        virtual void Release(SamplerArray& samplerArray) = 0;
 
         /* ----- Resource Heaps ----- */
 
@@ -525,12 +490,6 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         //! Validates the specified arguments to be used for buffer array creation.
         void AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
-
-        //! Validates the specified arguments to be used for texture array creation.
-        void AssertCreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray);
-
-        //! Validates the specified arguments to be used for sampler array creation.
-        void AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray);
 
         //! Validates the specified shader descriptor.
         void AssertCreateShader(const ShaderDescriptor& desc);

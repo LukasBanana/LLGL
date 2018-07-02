@@ -277,19 +277,9 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     return TakeOwnership(textures_, std::move(textureD3D));
 }
 
-TextureArray* D3D12RenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    return nullptr;//todo...
-}
-
 void D3D12RenderSystem::Release(Texture& texture)
 {
     //RemoveFromUniqueSet(textures_, &texture);
-}
-
-void D3D12RenderSystem::Release(TextureArray& textureArray)
-{
-    //RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
 void D3D12RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
@@ -319,19 +309,9 @@ Sampler* D3D12RenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, MakeUnique<D3D12Sampler>(desc));
 }
 
-SamplerArray* D3D12RenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    return nullptr;//todo
-}
-
 void D3D12RenderSystem::Release(Sampler& sampler)
 {
     RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void D3D12RenderSystem::Release(SamplerArray& samplerArray)
-{
-    //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Heaps ----- */

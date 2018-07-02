@@ -18,7 +18,6 @@
 #include "BufferArray.h"
 #include "ShaderProgram.h"
 #include "Texture.h"
-#include "TextureArray.h"
 #include "RenderTarget.h"
 #include "GraphicsPipeline.h"
 #include "ComputePipeline.h"

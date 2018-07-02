@@ -228,30 +228,9 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
 }
 
-TextureArray* DbgRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    AssertCreateTextureArray(numTextures, textureArray);
-
-    /* Create temporary buffer array with buffer instances */
-    std::vector<Texture*> textureInstanceArray;
-    for (std::uint32_t i = 0; i < numTextures; ++i)
-    {
-        auto textureDbg = LLGL_CAST(DbgTexture*, (*(textureArray++)));
-        textureInstanceArray.push_back(&(textureDbg->instance));
-    }
-
-    return instance_->CreateTextureArray(numTextures, textureInstanceArray.data());
-}
-
 void DbgRenderSystem::Release(Texture& texture)
 {
     ReleaseDbg(textures_, texture);
-}
-
-void DbgRenderSystem::Release(TextureArray& textureArray)
-{
-    instance_->Release(textureArray);
-    //ReleaseDbg(textureArrays_, textureArray);
 }
 
 void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
@@ -334,22 +313,10 @@ Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     //return TakeOwnership(samplers_, MakeUnique<DbgSampler>());
 }
 
-SamplerArray* DbgRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    AssertCreateSamplerArray(numSamplers, samplerArray);
-    return instance_->CreateSamplerArray(numSamplers, samplerArray);
-}
-
 void DbgRenderSystem::Release(Sampler& sampler)
 {
     instance_->Release(sampler);
     //RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void DbgRenderSystem::Release(SamplerArray& samplerArray)
-{
-    instance_->Release(samplerArray);
-    //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Views ----- */

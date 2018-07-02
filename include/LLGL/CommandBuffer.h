@@ -16,10 +16,6 @@
 
 #include "Buffer.h"
 #include "BufferArray.h"
-#include "Texture.h"
-#include "TextureArray.h"
-#include "Sampler.h"
-#include "SamplerArray.h"
 #include "ResourceHeap.h"
 #include "PipelineLayoutFlags.h"
 

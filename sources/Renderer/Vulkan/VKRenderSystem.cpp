@@ -500,22 +500,12 @@ Texture* VKRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     return TakeOwnership(textures_, std::move(textureVK));
 }
 
-TextureArray* VKRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    return nullptr;//todo
-}
-
 void VKRenderSystem::Release(Texture& texture)
 {
     /* Release device memory region, then release texture object */
     auto& textureVK = LLGL_CAST(VKTexture&, texture);
     deviceMemoryMngr_->Release(textureVK.GetMemoryRegion());
     RemoveFromUniqueSet(textures_, &texture);
-}
-
-void VKRenderSystem::Release(TextureArray& textureArray)
-{
-    //todo
 }
 
 void VKRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
@@ -566,19 +556,9 @@ Sampler* VKRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, MakeUnique<VKSampler>(device_, desc));
 }
 
-SamplerArray* VKRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    return TakeOwnership(samplerArrays_, MakeUnique<VKSamplerArray>(numSamplers, samplerArray));
-}
-
 void VKRenderSystem::Release(Sampler& sampler)
 {
     RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void VKRenderSystem::Release(SamplerArray& samplerArray)
-{
-    RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Heaps ----- */

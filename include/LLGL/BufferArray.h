@@ -21,7 +21,7 @@ namespace LLGL
 \brief Hardware buffer container interface.
 \remarks This array can only contain buffers which are all from the same type,
 like an array of vertex buffers for instance.
-\todo Maybe rename this to "BufferHeap".
+\todo Maybe rename this to "BufferHeap" or "VertexArray".
 \see RenderSystem::CreateBufferArray
 */
 class LLGL_EXPORT BufferArray : public RenderSystemChild
