@@ -26,20 +26,15 @@ static void Attach(D3D12Shader*& shaderD3D, Shader* shader)
         shaderD3D = LLGL_CAST(D3D12Shader*, shader);
 }
 
-D3D12ShaderProgram::D3D12ShaderProgram(const GraphicsShaderProgramDescriptor& desc)
+D3D12ShaderProgram::D3D12ShaderProgram(const ShaderProgramDescriptor& desc)
 {
     Attach(vs_, desc.vertexShader);
     Attach(hs_, desc.tessControlShader);
     Attach(ds_, desc.tessEvaluationShader);
     Attach(gs_, desc.geometryShader);
     Attach(ps_, desc.fragmentShader);
-    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
-    Link();
-}
-
-D3D12ShaderProgram::D3D12ShaderProgram(const ComputeShaderProgramDescriptor& desc)
-{
     Attach(cs_, desc.computeShader);
+    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
     Link();
 }
 

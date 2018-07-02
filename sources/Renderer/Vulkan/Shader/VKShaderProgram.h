@@ -26,8 +26,7 @@ class VKShaderProgram : public ShaderProgram
 
     public:
 
-        VKShaderProgram(const GraphicsShaderProgramDescriptor& desc);
-        VKShaderProgram(const ComputeShaderProgramDescriptor& desc);
+        VKShaderProgram(const ShaderProgramDescriptor& desc);
 
         bool HasErrors() const override;
 

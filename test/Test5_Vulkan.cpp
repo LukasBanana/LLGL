@@ -126,7 +126,7 @@ int main()
         auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
 
         // Create shader program
-        LLGL::GraphicsShaderProgramDescriptor shaderProgramDesc;
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             shaderProgramDesc.vertexFormats     = { vertexFormat };
             shaderProgramDesc.vertexShader      = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex, "Triangle.vert.spv"));

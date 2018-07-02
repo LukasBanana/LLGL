@@ -27,20 +27,15 @@ static void Attach(D3D11Shader*& shaderD3D, Shader* shader)
         shaderD3D = LLGL_CAST(D3D11Shader*, shader);
 }
 
-D3D11ShaderProgram::D3D11ShaderProgram(const GraphicsShaderProgramDescriptor& desc, ID3D11Device* device)
+D3D11ShaderProgram::D3D11ShaderProgram(ID3D11Device* device, const ShaderProgramDescriptor& desc)
 {
     Attach(vs_, desc.vertexShader);
     Attach(hs_, desc.tessControlShader);
     Attach(ds_, desc.tessEvaluationShader);
     Attach(gs_, desc.geometryShader);
     Attach(ps_, desc.fragmentShader);
-    BuildInputLayout(device, desc.vertexFormats.size(), desc.vertexFormats.data());
-    Link();
-}
-
-D3D11ShaderProgram::D3D11ShaderProgram(const ComputeShaderProgramDescriptor& desc)
-{
     Attach(cs_, desc.computeShader);
+    BuildInputLayout(device, desc.vertexFormats.size(), desc.vertexFormats.data());
     Link();
 }
 

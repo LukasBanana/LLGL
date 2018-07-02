@@ -229,15 +229,17 @@ LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const cha
     return desc;
 }
 
-/* ----- GraphicsShaderProgramDescriptor utility functions ----- */
+/* ----- ShaderProgramDescriptor utility functions ----- */
 
-static void AssignShaderToDesc(GraphicsShaderProgramDescriptor& desc, Shader* shader)
+static void AssignShaderToDesc(ShaderProgramDescriptor& desc, Shader* shader)
 {
     if (shader != nullptr)
     {
         /* Assign shader types their respective struct members */
         switch (shader->GetType())
         {
+            case ShaderType::Undefined:
+                break;
             case ShaderType::Vertex:
                 desc.vertexShader = shader;
                 break;
@@ -253,15 +255,16 @@ static void AssignShaderToDesc(GraphicsShaderProgramDescriptor& desc, Shader* sh
             case ShaderType::Fragment:
                 desc.fragmentShader = shader;
                 break;
-            default:
+            case ShaderType::Compute:
+                desc.computeShader = shader;
                 break;
         }
     }
 }
 
-LLGL_EXPORT GraphicsShaderProgramDescriptor GraphicsShaderProgramDesc(const std::initializer_list<Shader*>& shaders, const std::initializer_list<VertexFormat>& vertexFormats)
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders, const std::initializer_list<VertexFormat>& vertexFormats)
 {
-    GraphicsShaderProgramDescriptor desc;
+    ShaderProgramDescriptor desc;
     {
         desc.vertexFormats = vertexFormats;
         for (auto shader : shaders)
@@ -270,24 +273,13 @@ LLGL_EXPORT GraphicsShaderProgramDescriptor GraphicsShaderProgramDesc(const std:
     return desc;
 }
 
-LLGL_EXPORT GraphicsShaderProgramDescriptor GraphicsShaderProgramDesc(const std::vector<Shader*>& shaders, const std::vector<VertexFormat>& vertexFormats)
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders, const std::vector<VertexFormat>& vertexFormats)
 {
-    GraphicsShaderProgramDescriptor desc;
+    ShaderProgramDescriptor desc;
     {
         desc.vertexFormats = vertexFormats;
         for (auto shader : shaders)
             AssignShaderToDesc(desc, shader);
-    }
-    return desc;
-}
-
-/* ----- ComputeShaderProgramDescriptor utility functions ----- */
-
-LLGL_EXPORT ComputeShaderProgramDescriptor ComputeShaderProgramDesc(Shader* computeShader)
-{
-    ComputeShaderProgramDescriptor desc;
-    {
-        desc.computeShader = computeShader;
     }
     return desc;
 }

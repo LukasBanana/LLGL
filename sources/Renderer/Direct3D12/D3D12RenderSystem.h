@@ -116,9 +116,7 @@ class D3D12RenderSystem : public RenderSystem
         /* ----- Shader ----- */
 
         Shader* CreateShader(const ShaderDescriptor& desc) override;
-
-        ShaderProgram* CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc) override;
-        ShaderProgram* CreateShaderProgram(const ComputeShaderProgramDescriptor& desc) override;
+        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;

@@ -26,8 +26,7 @@ class D3D11ShaderProgram : public ShaderProgram
 
     public:
 
-        D3D11ShaderProgram(const GraphicsShaderProgramDescriptor& desc, ID3D11Device* device);
-        D3D11ShaderProgram(const ComputeShaderProgramDescriptor& desc);
+        D3D11ShaderProgram(ID3D11Device* device, const ShaderProgramDescriptor& desc);
 
         bool HasErrors() const override;
 

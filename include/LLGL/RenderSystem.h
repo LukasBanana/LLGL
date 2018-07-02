@@ -425,27 +425,22 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         /**
         \brief Creates a new and Shader object and compiles the specified source.
         \remarks To check whether the compilation was successful or not, use the 'HasErrors' and 'QueryInfoLog' functions of the Shader interface.
-        \see Shader
         \see Shader::HasErrors
         \see Shader::QueryInfoLog
+        \see ShaderDescriptor
+        \see ShaderDescFromFile
         */
         virtual Shader* CreateShader(const ShaderDescriptor& desc) = 0;
 
         /**
-        \brief Creates a new shader program for a graphics pipeline.
-        \see ShaderProgram
-        \see GraphicsShaderProgramDescriptor
-        \see CreateShaderProgram(const ComputeShaderProgramDescriptor&)
+        \brief Creates a new shader program and links all specified shaders.
+        \remarks To check whether the linking was successful or not, use the 'HasErrors' and 'QueryInfoLog' functions of the ShaderProgram interface.
+        \see ShaderProgram::HasErrors
+        \see ShaderProgram::QueryInfoLog
+        \see ShaderProgramDescriptor
+        \see ShaderProgramDesc
         */
-        virtual ShaderProgram* CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc) = 0;
-
-        /**
-        \brief Creates a new shader program for a compute pipeline.
-        \see ShaderProgram
-        \see ComputeShaderProgramDescriptor
-        \see CreateShaderProgram(const GraphicsShaderProgramDescriptor&)
-        */
-        virtual ShaderProgram* CreateShaderProgram(const ComputeShaderProgramDescriptor& desc) = 0;
+        virtual ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) = 0;
 
         //! Releases the specified Shader object. After this call, the specified object must no longer be used.
         virtual void Release(Shader& shader) = 0;
@@ -540,11 +535,8 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         //! Validates the specified shader descriptor.
         void AssertCreateShader(const ShaderDescriptor& desc);
 
-        //! Validates the specified graphics shader program descriptor.
-        void AssertCreateShaderProgram(const GraphicsShaderProgramDescriptor& desc);
-
-        //! Validates the specified compute shader program descriptor.
-        void AssertCreateShaderProgram(const ComputeShaderProgramDescriptor& desc);
+        //! Validates the specified shader program descriptor.
+        void AssertCreateShaderProgram(const ShaderProgramDescriptor& desc);
 
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);

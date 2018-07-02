@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
         }
 
         // Create shader program which is used as composite
-        LLGL::GraphicsShaderProgramDescriptor shaderProgramDesc;
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             shaderProgramDesc.vertexFormats     = { vertexFormat };
             shaderProgramDesc.vertexShader      = vertShader;

@@ -317,36 +317,41 @@ static void AssertShaderType(Shader* shader, const char* shaderName, const Shade
     }
 }
 
-void RenderSystem::AssertCreateShaderProgram(const GraphicsShaderProgramDescriptor& desc)
+void RenderSystem::AssertCreateShaderProgram(const ShaderProgramDescriptor& desc)
 {
     AssertShaderType(desc.vertexShader,         "vertexShader",         ShaderType::Vertex,         "Vertex"        );
     AssertShaderType(desc.tessControlShader,    "tessControlShader",    ShaderType::TessControl,    "TessControl"   );
     AssertShaderType(desc.tessEvaluationShader, "tessEvaluationShader", ShaderType::TessEvaluation, "TessEvaluation");
     AssertShaderType(desc.geometryShader,       "geometryShader",       ShaderType::Geometry,       "Geometry"      );
     AssertShaderType(desc.fragmentShader,       "fragmentShader",       ShaderType::Fragment,       "Fragment"      );
+    AssertShaderType(desc.computeShader,        "computeShader",        ShaderType::Compute,        "Compute"       );
 
-    if (desc.vertexShader == nullptr)
-        throw std::invalid_argument("cannot create shader program without vertex shader");
-
-    if ( ( desc.tessControlShader != nullptr && desc.tessEvaluationShader == nullptr ) ||
-         ( desc.tessControlShader == nullptr && desc.tessEvaluationShader != nullptr ) )
+    if (desc.computeShader != nullptr)
     {
-        throw std::invalid_argument(
-            "cannot create shader program with 'tessControlShader' and 'tessEvaluationShader' being partially specified"
-        );
-    }
-}
-
-void RenderSystem::AssertCreateShaderProgram(const ComputeShaderProgramDescriptor& desc)
-{
-    if (auto shader = desc.computeShader)
-    {
-        AssertShaderType(shader, "computeShader", ShaderType::Compute, "Compute");
-        if (shader->HasErrors())
-            throw std::invalid_argument("cannot create shader program with 'computeShader' having errors");
+        if ( desc.vertexShader         != nullptr ||
+             desc.tessControlShader    != nullptr ||
+             desc.tessEvaluationShader != nullptr ||
+             desc.geometryShader       != nullptr ||
+             desc.fragmentShader       != nullptr )
+        {
+            throw std::invalid_argument(
+                "cannot create shader program with 'computeShader' in conjunction with any other shader"
+            );
+        }
     }
     else
-        throw std::invalid_argument("cannot create shader program without compute shader");
+    {
+        if (desc.vertexShader == nullptr)
+            throw std::invalid_argument("cannot create shader program without vertex shader");
+
+        if ( ( desc.tessControlShader != nullptr && desc.tessEvaluationShader == nullptr ) ||
+             ( desc.tessControlShader == nullptr && desc.tessEvaluationShader != nullptr ) )
+        {
+            throw std::invalid_argument(
+                "cannot create shader program with 'tessControlShader' and 'tessEvaluationShader' being partially specified"
+            );
+        }
+    }
 }
 
 void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info)

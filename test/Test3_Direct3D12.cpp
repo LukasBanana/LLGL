@@ -129,7 +129,7 @@ int main()
         #endif
 
         // Create shader program
-        LLGL::GraphicsShaderProgramDescriptor shaderProgramDesc;
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             shaderProgramDesc.vertexFormats     = { vertexFormat };
             shaderProgramDesc.vertexShader      = vertShader;

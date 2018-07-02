@@ -23,8 +23,7 @@ class GLShaderProgram : public ShaderProgram
 
     public:
 
-        GLShaderProgram(const GraphicsShaderProgramDescriptor& desc);
-        GLShaderProgram(const ComputeShaderProgramDescriptor& desc);
+        GLShaderProgram(const ShaderProgramDescriptor& desc);
         ~GLShaderProgram();
 
         bool HasErrors() const override;
@@ -52,8 +51,6 @@ class GLShaderProgram : public ShaderProgram
         }
 
     private:
-
-        GLShaderProgram();
 
         void Attach(Shader* shader);
         void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);

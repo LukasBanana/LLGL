@@ -32,8 +32,7 @@ class DbgShaderProgram : public ShaderProgram
             bool                            bound       = false;
         };
 
-        DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const GraphicsShaderProgramDescriptor& desc);
-        DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const ComputeShaderProgramDescriptor& desc);
+        DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const ShaderProgramDescriptor& desc);
 
         bool HasErrors() const override;
 

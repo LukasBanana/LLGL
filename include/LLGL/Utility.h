@@ -132,24 +132,23 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBuffe
 */
 LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const char* filename, const char* entryPoint = nullptr, const char* profile = nullptr, long flags = 0);
 
-/* ----- GraphicsShaderProgramDescriptor utility functions ----- */
+/* ----- ShaderProgramDescriptor utility functions ----- */
 
 /**
-\brief Returns a GraphicsShaderProgramDescriptor structure and assigns the input shaders into the respective structure members.
+\brief Returns a ShaderProgramDescriptor structure and assigns the input shaders into the respective structure members.
 \param[in] shaders Specifies the list of shaders to attach to the shader program. Null pointers in the list are ignored.
-\param[in] vertexFormats Specifies the list of vertex formats. This may also be empty.
-\see RenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor&)
+\param[in] vertexFormats Specifies the list of vertex formats. By default empty.
+\see RenderSystem::CreateShaderProgram
 */
-LLGL_EXPORT GraphicsShaderProgramDescriptor GraphicsShaderProgramDesc(const std::initializer_list<Shader*>& shaders, const std::initializer_list<VertexFormat>& vertexFormats = {});
-LLGL_EXPORT GraphicsShaderProgramDescriptor GraphicsShaderProgramDesc(const std::vector<Shader*>& shaders, const std::vector<VertexFormat>& vertexFormats = {});
-
-/* ----- ComputeShaderProgramDescriptor utility functions ----- */
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders, const std::initializer_list<VertexFormat>& vertexFormats = {});
 
 /**
-\brief Returns a ComputeShaderProgramDescriptor structure and assigns the input shaders into the respective structure members.
-\see RenderSystem::CreateShaderProgram(const ComputeShaderProgramDescriptor&)
+\brief Returns a ShaderProgramDescriptor structure and assigns the input shaders into the respective structure members.
+\param[in] shaders Specifies the list of shaders to attach to the shader program. Null pointers in the list are ignored.
+\param[in] vertexFormats Specifies the list of vertex formats. By default empty.
+\see RenderSystem::CreateShaderProgram
 */
-LLGL_EXPORT ComputeShaderProgramDescriptor ComputeShaderProgramDesc(Shader* computeShader);
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders, const std::vector<VertexFormat>& vertexFormats = {});
 
 /* ----- PipelineLayoutDescriptor utility functions ----- */
 

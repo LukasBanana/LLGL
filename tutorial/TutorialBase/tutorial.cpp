@@ -327,7 +327,7 @@ LLGL::ShaderProgram* Tutorial::LoadShaderProgram(
     }
 
     // Create shader program
-    auto shaderProgram = renderer->CreateShaderProgram(LLGL::GraphicsShaderProgramDesc(recall.shaders, vertexFormats));
+    auto shaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(recall.shaders, vertexFormats));
 
     // Link shader program and check for errors
     if (shaderProgram->HasErrors())
@@ -379,7 +379,7 @@ bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
         }
 
         // Create new shader program
-        auto newShaderProgram = renderer->CreateShaderProgram(LLGL::GraphicsShaderProgramDesc(shaders, recall.vertexFormats));
+        auto newShaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(shaders, recall.vertexFormats));
 
         // Link shader program and check for errors
         if (newShaderProgram->HasErrors())

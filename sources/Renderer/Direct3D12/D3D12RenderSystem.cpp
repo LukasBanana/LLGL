@@ -366,13 +366,7 @@ Shader* D3D12RenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<D3D12Shader>(desc));
 }
 
-ShaderProgram* D3D12RenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc)
-{
-    AssertCreateShaderProgram(desc);
-    return TakeOwnership(shaderPrograms_, MakeUnique<D3D12ShaderProgram>(desc));
-}
-
-ShaderProgram* D3D12RenderSystem::CreateShaderProgram(const ComputeShaderProgramDescriptor& desc)
+ShaderProgram* D3D12RenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
 {
     AssertCreateShaderProgram(desc);
     return TakeOwnership(shaderPrograms_, MakeUnique<D3D12ShaderProgram>(desc));

@@ -23,22 +23,17 @@ namespace LLGL
 {
 
 
-GLShaderProgram::GLShaderProgram(const GraphicsShaderProgramDescriptor& desc) :
-    GLShaderProgram {}
+GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
+    id_      { glCreateProgram() },
+    uniform_ { id_               }
 {
     Attach(desc.vertexShader);
     Attach(desc.tessControlShader);
     Attach(desc.tessEvaluationShader);
     Attach(desc.geometryShader);
     Attach(desc.fragmentShader);
-    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
-    Link();
-}
-
-GLShaderProgram::GLShaderProgram(const ComputeShaderProgramDescriptor& desc) :
-    GLShaderProgram {}
-{
     Attach(desc.computeShader);
+    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
     Link();
 }
 
@@ -131,12 +126,6 @@ void GLShaderProgram::UnlockShaderUniform()
 /*
  * ======= Private: =======
  */
-
-GLShaderProgram::GLShaderProgram() :
-    id_      { glCreateProgram() },
-    uniform_ { id_               }
-{
-}
 
 //TODO: refactor "MoveStreamOutputFormat" (shader might be used multiple times, but internal contianer gets lost!)
 void GLShaderProgram::Attach(Shader* shader)

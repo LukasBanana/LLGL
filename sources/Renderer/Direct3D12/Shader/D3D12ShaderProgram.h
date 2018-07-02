@@ -26,8 +26,7 @@ class D3D12ShaderProgram : public ShaderProgram
 
     public:
 
-        D3D12ShaderProgram(const GraphicsShaderProgramDescriptor& desc);
-        D3D12ShaderProgram(const ComputeShaderProgramDescriptor& desc);
+        D3D12ShaderProgram(const ShaderProgramDescriptor& desc);
 
         bool HasErrors() const override;
 

@@ -437,9 +437,9 @@ static Shader* GetInstanceShader(Shader* shader)
     return nullptr;
 }
 
-ShaderProgram* DbgRenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc)
+ShaderProgram* DbgRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
 {
-    GraphicsShaderProgramDescriptor instanceDesc;
+    ShaderProgramDescriptor instanceDesc;
     {
         instanceDesc.vertexFormats          = desc.vertexFormats;
         instanceDesc.vertexShader           = GetInstanceShader(desc.vertexShader);
@@ -447,15 +447,7 @@ ShaderProgram* DbgRenderSystem::CreateShaderProgram(const GraphicsShaderProgramD
         instanceDesc.tessEvaluationShader   = GetInstanceShader(desc.tessEvaluationShader);
         instanceDesc.geometryShader         = GetInstanceShader(desc.geometryShader);
         instanceDesc.fragmentShader         = GetInstanceShader(desc.fragmentShader);
-    }
-    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc));
-}
-
-ShaderProgram* DbgRenderSystem::CreateShaderProgram(const ComputeShaderProgramDescriptor& desc)
-{
-    ComputeShaderProgramDescriptor instanceDesc;
-    {
-        instanceDesc.computeShader = GetInstanceShader(desc.computeShader);
+        instanceDesc.computeShader          = GetInstanceShader(desc.computeShader);
     }
     return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc));
 }

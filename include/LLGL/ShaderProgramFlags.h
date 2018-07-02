@@ -25,16 +25,15 @@ namespace LLGL
 
 /* ----- Structures ----- */
 
-//TODO: rename to ShaderProgramDescriptor
 /**
-\brief Descriptor structure for graphics shader programs.
-\see RenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor&)
+\brief Descriptor structure for shader programs.
+\see RenderSystem::CreateShaderProgram
 \see RenderSystem::CreateShader
 */
-struct GraphicsShaderProgramDescriptor
+struct ShaderProgramDescriptor
 {
     /**
-    \brief Vertex format list. This may also be empty, if the vertex shader has no input attributes.
+    \brief Vertex format list. This may also be empty, if the vertex shader has no input attributes or only a compute shader is specified.
     \see VertexFormat
     */
     std::vector<VertexFormat>   vertexFormats;
@@ -45,8 +44,11 @@ struct GraphicsShaderProgramDescriptor
     #endif
 
     /**
-    \brief Specifies the vertex shader. Each graphics shader program must have at least a vertex shader.
-    \remarks The shader must be created with the ShaderType::Vertex type.
+    \brief Specifies the vertex shader.
+    \remarks Each graphics shader program must have at least a vertex shader.
+    For a compute shader program, only a compute shader must be specified.
+    With OpenGL, this shader may also have a stream output.
+    \see ShaderDescriptor::streamOutput
     */
     Shader*                     vertexShader            = nullptr;
 
@@ -64,7 +66,11 @@ struct GraphicsShaderProgramDescriptor
     */
     Shader*                     tessEvaluationShader    = nullptr;
 
-    //! Specifies an optional geometry shader.
+    /**
+    \brief Specifies an optional geometry shader.
+    \remarks This shader may also have a stream output.
+    \see ShaderDescriptor::streamOutput
+    */
     Shader*                     geometryShader          = nullptr;
 
     /**
@@ -73,20 +79,12 @@ struct GraphicsShaderProgramDescriptor
     and only the stream-output functionality is used by either the vertex or geometry shader.
     */
     Shader*                     fragmentShader          = nullptr;
-};
 
-/**
-\brief Descriptor structure for compute shader programs.
-\see RenderSystem::CreateShaderProgram(const ComputeShaderProgramDescriptor&)
-\see RenderSystem::CreateShader
-*/
-struct ComputeShaderProgramDescriptor
-{
     /**
-    \brief Specifies the compute shader. By default null.
-    \remarks This must not be null when passed to the CreateShaderProgram function.
+    \brief Specifies the compute shader.
+    \remarks This shader cannot be used in conjunction with any other shaders.
     */
-    Shader* computeShader = nullptr;
+    Shader*                     computeShader           = nullptr;
 };
 
 /**

@@ -15,7 +15,7 @@ namespace LLGL
 {
 
 
-DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const GraphicsShaderProgramDescriptor& desc) :
+DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const ShaderProgramDescriptor& desc) :
     instance  { instance },
     debugger_ { debugger }
 {
@@ -28,6 +28,7 @@ DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* d
         DebugShaderAttachment(desc.tessEvaluationShader);
         DebugShaderAttachment(desc.geometryShader);
         DebugShaderAttachment(desc.fragmentShader);
+        DebugShaderAttachment(desc.computeShader);
         DebugShaderComposition();
     }
 
@@ -38,18 +39,6 @@ DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* d
             vertexLayout_.attributes.push_back(attrib);
     }
     vertexLayout_.bound = true;
-}
-
-DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const ComputeShaderProgramDescriptor& desc) :
-    instance  { instance },
-    debugger_ { debugger }
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        DebugShaderAttachment(desc.computeShader);
-        DebugShaderComposition();
-    }
 }
 
 bool DbgShaderProgram::HasErrors() const

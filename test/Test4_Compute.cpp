@@ -73,7 +73,7 @@ int main()
             std::cerr << computeShader->QueryInfoLog() << std::endl;
 
         // Create shader program
-        LLGL::ComputeShaderProgramDescriptor shaderProgramDesc;
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
             shaderProgramDesc.computeShader = computeShader;
         }

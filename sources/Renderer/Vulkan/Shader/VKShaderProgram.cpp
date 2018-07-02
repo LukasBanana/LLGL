@@ -19,20 +19,15 @@ namespace LLGL
 {
 
 
-VKShaderProgram::VKShaderProgram(const GraphicsShaderProgramDescriptor& desc)
+VKShaderProgram::VKShaderProgram(const ShaderProgramDescriptor& desc)
 {
     Attach(desc.vertexShader);
     Attach(desc.tessControlShader);
     Attach(desc.tessEvaluationShader);
     Attach(desc.geometryShader);
     Attach(desc.fragmentShader);
-    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
-    Link();
-}
-
-VKShaderProgram::VKShaderProgram(const ComputeShaderProgramDescriptor& desc)
-{
     Attach(desc.computeShader);
+    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
     Link();
 }
 

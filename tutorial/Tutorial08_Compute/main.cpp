@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
             computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "shader.hlsl", "CS", "cs_5_0" });
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
-            computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "shader.glsl" });
+            computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "compute.glsl" });
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
             computeShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Compute, "compute.spv"));
 
@@ -83,11 +83,7 @@ int main(int argc, char* argv[])
             std::cerr << log << std::endl;
 
         // Create shader program which is used as composite
-        LLGL::ComputeShaderProgramDescriptor shaderProgramDesc;
-        {
-            shaderProgramDesc.computeShader = computeShader;
-        }
-        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
+        auto shaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc({ computeShader }));
 
         // Link shader program and check for errors
         if (shaderProgram->HasErrors())
