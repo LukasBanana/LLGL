@@ -4,7 +4,7 @@
 
 - [`Shader` interface](#shader-interface)
 - [`ShaderProgram` interface](#shaderprogram-interface)
-- [`LogicOp` usage](#LogicOp-usage)
+- [`LogicOp` usage](#logicop-usage)
 - [Rasterization line width (OpenGL and Vulkan only)](#rasterization-line-width-opengl-and-vulkan-only)
 - [OpenGL profile selection](#opengl-profile-selection)
 - [Query texture descriptor](#query-texture-descriptor)
