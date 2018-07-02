@@ -207,8 +207,6 @@ Render target attachments:
 
 Render target attachments are now defined by the `RenderTargetDescriptor` structure when the render target is created. Instead of detaching all attachments (i.e. `DetachAll`), release the render target and create a new one.
 
-***Under Construction***
-
 Dynamic attachment functions have been removed such as `AttachTexture` and `DetachAll`.
 
 Before:
@@ -567,7 +565,7 @@ LLGL::BlendOp::InvDstAlpha;
 LLGL::SrcImageDescriptor;
 LLGL::CPUAccess;
 LLGL::SamplerFilter;
-LLGL::TextureAddressMode;
+LLGL::SamplerAddressMode;
 ```
 
 
@@ -629,6 +627,56 @@ LLGL::VertexAttribute myVertexPositionAttrib { "myPosition", LLGL::Format::RGB32
 LLGL::VertexAttribute myVertexColorAttrib    { "myColor",    LLGL::Format::RGBA8UNorm }; // 8-bit normalized unsigned byte format
 LLGL::VertexAttribute myVertexFlagsAttrib    { "myFlags",    LLGL::Format::R32UInt    }; // 32-bit unsigned integer format
 ```
+
+
+`TextureDescriptor` struct:
+---------------------------
+
+The descriptor structure `TextureDescriptor` has been simplified and generalized. All nested structures have been removed.
+
+Before:
+```cpp
+// Usage:
+LLGL::TextureDescriptor my2DTexDesc;
+my2DTexDesc.type             = LLGL::TextureType::Texture2DArray;
+my2DTexDesc.format           = LLGL::TextureFormat::RGBA8;
+my2DTexDesc.texture2D.width  = 512;
+my2DTexDesc.texture2D.height = 512;
+my2DTexDesc.texture2D.layers = 4;
+LLGL::Texture* my2DTex = myRenderer->CreateTexture(my2DTexDesc);
+
+LLGL::TextureDescriptor my3DTexDesc;
+my3DTexDesc.type             = LLGL::TextureType::Texture3D;
+my3DTexDesc.format           = LLGL::TextureFormat::R32Float;
+my3DTexDesc.texture3D.width  = 16;
+my3DTexDesc.texture3D.height = 16;
+my3DTexDesc.texture3D.depth  = 16;
+LLGL::Texture* my3DTex = myRenderer->CreateTexture(my3DTexDesc);
+```
+
+After:
+```cpp
+// Usage:
+LLGL::TextureDescriptor my2DTexDesc;
+my2DTexDesc.type   = LLGL::TextureType::Texture2DArray;
+my2DTexDesc.format = LLGL::Format::RGBA8UNorm;
+my2DTexDesc.width  = 512;
+my2DTexDesc.height = 512;
+my2DTexDesc.layers = 4;
+LLGL::Texture* my2DTex = myRenderer->CreateTexture(my2DTexDesc);
+
+LLGL::TextureDescriptor my3DTexDesc;
+my3DTexDesc.type   = LLGL::TextureType::Texture3D;
+my3DTexDesc.format = LLGL::Format::R32Float;
+my3DTexDesc.width  = 16;
+my3DTexDesc.height = 16;
+my3DTexDesc.depth  = 16;
+LLGL::Texture* my3DTex = myRenderer->CreateTexture(my3DTexDesc);
+```
+
+
+
+
 
 
 
