@@ -25,6 +25,7 @@ namespace LLGL
 
 /* ----- Structures ----- */
 
+//TODO: rename to ShaderProgramDescriptor
 /**
 \brief Descriptor structure for graphics shader programs.
 \see RenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor&)
@@ -33,10 +34,15 @@ namespace LLGL
 struct GraphicsShaderProgramDescriptor
 {
     /**
-    \brief Vertex format list. This must not be empty.
+    \brief Vertex format list. This may also be empty, if the vertex shader has no input attributes.
     \see VertexFormat
     */
     std::vector<VertexFormat>   vertexFormats;
+
+    //TODO: add FragmentFormat structure to provide CPU side fragment binding for OpenGL
+    #if 0
+    FragmentFormat              fragmentFormat;
+    #endif
 
     /**
     \brief Specifies the vertex shader. Each graphics shader program must have at least a vertex shader.

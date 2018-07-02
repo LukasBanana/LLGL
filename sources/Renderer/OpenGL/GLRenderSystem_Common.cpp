@@ -165,9 +165,16 @@ Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<GLShader>(desc));
 }
 
-ShaderProgram* GLRenderSystem::CreateShaderProgram()
+ShaderProgram* GLRenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>());
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>(desc));
+}
+
+ShaderProgram* GLRenderSystem::CreateShaderProgram(const ComputeShaderProgramDescriptor& desc)
+{
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>(desc));
 }
 
 void GLRenderSystem::Release(Shader& shader)

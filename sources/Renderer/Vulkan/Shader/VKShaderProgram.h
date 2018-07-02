@@ -26,19 +26,15 @@ class VKShaderProgram : public ShaderProgram
 
     public:
 
-        VKShaderProgram();
-        ~VKShaderProgram();
+        VKShaderProgram(const GraphicsShaderProgramDescriptor& desc);
+        VKShaderProgram(const ComputeShaderProgramDescriptor& desc);
 
-        void AttachShader(Shader& shader) override;
-        void DetachAll() override;
-
-        bool LinkShaders() override;
+        bool HasErrors() const override;
 
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
 
-        void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
         void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
 
@@ -56,6 +52,10 @@ class VKShaderProgram : public ShaderProgram
         bool HasFragmentShader() const;
 
     private:
+
+        void Attach(Shader* shader);
+        void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
+        void Link();
 
         std::vector<VKShader*>                          shaders_;
 

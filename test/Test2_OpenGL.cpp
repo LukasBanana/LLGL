@@ -175,10 +175,10 @@ int main()
             vertShaderDesc.source       = vertShaderSource;
             vertShaderDesc.sourceType   = LLGL::ShaderSourceType::CodeString;
         }
-        auto& vertShader = *renderer->CreateShader(vertShaderDesc);
+        auto vertShader = renderer->CreateShader(vertShaderDesc);
 
-        if (vertShader.HasErrors())
-            std::cerr << vertShader.QueryInfoLog() << std::endl;
+        if (vertShader->HasErrors())
+            std::cerr << vertShader->QueryInfoLog() << std::endl;
 
         // Create fragment shader
         auto fragShaderSource =
@@ -199,20 +199,21 @@ int main()
             fragShaderDesc.source       = fragShaderSource;
             fragShaderDesc.sourceType   = LLGL::ShaderSourceType::CodeString;
         }
-        auto& fragShader = *renderer->CreateShader(fragShaderDesc);
+        auto fragShader = renderer->CreateShader(fragShaderDesc);
 
-        if (fragShader.HasErrors())
-            std::cerr << fragShader.QueryInfoLog() << std::endl;
+        if (fragShader->HasErrors())
+            std::cerr << fragShader->QueryInfoLog() << std::endl;
 
         // Create shader program
-        auto& shaderProgram = *renderer->CreateShaderProgram();
+        LLGL::GraphicsShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.vertexFormats     = { vertexFormat };
+            shaderProgramDesc.vertexShader      = vertShader;
+            shaderProgramDesc.fragmentShader    = fragShader;
+        }
+        auto& shaderProgram = *renderer->CreateShaderProgram(shaderProgramDesc);
 
-        shaderProgram.AttachShader(vertShader);
-        shaderProgram.AttachShader(fragShader);
-
-        shaderProgram.BuildInputLayout(1, &vertexFormat);
-
-        if (!shaderProgram.LinkShaders())
+        if (shaderProgram.HasErrors())
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;
 
         auto reflectionDesc = shaderProgram.QueryReflectionDesc();

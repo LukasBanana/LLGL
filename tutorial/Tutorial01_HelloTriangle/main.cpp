@@ -127,17 +127,16 @@ int main(int argc, char* argv[])
         }
 
         // Create shader program which is used as composite
-        LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
-
-        // Attach vertex- and fragment shader to the shader program
-        shaderProgram->AttachShader(*vertShader);
-        shaderProgram->AttachShader(*fragShader);
-
-        // Bind vertex attribute layout (this is not required for a compute shader program)
-        shaderProgram->BuildInputLayout(1, &vertexFormat);
+        LLGL::GraphicsShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.vertexFormats     = { vertexFormat };
+            shaderProgramDesc.vertexShader      = vertShader;
+            shaderProgramDesc.fragmentShader    = fragShader;
+        }
+        LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
         // Link shader program and check for errors
-        if (!shaderProgram->LinkShaders())
+        if (shaderProgram->HasErrors())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
 
         // Create graphics pipeline

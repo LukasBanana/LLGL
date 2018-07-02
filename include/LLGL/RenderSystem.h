@@ -283,13 +283,17 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         It is just a container of multiple texture objects, which can be used to bind several hardware textures at once, to improve performance.
         \throws std::invalid_argument If 'numTextures' is 0, if 'textureArray' is null,
         or if any of the pointers in the array are null.
+        \deprecated TextureArray interface will be removed soon, use ResourceHeap interface instead.
         */
         virtual TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) = 0;
 
         //! Releases the specified texture object. After this call, the specified object must no longer be used.
         virtual void Release(Texture& texture) = 0;
 
-        //! Releases the specified texture array object. After this call, the specified object must no longer be used.
+        /**
+        \brief Releases the specified texture array object. After this call, the specified object must no longer be used.
+        \deprecated TextureArray interface will be removed soon, use ResourceHeap interface instead.
+        */
         virtual void Release(TextureArray& textureArray) = 0;
 
         /**
@@ -376,13 +380,17 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \param[in] samplerArray Pointer to an array of Sampler object pointers. This must not be null.
         \throws std::invalid_argument If 'numSamplers' is 0, if 'samplerArray' is null,
         or if any of the pointers in the array are null.
+        \deprecated SamplerArray interface will be removed soon, use ResourceHeap interface instead.
         */
         virtual SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) = 0;
 
         //! Releases the specified Sampler object. After this call, the specified object must no longer be used.
         virtual void Release(Sampler& sampler) = 0;
 
-        //! Releases the specified sampler array object. After this call, the specified object must no longer be used.
+        /**
+        \brief Releases the specified sampler array object. After this call, the specified object must no longer be used.
+        \deprecated SamplerArray interface will be removed soon, use ResourceHeap interface instead.
+        */
         virtual void Release(SamplerArray& samplerArray) = 0;
 
         /* ----- Resource Heaps ----- */
@@ -424,11 +432,20 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         virtual Shader* CreateShader(const ShaderDescriptor& desc) = 0;
 
         /**
-        \brief Creates a new and empty shader program.
-        \remarks At least one shader must be attached to a shader program to be used for a graphics or compute pipeline.
+        \brief Creates a new shader program for a graphics pipeline.
         \see ShaderProgram
+        \see GraphicsShaderProgramDescriptor
+        \see CreateShaderProgram(const ComputeShaderProgramDescriptor&)
         */
-        virtual ShaderProgram* CreateShaderProgram() = 0;
+        virtual ShaderProgram* CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc) = 0;
+
+        /**
+        \brief Creates a new shader program for a compute pipeline.
+        \see ShaderProgram
+        \see ComputeShaderProgramDescriptor
+        \see CreateShaderProgram(const GraphicsShaderProgramDescriptor&)
+        */
+        virtual ShaderProgram* CreateShaderProgram(const ComputeShaderProgramDescriptor& desc) = 0;
 
         //! Releases the specified Shader object. After this call, the specified object must no longer be used.
         virtual void Release(Shader& shader) = 0;
@@ -522,6 +539,12 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         //! Validates the specified shader descriptor.
         void AssertCreateShader(const ShaderDescriptor& desc);
+
+        //! Validates the specified graphics shader program descriptor.
+        void AssertCreateShaderProgram(const GraphicsShaderProgramDescriptor& desc);
+
+        //! Validates the specified compute shader program descriptor.
+        void AssertCreateShaderProgram(const ComputeShaderProgramDescriptor& desc);
 
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);

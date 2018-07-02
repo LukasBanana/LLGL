@@ -220,9 +220,16 @@ Shader* D3D11RenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<D3D11Shader>(device_.Get(), desc));
 }
 
-ShaderProgram* D3D11RenderSystem::CreateShaderProgram()
+ShaderProgram* D3D11RenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<D3D11ShaderProgram>(device_.Get()));
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<D3D11ShaderProgram>(desc, device_.Get()));
+}
+
+ShaderProgram* D3D11RenderSystem::CreateShaderProgram(const ComputeShaderProgramDescriptor& desc)
+{
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<D3D11ShaderProgram>(desc));
 }
 
 void D3D11RenderSystem::Release(Shader& shader)

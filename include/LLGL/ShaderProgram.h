@@ -29,30 +29,12 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
     public:
 
         /**
-        \brief Attaches the specified shader to this shader program.
-        \param[in] shader Specifies the shader which is to be attached to this shader program.
-        Each shader type can only be added once for each shader program.
-        \remarks This must be called, before "LinkShaders" is called.
-        \throws std::invalid_argument If a shader is attached to this shader program, which is not allowed in the current state.
-        This will happend if a different shader of the same type has already been attached to this shader program for instance.
-        \see Shader::GetType
-        */
-        virtual void AttachShader(Shader& shader) = 0;
-
-        /**
-        \brief Detaches all shaders from this shader program.
-        \remarks After this call, the link status will be invalid, and the shader program must be linked again.
-        \see LinkShaders
-        */
-        virtual void DetachAll() = 0;
-
-        /**
-        \brief Links all attached shaders to the final shader program.
-        \return True on success, otherwise "QueryInfoLog" can be used to query the reason for failure.
-        \remarks Each attached shader must be compiled first!
+        \brief Returns true if this shader program has any errors. Otherwise, the linking was successful.
+        \remarks If the linking failed, this shader program can not be used for a graphics or compute pipeline.
+        However, the details about the failure can be queried by the QueryInfoLog function.
         \see QueryInfoLog
         */
-        virtual bool LinkShaders() = 0;
+        virtual bool HasErrors() const = 0;
 
         //! Returns the information log after the shader linkage.
         virtual std::string QueryInfoLog() = 0;
@@ -74,25 +56,6 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \throws std::runtime_error If shader reflection failed.
         */
         virtual ShaderReflectionDescriptor QueryReflectionDesc() const = 0;
-
-        /**
-        \brief Builds the input layout with the specified vertex format for this shader program.
-        \param[in] numVertexFormats Specifies the number of entries in the vertex format array. If this is zero, the function call has no effect.
-        \param[in] vertexFormats Specifies the input vertex formats. This must be a pointer to an array of vertex formats with at least as much entries as specified by 'numVertexFormats'.
-        If this is null, the function call has no effect.
-        \remarks Can only be used for a shader program which has a successfully compiled vertex shader attached.
-        If this is called after the shader program has been linked, the shader program might be re-linked again.
-        \see AttachShader(VertexShader&)
-        \see Shader::Compile
-        \see LinkShaders
-        \throws std::invalid_argument If the name of an vertex attribute is invalid or the maximal number of available vertex attributes is exceeded.
-        */
-        virtual void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) = 0;
-
-        //TODO: add FragmentFormat structure to provide CPU side fragment binding for OpenGL
-        #if 0
-        virtual void BuildOutputLayout(const FragmentFormat& fragmentFormat) = 0;
-        #endif
 
         /**
         \brief Binds the specified constant buffer to this shader.
@@ -156,7 +119,7 @@ class LLGL_EXPORT ShaderProgram : public RenderSystemChild
         \remarks For example, a composition of a compute shader and a fragment shader is invalid,
         but a composition of a vertex shader and a fragment shader is valid.
         */
-        /*static*/ bool ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders) const;
+        static bool ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders);
 
         /**
         \brief Sorts the resource views of the specified shader reflection descriptor as described in the QueryReflectionDesc function.

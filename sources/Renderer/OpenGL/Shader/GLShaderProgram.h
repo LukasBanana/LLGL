@@ -23,19 +23,16 @@ class GLShaderProgram : public ShaderProgram
 
     public:
 
-        GLShaderProgram();
+        GLShaderProgram(const GraphicsShaderProgramDescriptor& desc);
+        GLShaderProgram(const ComputeShaderProgramDescriptor& desc);
         ~GLShaderProgram();
 
-        void AttachShader(Shader& shader) override;
-        void DetachAll() override;
-
-        bool LinkShaders() override;
+        bool HasErrors() const override;
 
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
 
-        void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
         void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
 
@@ -56,12 +53,16 @@ class GLShaderProgram : public ShaderProgram
 
     private:
 
+        GLShaderProgram();
+
+        void Attach(Shader* shader);
+        void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
+        void Link();
+
         bool QueryActiveAttribs(
             GLenum attribCountType, GLenum attribNameLengthType,
             GLint& numAttribs, GLint& maxNameLength, std::vector<char>& nameBuffer
         ) const;
-
-        bool LinkShaderProgram();
 
         void BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes);
         #ifndef __APPLE__

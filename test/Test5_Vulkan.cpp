@@ -93,17 +93,12 @@ int main()
         // Create command buffer
         auto commands = renderer->CreateCommandBuffer();
 
-        // Load shaders
-        auto shaderVert = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex, "Triangle.vert.spv"));
-        auto shaderFrag = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Triangle.frag.spv"));
+        // Create vertex format
+        LLGL::VertexFormat vertexFormat;
 
-        // Create shader program
-        auto shaderProgram = renderer->CreateShaderProgram();
-
-        shaderProgram->AttachShader(*shaderVert);
-        shaderProgram->AttachShader(*shaderFrag);
-
-        shaderProgram->LinkShaders();
+        vertexFormat.AppendAttribute({ "coord",    LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB32Float });
 
         // Create vertex data
         auto PointOnCircle = [](float angle, float radius)
@@ -127,17 +122,20 @@ int main()
             { {  1.0f, -1.0f }, { uScale, 0.0f   }, { 1.0f, 1.0f, 1.0f } },
         };
 
-        // Create vertex format
-        LLGL::VertexFormat vertexFormat;
-
-        vertexFormat.AppendAttribute({ "coord",    LLGL::Format::RG32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
-        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB32Float });
-
-        shaderProgram->BuildInputLayout(1, &vertexFormat);
-
         // Create vertex buffer
         auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
+
+        // Create shader program
+        LLGL::GraphicsShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.vertexFormats     = { vertexFormat };
+            shaderProgramDesc.vertexShader      = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex, "Triangle.vert.spv"));
+            shaderProgramDesc.fragmentShader    = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Triangle.frag.spv"));
+        }
+        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
+
+        if (shaderProgram->HasErrors())
+            std::cerr << shaderProgram->QueryInfoLog() << std::endl;
 
         // Create constant buffers
         struct Matrices

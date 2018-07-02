@@ -83,13 +83,14 @@ int main(int argc, char* argv[])
             std::cerr << log << std::endl;
 
         // Create shader program which is used as composite
-        auto shaderProgram = renderer->CreateShaderProgram();
-
-        // Attach compute shader to the shader program
-        shaderProgram->AttachShader(*computeShader);
+        LLGL::ComputeShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.computeShader = computeShader;
+        }
+        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
         // Link shader program and check for errors
-        if (!shaderProgram->LinkShaders())
+        if (shaderProgram->HasErrors())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
 
         // Create pipeline layout for Vulkan and Direct3D 12 render systems

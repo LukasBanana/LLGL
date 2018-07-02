@@ -15,48 +15,46 @@ namespace LLGL
 {
 
 
-DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger) :
+DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const GraphicsShaderProgramDescriptor& desc) :
     instance  { instance },
     debugger_ { debugger }
 {
-}
-
-void DbgShaderProgram::AttachShader(Shader& shader)
-{
-    auto& shaderDbg = LLGL_CAST(DbgShader&, shader);
-
+    /* Debug all attachments and shader composition */
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
-        DebugShaderAttachment(shaderDbg);
-    }
-
-    instance.AttachShader(shaderDbg.instance);
-}
-
-void DbgShaderProgram::DetachAll()
-{
-    instance.DetachAll();
-
-    /* Reset debug information */
-    shaderAttachmentMask_   = 0;
-    linked_                 = false;
-    shaderTypes_.clear();
-    vertexLayout_.attributes.clear();
-    vertexLayout_.bound = false;
-}
-
-bool DbgShaderProgram::LinkShaders()
-{
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
+        DebugShaderAttachment(desc.vertexShader);
+        DebugShaderAttachment(desc.tessControlShader);
+        DebugShaderAttachment(desc.tessEvaluationShader);
+        DebugShaderAttachment(desc.geometryShader);
+        DebugShaderAttachment(desc.fragmentShader);
         DebugShaderComposition();
     }
 
-    linked_ = instance.LinkShaders();
+    /* Store all attributes of vertex layout */
+    for (const auto& format : desc.vertexFormats)
+    {
+        for (const auto& attrib : format.attributes)
+            vertexLayout_.attributes.push_back(attrib);
+    }
+    vertexLayout_.bound = true;
+}
 
-    return linked_;
+DbgShaderProgram::DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const ComputeShaderProgramDescriptor& desc) :
+    instance  { instance },
+    debugger_ { debugger }
+{
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        DebugShaderAttachment(desc.computeShader);
+        DebugShaderComposition();
+    }
+}
+
+bool DbgShaderProgram::HasErrors() const
+{
+    return instance.HasErrors();
 }
 
 std::string DbgShaderProgram::QueryInfoLog()
@@ -67,19 +65,6 @@ std::string DbgShaderProgram::QueryInfoLog()
 ShaderReflectionDescriptor DbgShaderProgram::QueryReflectionDesc() const
 {
     return instance.QueryReflectionDesc();
-}
-
-void DbgShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
-{
-    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
-    {
-        for (const auto& attrib : vertexFormats[i].attributes)
-            vertexLayout_.attributes.push_back(attrib);
-    }
-
-    vertexLayout_.bound = true;
-
-    instance.BuildInputLayout(numVertexFormats, vertexFormats);
 }
 
 void DbgShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
@@ -115,24 +100,29 @@ void DbgShaderProgram::UnlockShaderUniform()
 #define LLGL_GS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Geometry)
 #define LLGL_CS_MASK                LLGL_SHADERTYPE_MASK(ShaderType::Compute)
 
-void DbgShaderProgram::DebugShaderAttachment(DbgShader& shaderDbg)
+void DbgShaderProgram::DebugShaderAttachment(Shader* shader)
 {
-    /* Check compilation state */
-    if (!shaderDbg.IsCompiled())
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to attach uncompiled shader to shader program");
-
-    /* Check if shader type already has been attached */
-    for (auto other : shaderTypes_)
+    if (shader != nullptr)
     {
-        if (other == shaderDbg.GetType())
-            LLGL_DBG_ERROR(ErrorType::InvalidArgument, "duplicate shader type attachments in shader program");
+        auto& shaderDbg = LLGL_CAST(DbgShader&, *shader);
+
+        /* Check compilation state */
+        if (!shaderDbg.IsCompiled())
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "attempt to attach uncompiled shader to shader program");
+
+        /* Check if shader type already has been attached */
+        for (auto other : shaderTypes_)
+        {
+            if (other == shaderDbg.GetType())
+                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "duplicate shader type attachments in shader program");
+        }
+
+        /* Add shader type to list */
+        shaderTypes_.push_back(shaderDbg.GetType());
+
+        /* Update shader attachment mask */
+        shaderAttachmentMask_ |= LLGL_SHADERTYPE_MASK(shaderDbg.GetType());
     }
-
-    /* Add shader type to list */
-    shaderTypes_.push_back(shaderDbg.GetType());
-
-    /* Update shader attachment mask */
-    shaderAttachmentMask_ |= LLGL_SHADERTYPE_MASK(shaderDbg.GetType());
 }
 
 void DbgShaderProgram::DebugShaderComposition()

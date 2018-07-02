@@ -11,6 +11,7 @@
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
+#include <LLGL/Shader.h>
 #include <cstring>
 
 
@@ -225,6 +226,90 @@ LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const cha
         }
     }
 
+    return desc;
+}
+
+/* ----- GraphicsShaderProgramDescriptor utility functions ----- */
+
+static void AssignShaderToDesc(GraphicsShaderProgramDescriptor& desc, Shader* shader)
+{
+    if (shader != nullptr)
+    {
+        /* Assign shader types their respective struct members */
+        switch (shader->GetType())
+        {
+            case ShaderType::Vertex:
+                desc.vertexShader = shader;
+                break;
+            case ShaderType::TessControl:
+                desc.tessControlShader = shader;
+                break;
+            case ShaderType::TessEvaluation:
+                desc.tessEvaluationShader = shader;
+                break;
+            case ShaderType::Geometry:
+                desc.geometryShader = shader;
+                break;
+            case ShaderType::Fragment:
+                desc.fragmentShader = shader;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+LLGL_EXPORT GraphicsShaderProgramDescriptor GraphicsShaderProgramDesc(const std::initializer_list<Shader*>& shaders, const std::initializer_list<VertexFormat>& vertexFormats)
+{
+    GraphicsShaderProgramDescriptor desc;
+    {
+        desc.vertexFormats = vertexFormats;
+        for (auto shader : shaders)
+            AssignShaderToDesc(desc, shader);
+    }
+    return desc;
+}
+
+LLGL_EXPORT GraphicsShaderProgramDescriptor GraphicsShaderProgramDesc(const std::vector<Shader*>& shaders, const std::vector<VertexFormat>& vertexFormats)
+{
+    GraphicsShaderProgramDescriptor desc;
+    {
+        desc.vertexFormats = vertexFormats;
+        for (auto shader : shaders)
+            AssignShaderToDesc(desc, shader);
+    }
+    return desc;
+}
+
+/* ----- ComputeShaderProgramDescriptor utility functions ----- */
+
+LLGL_EXPORT ComputeShaderProgramDescriptor ComputeShaderProgramDesc(Shader* computeShader)
+{
+    ComputeShaderProgramDescriptor desc;
+    {
+        desc.computeShader = computeShader;
+    }
+    return desc;
+}
+
+/* ----- PipelineLayoutDescriptor utility functions ----- */
+
+static void Convert(BindingDescriptor& dst, const ShaderReflectionDescriptor::ResourceView& src)
+{
+    dst.type        = src.type;
+    dst.stageFlags  = src.stageFlags;
+    dst.slot        = src.slot;
+    dst.arraySize   = src.arraySize;
+}
+
+LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDescriptor& reflectionDesc)
+{
+    PipelineLayoutDescriptor desc;
+    {
+        desc.bindings.resize(reflectionDesc.resourceViews.size());
+        for (std::size_t i = 0; i < desc.bindings.size(); ++i)
+            Convert(desc.bindings[i], reflectionDesc.resourceViews[i]);
+    }
     return desc;
 }
 

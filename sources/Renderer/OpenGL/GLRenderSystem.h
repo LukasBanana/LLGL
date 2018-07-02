@@ -123,7 +123,9 @@ class GLRenderSystem : public RenderSystem
         /* ----- Shader ----- */
 
         Shader* CreateShader(const ShaderDescriptor& desc) override;
-        ShaderProgram* CreateShaderProgram() override;
+
+        ShaderProgram* CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc) override;
+        ShaderProgram* CreateShaderProgram(const ComputeShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;

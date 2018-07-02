@@ -73,10 +73,13 @@ int main()
             std::cerr << computeShader->QueryInfoLog() << std::endl;
 
         // Create shader program
-        auto shaderProgram = renderer->CreateShaderProgram();
+        LLGL::ComputeShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.computeShader = computeShader;
+        }
+        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
-        shaderProgram->AttachShader(*computeShader);
-        if (!shaderProgram->LinkShaders())
+        if (shaderProgram->HasErrors())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
 
         // Create timer query

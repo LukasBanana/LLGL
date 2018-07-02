@@ -616,9 +616,16 @@ Shader* VKRenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<VKShader>(device_, desc));
 }
 
-ShaderProgram* VKRenderSystem::CreateShaderProgram()
+ShaderProgram* VKRenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<VKShaderProgram>());
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<VKShaderProgram>(desc));
+}
+
+ShaderProgram* VKRenderSystem::CreateShaderProgram(const ComputeShaderProgramDescriptor& desc)
+{
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<VKShaderProgram>(desc));
 }
 
 void VKRenderSystem::Release(Shader& shader)

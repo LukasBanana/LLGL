@@ -306,9 +306,6 @@ LLGL::ShaderProgram* Tutorial::LoadShaderProgram(
     const std::vector<LLGL::VertexFormat>&          vertexFormats,
     const LLGL::StreamOutputFormat&                 streamOutputFormat)
 {
-    // Create shader program
-    LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
-
     ShaderProgramRecall recall;
 
     recall.shaderDescs = shaderDescs;
@@ -325,19 +322,15 @@ LLGL::ShaderProgram* Tutorial::LoadShaderProgram(
         if (!log.empty())
             std::cerr << log << std::endl;
 
-        // Attach vertex- and fragment shader to the shader program
-        shaderProgram->AttachShader(*shader);
-
         // Store shader in recall
         recall.shaders.push_back(shader);
     }
 
-    // Bind vertex attribute layout (this is not required for a compute shader program)
-    if (!vertexFormats.empty())
-        shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(vertexFormats.size()), vertexFormats.data());
+    // Create shader program
+    auto shaderProgram = renderer->CreateShaderProgram(LLGL::GraphicsShaderProgramDesc(recall.shaders, vertexFormats));
 
     // Link shader program and check for errors
-    if (!shaderProgram->LinkShaders())
+    if (shaderProgram->HasErrors())
         throw std::runtime_error(shaderProgram->QueryInfoLog());
 
     // Store information in call
@@ -348,8 +341,11 @@ LLGL::ShaderProgram* Tutorial::LoadShaderProgram(
     return shaderProgram;
 }
 
-bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram)
+bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
 {
+    if (!shaderProgram)
+        return false;
+
     std::cout << "reload shader program" << std::endl;
 
     // Find shader program in the recall map
@@ -359,9 +355,6 @@ bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram)
 
     auto& recall = it->second;
     std::vector<LLGL::Shader*> shaders;
-
-    // Detach previous shaders
-    shaderProgram->DetachAll();
 
     try
     {
@@ -381,49 +374,43 @@ bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram)
             if (!log.empty())
                 std::cerr << log << std::endl;
 
-            // Attach vertex- and fragment shader to the shader program
-            shaderProgram->AttachShader(*shader);
-
             // Store new shader
             shaders.push_back(shader);
         }
 
-        // Bind vertex attribute layout (this is not required for a compute shader program)
-        if (!recall.vertexFormats.empty())
-            shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(recall.vertexFormats.size()), recall.vertexFormats.data());
+        // Create new shader program
+        auto newShaderProgram = renderer->CreateShaderProgram(LLGL::GraphicsShaderProgramDesc(shaders, recall.vertexFormats));
 
         // Link shader program and check for errors
-        if (!shaderProgram->LinkShaders())
-            throw std::runtime_error(shaderProgram->QueryInfoLog());
+        if (newShaderProgram->HasErrors())
+        {
+            // Print errors and release shader program
+            std::cerr << newShaderProgram->QueryInfoLog() << std::endl;
+            renderer->Release(*newShaderProgram);
+        }
+        else
+        {
+            // Delete all previous shaders
+            for (auto shader : recall.shaders)
+                renderer->Release(*shader);
+
+            // Store new shaders in recall
+            recall.shaders = std::move(shaders);
+
+            // Delete old and use new shader program
+            renderer->Release(*shaderProgram);
+            shaderProgram = newShaderProgram;
+
+            return true;
+        }
     }
     catch (const std::exception& err)
     {
         // Print error message
         std::cerr << err.what() << std::endl;
-
-        // Attach all previous shaders again
-        for (auto shader : recall.shaders)
-            shaderProgram->AttachShader(*shader);
-
-        // Bind vertex attribute layout (this is not required for a compute shader program)
-        if (!recall.vertexFormats.empty())
-            shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(recall.vertexFormats.size()), recall.vertexFormats.data());
-
-        // Link shader program and check for errors
-        if (!shaderProgram->LinkShaders())
-            throw std::runtime_error(shaderProgram->QueryInfoLog());
-
-        return false;
     }
 
-    // Delete all previous shaders
-    for (auto shader : recall.shaders)
-        renderer->Release(*shader);
-
-    // Store new shaders in recall
-    recall.shaders = std::move(shaders);
-
-    return true;
+    return false;
 }
 
 LLGL::ShaderProgram* Tutorial::LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats)

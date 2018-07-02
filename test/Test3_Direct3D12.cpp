@@ -129,14 +129,15 @@ int main()
         #endif
 
         // Create shader program
-        auto shaderProgram = renderer->CreateShaderProgram();
+        LLGL::GraphicsShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.vertexFormats     = { vertexFormat };
+            shaderProgramDesc.vertexShader      = vertShader;
+            shaderProgramDesc.fragmentShader    = fragShader;
+        }
+        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
-        shaderProgram->AttachShader(*vertShader);
-        shaderProgram->AttachShader(*fragShader);
-
-        shaderProgram->BuildInputLayout(1, &vertexFormat);
-
-        if (!shaderProgram->LinkShaders())
+        if (shaderProgram->HasErrors())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else

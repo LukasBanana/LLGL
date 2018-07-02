@@ -427,9 +427,37 @@ Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& desc)
     return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc.type, debugger_));
 }
 
-ShaderProgram* DbgRenderSystem::CreateShaderProgram()
+static Shader* GetInstanceShader(Shader* shader)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(), debugger_));
+    if (shader)
+    {
+        auto shaderDbg = LLGL_CAST(DbgShader*, shader);
+        return &(shaderDbg->instance);
+    }
+    return nullptr;
+}
+
+ShaderProgram* DbgRenderSystem::CreateShaderProgram(const GraphicsShaderProgramDescriptor& desc)
+{
+    GraphicsShaderProgramDescriptor instanceDesc;
+    {
+        instanceDesc.vertexFormats          = desc.vertexFormats;
+        instanceDesc.vertexShader           = GetInstanceShader(desc.vertexShader);
+        instanceDesc.tessControlShader      = GetInstanceShader(desc.tessControlShader);
+        instanceDesc.tessEvaluationShader   = GetInstanceShader(desc.tessEvaluationShader);
+        instanceDesc.geometryShader         = GetInstanceShader(desc.geometryShader);
+        instanceDesc.fragmentShader         = GetInstanceShader(desc.fragmentShader);
+    }
+    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc));
+}
+
+ShaderProgram* DbgRenderSystem::CreateShaderProgram(const ComputeShaderProgramDescriptor& desc)
+{
+    ComputeShaderProgramDescriptor instanceDesc;
+    {
+        instanceDesc.computeShader = GetInstanceShader(desc.computeShader);
+    }
+    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc));
 }
 
 void DbgRenderSystem::Release(Shader& shader)

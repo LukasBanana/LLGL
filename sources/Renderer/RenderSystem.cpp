@@ -303,6 +303,52 @@ void RenderSystem::AssertCreateShader(const ShaderDescriptor& desc)
         throw std::invalid_argument("cannot create shader from binary buffer with <sourceSize> being zero");
 }
 
+static void AssertShaderType(Shader* shader, const char* shaderName, const ShaderType type, const char* typeName)
+{
+    if (shader != nullptr)
+    {
+        if (shader->GetType() != type)
+        {
+            throw std::invalid_argument(
+                "cannot create shader program with '" + std::string(shaderName) +
+                "' not being of type <LLGL::ShaderType::" + std::string(typeName) + ">"
+            );
+        }
+    }
+}
+
+void RenderSystem::AssertCreateShaderProgram(const GraphicsShaderProgramDescriptor& desc)
+{
+    AssertShaderType(desc.vertexShader,         "vertexShader",         ShaderType::Vertex,         "Vertex"        );
+    AssertShaderType(desc.tessControlShader,    "tessControlShader",    ShaderType::TessControl,    "TessControl"   );
+    AssertShaderType(desc.tessEvaluationShader, "tessEvaluationShader", ShaderType::TessEvaluation, "TessEvaluation");
+    AssertShaderType(desc.geometryShader,       "geometryShader",       ShaderType::Geometry,       "Geometry"      );
+    AssertShaderType(desc.fragmentShader,       "fragmentShader",       ShaderType::Fragment,       "Fragment"      );
+
+    if (desc.vertexShader == nullptr)
+        throw std::invalid_argument("cannot create shader program without vertex shader");
+
+    if ( ( desc.tessControlShader != nullptr && desc.tessEvaluationShader == nullptr ) ||
+         ( desc.tessControlShader == nullptr && desc.tessEvaluationShader != nullptr ) )
+    {
+        throw std::invalid_argument(
+            "cannot create shader program with 'tessControlShader' and 'tessEvaluationShader' being partially specified"
+        );
+    }
+}
+
+void RenderSystem::AssertCreateShaderProgram(const ComputeShaderProgramDescriptor& desc)
+{
+    if (auto shader = desc.computeShader)
+    {
+        AssertShaderType(shader, "computeShader", ShaderType::Compute, "Compute");
+        if (shader->HasErrors())
+            throw std::invalid_argument("cannot create shader program with 'computeShader' having errors");
+    }
+    else
+        throw std::invalid_argument("cannot create shader program without compute shader");
+}
+
 void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info)
 {
     if (dataSize < requiredDataSize)

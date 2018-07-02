@@ -162,7 +162,7 @@ protected:
     );
 
     // Reloads the specified shader program from the previously specified shader source files.
-    bool ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram);
+    bool ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram);
 
     // Load standard shader program (with vertex- and fragment shaders).
     LLGL::ShaderProgram* LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats);

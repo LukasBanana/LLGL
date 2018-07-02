@@ -28,7 +28,7 @@ class LLGL_EXPORT Shader : public RenderSystemChild
     public:
 
         /**
-        \brief Returns true if this shader has errors. Otherwise, the compilation was successful.
+        \brief Returns true if this shader has any errors. Otherwise, the compilation was successful.
         \remarks If the compilation failed, this shader can not be used for a graphics or compute pipeline.
         However, the details about the failure can be queried by the QueryInfoLog function.
         \see QueryInfoLog
