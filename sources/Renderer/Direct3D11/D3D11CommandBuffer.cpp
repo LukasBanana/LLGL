@@ -29,9 +29,7 @@
 #include "Buffer/D3D11StreamOutputBufferArray.h"
 
 #include "Texture/D3D11Texture.h"
-#include "Texture/D3D11TextureArray.h"
 #include "Texture/D3D11Sampler.h"
-#include "Texture/D3D11SamplerArray.h"
 #include "Texture/D3D11RenderTarget.h"
 
 
@@ -207,18 +205,6 @@ void D3D11CommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, l
     SetConstantBuffersOnStages(slot, 1, &resource, stageFlags);
 }
 
-void D3D11CommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
-{
-    /* Set constant buffer resource to all shader stages */
-    auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
-    SetConstantBuffersOnStages(
-        startSlot,
-        static_cast<UINT>(bufferArrayD3D.GetBuffers().size()),
-        bufferArrayD3D.GetBuffers().data(),
-        stageFlags
-    );
-}
-
 /* ----- Storage Buffers ------ */
 
 void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
@@ -237,33 +223,6 @@ void D3D11CommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, lo
         /* Set SRVs to specified shader stages */
         ID3D11ShaderResourceView* srvList[] = { storageBufferD3D.GetSRV() };
         SetShaderResourcesOnStages(slot, 1, srvList, stageFlags);
-    }
-}
-
-void D3D11CommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
-{
-    auto& stroageBufferArrayD3D = LLGL_CAST(D3D11StorageBufferArray&, bufferArray);
-
-    if (stroageBufferArrayD3D.HasUAV() && !SRV_STAGE(stageFlags))
-    {
-        /* Set UAVs to specified shader stages */
-        SetUnorderedAccessViewsOnStages(
-            startSlot,
-            static_cast<UINT>(stroageBufferArrayD3D.GetUnorderedViews().size()),
-            stroageBufferArrayD3D.GetUnorderedViews().data(),
-            stroageBufferArrayD3D.GetInitialCounts().data(),
-            stageFlags
-        );
-    }
-    else
-    {
-        /* Set SRVs to specified shader stages */
-        SetShaderResourcesOnStages(
-            startSlot,
-            static_cast<UINT>(stroageBufferArrayD3D.GetResourceViews().size()),
-            stroageBufferArrayD3D.GetResourceViews().data(),
-            stageFlags
-        );
     }
 }
 
@@ -311,18 +270,6 @@ void D3D11CommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long s
     SetShaderResourcesOnStages(slot, 1, &resource, stageFlags);
 }
 
-void D3D11CommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags)
-{
-    /* Set texture resource to all shader stages */
-    auto& textureArrayD3D = LLGL_CAST(D3D11TextureArray&, textureArray);
-    SetShaderResourcesOnStages(
-        startSlot,
-        static_cast<UINT>(textureArrayD3D.GetResourceViews().size()),
-        textureArrayD3D.GetResourceViews().data(),
-        stageFlags
-    );
-}
-
 /* ----- Sampler States ----- */
 
 void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
@@ -331,18 +278,6 @@ void D3D11CommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long s
     auto& samplerD3D = LLGL_CAST(D3D11Sampler&, sampler);
     auto resource = samplerD3D.GetNative();
     SetSamplersOnStages(slot, 1, &resource, stageFlags);
-}
-
-void D3D11CommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags)
-{
-    /* Set sampler state object to all shader stages */
-    auto& samplerArrayD3D = LLGL_CAST(D3D11SamplerArray&, samplerArray);
-    SetSamplersOnStages(
-        startSlot,
-        static_cast<UINT>(samplerArrayD3D.GetSamplerStates().size()),
-        samplerArrayD3D.GetSamplerStates().data(),
-        stageFlags
-    );
 }
 
 /* ----- Resource Heaps ----- */

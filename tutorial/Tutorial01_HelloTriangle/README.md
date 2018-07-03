@@ -45,25 +45,25 @@ Vertex Buffer:
 Next we create our vertex data for our triangle we want to render and then declare the vertex format which will be passed to the vertex buffer and shader program:
 ```cpp
 struct MyVertex {
-    float position[2]; // 2D vector for X and Y coordinates
-    float color[3];    // 3D vector for red, green, and blue color components
+    float   position[2]; // 2D vector for X and Y coordinates
+    uint8_t color[4];    // 4D vector for red, green, blue, alpha color components
 };
 ```
 For this tutorial we only want to render a single triangle so we define our 3 vertices:
 ```cpp
 MyVertex myVertices[3] = {
-    MyVertex { {  0.0f,  0.5f }, { 1.0f, 0.0f, 0.0f } },
-    MyVertex { {  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f } },
-    MyVertex { { -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f } },
+    MyVertex { {  0.0f,  0.5f }, { 255,   0,   0, 255 } },
+    MyVertex { {  0.5f, -0.5f }, {   0, 255,   0, 255 } },
+    MyVertex { { -0.5f, -0.5f }, {   0,   0, 255, 255 } },
 };
 ```
 The `VertexFormat` structure has a couple of member functions to simplify the description of a vertex format, but we could also use the member variables directly. The `AppendAttribute` function determines the data offset for each vertex attribute automatically:
 ```cpp
 LLGL::VertexFormat myVertexFormat;
-myVertexFormat.AppendAttribute({ "position", LLGL::VectorType::Float2 });
-myVertexFormat.AppendAttribute({ "color",    LLGL::VectorType::Float3 });
+myVertexFormat.AppendAttribute({ "position", LLGL::Format::RG32Float  });
+myVertexFormat.AppendAttribute({ "color",    LLGL::Format::RGBA8UNorm });
 ```
-The strings "position" and "color" must be equal to the identifiers used in the shader, not the one we used in our `MyVertex` structure!
+The strings "position" and "color" must be equal to the identifiers used in the shader, not the one we used in our `MyVertex` structure! We use an RGBA format for the color components even though the alpha channel is not used, because RGB formats are only supported by OpenGL and Vulkan. The identifier `UNorm` denotes a 'normalized unsigned integral' format, i.e. the unsigned byte values in the range [0, 255] will be normalized to the range [0, 1].
 
 Now we can create the GPU vertex buffer:
 ```cpp
@@ -78,12 +78,7 @@ LLGL::Buffer* myVertexBuffer = myRenderer->CreateBuffer(myVertexBufferDesc, myVe
 Shaders:
 --------
 
-In LLGL shaders are organized with an instance of the `ShaderProgram` interface to which we can attach one or more instances of the `Shader` interface. This nomenclature is derived from OpenGL (see `glAttachShader` and `glCreateProgram`). In this tutorial we only need a vertex and fragment shader:
-```cpp
-LLGL::Shader* myVertShader = myRenderer->CreateShader(LLGL::ShaderType::Vertex);
-LLGL::Shader* myFragShader = myRenderer->CreateShader(LLGL::ShaderType::Fragment);
-```
-The `Shader` interface provides a function to load a shader from source and from binary respectively. However, not all render system provide both. For example, Vulkan can only load binary SPIR-V modules. With Direct3D 11 and Direct3D 12, we can load either our HLSL shader directly from a text file, or load a pre-compiled DXBC binary file. Which shading languages are supported can be determined by the `GetRenderingCaps` function of the `RenderSystem` interface:
+In LLGL, shaders are organized with an instance of the `ShaderProgram` interface to which we can attach one or more instances of the `Shader` interface, but only at creation time. In this tutorial we only need a vertex and fragment shader. We can either store them (of type `LLGL::Shader*`) or we just pass them to the `ShaderProgramDescriptor`. To determine which shading language is supported by the current renderer, we can use the `shadingLanguages` container as shown here:
 ```cpp
 bool IsSupported(LLGL::ShadingLanguage lang) {
     const auto& supportedLangs = myRenderer->GetRenderingCaps().shadingLanguages;
@@ -92,44 +87,52 @@ bool IsSupported(LLGL::ShadingLanguage lang) {
 ```
 Here is an example of loading a shader for either HLSL or GLSL source files:
 ```cpp
+LLGL::ShaderProgramDescritpor myProgramDesc;
 if (IsSupported(LLGL::ShadingLanguage::HLSL)) {
-    std::string mySourceHLSL = /* Load .hlsl file */
-    myVertShader->Compile(mySourceHLSL, LLGL::ShaderDescriptor{ "VMain", "vs_4_0" });
-    myFragShader->Compile(mySourceHLSL, LLGL::ShaderDescriptor{ "PMain", "ps_4_0" });
+    myProgramDesc.vertexShader   = myRenderer->CreateShader({ LLGL::ShaderType::Vertex,   "MyShader.hlsl", "VMain", "vs_4_0" });
+    myProgramDesc.fragmentShader = myRenderer->CreateShader({ LLGL::ShaderType::Fragment, "MyShader.hlsl", "PMain", "ps_4_0" });
 } else if (IsSupported(LLGL::ShadingLanguage::GLSL)) {
-    std::string mySourceVert = /* Load .vert/.glsl file */
-    std::string mySourceFrag = /* Load .frag/.glsl file */
-    myVertShader->Compile(mySourceVert);
-    myFragShader->Compile(mySourceFrag);
+    myProgramDesc.vertexShader   = myRenderer->CreateShader({ LLGL::ShaderType::Vertex,   "MyShader.vert" });
+    myProgramDesc.fragmentShader = myRenderer->CreateShader({ LLGL::ShaderType::Fragment, "MyShader.frag" });
 } else {
     /* Error: shading language not supported ... */
 }
 ```
-The descriptor `ShaderDescriptor` is only required for HLSL because the shader **entry point** and **profile target** must be specified. For GLSL, there is always only the `main()` entry point and the profile is specified in the shader itself by the `#version` directive.
+The initializer list within the `CreateShader` function call constructs the descriptor `ShaderDescriptor`. The descriptor provides members to specifiy the shader code as content or as filename which is then loaded by the framework. In our case, we just load the shaders from file (e.g. `MyShader.hlsl`). The descriptor also provides a member to specify whether our shader is in binary or high-level text form. However, not all render systems provide both. For example, Vulkan can only load binary SPIR-V modules. With Direct3D 11 and Direct3D 12, we can load either our HLSL shader directly from a text file, or load a pre-compiled DXBC binary file. Here is an example how to load a shader as content instead of loading it from file:
+```cpp
+LLGL::ShaderDescriptor myShaderDesc;
+myShaderDesc.type       = LLGL::ShaderType::Vertex;
+myShaderDesc.source     = "#version 330\n"
+                          "void main() {\n"
+                          "    gl_Position = vec4(0, 0, 0, 1);\n"
+                          "}\n";
+myShaderDesc.sourceSize = 0;                                    // Ignored for null-terminated sources
+myShaderDesc.sourceType = LLGL::ShaderSourceType::CodeString;   // Source is null-terminated string and in high-level format
+myShaderDesc.entryPoint = "";                                   // Only required for HLSL (can be null)
+myShaderDesc.profile    = "";                                   // Only required for HLSL (can be null)
+LLGL::Shader* myExampleShader = myRenderer->CreateShader(myShaderDesc);
+```
+The members `entryPoint` and `profile` are only required for HLSL (e.g. `entryPoint="main"` and `profile="vs_4_0"`). The member `source` is of type `const char*` and is either a null-terminated string or a raw byte buffer (for shader byte code). If the source type is either `CodeFile` or `BinaryFile`, the source code is read from file using the C++ standard file streams (i.e. `std::ifstream`).
+
+After we created the shaders we also need to specify the input layout by passing the vertex format to the shader program descriptor:
+```cpp
+myProgramDesc.vertexFormats = { myVertexFormat };
+```
+However, this is not necessary for a compute shader.
 
 Even if a shader compiles successfully, we can query the information log if the shader compiler reports some warnings:
 ```cpp
-for (auto shader : { myVertShader, myFragShader }) {
+for (auto shader : { myProgramDesc.vertexShader, myProgramDesc.fragmentShader }) {
     std::string log = shader->QueryInfoLog();
     if (!log.empty()) {
         std::cerr << log << std::endl;
     }
 }
 ```
-Now we can finally create the shader program, attach the shaders, build the vertex input layout with our vertex format, and link the shaders to finalize the shader program:
+Now we can finally create the shader program and check for linking errors:
 ```cpp
-// Create shader program
-LLGL::ShaderProgram* myShaderProgram = myRenderer->CreateShaderProgram();
-
-// Attach shaders
-myShaderProgram->AttachShader(*myVertShader);
-myShaderProgram->AttachShader(*myFragShader);
-
-// Build input layout with a single vertex format (since we only use one vertex buffer)
-myShaderProgram->BuildInputLayout(1, &myVertexFormat);
-
-// Link shaders and throw exception of failure
-if (!myShaderProgram->LinkShaders()) {
+LLGL::ShaderProgram* myShaderProgram = myRenderer->CreateShaderProgram(myProgramDesc);
+if (myShaderProgram->HasErrors()) {
     throw std::runtime_error(myShaderProgram->QueryInfoLog());
 }
 ```

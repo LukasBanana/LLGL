@@ -67,47 +67,26 @@ int main(int argc, char* argv[])
         auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, inputData.data());
 
         // Create shaders
-        auto computeShader = renderer->CreateShader(LLGL::ShaderType::Compute);
-
-        // Load compute shader code from file
-        auto PrintShaderLog = [&](LLGL::Shader* shader)
-        {
-            // Print info log (warnings and errors)
-            std::string log = shader->QueryInfoLog();
-            if (!log.empty())
-                std::cerr << log << std::endl;
-        };
-
-        auto CompileShader = [&](LLGL::Shader* shader, const std::string& source, const LLGL::ShaderDescriptor& shaderDesc = {})
-        {
-            // Compile shader
-            shader->Compile(source, shaderDesc);
-            PrintShaderLog(shader);
-        };
-
-        auto LoadBinaryShader = [&](LLGL::Shader* shader, std::vector<char>&& binaryCode, const LLGL::ShaderDescriptor& shaderDesc = {})
-        {
-            // Load binary into shader
-            shader->LoadBinary(std::move(binaryCode), shaderDesc);
-            PrintShaderLog(shader);
-        };
+        LLGL::Shader* computeShader = nullptr;
 
         const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
-            CompileShader(computeShader, ReadFileContent("shader.hlsl"), { "CS", "cs_5_0" });
+            computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "shader.hlsl", "CS", "cs_5_0" });
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
-            CompileShader(computeShader, ReadFileContent("compute.glsl"));
+            computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "compute.glsl" });
         else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
-            LoadBinaryShader(computeShader, ReadFileBuffer("compute.spv"));
+            computeShader = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Compute, "compute.spv"));
+
+        // Print info log (warnings and errors)
+        std::string log = computeShader->QueryInfoLog();
+        if (!log.empty())
+            std::cerr << log << std::endl;
 
         // Create shader program which is used as composite
-        auto shaderProgram = renderer->CreateShaderProgram();
-
-        // Attach compute shader to the shader program
-        shaderProgram->AttachShader(*computeShader);
+        auto shaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc({ computeShader }));
 
         // Link shader program and check for errors
-        if (!shaderProgram->LinkShaders())
+        if (shaderProgram->HasErrors())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
 
         // Create pipeline layout for Vulkan and Direct3D 12 render systems

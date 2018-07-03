@@ -13,6 +13,7 @@
 #include <thread>
 #include <cstring>
 #include "../Core/Assertion.h"
+#include "Float16Compressor.h"
 
 
 namespace LLGL
@@ -116,9 +117,11 @@ static double ReadNormalizedTypedVariant(DataType srcDataType, const VariantCons
             return ReadNormalizedVariant(srcBuffer.int32[idx]);
         case DataType::UInt32:
             return ReadNormalizedVariant(srcBuffer.uint32[idx]);
-        case DataType::Float:
+        case DataType::Float16:
+            return static_cast<double>(DecompressFloat16(srcBuffer.uint16[idx]));
+        case DataType::Float32:
             return static_cast<double>(srcBuffer.real32[idx]);
-        case DataType::Double:
+        case DataType::Float64:
             return srcBuffer.real64[idx];
     }
     return 0.0;
@@ -146,10 +149,13 @@ static void WriteNormalizedTypedVariant(DataType dstDataType, VariantBuffer& dst
         case DataType::UInt32:
             WriteNormalizedVariant(dstBuffer.uint32[idx], value);
             break;
-        case DataType::Float:
+        case DataType::Float16:
+            dstBuffer.uint16[idx] = CompressFloat16(static_cast<float>(value));
+            break;
+        case DataType::Float32:
             dstBuffer.real32[idx] = static_cast<float>(value);
             break;
-        case DataType::Double:
+        case DataType::Float64:
             dstBuffer.real64[idx] = value;
             break;
     }
@@ -261,10 +267,13 @@ static void SetVariantMinMax(DataType dataType, Variant& var, bool setMin)
         case DataType::UInt32:
             var.uint32 = (setMin ? std::numeric_limits<std::uint32_t>::min() : std::numeric_limits<std::uint32_t>::max());
             break;
-        case DataType::Float:
+        case DataType::Float16:
+            var.uint16 = CompressFloat16(setMin ? 0.0f : 1.0f);
+            break;
+        case DataType::Float32:
             var.real32 = (setMin ? 0.0f : 1.0f);
             break;
-        case DataType::Double:
+        case DataType::Float64:
             var.real64 = (setMin ? 0.0 : 1.0);
             break;
     }
@@ -292,10 +301,13 @@ static void CopyTypedVariant(DataType dataType, const VariantConstBuffer& srcBuf
         case DataType::UInt32:
             dst.uint32 = srcBuffer.uint32[idx];
             break;
-        case DataType::Float:
+        case DataType::Float16:
+            dst.uint16 = srcBuffer.uint16[idx];
+            break;
+        case DataType::Float32:
             dst.real32 = srcBuffer.real32[idx];
             break;
-        case DataType::Double:
+        case DataType::Float64:
             dst.real64 = srcBuffer.real64[idx];
             break;
     }
@@ -323,10 +335,13 @@ static void CopyTypedVariant(DataType dataType, VariantBuffer& dstBuffer, std::s
         case DataType::UInt32:
             dstBuffer.uint32[idx] = src.uint32;
             break;
-        case DataType::Float:
+        case DataType::Float16:
+            dstBuffer.uint16[idx] = src.uint16;
+            break;
+        case DataType::Float32:
             dstBuffer.real32[idx] = src.real32;
             break;
-        case DataType::Double:
+        case DataType::Float64:
             dstBuffer.real64[idx] = src.real64;
             break;
     }
@@ -551,11 +566,11 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::R16SNorm:          return T{ ImageFormat::R, DataType::Int16 };
         case Format::R16UInt:           return T{ ImageFormat::R, DataType::UInt16 };
         case Format::R16SInt:           return T{ ImageFormat::R, DataType::Int16 };
-        case Format::R16Float:          break;//T{ ImageFormat::R, DataType::Float16 };
+        case Format::R16Float:          return T{ ImageFormat::R, DataType::Float16 };
 
         case Format::R32UInt:           return T{ ImageFormat::R, DataType::UInt32 };
         case Format::R32SInt:           return T{ ImageFormat::R, DataType::Int32 };
-        case Format::R32Float:          return T{ ImageFormat::R, DataType::Float };
+        case Format::R32Float:          return T{ ImageFormat::R, DataType::Float32 };
 
         case Format::RG8UNorm:          return T{ ImageFormat::RG, DataType::UInt8 };
         case Format::RG8SNorm:          return T{ ImageFormat::RG, DataType::Int8 };
@@ -566,11 +581,11 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::RG16SNorm:         return T{ ImageFormat::RG, DataType::Int16 };
         case Format::RG16UInt:          return T{ ImageFormat::RG, DataType::UInt16 };
         case Format::RG16SInt:          return T{ ImageFormat::RG, DataType::Int16 };
-        case Format::RG16Float:         break;//T{ ImageFormat::RG, DataType::Float16 }; //TODO
+        case Format::RG16Float:         return T{ ImageFormat::RG, DataType::Float16 };
 
         case Format::RG32UInt:          return T{ ImageFormat::RG, DataType::UInt32 };
         case Format::RG32SInt:          return T{ ImageFormat::RG, DataType::Int32 };
-        case Format::RG32Float:         return T{ ImageFormat::RG, DataType::Float };
+        case Format::RG32Float:         return T{ ImageFormat::RG, DataType::Float32 };
 
         case Format::RGB8UNorm:         return T{ ImageFormat::RGB, DataType::UInt8 };
         case Format::RGB8SNorm:         return T{ ImageFormat::RGB, DataType::Int8 };
@@ -581,11 +596,11 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::RGB16SNorm:        return T{ ImageFormat::RGB, DataType::Int16 };
         case Format::RGB16UInt:         return T{ ImageFormat::RGB, DataType::UInt16 };
         case Format::RGB16SInt:         return T{ ImageFormat::RGB, DataType::Int16 };
-        case Format::RGB16Float:        break;//T{ ImageFormat::RGB, DataType::Float16 }; //TODO
+        case Format::RGB16Float:        return T{ ImageFormat::RGB, DataType::Float16 };
 
         case Format::RGB32UInt:         return T{ ImageFormat::RGB, DataType::UInt32 };
         case Format::RGB32SInt:         return T{ ImageFormat::RGB, DataType::Int32 };
-        case Format::RGB32Float:        return T{ ImageFormat::RGB, DataType::Float };
+        case Format::RGB32Float:        return T{ ImageFormat::RGB, DataType::Float32 };
 
         case Format::RGBA8UNorm:        return T{ ImageFormat::RGBA, DataType::UInt8 };
         case Format::RGBA8SNorm:        return T{ ImageFormat::RGBA, DataType::Int8 };
@@ -596,22 +611,22 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::RGBA16SNorm:       return T{ ImageFormat::RGBA, DataType::Int16 };
         case Format::RGBA16UInt:        return T{ ImageFormat::RGBA, DataType::UInt16 };
         case Format::RGBA16SInt:        return T{ ImageFormat::RGBA, DataType::Int16 };
-        case Format::RGBA16Float:       break;//T{ ImageFormat::RGBA, DataType::Float16 }; //TODO
+        case Format::RGBA16Float:       return T{ ImageFormat::RGBA, DataType::Float16 };
 
         case Format::RGBA32UInt:        return T{ ImageFormat::RGBA, DataType::UInt32 };
         case Format::RGBA32SInt:        return T{ ImageFormat::RGBA, DataType::Int32 };
-        case Format::RGBA32Float:       return T{ ImageFormat::RGBA, DataType::Float };
-        
+        case Format::RGBA32Float:       return T{ ImageFormat::RGBA, DataType::Float32 };
+
         /* --- Extended color formats --- */
-        case Format::R64Float:          return T{ ImageFormat::R, DataType::Double };
-        case Format::RG64Float:         return T{ ImageFormat::RG, DataType::Double };
-        case Format::RGB64Float:        return T{ ImageFormat::RGB, DataType::Double };
-        case Format::RGBA64Float:       return T{ ImageFormat::RGBA, DataType::Double };
+        case Format::R64Float:          return T{ ImageFormat::R, DataType::Float64 };
+        case Format::RG64Float:         return T{ ImageFormat::RG, DataType::Float64 };
+        case Format::RGB64Float:        return T{ ImageFormat::RGB, DataType::Float64 };
+        case Format::RGBA64Float:       return T{ ImageFormat::RGBA, DataType::Float64 };
 
         /* --- Depth-stencil formats --- */
-        case Format::D16UNorm:          break;//T{ ImageFormat::Depth, DataType::Float16 }; //TODO
-        case Format::D32Float:          return T{ ImageFormat::Depth, DataType::Float };
-        case Format::D24UNormS8UInt:    return T{ ImageFormat::DepthStencil, DataType::Float };
+        case Format::D16UNorm:          return T{ ImageFormat::Depth, DataType::UInt16 };
+        case Format::D32Float:          return T{ ImageFormat::Depth, DataType::Float32 };
+        case Format::D24UNormS8UInt:    return T{ ImageFormat::DepthStencil, DataType::Float32 };
         case Format::D32FloatS8X24UInt: break;
 
         /* --- Compressed color formats --- */
@@ -622,7 +637,7 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
     }
 
     /* Return an invalid image format */
-    return T{ ImageFormat::CompressedRGBA, DataType::Double };
+    return T{ ImageFormat::CompressedRGBA, DataType::Float64 };
 }
 
 LLGL_EXPORT bool FindSuitableImageFormat(const Format format, ImageFormat& imageFormat, DataType& dataType)
@@ -633,7 +648,7 @@ LLGL_EXPORT bool FindSuitableImageFormat(const Format format, ImageFormat& image
 
     std::tie(imageFormatTmp, dataTypeTmp) = FindSuitableImageFormatPrimary(format);
 
-    if (!(imageFormatTmp == ImageFormat::CompressedRGBA && dataTypeTmp == DataType::Double))
+    if (!(imageFormatTmp == ImageFormat::CompressedRGBA && dataTypeTmp == DataType::Float64))
     {
         imageFormat = imageFormatTmp;
         dataType    = dataTypeTmp;

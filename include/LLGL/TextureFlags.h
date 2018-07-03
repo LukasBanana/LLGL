@@ -10,6 +10,7 @@
 
 
 #include "Export.h"
+#include "Types.h"
 #include "Format.h"
 #include <cstddef>
 #include <cstdint>
@@ -125,12 +126,21 @@ struct TextureFlags
         StorageUsage        = (1 << 6),
 
         /**
-        \brief Default texture flags: (GenerateMips | AttachmentUsage | SampleUsage).
+        \brief Multi-sampled texture has fixed sample locations.
+        \remarks This can only be used with multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray).
+        \see TextureType
+        \see Default
+        */
+        FixedSamples        = (1 << 7),
+
+        /**
+        \brief Default texture flags: (GenerateMips | AttachmentUsage | SampleUsage | FixedSamples).
         \see GenerateMips
         \see AttachmentUsage
         \see SampleUsage
+        \see FixedSamples
         */
-        Default             = (GenerateMips | AttachmentUsage | SampleUsage),
+        Default             = (GenerateMips | AttachmentUsage | SampleUsage | FixedSamples),
     };
 };
 
@@ -157,71 +167,6 @@ struct TextureSwizzleRGBA
 */
 struct TextureDescriptor
 {
-    //! 1D- and 1D-Array texture specific descriptor structure.
-    struct Texture1D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-    };
-
-    //! 2D- and 2D-Array texture specific descriptor structure.
-    struct Texture2D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-    };
-
-    //! 3D texture specific descriptor structure.
-    struct Texture3D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   depth;          //!< Texture depth.
-    };
-
-    /**
-    \brief Cube- and Cube-Array texture specific descriptor structure.
-    \remarks Cube textures must have the same value for width and height.
-    However, two parameters are used for convenience in rendering APIs.
-    */
-    struct TextureCube
-    {
-        std::uint32_t   width;          //!< Texture width. Must be equal to height.
-        std::uint32_t   height;         //!< Texture height. Must be equal to width.
-
-        /**
-        \brief Number of texture array layers, one for each cube.
-        \remarks Most rendering APIs only use the actual number of array layers, so for cube maps they are always a multiple of 6.
-        This attribute, however, specifies the number of cubes in the array texture and LLGL will multiply it by 6 automatically if necessary.
-        */
-        std::uint32_t   layers;
-    };
-
-    //! Multi-sampled 2D- and 2D-Array texture specific descriptor structure.
-    struct Texture2DMS
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-        std::uint32_t   samples;        //!< Number of samples.
-        bool            fixedSamples;   //!< Specifies whether the sample locations are fixed or not. By default true. \note Only supported with: OpenGL.
-    };
-
-    inline TextureDescriptor()
-    {
-        texture2DMS.width           = 0;
-        texture2DMS.height          = 0;
-        texture2DMS.layers          = 0;
-        texture2DMS.samples         = 0;
-        texture2DMS.fixedSamples    = true;
-    }
-
-    inline ~TextureDescriptor()
-    {
-        // Dummy
-    }
-
     //! Hardware texture type. By default TextureType::Texture1D.
     TextureType     type        = TextureType::Texture1D;
 
@@ -235,14 +180,38 @@ struct TextureDescriptor
     */
     long            flags       = TextureFlags::Default;
 
-    union
-    {
-        Texture1D   texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2D   texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3D   texture3D;      //!< Descriptor for 3D textures.
-        TextureCube textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
-        Texture2DMS texture2DMS;    //!< Descriptor for multi-sampled 2D- and 2D-Array textures.
-    };
+    //! Texture width. By default 1.
+    std::uint32_t   width       = 1;
+
+    /**
+    \brief Texture height. By default 1.
+    \remarks This is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
+    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, TextureType::Texture2DMSArray).
+    \see TextureType
+    */
+    std::uint32_t   height      = 1;
+
+    /**
+    \brief Texture depth. By default 1.
+    \remarks This is only used for 3D textures (i.e. TextureType::Texture3D).
+    \see TextureType
+    */
+    std::uint32_t   depth       = 1;
+
+    /**
+    \brief Number of array layers. By default 1.
+    \remarks This is only used for array textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
+    \see TextureType
+    */
+    std::uint32_t   layers      = 1;
+
+    /**
+    \brief Number of samples per texel. By default 1.
+    \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
+    \see TextureType
+    */
+    std::uint32_t   samples     = 1;
 };
 
 /**
@@ -251,71 +220,24 @@ struct TextureDescriptor
 */
 struct SubTextureDescriptor
 {
-    struct Texture1D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t layers;         //!< Number of texture array layers.
-    };
+    //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    std::uint32_t   mipLevel    = 0;
 
-    struct Texture2D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t layers;         //!< Number of texture array layers.
-    };
+    /**
+    \brief Sub-texture offset. By default (0, 0, 0).
+    \remarks For array textures, the Z component specifies the array layer.
+    For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
+    The layer offset for the respective cube face can be determined by the values of the AxisDirection enumeration
+    \see AxisDirection
+    */
+    Offset3D        offset      = { 0, 0, 0 };
 
-    struct Texture3D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t z;              //!< Sub-texture Z-axis offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t depth;          //!< Number of texture array layers.
-    };
-
-    struct TextureCube
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be N*6.
-        AxisDirection cubeFaceOffset; //!< First cube face in the current layer.
-    };
-
-    inline SubTextureDescriptor()
-    {
-        mipLevel                    = 0;
-        textureCube.x               = 0;
-        textureCube.y               = 0;
-        textureCube.layerOffset     = 0;
-        textureCube.width           = 0;
-        textureCube.height          = 0;
-        textureCube.cubeFaces       = 0;
-        textureCube.cubeFaceOffset  = AxisDirection::XPos;
-    }
-
-    inline ~SubTextureDescriptor()
-    {
-    }
-
-    //! MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
-    std::uint32_t   mipLevel;
-
-    union
-    {
-        Texture1D   texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2D   texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3D   texture3D;      //!< Descriptor for 3D textures.
-        TextureCube textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
-    };
+    /**
+    \brief Sub-texture extent. By default (1, 1, 1).
+    \remarks For array textures, the depth component specifies the number of array layers (for 1D-array textures it's the height component).
+    For cube textures, the depthj component specifies the number of array layers and cube faces (where each cube has 6 faces).
+    */
+    Extent3D        extent      = { 1, 1, 1 };
 };
 
 
@@ -344,14 +266,6 @@ LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height
 \see NumMipLevels(std::uint32_t, std::uint32_t, std::uint32_t)
 */
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc);
-
-/**
-\briefs Returns the number of array layers for the specified texture descriptor.
-\param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of array layers.
-\return Number of array layers, or 1 if the texture type is not an array texture.
-\see IsArrayTexture
-*/
-LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc);
 
 /**
 \brief Returns the required buffer size (in bytes) of a texture with the specified hardware format and number of texels.

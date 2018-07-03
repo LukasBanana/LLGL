@@ -31,14 +31,14 @@ on a 32-bit build, both for the fragment shader stage only:
 
 Offset      Attribute                                   Value   Description                                         Segment
 --------------------------------------------------------------------------------------------------------------------------------------------
-0x00000000  D3DResourceViewHeapSegment2::segmentSize    16      Size of this segment                                \
-0x00000004  D3DResourceViewHeapSegment2::startSlot      4       First binding point                                  |-- Texture segment
-0x00000008  D3DResourceViewHeapSegment2::numSlots       1       Number of binding points                             |
+0x00000000  D3DResourceViewHeapSegment1::segmentSize    16      Size of this segment                                \
+0x00000004  D3DResourceViewHeapSegment1::startSlot      4       First binding point                                  |-- Texture segment
+0x00000008  D3DResourceViewHeapSegment1::numSlots       1       Number of binding points                             |
 0x0000000C  srv[0]                                      <ptr>   1st ID3D11ShaderResourceView for texture            /
-0x00000010  D3DResourceViewHeapSegment1::segmentSize    20      Size of this segment                                \
-0x00000014  D3DResourceViewHeapSegment1::offsetEnd0     20      Relative offset to initialCount[0] (at 0x00000028)   |
-0x00000018  D3DResourceViewHeapSegment1::startSlot      5       First binding point                                  |
-0x0000001C  D3DResourceViewHeapSegment1::numSlots       2       Number of binding points                             |-- StorageBuffer segment
+0x00000010  D3DResourceViewHeapSegment2::segmentSize    20      Size of this segment                                \
+0x00000014  D3DResourceViewHeapSegment2::offsetEnd0     20      Relative offset to initialCount[0] (at 0x00000028)   |
+0x00000018  D3DResourceViewHeapSegment2::startSlot      5       First binding point                                  |
+0x0000001C  D3DResourceViewHeapSegment2::numSlots       2       Number of binding points                             |-- StorageBuffer segment
 0x00000020  uav[0]                                      <ptr>   1st ID3D11UnorderedAccessView for storage buffer     |
 0x00000024  uav[1]                                      <ptr>   2nd ID3D11UnorderedAccessView for storage buffer     |
 0x00000028  initialCount[0]                             0       1st initial count                                    |

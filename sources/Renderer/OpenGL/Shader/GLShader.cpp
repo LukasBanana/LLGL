@@ -9,6 +9,8 @@
 #include "../Ext/GLExtensions.h"
 #include "../../GLCommon/GLExtensionRegistry.h"
 #include "../../GLCommon/GLTypes.h"
+#include "../../../Core/Helper.h"
+#include "../../../Core/Exception.h"
 #include <vector>
 #include <sstream>
 #include <stdexcept>
@@ -18,10 +20,11 @@ namespace LLGL
 {
 
 
-GLShader::GLShader(const ShaderType type) :
-    Shader { type }
+GLShader::GLShader(const ShaderDescriptor& desc) :
+    Shader { desc.type }
 {
-    id_ = glCreateShader(GLTypes::Map(type));
+    id_ = glCreateShader(GLTypes::Map(desc.type));
+    Build(desc);
 }
 
 GLShader::~GLShader()
@@ -29,41 +32,11 @@ GLShader::~GLShader()
     glDeleteShader(id_);
 }
 
-bool GLShader::Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc)
+bool GLShader::HasErrors() const
 {
-    /* Load shader source code, then compile shader */
-    const GLchar* strings[] = { sourceCode.c_str() };
-
-    glShaderSource(id_, 1, strings, nullptr);
-    glCompileShader(id_);
-
-    /* Store stream-output format */
-    streamOutputFormat_ = shaderDesc.streamOutput.format;
-
-    /* Query compilation status */
-    return QueryCompileStatus();
-}
-
-bool GLShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
-{
-    #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
-    if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
-    {
-        /* Load shader binary */
-        glShaderBinary(1, &id_, GL_SHADER_BINARY_FORMAT_SPIR_V, binaryCode.data(), static_cast<GLsizei>(binaryCode.size()));
-
-        /* Specialize for the default "main" function in a SPIR-V module  */
-        const char* entryPoint = (shaderDesc.entryPoint.empty() ? "main" : shaderDesc.entryPoint.c_str());
-        glSpecializeShader(id_, entryPoint, 0, nullptr, nullptr);
-
-        /* Store stream-output format */
-        streamOutputFormat_ = shaderDesc.streamOutput.format;
-
-        /* Query compilation status */
-        return QueryCompileStatus();
-    }
-    #endif
-    return false;
+    GLint status = 0;
+    glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
+    return (status == GL_FALSE);
 }
 
 std::string GLShader::Disassemble(int flags)
@@ -114,11 +87,77 @@ bool GLShader::MoveStreamOutputFormat(StreamOutputFormat& streamOutputFormat)
  * ======= Private: =======
  */
 
-bool GLShader::QueryCompileStatus() const
+void GLShader::Build(const ShaderDescriptor& shaderDesc)
 {
-    GLint status = 0;
-    glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
-    return (status != GL_FALSE);
+    if (IsShaderSourceCode(shaderDesc.sourceType))
+        CompileSource(shaderDesc);
+    else
+        LoadBinary(shaderDesc);
+}
+
+void GLShader::CompileSource(const ShaderDescriptor& shaderDesc)
+{
+    /* Get source code */
+    std::string fileContent;
+    const GLchar* strings[1];
+
+    if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
+    {
+        fileContent = ReadFileString(shaderDesc.source);
+        strings[0]  = fileContent.c_str();
+    }
+    else
+    {
+        strings[0] = shaderDesc.source;
+    }
+
+    /* Load shader source code, then compile shader */
+    glShaderSource(id_, 1, strings, nullptr);
+    glCompileShader(id_);
+
+    /* Store stream-output format */
+    streamOutputFormat_ = shaderDesc.streamOutput.format;
+}
+
+void GLShader::LoadBinary(const ShaderDescriptor& shaderDesc)
+{
+    #if defined GL_ARB_gl_spirv && defined GL_ARB_ES2_compatibility
+    if (HasExtension(GLExt::ARB_gl_spirv) && HasExtension(GLExt::ARB_ES2_compatibility))
+    {
+        /* Get shader binary */
+        std::vector<char>   fileContent;
+        const void*         binaryBuffer    = nullptr;
+        GLsizei             binaryLength    = 0;
+
+        if (shaderDesc.sourceType == ShaderSourceType::BinaryFile)
+        {
+            /* Load binary from file */
+            fileContent = ReadFileBuffer(shaderDesc.source);
+            binaryBuffer = fileContent.data();
+            binaryLength = static_cast<GLsizei>(fileContent.size());
+        }
+        else
+        {
+            /* Load binary from buffer */
+            binaryBuffer = shaderDesc.source;
+            binaryLength = static_cast<GLsizei>(shaderDesc.sourceSize);
+        }
+
+        /* Load shader binary */
+        glShaderBinary(1, &id_, GL_SHADER_BINARY_FORMAT_SPIR_V, binaryBuffer, binaryLength);
+
+        /* Specialize for the default "main" function in a SPIR-V module  */
+        const char* entryPoint = (shaderDesc.entryPoint == nullptr || *shaderDesc.entryPoint == '\0' ? "main" : shaderDesc.entryPoint);
+        glSpecializeShader(id_, entryPoint, 0, nullptr, nullptr);
+
+        /* Store stream-output format */
+        streamOutputFormat_ = shaderDesc.streamOutput.format;
+    }
+    else
+    #endif
+    {
+        ThrowNotSupportedExcept(__FUNCTION__, "loading binary shader");
+    }
 }
 
 

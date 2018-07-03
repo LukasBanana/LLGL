@@ -23,10 +23,18 @@ namespace LLGL
 {
 
 
-GLShaderProgram::GLShaderProgram() :
+GLShaderProgram::GLShaderProgram(const ShaderProgramDescriptor& desc) :
     id_      { glCreateProgram() },
     uniform_ { id_               }
 {
+    Attach(desc.vertexShader);
+    Attach(desc.tessControlShader);
+    Attach(desc.tessEvaluationShader);
+    Attach(desc.geometryShader);
+    Attach(desc.fragmentShader);
+    Attach(desc.computeShader);
+    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
+    Link();
 }
 
 GLShaderProgram::~GLShaderProgram()
@@ -35,64 +43,11 @@ GLShaderProgram::~GLShaderProgram()
     GLStateManager::active->NotifyShaderProgramRelease(id_);
 }
 
-void GLShaderProgram::AttachShader(Shader& shader)
+bool GLShaderProgram::HasErrors() const
 {
-    auto& shaderGL = LLGL_CAST(GLShader&, shader);
-
-    /* Attach shader to shader program */
-    glAttachShader(id_, shaderGL.GetID());
-
-    /* Store attribute if fragment shader is set */
-    if (shader.GetType() == ShaderType::Fragment)
-        hasFragmentShader_ = true;
-
-    /* Move stream-output format from shader to shader program (if available) */
-    shaderGL.MoveStreamOutputFormat(streamOutputFormat_);
-}
-
-void GLShaderProgram::DetachAll()
-{
-    /* Retrieve all attached shaders from program */
-    GLsizei numShaders = 0;
-    GLuint shaders[6] = { 0 };
-    glGetAttachedShaders(id_, 6, &numShaders, shaders);
-
-    /* Detach all shaders */
-    for (GLsizei i = 0; i < numShaders; ++i)
-        glDetachShader(id_, shaders[i]);
-
-    /* Reset shader attributes */
-    hasFragmentShader_ = false;
-    streamOutputFormat_.attributes.clear();
-}
-
-bool GLShaderProgram::LinkShaders()
-{
-    /* Check if transform-feedback varyings must be specified (before or after shader linking) */
-    if (!streamOutputFormat_.attributes.empty())
-    {
-        /* For GL_EXT_transform_feedback the varyings must be specified BEFORE linking */
-        #ifndef __APPLE__
-        if (HasExtension(GLExt::EXT_transform_feedback))
-        #endif
-        {
-            BuildTransformFeedbackVaryingsEXT(streamOutputFormat_.attributes);
-            return LinkShaderProgram();
-        }
-
-        #ifndef __APPLE__
-        /* For GL_NV_transform_feedback (Vendor specific) the varyings must be specified AFTER linking */
-        if (HasExtension(GLExt::NV_transform_feedback))
-        {
-            auto result = LinkShaderProgram();
-            BuildTransformFeedbackVaryingsNV(streamOutputFormat_.attributes);
-            return result;
-        }
-        #endif
-    }
-
-    /* Just link shader program */
-    return LinkShaderProgram();
+    GLint status = 0;
+    glGetProgramiv(id_, GL_LINK_STATUS, &status);
+    return (status == GL_FALSE);
 }
 
 std::string GLShaderProgram::QueryInfoLog()
@@ -129,51 +84,6 @@ ShaderReflectionDescriptor GLShaderProgram::QueryReflectionDesc() const
     ShaderProgram::FinalizeShaderReflection(reflection);
 
     return reflection;
-}
-
-void GLShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
-{
-    if (numVertexFormats == 0 || vertexFormats == nullptr)
-        return;
-
-    /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
-    static const std::size_t minSupportedVertexAttribs = 8;
-
-    std::size_t numVertexAttribs = 0;
-    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
-        numVertexAttribs += vertexFormats[i].attributes.size();
-
-    if (numVertexAttribs > minSupportedVertexAttribs)
-    {
-        GLint maxSupportedVertexAttribs = 0;
-        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxSupportedVertexAttribs);
-
-        if (numVertexAttribs > static_cast<std::size_t>(maxSupportedVertexAttribs))
-        {
-            throw std::invalid_argument(
-                "failed build input layout, because too many vertex attributes are specified (" +
-                std::to_string(numVertexAttribs) + " is specified, but maximum is " + std::to_string(maxSupportedVertexAttribs) + ")"
-            );
-        }
-    }
-
-    /* Bind all vertex attribute locations */
-    GLuint index = 0;
-
-    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
-    {
-        for (const auto& attrib : vertexFormats[i].attributes)
-        {
-            /* Bind attribute location (matrices only use the 1st column) */
-            if (attrib.semanticIndex == 0)
-                glBindAttribLocation(id_, index, attrib.name.c_str());
-            ++index;
-        }
-    }
-
-    /* Re-link shader program if the shader has already been linked */
-    if (isLinked_)
-        LinkShaderProgram();
 }
 
 void GLShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
@@ -217,6 +127,96 @@ void GLShaderProgram::UnlockShaderUniform()
  * ======= Private: =======
  */
 
+//TODO: refactor "MoveStreamOutputFormat" (shader might be used multiple times, but internal contianer gets lost!)
+void GLShaderProgram::Attach(Shader* shader)
+{
+    if (shader != nullptr)
+    {
+        auto shaderGL = LLGL_CAST(GLShader*, shader);
+
+        /* Attach shader to shader program */
+        glAttachShader(id_, shaderGL->GetID());
+
+        /* Store attribute if fragment shader is set */
+        if (shader->GetType() == ShaderType::Fragment)
+            hasFragmentShader_ = true;
+
+        /* Move stream-output format from shader to shader program (if available) */
+        shaderGL->MoveStreamOutputFormat(streamOutputFormat_);
+    }
+}
+
+void GLShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
+{
+    if (numVertexFormats == 0 || vertexFormats == nullptr)
+        return;
+
+    /* Validate maximal number of vertex attributes (OpenGL supports at least 8 vertex attribute) */
+    static const std::size_t minSupportedVertexAttribs = 8;
+
+    std::size_t numVertexAttribs = 0;
+    for (std::size_t i = 0; i < numVertexFormats; ++i)
+        numVertexAttribs += vertexFormats[i].attributes.size();
+
+    if (numVertexAttribs > minSupportedVertexAttribs)
+    {
+        GLint maxSupportedVertexAttribs = 0;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxSupportedVertexAttribs);
+
+        if (numVertexAttribs > static_cast<std::size_t>(maxSupportedVertexAttribs))
+        {
+            throw std::invalid_argument(
+                "failed build input layout, because too many vertex attributes are specified (" +
+                std::to_string(numVertexAttribs) + " is specified, but maximum is " + std::to_string(maxSupportedVertexAttribs) + ")"
+            );
+        }
+    }
+
+    /* Bind all vertex attribute locations */
+    GLuint index = 0;
+
+    for (std::size_t i = 0; i < numVertexFormats; ++i)
+    {
+        for (const auto& attrib : vertexFormats[i].attributes)
+        {
+            /* Bind attribute location (matrices only use the 1st column) */
+            if (attrib.semanticIndex == 0)
+                glBindAttribLocation(id_, index, attrib.name.c_str());
+            ++index;
+        }
+    }
+}
+
+void GLShaderProgram::Link()
+{
+    /* Check if transform-feedback varyings must be specified (before or after shader linking) */
+    if (!streamOutputFormat_.attributes.empty())
+    {
+        /* For GL_EXT_transform_feedback the varyings must be specified BEFORE linking */
+        #ifndef __APPLE__
+        if (HasExtension(GLExt::EXT_transform_feedback))
+        #endif
+        {
+            BuildTransformFeedbackVaryingsEXT(streamOutputFormat_.attributes);
+            glLinkProgram(id_);
+            return;
+        }
+
+        #ifndef __APPLE__
+        /* For GL_NV_transform_feedback (Vendor specific) the varyings must be specified AFTER linking */
+        if (HasExtension(GLExt::NV_transform_feedback))
+        {
+            glLinkProgram(id_);
+            BuildTransformFeedbackVaryingsNV(streamOutputFormat_.attributes);
+            return;
+        }
+        #endif
+    }
+
+    /* Just link shader program */
+    glLinkProgram(id_);
+}
+
 bool GLShaderProgram::QueryActiveAttribs(
     GLenum attribCountType, GLenum attribNameLengthType,
     GLint& numAttribs, GLint& maxNameLength, std::vector<char>& nameBuffer) const
@@ -234,21 +234,6 @@ bool GLShaderProgram::QueryActiveAttribs(
     nameBuffer.resize(maxNameLength, '\0');
 
     return true;
-}
-
-bool GLShaderProgram::LinkShaderProgram()
-{
-    /* Link shader program */
-    glLinkProgram(id_);
-
-    /* Query linking status */
-    GLint linkStatus = 0;
-    glGetProgramiv(id_, GL_LINK_STATUS, &linkStatus);
-
-    /* Store if program is linked successful */
-    isLinked_ = (linkStatus != GL_FALSE);
-
-    return isLinked_;
 }
 
 void GLShaderProgram::BuildTransformFeedbackVaryingsEXT(const std::vector<StreamOutputAttribute>& attributes)
@@ -450,8 +435,12 @@ void GLShaderProgram::QueryStreamOutputAttributes(ShaderReflectionDescriptor& re
 #ifdef GL_ARB_program_interface_query
 
 static bool GLGetProgramResourceProperties(
-    GLuint program, GLenum programInterface, GLuint resourceIndex,
-    GLsizei count, const GLenum* props, GLint* params)
+    GLuint          program,
+    GLenum          programInterface,
+    GLuint          resourceIndex,
+    GLsizei         count,
+    const GLenum*   props,
+    GLint*          params)
 {
     if (HasExtension(GLExt::ARB_program_interface_query))
     {

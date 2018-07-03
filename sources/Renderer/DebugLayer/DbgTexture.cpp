@@ -19,7 +19,7 @@ DbgTexture::DbgTexture(Texture& instance, const TextureDescriptor& desc) :
 {
     /* Store number of MIP-maps (if enabled) */
     if ((desc.flags & TextureFlags::GenerateMips) != 0)
-        mipLevels = NumMipLevels(desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth);
+        mipLevels = NumMipLevels(desc);
     else
         mipLevels = 1;
 }

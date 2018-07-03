@@ -145,9 +145,7 @@ int main()
         //auto vertexBufferArray = renderer->CreateBufferArray(1, &vertexBuffer);
 
         // Create vertex shader
-        auto& vertShader = *renderer->CreateShader(LLGL::ShaderType::Vertex);
-
-        std::string shaderSource =
+        auto vertShaderSource =
         (
             #ifdef TEST_STORAGE_BUFFER
             "#version 430\n"
@@ -171,13 +169,19 @@ int main()
             "}\n"
         );
 
-        if (!vertShader.Compile(shaderSource))
-            std::cerr << vertShader.QueryInfoLog() << std::endl;
+        LLGL::ShaderDescriptor vertShaderDesc;
+        {
+            vertShaderDesc.type         = LLGL::ShaderType::Vertex;
+            vertShaderDesc.source       = vertShaderSource;
+            vertShaderDesc.sourceType   = LLGL::ShaderSourceType::CodeString;
+        }
+        auto vertShader = renderer->CreateShader(vertShaderDesc);
+
+        if (vertShader->HasErrors())
+            std::cerr << vertShader->QueryInfoLog() << std::endl;
 
         // Create fragment shader
-        auto& fragShader = *renderer->CreateShader(LLGL::ShaderType::Fragment);
-
-        shaderSource =
+        auto fragShaderSource =
         (
             "#version 130\n"
             "out vec4 fragColor;\n"
@@ -189,18 +193,27 @@ int main()
             "}\n"
         );
 
-        if (!fragShader.Compile(shaderSource))
-            std::cerr << fragShader.QueryInfoLog() << std::endl;
+        LLGL::ShaderDescriptor fragShaderDesc;
+        {
+            fragShaderDesc.type         = LLGL::ShaderType::Fragment;
+            fragShaderDesc.source       = fragShaderSource;
+            fragShaderDesc.sourceType   = LLGL::ShaderSourceType::CodeString;
+        }
+        auto fragShader = renderer->CreateShader(fragShaderDesc);
+
+        if (fragShader->HasErrors())
+            std::cerr << fragShader->QueryInfoLog() << std::endl;
 
         // Create shader program
-        auto& shaderProgram = *renderer->CreateShaderProgram();
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.vertexFormats     = { vertexFormat };
+            shaderProgramDesc.vertexShader      = vertShader;
+            shaderProgramDesc.fragmentShader    = fragShader;
+        }
+        auto& shaderProgram = *renderer->CreateShaderProgram(shaderProgramDesc);
 
-        shaderProgram.AttachShader(vertShader);
-        shaderProgram.AttachShader(fragShader);
-
-        shaderProgram.BuildInputLayout(1, &vertexFormat);
-
-        if (!shaderProgram.LinkShaders())
+        if (shaderProgram.HasErrors())
             std::cerr << shaderProgram.QueryInfoLog() << std::endl;
 
         auto reflectionDesc = shaderProgram.QueryReflectionDesc();
@@ -264,10 +277,10 @@ int main()
         }
         LLGL::TextureDescriptor textureDesc;
         {
-            textureDesc.type                = LLGL::TextureType::Texture2D;
-            textureDesc.format              = LLGL::Format::RGBA8UNorm;
-            textureDesc.texture2D.width     = 2;
-            textureDesc.texture2D.height    = 2;
+            textureDesc.type    = LLGL::TextureType::Texture2D;
+            textureDesc.format  = LLGL::Format::RGBA8UNorm;
+            textureDesc.width   = 2;
+            textureDesc.height  = 2;
         }
         auto& texture = *renderer->CreateTexture(textureDesc, &imageDesc);
 
@@ -278,10 +291,10 @@ int main()
         LLGL::SubTextureDescriptor subTexDesc;
         {
             subTexDesc.mipLevel         = 0;
-            subTexDesc.texture2D.x      = 0;
-            subTexDesc.texture2D.y      = 1;
-            subTexDesc.texture2D.width  = 2;
-            subTexDesc.texture2D.height = 1;
+            subTexDesc.offset.x         = 0;
+            subTexDesc.offset.y         = 1;
+            subTexDesc.extent.width     = 2;
+            subTexDesc.extent.height    = 1;
         }
         //renderer->WriteTexture(texture, subTexDesc, imageDesc); // update 2D texture
 

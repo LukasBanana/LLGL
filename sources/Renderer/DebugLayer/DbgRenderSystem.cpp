@@ -228,30 +228,9 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
 }
 
-TextureArray* DbgRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    AssertCreateTextureArray(numTextures, textureArray);
-
-    /* Create temporary buffer array with buffer instances */
-    std::vector<Texture*> textureInstanceArray;
-    for (std::uint32_t i = 0; i < numTextures; ++i)
-    {
-        auto textureDbg = LLGL_CAST(DbgTexture*, (*(textureArray++)));
-        textureInstanceArray.push_back(&(textureDbg->instance));
-    }
-
-    return instance_->CreateTextureArray(numTextures, textureInstanceArray.data());
-}
-
 void DbgRenderSystem::Release(Texture& texture)
 {
     ReleaseDbg(textures_, texture);
-}
-
-void DbgRenderSystem::Release(TextureArray& textureArray)
-{
-    instance_->Release(textureArray);
-    //ReleaseDbg(textureArrays_, textureArray);
 }
 
 void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
@@ -281,9 +260,10 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel
         /* Validate output data size */
         const auto requiredDataSize =
         (
-            textureDbg.desc.texture3D.width *
-            textureDbg.desc.texture3D.height *
-            textureDbg.desc.texture3D.depth *
+            textureDbg.desc.width *
+            textureDbg.desc.height *
+            textureDbg.desc.depth *
+            textureDbg.desc.layers *
             ImageFormatSize(imageDesc.format) *
             DataTypeSize(imageDesc.dataType)
         );
@@ -333,22 +313,10 @@ Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     //return TakeOwnership(samplers_, MakeUnique<DbgSampler>());
 }
 
-SamplerArray* DbgRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    AssertCreateSamplerArray(numSamplers, samplerArray);
-    return instance_->CreateSamplerArray(numSamplers, samplerArray);
-}
-
 void DbgRenderSystem::Release(Sampler& sampler)
 {
     instance_->Release(sampler);
     //RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void DbgRenderSystem::Release(SamplerArray& samplerArray)
-{
-    instance_->Release(samplerArray);
-    //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Views ----- */
@@ -421,14 +389,34 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* DbgRenderSystem::CreateShader(const ShaderType type)
+Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(type), type, debugger_));
+    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc.type, debugger_));
 }
 
-ShaderProgram* DbgRenderSystem::CreateShaderProgram()
+static Shader* GetInstanceShader(Shader* shader)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(), debugger_));
+    if (shader)
+    {
+        auto shaderDbg = LLGL_CAST(DbgShader*, shader);
+        return &(shaderDbg->instance);
+    }
+    return nullptr;
+}
+
+ShaderProgram* DbgRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
+{
+    ShaderProgramDescriptor instanceDesc;
+    {
+        instanceDesc.vertexFormats          = desc.vertexFormats;
+        instanceDesc.vertexShader           = GetInstanceShader(desc.vertexShader);
+        instanceDesc.tessControlShader      = GetInstanceShader(desc.tessControlShader);
+        instanceDesc.tessEvaluationShader   = GetInstanceShader(desc.tessEvaluationShader);
+        instanceDesc.geometryShader         = GetInstanceShader(desc.geometryShader);
+        instanceDesc.fragmentShader         = GetInstanceShader(desc.fragmentShader);
+        instanceDesc.computeShader          = GetInstanceShader(desc.computeShader);
+    }
+    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc));
 }
 
 void DbgRenderSystem::Release(Shader& shader)
@@ -650,65 +638,67 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
     switch (desc.type)
     {
         case TextureType::Texture1D:
-            Validate1DTextureSize(desc.texture1D.width);
-            if (desc.texture1D.layers > 1)
+            Validate1DTextureSize(desc.width);
+            if (desc.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::Texture2D:
-            Validate2DTextureSize(desc.texture2D.width);
-            Validate2DTextureSize(desc.texture2D.height);
-            if (desc.texture2D.layers > 1)
+            Validate2DTextureSize(desc.width);
+            Validate2DTextureSize(desc.height);
+            if (desc.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::TextureCube:
             AssertCubeTextures();
-            ValidateCubeTextureSize(desc.textureCube.width, desc.textureCube.height);
-            if (desc.textureCube.layers > 1)
+            ValidateCubeTextureSize(desc.width, desc.height);
+            if (desc.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::Texture3D:
             Assert3DTextures();
-            Validate3DTextureSize(desc.texture3D.width);
-            Validate3DTextureSize(desc.texture3D.height);
-            Validate3DTextureSize(desc.texture3D.depth);
+            Validate3DTextureSize(desc.width);
+            Validate3DTextureSize(desc.height);
+            Validate3DTextureSize(desc.depth);
+            if (desc.layers > 1)
+                WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::Texture1DArray:
             AssertArrayTextures();
-            Validate1DTextureSize(desc.texture1D.width);
-            ValidateArrayTextureLayers(desc.texture1D.layers);
+            Validate1DTextureSize(desc.width);
+            ValidateArrayTextureLayers(desc.layers);
             break;
 
         case TextureType::Texture2DArray:
             AssertArrayTextures();
-            Validate1DTextureSize(desc.texture2D.width);
-            Validate1DTextureSize(desc.texture2D.height);
-            ValidateArrayTextureLayers(desc.texture2D.layers);
+            Validate1DTextureSize(desc.width);
+            Validate1DTextureSize(desc.height);
+            ValidateArrayTextureLayers(desc.layers);
             break;
 
         case TextureType::TextureCubeArray:
             AssertCubeArrayTextures();
-            ValidateCubeTextureSize(desc.textureCube.width, desc.textureCube.height);
-            ValidateArrayTextureLayers(desc.textureCube.layers);
+            ValidateCubeTextureSize(desc.width, desc.height);
+            ValidateArrayTextureLayers(desc.layers);
             break;
 
         case TextureType::Texture2DMS:
             AssertMultiSampleTextures();
-            Validate2DTextureSize(desc.texture2DMS.width);
-            Validate2DTextureSize(desc.texture2DMS.height);
-            if (desc.texture2DMS.layers > 1)
+            Validate2DTextureSize(desc.width);
+            Validate2DTextureSize(desc.height);
+            if (desc.layers > 1)
                 WarnTextureLayersGreaterOne();
             break;
 
         case TextureType::Texture2DMSArray:
             AssertMultiSampleTextures();
             AssertArrayTextures();
-            Validate2DTextureSize(desc.texture2DMS.width);
-            Validate2DTextureSize(desc.texture2DMS.height);
-            ValidateArrayTextureLayers(desc.texture2DMS.layers);
+            Validate2DTextureSize(desc.width);
+            Validate2DTextureSize(desc.height);
+            ValidateArrayTextureLayers(desc.layers);
             break;
 
         default:
@@ -820,25 +810,10 @@ void DbgRenderSystem::ValidateTextureMipRange(const DbgTexture& textureDbg, std:
 
 void DbgRenderSystem::ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
-    switch (textureDbg.GetType())
-    {
-        case TextureType::Texture1DArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture1D.layers);
-            break;
-        case TextureType::Texture2DArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture2D.layers);
-            break;
-        case TextureType::TextureCubeArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.textureCube.layers);
-            break;
-        case TextureType::Texture2DMSArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture2DMS.layers);
-            break;
-        default:
-            if (baseArrayLayer > 0 || numArrayLayers > 1)
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "array layer out of range for non-array texture type");
-            break;
-    }
+    if (IsArrayTexture(textureDbg.GetType()))
+        ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.layers);
+    else if (baseArrayLayer > 0 || numArrayLayers > 1)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "array layer out of range for non-array texture type");
 }
 
 void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit)

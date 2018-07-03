@@ -172,20 +172,9 @@ Sampler* D3D11RenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, MakeUnique<D3D11Sampler>(device_.Get(), desc));
 }
 
-SamplerArray* D3D11RenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    AssertCreateSamplerArray(numSamplers, samplerArray);
-    return TakeOwnership(samplerArrays_, MakeUnique<D3D11SamplerArray>(numSamplers, samplerArray));
-}
-
 void D3D11RenderSystem::Release(Sampler& sampler)
 {
     RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void D3D11RenderSystem::Release(SamplerArray& samplerArray)
-{
-    RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Heaps ----- */
@@ -214,14 +203,16 @@ void D3D11RenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* D3D11RenderSystem::CreateShader(const ShaderType type)
+Shader* D3D11RenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<D3D11Shader>(device_.Get(), type));
+    AssertCreateShader(desc);
+    return TakeOwnership(shaders_, MakeUnique<D3D11Shader>(device_.Get(), desc));
 }
 
-ShaderProgram* D3D11RenderSystem::CreateShaderProgram()
+ShaderProgram* D3D11RenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<D3D11ShaderProgram>(device_.Get()));
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<D3D11ShaderProgram>(device_.Get(), desc));
 }
 
 void D3D11RenderSystem::Release(Shader& shader)

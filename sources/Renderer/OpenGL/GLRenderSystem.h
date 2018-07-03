@@ -24,9 +24,7 @@
 #include "Shader/GLShaderProgram.h"
 
 #include "Texture/GLTexture.h"
-#include "Texture/GLTextureArray.h"
 #include "Texture/GLSampler.h"
-#include "Texture/GLSamplerArray.h"
 #include "Texture/GLRenderTarget.h"
 
 #include "RenderState/GLQuery.h"
@@ -45,6 +43,9 @@
 namespace LLGL
 {
 
+
+//TODO: performance tests show that the manual MIP-map generation is almost always slower than the default MIP-map generation
+//#define LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 class GLRenderSystem : public RenderSystem
 {
@@ -88,13 +89,10 @@ class GLRenderSystem : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
-        TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
-        void Release(TextureArray& textureArray) override;
 
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
-
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
 
         void GenerateMips(Texture& texture) override;
@@ -103,10 +101,8 @@ class GLRenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
-        SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
-        void Release(SamplerArray& samplerArray) override;
 
         /* ----- Resource Heaps ----- */
 
@@ -122,8 +118,8 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Shader ----- */
 
-        Shader* CreateShader(const ShaderType type) override;
-        ShaderProgram* CreateShaderProgram() override;
+        Shader* CreateShader(const ShaderDescriptor& desc) override;
+        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
@@ -172,6 +168,7 @@ class GLRenderSystem : public RenderSystem
         void GenerateSubMipsWithFBO(GLTexture& textureGL, const Extent3D& extent, GLint baseMipLevel, GLint numMipLevels, GLint baseArrayLayer, GLint numArrayLayers);
         void GenerateSubMipsWithTextureView(GLTexture& textureGL, GLuint baseMipLevel, GLuint numMipLevels, GLuint baseArrayLayer, GLuint numArrayLayers);
 
+        #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
         struct MipGenerationFBOPair
         {
             ~MipGenerationFBOPair();
@@ -181,6 +178,7 @@ class GLRenderSystem : public RenderSystem
 
             GLuint fbos[2] = { 0, 0 };
         };
+        #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
         /* ----- Hardware object containers ----- */
 
@@ -190,9 +188,7 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLBuffer>             buffers_;
         HWObjectContainer<GLBufferArray>        bufferArrays_;
         HWObjectContainer<GLTexture>            textures_;
-        HWObjectContainer<GLTextureArray>       textureArrays_;
         HWObjectContainer<GLSampler>            samplers_;
-        HWObjectContainer<GLSamplerArray>       samplerArrays_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;
         HWObjectContainer<GLShader>             shaders_;
         HWObjectContainer<GLShaderProgram>      shaderPrograms_;
@@ -205,7 +201,9 @@ class GLRenderSystem : public RenderSystem
 
         DebugCallback                           debugCallback_;
 
+        #ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
         MipGenerationFBOPair                    mipGenerationFBOPair_;
+        #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 };
 

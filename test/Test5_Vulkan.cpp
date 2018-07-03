@@ -93,36 +93,12 @@ int main()
         // Create command buffer
         auto commands = renderer->CreateCommandBuffer();
 
-        // Load shaders
-        auto LoadSPIRVModule = [](const std::string& filename)
-        {
-            std::ifstream file(filename, std::ios::ate | std::ios::binary);
+        // Create vertex format
+        LLGL::VertexFormat vertexFormat;
 
-            if (!file.good())
-                throw std::runtime_error("failed to read file: \"" + filename + "\"");
-
-            auto fileSize = static_cast<size_t>(file.tellg());
-            std::vector<char> buffer(fileSize);
-
-            file.seekg(0);
-            file.read(buffer.data(), fileSize);
-
-            return buffer;
-        };
-
-        auto shaderVert = renderer->CreateShader(LLGL::ShaderType::Vertex);
-        auto shaderFrag = renderer->CreateShader(LLGL::ShaderType::Fragment);
-
-        shaderVert->LoadBinary(LoadSPIRVModule("Triangle.vert.spv"));
-        shaderFrag->LoadBinary(LoadSPIRVModule("Triangle.frag.spv"));
-
-        // Create shader program
-        auto shaderProgram = renderer->CreateShaderProgram();
-
-        shaderProgram->AttachShader(*shaderVert);
-        shaderProgram->AttachShader(*shaderFrag);
-
-        shaderProgram->LinkShaders();
+        vertexFormat.AppendAttribute({ "coord",    LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB32Float });
 
         // Create vertex data
         auto PointOnCircle = [](float angle, float radius)
@@ -146,17 +122,20 @@ int main()
             { {  1.0f, -1.0f }, { uScale, 0.0f   }, { 1.0f, 1.0f, 1.0f } },
         };
 
-        // Create vertex format
-        LLGL::VertexFormat vertexFormat;
-
-        vertexFormat.AppendAttribute({ "coord",    LLGL::Format::RG32Float });
-        vertexFormat.AppendAttribute({ "texCoord", LLGL::Format::RG32Float });
-        vertexFormat.AppendAttribute({ "color",    LLGL::Format::RGB32Float });
-
-        shaderProgram->BuildInputLayout(1, &vertexFormat);
-
         // Create vertex buffer
         auto vertexBuffer = renderer->CreateBuffer(LLGL::VertexBufferDesc(sizeof(vertices), vertexFormat), vertices);
+
+        // Create shader program
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.vertexFormats     = { vertexFormat };
+            shaderProgramDesc.vertexShader      = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Vertex, "Triangle.vert.spv"));
+            shaderProgramDesc.fragmentShader    = renderer->CreateShader(LLGL::ShaderDescFromFile(LLGL::ShaderType::Fragment, "Triangle.frag.spv"));
+        }
+        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
+
+        if (shaderProgram->HasErrors())
+            std::cerr << shaderProgram->QueryInfoLog() << std::endl;
 
         // Create constant buffers
         struct Matrices

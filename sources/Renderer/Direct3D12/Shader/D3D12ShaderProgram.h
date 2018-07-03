@@ -26,18 +26,14 @@ class D3D12ShaderProgram : public ShaderProgram
 
     public:
 
-        D3D12ShaderProgram();
+        D3D12ShaderProgram(const ShaderProgramDescriptor& desc);
 
-        void AttachShader(Shader& shader) override;
-        void DetachAll() override;
-
-        bool LinkShaders() override;
+        bool HasErrors() const override;
 
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
 
-        void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
         void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
 
@@ -56,6 +52,9 @@ class D3D12ShaderProgram : public ShaderProgram
         inline D3D12Shader* GetCS() const { return cs_; }
 
     private:
+
+        void BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats);
+        void Link();
 
         std::vector<D3D12_INPUT_ELEMENT_DESC>   inputElements_;
         std::vector<std::string>                inputElementNames_; // custom string container to hold valid string pointers.

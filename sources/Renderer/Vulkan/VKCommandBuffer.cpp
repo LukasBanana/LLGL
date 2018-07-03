@@ -13,7 +13,6 @@
 #include "RenderState/VKResourceHeap.h"
 #include "RenderState/VKQuery.h"
 #include "Texture/VKSampler.h"
-#include "Texture/VKSamplerArray.h"
 #include "Texture/VKRenderTarget.h"
 #include "Buffer/VKBuffer.h"
 #include "Buffer/VKBufferArray.h"

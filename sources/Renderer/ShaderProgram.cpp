@@ -6,6 +6,7 @@
  */
 
 #include <LLGL/ShaderProgram.h>
+#include <LLGL/Shader.h>
 #include <algorithm>
 
 
@@ -17,7 +18,7 @@ namespace LLGL
  * ======= Protected: =======
  */
 
-bool ShaderProgram::ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders) const
+bool ShaderProgram::ValidateShaderComposition(Shader* const * shaders, std::size_t numShaders)
 {
     enum ShaderTypeBits
     {

@@ -114,9 +114,13 @@ TextureDescriptor GLTexture::QueryDesc() const
     */
     GLTypes::Unmap(texDesc.format, static_cast<GLenum>(internalFormat));
 
-    texDesc.texture3D.width     = static_cast<std::uint32_t>(extent[0]);
-    texDesc.texture3D.height    = static_cast<std::uint32_t>(extent[1]);
-    texDesc.texture3D.depth     = static_cast<std::uint32_t>(extent[2]);
+    texDesc.width   = static_cast<std::uint32_t>(extent[0]);
+    texDesc.height  = static_cast<std::uint32_t>(extent[1]);
+
+    if (GetType() == TextureType::Texture3D)
+        texDesc.depth   = static_cast<std::uint32_t>(extent[2]);
+    else
+        texDesc.layers  = static_cast<std::uint32_t>(extent[2]);
 
     return texDesc;
 }
@@ -145,9 +149,9 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
 
         if (extent)
         {
-            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_WIDTH, &extent[0]);
+            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_WIDTH,  &extent[0]);
             glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_HEIGHT, &extent[1]);
-            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_DEPTH, &extent[2]);
+            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_DEPTH,  &extent[2]);
         }
     }
     else
@@ -165,9 +169,9 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
 
             if (extent)
             {
-                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &extent[0]);
+                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH,  &extent[0]);
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &extent[1]);
-                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH, &extent[2]);
+                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &extent[2]);
             }
         }
         GLStateManager::active->PopBoundTexture();

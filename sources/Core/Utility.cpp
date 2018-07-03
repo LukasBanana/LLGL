@@ -11,6 +11,8 @@
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
+#include <LLGL/Shader.h>
+#include <cstring>
 
 
 namespace LLGL
@@ -23,10 +25,10 @@ LLGL_EXPORT TextureDescriptor Texture1DDesc(Format format, std::uint32_t width, 
 {
     TextureDescriptor desc;
     {
-        desc.type               = TextureType::Texture1D;
-        desc.format             = format;
-        desc.flags              = flags;
-        desc.texture1D.width    = width;
+        desc.type   = TextureType::Texture1D;
+        desc.format = format;
+        desc.flags  = flags;
+        desc.width  = width;
     }
     return desc;
 }
@@ -35,11 +37,11 @@ LLGL_EXPORT TextureDescriptor Texture2DDesc(Format format, std::uint32_t width, 
 {
     TextureDescriptor desc;
     {
-        desc.type               = TextureType::Texture2D;
-        desc.format             = format;
-        desc.flags              = flags;
-        desc.texture2D.width    = width;
-        desc.texture2D.height   = height;
+        desc.type   = TextureType::Texture2D;
+        desc.format = format;
+        desc.flags  = flags;
+        desc.width  = width;
+        desc.height = height;
     }
     return desc;
 }
@@ -48,12 +50,12 @@ LLGL_EXPORT TextureDescriptor Texture3DDesc(Format format, std::uint32_t width, 
 {
     TextureDescriptor desc;
     {
-        desc.type               = TextureType::Texture3D;
-        desc.format             = format;
-        desc.flags              = flags;
-        desc.texture3D.width    = width;
-        desc.texture3D.height   = height;
-        desc.texture3D.depth    = depth;
+        desc.type   = TextureType::Texture3D;
+        desc.format = format;
+        desc.flags  = flags;
+        desc.width  = width;
+        desc.height = height;
+        desc.depth  = depth;
     }
     return desc;
 }
@@ -62,11 +64,11 @@ LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width
 {
     TextureDescriptor desc;
     {
-        desc.type               = TextureType::TextureCube;
-        desc.format             = format;
-        desc.flags              = flags;
-        desc.textureCube.width  = width;
-        desc.textureCube.height = height;
+        desc.type   = TextureType::TextureCube;
+        desc.format = format;
+        desc.flags  = flags;
+        desc.width  = width;
+        desc.height = height;
     }
     return desc;
 }
@@ -75,11 +77,11 @@ LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t wi
 {
     TextureDescriptor desc;
     {
-        desc.type               = TextureType::Texture1DArray;
-        desc.format             = format;
-        desc.flags              = flags;
-        desc.texture1D.width    = width;
-        desc.texture1D.layers   = layers;
+        desc.type   = TextureType::Texture1DArray;
+        desc.format = format;
+        desc.flags  = flags;
+        desc.width  = width;
+        desc.layers = layers;
     }
     return desc;
 }
@@ -88,12 +90,12 @@ LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t wi
 {
     TextureDescriptor desc;
     {
-        desc.type               = TextureType::Texture2DArray;
-        desc.format             = format;
-        desc.flags              = flags;
-        desc.texture2D.width    = width;
-        desc.texture2D.height   = height;
-        desc.texture2D.layers   = layers;
+        desc.type   = TextureType::Texture2DArray;
+        desc.format = format;
+        desc.flags  = flags;
+        desc.width  = width;
+        desc.height = height;
+        desc.layers = layers;
     }
     return desc;
 }
@@ -102,43 +104,41 @@ LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t 
 {
     TextureDescriptor desc;
     {
-        desc.type               = TextureType::TextureCubeArray;
-        desc.format             = format;
-        desc.flags              = flags;
-        desc.textureCube.width  = width;
-        desc.textureCube.height = height;
-        desc.textureCube.layers = layers;
+        desc.type   = TextureType::TextureCubeArray;
+        desc.format = format;
+        desc.flags  = flags;
+        desc.width  = width;
+        desc.height = height;
+        desc.layers = layers;
     }
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t samples, bool fixedSamples, long flags)
+LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t samples, long flags)
 {
     TextureDescriptor desc;
     {
-        desc.type                       = TextureType::Texture2DMS;
-        desc.format                     = format;
-        desc.flags                      = flags;
-        desc.texture2DMS.width          = width;
-        desc.texture2DMS.height         = height;
-        desc.texture2DMS.samples        = samples;
-        desc.texture2DMS.fixedSamples   = fixedSamples;
+        desc.type       = TextureType::Texture2DMS;
+        desc.format     = format;
+        desc.flags      = flags;
+        desc.width      = width;
+        desc.height     = height;
+        desc.samples    = samples;
     }
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, std::uint32_t samples, bool fixedSamples, long flags)
+LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, std::uint32_t samples, long flags)
 {
     TextureDescriptor desc;
     {
-        desc.type                       = TextureType::Texture2DMSArray;
-        desc.format                     = format;
-        desc.flags                      = flags;
-        desc.texture2DMS.width          = width;
-        desc.texture2DMS.height         = height;
-        desc.texture2DMS.layers         = layers;
-        desc.texture2DMS.samples        = samples;
-        desc.texture2DMS.fixedSamples   = fixedSamples;
+        desc.type       = TextureType::Texture2DMSArray;
+        desc.format     = format;
+        desc.flags      = flags;
+        desc.width      = width;
+        desc.height     = height;
+        desc.layers     = layers;
+        desc.samples    = samples;
     }
     return desc;
 }
@@ -189,6 +189,118 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(std::uint64_t size, const Storage
         desc.flags                      = flags;
         desc.storageBuffer.storageType  = storageType;
         desc.storageBuffer.stride       = stride;
+    }
+    return desc;
+}
+
+/* ----- ShaderDescriptor utility functions ----- */
+
+LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const char* filename, const char* entryPoint, const char* profile, long flags)
+{
+    ShaderDescriptor desc;
+
+    if (filename != nullptr)
+    {
+        if (auto fileExt = std::strrchr(filename, '.'))
+        {
+            /* Check if filename refers to a text-based source file */
+            bool isTextFile = false;
+
+            for (auto ext : { "hlsl", "fx", "glsl", "vert", "tesc", "tese", "geom", "comp" })
+            {
+                if (std::strcmp(fileExt + 1, ext) == 0)
+                {
+                    isTextFile = true;
+                    break;
+                }
+            }
+
+            /* Initialize descriptor */
+            desc.type       = type;
+            desc.source     = filename;
+            desc.sourceSize = 0;
+            desc.sourceType = (isTextFile ? ShaderSourceType::CodeFile : ShaderSourceType::BinaryFile);
+            desc.entryPoint = entryPoint;
+            desc.profile    = profile;
+            desc.flags      = flags;
+        }
+    }
+
+    return desc;
+}
+
+/* ----- ShaderProgramDescriptor utility functions ----- */
+
+static void AssignShaderToDesc(ShaderProgramDescriptor& desc, Shader* shader)
+{
+    if (shader != nullptr)
+    {
+        /* Assign shader types their respective struct members */
+        switch (shader->GetType())
+        {
+            case ShaderType::Undefined:
+                break;
+            case ShaderType::Vertex:
+                desc.vertexShader = shader;
+                break;
+            case ShaderType::TessControl:
+                desc.tessControlShader = shader;
+                break;
+            case ShaderType::TessEvaluation:
+                desc.tessEvaluationShader = shader;
+                break;
+            case ShaderType::Geometry:
+                desc.geometryShader = shader;
+                break;
+            case ShaderType::Fragment:
+                desc.fragmentShader = shader;
+                break;
+            case ShaderType::Compute:
+                desc.computeShader = shader;
+                break;
+        }
+    }
+}
+
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::initializer_list<Shader*>& shaders, const std::initializer_list<VertexFormat>& vertexFormats)
+{
+    ShaderProgramDescriptor desc;
+    {
+        desc.vertexFormats = vertexFormats;
+        for (auto shader : shaders)
+            AssignShaderToDesc(desc, shader);
+    }
+    return desc;
+}
+
+LLGL_EXPORT ShaderProgramDescriptor ShaderProgramDesc(const std::vector<Shader*>& shaders, const std::vector<VertexFormat>& vertexFormats)
+{
+    ShaderProgramDescriptor desc;
+    {
+        desc.vertexFormats = vertexFormats;
+        for (auto shader : shaders)
+            AssignShaderToDesc(desc, shader);
+    }
+    return desc;
+}
+
+/* ----- PipelineLayoutDescriptor utility functions ----- */
+
+static void Convert(BindingDescriptor& dst, const ShaderReflectionDescriptor::ResourceView& src)
+{
+    dst.type        = src.type;
+    dst.stageFlags  = src.stageFlags;
+    dst.slot        = src.slot;
+    dst.arraySize   = src.arraySize;
+}
+
+LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDescriptor& reflectionDesc)
+{
+    PipelineLayoutDescriptor desc;
+    {
+        desc.bindings.resize(reflectionDesc.resourceViews.size());
+        for (std::size_t i = 0; i < desc.bindings.size(); ++i)
+            Convert(desc.bindings[i], reflectionDesc.resourceViews[i]);
     }
     return desc;
 }

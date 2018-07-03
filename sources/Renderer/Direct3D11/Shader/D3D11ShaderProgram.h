@@ -26,18 +26,14 @@ class D3D11ShaderProgram : public ShaderProgram
 
     public:
 
-        D3D11ShaderProgram(ID3D11Device* device);
+        D3D11ShaderProgram(ID3D11Device* device, const ShaderProgramDescriptor& desc);
 
-        void AttachShader(Shader& shader) override;
-        void DetachAll() override;
-
-        bool LinkShaders() override;
+        bool HasErrors() const override;
 
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
 
-        void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
         void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
 
@@ -60,7 +56,8 @@ class D3D11ShaderProgram : public ShaderProgram
 
     private:
 
-        ID3D11Device*               device_         = nullptr;
+        void BuildInputLayout(ID3D11Device* device, std::size_t numVertexFormats, const VertexFormat* vertexFormats);
+        void Link();
 
         ComPtr<ID3D11InputLayout>   inputLayout_;
 

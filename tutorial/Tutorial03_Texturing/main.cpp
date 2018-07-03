@@ -20,7 +20,6 @@ class Tutorial03 : public Tutorial
     LLGL::Sampler*          sampler[5]          = {};
     LLGL::ResourceHeap*     resourceHeaps[5]    = {};
 
-    LLGL::TextureArray*     textureArray    = nullptr;
     int                     samplerIndex    = 0;
 
 public:
@@ -132,14 +131,14 @@ public:
             LLGL::TextureDescriptor texDesc;
             {
                 // Texture type: 2D
-                texDesc.type                = LLGL::TextureType::Texture2D;
+                texDesc.type    = LLGL::TextureType::Texture2D;
 
                 // Texture hardware format: RGBA with normalized 8-bit unsigned char type
-                texDesc.format              = LLGL::Format::RGBA8UNorm;
+                texDesc.format  = LLGL::Format::RGBA8UNorm;
 
                 // Texture size
-                texDesc.texture2D.width     = texWidth;
-                texDesc.texture2D.height    = texHeight;
+                texDesc.width   = texWidth;
+                texDesc.height  = texHeight;
             }
             #if 0//TEST
             texDesc.type = LLGL::TextureType::TextureCube;
@@ -168,10 +167,6 @@ public:
         // Query texture descriptor to see what is really stored on the GPU
         auto textureDesc = colorMap->QueryDesc();
         auto textureExtent = colorMap->QueryMipLevelSize(0);
-
-        // Create array of textures, which is generally done to bind multiple textures at once, but here it is only for demonstration purposes
-        // Note: Not to be confused with an "array texture" which is an arrayed texture type, e.g. LLGL::TextureType::Texture2DArray
-        textureArray = renderer->CreateTextureArray(1, &colorMap);
     }
 
     void CreateSamplers()
@@ -235,17 +230,8 @@ private:
         commands->SetGraphicsPipeline(*pipeline);
         commands->SetVertexBuffer(*vertexBuffer);
 
-        if (resourceHeaps[samplerIndex])
-        {
-            // Set graphics shader resources
-            commands->SetGraphicsResourceHeap(*resourceHeaps[samplerIndex], 0);
-        }
-        else
-        {
-            // Set texture and sampler state on slot index 0
-            commandsExt->SetTextureArray(*textureArray, 0, LLGL::StageFlags::FragmentStage);
-            commandsExt->SetSampler(*sampler[samplerIndex], 0, LLGL::StageFlags::FragmentStage);
-        }
+        // Set graphics shader resources
+        commands->SetGraphicsResourceHeap(*resourceHeaps[samplerIndex], 0);
 
         // Draw fullscreen quad
         commands->Draw(4, 0);

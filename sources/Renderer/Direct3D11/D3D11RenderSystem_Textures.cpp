@@ -30,19 +30,19 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     switch (descD3D.type)
     {
         case TextureType::Texture1D:
-            descD3D.texture1D.layers = 1;
+            descD3D.layers = 1;
             break;
         case TextureType::Texture2D:
-            descD3D.texture2D.layers = 1;
+            descD3D.layers = 1;
             break;
         case TextureType::TextureCube:
-            descD3D.textureCube.layers = 6;
+            descD3D.layers = 6;
             break;
         case TextureType::TextureCubeArray:
-            descD3D.textureCube.layers *= 6;
+            descD3D.layers *= 6;
             break;
         case TextureType::Texture2DMS:
-            descD3D.texture2DMS.layers = 1;
+            descD3D.layers = 1;
             break;
         default:
             break;
@@ -78,97 +78,15 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     return TakeOwnership(textures_, std::move(texture));
 }
 
-TextureArray* D3D11RenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    AssertCreateTextureArray(numTextures, textureArray);
-    return TakeOwnership(textureArrays_, MakeUnique<D3D11TextureArray>(numTextures, textureArray));
-}
-
 void D3D11RenderSystem::Release(Texture& texture)
 {
     RemoveFromUniqueSet(textures_, &texture);
 }
 
-void D3D11RenderSystem::Release(TextureArray& textureArray)
-{
-    RemoveFromUniqueSet(textureArrays_, &textureArray);
-}
-
 void D3D11RenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
 {
-    /* Determine update region */
-    Offset3D offset;
-    Extent3D extent;
-
-    switch (texture.GetType())
-    {
-        case TextureType::Texture1D:
-            offset.x        = subTextureDesc.texture1D.x;
-            extent.width    = subTextureDesc.texture1D.width;
-            extent.height   = 1;
-            extent.depth    = 1;
-            break;
-
-        case TextureType::Texture2D:
-            offset.x        = subTextureDesc.texture2D.x;
-            offset.y        = subTextureDesc.texture2D.y;
-            extent.width    = subTextureDesc.texture2D.width;
-            extent.height   = subTextureDesc.texture2D.height;
-            extent.depth    = 1;
-            break;
-
-        case TextureType::Texture3D:
-            offset.x        = subTextureDesc.texture3D.x;
-            offset.y        = subTextureDesc.texture3D.y;
-            offset.z        = subTextureDesc.texture3D.z;
-            extent.width    = subTextureDesc.texture3D.width;
-            extent.height   = subTextureDesc.texture3D.height;
-            extent.depth    = subTextureDesc.texture3D.depth;
-            break;
-
-        case TextureType::TextureCube:
-            offset.x        = subTextureDesc.textureCube.x;
-            offset.y        = subTextureDesc.textureCube.y;
-            offset.z        = static_cast<std::uint32_t>(subTextureDesc.textureCube.cubeFaceOffset);
-            extent.width    = subTextureDesc.textureCube.width;
-            extent.height   = subTextureDesc.textureCube.height;
-            extent.depth    = 1;
-            break;
-
-        case TextureType::Texture1DArray:
-            offset.x        = subTextureDesc.texture1D.x;
-            offset.y        = subTextureDesc.texture1D.layerOffset;
-            offset.z        = 0;
-            extent.width    = subTextureDesc.texture1D.width;
-            extent.height   = subTextureDesc.texture1D.layers;
-            extent.depth    = 1;
-            break;
-
-        case TextureType::Texture2DArray:
-            offset.x        = subTextureDesc.texture2D.x;
-            offset.y        = subTextureDesc.texture2D.y;
-            offset.z        = subTextureDesc.texture2D.layerOffset;
-            extent.width    = subTextureDesc.texture2D.width;
-            extent.height   = subTextureDesc.texture2D.height;
-            extent.depth    = subTextureDesc.texture2D.layers;
-            break;
-
-        case TextureType::TextureCubeArray:
-            offset.x        = subTextureDesc.textureCube.x;
-            offset.y        = subTextureDesc.textureCube.y;
-            offset.z        = subTextureDesc.textureCube.layerOffset * 6 + static_cast<std::uint32_t>(subTextureDesc.textureCube.cubeFaceOffset);
-            extent.width    = subTextureDesc.textureCube.width;
-            extent.height   = subTextureDesc.textureCube.height;
-            extent.depth    = subTextureDesc.textureCube.cubeFaces;
-            break;
-
-        default:
-            /* Ignore multi-sample textures */
-            return;
-    }
-
     /* Update generic texture at determined region */
-    UpdateGenericTexture(texture, subTextureDesc.mipLevel, 0, offset, extent, imageDesc);
+    UpdateGenericTexture(texture, subTextureDesc.mipLevel, 0, subTextureDesc.offset, subTextureDesc.extent, imageDesc);
 }
 
 static void ValidateImageDataSize(std::size_t dataSize, std::size_t requiredDataSize)
@@ -306,9 +224,9 @@ void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const Te
     /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE1D_DESC descDX;
     {
-        descDX.Width            = desc.texture1D.width;
+        descDX.Width            = desc.width;
         descDX.MipLevels        = GetDXTextureMipLevels(desc);
-        descDX.ArraySize        = desc.texture1D.layers;
+        descDX.ArraySize        = desc.layers;
         descDX.Format           = D3D11Types::Map(desc.format);
         descDX.Usage            = D3D11_USAGE_DEFAULT;
         descDX.BindFlags        = GetDXTextureBindFlags(desc);
@@ -318,10 +236,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const Te
     textureD3D.CreateTexture1D(device_.Get(), descDX, desc.flags);
 
     /* Initialize texture image data */
-    InitializeGpuTexture(
-        textureD3D, desc.format, imageDesc,
-        desc.texture1D.width, 1, 1, desc.texture1D.layers
-    );
+    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.width, 1, 1, desc.layers);
 }
 
 void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
@@ -329,10 +244,10 @@ void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const Te
     /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE2D_DESC descDX;
     {
-        descDX.Width                = desc.texture2D.width;
-        descDX.Height               = desc.texture2D.height;
+        descDX.Width                = desc.width;
+        descDX.Height               = desc.height;
         descDX.MipLevels            = GetDXTextureMipLevels(desc);
-        descDX.ArraySize            = desc.texture2D.layers;
+        descDX.ArraySize            = desc.layers;
         descDX.Format               = D3D11Types::Map(desc.format);
         descDX.SampleDesc.Count     = 1;
         descDX.SampleDesc.Quality   = 0;
@@ -344,10 +259,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const Te
     textureD3D.CreateTexture2D(device_.Get(), descDX, desc.flags);
 
     /* Initialize texture image data */
-    InitializeGpuTexture(
-        textureD3D, desc.format, imageDesc,
-        desc.texture2D.width, desc.texture2D.height, 1, desc.texture2D.layers
-    );
+    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.width, desc.height, 1, desc.layers);
 }
 
 void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
@@ -355,9 +267,9 @@ void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const Te
     /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE3D_DESC descDX;
     {
-        descDX.Width            = desc.texture3D.width;
-        descDX.Height           = desc.texture3D.height;
-        descDX.Depth            = desc.texture3D.depth;
+        descDX.Width            = desc.width;
+        descDX.Height           = desc.height;
+        descDX.Depth            = desc.depth;
         descDX.MipLevels        = GetDXTextureMipLevels(desc);
         descDX.Format           = D3D11Types::Map(desc.format);
         descDX.Usage            = D3D11_USAGE_DEFAULT;
@@ -368,10 +280,7 @@ void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const Te
     textureD3D.CreateTexture3D(device_.Get(), descDX, desc.flags);
 
     /* Initialize texture image data */
-    InitializeGpuTexture(
-        textureD3D, desc.format, imageDesc,
-        desc.texture3D.width, desc.texture3D.height, desc.texture3D.depth, 1
-    );
+    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.width, desc.height, desc.depth, 1);
 }
 
 void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const TextureDescriptor& desc)
@@ -379,13 +288,13 @@ void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const 
     /* Setup D3D texture descriptor and create D3D texture resouce */
     D3D11_TEXTURE2D_DESC descDX;
     {
-        descDX.Width                = desc.texture2DMS.width;
-        descDX.Height               = desc.texture2DMS.height;
+        descDX.Width                = desc.width;
+        descDX.Height               = desc.height;
         descDX.MipLevels            = 1;
-        descDX.ArraySize            = desc.texture2DMS.layers;
+        descDX.ArraySize            = desc.layers;
         descDX.Format               = D3D11Types::Map(desc.format);
-        descDX.SampleDesc.Count     = desc.texture2DMS.samples;
-        descDX.SampleDesc.Quality   = 0;//(descD3D.texture2DMS.fixedSamples ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
+        descDX.SampleDesc.Count     = desc.samples;
+        descDX.SampleDesc.Quality   = 0;//((descD3D.flags & TextureFlags::FixedSamples) ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);
         descDX.Usage                = D3D11_USAGE_DEFAULT;
         descDX.BindFlags            = GetDXTextureBindFlags(desc);
         descDX.CPUAccessFlags       = 0;
