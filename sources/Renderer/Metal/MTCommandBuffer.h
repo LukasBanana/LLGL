@@ -67,22 +67,18 @@ class MTCommandBuffer : public CommandBufferExt
         /* ----- Constant Buffers ------ */
 
         void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Storage Buffers ----- */
 
         void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Textures ----- */
 
         void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Samplers ----- */
 
         void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) override;
-        void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) override;
 
         /* ----- Resource Heaps ----- */
 

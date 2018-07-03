@@ -44,8 +44,9 @@ MTLDataType ToMTLDataType(const DataType dataType)
         case DataType::Int32:   return MTLDataTypeInt;
         case DataType::UInt32:  return MTLDataTypeUInt;
 
-        case DataType::Float:   return MTLDataTypeFloat;
-        case DataType::Double:  break;
+        case DataType::Float16: return MTLDataTypeHalf;
+        case DataType::Float32: return MTLDataTypeFloat;
+        case DataType::Float64: break;
     }
     MapFailed("DataType", "MTLDataType");
 }

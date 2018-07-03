@@ -113,19 +113,9 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     return TakeOwnership(textures_, std::move(textureMT));
 }
 
-TextureArray* MTRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    return nullptr;//todo
-}
-
 void MTRenderSystem::Release(Texture& texture)
 {
     RemoveFromUniqueSet(textures_, &texture);
-}
-
-void MTRenderSystem::Release(TextureArray& textureArray)
-{
-    //todo
 }
 
 void MTRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
@@ -155,21 +145,10 @@ Sampler* MTRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return nullptr;//todo
 }
 
-SamplerArray* MTRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    return nullptr;//todo
-}
-
 void MTRenderSystem::Release(Sampler& sampler)
 {
     //todo
     //RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void MTRenderSystem::Release(SamplerArray& samplerArray)
-{
-    //todo
-    //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Heaps ----- */
@@ -199,14 +178,16 @@ void MTRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* MTRenderSystem::CreateShader(const ShaderType type)
+Shader* MTRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<MTShader>(device_, type));
+    AssertCreateShader(desc);
+    return TakeOwnership(shaders_, MakeUnique<MTShader>(device_, desc));
 }
 
-ShaderProgram* MTRenderSystem::CreateShaderProgram()
+ShaderProgram* MTRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<MTShaderProgram>());
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<MTShaderProgram>(desc));
 }
 
 void MTRenderSystem::Release(Shader& shader)

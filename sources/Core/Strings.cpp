@@ -18,6 +18,7 @@ LLGL_EXPORT const char* ToString(const ShaderType t)
 
     switch (t)
     {
+        case T::Undefined:      return "<undefined>";
         case T::Vertex:         return "vertex";
         case T::TessControl:    return "tessellation control";
         case T::TessEvaluation: return "tessellation evaluation";
@@ -115,7 +116,7 @@ LLGL_EXPORT const char* ToString(const Format t)
 
     switch (t)
     {
-        case T::Undefined:          return "undefined";
+        case T::Undefined:          return "<undefined>";
 
         /* --- Color formats --- */
         case T::R8UNorm:            return "R8UNorm";

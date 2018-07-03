@@ -23,12 +23,10 @@ class MTShader : public Shader
 
     public:
 
-        MTShader(id<MTLDevice> device, const ShaderType type);
+        MTShader(id<MTLDevice> device, const ShaderDescriptor& desc);
         ~MTShader();
-
-        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
-
-        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
+    
+        bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
 
@@ -47,14 +45,15 @@ class MTShader : public Shader
         }
 
     private:
-    
+
+        bool CompileSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc);
         void ReleaseError();
 
-        id<MTLDevice>   device_     = nil;
         id<MTLLibrary>  library_    = nil;
         id<MTLFunction> native_     = nil;
-    
+
         NSError*        error_      = nullptr;
+        bool            hasErrors_  = false;
 
 };
 

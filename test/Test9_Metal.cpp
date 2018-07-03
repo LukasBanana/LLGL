@@ -103,24 +103,16 @@ int main()
         
         stbi_image_free(imageBuffer);
         
-        // Create shaders
-        auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
-        auto fragShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
-        
-        auto shaderSource = ReadFileContent("TestShader.metal");
-        
-        vertShader->Compile(shaderSource, { "VMain", "1.1" });
-        fragShader->Compile(shaderSource, { "FMain", "1.1" });
-
         // Create shader program
-        auto shaderProgram = renderer->CreateShaderProgram();
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.vertexFormats     = { vertexBufferDesc.vertexBuffer.format };
+            shaderProgramDesc.vertexShader      = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "TestShader.metal", "VMain", "1.1" });
+            shaderProgramDesc.fragmentShader    = renderer->CreateShader({ LLGL::ShaderType::Fragment, "TestShader.metal", "FMain", "1.1" });
+        }
+        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
         
-        shaderProgram->AttachShader(*vertShader);
-        shaderProgram->AttachShader(*fragShader);
-        
-        shaderProgram->BuildInputLayout(1, &(vertexBufferDesc.vertexBuffer.format));
-        
-        if (!shaderProgram->LinkShaders())
+        if (shaderProgram->HasErrors())
             throw std::runtime_error(shaderProgram->QueryInfoLog());
         
         // Create graphics pipeline

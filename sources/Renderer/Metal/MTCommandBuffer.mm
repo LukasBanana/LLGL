@@ -168,19 +168,9 @@ void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long
     //todo
 }
 
-void MTCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
-{
-    //todo
-}
-
 /* ----- Storage Buffers ----- */
 
 void MTCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
-{
-    //todo
-}
-
-void MTCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
 {
     //todo
 }
@@ -206,19 +196,9 @@ void MTCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stag
     }
 }
 
-void MTCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags)
-{
-    //todo
-}
-
 /* ----- Samplers ----- */
 
 void MTCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
-{
-    //todo
-}
-
-void MTCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags)
 {
     //todo
 }

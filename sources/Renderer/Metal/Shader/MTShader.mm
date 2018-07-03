@@ -6,16 +6,21 @@
  */
 
 #include "MTShader.h"
+#include "../../../Core/Exception.h"
+#include <cstring>
 
 
 namespace LLGL
 {
 
 
-MTShader::MTShader(id<MTLDevice> device, const ShaderType type) :
-    Shader  { type   },
-    device_ { device }
+MTShader::MTShader(id<MTLDevice> device, const ShaderDescriptor& desc) :
+    Shader { desc.type }
 {
+    if (IsShaderSourceCode(desc.sourceType))
+        hasErrors_ = CompileSource(device, desc);
+    else
+        ThrowNotSupportedExcept(__FUNCTION__, "binary shader source");
 }
 
 MTShader::~MTShader()
@@ -29,56 +34,19 @@ MTShader::~MTShader()
 
 static MTLLanguageVersion GetMTLLanguageVersion(const ShaderDescriptor& desc)
 {
-    if (desc.target == "2.0")
-        return MTLLanguageVersion2_0;
-    if (desc.target == "1.2")
-        return MTLLanguageVersion1_2;
+    if (desc.profile != nullptr)
+    {
+        if (std::strcmp(desc.profile, "2.0") == 0)
+            return MTLLanguageVersion2_0;
+        if (std::strcmp(desc.profile, "1.2") == 0)
+            return MTLLanguageVersion1_2;
+    }
     return MTLLanguageVersion1_1;
 }
 
-bool MTShader::Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc)
+bool MTShader::HasErrors() const
 {
-    /* Convert strings to NSString */
-    NSString* sourceString = [[NSString alloc] initWithUTF8String:sourceCode.c_str()];
-    NSString* entryPoint = [[NSString alloc] initWithUTF8String:shaderDesc.entryPoint.c_str()];
-
-    /* Initialize shader compiler options */
-    MTLCompileOptions* opt = [MTLCompileOptions alloc];
-    [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
-
-    /* Load shader library */
-    ReleaseError();
-    error_ = [NSError alloc];
-    
-    library_ = [device_
-        newLibraryWithSource:   sourceString
-        options:                opt
-        error:                  &error_
-    ];
-    
-    bool result = false;
-    
-    if (library_)
-    {
-        /* Create shader function */
-        native_ = [library_ newFunctionWithName:entryPoint];
-        if (native_)
-        {
-            result = true;
-            ReleaseError();
-        }
-    }
-    
-    /* Release NSString objects */
-    [sourceString release];
-    [entryPoint release];
-    
-    return result;
-}
-
-bool MTShader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
-{
-    return false; // dummy
+    return hasErrors_;
 }
 
 std::string MTShader::Disassemble(int flags)
@@ -104,6 +72,57 @@ std::string MTShader::QueryInfoLog()
 /*
  * ======= Private: =======
  */
+
+bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shaderDesc)
+{
+    /* Get source */
+    NSString* sourceString = nil;
+    
+    if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
+    {
+        NSString* filePath = [[NSString alloc] initWithUTF8String:shaderDesc.source];
+        sourceString = [[NSString alloc] initWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil];
+        [filePath release];
+    }
+    else
+        sourceString = [[NSString alloc] initWithUTF8String:shaderDesc.source];
+
+    /* Convert entry point to string to NSString */
+    NSString* entryPoint = [[NSString alloc] initWithUTF8String:(shaderDesc.entryPoint != nullptr ? shaderDesc.entryPoint : "")];
+
+    /* Initialize shader compiler options */
+    MTLCompileOptions* opt = [MTLCompileOptions alloc];
+    [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
+
+    /* Load shader library */
+    ReleaseError();
+    error_ = [NSError alloc];
+    
+    library_ = [device
+        newLibraryWithSource:   sourceString
+        options:                opt
+        error:                  &error_
+    ];
+    
+    bool result = false;
+    
+    if (library_)
+    {
+        /* Create shader function */
+        native_ = [library_ newFunctionWithName:entryPoint];
+        if (native_)
+        {
+            result = true;
+            ReleaseError();
+        }
+    }
+    
+    /* Release NSString objects */
+    [sourceString release];
+    [entryPoint release];
+    
+    return result;
+}
 
 void MTShader::ReleaseError()
 {

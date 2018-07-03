@@ -21,6 +21,7 @@ long Shader::GetStageFlags() const
 {
     switch (GetType())
     {
+        case ShaderType::Undefined:         break;
         case ShaderType::Vertex:            return StageFlags::VertexStage;
         case ShaderType::TessControl:       return StageFlags::TessControlStage;
         case ShaderType::TessEvaluation:    return StageFlags::TessEvaluationStage;
