@@ -139,6 +139,7 @@ class MTRenderSystem : public RenderSystem
     private:
 
         void CreateDeviceResources();
+        void QueryRenderingCaps();
 
         /* ----- Common objects ----- */
 

@@ -77,13 +77,9 @@ class GLShaderProgram : public ShaderProgram
         void QueryBufferProperties(ShaderReflectionDescriptor::ResourceView& resourceView, GLenum programInterface, GLuint resourceIndex) const;
         #endif // /GL_ARB_program_interface_query
 
-        GLuint              id_ = 0;
-
+        GLuint              id_                 = 0;
         GLShaderUniform     uniform_;
-
         bool                hasFragmentShader_  = false;
-        bool                isLinked_           = false;
-
         StreamOutputFormat  streamOutputFormat_;
 
 };

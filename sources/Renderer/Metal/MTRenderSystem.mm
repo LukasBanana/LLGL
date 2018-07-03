@@ -20,6 +20,7 @@ namespace LLGL
 MTRenderSystem::MTRenderSystem()
 {
     CreateDeviceResources();
+    QueryRenderingCaps();
 }
 
 MTRenderSystem::~MTRenderSystem()
@@ -130,7 +131,13 @@ void MTRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel,
 
 void MTRenderSystem::GenerateMips(Texture& texture)
 {
-    //todo
+    auto& textureMT = LLGL_CAST(MTTexture&, texture);
+    
+    id<MTLCommandBuffer> cmdBuffer = [commandQueue_->GetNative() commandBuffer];
+    id<MTLBlitCommandEncoder> blitCmdEncoder = [cmdBuffer blitCommandEncoder];
+    
+    [blitCmdEncoder generateMipmapsForTexture:textureMT.GetNative()];
+    [cmdBuffer commit];
 }
 
 void MTRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
@@ -286,6 +293,22 @@ void MTRenderSystem::CreateDeviceResources()
     
     /* Create command queue */
     commandQueue_ = MakeUnique<MTCommandQueue>(device_);
+}
+
+void MTRenderSystem::QueryRenderingCaps()
+{
+    RenderingCapabilities caps;
+    
+    caps.shadingLanguages =
+    {
+        ShadingLanguage::Metal,
+        ShadingLanguage::Metal_1_0,
+        ShadingLanguage::Metal_1_1,
+        ShadingLanguage::Metal_1_2,
+    };
+    
+    
+    SetRenderingCaps(caps);
 }
 
 

@@ -98,7 +98,6 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
 
 void GLRenderSystem::Release(Texture& texture)
 {
-    auto& textureGL = LLGL_CAST(GLTexture&, texture);
     RemoveFromUniqueSet(textures_, &texture);
 }
 

@@ -93,6 +93,9 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
     /* Initialize shader compiler options */
     MTLCompileOptions* opt = [MTLCompileOptions alloc];
     [opt setLanguageVersion:GetMTLLanguageVersion(shaderDesc)];
+    
+    if ((shaderDesc.flags & (ShaderCompileFlags::O1 | ShaderCompileFlags::O2 | ShaderCompileFlags::O3)) != 0)
+        [opt setFastMathEnabled:YES];
 
     /* Load shader library */
     ReleaseError();
@@ -120,6 +123,7 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
     /* Release NSString objects */
     [sourceString release];
     [entryPoint release];
+    [opt release];
     
     return result;
 }

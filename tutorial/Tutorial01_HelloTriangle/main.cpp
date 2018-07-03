@@ -98,8 +98,8 @@ int main(int argc, char* argv[])
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
             #ifdef __APPLE__
-            CompileShader(vertShader, ReadTextFile("vertex.140core.glsl"));
-            CompileShader(fragShader, ReadTextFile("fragment.140core.glsl"));
+            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "vertex.140core.glsl"   });
+            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "fragment.140core.glsl" });
             #else
             vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "vertex.glsl"   });
             fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "fragment.glsl" });
@@ -114,6 +114,11 @@ int main(int argc, char* argv[])
         {
             vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "shader.hlsl", "VS", "vs_4_0" });
             fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_4_0" });
+        }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::Metal) != languages.end())
+        {
+            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "shader.metal", "VS", "1.1" });
+            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "shader.metal", "PS", "1.1" });
         }
 
         for (auto shader : { vertShader, fragShader })

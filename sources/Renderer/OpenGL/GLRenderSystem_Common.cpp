@@ -94,7 +94,6 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 
 void GLRenderSystem::Release(Sampler& sampler)
 {
-    auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     RemoveFromUniqueSet(samplers_, &sampler);
 }
 
@@ -120,8 +119,6 @@ RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& d
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)
 {
-    /* Release render target (GLRenderTarget destructor notifies GL state manager about object releases) */
-    auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
     RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
@@ -165,7 +162,6 @@ void GLRenderSystem::Release(Shader& shader)
 
 void GLRenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
