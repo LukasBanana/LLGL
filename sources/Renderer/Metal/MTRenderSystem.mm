@@ -9,6 +9,7 @@
 #include "../CheckedCast.h"
 #include "../../Core/Helper.h"
 #include "../../Core/Vendor.h"
+#include "MTFeatureSet.h"
 
 
 namespace LLGL
@@ -295,19 +296,27 @@ void MTRenderSystem::CreateDeviceResources()
     commandQueue_ = MakeUnique<MTCommandQueue>(device_);
 }
 
+static const MTLFeatureSet g_potentialFeatureSets[] =
+{
+    MTLFeatureSet_macOS_ReadWriteTextureTier2,
+    MTLFeatureSet_macOS_GPUFamily1_v3,
+    MTLFeatureSet_macOS_GPUFamily1_v2,
+    MTLFeatureSet_macOS_GPUFamily1_v1,
+};
+
 void MTRenderSystem::QueryRenderingCaps()
 {
     RenderingCapabilities caps;
     
-    caps.shadingLanguages =
+    for (auto fset : g_potentialFeatureSets)
     {
-        ShadingLanguage::Metal,
-        ShadingLanguage::Metal_1_0,
-        ShadingLanguage::Metal_1_1,
-        ShadingLanguage::Metal_1_2,
-    };
-    
-    
+        if ([device_ supportsFeatureSet:fset])
+        {
+            LoadFeatureSetCaps(device_, fset, caps);
+            break;
+        }
+    }
+
     SetRenderingCaps(caps);
 }
 
