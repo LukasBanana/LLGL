@@ -13,6 +13,34 @@ namespace LLGL
 {
 
 
+static MTLPixelFormat GetColorMTLPixelFormat(int /*color*/)
+{
+    return MTLPixelFormatBGRA8Unorm;
+}
+
+static MTLPixelFormat GetDepthStencilMTLPixelFormat(int depthBits, int stencilBits)
+{
+    #if 0 //TODO: graphics pipeline must get the correct type from the render context
+    if (depthBits > 0 && stencilBits > 0)
+    {
+        if (depthBits == 32)
+            return MTLPixelFormatDepth32Float_Stencil8;
+    }
+    else if (depthBits > 0)
+    {
+        if (depthBits == 32)
+            return MTLPixelFormatDepth32Float;
+        else if (depthBits == 16)
+            return MTLPixelFormatDepth16Unorm;
+    }
+    else if (stencilBits > 0)
+        return MTLPixelFormatStencil8;
+    return MTLPixelFormatDepth24Unorm_Stencil8;
+    #else
+    return MTLPixelFormatDepth32Float_Stencil8;
+    #endif
+}
+
 /* ----- Common ----- */
 
 MTRenderContext::MTRenderContext(
@@ -33,10 +61,9 @@ MTRenderContext::MTRenderContext(
     [wnd setContentView:view_];
     [wnd.contentViewController setView:view_];
     
-    #if 1//TEST
-    view_.colorPixelFormat          = MTLPixelFormatBGRA8Unorm_sRGB;
-    view_.depthStencilPixelFormat   = MTLPixelFormatDepth32Float_Stencil8;
-    #endif
+    /* Initialize color and depth buffer */
+    view_.colorPixelFormat          = GetColorMTLPixelFormat(desc.videoMode.colorBits);
+    view_.depthStencilPixelFormat   = GetDepthStencilMTLPixelFormat(desc.videoMode.depthBits, desc.videoMode.stencilBits);
 }
 
 MTRenderContext::~MTRenderContext()

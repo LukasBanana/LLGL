@@ -69,8 +69,8 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
         renderPipelineDesc.vertexFunction           = shaderProgramMT->GetVertexMTLFunction();
         renderPipelineDesc.inputPrimitiveTopology   = GetMTLPrimitiveTopologyClass(desc.primitiveTopology);
         
-        //TODO...
-        renderPipelineDesc.colorAttachments[0].pixelFormat  = MTLPixelFormatBGRA8Unorm_sRGB;
+        //TODO: get pixel formats from render target or render context
+        renderPipelineDesc.colorAttachments[0].pixelFormat  = MTLPixelFormatBGRA8Unorm;
         renderPipelineDesc.depthAttachmentPixelFormat       = MTLPixelFormatDepth32Float_Stencil8;
         renderPipelineDesc.stencilAttachmentPixelFormat     = MTLPixelFormatDepth32Float_Stencil8;
         
