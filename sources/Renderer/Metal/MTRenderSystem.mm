@@ -138,6 +138,7 @@ void MTRenderSystem::GenerateMips(Texture& texture)
     id<MTLBlitCommandEncoder> blitCmdEncoder = [cmdBuffer blitCommandEncoder];
     
     [blitCmdEncoder generateMipmapsForTexture:textureMT.GetNative()];
+    [blitCmdEncoder endEncoding];
     [cmdBuffer commit];
 }
 
@@ -150,13 +151,12 @@ void MTRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
 
 Sampler* MTRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(samplers_, MakeUnique<MTSampler>(device_, desc));
 }
 
 void MTRenderSystem::Release(Sampler& sampler)
 {
-    //todo
-    //RemoveFromUniqueSet(samplers_, &sampler);
+    RemoveFromUniqueSet(samplers_, &sampler);
 }
 
 /* ----- Resource Heaps ----- */

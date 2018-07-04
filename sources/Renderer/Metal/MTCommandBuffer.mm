@@ -11,6 +11,7 @@
 #include "Buffer/MTBuffer.h"
 #include "RenderState/MTGraphicsPipeline.h"
 #include "Texture/MTTexture.h"
+#include "Texture/MTSampler.h"
 #include "../CheckedCast.h"
 #include <algorithm>
 
@@ -200,7 +201,16 @@ void MTCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long stag
 
 void MTCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
 {
-    //todo
+    /* Get native MTLSamplerState object */
+    auto& samplerMT = LLGL_CAST(MTSampler&, sampler);
+    
+    auto samplerState   = samplerMT.GetNative();
+    auto index          = static_cast<NSUInteger>(slot);
+    
+    if ((stageFlags & StageFlags::VertexStage) != 0)
+        [renderEncoder_ setVertexSamplerState:samplerState atIndex:index];
+    if ((stageFlags & StageFlags::FragmentStage) != 0)
+        [renderEncoder_ setFragmentSamplerState:samplerState atIndex:index];
 }
 
 /* ----- Resource Heaps ----- */

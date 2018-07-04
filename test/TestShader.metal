@@ -25,7 +25,7 @@ vertex VertexOut VMain(VertexIn inp [[stage_in]])
     VertexOut outp;
 
     outp.position = float4(inp.position, 0.0, 1.0);
-    outp.texCoord = inp.texCoord;
+    outp.texCoord = inp.texCoord * 3.0 - 1.0;
     outp.color    = float4(inp.color, 1.0);
 
     return outp;
@@ -33,12 +33,13 @@ vertex VertexOut VMain(VertexIn inp [[stage_in]])
 
 fragment float4 FMain(
     VertexOut           inp [[stage_in]],
-    texture2d<float>    tex [[texture(0)]])
+    texture2d<float>    tex [[texture(0)]],
+    sampler             smpl [[sampler(0)]])
 {
-    constexpr sampler texSampler(mag_filter::linear, min_filter::linear);
+    constexpr sampler smpl2(mag_filter::linear, min_filter::linear);
     #if 0
-    return inp.color * tex.sample(texSampler, inp.texCoord);
+    return inp.color * tex.sample(smpl, inp.texCoord);
     #else
-    return tex.sample(texSampler, inp.texCoord);
+    return tex.sample(smpl, inp.texCoord);
     #endif
 }

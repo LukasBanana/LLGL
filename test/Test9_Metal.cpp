@@ -103,6 +103,23 @@ int main()
         
         stbi_image_free(imageBuffer);
         
+        renderer->GenerateMips(*texture);
+        
+        // Create sampler
+        LLGL::SamplerDescriptor samplerDesc;
+        {
+            samplerDesc.addressModeU    = LLGL::SamplerAddressMode::Mirror;
+            samplerDesc.addressModeV    = LLGL::SamplerAddressMode::Border;
+            samplerDesc.mipMapping      = true;
+            samplerDesc.borderColor     = { 1, 1, 1, 1 };
+            #if 0
+            samplerDesc.magFilter       = LLGL::SamplerFilter::Nearest;
+            samplerDesc.minFilter       = LLGL::SamplerFilter::Nearest;
+            samplerDesc.minLOD          = 2.0f;
+            #endif
+        }
+        auto sampler = renderer->CreateSampler(samplerDesc);
+        
         // Create shader program
         LLGL::ShaderProgramDescriptor shaderProgramDesc;
         {
@@ -137,6 +154,7 @@ int main()
             commands->SetVertexBuffer(*vertexBuffer);
             
             commands->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
+            commands->SetSampler(*sampler, 0, LLGL::StageFlags::FragmentStage);
 
             commands->Draw(4, 0);
 

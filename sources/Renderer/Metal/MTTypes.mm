@@ -17,8 +17,6 @@ namespace MTTypes
 {
 
 
-/* ----- Map functions ----- */
-
 [[noreturn]]
 void MapFailed(const std::string& typeName, const std::string& mtlTypeName)
 {
@@ -265,6 +263,39 @@ MTLCompareFunction ToMTLCompareFunction(const CompareOp compareOp)
         case CompareOp::Ever:           return MTLCompareFunctionAlways;
     }
     MapFailed("CompareOp", "MTLCompareFunction");
+}
+
+MTLSamplerAddressMode ToMTLSamplerAddressMode(const SamplerAddressMode addressMode)
+{
+    switch (addressMode)
+    {
+        case SamplerAddressMode::Repeat:        return MTLSamplerAddressModeRepeat;
+        case SamplerAddressMode::Mirror:        return MTLSamplerAddressModeMirrorRepeat;
+        case SamplerAddressMode::Clamp:         return MTLSamplerAddressModeClampToEdge;
+        case SamplerAddressMode::Border:        return MTLSamplerAddressModeClampToBorderColor;
+        case SamplerAddressMode::MirrorOnce:    return MTLSamplerAddressModeMirrorClampToEdge;
+    }
+    MapFailed("SamplerAddressMode", "MTLSamplerAddressMode");
+}
+
+MTLSamplerMinMagFilter ToMTLSamplerMinMagFilter(const SamplerFilter filter)
+{
+    switch (filter)
+    {
+        case SamplerFilter::Nearest:    return MTLSamplerMinMagFilterNearest;
+        case SamplerFilter::Linear:     return MTLSamplerMinMagFilterLinear;
+    }
+    MapFailed("SamplerFilter", "MTLSamplerMinMagFilter");
+}
+
+MTLSamplerMipFilter ToMTLSamplerMipFilter(const SamplerFilter filter)
+{
+    switch (filter)
+    {
+        case SamplerFilter::Nearest:    return MTLSamplerMipFilterNearest;
+        case SamplerFilter::Linear:     return MTLSamplerMipFilterLinear;
+    }
+    MapFailed("SamplerFilter", "MTLSamplerMipFilter");
 }
 
 Format ToFormat(const MTLPixelFormat pixelFormat)
