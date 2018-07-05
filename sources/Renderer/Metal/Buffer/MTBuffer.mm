@@ -6,6 +6,7 @@
  */
 
 #include "MTBuffer.h"
+#include <string.h>
 
 
 namespace LLGL
@@ -33,6 +34,21 @@ MTBuffer::MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const voi
 MTBuffer::~MTBuffer()
 {
     [native_ release];
+}
+
+void MTBuffer::Write(const void* data, std::size_t dataSize, std::size_t offset)
+{
+    /* Set buffer region to update */
+    NSRange range;
+    range.location  = static_cast<NSUInteger>(offset);
+    range.length    = static_cast<NSUInteger>(dataSize);
+    
+    /* Copy data to CPU buffer region */
+    auto byteAlignedBuffer = reinterpret_cast<std::int8_t*>([native_ contents]);
+    ::memcpy(byteAlignedBuffer + offset, data, dataSize);
+    
+    /* Notify Metal API about update */
+    [native_ didModifyRange:range];
 }
 
 

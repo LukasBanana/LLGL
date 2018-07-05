@@ -126,23 +126,58 @@ TextureDescriptor MTTexture::QueryDesc() const
     return texDesc;
 }
 
-void MTTexture::Write(const SrcImageDescriptor& imageDesc, const Offset3D& offset, const Extent3D& extent)
+void MTTexture::Write(
+    const SrcImageDescriptor&   imageDesc,
+    const Offset3D&             offset,
+    const Extent3D&             extent,
+    std::uint32_t               mipLevel)
 {
     //TODO: convert data if necessary
     
-    /* Replace region of native texture with source image data */
+    /* Convert region to MTLRegion */
     MTLRegion region;
     MTTypes::Convert(region.origin, offset);
     MTTypes::Convert(region.size, extent);
     
-    auto format = MTTypes::ToFormat([native_ pixelFormat]);
+    /* Get dimensions */
+    auto        format          = MTTypes::ToFormat([native_ pixelFormat]);
+    NSUInteger  bytesPerRow     = ([native_ width] * FormatBitSize(format) / 8);
+    NSUInteger  bytesPerSlice   = ([native_ height] * bytesPerRow);
 
-    [native_
-        replaceRegion:  region
-        mipmapLevel:    0
-        withBytes:      imageDesc.data
-        bytesPerRow:    ([native_ width] * FormatBitSize(format) / 8)
-    ];
+    /* Replace region of native texture with source image data */
+    if (GetType() == TextureType::Texture3D)
+    {
+        [native_
+            replaceRegion:  region
+            mipmapLevel:    0
+            withBytes:      imageDesc.data
+            bytesPerRow:    bytesPerRow
+        ];
+    }
+    else
+    {
+        /* Take z and depth components as array layer range */
+        auto firstArrayLayer    = region.origin.z;
+        auto numArrayLayers     = region.size.depth;
+        
+        region.origin.z         = 0;
+        region.size.depth       = 1;
+        
+        auto byteAlignedData = reinterpret_cast<const std::int8_t*>(imageDesc.data);
+        
+        for (NSUInteger arrayLayer = 0; arrayLayer < numArrayLayers; ++arrayLayer)
+        {
+            [native_
+                replaceRegion:  region
+                mipmapLevel:    static_cast<NSUInteger>(mipLevel)
+                slice:          (firstArrayLayer + arrayLayer)
+                withBytes:      byteAlignedData
+                bytesPerRow:    bytesPerRow
+                bytesPerImage:  bytesPerSlice
+            ];
+            byteAlignedData += bytesPerSlice;
+        }
+    }
 }
 
 

@@ -74,7 +74,8 @@ Buffer* MTRenderSystem::CreateBuffer(const BufferDescriptor& desc, const void* i
 
 BufferArray* MTRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
-    return nullptr;//todo
+    AssertCreateBufferArray(numBuffers, bufferArray);
+    return TakeOwnership(bufferArrays_, MakeUnique<MTBufferArray>((*bufferArray)->GetType(), numBuffers, bufferArray));
 }
 
 void MTRenderSystem::Release(Buffer& buffer)
@@ -84,13 +85,13 @@ void MTRenderSystem::Release(Buffer& buffer)
 
 void MTRenderSystem::Release(BufferArray& bufferArray)
 {
-    //todo
-    //RemoveFromUniqueSet(bufferArrays_, &bufferArray);
+    RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 
 void MTRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    bufferMT.Write(data, dataSize, offset);
 }
 
 void* MTRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)

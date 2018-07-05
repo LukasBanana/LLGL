@@ -9,6 +9,7 @@
 #include "MTRenderContext.h"
 #include "MTTypes.h"
 #include "Buffer/MTBuffer.h"
+#include "Buffer/MTBufferArray.h"
 #include "RenderState/MTGraphicsPipeline.h"
 #include "RenderState/MTResourceHeap.h"
 #include "Texture/MTTexture.h"
@@ -133,7 +134,12 @@ void MTCommandBuffer::SetVertexBuffer(Buffer& buffer)
 
 void MTCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    //todo
+    auto& bufferArrayMT = LLGL_CAST(MTBufferArray&, bufferArray);
+    [renderEncoder_
+        setVertexBuffers:   bufferArrayMT.GetIDArray().data()
+        offsets:            bufferArrayMT.GetOffsets().data()
+        withRange:          NSMakeRange(0, static_cast<NSUInteger>(bufferArrayMT.GetIDArray().size()))
+    ];
 }
 
 void MTCommandBuffer::SetIndexBuffer(Buffer& buffer)
@@ -167,7 +173,11 @@ void MTCommandBuffer::EndStreamOutput()
 
 void MTCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    if ((stageFlags & StageFlags::VertexStage) != 0)
+        [renderEncoder_ setVertexBuffer:bufferMT.GetNative() offset:0 atIndex:static_cast<NSUInteger>(slot)];
+    if ((stageFlags & StageFlags::FragmentStage) != 0)
+        [renderEncoder_ setFragmentBuffer:bufferMT.GetNative() offset:0 atIndex:static_cast<NSUInteger>(slot)];
 }
 
 /* ----- Storage Buffers ----- */

@@ -32,7 +32,12 @@ class MTTexture : public Texture
 
         TextureDescriptor QueryDesc() const override;
 
-        void Write(const SrcImageDescriptor& imageDesc, const Offset3D& offset, const Extent3D& extent);
+        void Write(
+            const SrcImageDescriptor&   imageDesc,
+            const Offset3D&             offset,
+            const Extent3D&             extent,
+            std::uint32_t               mipLevel = 0
+        );
 
         // Returns the native MTLTexture object.
         inline id<MTLTexture> GetNative() const

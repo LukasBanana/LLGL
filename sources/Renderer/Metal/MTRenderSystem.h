@@ -19,6 +19,7 @@
 #include "MTRenderContext.h"
 
 #include "Buffer/MTBuffer.h"
+#include "Buffer/MTBufferArray.h"
 
 #include "RenderState/MTGraphicsPipeline.h"
 #include "RenderState/MTPipelineLayout.h"
@@ -154,7 +155,7 @@ class MTRenderSystem : public RenderSystem
         HWObjectInstance<MTCommandQueue>        commandQueue_;
         HWObjectContainer<MTCommandBuffer>      commandBuffers_;
         HWObjectContainer<MTBuffer>             buffers_;
-        //HWObjectContainer<MTBufferArray>        bufferArrays_;
+        HWObjectContainer<MTBufferArray>        bufferArrays_;
         HWObjectContainer<MTTexture>            textures_;
         HWObjectContainer<MTSampler>            samplers_;
         //HWObjectContainer<MTRenderTarget>       renderTargets_;

@@ -64,6 +64,9 @@ MTRenderContext::MTRenderContext(
     /* Initialize color and depth buffer */
     view_.colorPixelFormat          = GetColorMTLPixelFormat(desc.videoMode.colorBits);
     view_.depthStencilPixelFormat   = GetDepthStencilMTLPixelFormat(desc.videoMode.depthBits, desc.videoMode.stencilBits);
+    
+    if (desc.vsync.enabled)
+        view_.preferredFramesPerSecond = static_cast<NSInteger>(desc.vsync.refreshRate);
 }
 
 MTRenderContext::~MTRenderContext()

@@ -25,6 +25,8 @@ class MTBuffer : public Buffer
 
         MTBuffer(id<MTLDevice> device, const BufferDescriptor& desc, const void* initialData);
         ~MTBuffer();
+    
+        void Write(const void* data, std::size_t dataSize, std::size_t offset);
 
         // Returns the native MTLBuffer object.
         inline id<MTLBuffer> GetNative() const

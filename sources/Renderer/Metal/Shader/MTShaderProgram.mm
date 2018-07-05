@@ -146,17 +146,25 @@ void MTShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const Verte
         //TODO: per-instance data by attribute (not by vertex format!)
         layoutDesc.stepFunction = MTLVertexStepFunctionPerVertex;
         layoutDesc.stepRate     = 1;
-        layoutDesc.stride       = (NSUInteger)vertexFormats[i].stride;
+        layoutDesc.stride       = static_cast<NSUInteger>(vertexFormats[i].stride);
 
         /* Convert attributes */
         const auto& attribs = vertexFormats[i].attributes;
+        
+        #if 1//TODO
+        if (!attribs.empty() && attribs.front().instanceDivisor > 0)
+        {
+            layoutDesc.stepFunction = MTLVertexStepFunctionPerInstance;
+            layoutDesc.stepRate     = static_cast<NSUInteger>(attribs.front().instanceDivisor);
+        }
+        #endif
         
         for (std::size_t j = 0; j < attribs.size(); ++j)
         {
             MTLVertexAttributeDescriptor* attribDesc = vertexDesc_.attributes[attribIdx++];
             
             attribDesc.format       = MTTypes::ToMTLVertexFormat(attribs[j].format);
-            attribDesc.offset       = (NSUInteger)attribs[j].offset;
+            attribDesc.offset       = static_cast<NSUInteger>(attribs[j].offset);
             attribDesc.bufferIndex  = inputSlot;
         }
     }

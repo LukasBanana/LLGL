@@ -20,6 +20,9 @@
 
 std::string GetSelectedRendererModule(int argc, char* argv[])
 {
+    #ifdef __APPLE__
+    return "Metal";
+    #else
     /* Select renderer module */
     std::string rendererModule;
 
@@ -75,6 +78,7 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
     std::cout << "selected renderer: " << rendererModule << std::endl;
 
     return rendererModule;
+    #endif // /__APPLE__
 }
 
 std::string ReadFileContent(const std::string& filename)
