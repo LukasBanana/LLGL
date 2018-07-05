@@ -163,13 +163,12 @@ void MTRenderSystem::Release(Sampler& sampler)
 
 ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(resourceHeaps_, MakeUnique<MTResourceHeap>(desc));
 }
 
 void MTRenderSystem::Release(ResourceHeap& resourceHeap)
 {
-    //todo
-    //RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+    RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
 /* ----- Render Targets ----- */
@@ -212,13 +211,12 @@ void MTRenderSystem::Release(ShaderProgram& shaderProgram)
 
 PipelineLayout* MTRenderSystem::CreatePipelineLayout(const PipelineLayoutDescriptor& desc)
 {
-    return nullptr;//todo
+    return TakeOwnership(pipelineLayouts_, MakeUnique<MTPipelineLayout>(desc));
 }
 
 void MTRenderSystem::Release(PipelineLayout& pipelineLayout)
 {
-    //todo
-    //RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
+    RemoveFromUniqueSet(pipelineLayouts_, &pipelineLayout);
 }
 
 /* ----- Pipeline States ----- */

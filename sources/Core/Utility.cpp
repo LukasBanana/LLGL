@@ -206,7 +206,7 @@ LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const cha
             /* Check if filename refers to a text-based source file */
             bool isTextFile = false;
 
-            for (auto ext : { "hlsl", "fx", "glsl", "vert", "tesc", "tese", "geom", "comp" })
+            for (auto ext : { "hlsl", "fx", "glsl", "vert", "tesc", "tese", "geom", "comp", "metal" })
             {
                 if (std::strcmp(fileExt + 1, ext) == 0)
                 {

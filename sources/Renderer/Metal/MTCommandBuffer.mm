@@ -10,6 +10,7 @@
 #include "MTTypes.h"
 #include "Buffer/MTBuffer.h"
 #include "RenderState/MTGraphicsPipeline.h"
+#include "RenderState/MTResourceHeap.h"
 #include "Texture/MTTexture.h"
 #include "Texture/MTSampler.h"
 #include "../CheckedCast.h"
@@ -217,7 +218,8 @@ void MTCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stag
 
 void MTCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
-    //todo
+    auto& resourceHeapMT = LLGL_CAST(MTResourceHeap&, resourceHeap);
+    resourceHeapMT.Bind(renderEncoder_, computeEncoder_);
 }
 
 void MTCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)

@@ -130,7 +130,7 @@ class MTCommandBuffer : public CommandBufferExt
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
 
         id<MTLRenderCommandEncoder>     renderEncoder_          = nil;
-        //id<MTLComputeCommandEncoder>    computeEncoder_         = nil;
+        id<MTLComputeCommandEncoder>    computeEncoder_         = nil;
 
         MTLPrimitiveType                primitiveType_          = MTLPrimitiveTypeTriangle;
         id<MTLBuffer>                   indexBuffer_            = nil;

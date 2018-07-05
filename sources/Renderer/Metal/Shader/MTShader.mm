@@ -118,6 +118,10 @@ bool MTShader::CompileSource(id<MTLDevice> device, const ShaderDescriptor& shade
             result = true;
             ReleaseError();
         }
+        else
+        {
+            //TODO...
+        }
     }
     
     /* Release NSString objects */

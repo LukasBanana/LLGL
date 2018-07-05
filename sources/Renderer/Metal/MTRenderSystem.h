@@ -21,6 +21,8 @@
 #include "Buffer/MTBuffer.h"
 
 #include "RenderState/MTGraphicsPipeline.h"
+#include "RenderState/MTPipelineLayout.h"
+#include "RenderState/MTResourceHeap.h"
 
 #include "Shader/MTShader.h"
 #include "Shader/MTShaderProgram.h"
@@ -158,10 +160,10 @@ class MTRenderSystem : public RenderSystem
         //HWObjectContainer<MTRenderTarget>       renderTargets_;
         HWObjectContainer<MTShader>             shaders_;
         HWObjectContainer<MTShaderProgram>      shaderPrograms_;
-        //HWObjectContainer<MTPipelineLayout>     pipelineLayouts_;
+        HWObjectContainer<MTPipelineLayout>     pipelineLayouts_;
         HWObjectContainer<MTGraphicsPipeline>   graphicsPipelines_;
         //HWObjectContainer<MTComputePipeline>    computePipelines_;
-        //HWObjectContainer<MTResourceHeap>       resourceHeaps_;
+        HWObjectContainer<MTResourceHeap>       resourceHeaps_;
         //HWObjectContainer<MTQuery>              queries_;
         //HWObjectContainer<MTFence>              fences_;
 
