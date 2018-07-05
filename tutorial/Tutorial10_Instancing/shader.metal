@@ -89,7 +89,7 @@ fragment float4 PS(
     if (color.a < 0.5)
         discard_fragment();
     
-    //color.rgb *= inp.color;
+    color.rgb *= inp.color;
     
     return color;
 }
