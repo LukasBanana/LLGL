@@ -238,6 +238,20 @@ MTLPrimitiveType ToMTLPrimitiveType(const PrimitiveTopology primitiveTopology)
     MapFailed("PrimitiveTopology", "MTLPrimitiveType");
 }
 
+MTLPrimitiveTopologyClass ToMTLPrimitiveTopologyClass(const PrimitiveTopology primitiveTopology)
+{
+    switch (primitiveTopology)
+    {
+        case PrimitiveTopology::PointList:      return MTLPrimitiveTopologyClassPoint;
+        case PrimitiveTopology::LineList:       /* pass */
+        case PrimitiveTopology::LineStrip:      return MTLPrimitiveTopologyClassLine;
+        case PrimitiveTopology::TriangleList:   /* pass */
+        case PrimitiveTopology::TriangleStrip:  return MTLPrimitiveTopologyClassTriangle;
+        default:                                break;
+    }
+    MapFailed("PrimitiveTopology", "MTLPrimitiveTopologyClass");
+}
+
 MTLCullMode ToMTLCullMode(const CullMode cullMode)
 {
     switch (cullMode)

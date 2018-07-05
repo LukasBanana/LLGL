@@ -142,7 +142,10 @@ struct LLGL_EXPORT SamplerDescriptor
 
     /**
     \brief Border color. By default black (0, 0, 0, 0).
-    \note For Vulkan and Metal, only three predefined border colors are supported: (0, 0, 0, 0), (0, 0, 0, 1), and (1, 1, 1, 1).
+    \note For Vulkan and Metal, only three predefined border colors are supported:
+    - Transparenty black: <code>{0,0,0,0}</code>
+    - Opaque black: <code>{0,0,0,1}</code>
+    - Opaque white: <code>{1,1,1,1}</code>
     */
     ColorRGBAf          borderColor     = { 0.0f, 0.0f, 0.0f, 0.0f };
 };

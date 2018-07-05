@@ -36,19 +36,6 @@ static BOOL MTBoolean(bool value)
     return (value ? YES : NO);
 }
 
-static MTLPrimitiveTopologyClass GetMTLPrimitiveTopologyClass(const PrimitiveTopology topology)
-{
-    switch (topology)
-    {
-        case PrimitiveTopology::PointList:      return MTLPrimitiveTopologyClassPoint;
-        case PrimitiveTopology::LineList:       /* pass */
-        case PrimitiveTopology::LineStrip:      return MTLPrimitiveTopologyClassLine;
-        case PrimitiveTopology::TriangleList:   /* pass */
-        case PrimitiveTopology::TriangleStrip:  return MTLPrimitiveTopologyClassTriangle;
-        default:                                return MTLPrimitiveTopologyClassUnspecified;
-    }
-}
-
 MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
 {
     /* Get native shader functions */
@@ -67,7 +54,7 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
         renderPipelineDesc.alphaToOneEnabled        = NO;
         renderPipelineDesc.fragmentFunction         = shaderProgramMT->GetFragmentMTLFunction();
         renderPipelineDesc.vertexFunction           = shaderProgramMT->GetVertexMTLFunction();
-        renderPipelineDesc.inputPrimitiveTopology   = GetMTLPrimitiveTopologyClass(desc.primitiveTopology);
+        renderPipelineDesc.inputPrimitiveTopology   = MTTypes::ToMTLPrimitiveTopologyClass(desc.primitiveTopology);
         
         //TODO: get pixel formats from render target or render context
         renderPipelineDesc.colorAttachments[0].pixelFormat  = MTLPixelFormatBGRA8Unorm;

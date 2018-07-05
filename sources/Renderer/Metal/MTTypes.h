@@ -28,18 +28,19 @@ namespace MTTypes
 {
 
 
-MTLDataType         	ToMTLDataType           ( const DataType            dataType          );
-MTLPixelFormat      	ToMTLPixelFormat        ( const Format              format            );
-MTLVertexFormat     	ToMTLVertexFormat       ( const Format              format            );
-MTLTextureType          ToMTLTextureType        ( const TextureType         textureType       );
-MTLPrimitiveType        ToMTLPrimitiveType      ( const PrimitiveTopology   primitiveTopology );
-MTLCullMode             ToMTLCullMode           ( const CullMode            cullMode          );
-MTLCompareFunction      ToMTLCompareFunction    ( const CompareOp           compareOp         );
-MTLSamplerAddressMode   ToMTLSamplerAddressMode ( const SamplerAddressMode  addressMode       );
-MTLSamplerMinMagFilter  ToMTLSamplerMinMagFilter( const SamplerFilter       filter            );
-MTLSamplerMipFilter     ToMTLSamplerMipFilter   ( const SamplerFilter       filter            );
+MTLDataType         	    ToMTLDataType               ( const DataType            dataType          );
+MTLPixelFormat      	    ToMTLPixelFormat            ( const Format              format            );
+MTLVertexFormat     	    ToMTLVertexFormat           ( const Format              format            );
+MTLTextureType              ToMTLTextureType            ( const TextureType         textureType       );
+MTLPrimitiveType            ToMTLPrimitiveType          ( const PrimitiveTopology   primitiveTopology );
+MTLPrimitiveTopologyClass   ToMTLPrimitiveTopologyClass ( const PrimitiveTopology   primitiveTopology );
+MTLCullMode                 ToMTLCullMode               ( const CullMode            cullMode          );
+MTLCompareFunction          ToMTLCompareFunction        ( const CompareOp           compareOp         );
+MTLSamplerAddressMode       ToMTLSamplerAddressMode     ( const SamplerAddressMode  addressMode       );
+MTLSamplerMinMagFilter  	ToMTLSamplerMinMagFilter    ( const SamplerFilter       filter            );
+MTLSamplerMipFilter         ToMTLSamplerMipFilter       ( const SamplerFilter       filter            );
 
-Format                  ToFormat                ( const MTLPixelFormat      pixelFormat       );
+Format                      ToFormat                    ( const MTLPixelFormat      pixelFormat       );
 
 void Convert(MTLOrigin& dst, const Offset3D& src);
 void Convert(MTLSize& dst, const Extent3D& src);
