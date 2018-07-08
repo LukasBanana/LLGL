@@ -25,10 +25,10 @@ LLGL_EXPORT TextureDescriptor Texture1DDesc(Format format, std::uint32_t width, 
 {
     TextureDescriptor desc;
     {
-        desc.type   = TextureType::Texture1D;
-        desc.format = format;
-        desc.flags  = flags;
-        desc.width  = width;
+        desc.type           = TextureType::Texture1D;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
     }
     return desc;
 }
@@ -37,11 +37,11 @@ LLGL_EXPORT TextureDescriptor Texture2DDesc(Format format, std::uint32_t width, 
 {
     TextureDescriptor desc;
     {
-        desc.type   = TextureType::Texture2D;
-        desc.format = format;
-        desc.flags  = flags;
-        desc.width  = width;
-        desc.height = height;
+        desc.type           = TextureType::Texture2D;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
+        desc.extent.height  = height;
     }
     return desc;
 }
@@ -50,12 +50,12 @@ LLGL_EXPORT TextureDescriptor Texture3DDesc(Format format, std::uint32_t width, 
 {
     TextureDescriptor desc;
     {
-        desc.type   = TextureType::Texture3D;
-        desc.format = format;
-        desc.flags  = flags;
-        desc.width  = width;
-        desc.height = height;
-        desc.depth  = depth;
+        desc.type           = TextureType::Texture3D;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
+        desc.extent.height  = height;
+        desc.extent.depth   = depth;
     }
     return desc;
 }
@@ -64,11 +64,11 @@ LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width
 {
     TextureDescriptor desc;
     {
-        desc.type   = TextureType::TextureCube;
-        desc.format = format;
-        desc.flags  = flags;
-        desc.width  = width;
-        desc.height = height;
+        desc.type           = TextureType::TextureCube;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
+        desc.extent.height  = height;
     }
     return desc;
 }
@@ -77,11 +77,11 @@ LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t wi
 {
     TextureDescriptor desc;
     {
-        desc.type   = TextureType::Texture1DArray;
-        desc.format = format;
-        desc.flags  = flags;
-        desc.width  = width;
-        desc.layers = layers;
+        desc.type           = TextureType::Texture1DArray;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
+        desc.layers         = layers;
     }
     return desc;
 }
@@ -90,12 +90,12 @@ LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t wi
 {
     TextureDescriptor desc;
     {
-        desc.type   = TextureType::Texture2DArray;
-        desc.format = format;
-        desc.flags  = flags;
-        desc.width  = width;
-        desc.height = height;
-        desc.layers = layers;
+        desc.type           = TextureType::Texture2DArray;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
+        desc.extent.height  = height;
+        desc.layers         = layers;
     }
     return desc;
 }
@@ -104,12 +104,12 @@ LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t 
 {
     TextureDescriptor desc;
     {
-        desc.type   = TextureType::TextureCubeArray;
-        desc.format = format;
-        desc.flags  = flags;
-        desc.width  = width;
-        desc.height = height;
-        desc.layers = layers;
+        desc.type           = TextureType::TextureCubeArray;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
+        desc.extent.height  = height;
+        desc.layers         = layers;
     }
     return desc;
 }
@@ -118,12 +118,12 @@ LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width
 {
     TextureDescriptor desc;
     {
-        desc.type       = TextureType::Texture2DMS;
-        desc.format     = format;
-        desc.flags      = flags;
-        desc.width      = width;
-        desc.height     = height;
-        desc.samples    = samples;
+        desc.type           = TextureType::Texture2DMS;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
+        desc.extent.height  = height;
+        desc.samples        = samples;
     }
     return desc;
 }
@@ -132,13 +132,13 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t 
 {
     TextureDescriptor desc;
     {
-        desc.type       = TextureType::Texture2DMSArray;
-        desc.format     = format;
-        desc.flags      = flags;
-        desc.width      = width;
-        desc.height     = height;
-        desc.layers     = layers;
-        desc.samples    = samples;
+        desc.type           = TextureType::Texture2DMSArray;
+        desc.format         = format;
+        desc.flags          = flags;
+        desc.extent.width   = width;
+        desc.extent.height  = height;
+        desc.layers         = layers;
+        desc.samples        = samples;
     }
     return desc;
 }

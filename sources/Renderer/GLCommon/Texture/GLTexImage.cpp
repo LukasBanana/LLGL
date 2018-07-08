@@ -441,7 +441,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         GLTexImage1D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
+            desc.extent.width,
             GLTypes::Map(imageDesc->format),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
@@ -459,7 +459,7 @@ void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         GLTexImage1D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
+            desc.extent.width,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
             nullptr
@@ -468,12 +468,11 @@ void GLTexImage1D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAf(desc.width, g_imageInitialization.clearValue.color);
-
+        auto image = GenImageDataRGBAf(desc.extent.width, g_imageInitialization.clearValue.color);
         GLTexImage1D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
+            desc.extent.width,
             GL_RGBA,
             GL_FLOAT,
             image.data()
@@ -491,8 +490,8 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         GLTexImage2D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             GLTypes::Map(imageDesc->format),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
@@ -505,13 +504,12 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         {
             //TODO: add support for default initialization of stencil values
             /* Initialize depth texture image with default depth */
-            auto image = GenImageDataRf(desc.width * desc.height, g_imageInitialization.clearValue.depth);
-
+            auto image = GenImageDataRf(desc.extent.width * desc.extent.height, g_imageInitialization.clearValue.depth);
             GLTexImage2D(
                 NumMipLevels(desc),
                 desc.format,
-                desc.width,
-                desc.height,
+                desc.extent.width,
+                desc.extent.height,
                 GL_DEPTH_COMPONENT,
                 GL_FLOAT,
                 image.data()
@@ -523,8 +521,8 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
             GLTexImage2D(
                 NumMipLevels(desc),
                 desc.format,
-                desc.width,
-                desc.height,
+                desc.extent.width,
+                desc.extent.height,
                 GL_DEPTH_COMPONENT,
                 GL_FLOAT,
                 nullptr
@@ -537,8 +535,8 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         GLTexImage2D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
             nullptr
@@ -547,13 +545,12 @@ void GLTexImage2D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAf(desc.width * desc.height, g_imageInitialization.clearValue.color);
-
+        auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height, g_imageInitialization.clearValue.color);
         GLTexImage2D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             GL_RGBA,
             GL_FLOAT,
             image.data()
@@ -569,9 +566,9 @@ void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         GLTexImage3D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
-            desc.depth,
+            desc.extent.width,
+            desc.extent.height,
+            desc.extent.depth,
             GLTypes::Map(imageDesc->format),
             GLTypes::Map(imageDesc->dataType),
             imageDesc->data,
@@ -589,9 +586,9 @@ void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* image
         GLTexImage3D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
-            desc.depth,
+            desc.extent.width,
+            desc.extent.height,
+            desc.extent.depth,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
             nullptr
@@ -600,14 +597,13 @@ void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* image
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAf(desc.width * desc.height * desc.depth, g_imageInitialization.clearValue.color);
-
+        auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height * desc.extent.depth, g_imageInitialization.clearValue.color);
         GLTexImage3D(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
-            desc.depth,
+            desc.extent.width,
+            desc.extent.height,
+            desc.extent.depth,
             GL_RGBA,
             GL_FLOAT,
             image.data()
@@ -633,7 +629,7 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
     {
         /* Setup texture image cube-faces from descriptor */
         auto imageFace          = reinterpret_cast<const char*>(imageDesc->data);
-        auto imageFaceStride    = (desc.width * desc.height * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType));
+        auto imageFaceStride    = (desc.extent.width * desc.extent.height * ImageFormatSize(imageDesc->format) * DataTypeSize(imageDesc->dataType));
 
         if (IsCompressedFormat(desc.format))
             imageFaceStride = static_cast<std::uint32_t>(imageDesc->dataSize);
@@ -646,8 +642,8 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
             GLTexImageCube(
                 numMipLevels,
                 desc.format,
-                desc.width,
-                desc.height,
+                desc.extent.width,
+                desc.extent.height,
                 face,
                 dataFormatGL,
                 dataTypeGL,
@@ -670,8 +666,8 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
             GLTexImageCube(
                 numMipLevels,
                 desc.format,
-                desc.width,
-                desc.height,
+                desc.extent.width,
+                desc.extent.height,
                 face,
                 GL_RGBA,
                 GL_UNSIGNED_BYTE,
@@ -682,15 +678,14 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
     else
     {
         /* Initialize texture image cube-faces with default color */
-        auto image = GenImageDataRGBAf(desc.width * desc.height, g_imageInitialization.clearValue.color);
-
+        auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height, g_imageInitialization.clearValue.color);
         for (auto face : cubeFaces)
         {
             GLTexImageCube(
                 numMipLevels,
                 desc.format,
-                desc.width,
-                desc.height,
+                desc.extent.width,
+                desc.extent.height,
                 face,
                 GL_RGBA,
                 GL_FLOAT,
@@ -710,7 +705,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
         GLTexImage1DArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
+            desc.extent.width,
             desc.layers,
             GLTypes::Map(imageDesc->format),
             GLTypes::Map(imageDesc->dataType),
@@ -729,7 +724,7 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
         GLTexImage1DArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
+            desc.extent.width,
             desc.layers,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
@@ -739,12 +734,11 @@ void GLTexImage1DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAf(desc.width * desc.layers, g_imageInitialization.clearValue.color);
-
+        auto image = GenImageDataRGBAf(desc.extent.width * desc.layers, g_imageInitialization.clearValue.color);
         GLTexImage1DArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
+            desc.extent.width,
             desc.layers,
             GL_RGBA,
             GL_FLOAT,
@@ -763,8 +757,8 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
         GLTexImage2DArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             desc.layers,
             GLTypes::Map(imageDesc->format),
             GLTypes::Map(imageDesc->dataType),
@@ -777,13 +771,12 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
         if (g_imageInitialization.enabled)
         {
             /* Initialize depth texture image with default depth */
-            auto image = GenImageDataRf(desc.width * desc.height * desc.layers, g_imageInitialization.clearValue.depth);
-
+            auto image = GenImageDataRf(desc.extent.width * desc.extent.height * desc.layers, g_imageInitialization.clearValue.depth);
             GLTexImage2DArray(
                 NumMipLevels(desc),
                 desc.format,
-                desc.width,
-                desc.height,
+                desc.extent.width,
+                desc.extent.height,
                 desc.layers,
                 GL_DEPTH_COMPONENT,
                 GL_FLOAT,
@@ -796,8 +789,8 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
             GLTexImage2DArray(
                 NumMipLevels(desc),
                 desc.format,
-                desc.width,
-                desc.height,
+                desc.extent.width,
+                desc.extent.height,
                 desc.layers,
                 GL_DEPTH_COMPONENT,
                 GL_FLOAT,
@@ -811,8 +804,8 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
         GLTexImage2DArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             desc.layers,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
@@ -822,13 +815,12 @@ void GLTexImage2DArray(const TextureDescriptor& desc, const SrcImageDescriptor* 
     else
     {
         /* Initialize texture image with default color */
-        auto image = GenImageDataRGBAf(desc.width * desc.height * desc.layers, g_imageInitialization.clearValue.color);
-
+        auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height * desc.layers, g_imageInitialization.clearValue.color);
         GLTexImage2DArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             desc.layers,
             GL_RGBA,
             GL_FLOAT,
@@ -847,8 +839,8 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor
         GLTexImageCubeArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             desc.layers,
             GLTypes::Map(imageDesc->format),
             GLTypes::Map(imageDesc->dataType),
@@ -867,8 +859,8 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor
         GLTexImageCubeArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             desc.layers,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
@@ -878,13 +870,12 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor
     else
     {
         /* Initialize texture image cube-faces with default color */
-        auto image = GenImageDataRGBAf(desc.width * desc.height * desc.layers * 6u, g_imageInitialization.clearValue.color);
-
+        auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height * desc.layers * 6u, g_imageInitialization.clearValue.color);
         GLTexImageCubeArray(
             NumMipLevels(desc),
             desc.format,
-            desc.width,
-            desc.height,
+            desc.extent.width,
+            desc.extent.height,
             desc.layers,
             GL_RGBA,
             GL_FLOAT,
@@ -899,8 +890,8 @@ void GLTexImage2DMS(const TextureDescriptor& desc)
     GLTexImage2DMultisample(
         desc.samples,
         desc.format,
-        desc.width,
-        desc.height,
+        desc.extent.width,
+        desc.extent.height,
         ((desc.flags & TextureFlags::FixedSamples) != 0)
     );
 }
@@ -911,8 +902,8 @@ void GLTexImage2DMSArray(const TextureDescriptor& desc)
     GLTexImage2DMultisampleArray(
         desc.samples,
         desc.format,
-        desc.width,
-        desc.height,
+        desc.extent.width,
+        desc.extent.height,
         desc.layers,
         ((desc.flags & TextureFlags::FixedSamples) != 0)
     );

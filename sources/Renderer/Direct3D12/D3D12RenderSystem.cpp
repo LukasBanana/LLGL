@@ -241,8 +241,8 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     if (imageDesc)
     {
         /* Get texture dimensions */
-        auto texWidth   = textureDesc.width;
-        auto texHeight  = textureDesc.height;
+        auto texWidth   = textureDesc.extent.width;
+        auto texHeight  = textureDesc.extent.height;
 
         if (textureDesc.type == TextureType::Texture1D || textureDesc.type == TextureType::Texture1DArray)
             texHeight = 1u;

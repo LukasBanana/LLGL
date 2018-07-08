@@ -137,8 +137,7 @@ public:
                 texDesc.format  = LLGL::Format::RGBA8UNorm;
 
                 // Texture size
-                texDesc.width   = texWidth;
-                texDesc.height  = texHeight;
+                texDesc.extent  = { static_cast<std::uint32_t>(texWidth), static_cast<std::uint32_t>(texHeight), 1u };
             }
             #if 0//TEST
             texDesc.type = LLGL::TextureType::TextureCube;

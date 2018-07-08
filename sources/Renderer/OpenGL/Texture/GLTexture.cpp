@@ -114,13 +114,13 @@ TextureDescriptor GLTexture::QueryDesc() const
     */
     GLTypes::Unmap(texDesc.format, static_cast<GLenum>(internalFormat));
 
-    texDesc.width   = static_cast<std::uint32_t>(extent[0]);
-    texDesc.height  = static_cast<std::uint32_t>(extent[1]);
+    texDesc.extent.width        = static_cast<std::uint32_t>(extent[0]);
+    texDesc.extent.height       = static_cast<std::uint32_t>(extent[1]);
 
     if (GetType() == TextureType::Texture3D)
-        texDesc.depth   = static_cast<std::uint32_t>(extent[2]);
+        texDesc.extent.depth    = static_cast<std::uint32_t>(extent[2]);
     else
-        texDesc.layers  = static_cast<std::uint32_t>(extent[2]);
+        texDesc.layers          = static_cast<std::uint32_t>(extent[2]);
 
     return texDesc;
 }

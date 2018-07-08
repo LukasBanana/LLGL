@@ -75,37 +75,37 @@ TextureDescriptor VKTexture::QueryDesc() const
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            texDesc.width   = extent_.width;
-            texDesc.layers  = numArrayLayers_;
+            texDesc.extent.width    = extent_.width;
+            texDesc.layers          = numArrayLayers_;
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-            texDesc.width   = extent_.width;
-            texDesc.height  = extent_.height;
-            texDesc.layers  = numArrayLayers_;
+            texDesc.extent.width    = extent_.width;
+            texDesc.extent.height   = extent_.height;
+            texDesc.layers          = numArrayLayers_;
             break;
 
         case TextureType::Texture3D:
-            texDesc.width   = extent_.width;
-            texDesc.height  = extent_.height;
-            texDesc.depth   = extent_.depth;
+            texDesc.extent.width    = extent_.width;
+            texDesc.extent.height   = extent_.height;
+            texDesc.extent.depth    = extent_.depth;
             break;
 
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
-            texDesc.width   = extent_.width;
-            texDesc.height  = extent_.height;
-            texDesc.layers  = numArrayLayers_ / 6;
+            texDesc.extent.width    = extent_.width;
+            texDesc.extent.height   = extent_.height;
+            texDesc.layers          = numArrayLayers_ / 6;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            texDesc.width   = extent_.width;
-            texDesc.height  = extent_.height;
-            texDesc.layers  = numArrayLayers_;
-            texDesc.samples = 0; //TODO
-            texDesc.flags   |= TextureFlags::FixedSamples;
+            texDesc.extent.width    = extent_.width;
+            texDesc.extent.height   = extent_.height;
+            texDesc.layers          = numArrayLayers_;
+            texDesc.samples         = 0; //TODO
+            texDesc.flags           |= TextureFlags::FixedSamples;
             break;
     }
 
@@ -171,7 +171,7 @@ static VkExtent3D GetVkImageExtent3D(const TextureDescriptor& desc, const VkImag
     switch (imageType)
     {
         case VK_IMAGE_TYPE_1D:
-            extent.width    = std::max(1u, desc.width);
+            extent.width    = std::max(1u, desc.extent.width);
             extent.height   = 1u;
             extent.depth    = 1u;
             break;
@@ -180,21 +180,21 @@ static VkExtent3D GetVkImageExtent3D(const TextureDescriptor& desc, const VkImag
             if (IsCubeTexture(desc.type))
             {
                 /* Width and height must be equal for cube textures in Vulkan */
-                extent.width    = std::max(1u, std::max(desc.width, desc.height));
+                extent.width    = std::max(1u, std::max(desc.extent.width, desc.extent.height));
                 extent.height   = extent.width;
             }
             else
             {
-                extent.width    = std::max(1u, desc.width);
-                extent.height   = std::max(1u, desc.height);
+                extent.width    = std::max(1u, desc.extent.width);
+                extent.height   = std::max(1u, desc.extent.height);
             }
             extent.depth    = 1u;
             break;
 
         case VK_IMAGE_TYPE_3D:
-            extent.width    = std::max(1u, desc.width);
-            extent.height   = std::max(1u, desc.height);
-            extent.depth    = std::max(1u, desc.depth);
+            extent.width    = std::max(1u, desc.extent.width);
+            extent.height   = std::max(1u, desc.extent.height);
+            extent.depth    = std::max(1u, desc.extent.depth);
             break;
 
         default:

@@ -183,7 +183,7 @@ class D3D11RenderSystem : public RenderSystem
         void UpdateGenericTexture(
             Texture&                    texture,
             std::uint32_t               mipLevel,
-            std::uint32_t               layer,
+            std::uint32_t               arrayLayer,
             const Offset3D&             offset,
             const Extent3D&             extent,
             const SrcImageDescriptor&   imageDesc
@@ -193,29 +193,23 @@ class D3D11RenderSystem : public RenderSystem
             D3D11Texture&               textureD3D,
             const Format                format,
             const SrcImageDescriptor*   imageDesc,
-            std::uint32_t               width,
-            std::uint32_t               height,
-            std::uint32_t               depth,
-            std::uint32_t               numLayers
+            const Extent3D&             extent,
+            std::uint32_t               arrayLayers
         );
 
         void InitializeGpuTextureWithImage(
             D3D11Texture&       textureD3D,
             const Format        format,
             SrcImageDescriptor  imageDesc,
-            std::uint32_t       width,
-            std::uint32_t       height,
-            std::uint32_t       depth,
-            std::uint32_t       numLayers
+            const Extent3D&     extent,
+            std::uint32_t       arrayLayers
         );
 
         void InitializeGpuTextureWithDefault(
             D3D11Texture&   textureD3D,
             const Format    format,
-            std::uint32_t   width,
-            std::uint32_t   height,
-            std::uint32_t   depth,
-            std::uint32_t   numLayers
+            const Extent3D& extent,
+            std::uint32_t   arrayLayers
         );
 
         void GenerateMipsWithSubresourceSRV(

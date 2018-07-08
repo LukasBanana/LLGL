@@ -147,11 +147,12 @@ class DbgRenderSystem : public RenderSystem
 
         void ValidateTextureDesc(const TextureDescriptor& desc);
         void ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName);
+        void ValidateTextureSizeDefault(std::uint32_t size);
         void Validate1DTextureSize(std::uint32_t size);
         void Validate2DTextureSize(std::uint32_t size);
         void Validate3DTextureSize(std::uint32_t size);
         void ValidateCubeTextureSize(std::uint32_t width, std::uint32_t height);
-        void ValidateArrayTextureLayers(std::uint32_t layers);
+        void ValidateArrayTextureLayers(std::uint32_t layers, bool isArrayTexture);
         void ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
         void ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize);
         bool ValidateTextureMips(const DbgTexture& textureDbg);
@@ -167,8 +168,6 @@ class DbgRenderSystem : public RenderSystem
         void AssertArrayTextures();
         void AssertCubeArrayTextures();
         void AssertMultiSampleTextures();
-
-        void WarnTextureLayersGreaterOne();
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);

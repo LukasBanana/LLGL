@@ -104,7 +104,7 @@ TextureDescriptor D3D11Texture::QueryDesc() const
             hwTex.tex1D->GetDesc(&desc);
 
             texDesc.format  = D3D11Types::Unmap(desc.Format);
-            texDesc.width   = desc.Width;
+            texDesc.extent  = { desc.Width, 1u, 1u };
             texDesc.layers  = desc.ArraySize;
         }
         break;
@@ -116,8 +116,7 @@ TextureDescriptor D3D11Texture::QueryDesc() const
             hwTex.tex2D->GetDesc(&desc);
 
             texDesc.format  = D3D11Types::Unmap(desc.Format);
-            texDesc.width   = desc.Width;
-            texDesc.height  = desc.Height;
+            texDesc.extent  = { desc.Width, desc.Height, 1u };
             texDesc.layers  = desc.ArraySize;
 
             if (texDesc.type == TextureType::TextureCube || texDesc.type == TextureType::TextureCubeArray)
@@ -134,9 +133,7 @@ TextureDescriptor D3D11Texture::QueryDesc() const
             hwTex.tex3D->GetDesc(&desc);
 
             texDesc.format  = D3D11Types::Unmap(desc.Format);
-            texDesc.width   = desc.Width;
-            texDesc.height  = desc.Height;
-            texDesc.depth   = desc.Depth;
+            texDesc.extent  = { desc.Width, desc.Height, desc.Depth };
         }
         break;
     }

@@ -180,31 +180,35 @@ struct TextureDescriptor
     */
     long            flags       = TextureFlags::Default;
 
-    //! Texture width. By default 1.
-    std::uint32_t   width       = 1;
-
     /**
-    \brief Texture height. By default 1.
-    \remarks This is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
+    \brief Texture extent. By default (1, 1, 1).
+    \remarks The height component is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
     TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, TextureType::Texture2DMSArray).
+    The depth component is only used for 3D textures (i.e. TextureType::Texture3D).
     \see TextureType
     */
-    std::uint32_t   height      = 1;
-
-    /**
-    \brief Texture depth. By default 1.
-    \remarks This is only used for 3D textures (i.e. TextureType::Texture3D).
-    \see TextureType
-    */
-    std::uint32_t   depth       = 1;
+    Extent3D        extent      = { 1, 1, 1 };
 
     /**
     \brief Number of array layers. By default 1.
-    \remarks This is only used for array textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    \remarks This can be greater than 1 for array textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
     TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
+    For all other texture types, this must be 1.
     \see TextureType
     */
     std::uint32_t   layers      = 1;
+
+    #if 0
+    /**
+    \brief Number of MIP-maps levels. By default 0.
+    \remarks If this is 0, the full MIP-chain will be generated.
+    If this is 1, no MIP-mapping is used for this texture but it has a single image level.
+    This field is ignored for multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray),
+    since they only have a single MIP-map level.
+    \see NumMipLevels
+    */
+    std::uint32_t   mipLevels   = 0;
+    #endif
 
     /**
     \brief Number of samples per texel. By default 1.

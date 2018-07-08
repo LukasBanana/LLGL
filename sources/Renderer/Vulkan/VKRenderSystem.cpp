@@ -373,14 +373,14 @@ static VkExtent3D GetTextureVkExtent(const TextureDescriptor& desc)
     switch (desc.type)
     {
         case TextureType::Texture1D:        /*pass*/
-        case TextureType::Texture1DArray:   return { desc.width, 1u, 1u };
+        case TextureType::Texture1DArray:   return { desc.extent.width, 1u, 1u };
         case TextureType::Texture2D:        /*pass*/
         case TextureType::Texture2DArray:   /*pass*/
         case TextureType::TextureCube:      /*pass*/
         case TextureType::TextureCubeArray: /*pass*/
         case TextureType::Texture2DMS:      /*pass*/
-        case TextureType::Texture2DMSArray: return { desc.width, desc.height, 1u };
-        case TextureType::Texture3D:        return { desc.width, desc.height, desc.depth };
+        case TextureType::Texture2DMSArray: return { desc.extent.width, desc.extent.height, 1u };
+        case TextureType::Texture3D:        return { desc.extent.width, desc.extent.height, desc.extent.depth };
     }
     throw std::invalid_argument("cannot determine texture extent for unknown texture type");
 }
