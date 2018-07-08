@@ -20,7 +20,7 @@ namespace LLGL
 
 class VKShaderProgram;
 
-class VKComputePipeline : public ComputePipeline
+class VKComputePipeline final : public ComputePipeline
 {
 
     public:

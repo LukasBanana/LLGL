@@ -26,7 +26,7 @@ class VKCommandBuffer;
 class VKDeviceMemoryManager;
 class VKDeviceMemoryRegion;
 
-class VKRenderContext : public RenderContext
+class VKRenderContext final : public RenderContext
 {
 
     public:

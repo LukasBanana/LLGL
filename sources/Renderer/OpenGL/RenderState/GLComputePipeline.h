@@ -19,7 +19,7 @@ namespace LLGL
 class GLShaderProgram;
 class GLStateManager;
 
-class GLComputePipeline : public ComputePipeline
+class GLComputePipeline final : public ComputePipeline
 {
 
     public:

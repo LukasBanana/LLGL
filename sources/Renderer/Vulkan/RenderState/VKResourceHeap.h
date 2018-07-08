@@ -23,7 +23,7 @@ class VKBuffer;
 struct VKWriteDescriptorContainer;
 struct VKLayoutBinding;
 
-class VKResourceHeap : public ResourceHeap
+class VKResourceHeap final : public ResourceHeap
 {
 
     public:

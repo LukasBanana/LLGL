@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class D3D11CommandQueue : public CommandQueue
+class D3D11CommandQueue final : public CommandQueue
 {
 
     public:

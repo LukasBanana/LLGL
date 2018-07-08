@@ -22,7 +22,7 @@ namespace LLGL
 {
 
 
-class GLRenderTarget : public RenderTarget
+class GLRenderTarget final : public RenderTarget
 {
 
     public:

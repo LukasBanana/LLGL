@@ -23,7 +23,7 @@ namespace LLGL
 class VKDeviceMemoryRegion;
 class VKDeviceMemoryManager;
 
-class VKTexture : public Texture
+class VKTexture final : public Texture
 {
 
     public:

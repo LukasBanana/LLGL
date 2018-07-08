@@ -26,7 +26,7 @@ namespace LLGL
 class D3D12RenderSystem;
 class D3D12CommandBuffer;
 
-class D3D12RenderContext : public RenderContext
+class D3D12RenderContext final : public RenderContext
 {
 
     public:

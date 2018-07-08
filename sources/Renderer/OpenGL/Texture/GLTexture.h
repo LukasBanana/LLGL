@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class GLTexture : public Texture
+class GLTexture final : public Texture
 {
 
     public:

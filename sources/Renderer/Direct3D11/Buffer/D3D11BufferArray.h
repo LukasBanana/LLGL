@@ -20,7 +20,7 @@ namespace LLGL
 
 class Buffer;
 
-class D3D11BufferArray : public BufferArray
+class D3D11BufferArray final : public BufferArray
 {
 
     public:

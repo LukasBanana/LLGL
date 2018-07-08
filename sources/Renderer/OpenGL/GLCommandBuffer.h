@@ -21,7 +21,7 @@ namespace LLGL
 class GLRenderTarget;
 class GLStateManager;
 
-class GLCommandBuffer : public CommandBufferExt
+class GLCommandBuffer final : public CommandBufferExt
 {
 
     public:

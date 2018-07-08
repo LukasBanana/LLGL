@@ -47,7 +47,7 @@ namespace LLGL
 //TODO: performance tests show that the manual MIP-map generation is almost always slower than the default MIP-map generation
 //#define LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
-class GLRenderSystem : public RenderSystem
+class GLRenderSystem final : public RenderSystem
 {
 
     public:

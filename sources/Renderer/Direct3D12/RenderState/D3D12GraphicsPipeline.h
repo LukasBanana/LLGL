@@ -23,7 +23,7 @@ struct GraphicsPipelineDescriptor;
 class D3D12RenderSystem;
 class D3D12ShaderProgram;
 
-class D3D12GraphicsPipeline : public GraphicsPipeline
+class D3D12GraphicsPipeline final : public GraphicsPipeline
 {
 
     public:

@@ -21,7 +21,7 @@ namespace LLGL
 
 class D3D11Shader;
 
-class D3D11ShaderProgram : public ShaderProgram
+class D3D11ShaderProgram final : public ShaderProgram
 {
 
     public:

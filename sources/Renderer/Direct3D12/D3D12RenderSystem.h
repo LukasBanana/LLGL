@@ -38,7 +38,7 @@ namespace LLGL
 {
 
 
-class D3D12RenderSystem : public RenderSystem
+class D3D12RenderSystem final : public RenderSystem
 {
 
     public:

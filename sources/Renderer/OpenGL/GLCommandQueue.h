@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-class GLCommandQueue : public CommandQueue
+class GLCommandQueue final : public CommandQueue
 {
 
     public:

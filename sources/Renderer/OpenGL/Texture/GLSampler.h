@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class GLSampler : public Sampler
+class GLSampler final : public Sampler
 {
 
     public:

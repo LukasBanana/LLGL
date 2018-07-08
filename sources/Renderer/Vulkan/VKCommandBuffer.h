@@ -23,7 +23,7 @@ namespace LLGL
 
 class VKResourceHeap;
 
-class VKCommandBuffer : public CommandBuffer
+class VKCommandBuffer final : public CommandBuffer
 {
 
     public:

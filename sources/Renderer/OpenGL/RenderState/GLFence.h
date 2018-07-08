@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class GLFence : public Fence
+class GLFence final : public Fence
 {
 
     public:

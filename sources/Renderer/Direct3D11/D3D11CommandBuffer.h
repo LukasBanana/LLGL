@@ -25,7 +25,7 @@ namespace LLGL
 class D3D11StateManager;
 class D3D11RenderTarget;
 
-class D3D11CommandBuffer : public CommandBufferExt
+class D3D11CommandBuffer final : public CommandBufferExt
 {
 
     public:

@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class D3D12Texture : public Texture
+class D3D12Texture final : public Texture
 {
 
     public:

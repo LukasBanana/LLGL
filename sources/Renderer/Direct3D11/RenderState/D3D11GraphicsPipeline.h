@@ -17,7 +17,7 @@ namespace LLGL
 
 
 // GraphicsPipeline implementation for Direct3D 11.0
-class D3D11GraphicsPipeline : public D3D11GraphicsPipelineBase
+class D3D11GraphicsPipeline final : public D3D11GraphicsPipelineBase
 {
 
     public:

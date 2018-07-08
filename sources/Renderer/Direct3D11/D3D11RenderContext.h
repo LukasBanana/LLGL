@@ -29,7 +29,7 @@ struct D3D11BackBuffer
 };
 
 
-class D3D11RenderContext : public RenderContext
+class D3D11RenderContext final : public RenderContext
 {
 
     public:

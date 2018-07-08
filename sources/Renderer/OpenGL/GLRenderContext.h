@@ -27,7 +27,7 @@ namespace LLGL
 
 class GLRenderTarget;
 
-class GLRenderContext : public RenderContext
+class GLRenderContext final : public RenderContext
 {
 
     public:

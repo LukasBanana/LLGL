@@ -36,7 +36,7 @@ union D3D11NativeTexture
 };
 
 
-class D3D11Texture : public Texture
+class D3D11Texture final : public Texture
 {
 
     public:

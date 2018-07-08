@@ -21,7 +21,7 @@ namespace LLGL
 
 class VKShader;
 
-class VKShaderProgram : public ShaderProgram
+class VKShaderProgram final : public ShaderProgram
 {
 
     public:

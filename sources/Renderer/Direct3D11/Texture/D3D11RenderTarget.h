@@ -23,7 +23,7 @@ namespace LLGL
 class D3D11Texture;
 class D3D11RenderSystem;
 
-class D3D11RenderTarget : public RenderTarget
+class D3D11RenderTarget final : public RenderTarget
 {
 
     public:

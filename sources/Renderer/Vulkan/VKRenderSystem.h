@@ -47,7 +47,7 @@ namespace LLGL
 {
 
 
-class VKRenderSystem : public RenderSystem
+class VKRenderSystem final : public RenderSystem
 {
 
     public:

@@ -19,7 +19,7 @@ namespace LLGL
 {
 
 
-class VKRenderTarget : public RenderTarget
+class VKRenderTarget final : public RenderTarget
 {
 
     public:
