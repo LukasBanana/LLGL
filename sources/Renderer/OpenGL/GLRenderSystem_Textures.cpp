@@ -206,7 +206,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
         {
             /* Generate MIP-maps in custom sub generation process */
             auto& textureGL = LLGL_CAST(GLTexture&, texture);
-            auto extent = textureGL.GLTexture::QueryMipLevelSize(baseMipLevel);
+            auto extent = textureGL.QueryMipExtent(baseMipLevel);
 
             GenerateSubMipsWithFBO(
                 textureGL,

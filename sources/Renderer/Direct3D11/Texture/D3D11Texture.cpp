@@ -19,7 +19,7 @@ D3D11Texture::D3D11Texture(const TextureType type) :
 {
 }
 
-Extent3D D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D D3D11Texture::QueryMipExtent(std::uint32_t mipLevel) const
 {
     Extent3D size;
 

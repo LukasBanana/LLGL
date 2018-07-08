@@ -58,9 +58,8 @@ class LLGL_EXPORT Texture : public Resource
         This is in contrast to the other handling of cube array layers, because this function determines the actual buffer extent of the hardware texture.
         \see RenderSystem::GenerateMips
         \see CommandBufferExt::SetTexture
-        \todo Rename to "QueryExtent"
         */
-        virtual Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const = 0;
+        virtual Extent3D QueryMipExtent(std::uint32_t mipLevel) const = 0;
 
     protected:
 

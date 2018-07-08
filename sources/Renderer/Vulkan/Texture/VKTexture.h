@@ -34,7 +34,7 @@ class VKTexture : public Texture
             const TextureDescriptor& desc
         );
 
-        Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const override;
+        Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
         TextureDescriptor QueryDesc() const override;
 
         void CreateImageView(

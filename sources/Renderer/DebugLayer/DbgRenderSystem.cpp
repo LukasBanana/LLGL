@@ -724,8 +724,6 @@ void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc
             );
         }
     }
-    else if (desc.mipLevels == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of MIP-map levels must not be zero");
 }
 
 void DbgRenderSystem::ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName)

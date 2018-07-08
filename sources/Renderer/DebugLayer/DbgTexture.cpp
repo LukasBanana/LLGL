@@ -20,9 +20,9 @@ DbgTexture::DbgTexture(Texture& instance, const TextureDescriptor& desc) :
 {
 }
 
-Extent3D DbgTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D DbgTexture::QueryMipExtent(std::uint32_t mipLevel) const
 {
-    return instance.QueryMipLevelSize(mipLevel);
+    return instance.QueryMipExtent(mipLevel);
 }
 
 TextureDescriptor DbgTexture::QueryDesc() const

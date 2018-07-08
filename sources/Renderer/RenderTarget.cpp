@@ -50,7 +50,7 @@ void RenderTarget::ValidateResolution(const Extent2D& resolution)
 void RenderTarget::ValidateMipResolution(const Texture& texture, std::uint32_t mipLevel)
 {
     /* Apply texture size to render target resolution */
-    auto size = texture.QueryMipLevelSize(mipLevel);
+    auto size = texture.QueryMipExtent(mipLevel);
     ValidateResolution({ size.width, size.height });
 }
 

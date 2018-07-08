@@ -106,7 +106,7 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     CreateResource(device, descD3D);
 }
 
-Extent3D D3D12Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D D3D12Texture::QueryMipExtent(std::uint32_t mipLevel) const
 {
     Extent3D size;
 

@@ -292,10 +292,10 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \param[in] mipLevel Specifies the MIP-level from which to read the texture data.
         \param[out] imageDesc Specifies the destination image descriptor to write the texture data to.
         \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
-        The Texture::QueryDesc or Texture::QueryMipLevelSize functions can be used to determine the texture dimensions.
+        The Texture::QueryDesc or Texture::QueryMipExtent functions can be used to determine the texture dimensions.
         \code
         // Query texture size attribute
-        auto myTextureExtent = myTexture->QueryMipLevelSize(0);
+        auto myTextureExtent = myTexture->QueryMipExtent(0);
 
         // Allocate image buffer with elements in all dimensions
         std::vector<LLGL::ColorRGBAub> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth);
@@ -316,7 +316,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         or 'imageDesc.dataSize' is less than the required size.
         \throws std::invalid_argument If 'imageDesc.data' is null.
         \see Texture::QueryDesc
-        \see Texture::QueryMipLevelSize
+        \see Texture::QueryMipExtent
         */
         virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;
 

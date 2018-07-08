@@ -28,7 +28,7 @@ VKTexture::VKTexture(
     imageWrapper_.AllocateMemoryRegion(deviceMemoryMngr);
 }
 
-Extent3D VKTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D VKTexture::QueryMipExtent(std::uint32_t mipLevel) const
 {
     switch (GetType())
     {

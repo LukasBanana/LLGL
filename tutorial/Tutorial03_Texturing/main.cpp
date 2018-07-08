@@ -165,7 +165,7 @@ public:
 
         // Query texture descriptor to see what is really stored on the GPU
         auto textureDesc = colorMap->QueryDesc();
-        auto textureExtent = colorMap->QueryMipLevelSize(0);
+        auto textureExtent = colorMap->QueryMipExtent(0);
     }
 
     void CreateSamplers()

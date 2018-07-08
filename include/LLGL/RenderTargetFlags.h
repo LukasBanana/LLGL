@@ -109,7 +109,7 @@ and an anonymous depth attachment (i.e. without a texture reference, which is on
 \code
 LLGL::RenderTargetDescriptor myRenderTargetDesc;
 
-auto myRenderTargetSize = myColorTexture->QueryMipLevelSize(0);
+auto myRenderTargetSize = myColorTexture->QueryMipExtent(0);
 myRenderTargetDesc.resolution = { myRenderTargetSize.width, myRenderTargetSize.height };
 
 myRenderTargetDesc.attachments = {
@@ -127,7 +127,7 @@ struct RenderTargetDescriptor
     \brief Specifies the resolution of the render targets.
     \remarks All attachments with a reference to a texture must have the same resolution,
     i.e. the specified array layer and MIP-map level must have the same extent.
-    \see Texture::QueryMipLevelSize
+    \see Texture::QueryMipExtent
     */
     Extent2D                            resolution;
 
