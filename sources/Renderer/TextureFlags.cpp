@@ -23,7 +23,7 @@ LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height
 
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
 {
-    if ((textureDesc.flags & TextureFlags::GenerateMips) != 0)
+    if (textureDesc.mipLevels == 0)
     {
         switch (textureDesc.type)
         {
@@ -38,7 +38,7 @@ LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
             case TextureType::Texture2DMSArray: return 1u;
         }
     }
-    return 1u;
+    return textureDesc.mipLevels;
 }
 
 std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
@@ -62,6 +62,11 @@ LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)
         case TextureType::Texture2DMSArray: return extent.width * extent.height * textureDesc.arrayLayers;
         default:                            return 0;
     }
+}
+
+LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc)
+{
+    return (!IsMultiSampleTexture(textureDesc.type) && (textureDesc.mipLevels == 0 || textureDesc.mipLevels > 1));
 }
 
 LLGL_EXPORT bool IsArrayTexture(const TextureType type)

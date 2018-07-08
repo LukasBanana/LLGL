@@ -702,7 +702,30 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
             break;
     }
 
+    ValidateTextureDescMipLevels(desc);
     ValidateArrayTextureLayers(desc.arrayLayers, IsArrayTexture(desc.type));
+}
+
+void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc)
+{
+    if (desc.mipLevels > 1)
+    {
+        /* Get number of levels for full MIP-chain */
+        auto tempDesc = desc;
+        tempDesc.mipLevels = 0;
+        auto maxNumMipLevels = NumMipLevels(tempDesc);
+
+        if (desc.mipLevels > maxNumMipLevels)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "number of MIP-map levels exceeded limit (" + std::to_string(desc.mipLevels) +
+                " specified but limit is " + std::to_string(maxNumMipLevels) + ")"
+            );
+        }
+    }
+    else if (desc.mipLevels == 0)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of MIP-map levels must not be zero");
 }
 
 void DbgRenderSystem::ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName)
@@ -812,9 +835,9 @@ void DbgRenderSystem::ValidateTextureImageDataSize(std::size_t dataSize, std::si
 
 bool DbgRenderSystem::ValidateTextureMips(const DbgTexture& textureDbg)
 {
-    if ((textureDbg.desc.flags & TextureFlags::GenerateMips) == 0)
+    if (textureDbg.desc.mipLevels == 1)
     {
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot generate MIP-maps for texture without 'TextureFlags::GenerateMips' flag set during creation");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot generate MIP-maps for texture with only one MIP-map level");
         return false;
     }
     return true;

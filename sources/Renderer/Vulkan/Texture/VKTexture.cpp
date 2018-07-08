@@ -207,19 +207,6 @@ static VkExtent3D GetVkImageExtent3D(const TextureDescriptor& desc, const VkImag
     return extent;
 }
 
-static bool HasTextureMipMaps(const TextureDescriptor& desc)
-{
-    return (!IsMultiSampleTexture(desc.type) && (desc.flags & TextureFlags::GenerateMips) != 0);
-}
-
-static std::uint32_t GetVkImageMipLevels(const TextureDescriptor& desc, const VkExtent3D& extent)
-{
-    if (HasTextureMipMaps(desc))
-        return NumMipLevels(extent.width, extent.height, extent.depth);
-    else
-        return 1u;
-}
-
 static std::uint32_t GetVkImageArrayLayers(const TextureDescriptor& desc, const VkImageType imageType)
 {
     switch (imageType)
@@ -254,7 +241,7 @@ static VkImageUsageFlags GetVkImageUsageFlags(const TextureDescriptor& desc)
     VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     /* Enable TRANSFER_SRC_BIT image usage when MIP-maps are enabled */
-    if (HasTextureMipMaps(desc))
+    if (IsMipMappedTexture(desc))
         usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
     /* Enable either color or depth-stencil ATTACHMENT_BIT image usage when attachment usage is enabled */
@@ -283,7 +270,7 @@ void VKTexture::CreateImage(VkDevice device, const TextureDescriptor& desc)
     auto imageType  = GetVkImageType(desc.type);
 
     extent_         = GetVkImageExtent3D(desc, imageType);
-    numMipLevels_   = GetVkImageMipLevels(desc, extent_);
+    numMipLevels_   = NumMipLevels(desc);
     numArrayLayers_ = GetVkImageArrayLayers(desc, imageType);
 
     /* Create image object */

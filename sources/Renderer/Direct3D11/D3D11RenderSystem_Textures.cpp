@@ -190,18 +190,13 @@ void D3D11RenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLeve
  * ======= Private: =======
  */
 
-static UINT GetDXTextureMipLevels(const TextureDescriptor& desc)
-{
-    return ((desc.flags & TextureFlags::GenerateMips) != 0 ? 0 : 1);
-}
-
 // see https://msdn.microsoft.com/en-us/library/windows/desktop/ff476203(v=vs.85).aspx
 static UINT GetDXTextureBindFlags(const TextureDescriptor& desc)
 {
     UINT flags = D3D11_BIND_SHADER_RESOURCE;
 
     /* Render target binding flag is required for MIP-map generation and render target attachment */
-    if ((desc.flags & TextureFlags::GenerateMips) != 0 || (desc.flags & TextureFlags::AttachmentUsage) != 0)
+    if (IsMipMappedTexture(desc) || (desc.flags & TextureFlags::AttachmentUsage) != 0)
         flags |= D3D11_BIND_RENDER_TARGET;
 
     return flags;
@@ -211,7 +206,7 @@ static UINT GetDXTextureMiscFlags(const TextureDescriptor& desc)
 {
     UINT flags = 0;
 
-    if ((desc.flags & TextureFlags::GenerateMips) != 0)
+    if (IsMipMappedTexture(desc))
         flags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
     if (IsCubeTexture(desc.type))
         flags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
@@ -225,7 +220,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const Te
     D3D11_TEXTURE1D_DESC descDX;
     {
         descDX.Width            = desc.extent.width;
-        descDX.MipLevels        = GetDXTextureMipLevels(desc);
+        descDX.MipLevels        = desc.mipLevels;
         descDX.ArraySize        = desc.arrayLayers;
         descDX.Format           = D3D11Types::Map(desc.format);
         descDX.Usage            = D3D11_USAGE_DEFAULT;
@@ -246,7 +241,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const Te
     {
         descDX.Width                = desc.extent.width;
         descDX.Height               = desc.extent.height;
-        descDX.MipLevels            = GetDXTextureMipLevels(desc);
+        descDX.MipLevels            = desc.mipLevels;
         descDX.ArraySize            = desc.arrayLayers;
         descDX.Format               = D3D11Types::Map(desc.format);
         descDX.SampleDesc.Count     = 1;
@@ -270,7 +265,7 @@ void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const Te
         descDX.Width            = desc.extent.width;
         descDX.Height           = desc.extent.height;
         descDX.Depth            = desc.extent.depth;
-        descDX.MipLevels        = GetDXTextureMipLevels(desc);
+        descDX.MipLevels        = desc.mipLevels;
         descDX.Format           = D3D11Types::Map(desc.format);
         descDX.Usage            = D3D11_USAGE_DEFAULT;
         descDX.BindFlags        = GetDXTextureBindFlags(desc);

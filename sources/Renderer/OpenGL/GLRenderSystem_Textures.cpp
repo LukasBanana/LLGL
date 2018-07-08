@@ -23,7 +23,7 @@ namespace LLGL
 
 static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
 {
-    if ((textureDesc.flags & TextureFlags::GenerateMips) != 0)
+    if (IsMipMappedTexture(textureDesc))
         return GL_LINEAR_MIPMAP_LINEAR;
     else
         return GL_LINEAR;

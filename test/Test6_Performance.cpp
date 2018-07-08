@@ -95,7 +95,6 @@ class PerformanceTest
             {
                 textureDesc.type            = LLGL::TextureType::Texture2DArray;
                 textureDesc.format          = LLGL::Format::RGBA8UNorm;
-                textureDesc.flags           = LLGL::TextureFlags::GenerateMips;
                 textureDesc.extent.width    = image.GetExtent().width;
                 textureDesc.extent.height   = image.GetExtent().height;
                 textureDesc.arrayLayers     = image.GetExtent().depth;
