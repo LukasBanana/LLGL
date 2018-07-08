@@ -114,10 +114,7 @@ BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buff
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
     auto bufferType = (*bufferArray)->GetType();
-    if (bufferType == BufferType::Vertex)
-        return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(bufferType, numBuffers, bufferArray));
-    else
-        return nullptr;
+    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(bufferType, numBuffers, bufferArray));
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)

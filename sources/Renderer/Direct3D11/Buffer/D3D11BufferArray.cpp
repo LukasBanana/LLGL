@@ -19,15 +19,16 @@ D3D11BufferArray::D3D11BufferArray(const BufferType type, std::uint32_t numBuffe
     BufferArray { type }
 {
     /* Store the pointer of each ID3D11Buffer, strides, and offests inside the arrays */
-    buffers_.reserve(numBuffers);
-    strides_.reserve(numBuffers);
-    offsets_.reserve(numBuffers);
+    buffers_.resize(numBuffers);
+    stridesAndOffsets_.resize(numBuffers * 2);
 
-    while (auto next = NextArrayResource<D3D11VertexBuffer>(numBuffers, bufferArray))
+    offsetStart_ = numBuffers;
+
+    for (std::size_t i = 0; auto next = NextArrayResource<D3D11VertexBuffer>(numBuffers, bufferArray); ++i)
     {
-        buffers_.push_back(next->GetNative());
-        strides_.push_back(next->GetStride());
-        offsets_.push_back(0);//next->GetOffset());
+        buffers_[i]                             = next->GetNative();
+        stridesAndOffsets_[i]                   = next->GetStride();
+        stridesAndOffsets_[i + offsetStart_]    = 0;//next->GetOffset());
     }
 }
 
@@ -43,12 +44,12 @@ ID3D11Buffer* const * D3D11BufferArray::GetBuffers() const
 
 const UINT* D3D11BufferArray::GetStrides() const
 {
-    return strides_.data();
+    return stridesAndOffsets_.data();
 }
 
 const UINT* D3D11BufferArray::GetOffsets() const
 {
-    return offsets_.data();
+    return (stridesAndOffsets_.data() + offsetStart_);
 }
 
 

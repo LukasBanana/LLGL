@@ -42,8 +42,8 @@ class D3D11BufferArray : public BufferArray
     private:
 
         std::vector<ID3D11Buffer*>  buffers_;
-        std::vector<UINT>           strides_;
-        std::vector<UINT>           offsets_;
+        std::vector<UINT>           stridesAndOffsets_;
+        std::size_t                 offsetStart_        = 0;
 
 };
 
