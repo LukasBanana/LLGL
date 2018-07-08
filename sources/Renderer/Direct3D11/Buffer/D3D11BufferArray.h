@@ -10,8 +10,8 @@
 
 
 #include <LLGL/BufferArray.h>
-#include <d3d11.h>
 #include <vector>
+#include <d3d11.h>
 
 
 namespace LLGL
@@ -27,15 +27,23 @@ class D3D11BufferArray : public BufferArray
 
         D3D11BufferArray(const BufferType type, std::uint32_t numBuffers, Buffer* const * bufferArray);
 
-        //! Returns the array of buffer objects.
-        inline const std::vector<ID3D11Buffer*>& GetBuffers() const
-        {
-            return buffers_;
-        }
+        // Returns the number fo buffers in this array.
+        UINT GetCount() const;
+
+        // Returns a pointer to the native buffer objects.
+        ID3D11Buffer* const * GetBuffers() const;
+
+        // Returns a pointer to the buffer strides.
+        const UINT* GetStrides() const;
+
+        // Returns a pointer to the buffer offsets.
+        const UINT* GetOffsets() const;
 
     private:
 
-        std::vector<ID3D11Buffer*> buffers_;
+        std::vector<ID3D11Buffer*>  buffers_;
+        std::vector<UINT>           strides_;
+        std::vector<UINT>           offsets_;
 
 };
 

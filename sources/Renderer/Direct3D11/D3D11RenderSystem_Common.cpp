@@ -17,13 +17,11 @@
 #include <limits>
 
 #include "Buffer/D3D11VertexBuffer.h"
-#include "Buffer/D3D11VertexBufferArray.h"
+#include "Buffer/D3D11BufferArray.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
-#include "Buffer/D3D11StorageBufferArray.h"
 #include "Buffer/D3D11StreamOutputBuffer.h"
-#include "Buffer/D3D11StreamOutputBufferArray.h"
 
 #include "RenderState/D3D11GraphicsPipeline.h"
 #include "RenderState/D3D11GraphicsPipeline1.h"
@@ -112,24 +110,14 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 
-static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
-{
-    auto type = (*bufferArray)->GetType();
-    switch (type)
-    {
-        case BufferType::Vertex:        return MakeUnique<D3D11VertexBufferArray>(numBuffers, bufferArray);
-        case BufferType::Constant:      return MakeUnique<D3D11BufferArray>(type, numBuffers, bufferArray);
-        case BufferType::Storage:       return MakeUnique<D3D11StorageBufferArray>(numBuffers, bufferArray);
-        case BufferType::StreamOutput:  return MakeUnique<D3D11StreamOutputBufferArray>(numBuffers, bufferArray);
-        default:                        break;
-    }
-    return nullptr;
-}
-
 BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return TakeOwnership(bufferArrays_, MakeD3D11BufferArray(numBuffers, bufferArray));
+    auto bufferType = (*bufferArray)->GetType();
+    if (bufferType == BufferType::Vertex)
+        return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(bufferType, numBuffers, bufferArray));
+    else
+        return nullptr;
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)

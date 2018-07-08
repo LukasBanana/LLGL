@@ -20,13 +20,11 @@
 #include "RenderState/D3D11ResourceHeap.h"
 
 #include "Buffer/D3D11VertexBuffer.h"
-#include "Buffer/D3D11VertexBufferArray.h"
+#include "Buffer/D3D11BufferArray.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
-#include "Buffer/D3D11StorageBufferArray.h"
 #include "Buffer/D3D11StreamOutputBuffer.h"
-#include "Buffer/D3D11StreamOutputBufferArray.h"
 
 #include "Texture/D3D11Texture.h"
 #include "Texture/D3D11Sampler.h"
@@ -178,14 +176,13 @@ void D3D11CommandBuffer::SetVertexBuffer(Buffer& buffer)
 
 void D3D11CommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
-    auto& vertexBufferArrayD3D = LLGL_CAST(D3D11VertexBufferArray&, bufferArray);
-
+    auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
     context_->IASetVertexBuffers(
         0,
-        static_cast<UINT>(vertexBufferArrayD3D.GetBuffers().size()),
-        vertexBufferArrayD3D.GetBuffers().data(),
-        vertexBufferArrayD3D.GetStrides().data(),
-        vertexBufferArrayD3D.GetOffsets().data()
+        bufferArrayD3D.GetCount(),
+        bufferArrayD3D.GetBuffers(),
+        bufferArrayD3D.GetStrides(),
+        bufferArrayD3D.GetOffsets()
     );
 }
 
@@ -240,12 +237,11 @@ void D3D11CommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
 
 void D3D11CommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
 {
-    auto& streamOutputBufferArrayD3D = LLGL_CAST(D3D11StreamOutputBufferArray&, bufferArray);
-
+    auto& bufferArrayD3D = LLGL_CAST(D3D11BufferArray&, bufferArray);
     context_->SOSetTargets(
-        static_cast<UINT>(streamOutputBufferArrayD3D.GetBuffers().size()),
-        streamOutputBufferArrayD3D.GetBuffers().data(),
-        streamOutputBufferArrayD3D.GetOffsets().data()
+        bufferArrayD3D.GetCount(),
+        bufferArrayD3D.GetBuffers(),
+        bufferArrayD3D.GetOffsets()
     );
 }
 
