@@ -389,10 +389,10 @@ static std::uint32_t GetTextureLayertCount(const TextureDescriptor& desc)
 {
     switch (desc.type)
     {
-        case TextureType::Texture1DArray:   return desc.layers;
-        case TextureType::Texture2DArray:   return desc.layers;
-        case TextureType::TextureCubeArray: return desc.layers * 6;
-        case TextureType::Texture2DMSArray: return desc.layers;
+        case TextureType::Texture1DArray:   return desc.arrayLayers;
+        case TextureType::Texture2DArray:   return desc.arrayLayers;
+        case TextureType::TextureCubeArray: return desc.arrayLayers * 6;
+        case TextureType::Texture2DMSArray: return desc.arrayLayers;
         default:                            return 1;
     }
 }

@@ -120,7 +120,7 @@ TextureDescriptor GLTexture::QueryDesc() const
     if (GetType() == TextureType::Texture3D)
         texDesc.extent.depth    = static_cast<std::uint32_t>(extent[2]);
     else
-        texDesc.layers          = static_cast<std::uint32_t>(extent[2]);
+        texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[2]);
 
     return texDesc;
 }

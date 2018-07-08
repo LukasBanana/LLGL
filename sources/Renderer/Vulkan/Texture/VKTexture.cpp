@@ -76,14 +76,14 @@ TextureDescriptor VKTexture::QueryDesc() const
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
             texDesc.extent.width    = extent_.width;
-            texDesc.layers          = numArrayLayers_;
+            texDesc.arrayLayers     = numArrayLayers_;
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
             texDesc.extent.width    = extent_.width;
             texDesc.extent.height   = extent_.height;
-            texDesc.layers          = numArrayLayers_;
+            texDesc.arrayLayers     = numArrayLayers_;
             break;
 
         case TextureType::Texture3D:
@@ -96,14 +96,14 @@ TextureDescriptor VKTexture::QueryDesc() const
         case TextureType::TextureCubeArray:
             texDesc.extent.width    = extent_.width;
             texDesc.extent.height   = extent_.height;
-            texDesc.layers          = numArrayLayers_ / 6;
+            texDesc.arrayLayers     = numArrayLayers_ / 6;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
             texDesc.extent.width    = extent_.width;
             texDesc.extent.height   = extent_.height;
-            texDesc.layers          = numArrayLayers_;
+            texDesc.arrayLayers     = numArrayLayers_;
             texDesc.samples         = 0; //TODO
             texDesc.flags           |= TextureFlags::FixedSamples;
             break;
@@ -225,13 +225,13 @@ static std::uint32_t GetVkImageArrayLayers(const TextureDescriptor& desc, const 
     switch (imageType)
     {
         case VK_IMAGE_TYPE_1D:
-            return std::max(1u, desc.layers);
+            return std::max(1u, desc.arrayLayers);
 
         case VK_IMAGE_TYPE_2D:
             if (IsCubeTexture(desc.type))
-                return std::max(1u, desc.layers) * 6;
+                return std::max(1u, desc.arrayLayers) * 6;
             else
-                return std::max(1u, desc.layers);
+                return std::max(1u, desc.arrayLayers);
 
         default:
             return 1u;

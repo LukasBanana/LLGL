@@ -57,14 +57,14 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
         case TextureType::Texture1DArray:
             dst.Width               = src.extent.width;
             dst.Height              = 1;
-            dst.DepthOrArraySize    = std::max(1u, src.layers);
+            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
             dst.Width               = src.extent.width;
             dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = std::max(1u, src.layers);
+            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
             break;
 
         case TextureType::Texture3D:
@@ -77,14 +77,14 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
         case TextureType::TextureCubeArray:
             dst.Width               = src.extent.width;
             dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = std::max(1u, src.layers) * 6;
+            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers) * 6;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
             dst.Width               = src.extent.width;
             dst.Height              = src.extent.height;
-            dst.DepthOrArraySize    = src.layers;
+            dst.DepthOrArraySize    = src.arrayLayers;
             dst.SampleDesc.Count    = std::max(1u, src.samples);
             break;
     }
@@ -98,7 +98,7 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     #else
     numMipLevels_   { 1                            },
     #endif
-    numArrayLayers_ { desc.layers                  }
+    numArrayLayers_ { desc.arrayLayers             }
 {
     /* Setup resource descriptor by texture descriptor and create hardware resource */
     D3D12_RESOURCE_DESC descD3D;
@@ -170,14 +170,14 @@ TextureDescriptor D3D12Texture::QueryDesc() const
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
             texDesc.extent.width    = static_cast<std::uint32_t>(desc.Width);
-            texDesc.layers          = desc.DepthOrArraySize;
+            texDesc.arrayLayers     = desc.DepthOrArraySize;
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
             texDesc.extent.width    = static_cast<std::uint32_t>(desc.Width);
             texDesc.extent.height   = desc.Height;
-            texDesc.layers          = desc.DepthOrArraySize;
+            texDesc.arrayLayers     = desc.DepthOrArraySize;
             break;
 
         case TextureType::Texture3D:
@@ -190,14 +190,14 @@ TextureDescriptor D3D12Texture::QueryDesc() const
         case TextureType::TextureCubeArray:
             texDesc.extent.width    = static_cast<std::uint32_t>(desc.Width);
             texDesc.extent.height   = desc.Height;
-            texDesc.layers          = desc.DepthOrArraySize / 6;
+            texDesc.arrayLayers     = desc.DepthOrArraySize / 6;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
             texDesc.extent.width    = static_cast<std::uint32_t>(desc.Width);
             texDesc.extent.height   = desc.Height;
-            texDesc.layers          = desc.DepthOrArraySize;
+            texDesc.arrayLayers     = desc.DepthOrArraySize;
             texDesc.samples         = desc.SampleDesc.Count;
             texDesc.flags           |= TextureFlags::FixedSamples;
             break;

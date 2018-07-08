@@ -196,7 +196,7 @@ struct TextureDescriptor
     For all other texture types, this must be 1.
     \see TextureType
     */
-    std::uint32_t   layers      = 1;
+    std::uint32_t   arrayLayers = 1;
 
     #if 0
     /**

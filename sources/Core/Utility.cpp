@@ -73,7 +73,7 @@ LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t layers, long flags)
+LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t arrayLayers, long flags)
 {
     TextureDescriptor desc;
     {
@@ -81,12 +81,12 @@ LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t wi
         desc.format         = format;
         desc.flags          = flags;
         desc.extent.width   = width;
-        desc.layers         = layers;
+        desc.arrayLayers    = arrayLayers;
     }
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags)
+LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long flags)
 {
     TextureDescriptor desc;
     {
@@ -95,12 +95,12 @@ LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t wi
         desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
-        desc.layers         = layers;
+        desc.arrayLayers    = arrayLayers;
     }
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags)
+LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long flags)
 {
     TextureDescriptor desc;
     {
@@ -109,7 +109,7 @@ LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t 
         desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
-        desc.layers         = layers;
+        desc.arrayLayers    = arrayLayers;
     }
     return desc;
 }
@@ -128,7 +128,7 @@ LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width
     return desc;
 }
 
-LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, std::uint32_t samples, long flags)
+LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, std::uint32_t samples, long flags)
 {
     TextureDescriptor desc;
     {
@@ -137,7 +137,7 @@ LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t 
         desc.flags          = flags;
         desc.extent.width   = width;
         desc.extent.height  = height;
-        desc.layers         = layers;
+        desc.arrayLayers    = arrayLayers;
         desc.samples        = samples;
     }
     return desc;

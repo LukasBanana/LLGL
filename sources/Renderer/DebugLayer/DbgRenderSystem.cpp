@@ -263,7 +263,7 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel
             textureDbg.desc.extent.width        *
             textureDbg.desc.extent.height       *
             textureDbg.desc.extent.depth        *
-            textureDbg.desc.layers              *
+            textureDbg.desc.arrayLayers         *
             ImageFormatSize(imageDesc.format)   *
             DataTypeSize(imageDesc.dataType)
         );
@@ -702,7 +702,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
             break;
     }
 
-    ValidateArrayTextureLayers(desc.layers, IsArrayTexture(desc.type));
+    ValidateArrayTextureLayers(desc.arrayLayers, IsArrayTexture(desc.type));
 }
 
 void DbgRenderSystem::ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName)
@@ -836,7 +836,7 @@ void DbgRenderSystem::ValidateTextureMipRange(const DbgTexture& textureDbg, std:
 void DbgRenderSystem::ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
     if (IsArrayTexture(textureDbg.GetType()))
-        ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.layers);
+        ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.arrayLayers);
     else if (baseArrayLayer > 0 || numArrayLayers > 1)
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "array layer out of range for non-array texture type");
 }

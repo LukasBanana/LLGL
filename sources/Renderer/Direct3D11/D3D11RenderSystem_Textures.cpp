@@ -30,19 +30,19 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     switch (descD3D.type)
     {
         case TextureType::Texture1D:
-            descD3D.layers = 1;
+            descD3D.arrayLayers = 1;
             break;
         case TextureType::Texture2D:
-            descD3D.layers = 1;
+            descD3D.arrayLayers = 1;
             break;
         case TextureType::TextureCube:
-            descD3D.layers = 6;
+            descD3D.arrayLayers = 6;
             break;
         case TextureType::TextureCubeArray:
-            descD3D.layers *= 6;
+            descD3D.arrayLayers *= 6;
             break;
         case TextureType::Texture2DMS:
-            descD3D.layers = 1;
+            descD3D.arrayLayers = 1;
             break;
         default:
             break;
@@ -226,7 +226,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const Te
     {
         descDX.Width            = desc.extent.width;
         descDX.MipLevels        = GetDXTextureMipLevels(desc);
-        descDX.ArraySize        = desc.layers;
+        descDX.ArraySize        = desc.arrayLayers;
         descDX.Format           = D3D11Types::Map(desc.format);
         descDX.Usage            = D3D11_USAGE_DEFAULT;
         descDX.BindFlags        = GetDXTextureBindFlags(desc);
@@ -236,7 +236,7 @@ void D3D11RenderSystem::BuildGenericTexture1D(D3D11Texture& textureD3D, const Te
     textureD3D.CreateTexture1D(device_.Get(), descDX, desc.flags);
 
     /* Initialize texture image data */
-    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, desc.layers);
+    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, desc.arrayLayers);
 }
 
 void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
@@ -247,7 +247,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const Te
         descDX.Width                = desc.extent.width;
         descDX.Height               = desc.extent.height;
         descDX.MipLevels            = GetDXTextureMipLevels(desc);
-        descDX.ArraySize            = desc.layers;
+        descDX.ArraySize            = desc.arrayLayers;
         descDX.Format               = D3D11Types::Map(desc.format);
         descDX.SampleDesc.Count     = 1;
         descDX.SampleDesc.Quality   = 0;
@@ -259,7 +259,7 @@ void D3D11RenderSystem::BuildGenericTexture2D(D3D11Texture& textureD3D, const Te
     textureD3D.CreateTexture2D(device_.Get(), descDX, desc.flags);
 
     /* Initialize texture image data */
-    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, desc.layers);
+    InitializeGpuTexture(textureD3D, desc.format, imageDesc, desc.extent, desc.arrayLayers);
 }
 
 void D3D11RenderSystem::BuildGenericTexture3D(D3D11Texture& textureD3D, const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
@@ -291,7 +291,7 @@ void D3D11RenderSystem::BuildGenericTexture2DMS(D3D11Texture& textureD3D, const 
         descDX.Width                = desc.extent.width;
         descDX.Height               = desc.extent.height;
         descDX.MipLevels            = 1;
-        descDX.ArraySize            = desc.layers;
+        descDX.ArraySize            = desc.arrayLayers;
         descDX.Format               = D3D11Types::Map(desc.format);
         descDX.SampleDesc.Count     = desc.samples;
         descDX.SampleDesc.Quality   = 0;//((descD3D.flags & TextureFlags::FixedSamples) ? D3D11_CENTER_MULTISAMPLE_PATTERN : 0);

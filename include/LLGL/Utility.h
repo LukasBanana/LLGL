@@ -69,19 +69,19 @@ LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width
 \brief Returns a TextureDescriptor structure with the TextureType::Texture1DArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t arrayLayers, long flags = TextureFlags::Default);
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long flags = TextureFlags::Default);
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::TextureCubeArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long flags = TextureFlags::Default);
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DMS type.
@@ -93,7 +93,7 @@ LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DMSArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, std::uint32_t samples, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, std::uint32_t samples, long flags = TextureFlags::Default);
 
 /* ----- BufferDescriptor utility functions ----- */
 

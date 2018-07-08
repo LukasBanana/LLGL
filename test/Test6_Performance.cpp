@@ -98,7 +98,7 @@ class PerformanceTest
                 textureDesc.flags           = LLGL::TextureFlags::GenerateMips;
                 textureDesc.extent.width    = image.GetExtent().width;
                 textureDesc.extent.height   = image.GetExtent().height;
-                textureDesc.layers          = image.GetExtent().depth;
+                textureDesc.arrayLayers     = image.GetExtent().depth;
             }
             for (std::size_t i = 0; i < numTextures; ++i)
             {
