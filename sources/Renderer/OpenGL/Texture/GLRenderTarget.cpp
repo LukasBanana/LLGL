@@ -329,31 +329,27 @@ void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor&
     switch (texture.GetType())
     {
         case TextureType::Texture1D:
-            GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, mipLevel);
+            GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, static_cast<GLint>(mipLevel));
             break;
         case TextureType::Texture2D:
-            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, mipLevel);
+            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, static_cast<GLint>(mipLevel));
             break;
         case TextureType::Texture3D:
-            GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, mipLevel, attachmentDesc.arrayLayer);
+            GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
             break;
         case TextureType::TextureCube:
-            GLFramebuffer::AttachTexture2D(attachment, GLTypes::Map(attachmentDesc.cubeFace), textureID, mipLevel);
+            GLFramebuffer::AttachTexture2D(attachment, GLTypes::ToTextureCubeMap(attachmentDesc.arrayLayer), textureID, static_cast<GLint>(mipLevel));
             break;
         case TextureType::Texture1DArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.arrayLayer);
-            break;
         case TextureType::Texture2DArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.arrayLayer);
-            break;
         case TextureType::TextureCubeArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.arrayLayer * 6 + static_cast<int>(attachmentDesc.cubeFace));
+            GLFramebuffer::AttachTextureLayer(attachment, textureID, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
             break;
         case TextureType::Texture2DMS:
             GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
             break;
         case TextureType::Texture2DMSArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, attachmentDesc.arrayLayer);
+            GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, static_cast<GLint>(attachmentDesc.arrayLayer));
             break;
     }
 }

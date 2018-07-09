@@ -22,6 +22,7 @@
 - [`TextureFormat` and `VectorType` enumerations](#textureformat-and-vectortype-enumerations)
 - [`TextureDescriptor` struct](#texturedescriptor-struct)
 - [Removal of `TextureArray` and `SamplerArray` interfaces](#removal-of-texturearray-and-samplerarray-interfaces)
+- [Array layers for cube textures](#array-layers-for-cube-textures)
 
 
 ## `Shader` interface
@@ -719,6 +720,31 @@ LLGL::ResourceHeap* myResourceHeap = myRenderer->CreateResourceHeap(myHeapDesc);
 myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
 ```
 
+
+## Array layers for cube textures
+
+The number of array layers for cube textures is no longer automatically multiplied by 6, but the client programmer must specifiy the correct number of array layers himself.
+
+Before:
+```cpp
+// Usage:
+LLGL::TextureDescriptor myTexDesc;
+myTexDesc.type                = LLGL::TextureType::TextureCubeArray;
+myTexDesc.textureCube.width   = 512;
+myTexDesc.textureCube.height  = 512;
+myTexDesc.textureCuber.layers = 2;
+LLGL::Texture* myTex = myRenderer->CreateTexture(myTexDesc);
+```
+
+After:
+```cpp
+// Usage:
+LLGL::TextureDescriptor myTexDesc;
+myTexDesc.type        = LLGL::TextureType::TextureCubeArray;
+myTexDesc.extent      = { 512, 512, 1 };
+myTexDesc.arrayLayers = 2 * 6;
+LLGL::Texture* myTex = myRenderer->CreateTexture(myTexDesc);
+```
 
 
 

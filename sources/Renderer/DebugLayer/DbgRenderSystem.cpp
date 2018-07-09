@@ -703,7 +703,7 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
     }
 
     ValidateTextureDescMipLevels(desc);
-    ValidateArrayTextureLayers(desc.arrayLayers, IsArrayTexture(desc.type));
+    ValidateArrayTextureLayers(desc.type, desc.arrayLayers);
 }
 
 void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc)
@@ -729,7 +729,7 @@ void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc
 void DbgRenderSystem::ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName)
 {
     if (size == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture size must not be zero");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture size must not be 0");
     if (size > limit)
     {
         LLGL_DBG_ERROR(
@@ -743,7 +743,7 @@ void DbgRenderSystem::ValidateTextureSize(std::uint32_t size, std::uint32_t limi
 void DbgRenderSystem::ValidateTextureSizeDefault(std::uint32_t size)
 {
     if (size == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture size must not be zero");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture size must not be 0");
     if (size > 1)
     {
         LLGL_DBG_ERROR(
@@ -776,33 +776,65 @@ void DbgRenderSystem::ValidateCubeTextureSize(std::uint32_t width, std::uint32_t
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "width and height of cube textures must be equal");
 }
 
-void DbgRenderSystem::ValidateArrayTextureLayers(std::uint32_t layers, bool isArrayTexture)
+void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::uint32_t layers)
 {
     if (layers == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of texture array layers must not be zero");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of texture array layers must not be 0");
 
     if (layers > 1)
     {
-        if (isArrayTexture)
+        switch (type)
         {
-            const auto maxNumLayers = limits_.maxNumTextureArrayLayers;
-
-            if (layers > maxNumLayers)
+            case TextureType::TextureCube:
             {
-                LLGL_DBG_ERROR(
-                    ErrorType::InvalidArgument,
-                    "number fo texture layers exceeded limit (" + std::to_string(layers) +
-                    " specified but limit is " + std::to_string(maxNumLayers) + ")"
-                );
+                if (layers != 6)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "number fo texture layers must be 6 for cube textures (but " +
+                        std::to_string(layers) + " was specified)"
+                    );
+                }
             }
-        }
-        else
-        {
-            LLGL_DBG_ERROR(
-                ErrorType::InvalidArgument,
-                "number of texture array layers must be one for non-array textures (but " +
-                std::to_string(layers) + " was specified)"
-            );
+            break;
+
+            case TextureType::TextureCubeArray:
+            {
+                if (layers % 6 != 0)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "number fo texture layers must be a multiple of 6 for cube array textures (but " +
+                        std::to_string(layers) + " was specified)"
+                    );
+                }
+            }
+            break;
+
+            default:
+            {
+                if (IsArrayTexture(type))
+                {
+                    const auto maxNumLayers = limits_.maxNumTextureArrayLayers;
+                    if (layers > maxNumLayers)
+                    {
+                        LLGL_DBG_ERROR(
+                            ErrorType::InvalidArgument,
+                            "number fo texture layers exceeded limit (" + std::to_string(layers) +
+                            " specified but limit is " + std::to_string(maxNumLayers) + ")"
+                        );
+                    }
+                }
+                else
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "number of texture array layers must be 1 for non-array textures (but " +
+                        std::to_string(layers) + " was specified)"
+                    );
+                }
+            }
+            break;
         }
     }
 }

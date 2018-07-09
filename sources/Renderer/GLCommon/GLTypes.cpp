@@ -395,20 +395,6 @@ GLenum Map(const CullMode cullMode)
     MapFailed("CullMode");
 }
 
-GLenum Map(const AxisDirection cubeFace)
-{
-    switch (cubeFace)
-    {
-        case AxisDirection::XPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-        case AxisDirection::XNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
-        case AxisDirection::YPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
-        case AxisDirection::YNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
-        case AxisDirection::ZPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
-        case AxisDirection::ZNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
-    }
-    MapFailed("AxisDirection");
-}
-
 GLenum Map(const SamplerAddressMode addressMode)
 {
     switch (addressMode)
@@ -730,6 +716,20 @@ static UniformType UnmapUniformType(const GLenum uniformType)
     #endif // /LLGL_OPENGLES3
 
     return UniformType::Undefined;
+}
+
+GLenum ToTextureCubeMap(std::uint32_t arrayLayer)
+{
+    static const GLenum g_textureCubeMaps[] =
+    {
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+    };
+    return g_textureCubeMaps[arrayLayer % 6];
 }
 
 void Unmap(UniformType& result, const GLenum uniformType)

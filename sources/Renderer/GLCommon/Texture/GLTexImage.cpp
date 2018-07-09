@@ -350,13 +350,13 @@ static void GLTexImageCube(
     const Format    internalFormat,
     std::uint32_t   width,
     std::uint32_t   height,
-    AxisDirection   cubeFace,
+    std::uint32_t   cubeFaceIndex,
     GLenum          format,
     GLenum          type,
     const void*     data,
     std::size_t     compressedSize = 0)
 {
-    GLTexImage2DBase(GLTypes::Map(cubeFace), mipLevels, internalFormat, width, height, format, type, data, compressedSize);
+    GLTexImage2DBase(GLTypes::ToTextureCubeMap(cubeFaceIndex), mipLevels, internalFormat, width, height, format, type, data, compressedSize);
 }
 
 #ifdef LLGL_OPENGL
@@ -403,7 +403,7 @@ static void GLTexImageCubeArray(
     const void*     data,
     std::size_t     compressedSize = 0)
 {
-    GLTexImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevels, internalFormat, width, height, layers*6, format, type, data, compressedSize);
+    GLTexImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevels, internalFormat, width, height, layers, format, type, data, compressedSize);
 }
 
 static void GLTexImage2DMultisample(
@@ -613,16 +613,6 @@ void GLTexImage3D(const TextureDescriptor& desc, const SrcImageDescriptor* image
 
 void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* imageDesc)
 {
-    const std::array<AxisDirection, 6> cubeFaces
-    {{
-        AxisDirection::XPos,
-        AxisDirection::XNeg,
-        AxisDirection::YPos,
-        AxisDirection::YNeg,
-        AxisDirection::ZPos,
-        AxisDirection::ZNeg
-    }};
-
     auto numMipLevels = NumMipLevels(desc);
 
     if (imageDesc)
@@ -637,14 +627,14 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
         auto dataFormatGL       = GLTypes::Map(imageDesc->format);
         auto dataTypeGL         = GLTypes::Map(imageDesc->dataType);
 
-        for (auto face : cubeFaces)
+        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
         {
             GLTexImageCube(
                 numMipLevels,
                 desc.format,
                 desc.extent.width,
                 desc.extent.height,
-                face,
+                arrayLayer,
                 dataFormatGL,
                 dataTypeGL,
                 imageFace,
@@ -661,14 +651,14 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
     else if (IsCompressedFormat(desc.format) || !g_imageInitialization.enabled)
     {
         /* Allocate texture without initial data */
-        for (auto face : cubeFaces)
+        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
         {
             GLTexImageCube(
                 numMipLevels,
                 desc.format,
                 desc.extent.width,
                 desc.extent.height,
-                face,
+                arrayLayer,
                 GL_RGBA,
                 GL_UNSIGNED_BYTE,
                 nullptr
@@ -679,14 +669,14 @@ void GLTexImageCube(const TextureDescriptor& desc, const SrcImageDescriptor* ima
     {
         /* Initialize texture image cube-faces with default color */
         auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height, g_imageInitialization.clearValue.color);
-        for (auto face : cubeFaces)
+        for (std::uint32_t arrayLayer = 0; arrayLayer < desc.arrayLayers; ++arrayLayer)
         {
             GLTexImageCube(
                 numMipLevels,
                 desc.format,
                 desc.extent.width,
                 desc.extent.height,
-                face,
+                arrayLayer,
                 GL_RGBA,
                 GL_FLOAT,
                 image.data()
@@ -870,7 +860,7 @@ void GLTexImageCubeArray(const TextureDescriptor& desc, const SrcImageDescriptor
     else
     {
         /* Initialize texture image cube-faces with default color */
-        auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height * desc.arrayLayers * 6u, g_imageInitialization.clearValue.color);
+        auto image = GenImageDataRGBAf(desc.extent.width * desc.extent.height * desc.arrayLayers, g_imageInitialization.clearValue.color);
         GLTexImageCubeArray(
             NumMipLevels(desc),
             desc.format,

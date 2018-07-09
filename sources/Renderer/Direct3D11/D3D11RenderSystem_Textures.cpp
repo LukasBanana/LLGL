@@ -24,51 +24,25 @@ Texture* D3D11RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     /* Create texture object and store type */
     auto texture = MakeUnique<D3D11Texture>(textureDesc.type);
 
-    /* Modify number of layers */
-    auto descD3D = textureDesc;
-
-    switch (descD3D.type)
-    {
-        case TextureType::Texture1D:
-            descD3D.arrayLayers = 1;
-            break;
-        case TextureType::Texture2D:
-            descD3D.arrayLayers = 1;
-            break;
-        case TextureType::TextureCube:
-            descD3D.arrayLayers = 6;
-            break;
-        case TextureType::TextureCubeArray:
-            descD3D.arrayLayers *= 6;
-            break;
-        case TextureType::Texture2DMS:
-            descD3D.arrayLayers = 1;
-            break;
-        default:
-            break;
-    }
-
     /* Bulid generic texture */
-    switch (descD3D.type)
+    switch (textureDesc.type)
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            BuildGenericTexture1D(*texture, descD3D, imageDesc);
+            BuildGenericTexture1D(*texture, textureDesc, imageDesc);
             break;
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-            BuildGenericTexture2D(*texture, descD3D, imageDesc);
-            break;
-        case TextureType::Texture3D:
-            BuildGenericTexture3D(*texture, descD3D, imageDesc);
-            break;
         case TextureType::TextureCube:
         case TextureType::TextureCubeArray:
-            BuildGenericTexture2D(*texture, descD3D, imageDesc);
+            BuildGenericTexture2D(*texture, textureDesc, imageDesc);
+            break;
+        case TextureType::Texture3D:
+            BuildGenericTexture3D(*texture, textureDesc, imageDesc);
             break;
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            BuildGenericTexture2DMS(*texture, descD3D);
+            BuildGenericTexture2DMS(*texture, textureDesc);
             break;
         default:
             throw std::invalid_argument("failed to create texture with invalid texture type");

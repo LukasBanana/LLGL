@@ -36,17 +36,6 @@ enum class TextureType
     Texture2DMSArray,   //!< 2-Dimensional multi-sample array texture.
 };
 
-//! Axis direction (also used for texture cube face).
-enum class AxisDirection
-{
-    XPos = 0,   //!< X+ direction.
-    XNeg,       //!< X- direction.
-    YPos,       //!< Y+ direction.
-    YNeg,       //!< Y- direction.
-    ZPos,       //!< Z+ direction.
-    ZNeg,       //!< Z- direction.
-};
-
 #if 0//TODO: currently unused
 /**
 \brief Texture component swizzle enumeration.
@@ -176,6 +165,7 @@ struct TextureDescriptor
     \remarks The height component is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
     TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, TextureType::Texture2DMSArray).
     The depth component is only used for 3D textures (i.e. TextureType::Texture3D).
+    For cube textures, the width and height component must be equal.
     \see IsArrayTexture
     \see IsCubeTexture
     */
@@ -183,10 +173,19 @@ struct TextureDescriptor
 
     /**
     \brief Number of array layers. By default 1.
-    \remarks This can be greater than 1 for array textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
-    TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
+    \remarks This can be greater than 1 for array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
+    For cube textures, this must be a multiple of 6 (one array layer for each cube face).
     For all other texture types, this must be 1.
+    The index offsets for each cube face are as follows:
+    - <code>X+</code> direction has index offset 0.
+    - <code>X-</code> direction has index offset 1.
+    - <code>Y+</code> direction has index offset 2.
+    - <code>Y-</code> direction has index offset 3.
+    - <code>Z+</code> direction has index offset 4.
+    - <code>Z-</code> direction has index offset 5.
     \see IsArrayTexture
+    \see IsCubeTexture
     \see RenderingLimits::maxNumTextureArrayLayers
     */
     std::uint32_t   arrayLayers = 1;
@@ -223,8 +222,9 @@ struct SubTextureDescriptor
     \brief Sub-texture offset. By default (0, 0, 0).
     \remarks For array textures, the Z component specifies the array layer.
     For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
-    The layer offset for the respective cube face can be determined by the values of the AxisDirection enumeration
-    \see AxisDirection
+    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayer member.
+    Negative values of this member are not allowed and result in undefined behavior.
+    \see TextureDescriptor::arrayLayer
     */
     Offset3D        offset      = { 0, 0, 0 };
 

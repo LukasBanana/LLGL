@@ -134,14 +134,6 @@ static void FillViewDescForTexture3D(const AttachmentDescriptor& attachmentDesc,
     viewDesc.Texture3D.WSize        = 1;
 }
 
-static void FillViewDescForTextureCube(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-    viewDesc.Texture2DArray.MipSlice        = attachmentDesc.mipLevel;
-    viewDesc.Texture2DArray.FirstArraySlice = static_cast<UINT>(attachmentDesc.cubeFace);
-    viewDesc.Texture2DArray.ArraySize       = 1;
-}
-
 static void FillViewDescForTexture1DArray(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
@@ -158,37 +150,15 @@ static void FillViewDescForTexture2DArray(const AttachmentDescriptor& attachment
     viewDesc.Texture2DArray.ArraySize       = 1;
 }
 
-static void FillViewDescForTextureCubeArray(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-    viewDesc.Texture2DArray.MipSlice        = attachmentDesc.mipLevel;
-    viewDesc.Texture2DArray.FirstArraySlice = attachmentDesc.arrayLayer * 6 + static_cast<UINT>(attachmentDesc.cubeFace);
-    viewDesc.Texture2DArray.ArraySize       = 1;
-}
-
 static void FillViewDescForTexture2DMS(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
-}
-
-static void FillViewDescForTextureCubeMS(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
-    viewDesc.Texture2DMSArray.FirstArraySlice   = static_cast<UINT>(attachmentDesc.cubeFace);
-    viewDesc.Texture2DMSArray.ArraySize         = 1;
 }
 
 static void FillViewDescForTexture2DArrayMS(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
     viewDesc.Texture2DMSArray.FirstArraySlice   = attachmentDesc.arrayLayer;
-    viewDesc.Texture2DMSArray.ArraySize         = 1;
-}
-
-static void FillViewDescForTextureCubeArrayMS(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
-{
-    viewDesc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
-    viewDesc.Texture2DMSArray.FirstArraySlice   = attachmentDesc.arrayLayer * 6 + static_cast<UINT>(attachmentDesc.cubeFace);
     viewDesc.Texture2DMSArray.ArraySize         = 1;
 }
 
@@ -217,13 +187,9 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
                 FillViewDescForTexture2DMS(attachmentDesc, rtvDesc);
                 break;
             case TextureType::TextureCube:
-                FillViewDescForTextureCubeMS(attachmentDesc, rtvDesc);
-                break;
             case TextureType::Texture2DArray:
-                FillViewDescForTexture2DArrayMS(attachmentDesc, rtvDesc);
-                break;
             case TextureType::TextureCubeArray:
-                FillViewDescForTextureCubeArrayMS(attachmentDesc, rtvDesc);
+                FillViewDescForTexture2DArrayMS(attachmentDesc, rtvDesc);
                 break;
             default:
                 throw std::invalid_argument("failed to attach D3D11 texture to multi-sample render-target");
@@ -271,17 +237,13 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
             case TextureType::Texture3D:
                 FillViewDescForTexture3D(attachmentDesc, rtvDesc);
                 break;
-            case TextureType::TextureCube:
-                FillViewDescForTextureCube(attachmentDesc, rtvDesc);
-                break;
             case TextureType::Texture1DArray:
                 FillViewDescForTexture1DArray(attachmentDesc, rtvDesc);
                 break;
+            case TextureType::TextureCube:
             case TextureType::Texture2DArray:
-                FillViewDescForTexture2DArray(attachmentDesc, rtvDesc);
-                break;
             case TextureType::TextureCubeArray:
-                FillViewDescForTextureCubeArray(attachmentDesc, rtvDesc);
+                FillViewDescForTexture2DArray(attachmentDesc, rtvDesc);
                 break;
             case TextureType::Texture2DMS:
                 FillViewDescForTexture2DMS(attachmentDesc, rtvDesc);

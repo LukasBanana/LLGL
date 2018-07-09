@@ -118,11 +118,7 @@ TextureDescriptor D3D11Texture::QueryDesc() const
             texDesc.format      = D3D11Types::Unmap(desc.Format);
             texDesc.extent      = { desc.Width, desc.Height, 1u };
             texDesc.arrayLayers = desc.ArraySize;
-
-            if (texDesc.type == TextureType::TextureCube || texDesc.type == TextureType::TextureCubeArray)
-                texDesc.arrayLayers /= 6;
-            else if (texDesc.type == TextureType::Texture2DMS || texDesc.type == TextureType::Texture2DMSArray)
-                texDesc.samples = desc.SampleDesc.Count;
+            texDesc.samples     = desc.SampleDesc.Count;
         }
         break;
 

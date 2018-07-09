@@ -48,12 +48,11 @@ struct AttachmentDescriptor
     AttachmentDescriptor(const AttachmentDescriptor&) = default;
 
     //! Constructor for the specified depth-, stencil-, or color attachment.
-    inline AttachmentDescriptor(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t arrayLayer = 0, AxisDirection cubeFace = AxisDirection::XPos) :
+    inline AttachmentDescriptor(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t arrayLayer = 0) :
         type       { type       },
         texture    { texture    },
         mipLevel   { mipLevel   },
-        arrayLayer { arrayLayer },
-        cubeFace   { cubeFace   }
+        arrayLayer { arrayLayer }
     {
     }
 
@@ -88,18 +87,13 @@ struct AttachmentDescriptor
 
     /**
     \brief Specifies the array texture layer which is to be used as render target attachment.
-    \remarks This is only used for array textures (i.e. TextureType::Texture1DArray,
-    TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
-    For cube array textures this can be used in combination with the cubeFace attribute.
-    \see cubeFace
+    \remarks This is only used for array textures and cube textures (i.e. TextureType::Texture1DArray,
+    TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), each cube has its own 6 array layers.
+    The layer index for the respective cube faces is described at the TextureDescriptor::arrayLayer member.
+    \see TextureDescriptor::arrayLayer
     */
     std::uint32_t   arrayLayer  = 0;
-
-    /**
-    \brief Cube texture face.
-    \remarks This is only used for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
-    */
-    AxisDirection   cubeFace    = AxisDirection::XPos;
 };
 
 /**
