@@ -442,6 +442,7 @@ struct RenderingLimits
     /**
     \brief Specifies the maximum number of attachment points for each render target.
     \see RenderTargetDescriptor::attachments
+    \see RenderPassDescriptor::colorAttachments
     */
     std::uint32_t   maxNumRenderTargetAttachments       = 0;
 

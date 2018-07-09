@@ -46,6 +46,9 @@ class D3D11RenderContext final : public RenderContext
 
         void Present() override;
 
+        Format QueryColorFormat() const override;
+        Format QueryDepthStencilFormat() const override;
+
         /* ----- Extended internal functions ----- */
 
         inline const D3D11BackBuffer& GetBackBuffer() const
@@ -70,6 +73,9 @@ class D3D11RenderContext final : public RenderContext
         UINT                        swapChainSamples_   = 1;
 
         D3D11BackBuffer             backBuffer_;
+
+        DXGI_FORMAT                 colorFormat_        = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                 depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
 
 };
 

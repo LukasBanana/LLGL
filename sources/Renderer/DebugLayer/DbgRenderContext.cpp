@@ -23,6 +23,16 @@ void DbgRenderContext::Present()
     instance.Present();
 }
 
+Format DbgRenderContext::QueryColorFormat() const
+{
+    return instance.QueryColorFormat();
+}
+
+Format DbgRenderContext::QueryDepthStencilFormat() const
+{
+    return instance.QueryDepthStencilFormat();
+}
+
 
 /*
  * ======= Private: =======

@@ -11,6 +11,7 @@
 #include "../CheckedCast.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
+#include "../DXCommon/DXTypes.h"
 #include <algorithm>
 #include "D3DX12/d3dx12.h"
 
@@ -95,6 +96,16 @@ void D3D12RenderContext::Present()
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
     commandBuffer_->ResetCommandList(commandAlloc, nullptr);
+}
+
+Format D3D12RenderContext::QueryColorFormat() const
+{
+    return DXTypes::Unmap(colorFormat_);
+}
+
+Format D3D12RenderContext::QueryDepthStencilFormat() const
+{
+    return DXTypes::Unmap(depthStencilFormat_);
 }
 
 /* --- Extended functions --- */
@@ -209,7 +220,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
             numFrames_,
             framebufferWidth,
             framebufferHeight,
-            colorBufferFormat_,
+            colorFormat_,
             0
         );
 
@@ -231,7 +242,7 @@ void D3D12RenderContext::CreateWindowSizeDependentResources(const VideoModeDescr
         {
             swapChainDesc.Width                 = framebufferWidth;
             swapChainDesc.Height                = framebufferHeight;
-            swapChainDesc.Format                = colorBufferFormat_;
+            swapChainDesc.Format                = colorFormat_;
             swapChainDesc.Stereo                = FALSE;
             swapChainDesc.SampleDesc.Count      = 1; // always 1 because D3D12 does not allow (directly) multi-sampled swap-chains
             swapChainDesc.SampleDesc.Quality    = 0;
@@ -305,7 +316,7 @@ void D3D12RenderContext::CreateColorBufferRTVs(const VideoModeDescriptor& videoM
     {
         /* Create multi-sampled render targets */
         auto tex2DMSDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-            colorBufferFormat_,
+            colorFormat_,
             videoModeDesc.resolution.width,
             videoModeDesc.resolution.height,
             1, // arraySize
@@ -439,7 +450,7 @@ void D3D12RenderContext::ResolveRenderTarget(ID3D12GraphicsCommandList* commandL
     commandList->ResolveSubresource(
         colorBuffers_[currentFrame_].Get(), 0,
         colorBuffersMS_[currentFrame_].Get(), 0,
-        colorBufferFormat_
+        colorFormat_
     );
 
     /* Prepare render-targets for presenting */

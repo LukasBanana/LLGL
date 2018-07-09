@@ -8,6 +8,7 @@
 #include "VKRenderContext.h"
 #include "VKCommandBuffer.h"
 #include "VKCore.h"
+#include "VKTypes.h"
 #include "Memory/VKDeviceMemoryManager.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
@@ -112,6 +113,16 @@ void VKRenderContext::Present()
     AcquireNextPresentImage();
 }
 
+Format VKRenderContext::QueryColorFormat() const
+{
+    return VKTypes::Unmap(swapChainFormat_.format);
+}
+
+Format VKRenderContext::QueryDepthStencilFormat() const
+{
+    return VKTypes::Unmap(depthStencilBuffer_.GetVkFormat());
+}
+
 /* --- Extended functions --- */
 
 void VKRenderContext::SetPresentCommandBuffer(VKCommandBuffer* commandBuffer)
@@ -205,9 +216,9 @@ void VKRenderContext::CreateGpuSurface()
     }
     auto result = vkCreateWin32SurfaceKHR(instance_, &createInfo, nullptr, surface_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Win32 surface for Vulkan render context");
-    
+
     #elif defined LLGL_OS_LINUX
-    
+
     VkXlibSurfaceCreateInfoKHR createInfo;
     {
         createInfo.sType    = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;

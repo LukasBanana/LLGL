@@ -109,6 +109,19 @@ GLenum MapOrZero(const Format format)
         case Format::RGBA32SInt:        return GL_RGBA32I;
         case Format::RGBA32Float:       return GL_RGBA32F;
 
+        /* --- Extended color formats --- */
+        case Format::R64Float:          return 0;
+        case Format::RG64Float:         return 0;
+        case Format::RGB64Float:        return 0;
+        case Format::RGBA64Float:       return 0;
+
+        /* --- Reversed color formats --- */
+        case Format::BGRA8UNorm:        return 0;
+        case Format::BGRA8SNorm:        return 0;
+        case Format::BGRA8UInt:         return 0;
+        case Format::BGRA8SInt:         return 0;
+        case Format::BGRA8sRGB:         return 0;
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return GL_DEPTH_COMPONENT16;
         case Format::D32Float:          return GL_DEPTH_COMPONENT32;//GL_DEPTH_COMPONENT;

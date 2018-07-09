@@ -131,6 +131,13 @@ DXGI_FORMAT Map(const Format format)
         case Format::RGB64Float:        break;
         case Format::RGBA64Float:       break;
 
+        /* --- Reversed color formats --- */
+        case Format::BGRA8UNorm:        return DXGI_FORMAT_B8G8R8A8_UNORM;
+        case Format::BGRA8SNorm:        break;
+        case Format::BGRA8UInt:         break;
+        case Format::BGRA8SInt:         break;
+        case Format::BGRA8sRGB:         return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return DXGI_FORMAT_R16_TYPELESS;        // typeless format to be used with SRV and DSV
         case Format::D32Float:          return DXGI_FORMAT_R32_TYPELESS;        // typeless format to be used with SRV and DSV
@@ -250,6 +257,10 @@ Format Unmap(const DXGI_FORMAT format)
         case DXGI_FORMAT_R32G32B32A32_UINT:     return Format::RGBA32UInt;
         case DXGI_FORMAT_R32G32B32A32_SINT:     return Format::RGBA32SInt;
         case DXGI_FORMAT_R32G32B32A32_FLOAT:    return Format::RGBA32Float;
+
+        /* --- Reversed color formats --- */
+        case DXGI_FORMAT_B8G8R8A8_UNORM:        return Format::BGRA8UNorm;
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:   return Format::BGRA8sRGB;
 
         /* --- Depth-stencil formats --- */
         case DXGI_FORMAT_D16_UNORM:             return Format::D16UNorm;

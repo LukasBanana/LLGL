@@ -9,6 +9,7 @@
 #include "D3D11RenderSystem.h"
 #include <LLGL/Platform/NativeHandle.h>
 #include "../../Core/Helper.h"
+#include "../DXCommon/DXTypes.h"
 
 
 namespace LLGL
@@ -42,6 +43,17 @@ void D3D11RenderContext::Present()
     swapChain_->Present(swapChainInterval_, 0);
 }
 
+Format D3D11RenderContext::QueryColorFormat() const
+{
+    return DXTypes::Unmap(colorFormat_);
+}
+
+Format D3D11RenderContext::QueryDepthStencilFormat() const
+{
+    return DXTypes::Unmap(depthStencilFormat_);
+}
+
+//TODO: depth-stencil and color format does not change, only resizing is considered!
 bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {
     const auto& prevVideoMode = GetVideoMode();
@@ -83,6 +95,9 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
     const auto& videoMode = GetVideoMode();
     const auto& vsync = GetVsync();
 
+    /* Pick and store color format */
+    colorFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;//DXGI_FORMAT_B8G8R8A8_UNORM
+
     /* Create swap chain for window handle */
     NativeHandle wndHandle;
     GetSurface().GetNativeHandle(&wndHandle);
@@ -92,7 +107,7 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
     {
         swapChainDesc.BufferDesc.Width                      = videoMode.resolution.width;
         swapChainDesc.BufferDesc.Height                     = videoMode.resolution.height;
-        swapChainDesc.BufferDesc.Format                     = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swapChainDesc.BufferDesc.Format                     = colorFormat_;
         swapChainDesc.BufferDesc.RefreshRate.Numerator      = vsync.refreshRate;
         swapChainDesc.BufferDesc.RefreshRate.Denominator    = vsync.interval;
         swapChainDesc.SampleDesc.Count                      = swapChainSamples_;
@@ -110,6 +125,9 @@ void D3D11RenderContext::CreateSwapChain(IDXGIFactory* factory)
 void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDesc)
 {
     HRESULT hr = 0;
+
+    /* Pick and store depth-stencil format */
+    depthStencilFormat_ = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
 
     /* Get back buffer from swap chain */
     hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(backBuffer_.colorBuffer.ReleaseAndGetAddressOf()));
@@ -130,7 +148,7 @@ void D3D11RenderContext::CreateBackBuffer(const VideoModeDescriptor& videoModeDe
             texDesc.Height              = videoModeDesc.resolution.height;
             texDesc.MipLevels           = 1;
             texDesc.ArraySize           = 1;
-            texDesc.Format              = DXPickDepthStencilFormat(videoModeDesc.depthBits, videoModeDesc.stencilBits);
+            texDesc.Format              = depthStencilFormat_;
             texDesc.SampleDesc.Count    = swapChainSamples_;
             texDesc.SampleDesc.Quality  = 0;
             texDesc.Usage               = D3D11_USAGE_DEFAULT;

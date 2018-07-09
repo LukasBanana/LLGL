@@ -52,6 +52,25 @@ class LLGL_EXPORT RenderContext : public RenderSystemChild
         virtual void Present() = 0;
 
         /**
+        \brief Returns the color format of this render context.
+        \remarks This may depend on the settings specified for the video mode.
+        A common value for a render context color format is Format::BGRA8UNorm.
+        \see SetVideoMode
+        \see AttachmentFormatDescriptor::format
+        \see Format
+        */
+        virtual Format QueryColorFormat() const = 0;
+
+        /**
+        \brief Returns the depth-stencil format of this render context.
+        \remarks This may depend on the settings specified for the video mode.
+        \see SetVideoMode
+        \see AttachmentFormatDescriptor::format
+        \see Format
+        */
+        virtual Format QueryDepthStencilFormat() const = 0;
+
+        /**
         \brief Returns the surface which is used to present the content on the screen.
         \remarks On desktop platforms, this can be statically casted to 'LLGL::Window&',
         and on mobile platforms, this can be statically casted to 'LLGL::Canvas&':

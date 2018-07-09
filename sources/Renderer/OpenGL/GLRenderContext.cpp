@@ -54,6 +54,18 @@ void GLRenderContext::Present()
     context_->SwapBuffers();
 }
 
+Format GLRenderContext::QueryColorFormat() const
+{
+    /* Return fixed value, not much of control for an OpenGL context */
+    return Format::RGBA8UNorm;
+}
+
+Format GLRenderContext::QueryDepthStencilFormat() const
+{
+    /* Return fixed value, not much of control for an OpenGL context */
+    return Format::D24UNormS8UInt;
+}
+
 bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 {
     if (renderContext)
@@ -108,6 +120,7 @@ void GLRenderContext::InitRenderStates()
     This is required so that texture formats like RGB (which is not word-aligned) can be used.
     */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    //glPixelStorei(GL_PACK_ALIGNMENT, 1); //???
 }
 
 

@@ -46,6 +46,9 @@ class VKRenderContext final : public RenderContext
 
         void Present() override;
 
+        Format QueryColorFormat() const override;
+        Format QueryDepthStencilFormat() const override;
+
         /* --- Extended functions --- */
 
         void SetPresentCommandBuffer(VKCommandBuffer* commandBuffer);
