@@ -119,7 +119,10 @@ struct RenderTargetDescriptor
     /**
     \brief Optional render pass object that will be used with the render target. By default null.
     \remarks If this is null, a default render pass is created for the render target.
+    The default render pass determines the attachment formats by the render target attachments and keeps the load and store operations at its default values.
     \see RenderSystem::CreateRenderPass
+    \see AttachmentFormatDescriptor::loadOp
+    \see AttachmentFormatDescriptor::storeOp
     */
     RenderPass*                         renderPass          = nullptr;
 

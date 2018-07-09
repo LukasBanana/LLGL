@@ -12,6 +12,7 @@
 #include <LLGL/RenderPass.h>
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
+#include <cstdint>
 
 
 namespace LLGL
@@ -25,7 +26,11 @@ class VKRenderPass final : public RenderPass
 
     public:
 
+        VKRenderPass(const VKPtr<VkDevice>& device);
         VKRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc);
+
+        // (Re-)creates the render pass object.
+        void CreateVkRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc);
 
         // Returns the Vulkan render pass object.
         inline VkRenderPass GetVkRenderPass() const
@@ -33,11 +38,34 @@ class VKRenderPass final : public RenderPass
             return renderPass_;
         }
 
+        /*
+        Returns the bitmask for all attachments that require a clear value.
+        the least significant bit specifies whether the first attachment has a clear value or not.
+        */
+        inline std::uint64_t GetClearValuesMask() const
+        {
+            return clearValuesMask_;
+        }
+
+        // Returns the index of the depth-stencil attachment, or 0xFF if there is no depth-stencil attachment.
+        inline std::uint8_t GetDepthStencilIndex() const
+        {
+            return depthStencilIndex_;
+        }
+
+        // Returns the number of clear values that are required to begin with this render pass.
+        inline std::uint8_t GetNumClearValues() const
+        {
+            return numClearValues_;
+        }
+
     private:
 
-        void CreateRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc);
-
         VKPtr<VkRenderPass> renderPass_;
+
+        std::uint64_t       clearValuesMask_    = 0;
+        std::uint8_t        depthStencilIndex_  = ~0;
+        std::uint8_t        numClearValues_     = 0;
 
 };
 

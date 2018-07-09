@@ -13,6 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include "VKCore.h"
 #include "VKPtr.h"
+#include "RenderState/VKRenderPass.h"
 #include "Texture/VKDepthStencilBuffer.h"
 #include <memory>
 #include <vector>
@@ -51,11 +52,9 @@ class VKRenderContext final : public RenderContext
 
         /* --- Extended functions --- */
 
-        void SetPresentCommandBuffer(VKCommandBuffer* commandBuffer);
-
-        inline const VKPtr<VkRenderPass>& GetSwapChainRenderPass() const
+        inline VkRenderPass GetSwapChainRenderPass() const
         {
-            return swapChainRenderPass_;
+            return swapChainRenderPass_.GetVkRenderPass();
         }
 
         // Returns the number of images the swap chain has.
@@ -122,7 +121,7 @@ class VKRenderContext final : public RenderContext
         SurfaceSupportDetails               surfaceSupportDetails_;
 
         VKPtr<VkSwapchainKHR>               swapChain_;
-        VKPtr<VkRenderPass>                 swapChainRenderPass_;
+        VKRenderPass                        swapChainRenderPass_;
         VkSurfaceFormatKHR                  swapChainFormat_;
         VkExtent2D                          swapChainExtent_            = { 0, 0 };
         std::vector<VkImage>                swapChainImages_;
@@ -137,8 +136,6 @@ class VKRenderContext final : public RenderContext
 
         VKPtr<VkSemaphore>                  imageAvailableSemaphore_;
         VKPtr<VkSemaphore>                  renderFinishedSemaphore_;
-
-        VKCommandBuffer*                    commandBuffer_              = nullptr;
 
 };
 

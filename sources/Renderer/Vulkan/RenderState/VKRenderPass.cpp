@@ -9,22 +9,23 @@
 #include "../VKCore.h"
 #include "../VKTypes.h"
 #include <LLGL/RenderPassFlags.h>
+#include <limits>
 
 
 namespace LLGL
 {
 
 
-VKRenderPass::VKRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc) :
+VKRenderPass::VKRenderPass(const VKPtr<VkDevice>& device) :
     renderPass_ { device, vkDestroyRenderPass }
 {
-    CreateRenderPass(device, desc);
 }
 
-
-/*
- * ======= Private: =======
- */
+VKRenderPass::VKRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc) :
+    VKRenderPass { device }
+{
+    CreateVkRenderPass(device, desc);
+}
 
 static void Convert(VkAttachmentDescription& dst, const AttachmentFormatDescriptor& src)
 {
@@ -77,11 +78,14 @@ static void Convert(VkAttachmentDescription& dst, const AttachmentFormatDescript
     dst.finalLayout     = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 }
 
-void VKRenderPass::CreateRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc)
+void VKRenderPass::CreateVkRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc)
 {
     /* Get number of attachments */
     std::uint32_t numColorAttachments   = static_cast<std::uint32_t>(desc.colorAttachments.size());
     std::uint32_t numAttachments        = numColorAttachments;
+
+    if (numAttachments > static_cast<std::uint32_t>(std::numeric_limits<decltype(numClearValues_)>::max()))
+        throw std::invalid_argument("too many attachments for Vulkan render pass");
 
     bool hasDepthStencil = false;
 
@@ -99,7 +103,23 @@ void VKRenderPass::CreateRenderPass(const VKPtr<VkDevice>& device, const RenderP
         Convert(attachmentDescs[i], desc.colorAttachments[i]);
 
     if (hasDepthStencil)
-        Convert(attachmentDescs[numColorAttachments], desc.depthAttachment, desc.stencilAttachment);
+    {
+        depthStencilIndex_ = static_cast<std::uint8_t>(numColorAttachments);
+        Convert(attachmentDescs[depthStencilIndex_], desc.depthAttachment, desc.stencilAttachment);
+    }
+
+    /* Build bitmask for clear values: least significant bit (LSB) is used for the first attachment */
+    clearValuesMask_ = 0;
+
+    for (std::uint32_t i = numAttachments; i > 0; --i)
+    {
+        if (attachmentDescs[i - 1].loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
+        {
+            clearValuesMask_ |= 0x1ull;
+            numClearValues_ = std::max(numClearValues_, static_cast<std::uint8_t>(i - 1));
+        }
+        clearValuesMask_ <<= 1;
+    }
 
     /* Initialize attachment reference */
     for (std::uint32_t i = 0; i < numAttachments; ++i)
@@ -115,7 +135,7 @@ void VKRenderPass::CreateRenderPass(const VKPtr<VkDevice>& device, const RenderP
     {
         auto& attachmentRef = attachmentsRefs.back();
         {
-            attachmentRef.attachment    = numColorAttachments;
+            attachmentRef.attachment    = depthStencilIndex_;
             attachmentRef.layout        = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         }
     }
@@ -130,7 +150,7 @@ void VKRenderPass::CreateRenderPass(const VKPtr<VkDevice>& device, const RenderP
         subpassDesc.colorAttachmentCount    = numColorAttachments;
         subpassDesc.pColorAttachments       = attachmentsRefs.data();
         subpassDesc.pResolveAttachments     = nullptr;
-        subpassDesc.pDepthStencilAttachment = (hasDepthStencil ? &(attachmentsRefs[numColorAttachments]) : nullptr);
+        subpassDesc.pDepthStencilAttachment = (hasDepthStencil ? &(attachmentsRefs[depthStencilIndex_]) : nullptr);
         subpassDesc.preserveAttachmentCount = 0;
         subpassDesc.pPreserveAttachments    = nullptr;
     }

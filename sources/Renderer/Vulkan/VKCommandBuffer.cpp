@@ -8,6 +8,7 @@
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 #include "VKTypes.h"
+#include "RenderState/VKRenderPass.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
 #include "RenderState/VKResourceHeap.h"
@@ -25,7 +26,9 @@ namespace LLGL
 {
 
 
-static const std::uint32_t g_maxNumViewportsPerBatch = 16;
+static const std::uint32_t g_maxNumViewportsPerBatch    = 16;
+static const std::uint32_t g_maxNumColorAttachments     = 32;
+static const std::uint32_t g_maxNumAttachments          = (g_maxNumColorAttachments + 1);
 
 VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, VkQueue graphicsQueue, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices) :
     device_             { device                           },
@@ -143,15 +146,17 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 
 /* ----- Clear ----- */
 
-static const std::uint32_t g_maxNumColorAttachments = 32;
-static const std::uint32_t g_maxNumAttachments      = (g_maxNumColorAttachments + 1);
+static void Convert(VkClearColorValue& dst, const ColorRGBAf& src)
+{
+    dst.float32[0] = src.r;
+    dst.float32[1] = src.g;
+    dst.float32[2] = src.b;
+    dst.float32[3] = src.a;
+}
 
 void VKCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
-    clearColor_.float32[0] = color.r;
-    clearColor_.float32[1] = color.g;
-    clearColor_.float32[2] = color.b;
-    clearColor_.float32[3] = color.a;
+    Convert(clearColor_, color);
 }
 
 void VKCommandBuffer::SetClearDepth(float depth)
@@ -227,12 +232,9 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
         if ((src.flags & ClearFlags::Color) != 0)
         {
             /* Convert color clear command */
-            dst.aspectMask                   = VK_IMAGE_ASPECT_COLOR_BIT;
-            dst.colorAttachment              = src.colorAttachment;
-            dst.clearValue.color.float32[0]  = src.clearValue.color.r;
-            dst.clearValue.color.float32[1]  = src.clearValue.color.g;
-            dst.clearValue.color.float32[2]  = src.clearValue.color.b;
-            dst.clearValue.color.float32[3]  = src.clearValue.color.a;
+            dst.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+            dst.colorAttachment = src.colorAttachment;
+            Convert(dst.clearValue.color, src.clearValue.color);
             ++numAttachmentsVK;
         }
         else if (hasDSVAttachment_)
@@ -348,12 +350,112 @@ void VKCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    //TODO
+    if (renderTarget.IsRenderContext())
+    {
+        /* Get Vulkan render context object */
+        auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderTarget);
+
+        /* Store information about framebuffer attachments */
+        renderPass_             = renderContextVK.GetSwapChainRenderPass();
+        framebuffer_            = renderContextVK.GetSwapChainFramebuffer();
+        framebufferExtent_      = renderContextVK.GetSwapChainExtent();
+        numColorAttachments_    = renderContextVK.GetNumColorAttachments();
+        hasDSVAttachment_       = (renderContextVK.HasDepthAttachment() || renderContextVK.HasStencilAttachment());
+    }
+    else
+    {
+        /* Get Vulkan render target object and store its extent for subsequent commands */
+        auto& renderTargetVK = LLGL_CAST(VKRenderTarget&, renderTarget);
+
+        /* Store information about framebuffer attachments */
+        renderPass_             = renderTargetVK.GetVkRenderPass();
+        framebuffer_            = renderTargetVK.GetVkFramebuffer();
+        framebufferExtent_      = renderTargetVK.GetVkExtent();
+        numColorAttachments_    = renderTargetVK.GetNumColorAttachments();
+        hasDSVAttachment_       = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
+    }
+
+    scissorRectInvalidated_ = true;
+
+    /* Declare array or clear values */
+    VkClearValue clearValuesVK[g_maxNumAttachments];
+    std::uint32_t numClearValuesVK = 0;
+
+    /* Get native render pass object either from RenderTarget or RenderPass interface */
+    if (renderPass != nullptr)
+    {
+        /* Get native VkRenderPass object */
+        auto renderPassVK = LLGL_CAST(VKRenderPass*, renderPass);
+        renderPass_ = renderPassVK->GetVkRenderPass();
+
+        /* Fill array of clear values */
+        numClearValuesVK        = renderPassVK->GetNumClearValues();
+        auto clearValuesMask    = renderPassVK->GetClearValuesMask();
+        auto depthStencilIndex  = renderPassVK->GetDepthStencilIndex();
+
+        for (std::uint32_t i = 0; i < numClearValuesVK; ++i)
+        {
+            /* Check if current attachment index requires a clear value */
+            if (((clearValuesMask >> i) & 0x1ull) != 0)
+            {
+                auto& dst = clearValuesVK[i];
+
+                if (numClearValues > 0)
+                {
+                    /* Set specified clear parameter */
+                    if (i == depthStencilIndex)
+                    {
+                        dst.depthStencil.depth      = clearValues->depth;
+                        dst.depthStencil.stencil    = clearValues->stencil;
+                    }
+                    else
+                        Convert(dst.color, clearValues->color);
+
+                    /* Get next clear value parameter */
+                    --numClearValues;
+                    ++clearValues;
+                }
+                else
+                {
+                    /* Set global clear parameters (from SetClearColor, SetClearDepth, SetClearStencil) */
+                    if (i == depthStencilIndex)
+                        dst.depthStencil = clearDepthStencil_;
+                    else
+                        dst.color = clearColor_;
+                }
+            }
+        }
+    }
+
+    #if 0
+    /* Begin command buffer and render pass */
+    if (!IsCommandBufferActive())
+        BeginCommandBuffer();
+    #endif
+
+    /* Record begin of render pass */
+    VkRenderPassBeginInfo beginInfo;
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.renderPass        = renderPass_;
+        beginInfo.framebuffer       = framebuffer_;
+        beginInfo.renderArea.offset = { 0, 0 };
+        beginInfo.renderArea.extent = framebufferExtent_;
+        beginInfo.clearValueCount   = numClearValuesVK;
+        beginInfo.pClearValues      = clearValuesVK;
+    }
+    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void VKCommandBuffer::EndRenderPass()
 {
-    //TODO
+    /* Record and of render pass */
+    vkCmdEndRenderPass(commandBuffer_);
+
+    /* Reset render pass and framebuffer attributes */
+    renderPass_     = VK_NULL_HANDLE;
+    framebuffer_    = VK_NULL_HANDLE;
 }
 
 /* ----- Render Targets ----- */
@@ -385,6 +487,7 @@ Maybe it can be integrated into a Begin/EndRenderPass function with a new interf
 */
 void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
+    #if 0
     auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderContext);
 
     //TODO:
@@ -406,6 +509,7 @@ void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
     /* Store information about framebuffer attachments */
     numColorAttachments_    = 1;
     hasDSVAttachment_       = renderContextVK.HasDepthStencilBuffer();
+    #endif
 }
 
 
@@ -579,8 +683,10 @@ void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
 
 /* --- Extended functions --- */
 
-void VKCommandBuffer::SetPresentIndex(std::uint32_t idx)
+void VKCommandBuffer::NextInternalBuffer()
 {
+    auto idx = (commandBufferIndex_ + 1) % commandBufferList_.size();
+
     commandBuffer_          = commandBufferList_[idx];
     commandBufferActiveIt_  = commandBufferActiveList_.begin() + idx;
     recordingFence_         = recordingFenceList_[idx];

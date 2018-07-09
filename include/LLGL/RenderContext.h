@@ -63,12 +63,14 @@ class LLGL_EXPORT RenderContext : public RenderTarget
         /**
         \brief Returns true if this render context has a depth format.
         \see QueryDepthStencilFormat
+        \see IsDepthFormat
         */
         bool HasDepthAttachment() const final;
 
         /**
         \brief Returns true if this render context has a stencil format.
         \see QueryDepthStencilFormat
+        \see IsStencilFormat
         */
         bool HasStencilAttachment() const final;
 

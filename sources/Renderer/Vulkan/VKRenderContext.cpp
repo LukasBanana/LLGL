@@ -40,7 +40,7 @@ VKRenderContext::VKRenderContext(
         deviceMemoryMngr_    { deviceMemoryMngr              },
         surface_             { instance, vkDestroySurfaceKHR },
         swapChain_           { device, vkDestroySwapchainKHR },
-        swapChainRenderPass_ { device, vkDestroyRenderPass   },
+        swapChainRenderPass_ { device                        },
         depthStencilBuffer_  { device                        }
 {
     SetOrCreateSurface(surface, desc.videoMode, nullptr);
@@ -63,20 +63,12 @@ VKRenderContext::~VKRenderContext()
 
 void VKRenderContext::Present()
 {
-    if (!commandBuffer_)
-        throw std::runtime_error("no command buffer set to present render context");
-
-    /* End command buffer and render pass */
-    commandBuffer_->SetRenderPassNull();
-    commandBuffer_->EndCommandBuffer();
-
-    /* Initialize semaphorse */
+    /* Initialize semaphores */
     VkSemaphore waitSemaphorse[] = { imageAvailableSemaphore_ };
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    VkSemaphore signalSemaphorse[] = { renderFinishedSemaphore_ };
-    VkCommandBuffer commandBuffers[] = { commandBuffer_->GetVkCommandBuffer() };
+    VkSemaphore signalSemaphores[] = { renderFinishedSemaphore_ };
 
-    /* Submit command buffer to graphics queue */
+    /* Submit signal semaphore to graphics queue */
     VkSubmitInfo submitInfo;
     {
         submitInfo.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -84,13 +76,13 @@ void VKRenderContext::Present()
         submitInfo.waitSemaphoreCount   = 1;
         submitInfo.pWaitSemaphores      = waitSemaphorse;
         submitInfo.pWaitDstStageMask    = waitStages;
-        submitInfo.commandBufferCount   = 1;
-        submitInfo.pCommandBuffers      = commandBuffers;
+        submitInfo.commandBufferCount   = 0;
+        submitInfo.pCommandBuffers      = nullptr;
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores    = signalSemaphorse;
+        submitInfo.pSignalSemaphores    = signalSemaphores;
     }
-    auto result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, commandBuffer_->GetQueueSubmitFence());
-    VKThrowIfFailed(result, "failed to submit Vulkan graphics queue");
+    auto result = vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
+    VKThrowIfFailed(result, "failed to submit semaphore to Vulkan graphics queue");
 
     /* Present result on screen */
     VkSwapchainKHR swapChains[] = { swapChain_ };
@@ -100,7 +92,7 @@ void VKRenderContext::Present()
         presentInfo.sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.pNext               = nullptr;
         presentInfo.waitSemaphoreCount  = 1;
-        presentInfo.pWaitSemaphores     = signalSemaphorse;
+        presentInfo.pWaitSemaphores     = signalSemaphores;
         presentInfo.swapchainCount      = 1;
         presentInfo.pSwapchains         = swapChains;
         presentInfo.pImageIndices       = &presentImageIndex_;
@@ -124,12 +116,6 @@ Format VKRenderContext::QueryDepthStencilFormat() const
 }
 
 /* --- Extended functions --- */
-
-void VKRenderContext::SetPresentCommandBuffer(VKCommandBuffer* commandBuffer)
-{
-    commandBuffer_ = commandBuffer;
-    commandBuffer_->SetPresentIndex(presentImageIndex_);
-}
 
 bool VKRenderContext::HasDepthStencilBuffer() const
 {
@@ -239,84 +225,27 @@ void VKRenderContext::CreateGpuSurface()
 
 void VKRenderContext::CreateSwapChainRenderPass()
 {
-    VkAttachmentDescription attachments[2];
-
-    /* Initialize color attachment */
-    attachments[0].flags                = 0;
-    attachments[0].format               = swapChainFormat_.format;
-    attachments[0].samples              = VK_SAMPLE_COUNT_1_BIT;
-    attachments[0].loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachments[0].storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
-    attachments[0].stencilLoadOp        = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachments[0].stencilStoreOp       = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachments[0].initialLayout        = VK_IMAGE_LAYOUT_UNDEFINED;
-    attachments[0].finalLayout          = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-    if (HasDepthStencilBuffer())
+    RenderPassDescriptor renderPassDesc;
     {
-        /* Initialize depth-stencil attachment */
-        attachments[1].flags                = 0;
-        attachments[1].format               = depthStencilBuffer_.GetVkFormat();
-        attachments[1].samples              = VK_SAMPLE_COUNT_1_BIT;
-        attachments[1].loadOp               = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[1].storeOp              = VK_ATTACHMENT_STORE_OP_STORE;
-        attachments[1].stencilLoadOp        = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachments[1].stencilStoreOp       = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachments[1].initialLayout        = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachments[1].finalLayout          = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    }
+        /* Specify single color attachment */
+        renderPassDesc.colorAttachments =
+        {
+            AttachmentFormatDescriptor
+            {
+                QueryColorFormat(),
+                AttachmentLoadOp::Undefined
+            }
+        };
 
-    /* Initialize color attachment reference */
-    VkAttachmentReference colorAttachmentRef;
-    {
-        colorAttachmentRef.attachment       = 0;
-        colorAttachmentRef.layout           = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    }
+        /* Specify depth-stencil attachment */
+        auto depthStencilFormat = QueryDepthStencilFormat();
 
-    /* Initialize depth-stencil attachment reference */
-    VkAttachmentReference depthAttachmentRef;
-    {
-        depthAttachmentRef.attachment       = 1;
-        depthAttachmentRef.layout           = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        if (IsDepthFormat(depthStencilFormat))
+            renderPassDesc.depthAttachment.format = depthStencilFormat;
+        if (IsStencilFormat(depthStencilFormat))
+            renderPassDesc.stencilAttachment.format = depthStencilFormat;
     }
-
-    /* Initialize sub-pass descriptor */
-    VkSubpassDescription subpassDesc = {};
-    {
-        subpassDesc.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpassDesc.colorAttachmentCount    = 1;
-        subpassDesc.pColorAttachments       = (&colorAttachmentRef);
-        if (HasDepthStencilBuffer())
-            subpassDesc.pDepthStencilAttachment = (&depthAttachmentRef);
-    }
-
-    /* Initialize sub-pass dependency */
-    VkSubpassDependency subpassDep;
-    {
-        subpassDep.srcSubpass               = VK_SUBPASS_EXTERNAL;
-        subpassDep.dstSubpass               = 0;
-        subpassDep.srcStageMask             = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpassDep.dstStageMask             = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpassDep.srcAccessMask            = 0;
-        subpassDep.dstAccessMask            = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        subpassDep.dependencyFlags          = 0;
-    }
-
-    /* Create swap-chain render pass */
-    VkRenderPassCreateInfo createInfo;
-    {
-        createInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
-        createInfo.flags                    = 0;
-        createInfo.attachmentCount          = (HasDepthStencilBuffer() ? 2 : 1);
-        createInfo.pAttachments             = attachments;
-        createInfo.subpassCount             = 1;
-        createInfo.pSubpasses               = (&subpassDesc);
-        createInfo.dependencyCount          = 1;
-        createInfo.pDependencies            = (&subpassDep);
-    }
-    auto result = vkCreateRenderPass(device_, &createInfo, nullptr, swapChainRenderPass_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan swap-chain render pass");
+    swapChainRenderPass_.CreateVkRenderPass(device_, renderPassDesc);
 }
 
 void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, const VsyncDescriptor& vsyncDesc)
@@ -441,7 +370,7 @@ void VKRenderContext::CreateSwapChainFramebuffers()
         createInfo.sType            = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         createInfo.pNext            = nullptr;
         createInfo.flags            = 0;
-        createInfo.renderPass       = swapChainRenderPass_;
+        createInfo.renderPass       = swapChainRenderPass_.GetVkRenderPass();
         createInfo.attachmentCount  = (HasDepthStencilBuffer() ? 2 : 1);
         createInfo.pAttachments     = attachments;
         createInfo.width            = swapChainExtent_.width;

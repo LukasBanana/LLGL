@@ -126,7 +126,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         /* --- Extended functions --- */
 
-        void SetPresentIndex(std::uint32_t idx);
+        void NextInternalBuffer();
 
         bool IsCommandBufferActive() const;
 
@@ -179,6 +179,7 @@ class VKCommandBuffer final : public CommandBuffer
         VkFence                         recordingFence_;
         std::vector<bool>               commandBufferActiveList_;
         std::vector<bool>::iterator     commandBufferActiveIt_      = commandBufferActiveList_.end();
+        std::size_t                     commandBufferIndex_         = 0;
 
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
