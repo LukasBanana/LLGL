@@ -48,12 +48,12 @@ struct AttachmentDescriptor
     AttachmentDescriptor(const AttachmentDescriptor&) = default;
 
     //! Constructor for the specified depth-, stencil-, or color attachment.
-    inline AttachmentDescriptor(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t layer = 0, AxisDirection cubeFace = AxisDirection::XPos) :
-        type     { type     },
-        texture  { texture  },
-        mipLevel { mipLevel },
-        layer    { layer    },
-        cubeFace { cubeFace }
+    inline AttachmentDescriptor(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t arrayLayer = 0, AxisDirection cubeFace = AxisDirection::XPos) :
+        type       { type       },
+        texture    { texture    },
+        mipLevel   { mipLevel   },
+        arrayLayer { arrayLayer },
+        cubeFace   { cubeFace   }
     {
     }
 
@@ -93,7 +93,7 @@ struct AttachmentDescriptor
     For cube array textures this can be used in combination with the cubeFace attribute.
     \see cubeFace
     */
-    std::uint32_t   layer       = 0;
+    std::uint32_t   arrayLayer  = 0;
 
     /**
     \brief Cube texture face.

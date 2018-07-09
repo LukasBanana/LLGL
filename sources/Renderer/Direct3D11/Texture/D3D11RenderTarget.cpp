@@ -130,7 +130,7 @@ static void FillViewDescForTexture3D(const AttachmentDescriptor& attachmentDesc,
 {
     viewDesc.ViewDimension          = D3D11_RTV_DIMENSION_TEXTURE3D;
     viewDesc.Texture3D.MipSlice     = attachmentDesc.mipLevel;
-    viewDesc.Texture3D.FirstWSlice  = attachmentDesc.layer;
+    viewDesc.Texture3D.FirstWSlice  = attachmentDesc.arrayLayer;
     viewDesc.Texture3D.WSize        = 1;
 }
 
@@ -146,7 +146,7 @@ static void FillViewDescForTexture1DArray(const AttachmentDescriptor& attachment
 {
     viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE1DARRAY;
     viewDesc.Texture1DArray.MipSlice        = attachmentDesc.mipLevel;
-    viewDesc.Texture1DArray.FirstArraySlice = attachmentDesc.layer;
+    viewDesc.Texture1DArray.FirstArraySlice = attachmentDesc.arrayLayer;
     viewDesc.Texture1DArray.ArraySize       = 1;
 }
 
@@ -154,7 +154,7 @@ static void FillViewDescForTexture2DArray(const AttachmentDescriptor& attachment
 {
     viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
     viewDesc.Texture2DArray.MipSlice        = attachmentDesc.mipLevel;
-    viewDesc.Texture2DArray.FirstArraySlice = attachmentDesc.layer;
+    viewDesc.Texture2DArray.FirstArraySlice = attachmentDesc.arrayLayer;
     viewDesc.Texture2DArray.ArraySize       = 1;
 }
 
@@ -162,7 +162,7 @@ static void FillViewDescForTextureCubeArray(const AttachmentDescriptor& attachme
 {
     viewDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
     viewDesc.Texture2DArray.MipSlice        = attachmentDesc.mipLevel;
-    viewDesc.Texture2DArray.FirstArraySlice = attachmentDesc.layer * 6 + static_cast<UINT>(attachmentDesc.cubeFace);
+    viewDesc.Texture2DArray.FirstArraySlice = attachmentDesc.arrayLayer * 6 + static_cast<UINT>(attachmentDesc.cubeFace);
     viewDesc.Texture2DArray.ArraySize       = 1;
 }
 
@@ -181,14 +181,14 @@ static void FillViewDescForTextureCubeMS(const AttachmentDescriptor& attachmentD
 static void FillViewDescForTexture2DArrayMS(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
-    viewDesc.Texture2DMSArray.FirstArraySlice   = attachmentDesc.layer;
+    viewDesc.Texture2DMSArray.FirstArraySlice   = attachmentDesc.arrayLayer;
     viewDesc.Texture2DMSArray.ArraySize         = 1;
 }
 
 static void FillViewDescForTextureCubeArrayMS(const AttachmentDescriptor& attachmentDesc, D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
 {
     viewDesc.ViewDimension                      = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY;
-    viewDesc.Texture2DMSArray.FirstArraySlice   = attachmentDesc.layer * 6 + static_cast<UINT>(attachmentDesc.cubeFace);
+    viewDesc.Texture2DMSArray.FirstArraySlice   = attachmentDesc.arrayLayer * 6 + static_cast<UINT>(attachmentDesc.cubeFace);
     viewDesc.Texture2DMSArray.ArraySize         = 1;
 }
 
@@ -249,7 +249,7 @@ void D3D11RenderTarget::AttachTexture(Texture& texture, const AttachmentDescript
             {
                 tex2DMS,
                 textureD3D.GetNative().tex2D.Get(),
-                D3D11CalcSubresource(attachmentDesc.mipLevel, attachmentDesc.layer, texDesc.MipLevels),
+                D3D11CalcSubresource(attachmentDesc.mipLevel, attachmentDesc.arrayLayer, texDesc.MipLevels),
                 texDesc.Format
             }
         );

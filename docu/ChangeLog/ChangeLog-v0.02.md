@@ -644,6 +644,7 @@ Before:
 LLGL::TextureDescriptor my2DTexDesc;
 my2DTexDesc.type             = LLGL::TextureType::Texture2DArray;
 my2DTexDesc.format           = LLGL::TextureFormat::RGBA8;
+my3DTexDesc.flags            = LLGL::TextureFlags::GenerateMips; // full MIP-map chain
 my2DTexDesc.texture2D.width  = 512;
 my2DTexDesc.texture2D.height = 512;
 my2DTexDesc.texture2D.layers = 4;
@@ -652,6 +653,7 @@ LLGL::Texture* my2DTex = myRenderer->CreateTexture(my2DTexDesc);
 LLGL::TextureDescriptor my3DTexDesc;
 my3DTexDesc.type             = LLGL::TextureType::Texture3D;
 my3DTexDesc.format           = LLGL::TextureFormat::R32Float;
+my3DTexDesc.flags            = 0; // no MIP-mapping
 my3DTexDesc.texture3D.width  = 16;
 my3DTexDesc.texture3D.height = 16;
 my3DTexDesc.texture3D.depth  = 16;
@@ -662,19 +664,21 @@ After:
 ```cpp
 // Usage:
 LLGL::TextureDescriptor my2DTexDesc;
-my2DTexDesc.type   = LLGL::TextureType::Texture2DArray;
-my2DTexDesc.format = LLGL::Format::RGBA8UNorm;
-my2DTexDesc.width  = 512;
-my2DTexDesc.height = 512;
-my2DTexDesc.layers = 4;
+my2DTexDesc.type          = LLGL::TextureType::Texture2DArray;
+my2DTexDesc.format        = LLGL::Format::RGBA8UNorm;
+my2DTexDesc.extent.width  = 512;
+my2DTexDesc.extent.height = 512;
+my2DTexDesc.arrayLayers   = 4;
+my2DTexDesc.mipLevels     = 0; // full MIP-map chain
 LLGL::Texture* my2DTex = myRenderer->CreateTexture(my2DTexDesc);
 
 LLGL::TextureDescriptor my3DTexDesc;
-my3DTexDesc.type   = LLGL::TextureType::Texture3D;
-my3DTexDesc.format = LLGL::Format::R32Float;
-my3DTexDesc.width  = 16;
-my3DTexDesc.height = 16;
-my3DTexDesc.depth  = 16;
+my3DTexDesc.type          = LLGL::TextureType::Texture3D;
+my3DTexDesc.format        = LLGL::Format::R32Float;
+my3DTexDesc.extent.width  = 16;
+my3DTexDesc.extent.height = 16;
+my3DTexDesc.extent.depth  = 16;
+my2DTexDesc.mipLevels     = 1; // no MIP-mapping
 LLGL::Texture* my3DTex = myRenderer->CreateTexture(my3DTexDesc);
 ```
 

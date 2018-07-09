@@ -220,7 +220,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
                 device,
                 attachment.mipLevel,
                 1,
-                attachment.layer,
+                attachment.arrayLayer,
                 1,
                 imageViews_[numAttachments].ReleaseAndGetAddressOf()
             );
