@@ -23,6 +23,8 @@
 #include "Sampler.h"
 #include "ResourceHeap.h"
 
+#include "RenderPass.h"
+#include "RenderPassFlags.h"
 #include "RenderTarget.h"
 #include "Shader.h"
 #include "ShaderProgram.h"
@@ -373,6 +375,19 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         //! Releases the specified ResourceHeap object. After this call, the specified object must no longer be used.
         virtual void Release(ResourceHeap& resourceHeap) = 0;
+
+        /* ----- Render Passes ----- */
+
+        /**
+        \brief Creates a new RenderPass object.
+        \remarks At least one render pass is required to render something.
+        \see CommandBuffer::BeginRenderPass
+        \see CommandBuffer::EndRenderPass
+        */
+        virtual RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) = 0;
+
+        //! Releases the specified RenderPass object. After this call, the specified object must no longer be used.
+        virtual void Release(RenderPass& renderPass) = 0;
 
         /* ----- Render Targets ----- */
 

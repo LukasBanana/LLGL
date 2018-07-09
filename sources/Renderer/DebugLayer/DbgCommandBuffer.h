@@ -97,6 +97,17 @@ class DbgCommandBuffer : public CommandBufferExt
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
+        /* ----- Render Passes ----- */
+
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            RenderPass*         renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
+
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;

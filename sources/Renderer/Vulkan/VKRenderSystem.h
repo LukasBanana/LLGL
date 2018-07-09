@@ -31,6 +31,7 @@
 
 #include "RenderState/VKQuery.h"
 #include "RenderState/VKFence.h"
+#include "RenderState/VKRenderPass.h"
 #include "RenderState/VKPipelineLayout.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
@@ -110,6 +111,12 @@ class VKRenderSystem final : public RenderSystem
         ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
         void Release(ResourceHeap& resourceHeap) override;
+
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 
@@ -231,6 +238,7 @@ class VKRenderSystem final : public RenderSystem
         HWObjectContainer<VKBufferArray>        bufferArrays_;
         HWObjectContainer<VKTexture>            textures_;
         HWObjectContainer<VKSampler>            samplers_;
+        HWObjectContainer<VKRenderPass>         renderPasses_;
         HWObjectContainer<VKRenderTarget>       renderTargets_;
         HWObjectContainer<VKShader>             shaders_;
         HWObjectContainer<VKShaderProgram>      shaderPrograms_;

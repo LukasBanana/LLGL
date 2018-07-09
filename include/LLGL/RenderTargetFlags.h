@@ -10,6 +10,7 @@
 
 
 #include "TextureFlags.h"
+#include "ForwardDecls.h"
 #include "GraphicsPipelineFlags.h"
 #include <vector>
 #include <cstdint>
@@ -18,8 +19,6 @@
 namespace LLGL
 {
 
-
-class Texture;
 
 /* ----- Enumerations ----- */
 
@@ -117,6 +116,13 @@ auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
 */
 struct RenderTargetDescriptor
 {
+    /**
+    \brief Optional render pass object that will be used with the render target. By default null.
+    \remarks If this is null, a default render pass is created for the render target.
+    \see RenderSystem::CreateRenderPass
+    */
+    RenderPass*                         renderPass          = nullptr;
+
     /**
     \brief Specifies the resolution of the render targets.
     \remarks All attachments with a reference to a texture must have the same resolution,

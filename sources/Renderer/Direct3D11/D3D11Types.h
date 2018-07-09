@@ -45,7 +45,7 @@ D3D11_SRV_DIMENSION         Map( const TextureType          textureType     );
 D3D11_LOGIC_OP              Map( const LogicOp              logicOp         );
 #endif
 
-Format               Unmap( const DXGI_FORMAT format );
+Format                      Unmap( const DXGI_FORMAT format );
 
 void Convert(D3D11_DEPTH_STENCIL_DESC& dst, const DepthDescriptor& srcDepth, const StencilDescriptor& srcStencil);
 

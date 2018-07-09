@@ -74,6 +74,17 @@ class VKCommandBuffer final : public CommandBuffer
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
+        /* ----- Render Passes ----- */
+
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            RenderPass*         renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
+
         /* ----- Render Targets ----- */
 
         void SetRenderTarget(RenderTarget& renderTarget) override;
@@ -156,8 +167,8 @@ class VKCommandBuffer final : public CommandBuffer
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
 
-        void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
-        void EndRenderPass();
+        void BeginRenderPass_OBSOLETE(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
+        void EndRenderPass_OBSOLETE();
 
         const VKPtr<VkDevice>&          device_;
         VKPtr<VkCommandPool>            commandPool_;

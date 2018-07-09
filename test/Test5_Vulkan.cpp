@@ -14,7 +14,7 @@
 
 
 //#define TEST_QUERY
-#define TEST_RENDER_TARGET
+//#define TEST_RENDER_TARGET
 
 
 int main()
@@ -236,7 +236,8 @@ int main()
         // Create render target
         LLGL::RenderTargetDescriptor rtDesc;
         {
-            rtDesc.attachments =
+            rtDesc.resolution   = { renderTargetSize, renderTargetSize };
+            rtDesc.attachments  =
             {
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
             };

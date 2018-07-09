@@ -19,6 +19,7 @@
 #include "ResourceHeap.h"
 #include "PipelineLayoutFlags.h"
 
+#include "RenderPass.h"
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
 #include "GraphicsPipeline.h"
@@ -246,6 +247,49 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
 
+        /* ----- Render Passes ----- */
+
+        /**
+        \brief Begins with a new render pass.
+        \param[in] renderTarget Specifies the render target in which the subsequent draw operations will be stored.
+        \param[in] renderPass Specifies an optional render pass object. If this is null, the default render pass for the specified render target will be used.
+        This render pass object must be compatible with the render pass object the specified render target was created with.
+        \param[in] numClearValues Specifies the number of clear values that are specified in the <code>clearValues</code> parameter.
+        This should be greater than or equal to the number of render pass attachments whose load operation (i.e. AttachmentFormatDescriptor::loadOp) is set to AttachmentLoadOp::Clear.
+        Otherwise, the default values from SetClearColor, SetClearDepth, and SetClearStencil are used.
+        \param[in] clearValues Optional pointer to the array of clear values.
+        If <code>numClearValues</code> is not zero, this must be a valid pointer to an array of at least <code>numClearValues</code> entries.
+        \remarks This function starts a new render pass section and must be ended with the EndRenderPass function.
+        A simple frame setup could look like this:
+        \code
+        myCmdBuffer->BeginRenderPass(*myRenderTarget);
+        {
+            myCmdBuffer->SetGraphicsPipeline(*myGfxPipeline);
+            myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
+            myCmdBuffer->Draw(...);
+        }
+        myCmdBuffer->EndRenderPass();
+        myRenderContext->Present();
+        \endcode
+        \see RenderSystem::CreateRenderPass
+        \see RenderSystem::CreateRenderTarget
+        \see RenderTargetDescriptor::renderPass
+        \see AttachmentFormatDescriptor::loadOp
+        \see EndRenderPass
+        */
+        virtual void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            RenderPass*         renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) {}//= 0;
+
+        /**
+        \brief Ends the current render pass.
+        \see BeginRenderPass
+        */
+        virtual void EndRenderPass() {}//= 0;
+
         /* ----- Render Targets ----- */
 
         /**
@@ -255,6 +299,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \note This function may invalidate the viewports and scissor rectangles.
         It is hence advisable to always set the viewports (and scissor rectangles, if enabled) after a new render target is bound.
         \see SetRenderTarget(RenderContext&)
+        \deprecated Will be removed soon, use BeginRenderPass.
         */
         virtual void SetRenderTarget(RenderTarget& renderTarget) = 0;
 
@@ -262,6 +307,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Sets the back buffer (or rather swap-chain) of the specified render context as the new target for subsequent rendering commands.
         \remarks Subsequent drawing operations will be rendered into the main framebuffer, which can then be presented onto the screen.
         \see SetRenderTarget(RenderTarget&)
+        \deprecated Will be removed soon, use BeginRenderPass.
         */
         virtual void SetRenderTarget(RenderContext& renderContext) = 0;
 

@@ -305,6 +305,43 @@ LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDe
     return desc;
 }
 
+/* ----- RenderPassDescriptor utility functions ----- */
+
+LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& renderTargetDesc)
+{
+    RenderPassDescriptor desc;
+    {
+        for (const auto& attachment : renderTargetDesc.attachments)
+        {
+            /* First try to get format from texture */
+            auto format = Format::Undefined;
+            if (auto texture = attachment.texture)
+                format = texture->QueryDesc().format;
+
+            switch (attachment.type)
+            {
+                case AttachmentType::Color:
+                    desc.colorAttachments.push_back({ format });
+                    break;
+
+                case AttachmentType::Depth:
+                    desc.depthAttachment    = { format != Format::Undefined ? format : Format::D32Float };
+                    break;
+
+                case AttachmentType::DepthStencil:
+                    desc.depthAttachment    = { format != Format::Undefined ? format : Format::D24UNormS8UInt };
+                    desc.stencilAttachment  = desc.depthAttachment;
+                    break;
+
+                case AttachmentType::Stencil:
+                    desc.depthAttachment    = { format != Format::Undefined ? format : Format::D24UNormS8UInt };
+                    break;
+            }
+        }
+    }
+    return desc;
+}
+
 
 } // /namespace LLGL
 

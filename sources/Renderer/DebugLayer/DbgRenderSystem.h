@@ -95,6 +95,12 @@ class DbgRenderSystem : public RenderSystem
 
         void Release(ResourceHeap& resourceViewHeap) override;
 
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
+
         /* ----- Render Targets ----- */
 
         RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;
@@ -191,6 +197,7 @@ class DbgRenderSystem : public RenderSystem
         HWObjectContainer<DbgBuffer>            buffers_;
         HWObjectContainer<DbgBufferArray>       bufferArrays_;
         HWObjectContainer<DbgTexture>           textures_;
+        //HWObjectContainer<DbgRenderPass>        renderPasses_;
         HWObjectContainer<DbgRenderTarget>      renderTargets_;
         HWObjectContainer<DbgShader>            shaders_;
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;

@@ -573,6 +573,18 @@ void VKRenderSystem::Release(ResourceHeap& resourceHeap)
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
+/* ----- Render Passes ----- */
+
+RenderPass* VKRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    return TakeOwnership(renderPasses_, MakeUnique<VKRenderPass>(device_, desc));
+}
+
+void VKRenderSystem::Release(RenderPass& renderPass)
+{
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)

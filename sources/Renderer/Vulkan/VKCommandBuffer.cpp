@@ -340,6 +340,22 @@ void VKCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
     BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, firstSet);
 }
 
+/* ----- Render Passes ----- */
+
+void VKCommandBuffer::BeginRenderPass(
+    RenderTarget&       renderTarget,
+    RenderPass*         renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
+{
+    //TODO
+}
+
+void VKCommandBuffer::EndRenderPass()
+{
+    //TODO
+}
+
 /* ----- Render Targets ----- */
 
 void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
@@ -614,7 +630,7 @@ void VKCommandBuffer::SetRenderPass(VkRenderPass renderPass, VkFramebuffer frame
     if (renderPass != VK_NULL_HANDLE)
     {
         /* Begin new render pass */
-        BeginRenderPass(renderPass, framebuffer, extent);
+        BeginRenderPass_OBSOLETE(renderPass, framebuffer, extent);
 
         /* Store render pass and framebuffer attributes */
         renderPass_             = renderPass;
@@ -638,7 +654,7 @@ void VKCommandBuffer::SetRenderPassNull()
 }
 
 //private
-void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
+void VKCommandBuffer::BeginRenderPass_OBSOLETE(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
 {
     /* Record begin of render pass */
     VkRenderPassBeginInfo beginInfo;
@@ -656,7 +672,7 @@ void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer fra
 }
 
 //private
-void VKCommandBuffer::EndRenderPass()
+void VKCommandBuffer::EndRenderPass_OBSOLETE()
 {
     /* Record and of render pass */
     vkCmdEndRenderPass(commandBuffer_);

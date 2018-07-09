@@ -1,0 +1,172 @@
+/*
+ * VKRenderPass.cpp
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#include "VKRenderPass.h"
+#include "../VKCore.h"
+#include "../VKTypes.h"
+#include <LLGL/RenderPassFlags.h>
+
+
+namespace LLGL
+{
+
+
+VKRenderPass::VKRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc) :
+    renderPass_ { device, vkDestroyRenderPass }
+{
+    CreateRenderPass(device, desc);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+static void Convert(VkAttachmentDescription& dst, const AttachmentFormatDescriptor& src)
+{
+    dst.flags           = 0;
+    dst.format          = VKTypes::Map(src.format);
+    dst.samples         = VK_SAMPLE_COUNT_1_BIT; //TODO: multi-sampling
+    dst.loadOp          = VKTypes::Map(src.loadOp);
+    dst.storeOp         = VKTypes::Map(src.storeOp);
+    dst.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    dst.stencilStoreOp  = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
+    dst.finalLayout     = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+}
+
+static VkFormat GetDepthStencilFormat(const Format depthFormat, const Format& stencilFormat)
+{
+    if (depthFormat != Format::Undefined && stencilFormat != Format::Undefined)
+    {
+        /* Check whether depth and stencil attachments share the same format */
+        if (depthFormat != stencilFormat)
+            throw std::invalid_argument("format mismatch between depth and stencil render pass attachments");
+        return VKTypes::Map(depthFormat);
+    }
+
+    if (depthFormat != Format::Undefined)
+    {
+        /* Get depth-stencil format from depth attachment only */
+        return VKTypes::Map(depthFormat);
+    }
+
+    if (stencilFormat != Format::Undefined)
+    {
+        /* Get depth-stencil format from stencil attachment only */
+        return VKTypes::Map(stencilFormat);
+    }
+
+    return VK_FORMAT_UNDEFINED;
+}
+
+static void Convert(VkAttachmentDescription& dst, const AttachmentFormatDescriptor& srcDepth, const AttachmentFormatDescriptor& srcStencil)
+{
+    dst.flags           = 0;
+    dst.format          = GetDepthStencilFormat(srcDepth.format, srcStencil.format);
+    dst.samples         = VK_SAMPLE_COUNT_1_BIT; //TODO: multi-sampling
+    dst.loadOp          = VKTypes::Map(srcDepth.loadOp);
+    dst.storeOp         = VKTypes::Map(srcDepth.storeOp);
+    dst.stencilLoadOp   = VKTypes::Map(srcStencil.loadOp);
+    dst.stencilStoreOp  = VKTypes::Map(srcStencil.storeOp);
+    dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
+    dst.finalLayout     = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+}
+
+void VKRenderPass::CreateRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc)
+{
+    /* Get number of attachments */
+    std::uint32_t numColorAttachments   = static_cast<std::uint32_t>(desc.colorAttachments.size());
+    std::uint32_t numAttachments        = numColorAttachments;
+
+    bool hasDepthStencil = false;
+
+    if (desc.depthAttachment.format != Format::Undefined || desc.stencilAttachment.format != Format::Undefined)
+    {
+        ++numAttachments;
+        hasDepthStencil = true;
+    }
+
+    std::vector<VkAttachmentDescription> attachmentDescs(numAttachments);
+    std::vector<VkAttachmentReference> attachmentsRefs(numAttachments);
+
+    /* Initialize attachment descriptors */
+    for (std::uint32_t i = 0; i < numColorAttachments; ++i)
+        Convert(attachmentDescs[i], desc.colorAttachments[i]);
+
+    if (hasDepthStencil)
+        Convert(attachmentDescs[numColorAttachments], desc.depthAttachment, desc.stencilAttachment);
+
+    /* Initialize attachment reference */
+    for (std::uint32_t i = 0; i < numAttachments; ++i)
+    {
+        auto& attachmentRef = attachmentsRefs[i];
+        {
+            attachmentRef.attachment    = i;
+            attachmentRef.layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
+    }
+
+    if (hasDepthStencil)
+    {
+        auto& attachmentRef = attachmentsRefs.back();
+        {
+            attachmentRef.attachment    = numColorAttachments;
+            attachmentRef.layout        = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        }
+    }
+
+    /* Initialize sub-pass descriptor */
+    VkSubpassDescription subpassDesc;
+    {
+        subpassDesc.flags                   = 0;
+        subpassDesc.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpassDesc.inputAttachmentCount    = 0;
+        subpassDesc.pInputAttachments       = nullptr;
+        subpassDesc.colorAttachmentCount    = numColorAttachments;
+        subpassDesc.pColorAttachments       = attachmentsRefs.data();
+        subpassDesc.pResolveAttachments     = nullptr;
+        subpassDesc.pDepthStencilAttachment = (hasDepthStencil ? &(attachmentsRefs[numColorAttachments]) : nullptr);
+        subpassDesc.preserveAttachmentCount = 0;
+        subpassDesc.pPreserveAttachments    = nullptr;
+    }
+
+    /* Initialize sub-pass dependency */
+    VkSubpassDependency subpassDep;
+    {
+        subpassDep.srcSubpass               = VK_SUBPASS_EXTERNAL;
+        subpassDep.dstSubpass               = 0;
+        subpassDep.srcStageMask             = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDep.dstStageMask             = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDep.srcAccessMask            = 0;
+        subpassDep.dstAccessMask            = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpassDep.dependencyFlags          = 0;
+    }
+
+    /* Create swap-chain render pass */
+    VkRenderPassCreateInfo createInfo;
+    {
+        createInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        createInfo.pNext                    = nullptr;
+        createInfo.flags                    = 0;
+        createInfo.attachmentCount          = numAttachments;
+        createInfo.pAttachments             = attachmentDescs.data();
+        createInfo.subpassCount             = 1;
+        createInfo.pSubpasses               = (&subpassDesc);
+        createInfo.dependencyCount          = 1;
+        createInfo.pDependencies            = (&subpassDep);
+    }
+    auto result = vkCreateRenderPass(device, &createInfo, nullptr, renderPass_.ReleaseAndGetAddressOf());
+    VKThrowIfFailed(result, "failed to create Vulkan render pass");
+}
+
+
+} // /namespace LLGL
+
+
+
+// ================================================================================

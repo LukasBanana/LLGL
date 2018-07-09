@@ -103,6 +103,12 @@ class D3D12RenderSystem final : public RenderSystem
 
         void Release(ResourceHeap& resourceHeap) override;
 
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
+
         /* ----- Render Targets ----- */
 
         RenderTarget* CreateRenderTarget(const RenderTargetDescriptor& desc) override;

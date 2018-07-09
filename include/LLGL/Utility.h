@@ -18,6 +18,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include "TextureFlags.h"
 #include "BufferFlags.h"
 #include "RenderTargetFlags.h"
+#include "RenderPassFlags.h"
 #include "ResourceHeapFlags.h"
 #include "ShaderFlags.h"
 #include "ShaderProgramFlags.h"
@@ -159,6 +160,14 @@ Some rendering APIs, such as OpenGL 2.0, do not provide sufficient functionality
 Hence, this utility function cannot be used in conjunction with all renderer versions.
 */
 LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDescriptor& reflectionDesc);
+
+/* ----- RenderPassDescriptor utility functions ----- */
+
+/**
+\brief Converts the specified render target descriptor into a render pass descriptor with default settings.
+\remarks This can be used to specify a render pass that is compatible with a render target.
+*/
+LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& renderTargetDesc);
 
 /** @} */
 

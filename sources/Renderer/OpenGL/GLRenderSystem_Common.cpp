@@ -110,6 +110,18 @@ void GLRenderSystem::Release(ResourceHeap& resourceHeap)
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
+/* ----- Render Passes ----- */
+
+RenderPass* GLRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    return nullptr;//return TakeOwnership(renderPasses_, MakeUnique<GLRenderPass>(desc));
+}
+
+void GLRenderSystem::Release(RenderPass& renderPass)
+{
+    //RemoveFromUniqueSet(renderPasses_, &renderPass);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)

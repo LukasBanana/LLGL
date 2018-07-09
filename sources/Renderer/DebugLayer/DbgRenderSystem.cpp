@@ -361,6 +361,18 @@ void DbgRenderSystem::Release(ResourceHeap& resourceViewHeap)
     return instance_->Release(resourceViewHeap);
 }
 
+/* ----- Render Passes ----- */
+
+RenderPass* DbgRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    return instance_->CreateRenderPass(desc);
+}
+
+void DbgRenderSystem::Release(RenderPass& renderPass)
+{
+    instance_->Release(renderPass);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
