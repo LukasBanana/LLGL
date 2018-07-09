@@ -109,7 +109,7 @@ struct Offset3D
 
 /**
 \brief Returns the sum of left hand side extent 'lhs' and the right hand side extent 'rhs'.
-\remarks If the operation results in a numerical overflow, the respective components will be clamped to its maximum, i.e. std::numeric_limits<std::uint32_t>::max().
+\remarks If the operation results in a numerical overflow, the respective components will be clamped to its maximum, i.e. <code>std::numeric_limits<std::uint32_t>::max()</code>.
 */
 LLGL_EXPORT Extent2D operator + (const Extent2D& lhs, const Extent2D& rhs);
 
@@ -121,7 +121,7 @@ LLGL_EXPORT Extent2D operator - (const Extent2D& lhs, const Extent2D& rhs);
 
 /**
 \brief Returns the sum of left hand side extent 'lhs' and the right hand side extent 'rhs'.
-\remarks If the operation results in a numerical overflow, the respective components will be clamped to its maximum, i.e. std::numeric_limits<std::uint32_t>::max().
+\remarks If the operation results in a numerical overflow, the respective components will be clamped to its maximum, i.e. <code>std::numeric_limits<std::uint32_t>::max()</code>.
 */
 LLGL_EXPORT Extent3D operator + (const Extent3D& lhs, const Extent3D& rhs);
 
@@ -136,25 +136,25 @@ LLGL_EXPORT Extent3D operator - (const Extent3D& lhs, const Extent3D& rhs);
 
 /**
 \brief Returns the sum of left hand side offset 'lhs' and the right hand side offset 'rhs'.
-\remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range [std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()].
+\remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range <code>[std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()]</code>.
 */
 LLGL_EXPORT Offset2D operator + (const Offset2D& lhs, const Offset2D& rhs);
 
 /**
 \brief Returns the subtractionn of left hand side offset 'lhs' and the right hand side offset 'rhs'.
-\remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range [std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()].
+\remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range <code>[std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()]</code>.
 */
 LLGL_EXPORT Offset2D operator - (const Offset2D& lhs, const Offset2D& rhs);
 
 /**
 \brief Returns the sum of left hand side offset 'lhs' and the right hand side offset 'rhs'.
-\remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range [std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()].
+\remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range <code>[std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()]</code>.
 */
 LLGL_EXPORT Offset3D operator + (const Offset3D& lhs, const Offset3D& rhs);
 
 /**
 \brief Returns the subtractionn of left hand side offset 'lhs' and the right hand side offset 'rhs'.
-\remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range [std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()].
+\remarks If the operation results in a numerical overflow or underflow, the respective components will be clamped into the range <code>[std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()]</code>.
 */
 LLGL_EXPORT Offset3D operator - (const Offset3D& lhs, const Offset3D& rhs);
 

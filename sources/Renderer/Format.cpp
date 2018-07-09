@@ -223,6 +223,7 @@ LLGL_EXPORT bool IsNormalizedFormat(const Format format)
         case Format::RGBA8SNorm:
         case Format::RGBA16UNorm:
         case Format::RGBA16SNorm:
+        case Format::BGRA8UNorm:
             return true;
         default:
             return false;
@@ -231,7 +232,7 @@ LLGL_EXPORT bool IsNormalizedFormat(const Format format)
 
 LLGL_EXPORT bool IsIntegralFormat(const Format format)
 {
-    if (format >= Format::R8UNorm && format <= Format::RGBA32SInt)
+    if (format >= Format::R8UNorm && format <= Format::BGRA8sRGB)
         return !IsFloatFormat(format);
     else
         return false;

@@ -26,6 +26,7 @@ namespace LLGL
 /**
 \brief Hardware buffer type enumeration.
 \see ResourceType
+\todo Maybe replace this enum by "ResourceType".
 */
 enum class BufferType
 {
