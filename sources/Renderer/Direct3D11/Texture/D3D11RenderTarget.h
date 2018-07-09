@@ -30,6 +30,7 @@ class D3D11RenderTarget final : public RenderTarget
 
         D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
 
+        Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
         bool HasDepthAttachment() const override;
         bool HasStencilAttachment() const override;
@@ -65,6 +66,8 @@ class D3D11RenderTarget final : public RenderTarget
         bool HasMultiSampling() const;
 
         ID3D11Device*                               device_                     = nullptr;
+
+        Extent2D                                    resolution_;
 
         std::vector<ComPtr<ID3D11RenderTargetView>> renderTargetViews_;
         std::vector<ID3D11RenderTargetView*>        renderTargetViewsRef_;

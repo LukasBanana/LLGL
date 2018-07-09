@@ -29,6 +29,7 @@ class GLRenderTarget final : public RenderTarget
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
 
+        Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
         bool HasDepthAttachment() const override;
         bool HasStencilAttachment() const override;
@@ -76,6 +77,8 @@ class GLRenderTarget final : public RenderTarget
         void BlitFramebuffer();
 
         /* === Members === */
+
+        Extent2D                    resolution_;
 
         GLFramebuffer               framebuffer_;   // primary FBO
         GLFramebuffer               framebufferMS_; // secondary FBO for multi-sampling

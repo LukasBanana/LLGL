@@ -20,13 +20,18 @@ namespace LLGL
 
 
 VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc) :
-    RenderTarget        { desc.resolution              },
+    resolution_         { desc.resolution              },
     framebuffer_        { device, vkDestroyFramebuffer },
     renderPass_         { device, vkDestroyRenderPass  },
     depthStencilBuffer_ { device                       }
 {
     CreateRenderPass(device, deviceMemoryMngr, desc);
     CreateFramebuffer(device, desc);
+}
+
+Extent2D VKRenderTarget::GetResolution() const
+{
+    return resolution_;
 }
 
 std::uint32_t VKRenderTarget::GetNumColorAttachments() const

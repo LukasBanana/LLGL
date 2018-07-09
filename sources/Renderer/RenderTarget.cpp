@@ -15,16 +15,15 @@ namespace LLGL
 {
 
 
+bool RenderTarget::IsRenderContext() const
+{
+    return false;
+}
+
+
 /*
  * ======= Protected: =======
  */
-
-RenderTarget::RenderTarget(const Extent2D& resolution) :
-    resolution_ { resolution }
-{
-    if (resolution_.width == 0 || resolution_.height == 0)
-        throw std::invalid_argument("invalid resolution of render target (at least one component is zero)");
-}
 
 static std::string Extent2DToString(const Extent2D& res)
 {
@@ -38,11 +37,11 @@ void RenderTarget::ValidateResolution(const Extent2D& resolution)
         throw std::invalid_argument("invalid resolution of render tartget attachment (at least one component is zero)");
 
     /* Check if size matches the current resolution */
-    if (resolution_ != resolution)
+    if (GetResolution() != resolution)
     {
         throw std::invalid_argument(
             "resolution mismatch of render target attachment (" +
-            Extent2DToString(resolution) + " is specified, but expected " + Extent2DToString(resolution_) + ")"
+            Extent2DToString(resolution) + " is specified, but expected " + Extent2DToString(GetResolution()) + ")"
         );
     }
 }

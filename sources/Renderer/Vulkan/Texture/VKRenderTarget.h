@@ -26,6 +26,7 @@ class VKRenderTarget final : public RenderTarget
 
         VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
 
+        Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
         bool HasDepthAttachment() const override;
         bool HasStencilAttachment() const override;
@@ -54,6 +55,8 @@ class VKRenderTarget final : public RenderTarget
 
         void CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
         void CreateFramebuffer(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
+
+        Extent2D                        resolution_;
 
         VKPtr<VkFramebuffer>            framebuffer_;
         VKPtr<VkRenderPass>             renderPass_;

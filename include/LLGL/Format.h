@@ -171,10 +171,24 @@ LLGL_EXPORT bool IsCompressedFormat(const Format format);
 
 /**
 \brief Returns true if the specified hardware format is a depth or depth-stencil format,
-i.e. either Format::DepthComponent, or Format::DepthStencil.
+i.e. Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, or Format::D32FloatS8X24UInt.
 \see Format
 */
 LLGL_EXPORT bool IsDepthStencilFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is a depth format,
+i.e. Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, or Format::D32FloatS8X24UInt.
+\see Format
+*/
+LLGL_EXPORT bool IsDepthFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is a stencil format,
+i.e. Format::D24UNormS8UInt or Format::D32FloatS8X24UInt.
+\see Format
+*/
+LLGL_EXPORT bool IsStencilFormat(const Format format);
 
 /**
 \brief Returns true if the specified hardware format is a normalized format (like Format::RGBA8UNorm, Format::R8SNorm etc.).

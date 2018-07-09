@@ -625,7 +625,7 @@ void VKCommandBuffer::EndCommandBuffer()
 void VKCommandBuffer::SetRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
 {
     if (renderPass_)
-        EndRenderPass();
+        EndRenderPass_OBSOLETE();
 
     if (renderPass != VK_NULL_HANDLE)
     {
@@ -645,7 +645,7 @@ void VKCommandBuffer::SetRenderPassNull()
     if (renderPass_)
     {
         /* End current render pass */
-        EndRenderPass();
+        EndRenderPass_OBSOLETE();
 
         /* Reset render pass and framebuffer attributes */
         renderPass_     = VK_NULL_HANDLE;

@@ -23,6 +23,35 @@ RenderContext::RenderContext(const VideoModeDescriptor& initialVideoMode, const 
 {
 }
 
+/* ----- Render Target ----- */
+
+bool RenderContext::IsRenderContext() const
+{
+    return true;
+}
+
+Extent2D RenderContext::GetResolution() const
+{
+    return GetVideoMode().resolution;
+}
+
+std::uint32_t RenderContext::GetNumColorAttachments() const
+{
+    return 1u;
+}
+
+bool RenderContext::HasDepthAttachment() const
+{
+    return IsDepthFormat(QueryDepthStencilFormat());
+}
+
+bool RenderContext::HasStencilAttachment() const
+{
+    return IsStencilFormat(QueryDepthStencilFormat());
+}
+
+/* ----- Configuration ----- */
+
 static bool IsVideoModeValid(const VideoModeDescriptor& videoModeDesc)
 {
     return (videoModeDesc.resolution.width > 0 && videoModeDesc.resolution.height > 0 && videoModeDesc.swapChainSize > 0);

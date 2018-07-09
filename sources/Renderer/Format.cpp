@@ -203,6 +203,16 @@ LLGL_EXPORT bool IsDepthStencilFormat(const Format format)
     return (format >= Format::D16UNorm && format <= Format::D32FloatS8X24UInt);
 }
 
+LLGL_EXPORT bool IsDepthFormat(const Format format)
+{
+    return (format >= Format::D16UNorm && format <= Format::D32FloatS8X24UInt);
+}
+
+LLGL_EXPORT bool IsStencilFormat(const Format format)
+{
+    return (format == Format::D24UNormS8UInt || format == Format::D32FloatS8X24UInt);
+}
+
 LLGL_EXPORT bool IsNormalizedFormat(const Format format)
 {
     switch (format)

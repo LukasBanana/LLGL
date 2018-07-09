@@ -68,7 +68,7 @@ static std::size_t CountColorAttachments(const std::vector<AttachmentDescriptor>
  */
 
 GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
-    RenderTarget  { desc.resolution                                        },
+    resolution_   { desc.resolution                                        },
     multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) }
 {
     framebuffer_.GenFramebuffer();
@@ -76,6 +76,11 @@ GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
         CreateFramebufferWithNoAttachments(desc);
     else
         CreateFramebufferWithAttachments(desc);
+}
+
+Extent2D GLRenderTarget::GetResolution() const
+{
+    return resolution_;
 }
 
 std::uint32_t GLRenderTarget::GetNumColorAttachments() const

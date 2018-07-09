@@ -17,8 +17,8 @@ namespace LLGL
 
 
 D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc) :
-    RenderTarget  { desc.resolution                  },
     device_       { device                           },
+    resolution_   { desc.resolution                  },
     multiSamples_ { desc.multiSampling.SampleCount() }
 {
     #if 0
@@ -33,6 +33,11 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
         for (const auto& attachment : desc.attachments)
             Attach(attachment);
     }
+}
+
+Extent2D D3D11RenderTarget::GetResolution() const
+{
+    return resolution_;
 }
 
 std::uint32_t D3D11RenderTarget::GetNumColorAttachments() const
