@@ -277,7 +277,6 @@ static void CreateColorBlendState(
     }
 
     auto numAttachments = desc.targets.size();
-
     if (numAttachments > 0)
     {
         /* Convert blend targets to Vulkan structure */
@@ -295,7 +294,6 @@ static void CreateColorBlendState(
 
     createInfo.attachmentCount      = static_cast<std::uint32_t>(numAttachments);
     createInfo.pAttachments         = attachmentStatesVK.data();
-
     createInfo.blendConstants[0]    = desc.blendFactor.r;
     createInfo.blendConstants[1]    = desc.blendFactor.g;
     createInfo.blendConstants[2]    = desc.blendFactor.b;

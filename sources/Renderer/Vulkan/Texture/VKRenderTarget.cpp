@@ -218,6 +218,8 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
         }
     }
 
+    numColorAttachments_ = numColorAttachments;
+
     /* Create framebuffer object */
     VkFramebufferCreateInfo createInfo;
     {
