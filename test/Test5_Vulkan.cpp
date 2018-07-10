@@ -43,7 +43,7 @@ int main()
         contextDesc.multiSampling.enabled       = true;
         contextDesc.multiSampling.samples       = 8;
 
-        contextDesc.vsync.enabled               = !true;
+        contextDesc.vsync.enabled               = true;
 
         const auto resolution = contextDesc.videoMode.resolution;
         const Gs::Vector2f viewportSize { static_cast<float>(resolution.width), static_cast<float>(resolution.height) };

@@ -160,9 +160,9 @@ private:
             layoutDesc.bindings =
             {
                 LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 0 },//1 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 0 },//2 },
-                //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               1 },//3 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },//1 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 2 },//2 },
+                //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               3 },//3 },
             };
         }
         pipelineLayout = renderer->CreatePipelineLayout(layoutDesc);
@@ -336,8 +336,12 @@ private:
 
     void DrawSceneIntoTexture()
     {
+        #if 0
         // Draw scene into render-target and binds its graphics pipeline
         commands->SetRenderTarget(*renderTarget);
+        #endif
+
+        // Bind graphics pipeline for render target
         commands->SetGraphicsPipeline(*pipelines[0]);
 
         // Set common buffers and sampler states
@@ -411,8 +415,12 @@ private:
 
     void DrawSceneOntoScreen()
     {
+        #if 0
         // Draw scene into render-context and binds its graphics pipeline
         commands->SetRenderTarget(*context);
+        #endif
+
+        // Binds graphics pipeline for render context
         commands->SetGraphicsPipeline(*pipelines[1]);
 
         // Generate MIP-maps again after texture has been written by the render-target
@@ -474,10 +482,22 @@ private:
         // Update scene by user input
         UpdateScene();
 
-        // Draw scene into texture, then draw scene onto screen
-        DrawSceneIntoTexture();
-        DrawSceneOntoScreen();
-        //commands->SetRenderTarget(*context);
+        commandQueue->Begin(*commands);
+        {
+            // Draw scene into texture, then draw scene onto screen
+            commands->BeginRenderPass(*renderTarget);
+            {
+                DrawSceneIntoTexture();
+            }
+            commands->EndRenderPass();
+
+            commands->BeginRenderPass(*context);
+            {
+                DrawSceneOntoScreen();
+            }
+            commands->EndRenderPass();
+        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

@@ -408,22 +408,26 @@ void DbgCommandBuffer::BeginRenderPass(
         if (states_.insideRenderPass)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot begin new render pass while previous render pass is still active");
         states_.insideRenderPass = true;
-
-        if (renderTarget.IsRenderContext())
-        {
-            auto& renderContextDbg = LLGL_CAST(DbgRenderContext&, renderTarget);
-            bindings_.renderContext = &renderContextDbg;
-            bindings_.renderTarget  = nullptr;
-        }
-        else
-        {
-            auto& renderTargetDbg = LLGL_CAST(DbgRenderTarget&, renderTarget);
-            bindings_.renderContext = nullptr;
-            bindings_.renderTarget  = &renderTargetDbg;
-        }
     }
 
-    instance.BeginRenderPass(renderTarget, renderPass, numClearValues, clearValues);
+    if (renderTarget.IsRenderContext())
+    {
+        auto& renderContextDbg = LLGL_CAST(DbgRenderContext&, renderTarget);
+
+        bindings_.renderContext = &renderContextDbg;
+        bindings_.renderTarget  = nullptr;
+
+        instance.BeginRenderPass(renderContextDbg.instance, renderPass, numClearValues, clearValues);
+    }
+    else
+    {
+        auto& renderTargetDbg = LLGL_CAST(DbgRenderTarget&, renderTarget);
+
+        bindings_.renderContext = nullptr;
+        bindings_.renderTarget  = &renderTargetDbg;
+
+        instance.BeginRenderPass(renderTargetDbg.instance, renderPass, numClearValues, clearValues);
+    }
 }
 
 void DbgCommandBuffer::EndRenderPass()
