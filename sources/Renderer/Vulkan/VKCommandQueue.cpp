@@ -40,7 +40,7 @@ void VKCommandQueue::Begin(CommandBuffer& commandBuffer, long flags)
     auto& commandBufferVK = LLGL_CAST(VKCommandBuffer&, commandBuffer);
 
     /* Use next internal VkCommandBuffer object to reduce latency */
-    commandBufferVK.NextInternalBuffer();
+    commandBufferVK.AcquireNextBuffer();
 
     /* Wait for fence before recording */
     VkFence fence = commandBufferVK.GetQueueSubmitFence();

@@ -40,14 +40,24 @@ VKCommandBuffer::VKCommandBuffer(
         queuePresentFamily_ { queueFamilyIndices.presentFamily }
 {
     std::size_t bufferCount = std::max(1u, desc.numNativeBuffers);
+
+    /* Create native command buffer objects */
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
     CreateCommandBuffers(bufferCount);
     CreateRecordingFences(graphicsQueue, bufferCount);
+
+    /* Acquire first native command buffer */
+    AcquireNextBuffer();
 }
 
 VKCommandBuffer::~VKCommandBuffer()
 {
-    vkFreeCommandBuffers(device_, commandPool_, static_cast<std::uint32_t>(commandBufferList_.size()), commandBufferList_.data());
+    vkFreeCommandBuffers(
+        device_,
+        commandPool_,
+        static_cast<std::uint32_t>(commandBufferList_.size()),
+        commandBufferList_.data()
+    );
 }
 
 /* ----- Configuration ----- */
@@ -690,110 +700,12 @@ void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
 
 /* --- Extended functions --- */
 
-void VKCommandBuffer::NextInternalBuffer()
+void VKCommandBuffer::AcquireNextBuffer()
 {
-    auto idx = (commandBufferIndex_ + 1) % commandBufferList_.size();
-    commandBuffer_ = commandBufferList_[idx];
-
-    #if 0
-    commandBufferActiveIt_  = commandBufferActiveList_.begin() + idx;
-    recordingFence_         = recordingFenceList_[idx];
-    #endif
+    commandBufferIndex_ = (commandBufferIndex_ + 1) % commandBufferList_.size();
+    commandBuffer_      = commandBufferList_[commandBufferIndex_];
+    recordingFence_     = recordingFenceList_[commandBufferIndex_].Get();
 }
-
-#if 0 //TODO: remove
-bool VKCommandBuffer::IsCommandBufferActive() const
-{
-    return *commandBufferActiveIt_;
-}
-
-void VKCommandBuffer::BeginCommandBuffer()
-{
-    /* Wait for fence before recording */
-    vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
-    vkResetFences(device_, 1, &recordingFence_);
-
-    /* Begin recording of current command buffer */
-    VkCommandBufferBeginInfo beginInfo;
-    {
-        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.pNext             = nullptr;
-        beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo  = nullptr;
-    }
-    auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
-    VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
-
-    /* Store activity state */
-    *commandBufferActiveIt_ = true;
-}
-
-void VKCommandBuffer::EndCommandBuffer()
-{
-    /* End recording of current command buffer */
-    auto result = vkEndCommandBuffer(commandBuffer_);
-    VKThrowIfFailed(result, "failed to end Vulkan command buffer");
-
-    /* Store activity state */
-    *commandBufferActiveIt_ = false;
-}
-
-void VKCommandBuffer::SetRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
-{
-    if (renderPass_)
-        EndRenderPass_OBSOLETE();
-
-    if (renderPass != VK_NULL_HANDLE)
-    {
-        /* Begin new render pass */
-        BeginRenderPass_OBSOLETE(renderPass, framebuffer, extent);
-
-        /* Store render pass and framebuffer attributes */
-        renderPass_             = renderPass;
-        framebuffer_            = framebuffer;
-        framebufferExtent_      = extent;
-        scissorRectInvalidated_ = true;
-    }
-}
-
-void VKCommandBuffer::SetRenderPassNull()
-{
-    if (renderPass_)
-    {
-        /* End current render pass */
-        EndRenderPass_OBSOLETE();
-
-        /* Reset render pass and framebuffer attributes */
-        renderPass_     = VK_NULL_HANDLE;
-        framebuffer_    = VK_NULL_HANDLE;
-    }
-}
-
-//private
-void VKCommandBuffer::BeginRenderPass_OBSOLETE(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
-{
-    /* Record begin of render pass */
-    VkRenderPassBeginInfo beginInfo;
-    {
-        beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        beginInfo.pNext             = nullptr;
-        beginInfo.renderPass        = renderPass;
-        beginInfo.framebuffer       = framebuffer;
-        beginInfo.renderArea.offset = { 0, 0 };
-        beginInfo.renderArea.extent = extent;
-        beginInfo.clearValueCount   = 0;//1;
-        beginInfo.pClearValues      = nullptr;//(&clearValue_);
-    }
-    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
-}
-
-//private
-void VKCommandBuffer::EndRenderPass_OBSOLETE()
-{
-    /* Record and of render pass */
-    vkCmdEndRenderPass(commandBuffer_);
-}
-#endif // /TODO
 
 
 /*
@@ -829,14 +741,6 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
     }
     auto result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferList_.data());
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
-
-    commandBuffer_ = commandBufferList_.front();
-
-    #if 0
-    /* Allocate list to keep track of which command buffers are active */
-    commandBufferActiveList_.resize(bufferCount);
-    commandBufferActiveIt_ = commandBufferActiveList_.end();
-    #endif
 }
 
 void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences)
@@ -859,8 +763,6 @@ void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t n
         /* Initial fence signal */
         vkQueueSubmit(graphicsQueue, 0, nullptr, fence);
     }
-
-    recordingFence_ = recordingFenceList_.front().Get();
 }
 
 void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments)

@@ -131,17 +131,8 @@ class VKCommandBuffer final : public CommandBuffer
 
         /* --- Extended functions --- */
 
-        void NextInternalBuffer();
-
-        #if 0
-        bool IsCommandBufferActive() const;
-
-        void BeginCommandBuffer();
-        void EndCommandBuffer();
-
-        void SetRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
-        void SetRenderPassNull();
-        #endif
+        // Acquires the next native VkCommandBuffer object.
+        void AcquireNextBuffer();
 
         // Returns the native VkCommandBuffer object.
         inline VkCommandBuffer GetVkCommandBuffer() const
@@ -174,11 +165,6 @@ class VKCommandBuffer final : public CommandBuffer
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
 
-        #if 0//TODO: remove
-        void BeginRenderPass_OBSOLETE(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
-        void EndRenderPass_OBSOLETE();
-        #endif
-
         const VKPtr<VkDevice>&          device_;
         VKPtr<VkCommandPool>            commandPool_;
 
@@ -188,10 +174,6 @@ class VKCommandBuffer final : public CommandBuffer
 
         std::vector<VKPtr<VkFence>>     recordingFenceList_;
         VkFence                         recordingFence_;
-        #if 0
-        std::vector<bool>               commandBufferActiveList_;
-        std::vector<bool>::iterator     commandBufferActiveIt_      = commandBufferActiveList_.end();
-        #endif
 
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };

@@ -23,7 +23,6 @@ namespace LLGL
 {
 
 
-class VKCommandBuffer;
 class VKDeviceMemoryManager;
 class VKDeviceMemoryRegion;
 

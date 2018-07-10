@@ -6,7 +6,6 @@
  */
 
 #include "VKRenderContext.h"
-#include "VKCommandBuffer.h"
 #include "VKCore.h"
 #include "VKTypes.h"
 #include "Memory/VKDeviceMemoryManager.h"
@@ -92,7 +91,7 @@ void VKRenderContext::Present()
         presentInfo.sType               = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
         presentInfo.pNext               = nullptr;
         presentInfo.waitSemaphoreCount  = 1;
-        presentInfo.pWaitSemaphores     = signalSemaphores;
+        presentInfo.pWaitSemaphores     = waitSemaphorse;//signalSemaphores;
         presentInfo.swapchainCount      = 1;
         presentInfo.pSwapchains         = swapChains;
         presentInfo.pImageIndices       = &presentImageIndex_;
@@ -441,7 +440,7 @@ VkExtent2D VKRenderContext::PickSwapExtent(const VkSurfaceCapabilitiesKHR& surfa
     {
         return VkExtent2D
         {
-            std::max(surfaceCaps.minImageExtent.width, std::min(surfaceCaps.maxImageExtent.width, width)),
+            std::max(surfaceCaps.minImageExtent.width,  std::min(surfaceCaps.maxImageExtent.width,  width)),
             std::max(surfaceCaps.minImageExtent.height, std::min(surfaceCaps.maxImageExtent.height, height))
         };
     }
@@ -452,7 +451,11 @@ VkFormat VKRenderContext::PickDepthStencilFormat() const
 {
     return VKFindSupportedImageFormat(
         physicalDevice_,
-        { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT },
+        {
+            VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VK_FORMAT_D24_UNORM_S8_UINT,
+            VK_FORMAT_D16_UNORM_S8_UINT
+        },
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
     );
@@ -462,7 +465,13 @@ VkFormat VKRenderContext::PickDepthFormat() const
 {
     return VKFindSupportedImageFormat(
         physicalDevice_,
-        { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D16_UNORM, VK_FORMAT_D16_UNORM_S8_UINT },
+        {
+            VK_FORMAT_D32_SFLOAT,
+            VK_FORMAT_D24_UNORM_S8_UINT,
+            VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VK_FORMAT_D16_UNORM,
+            VK_FORMAT_D16_UNORM_S8_UINT
+        },
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
     );
