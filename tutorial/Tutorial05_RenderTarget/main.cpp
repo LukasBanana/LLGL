@@ -387,7 +387,7 @@ private:
         #endif
 
         // Set viewport for render target
-        commands->SetViewport({ { 0, 0 }, renderTargetSize });
+        commands->SetViewport({ { 0, 0 }, renderTarget->GetResolution() });
 
         // Clear color and depth buffers of active framebuffer (i.e. the render target)
         commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
@@ -441,7 +441,7 @@ private:
         #endif
 
         // Reset viewport for the screen
-        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
 
         // Clear color and depth buffers of active framebuffer (i.e. the screen)
         commands->SetClearColor(defaultClearColor);

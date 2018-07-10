@@ -351,6 +351,7 @@ void VKRenderContext::CreateSwapChainImageViews()
     }
 
     /* Create all image views for the swap-chain */
+    swapChainImageViews_.clear();
     swapChainImageViews_.reserve(swapChainImages_.size());
 
     for (auto image : swapChainImages_)
@@ -391,6 +392,7 @@ void VKRenderContext::CreateSwapChainFramebuffers()
     }
 
     /* Create all framebuffers for the swap-chain */
+    swapChainFramebuffers_.clear();
     swapChainFramebuffers_.reserve(swapChainImageViews_.size());
 
     for (const auto& imageView : swapChainImageViews_)
