@@ -129,7 +129,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
-        /* --- Extended functions --- */
+        /* ----- Extended functions ----- */
 
         // Acquires the next native VkCommandBuffer object.
         void AcquireNextBuffer();

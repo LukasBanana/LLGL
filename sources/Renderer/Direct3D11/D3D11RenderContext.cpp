@@ -53,6 +53,11 @@ Format D3D11RenderContext::QueryDepthStencilFormat() const
     return DXTypes::Unmap(depthStencilFormat_);
 }
 
+const RenderPass* D3D11RenderContext::GetRenderPass() const
+{
+    return nullptr; // dummy
+}
+
 //TODO: depth-stencil and color format does not change, only resizing is considered!
 bool D3D11RenderContext::OnSetVideoMode(const VideoModeDescriptor& videoModeDesc)
 {

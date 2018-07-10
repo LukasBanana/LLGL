@@ -22,11 +22,21 @@ namespace LLGL
 VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc) :
     resolution_         { desc.resolution              },
     framebuffer_        { device, vkDestroyFramebuffer },
-    renderPass_         { device, vkDestroyRenderPass  },
+    defaultRenderPass_  { device                       },
     depthStencilBuffer_ { device                       }
 {
-    CreateRenderPass(device, deviceMemoryMngr, desc);
-    CreateFramebuffer(device, desc);
+    if (desc.renderPass)
+    {
+        /* Get render pass from descriptor */
+        renderPass_ = LLGL_CAST(const VKRenderPass*, desc.renderPass);
+    }
+    else
+    {
+        /* Create default render pass */
+        CreateRenderPass(device, desc);
+        renderPass_ = (&defaultRenderPass_);
+    }
+    CreateFramebuffer(device, deviceMemoryMngr, desc);
 }
 
 Extent2D VKRenderTarget::GetResolution() const
@@ -51,6 +61,11 @@ bool VKRenderTarget::HasStencilAttachment() const
     return (format == VK_FORMAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT);
 }
 
+const RenderPass* VKRenderTarget::GetRenderPass() const
+{
+    return renderPass_;
+}
+
 void VKRenderTarget::ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr)
 {
     depthStencilBuffer_.ReleaseDepthStencil(deviceMemoryMngr);
@@ -64,7 +79,7 @@ void VKRenderTarget::ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceM
 [[noreturn]]
 static void ErrDepthAttachmentFailed()
 {
-    throw std::runtime_error("attachment to render target failed, because render target already has a depth-stencil buffer");
+    throw std::runtime_error("depth-stencil already allocated in render target: more than one attachment does not have a texture reference");
 }
 
 static VkFormat GetDepthAttachmentVkFormat(const AttachmentType type)
@@ -84,141 +99,95 @@ static bool HasStencilComponent(const AttachmentType type)
     return (type == AttachmentType::Stencil || type == AttachmentType::DepthStencil);
 }
 
-void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc)
+void VKRenderTarget::CreateDepthStencilForAttachment(VKDeviceMemoryManager& deviceMemoryMngr, const AttachmentDescriptor& attachmentDesc)
+{
+    /* Create depth-stencil buffer */
+    if (depthStencilBuffer_.GetVkFormat() == VK_FORMAT_UNDEFINED)
+    {
+        depthStencilBuffer_.CreateDepthStencil(
+            deviceMemoryMngr,
+            GetResolution(),
+            GetDepthAttachmentVkFormat(attachmentDesc.type),
+            GetSampleCountFlags()
+        );
+    }
+    else
+        ErrDepthAttachmentFailed();
+}
+
+static void Convert(VkAttachmentDescription& dst, const AttachmentDescriptor& src, VkFormat srcFormat, VkSampleCountFlagBits srcSampleFlags)
+{
+    dst.flags           = 0;
+    dst.format          = srcFormat;
+    dst.samples         = srcSampleFlags;
+    dst.loadOp          = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    dst.storeOp         = VK_ATTACHMENT_STORE_OP_STORE;
+    dst.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    dst.stencilStoreOp  = (HasStencilComponent(src.type) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE);
+    dst.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
+    dst.finalLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+}
+
+void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc)
 {
     /* Initialize attachment descriptors */
-    std::vector<VkAttachmentDescription> attachmentDescs(desc.attachments.size());
+    std::uint32_t numAttachments        = static_cast<std::uint32_t>(desc.attachments.size());
+    std::uint32_t numColorAttachments   = 0;
 
-    for (std::size_t i = 0; i < desc.attachments.size(); ++i)
+    std::vector<VkAttachmentDescription> attachmentDescs(numAttachments);
+
+    for (const auto& attachment : desc.attachments)
     {
-        const auto& attachmentSrc = desc.attachments[i];
-        auto&       attachmentDst = attachmentDescs[i];
-
         /* Initialize format and sample count flags */
         VkFormat                format          = VK_FORMAT_UNDEFINED;
         VkSampleCountFlagBits   samplesFlags    = VK_SAMPLE_COUNT_1_BIT; //TODO: multi-sampling
 
-        if (auto texture = attachmentSrc.texture)
+        if (auto texture = attachment.texture)
         {
             /* Get format from texture */
             auto textureVK = LLGL_CAST(VKTexture*, texture);
-            format = textureVK->GetVkFormat();
+
+            /* Write attachment descriptor */
+            Convert(
+                attachmentDescs[numColorAttachments],
+                attachment,
+                textureVK->GetVkFormat(),
+                GetSampleCountFlags()
+            );
+            ++numColorAttachments;
         }
         else
         {
-            /* Create depth-stencil buffer */
-            format = GetDepthAttachmentVkFormat(attachmentSrc.type);
-
-            if (depthStencilBuffer_.GetVkFormat() == VK_FORMAT_UNDEFINED)
-                depthStencilBuffer_.CreateDepthStencil(deviceMemoryMngr, GetResolution(), format, samplesFlags);
-            else
-                ErrDepthAttachmentFailed();
-        }
-
-        /* Write attachment descriptor */
-        attachmentDst.flags            = 0;
-        attachmentDst.format           = format;
-        attachmentDst.samples          = samplesFlags;
-        attachmentDst.loadOp           = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDst.storeOp          = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDst.stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDst.stencilStoreOp    = (HasStencilComponent(attachmentSrc.type) ? VK_ATTACHMENT_STORE_OP_STORE : VK_ATTACHMENT_STORE_OP_DONT_CARE);
-        attachmentDst.initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachmentDst.finalLayout      = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    }
-
-    /* Initialize attachment reference */
-    std::vector<VkAttachmentReference> attachmentsRefs(desc.attachments.size());
-
-    numColorAttachments_ = 0;
-    std::size_t depthAttachmentIndex = ~0;
-    bool hasDSVAttachment = false;
-
-    for (std::uint32_t i = 0, n = static_cast<std::uint32_t>(desc.attachments.size()); i < n; ++i)
-    {
-        if (desc.attachments[i].type == AttachmentType::Color)
-        {
-            auto& attachmentRef = attachmentsRefs[numColorAttachments_++];
-            {
-                attachmentRef.attachment    = i;
-                attachmentRef.layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            }
-        }
-        else
-        {
-            if (!hasDSVAttachment)
-            {
-                auto& attachmentRef = attachmentsRefs.back();
-                {
-                    attachmentRef.attachment    = i;
-                    attachmentRef.layout        = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-                }
-                depthAttachmentIndex = (attachmentsRefs.size() - 1);
-                hasDSVAttachment = true;
-            }
-            else
-                throw std::invalid_argument("cannot have more than one depth-stencil attachment for render target");
+            /* Write attachment descriptor */
+            Convert(
+                attachmentDescs[numAttachments - 1],
+                attachment,
+                GetDepthAttachmentVkFormat(attachment.type),
+                GetSampleCountFlags()
+            );
         }
     }
 
-    /* Initialize sub-pass descriptor */
-    VkSubpassDescription subpassDesc;
-    {
-        subpassDesc.flags                   = 0;
-        subpassDesc.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpassDesc.inputAttachmentCount    = 0;
-        subpassDesc.pInputAttachments       = nullptr;
-        subpassDesc.colorAttachmentCount    = numColorAttachments_;
-        subpassDesc.pColorAttachments       = attachmentsRefs.data();
-        subpassDesc.pResolveAttachments     = nullptr;
-        subpassDesc.pDepthStencilAttachment = (depthAttachmentIndex < attachmentsRefs.size() ? &(attachmentsRefs[depthAttachmentIndex]) : nullptr);
-        subpassDesc.preserveAttachmentCount = 0;
-        subpassDesc.pPreserveAttachments    = nullptr;
-    }
-
-    /* Initialize sub-pass dependency */
-    VkSubpassDependency subpassDep;
-    {
-        subpassDep.srcSubpass               = VK_SUBPASS_EXTERNAL;
-        subpassDep.dstSubpass               = 0;
-        subpassDep.srcStageMask             = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpassDep.dstStageMask             = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpassDep.srcAccessMask            = 0;
-        subpassDep.dstAccessMask            = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        subpassDep.dependencyFlags          = 0;
-    }
-
-    /* Create swap-chain render pass */
-    VkRenderPassCreateInfo createInfo;
-    {
-        createInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        createInfo.pNext                    = nullptr;
-        createInfo.flags                    = 0;
-        createInfo.attachmentCount          = static_cast<std::uint32_t>(attachmentDescs.size());
-        createInfo.pAttachments             = attachmentDescs.data();
-        createInfo.subpassCount             = 1;
-        createInfo.pSubpasses               = (&subpassDesc);
-        createInfo.dependencyCount          = 1;
-        createInfo.pDependencies            = (&subpassDep);
-    }
-    auto result = vkCreateRenderPass(device, &createInfo, nullptr, renderPass_.ReleaseAndGetAddressOf());
-    VKThrowIfFailed(result, "failed to create Vulkan render pass");
+    defaultRenderPass_.CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs.data());
 }
 
-void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc)
+void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc)
 {
     /* Create image view for each attachment */
-    imageViews_.resize(desc.attachments.size(), VKPtr<VkImageView> { device, vkDestroyImageView });
+    std::uint32_t numAttachments        = static_cast<std::uint32_t>(desc.attachments.size());
+    std::uint32_t numColorAttachments   = 0;
 
-    std::vector<VkImageView> imageViewRefs(desc.attachments.size());
+    if (numAttachments == 0)
+        throw std::runtime_error("cannot create render target without attachments");
 
-    std::uint32_t numAttachments = 0;
+    imageViews_.resize(numAttachments, VKPtr<VkImageView> { device, vkDestroyImageView });
+    std::vector<VkImageView> imageViewRefs(numAttachments);
 
     for (const auto& attachment : desc.attachments)
     {
-        if (attachment.texture)
+        if (auto texture = attachment.texture)
         {
-            auto textureVK = LLGL_CAST(VKTexture*, attachment.texture);
+            auto textureVK = LLGL_CAST(VKTexture*, texture);
 
             /* Create new image view for MIP-level and array layer specified in attachment descriptor */
             textureVK->CreateImageView(
@@ -227,30 +196,27 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
                 1,
                 attachment.arrayLayer,
                 1,
-                imageViews_[numAttachments].ReleaseAndGetAddressOf()
+                imageViews_[numColorAttachments].ReleaseAndGetAddressOf()
             );
 
             /* Add image view to attachments */
-            imageViewRefs[numAttachments] = imageViews_[numAttachments].Get();
+            imageViewRefs[numColorAttachments] = imageViews_[numColorAttachments].Get();
 
             /* Validate texture resolution to render target (to validate correlation between attachments) */
             ValidateMipResolution(*textureVK, attachment.mipLevel);
 
             /* Next attachment index */
-            ++numAttachments;
+            ++numColorAttachments;
         }
         else
         {
-            /* Add depth-stencil image view to attachments */
-            imageViewRefs[numAttachments] = depthStencilBuffer_.GetVkImageView();
+            /* Create depth-stencil buffer */
+            CreateDepthStencilForAttachment(deviceMemoryMngr, attachment);
 
-            /* Next attachment index */
-            ++numAttachments;
+            /* Add depth-stencil image view to attachments */
+            imageViewRefs[numAttachments - 1] = depthStencilBuffer_.GetVkImageView();
         }
     }
-
-    if (numAttachments == 0)
-        throw std::runtime_error("failed to create render target without attachments");
 
     /* Create framebuffer object */
     VkFramebufferCreateInfo createInfo;
@@ -258,7 +224,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
         createInfo.sType            = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         createInfo.pNext            = nullptr;
         createInfo.flags            = 0;
-        createInfo.renderPass       = renderPass_;
+        createInfo.renderPass       = renderPass_->GetVkRenderPass();
         createInfo.attachmentCount  = numAttachments;
         createInfo.pAttachments     = imageViewRefs.data();
         createInfo.width            = GetResolution().width;
@@ -267,6 +233,13 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
     }
     VkResult result = vkCreateFramebuffer(device, &createInfo, nullptr, framebuffer_.ReleaseAndGetAddressOf());
     VKThrowIfFailed(result, "failed to create Vulkan framebuffer");
+}
+
+//TODO: support multi-sampling
+VkSampleCountFlagBits VKRenderTarget::GetSampleCountFlags() const
+{
+    VkSampleCountFlagBits samplesFlags = VK_SAMPLE_COUNT_1_BIT;
+    return samplesFlags;
 }
 
 

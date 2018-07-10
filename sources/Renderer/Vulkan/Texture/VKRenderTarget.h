@@ -12,6 +12,7 @@
 #include <LLGL/RenderTarget.h>
 #include <vulkan/vulkan.h>
 #include "../VKPtr.h"
+#include "../RenderState/VKRenderPass.h"
 #include "VKDepthStencilBuffer.h"
 
 
@@ -28,8 +29,13 @@ class VKRenderTarget final : public RenderTarget
 
         Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
+
         bool HasDepthAttachment() const override;
         bool HasStencilAttachment() const override;
+
+        const RenderPass* GetRenderPass() const override;
+
+        /* ----- Extended functions ----- */
 
         void ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr);
 
@@ -42,7 +48,7 @@ class VKRenderTarget final : public RenderTarget
         // Returns the Vulkan render pass object.
         inline VkRenderPass GetVkRenderPass() const
         {
-            return renderPass_;
+            return renderPass_->GetVkRenderPass();
         }
 
         // Returns the render target resolution as VkExtent2D.
@@ -53,13 +59,17 @@ class VKRenderTarget final : public RenderTarget
 
     private:
 
-        void CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
-        void CreateFramebuffer(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
+        void CreateDepthStencilForAttachment(VKDeviceMemoryManager& deviceMemoryMngr, const AttachmentDescriptor& attachmentDesc);
+        void CreateRenderPass(const VKPtr<VkDevice>& device, const RenderTargetDescriptor& desc);
+        void CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
+
+        VkSampleCountFlagBits GetSampleCountFlags() const;
 
         Extent2D                        resolution_;
 
         VKPtr<VkFramebuffer>            framebuffer_;
-        VKPtr<VkRenderPass>             renderPass_;
+        VKRenderPass                    defaultRenderPass_;
+        const VKRenderPass*             renderPass_             = nullptr;
 
         std::vector<VKPtr<VkImageView>> imageViews_;
 

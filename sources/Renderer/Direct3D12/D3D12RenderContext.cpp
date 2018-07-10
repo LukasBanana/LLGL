@@ -108,6 +108,11 @@ Format D3D12RenderContext::QueryDepthStencilFormat() const
     return DXTypes::Unmap(depthStencilFormat_);
 }
 
+const RenderPass* D3D12RenderContext::GetRenderPass() const
+{
+    return nullptr; // dummy
+}
+
 /* --- Extended functions --- */
 
 ID3D12Resource* D3D12RenderContext::GetCurrentColorBuffer()

@@ -49,6 +49,8 @@ class VKRenderContext final : public RenderContext
         Format QueryColorFormat() const override;
         Format QueryDepthStencilFormat() const override;
 
+        const RenderPass* GetRenderPass() const override;
+
         /* --- Extended functions --- */
 
         // Returns the swap-chain render pass object.

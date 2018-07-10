@@ -32,6 +32,8 @@ class DbgRenderContext : public RenderContext
         Format QueryColorFormat() const override;
         Format QueryDepthStencilFormat() const override;
 
+        const RenderPass* GetRenderPass() const override;
+
         /* ----- Debugging members ----- */
 
         RenderContext& instance;

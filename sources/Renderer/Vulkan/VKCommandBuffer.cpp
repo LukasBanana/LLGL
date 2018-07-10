@@ -648,7 +648,7 @@ void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
     vkCmdDispatch(commandBuffer_, groupSizeX, groupSizeY, groupSizeZ);
 }
 
-/* --- Extended functions --- */
+/* ----- Extended functions ----- */
 
 void VKCommandBuffer::AcquireNextBuffer()
 {

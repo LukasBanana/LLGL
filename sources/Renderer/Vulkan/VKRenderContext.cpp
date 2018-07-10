@@ -114,6 +114,11 @@ Format VKRenderContext::QueryDepthStencilFormat() const
     return VKTypes::Unmap(depthStencilBuffer_.GetVkFormat());
 }
 
+const RenderPass* VKRenderContext::GetRenderPass() const
+{
+    return (&swapChainRenderPass_);
+}
+
 /* --- Extended functions --- */
 
 bool VKRenderContext::HasDepthStencilBuffer() const

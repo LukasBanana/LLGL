@@ -55,6 +55,11 @@ bool D3D11RenderTarget::HasStencilAttachment() const
     return (depthStencilView_.Get() != nullptr && depthStencilFormat_ == DXGI_FORMAT_D24_UNORM_S8_UINT);
 }
 
+const RenderPass* D3D11RenderTarget::GetRenderPass() const
+{
+    return nullptr; // dummy
+}
+
 /* ----- Extended Internal Functions ----- */
 
 void D3D11RenderTarget::ResolveSubresources(ID3D11DeviceContext* context)

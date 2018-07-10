@@ -75,15 +75,13 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         */
         virtual bool HasStencilAttachment() const = 0;
 
-        #if 0
         /**
-        \brief Returns the RenderPass object this render target is associated with.
+        \brief Returns the RenderPass object this render target is associated with, or null if the render system does not use render passes.
         \remarks This is either the RenderPass object that was passed to the descriptor when this render target was created,
         or it is the default RenderPass object that was created by the render target itself.
         \see RenderTargetDescriptor::renderPass
         */
         virtual const RenderPass* GetRenderPass() const = 0;
-        #endif
 
     protected:
 

@@ -66,6 +66,11 @@ Format GLRenderContext::QueryDepthStencilFormat() const
     return Format::D24UNormS8UInt;
 }
 
+const RenderPass* GLRenderContext::GetRenderPass() const
+{
+    return nullptr; // dummy
+}
+
 bool GLRenderContext::GLMakeCurrent(GLRenderContext* renderContext)
 {
     if (renderContext)

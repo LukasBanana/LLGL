@@ -30,7 +30,17 @@ class VKRenderPass final : public RenderPass
         VKRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc);
 
         // (Re-)creates the render pass object.
-        void CreateVkRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc);
+        void CreateVkRenderPass(
+            VkDevice                    device,
+            const RenderPassDescriptor& desc
+        );
+
+        void CreateVkRenderPassWithDescriptors(
+            VkDevice                        device,
+            std::uint32_t                   numAttachments,
+            std::uint32_t                   numColorAttachments,
+            const VkAttachmentDescription*  attachmentDescs
+        );
 
         // Returns the Vulkan render pass object.
         inline VkRenderPass GetVkRenderPass() const

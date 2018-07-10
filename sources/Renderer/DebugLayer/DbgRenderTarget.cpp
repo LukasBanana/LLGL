@@ -41,6 +41,11 @@ bool DbgRenderTarget::HasStencilAttachment() const
     return instance.HasStencilAttachment();
 }
 
+const RenderPass* DbgRenderTarget::GetRenderPass() const
+{
+    return instance.GetRenderPass();
+}
+
 
 } // /namespace LLGL
 

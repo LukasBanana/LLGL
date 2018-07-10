@@ -44,6 +44,8 @@ class D3D12RenderContext final : public RenderContext
         Format QueryColorFormat() const override;
         Format QueryDepthStencilFormat() const override;
 
+        const RenderPass* GetRenderPass() const override;
+
         /* --- Extended functions --- */
 
         ID3D12Resource* GetCurrentColorBuffer();

@@ -78,7 +78,7 @@ static void Convert(VkAttachmentDescription& dst, const AttachmentFormatDescript
     dst.finalLayout     = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 }
 
-void VKRenderPass::CreateVkRenderPass(const VKPtr<VkDevice>& device, const RenderPassDescriptor& desc)
+void VKRenderPass::CreateVkRenderPass(VkDevice device, const RenderPassDescriptor& desc)
 {
     /* Get number of attachments */
     std::uint32_t numColorAttachments   = static_cast<std::uint32_t>(desc.colorAttachments.size());
@@ -87,6 +87,7 @@ void VKRenderPass::CreateVkRenderPass(const VKPtr<VkDevice>& device, const Rende
     if (numAttachments > static_cast<std::uint32_t>(std::numeric_limits<decltype(numClearValues_)>::max()))
         throw std::invalid_argument("too many attachments for Vulkan render pass");
 
+    /* Check for depth-stencil attachment */
     bool hasDepthStencil = false;
 
     if (desc.depthAttachment.format != Format::Undefined || desc.stencilAttachment.format != Format::Undefined)
@@ -95,18 +96,31 @@ void VKRenderPass::CreateVkRenderPass(const VKPtr<VkDevice>& device, const Rende
         hasDepthStencil = true;
     }
 
-    std::vector<VkAttachmentDescription> attachmentDescs(numAttachments);
-    std::vector<VkAttachmentReference> attachmentsRefs(numAttachments);
-
     /* Initialize attachment descriptors */
+    std::vector<VkAttachmentDescription> attachmentDescs(numAttachments);
+
     for (std::uint32_t i = 0; i < numColorAttachments; ++i)
         Convert(attachmentDescs[i], desc.colorAttachments[i]);
 
     if (hasDepthStencil)
-    {
+        Convert(attachmentDescs[numColorAttachments], desc.depthAttachment, desc.stencilAttachment);
+
+    /* Create render pass with native attachment descriptors */
+    CreateVkRenderPassWithDescriptors(device, numAttachments, numColorAttachments, attachmentDescs.data());
+}
+
+void VKRenderPass::CreateVkRenderPassWithDescriptors(
+    VkDevice                        device,
+    std::uint32_t                   numAttachments,
+    std::uint32_t                   numColorAttachments,
+    const VkAttachmentDescription*  attachmentDescs)
+{
+    std::vector<VkAttachmentReference> attachmentsRefs(numAttachments);
+
+    /* Store index for depth-stencil attachment */
+    bool hasDepthStencil = (numColorAttachments < numAttachments);
+    if (hasDepthStencil)
         depthStencilIndex_ = static_cast<std::uint8_t>(numColorAttachments);
-        Convert(attachmentDescs[depthStencilIndex_], desc.depthAttachment, desc.stencilAttachment);
-    }
 
     /* Build bitmask for clear values: least significant bit (LSB) is used for the first attachment */
     clearValuesMask_ = 0;
@@ -174,7 +188,7 @@ void VKRenderPass::CreateVkRenderPass(const VKPtr<VkDevice>& device, const Rende
         createInfo.pNext                    = nullptr;
         createInfo.flags                    = 0;
         createInfo.attachmentCount          = numAttachments;
-        createInfo.pAttachments             = attachmentDescs.data();
+        createInfo.pAttachments             = attachmentDescs;
         createInfo.subpassCount             = 1;
         createInfo.pSubpasses               = (&subpassDesc);
         createInfo.dependencyCount          = 1;

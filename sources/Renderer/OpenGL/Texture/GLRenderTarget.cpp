@@ -98,6 +98,11 @@ bool GLRenderTarget::HasStencilAttachment() const
     return ((blitMask_ & GL_STENCIL_BUFFER_BIT) != 0);
 }
 
+const RenderPass* GLRenderTarget::GetRenderPass() const
+{
+    return nullptr; // dummy
+}
+
 /* ----- Extended Internal Functions ----- */
 
 //private

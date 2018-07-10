@@ -32,8 +32,11 @@ class D3D11RenderTarget final : public RenderTarget
 
         Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
+
         bool HasDepthAttachment() const override;
         bool HasStencilAttachment() const override;
+
+        const RenderPass* GetRenderPass() const override;
 
         /* ----- Extended Internal Functions ----- */
 

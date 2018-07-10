@@ -29,6 +29,7 @@ class DbgRenderTarget : public RenderTarget
         std::uint32_t GetNumColorAttachments() const override;
         bool HasDepthAttachment() const override;
         bool HasStencilAttachment() const override;
+        const RenderPass* GetRenderPass() const override;
 
         // Returns the render target descriptor of this debug layer object.
         inline const RenderTargetDescriptor& GetDesc() const
