@@ -695,7 +695,7 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
 
 void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences)
 {
-    recordingFenceList_.resize(numFences, VKPtr<VkFence> { device_, vkDestroyFence });
+    recordingFenceList_.reserve(numFences);
 
     VkFenceCreateInfo createInfo;
     {
@@ -704,14 +704,18 @@ void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t n
         createInfo.flags = 0;
     }
 
-    for (auto& fence : recordingFenceList_)
+    for (std::size_t i = 0; i < numFences; ++i)
     {
-        /* Create fence for command buffer recording */
-        auto result = vkCreateFence(device_, &createInfo, nullptr, fence.ReleaseAndGetAddressOf());
-        VKThrowIfFailed(result, "failed to create Vulkan fence");
+        VKPtr<VkFence> fence { device_, vkDestroyFence };
+        {
+            /* Create fence for command buffer recording */
+            auto result = vkCreateFence(device_, &createInfo, nullptr, fence.ReleaseAndGetAddressOf());
+            VKThrowIfFailed(result, "failed to create Vulkan fence");
 
-        /* Initial fence signal */
-        vkQueueSubmit(graphicsQueue, 0, nullptr, fence);
+            /* Initial fence signal */
+            vkQueueSubmit(graphicsQueue, 0, nullptr, fence);
+        }
+        recordingFenceList_.emplace_back(std::move(fence));
     }
 }
 

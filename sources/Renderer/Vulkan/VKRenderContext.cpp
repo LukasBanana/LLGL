@@ -330,40 +330,48 @@ void VKRenderContext::CreateSwapChain(const VideoModeDescriptor& videoModeDesc, 
 
 void VKRenderContext::CreateSwapChainImageViews()
 {
-    swapChainImageViews_.resize(swapChainImages_.size(), VKPtr<VkImageView> { device_, vkDestroyImageView });
-
-    for (std::size_t i = 0, n = swapChainImages_.size(); i < n; ++i)
+    /* Initialize image-view descriptor */
+    VkImageViewCreateInfo createInfo;
     {
-        /* Create image view */
-        VkImageViewCreateInfo createInfo;
+        createInfo.sType                            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.pNext                            = nullptr;
+        createInfo.flags                            = 0;
+        createInfo.image                            = VK_NULL_HANDLE;
+        createInfo.viewType                         = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format                           = swapChainFormat_.format;
+        createInfo.components.r                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a                     = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.subresourceRange.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel    = 0;
+        createInfo.subresourceRange.levelCount      = 1;
+        createInfo.subresourceRange.baseArrayLayer  = 0;
+        createInfo.subresourceRange.layerCount      = 1;
+    }
+
+    /* Create all image views for the swap-chain */
+    swapChainImageViews_.reserve(swapChainImages_.size());
+
+    for (auto image : swapChainImages_)
+    {
+        /* Update image handle in Vulkan descriptor */
+        createInfo.image = image;
+
+        /* Create image view for framebuffer */
+        VKPtr<VkImageView> imageView { device_, vkDestroyImageView };
         {
-            createInfo.sType                            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createInfo.pNext                            = nullptr;
-            createInfo.flags                            = 0;
-            createInfo.image                            = swapChainImages_[i];
-            createInfo.viewType                         = VK_IMAGE_VIEW_TYPE_2D;
-            createInfo.format                           = swapChainFormat_.format;
-            createInfo.components.r                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.g                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.b                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.a                     = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.subresourceRange.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            createInfo.subresourceRange.baseMipLevel    = 0;
-            createInfo.subresourceRange.levelCount      = 1;
-            createInfo.subresourceRange.baseArrayLayer  = 0;
-            createInfo.subresourceRange.layerCount      = 1;
+            auto result = vkCreateImageView(device_, &createInfo, nullptr, imageView.ReleaseAndGetAddressOf());
+            VKThrowIfFailed(result, "failed to create Vulkan swap-chain image view");
         }
-        auto result = vkCreateImageView(device_, &createInfo, nullptr, swapChainImageViews_[i].ReleaseAndGetAddressOf());
-        VKThrowIfFailed(result, "failed to create Vulkan swap-chain image view");
+        swapChainImageViews_.emplace_back(std::move(imageView));
     }
 }
 
 void VKRenderContext::CreateSwapChainFramebuffers()
 {
-    swapChainFramebuffers_.resize(swapChainImageViews_.size(), VKPtr<VkFramebuffer>{ device_, vkDestroyFramebuffer });
-
     /* Initialize image view attachments */
-    VkImageView attachments[2];
+    VkImageView attachments[2] = {};
 
     if (HasDepthStencilBuffer())
         attachments[1] = depthStencilBuffer_.GetVkImageView();
@@ -382,14 +390,21 @@ void VKRenderContext::CreateSwapChainFramebuffers()
         createInfo.layers           = 1;
     }
 
-    for (std::size_t i = 0, n = swapChainImageViews_.size(); i < n; ++i)
+    /* Create all framebuffers for the swap-chain */
+    swapChainFramebuffers_.reserve(swapChainImageViews_.size());
+
+    for (const auto& imageView : swapChainImageViews_)
     {
-        /* Update color attachment image view */
-        attachments[0] = swapChainImageViews_[i].Get();
+        /* Update image view in Vulkan descriptor */
+        attachments[0] = imageView;
 
         /* Create framebuffer */
-        auto result = vkCreateFramebuffer(device_, &createInfo, nullptr, swapChainFramebuffers_[i].ReleaseAndGetAddressOf());
-        VKThrowIfFailed(result, "failed to create Vulkan swap-chain framebuffer");
+        VKPtr<VkFramebuffer> framebuffer { device_, vkDestroyFramebuffer };
+        {
+            auto result = vkCreateFramebuffer(device_, &createInfo, nullptr, framebuffer.ReleaseAndGetAddressOf());
+            VKThrowIfFailed(result, "failed to create Vulkan swap-chain framebuffer");
+        }
+        swapChainFramebuffers_.emplace_back(std::move(framebuffer));
     }
 }
 

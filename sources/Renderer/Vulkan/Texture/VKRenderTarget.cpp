@@ -180,7 +180,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
     if (numAttachments == 0)
         throw std::runtime_error("cannot create render target without attachments");
 
-    imageViews_.resize(numAttachments, VKPtr<VkImageView> { device, vkDestroyImageView });
+    imageViews_.reserve(numAttachments);
     std::vector<VkImageView> imageViewRefs(numAttachments);
 
     for (const auto& attachment : desc.attachments)
@@ -190,17 +190,21 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, VKDeviceMe
             auto textureVK = LLGL_CAST(VKTexture*, texture);
 
             /* Create new image view for MIP-level and array layer specified in attachment descriptor */
-            textureVK->CreateImageView(
-                device,
-                attachment.mipLevel,
-                1,
-                attachment.arrayLayer,
-                1,
-                imageViews_[numColorAttachments].ReleaseAndGetAddressOf()
-            );
+            VKPtr<VkImageView> imageView { device, vkDestroyImageView };
+            {
+                textureVK->CreateImageView(
+                    device,
+                    attachment.mipLevel,
+                    1,
+                    attachment.arrayLayer,
+                    1,
+                    imageView.ReleaseAndGetAddressOf()
+                );
 
-            /* Add image view to attachments */
-            imageViewRefs[numColorAttachments] = imageViews_[numColorAttachments].Get();
+                /* Add image view to attachments */
+                imageViewRefs[numColorAttachments] = imageView;
+            }
+            imageViews_.emplace_back(std::move(imageView));
 
             /* Validate texture resolution to render target (to validate correlation between attachments) */
             ValidateMipResolution(*textureVK, attachment.mipLevel);
