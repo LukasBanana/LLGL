@@ -33,14 +33,14 @@ VKGraphicsPipeline::VKGraphicsPipeline(
     /* Get pipeline layout object */
     if (desc.pipelineLayout)
     {
-        auto pipelineLayoutVK = LLGL_CAST(VKPipelineLayout*, desc.pipelineLayout);
+        auto pipelineLayoutVK = LLGL_CAST(const VKPipelineLayout*, desc.pipelineLayout);
         pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
     }
 
     /* Use render pass from render target if it's specified */
     if (desc.renderTarget)
     {
-        auto renderTargetVK = LLGL_CAST(VKRenderTarget*, desc.renderTarget);
+        auto renderTargetVK = LLGL_CAST(const VKRenderTarget*, desc.renderTarget);
         renderPass_ = renderTargetVK->GetVkRenderPass();
     }
 
@@ -132,7 +132,7 @@ static void CreateViewportState(
 
 static void CreateRasterizerState(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, VkPipelineRasterizationStateCreateInfo& createInfo)
 {
-    auto shaderProgramVK = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
+    auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
 
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
@@ -294,7 +294,7 @@ static void CreateDynamicState(const GraphicsPipelineDescriptor& desc, VkPipelin
 void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent)
 {
     /* Get shader program object */
-    auto shaderProgramVK = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
+    auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
     if (!shaderProgramVK)
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
 

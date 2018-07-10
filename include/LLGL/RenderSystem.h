@@ -380,7 +380,10 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         /**
         \brief Creates a new RenderPass object.
-        \remarks At least one render pass is required to render something.
+        \return Pointer to the new RenderPass object or null if the render system does not use render passes.
+        In the case of the latter, null pointers are allowed for render passes.
+        \see RenderTargetDescriptor::renderPass
+        \see GraphicsPipelineDescriptor::renderPass
         \see CommandBuffer::BeginRenderPass
         \see CommandBuffer::EndRenderPass
         */

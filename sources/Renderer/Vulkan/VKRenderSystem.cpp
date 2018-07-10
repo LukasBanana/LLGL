@@ -643,7 +643,7 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
         throw std::runtime_error("cannot create graphics pipeline without a render context");
 
     auto renderContext = renderContexts_.begin()->get();
-    auto renderPassVK = renderContext->GetSwapChainRenderPass();
+    auto renderPassVK = renderContext->GetSwapChainRenderPass().GetVkRenderPass();
 
     return TakeOwnership(
         graphicsPipelines_,
@@ -653,7 +653,7 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
             defaultPipelineLayout_,
             desc,
             gfxPipelineLimits_,
-            renderContext->GetSwapChainExtent()
+            renderContext->GetVkExtent()
         )
     );
 }

@@ -124,7 +124,7 @@ struct RenderTargetDescriptor
     \see AttachmentFormatDescriptor::loadOp
     \see AttachmentFormatDescriptor::storeOp
     */
-    RenderPass*                         renderPass          = nullptr;
+    const RenderPass*                   renderPass          = nullptr;
 
     /**
     \brief Specifies the resolution of the render targets.

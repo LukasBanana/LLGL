@@ -51,31 +51,20 @@ class VKRenderContext final : public RenderContext
 
         /* --- Extended functions --- */
 
-        inline VkRenderPass GetSwapChainRenderPass() const
+        // Returns the swap-chain render pass object.
+        inline const VKRenderPass& GetSwapChainRenderPass() const
         {
-            return swapChainRenderPass_.GetVkRenderPass();
+            return swapChainRenderPass_;
         }
 
-        // Returns the number of images the swap chain has.
-        inline size_t GetSwapChainSize() const
-        {
-            return swapChainImages_.size();
-        }
-
-        // Returns the active VkFramebuffer object from the swap chain.
-        inline VkFramebuffer GetSwapChainFramebuffer() const
+        // Returns the native VkFramebuffer object that is currently used from swap-chain.
+        inline VkFramebuffer GetVkFramebuffer() const
         {
             return swapChainFramebuffers_[presentImageIndex_].Get();
         }
 
-        // Returns the active VkImage object from the swap chain.
-        inline VkImage GetSwapChainImage() const
-        {
-            return swapChainImages_[presentImageIndex_];
-        }
-
-        // Returns the 2D extend (i.e. resolution) of the swap chain.
-        inline const VkExtent2D& GetSwapChainExtent() const
+        // Returns the render context resolution as VkExtent2D.
+        inline const VkExtent2D& GetVkExtent() const
         {
             return swapChainExtent_;
         }

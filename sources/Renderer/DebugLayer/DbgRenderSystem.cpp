@@ -477,7 +477,7 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
     {
         auto instanceDesc = desc;
         {
-            auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, desc.shaderProgram);
+            auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram);
             instanceDesc.shaderProgram = &(shaderProgramDbg->instance);
 
             if (desc.renderTarget)

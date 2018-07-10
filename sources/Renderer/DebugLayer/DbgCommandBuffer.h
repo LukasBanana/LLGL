@@ -100,7 +100,7 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void BeginRenderPass(
             RenderTarget&       renderTarget,
-            RenderPass*         renderPass      = nullptr,
+            const RenderPass*   renderPass      = nullptr,
             std::uint32_t       numClearValues  = 0,
             const ClearValue*   clearValues     = nullptr
         ) override;

@@ -361,7 +361,7 @@ void VKCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
 
 void VKCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
-    RenderPass*         renderPass,
+    const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
@@ -371,9 +371,9 @@ void VKCommandBuffer::BeginRenderPass(
         auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderTarget);
 
         /* Store information about framebuffer attachments */
-        renderPass_             = renderContextVK.GetSwapChainRenderPass();
-        framebuffer_            = renderContextVK.GetSwapChainFramebuffer();
-        framebufferExtent_      = renderContextVK.GetSwapChainExtent();
+        renderPass_             = renderContextVK.GetSwapChainRenderPass().GetVkRenderPass();
+        framebuffer_            = renderContextVK.GetVkFramebuffer();
+        framebufferExtent_      = renderContextVK.GetVkExtent();
         numColorAttachments_    = renderContextVK.GetNumColorAttachments();
         hasDSVAttachment_       = (renderContextVK.HasDepthAttachment() || renderContextVK.HasStencilAttachment());
     }
@@ -400,7 +400,7 @@ void VKCommandBuffer::BeginRenderPass(
     if (renderPass != nullptr)
     {
         /* Get native VkRenderPass object */
-        auto renderPassVK = LLGL_CAST(VKRenderPass*, renderPass);
+        auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
         renderPass_ = renderPassVK->GetVkRenderPass();
 
         /* Fill array of clear values */
@@ -442,12 +442,6 @@ void VKCommandBuffer::BeginRenderPass(
         }
     }
 
-    #if 0
-    /* Begin command buffer and render pass */
-    if (!IsCommandBufferActive())
-        BeginCommandBuffer();
-    #endif
-
     /* Record begin of render pass */
     VkRenderPassBeginInfo beginInfo;
     {
@@ -477,56 +471,12 @@ void VKCommandBuffer::EndRenderPass()
 
 void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 {
-    #if 0
-    auto& renderTargetVK = LLGL_CAST(VKRenderTarget&, renderTarget);
-
-    /* Begin command buffer and render pass */
-    if (!IsCommandBufferActive())
-        BeginCommandBuffer();
-
-    /* Set new render pass */
-    SetRenderPass(
-        renderTargetVK.GetVkRenderPass(),
-        renderTargetVK.GetVkFramebuffer(),
-        renderTargetVK.GetVkExtent()
-    );
-
-    /* Store information about framebuffer attachments */
-    numColorAttachments_    = (renderTargetVK.GetNumColorAttachments());
-    hasDSVAttachment_       = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
-    #endif
+    //TODO: remove
 }
 
-/*
-TODO:
-BeginCommandBuffer at this point is only a workaround!
-Maybe it can be integrated into a Begin/EndRenderPass function with a new interface "RenderPass".
-*/
 void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
 {
-    #if 0
-    auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderContext);
-
-    //TODO:
-    //  this must be done for all command buffers at the end of the "VKRenderContext::Present" function
-    /* Switch internal command buffer for the respective render context presentation index */
-    renderContextVK.SetPresentCommandBuffer(this);
-
-    /* Begin command buffer and render pass */
-    if (!IsCommandBufferActive())
-        BeginCommandBuffer();
-
-    /* Set new render pass */
-    SetRenderPass(
-        renderContextVK.GetSwapChainRenderPass(),
-        renderContextVK.GetSwapChainFramebuffer(),
-        renderContextVK.GetSwapChainExtent()
-    );
-
-    /* Store information about framebuffer attachments */
-    numColorAttachments_    = 1;
-    hasDSVAttachment_       = renderContextVK.HasDepthStencilBuffer();
-    #endif
+    //TODO: remove
 }
 
 

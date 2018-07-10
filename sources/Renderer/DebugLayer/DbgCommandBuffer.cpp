@@ -396,7 +396,7 @@ void DbgCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::u
 
 void DbgCommandBuffer::BeginRenderPass(
     RenderTarget&       renderTarget,
-    RenderPass*         renderPass,
+    const RenderPass*   renderPass,
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
@@ -490,7 +490,7 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
         bindings_.graphicsPipeline = (&graphicsPipelineDbg);
         if (auto shaderProgram = graphicsPipelineDbg.desc.shaderProgram)
         {
-            auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, shaderProgram);
+            auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, shaderProgram);
             bindings_.anyShaderAttributes = !(shaderProgramDbg->GetVertexLayout().attributes.empty());
         }
         else
@@ -823,7 +823,7 @@ void DbgCommandBuffer::ValidateVertexLayout()
 {
     if (bindings_.graphicsPipeline && bindings_.numVertexBuffers > 0)
     {
-        auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, bindings_.graphicsPipeline->desc.shaderProgram);
+        auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, bindings_.graphicsPipeline->desc.shaderProgram);
         const auto& vertexLayout = shaderProgramDbg->GetVertexLayout();
 
         /* Check if vertex layout is specified in active shader program */
