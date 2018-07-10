@@ -66,7 +66,12 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
 
 CommandQueue* DbgRenderSystem::GetCommandQueue()
 {
-    return instance_->GetCommandQueue();
+    if (!commandQueue_)
+    {
+        /* Instantiate command queue */
+        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
+    }
+    return commandQueue_.get();;
 }
 
 /* ----- Command buffers ----- */

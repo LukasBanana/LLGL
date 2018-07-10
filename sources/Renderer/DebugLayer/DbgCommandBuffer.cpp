@@ -18,6 +18,9 @@
 #include "DbgShaderProgram.h"
 #include "DbgQuery.h"
 
+#include <LLGL/RenderingProfiler.h>
+#include <LLGL/RenderingDebugger.h>
+
 
 namespace LLGL
 {
@@ -29,7 +32,6 @@ DbgCommandBuffer::DbgCommandBuffer(
         instanceExt { instanceExt   },
         profiler_   { profiler      },
         debugger_   { debugger      },
-        //caps_       { caps          },
         features_   { caps.features },
         limits_     { caps.limits   }
 {
@@ -49,6 +51,7 @@ void DbgCommandBuffer::SetViewport(const Viewport& viewport)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateViewport(viewport);
     }
 
@@ -60,6 +63,8 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+
+        AssertRecording();
 
         /* Validate all viewports in array */
         if (viewports)
@@ -88,6 +93,8 @@ void DbgCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* 
 
 void DbgCommandBuffer::SetScissor(const Scissor& scissor)
 {
+    LLGL_DBG_SOURCE;
+    AssertRecording();
     instance.SetScissor(scissor);
 }
 
@@ -96,6 +103,7 @@ void DbgCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* sci
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         if (!scissors)
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "scissor array must not be a null pointer");
         if (numScissors == 0)
@@ -124,6 +132,12 @@ void DbgCommandBuffer::SetClearStencil(std::uint32_t stencil)
 
 void DbgCommandBuffer::Clear(long flags)
 {
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        AssertInsideRenderPass();
+    }
     instance.Clear(flags);
 }
 
@@ -132,6 +146,8 @@ void DbgCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Atta
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
+        AssertInsideRenderPass();
         for (std::uint32_t i = 0; i < numAttachments; ++i)
             ValidateAttachmentClear(attachments[i]);
     }
@@ -146,6 +162,7 @@ void DbgCommandBuffer::SetVertexBuffer(Buffer& buffer)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateBufferType(buffer.GetType(), BufferType::Vertex);
     }
 
@@ -169,6 +186,7 @@ void DbgCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateBufferType(bufferArray.GetType(), BufferType::Vertex);
     }
 
@@ -203,6 +221,7 @@ void DbgCommandBuffer::SetIndexBuffer(Buffer& buffer)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateBufferType(buffer.GetType(), BufferType::Index);
         bindings_.indexBuffer = (&bufferDbg);
     }
@@ -223,6 +242,7 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, lon
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateBufferType(buffer.GetType(), BufferType::Constant);
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
@@ -243,6 +263,7 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateBufferType(buffer.GetType(), BufferType::Storage);
         ValidateStageFlags(stageFlags, StageFlags::AllStages | StageFlags::ReadOnlyResource);
     }
@@ -261,6 +282,7 @@ void DbgCommandBuffer::SetStreamOutputBuffer(Buffer& buffer)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateBufferType(buffer.GetType(), BufferType::StreamOutput);
         bindings_.streamOutput = (&bufferDbg);
     }
@@ -275,6 +297,7 @@ void DbgCommandBuffer::SetStreamOutputBufferArray(BufferArray& bufferArray)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateBufferType(bufferArray.GetType(), BufferType::StreamOutput);
     }
 
@@ -288,6 +311,7 @@ void DbgCommandBuffer::BeginStreamOutput(const PrimitiveType primitiveType)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         if (states_.streamOutputBusy)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "stream-output is already busy");
         if (!bindings_.streamOutput)
@@ -303,6 +327,7 @@ void DbgCommandBuffer::EndStreamOutput()
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         if (!states_.streamOutputBusy)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "stream-output has not started");
         states_.streamOutputBusy = false;
@@ -322,6 +347,7 @@ void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long sta
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
@@ -339,6 +365,7 @@ void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long sta
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         ValidateStageFlags(stageFlags, StageFlags::AllStages);
     }
 
@@ -352,12 +379,16 @@ void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long sta
 //TODO: record bindings
 void DbgCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
+    LLGL_DBG_SOURCE;
+    AssertRecording();
     instance.SetGraphicsResourceHeap(resourceHeap, firstSet);
 }
 
 //TODO: record bindings
 void DbgCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
+    LLGL_DBG_SOURCE;
+    AssertRecording();
     instance.SetComputeResourceHeap(resourceHeap, firstSet);
 }
 
@@ -369,11 +400,43 @@ void DbgCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+
+        if (states_.insideRenderPass)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot begin new render pass while previous render pass is still active");
+        states_.insideRenderPass = true;
+
+        if (renderTarget.IsRenderContext())
+        {
+            auto& renderContextDbg = LLGL_CAST(DbgRenderContext&, renderTarget);
+            bindings_.renderContext = &renderContextDbg;
+            bindings_.renderTarget  = nullptr;
+        }
+        else
+        {
+            auto& renderTargetDbg = LLGL_CAST(DbgRenderTarget&, renderTarget);
+            bindings_.renderContext = nullptr;
+            bindings_.renderTarget  = &renderTargetDbg;
+        }
+    }
+
     instance.BeginRenderPass(renderTarget, renderPass, numClearValues, clearValues);
 }
 
 void DbgCommandBuffer::EndRenderPass()
 {
+    if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+        if (!states_.insideRenderPass)
+            LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot end render pass while no render pass is currently active");
+        states_.insideRenderPass = false;
+    }
+
     instance.EndRenderPass();
 }
 
@@ -417,6 +480,9 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 
     if (debugger_)
     {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
+
         bindings_.graphicsPipeline = (&graphicsPipelineDbg);
         if (auto shaderProgram = graphicsPipelineDbg.desc.shaderProgram)
         {
@@ -439,7 +505,11 @@ void DbgCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 void DbgCommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
 {
     if (debugger_)
+    {
+        LLGL_DBG_SOURCE;
+        AssertRecording();
         bindings_.computePipeline = (&computePipeline);
+    }
 
     instance.SetComputePipeline(computePipeline);
 
@@ -455,6 +525,7 @@ void DbgCommandBuffer::BeginQuery(Query& query)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         if (queryDbg.state == DbgQuery::State::Busy)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "query is already busy");
         queryDbg.state = DbgQuery::State::Busy;
@@ -470,6 +541,7 @@ void DbgCommandBuffer::EndQuery(Query& query)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         if (queryDbg.state != DbgQuery::State::Busy)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "query has not started");
         queryDbg.state = DbgQuery::State::Ready;
@@ -485,6 +557,7 @@ bool DbgCommandBuffer::QueryResult(Query& query, std::uint64_t& result)
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         if (queryDbg.state != DbgQuery::State::Ready)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
     }
@@ -499,6 +572,7 @@ bool DbgCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipeline
     if (debugger_)
     {
         LLGL_DBG_SOURCE;
+        AssertRecording();
         if (queryDbg.state != DbgQuery::State::Ready)
             LLGL_DBG_ERROR(ErrorType::InvalidState, "query result is not ready");
     }
@@ -509,11 +583,17 @@ bool DbgCommandBuffer::QueryPipelineStatisticsResult(Query& query, QueryPipeline
 void DbgCommandBuffer::BeginRenderCondition(Query& query, const RenderConditionMode mode)
 {
     auto& queryDbg = LLGL_CAST(DbgQuery&, query);
+
+    LLGL_DBG_SOURCE;
+    AssertRecording();
+
     instance.BeginRenderCondition(queryDbg.instance, mode);
 }
 
 void DbgCommandBuffer::EndRenderCondition()
 {
+    LLGL_DBG_SOURCE;
+    AssertRecording();
     instance.EndRenderCondition();
 }
 
@@ -650,6 +730,24 @@ void DbgCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSiz
     instance.Dispatch(groupSizeX, groupSizeY, groupSizeZ);
 
     LLGL_DBG_PROFILER_DO(dispatchComputeCalls.Inc());
+}
+
+/* ----- Extended functions ----- */
+
+void DbgCommandBuffer::EnableRecording(bool enable)
+{
+    if (debugger_)
+    {
+        if (enable == states_.recording)
+        {
+            LLGL_DBG_SOURCE;
+            if (enable)
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot begin nested recording of command buffer");
+            else
+                LLGL_DBG_ERROR(ErrorType::InvalidState, "cannot end recording of command buffer while no recording is currently active");
+        }
+        states_.recording = enable;
+    }
 }
 
 
@@ -837,6 +935,8 @@ void DbgCommandBuffer::ValidateNumInstances(std::uint32_t numInstances, std::uin
 void DbgCommandBuffer::ValidateDrawCmd(
     std::uint32_t numVertices, std::uint32_t firstVertex, std::uint32_t numInstances, std::uint32_t firstInstance)
 {
+    AssertRecording();
+    AssertInsideRenderPass();
     AssertGraphicsPipelineBound();
     AssertVertexBufferBound();
     ValidateVertexLayout();
@@ -850,6 +950,8 @@ void DbgCommandBuffer::ValidateDrawCmd(
 void DbgCommandBuffer::ValidateDrawIndexedCmd(
     std::uint32_t numVertices, std::uint32_t numInstances, std::uint32_t firstIndex, std::int32_t vertexOffset, std::uint32_t firstInstance)
 {
+    AssertRecording();
+    AssertInsideRenderPass();
     AssertGraphicsPipelineBound();
     AssertVertexBufferBound();
     AssertIndexBufferBound();
@@ -911,16 +1013,28 @@ void DbgCommandBuffer::ValidateBufferType(const BufferType bufferType, const Buf
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid buffer type");
 }
 
+void DbgCommandBuffer::AssertRecording()
+{
+    if (!states_.recording)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "command buffer must be in record mode: missing call to <LLGL::CommandQueue::Begin>");
+}
+
+void DbgCommandBuffer::AssertInsideRenderPass()
+{
+    if (!states_.insideRenderPass)
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "operation is only allowed inside a render pass: missing call to <LLGL::CommandBuffer::BeginRenderPass>");
+}
+
 void DbgCommandBuffer::AssertGraphicsPipelineBound()
 {
     if (!bindings_.graphicsPipeline)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound");
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no graphics pipeline is bound: missing call to <LLGL::CommandBuffer::SetGraphicsPipeline>");
 }
 
 void DbgCommandBuffer::AssertComputePipelineBound()
 {
     if (!bindings_.computePipeline)
-        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound");
+        LLGL_DBG_ERROR(ErrorType::InvalidState, "no compute pipeline is bound: missing call to <LLGL::CommandBuffer::SetComputePipeline>");
 }
 
 void DbgCommandBuffer::AssertVertexBufferBound()

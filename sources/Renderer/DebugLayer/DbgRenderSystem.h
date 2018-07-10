@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include "DbgRenderContext.h"
 #include "DbgCommandBuffer.h"
+#include "DbgCommandQueue.h"
 
 #include "DbgBuffer.h"
 #include "DbgBufferArray.h"
@@ -193,6 +194,7 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<DbgRenderContext>     renderContexts_;
+        HWObjectInstance<DbgCommandQueue>       commandQueue_;
         HWObjectContainer<DbgCommandBuffer>     commandBuffers_;
         HWObjectContainer<DbgBuffer>            buffers_;
         HWObjectContainer<DbgBufferArray>       bufferArrays_;
