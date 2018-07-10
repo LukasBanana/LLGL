@@ -73,12 +73,12 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* D3D11RenderSystem::CreateCommandBuffer()
+CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
 {
     return CreateCommandBufferExt();
 }
 
-CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt()
+CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     return TakeOwnership(commandBuffers_, MakeUnique<D3D11CommandBuffer>(*stateMngr_, context_));
 }

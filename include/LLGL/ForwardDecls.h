@@ -49,6 +49,7 @@ struct BlendDescriptor;
 struct BlendTargetDescriptor;
 struct BufferDescriptor;
 struct CanvasDescriptor;
+struct CommandBufferDescriptor;
 struct ComputePipelineDescriptor;
 struct DepthBiasDescriptor;
 struct DepthDescriptor;

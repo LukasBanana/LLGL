@@ -207,16 +207,15 @@ CommandQueue* VKRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* VKRenderSystem::CreateCommandBuffer()
+CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    auto mainContext = renderContexts_.begin()->get();
     return TakeOwnership(
         commandBuffers_,
-        MakeUnique<VKCommandBuffer>(device_, graphicsQueue_, mainContext->GetSwapChainSize(), queueFamilyIndices_)
+        MakeUnique<VKCommandBuffer>(device_, graphicsQueue_, queueFamilyIndices_, desc)
     );
 }
 
-CommandBufferExt* VKRenderSystem::CreateCommandBufferExt()
+CommandBufferExt* VKRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     /* Extended command buffers are not spported */
     return nullptr;

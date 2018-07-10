@@ -71,20 +71,26 @@ CommandQueue* DbgRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* DbgRenderSystem::CreateCommandBuffer()
+CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<DbgCommandBuffer>(
-        *instance_->CreateCommandBuffer(), nullptr, profiler_, debugger_, GetRenderingCaps()
-    ));
+    return TakeOwnership(
+        commandBuffers_,
+        MakeUnique<DbgCommandBuffer>(
+            *instance_->CreateCommandBuffer(desc), nullptr, profiler_, debugger_, GetRenderingCaps()
+        )
+    );
 }
 
-CommandBufferExt* DbgRenderSystem::CreateCommandBufferExt()
+CommandBufferExt* DbgRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& desc)
 {
-    if (auto instance = instance_->CreateCommandBufferExt())
+    if (auto instance = instance_->CreateCommandBufferExt(desc))
     {
-        return TakeOwnership(commandBuffers_, MakeUnique<DbgCommandBuffer>(
-            *instance, instance, profiler_, debugger_, GetRenderingCaps()
-        ));
+        return TakeOwnership(
+            commandBuffers_,
+            MakeUnique<DbgCommandBuffer>(
+                *instance, instance, profiler_, debugger_, GetRenderingCaps()
+            )
+        );
     }
     return nullptr;
 }

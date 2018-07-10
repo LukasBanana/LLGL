@@ -37,7 +37,7 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
 
         /**
         \brief Begins recording of the specified command buffer.
-        \param[in] flags Optional flags with information about what is recorded in the command buffer.
+        \param[in] flags Optional flags with hints about how is to be recorded. By default 0.
         This can be a bitwise OR combination of the RecordingFlags enumeration.
         \see End(CommandBuffer&)
         \see RecordingFlags

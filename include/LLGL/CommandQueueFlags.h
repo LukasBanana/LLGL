@@ -17,7 +17,7 @@ namespace LLGL
 
 /**
 \brief Command buffer recording flags.
-\see Begin(CommandBuffer&, long)
+\see CommandQueue::Begin(CommandBuffer&, long)
 */
 struct RecordingFlags
 {

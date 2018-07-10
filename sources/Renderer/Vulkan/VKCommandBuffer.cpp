@@ -30,11 +30,16 @@ static const std::uint32_t g_maxNumViewportsPerBatch    = 16;
 static const std::uint32_t g_maxNumColorAttachments     = 32;
 static const std::uint32_t g_maxNumAttachments          = (g_maxNumColorAttachments + 1);
 
-VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, VkQueue graphicsQueue, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices) :
-    device_             { device                           },
-    commandPool_        { device, vkDestroyCommandPool     },
-    queuePresentFamily_ { queueFamilyIndices.presentFamily }
+VKCommandBuffer::VKCommandBuffer(
+    const VKPtr<VkDevice>&          device,
+    VkQueue                         graphicsQueue,
+    const QueueFamilyIndices&       queueFamilyIndices,
+    const CommandBufferDescriptor&  desc) :
+        device_             { device                           },
+        commandPool_        { device, vkDestroyCommandPool     },
+        queuePresentFamily_ { queueFamilyIndices.presentFamily }
 {
+    std::size_t bufferCount = std::max(1u, desc.numNativeBuffers);
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
     CreateCommandBuffers(bufferCount);
     CreateRecordingFences(graphicsQueue, bufferCount);
@@ -462,6 +467,7 @@ void VKCommandBuffer::EndRenderPass()
 
 void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
 {
+    #if 0
     auto& renderTargetVK = LLGL_CAST(VKRenderTarget&, renderTarget);
 
     /* Begin command buffer and render pass */
@@ -478,6 +484,7 @@ void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
     /* Store information about framebuffer attachments */
     numColorAttachments_    = (renderTargetVK.GetNumColorAttachments());
     hasDSVAttachment_       = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
+    #endif
 }
 
 /*
@@ -686,12 +693,15 @@ void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
 void VKCommandBuffer::NextInternalBuffer()
 {
     auto idx = (commandBufferIndex_ + 1) % commandBufferList_.size();
+    commandBuffer_ = commandBufferList_[idx];
 
-    commandBuffer_          = commandBufferList_[idx];
+    #if 0
     commandBufferActiveIt_  = commandBufferActiveList_.begin() + idx;
     recordingFence_         = recordingFenceList_[idx];
+    #endif
 }
 
+#if 0 //TODO: remove
 bool VKCommandBuffer::IsCommandBufferActive() const
 {
     return *commandBufferActiveIt_;
@@ -783,6 +793,7 @@ void VKCommandBuffer::EndRenderPass_OBSOLETE()
     /* Record and of render pass */
     vkCmdEndRenderPass(commandBuffer_);
 }
+#endif // /TODO
 
 
 /*
@@ -821,9 +832,11 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
 
     commandBuffer_ = commandBufferList_.front();
 
+    #if 0
     /* Allocate list to keep track of which command buffers are active */
     commandBufferActiveList_.resize(bufferCount);
     commandBufferActiveIt_ = commandBufferActiveList_.end();
+    #endif
 }
 
 void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences)

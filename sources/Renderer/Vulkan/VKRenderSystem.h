@@ -70,8 +70,8 @@ class VKRenderSystem final : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer() override;
-        CommandBufferExt* CreateCommandBufferExt() override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 

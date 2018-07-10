@@ -183,17 +183,17 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         but especially for the legacy graphics APIs such as OpenGL and Direct3D 11, this doesn't provide any benefit,
         since all graphics and compute commands are submitted sequentially to the GPU.
         */
-        virtual CommandBuffer* CreateCommandBuffer() = 0;
+        virtual CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) = 0;
 
         /**
         \brief Creates a new extended command buffer (if supported) with dynamic state access for shader resources (i.e. Constant Buffers, Storage Buffers, Textures, and Samplers).
         \return Pointer to the new CommandBufferExt object, or null if the render system does not support extended command buffers.
         \remarks For those render systems that do not support dynamic state access for shader resources, use the ResourceHeap interface.
-        \note Only supported with: OpenGL, Direct3D 11.
+        \note Only supported with: OpenGL, Direct3D 11, Metal.
         \see RenderingCapabilities::hasCommandBufferExt
         \see CreateResourceHeap
         */
-        virtual CommandBufferExt* CreateCommandBufferExt() = 0;
+        virtual CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) = 0;
 
         /**
         \brief Releases the specified command buffer. After this call, the specified object must no longer be used.

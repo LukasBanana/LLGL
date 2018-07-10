@@ -90,12 +90,12 @@ CommandQueue* D3D12RenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* D3D12RenderSystem::CreateCommandBuffer()
+CommandBuffer* D3D12RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
     return TakeOwnership(commandBuffers_, MakeUnique<D3D12CommandBuffer>(*this));
 }
 
-CommandBufferExt* D3D12RenderSystem::CreateCommandBufferExt()
+CommandBufferExt* D3D12RenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     /* Extended command buffers are not spported */
     return nullptr;

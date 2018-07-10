@@ -30,7 +30,12 @@ class VKCommandBuffer final : public CommandBuffer
 
         /* ----- Common ----- */
 
-        VKCommandBuffer(const VKPtr<VkDevice>& device, VkQueue graphicsQueue, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices);
+        VKCommandBuffer(
+            const VKPtr<VkDevice>&          device,
+            VkQueue                         graphicsQueue,
+            const QueueFamilyIndices&       queueFamilyIndices,
+            const CommandBufferDescriptor&  desc
+        );
         ~VKCommandBuffer();
 
         /* ----- Configuration ----- */
@@ -128,6 +133,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         void NextInternalBuffer();
 
+        #if 0
         bool IsCommandBufferActive() const;
 
         void BeginCommandBuffer();
@@ -135,6 +141,7 @@ class VKCommandBuffer final : public CommandBuffer
 
         void SetRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
         void SetRenderPassNull();
+        #endif
 
         // Returns the native VkCommandBuffer object.
         inline VkCommandBuffer GetVkCommandBuffer() const
@@ -167,19 +174,24 @@ class VKCommandBuffer final : public CommandBuffer
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
 
+        #if 0//TODO: remove
         void BeginRenderPass_OBSOLETE(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
         void EndRenderPass_OBSOLETE();
+        #endif
 
         const VKPtr<VkDevice>&          device_;
         VKPtr<VkCommandPool>            commandPool_;
 
         std::vector<VkCommandBuffer>    commandBufferList_;
         VkCommandBuffer                 commandBuffer_;
+        std::size_t                     commandBufferIndex_         = 0;
+
         std::vector<VKPtr<VkFence>>     recordingFenceList_;
         VkFence                         recordingFence_;
+        #if 0
         std::vector<bool>               commandBufferActiveList_;
         std::vector<bool>::iterator     commandBufferActiveIt_      = commandBufferActiveList_.end();
-        std::size_t                     commandBufferIndex_         = 0;
+        #endif
 
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
@@ -199,7 +211,7 @@ class VKCommandBuffer final : public CommandBuffer
         std::uint32_t                   queuePresentFamily_         = 0;
 
         bool                            scissorEnabled_             = false;
-        bool                            scissorRectInvalidated_     = false;
+        bool                            scissorRectInvalidated_     = true;
 
 };
 

@@ -55,12 +55,12 @@ CommandQueue* GLRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* GLRenderSystem::CreateCommandBuffer()
+CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
 {
     return CreateCommandBufferExt();
 }
 
-CommandBufferExt* GLRenderSystem::CreateCommandBufferExt()
+CommandBufferExt* GLRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     /* Get state manager from shared render context */
     if (auto sharedContext = GetSharedRenderContext())
