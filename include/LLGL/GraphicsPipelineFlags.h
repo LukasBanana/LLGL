@@ -593,11 +593,19 @@ struct GraphicsPipelineDescriptor
 {
     /**
     \brief Pointer to the shader program for the graphics pipeline. By default null.
-    \remarks This must never be null when "RenderSystem::CreateGraphicsPipeline" is called with this structure.
+    \remarks This must never be null when RenderSystem::CreateGraphicsPipeline is called with this structure.
     \see RenderSystem::CreateGraphicsPipeline
     \see RenderSystem::CreateShaderProgram
     */
     const ShaderProgram*    shaderProgram       = nullptr;
+
+    /**
+    \brief Pointer to a RenderPass object. By default null.
+    \remarks This must never be null when RenderSystem::CreateGraphicsPipeline is called with this structure.
+    This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
+    \see CommandBuffer::BeginRenderPass
+    */
+    const RenderPass*       renderPass          = nullptr;
 
     /**
     \brief Pointer to an optional pipeline layout for the graphics pipeline. By default null.
@@ -605,13 +613,6 @@ struct GraphicsPipelineDescriptor
     This is ignored by render systems which do not support pipeline layouts.
     */
     const PipelineLayout*   pipelineLayout      = nullptr;
-
-    /**
-    \brief Pointer to a RenderPass object. By default null.
-    \remarks This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
-    \see CommandBuffer::BeginRenderPass
-    */
-    const RenderPass*       renderPass          = nullptr;
 
     #if 1 // TODO: replace this by 'renderPass' member.
     //! \deprecated Use 'renderPass' instead.

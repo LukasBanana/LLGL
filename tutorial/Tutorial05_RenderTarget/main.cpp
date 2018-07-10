@@ -171,6 +171,7 @@ private:
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.renderPass                 = context->GetRenderPass();
             pipelineDesc.pipelineLayout             = pipelineLayout;
 
             // Enable depth test and writing
@@ -180,6 +181,10 @@ private:
             // Enable culling of back-facing polygons
             pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
 
+            #if 1
+            pipelineDesc.rasterizer.frontCCW = true;
+            #endif
+
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampling   = LLGL::MultiSamplingDescriptor(8);
             #endif
@@ -188,7 +193,7 @@ private:
 
         // Create graphics pipeline for render target
         {
-            pipelineDesc.renderTarget = renderTarget;
+            pipelineDesc.renderPass = renderTarget->GetRenderPass();
 
             #ifndef ENABLE_OPENGL_INVERT_FRONTFACE
             if (IsOpenGL())
@@ -351,7 +356,7 @@ private:
         if (resourceHeaps[0])
         {
             // Set graphics pipeline resources
-            commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
+            commands->SetGraphicsResourceHeap(*resourceHeaps[0]);
         }
         else
         {
@@ -445,7 +450,7 @@ private:
         if (resourceHeaps[1])
         {
             // Set graphics pipeline resources
-            commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
+            commands->SetGraphicsResourceHeap(*resourceHeaps[1]);
         }
         else
         {

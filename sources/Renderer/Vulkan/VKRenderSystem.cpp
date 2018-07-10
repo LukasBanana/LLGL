@@ -639,22 +639,9 @@ void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    if (renderContexts_.empty())
-        throw std::runtime_error("cannot create graphics pipeline without a render context");
-
-    auto renderContext = renderContexts_.begin()->get();
-    auto renderPassVK = renderContext->GetSwapChainRenderPass().GetVkRenderPass();
-
     return TakeOwnership(
         graphicsPipelines_,
-        MakeUnique<VKGraphicsPipeline>(
-            device_,
-            renderPassVK,
-            defaultPipelineLayout_,
-            desc,
-            gfxPipelineLimits_,
-            renderContext->GetVkExtent()
-        )
+        MakeUnique<VKGraphicsPipeline>(device_, defaultPipelineLayout_, desc, gfxPipelineLimits_)
     );
 }
 
@@ -706,7 +693,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 {
     /* Initialize application descriptor */
     VkApplicationInfo appInfo;
-    
+
     appInfo.sType                   = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pNext                   = nullptr;
 
@@ -749,7 +736,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 
     /* Setup Vulkan instance descriptor */
     VkInstanceCreateInfo instanceInfo;
-    
+
     instanceInfo.sType                          = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceInfo.pNext                          = nullptr;
     instanceInfo.flags                          = 0;

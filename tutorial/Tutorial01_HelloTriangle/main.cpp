@@ -143,6 +143,7 @@ int main(int argc, char* argv[])
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.renderPass                 = context->GetRenderPass();
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
             #endif

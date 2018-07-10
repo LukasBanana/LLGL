@@ -217,6 +217,7 @@ int main()
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.renderPass         = context->GetRenderPass();
             pipelineDesc.pipelineLayout     = pipelineLayout;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
 
