@@ -341,58 +341,6 @@ private:
 
     void DrawSceneIntoTexture()
     {
-        #if 0
-        // Draw scene into render-target and binds its graphics pipeline
-        commands->SetRenderTarget(*renderTarget);
-        #endif
-
-        // Bind graphics pipeline for render target
-        commands->SetGraphicsPipeline(*pipelines[0]);
-
-        // Set common buffers and sampler states
-        commands->SetIndexBuffer(*indexBuffer);
-        commands->SetVertexBuffer(*vertexBuffer);
-
-        if (resourceHeaps[0])
-        {
-            // Set graphics pipeline resources
-            commands->SetGraphicsResourceHeap(*resourceHeaps[0]);
-        }
-        else
-        {
-            commandsExt->SetConstantBuffer(*constantBuffer, 0, shaderStages);
-            commandsExt->SetTexture(*colorMap, 0, shaderStages);
-            commandsExt->SetSampler(*samplerState, 0, shaderStages);
-        }
-
-        #ifdef ENABLE_OPENGL_INVERT_FRONTFACE
-        if (IsOpenGL())
-        {
-            /*
-            Set graphics API dependent state to be uniform between OpenGL and Direct3D:
-            A huge difference between OpenGL and Direct3D is,
-            that OpenGL stores image data from the lower-left to the upper-right in a texture,
-            but Direct3D stores image data from the upper-left to the lower-right in a texture.
-            The default screen-space origin of LLGL is the upper-left, so when rendering into a texture,
-            we need to render vertically flipped when OpenGL is used.
-            To do this we flip the Y-axis of the world-view-projection matrix and invert the front-facing,
-            so that the face-culling works as excepted.
-            */
-            LLGL::OpenGLDependentStateDescriptor apiStateDesc;
-            {
-                apiStateDesc.invertFrontFace = true;
-            }
-            commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
-        }
-        #endif
-
-        // Set viewport for render target
-        commands->SetViewport({ { 0, 0 }, renderTarget->GetResolution() });
-
-        // Clear color and depth buffers of active framebuffer (i.e. the render target)
-        commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
-        commands->Clear(LLGL::ClearFlags::ColorDepth);
-
         // Update model transformation with render-target projection
         UpdateModelTransform(renderTargetProj, rotation.y, Gs::Vector3f(1));
 
@@ -412,61 +360,67 @@ private:
 
         #endif
 
+        // Update constant buffer with current settings
         UpdateBuffer(constantBuffer, settings);
 
-        // Draw scene
-        commands->DrawIndexed(36, 0);
+        // Begin render pass for render target
+        commands->BeginRenderPass(*renderTarget);
+        {
+            // Bind graphics pipeline for render target
+            commands->SetGraphicsPipeline(*pipelines[0]);
+
+            // Set common buffers and sampler states
+            commands->SetIndexBuffer(*indexBuffer);
+            commands->SetVertexBuffer(*vertexBuffer);
+
+            if (resourceHeaps[0])
+            {
+                // Set graphics pipeline resources
+                commands->SetGraphicsResourceHeap(*resourceHeaps[0]);
+            }
+            else
+            {
+                commandsExt->SetConstantBuffer(*constantBuffer, 0, shaderStages);
+                commandsExt->SetTexture(*colorMap, 0, shaderStages);
+                commandsExt->SetSampler(*samplerState, 0, shaderStages);
+            }
+
+            #ifdef ENABLE_OPENGL_INVERT_FRONTFACE
+            if (IsOpenGL())
+            {
+                /*
+                Set graphics API dependent state to be uniform between OpenGL and Direct3D:
+                A huge difference between OpenGL and Direct3D is,
+                that OpenGL stores image data from the lower-left to the upper-right in a texture,
+                but Direct3D stores image data from the upper-left to the lower-right in a texture.
+                The default screen-space origin of LLGL is the upper-left, so when rendering into a texture,
+                we need to render vertically flipped when OpenGL is used.
+                To do this we flip the Y-axis of the world-view-projection matrix and invert the front-facing,
+                so that the face-culling works as excepted.
+                */
+                LLGL::OpenGLDependentStateDescriptor apiStateDesc;
+                {
+                    apiStateDesc.invertFrontFace = true;
+                }
+                commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
+            }
+            #endif
+
+            // Set viewport for render target
+            commands->SetViewport({ { 0, 0 }, renderTarget->GetResolution() });
+
+            // Clear color and depth buffers of active framebuffer (i.e. the render target)
+            commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
+            commands->Clear(LLGL::ClearFlags::ColorDepth);
+
+            // Draw scene
+            commands->DrawIndexed(36, 0);
+        }
+        commands->EndRenderPass();
     }
 
     void DrawSceneOntoScreen()
     {
-        #if 0
-        // Draw scene into render-context and binds its graphics pipeline
-        commands->SetRenderTarget(*context);
-        #endif
-
-        // Binds graphics pipeline for render context
-        commands->SetGraphicsPipeline(*pipelines[1]);
-
-        // Generate MIP-maps again after texture has been written by the render-target
-        renderer->GenerateMips(*renderTargetTex);
-
-        #ifdef ENABLE_OPENGL_INVERT_FRONTFACE
-        if (IsOpenGL())
-        {
-            // Reset graphics API dependent state
-            LLGL::OpenGLDependentStateDescriptor apiStateDesc;
-            commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
-        }
-        #endif
-
-        // Reset viewport for the screen
-        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
-
-        // Clear color and depth buffers of active framebuffer (i.e. the screen)
-        commands->SetClearColor(defaultClearColor);
-        commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-        if (resourceHeaps[1])
-        {
-            // Set graphics pipeline resources
-            commands->SetGraphicsResourceHeap(*resourceHeaps[1]);
-        }
-        else
-        {
-            #ifdef ENABLE_CUSTOM_MULTISAMPLING
-
-            // Set multi-sample render-target texture
-            commandsExt->SetTexture(*renderTargetTex, 1, shaderStages);
-
-            #else
-
-            // Set render-target texture
-            commandsExt->SetTexture(*renderTargetTex, 0, shaderStages);
-
-            #endif // /ENABLE_CUSTOM_MULTISAMPLING
-        }
-
         #ifdef ENABLE_CUSTOM_MULTISAMPLING
 
         // Enable multi-sample texture in fragment shader
@@ -478,8 +432,55 @@ private:
         UpdateModelTransform(projection, rotation.x);
         UpdateBuffer(constantBuffer, settings);
 
-        // Draw scene
-        commands->DrawIndexed(36, 0);
+        // Begin render pass for render context
+        commands->BeginRenderPass(*context);
+        {
+            // Binds graphics pipeline for render context
+            commands->SetGraphicsPipeline(*pipelines[1]);
+
+            // Generate MIP-maps again after texture has been written by the render-target
+            renderer->GenerateMips(*renderTargetTex);
+
+            #ifdef ENABLE_OPENGL_INVERT_FRONTFACE
+            if (IsOpenGL())
+            {
+                // Reset graphics API dependent state
+                LLGL::OpenGLDependentStateDescriptor apiStateDesc;
+                commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
+            }
+            #endif
+
+            // Reset viewport for the screen
+            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+
+            // Clear color and depth buffers of active framebuffer (i.e. the screen)
+            commands->SetClearColor(defaultClearColor);
+            commands->Clear(LLGL::ClearFlags::ColorDepth);
+
+            if (resourceHeaps[1])
+            {
+                // Set graphics pipeline resources
+                commands->SetGraphicsResourceHeap(*resourceHeaps[1]);
+            }
+            else
+            {
+                #ifdef ENABLE_CUSTOM_MULTISAMPLING
+
+                // Set multi-sample render-target texture
+                commandsExt->SetTexture(*renderTargetTex, 1, shaderStages);
+
+                #else
+
+                // Set render-target texture
+                commandsExt->SetTexture(*renderTargetTex, 0, shaderStages);
+
+                #endif // /ENABLE_CUSTOM_MULTISAMPLING
+            }
+
+            // Draw scene
+            commands->DrawIndexed(36, 0);
+        }
+        commands->EndRenderPass();
     }
 
     void OnDrawFrame() override
@@ -490,17 +491,8 @@ private:
         commandQueue->Begin(*commands);
         {
             // Draw scene into texture, then draw scene onto screen
-            commands->BeginRenderPass(*renderTarget);
-            {
-                DrawSceneIntoTexture();
-            }
-            commands->EndRenderPass();
-
-            commands->BeginRenderPass(*context);
-            {
-                DrawSceneOntoScreen();
-            }
-            commands->EndRenderPass();
+            DrawSceneIntoTexture();
+            DrawSceneOntoScreen();
         }
         commandQueue->End(*commands);
 
