@@ -200,9 +200,11 @@ class VKRenderSystem final : public RenderSystem
         void AssertBufferCPUAccess(const VKBuffer& bufferVK);
 
         void GenerateMipsPrimary(
-            VKTexture& textureVK,
-            std::uint32_t baseMipLevel, std::uint32_t numMipLevels,
-            std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers
+            VKTexture&      textureVK,
+            std::uint32_t   baseMipLevel,
+            std::uint32_t   numMipLevels,
+            std::uint32_t   baseArrayLayer,
+            std::uint32_t   numArrayLayers
         );
 
         /* ----- Common objects ----- */

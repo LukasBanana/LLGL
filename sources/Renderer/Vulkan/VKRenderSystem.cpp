@@ -309,11 +309,57 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 
     if (bufferVK.GetStagingVkBuffer() != VK_NULL_HANDLE)
     {
+        #if 1
+
         /* Copy data to staging buffer memory */
         bufferVK.UpdateStagingBuffer(device_, data, memorySize, memoryOffset);
 
         /* Copy staging buffer into hardware buffer */
         CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
+
+        #else // TEST
+
+        BeginStagingCommands();
+
+        if (auto mappedData = bufferVK.MapStaging(device_, memorySize, memoryOffset))
+        {
+            ::memcpy(mappedData, data, static_cast<std::size_t>(dataSize));
+            bufferVK.UnmapStaging(device_);
+        }
+
+        VkBufferMemoryBarrier barrier;
+        {
+            barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            barrier.pNext               = nullptr;
+            barrier.srcAccessMask       = 0;//VK_ACCESS_HOST_WRITE_BIT;
+            barrier.dstAccessMask       = 0;//VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.buffer              = bufferVK.GetStagingVkBuffer();
+            barrier.offset              = 0;
+            barrier.size                = VK_WHOLE_SIZE;
+        }
+        vkCmdPipelineBarrier(
+            stagingCommandBuffer_,
+            VK_PIPELINE_STAGE_HOST_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0, 0, nullptr,
+            1, &barrier,
+            0, nullptr
+        );
+
+        /* Copy staging buffer into hardware buffer */
+        VkBufferCopy region;
+        {
+            region.srcOffset    = memoryOffset;
+            region.dstOffset    = memoryOffset;
+            region.size         = memorySize;
+        }
+        vkCmdCopyBuffer(stagingCommandBuffer_, bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), 1, &region);
+
+        EndStagingCommands();
+
+        #endif // /TEST
     }
     else
     {
@@ -1257,7 +1303,12 @@ void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
 }
 
 //TODO: add parameters
-void VKRenderSystem::GenerateMipsPrimary(VKTexture& textureVK, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
+void VKRenderSystem::GenerateMipsPrimary(
+    VKTexture&      textureVK,
+    std::uint32_t   baseMipLevel,
+    std::uint32_t   numMipLevels,
+    std::uint32_t   baseArrayLayer,
+    std::uint32_t   numArrayLayers)
 {
     /* Get Vulkan image object */
     auto image  = textureVK.GetVkImage();

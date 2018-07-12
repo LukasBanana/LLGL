@@ -47,6 +47,9 @@ class VKBuffer : public Buffer
         void* Map(VkDevice device, const CPUAccess access);
         void Unmap(VkDevice device);
 
+        void* MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize offset = 0);
+        void UnmapStaging(VkDevice device);
+
         // Updates the staging buffer (if it was created).
         void UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset = 0);
 
