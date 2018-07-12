@@ -114,12 +114,13 @@ void GLRenderSystem::Release(ResourceHeap& resourceHeap)
 
 RenderPass* GLRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
 {
-    return nullptr;//return TakeOwnership(renderPasses_, MakeUnique<GLRenderPass>(desc));
+    AssertCreateRenderPass(desc);
+    return TakeOwnership(renderPasses_, MakeUnique<GLRenderPass>(desc));
 }
 
 void GLRenderSystem::Release(RenderPass& renderPass)
 {
-    //RemoveFromUniqueSet(renderPasses_, &renderPass);
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
 /* ----- Render Targets ----- */
@@ -127,6 +128,7 @@ void GLRenderSystem::Release(RenderPass& renderPass)
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
     LLGL_ASSERT_FEATURE_SUPPORT(hasRenderTargets);
+    AssertCreateRenderTarget(desc);
     return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(desc));
 }
 

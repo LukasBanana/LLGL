@@ -258,19 +258,26 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         This render pass object must be compatible with the render pass object the specified render target was created with.
         \param[in] numClearValues Specifies the number of clear values that are specified in the <code>clearValues</code> parameter.
         This should be greater than or equal to the number of render pass attachments whose load operation (i.e. AttachmentFormatDescriptor::loadOp) is set to AttachmentLoadOp::Clear.
-        Otherwise, the default values from SetClearColor, SetClearDepth, and SetClearStencil are used.
+        Otherwise, the default values from \c SetClearColor, \c SetClearDepth, and \c SetClearStencil are used.
         \param[in] clearValues Optional pointer to the array of clear values.
         If <code>numClearValues</code> is not zero, this must be a valid pointer to an array of at least <code>numClearValues</code> entries.
+        Each entry in the array is used to clear the attachment whose load operation is set to AttachmentLoadOp::Clear,
+        where the depth attachment (i.e. RenderPassDescriptor::depthAttachment) appears as the penultimate
+        and the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) appears as the last entry.
         \remarks This function starts a new render pass section and must be ended with the EndRenderPass function.
         A simple frame setup could look like this:
         \code
-        myCmdBuffer->BeginRenderPass(*myRenderTarget);
+        myCmdQueue->Begin(*myCmdBuffer);
         {
-            myCmdBuffer->SetGraphicsPipeline(*myGfxPipeline);
-            myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
-            myCmdBuffer->Draw(...);
+            myCmdBuffer->BeginRenderPass(*myRenderTarget);
+            {
+                myCmdBuffer->SetGraphicsPipeline(*myGfxPipeline);
+                myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
+                myCmdBuffer->Draw(...);
+            }
+            myCmdBuffer->EndRenderPass();
         }
-        myCmdBuffer->EndRenderPass();
+        myCmdQueue->End(*myCmdBuffer);
         myRenderContext->Present();
         \endcode
         \see RenderSystem::CreateRenderPass
@@ -292,6 +299,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void EndRenderPass() {}//= 0;
 
+        #if 1//TODO: remove
+
         /* ----- Render Targets ----- */
 
         /**
@@ -303,7 +312,7 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see SetRenderTarget(RenderContext&)
         \deprecated Will be removed soon, use BeginRenderPass.
         */
-        virtual void SetRenderTarget(RenderTarget& renderTarget) = 0;
+        virtual void SetRenderTarget(RenderTarget& renderTarget) {};
 
         /**
         \brief Sets the back buffer (or rather swap-chain) of the specified render context as the new target for subsequent rendering commands.
@@ -311,7 +320,9 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \see SetRenderTarget(RenderTarget&)
         \deprecated Will be removed soon, use BeginRenderPass.
         */
-        virtual void SetRenderTarget(RenderContext& renderContext) = 0;
+        virtual void SetRenderTarget(RenderContext& renderContext) {};
+
+        #endif
 
         /* ----- Pipeline States ----- */
 

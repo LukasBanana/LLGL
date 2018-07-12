@@ -19,6 +19,7 @@
 #include "Buffer/VKBufferArray.h"
 #include "Buffer/VKIndexBuffer.h"
 #include "../CheckedCast.h"
+#include "../StaticLimits.h"
 #include <cstddef>
 
 
@@ -26,9 +27,7 @@ namespace LLGL
 {
 
 
-static const std::uint32_t g_maxNumViewportsPerBatch    = 16;
-static const std::uint32_t g_maxNumColorAttachments     = 32;
-static const std::uint32_t g_maxNumAttachments          = (g_maxNumColorAttachments + 1);
+static const std::uint32_t g_maxNumViewportsPerBatch = 16;
 
 VKCommandBuffer::VKCommandBuffer(
     const VKPtr<VkDevice>&          device,
@@ -198,14 +197,14 @@ static VkImageAspectFlags GetDepthStencilAspectMask(long flags)
 
 void VKCommandBuffer::Clear(long flags)
 {
-    VkClearAttachment attachments[g_maxNumAttachments];
+    VkClearAttachment attachments[LLGL_MAX_NUM_ATTACHMENTS];
 
     std::uint32_t numAttachments = 0;
 
     /* Fill clear descriptors for color attachments */
     if ((flags & ClearFlags::Color) != 0)
     {
-        numAttachments = std::min(numColorAttachments_, g_maxNumColorAttachments);
+        numAttachments = std::min(numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS);
         for (std::uint32_t i = 0; i < numAttachments; ++i)
         {
             auto& attachment = attachments[i];
@@ -235,11 +234,11 @@ void VKCommandBuffer::Clear(long flags)
 void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
     /* Convert clear attachment descriptors */
-    VkClearAttachment attachmentsVK[g_maxNumAttachments];
+    VkClearAttachment attachmentsVK[LLGL_MAX_NUM_ATTACHMENTS];
 
     std::uint32_t numAttachmentsVK = 0;
 
-    for (std::uint32_t i = 0, n = std::min(numAttachments, g_maxNumAttachments); i < n; ++i)
+    for (std::uint32_t i = 0, n = std::min(numAttachments, LLGL_MAX_NUM_ATTACHMENTS); i < n; ++i)
     {
         auto& dst = attachmentsVK[numAttachmentsVK];
         const auto& src = attachments[i];
@@ -393,7 +392,7 @@ void VKCommandBuffer::BeginRenderPass(
     scissorRectInvalidated_ = true;
 
     /* Declare array or clear values */
-    VkClearValue clearValuesVK[g_maxNumAttachments];
+    VkClearValue clearValuesVK[LLGL_MAX_NUM_ATTACHMENTS];
     std::uint32_t numClearValuesVK = 0;
 
     /* Get native render pass object either from RenderTarget or RenderPass interface */

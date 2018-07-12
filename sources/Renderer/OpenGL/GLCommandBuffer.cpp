@@ -28,6 +28,7 @@
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
 #include "RenderState/GLResourceHeap.h"
+#include "RenderState/GLRenderPass.h"
 #include "RenderState/GLQuery.h"
 
 
@@ -131,17 +132,32 @@ void GLCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 
 void GLCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
+    /* Submit clear value to GL */
     glClearColor(color.r, color.g, color.b, color.a);
+
+    /* Store as default clear value */
+    clearValue_.color[0] = color.r;
+    clearValue_.color[1] = color.g;
+    clearValue_.color[2] = color.b;
+    clearValue_.color[3] = color.a;
 }
 
 void GLCommandBuffer::SetClearDepth(float depth)
 {
+    /* Submit clear value to GL */
     glClearDepth(depth);
+
+    /* Store as default clear value */
+    clearValue_.depth = depth;
 }
 
 void GLCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
+    /* Submit clear value to GL */
     glClearStencil(static_cast<GLint>(stencil));
+
+    /* Store as default clear value */
+    clearValue_.stencil = static_cast<GLint>(stencil);
 }
 
 //TODO: maybe glColorMask must be set to (1, 1, 1, 1) to clear color correctly
@@ -158,7 +174,7 @@ void GLCommandBuffer::Clear(long flags)
 
     if ((flags & ClearFlags::Depth) != 0)
     {
-        stateMngr_->SetDepthMask(GL_TRUE);
+        stateMngr_->SetDepthMask(GL_TRUE); // <------- TODO: MUST BE TESTED, IF RESET IS REQUIRED!!!
         mask |= GL_DEPTH_BUFFER_BIT;
     }
 
@@ -331,53 +347,31 @@ void GLCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
     SetResourceHeap(resourceHeap);
 }
 
-/* ----- Render Targets ----- */
+/* ----- Render Passes ----- */
 
-//private
-void GLCommandBuffer::BlitBoundRenderTarget()
+void GLCommandBuffer::BeginRenderPass(
+    RenderTarget&       renderTarget,
+    const RenderPass*   renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
 {
-    if (boundRenderTarget_)
-        boundRenderTarget_->BlitOntoFramebuffer();
+    /* Bind render target/context */
+    if (renderTarget.IsRenderContext())
+        BindRenderContext(LLGL_CAST(GLRenderContext&, renderTarget));
+    else
+        BindRenderTarget(LLGL_CAST(GLRenderTarget&, renderTarget));
+
+    /* Clear attachments */
+    if (renderPass)
+    {
+        auto renderPassGL = LLGL_CAST(const GLRenderPass*, renderPass);
+        ClearAttachmentsWithEnderPass(*renderPassGL, numClearValues, clearValues);
+    }
 }
 
-void GLCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
+void GLCommandBuffer::EndRenderPass()
 {
-    /* Blit previously bound render target (in case mutli-sampling is used) */
-    BlitBoundRenderTarget();
-
-    /* Bind framebuffer object */
-    auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
-    stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFramebuffer().GetID());
-
-    /* Notify state manager about new render target height */
-    stateMngr_->NotifyRenderTargetHeight(static_cast<GLint>(renderTarget.GetResolution().height));
-
-    /* Store current render target */
-    boundRenderTarget_ = &renderTargetGL;
-
-    //TODO: maybe use 'glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
-}
-
-void GLCommandBuffer::SetRenderTarget(RenderContext& renderContext)
-{
-    auto& renderContextGL = LLGL_CAST(GLRenderContext&, renderContext);
-
-    /* Blit previously bound render target (in case mutli-sampling is used) */
-    BlitBoundRenderTarget();
-
-    /* Unbind framebuffer object */
-    stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
-
-    /*
-    Ensure the specified render context is the active one,
-    and notify the state manager about new render target (the default framebuffer) height
-    */
-    GLRenderContext::GLMakeCurrent(&renderContextGL);
-
-    /* Reset reference to render target */
-    boundRenderTarget_ = nullptr;
-
-    //TODO: maybe use 'glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
+    // dummy
 }
 
 /* ----- Pipeline States ----- */
@@ -671,6 +665,118 @@ void GLCommandBuffer::SetResourceHeap(ResourceHeap& resourceHeap)
 {
     auto& resourceHeapGL = LLGL_CAST(GLResourceHeap&, resourceHeap);
     resourceHeapGL.Bind(*stateMngr_);
+}
+
+void GLCommandBuffer::BlitBoundRenderTarget()
+{
+    if (boundRenderTarget_)
+        boundRenderTarget_->BlitOntoFramebuffer();
+}
+
+void GLCommandBuffer::BindRenderTarget(GLRenderTarget& renderTargetGL)
+{
+    /* Blit previously bound render target (in case mutli-sampling is used) */
+    BlitBoundRenderTarget();
+
+    /* Bind framebuffer object */
+    stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, renderTargetGL.GetFramebuffer().GetID());
+
+    /* Notify state manager about new render target height */
+    stateMngr_->NotifyRenderTargetHeight(static_cast<GLint>(renderTargetGL.GetResolution().height));
+
+    /* Store current render target */
+    boundRenderTarget_ = &renderTargetGL;
+
+    //TODO: maybe use 'glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
+}
+
+void GLCommandBuffer::BindRenderContext(GLRenderContext& renderContextGL)
+{
+    /* Blit previously bound render target (in case mutli-sampling is used) */
+    BlitBoundRenderTarget();
+
+    /* Unbind framebuffer object */
+    stateMngr_->BindFramebuffer(GLFramebufferTarget::DRAW_FRAMEBUFFER, 0);
+
+    /*
+    Ensure the specified render context is the active one,
+    and notify the state manager about new render target (the default framebuffer) height
+    */
+    GLRenderContext::GLMakeCurrent(&renderContextGL);
+
+    /* Reset reference to render target */
+    boundRenderTarget_ = nullptr;
+
+    //TODO: maybe use 'glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
+}
+
+void GLCommandBuffer::ClearAttachmentsWithEnderPass(const GLRenderPass& renderPassGL, std::uint32_t numClearValues, const ClearValue* clearValues)
+{
+    auto mask = renderPassGL.GetClearMask();
+
+    /* Clear color attachments */
+    std::uint32_t idx = 0;
+    if ((mask & GL_COLOR_BUFFER_BIT) != 0)
+        ClearColorBuffers(renderPassGL.GetClearColorAttachments(), numClearValues, clearValues, idx);
+
+    /* Clear depth-stencil attachment */
+    static const GLbitfield g_maskDepthStencil = (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    if ((mask & g_maskDepthStencil) == g_maskDepthStencil)
+    {
+        /* Clear depth and stencil buffer simultaneously */
+        if (idx < numClearValues)
+            glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValues[idx].depth, static_cast<GLint>(clearValues[idx].stencil));
+        else
+            glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValue_.depth, clearValue_.stencil);
+    }
+    if ((mask & GL_DEPTH_BUFFER_BIT) != 0)
+    {
+        /* Clear only depth buffer */
+        if (idx < numClearValues)
+            glClearBufferfv(GL_DEPTH, 0, &(clearValues[idx].depth));
+        else
+            glClearBufferfv(GL_DEPTH, 0, &(clearValue_.depth));
+    }
+    else if ((mask & GL_STENCIL_BUFFER_BIT) != 0)
+    {
+        /* Clear only stencil buffer */
+        if (idx < numClearValues)
+        {
+            GLint stencil = static_cast<GLint>(clearValues[idx].stencil);
+            glClearBufferiv(GL_STENCIL, 0, &stencil);
+        }
+        else
+            glClearBufferiv(GL_STENCIL, 0, &(clearValue_.stencil));
+    }
+}
+
+void GLCommandBuffer::ClearColorBuffers(
+    const std::uint8_t* colorBuffers,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues,
+    std::uint32_t&      idx)
+{
+    std::uint32_t i = 0;
+
+    /* Use specified clear values */
+    for (; i < numClearValues; ++i)
+    {
+        /* Check if attachment list has ended */
+        if (colorBuffers[i] != 0xFF)
+            glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), clearValues[idx++].color.Ptr());
+        else
+            return;
+    }
+
+    /* Use default clear values */
+    for (; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
+    {
+        /* Check if attachment list has ended */
+        if (colorBuffers[i] != 0xFF)
+            glClearBufferfv(GL_COLOR, static_cast<GLint>(colorBuffers[i]), clearValue_.color);
+        else
+            return;
+    }
 }
 
 

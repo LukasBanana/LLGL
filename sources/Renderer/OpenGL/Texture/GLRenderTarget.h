@@ -100,6 +100,8 @@ class GLRenderTarget final : public RenderTarget
         GLsizei                     multiSamples_       = 0;
         GLbitfield                  blitMask_           = 0;
 
+        const RenderPass*           renderPass_         = nullptr;
+
 };
 
 

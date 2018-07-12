@@ -622,6 +622,7 @@ void VKRenderSystem::Release(ResourceHeap& resourceHeap)
 
 RenderPass* VKRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
 {
+    AssertCreateRenderPass(desc);
     return TakeOwnership(renderPasses_, MakeUnique<VKRenderPass>(device_, desc));
 }
 
@@ -634,6 +635,7 @@ void VKRenderSystem::Release(RenderPass& renderPass)
 
 RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
+    AssertCreateRenderTarget(desc);
     return TakeOwnership(renderTargets_, MakeUnique<VKRenderTarget>(device_, *deviceMemoryMngr_, desc));
 }
 

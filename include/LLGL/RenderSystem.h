@@ -515,6 +515,12 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         //! Validates the specified shader program descriptor.
         void AssertCreateShaderProgram(const ShaderProgramDescriptor& desc);
 
+        //! Validates the specified render target descriptor.
+        void AssertCreateRenderTarget(const RenderTargetDescriptor& desc);
+
+        //! Validates the specified render pass descriptor.
+        void AssertCreateRenderPass(const RenderPassDescriptor& desc);
+
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);
 

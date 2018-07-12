@@ -130,7 +130,7 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
         if (attachmentDescs[i - 1].loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
         {
             clearValuesMask_ |= 0x1ull;
-            numClearValues_ = std::max(numClearValues_, static_cast<std::uint8_t>(i - 1));
+            numClearValues_ = std::max(numClearValues_, static_cast<std::uint8_t>(i));
         }
         clearValuesMask_ <<= 1;
     }

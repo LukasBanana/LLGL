@@ -69,7 +69,8 @@ static std::size_t CountColorAttachments(const std::vector<AttachmentDescriptor>
 
 GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
     resolution_   { desc.resolution                                        },
-    multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) }
+    multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) },
+    renderPass_   { desc.renderPass                                        }
 {
     framebuffer_.GenFramebuffer();
     if (desc.attachments.empty())
@@ -100,7 +101,7 @@ bool GLRenderTarget::HasStencilAttachment() const
 
 const RenderPass* GLRenderTarget::GetRenderPass() const
 {
-    return nullptr; // dummy
+    return renderPass_;
 }
 
 /* ----- Extended Internal Functions ----- */

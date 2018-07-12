@@ -161,7 +161,7 @@ private:
             {
                 LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 1 },//1 },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 2 },//2 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 1 },//2 },
                 //LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                               3 },//3 },
             };
         }
@@ -366,6 +366,10 @@ private:
         // Begin render pass for render target
         commands->BeginRenderPass(*renderTarget);
         {
+            // Clear color and depth buffers of active framebuffer (i.e. the render target)
+            commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
+            commands->Clear(LLGL::ClearFlags::ColorDepth);
+
             // Bind graphics pipeline for render target
             commands->SetGraphicsPipeline(*pipelines[0]);
 
@@ -409,10 +413,6 @@ private:
             // Set viewport for render target
             commands->SetViewport({ { 0, 0 }, renderTarget->GetResolution() });
 
-            // Clear color and depth buffers of active framebuffer (i.e. the render target)
-            commands->SetClearColor({ 0.2f, 0.7f, 0.1f });
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
-
             // Draw scene
             commands->DrawIndexed(36, 0);
         }
@@ -435,6 +435,13 @@ private:
         // Begin render pass for render context
         commands->BeginRenderPass(*context);
         {
+            // Clear color and depth buffers of active framebuffer (i.e. the screen)
+            commands->SetClearColor(defaultClearColor);
+            commands->Clear(LLGL::ClearFlags::ColorDepth);
+
+            // Reset viewport for the screen
+            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+
             // Binds graphics pipeline for render context
             commands->SetGraphicsPipeline(*pipelines[1]);
 
@@ -449,13 +456,6 @@ private:
                 commands->SetGraphicsAPIDependentState(&apiStateDesc, sizeof(apiStateDesc));
             }
             #endif
-
-            // Reset viewport for the screen
-            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
-
-            // Clear color and depth buffers of active framebuffer (i.e. the screen)
-            commands->SetClearColor(defaultClearColor);
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
 
             if (resourceHeaps[1])
             {

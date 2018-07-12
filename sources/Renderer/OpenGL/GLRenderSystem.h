@@ -29,6 +29,7 @@
 
 #include "RenderState/GLQuery.h"
 #include "RenderState/GLFence.h"
+#include "RenderState/GLRenderPass.h"
 #include "RenderState/GLPipelineLayout.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
@@ -195,6 +196,7 @@ class GLRenderSystem final : public RenderSystem
         HWObjectContainer<GLBufferArray>        bufferArrays_;
         HWObjectContainer<GLTexture>            textures_;
         HWObjectContainer<GLSampler>            samplers_;
+        HWObjectContainer<GLRenderPass>         renderPasses_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;
         HWObjectContainer<GLShader>             shaders_;
         HWObjectContainer<GLShaderProgram>      shaderPrograms_;
