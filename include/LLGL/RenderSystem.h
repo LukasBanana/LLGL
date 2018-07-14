@@ -89,9 +89,9 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \see RenderSystemDescriptor::moduleName
         */
         static std::unique_ptr<RenderSystem> Load(
-            const RenderSystemDescriptor& renderSystemDesc,
-            RenderingProfiler* profiler = nullptr,
-            RenderingDebugger* debugger = nullptr
+            const RenderSystemDescriptor&   renderSystemDesc,
+            RenderingProfiler*              profiler            = nullptr,
+            RenderingDebugger*              debugger            = nullptr
         );
 
         /**
@@ -159,11 +159,11 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \brief Creates a new render context and returns the raw pointer.
         \param[in] desc Specifies the render context descriptor, which contains the video mode, vsync, multi-sampling settings etc.
         \param[in] surface Optional shared pointer to a surface for the render context.
-        If this is null, the render context will create its own platform specific surface, which can be accessed by "RenderContext::GetSurface".
-        \remarks The render system takes the ownership of this object. All render contexts are deleted in the destructor of this render system.
+        If this is null, the render context will create its own platform specific surface, which can be accessed by RenderContext::GetSurface.
+        The default surface is not shown automatically.
         \see RenderContext::GetSurface
         */
-        virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = nullptr) = 0;
+        virtual RenderContext* CreateRenderContext(const RenderContextDescriptor& desc, const std::shared_ptr<Surface>& surface = {}) = 0;
 
         //! Releases the specified render context. This will all release all resources, that are associated with this render context.
         virtual void Release(RenderContext& renderContext) = 0;
