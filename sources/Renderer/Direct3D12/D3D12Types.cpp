@@ -18,17 +18,12 @@ namespace D3D12Types
 {
 
 
-DXGI_FORMAT Map(const VectorType vectorType)
-{
-    return DXTypes::Map(vectorType);
-}
-
 DXGI_FORMAT Map(const DataType dataType)
 {
     return DXTypes::Map(dataType);
 }
 
-DXGI_FORMAT Map(const TextureFormat textureFormat)
+DXGI_FORMAT Map(const Format textureFormat)
 {
     return DXTypes::Map(textureFormat);
 }
@@ -253,7 +248,24 @@ D3D12_SRV_DIMENSION Map(const TextureType textureType)
     DXTypes::MapFailed("TextureType", "D3D12_SRV_DIMENSION");
 }
 
-TextureFormat Unmap(const DXGI_FORMAT format)
+D3D12_RESOURCE_DIMENSION ToResourceDimension(const TextureType type)
+{
+    switch (type)
+    {
+        case TextureType::Texture1D:        /* pass */
+        case TextureType::Texture1DArray:   return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+        case TextureType::Texture2D:        /* pass */
+        case TextureType::Texture2DArray:   /* pass */
+        case TextureType::TextureCube:      /* pass */
+        case TextureType::TextureCubeArray: /* pass */
+        case TextureType::Texture2DMS:      /* pass */
+        case TextureType::Texture2DMSArray: return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        case TextureType::Texture3D:        return D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+    }
+    DXTypes::MapFailed("TextureType", "D3D12_RESOURCE_DIMENSION");
+}
+
+Format Unmap(const DXGI_FORMAT format)
 {
     return DXTypes::Unmap(format);
 }

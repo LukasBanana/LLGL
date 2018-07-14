@@ -55,8 +55,8 @@ int main()
 
         // Create vertex buffer
         LLGL::VertexFormat vertexFormat;
-        vertexFormat.AppendAttribute({ "POSITION", LLGL::VectorType::Float2 });
-        vertexFormat.AppendAttribute({ "COLOR", LLGL::VectorType::Float3 });
+        vertexFormat.AppendAttribute({ "POSITION", LLGL::Format::RG32Float });
+        vertexFormat.AppendAttribute({ "COLOR", LLGL::Format::RGB32Float });
 
         const float triSize = 0.5f;
 
@@ -103,16 +103,14 @@ int main()
         auto constantBuffer = renderer->CreateBuffer(constantBufferDesc, &matrices);
 
         // Load shader
-        auto shaderSource = ReadFileContent("TestShader.hlsl");
-
-        auto vertShader = renderer->CreateShader(LLGL::ShaderType::Vertex);
-        auto fragShader = renderer->CreateShader(LLGL::ShaderType::Fragment);
+        auto vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "TestShader.hlsl", "VS", "vs_5_0" });
+        auto fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "TestShader.hlsl", "PS", "ps_5_0" });
 
         #ifdef TEST_PRINT_SHADER_INFO
         std::cout << "VERTEX OUTPUT:" << std::endl;
         #endif
 
-        if (!vertShader->Compile(shaderSource, { "VS", "vs_5_0" }))
+        if (vertShader->HasErrors())
             std::cerr << vertShader->QueryInfoLog() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else
@@ -123,7 +121,7 @@ int main()
         std::cout << "PIXEL OUTPUT:" << std::endl;
         #endif
 
-        if (!fragShader->Compile(shaderSource, { "PS", "ps_5_0" }))
+        if (fragShader->HasErrors())
             std::cerr << fragShader->QueryInfoLog() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else
@@ -131,14 +129,15 @@ int main()
         #endif
 
         // Create shader program
-        auto shaderProgram = renderer->CreateShaderProgram();
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.vertexFormats     = { vertexFormat };
+            shaderProgramDesc.vertexShader      = vertShader;
+            shaderProgramDesc.fragmentShader    = fragShader;
+        }
+        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
-        shaderProgram->AttachShader(*vertShader);
-        shaderProgram->AttachShader(*fragShader);
-
-        shaderProgram->BuildInputLayout(1, &vertexFormat);
-
-        if (!shaderProgram->LinkShaders())
+        if (shaderProgram->HasErrors())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
         #ifdef TEST_PRINT_SHADER_INFO
         else
@@ -200,7 +199,7 @@ int main()
         LLGL::TextureDescriptor texDesc;
         {
             texDesc.type                = LLGL::TextureType::Texture2D;
-            texDesc.format              = LLGL::TextureFormat::RGBA;
+            texDesc.format              = LLGL::Format::RGBA;
             texDesc.texture2D.width     = 2;
             texDesc.texture2D.height    = 2;
             texDesc.texture2D.layers    = 1;

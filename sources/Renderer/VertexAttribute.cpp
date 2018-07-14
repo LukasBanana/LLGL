@@ -14,15 +14,15 @@ namespace LLGL
 
 
 VertexAttribute::VertexAttribute(
-    const std::string& name, const VectorType vectorType, std::uint32_t instanceDivisor) :
-        VertexAttribute { name, 0, vectorType, instanceDivisor }
+    const std::string& name, const Format format, std::uint32_t instanceDivisor) :
+        VertexAttribute { name, 0, format, instanceDivisor }
 {
 }
 
 VertexAttribute::VertexAttribute(
-    const std::string& semanticName, std::uint32_t semanticIndex, const VectorType vectorType, std::uint32_t instanceDivisor) :
+    const std::string& semanticName, std::uint32_t semanticIndex, const Format format, std::uint32_t instanceDivisor) :
         name            { semanticName    },
-        vectorType      { vectorType      },
+        format          { format          },
         instanceDivisor { instanceDivisor },
         semanticIndex   { semanticIndex   }
 {
@@ -30,7 +30,7 @@ VertexAttribute::VertexAttribute(
 
 std::uint32_t VertexAttribute::GetSize() const
 {
-    return VectorTypeSize(vectorType);
+    return (FormatBitSize(format) / 8);
 }
 
 
@@ -39,9 +39,8 @@ LLGL_EXPORT bool operator == (const VertexAttribute& lhs, const VertexAttribute&
     return
     (
         LLGL_COMPARE_MEMBER_EQ( name            ) &&
-        LLGL_COMPARE_MEMBER_EQ( vectorType      ) &&
+        LLGL_COMPARE_MEMBER_EQ( format          ) &&
         LLGL_COMPARE_MEMBER_EQ( instanceDivisor ) &&
-        LLGL_COMPARE_MEMBER_EQ( conversion      ) &&
         LLGL_COMPARE_MEMBER_EQ( offset          ) &&
         LLGL_COMPARE_MEMBER_EQ( semanticIndex   )
     );

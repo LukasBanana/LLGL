@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class VKSampler : public Sampler
+class VKSampler final : public Sampler
 {
 
     public:

@@ -26,7 +26,7 @@ struct VKLayoutBinding
     VkDescriptorType    descriptorType;
 };
 
-class VKPipelineLayout : public PipelineLayout
+class VKPipelineLayout final : public PipelineLayout
 {
 
     public:

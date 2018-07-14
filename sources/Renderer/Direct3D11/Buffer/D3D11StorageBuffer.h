@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-class D3D11StorageBuffer : public D3D11Buffer
+class D3D11StorageBuffer final : public D3D11Buffer
 {
 
     public:
@@ -56,7 +56,8 @@ class D3D11StorageBuffer : public D3D11Buffer
         UINT GetMiscFlags() const;
         UINT GetUAVFlags() const;
 
-        DXGI_FORMAT GetFormat(const VectorType vectorType) const;
+        //TODO: rename to "GetDXFormat"
+        DXGI_FORMAT GetFormat(const Format format) const;
 
         void CreateSRV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);
         void CreateUAV(ID3D11Device* device, DXGI_FORMAT format, UINT firstElement, UINT numElements);

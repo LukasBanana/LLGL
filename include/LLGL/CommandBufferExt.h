@@ -10,12 +10,7 @@
 
 
 #include "CommandBuffer.h"
-#include "Buffer.h"
-#include "BufferArray.h"
-#include "Texture.h"
-#include "TextureArray.h"
-#include "Sampler.h"
-#include "SamplerArray.h"
+#include "ForwardDecls.h"
 
 
 namespace LLGL
@@ -46,14 +41,6 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
         */
         virtual void SetConstantBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
 
-        /**
-        \brief Sets the active array of constant buffers at the specified start slot index.
-        \param[in] bufferArray Specifies the constant buffer array to set.
-        \see RenderSystem::CreateBufferArray
-        \see SetConstantBuffer
-        */
-        virtual void SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) = 0;
-
         /* ----- Storage Buffers ----- */
 
         /**
@@ -68,14 +55,6 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
         */
         virtual void SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
 
-        /**
-        \brief Sets the active array of storage buffers at the specified start slot index.
-        \param[in] bufferArray Specifies the storage buffer array to set.
-        \see RenderSystem::CreateBufferArray
-        \see SetStorageBuffer
-        */
-        virtual void SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) = 0;
-
         /* ----- Textures ----- */
 
         /**
@@ -84,12 +63,6 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
         \param[in] slot Specifies the slot index where to put the texture.
         */
         virtual void SetTexture(Texture& texture, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
-
-        /**
-        \brief Sets the active array of textures at the specified start slot index.
-        \see SetTexture
-        */
-        virtual void SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) = 0;
 
         /* ----- Samplers ----- */
 
@@ -100,12 +73,6 @@ class LLGL_EXPORT CommandBufferExt : public CommandBuffer
         \see RenderSystem::CreateSampler
         */
         virtual void SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags = StageFlags::AllStages) = 0;
-
-        /**
-        \brief Sets the active array of samplers at the specified start slot index.
-        \see SetSampler
-        */
-        virtual void SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags = StageFlags::AllStages) = 0;
 
     protected:
 

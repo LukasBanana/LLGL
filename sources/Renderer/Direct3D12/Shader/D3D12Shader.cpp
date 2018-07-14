@@ -8,6 +8,7 @@
 #include "D3D12Shader.h"
 #include "../../DXCommon/DXCore.h"
 #include "../../DXCommon/DXTypes.h"
+#include "../../../Core/Helper.h"
 #include <algorithm>
 #include <stdexcept>
 #include <d3dcompiler.h>
@@ -17,52 +18,16 @@ namespace LLGL
 {
 
 
-D3D12Shader::D3D12Shader(const ShaderType type) :
-    Shader { type }
+D3D12Shader::D3D12Shader(const ShaderDescriptor& desc) :
+    Shader { desc.type }
 {
+    if (!Build(desc))
+        hasErrors_ = true;
 }
 
-// see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
-bool D3D12Shader::Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc)
+bool D3D12Shader::HasErrors() const
 {
-    /* Get parameter from union */
-    const auto& entry   = shaderDesc.entryPoint;
-    const auto& target  = shaderDesc.target;
-    auto flags          = shaderDesc.flags;
-
-    /* Compile shader code */
-    ComPtr<ID3DBlob> code;
-
-    auto hr = D3DCompile(
-        sourceCode.data(),
-        sourceCode.size(),
-        nullptr,                                    // LPCSTR               pSourceName
-        nullptr,                                    // D3D_SHADER_MACRO*    pDefines
-        nullptr,                                    // ID3DInclude*         pInclude
-        (entry.empty() ? nullptr : entry.c_str()),  // LPCSTR               pEntrypoint
-        target.c_str(),                             // LPCSTR               pTarget
-        DXGetCompilerFlags(flags),                  // UINT                 Flags1
-        0,                                          // UINT                 Flags2 (recommended to always be 0)
-        &code,                                      // ID3DBlob**           ppCode
-        &errors_                                    // ID3DBlob**           ppErrorMsgs
-    );
-
-    /* Get byte code from blob */
-    if (code)
-        byteCode_ = DXGetBlobData(code.Get());
-
-    return !FAILED(hr);
-}
-
-bool D3D12Shader::LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc)
-{
-    if (!binaryCode.empty())
-    {
-        /* Move binary code into byte code container and perform code reflection */
-        byteCode_ = std::move(binaryCode);
-        return true;
-    }
-    return false;
+    return hasErrors_;
 }
 
 std::string D3D12Shader::Disassemble(int flags)
@@ -104,6 +69,81 @@ void D3D12Shader::Reflect(ShaderReflectionDescriptor& reflectionDesc) const
 /*
  * ======= Private: =======
  */
+
+bool D3D12Shader::Build(const ShaderDescriptor& shaderDesc)
+{
+    if (IsShaderSourceCode(shaderDesc.sourceType))
+        return CompileSource(shaderDesc);
+    else
+        return LoadBinary(shaderDesc);
+}
+
+// see https://msdn.microsoft.com/en-us/library/windows/desktop/dd607324(v=vs.85).aspx
+bool D3D12Shader::CompileSource(const ShaderDescriptor& shaderDesc)
+{
+    /* Get source code */
+    std::string fileContent;
+    const char* sourceCode      = nullptr;
+    SIZE_T      sourceLength    = 0;
+
+    if (shaderDesc.sourceType == ShaderSourceType::CodeFile)
+    {
+        fileContent     = ReadFileString(shaderDesc.source);
+        sourceCode      = fileContent.c_str();
+        sourceLength    = fileContent.size();
+    }
+    else
+    {
+        sourceCode      = shaderDesc.source;
+        sourceLength    = shaderDesc.sourceSize;
+    }
+
+    /* Get parameter from union */
+    const char* entry   = shaderDesc.entryPoint;
+    const char* target  = (shaderDesc.profile != nullptr ? shaderDesc.profile : "");
+    auto        flags   = shaderDesc.flags;
+
+    /* Compile shader code */
+    ComPtr<ID3DBlob> code;
+
+    auto hr = D3DCompile(
+        sourceCode,
+        sourceLength,
+        nullptr,                            // LPCSTR               pSourceName
+        nullptr,                            // D3D_SHADER_MACRO*    pDefines
+        nullptr,                            // ID3DInclude*         pInclude
+        entry,                              // LPCSTR               pEntrypoint
+        target,                             // LPCSTR               pTarget
+        DXGetCompilerFlags(flags),          // UINT                 Flags1
+        0,                                  // UINT                 Flags2 (recommended to always be 0)
+        code.ReleaseAndGetAddressOf(),      // ID3DBlob**           ppCode
+        errors_.ReleaseAndGetAddressOf()    // ID3DBlob**           ppErrorMsgs
+    );
+
+    /* Get byte code from blob */
+    if (code)
+        byteCode_ = DXGetBlobData(code.Get());
+
+    /* Store if compilation was successful */
+    return !FAILED(hr);
+}
+
+bool D3D12Shader::LoadBinary(const ShaderDescriptor& shaderDesc)
+{
+    if (shaderDesc.sourceType == ShaderSourceType::BinaryFile)
+    {
+        /* Load binary code from file */
+        byteCode_ = ReadFileBuffer(shaderDesc.source);
+    }
+    else
+    {
+        /* Copy binary code into container and create native shader */
+        byteCode_.resize(shaderDesc.sourceSize);
+        std::copy(shaderDesc.source, shaderDesc.source + shaderDesc.sourceSize, byteCode_.begin());
+    }
+
+    return !byteCode_.empty();
+}
 
 /*
 NOTE:
@@ -151,7 +191,7 @@ static void ReflectShaderVertexAttributes(
         VertexAttribute vertexAttrib;
         {
             vertexAttrib.name           = std::string(paramDesc.SemanticName);
-            vertexAttrib.vectorType     = DXGetSignatureParameterType(paramDesc.ComponentType, paramDesc.Mask);
+            vertexAttrib.format         = DXGetSignatureParameterType(paramDesc.ComponentType, paramDesc.Mask);
             vertexAttrib.semanticIndex  = paramDesc.SemanticIndex;
         }
         reflectionDesc.vertexAttributes.push_back(vertexAttrib);

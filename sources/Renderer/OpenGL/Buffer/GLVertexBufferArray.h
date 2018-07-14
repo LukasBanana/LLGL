@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class GLVertexBufferArray : public GLBufferArray
+class GLVertexBufferArray final : public GLBufferArray
 {
 
     public:

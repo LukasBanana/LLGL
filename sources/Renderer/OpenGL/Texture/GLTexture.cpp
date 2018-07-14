@@ -36,6 +36,7 @@ GLTexture::GLTexture(const TextureType type) :
 GLTexture::~GLTexture()
 {
     glDeleteTextures(1, &id_);
+    GLStateManager::active->NotifyTextureRelease(id_, GLStateManager::GetTextureTarget(GetType()));
 }
 
 static GLenum GLGetTextureParamTarget(const TextureType type)
@@ -55,7 +56,7 @@ static GLenum GLGetTextureParamTarget(const TextureType type)
     return 0;
 }
 
-Extent3D GLTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D GLTexture::QueryMipExtent(std::uint32_t mipLevel) const
 {
     GLint texSize[3] = { 0 };
     GLint level = static_cast<GLint>(mipLevel);
@@ -113,9 +114,13 @@ TextureDescriptor GLTexture::QueryDesc() const
     */
     GLTypes::Unmap(texDesc.format, static_cast<GLenum>(internalFormat));
 
-    texDesc.texture3D.width     = static_cast<std::uint32_t>(extent[0]);
-    texDesc.texture3D.height    = static_cast<std::uint32_t>(extent[1]);
-    texDesc.texture3D.depth     = static_cast<std::uint32_t>(extent[2]);
+    texDesc.extent.width        = static_cast<std::uint32_t>(extent[0]);
+    texDesc.extent.height       = static_cast<std::uint32_t>(extent[1]);
+
+    if (GetType() == TextureType::Texture3D)
+        texDesc.extent.depth    = static_cast<std::uint32_t>(extent[2]);
+    else
+        texDesc.arrayLayers     = static_cast<std::uint32_t>(extent[2]);
 
     return texDesc;
 }
@@ -144,9 +149,9 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
 
         if (extent)
         {
-            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_WIDTH, &extent[0]);
+            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_WIDTH,  &extent[0]);
             glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_HEIGHT, &extent[1]);
-            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_DEPTH, &extent[2]);
+            glGetTextureLevelParameteriv(id_, 0, GL_TEXTURE_DEPTH,  &extent[2]);
         }
     }
     else
@@ -164,9 +169,9 @@ void GLTexture::QueryTexParams(GLint* internalFormat, GLint* extent) const
 
             if (extent)
             {
-                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH, &extent[0]);
+                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_WIDTH,  &extent[0]);
                 glGetTexLevelParameteriv(target, 0, GL_TEXTURE_HEIGHT, &extent[1]);
-                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH, &extent[2]);
+                glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH,  &extent[2]);
             }
         }
         GLStateManager::active->PopBoundTexture();

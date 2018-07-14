@@ -10,6 +10,7 @@
 #include "../GLImport.h"
 #include "../GLImportExt.h"
 #include <array>
+#include <algorithm>
 
 
 namespace LLGL
@@ -21,7 +22,7 @@ namespace LLGL
 static void GLTexSubImage1DBase(
     GLenum                      target,
     std::uint32_t               mipLevel,
-    std::uint32_t               x,
+    std::int32_t                x,
     std::uint32_t               width,
     const SrcImageDescriptor&   imageDesc)
 {
@@ -30,7 +31,7 @@ static void GLTexSubImage1DBase(
         glCompressedTexSubImage1D(
             target,
             static_cast<GLint>(mipLevel),
-            static_cast<GLint>(x),
+            x,
             static_cast<GLsizei>(width),
             GLTypes::Map(imageDesc.format),
             static_cast<GLsizei>(imageDesc.dataSize),
@@ -42,7 +43,7 @@ static void GLTexSubImage1DBase(
         glTexSubImage1D(
             target,
             static_cast<GLint>(mipLevel),
-            static_cast<GLint>(x),
+            x,
             static_cast<GLsizei>(width),
             GLTypes::Map(imageDesc.format),
             GLTypes::Map(imageDesc.dataType),
@@ -54,21 +55,21 @@ static void GLTexSubImage1DBase(
 #endif
 
 static void GLTexSubImage2DBase(
-    GLenum                    target,
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             y,
-    std::uint32_t             width,
-    std::uint32_t             height,
-    const SrcImageDescriptor& imageDesc)
+    GLenum                      target,
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::int32_t                y,
+    std::uint32_t               width,
+    std::uint32_t               height,
+    const SrcImageDescriptor&   imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))
     {
         glCompressedTexSubImage2D(
             target,
             static_cast<GLint>(mipLevel),
-            static_cast<GLint>(x),
-            static_cast<GLint>(y),
+            x,
+            y,
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             GLTypes::Map(imageDesc.format),
@@ -81,8 +82,8 @@ static void GLTexSubImage2DBase(
         glTexSubImage2D(
             target,
             static_cast<GLint>(mipLevel),
-            static_cast<GLint>(x),
-            static_cast<GLint>(y),
+            x,
+            y,
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             GLTypes::Map(imageDesc.format),
@@ -93,24 +94,24 @@ static void GLTexSubImage2DBase(
 }
 
 static void GLTexSubImage3DBase(
-    GLenum                    target,
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             y,
-    std::uint32_t             z,
-    std::uint32_t             width,
-    std::uint32_t             height,
-    std::uint32_t             depth,
-    const SrcImageDescriptor& imageDesc)
+    GLenum                      target,
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::int32_t                y,
+    std::int32_t                z,
+    std::uint32_t               width,
+    std::uint32_t               height,
+    std::uint32_t               depth,
+    const SrcImageDescriptor&   imageDesc)
 {
     if (IsCompressedFormat(imageDesc.format))
     {
         glCompressedTexSubImage3D(
             target,
             static_cast<GLint>(mipLevel),
-            static_cast<GLint>(x),
-            static_cast<GLint>(y),
-            static_cast<GLint>(z),
+            x,
+            y,
+            z,
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
@@ -124,9 +125,9 @@ static void GLTexSubImage3DBase(
         glTexSubImage3D(
             target,
             static_cast<GLint>(mipLevel),
-            static_cast<GLint>(x),
-            static_cast<GLint>(y),
-            static_cast<GLint>(z),
+            x,
+            y,
+            z,
             static_cast<GLsizei>(width),
             static_cast<GLsizei>(height),
             static_cast<GLsizei>(depth),
@@ -140,10 +141,10 @@ static void GLTexSubImage3DBase(
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1D(
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             width,
-    const SrcImageDescriptor& imageDesc)
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::uint32_t               width,
+    const SrcImageDescriptor&   imageDesc)
 {
     GLTexSubImage1DBase(GL_TEXTURE_1D, mipLevel, x, width, imageDesc);
 }
@@ -151,92 +152,90 @@ static void GLTexSubImage1D(
 #endif
 
 static void GLTexSubImage2D(
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             y,
-    std::uint32_t             width,
-    std::uint32_t             height,
-    const SrcImageDescriptor& imageDesc)
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::int32_t                y,
+    std::uint32_t               width,
+    std::uint32_t               height,
+    const SrcImageDescriptor&   imageDesc)
 {
     GLTexSubImage2DBase(GL_TEXTURE_2D, mipLevel, x, y, width, height, imageDesc);
 }
 
 static void GLTexSubImage3D(
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             y,
-    std::uint32_t             z,
-    std::uint32_t             width,
-    std::uint32_t             height,
-    std::uint32_t             depth,
-    const SrcImageDescriptor& imageDesc)
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::int32_t                y,
+    std::int32_t                z,
+    std::uint32_t               width,
+    std::uint32_t               height,
+    std::uint32_t               depth,
+    const SrcImageDescriptor&   imageDesc)
 {
     GLTexSubImage3DBase(GL_TEXTURE_3D, mipLevel, x, y, z, width, height, depth, imageDesc);
 }
 
 static void GLTexSubImageCube(
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             y,
-    std::uint32_t             width,
-    std::uint32_t             height,
-    AxisDirection             cubeFace,
-    const SrcImageDescriptor& imageDesc)
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::int32_t                y,
+    std::uint32_t               width,
+    std::uint32_t               height,
+    std::uint32_t               cubeFaceIndex,
+    const SrcImageDescriptor&   imageDesc)
 {
-    GLTexSubImage2DBase(GLTypes::Map(cubeFace), mipLevel, x, y, width, height, imageDesc);
+    GLTexSubImage2DBase(GLTypes::ToTextureCubeMap(cubeFaceIndex), mipLevel, x, y, width, height, imageDesc);
 }
 
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImage1DArray(
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             layerOffset,
-    std::uint32_t             width,
-    std::uint32_t             layers,
-    const SrcImageDescriptor& imageDesc)
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::int32_t                firstLayer,
+    std::uint32_t               width,
+    std::uint32_t               numLayers,
+    const SrcImageDescriptor&   imageDesc)
 {
-    GLTexSubImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevel, x, layerOffset, width, layers, imageDesc);
+    GLTexSubImage2DBase(GL_TEXTURE_1D_ARRAY, mipLevel, x, firstLayer, width, numLayers, imageDesc);
 }
 
 #endif
 
 static void GLTexSubImage2DArray(
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             y,
-    std::uint32_t             layerOffset,
-    std::uint32_t             width,
-    std::uint32_t             height,
-    std::uint32_t             layers,
-    const SrcImageDescriptor& imageDesc)
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::int32_t                y,
+    std::int32_t                firstLayer,
+    std::uint32_t               width,
+    std::uint32_t               height,
+    std::uint32_t               numLayers,
+    const SrcImageDescriptor&   imageDesc)
 {
-    GLTexSubImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevel, x, y, layerOffset, width, height, layers, imageDesc);
+    GLTexSubImage3DBase(GL_TEXTURE_2D_ARRAY, mipLevel, x, y, firstLayer, width, height, numLayers, imageDesc);
 }
 
 #ifdef LLGL_OPENGL
 
 static void GLTexSubImageCubeArray(
-    std::uint32_t             mipLevel,
-    std::uint32_t             x,
-    std::uint32_t             y,
-    std::uint32_t             layerOffset,
-    AxisDirection             cubeFaceOffset,
-    std::uint32_t             width,
-    std::uint32_t             height,
-    std::uint32_t             cubeFaces,
-    const SrcImageDescriptor& imageDesc)
+    std::uint32_t               mipLevel,
+    std::int32_t                x,
+    std::int32_t                y,
+    std::int32_t                firstLayer,
+    std::uint32_t               width,
+    std::uint32_t               height,
+    std::uint32_t               numLayers,
+    const SrcImageDescriptor&   imageDesc)
 {
-    layerOffset = layerOffset * 6 + static_cast<std::uint32_t>(cubeFaceOffset);
-    GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, layerOffset, width, height, cubeFaces, imageDesc);
+    GLTexSubImage3DBase(GL_TEXTURE_CUBE_MAP_ARRAY, mipLevel, x, y, firstLayer, width, height, numLayers, imageDesc);
 }
 
 void GLTexSubImage1D(const SubTextureDescriptor& desc, const SrcImageDescriptor& imageDesc)
 {
     GLTexSubImage1D(
         desc.mipLevel,
-        desc.texture1D.x,
-        desc.texture1D.width,
+        desc.offset.x,
+        desc.extent.width,
         imageDesc
     );
 }
@@ -247,10 +246,10 @@ void GLTexSubImage2D(const SubTextureDescriptor& desc, const SrcImageDescriptor&
 {
     GLTexSubImage2D(
         desc.mipLevel,
-        desc.texture2D.x,
-        desc.texture2D.y,
-        desc.texture2D.width,
-        desc.texture2D.height,
+        desc.offset.x,
+        desc.offset.y,
+        desc.extent.width,
+        desc.extent.height,
         imageDesc
     );
 }
@@ -259,12 +258,12 @@ void GLTexSubImage3D(const SubTextureDescriptor& desc, const SrcImageDescriptor&
 {
     GLTexSubImage3D(
         desc.mipLevel,
-        desc.texture3D.x,
-        desc.texture3D.y,
-        desc.texture3D.z,
-        desc.texture3D.width,
-        desc.texture3D.height,
-        desc.texture3D.depth,
+        desc.offset.x,
+        desc.offset.y,
+        desc.offset.z,
+        desc.extent.width,
+        desc.extent.height,
+        desc.extent.depth,
         imageDesc
     );
 }
@@ -273,11 +272,11 @@ void GLTexSubImageCube(const SubTextureDescriptor& desc, const SrcImageDescripto
 {
     GLTexSubImageCube(
         desc.mipLevel,
-        desc.textureCube.x,
-        desc.textureCube.y,
-        desc.textureCube.width,
-        desc.textureCube.height,
-        desc.textureCube.cubeFaceOffset,
+        desc.offset.x,
+        desc.offset.y,
+        desc.extent.width,
+        desc.extent.height,
+        static_cast<std::uint32_t>(desc.offset.z),
         imageDesc
     );
 }
@@ -288,10 +287,10 @@ void GLTexSubImage1DArray(const SubTextureDescriptor& desc, const SrcImageDescri
 {
     GLTexSubImage1DArray(
         desc.mipLevel,
-        desc.texture1D.x,
-        desc.texture1D.layerOffset,
-        desc.texture1D.width,
-        desc.texture1D.layers,
+        desc.offset.x,
+        desc.offset.y,
+        desc.extent.width,
+        desc.extent.height,
         imageDesc
     );
 }
@@ -302,12 +301,12 @@ void GLTexSubImage2DArray(const SubTextureDescriptor& desc, const SrcImageDescri
 {
     GLTexSubImage2DArray(
         desc.mipLevel,
-        desc.texture2D.x,
-        desc.texture2D.y,
-        desc.texture2D.layerOffset,
-        desc.texture2D.width,
-        desc.texture2D.height,
-        desc.texture2D.layers,
+        desc.offset.x,
+        desc.offset.y,
+        desc.offset.z,
+        desc.extent.width,
+        desc.extent.height,
+        desc.extent.depth,
         imageDesc
     );
 }
@@ -318,13 +317,12 @@ void GLTexSubImageCubeArray(const SubTextureDescriptor& desc, const SrcImageDesc
 {
     GLTexSubImageCubeArray(
         desc.mipLevel,
-        desc.textureCube.x,
-        desc.textureCube.y,
-        desc.textureCube.layerOffset,
-        desc.textureCube.cubeFaceOffset,
-        desc.textureCube.width,
-        desc.textureCube.height,
-        desc.textureCube.cubeFaces,
+        desc.offset.x,
+        desc.offset.y,
+        desc.offset.z,
+        desc.extent.width,
+        desc.extent.height,
+        desc.extent.depth,
         imageDesc
     );
 }

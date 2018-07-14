@@ -228,30 +228,9 @@ Texture* DbgRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, co
     return TakeOwnership(textures_, MakeUnique<DbgTexture>(*instance_->CreateTexture(textureDesc, imageDesc), textureDesc));
 }
 
-TextureArray* DbgRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    AssertCreateTextureArray(numTextures, textureArray);
-
-    /* Create temporary buffer array with buffer instances */
-    std::vector<Texture*> textureInstanceArray;
-    for (std::uint32_t i = 0; i < numTextures; ++i)
-    {
-        auto textureDbg = LLGL_CAST(DbgTexture*, (*(textureArray++)));
-        textureInstanceArray.push_back(&(textureDbg->instance));
-    }
-
-    return instance_->CreateTextureArray(numTextures, textureInstanceArray.data());
-}
-
 void DbgRenderSystem::Release(Texture& texture)
 {
     ReleaseDbg(textures_, texture);
-}
-
-void DbgRenderSystem::Release(TextureArray& textureArray)
-{
-    instance_->Release(textureArray);
-    //ReleaseDbg(textureArrays_, textureArray);
 }
 
 void DbgRenderSystem::WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc)
@@ -281,10 +260,11 @@ void DbgRenderSystem::ReadTexture(const Texture& texture, std::uint32_t mipLevel
         /* Validate output data size */
         const auto requiredDataSize =
         (
-            textureDbg.desc.texture3D.width *
-            textureDbg.desc.texture3D.height *
-            textureDbg.desc.texture3D.depth *
-            ImageFormatSize(imageDesc.format) *
+            textureDbg.desc.extent.width        *
+            textureDbg.desc.extent.height       *
+            textureDbg.desc.extent.depth        *
+            textureDbg.desc.arrayLayers         *
+            ImageFormatSize(imageDesc.format)   *
             DataTypeSize(imageDesc.dataType)
         );
 
@@ -333,22 +313,10 @@ Sampler* DbgRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     //return TakeOwnership(samplers_, MakeUnique<DbgSampler>());
 }
 
-SamplerArray* DbgRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    AssertCreateSamplerArray(numSamplers, samplerArray);
-    return instance_->CreateSamplerArray(numSamplers, samplerArray);
-}
-
 void DbgRenderSystem::Release(Sampler& sampler)
 {
     instance_->Release(sampler);
     //RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void DbgRenderSystem::Release(SamplerArray& samplerArray)
-{
-    instance_->Release(samplerArray);
-    //RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Views ----- */
@@ -421,14 +389,34 @@ void DbgRenderSystem::Release(RenderTarget& renderTarget)
 
 /* ----- Shader ----- */
 
-Shader* DbgRenderSystem::CreateShader(const ShaderType type)
+Shader* DbgRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
-    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(type), type, debugger_));
+    return TakeOwnership(shaders_, MakeUnique<DbgShader>(*instance_->CreateShader(desc), desc.type, debugger_));
 }
 
-ShaderProgram* DbgRenderSystem::CreateShaderProgram()
+static Shader* GetInstanceShader(Shader* shader)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(), debugger_));
+    if (shader)
+    {
+        auto shaderDbg = LLGL_CAST(DbgShader*, shader);
+        return &(shaderDbg->instance);
+    }
+    return nullptr;
+}
+
+ShaderProgram* DbgRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
+{
+    ShaderProgramDescriptor instanceDesc;
+    {
+        instanceDesc.vertexFormats          = desc.vertexFormats;
+        instanceDesc.vertexShader           = GetInstanceShader(desc.vertexShader);
+        instanceDesc.tessControlShader      = GetInstanceShader(desc.tessControlShader);
+        instanceDesc.tessEvaluationShader   = GetInstanceShader(desc.tessEvaluationShader);
+        instanceDesc.geometryShader         = GetInstanceShader(desc.geometryShader);
+        instanceDesc.fragmentShader         = GetInstanceShader(desc.fragmentShader);
+        instanceDesc.computeShader          = GetInstanceShader(desc.computeShader);
+    }
+    return TakeOwnership(shaderPrograms_, MakeUnique<DbgShaderProgram>(*instance_->CreateShaderProgram(instanceDesc), debugger_, desc));
 }
 
 void DbgRenderSystem::Release(Shader& shader)
@@ -650,83 +638,117 @@ void DbgRenderSystem::ValidateTextureDesc(const TextureDescriptor& desc)
     switch (desc.type)
     {
         case TextureType::Texture1D:
-            Validate1DTextureSize(desc.texture1D.width);
-            if (desc.texture1D.layers > 1)
-                WarnTextureLayersGreaterOne();
+            Validate1DTextureSize(desc.extent.width);
+            ValidateTextureSizeDefault(desc.extent.height);
+            ValidateTextureSizeDefault(desc.extent.depth);
             break;
 
         case TextureType::Texture2D:
-            Validate2DTextureSize(desc.texture2D.width);
-            Validate2DTextureSize(desc.texture2D.height);
-            if (desc.texture2D.layers > 1)
-                WarnTextureLayersGreaterOne();
+            Validate2DTextureSize(desc.extent.width);
+            Validate2DTextureSize(desc.extent.height);
+            ValidateTextureSizeDefault(desc.extent.depth);
             break;
 
         case TextureType::TextureCube:
             AssertCubeTextures();
-            ValidateCubeTextureSize(desc.textureCube.width, desc.textureCube.height);
-            if (desc.textureCube.layers > 1)
-                WarnTextureLayersGreaterOne();
+            ValidateCubeTextureSize(desc.extent.width, desc.extent.height);
+            ValidateTextureSizeDefault(desc.extent.depth);
             break;
 
         case TextureType::Texture3D:
             Assert3DTextures();
-            Validate3DTextureSize(desc.texture3D.width);
-            Validate3DTextureSize(desc.texture3D.height);
-            Validate3DTextureSize(desc.texture3D.depth);
+            Validate3DTextureSize(desc.extent.width);
+            Validate3DTextureSize(desc.extent.height);
+            Validate3DTextureSize(desc.extent.depth);
             break;
 
         case TextureType::Texture1DArray:
             AssertArrayTextures();
-            Validate1DTextureSize(desc.texture1D.width);
-            ValidateArrayTextureLayers(desc.texture1D.layers);
+            Validate1DTextureSize(desc.extent.width);
+            ValidateTextureSizeDefault(desc.extent.height);
+            ValidateTextureSizeDefault(desc.extent.depth);
             break;
 
         case TextureType::Texture2DArray:
             AssertArrayTextures();
-            Validate1DTextureSize(desc.texture2D.width);
-            Validate1DTextureSize(desc.texture2D.height);
-            ValidateArrayTextureLayers(desc.texture2D.layers);
+            Validate1DTextureSize(desc.extent.width);
+            Validate1DTextureSize(desc.extent.height);
+            ValidateTextureSizeDefault(desc.extent.depth);
             break;
 
         case TextureType::TextureCubeArray:
             AssertCubeArrayTextures();
-            ValidateCubeTextureSize(desc.textureCube.width, desc.textureCube.height);
-            ValidateArrayTextureLayers(desc.textureCube.layers);
+            ValidateCubeTextureSize(desc.extent.width, desc.extent.height);
+            ValidateTextureSizeDefault(desc.extent.depth);
             break;
 
         case TextureType::Texture2DMS:
             AssertMultiSampleTextures();
-            Validate2DTextureSize(desc.texture2DMS.width);
-            Validate2DTextureSize(desc.texture2DMS.height);
-            if (desc.texture2DMS.layers > 1)
-                WarnTextureLayersGreaterOne();
+            Validate2DTextureSize(desc.extent.width);
+            Validate2DTextureSize(desc.extent.height);
+            ValidateTextureSizeDefault(desc.extent.depth);
             break;
 
         case TextureType::Texture2DMSArray:
             AssertMultiSampleTextures();
             AssertArrayTextures();
-            Validate2DTextureSize(desc.texture2DMS.width);
-            Validate2DTextureSize(desc.texture2DMS.height);
-            ValidateArrayTextureLayers(desc.texture2DMS.layers);
+            Validate2DTextureSize(desc.extent.width);
+            Validate2DTextureSize(desc.extent.height);
+            ValidateTextureSizeDefault(desc.extent.depth);
             break;
 
         default:
             LLGL_DBG_ERROR(ErrorType::InvalidArgument, "invalid texture type");
             break;
     }
+
+    ValidateTextureDescMipLevels(desc);
+    ValidateArrayTextureLayers(desc.type, desc.arrayLayers);
+}
+
+void DbgRenderSystem::ValidateTextureDescMipLevels(const TextureDescriptor& desc)
+{
+    if (desc.mipLevels > 1)
+    {
+        /* Get number of levels for full MIP-chain */
+        auto tempDesc = desc;
+        tempDesc.mipLevels = 0;
+        auto maxNumMipLevels = NumMipLevels(tempDesc);
+
+        if (desc.mipLevels > maxNumMipLevels)
+        {
+            LLGL_DBG_ERROR(
+                ErrorType::InvalidArgument,
+                "number of MIP-map levels exceeded limit (" + std::to_string(desc.mipLevels) +
+                " specified but limit is " + std::to_string(maxNumMipLevels) + ")"
+            );
+        }
+    }
 }
 
 void DbgRenderSystem::ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName)
 {
     if (size == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture size must not be empty");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture size must not be 0");
     if (size > limit)
     {
         LLGL_DBG_ERROR(
             ErrorType::InvalidArgument,
             std::string(textureTypeName) + " texture size exceeded limit (" + std::to_string(size) +
             " specified but limit is " + std::to_string(limit) + ")"
+        );
+    }
+}
+
+void DbgRenderSystem::ValidateTextureSizeDefault(std::uint32_t size)
+{
+    if (size == 0)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "texture size must not be 0");
+    if (size > 1)
+    {
+        LLGL_DBG_ERROR(
+            ErrorType::InvalidArgument,
+            "unused texture dimension must be one (but " + std::to_string(size) + " was specified)"
         );
     }
 }
@@ -754,20 +776,66 @@ void DbgRenderSystem::ValidateCubeTextureSize(std::uint32_t width, std::uint32_t
         LLGL_DBG_ERROR(ErrorType::InvalidArgument, "width and height of cube textures must be equal");
 }
 
-void DbgRenderSystem::ValidateArrayTextureLayers(std::uint32_t layers)
+void DbgRenderSystem::ValidateArrayTextureLayers(const TextureType type, std::uint32_t layers)
 {
     if (layers == 0)
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of texture layers must not be zero for array textures");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "number of texture array layers must not be 0");
 
-    const auto maxNumLayers = limits_.maxNumTextureArrayLayers;
-
-    if (layers > maxNumLayers)
+    if (layers > 1)
     {
-        LLGL_DBG_ERROR(
-            ErrorType::InvalidArgument,
-            "number fo texture layers exceeded limit (" + std::to_string(layers) +
-            " specified but limit is " + std::to_string(maxNumLayers) + ")"
-        );
+        switch (type)
+        {
+            case TextureType::TextureCube:
+            {
+                if (layers != 6)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "number fo texture layers must be 6 for cube textures (but " +
+                        std::to_string(layers) + " was specified)"
+                    );
+                }
+            }
+            break;
+
+            case TextureType::TextureCubeArray:
+            {
+                if (layers % 6 != 0)
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "number fo texture layers must be a multiple of 6 for cube array textures (but " +
+                        std::to_string(layers) + " was specified)"
+                    );
+                }
+            }
+            break;
+
+            default:
+            {
+                if (IsArrayTexture(type))
+                {
+                    const auto maxNumLayers = limits_.maxNumTextureArrayLayers;
+                    if (layers > maxNumLayers)
+                    {
+                        LLGL_DBG_ERROR(
+                            ErrorType::InvalidArgument,
+                            "number fo texture layers exceeded limit (" + std::to_string(layers) +
+                            " specified but limit is " + std::to_string(maxNumLayers) + ")"
+                        );
+                    }
+                }
+                else
+                {
+                    LLGL_DBG_ERROR(
+                        ErrorType::InvalidArgument,
+                        "number of texture array layers must be 1 for non-array textures (but " +
+                        std::to_string(layers) + " was specified)"
+                    );
+                }
+            }
+            break;
+        }
     }
 }
 
@@ -797,9 +865,9 @@ void DbgRenderSystem::ValidateTextureImageDataSize(std::size_t dataSize, std::si
 
 bool DbgRenderSystem::ValidateTextureMips(const DbgTexture& textureDbg)
 {
-    if ((textureDbg.desc.flags & TextureFlags::GenerateMips) == 0)
+    if (textureDbg.desc.mipLevels == 1)
     {
-        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot generate MIP-maps for texture without 'TextureFlags::GenerateMips' flag set during creation");
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "cannot generate MIP-maps for texture with only one MIP-map level");
         return false;
     }
     return true;
@@ -820,25 +888,10 @@ void DbgRenderSystem::ValidateTextureMipRange(const DbgTexture& textureDbg, std:
 
 void DbgRenderSystem::ValidateTextureArrayRange(const DbgTexture& textureDbg, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
-    switch (textureDbg.GetType())
-    {
-        case TextureType::Texture1DArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture1D.layers);
-            break;
-        case TextureType::Texture2DArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture2D.layers);
-            break;
-        case TextureType::TextureCubeArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.textureCube.layers);
-            break;
-        case TextureType::Texture2DMSArray:
-            ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.texture2DMS.layers);
-            break;
-        default:
-            if (baseArrayLayer > 0 || numArrayLayers > 1)
-                LLGL_DBG_ERROR(ErrorType::InvalidArgument, "array layer out of range for non-array texture type");
-            break;
-    }
+    if (IsArrayTexture(textureDbg.GetType()))
+        ValidateTextureArrayRangeWithEnd(baseArrayLayer, numArrayLayers, textureDbg.desc.arrayLayers);
+    else if (baseArrayLayer > 0 || numArrayLayers > 1)
+        LLGL_DBG_ERROR(ErrorType::InvalidArgument, "array layer out of range for non-array texture type");
 }
 
 void DbgRenderSystem::ValidateTextureArrayRangeWithEnd(std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers, std::uint32_t arrayLayerLimit)
@@ -909,11 +962,6 @@ void DbgRenderSystem::AssertMultiSampleTextures()
 {
     if (!features_.hasMultiSampleTextures)
         LLGL_DBG_ERROR_NOT_SUPPORTED("multi-sample textures");
-}
-
-void DbgRenderSystem::WarnTextureLayersGreaterOne()
-{
-    LLGL_DBG_WARN(WarningType::ImproperArgument, "texture layers is greater than 1 but no array texture is specified");
 }
 
 template <typename T, typename TBase>

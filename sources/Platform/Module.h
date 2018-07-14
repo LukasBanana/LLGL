@@ -9,6 +9,7 @@
 #define LLGL_MODULE_H
 
 
+#include <LLGL/NonCopyable.h>
 #include <memory>
 #include <string>
 
@@ -25,19 +26,10 @@ namespace LLGL
 
 
 //! Module class (to load procedures for shared libraries)
-class Module
+class Module : public NonCopyable
 {
 
     public:
-
-        Module() = default;
-
-        Module(const Module&) = delete;
-        Module& operator = (const Module&) = delete;
-
-        virtual ~Module()
-        {
-        }
 
         //! Converts the module name into a specific filename (e.g. "OpenGL" to "LLGL_OpenGL.dll" on Windows).
         static std::string GetModuleFilename(std::string moduleName);

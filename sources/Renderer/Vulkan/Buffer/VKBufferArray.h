@@ -21,7 +21,7 @@ namespace LLGL
 
 class Buffer;
 
-class VKBufferArray : public BufferArray
+class VKBufferArray final : public BufferArray
 {
 
     public:

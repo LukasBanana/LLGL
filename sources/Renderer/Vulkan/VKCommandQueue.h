@@ -20,7 +20,7 @@ namespace LLGL
 {
 
 
-class VKCommandQueue : public CommandQueue
+class VKCommandQueue final : public CommandQueue
 {
 
     public:

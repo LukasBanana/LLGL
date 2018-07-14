@@ -395,8 +395,8 @@ void D3D12CommandBuffer::ResetCommandList(ID3D12CommandAllocator* commandAlloc, 
 void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 {
     /* Create command allocator and graphics command list */
-    commandAlloc_   = renderSystem.CreateDXCommandAllocator();
-    commandList_    = renderSystem.CreateDXCommandList(commandAlloc_.Get());
+    commandAlloc_   = renderSystem.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    commandList_    = renderSystem.CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, commandAlloc_.Get());
 }
 
 void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)

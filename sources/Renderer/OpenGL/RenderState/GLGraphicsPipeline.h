@@ -23,7 +23,7 @@ namespace LLGL
 
 struct GraphicsPipelineDescriptor;
 
-class GLGraphicsPipeline : public GraphicsPipeline
+class GLGraphicsPipeline final : public GraphicsPipeline
 {
 
     public:

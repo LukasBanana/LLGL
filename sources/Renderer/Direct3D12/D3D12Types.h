@@ -24,9 +24,8 @@ namespace D3D12Types
 {
 
 
-DXGI_FORMAT                 Map( const VectorType           vectorType      );
 DXGI_FORMAT                 Map( const DataType             dataType        );
-DXGI_FORMAT                 Map( const TextureFormat        textureFormat   );
+DXGI_FORMAT                 Map( const Format        textureFormat   );
 D3D_PRIMITIVE_TOPOLOGY      Map( const PrimitiveTopology    topology        );
 D3D12_FILL_MODE             Map( const PolygonMode          polygonMode     );
 D3D12_CULL_MODE             Map( const CullMode             cullMode        );
@@ -39,7 +38,9 @@ D3D12_TEXTURE_ADDRESS_MODE  Map( const SamplerAddressMode   addressMode     );
 D3D12_LOGIC_OP              Map( const LogicOp              logicOp         );
 D3D12_SRV_DIMENSION         Map( const TextureType          textureType     );
 
-TextureFormat               Unmap( const DXGI_FORMAT format );
+D3D12_RESOURCE_DIMENSION    ToResourceDimension(const TextureType type);
+
+Format                      Unmap( const DXGI_FORMAT format );
 
 
 } // /namespace D3D12Types

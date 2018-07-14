@@ -28,7 +28,7 @@ struct VKGraphicsPipelineLimits
 struct GraphicsPipelineDescriptor;
 class VKShaderProgram;
 
-class VKGraphicsPipeline : public GraphicsPipeline
+class VKGraphicsPipeline final : public GraphicsPipeline
 {
 
     public:

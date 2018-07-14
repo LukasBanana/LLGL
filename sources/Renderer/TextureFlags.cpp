@@ -23,124 +23,50 @@ LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height
 
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc)
 {
-    if ((textureDesc.flags & TextureFlags::GenerateMips) != 0)
+    if (textureDesc.mipLevels == 0)
     {
         switch (textureDesc.type)
         {
-            case TextureType::Texture1D:        return NumMipLevels(textureDesc.texture1D.width);
-            case TextureType::Texture2D:        return NumMipLevels(textureDesc.texture2D.width, textureDesc.texture2D.height);
-            case TextureType::Texture3D:        return NumMipLevels(textureDesc.texture3D.width, textureDesc.texture3D.height, textureDesc.texture3D.depth);
-            case TextureType::TextureCube:      return NumMipLevels(textureDesc.textureCube.width, textureDesc.textureCube.height);
-            case TextureType::Texture1DArray:   return NumMipLevels(textureDesc.texture1D.width);
-            case TextureType::Texture2DArray:   return NumMipLevels(textureDesc.texture2D.width, textureDesc.texture2D.height);
-            case TextureType::TextureCubeArray: return NumMipLevels(textureDesc.textureCube.width, textureDesc.textureCube.height);
+            case TextureType::Texture1D:        return NumMipLevels(textureDesc.extent.width);
+            case TextureType::Texture2D:        return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height);
+            case TextureType::Texture3D:        return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height, textureDesc.extent.depth);
+            case TextureType::TextureCube:      return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height);
+            case TextureType::Texture1DArray:   return NumMipLevels(textureDesc.extent.width);
+            case TextureType::Texture2DArray:   return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height);
+            case TextureType::TextureCubeArray: return NumMipLevels(textureDesc.extent.width, textureDesc.extent.height);
             case TextureType::Texture2DMS:      return 1u;
             case TextureType::Texture2DMSArray: return 1u;
         }
     }
-    return 1u;
+    return textureDesc.mipLevels;
 }
 
-LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc)
+std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels)
 {
-    switch (textureDesc.type)
-    {
-        case TextureType::Texture1DArray:   return textureDesc.texture1D.layers;
-        case TextureType::Texture2DArray:   return textureDesc.texture2D.layers;
-        case TextureType::TextureCubeArray: return textureDesc.textureCube.layers;
-        case TextureType::Texture2DMSArray: return textureDesc.texture2DMS.layers;
-        default:                            return 1u;
-    }
-}
-
-std::uint32_t TextureBufferSize(const TextureFormat textureFormat, std::uint32_t numTexels)
-{
-    switch (textureFormat)
-    {
-        /* --- Color formats --- */
-        case TextureFormat::R8:             return numTexels;
-        case TextureFormat::R8Sgn:          return numTexels;
-
-        case TextureFormat::R16:            return numTexels * 2;
-        case TextureFormat::R16Sgn:         return numTexels * 2;
-        case TextureFormat::R16Float:       return numTexels * 2;
-
-        case TextureFormat::R32UInt:        return numTexels * 4;
-        case TextureFormat::R32SInt:        return numTexels * 4;
-        case TextureFormat::R32Float:       return numTexels * 4;
-
-        case TextureFormat::RG8:            return numTexels * 2;
-        case TextureFormat::RG8Sgn:         return numTexels * 2;
-
-        case TextureFormat::RG16:           return numTexels * 4;
-        case TextureFormat::RG16Sgn:        return numTexels * 4;
-        case TextureFormat::RG16Float:      return numTexels * 4;
-
-        case TextureFormat::RG32UInt:       return numTexels * 8;
-        case TextureFormat::RG32SInt:       return numTexels * 8;
-        case TextureFormat::RG32Float:      return numTexels * 8;
-
-        case TextureFormat::RGB8:           return numTexels * 3;
-        case TextureFormat::RGB8Sgn:        return numTexels * 3;
-
-        case TextureFormat::RGB16:          return numTexels * 6;
-        case TextureFormat::RGB16Sgn:       return numTexels * 6;
-        case TextureFormat::RGB16Float:     return numTexels * 6;
-
-        case TextureFormat::RGB32UInt:      return numTexels * 12;
-        case TextureFormat::RGB32SInt:      return numTexels * 12;
-        case TextureFormat::RGB32Float:     return numTexels * 12;
-
-        case TextureFormat::RGBA8:          return numTexels * 4;
-        case TextureFormat::RGBA8Sgn:       return numTexels * 4;
-
-        case TextureFormat::RGBA16:         return numTexels * 8;
-        case TextureFormat::RGBA16Sgn:      return numTexels * 8;
-        case TextureFormat::RGBA16Float:    return numTexels * 8;
-
-        case TextureFormat::RGBA32UInt:     return numTexels * 16;
-        case TextureFormat::RGBA32SInt:     return numTexels * 16;
-        case TextureFormat::RGBA32Float:    return numTexels * 16;
-
-        /* --- Depth-stencil formats --- */
-        case TextureFormat::D32:            return numTexels * 4; // 32-bit depth
-        case TextureFormat::D24S8:          return numTexels * 4; // 24-bit depth, 8-bit stencil
-
-        /* --- Compressed color formats --- */
-        case TextureFormat::RGB_DXT1:       return numTexels / 4; // 64-bit per 4x4 block
-        case TextureFormat::RGBA_DXT1:      return numTexels / 4; // 64-bit per 4x4 block
-        case TextureFormat::RGBA_DXT3:      return numTexels / 8; // 128-bit per 4x4 block
-        case TextureFormat::RGBA_DXT5:      return numTexels / 8; // 128-bit per 4x4 block
-
-        default:                            return 0;
-    }
+    return ((FormatBitSize(format) * numTexels) / 8);
 }
 
 LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc)
 {
+    const auto& extent = textureDesc.extent;
     switch (textureDesc.type)
     {
-        case TextureType::Texture1D:        return textureDesc.texture1D.width;
-        case TextureType::Texture2D:        return textureDesc.texture2D.width * textureDesc.texture2D.height;
-        case TextureType::Texture3D:        return textureDesc.texture3D.width * textureDesc.texture3D.height * textureDesc.texture3D.depth;
-        case TextureType::TextureCube:      return textureDesc.textureCube.width * textureDesc.textureCube.height * 6;
-        case TextureType::Texture1DArray:   return textureDesc.texture1D.width * textureDesc.texture1D.layers;
-        case TextureType::Texture2DArray:   return textureDesc.texture2D.width * textureDesc.texture2D.height * textureDesc.texture2D.layers;
-        case TextureType::TextureCubeArray: return textureDesc.textureCube.width * textureDesc.textureCube.height * 6 * textureDesc.textureCube.layers;
-        case TextureType::Texture2DMS:      return textureDesc.texture2D.width * textureDesc.texture2D.height;
-        case TextureType::Texture2DMSArray: return textureDesc.texture2D.width * textureDesc.texture2D.height * textureDesc.texture2D.layers;
+        case TextureType::Texture1D:        return extent.width;
+        case TextureType::Texture2D:        return extent.width * extent.height;
+        case TextureType::Texture3D:        return extent.width * extent.height * extent.depth;
+        case TextureType::TextureCube:      return extent.width * extent.height * 6;
+        case TextureType::Texture1DArray:   return extent.width * textureDesc.arrayLayers;
+        case TextureType::Texture2DArray:   return extent.width * extent.height * textureDesc.arrayLayers;
+        case TextureType::TextureCubeArray: return extent.width * extent.height * 6 * textureDesc.arrayLayers;
+        case TextureType::Texture2DMS:      return extent.width * extent.height;
+        case TextureType::Texture2DMSArray: return extent.width * extent.height * textureDesc.arrayLayers;
         default:                            return 0;
     }
 }
 
-LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format)
+LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc)
 {
-    return (format >= TextureFormat::RGB_DXT1);
-}
-
-LLGL_EXPORT bool IsDepthStencilFormat(const TextureFormat format)
-{
-    return (format == TextureFormat::D32 || format == TextureFormat::D24S8);
+    return (!IsMultiSampleTexture(textureDesc.type) && (textureDesc.mipLevels == 0 || textureDesc.mipLevels > 1));
 }
 
 LLGL_EXPORT bool IsArrayTexture(const TextureType type)

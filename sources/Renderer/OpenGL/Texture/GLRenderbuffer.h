@@ -22,24 +22,37 @@ class GLRenderbuffer
 
     public:
 
+        GLRenderbuffer() = default;
+        ~GLRenderbuffer();
+
         GLRenderbuffer(const GLRenderbuffer&) = delete;
         GLRenderbuffer& operator = (const GLRenderbuffer&) = delete;
 
-        GLRenderbuffer();
-        ~GLRenderbuffer();
+        GLRenderbuffer(GLRenderbuffer&& rhs);
+        GLRenderbuffer& operator = (GLRenderbuffer&& rhs);
 
-        void Bind() const;
-        void Unbind() const;
+        void GenRenderbuffer();
+        void DeleteRenderbuffer();
 
-        // Recreates the internal renderbuffer object. This will invalidate the previous buffer ID.
-        void Recreate();
-
-        static void Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples);
+        // Binds the renderbuffer and initialized its storage.
+        void Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples);
 
         // Returns the hardware buffer ID.
         inline GLuint GetID() const
         {
             return id_;
+        }
+
+        // Returns true if this framebuffer object has a valid ID.
+        inline bool Valid() const
+        {
+            return (GetID() != 0);
+        }
+
+        // Equivalent to Valid().
+        inline operator bool () const
+        {
+            return Valid();
         }
 
     private:

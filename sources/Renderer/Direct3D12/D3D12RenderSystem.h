@@ -38,7 +38,7 @@ namespace LLGL
 {
 
 
-class D3D12RenderSystem : public RenderSystem
+class D3D12RenderSystem final : public RenderSystem
 {
 
     public:
@@ -81,10 +81,8 @@ class D3D12RenderSystem : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
-        TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
-        void Release(TextureArray& textureArray) override;
 
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
 
@@ -96,10 +94,8 @@ class D3D12RenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
-        SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
-        void Release(SamplerArray& samplerArray) override;
 
         /* ----- Resource Heaps ----- */
 
@@ -115,8 +111,8 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Shader ----- */
 
-        Shader* CreateShader(const ShaderType type) override;
-        ShaderProgram* CreateShaderProgram() override;
+        Shader* CreateShader(const ShaderDescriptor& desc) override;
+        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
@@ -151,8 +147,8 @@ class D3D12RenderSystem : public RenderSystem
 
         ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
         ComPtr<ID3D12CommandQueue> CreateDXCommandQueue();
-        ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator();
-        ComPtr<ID3D12GraphicsCommandList> CreateDXCommandList(ID3D12CommandAllocator* commandAlloc = nullptr);
+        ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
+        ComPtr<ID3D12GraphicsCommandList> CreateDXCommandList(D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* cmdAllocator);
         ComPtr<ID3D12PipelineState> CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
         ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
 
@@ -209,8 +205,10 @@ class D3D12RenderSystem : public RenderSystem
         D3D_FEATURE_LEVEL                           featureLevel_           = D3D_FEATURE_LEVEL_9_1;
 
         ComPtr<ID3D12CommandQueue>                  queue_;
-        ComPtr<ID3D12CommandAllocator>              commandAlloc_;
-        ComPtr<ID3D12GraphicsCommandList>           commandList_; // graphics command list to upload data to the GPU
+        ComPtr<ID3D12CommandAllocator>              graphicsCmdAlloc_;
+        ComPtr<ID3D12GraphicsCommandList>           graphicsCmdList_;   // graphics command list to upload data to the GPU
+        ComPtr<ID3D12CommandAllocator>              computeCmdAlloc_;
+        ComPtr<ID3D12GraphicsCommandList>           computeCmdList_;    // compute command list to generate MIP-maps
 
         ComPtr<ID3D12Fence>                         fence_;
         HANDLE                                      fenceEvent_             = 0;

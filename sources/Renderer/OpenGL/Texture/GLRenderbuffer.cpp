@@ -14,35 +14,50 @@ namespace LLGL
 {
 
 
-GLRenderbuffer::GLRenderbuffer()
-{
-    glGenRenderbuffers(1, &id_);
-}
-
 GLRenderbuffer::~GLRenderbuffer()
 {
-    glDeleteRenderbuffers(1, &id_);
+    DeleteRenderbuffer();
 }
 
-void GLRenderbuffer::Bind() const
+GLRenderbuffer::GLRenderbuffer(GLRenderbuffer&& rhs) :
+    id_ { rhs.id_ }
 {
-    GLStateManager::active->BindRenderbuffer(id_);
+    rhs.id_ = 0;
 }
 
-void GLRenderbuffer::Unbind() const
+GLRenderbuffer& GLRenderbuffer::operator = (GLRenderbuffer&& rhs)
 {
-    GLStateManager::active->BindRenderbuffer(0);
+    if (id_ != rhs.id_)
+    {
+        DeleteRenderbuffer();
+        id_ = rhs.id_;
+        rhs.id_ = 0;
+    }
+    return *this;
 }
 
-void GLRenderbuffer::Recreate()
+void GLRenderbuffer::GenRenderbuffer()
 {
-    /* Delete previous renderbuffer and create a new one */
-    glDeleteRenderbuffers(1, &id_);
+    DeleteRenderbuffer();
     glGenRenderbuffers(1, &id_);
+}
+
+void GLRenderbuffer::DeleteRenderbuffer()
+{
+    if (id_ != 0)
+    {
+        glDeleteRenderbuffers(1, &id_);
+        GLStateManager::active->NotifyRenderbufferRelease(id_);
+        id_ = 0;
+    }
 }
 
 void GLRenderbuffer::Storage(GLenum internalFormat, GLsizei width, GLsizei height, GLsizei samples)
 {
+    /* Bind renderbuffer */
+    GLStateManager::active->BindRenderbuffer(id_);
+
+    /* Initialize renderbuffer storage */
     if (samples > 1)
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, internalFormat, width, height);
     else

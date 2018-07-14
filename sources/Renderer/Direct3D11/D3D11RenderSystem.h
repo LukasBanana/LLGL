@@ -31,9 +31,7 @@
 #include "Shader/D3D11ShaderProgram.h"
 
 #include "Texture/D3D11Texture.h"
-#include "Texture/D3D11TextureArray.h"
 #include "Texture/D3D11Sampler.h"
-#include "Texture/D3D11SamplerArray.h"
 #include "Texture/D3D11RenderTarget.h"
 
 #include "../ContainerTypes.h"
@@ -47,7 +45,7 @@ namespace LLGL
 {
 
 
-class D3D11RenderSystem : public RenderSystem
+class D3D11RenderSystem final : public RenderSystem
 {
 
     public:
@@ -90,13 +88,10 @@ class D3D11RenderSystem : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
-        TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
-        void Release(TextureArray& textureArray) override;
 
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
-
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
 
         void GenerateMips(Texture& texture) override;
@@ -105,10 +100,8 @@ class D3D11RenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
-        SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
-        void Release(SamplerArray& samplerArray) override;
 
         /* ----- Resource Heaps ----- */
 
@@ -124,8 +117,8 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Shader ----- */
 
-        Shader* CreateShader(const ShaderType type) override;
-        ShaderProgram* CreateShaderProgram() override;
+        Shader* CreateShader(const ShaderDescriptor& desc) override;
+        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
@@ -190,7 +183,7 @@ class D3D11RenderSystem : public RenderSystem
         void UpdateGenericTexture(
             Texture&                    texture,
             std::uint32_t               mipLevel,
-            std::uint32_t               layer,
+            std::uint32_t               arrayLayer,
             const Offset3D&             offset,
             const Extent3D&             extent,
             const SrcImageDescriptor&   imageDesc
@@ -198,31 +191,25 @@ class D3D11RenderSystem : public RenderSystem
 
         void InitializeGpuTexture(
             D3D11Texture&               textureD3D,
-            const TextureFormat         format,
+            const Format                format,
             const SrcImageDescriptor*   imageDesc,
-            std::uint32_t               width,
-            std::uint32_t               height,
-            std::uint32_t               depth,
-            std::uint32_t               numLayers
+            const Extent3D&             extent,
+            std::uint32_t               arrayLayers
         );
 
         void InitializeGpuTextureWithImage(
             D3D11Texture&       textureD3D,
-            const TextureFormat format,
+            const Format        format,
             SrcImageDescriptor  imageDesc,
-            std::uint32_t       width,
-            std::uint32_t       height,
-            std::uint32_t       depth,
-            std::uint32_t       numLayers
+            const Extent3D&     extent,
+            std::uint32_t       arrayLayers
         );
 
         void InitializeGpuTextureWithDefault(
-            D3D11Texture&       textureD3D,
-            const TextureFormat format,
-            std::uint32_t       width,
-            std::uint32_t       height,
-            std::uint32_t       depth,
-            std::uint32_t       numLayers
+            D3D11Texture&   textureD3D,
+            const Format    format,
+            const Extent3D& extent,
+            std::uint32_t   arrayLayers
         );
 
         void GenerateMipsWithSubresourceSRV(
@@ -265,9 +252,7 @@ class D3D11RenderSystem : public RenderSystem
         HWObjectContainer<D3D11Buffer>                  buffers_;
         HWObjectContainer<D3D11BufferArray>             bufferArrays_;
         HWObjectContainer<D3D11Texture>                 textures_;
-        HWObjectContainer<D3D11TextureArray>            textureArrays_;
         HWObjectContainer<D3D11Sampler>                 samplers_;
-        HWObjectContainer<D3D11SamplerArray>            samplerArrays_;
         HWObjectContainer<D3D11RenderTarget>            renderTargets_;
         HWObjectContainer<D3D11Shader>                  shaders_;
         HWObjectContainer<D3D11ShaderProgram>           shaderPrograms_;

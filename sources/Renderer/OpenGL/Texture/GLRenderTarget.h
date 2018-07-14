@@ -22,12 +22,16 @@ namespace LLGL
 {
 
 
-class GLRenderTarget : public RenderTarget
+class GLRenderTarget final : public RenderTarget
 {
 
     public:
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
+
+        std::uint32_t GetNumColorAttachments() const override;
+        bool HasDepthAttachment() const override;
+        bool HasStencilAttachment() const override;
 
         /* ----- Extended Internal Functions ----- */
 
@@ -42,51 +46,53 @@ class GLRenderTarget : public RenderTarget
 
     private:
 
-        void AttachDepthBuffer(const Extent2D& size);
-        void AttachStencilBuffer(const Extent2D& size);
-        void AttachDepthStencilBuffer(const Extent2D& size);
-        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc);
+        void CreateFramebufferWithAttachments(const RenderTargetDescriptor& desc);
+        void CreateFramebufferWithNoAttachments(const RenderTargetDescriptor& desc);
+
+        void AttachAllTextures(const std::vector<AttachmentDescriptor>& attachmentDescs, GLenum* internalFormats);
+        void AttachAllDepthStencilBuffers(const std::vector<AttachmentDescriptor>& attachmentDescs);
+
+        void AttachDepthBuffer();
+        void AttachStencilBuffer();
+        void AttachDepthStencilBuffer();
+        void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc, GLenum& internalFormat);
 
         void InitRenderbufferStorage(GLRenderbuffer& renderbuffer, GLenum internalFormat);
-        GLenum AttachDefaultRenderbuffer(GLFramebuffer& framebuffer, GLenum attachment);
 
-        void AttachRenderbuffer(const Extent2D& size, GLenum internalFormat, GLenum attachment);
+        void CreateAndAttachRenderbuffer(GLenum internalFormat, GLenum attachment);
 
-        GLenum MakeFramebufferAttachment(GLint internalFormat);
+        GLenum MakeFramebufferAttachment(GLenum internalFormat);
+
+        void CreateRenderbuffersMS(const GLenum* internalFormats);
+        void CreateRenderbufferMS(GLenum attachment, GLenum internalFormat);
 
         // Sets the draw buffers for the currently bound FBO.
         void SetDrawBuffers();
 
-        void ErrOnIncompleteFramebuffer(const GLenum status, const char* info);
-
-        void CreateOnceFramebufferMS();
-
         bool HasMultiSampling() const;
         bool HasCustomMultiSampling() const;
-        bool HasDepthAttachment() const;
+        bool HasDepthStencilAttachment() const;
 
         void BlitFramebuffer();
 
         /* === Members === */
 
-        GLFramebuffer                                   framebuffer_;
+        GLFramebuffer               framebuffer_;   // primary FBO
+        GLFramebuffer               framebufferMS_; // secondary FBO for multi-sampling
 
-        std::unique_ptr<GLRenderbuffer>                 renderbuffer_;
-
-        // Multi-sampled framebuffer; required since we cannot directly draw into a texture when using multi-sampling.
-        std::unique_ptr<GLFramebuffer>                  framebufferMS_;
+        GLRenderbuffer              renderbuffer_;
 
         /*
         For multi-sampled render targets we also need a renderbuffer for each attached texture.
         Otherwise we would need multi-sampled textures (e.g. "glTexImage2DMultisample")
         which is only supported since OpenGL 3.2+, but renderbuffers are supported since OpenGL 3.0+.
         */
-        std::vector<std::unique_ptr<GLRenderbuffer>>    renderbuffersMS_;
+        std::vector<GLRenderbuffer> renderbuffersMS_;
 
-        std::vector<GLenum>                             colorAttachments_;
+        std::vector<GLenum>         colorAttachments_;
 
-        GLsizei                                         multiSamples_           = 0;
-        GLbitfield                                      blitMask_               = 0;
+        GLsizei                     multiSamples_       = 0;
+        GLbitfield                  blitMask_           = 0;
 
 };
 

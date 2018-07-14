@@ -10,6 +10,7 @@
 
 
 #include <LLGL/ShaderProgram.h>
+#include <LLGL/ShaderFlags.h>
 #include <LLGL/RenderingDebugger.h>
 #include <vector>
 
@@ -31,18 +32,14 @@ class DbgShaderProgram : public ShaderProgram
             bool                            bound       = false;
         };
 
-        DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger);
+        DbgShaderProgram(ShaderProgram& instance, RenderingDebugger* debugger, const ShaderProgramDescriptor& desc);
 
-        void AttachShader(Shader& shader) override;
-        void DetachAll() override;
-
-        bool LinkShaders() override;
+        bool HasErrors() const override;
 
         std::string QueryInfoLog() override;
 
         ShaderReflectionDescriptor QueryReflectionDesc() const override;
 
-        void BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats) override;
         void BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex) override;
         void BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex) override;
 
@@ -58,11 +55,10 @@ class DbgShaderProgram : public ShaderProgram
 
     private:
 
-        void DebugShaderAttachment(DbgShader& shaderDbg);
+        void DebugShaderAttachment(Shader* shader);
         void DebugShaderComposition();
 
         RenderingDebugger*      debugger_               = nullptr;
-        bool                    linked_                 = false;
         int                     shaderAttachmentMask_   = 0;
 
         std::vector<ShaderType> shaderTypes_;

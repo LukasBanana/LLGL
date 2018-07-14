@@ -26,7 +26,7 @@ namespace LLGL
 class D3D12RenderSystem;
 class D3D12CommandBuffer;
 
-class D3D12RenderContext : public RenderContext
+class D3D12RenderContext final : public RenderContext
 {
 
     public:
@@ -40,6 +40,9 @@ class D3D12RenderContext : public RenderContext
         ~D3D12RenderContext();
 
         void Present() override;
+
+        Format QueryColorFormat() const override;
+        Format QueryDepthStencilFormat() const override;
 
         /* --- Extended functions --- */
 
@@ -86,7 +89,7 @@ class D3D12RenderContext : public RenderContext
 
         ComPtr<ID3D12Resource>          colorBuffers_[g_maxSwapChainSize];
         ComPtr<ID3D12Resource>          colorBuffersMS_[g_maxSwapChainSize];
-        DXGI_FORMAT                     colorBufferFormat_                  = DXGI_FORMAT_B8G8R8A8_UNORM;
+        DXGI_FORMAT                     colorFormat_                        = DXGI_FORMAT_B8G8R8A8_UNORM;
 
         ComPtr<ID3D12Resource>          depthStencil_;
         DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;

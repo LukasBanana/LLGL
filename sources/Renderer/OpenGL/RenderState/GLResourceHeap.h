@@ -28,7 +28,7 @@ struct GLResourceBinding;
 This class emulates the behavior of a descriptor set like in Vulkan,
 by binding all shader resources within one bind call in the command buffer.
 */
-class GLResourceHeap : public ResourceHeap
+class GLResourceHeap final : public ResourceHeap
 {
 
     public:

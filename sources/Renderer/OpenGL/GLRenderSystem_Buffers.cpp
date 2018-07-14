@@ -136,23 +136,14 @@ BufferArray* GLRenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer*
 
 void GLRenderSystem::Release(Buffer& buffer)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& bufferGL = LLGL_CAST(GLBuffer&, buffer);
-    GLStateManager::NotifyBufferRelease(bufferGL.GetID(), GLStateManager::GetBufferTarget(bufferGL.GetType()));
     RemoveFromUniqueSet(buffers_, &buffer);
 }
 
 void GLRenderSystem::Release(BufferArray& bufferArray)
 {
-    /* Notify GL state manager about object release, then release object */
+    /* Release buffer array (no notification to state manager necessary, no GL object is destroyed) */
     auto& bufferArrayGL = LLGL_CAST(GLBufferArray&, bufferArray);
-
-    const auto& bufferIDs = bufferArrayGL.GetIDArray();
-    auto bufferTarget = GLStateManager::GetBufferTarget(bufferArrayGL.GetType());
-
-    for (std::size_t i = 0, n = bufferIDs.size(); i < n; ++i)
-        GLStateManager::NotifyBufferRelease(bufferIDs[i], bufferTarget);
-
     RemoveFromUniqueSet(bufferArrays_, &bufferArray);
 }
 

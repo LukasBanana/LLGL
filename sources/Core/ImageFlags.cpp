@@ -13,6 +13,7 @@
 #include <thread>
 #include <cstring>
 #include "../Core/Assertion.h"
+#include "Float16Compressor.h"
 
 
 namespace LLGL
@@ -116,9 +117,11 @@ static double ReadNormalizedTypedVariant(DataType srcDataType, const VariantCons
             return ReadNormalizedVariant(srcBuffer.int32[idx]);
         case DataType::UInt32:
             return ReadNormalizedVariant(srcBuffer.uint32[idx]);
-        case DataType::Float:
+        case DataType::Float16:
+            return static_cast<double>(DecompressFloat16(srcBuffer.uint16[idx]));
+        case DataType::Float32:
             return static_cast<double>(srcBuffer.real32[idx]);
-        case DataType::Double:
+        case DataType::Float64:
             return srcBuffer.real64[idx];
     }
     return 0.0;
@@ -146,10 +149,13 @@ static void WriteNormalizedTypedVariant(DataType dstDataType, VariantBuffer& dst
         case DataType::UInt32:
             WriteNormalizedVariant(dstBuffer.uint32[idx], value);
             break;
-        case DataType::Float:
+        case DataType::Float16:
+            dstBuffer.uint16[idx] = CompressFloat16(static_cast<float>(value));
+            break;
+        case DataType::Float32:
             dstBuffer.real32[idx] = static_cast<float>(value);
             break;
-        case DataType::Double:
+        case DataType::Float64:
             dstBuffer.real64[idx] = value;
             break;
     }
@@ -261,10 +267,13 @@ static void SetVariantMinMax(DataType dataType, Variant& var, bool setMin)
         case DataType::UInt32:
             var.uint32 = (setMin ? std::numeric_limits<std::uint32_t>::min() : std::numeric_limits<std::uint32_t>::max());
             break;
-        case DataType::Float:
+        case DataType::Float16:
+            var.uint16 = CompressFloat16(setMin ? 0.0f : 1.0f);
+            break;
+        case DataType::Float32:
             var.real32 = (setMin ? 0.0f : 1.0f);
             break;
-        case DataType::Double:
+        case DataType::Float64:
             var.real64 = (setMin ? 0.0 : 1.0);
             break;
     }
@@ -292,10 +301,13 @@ static void CopyTypedVariant(DataType dataType, const VariantConstBuffer& srcBuf
         case DataType::UInt32:
             dst.uint32 = srcBuffer.uint32[idx];
             break;
-        case DataType::Float:
+        case DataType::Float16:
+            dst.uint16 = srcBuffer.uint16[idx];
+            break;
+        case DataType::Float32:
             dst.real32 = srcBuffer.real32[idx];
             break;
-        case DataType::Double:
+        case DataType::Float64:
             dst.real64 = srcBuffer.real64[idx];
             break;
     }
@@ -323,10 +335,13 @@ static void CopyTypedVariant(DataType dataType, VariantBuffer& dstBuffer, std::s
         case DataType::UInt32:
             dstBuffer.uint32[idx] = src.uint32;
             break;
-        case DataType::Float:
+        case DataType::Float16:
+            dstBuffer.uint16[idx] = src.uint16;
+            break;
+        case DataType::Float32:
             dstBuffer.real32[idx] = src.real32;
             break;
-        case DataType::Double:
+        case DataType::Float64:
             dstBuffer.real64[idx] = src.real64;
             break;
     }
@@ -499,9 +514,9 @@ static void ConvertImageBufferFormat(
 
 /* ----- Public functions ----- */
 
-LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat format)
+LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat imageFormat)
 {
-    switch (format)
+    switch (imageFormat)
     {
         case ImageFormat::R:                return 1;
         case ImageFormat::RG:               return 2;
@@ -519,94 +534,112 @@ LLGL_EXPORT std::uint32_t ImageFormatSize(const ImageFormat format)
     return 0;
 }
 
-LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat format, const DataType dataType, std::uint32_t numPixels)
+LLGL_EXPORT std::uint32_t ImageDataSize(const ImageFormat imageFormat, const DataType dataType, std::uint32_t numPixels)
 {
-    return (ImageFormatSize(format) * DataTypeSize(dataType) * numPixels);
+    return (ImageFormatSize(imageFormat) * DataTypeSize(dataType) * numPixels);
 }
 
-LLGL_EXPORT bool IsCompressedFormat(const ImageFormat format)
+LLGL_EXPORT bool IsCompressedFormat(const ImageFormat imageFormat)
 {
-    return (format >= ImageFormat::CompressedRGB);
+    return (imageFormat == ImageFormat::CompressedRGB || imageFormat == ImageFormat::CompressedRGBA);
 }
 
-LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat format)
+LLGL_EXPORT bool IsDepthStencilFormat(const ImageFormat imageFormat)
 {
-    return (format == ImageFormat::Depth || format == ImageFormat::DepthStencil);
+    return (imageFormat == ImageFormat::Depth || imageFormat == ImageFormat::DepthStencil);
 }
 
-static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const TextureFormat textureFormat)
+static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Format format)
 {
     using T = std::tuple<ImageFormat, DataType>;
-    switch (textureFormat)
+    switch (format)
     {
-        case TextureFormat::Unknown:        break;
+        case Format::Undefined:         break;
 
-        case TextureFormat::R8:             return T{ ImageFormat::R, DataType::UInt8 };
-        case TextureFormat::R8Sgn:          return T{ ImageFormat::R, DataType::Int8 };
+        case Format::R8UNorm:           return T{ ImageFormat::R, DataType::UInt8 };
+        case Format::R8SNorm:           return T{ ImageFormat::R, DataType::Int8 };
+        case Format::R8UInt:            return T{ ImageFormat::R, DataType::UInt8 };
+        case Format::R8SInt:            return T{ ImageFormat::R, DataType::Int8 };
 
-        case TextureFormat::R16:            return T{ ImageFormat::R, DataType::UInt16 };
-        case TextureFormat::R16Sgn:         return T{ ImageFormat::R, DataType::Int16 };
-        case TextureFormat::R16Float:       break;
+        case Format::R16UNorm:          return T{ ImageFormat::R, DataType::UInt16 };
+        case Format::R16SNorm:          return T{ ImageFormat::R, DataType::Int16 };
+        case Format::R16UInt:           return T{ ImageFormat::R, DataType::UInt16 };
+        case Format::R16SInt:           return T{ ImageFormat::R, DataType::Int16 };
+        case Format::R16Float:          return T{ ImageFormat::R, DataType::Float16 };
 
-        case TextureFormat::R32UInt:        return T{ ImageFormat::R, DataType::UInt32 };
-        case TextureFormat::R32SInt:        return T{ ImageFormat::R, DataType::Int32 };
-        case TextureFormat::R32Float:       return T{ ImageFormat::R, DataType::Float };
+        case Format::R32UInt:           return T{ ImageFormat::R, DataType::UInt32 };
+        case Format::R32SInt:           return T{ ImageFormat::R, DataType::Int32 };
+        case Format::R32Float:          return T{ ImageFormat::R, DataType::Float32 };
 
-        case TextureFormat::RG8:            return T{ ImageFormat::RG, DataType::UInt8 };
-        case TextureFormat::RG8Sgn:         return T{ ImageFormat::RG, DataType::Int8 };
+        case Format::RG8UNorm:          return T{ ImageFormat::RG, DataType::UInt8 };
+        case Format::RG8SNorm:          return T{ ImageFormat::RG, DataType::Int8 };
+        case Format::RG8UInt:           return T{ ImageFormat::RG, DataType::UInt8 };
+        case Format::RG8SInt:           return T{ ImageFormat::RG, DataType::Int8 };
 
-        case TextureFormat::RG16:           return T{ ImageFormat::RG, DataType::UInt16 };
-        case TextureFormat::RG16Sgn:        return T{ ImageFormat::RG, DataType::Int16 };
-        case TextureFormat::RG16Float:      break;
+        case Format::RG16UNorm:         return T{ ImageFormat::RG, DataType::UInt16 };
+        case Format::RG16SNorm:         return T{ ImageFormat::RG, DataType::Int16 };
+        case Format::RG16UInt:          return T{ ImageFormat::RG, DataType::UInt16 };
+        case Format::RG16SInt:          return T{ ImageFormat::RG, DataType::Int16 };
+        case Format::RG16Float:         return T{ ImageFormat::RG, DataType::Float16 };
 
-        case TextureFormat::RG32UInt:       return T{ ImageFormat::RG, DataType::UInt32 };
-        case TextureFormat::RG32SInt:       return T{ ImageFormat::RG, DataType::Int32 };
-        case TextureFormat::RG32Float:      return T{ ImageFormat::RG, DataType::Float };
+        case Format::RG32UInt:          return T{ ImageFormat::RG, DataType::UInt32 };
+        case Format::RG32SInt:          return T{ ImageFormat::RG, DataType::Int32 };
+        case Format::RG32Float:         return T{ ImageFormat::RG, DataType::Float32 };
 
-        case TextureFormat::RGB8:           return T{ ImageFormat::RGB, DataType::UInt8 };
-        case TextureFormat::RGB8Sgn:        return T{ ImageFormat::RGB, DataType::Int8 };
+        case Format::RGB8UNorm:         return T{ ImageFormat::RGB, DataType::UInt8 };
+        case Format::RGB8SNorm:         return T{ ImageFormat::RGB, DataType::Int8 };
+        case Format::RGB8UInt:          return T{ ImageFormat::RGB, DataType::UInt8 };
+        case Format::RGB8SInt:          return T{ ImageFormat::RGB, DataType::Int8 };
 
-        case TextureFormat::RGB16:          return T{ ImageFormat::RGB, DataType::UInt16 };
-        case TextureFormat::RGB16Sgn:       return T{ ImageFormat::RGB, DataType::Int16 };
-        case TextureFormat::RGB16Float:     break;
+        case Format::RGB16UNorm:        return T{ ImageFormat::RGB, DataType::UInt16 };
+        case Format::RGB16SNorm:        return T{ ImageFormat::RGB, DataType::Int16 };
+        case Format::RGB16UInt:         return T{ ImageFormat::RGB, DataType::UInt16 };
+        case Format::RGB16SInt:         return T{ ImageFormat::RGB, DataType::Int16 };
+        case Format::RGB16Float:        return T{ ImageFormat::RGB, DataType::Float16 };
 
-        case TextureFormat::RGB32UInt:      return T{ ImageFormat::RGB, DataType::UInt32 };
-        case TextureFormat::RGB32SInt:      return T{ ImageFormat::RGB, DataType::Int32 };
-        case TextureFormat::RGB32Float:     return T{ ImageFormat::RGB, DataType::Float };
+        case Format::RGB32UInt:         return T{ ImageFormat::RGB, DataType::UInt32 };
+        case Format::RGB32SInt:         return T{ ImageFormat::RGB, DataType::Int32 };
+        case Format::RGB32Float:        return T{ ImageFormat::RGB, DataType::Float32 };
 
-        case TextureFormat::RGBA8:          return T{ ImageFormat::RGBA, DataType::UInt8 };
-        case TextureFormat::RGBA8Sgn:       return T{ ImageFormat::RGBA, DataType::Int8 };
+        case Format::RGBA8UNorm:        return T{ ImageFormat::RGBA, DataType::UInt8 };
+        case Format::RGBA8SNorm:        return T{ ImageFormat::RGBA, DataType::Int8 };
+        case Format::RGBA8UInt:         return T{ ImageFormat::RGBA, DataType::UInt8 };
+        case Format::RGBA8SInt:         return T{ ImageFormat::RGBA, DataType::Int8 };
 
-        case TextureFormat::RGBA16:         return T{ ImageFormat::RGBA, DataType::UInt16 };
-        case TextureFormat::RGBA16Sgn:      return T{ ImageFormat::RGBA, DataType::Int16 };
-        case TextureFormat::RGBA16Float:    break;
+        case Format::RGBA16UNorm:       return T{ ImageFormat::RGBA, DataType::UInt16 };
+        case Format::RGBA16SNorm:       return T{ ImageFormat::RGBA, DataType::Int16 };
+        case Format::RGBA16UInt:        return T{ ImageFormat::RGBA, DataType::UInt16 };
+        case Format::RGBA16SInt:        return T{ ImageFormat::RGBA, DataType::Int16 };
+        case Format::RGBA16Float:       return T{ ImageFormat::RGBA, DataType::Float16 };
 
-        case TextureFormat::RGBA32UInt:     return T{ ImageFormat::RGBA, DataType::UInt32 };
-        case TextureFormat::RGBA32SInt:     return T{ ImageFormat::RGBA, DataType::Int32 };
-        case TextureFormat::RGBA32Float:    return T{ ImageFormat::RGBA, DataType::Float };
+        case Format::RGBA32UInt:        return T{ ImageFormat::RGBA, DataType::UInt32 };
+        case Format::RGBA32SInt:        return T{ ImageFormat::RGBA, DataType::Int32 };
+        case Format::RGBA32Float:       return T{ ImageFormat::RGBA, DataType::Float32 };
 
-        case TextureFormat::D32:            return T{ ImageFormat::Depth, DataType::Float };
-        case TextureFormat::D24S8:          return T{ ImageFormat::DepthStencil, DataType::Float };
+        case Format::D16UNorm:          return T{ ImageFormat::Depth, DataType::UInt16 };
+        case Format::D32Float:          return T{ ImageFormat::Depth, DataType::Float32 };
+        case Format::D24UNormS8UInt:    return T{ ImageFormat::DepthStencil, DataType::Float32 };
+        case Format::D32FloatS8X24UInt: break;
 
-        case TextureFormat::RGB_DXT1:       return T{ ImageFormat::CompressedRGB, DataType::Int8 };
-        case TextureFormat::RGBA_DXT1:      return T{ ImageFormat::CompressedRGBA, DataType::Int8 };
-        case TextureFormat::RGBA_DXT3:      return T{ ImageFormat::CompressedRGBA, DataType::Int16 };
-        case TextureFormat::RGBA_DXT5:      return T{ ImageFormat::CompressedRGBA, DataType::Int16 };
+        case Format::BC1RGB:            return T{ ImageFormat::CompressedRGB, DataType::Int8 };
+        case Format::BC1RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int8 };
+        case Format::BC2RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int16 };
+        case Format::BC3RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int16 };
     }
 
     /* Return an invalid image format */
-    return T{ ImageFormat::CompressedRGBA, DataType::Double };
+    return T{ ImageFormat::CompressedRGBA, DataType::Float64 };
 }
 
-LLGL_EXPORT bool FindSuitableImageFormat(const TextureFormat textureFormat, ImageFormat& imageFormat, DataType& dataType)
+LLGL_EXPORT bool FindSuitableImageFormat(const Format format, ImageFormat& imageFormat, DataType& dataType)
 {
     /* Find suitable format and check for invalid output */
     ImageFormat imageFormatTmp;
     DataType dataTypeTmp;
 
-    std::tie(imageFormatTmp, dataTypeTmp) = FindSuitableImageFormatPrimary(textureFormat);
+    std::tie(imageFormatTmp, dataTypeTmp) = FindSuitableImageFormatPrimary(format);
 
-    if (!(imageFormatTmp == ImageFormat::CompressedRGBA && dataTypeTmp == DataType::Double))
+    if (!(imageFormatTmp == ImageFormat::CompressedRGBA && dataTypeTmp == DataType::Float64))
     {
         imageFormat = imageFormatTmp;
         dataType    = dataTypeTmp;

@@ -104,44 +104,62 @@ static std::vector<ShadingLanguage> GLQueryShadingLanguages()
     return languages;
 }
 
-static std::vector<TextureFormat> GetDefaultSupportedGLTextureFormats()
+static std::vector<Format> GetDefaultSupportedGLTextureFormats()
 {
     return
     {
-        TextureFormat::R8,
-        TextureFormat::R8Sgn,
-        TextureFormat::R16,
-        TextureFormat::R16Sgn,
-        TextureFormat::R16Float,
-        TextureFormat::R32UInt,
-        TextureFormat::R32SInt,
-        TextureFormat::R32Float,
-        TextureFormat::RG8,
-        TextureFormat::RG8Sgn,
-        TextureFormat::RG16,
-        TextureFormat::RG16Sgn,
-        TextureFormat::RG16Float,
-        TextureFormat::RG32UInt,
-        TextureFormat::RG32SInt,
-        TextureFormat::RG32Float,
-        TextureFormat::RGB8,
-        TextureFormat::RGB8Sgn,
-        TextureFormat::RGB16,
-        TextureFormat::RGB16Sgn,
-        TextureFormat::RGB16Float,
-        TextureFormat::RGB32UInt,
-        TextureFormat::RGB32SInt,
-        TextureFormat::RGB32Float,
-        TextureFormat::RGBA8,
-        TextureFormat::RGBA8Sgn,
-        TextureFormat::RGBA16,
-        TextureFormat::RGBA16Sgn,
-        TextureFormat::RGBA16Float,
-        TextureFormat::RGBA32UInt,
-        TextureFormat::RGBA32SInt,
-        TextureFormat::RGBA32Float,
-        TextureFormat::D32,
-        TextureFormat::D24S8,
+        Format::R8UNorm,
+        Format::R8SNorm,
+        Format::R8UInt,
+        Format::R8SInt,
+        Format::R16UNorm,
+        Format::R16SNorm,
+        Format::R16UInt,
+        Format::R16SInt,
+        Format::R16Float,
+        Format::R32UInt,
+        Format::R32SInt,
+        Format::R32Float,
+        Format::RG8UNorm,
+        Format::RG8SNorm,
+        Format::RG8UInt,
+        Format::RG8SInt,
+        Format::RG16UNorm,
+        Format::RG16SNorm,
+        Format::RG16UInt,
+        Format::RG16SInt,
+        Format::RG16Float,
+        Format::RG32UInt,
+        Format::RG32SInt,
+        Format::RG32Float,
+        Format::RGB8UNorm,
+        Format::RGB8SNorm,
+        Format::RGB8UInt,
+        Format::RGB8SInt,
+        Format::RGB16UNorm,
+        Format::RGB16SNorm,
+        Format::RGB16UInt,
+        Format::RGB16SInt,
+        Format::RGB16Float,
+        Format::RGB32UInt,
+        Format::RGB32SInt,
+        Format::RGB32Float,
+        Format::RGBA8UNorm,
+        Format::RGBA8SNorm,
+        Format::RGBA8UInt,
+        Format::RGBA8SInt,
+        Format::RGBA16UNorm,
+        Format::RGBA16SNorm,
+        Format::RGBA16UInt,
+        Format::RGBA16SInt,
+        Format::RGBA16Float,
+        Format::RGBA32UInt,
+        Format::RGBA32SInt,
+        Format::RGBA32Float,
+        Format::D16UNorm,
+        Format::D32Float,
+        Format::D24UNormS8UInt,
+        Format::D32FloatS8X24UInt,
     };
 }
 
@@ -153,7 +171,7 @@ static void GLGetRenderingAttribs(RenderingCapabilities& caps)
     caps.shadingLanguages   = GLQueryShadingLanguages();
 }
 
-static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureFormats)
+static void GLGetSupportedTextureFormats(std::vector<Format>& textureFormats)
 {
     textureFormats = GetDefaultSupportedGLTextureFormats();
 
@@ -163,7 +181,7 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
     {
         RemoveAllFromListIf(
             textureFormats,
-            [](TextureFormat format) -> bool
+            [](Format format) -> bool
             {
                 if (auto internalformat = GLTypes::MapOrZero(format))
                 {
@@ -190,16 +208,16 @@ static void GLGetSupportedTextureFormats(std::vector<TextureFormat>& textureForm
         switch (format)
         {
             case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-                textureFormats.push_back(TextureFormat::RGB_DXT1);
+                textureFormats.push_back(Format::BC1RGB);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-                textureFormats.push_back(TextureFormat::RGBA_DXT1);
+                textureFormats.push_back(Format::BC1RGBA);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-                textureFormats.push_back(TextureFormat::RGBA_DXT3);
+                textureFormats.push_back(Format::BC2RGBA);
                 break;
             case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-                textureFormats.push_back(TextureFormat::RGBA_DXT5);
+                textureFormats.push_back(Format::BC3RGBA);
                 break;
             default:
                 break;

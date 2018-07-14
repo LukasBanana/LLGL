@@ -283,16 +283,63 @@ void RenderSystem::AssertCreateBufferArray(std::uint32_t numBuffers, Buffer* con
     }
 }
 
-void RenderSystem::AssertCreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
+void RenderSystem::AssertCreateShader(const ShaderDescriptor& desc)
 {
-    /* Validate common resource array parameters */
-    AssertCreateResourceArrayCommon(numTextures, reinterpret_cast<void* const*>(textureArray), "texture");
+    if (desc.source == nullptr)
+        throw std::invalid_argument("cannot create shader with <source> being a null pointer");
+    if (desc.sourceType == ShaderSourceType::BinaryBuffer && desc.sourceSize == 0)
+        throw std::invalid_argument("cannot create shader from binary buffer with <sourceSize> being zero");
 }
 
-void RenderSystem::AssertCreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
+static void AssertShaderType(Shader* shader, const char* shaderName, const ShaderType type, const char* typeName)
 {
-    /* Validate common resource array parameters */
-    AssertCreateResourceArrayCommon(numSamplers, reinterpret_cast<void* const*>(samplerArray), "sampler");
+    if (shader != nullptr)
+    {
+        if (shader->GetType() != type)
+        {
+            throw std::invalid_argument(
+                "cannot create shader program with '" + std::string(shaderName) +
+                "' not being of type <LLGL::ShaderType::" + std::string(typeName) + ">"
+            );
+        }
+    }
+}
+
+void RenderSystem::AssertCreateShaderProgram(const ShaderProgramDescriptor& desc)
+{
+    AssertShaderType(desc.vertexShader,         "vertexShader",         ShaderType::Vertex,         "Vertex"        );
+    AssertShaderType(desc.tessControlShader,    "tessControlShader",    ShaderType::TessControl,    "TessControl"   );
+    AssertShaderType(desc.tessEvaluationShader, "tessEvaluationShader", ShaderType::TessEvaluation, "TessEvaluation");
+    AssertShaderType(desc.geometryShader,       "geometryShader",       ShaderType::Geometry,       "Geometry"      );
+    AssertShaderType(desc.fragmentShader,       "fragmentShader",       ShaderType::Fragment,       "Fragment"      );
+    AssertShaderType(desc.computeShader,        "computeShader",        ShaderType::Compute,        "Compute"       );
+
+    if (desc.computeShader != nullptr)
+    {
+        if ( desc.vertexShader         != nullptr ||
+             desc.tessControlShader    != nullptr ||
+             desc.tessEvaluationShader != nullptr ||
+             desc.geometryShader       != nullptr ||
+             desc.fragmentShader       != nullptr )
+        {
+            throw std::invalid_argument(
+                "cannot create shader program with 'computeShader' in conjunction with any other shader"
+            );
+        }
+    }
+    else
+    {
+        if (desc.vertexShader == nullptr)
+            throw std::invalid_argument("cannot create shader program without vertex shader");
+
+        if ( ( desc.tessControlShader != nullptr && desc.tessEvaluationShader == nullptr ) ||
+             ( desc.tessControlShader == nullptr && desc.tessEvaluationShader != nullptr ) )
+        {
+            throw std::invalid_argument(
+                "cannot create shader program with 'tessControlShader' and 'tessEvaluationShader' being partially specified"
+            );
+        }
+    }
 }
 
 void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info)

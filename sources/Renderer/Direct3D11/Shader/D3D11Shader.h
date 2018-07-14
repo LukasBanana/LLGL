@@ -10,6 +10,7 @@
 
 
 #include <LLGL/Shader.h>
+#include <LLGL/ShaderProgramFlags.h>
 #include <LLGL/VertexAttribute.h>
 #include <LLGL/BufferFlags.h>
 #include "../../DXCommon/ComPtr.h"
@@ -42,16 +43,14 @@ union D3D11NativeShader
 };
 
 
-class D3D11Shader : public Shader
+class D3D11Shader final : public Shader
 {
 
     public:
 
-        D3D11Shader(ID3D11Device* device, const ShaderType type);
+        D3D11Shader(ID3D11Device* device, const ShaderDescriptor& desc);
 
-        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
-
-        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
+        bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
 
@@ -75,16 +74,19 @@ class D3D11Shader : public Shader
 
     private:
 
-        void CreateNativeShader(const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage);
+        bool Build(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
+        bool CompileSource(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
+        bool LoadBinary(ID3D11Device* device, const ShaderDescriptor& shaderDesc);
+
+        void CreateNativeShader(ID3D11Device* device, const ShaderDescriptor::StreamOutput& streamOutputDesc, ID3D11ClassLinkage* classLinkage);
 
         void ReflectShaderByteCode(ShaderReflectionDescriptor& reflectionDesc) const;
-
-        ID3D11Device*       device_         = nullptr;
 
         D3D11NativeShader   native_;
 
         std::vector<char>   byteCode_;
         ComPtr<ID3DBlob>    errors_;
+        bool                hasErrors_  = false;
 
 };
 

@@ -28,14 +28,14 @@ namespace GLTypes
 {
 
 
-GLenum MapOrZero(const TextureFormat textureFormat);
+GLenum MapOrZero(const Format textureFormat);
 
 GLenum Map( const CPUAccess             cpuAccess           );
 GLenum Map( const DataType              dataType            );
 GLenum Map( const PrimitiveType         primitiveType       );
 GLenum Map( const PrimitiveTopology     primitiveTopology   );
 GLenum Map( const TextureType           textureType         );
-GLenum Map( const TextureFormat         textureFormat       );
+GLenum Map( const Format                format              );
 GLenum Map( const ImageFormat           imageFormat         );
 //GLenum Map( const ImageFormat           imageFormat, bool integerFormat );
 GLenum Map( const CompareOp             compareOp           );
@@ -44,7 +44,6 @@ GLenum Map( const BlendOp               blendOp             );
 GLenum Map( const BlendArithmetic       blendArithmetic     );
 GLenum Map( const PolygonMode           polygonMode         ); // GL_FILL, GL_LINE, GL_POINT
 GLenum Map( const CullMode              cullMode            ); // 0, GL_FRONT, GL_BACK
-GLenum Map( const AxisDirection         cubeFace            ); // GL_TEXTURE_CUBE_MAP_...
 GLenum Map( const SamplerAddressMode    addressMode         ); // GL_REPEAT, ...
 GLenum Map( const SamplerFilter         textureFilter       ); // GL_NEAREST, GL_LINEAR
 GLenum Map( const SamplerFilter         textureMinFilter, const SamplerFilter textureMipMapFilter );
@@ -53,8 +52,11 @@ GLenum Map( const BufferType            bufferType          );
 GLenum Map( const RenderConditionMode   renderConditionMode );
 GLenum Map( const LogicOp               logicOp             );
 
+// Returns an enum in [GL_TEXTURE_CUBE_MAP_POSITIVE_X, ..., GL_TEXTURE_CUBE_MAP_NEGATIVE_Z] for (arrayLayer % 6).
+GLenum ToTextureCubeMap(std::uint32_t arrayLayer);
+
 void Unmap( UniformType& result,    const GLenum uniformType    );
-void Unmap( TextureFormat& result,  const GLenum internalFormat );
+void Unmap( Format& result,         const GLenum internalFormat );
 
 
 } // /namespace GLTypes

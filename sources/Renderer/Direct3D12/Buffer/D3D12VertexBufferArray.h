@@ -20,7 +20,7 @@ namespace LLGL
 
 class Buffer;
 
-class D3D12VertexBufferArray : public BufferArray
+class D3D12VertexBufferArray final : public BufferArray
 {
 
     public:

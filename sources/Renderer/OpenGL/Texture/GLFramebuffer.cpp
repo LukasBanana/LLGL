@@ -6,6 +6,7 @@
  */
 
 #include "GLFramebuffer.h"
+#include "../../GLCommon/GLExtensionRegistry.h"
 #include "../Ext/GLExtensions.h"
 #include "../RenderState/GLStateManager.h"
 
@@ -14,35 +15,53 @@ namespace LLGL
 {
 
 
-GLFramebuffer::GLFramebuffer()
+GLFramebuffer::~GLFramebuffer()
 {
+    DeleteFramebuffer();
+}
+
+GLFramebuffer::GLFramebuffer(GLFramebuffer&& rhs) :
+    id_ { rhs.id_ }
+{
+    rhs.id_ = 0;
+}
+
+GLFramebuffer& GLFramebuffer::operator = (GLFramebuffer&& rhs)
+{
+    if (id_ != rhs.id_)
+    {
+        DeleteFramebuffer();
+        id_ = rhs.id_;
+        rhs.id_ = 0;
+    }
+    return *this;
+}
+
+void GLFramebuffer::GenFramebuffer()
+{
+    DeleteFramebuffer();
     glGenFramebuffers(1, &id_);
 }
 
-GLFramebuffer::~GLFramebuffer()
+void GLFramebuffer::DeleteFramebuffer()
 {
-    glDeleteFramebuffers(1, &id_);
+    if (id_ != 0)
+    {
+        glDeleteFramebuffers(1, &id_);
+        GLStateManager::active->NotifyFramebufferRelease(id_);
+        id_ = 0;
+    }
 }
 
 void GLFramebuffer::Bind(const GLFramebufferTarget target) const
 {
-    GLStateManager::active->BindFramebuffer(target, id_);
+    GLStateManager::active->BindFramebuffer(target, GetID());
 }
 
 void GLFramebuffer::Unbind(const GLFramebufferTarget target) const
 {
     GLStateManager::active->BindFramebuffer(target, 0);
 }
-
-//TODO: remove this as soon as "RenderTarget::Detach" is removed!
-#if 1
-void GLFramebuffer::Recreate()
-{
-    /* Delete previous framebuffer and create a new one */
-    glDeleteFramebuffers(1, &id_);
-    glGenFramebuffers(1, &id_);
-}
-#endif
 
 void GLFramebuffer::AttachTexture1D(GLenum attachment, GLenum textureTarget, GLuint textureID, GLint mipLevel)
 {
@@ -79,15 +98,40 @@ void GLFramebuffer::Blit(GLint width, GLint height, GLenum mask)
 }
 
 void GLFramebuffer::Blit(
-    const Offset2D& srcPos0, const Offset2D& srcPos1,
-    const Offset2D& destPos0, const Offset2D& destPos1,
-    GLenum mask, GLenum filter)
+    const Offset2D& srcPos0,
+    const Offset2D& srcPos1,
+    const Offset2D& destPos0,
+    const Offset2D& destPos1,
+    GLenum          mask,
+    GLenum          filter)
 {
     glBlitFramebuffer(
         srcPos0.x, srcPos0.y, srcPos1.x, srcPos1.y,
         destPos0.x, destPos0.y, destPos1.x, destPos1.y,
         mask, filter
     );
+}
+
+bool GLFramebuffer::FramebufferParameters(
+    GLint width,
+    GLint height,
+    GLint layers,
+    GLint samples,
+    GLint fixedSampleLocations)
+{
+    #ifdef GL_ARB_framebuffer_no_attachments
+    if (HasExtension(GLExt::ARB_framebuffer_no_attachments))
+    {
+        GLStateManager::active->BindFramebuffer(GLFramebufferTarget::FRAMEBUFFER, GetID());
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, layers);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, samples);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, fixedSampleLocations);
+        return true;
+    }
+    #endif // /GL_ARB_framebuffer_no_attachments
+    return false;
 }
 
 

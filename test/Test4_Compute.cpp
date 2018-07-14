@@ -67,17 +67,19 @@ int main()
         auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, vec.data());
 
         // Load shader
-        auto computeShader = renderer->CreateShader(LLGL::ShaderType::Compute);
+        auto computeShader = renderer->CreateShader({ LLGL::ShaderType::Compute, "ComputeShader.glsl" });
 
-        auto shaderSource = ReadFileContent("ComputeShader.glsl");
-        if (!computeShader->Compile(shaderSource))
+        if (computeShader->HasErrors())
             std::cerr << computeShader->QueryInfoLog() << std::endl;
 
         // Create shader program
-        auto shaderProgram = renderer->CreateShaderProgram();
+        LLGL::ShaderProgramDescriptor shaderProgramDesc;
+        {
+            shaderProgramDesc.computeShader = computeShader;
+        }
+        auto shaderProgram = renderer->CreateShaderProgram(shaderProgramDesc);
 
-        shaderProgram->AttachShader(*computeShader);
-        if (!shaderProgram->LinkShaders())
+        if (shaderProgram->HasErrors())
             std::cerr << shaderProgram->QueryInfoLog() << std::endl;
 
         // Create timer query

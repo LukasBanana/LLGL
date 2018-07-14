@@ -16,28 +16,25 @@ namespace LLGL
 
 
 DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc) :
-    instance { instance },
-    desc_    { desc     }
+    RenderTarget { desc.resolution },
+    instance     { instance        },
+    desc_        { desc            }
 {
-    for (const auto& attachment : desc.attachments)
-    {
-        switch (attachment.type)
-        {
-            case AttachmentType::Color:
-                ++numColorAttachments_;
-                break;
-            case AttachmentType::Depth:
-                hasDepthAttachment_     = true;
-                break;
-            case AttachmentType::DepthStencil:
-                hasDepthAttachment_     = true;
-                hasStencilAttachment_   = true;
-                break;
-            case AttachmentType::Stencil:
-                hasStencilAttachment_   = true;
-                break;
-        }
-    }
+}
+
+std::uint32_t DbgRenderTarget::GetNumColorAttachments() const
+{
+    return instance.GetNumColorAttachments();
+}
+
+bool DbgRenderTarget::HasDepthAttachment() const
+{
+    return instance.HasDepthAttachment();
+}
+
+bool DbgRenderTarget::HasStencilAttachment() const
+{
+    return instance.HasStencilAttachment();
 }
 
 

@@ -92,30 +92,10 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
     return TakeOwnership(samplers_, std::move(sampler));
 }
 
-SamplerArray* GLRenderSystem::CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray)
-{
-    LLGL_ASSERT_FEATURE_SUPPORT(hasSamplers);
-    AssertCreateSamplerArray(numSamplers, samplerArray);
-    return TakeOwnership(samplerArrays_, MakeUnique<GLSamplerArray>(numSamplers, samplerArray));
-}
-
 void GLRenderSystem::Release(Sampler& sampler)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
-    GLStateManager::NotifySamplerRelease(samplerGL.GetID());
     RemoveFromUniqueSet(samplers_, &sampler);
-}
-
-void GLRenderSystem::Release(SamplerArray& samplerArray)
-{
-    /* Notify GL state manager about object release, then release object */
-    auto& samplerArrayGL = LLGL_CAST(GLSamplerArray&, samplerArray);
-
-    for (auto samplerId : samplerArrayGL.GetIDArray())
-        GLStateManager::NotifySamplerRelease(samplerId);
-
-    RemoveFromUniqueSet(samplerArrays_, &samplerArray);
 }
 
 /* ----- Resource Heaps ----- */
@@ -140,18 +120,19 @@ RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& d
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)
 {
-    /* Notify GL state manager about object release, then release object */
+    /* Release render target (GLRenderTarget destructor notifies GL state manager about object releases) */
     auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
-    GLStateManager::NotifyFramebufferRelease(renderTargetGL.GetFramebuffer().GetID());
     RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
 /* ----- Shader ----- */
 
-Shader* GLRenderSystem::CreateShader(const ShaderType type)
+Shader* GLRenderSystem::CreateShader(const ShaderDescriptor& desc)
 {
+    AssertCreateShader(desc);
+
     /* Validate rendering capabilities for required shader type */
-    switch (type)
+    switch (desc.type)
     {
         case ShaderType::Geometry:
             LLGL_ASSERT_FEATURE_SUPPORT(hasGeometryShaders);
@@ -168,12 +149,13 @@ Shader* GLRenderSystem::CreateShader(const ShaderType type)
     }
 
     /* Make and return shader object */
-    return TakeOwnership(shaders_, MakeUnique<GLShader>(type));
+    return TakeOwnership(shaders_, MakeUnique<GLShader>(desc));
 }
 
-ShaderProgram* GLRenderSystem::CreateShaderProgram()
+ShaderProgram* GLRenderSystem::CreateShaderProgram(const ShaderProgramDescriptor& desc)
 {
-    return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>());
+    AssertCreateShaderProgram(desc);
+    return TakeOwnership(shaderPrograms_, MakeUnique<GLShaderProgram>(desc));
 }
 
 void GLRenderSystem::Release(Shader& shader)
@@ -183,9 +165,7 @@ void GLRenderSystem::Release(Shader& shader)
 
 void GLRenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
-    GLStateManager::NotifyShaderProgramRelease(shaderProgramGL.GetID());
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 
@@ -361,6 +341,8 @@ void GLRenderSystem::QueryRenderingCaps()
 }
 
 
+#ifdef LLGL_ENABLE_CUSTOM_SUB_MIPGEN
+
 /*
  * MipGenerationFBOPair structure
  */
@@ -385,6 +367,8 @@ void GLRenderSystem::MipGenerationFBOPair::ReleaseFBOs()
         fbos[1] = 0;
     }
 }
+
+#endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
 
 } // /namespace LLGL

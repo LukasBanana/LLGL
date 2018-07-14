@@ -23,7 +23,7 @@ namespace LLGL
 
 class VKResourceHeap;
 
-class VKCommandBuffer : public CommandBuffer
+class VKCommandBuffer final : public CommandBuffer
 {
 
     public:
@@ -177,7 +177,7 @@ class VKCommandBuffer : public CommandBuffer
         VkFramebuffer                   framebuffer_                = VK_NULL_HANDLE;
         VkExtent2D                      framebufferExtent_          = { 0, 0 };
         std::uint32_t                   numColorAttachments_        = 0;
-        bool                            hasDepthStencilAttachment_  = false;
+        bool                            hasDSVAttachment_           = false;
 
         #if 1//TODO: remove (use numColorAttachments_ instead)
         VkImage                         imageColor_                 = VK_NULL_HANDLE;

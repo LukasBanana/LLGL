@@ -18,16 +18,14 @@ namespace LLGL
 {
 
 
-class VKShader : public Shader
+class VKShader final : public Shader
 {
 
     public:
 
-        VKShader(const VKPtr<VkDevice>& device, const ShaderType type);
+        VKShader(const VKPtr<VkDevice>& device, const ShaderDescriptor& desc);
 
-        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
-
-        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
+        bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
 
@@ -51,6 +49,10 @@ class VKShader : public Shader
             InvalidCodeSize,
             ReflectFailed,
         };
+
+        bool Build(const ShaderDescriptor& shaderDesc);
+        bool CompileSource(const ShaderDescriptor& shaderDesc);
+        bool LoadBinary(const ShaderDescriptor& shaderDesc);
 
         VkDevice                device_             = VK_NULL_HANDLE;
         VKPtr<VkShaderModule>   shaderModule_;

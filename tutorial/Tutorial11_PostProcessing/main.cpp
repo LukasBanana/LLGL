@@ -82,8 +82,8 @@ public:
     void CreateBuffers()
     {
         // Specify vertex format for scene
-        vertexFormatScene.AppendAttribute({ "position", LLGL::VectorType::Float3 });
-        vertexFormatScene.AppendAttribute({ "normal", LLGL::VectorType::Float3 });
+        vertexFormatScene.AppendAttribute({ "position", LLGL::Format::RGB32Float });
+        vertexFormatScene.AppendAttribute({ "normal",   LLGL::Format::RGB32Float });
 
         // Create scene buffers
         auto sceneVertices = LoadObjModel("../Media/Models/WiredBox.obj");
@@ -225,14 +225,14 @@ public:
     {
         // Create empty color and gloss map
         auto resolution = context->GetVideoMode().resolution;
-        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
-        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
+        colorMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
+        glossMap        = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
 
         // Create empty blur pass maps (in quarter resolution)
         resolution.width  /= 4;
         resolution.height /= 4;
-        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
-        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, resolution.width, resolution.height));
+        glossMapBlurX   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
+        glossMapBlurY   = renderer->CreateTexture(LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, resolution.width, resolution.height));
     }
 
     void CreateRenderTargets()
@@ -242,9 +242,10 @@ public:
         // Create render-target for scene rendering
         LLGL::RenderTargetDescriptor renderTargetDesc;
         {
+            renderTargetDesc.resolution = resolution;
             renderTargetDesc.attachments =
             {
-                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth, resolution },
+                LLGL::AttachmentDescriptor { LLGL::AttachmentType::Depth },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, colorMap },
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMap },
             };
@@ -253,8 +254,12 @@ public:
         renderTargetScene = renderer->CreateRenderTarget(renderTargetDesc);
 
         // Create render-target for horizontal blur pass (no depth buffer needed)
+        resolution.width    /= 4;
+        resolution.height   /= 4;
+
         LLGL::RenderTargetDescriptor renderTargetBlurXDesc;
         {
+            renderTargetBlurXDesc.resolution = resolution;
             renderTargetBlurXDesc.attachments =
             {
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMapBlurX }
@@ -265,6 +270,7 @@ public:
         // Create render-target for vertical blur pass (no depth buffer needed)
         LLGL::RenderTargetDescriptor renderTargetBlurYDesc;
         {
+            renderTargetBlurYDesc.resolution = resolution;
             renderTargetBlurYDesc.attachments =
             {
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, glossMapBlurY }

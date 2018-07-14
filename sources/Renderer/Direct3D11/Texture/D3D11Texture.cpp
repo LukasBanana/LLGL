@@ -19,7 +19,7 @@ D3D11Texture::D3D11Texture(const TextureType type) :
 {
 }
 
-Extent3D D3D11Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D D3D11Texture::QueryMipExtent(std::uint32_t mipLevel) const
 {
     Extent3D size;
 
@@ -103,9 +103,9 @@ TextureDescriptor D3D11Texture::QueryDesc() const
             D3D11_TEXTURE1D_DESC desc;
             hwTex.tex1D->GetDesc(&desc);
 
-            texDesc.format              = D3D11Types::Unmap(desc.Format);
-            texDesc.texture1D.width     = desc.Width;
-            texDesc.texture1D.layers    = desc.ArraySize;
+            texDesc.format      = D3D11Types::Unmap(desc.Format);
+            texDesc.extent      = { desc.Width, 1u, 1u };
+            texDesc.arrayLayers = desc.ArraySize;
         }
         break;
 
@@ -115,15 +115,10 @@ TextureDescriptor D3D11Texture::QueryDesc() const
             D3D11_TEXTURE2D_DESC desc;
             hwTex.tex2D->GetDesc(&desc);
 
-            texDesc.format              = D3D11Types::Unmap(desc.Format);
-            texDesc.texture2D.width     = desc.Width;
-            texDesc.texture2D.height    = desc.Height;
-            texDesc.texture2D.layers    = desc.ArraySize;
-
-            if (texDesc.type == TextureType::TextureCube || texDesc.type == TextureType::TextureCubeArray)
-                texDesc.textureCube.layers /= 6;
-            else if (texDesc.type == TextureType::Texture2DMS || texDesc.type == TextureType::Texture2DMSArray)
-                texDesc.texture2DMS.samples = desc.SampleDesc.Count;
+            texDesc.format      = D3D11Types::Unmap(desc.Format);
+            texDesc.extent      = { desc.Width, desc.Height, 1u };
+            texDesc.arrayLayers = desc.ArraySize;
+            texDesc.samples     = desc.SampleDesc.Count;
         }
         break;
 
@@ -133,10 +128,8 @@ TextureDescriptor D3D11Texture::QueryDesc() const
             D3D11_TEXTURE3D_DESC desc;
             hwTex.tex3D->GetDesc(&desc);
 
-            texDesc.format              = D3D11Types::Unmap(desc.Format);
-            texDesc.texture3D.width     = desc.Width;
-            texDesc.texture3D.height    = desc.Height;
-            texDesc.texture3D.depth     = desc.Depth;
+            texDesc.format  = D3D11Types::Unmap(desc.Format);
+            texDesc.extent  = { desc.Width, desc.Height, desc.Depth };
         }
         break;
     }

@@ -27,7 +27,7 @@ namespace LLGL
 
 class GLRenderTarget;
 
-class GLRenderContext : public RenderContext
+class GLRenderContext final : public RenderContext
 {
 
     public:
@@ -37,6 +37,9 @@ class GLRenderContext : public RenderContext
         GLRenderContext(RenderContextDescriptor desc, const std::shared_ptr<Surface>& surface, GLRenderContext* sharedRenderContext);
 
         void Present() override;
+
+        Format QueryColorFormat() const override;
+        Format QueryDepthStencilFormat() const override;
 
         /* ----- GLRenderContext specific functions ----- */
 

@@ -17,17 +17,15 @@ namespace LLGL
 {
 
 
-class GLShader : public Shader
+class GLShader final : public Shader
 {
 
     public:
 
-        GLShader(const ShaderType type);
+        GLShader(const ShaderDescriptor& desc);
         ~GLShader();
 
-        bool Compile(const std::string& sourceCode, const ShaderDescriptor& shaderDesc = {}) override;
-
-        bool LoadBinary(std::vector<char>&& binaryCode, const ShaderDescriptor& shaderDesc = {}) override;
+        bool HasErrors() const override;
 
         std::string Disassemble(int flags = 0) override;
 
@@ -47,10 +45,11 @@ class GLShader : public Shader
 
     private:
 
-        bool QueryCompileStatus() const;
+        void Build(const ShaderDescriptor& shaderDesc);
+        void CompileSource(const ShaderDescriptor& shaderDesc);
+        void LoadBinary(const ShaderDescriptor& shaderDesc);
 
         GLuint              id_ = 0;
-
         StreamOutputFormat  streamOutputFormat_;
 
 };

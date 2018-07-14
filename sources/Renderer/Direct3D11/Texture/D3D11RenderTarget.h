@@ -23,23 +23,29 @@ namespace LLGL
 class D3D11Texture;
 class D3D11RenderSystem;
 
-class D3D11RenderTarget : public RenderTarget
+class D3D11RenderTarget final : public RenderTarget
 {
 
     public:
 
         D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc);
 
+        std::uint32_t GetNumColorAttachments() const override;
+        bool HasDepthAttachment() const override;
+        bool HasStencilAttachment() const override;
+
         /* ----- Extended Internal Functions ----- */
 
         // Resolves all multi-sampled subresources.
         void ResolveSubresources(ID3D11DeviceContext* context);
 
+        // Returns the list of native render target views (RTV).
         inline const std::vector<ID3D11RenderTargetView*>& GetRenderTargetViews() const
         {
             return renderTargetViewsRef_;
         }
 
+        // Returns the native depth stencil view (DSV).
         inline ID3D11DepthStencilView* GetDepthStencilView() const
         {
             return depthStencilView_.Get();
@@ -47,12 +53,13 @@ class D3D11RenderTarget : public RenderTarget
 
     private:
 
-        void AttachDepthBuffer(const Extent2D& size);
-        void AttachStencilBuffer(const Extent2D& size);
-        void AttachDepthStencilBuffer(const Extent2D& size);
+        void Attach(const AttachmentDescriptor& attachmentDesc);
+        void AttachDepthBuffer();
+        void AttachStencilBuffer();
+        void AttachDepthStencilBuffer();
         void AttachTexture(Texture& texture, const AttachmentDescriptor& attachmentDesc);
 
-        void CreateDepthStencilAndDSV(const Extent2D& size, DXGI_FORMAT format);
+        void CreateDepthStencilAndDSV(DXGI_FORMAT format);
         void CreateAndAppendRTV(ID3D11Resource* resource, const D3D11_RENDER_TARGET_VIEW_DESC& rtvDesc);
 
         bool HasMultiSampling() const;
@@ -64,6 +71,7 @@ class D3D11RenderTarget : public RenderTarget
 
         ComPtr<ID3D11Texture2D>                     depthStencil_;
         ComPtr<ID3D11DepthStencilView>              depthStencilView_;
+        DXGI_FORMAT                                 depthStencilFormat_         = DXGI_FORMAT_UNKNOWN;
 
         // Members for multi-sampled render-targets
         struct MultiSampledAttachment

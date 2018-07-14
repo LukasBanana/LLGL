@@ -20,12 +20,30 @@ namespace LLGL
 
 
 VKRenderTarget::VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc) :
+    RenderTarget        { desc.resolution              },
     framebuffer_        { device, vkDestroyFramebuffer },
     renderPass_         { device, vkDestroyRenderPass  },
     depthStencilBuffer_ { device                       }
 {
     CreateRenderPass(device, deviceMemoryMngr, desc);
     CreateFramebuffer(device, desc);
+}
+
+std::uint32_t VKRenderTarget::GetNumColorAttachments() const
+{
+    return numColorAttachments_;
+}
+
+bool VKRenderTarget::HasDepthAttachment() const
+{
+    auto format = depthStencilBuffer_.GetVkFormat();
+    return (format == VK_FORMAT_D32_SFLOAT || format == VK_FORMAT_D24_UNORM_S8_UINT);
+}
+
+bool VKRenderTarget::HasStencilAttachment() const
+{
+    auto format = depthStencilBuffer_.GetVkFormat();
+    return (format == VK_FORMAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT);
 }
 
 void VKRenderTarget::ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr)
@@ -83,15 +101,11 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMem
         }
         else
         {
-            /* Validate attachment attributes */
-            if (attachmentSrc.resolution.width == 0 || attachmentSrc.resolution.height == 0)
-                throw std::invalid_argument("invalid attachment to render target that has no texture and no valid size specified");
-
+            /* Create depth-stencil buffer */
             format = GetDepthAttachmentVkFormat(attachmentSrc.type);
 
-            /* Create depth-stencil buffer */
             if (depthStencilBuffer_.GetVkFormat() == VK_FORMAT_UNDEFINED)
-                depthStencilBuffer_.CreateDepthStencil(deviceMemoryMngr, attachmentSrc.resolution, format, samplesFlags);
+                depthStencilBuffer_.CreateDepthStencil(deviceMemoryMngr, GetResolution(), format, samplesFlags);
             else
                 ErrDepthAttachmentFailed();
         }
@@ -113,6 +127,7 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMem
 
     numColorAttachments_ = 0;
     std::size_t depthAttachmentIndex = ~0;
+    bool hasDSVAttachment = false;
 
     for (std::uint32_t i = 0, n = static_cast<std::uint32_t>(desc.attachments.size()); i < n; ++i)
     {
@@ -126,7 +141,7 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMem
         }
         else
         {
-            if (!hasDepthStencilAttachment_)
+            if (!hasDSVAttachment)
             {
                 auto& attachmentRef = attachmentsRefs.back();
                 {
@@ -134,7 +149,7 @@ void VKRenderTarget::CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMem
                     attachmentRef.layout        = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 }
                 depthAttachmentIndex = (attachmentsRefs.size() - 1);
-                hasDepthStencilAttachment_ = true;
+                hasDSVAttachment = true;
             }
             else
                 throw std::invalid_argument("cannot have more than one depth-stencil attachment for render target");
@@ -205,7 +220,7 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
                 device,
                 attachment.mipLevel,
                 1,
-                attachment.layer,
+                attachment.arrayLayer,
                 1,
                 imageViews_[numAttachments].ReleaseAndGetAddressOf()
             );
@@ -213,8 +228,8 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
             /* Add image view to attachments */
             imageViewRefs[numAttachments] = imageViews_[numAttachments].Get();
 
-            /* Apply texture resolution to render target (to validate correlation between attachments) */
-            ApplyResolution({ textureVK->GetVkExtent().width, textureVK->GetVkExtent().height });
+            /* Validate texture resolution to render target (to validate correlation between attachments) */
+            ValidateMipResolution(*textureVK, attachment.mipLevel);
 
             /* Next attachment index */
             ++numAttachments;
@@ -223,9 +238,6 @@ void VKRenderTarget::CreateFramebuffer(const VKPtr<VkDevice>& device, const Rend
         {
             /* Add depth-stencil image view to attachments */
             imageViewRefs[numAttachments] = depthStencilBuffer_.GetVkImageView();
-
-            /* Apply texture resolution to render target (to validate correlation between attachments) */
-            ApplyResolution(attachment.resolution);
 
             /* Next attachment index */
             ++numAttachments;

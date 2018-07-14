@@ -20,69 +20,27 @@ namespace LLGL
 {
 
 
-D3D12ShaderProgram::D3D12ShaderProgram()
+static void Attach(D3D12Shader*& shaderD3D, Shader* shader)
 {
+    if (shader != nullptr)
+        shaderD3D = LLGL_CAST(D3D12Shader*, shader);
 }
 
-template <typename T>
-void InsertBufferDesc(std::vector<T>& container, const std::vector<T>& entries)
+D3D12ShaderProgram::D3D12ShaderProgram(const ShaderProgramDescriptor& desc)
 {
-    for (const auto& desc : entries)
-    {
-        auto it = std::find_if(
-            container.begin(), container.end(), 
-            [&desc](const T& entry)
-            {
-                return (entry.name == desc.name);
-            }
-        );
-        if (it == container.end())
-            container.push_back(desc);
-    }
+    Attach(vs_, desc.vertexShader);
+    Attach(hs_, desc.tessControlShader);
+    Attach(ds_, desc.tessEvaluationShader);
+    Attach(gs_, desc.geometryShader);
+    Attach(ps_, desc.fragmentShader);
+    Attach(cs_, desc.computeShader);
+    BuildInputLayout(desc.vertexFormats.size(), desc.vertexFormats.data());
+    Link();
 }
 
-void D3D12ShaderProgram::AttachShader(Shader& shader)
+bool D3D12ShaderProgram::HasErrors() const
 {
-    /* Store D3D12 shader */
-    auto shaderD3D = LLGL_CAST(D3D12Shader*, &shader);
-
-    const auto shaderType0Idx = static_cast<std::size_t>(ShaderType::Vertex);
-    const auto shaderTypeNIdx = (static_cast<std::size_t>(shader.GetType()) - shaderType0Idx);
-
-    if (shaderTypeNIdx < 6)
-        shaders_[shaderTypeNIdx] = shaderD3D;
-    else
-        throw std::runtime_error("cannot attach shader with invalid type: 0x" + ToHex(shaderTypeNIdx));
-}
-
-void D3D12ShaderProgram::DetachAll()
-{
-    /* Reset all shader attributes */
-    inputElements_.clear();
-    std::fill(std::begin(shaders_), std::end(shaders_), nullptr);
-    linkError_ = LinkError::NoError;
-}
-
-bool D3D12ShaderProgram::LinkShaders()
-{
-    /* Validate shader composition */
-    linkError_ = LinkError::NoError;
-
-    /* Validate native shader objects */
-    for (std::size_t i = 0; i < 6; ++i)
-    {
-        if (shaders_[i] != nullptr && shaders_[i]->GetByteCode().BytecodeLength == 0)
-            linkError_ = LinkError::InvalidByteCode;
-    }
-
-    /*
-    Validate composition of attached shaders
-    Note: reinterpret_cast allowed here, because no multiple inheritance is used, just plain pointers!
-    */
-    if (!ValidateShaderComposition(reinterpret_cast<Shader* const*>(shaders_), 6))
-        linkError_ = LinkError::InvalidComposition;
-
-    return (linkError_ == LinkError::NoError);
+    return (linkError_ != LinkError::NoError);
 }
 
 std::string D3D12ShaderProgram::QueryInfoLog()
@@ -110,19 +68,54 @@ ShaderReflectionDescriptor D3D12ShaderProgram::QueryReflectionDesc() const
     return reflection;
 }
 
+void D3D12ShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
+{
+    // dummy
+}
+
+void D3D12ShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
+{
+    // dummy
+}
+
+ShaderUniform* D3D12ShaderProgram::LockShaderUniform()
+{
+    return nullptr; // dummy
+}
+
+void D3D12ShaderProgram::UnlockShaderUniform()
+{
+    // dummy
+}
+
+D3D12_INPUT_LAYOUT_DESC D3D12ShaderProgram::GetInputLayoutDesc() const
+{
+    D3D12_INPUT_LAYOUT_DESC desc;
+
+    desc.pInputElementDescs = inputElements_.data();
+    desc.NumElements        = static_cast<UINT>(inputElements_.size());
+
+    return desc;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
 static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {
     try
     {
-        return D3D12Types::Map(attrib.vectorType);
+        return D3D12Types::Map(attrib.format);
     }
     catch (const std::exception& e)
     {
-        throw std::invalid_argument(std::string(e.what()) + " (for vertex attribute \"" + attrib.name + "\")");
+        throw std::invalid_argument(std::string(e.what()) + " for vertex attribute: " + attrib.name);
     }
 }
 
-void D3D12ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
+void D3D12ShaderProgram::BuildInputLayout(std::size_t numVertexFormats, const VertexFormat* vertexFormats)
 {
     if (numVertexFormats == 0 || vertexFormats == nullptr)
         return;
@@ -130,7 +123,7 @@ void D3D12ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const 
     /* Reserve capacity for new elements */
     std::size_t numElements = 0;
 
-    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
+    for (std::size_t i = 0; i < numVertexFormats; ++i)
         numElements += vertexFormats[i].attributes.size();
 
     inputElements_.clear();
@@ -140,7 +133,7 @@ void D3D12ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const 
     inputElementNames_.reserve(numElements);
 
     /* Build input element descriptors */
-    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
+    for (std::size_t i = 0; i < numVertexFormats; ++i)
     {
         for (const auto& attrib : vertexFormats[i].attributes)
         {
@@ -163,34 +156,24 @@ void D3D12ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const 
     }
 }
 
-void D3D12ShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
+void D3D12ShaderProgram::Link()
 {
-    //todo...
-}
+    /* Validate shader composition */
+    linkError_ = LinkError::NoError;
 
-void D3D12ShaderProgram::BindStorageBuffer(const std::string& name, std::uint32_t bindingIndex)
-{
-    //todo...
-}
+    /* Validate native shader objects */
+    for (std::size_t i = 0; i < 6; ++i)
+    {
+        if (shaders_[i] != nullptr && shaders_[i]->GetByteCode().BytecodeLength == 0)
+            linkError_ = LinkError::InvalidByteCode;
+    }
 
-ShaderUniform* D3D12ShaderProgram::LockShaderUniform()
-{
-    return nullptr; // dummy
-}
-
-void D3D12ShaderProgram::UnlockShaderUniform()
-{
-    // dummy
-}
-
-D3D12_INPUT_LAYOUT_DESC D3D12ShaderProgram::GetInputLayoutDesc() const
-{
-    D3D12_INPUT_LAYOUT_DESC desc;
-
-    desc.pInputElementDescs = inputElements_.data();
-    desc.NumElements        = static_cast<UINT>(inputElements_.size());
-
-    return desc;
+    /*
+    Validate composition of attached shaders
+    Note: reinterpret_cast allowed here, because no multiple inheritance is used, just plain pointers!
+    */
+    if (!ShaderProgram::ValidateShaderComposition(reinterpret_cast<Shader* const*>(shaders_), 6))
+        linkError_ = LinkError::InvalidComposition;
 }
 
 

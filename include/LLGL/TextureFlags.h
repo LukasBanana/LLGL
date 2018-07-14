@@ -10,6 +10,8 @@
 
 
 #include "Export.h"
+#include "Types.h"
+#include "Format.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -32,82 +34,6 @@ enum class TextureType
     TextureCubeArray,   //!< Cube array texture.
     Texture2DMS,        //!< 2-Dimensional multi-sample texture.
     Texture2DMSArray,   //!< 2-Dimensional multi-sample array texture.
-};
-
-/**
-\brief Hardware texture format enumeration.
-\note All 32-bit integral formats are un-normalized!
-\todo Rename "R8" to "R8UNorm", "R8Sgn" to "R8SNorm" and add "R8UInt", "R8SInt" etc.
-*/
-enum class TextureFormat
-{
-    Unknown,        //!< Unknown texture format.
-
-    /* --- Color formats --- */
-    R8,             //!< Color format: red 8-bit normalized unsigned integer component.
-    R8Sgn,          //!< Color format: red 8-bit normalized signed integer component.
-
-    R16,            //!< Color format: red 16-bit normalized unsigned interger component.
-    R16Sgn,         //!< Color format: red 16-bit normalized signed interger component.
-    R16Float,       //!< Color format: red 16-bit floating point component.
-
-    R32UInt,        //!< Color format: red 32-bit un-normalized unsigned interger component.
-    R32SInt,        //!< Color format: red 32-bit un-normalized signed interger component.
-    R32Float,       //!< Color format: red 32-bit floating point component.
-
-    RG8,            //!< Color format: red, green 8-bit normalized unsigned integer components.
-    RG8Sgn,         //!< Color format: red, green 8-bit normalized signed integer components.
-
-    RG16,           //!< Color format: red, green 16-bit normalized unsigned interger components.
-    RG16Sgn,        //!< Color format: red, green 16-bit normalized signed interger components.
-    RG16Float,      //!< Color format: red, green 16-bit floating point components.
-
-    RG32UInt,       //!< Color format: red, green 32-bit un-normalized unsigned interger components.
-    RG32SInt,       //!< Color format: red, green 32-bit un-normalized signed interger components.
-    RG32Float,      //!< Color format: red, green 32-bit floating point components.
-
-    RGB8,           //!< Color format: red, green, blue 8-bit normalized unsigned integer components. \note Only supported with: OpenGL, Vulkan.
-    RGB8Sgn,        //!< Color format: red, green, blue 8-bit normalized signed integer components. \note Only supported with: OpenGL, Vulkan.
-
-    RGB16,          //!< Color format: red, green, blue 16-bit normalized unsigned interger components. \note Only supported with: OpenGL, Vulkan.
-    RGB16Sgn,       //!< Color format: red, green, blue 16-bit normalized signed interger components. \note Only supported with: OpenGL, Vulkan.
-    RGB16Float,     //!< Color format: red, green, blue 16-bit floating point components. \note Only supported with: OpenGL, Vulkan.
-
-    RGB32UInt,      //!< Color format: red, green, blue 32-bit un-normalized unsigned interger components.
-    RGB32SInt,      //!< Color format: red, green, blue 32-bit un-normalized signed interger components.
-    RGB32Float,     //!< Color format: red, green, blue 32-bit floating point components.
-
-    RGBA8,          //!< Color format: red, green, blue, alpha 8-bit normalized unsigned integer components.
-    RGBA8Sgn,       //!< Color format: red, green, blue, alpha 8-bit normalized signed integer components.
-
-    RGBA16,         //!< Color format: red, green, blue, alpha 16-bit normalized unsigned interger components.
-    RGBA16Sgn,      //!< Color format: red, green, blue, alpha 16-bit normalized signed interger components.
-    RGBA16Float,    //!< Color format: red, green, blue, alpha 16-bit floating point components.
-
-    RGBA32UInt,     //!< Color format: red, green, blue, alpha 32-bit un-normalized unsigned interger components.
-    RGBA32SInt,     //!< Color format: red, green, blue, alpha 32-bit un-normalized signed interger components.
-    RGBA32Float,    //!< Color format: red, green, blue, alpha 32-bit floating point components.
-
-    /* --- Depth-stencil formats --- */
-    D32,            //!< Depth-stencil format: depth 32-bit floating point component.
-    D24S8,          //!< Depth-stencil format: depth 24-bit normalized unsigned integer, and 8-bit unsigned integer stencil components.
-
-    /* --- Compressed color formats --- */
-    RGB_DXT1,       //!< Compressed color format: RGB S3TC DXT1 with 8 bytes per 4x4 block. \note Only supported with: OpenGL.
-    RGBA_DXT1,      //!< Compressed color format: RGBA S3TC DXT1 with 8 bytes per 4x4 block.
-    RGBA_DXT3,      //!< Compressed color format: RGBA S3TC DXT3 with 16 bytes per 4x4 block.
-    RGBA_DXT5,      //!< Compressed color format: RGBA S3TC DXT5 with 16 bytes per 4x4 block.
-};
-
-//! Axis direction (also used for texture cube face).
-enum class AxisDirection
-{
-    XPos = 0,   //!< X+ direction.
-    XNeg,       //!< X- direction.
-    YPos,       //!< Y+ direction.
-    YNeg,       //!< Y- direction.
-    ZPos,       //!< Z+ direction.
-    ZNeg,       //!< Z- direction.
 };
 
 #if 0//TODO: currently unused
@@ -163,38 +89,38 @@ struct TextureFlags
         #endif
 
         /**
-        \brief Texture will be used with MIP-mapping. This will create all MIP-map levels at texture creation time.
-        \remarks This is part of the default flags.
-        \see RenderSystem::GenerateMips
-        \see Default
-        */
-        GenerateMips        = (1 << 3),
-
-        /**
         \brief Texture can be used as render target attachment.
         \remarks This is part of the default flags.
         \see AttachmentDescriptor::texture
         \see Default
         */
-        AttachmentUsage     = (1 << 4),
+        AttachmentUsage     = (1 << 3),
 
         /**
         \brief Texture can be used for sampling (e.g. "sampler2D" in GLSL, or "Texture2D" in HLSL).
         \remarks This is part of the default flags.
         \see Default
         */
-        SampleUsage         = (1 << 5),
+        SampleUsage         = (1 << 4),
 
         //! Texture can be used as storage texture (e.g. "image2D" in GLSL, or "RWTexture2D" in HLSL).
-        StorageUsage        = (1 << 6),
+        StorageUsage        = (1 << 5),
 
         /**
-        \brief Default texture flags: (GenerateMips | AttachmentUsage | SampleUsage).
-        \see GenerateMips
+        \brief Multi-sampled texture has fixed sample locations.
+        \remarks This can only be used with multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray).
+        \see TextureType
+        \see Default
+        */
+        FixedSamples        = (1 << 6),
+
+        /**
+        \brief Default texture flags: (AttachmentUsage | SampleUsage | FixedSamples).
         \see AttachmentUsage
         \see SampleUsage
+        \see FixedSamples
         */
-        Default             = (GenerateMips | AttachmentUsage | SampleUsage),
+        Default             = (AttachmentUsage | SampleUsage | FixedSamples),
     };
 };
 
@@ -221,76 +147,11 @@ struct TextureSwizzleRGBA
 */
 struct TextureDescriptor
 {
-    //! 1D- and 1D-Array texture specific descriptor structure.
-    struct Texture1D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-    };
-
-    //! 2D- and 2D-Array texture specific descriptor structure.
-    struct Texture2D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-    };
-
-    //! 3D texture specific descriptor structure.
-    struct Texture3D
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   depth;          //!< Texture depth.
-    };
-
-    /**
-    \brief Cube- and Cube-Array texture specific descriptor structure.
-    \remarks Cube textures must have the same value for width and height.
-    However, two parameters are used for convenience in rendering APIs.
-    */
-    struct TextureCube
-    {
-        std::uint32_t   width;          //!< Texture width. Must be equal to height.
-        std::uint32_t   height;         //!< Texture height. Must be equal to width.
-
-        /**
-        \brief Number of texture array layers, one for each cube.
-        \remarks Most rendering APIs only use the actual number of array layers, so for cube maps they are always a multiple of 6.
-        This attribute, however, specifies the number of cubes in the array texture and LLGL will multiply it by 6 automatically if necessary.
-        */
-        std::uint32_t   layers;
-    };
-
-    //! Multi-sampled 2D- and 2D-Array texture specific descriptor structure.
-    struct Texture2DMS
-    {
-        std::uint32_t   width;          //!< Texture width.
-        std::uint32_t   height;         //!< Texture height.
-        std::uint32_t   layers;         //!< Number of texture array layers.
-        std::uint32_t   samples;        //!< Number of samples.
-        bool            fixedSamples;   //!< Specifies whether the sample locations are fixed or not. By default true. \note Only supported with: OpenGL.
-    };
-
-    inline TextureDescriptor()
-    {
-        texture2DMS.width           = 0;
-        texture2DMS.height          = 0;
-        texture2DMS.layers          = 0;
-        texture2DMS.samples         = 0;
-        texture2DMS.fixedSamples    = true;
-    }
-
-    inline ~TextureDescriptor()
-    {
-        // Dummy
-    }
-
     //! Hardware texture type. By default TextureType::Texture1D.
     TextureType     type        = TextureType::Texture1D;
 
-    //! Hardware texture format. By default TextureFormat::RGBA8.
-    TextureFormat   format      = TextureFormat::RGBA8;
+    //! Hardware texture format. By default Format::RGBA8UNorm.
+    Format          format      = Format::RGBA8UNorm;
 
     /**
     \brief Specifies the texture creation flags (e.g. if MIP-mapping is required). By default TextureFlags::Default.
@@ -299,14 +160,53 @@ struct TextureDescriptor
     */
     long            flags       = TextureFlags::Default;
 
-    union
-    {
-        Texture1D   texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2D   texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3D   texture3D;      //!< Descriptor for 3D textures.
-        TextureCube textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
-        Texture2DMS texture2DMS;    //!< Descriptor for multi-sampled 2D- and 2D-Array textures.
-    };
+    /**
+    \brief Texture extent. By default (1, 1, 1).
+    \remarks The height component is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
+    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, TextureType::Texture2DMSArray).
+    The depth component is only used for 3D textures (i.e. TextureType::Texture3D).
+    For cube textures, the width and height component must be equal.
+    \see IsArrayTexture
+    \see IsCubeTexture
+    */
+    Extent3D        extent      = { 1, 1, 1 };
+
+    /**
+    \brief Number of array layers. By default 1.
+    \remarks This can be greater than 1 for array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
+    For cube textures, this must be a multiple of 6 (one array layer for each cube face).
+    For all other texture types, this must be 1.
+    The index offsets for each cube face are as follows:
+    - <code>X+</code> direction has index offset 0.
+    - <code>X-</code> direction has index offset 1.
+    - <code>Y+</code> direction has index offset 2.
+    - <code>Y-</code> direction has index offset 3.
+    - <code>Z+</code> direction has index offset 4.
+    - <code>Z-</code> direction has index offset 5.
+    \see IsArrayTexture
+    \see IsCubeTexture
+    \see RenderingLimits::maxNumTextureArrayLayers
+    */
+    std::uint32_t   arrayLayers = 1;
+
+    /**
+    \brief Number of MIP-map levels. By default 0.
+    \remarks If this is 0, the full MIP-chain will be generated.
+    If this is 1, no MIP-mapping is used for this texture and it has only a MIP level.
+    This field is ignored for multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray),
+    since these texture types only have a single MIP-map level.
+    \see NumMipLevels
+    \see RenderSystem::GenerateMips
+    */
+    std::uint32_t   mipLevels   = 0;
+
+    /**
+    \brief Number of samples per texel. By default 1.
+    \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
+    \see IsMultiSampleTexture
+    */
+    std::uint32_t   samples     = 1;
 };
 
 /**
@@ -315,78 +215,32 @@ struct TextureDescriptor
 */
 struct SubTextureDescriptor
 {
-    struct Texture1D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t layers;         //!< Number of texture array layers.
-    };
+    //! MIP-map level for the sub-texture, where 0 is the base texture, and N > 0 is the N-th MIP-map level. By default 0.
+    std::uint32_t   mipLevel    = 0;
 
-    struct Texture2D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t layers;         //!< Number of texture array layers.
-    };
+    /**
+    \brief Sub-texture offset. By default (0, 0, 0).
+    \remarks For array textures, the Z component specifies the array layer.
+    For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
+    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayer member.
+    Negative values of this member are not allowed and result in undefined behavior.
+    \see TextureDescriptor::arrayLayer
+    */
+    Offset3D        offset      = { 0, 0, 0 };
 
-    struct Texture3D
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t z;              //!< Sub-texture Z-axis offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t depth;          //!< Number of texture array layers.
-    };
-
-    struct TextureCube
-    {
-        std::uint32_t x;              //!< Sub-texture X-axis offset.
-        std::uint32_t y;              //!< Sub-texture Y-axis offset.
-        std::uint32_t layerOffset;    //!< Zero-based layer offset.
-        std::uint32_t width;          //!< Sub-texture width.
-        std::uint32_t height;         //!< Sub-texture height.
-        std::uint32_t cubeFaces;      //!< Number of cube-faces. To have all faces of N cube-texture layers, this value must be N*6.
-        AxisDirection cubeFaceOffset; //!< First cube face in the current layer.
-    };
-
-    inline SubTextureDescriptor()
-    {
-        mipLevel                    = 0;
-        textureCube.x               = 0;
-        textureCube.y               = 0;
-        textureCube.layerOffset     = 0;
-        textureCube.width           = 0;
-        textureCube.height          = 0;
-        textureCube.cubeFaces       = 0;
-        textureCube.cubeFaceOffset  = AxisDirection::XPos;
-    }
-
-    inline ~SubTextureDescriptor()
-    {
-    }
-
-    //! MIP-map level for the sub-texture, where 0 is the base texture, and n > 0 is the n-th MIP-map level.
-    std::uint32_t   mipLevel;
-
-    union
-    {
-        Texture1D   texture1D;      //!< Descriptor for 1D- and 1D-Array textures.
-        Texture2D   texture2D;      //!< Descriptor for 2D- and 2D-Array textures.
-        Texture3D   texture3D;      //!< Descriptor for 3D textures.
-        TextureCube textureCube;    //!< Descriptor for Cube- and Cube-Array textures.
-    };
+    /**
+    \brief Sub-texture extent. By default (1, 1, 1).
+    \remarks For array textures, the depth component specifies the number of array layers (for 1D-array textures it's the height component).
+    For cube textures, the depthj component specifies the number of array layers and cube faces (where each cube has 6 faces).
+    */
+    Extent3D        extent      = { 1, 1, 1 };
 };
 
 
 /* ----- Functions ----- */
 
 /**
-\defgroup group_tex_util Global texture utility functions to determine texture dimension and buffer sizes.
+\defgroup group_tex_util Texture utility functions to determine texture dimension and buffer sizes.
 \addtogroup group_tex_util
 @{
 */
@@ -404,18 +258,11 @@ LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height
 /**
 \brief Returns the number of MIP-map levels for the specified texture descriptor.
 \param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of MIP-map levels.
-\return Number of MIP-map levels, or 1 if the descriptor has not the 'TextureFlags::GenerateMips' flags bit set.
+\remarks This function will deduce the number MIP-map levels automatically only if the member "mipLevels" is zero.
+Otherwise, the value of this member is returned.
 \see NumMipLevels(std::uint32_t, std::uint32_t, std::uint32_t)
 */
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc);
-
-/**
-\briefs Returns the number of array layers for the specified texture descriptor.
-\param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of array layers.
-\return Number of array layers, or 1 if the texture type is not an array texture.
-\see IsArrayTexture
-*/
-LLGL_EXPORT std::uint32_t NumArrayLayers(const TextureDescriptor& textureDesc);
 
 /**
 \brief Returns the required buffer size (in bytes) of a texture with the specified hardware format and number of texels.
@@ -426,7 +273,7 @@ For the DXT compressed texture formats, this must be a multiple of 16, since the
 \remarks The counterpart for image data is the function ImageDataSize.
 \see ImageDataSize
 */
-LLGL_EXPORT std::uint32_t TextureBufferSize(const TextureFormat format, std::uint32_t numTexels);
+LLGL_EXPORT std::uint32_t TextureBufferSize(const Format format, std::uint32_t numTexels);
 
 /**
 \brief Returns the texture size (in texels) of the specified texture descriptor, or zero if the texture type is invalid.
@@ -435,18 +282,11 @@ LLGL_EXPORT std::uint32_t TextureBufferSize(const TextureFormat format, std::uin
 LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc);
 
 /**
-\brief Returns true if the specified texture format is a compressed format,
-i.e. either TextureFormat::RGB_DXT1, TextureFormat::RGBA_DXT1, TextureFormat::RGBA_DXT3, or TextureFormat::RGBA_DXT5.
-\see TextureFormat
+\brief Returns true if the specified texture descriptor describes a texture with MIP-mapping enabled.
+\return True if the texture type is not a multi-sampled texture and the number of MIP-map levels in the descriptor is either zero or greater than one.
+\see TextureDescriptor::mipLevels
 */
-LLGL_EXPORT bool IsCompressedFormat(const TextureFormat format);
-
-/**
-\brief Returns true if the specified texture format is a depth or depth-stencil format,
-i.e. either TextureFormat::DepthComponent, or TextureFormat::DepthStencil.
-\see TextureFormat
-*/
-LLGL_EXPORT bool IsDepthStencilFormat(const TextureFormat format);
+LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc);
 
 /**
 \brief Returns true if the specified texture type is an array texture.

@@ -19,12 +19,16 @@ namespace LLGL
 {
 
 
-class VKRenderTarget : public RenderTarget
+class VKRenderTarget final : public RenderTarget
 {
 
     public:
 
         VKRenderTarget(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
+
+        std::uint32_t GetNumColorAttachments() const override;
+        bool HasDepthAttachment() const override;
+        bool HasStencilAttachment() const override;
 
         void ReleaseDeviceMemoryResources(VKDeviceMemoryManager& deviceMemoryMngr);
 
@@ -46,18 +50,6 @@ class VKRenderTarget : public RenderTarget
             return { GetResolution().width, GetResolution().height };
         }
 
-        // Returns the number of render target color attachments.
-        inline std::uint32_t GetNumColorAttachments() const
-        {
-            return numColorAttachments_;
-        }
-
-        // Returns true if this render target has a depth-stencil attachment.
-        inline bool HasDepthStencilAttachment() const
-        {
-            return hasDepthStencilAttachment_;
-        }
-
     private:
 
         void CreateRenderPass(const VKPtr<VkDevice>& device, VKDeviceMemoryManager& deviceMemoryMngr, const RenderTargetDescriptor& desc);
@@ -70,8 +62,7 @@ class VKRenderTarget : public RenderTarget
 
         VKDepthStencilBuffer            depthStencilBuffer_;
 
-        std::uint32_t                   numColorAttachments_        = 0;
-        bool                            hasDepthStencilAttachment_  = false;
+        std::uint32_t                   numColorAttachments_    = 0;
 
 };
 

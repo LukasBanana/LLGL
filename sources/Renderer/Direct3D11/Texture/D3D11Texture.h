@@ -36,14 +36,14 @@ union D3D11NativeTexture
 };
 
 
-class D3D11Texture : public Texture
+class D3D11Texture final : public Texture
 {
 
     public:
 
         D3D11Texture(const TextureType type);
 
-        Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const override;
+        Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
 

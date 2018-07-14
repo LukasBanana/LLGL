@@ -180,42 +180,56 @@ static std::vector<ShadingLanguage> DXGetHLSLVersions(D3D_FEATURE_LEVEL featureL
     return languages;
 }
 
-static std::vector<TextureFormat> DXGetSupportedTextureFormats()
+static std::vector<Format> DXGetSupportedTextureFormats()
 {
     return
     {
-        TextureFormat::R8,
-        TextureFormat::R8Sgn,
-        TextureFormat::R16,
-        TextureFormat::R16Sgn,
-        TextureFormat::R16Float,
-        TextureFormat::R32UInt,
-        TextureFormat::R32SInt,
-        TextureFormat::R32Float,
-        TextureFormat::RG8,
-        TextureFormat::RG8Sgn,
-        TextureFormat::RG16,
-        TextureFormat::RG16Sgn,
-        TextureFormat::RG16Float,
-        TextureFormat::RG32UInt,
-        TextureFormat::RG32SInt,
-        TextureFormat::RG32Float,
-        TextureFormat::RGB32UInt,
-        TextureFormat::RGB32SInt,
-        TextureFormat::RGB32Float,
-        TextureFormat::RGBA8,
-        TextureFormat::RGBA8Sgn,
-        TextureFormat::RGBA16,
-        TextureFormat::RGBA16Sgn,
-        TextureFormat::RGBA16Float,
-        TextureFormat::RGBA32UInt,
-        TextureFormat::RGBA32SInt,
-        TextureFormat::RGBA32Float,
-        TextureFormat::D32,
-        TextureFormat::D24S8,
-        TextureFormat::RGBA_DXT1,
-        TextureFormat::RGBA_DXT3,
-        TextureFormat::RGBA_DXT5,
+        Format::R8UNorm,
+        Format::R8SNorm,
+        Format::R8UInt,
+        Format::R8SInt,
+        Format::R16UNorm,
+        Format::R16SNorm,
+        Format::R16UInt,
+        Format::R16SInt,
+        Format::R16Float,
+        Format::R32UInt,
+        Format::R32SInt,
+        Format::R32Float,
+        Format::RG8UNorm,
+        Format::RG8SNorm,
+        Format::RG8UInt,
+        Format::RG8SInt,
+        Format::RG16UNorm,
+        Format::RG16SNorm,
+        Format::RG16UInt,
+        Format::RG16SInt,
+        Format::RG16Float,
+        Format::RG32UInt,
+        Format::RG32SInt,
+        Format::RG32Float,
+        Format::RGB32UInt,
+        Format::RGB32SInt,
+        Format::RGB32Float,
+        Format::RGBA8UNorm,
+        Format::RGBA8SNorm,
+        Format::RGBA8UInt,
+        Format::RGBA8SInt,
+        Format::RGBA16UNorm,
+        Format::RGBA16SNorm,
+        Format::RGBA16UInt,
+        Format::RGBA16SInt,
+        Format::RGBA16Float,
+        Format::RGBA32UInt,
+        Format::RGBA32SInt,
+        Format::RGBA32Float,
+        Format::D16UNorm,
+        Format::D32Float,
+        Format::D24UNormS8UInt,
+        Format::D32FloatS8X24UInt,
+        Format::BC1RGBA,
+        Format::BC2RGBA,
+        Format::BC3RGBA,
     };
 }
 
@@ -437,41 +451,46 @@ D3DTextureFormatDescriptor DXGetTextureFormatDesc(DXGI_FORMAT format)
 {
     switch (format)
     {
-        case DXGI_FORMAT_D32_FLOAT:             return { ImageFormat::Depth,            DataType::Float  };
-        case DXGI_FORMAT_D24_UNORM_S8_UINT:     return { ImageFormat::DepthStencil,     DataType::Float  };
-        case DXGI_FORMAT_R8_UNORM:              return { ImageFormat::R,                DataType::UInt8  };
-        case DXGI_FORMAT_R8_SNORM:              return { ImageFormat::R,                DataType::Int8   };
-        case DXGI_FORMAT_R16_UNORM:             return { ImageFormat::R,                DataType::UInt16 };
-        case DXGI_FORMAT_R16_SNORM:             return { ImageFormat::R,                DataType::Int16  };
-        case DXGI_FORMAT_R32_UINT:              return { ImageFormat::R,                DataType::UInt32 };
-        case DXGI_FORMAT_R32_SINT:              return { ImageFormat::R,                DataType::Int32  };
-        case DXGI_FORMAT_R32_FLOAT:             return { ImageFormat::R,                DataType::Float  };
-        case DXGI_FORMAT_R8G8_UNORM:            return { ImageFormat::RG,               DataType::UInt8  };
-        case DXGI_FORMAT_R8G8_SNORM:            return { ImageFormat::RG,               DataType::Int8   };
-        case DXGI_FORMAT_R16G16_UNORM:          return { ImageFormat::RG,               DataType::UInt16 };
-        case DXGI_FORMAT_R16G16_SNORM:          return { ImageFormat::RG,               DataType::Int16  };
-        case DXGI_FORMAT_R32G32_UINT:           return { ImageFormat::RG,               DataType::UInt32 };
-        case DXGI_FORMAT_R32G32_SINT:           return { ImageFormat::RG,               DataType::Int32  };
-        case DXGI_FORMAT_R32G32_FLOAT:          return { ImageFormat::RG,               DataType::Float  };
-        case DXGI_FORMAT_R32G32B32_UINT:        return { ImageFormat::RGB,              DataType::UInt32 };
-        case DXGI_FORMAT_R32G32B32_SINT:        return { ImageFormat::RGB,              DataType::Int32  };
-        case DXGI_FORMAT_R32G32B32_FLOAT:       return { ImageFormat::RGB,              DataType::Float  };
-        case DXGI_FORMAT_R8G8B8A8_UNORM:        return { ImageFormat::RGBA,             DataType::UInt8  };
-        case DXGI_FORMAT_R8G8B8A8_SNORM:        return { ImageFormat::RGBA,             DataType::Int8   };
-        case DXGI_FORMAT_R16G16B16A16_UNORM:    return { ImageFormat::RGBA,             DataType::UInt16 };
-        case DXGI_FORMAT_R16G16B16A16_SNORM:    return { ImageFormat::RGBA,             DataType::Int16  };
-        case DXGI_FORMAT_R32G32B32A32_UINT:     return { ImageFormat::RGBA,             DataType::UInt32 };
-        case DXGI_FORMAT_R32G32B32A32_SINT:     return { ImageFormat::RGBA,             DataType::Int32  };
-        case DXGI_FORMAT_R32G32B32A32_FLOAT:    return { ImageFormat::RGBA,             DataType::Float  };
-        case DXGI_FORMAT_BC1_UNORM:             return { ImageFormat::CompressedRGB,    DataType::UInt8  };
-        case DXGI_FORMAT_BC2_UNORM:             return { ImageFormat::CompressedRGBA,   DataType::UInt8  };
-        case DXGI_FORMAT_BC3_UNORM:             return { ImageFormat::CompressedRGBA,   DataType::UInt8  };
+        case DXGI_FORMAT_D16_UNORM:             return { ImageFormat::Depth,            DataType::UInt16  };
+        case DXGI_FORMAT_D32_FLOAT:             return { ImageFormat::Depth,            DataType::Float32 };
+        case DXGI_FORMAT_D24_UNORM_S8_UINT:     return { ImageFormat::DepthStencil,     DataType::Float32 };
+        //case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:  return { ImageFormat::DepthStencil,     DataType::Float32 };
+        case DXGI_FORMAT_R8_UNORM:              return { ImageFormat::R,                DataType::UInt8   };
+        case DXGI_FORMAT_R8_SNORM:              return { ImageFormat::R,                DataType::Int8    };
+        case DXGI_FORMAT_R16_UNORM:             return { ImageFormat::R,                DataType::UInt16  };
+        case DXGI_FORMAT_R16_SNORM:             return { ImageFormat::R,                DataType::Int16   };
+        case DXGI_FORMAT_R32_UINT:              return { ImageFormat::R,                DataType::UInt32  };
+        case DXGI_FORMAT_R32_SINT:              return { ImageFormat::R,                DataType::Int32   };
+        case DXGI_FORMAT_R16_FLOAT:             return { ImageFormat::R,                DataType::Float16 };
+        case DXGI_FORMAT_R32_FLOAT:             return { ImageFormat::R,                DataType::Float32 };
+        case DXGI_FORMAT_R8G8_UNORM:            return { ImageFormat::RG,               DataType::UInt8   };
+        case DXGI_FORMAT_R8G8_SNORM:            return { ImageFormat::RG,               DataType::Int8    };
+        case DXGI_FORMAT_R16G16_UNORM:          return { ImageFormat::RG,               DataType::UInt16  };
+        case DXGI_FORMAT_R16G16_SNORM:          return { ImageFormat::RG,               DataType::Int16   };
+        case DXGI_FORMAT_R32G32_UINT:           return { ImageFormat::RG,               DataType::UInt32  };
+        case DXGI_FORMAT_R32G32_SINT:           return { ImageFormat::RG,               DataType::Int32   };
+        case DXGI_FORMAT_R16G16_FLOAT:          return { ImageFormat::RG,               DataType::Float16 };
+        case DXGI_FORMAT_R32G32_FLOAT:          return { ImageFormat::RG,               DataType::Float32 };
+        case DXGI_FORMAT_R32G32B32_UINT:        return { ImageFormat::RGB,              DataType::UInt32  };
+        case DXGI_FORMAT_R32G32B32_SINT:        return { ImageFormat::RGB,              DataType::Int32   };
+        case DXGI_FORMAT_R32G32B32_FLOAT:       return { ImageFormat::RGB,              DataType::Float32 };
+        case DXGI_FORMAT_R8G8B8A8_UNORM:        return { ImageFormat::RGBA,             DataType::UInt8   };
+        case DXGI_FORMAT_R8G8B8A8_SNORM:        return { ImageFormat::RGBA,             DataType::Int8    };
+        case DXGI_FORMAT_R16G16B16A16_UNORM:    return { ImageFormat::RGBA,             DataType::UInt16  };
+        case DXGI_FORMAT_R16G16B16A16_SNORM:    return { ImageFormat::RGBA,             DataType::Int16   };
+        case DXGI_FORMAT_R32G32B32A32_UINT:     return { ImageFormat::RGBA,             DataType::UInt32  };
+        case DXGI_FORMAT_R32G32B32A32_SINT:     return { ImageFormat::RGBA,             DataType::Int32   };
+        case DXGI_FORMAT_R16G16B16A16_FLOAT:    return { ImageFormat::RGBA,             DataType::Float16 };
+        case DXGI_FORMAT_R32G32B32A32_FLOAT:    return { ImageFormat::RGBA,             DataType::Float32 };
+        case DXGI_FORMAT_BC1_UNORM:             return { ImageFormat::CompressedRGB,    DataType::UInt8   };
+        case DXGI_FORMAT_BC2_UNORM:             return { ImageFormat::CompressedRGBA,   DataType::UInt8   };
+        case DXGI_FORMAT_BC3_UNORM:             return { ImageFormat::CompressedRGBA,   DataType::UInt8   };
         default:                                break;
     }
     throw std::invalid_argument("failed to map hardware texture format into image buffer format");
 }
 
-VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
+Format DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType, BYTE componentMask)
 {
     switch (componentType)
     {
@@ -479,10 +498,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::UInt;
-                case 0x03: return VectorType::UInt2;
-                case 0x07: return VectorType::UInt3;
-                case 0x0f: return VectorType::UInt4;
+                case 0x01: return Format::R32UInt;
+                case 0x03: return Format::RG32UInt;
+                case 0x07: return Format::RGB32UInt;
+                case 0x0f: return Format::RGBA32UInt;
             }
         }
         break;
@@ -491,10 +510,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::Int;
-                case 0x03: return VectorType::Int2;
-                case 0x07: return VectorType::Int3;
-                case 0x0f: return VectorType::Int4;
+                case 0x01: return Format::R32SInt;
+                case 0x03: return Format::RG32SInt;
+                case 0x07: return Format::RGB32SInt;
+                case 0x0f: return Format::RGBA32SInt;
             }
         }
         break;
@@ -503,10 +522,10 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         {
             switch (componentMask)
             {
-                case 0x01: return VectorType::Float;
-                case 0x03: return VectorType::Float2;
-                case 0x07: return VectorType::Float3;
-                case 0x0f: return VectorType::Float4;
+                case 0x01: return Format::R32Float;
+                case 0x03: return Format::RG32Float;
+                case 0x07: return Format::RGB32Float;
+                case 0x0f: return Format::RGBA32Float;
             }
         }
         break;
@@ -514,7 +533,7 @@ VectorType DXGetSignatureParameterType(D3D_REGISTER_COMPONENT_TYPE componentType
         default:
         break;
     }
-    throw std::runtime_error("failed to map Direct3D signature parameter to VectorType");
+    throw std::runtime_error("failed to map Direct3D signature parameter to LLGL::Format");
 }
 
 DXGI_FORMAT DXPickDepthStencilFormat(int depthBits, int stencilBits)

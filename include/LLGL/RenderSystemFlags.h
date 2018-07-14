@@ -433,25 +433,48 @@ struct RenderingLimits
     */
     float           lineWidthRange[2]                   = { 1.0f, 1.0f };
 
-    //! Specifies the maximum number of texture array layers (for 1D-, 2D-, and cube textures).
+    /**
+    \brief Specifies the maximum number of texture array layers (for 1D-, 2D-, and cube textures).
+    \see TextureDescriptor::arrayLayers
+    */
     std::uint32_t   maxNumTextureArrayLayers            = 0;
 
-    //! Specifies the maximum number of attachment points for each render target.
+    /**
+    \brief Specifies the maximum number of attachment points for each render target.
+    \see RenderTargetDescriptor::attachments
+    \see RenderPassDescriptor::colorAttachments
+    */
     std::uint32_t   maxNumRenderTargetAttachments       = 0;
 
-    //! Specifies the maximum number of patch control points.
+    /**
+    \brief Specifies the maximum number of patch control points.
+    \see PrimitiveTopology::Patches1
+    \see PrimitiveTopology::Patches32
+    */
     std::uint32_t   maxPatchVertices                    = 0;
 
-    //! Specifies the maximum size of each 1D texture.
+    /**
+    \brief Specifies the maximum size of each 1D texture.
+    \see TextureDescriptor::extent
+    */
     std::uint32_t   max1DTextureSize                    = 0;
 
-    //! Specifies the maximum size of each 2D texture (for width and height).
+    /**
+    \brief Specifies the maximum size of each 2D texture (for width and height).
+    \see TextureDescriptor::extent
+    */
     std::uint32_t   max2DTextureSize                    = 0;
 
-    //! Specifies the maximum size of each 3D texture (for width, height, and depth).
+    /**
+    \brief Specifies the maximum size of each 3D texture (for width, height, and depth).
+    \see TextureDescriptor::extent
+    */
     std::uint32_t   max3DTextureSize                    = 0;
 
-    //! Specifies the maximum size of each cube texture (for width and height).
+    /**
+    \brief Specifies the maximum size of each cube texture (for width and height).
+    \see TextureDescriptor::extent
+    */
     std::uint32_t   maxCubeTextureSize                  = 0;
 
     /**
@@ -471,11 +494,17 @@ struct RenderingLimits
 
     /**
     \brief Specifies the maximum number of viewports and scissor rectangles. Most render systems have a maximum of 16.
-    \see hasViewportArrays
+    \see CommandBuffer::SetViewports
+    \see CommandBuffer::SetScissors
+    \see RenderingFeatures::hasViewportArrays
     */
     std::uint32_t   maxNumViewports                     = 0;
 
-    //! Specifies the maximum width and height of each viewport and scissor rectangle.
+    /**
+    \brief Specifies the maximum width and height of each viewport and scissor rectangle.
+    \see Viewport::width
+    \see Viewport::height
+    */
     std::uint32_t   maxViewportSize[2]                  = { 0, 0 };
 
     /**
@@ -522,8 +551,11 @@ struct RenderingCapabilities
     */
     std::vector<ShadingLanguage>    shadingLanguages;
 
-    //! Specifies the list of supported texture formats.
-    std::vector<TextureFormat>      textureFormats;
+    /**
+    \brief Specifies the list of supported texture formats.
+    \see Format
+    */
+    std::vector<Format>             textureFormats;
 
     /**
     \brief Specifies all supported hardware features.

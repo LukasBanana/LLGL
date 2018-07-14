@@ -11,7 +11,7 @@
 namespace LLGL
 {
 
-    
+
 #ifndef LLGL_OS_MACOS
 
 /* Platform specific GL extensions */
@@ -392,6 +392,16 @@ PFNGLPOLYGONOFFSETCLAMPPROC                             glPolygonOffsetClamp    
 /* GL_ARB_texture_view */
 
 PFNGLTEXTUREVIEWPROC                                    glTextureView                                   = nullptr;
+
+/* GL_ARB_shader_image_load_store */
+
+PFNGLBINDIMAGETEXTUREPROC                               glBindImageTexture                              = nullptr;
+PFNGLMEMORYBARRIERPROC                                  glMemoryBarrier                                 = nullptr;
+
+/* GL_ARB_framebuffer_no_attachments */
+
+PFNGLFRAMEBUFFERPARAMETERIPROC                          glFramebufferParameteri                         = nullptr;
+PFNGLGETFRAMEBUFFERPARAMETERIVPROC                      glGetFramebufferParameteriv                     = nullptr;
 
 /* GL_ARB_direct_state_access */
 

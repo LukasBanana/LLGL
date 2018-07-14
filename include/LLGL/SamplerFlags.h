@@ -38,7 +38,7 @@ enum class SamplerAddressMode
     Repeat,
 
     /**
-    \brief Flip texture coordinates at ever integer junction.
+    \brief Flip texture coordinates at each integer junction.
     \image html SamplerAddressMode_Mirror.png
     \image latex SamplerAddressMode_Mirror.png "SamplerAddressMode::Mirror example" width=0.3\textwidth
     */

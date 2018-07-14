@@ -15,9 +15,14 @@ namespace LLGL
 
 
 static void BitBlit(
-    const Extent3D& copyExtent, std::uint32_t bpp,
-    char* dst, std::uint32_t dstRowStride, std::uint32_t dstDepthStride,
-    const char* src, std::uint32_t srcRowStride, std::uint32_t srcDepthStride)
+    const Extent3D& copyExtent,
+    std::uint32_t   bpp,
+    char*           dst,
+    std::uint32_t   dstRowStride,
+    std::uint32_t   dstDepthStride,
+    const char*     src,
+    std::uint32_t   srcRowStride,
+    std::uint32_t   srcDepthStride)
 {
     const auto copyRowStride    = bpp * copyExtent.width;
     const auto copyDepthStride  = copyRowStride * copyExtent.height;

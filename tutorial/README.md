@@ -10,7 +10,7 @@ Getting started tutorial where a single multi-colored triangle is rendered.
 
 <p align="center"><img src="Tutorial01_HelloTriangle.png" width="400" height="300"/></p>
 
-### [Tutorial 02: Tessellation](Tutorial02_Tessellation/main.cpp)
+### [Tutorial 02: Tessellation](Tutorial02_Tessellation)
 
 Simple tessellation example without any textures.
 

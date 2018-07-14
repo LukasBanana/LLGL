@@ -1,5 +1,5 @@
 /*
- * Input.h
+ * Helper.h
  * 
  * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
  * See "LICENSE.txt" for license information.
@@ -10,6 +10,7 @@
 
 
 #include "../Renderer/CheckedCast.h"
+#include <LLGL/Export.h>
 #include <algorithm>
 #include <type_traits>
 #include <memory>
@@ -28,6 +29,8 @@
 namespace LLGL
 {
 
+
+/* ----- Templates ----- */
 
 // Alternative to std::make_unique for strict C++11 support.
 template <typename T, typename... Args>
@@ -193,6 +196,15 @@ T GetAlignedSize(T size, T alignment)
     }
     return size;
 }
+
+
+/* ----- Functions ----- */
+
+//! Reads the specified text file into a string.
+LLGL_EXPORT std::string ReadFileString(const char* filename);
+
+//! Reads the specified binary file into a buffer.
+LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename);
 
 
 } // /namespace LLGL

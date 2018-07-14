@@ -571,6 +571,20 @@ static bool Load_GL_ARB_texture_view(bool usePlaceholder)
     return true;
 }
 
+static bool Load_GL_ARB_shader_image_load_store(bool usePlaceholder)
+{
+    LOAD_GLPROC( glBindImageTexture );
+    LOAD_GLPROC( glMemoryBarrier    );
+    return true;
+}
+
+static bool Load_GL_ARB_framebuffer_no_attachments(bool usePlaceholder)
+{
+    LOAD_GLPROC( glFramebufferParameteri     );
+    LOAD_GLPROC( glGetFramebufferParameteriv );
+    return true;
+}
+
 static bool Load_GL_ARB_direct_state_access(bool usePlaceholder)
 {
     LOAD_GLPROC( glCreateTransformFeedbacks                 );
@@ -804,35 +818,38 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
 
     #else
 
-    auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc, GLExt viewerExt) -> void
+    auto LoadExtension = [&](const std::string& extName, const std::function<bool(bool)>& extLoadingProc, GLExt extensionID) -> void
     {
         /* Try to load OpenGL extension */
         auto it = extensions.find(extName);
-        if (it != extensions.end() && !extLoadingProc(false))
+        if (it != extensions.end())
         {
-            /* Loading extension failed */
-            Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
+            if (extLoadingProc(false))
+            {
+                /* Enable extension in registry */
+                RegisterExtension(extensionID);
+                it->second = true;
+            }
+            else
+            {
+                /* Loading extension failed */
+                Log::StdErr() << "failed to load OpenGL extension: " << extName << std::endl;
+            }
         }
         #ifdef LLGL_GL_ENABLE_EXT_PLACEHOLDERS
-        else if (it == extensions.end())
+        else
         {
             /* If failed, use dummy procedures to detect illegal use of OpenGL extension */
             extLoadingProc(true);
         }
         #endif
-        else if (it != extensions.end())
-        {
-            /* Enable extension in viewer */
-            RegisterExtension(viewerExt);
-            it->second = true;
-        }
     };
 
-    auto EnableExtension = [&](const std::string& extName, GLExt viewerExt) -> void
+    auto EnableExtension = [&](const std::string& extName, GLExt extensionID) -> void
     {
         /* Try to enable OpenGL extension */
         if (extensions.find(extName) != extensions.end())
-            RegisterExtension(viewerExt);
+            RegisterExtension(extensionID);
     };
 
     #define LOAD_GLEXT(NAME) \
@@ -844,9 +861,9 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     /* Add standard extensions */
     if (coreProfile)
     {
-        extensions["GL_ARB_shader_objects"] = false;
-        extensions["GL_ARB_vertex_buffer_object"] = false;
-        extensions["GL_EXT_texture3D"] = false;
+        extensions[ "GL_ARB_shader_objects"       ] = false;
+        extensions[ "GL_ARB_vertex_buffer_object" ] = false;
+        extensions[ "GL_EXT_texture3D"            ] = false;
     }
 
     /* Load hardware buffer extensions */
@@ -908,6 +925,8 @@ void LoadAllExtensions(GLExtensionList& extensions, bool coreProfile)
     LOAD_GLEXT( ARB_buffer_storage               );
     LOAD_GLEXT( ARB_polygon_offset_clamp         );
     LOAD_GLEXT( ARB_texture_view                 );
+    LOAD_GLEXT( ARB_shader_image_load_store      );
+    LOAD_GLEXT( ARB_framebuffer_no_attachments   );
     #ifdef LLGL_GL_ENABLE_DSA_EXT
     LOAD_GLEXT( ARB_direct_state_access          );
     #endif

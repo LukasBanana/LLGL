@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-class D3D11StreamOutputBuffer : public D3D11Buffer
+class D3D11StreamOutputBuffer final : public D3D11Buffer
 {
 
     public:

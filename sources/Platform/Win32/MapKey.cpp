@@ -12,293 +12,289 @@ namespace LLGL
 {
 
 
-#define KEY(c) Key::c
-#define DUMMY KEY(Pause) // <-- any key, a dummy will never be used
+static const Key g_win32KeyCodeDummy    = Key::Any;
 
 static const Key g_win32KeyCodeMap[256] =
 {
-    DUMMY,                     // 0x00
-    KEY(LButton             ), // 0x01
-    KEY(RButton             ), // 0x02
-    KEY(Cancel              ), // 0x03
-    KEY(MButton             ), // 0x04
-    KEY(XButton1            ), // 0x05
-    KEY(XButton2            ), // 0x06
-    DUMMY,                     // 0x07
-    KEY(Back                ), // 0x08
-    KEY(Tab                 ), // 0x09
-    DUMMY,                     // 0x0a
-    DUMMY,                     // 0x0b
-    KEY(Clear               ), // 0x0c
-    KEY(Return              ), // 0x0d
-    DUMMY,                     // 0x0e
-    DUMMY,                     // 0x0f
-    KEY(Shift               ), // 0x10
-    KEY(Control             ), // 0x11
-    KEY(Menu                ), // 0x12
-    KEY(Pause               ), // 0x13
-    KEY(Capital             ), // 0x14
-    DUMMY,                     // 0x15
-    DUMMY,                     // 0x16
-    DUMMY,                     // 0x17
-    DUMMY,                     // 0x18
-    DUMMY,                     // 0x19
-    DUMMY,                     // 0x1a
-    KEY(Escape              ), // 0x1b
-    DUMMY,                     // 0x1c
-    DUMMY,                     // 0x1d
-    DUMMY,                     // 0x1e
-    DUMMY,                     // 0x1f
-    KEY(Space               ), // 0x20
-    KEY(PageUp              ), // 0x21
-    KEY(PageDown            ), // 0x22
-    KEY(End                 ), // 0x23
-    KEY(Home                ), // 0x24
-    KEY(Left                ), // 0x25
-    KEY(Up                  ), // 0x26
-    KEY(Right               ), // 0x27
-    KEY(Down                ), // 0x28
-    KEY(Select              ), // 0x29
-    KEY(Print               ), // 0x2a
-    KEY(Exe                 ), // 0x2b
-    KEY(Snapshot            ), // 0x2c
-    KEY(Insert              ), // 0x2d
-    KEY(Delete              ), // 0x2e
-    KEY(Help                ), // 0x2f
-    
-    KEY(D0                  ), // 0x30
-    KEY(D1                  ), // 0x31
-    KEY(D2                  ), // 0x32
-    KEY(D3                  ), // 0x33
-    KEY(D4                  ), // 0x34
-    KEY(D5                  ), // 0x35
-    KEY(D6                  ), // 0x36
-    KEY(D7                  ), // 0x37
-    KEY(D8                  ), // 0x38
-    KEY(D9                  ), // 0x39
-    
-    DUMMY,                     // 0x3a
-    DUMMY,                     // 0x3b
-    DUMMY,                     // 0x3c
-    DUMMY,                     // 0x3d
-    DUMMY,                     // 0x3e
-    DUMMY,                     // 0x3f
-    DUMMY,                     // 0x40
+    g_win32KeyCodeDummy,    // 0x00
+    Key::LButton,           // 0x01
+    Key::RButton,           // 0x02
+    Key::Cancel,            // 0x03
+    Key::MButton,           // 0x04
+    Key::XButton1,          // 0x05
+    Key::XButton2,          // 0x06
+    g_win32KeyCodeDummy,    // 0x07
+    Key::Back,              // 0x08
+    Key::Tab,               // 0x09
+    g_win32KeyCodeDummy,    // 0x0a
+    g_win32KeyCodeDummy,    // 0x0b
+    Key::Clear,             // 0x0c
+    Key::Return,            // 0x0d
+    g_win32KeyCodeDummy,    // 0x0e
+    g_win32KeyCodeDummy,    // 0x0f
+    Key::Shift,             // 0x10
+    Key::Control,           // 0x11
+    Key::Menu,              // 0x12
+    Key::Pause,             // 0x13
+    Key::Capital,           // 0x14
+    g_win32KeyCodeDummy,    // 0x15
+    g_win32KeyCodeDummy,    // 0x16
+    g_win32KeyCodeDummy,    // 0x17
+    g_win32KeyCodeDummy,    // 0x18
+    g_win32KeyCodeDummy,    // 0x19
+    g_win32KeyCodeDummy,    // 0x1a
+    Key::Escape,            // 0x1b
+    g_win32KeyCodeDummy,    // 0x1c
+    g_win32KeyCodeDummy,    // 0x1d
+    g_win32KeyCodeDummy,    // 0x1e
+    g_win32KeyCodeDummy,    // 0x1f
+    Key::Space,             // 0x20
+    Key::PageUp,            // 0x21
+    Key::PageDown,          // 0x22
+    Key::End,               // 0x23
+    Key::Home,              // 0x24
+    Key::Left,              // 0x25
+    Key::Up,                // 0x26
+    Key::Right,             // 0x27
+    Key::Down,              // 0x28
+    Key::Select,            // 0x29
+    Key::Print,             // 0x2a
+    Key::Exe,               // 0x2b
+    Key::Snapshot,          // 0x2c
+    Key::Insert,            // 0x2d
+    Key::Delete,            // 0x2e
+    Key::Help,              // 0x2f
 
-    KEY(A                   ), // 0x41
-    KEY(B                   ), // 0x42
-    KEY(C                   ), // 0x43
-    KEY(D                   ), // 0x44
-    KEY(E                   ), // 0x45
-    KEY(F                   ), // 0x46
-    KEY(G                   ), // 0x47
-    KEY(H                   ), // 0x48
-    KEY(I                   ), // 0x49
-    KEY(J                   ), // 0x4a
-    KEY(K                   ), // 0x4b
-    KEY(L                   ), // 0x4c
-    KEY(M                   ), // 0x4d
-    KEY(N                   ), // 0x4e
-    KEY(O                   ), // 0x4f
-    KEY(P                   ), // 0x50
-    KEY(Q                   ), // 0x51
-    KEY(R                   ), // 0x52
-    KEY(S                   ), // 0x53
-    KEY(T                   ), // 0x54
-    KEY(U                   ), // 0x55
-    KEY(V                   ), // 0x56
-    KEY(W                   ), // 0x57
-    KEY(X                   ), // 0x58
-    KEY(Y                   ), // 0x59
-    KEY(Z                   ), // 0x5a
-    
-    KEY(LWin                ), // 0x5b
-    KEY(RWin                ), // 0x5c
-    KEY(Apps                ), // 0x5d
-    DUMMY,                     // 0x5e
-    KEY(Sleep               ), // 0x5f
+    Key::D0,                // 0x30
+    Key::D1,                // 0x31
+    Key::D2,                // 0x32
+    Key::D3,                // 0x33
+    Key::D4,                // 0x34
+    Key::D5,                // 0x35
+    Key::D6,                // 0x36
+    Key::D7,                // 0x37
+    Key::D8,                // 0x38
+    Key::D9,                // 0x39
 
-    KEY(Keypad0             ), // 0x60
-    KEY(Keypad1             ), // 0x61
-    KEY(Keypad2             ), // 0x62
-    KEY(Keypad3             ), // 0x63
-    KEY(Keypad4             ), // 0x64
-    KEY(Keypad5             ), // 0x65
-    KEY(Keypad6             ), // 0x66
-    KEY(Keypad7             ), // 0x67
-    KEY(Keypad8             ), // 0x68
-    KEY(Keypad9             ), // 0x69
-    
-    KEY(KeypadMultiply      ), // 0x6a
-    KEY(KeypadPlus          ), // 0x6b
-    KEY(KeypadSeparator     ), // 0x6c
-    KEY(KeypadMinus         ), // 0x6d
-    KEY(KeypadDecimal       ), // 0x6e
-    KEY(KeypadDivide        ), // 0x6f
-    
-    KEY(F1                  ), // 0x70
-    KEY(F2                  ), // 0x71
-    KEY(F3                  ), // 0x72
-    KEY(F4                  ), // 0x73
-    KEY(F5                  ), // 0x74
-    KEY(F6                  ), // 0x75
-    KEY(F7                  ), // 0x76
-    KEY(F8                  ), // 0x77
-    KEY(F9                  ), // 0x78
-    KEY(F10                 ), // 0x79
-    KEY(F11                 ), // 0x7a
-    KEY(F12                 ), // 0x7b
-    KEY(F13                 ), // 0x7c
-    KEY(F14                 ), // 0x7d
-    KEY(F15                 ), // 0x7e
-    KEY(F16                 ), // 0x7f
-    KEY(F17                 ), // 0x80
-    KEY(F18                 ), // 0x81
-    KEY(F19                 ), // 0x82
-    KEY(F20                 ), // 0x83
-    KEY(F21                 ), // 0x84
-    KEY(F22                 ), // 0x85
-    KEY(F23                 ), // 0x86
-    KEY(F24                 ), // 0x87
-    
-    DUMMY,                     // 0x88
-    DUMMY,                     // 0x89
-    DUMMY,                     // 0x8a
-    DUMMY,                     // 0x8b
-    DUMMY,                     // 0x8c
-    DUMMY,                     // 0x8d
-    DUMMY,                     // 0x8e
-    DUMMY,                     // 0x8f
+    g_win32KeyCodeDummy,    // 0x3a
+    g_win32KeyCodeDummy,    // 0x3b
+    g_win32KeyCodeDummy,    // 0x3c
+    g_win32KeyCodeDummy,    // 0x3d
+    g_win32KeyCodeDummy,    // 0x3e
+    g_win32KeyCodeDummy,    // 0x3f
+    g_win32KeyCodeDummy,    // 0x40
 
-    KEY(NumLock             ), // 0x90
-    KEY(ScrollLock          ), // 0x91
-    
-    DUMMY,                     // 0x92
-    DUMMY,                     // 0x93
-    DUMMY,                     // 0x94
-    DUMMY,                     // 0x95
-    DUMMY,                     // 0x96
-    DUMMY,                     // 0x97
-    DUMMY,                     // 0x98
-    DUMMY,                     // 0x99
-    DUMMY,                     // 0x9a
-    DUMMY,                     // 0x9b
-    DUMMY,                     // 0x9c
-    DUMMY,                     // 0x9d
-    DUMMY,                     // 0x9e
-    DUMMY,                     // 0x9f
-    
-    KEY(LShift              ), // 0xa0
-    KEY(RShift              ), // 0xa1
-    KEY(LControl            ), // 0xa2
-    KEY(RControl            ), // 0xa3
-    KEY(LMenu               ), // 0xa4
-    KEY(RMenu               ), // 0xa5
-    
-    KEY(BrowserBack         ), // 0xa6
-    KEY(BrowserForward      ), // 0xa7
-    KEY(BrowserRefresh      ), // 0xa8
-    KEY(BrowserStop         ), // 0xa9
-    KEY(BrowserSearch       ), // 0xaa
-    KEY(BrowserFavorits     ), // 0xab
-    KEY(BrowserHome         ), // 0xac
+    Key::A,                 // 0x41
+    Key::B,                 // 0x42
+    Key::C,                 // 0x43
+    Key::D,                 // 0x44
+    Key::E,                 // 0x45
+    Key::F,                 // 0x46
+    Key::G,                 // 0x47
+    Key::H,                 // 0x48
+    Key::I,                 // 0x49
+    Key::J,                 // 0x4a
+    Key::K,                 // 0x4b
+    Key::L,                 // 0x4c
+    Key::M,                 // 0x4d
+    Key::N,                 // 0x4e
+    Key::O,                 // 0x4f
+    Key::P,                 // 0x50
+    Key::Q,                 // 0x51
+    Key::R,                 // 0x52
+    Key::S,                 // 0x53
+    Key::T,                 // 0x54
+    Key::U,                 // 0x55
+    Key::V,                 // 0x56
+    Key::W,                 // 0x57
+    Key::X,                 // 0x58
+    Key::Y,                 // 0x59
+    Key::Z,                 // 0x5a
 
-    KEY(VolumeMute          ), // 0xad
-    KEY(VolumeDown          ), // 0xae
-    KEY(VolumeUp            ), // 0xaf
+    Key::LWin,              // 0x5b
+    Key::RWin,              // 0x5c
+    Key::Apps,              // 0x5d
+    g_win32KeyCodeDummy,    // 0x5e
+    Key::Sleep,             // 0x5f
 
-    KEY(MediaNextTrack      ), // 0xb0
-    KEY(MediaPrevTrack      ), // 0xb1
-    KEY(MediaStop           ), // 0xb2
-    KEY(MediaPlayPause      ), // 0xb3
-    
-    KEY(LaunchMail          ), // 0xb4
-    KEY(LaunchMediaSelect   ), // 0xb5
-    KEY(LaunchApp1          ), // 0xb6
-    KEY(LaunchApp2          ), // 0xb7
+    Key::Keypad0,           // 0x60
+    Key::Keypad1,           // 0x61
+    Key::Keypad2,           // 0x62
+    Key::Keypad3,           // 0x63
+    Key::Keypad4,           // 0x64
+    Key::Keypad5,           // 0x65
+    Key::Keypad6,           // 0x66
+    Key::Keypad7,           // 0x67
+    Key::Keypad8,           // 0x68
+    Key::Keypad9,           // 0x69
 
-    DUMMY,                     // 0xb8
-    DUMMY,                     // 0xb9
-    DUMMY,                     // 0xba
+    Key::KeypadMultiply,    // 0x6a
+    Key::KeypadPlus,        // 0x6b
+    Key::KeypadSeparator,   // 0x6c
+    Key::KeypadMinus,       // 0x6d
+    Key::KeypadDecimal,     // 0x6e
+    Key::KeypadDivide,      // 0x6f
 
-    KEY(Plus                ), // 0xbb
-    KEY(Comma               ), // 0xbc
-    KEY(Minus               ), // 0xbd
-    KEY(Period              ), // 0xbe
-    
-    DUMMY,                     // 0xbf
-    DUMMY,                     // 0xc0
+    Key::F1,                // 0x70
+    Key::F2,                // 0x71
+    Key::F3,                // 0x72
+    Key::F4,                // 0x73
+    Key::F5,                // 0x74
+    Key::F6,                // 0x75
+    Key::F7,                // 0x76
+    Key::F8,                // 0x77
+    Key::F9,                // 0x78
+    Key::F10,               // 0x79
+    Key::F11,               // 0x7a
+    Key::F12,               // 0x7b
+    Key::F13,               // 0x7c
+    Key::F14,               // 0x7d
+    Key::F15,               // 0x7e
+    Key::F16,               // 0x7f
+    Key::F17,               // 0x80
+    Key::F18,               // 0x81
+    Key::F19,               // 0x82
+    Key::F20,               // 0x83
+    Key::F21,               // 0x84
+    Key::F22,               // 0x85
+    Key::F23,               // 0x86
+    Key::F24,               // 0x87
 
-    DUMMY,                     // 0xc1
-    DUMMY,                     // 0xc2
-    DUMMY,                     // 0xc3
-    DUMMY,                     // 0xc4
-    DUMMY,                     // 0xc5
-    DUMMY,                     // 0xc6
-    DUMMY,                     // 0xc7
-    DUMMY,                     // 0xc8
-    DUMMY,                     // 0xc9
-    DUMMY,                     // 0xca
-    DUMMY,                     // 0xcb
-    DUMMY,                     // 0xcc
-    DUMMY,                     // 0xcd
-    DUMMY,                     // 0xce
-    DUMMY,                     // 0xcf
-    DUMMY,                     // 0xd0
-    DUMMY,                     // 0xd1
-    DUMMY,                     // 0xd2
-    DUMMY,                     // 0xd3
-    DUMMY,                     // 0xd4
-    DUMMY,                     // 0xd5
-    DUMMY,                     // 0xd6
-    DUMMY,                     // 0xd7
-    DUMMY,                     // 0xd8
-    DUMMY,                     // 0xd9
-    DUMMY,                     // 0xda
-    DUMMY,                     // 0xdb
+    g_win32KeyCodeDummy,    // 0x88
+    g_win32KeyCodeDummy,    // 0x89
+    g_win32KeyCodeDummy,    // 0x8a
+    g_win32KeyCodeDummy,    // 0x8b
+    g_win32KeyCodeDummy,    // 0x8c
+    g_win32KeyCodeDummy,    // 0x8d
+    g_win32KeyCodeDummy,    // 0x8e
+    g_win32KeyCodeDummy,    // 0x8f
 
-    KEY(Exponent            ), // 0xdc
-    
-    DUMMY,                     // 0xdd
-    DUMMY,                     // 0xde
-    DUMMY,                     // 0xdf
-    DUMMY,                     // 0xe0
-    DUMMY,                     // 0xe1
-    DUMMY,                     // 0xe2
-    DUMMY,                     // 0xe3
-    DUMMY,                     // 0xe4
-    DUMMY,                     // 0xe5
-    DUMMY,                     // 0xe6
-    DUMMY,                     // 0xe7
-    DUMMY,                     // 0xe8
-    DUMMY,                     // 0xe9
-    DUMMY,                     // 0xea
-    DUMMY,                     // 0xeb
-    DUMMY,                     // 0xec
-    DUMMY,                     // 0xed
-    DUMMY,                     // 0xee
-    DUMMY,                     // 0xef
-    DUMMY,                     // 0xf0
-    DUMMY,                     // 0xf1
-    DUMMY,                     // 0xf2
-    DUMMY,                     // 0xf3
-    DUMMY,                     // 0xf4
-    DUMMY,                     // 0xf5
+    Key::NumLock,           // 0x90
+    Key::ScrollLock,        // 0x91
 
-    KEY(Attn                ), // 0xf6
-    KEY(CrSel               ), // 0xf7
-    KEY(ExSel               ), // 0xf8
-    KEY(ErEOF               ), // 0xf9
-    KEY(Play                ), // 0xfa
-    KEY(Zoom                ), // 0xfb
-    KEY(NoName              ), // 0xfc
-    KEY(PA1                 ), // 0xfd
-    KEY(OEMClear            ), // 0xfe
-    DUMMY,                     // 0xff
+    g_win32KeyCodeDummy,    // 0x92
+    g_win32KeyCodeDummy,    // 0x93
+    g_win32KeyCodeDummy,    // 0x94
+    g_win32KeyCodeDummy,    // 0x95
+    g_win32KeyCodeDummy,    // 0x96
+    g_win32KeyCodeDummy,    // 0x97
+    g_win32KeyCodeDummy,    // 0x98
+    g_win32KeyCodeDummy,    // 0x99
+    g_win32KeyCodeDummy,    // 0x9a
+    g_win32KeyCodeDummy,    // 0x9b
+    g_win32KeyCodeDummy,    // 0x9c
+    g_win32KeyCodeDummy,    // 0x9d
+    g_win32KeyCodeDummy,    // 0x9e
+    g_win32KeyCodeDummy,    // 0x9f
+
+    Key::LShift,            // 0xa0
+    Key::RShift,            // 0xa1
+    Key::LControl,          // 0xa2
+    Key::RControl,          // 0xa3
+    Key::LMenu,             // 0xa4
+    Key::RMenu,             // 0xa5
+
+    Key::BrowserBack,       // 0xa6
+    Key::BrowserForward,    // 0xa7
+    Key::BrowserRefresh,    // 0xa8
+    Key::BrowserStop,       // 0xa9
+    Key::BrowserSearch,     // 0xaa
+    Key::BrowserFavorits,   // 0xab
+    Key::BrowserHome,       // 0xac
+
+    Key::VolumeMute,        // 0xad
+    Key::VolumeDown,        // 0xae
+    Key::VolumeUp,          // 0xaf
+
+    Key::MediaNextTrack,    // 0xb0
+    Key::MediaPrevTrack,    // 0xb1
+    Key::MediaStop,         // 0xb2
+    Key::MediaPlayPause,    // 0xb3
+
+    Key::LaunchMail,        // 0xb4
+    Key::LaunchMediaSelect, // 0xb5
+    Key::LaunchApp1,        // 0xb6
+    Key::LaunchApp2,        // 0xb7
+
+    g_win32KeyCodeDummy,    // 0xb8
+    g_win32KeyCodeDummy,    // 0xb9
+    g_win32KeyCodeDummy,    // 0xba
+
+    Key::Plus,              // 0xbb
+    Key::Comma,             // 0xbc
+    Key::Minus,             // 0xbd
+    Key::Period,            // 0xbe
+
+    g_win32KeyCodeDummy,    // 0xbf
+    g_win32KeyCodeDummy,    // 0xc0
+
+    g_win32KeyCodeDummy,    // 0xc1
+    g_win32KeyCodeDummy,    // 0xc2
+    g_win32KeyCodeDummy,    // 0xc3
+    g_win32KeyCodeDummy,    // 0xc4
+    g_win32KeyCodeDummy,    // 0xc5
+    g_win32KeyCodeDummy,    // 0xc6
+    g_win32KeyCodeDummy,    // 0xc7
+    g_win32KeyCodeDummy,    // 0xc8
+    g_win32KeyCodeDummy,    // 0xc9
+    g_win32KeyCodeDummy,    // 0xca
+    g_win32KeyCodeDummy,    // 0xcb
+    g_win32KeyCodeDummy,    // 0xcc
+    g_win32KeyCodeDummy,    // 0xcd
+    g_win32KeyCodeDummy,    // 0xce
+    g_win32KeyCodeDummy,    // 0xcf
+    g_win32KeyCodeDummy,    // 0xd0
+    g_win32KeyCodeDummy,    // 0xd1
+    g_win32KeyCodeDummy,    // 0xd2
+    g_win32KeyCodeDummy,    // 0xd3
+    g_win32KeyCodeDummy,    // 0xd4
+    g_win32KeyCodeDummy,    // 0xd5
+    g_win32KeyCodeDummy,    // 0xd6
+    g_win32KeyCodeDummy,    // 0xd7
+    g_win32KeyCodeDummy,    // 0xd8
+    g_win32KeyCodeDummy,    // 0xd9
+    g_win32KeyCodeDummy,    // 0xda
+    g_win32KeyCodeDummy,    // 0xdb
+
+    Key::Exponent,          // 0xdc
+
+    g_win32KeyCodeDummy,    // 0xdd
+    g_win32KeyCodeDummy,    // 0xde
+    g_win32KeyCodeDummy,    // 0xdf
+    g_win32KeyCodeDummy,    // 0xe0
+    g_win32KeyCodeDummy,    // 0xe1
+    g_win32KeyCodeDummy,    // 0xe2
+    g_win32KeyCodeDummy,    // 0xe3
+    g_win32KeyCodeDummy,    // 0xe4
+    g_win32KeyCodeDummy,    // 0xe5
+    g_win32KeyCodeDummy,    // 0xe6
+    g_win32KeyCodeDummy,    // 0xe7
+    g_win32KeyCodeDummy,    // 0xe8
+    g_win32KeyCodeDummy,    // 0xe9
+    g_win32KeyCodeDummy,    // 0xea
+    g_win32KeyCodeDummy,    // 0xeb
+    g_win32KeyCodeDummy,    // 0xec
+    g_win32KeyCodeDummy,    // 0xed
+    g_win32KeyCodeDummy,    // 0xee
+    g_win32KeyCodeDummy,    // 0xef
+    g_win32KeyCodeDummy,    // 0xf0
+    g_win32KeyCodeDummy,    // 0xf1
+    g_win32KeyCodeDummy,    // 0xf2
+    g_win32KeyCodeDummy,    // 0xf3
+    g_win32KeyCodeDummy,    // 0xf4
+    g_win32KeyCodeDummy,    // 0xf5
+
+    Key::Attn,              // 0xf6
+    Key::CrSel,             // 0xf7
+    Key::ExSel,             // 0xf8
+    Key::ErEOF,             // 0xf9
+    Key::Play,              // 0xfa
+    Key::Zoom,              // 0xfb
+    Key::NoName,            // 0xfc
+    Key::PA1,               // 0xfd
+    Key::OEMClear,          // 0xfe
+    g_win32KeyCodeDummy,    // 0xff
 };
-
-#undef KEY
-#undef DUMMY
 
 
 Key MapKey(std::uint8_t sysKeyCode)

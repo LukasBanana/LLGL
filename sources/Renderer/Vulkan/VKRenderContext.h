@@ -26,7 +26,7 @@ class VKCommandBuffer;
 class VKDeviceMemoryManager;
 class VKDeviceMemoryRegion;
 
-class VKRenderContext : public RenderContext
+class VKRenderContext final : public RenderContext
 {
 
     public:
@@ -45,6 +45,9 @@ class VKRenderContext : public RenderContext
         ~VKRenderContext();
 
         void Present() override;
+
+        Format QueryColorFormat() const override;
+        Format QueryDepthStencilFormat() const override;
 
         /* --- Extended functions --- */
 

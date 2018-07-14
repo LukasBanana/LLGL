@@ -23,7 +23,7 @@ namespace LLGL
 
 static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
 {
-    if ((textureDesc.flags & TextureFlags::GenerateMips) != 0)
+    if (IsMipMappedTexture(textureDesc))
         return GL_LINEAR_MIPMAP_LINEAR;
     else
         return GL_LINEAR;
@@ -96,32 +96,10 @@ Texture* GLRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     return TakeOwnership(textures_, std::move(texture));
 }
 
-TextureArray* GLRenderSystem::CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray)
-{
-    AssertCreateTextureArray(numTextures, textureArray);
-    return TakeOwnership(textureArrays_, MakeUnique<GLTextureArray>(numTextures, textureArray));
-}
-
 void GLRenderSystem::Release(Texture& texture)
 {
-    /* Notify GL state manager about object release, then release object */
     auto& textureGL = LLGL_CAST(GLTexture&, texture);
-    GLStateManager::NotifyTextureRelease(textureGL.GetID(), GLStateManager::GetTextureTarget(textureGL.GetType()));
     RemoveFromUniqueSet(textures_, &texture);
-}
-
-void GLRenderSystem::Release(TextureArray& textureArray)
-{
-    /* Notify GL state manager about object release, then release object */
-    auto& textureArrayGL = LLGL_CAST(GLTextureArray&, textureArray);
-
-    const auto& texIDs      = textureArrayGL.GetIDArray();
-    const auto& texTargets  = textureArrayGL.GetTargetArray();
-
-    for (std::size_t i = 0, n = texIDs.size(); i < n; ++i)
-        GLStateManager::NotifyTextureRelease(texIDs[i], texTargets[i]);
-
-    RemoveFromUniqueSet(textureArrays_, &textureArray);
 }
 
 /* ----- "WriteTexture..." functions ----- */
@@ -213,9 +191,6 @@ void GLRenderSystem::GenerateMips(Texture& texture)
     GenerateMipsPrimary(textureGL.GetID(), textureGL.GetType());
 }
 
-//TODO: performance tests show that the manual MIP-map generation is almost always slower than the default MIP-map generation
-//#define LLGL_ENABLE_CUSTOM_SUB_MIPGEN
-
 void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
 {
     if (numMipLevels > 0 && numArrayLayers > 0)
@@ -231,7 +206,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
         {
             /* Generate MIP-maps in custom sub generation process */
             auto& textureGL = LLGL_CAST(GLTexture&, texture);
-            auto extent = textureGL.GLTexture::QueryMipLevelSize(baseMipLevel);
+            auto extent = textureGL.QueryMipExtent(baseMipLevel);
 
             GenerateSubMipsWithFBO(
                 textureGL,
@@ -266,7 +241,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
             GLRenderSystem::GenerateMips(texture);
         }
 
-        #endif
+        #endif // /LLGL_ENABLE_CUSTOM_SUB_MIPGEN
     }
 }
 

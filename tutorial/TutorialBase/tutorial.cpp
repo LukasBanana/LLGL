@@ -125,11 +125,11 @@ Tutorial::TutorialShaderDescriptor::TutorialShaderDescriptor(
     LLGL::ShaderType    type,
     const std::string&  filename,
     const std::string&  entryPoint,
-    const std::string&  target) :
+    const std::string&  profile) :
         type       { type       },
         filename   { filename   },
         entryPoint { entryPoint },
-        target     { target     }
+        profile    { profile    }
 {
 }
 
@@ -306,9 +306,6 @@ LLGL::ShaderProgram* Tutorial::LoadShaderProgram(
     const std::vector<LLGL::VertexFormat>&          vertexFormats,
     const LLGL::StreamOutputFormat&                 streamOutputFormat)
 {
-    // Create shader program
-    LLGL::ShaderProgram* shaderProgram = renderer->CreateShaderProgram();
-
     ShaderProgramRecall recall;
 
     recall.shaderDescs = shaderDescs;
@@ -316,43 +313,24 @@ LLGL::ShaderProgram* Tutorial::LoadShaderProgram(
     for (const auto& desc : shaderDescs)
     {
         // Create shader
-        auto shader = renderer->CreateShader(desc.type);
-
-        LLGL::ShaderDescriptor shaderDesc { desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug };
+        auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
         shaderDesc.streamOutput.format = streamOutputFormat;
-
-        // Read shader file
-        if (desc.filename.size() > 4 && desc.filename.substr(desc.filename.size() - 4) == ".spv")
-        {
-            // Load binary
-            auto byteCode = ReadFileBuffer(desc.filename);
-            shader->LoadBinary(std::move(byteCode), shaderDesc);
-        }
-        else
-        {
-            // Compile shader
-            auto shaderCode = ReadFileContent(desc.filename);
-            shader->Compile(shaderCode, shaderDesc);
-        }
+        auto shader = renderer->CreateShader(shaderDesc);
 
         // Print info log (warnings and errors)
         std::string log = shader->QueryInfoLog();
         if (!log.empty())
             std::cerr << log << std::endl;
 
-        // Attach vertex- and fragment shader to the shader program
-        shaderProgram->AttachShader(*shader);
-
         // Store shader in recall
         recall.shaders.push_back(shader);
     }
 
-    // Bind vertex attribute layout (this is not required for a compute shader program)
-    if (!vertexFormats.empty())
-        shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(vertexFormats.size()), vertexFormats.data());
+    // Create shader program
+    auto shaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(recall.shaders, vertexFormats));
 
     // Link shader program and check for errors
-    if (!shaderProgram->LinkShaders())
+    if (shaderProgram->HasErrors())
         throw std::runtime_error(shaderProgram->QueryInfoLog());
 
     // Store information in call
@@ -363,8 +341,11 @@ LLGL::ShaderProgram* Tutorial::LoadShaderProgram(
     return shaderProgram;
 }
 
-bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram)
+bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
 {
+    if (!shaderProgram)
+        return false;
+
     std::cout << "reload shader program" << std::endl;
 
     // Find shader program in the recall map
@@ -375,9 +356,6 @@ bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram)
     auto& recall = it->second;
     std::vector<LLGL::Shader*> shaders;
 
-    // Detach previous shaders
-    shaderProgram->DetachAll();
-
     try
     {
         // Recompile all shaders
@@ -387,62 +365,52 @@ bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram* shaderProgram)
             auto shaderCode = ReadFileContent(desc.filename);
 
             // Create shader
-            auto shader = renderer->CreateShader(desc.type);
-
-            // Compile shader
-            LLGL::ShaderDescriptor shaderDesc(desc.entryPoint, desc.target, LLGL::ShaderCompileFlags::Debug);
+            auto shaderDesc = LLGL::ShaderDescFromFile(desc.type, desc.filename.c_str(), desc.entryPoint.c_str(), desc.profile.c_str());
             shaderDesc.streamOutput.format = recall.streamOutputFormat;
-
-            shader->Compile(shaderCode, shaderDesc);
+            auto shader = renderer->CreateShader(shaderDesc);
 
             // Print info log (warnings and errors)
             std::string log = shader->QueryInfoLog();
             if (!log.empty())
                 std::cerr << log << std::endl;
 
-            // Attach vertex- and fragment shader to the shader program
-            shaderProgram->AttachShader(*shader);
-
             // Store new shader
             shaders.push_back(shader);
         }
 
-        // Bind vertex attribute layout (this is not required for a compute shader program)
-        if (!recall.vertexFormats.empty())
-            shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(recall.vertexFormats.size()), recall.vertexFormats.data());
+        // Create new shader program
+        auto newShaderProgram = renderer->CreateShaderProgram(LLGL::ShaderProgramDesc(shaders, recall.vertexFormats));
 
         // Link shader program and check for errors
-        if (!shaderProgram->LinkShaders())
-            throw std::runtime_error(shaderProgram->QueryInfoLog());
+        if (newShaderProgram->HasErrors())
+        {
+            // Print errors and release shader program
+            std::cerr << newShaderProgram->QueryInfoLog() << std::endl;
+            renderer->Release(*newShaderProgram);
+        }
+        else
+        {
+            // Delete all previous shaders
+            for (auto shader : recall.shaders)
+                renderer->Release(*shader);
+
+            // Store new shaders in recall
+            recall.shaders = std::move(shaders);
+
+            // Delete old and use new shader program
+            renderer->Release(*shaderProgram);
+            shaderProgram = newShaderProgram;
+
+            return true;
+        }
     }
     catch (const std::exception& err)
     {
         // Print error message
         std::cerr << err.what() << std::endl;
-
-        // Attach all previous shaders again
-        for (auto shader : recall.shaders)
-            shaderProgram->AttachShader(*shader);
-
-        // Bind vertex attribute layout (this is not required for a compute shader program)
-        if (!recall.vertexFormats.empty())
-            shaderProgram->BuildInputLayout(static_cast<std::uint32_t>(recall.vertexFormats.size()), recall.vertexFormats.data());
-
-        // Link shader program and check for errors
-        if (!shaderProgram->LinkShaders())
-            throw std::runtime_error(shaderProgram->QueryInfoLog());
-
-        return false;
     }
 
-    // Delete all previous shaders
-    for (auto shader : recall.shaders)
-        renderer->Release(*shader);
-
-    // Store new shaders in recall
-    recall.shaders = std::move(shaders);
-
-    return true;
+    return false;
 }
 
 LLGL::ShaderProgram* Tutorial::LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats)
@@ -511,7 +479,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 
     // Create texture and upload image data onto hardware texture
     auto tex = renderSys.CreateTexture(
-        LLGL::Texture2DDesc(LLGL::TextureFormat::RGBA8, width, height), &imageDesc
+        LLGL::Texture2DDesc(LLGL::Format::RGBA8UNorm, width, height), &imageDesc
     );
 
     // Generate all MIP-maps (MIP = "Multum in Parvo", or "a multitude in a small space")
@@ -531,7 +499,7 @@ LLGL::Texture* LoadTextureWithRenderer(LLGL::RenderSystem& renderSys, const std:
 bool SaveTextureWithRenderer(LLGL::RenderSystem& renderSys, LLGL::Texture& texture, const std::string& filename, std::uint32_t mipLevel)
 {
     // Get texture dimension
-    auto texSize = texture.QueryMipLevelSize(0);
+    auto texSize = texture.QueryMipExtent(0);
 
     // Read texture image data
     std::vector<LLGL::ColorRGBAub> imageBuffer(texSize.width*texSize.height);

@@ -232,22 +232,6 @@ void DbgCommandBuffer::SetConstantBuffer(Buffer& buffer, std::uint32_t slot, lon
     LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
 }
 
-void DbgCommandBuffer::SetConstantBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        ValidateBufferType(bufferArray.GetType(), BufferType::Constant);
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetConstantBufferArray(bufferArray, startSlot, stageFlags);
-    
-    LLGL_DBG_PROFILER_DO(setConstantBuffer.Inc());
-}
-
 /* ----- Storage Buffers ------ */
 
 void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long stageFlags)
@@ -264,22 +248,6 @@ void DbgCommandBuffer::SetStorageBuffer(Buffer& buffer, std::uint32_t slot, long
     }
 
     instanceExt->SetStorageBuffer(bufferDbg.instance, slot, stageFlags);
-    
-    LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
-}
-
-void DbgCommandBuffer::SetStorageBufferArray(BufferArray& bufferArray, std::uint32_t startSlot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        ValidateBufferType(bufferArray.GetType(), BufferType::Storage);
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-
-    instanceExt->SetStorageBufferArray(bufferArray, startSlot, stageFlags);
     
     LLGL_DBG_PROFILER_DO(setStorageBuffer.Inc());
 }
@@ -362,21 +330,6 @@ void DbgCommandBuffer::SetTexture(Texture& texture, std::uint32_t slot, long sta
     LLGL_DBG_PROFILER_DO(setTexture.Inc());
 }
 
-void DbgCommandBuffer::SetTextureArray(TextureArray& textureArray, std::uint32_t startSlot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-    
-    instanceExt->SetTextureArray(textureArray, startSlot, stageFlags);
-    
-    LLGL_DBG_PROFILER_DO(setTexture.Inc());
-}
-
 /* ----- Sampler States ----- */
 
 void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long stageFlags)
@@ -394,28 +347,15 @@ void DbgCommandBuffer::SetSampler(Sampler& sampler, std::uint32_t slot, long sta
     LLGL_DBG_PROFILER_DO(setSampler.Inc());
 }
 
-void DbgCommandBuffer::SetSamplerArray(SamplerArray& samplerArray, std::uint32_t startSlot, long stageFlags)
-{
-    AssertCommandBufferExt(__func__);
-
-    if (debugger_)
-    {
-        LLGL_DBG_SOURCE;
-        ValidateStageFlags(stageFlags, StageFlags::AllStages);
-    }
-    
-    instanceExt->SetSamplerArray(samplerArray, startSlot, stageFlags);
-    
-    LLGL_DBG_PROFILER_DO(setSampler.Inc());
-}
-
 /* ----- Resource View Heaps ----- */
 
+//TODO: record bindings
 void DbgCommandBuffer::SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
     instance.SetGraphicsResourceHeap(resourceHeap, firstSet);
 }
 
+//TODO: record bindings
 void DbgCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet)
 {
     instance.SetComputeResourceHeap(resourceHeap, firstSet);

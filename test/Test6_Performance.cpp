@@ -93,12 +93,11 @@ class PerformanceTest
 
             LLGL::TextureDescriptor textureDesc;
             {
-                textureDesc.type                = LLGL::TextureType::Texture2DArray;
-                textureDesc.format              = LLGL::TextureFormat::RGBA8;
-                textureDesc.flags               = LLGL::TextureFlags::GenerateMips;
-                textureDesc.texture2D.width     = image.GetExtent().width;
-                textureDesc.texture2D.height    = image.GetExtent().height;
-                textureDesc.texture2D.layers    = image.GetExtent().depth;
+                textureDesc.type            = LLGL::TextureType::Texture2DArray;
+                textureDesc.format          = LLGL::Format::RGBA8UNorm;
+                textureDesc.extent.width    = image.GetExtent().width;
+                textureDesc.extent.height   = image.GetExtent().height;
+                textureDesc.arrayLayers     = image.GetExtent().depth;
             }
             for (std::size_t i = 0; i < numTextures; ++i)
             {

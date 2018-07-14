@@ -21,53 +21,27 @@ namespace LLGL
 {
 
 
-D3D11ShaderProgram::D3D11ShaderProgram(ID3D11Device* device) :
-    device_ { device }
+static void Attach(D3D11Shader*& shaderD3D, Shader* shader)
 {
+    if (shader != nullptr)
+        shaderD3D = LLGL_CAST(D3D11Shader*, shader);
 }
 
-void D3D11ShaderProgram::AttachShader(Shader& shader)
+D3D11ShaderProgram::D3D11ShaderProgram(ID3D11Device* device, const ShaderProgramDescriptor& desc)
 {
-    /* Store D3D11 shader */
-    auto shaderD3D = LLGL_CAST(D3D11Shader*, &shader);
-
-    const auto shaderType0Idx = static_cast<std::size_t>(ShaderType::Vertex);
-    const auto shaderTypeNIdx = (static_cast<std::size_t>(shader.GetType()) - shaderType0Idx);
-
-    if (shaderTypeNIdx < 6)
-        shaders_[shaderTypeNIdx] = shaderD3D;
-    else
-        throw std::runtime_error("cannot attach shader with invalid type: 0x" + ToHex(shaderTypeNIdx));
+    Attach(vs_, desc.vertexShader);
+    Attach(hs_, desc.tessControlShader);
+    Attach(ds_, desc.tessEvaluationShader);
+    Attach(gs_, desc.geometryShader);
+    Attach(ps_, desc.fragmentShader);
+    Attach(cs_, desc.computeShader);
+    BuildInputLayout(device, desc.vertexFormats.size(), desc.vertexFormats.data());
+    Link();
 }
 
-void D3D11ShaderProgram::DetachAll()
+bool D3D11ShaderProgram::HasErrors() const
 {
-    /* Reset all shader attributes */
-    inputLayout_.Reset();
-    std::fill(std::begin(shaders_), std::end(shaders_), nullptr);
-    linkError_ = LinkError::NoError;
-}
-
-bool D3D11ShaderProgram::LinkShaders()
-{
-    /* Validate shader composition */
-    linkError_ = LinkError::NoError;
-
-    /* Validate native shader objects */
-    for (std::size_t i = 0; i < 6; ++i)
-    {
-        if (shaders_[i] != nullptr && shaders_[i]->GetNative().vs == nullptr)
-            linkError_ = LinkError::InvalidByteCode;
-    }
-
-    /*
-    Validate composition of attached shaders
-    Note: reinterpret_cast allowed here, because no multiple inheritance is used, just plain pointers!
-    */
-    if (!ValidateShaderComposition(reinterpret_cast<Shader* const*>(shaders_), 6))
-        linkError_ = LinkError::InvalidComposition;
-
-    return (linkError_ == LinkError::NoError);
+    return (linkError_ != LinkError::NoError);
 }
 
 std::string D3D11ShaderProgram::QueryInfoLog()
@@ -99,53 +73,12 @@ static DXGI_FORMAT GetInputElementFormat(const VertexAttribute& attrib)
 {
     try
     {
-        return D3D11Types::Map(attrib.vectorType);
+        return D3D11Types::Map(attrib.format);
     }
     catch (const std::exception& e)
     {
         throw std::invalid_argument(std::string(e.what()) + " (for vertex attribute \"" + attrib.name + "\")");
     }
-}
-
-void D3D11ShaderProgram::BuildInputLayout(std::uint32_t numVertexFormats, const VertexFormat* vertexFormats)
-{
-    if (numVertexFormats == 0 || vertexFormats == nullptr)
-        return;
-
-    if (!vs_ || vs_->GetByteCode().empty())
-        throw std::runtime_error("cannot build input layout without valid vertex shader");
-
-    /* Setup input element descriptors */
-    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
-
-    for (std::uint32_t i = 0; i < numVertexFormats; ++i)
-    {
-        for (const auto& attrib : vertexFormats[i].attributes)
-        {
-            D3D11_INPUT_ELEMENT_DESC elementDesc;
-            {
-                elementDesc.SemanticName            = attrib.name.c_str();
-                elementDesc.SemanticIndex           = attrib.semanticIndex;
-                elementDesc.Format                  = GetInputElementFormat(attrib);
-                elementDesc.InputSlot               = vertexFormats[i].inputSlot;
-                elementDesc.AlignedByteOffset       = attrib.offset;
-                elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
-                elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
-            }
-            inputElements.push_back(elementDesc);
-        }
-    }
-
-    /* Create input layout */
-    inputLayout_.Reset();
-    auto hr = device_->CreateInputLayout(
-        inputElements.data(),
-        static_cast<UINT>(inputElements.size()),
-        vs_->GetByteCode().data(),
-        vs_->GetByteCode().size(),
-        &inputLayout_
-    );
-    DXThrowIfFailed(hr, "failed to create D3D11 input layout");
 }
 
 void D3D11ShaderProgram::BindConstantBuffer(const std::string& name, std::uint32_t bindingIndex)
@@ -166,6 +99,72 @@ ShaderUniform* D3D11ShaderProgram::LockShaderUniform()
 void D3D11ShaderProgram::UnlockShaderUniform()
 {
     // dummy
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void D3D11ShaderProgram::BuildInputLayout(ID3D11Device* device, std::size_t numVertexFormats, const VertexFormat* vertexFormats)
+{
+    if (device == nullptr || numVertexFormats == 0 || vertexFormats == nullptr)
+        return;
+
+    if (!vs_ || vs_->GetByteCode().empty())
+        throw std::runtime_error("cannot build input layout without valid vertex shader");
+
+    /* Setup input element descriptors */
+    std::vector<D3D11_INPUT_ELEMENT_DESC> inputElements;
+    inputElements.reserve(numVertexFormats);
+
+    for (std::size_t i = 0; i < numVertexFormats; ++i)
+    {
+        for (const auto& attrib : vertexFormats[i].attributes)
+        {
+            D3D11_INPUT_ELEMENT_DESC elementDesc;
+            {
+                elementDesc.SemanticName            = attrib.name.c_str();
+                elementDesc.SemanticIndex           = attrib.semanticIndex;
+                elementDesc.Format                  = GetInputElementFormat(attrib);
+                elementDesc.InputSlot               = vertexFormats[i].inputSlot;
+                elementDesc.AlignedByteOffset       = attrib.offset;
+                elementDesc.InputSlotClass          = (attrib.instanceDivisor > 0 ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA);
+                elementDesc.InstanceDataStepRate    = attrib.instanceDivisor;
+            }
+            inputElements.push_back(elementDesc);
+        }
+    }
+
+    /* Create input layout */
+    auto hr = device->CreateInputLayout(
+        inputElements.data(),
+        static_cast<UINT>(inputElements.size()),
+        vs_->GetByteCode().data(),
+        vs_->GetByteCode().size(),
+        inputLayout_.ReleaseAndGetAddressOf()
+    );
+    DXThrowIfFailed(hr, "failed to create D3D11 input layout");
+}
+
+void D3D11ShaderProgram::Link()
+{
+    /* Validate shader composition */
+    linkError_ = LinkError::NoError;
+
+    /* Validate native shader objects */
+    for (std::size_t i = 0; i < 6; ++i)
+    {
+        if (shaders_[i] != nullptr && shaders_[i]->GetNative().vs == nullptr)
+            linkError_ = LinkError::InvalidByteCode;
+    }
+
+    /*
+    Validate composition of attached shaders
+    Note: reinterpret_cast allowed here, because no multiple inheritance is used, just plain pointers!
+    */
+    if (!ShaderProgram::ValidateShaderComposition(reinterpret_cast<Shader* const*>(shaders_), 6))
+        linkError_ = LinkError::InvalidComposition;
 }
 
 

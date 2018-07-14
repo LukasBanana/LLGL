@@ -74,13 +74,10 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Textures ----- */
 
         Texture* CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc = nullptr) override;
-        TextureArray* CreateTextureArray(std::uint32_t numTextures, Texture* const * textureArray) override;
 
         void Release(Texture& texture) override;
-        void Release(TextureArray& textureArray) override;
 
         void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc) override;
-
         void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) override;
 
         void GenerateMips(Texture& texture) override;
@@ -89,10 +86,8 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Sampler States ---- */
 
         Sampler* CreateSampler(const SamplerDescriptor& desc) override;
-        SamplerArray* CreateSamplerArray(std::uint32_t numSamplers, Sampler* const * samplerArray) override;
 
         void Release(Sampler& sampler) override;
-        void Release(SamplerArray& samplerArray) override;
 
         /* ----- Resource Views ----- */
 
@@ -108,8 +103,9 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Shader ----- */
 
-        Shader* CreateShader(const ShaderType type) override;
-        ShaderProgram* CreateShaderProgram() override;
+        Shader* CreateShader(const ShaderDescriptor& desc) override;
+
+        ShaderProgram* CreateShaderProgram(const ShaderProgramDescriptor& desc) override;
 
         void Release(Shader& shader) override;
         void Release(ShaderProgram& shaderProgram) override;
@@ -150,12 +146,14 @@ class DbgRenderSystem : public RenderSystem
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
 
         void ValidateTextureDesc(const TextureDescriptor& desc);
+        void ValidateTextureDescMipLevels(const TextureDescriptor& desc);
         void ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName);
+        void ValidateTextureSizeDefault(std::uint32_t size);
         void Validate1DTextureSize(std::uint32_t size);
         void Validate2DTextureSize(std::uint32_t size);
         void Validate3DTextureSize(std::uint32_t size);
         void ValidateCubeTextureSize(std::uint32_t width, std::uint32_t height);
-        void ValidateArrayTextureLayers(std::uint32_t layers);
+        void ValidateArrayTextureLayers(const TextureType type, std::uint32_t layers);
         void ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
         void ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize);
         bool ValidateTextureMips(const DbgTexture& textureDbg);
@@ -171,8 +169,6 @@ class DbgRenderSystem : public RenderSystem
         void AssertArrayTextures();
         void AssertCubeArrayTextures();
         void AssertMultiSampleTextures();
-
-        void WarnTextureLayersGreaterOne();
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
