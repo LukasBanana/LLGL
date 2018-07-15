@@ -23,9 +23,12 @@ namespace LLGL
 \brief Hardware vector and pixel format enumeration.
 \remarks This enumeration is used for hardware texture formats and vertex attribute formats.
 \see TextureDescriptor::format
+\see VertexAttribute::format
 \see RenderingCapabilities::textureFormats
+\see OpenGL counterpart: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexImage1D.xhtml#id-1.6.14.1
 \see Vulkan counterpart <code>VkFormat</code>: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkFormat.html
 \see Direct3D counterpart <code>DXGI_FORMAT</code>: https://msdn.microsoft.com/en-us/library/windows/desktop/bb173059(v=vs.85).aspx
+\see Metal counterpart <code>MTLPixelFormat</code>: https://developer.apple.com/documentation/metal/mtlpixelformat
 */
 enum class Format
 {
