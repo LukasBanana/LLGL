@@ -28,7 +28,10 @@ class MTCommandQueue : public CommandQueue
         MTCommandQueue(id<MTLDevice> device);
         ~MTCommandQueue();
 
-        /* ----- Command queues ----- */
+        /* ----- Command Buffers ----- */
+
+        void Begin(CommandBuffer& commandBuffer, long flags = 0) override;
+        void End(CommandBuffer& commandBuffer) override;
 
         void Submit(CommandBuffer& commandBuffer) override;
 

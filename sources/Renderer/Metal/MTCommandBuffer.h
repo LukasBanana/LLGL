@@ -25,7 +25,6 @@ class MTCommandBuffer : public CommandBufferExt
 
         /* ----- Common ----- */
 
-        MTCommandBuffer(id<MTLCommandQueue> commandQueue);
         ~MTCommandBuffer();
 
         /* ----- Configuration ----- */
@@ -85,10 +84,16 @@ class MTCommandBuffer : public CommandBufferExt
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
-        /* ----- Render Targets ----- */
+        /* ----- Render Passes ----- */
 
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void SetRenderTarget(RenderContext& renderContext) override;
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
 
         /* ----- Pipeline States ----- */
 
@@ -123,10 +128,13 @@ class MTCommandBuffer : public CommandBufferExt
         /* ----- Compute ----- */
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
+    
+        /* ----- Extended functions ----- */
+    
+        void NextCommandBuffer(id<MTLCommandQueue> cmdQueue);
 
     private:
 
-        id<MTLCommandQueue>             cmdQueue_               = nil;
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
 
         id<MTLRenderCommandEncoder>     renderEncoder_          = nil;

@@ -50,14 +50,14 @@ CommandQueue* MTRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* MTRenderSystem::CreateCommandBuffer()
+CommandBuffer* MTRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(commandQueue_->GetNative()));
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>());
 }
 
-CommandBufferExt* MTRenderSystem::CreateCommandBufferExt()
+CommandBufferExt* MTRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>(commandQueue_->GetNative()));
+    return TakeOwnership(commandBuffers_, MakeUnique<MTCommandBuffer>());
 }
 
 void MTRenderSystem::Release(CommandBuffer& commandBuffer)
@@ -111,7 +111,7 @@ Texture* MTRenderSystem::CreateTexture(const TextureDescriptor& textureDesc, con
     auto textureMT = MakeUnique<MTTexture>(device_, textureDesc);
     
     if (imageDesc)
-        textureMT->Write(*imageDesc, { 0, 0, 0 }, textureMT->QueryMipLevelSize(0));
+        textureMT->Write(*imageDesc, { 0, 0, 0 }, textureMT->QueryMipExtent(0));
     
     return TakeOwnership(textures_, std::move(textureMT));
 }
@@ -170,6 +170,19 @@ ResourceHeap* MTRenderSystem::CreateResourceHeap(const ResourceHeapDescriptor& d
 void MTRenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+/* ----- Render Passes ----- */
+
+RenderPass* MTRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    AssertCreateRenderPass(desc);
+    return nullptr;//return TakeOwnership(renderPasses_, MakeUnique<MTRenderPass>(desc));
+}
+
+void MTRenderSystem::Release(RenderPass& renderPass)
+{
+    //RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
 /* ----- Render Targets ----- */

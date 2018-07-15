@@ -6,6 +6,7 @@
  */
 
 #include "MTRenderContext.h"
+#include "MTTypes.h"
 #include <LLGL/Platform/NativeHandle.h>
 
 
@@ -75,17 +76,30 @@ MTRenderContext::~MTRenderContext()
 
 void MTRenderContext::Present()
 {
-    [renderCmdEncoder_ endEncoding];
     [cmdBuffer_ presentDrawable:view_.currentDrawable];
     [cmdBuffer_ commit];
 }
 
+Format MTRenderContext::QueryColorFormat() const
+{
+    return MTTypes::ToFormat(view_.colorPixelFormat);
+}
+
+Format MTRenderContext::QueryDepthStencilFormat() const
+{
+    return MTTypes::ToFormat(view_.depthStencilPixelFormat);
+}
+
+const RenderPass* MTRenderContext::GetRenderPass() const
+{
+    return nullptr; //TODO
+}
+
 /* ----- Extended functions ----- */
 
-void MTRenderContext::MakeCurrent(id<MTLCommandBuffer> cmdBuffer, id<MTLRenderCommandEncoder> renderCmdEncoder)
+void MTRenderContext::MakeCurrent(id<MTLCommandBuffer> cmdBuffer)
 {
-    cmdBuffer_          = cmdBuffer;
-    renderCmdEncoder_   = renderCmdEncoder;
+    cmdBuffer_ = cmdBuffer;
 }
 
 

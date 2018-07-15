@@ -36,9 +36,14 @@ class MTRenderContext : public RenderContext
 
         void Present() override;
     
+        Format QueryColorFormat() const override;
+        Format QueryDepthStencilFormat() const override;
+
+        const RenderPass* GetRenderPass() const override;
+
         /* ----- Extended functions ----- */
     
-        void MakeCurrent(id<MTLCommandBuffer> cmdBuffer, id<MTLRenderCommandEncoder> renderCmdEncoder);
+        void MakeCurrent(id<MTLCommandBuffer> cmdBuffer);
     
         // Returns the native MTKView object.
         inline MTKView* GetMTKView() const
@@ -51,9 +56,8 @@ class MTRenderContext : public RenderContext
         bool OnSetVideoMode(const VideoModeDescriptor& videoModeDesc) override;
         bool OnSetVsync(const VsyncDescriptor& vsyncDesc) override;
 
-        MTKView*                    view_               = nullptr;
-        id<MTLCommandBuffer>        cmdBuffer_          = nil;
-        id<MTLRenderCommandEncoder> renderCmdEncoder_   = nil;
+        MTKView*                view_       = nullptr;
+        id<MTLCommandBuffer>    cmdBuffer_  = nil;
 
 };
 

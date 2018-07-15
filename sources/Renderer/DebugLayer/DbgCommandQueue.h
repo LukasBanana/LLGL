@@ -52,7 +52,7 @@ class DbgCommandQueue : public CommandQueue
 
     private:
 
-        RenderingProfiler* profiler_ = nullptr;
+        //RenderingProfiler* profiler_ = nullptr;
         RenderingDebugger* debugger_ = nullptr;
 
 };

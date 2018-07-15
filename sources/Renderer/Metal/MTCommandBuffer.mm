@@ -24,11 +24,6 @@ namespace LLGL
 
 static const std::uint32_t g_maxNumViewportsAndScissors = 32;
 
-MTCommandBuffer::MTCommandBuffer(id<MTLCommandQueue> commandQueue) :
-    cmdQueue_ { commandQueue }
-{
-}
-
 MTCommandBuffer::~MTCommandBuffer()
 {
     [cmdBuffer_ release];
@@ -237,29 +232,45 @@ void MTCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
     //todo
 }
 
-/* ----- Render Targets ----- */
+/* ----- Render Passes ----- */
 
-void MTCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
+void MTCommandBuffer::BeginRenderPass(
+    RenderTarget&       renderTarget,
+    const RenderPass*   renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
 {
-    //todo
+    MTLRenderPassDescriptor* renderPassDesc = nullptr;
+    
+    if (renderTarget.IsRenderContext())
+    {
+        /* Make this the current command buffer for the render context */
+        auto& renderContextMT = LLGL_CAST(MTRenderContext&, renderTarget);
+        renderContextMT.MakeCurrent(cmdBuffer_);
+        
+        /* Get next render pass descriptor from MetalKit view */
+        MTKView* view = renderContextMT.GetMTKView();
+        renderPassDesc = view.currentRenderPassDescriptor;
+    }
+    else
+    {
+        //TODO
+    }
+    
+    /* Build render pass descriptor */
+    //TODO...
+    
+    /* Get next render command encoder */
+    if (renderPassDesc != nullptr)
+        renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
 }
 
-void MTCommandBuffer::SetRenderTarget(RenderContext& renderContext)
+void MTCommandBuffer::EndRenderPass()
 {
-    auto& renderContextMT = LLGL_CAST(MTRenderContext&, renderContext);
-    
-    /* Get next command buffer */
-    cmdBuffer_ = [cmdQueue_ commandBuffer];
-    
-    /* Get next render pass descriptor from MetalKit view */
-    MTKView* view = renderContextMT.GetMTKView();
-    MTLRenderPassDescriptor* renderPassDesc = view.currentRenderPassDescriptor;
-    
-    if (renderPassDesc != nullptr)
+    if (renderEncoder_ != nil)
     {
-        /* Get next render command encoder */
-        renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
-        renderContextMT.MakeCurrent(cmdBuffer_, renderEncoder_);
+        [renderEncoder_ endEncoding];
+        renderEncoder_ = nil;
     }
 }
 
@@ -549,6 +560,12 @@ void MTCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
     //todo
 }
 
+/* ----- Extended functions ----- */
+
+void MTCommandBuffer::NextCommandBuffer(id<MTLCommandQueue> cmdQueue)
+{
+    cmdBuffer_ = [cmdQueue commandBuffer];
+}
 
 
 /*

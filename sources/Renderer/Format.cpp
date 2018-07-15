@@ -158,6 +158,13 @@ static std::tuple<DataType, std::uint32_t> SplitFormatPrimary(const Format forma
         case Format::RGB64Float:        return T{ DataType::Float64, 3 };
         case Format::RGBA64Float:       return T{ DataType::Float64, 4 };
 
+        /* --- Reversed color formats --- */
+        case Format::BGRA8UNorm:        return T{ DataType::UInt8,   4 };
+        case Format::BGRA8SNorm:        return T{ DataType::Int8,    4 };
+        case Format::BGRA8UInt:         return T{ DataType::UInt8,   4 };
+        case Format::BGRA8SInt:         return T{ DataType::Int8,    4 };
+        case Format::BGRA8sRGB:         return T{ DataType::UInt8,   4 };
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          break;
         case Format::D32Float:          break;

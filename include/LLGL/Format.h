@@ -100,9 +100,9 @@ enum class Format
 
     /* --- Reversed color formats --- */
     BGRA8UNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized unsigned integer components. \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
-    BGRA8SNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized signed integer components. \note Only supported with: Vulkan, Metal.
-    BGRA8UInt,          //!< Color format: blue, green, red, alpha 8-bit unsigned integer components. \note Only supported with: Vulkan, Metal.
-    BGRA8SInt,          //!< Color format: blue, green, red, alpha 8-bit signed integer components. \note Only supported with: Vulkan, Metal.
+    BGRA8SNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized signed integer components. \note Only supported with: Vulkan.
+    BGRA8UInt,          //!< Color format: blue, green, red, alpha 8-bit unsigned integer components. \note Only supported with: Vulkan.
+    BGRA8SInt,          //!< Color format: blue, green, red, alpha 8-bit signed integer components. \note Only supported with: Vulkan.
     BGRA8sRGB,          //!< Color format: blue, green, red, alpha 8-bit normalized unsigned integer components in sRGB non-linear color space. \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
 
     /* --- Depth-stencil formats --- */

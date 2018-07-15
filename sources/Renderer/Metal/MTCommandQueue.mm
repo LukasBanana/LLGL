@@ -6,6 +6,7 @@
  */
 
 #include "MTCommandQueue.h"
+#include "MTCommandBuffer.h"
 #include "../CheckedCast.h"
 
 
@@ -23,7 +24,18 @@ MTCommandQueue::~MTCommandQueue()
     [queue_ release];
 }
 
-/* ----- Command queues ----- */
+/* ----- Command Buffers ----- */
+
+void MTCommandQueue::Begin(CommandBuffer& commandBuffer, long /*flags*/)
+{
+    auto& commandBufferMT = LLGL_CAST(MTCommandBuffer&, commandBuffer);
+    commandBufferMT.NextCommandBuffer(queue_);
+}
+
+void MTCommandQueue::End(CommandBuffer& commandBuffer)
+{
+    //todo
+}
 
 void MTCommandQueue::Submit(CommandBuffer& commandBuffer)
 {

@@ -39,7 +39,7 @@ static BOOL MTBoolean(bool value)
 MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc)
 {
     /* Get native shader functions */
-    auto shaderProgramMT = LLGL_CAST(MTShaderProgram*, desc.shaderProgram);
+    auto shaderProgramMT = LLGL_CAST(const MTShaderProgram*, desc.shaderProgram);
     if (!shaderProgramMT)
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
     

@@ -121,6 +121,13 @@ MTLPixelFormat ToMTLPixelFormat(const Format format)
         case Format::RG64Float:         break;
         case Format::RGB64Float:        break;
         case Format::RGBA64Float:       break;
+        
+        /* --- Reversed color formats --- */
+        case Format::BGRA8UNorm:        return MTLPixelFormatBGRA8Unorm;
+        case Format::BGRA8SNorm:        break;
+        case Format::BGRA8UInt:         break;
+        case Format::BGRA8SInt:         break;
+        case Format::BGRA8sRGB:         return MTLPixelFormatBGRA8Unorm_sRGB;
 
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return MTLPixelFormatDepth16Unorm;

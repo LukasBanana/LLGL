@@ -58,8 +58,8 @@ class MTRenderSystem : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer() override;
-        CommandBufferExt* CreateCommandBufferExt() override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 
@@ -99,6 +99,12 @@ class MTRenderSystem : public RenderSystem
         ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
         void Release(ResourceHeap& resourceHeap) override;
+
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 

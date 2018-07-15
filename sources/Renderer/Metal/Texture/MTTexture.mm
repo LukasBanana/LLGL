@@ -19,9 +19,9 @@ namespace LLGL
 static NSUInteger GetTextureLayers(const TextureDescriptor& desc)
 {
     if (IsCubeTexture(desc.type))
-        return desc.layers / 6;
+        return desc.arrayLayers / 6;
     else
-        return desc.layers;
+        return desc.arrayLayers;
 }
 
 static MTLTextureUsage GetTextureUsage(const TextureDescriptor& desc)
@@ -42,9 +42,9 @@ static void Convert(MTLTextureDescriptor* dst, const TextureDescriptor& src)
 {
     dst.textureType         = MTTypes::ToMTLTextureType(src.type);
     dst.pixelFormat         = MTTypes::ToMTLPixelFormat(src.format);
-    dst.width               = src.width;
-    dst.height              = src.height;
-    dst.depth               = src.depth;
+    dst.width               = src.extent.width;
+    dst.height              = src.extent.height;
+    dst.depth               = src.extent.depth;
     dst.mipmapLevelCount    = static_cast<NSUInteger>(NumMipLevels(src));
     dst.sampleCount         = static_cast<NSUInteger>(std::max(1u, src.samples));
     dst.arrayLength         = GetTextureLayers(src);
@@ -64,7 +64,7 @@ MTTexture::~MTTexture()
     [native_ release];
 }
 
-Extent3D MTTexture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D MTTexture::QueryMipExtent(std::uint32_t mipLevel) const
 {
     auto w = static_cast<std::uint32_t>([native_ width]);
     auto h = static_cast<std::uint32_t>([native_ height]);
@@ -111,17 +111,17 @@ TextureDescriptor MTTexture::QueryDesc() const
 {
     TextureDescriptor texDesc;
 
-    texDesc.type    = GetType();
-    texDesc.flags   = 0;
-    texDesc.format  = MTTypes::ToFormat([native_ pixelFormat]);
-    texDesc.width   = static_cast<std::uint32_t>([native_ width]);
-    texDesc.height  = static_cast<std::uint32_t>([native_ height]);
-    texDesc.depth   = static_cast<std::uint32_t>([native_ depth]);
-    texDesc.layers  = static_cast<std::uint32_t>([native_ arrayLength]);
-    texDesc.samples = static_cast<std::uint32_t>([native_ sampleCount]);
+    texDesc.type            = GetType();
+    texDesc.flags           = 0;
+    texDesc.format          = MTTypes::ToFormat([native_ pixelFormat]);
+    texDesc.extent.width    = static_cast<std::uint32_t>([native_ width]);
+    texDesc.extent.height   = static_cast<std::uint32_t>([native_ height]);
+    texDesc.extent.depth    = static_cast<std::uint32_t>([native_ depth]);
+    texDesc.arrayLayers     = static_cast<std::uint32_t>([native_ arrayLength]);
+    texDesc.samples         = static_cast<std::uint32_t>([native_ sampleCount]);
     
     if (IsCubeTexture(GetType()))
-        texDesc.layers /= 6;
+        texDesc.arrayLayers *= 6;
 
     return texDesc;
 }
