@@ -85,9 +85,9 @@ void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport
         commandList_->RSSetViewports(numViewports, viewportsD3D);
     }
 
-    /* If scissor test is disabled, update remaining scissor rectangles to extent of active framebuffer */
+    /* If scissor test is disabled, update remaining scissor rectangles to default value */
     if (!scissorEnabled_)
-        SetScissorRectsWithFramebufferExtent(numViewports);
+        SetScissorRectsToDefault(numViewports);
 }
 
 void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
@@ -261,7 +261,16 @@ void D3D12CommandBuffer::BeginRenderPass(
 
 void D3D12CommandBuffer::EndRenderPass()
 {
-    //todo
+    if (boundBackBuffer_)
+    {
+        /* Indicate that the render target will now be used to present when the command list is done executing */
+        TransitionRenderTarget(
+            boundBackBuffer_,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_PRESENT
+        );
+        boundBackBuffer_ = nullptr;
+    }
 }
 
 /* ----- Pipeline States ----- */
@@ -278,7 +287,7 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
     if (!scissorEnabled_)
-        SetScissorRectsWithFramebufferExtent(1);
+        SetScissorRectsToDefault(1);
 }
 
 void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
@@ -372,11 +381,14 @@ void D3D12CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupS
 
 /* ----- Extended functions ----- */
 
-void D3D12CommandBuffer::ResetCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState)
+void D3D12CommandBuffer::CloseCommandList()
 {
-    /* Reset commanb list with command allocator and pipeline state */
-    auto hr = commandList_->Reset(commandAlloc, pipelineState);
-    DXThrowIfFailed(hr, "failed to reset D3D12 command list");
+    /* Close native command list */
+    auto hr = commandList_->Close();
+    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+
+    /* Reset intermediate states */
+    numBoundScissorRects_ = 0;
 }
 
 
@@ -393,10 +405,11 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 
 void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
 {
-    if (!renderContextD3D.HasMultiSampling())
+    if (boundBackBuffer_)
     {
         /* Indicate that the back buffer will be used as render target */
-        renderContextD3D.TransitionRenderTarget(
+        TransitionRenderTarget(
+            boundBackBuffer_,
             D3D12_RESOURCE_STATE_PRESENT,
             D3D12_RESOURCE_STATE_RENDER_TARGET
         );
@@ -418,7 +431,7 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     }
 }
 
-void D3D12CommandBuffer::SetScissorRectsWithFramebufferExtent(UINT numScissorRects)
+void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
 {
     numScissorRects = std::min(numScissorRects, UINT(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
@@ -431,8 +444,8 @@ void D3D12CommandBuffer::SetScissorRectsWithFramebufferExtent(UINT numScissorRec
         {
             scissorRects[i].left    = 0;
             scissorRects[i].top     = 0;
-            scissorRects[i].right   = framebufferWidth_;
-            scissorRects[i].bottom  = framebufferHeight_;
+            scissorRects[i].right   = std::numeric_limits<LONG>::max();
+            scissorRects[i].bottom  = std::numeric_limits<LONG>::max();
         }
 
         commandList_->RSSetScissorRects(numScissorRects, scissorRects);
@@ -449,7 +462,8 @@ void D3D12CommandBuffer::SetScissorRectsWithFramebufferExtent(UINT numScissorRec
 
 void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
 {
-    renderContextD3D.SetCommandBuffer(this);
+    if (!renderContextD3D.HasMultiSampling())
+        boundBackBuffer_ = renderContextD3D.GetCurrentColorBuffer();
 
     /* Set back-buffer RTVs */
     SetBackBufferRTV(renderContextD3D);
@@ -458,9 +472,17 @@ void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
     const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
     framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
     framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
+}
 
-    /* Reset information about default scissor rectangles */
-    numBoundScissorRects_ = 0;
+void D3D12CommandBuffer::TransitionRenderTarget(
+    ID3D12Resource*         colorBuffer,
+    D3D12_RESOURCE_STATES   stateBefore,
+    D3D12_RESOURCE_STATES   stateAfter)
+{
+    /* Indicate a transition in the render-target usage and synchronize with the resource barrier */
+    commandList_->ResourceBarrier(
+        1, &CD3DX12_RESOURCE_BARRIER::Transition(colorBuffer, stateBefore, stateAfter)
+    );
 }
 
 

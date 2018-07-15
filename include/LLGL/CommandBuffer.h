@@ -306,17 +306,19 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] graphicsPipeline Specifies the graphics pipeline state to set.
         \remarks This will set all blending-, rasterizer-, depth-, stencil-, and shader states.
         A valid graphics pipeline must always be set before any drawing operation can be performed,
-        and a valid render target (or render context) must always be set before any graphics pipeline can be set:
+        and a graphics pipeline can only be set inside a render pass.
         \code
         // First set render target
-        myCmdBuffer->SetRenderTarget(...);
+        myCmdBuffer->BeginRenderPass(...);
+        {
+            // Then set graphics pipeline
+            myCmdBuffer->SetGraphicsPipeline(...);
 
-        // Then set graphics pipeline
-        myCmdBuffer->SetGraphicsPipeline(...);
-
-        // Then perform drawing operations
-        myCmdBuffer->SetGraphicsResourceHeap(...);
-        myCmdBuffer->Draw(...);
+            // Then perform drawing operations
+            myCmdBuffer->SetGraphicsResourceHeap(...);
+            myCmdBuffer->Draw(...);
+        }
+        myCmdBuffer->EndRenderPass();
         \endcode
         \see RenderSystem::CreateGraphicsPipeline
         */

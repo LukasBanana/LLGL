@@ -122,13 +122,14 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         /* ----- Extended functions ----- */
 
-        // Returns the native command list.
-        inline ID3D12GraphicsCommandList* GetCommandList() const
+        // Returns the native ID3D12GraphicsCommandList object.
+        inline ID3D12GraphicsCommandList* GetNative() const
         {
             return commandList_.Get();
         }
 
-        void ResetCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState);
+        // Closes the command list and resets internal states.
+        void CloseCommandList();
 
     private:
 
@@ -139,10 +140,16 @@ class D3D12CommandBuffer final : public CommandBuffer
         // Sets the current back buffer as render target view.
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
 
-        void SetScissorRectsWithFramebufferExtent(UINT numScissorRects);
+        void SetScissorRectsToDefault(UINT numScissorRects);
 
         //void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
         void BindRenderContext(D3D12RenderContext& renderContextD3D);
+
+        void TransitionRenderTarget(
+            ID3D12Resource*         colorBuffer,
+            D3D12_RESOURCE_STATES   stateBefore,
+            D3D12_RESOURCE_STATES   stateAfter
+        );
 
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
@@ -157,6 +164,8 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         LONG                                framebufferWidth_       = 0;
         LONG                                framebufferHeight_      = 0;
+
+        ID3D12Resource*                     boundBackBuffer_        = nullptr;  // Currently bound color buffer from D3D12RenderContext
 
 };
 

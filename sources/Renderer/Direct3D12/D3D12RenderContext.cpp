@@ -62,44 +62,12 @@ D3D12RenderContext::~D3D12RenderContext()
 
 void D3D12RenderContext::Present()
 {
-    /* Get command list from command buffer object */
-    if (!commandBuffer_)
-        throw std::runtime_error("cannot present framebuffer without D3D12 command allocator and/or command list");
-
-    auto commandList = commandBuffer_->GetCommandList();
-
-    if (HasMultiSampling())
-    {
-        /* Blit multi-sampled texture into back-buffer */
-        ResolveRenderTarget(commandList);
-    }
-    else
-    {
-        /* Indicate that the render target will now be used to present when the command list is done executing */
-        TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-    }
-
-    #if 0
-    /* Execute pending command list */
-    renderSystem_.CloseAndExecuteCommandList(commandList);
-    #endif
-
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
     DXThrowIfFailed(hr, "failed to present DXGI swap chain");
 
     /* Advance frame counter */
     MoveToNextFrame();
-
-    #if 1//TODO: move this to D3D12CommandQueue
-    /* Reset command allocator and command list*/
-    auto commandAlloc = commandAllocs_[currentFrame_].Get();
-
-    hr = commandAlloc->Reset();
-    DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
-
-    commandBuffer_->ResetCommandList(commandAlloc, nullptr);
-    #endif
 }
 
 Format D3D12RenderContext::QueryColorFormat() const
@@ -127,6 +95,46 @@ ID3D12Resource* D3D12RenderContext::GetCurrentColorBuffer()
         return colorBuffers_[currentFrame_].Get();
 }
 
+void D3D12RenderContext::ResolveRenderTarget(ID3D12GraphicsCommandList* commandList)
+{
+    /* Prepare render-target for resolving */
+    D3D12_RESOURCE_BARRIER resourceBarriersBefore[2] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            colorBuffers_[currentFrame_].Get(),
+            D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST
+        ),
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            colorBuffersMS_[currentFrame_].Get(),
+            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE
+        ),
+    };
+    commandList->ResourceBarrier(2, resourceBarriersBefore);
+
+    /* Resolve multi-sampled render targets */
+    commandList->ResolveSubresource(
+        colorBuffers_[currentFrame_].Get(),
+        0,
+        colorBuffersMS_[currentFrame_].Get(),
+        0,
+        colorFormat_
+    );
+
+    /* Prepare render-targets for presenting */
+    D3D12_RESOURCE_BARRIER resourceBarriersAfter[2] =
+    {
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            colorBuffers_[currentFrame_].Get(),
+            D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT
+        ),
+        CD3DX12_RESOURCE_BARRIER::Transition(
+            colorBuffersMS_[currentFrame_].Get(),
+            D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
+        ),
+    };
+    commandList->ResourceBarrier(2, resourceBarriersAfter);
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForCurrentRTV() const
 {
     return CD3DX12_CPU_DESCRIPTOR_HANDLE(
@@ -142,19 +150,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3D12RenderContext::GetCPUDescriptorHandleForDSV() c
         return dsvDescHeap_->GetCPUDescriptorHandleForHeapStart();
     else
         return {};
-}
-
-void D3D12RenderContext::SetCommandBuffer(D3D12CommandBuffer* commandBuffer)
-{
-    commandBuffer_ = commandBuffer;
-}
-
-void D3D12RenderContext::TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
-{
-    /* Indicate a transition in the render-target usage and synchronize with the resource barrier */
-    commandBuffer_->GetCommandList()->ResourceBarrier(
-        1, &CD3DX12_RESOURCE_BARRIER::Transition(colorBuffers_[currentFrame_].Get(), stateBefore, stateAfter)
-    );
 }
 
 bool D3D12RenderContext::HasMultiSampling() const
@@ -417,10 +412,6 @@ void D3D12RenderContext::CreateDeviceResources()
 {
     /* Store size of RTV descriptor */
     rtvDescSize_ = renderSystem_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-    /* Create command allocators */
-    for (UINT i = 0; i < g_maxSwapChainSize; ++i)
-        commandAllocs_[i] = renderSystem_.CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
 void D3D12RenderContext::MoveToNextFrame()
@@ -437,44 +428,6 @@ void D3D12RenderContext::MoveToNextFrame()
 
     /* Set fence value for next frame */
     fenceValues_[currentFrame_] = currentFenceValue + 1;
-}
-
-void D3D12RenderContext::ResolveRenderTarget(ID3D12GraphicsCommandList* commandList)
-{
-    /* Prepare render-target for resolving */
-    D3D12_RESOURCE_BARRIER resourceBarriersBefore[2] =
-    {
-        CD3DX12_RESOURCE_BARRIER::Transition(
-            colorBuffers_[currentFrame_].Get(),
-            D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST
-        ),
-        CD3DX12_RESOURCE_BARRIER::Transition(
-            colorBuffersMS_[currentFrame_].Get(),
-            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE
-        ),
-    };
-    commandList->ResourceBarrier(2, resourceBarriersBefore);
-
-    /* Resolve multi-sampled render targets */
-    commandList->ResolveSubresource(
-        colorBuffers_[currentFrame_].Get(), 0,
-        colorBuffersMS_[currentFrame_].Get(), 0,
-        colorFormat_
-    );
-
-    /* Prepare render-targets for presenting */
-    D3D12_RESOURCE_BARRIER resourceBarriersAfter[2] =
-    {
-        CD3DX12_RESOURCE_BARRIER::Transition(
-            colorBuffers_[currentFrame_].Get(),
-            D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT
-        ),
-        CD3DX12_RESOURCE_BARRIER::Transition(
-            colorBuffersMS_[currentFrame_].Get(),
-            D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
-        ),
-    };
-    commandList->ResourceBarrier(2, resourceBarriersAfter);
 }
 
 #undef LLGL_D3D12_SET_NAME

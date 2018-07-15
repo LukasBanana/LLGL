@@ -11,19 +11,23 @@
 
 #include <LLGL/CommandQueue.h>
 #include "../DXCommon/ComPtr.h"
+#include "../StaticLimits.h"
 #include <d3d12.h>
+#include <cstddef>
 
 
 namespace LLGL
 {
 
 
+class D3D12RenderSystem;
+
 class D3D12CommandQueue final : public CommandQueue
 {
 
     public:
 
-        D3D12CommandQueue(ComPtr<ID3D12CommandQueue>& queue, ComPtr<ID3D12CommandAllocator>& commandAlloc);
+        D3D12CommandQueue(D3D12RenderSystem& renderSystem);
 
         /* ----- Command Buffers ----- */
 
@@ -41,15 +45,27 @@ class D3D12CommandQueue final : public CommandQueue
 
         /* ----- Extended functions ----- */
 
-        inline ID3D12CommandQueue* GetDxCommandQueue() const
+        // Returns the native ID3D12CommandQueue object.
+        inline ID3D12CommandQueue* GetNative() const
         {
-            return queue_.Get();
+            return cmdQueue_.Get();
         }
 
     private:
 
-        ComPtr<ID3D12CommandQueue>      queue_;
-        ComPtr<ID3D12CommandAllocator>  commandAlloc_;
+        void NextCmdAllocator();
+        void ResetCommandList(ID3D12GraphicsCommandList* commandList);
+
+        inline ID3D12CommandAllocator* GetCmdAllocator() const
+        {
+            return cmdAllocators_[currentCmdAllocator_].Get();
+        }
+
+        static const std::size_t g_numCmdAllocators = 3;
+
+        ComPtr<ID3D12CommandQueue>      cmdQueue_;
+        ComPtr<ID3D12CommandAllocator>  cmdAllocators_[g_numCmdAllocators];
+        std::size_t                     currentCmdAllocator_                = 0;
 
 };
 

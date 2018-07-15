@@ -151,12 +151,12 @@ class D3D12RenderSystem final : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
-        ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
-        ComPtr<ID3D12CommandQueue> CreateDXCommandQueue();
-        ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
-        ComPtr<ID3D12GraphicsCommandList> CreateDXCommandList(D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* cmdAllocator);
-        ComPtr<ID3D12PipelineState> CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
-        ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
+        ComPtr<IDXGISwapChain1>             CreateDXSwapChain       (const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
+        ComPtr<ID3D12CommandQueue>          CreateDXCommandQueue    ();
+        ComPtr<ID3D12CommandAllocator>      CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
+        ComPtr<ID3D12GraphicsCommandList>   CreateDXCommandList     (D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* cmdAllocator);
+        ComPtr<ID3D12PipelineState>         CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
+        ComPtr<ID3D12DescriptorHeap>        CreateDXDescriptorHeap  (const D3D12_DESCRIPTOR_HEAP_DESC& desc);
 
         // Internal fence
         void SignalFenceValue(UINT64 fenceValue);
@@ -198,9 +198,6 @@ class D3D12RenderSystem final : public RenderSystem
 
         // Close, execute, and reset command list.
         void ExecuteCommandList();
-
-        // Close and execute command list.
-        void CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList);
 
         std::unique_ptr<D3D12Buffer> MakeBufferAndInitialize(const BufferDescriptor& desc, const void* initialData);
 
