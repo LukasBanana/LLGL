@@ -152,7 +152,10 @@ However, all descriptors have the "D3D12" prefix, so a generalization (without m
 */
 
 static ShaderReflectionDescriptor::ResourceView* FetchOrInsertResource(
-    ShaderReflectionDescriptor& reflectionDesc, const char* name, const ResourceType type, std::uint32_t slot)
+    ShaderReflectionDescriptor& reflectionDesc,
+    const char*                 name,
+    const ResourceType          type,
+    std::uint32_t               slot)
 {
     /* Fetch resource from list */
     for (auto& resource : reflectionDesc.resourceViews)
@@ -173,7 +176,9 @@ static ShaderReflectionDescriptor::ResourceView* FetchOrInsertResource(
 }
 
 static void ReflectShaderVertexAttributes(
-    ID3D12ShaderReflection* reflection, const D3D12_SHADER_DESC& shaderDesc, ShaderReflectionDescriptor& reflectionDesc)
+    ID3D12ShaderReflection*     reflection,
+    const D3D12_SHADER_DESC&    shaderDesc,
+    ShaderReflectionDescriptor& reflectionDesc)
 {
     for (UINT i = 0; i < shaderDesc.InputParameters; ++i)
     {
@@ -199,7 +204,10 @@ static void ReflectShaderVertexAttributes(
 }
 
 static void ReflectShaderResourceGeneric(
-    const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc, long stageFlags, const ResourceType resourceType, ShaderReflectionDescriptor& reflectionDesc)
+    const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc,
+    long                                stageFlags,
+    const ResourceType                  resourceType,
+    ShaderReflectionDescriptor&         reflectionDesc)
 {
     /* Initialize resource view descriptor for a generic resource (texture, sampler etc.) */
     auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, resourceType, inputBindDesc.BindPoint);
@@ -210,7 +218,10 @@ static void ReflectShaderResourceGeneric(
 }
 
 static void ReflectShaderStorageBuffer(
-    const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc, long stageFlags, const StorageBufferType storageBufferType, ShaderReflectionDescriptor& reflectionDesc)
+    const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc,
+    long                                stageFlags,
+    const StorageBufferType             storageBufferType,
+    ShaderReflectionDescriptor&         reflectionDesc)
 {
     /* Initialize resource view descriptor for storage buffer */
     auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, ResourceType::StorageBuffer, inputBindDesc.BindPoint);
@@ -222,8 +233,12 @@ static void ReflectShaderStorageBuffer(
 }
 
 static void ReflectShaderConstantBuffer(
-    ID3D12ShaderReflection* reflection, const D3D12_SHADER_DESC& shaderDesc, const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc,
-    long stageFlags, UINT& cbufferIdx, ShaderReflectionDescriptor& reflectionDesc)
+    ID3D12ShaderReflection*             reflection,
+    const D3D12_SHADER_DESC&            shaderDesc,
+    const D3D12_SHADER_INPUT_BIND_DESC& inputBindDesc,
+    long                                stageFlags,
+    UINT&                               cbufferIdx,
+    ShaderReflectionDescriptor&         reflectionDesc)
 {
     /* Initialize resource view descriptor for constant buffer */
     auto resourceView = FetchOrInsertResource(reflectionDesc, inputBindDesc.Name, ResourceType::ConstantBuffer, inputBindDesc.BindPoint);
@@ -266,7 +281,10 @@ static void ReflectShaderConstantBuffer(
 }
 
 static void ReflectShaderInputBindings(
-    ID3D12ShaderReflection* reflection, const D3D12_SHADER_DESC& shaderDesc, long stageFlags, ShaderReflectionDescriptor& reflectionDesc)
+    ID3D12ShaderReflection*     reflection,
+    const D3D12_SHADER_DESC&    shaderDesc,
+    long                        stageFlags,
+    ShaderReflectionDescriptor& reflectionDesc)
 {
     UINT cbufferIdx = 0;
 

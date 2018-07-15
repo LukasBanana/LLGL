@@ -73,12 +73,12 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* D3D11RenderSystem::CreateCommandBuffer()
+CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
 {
     return CreateCommandBufferExt();
 }
 
-CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt()
+CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     return TakeOwnership(commandBuffers_, MakeUnique<D3D11CommandBuffer>(*stateMngr_, context_));
 }
@@ -172,6 +172,18 @@ ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor
 void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+/* ----- Render Passes ----- */
+
+RenderPass* D3D11RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    return TakeOwnership(renderPasses_, MakeUnique<D3D11RenderPass>(desc));
+}
+
+void D3D11RenderSystem::Release(RenderPass& renderPass)
+{
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
 /* ----- Render Targets ----- */

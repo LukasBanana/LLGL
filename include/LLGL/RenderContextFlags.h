@@ -87,6 +87,7 @@ struct VideoModeDescriptor
     /**
     \brief Screen resolution (in pixels).
     \remarks If the resolution contains a member with a value of 0, the video mode is invalid.
+    \see RenderTarget::GetResolution
     */
     Extent2D        resolution;
 

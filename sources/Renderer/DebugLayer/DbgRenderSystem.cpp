@@ -66,25 +66,36 @@ void DbgRenderSystem::Release(RenderContext& renderContext)
 
 CommandQueue* DbgRenderSystem::GetCommandQueue()
 {
-    return instance_->GetCommandQueue();
+    if (!commandQueue_)
+    {
+        /* Instantiate command queue */
+        commandQueue_ = MakeUnique<DbgCommandQueue>(*(instance_->GetCommandQueue()), profiler_, debugger_);
+    }
+    return commandQueue_.get();;
 }
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* DbgRenderSystem::CreateCommandBuffer()
+CommandBuffer* DbgRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    return TakeOwnership(commandBuffers_, MakeUnique<DbgCommandBuffer>(
-        *instance_->CreateCommandBuffer(), nullptr, profiler_, debugger_, GetRenderingCaps()
-    ));
+    return TakeOwnership(
+        commandBuffers_,
+        MakeUnique<DbgCommandBuffer>(
+            *instance_->CreateCommandBuffer(desc), nullptr, profiler_, debugger_, GetRenderingCaps()
+        )
+    );
 }
 
-CommandBufferExt* DbgRenderSystem::CreateCommandBufferExt()
+CommandBufferExt* DbgRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& desc)
 {
-    if (auto instance = instance_->CreateCommandBufferExt())
+    if (auto instance = instance_->CreateCommandBufferExt(desc))
     {
-        return TakeOwnership(commandBuffers_, MakeUnique<DbgCommandBuffer>(
-            *instance, instance, profiler_, debugger_, GetRenderingCaps()
-        ));
+        return TakeOwnership(
+            commandBuffers_,
+            MakeUnique<DbgCommandBuffer>(
+                *instance, instance, profiler_, debugger_, GetRenderingCaps()
+            )
+        );
     }
     return nullptr;
 }
@@ -183,7 +194,6 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t 
 
 void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
-    void* result = nullptr;
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
     if (debugger_)
@@ -193,11 +203,12 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
         ValidateBufferMapping(bufferDbg, true);
     }
 
-    result = instance_->MapBuffer(bufferDbg.instance, access);
+    auto result = instance_->MapBuffer(bufferDbg.instance, access);
 
     bufferDbg.mapped = true;
 
     LLGL_DBG_PROFILER_DO(mapBuffer.Inc());
+
     return result;
 }
 
@@ -361,6 +372,18 @@ void DbgRenderSystem::Release(ResourceHeap& resourceViewHeap)
     return instance_->Release(resourceViewHeap);
 }
 
+/* ----- Render Passes ----- */
+
+RenderPass* DbgRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    return instance_->CreateRenderPass(desc);
+}
+
+void DbgRenderSystem::Release(RenderPass& renderPass)
+{
+    instance_->Release(renderPass);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* DbgRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
@@ -454,14 +477,8 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
     {
         auto instanceDesc = desc;
         {
-            auto shaderProgramDbg = LLGL_CAST(DbgShaderProgram*, desc.shaderProgram);
+            auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram);
             instanceDesc.shaderProgram = &(shaderProgramDbg->instance);
-
-            if (desc.renderTarget)
-            {
-                auto renderTargetDbg = LLGL_CAST(DbgRenderTarget*, desc.renderTarget);
-                instanceDesc.renderTarget = &(renderTargetDbg->instance);
-            }
         }
         return TakeOwnership(graphicsPipelines_, MakeUnique<DbgGraphicsPipeline>(*instance_->CreateGraphicsPipeline(instanceDesc), desc));
     }

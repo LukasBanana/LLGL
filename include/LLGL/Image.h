@@ -25,7 +25,7 @@ namespace LLGL
 This class is not required for any interaction with the render system.
 It can be used as utility to handle 2D and 3D image data before passing it to a hardware texture.
 \remarks This class holds the ownership of an image buffer and its attributes.
-The primary functions are implemented as global functions like GenerateImageBuffer for instance.
+The primary functions are implemented as global functions like <code>GenerateImageBuffer</code> for instance.
 \note All image operations of this class do NOT make use of hardware acceleration.
 \see GenerateImageBuffer
 \see ConvertImageBuffer

@@ -64,7 +64,7 @@ class D3D12GraphicsPipeline final : public GraphicsPipeline
 
         void CreatePipelineState(
             D3D12RenderSystem&                  renderSystem,
-            D3D12ShaderProgram&                 shaderProgram,
+            const D3D12ShaderProgram&           shaderProgram,
             ID3D12RootSignature*                rootSignature,
             const GraphicsPipelineDescriptor&   desc
         );

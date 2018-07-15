@@ -22,6 +22,7 @@ namespace LLGL
 /**
 \brief Rendering profiler model class.
 \remarks This can be used to profile the renderer draw calls and buffer updates.
+\todo Refactor this for the new ResourceHeap and RenderPass interfaces.
 */
 class LLGL_EXPORT RenderingProfiler
 {

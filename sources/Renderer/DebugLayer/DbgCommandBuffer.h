@@ -10,9 +10,6 @@
 
 
 #include <LLGL/CommandBufferExt.h>
-#include <LLGL/RenderingProfiler.h>
-#include <LLGL/RenderingDebugger.h>
-
 #include "DbgGraphicsPipeline.h"
 #include <cstdint>
 
@@ -24,6 +21,8 @@ namespace LLGL
 class DbgBuffer;
 class DbgRenderContext;
 class DbgRenderTarget;
+class RenderingProfiler;
+class RenderingDebugger;
 
 class DbgCommandBuffer : public CommandBufferExt
 {
@@ -97,10 +96,16 @@ class DbgCommandBuffer : public CommandBufferExt
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
-        /* ----- Render Targets ----- */
+        /* ----- Render Passes ----- */
 
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void SetRenderTarget(RenderContext& renderContext) override;
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
 
         /* ----- Pipeline States ----- */
 
@@ -136,6 +141,10 @@ class DbgCommandBuffer : public CommandBufferExt
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
+        /* ----- Extended functions ----- */
+
+        void EnableRecording(bool enable);
+
         /* ----- Debugging members ----- */
 
         CommandBuffer&      instance;
@@ -164,6 +173,8 @@ class DbgCommandBuffer : public CommandBufferExt
         void ValidateStageFlags(long stageFlags, long validFlags);
         void ValidateBufferType(const BufferType bufferType, const BufferType compareType);
 
+        void AssertRecording();
+        void AssertInsideRenderPass();
         void AssertGraphicsPipelineBound();
         void AssertComputePipelineBound();
         void AssertVertexBufferBound();
@@ -205,7 +216,9 @@ class DbgCommandBuffer : public CommandBufferExt
 
         struct States
         {
-            bool streamOutputBusy = false;
+            bool recording          = false;
+            bool insideRenderPass   = false;
+            bool streamOutputBusy   = false;
         }
         states_;
 

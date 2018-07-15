@@ -41,6 +41,8 @@ class GLRenderContext final : public RenderContext
         Format QueryColorFormat() const override;
         Format QueryDepthStencilFormat() const override;
 
+        const RenderPass* GetRenderPass() const override;
+
         /* ----- GLRenderContext specific functions ----- */
 
         static bool GLMakeCurrent(GLRenderContext* renderContext);

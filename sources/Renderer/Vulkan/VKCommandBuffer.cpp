@@ -8,6 +8,7 @@
 #include "VKCommandBuffer.h"
 #include "VKRenderContext.h"
 #include "VKTypes.h"
+#include "RenderState/VKRenderPass.h"
 #include "RenderState/VKGraphicsPipeline.h"
 #include "RenderState/VKComputePipeline.h"
 #include "RenderState/VKResourceHeap.h"
@@ -18,6 +19,7 @@
 #include "Buffer/VKBufferArray.h"
 #include "Buffer/VKIndexBuffer.h"
 #include "../CheckedCast.h"
+#include "../StaticLimits.h"
 #include <cstddef>
 
 
@@ -27,19 +29,34 @@ namespace LLGL
 
 static const std::uint32_t g_maxNumViewportsPerBatch = 16;
 
-VKCommandBuffer::VKCommandBuffer(const VKPtr<VkDevice>& device, VkQueue graphicsQueue, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices) :
-    device_             { device                           },
-    commandPool_        { device, vkDestroyCommandPool     },
-    queuePresentFamily_ { queueFamilyIndices.presentFamily }
+VKCommandBuffer::VKCommandBuffer(
+    const VKPtr<VkDevice>&          device,
+    VkQueue                         graphicsQueue,
+    const QueueFamilyIndices&       queueFamilyIndices,
+    const CommandBufferDescriptor&  desc) :
+        device_             { device                           },
+        commandPool_        { device, vkDestroyCommandPool     },
+        queuePresentFamily_ { queueFamilyIndices.presentFamily }
 {
+    std::size_t bufferCount = std::max(1u, desc.numNativeBuffers);
+
+    /* Create native command buffer objects */
     CreateCommandPool(queueFamilyIndices.graphicsFamily);
     CreateCommandBuffers(bufferCount);
     CreateRecordingFences(graphicsQueue, bufferCount);
+
+    /* Acquire first native command buffer */
+    AcquireNextBuffer();
 }
 
 VKCommandBuffer::~VKCommandBuffer()
 {
-    vkFreeCommandBuffers(device_, commandPool_, static_cast<std::uint32_t>(commandBufferList_.size()), commandBufferList_.data());
+    vkFreeCommandBuffers(
+        device_,
+        commandPool_,
+        static_cast<std::uint32_t>(commandBufferList_.size()),
+        commandBufferList_.data()
+    );
 }
 
 /* ----- Configuration ----- */
@@ -143,15 +160,17 @@ void VKCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 
 /* ----- Clear ----- */
 
-static const std::uint32_t g_maxNumColorAttachments = 32;
-static const std::uint32_t g_maxNumAttachments      = (g_maxNumColorAttachments + 1);
+static void Convert(VkClearColorValue& dst, const ColorRGBAf& src)
+{
+    dst.float32[0] = src.r;
+    dst.float32[1] = src.g;
+    dst.float32[2] = src.b;
+    dst.float32[3] = src.a;
+}
 
 void VKCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
-    clearColor_.float32[0] = color.r;
-    clearColor_.float32[1] = color.g;
-    clearColor_.float32[2] = color.b;
-    clearColor_.float32[3] = color.a;
+    Convert(clearColor_, color);
 }
 
 void VKCommandBuffer::SetClearDepth(float depth)
@@ -178,14 +197,14 @@ static VkImageAspectFlags GetDepthStencilAspectMask(long flags)
 
 void VKCommandBuffer::Clear(long flags)
 {
-    VkClearAttachment attachments[g_maxNumAttachments];
+    VkClearAttachment attachments[LLGL_MAX_NUM_ATTACHMENTS];
 
     std::uint32_t numAttachments = 0;
 
     /* Fill clear descriptors for color attachments */
     if ((flags & ClearFlags::Color) != 0)
     {
-        numAttachments = std::min(numColorAttachments_, g_maxNumColorAttachments);
+        numAttachments = std::min(numColorAttachments_, LLGL_MAX_NUM_COLOR_ATTACHMENTS);
         for (std::uint32_t i = 0; i < numAttachments; ++i)
         {
             auto& attachment = attachments[i];
@@ -215,11 +234,11 @@ void VKCommandBuffer::Clear(long flags)
 void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
 {
     /* Convert clear attachment descriptors */
-    VkClearAttachment attachmentsVK[g_maxNumAttachments];
+    VkClearAttachment attachmentsVK[LLGL_MAX_NUM_ATTACHMENTS];
 
     std::uint32_t numAttachmentsVK = 0;
 
-    for (std::uint32_t i = 0, n = std::min(numAttachments, g_maxNumAttachments); i < n; ++i)
+    for (std::uint32_t i = 0, n = std::min(numAttachments, LLGL_MAX_NUM_ATTACHMENTS); i < n; ++i)
     {
         auto& dst = attachmentsVK[numAttachmentsVK];
         const auto& src = attachments[i];
@@ -227,12 +246,9 @@ void VKCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
         if ((src.flags & ClearFlags::Color) != 0)
         {
             /* Convert color clear command */
-            dst.aspectMask                   = VK_IMAGE_ASPECT_COLOR_BIT;
-            dst.colorAttachment              = src.colorAttachment;
-            dst.clearValue.color.float32[0]  = src.clearValue.color.r;
-            dst.clearValue.color.float32[1]  = src.clearValue.color.g;
-            dst.clearValue.color.float32[2]  = src.clearValue.color.b;
-            dst.clearValue.color.float32[3]  = src.clearValue.color.a;
+            dst.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
+            dst.colorAttachment = src.colorAttachment;
+            Convert(dst.clearValue.color, src.clearValue.color);
             ++numAttachmentsVK;
         }
         else if (hasDSVAttachment_)
@@ -340,56 +356,114 @@ void VKCommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std::ui
     BindResourceHeap(resourceHeapVK, VK_PIPELINE_BIND_POINT_COMPUTE, firstSet);
 }
 
-/* ----- Render Targets ----- */
+/* ----- Render Passes ----- */
 
-void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
+void VKCommandBuffer::BeginRenderPass(
+    RenderTarget&       renderTarget,
+    const RenderPass*   renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
 {
-    auto& renderTargetVK = LLGL_CAST(VKRenderTarget&, renderTarget);
+    if (renderTarget.IsRenderContext())
+    {
+        /* Get Vulkan render context object */
+        auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderTarget);
 
-    /* Begin command buffer and render pass */
-    if (!IsCommandBufferActive())
-        BeginCommandBuffer();
+        /* Store information about framebuffer attachments */
+        renderPass_             = renderContextVK.GetSwapChainRenderPass().GetVkRenderPass();
+        framebuffer_            = renderContextVK.GetVkFramebuffer();
+        framebufferExtent_      = renderContextVK.GetVkExtent();
+        numColorAttachments_    = renderContextVK.GetNumColorAttachments();
+        hasDSVAttachment_       = (renderContextVK.HasDepthAttachment() || renderContextVK.HasStencilAttachment());
+    }
+    else
+    {
+        /* Get Vulkan render target object and store its extent for subsequent commands */
+        auto& renderTargetVK = LLGL_CAST(VKRenderTarget&, renderTarget);
 
-    /* Set new render pass */
-    SetRenderPass(
-        renderTargetVK.GetVkRenderPass(),
-        renderTargetVK.GetVkFramebuffer(),
-        renderTargetVK.GetVkExtent()
-    );
+        /* Store information about framebuffer attachments */
+        renderPass_             = renderTargetVK.GetVkRenderPass();
+        framebuffer_            = renderTargetVK.GetVkFramebuffer();
+        framebufferExtent_      = renderTargetVK.GetVkExtent();
+        numColorAttachments_    = renderTargetVK.GetNumColorAttachments();
+        hasDSVAttachment_       = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
+    }
 
-    /* Store information about framebuffer attachments */
-    numColorAttachments_    = (renderTargetVK.GetNumColorAttachments());
-    hasDSVAttachment_       = (renderTargetVK.HasDepthAttachment() || renderTargetVK.HasStencilAttachment());
+    scissorRectInvalidated_ = true;
+
+    /* Declare array or clear values */
+    VkClearValue clearValuesVK[LLGL_MAX_NUM_ATTACHMENTS];
+    std::uint32_t numClearValuesVK = 0;
+
+    /* Get native render pass object either from RenderTarget or RenderPass interface */
+    if (renderPass != nullptr)
+    {
+        /* Get native VkRenderPass object */
+        auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
+        renderPass_ = renderPassVK->GetVkRenderPass();
+
+        /* Fill array of clear values */
+        numClearValuesVK        = renderPassVK->GetNumClearValues();
+        auto clearValuesMask    = renderPassVK->GetClearValuesMask();
+        auto depthStencilIndex  = renderPassVK->GetDepthStencilIndex();
+
+        for (std::uint32_t i = 0; i < numClearValuesVK; ++i)
+        {
+            /* Check if current attachment index requires a clear value */
+            if (((clearValuesMask >> i) & 0x1ull) != 0)
+            {
+                auto& dst = clearValuesVK[i];
+
+                if (numClearValues > 0)
+                {
+                    /* Set specified clear parameter */
+                    if (i == depthStencilIndex)
+                    {
+                        dst.depthStencil.depth      = clearValues->depth;
+                        dst.depthStencil.stencil    = clearValues->stencil;
+                    }
+                    else
+                        Convert(dst.color, clearValues->color);
+
+                    /* Get next clear value parameter */
+                    --numClearValues;
+                    ++clearValues;
+                }
+                else
+                {
+                    /* Set global clear parameters (from SetClearColor, SetClearDepth, SetClearStencil) */
+                    if (i == depthStencilIndex)
+                        dst.depthStencil = clearDepthStencil_;
+                    else
+                        dst.color = clearColor_;
+                }
+            }
+        }
+    }
+
+    /* Record begin of render pass */
+    VkRenderPassBeginInfo beginInfo;
+    {
+        beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        beginInfo.pNext             = nullptr;
+        beginInfo.renderPass        = renderPass_;
+        beginInfo.framebuffer       = framebuffer_;
+        beginInfo.renderArea.offset = { 0, 0 };
+        beginInfo.renderArea.extent = framebufferExtent_;
+        beginInfo.clearValueCount   = numClearValuesVK;
+        beginInfo.pClearValues      = clearValuesVK;
+    }
+    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-/*
-TODO:
-BeginCommandBuffer at this point is only a workaround!
-Maybe it can be integrated into a Begin/EndRenderPass function with a new interface "RenderPass".
-*/
-void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
+void VKCommandBuffer::EndRenderPass()
 {
-    auto& renderContextVK = LLGL_CAST(VKRenderContext&, renderContext);
+    /* Record and of render pass */
+    vkCmdEndRenderPass(commandBuffer_);
 
-    //TODO:
-    //  this must be done for all command buffers at the end of the "VKRenderContext::Present" function
-    /* Switch internal command buffer for the respective render context presentation index */
-    renderContextVK.SetPresentCommandBuffer(this);
-
-    /* Begin command buffer and render pass */
-    if (!IsCommandBufferActive())
-        BeginCommandBuffer();
-
-    /* Set new render pass */
-    SetRenderPass(
-        renderContextVK.GetSwapChainRenderPass(),
-        renderContextVK.GetSwapChainFramebuffer(),
-        renderContextVK.GetSwapChainExtent()
-    );
-
-    /* Store information about framebuffer attachments */
-    numColorAttachments_    = 1;
-    hasDSVAttachment_       = renderContextVK.HasDepthStencilBuffer();
+    /* Reset render pass and framebuffer attributes */
+    renderPass_     = VK_NULL_HANDLE;
+    framebuffer_    = VK_NULL_HANDLE;
 }
 
 
@@ -561,105 +635,13 @@ void VKCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
     vkCmdDispatch(commandBuffer_, groupSizeX, groupSizeY, groupSizeZ);
 }
 
-/* --- Extended functions --- */
+/* ----- Extended functions ----- */
 
-void VKCommandBuffer::SetPresentIndex(std::uint32_t idx)
+void VKCommandBuffer::AcquireNextBuffer()
 {
-    commandBuffer_          = commandBufferList_[idx];
-    commandBufferActiveIt_  = commandBufferActiveList_.begin() + idx;
-    recordingFence_         = recordingFenceList_[idx];
-}
-
-bool VKCommandBuffer::IsCommandBufferActive() const
-{
-    return *commandBufferActiveIt_;
-}
-
-void VKCommandBuffer::BeginCommandBuffer()
-{
-    /* Wait for fence before recording */
-    vkWaitForFences(device_, 1, &recordingFence_, VK_TRUE, UINT64_MAX);
-    vkResetFences(device_, 1, &recordingFence_);
-
-    /* Begin recording of current command buffer */
-    VkCommandBufferBeginInfo beginInfo;
-    {
-        beginInfo.sType             = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.pNext             = nullptr;
-        beginInfo.flags             = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        beginInfo.pInheritanceInfo  = nullptr;
-    }
-    auto result = vkBeginCommandBuffer(commandBuffer_, &beginInfo);
-    VKThrowIfFailed(result, "failed to begin Vulkan command buffer");
-
-    /* Store activity state */
-    *commandBufferActiveIt_ = true;
-}
-
-void VKCommandBuffer::EndCommandBuffer()
-{
-    /* End recording of current command buffer */
-    auto result = vkEndCommandBuffer(commandBuffer_);
-    VKThrowIfFailed(result, "failed to end Vulkan command buffer");
-
-    /* Store activity state */
-    *commandBufferActiveIt_ = false;
-}
-
-void VKCommandBuffer::SetRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
-{
-    if (renderPass_)
-        EndRenderPass();
-
-    if (renderPass != VK_NULL_HANDLE)
-    {
-        /* Begin new render pass */
-        BeginRenderPass(renderPass, framebuffer, extent);
-
-        /* Store render pass and framebuffer attributes */
-        renderPass_             = renderPass;
-        framebuffer_            = framebuffer;
-        framebufferExtent_      = extent;
-        scissorRectInvalidated_ = true;
-    }
-}
-
-void VKCommandBuffer::SetRenderPassNull()
-{
-    if (renderPass_)
-    {
-        /* End current render pass */
-        EndRenderPass();
-
-        /* Reset render pass and framebuffer attributes */
-        renderPass_     = VK_NULL_HANDLE;
-        framebuffer_    = VK_NULL_HANDLE;
-    }
-}
-
-//private
-void VKCommandBuffer::BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent)
-{
-    /* Record begin of render pass */
-    VkRenderPassBeginInfo beginInfo;
-    {
-        beginInfo.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        beginInfo.pNext             = nullptr;
-        beginInfo.renderPass        = renderPass;
-        beginInfo.framebuffer       = framebuffer;
-        beginInfo.renderArea.offset = { 0, 0 };
-        beginInfo.renderArea.extent = extent;
-        beginInfo.clearValueCount   = 0;//1;
-        beginInfo.pClearValues      = nullptr;//(&clearValue_);
-    }
-    vkCmdBeginRenderPass(commandBuffer_, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
-}
-
-//private
-void VKCommandBuffer::EndRenderPass()
-{
-    /* Record and of render pass */
-    vkCmdEndRenderPass(commandBuffer_);
+    commandBufferIndex_ = (commandBufferIndex_ + 1) % commandBufferList_.size();
+    commandBuffer_      = commandBufferList_[commandBufferIndex_];
+    recordingFence_     = recordingFenceList_[commandBufferIndex_].Get();
 }
 
 
@@ -696,17 +678,11 @@ void VKCommandBuffer::CreateCommandBuffers(std::size_t bufferCount)
     }
     auto result = vkAllocateCommandBuffers(device_, &allocInfo, commandBufferList_.data());
     VKThrowIfFailed(result, "failed to allocate Vulkan command buffers");
-
-    commandBuffer_ = commandBufferList_.front();
-
-    /* Allocate list to keep track of which command buffers are active */
-    commandBufferActiveList_.resize(bufferCount);
-    commandBufferActiveIt_ = commandBufferActiveList_.end();
 }
 
 void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t numFences)
 {
-    recordingFenceList_.resize(numFences, VKPtr<VkFence> { device_, vkDestroyFence });
+    recordingFenceList_.reserve(numFences);
 
     VkFenceCreateInfo createInfo;
     {
@@ -715,17 +691,19 @@ void VKCommandBuffer::CreateRecordingFences(VkQueue graphicsQueue, std::size_t n
         createInfo.flags = 0;
     }
 
-    for (auto& fence : recordingFenceList_)
+    for (std::size_t i = 0; i < numFences; ++i)
     {
-        /* Create fence for command buffer recording */
-        auto result = vkCreateFence(device_, &createInfo, nullptr, fence.ReleaseAndGetAddressOf());
-        VKThrowIfFailed(result, "failed to create Vulkan fence");
+        VKPtr<VkFence> fence { device_, vkDestroyFence };
+        {
+            /* Create fence for command buffer recording */
+            auto result = vkCreateFence(device_, &createInfo, nullptr, fence.ReleaseAndGetAddressOf());
+            VKThrowIfFailed(result, "failed to create Vulkan fence");
 
-        /* Initial fence signal */
-        vkQueueSubmit(graphicsQueue, 0, nullptr, fence);
+            /* Initial fence signal */
+            vkQueueSubmit(graphicsQueue, 0, nullptr, fence);
+        }
+        recordingFenceList_.emplace_back(std::move(fence));
     }
-
-    recordingFence_ = recordingFenceList_.front().Get();
 }
 
 void VKCommandBuffer::ClearFramebufferAttachments(std::uint32_t numAttachments, const VkClearAttachment* attachments)

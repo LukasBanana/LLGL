@@ -29,12 +29,9 @@ D3D12Fence::~D3D12Fence()
     CloseHandle(event_);
 }
 
-void D3D12Fence::Submit(ID3D12CommandQueue* commandQueue)
+UINT64 D3D12Fence::NextValue()
 {
-    /* Schedule signal command into the qeue */
-    ++value_;
-    auto hr = commandQueue->Signal(fence_.Get(), value_);
-    DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
+    return ++value_;
 }
 
 // Converts the specified amount of nanoseconds into milliseconds (rounded up)

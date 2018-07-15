@@ -368,47 +368,52 @@ private:
                 std::cout << "Alpha-To-Coverage Disabled" << std::endl;
         }
 
-        // Set the render context as the initial render target
-        commands->SetRenderTarget(*context);
-
-        // Set viewport
-        const auto resolution = context->GetVideoMode().resolution;
-        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
-
-        // Clear color- and depth buffers
-        commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-        // Set buffer array, texture, and sampler
-        commands->SetVertexBufferArray(*vertexBufferArray);
-
-        // Set graphics pipeline state
-        commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
-
-        if (pipelineLayout)
+        commandQueue->Begin(*commands);
         {
-            // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-            commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
-            commands->DrawInstanced(4, 0, numPlantInstances);
+            // Set buffer array, texture, and sampler
+            commands->SetVertexBufferArray(*vertexBufferArray);
 
-            // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-            commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
-            commands->DrawInstanced(4, 4, 1, numPlantInstances);
+            // Set the render context as the initial render target
+            commands->BeginRenderPass(*context);
+            {
+                // Clear color- and depth buffers
+                commands->Clear(LLGL::ClearFlags::ColorDepth);
+
+                // Set viewport
+                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+
+                // Set graphics pipeline state
+                commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
+
+                if (pipelineLayout)
+                {
+                    // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+                    commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
+                    commands->DrawInstanced(4, 0, numPlantInstances);
+
+                    // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+                    commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
+                    commands->DrawInstanced(4, 4, 1, numPlantInstances);
+                }
+                else
+                {
+                    commandsExt->SetTexture(*arrayTexture, 0, LLGL::StageFlags::FragmentStage);
+                    commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
+
+                    // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+                    commandsExt->SetSampler(*samplers[0], 0, LLGL::StageFlags::FragmentStage);
+                    commands->DrawInstanced(4, 0, numPlantInstances);
+
+                    #ifndef __APPLE__
+                    // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+                    commandsExt->SetSampler(*samplers[1], 0, LLGL::StageFlags::FragmentStage);
+                    commands->DrawInstanced(4, 4, 1, numPlantInstances);
+                    #endif
+                }
+            }
+            commands->EndRenderPass();
         }
-        else
-        {
-            commandsExt->SetTexture(*arrayTexture, 0, LLGL::StageFlags::FragmentStage);
-            commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
-
-            // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-            commandsExt->SetSampler(*samplers[0], 0, LLGL::StageFlags::FragmentStage);
-            commands->DrawInstanced(4, 0, numPlantInstances);
-
-            #ifndef __APPLE__
-            // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-            commandsExt->SetSampler(*samplers[1], 0, LLGL::StageFlags::FragmentStage);
-            commands->DrawInstanced(4, 4, 1, numPlantInstances);
-            #endif
-        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

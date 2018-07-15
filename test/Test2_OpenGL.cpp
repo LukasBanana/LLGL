@@ -77,6 +77,7 @@ int main()
         window->Show();
 
         // Create command buffer
+        auto commandQueue = renderer->GetCommandQueue();
         auto commands = renderer->CreateCommandBufferExt();
 
         //const auto& renderCaps = renderer->GetRenderingCaps();
@@ -101,16 +102,7 @@ int main()
             {
                 auto videoMode = context_->GetVideoMode();
                 videoMode.resolution = clientAreaSize;
-
                 context_->SetVideoMode(videoMode);
-                commands_->SetRenderTarget(*context_);
-
-                LLGL::Viewport viewport;
-                {
-                    viewport.width  = static_cast<float>(videoMode.resolution.width);
-                    viewport.height = static_cast<float>(videoMode.resolution.height);
-                }
-                commands_->SetViewport(viewport);
             }
         private:
             LLGL::RenderContext* context_;
@@ -356,12 +348,6 @@ int main()
         }
         auto& sampler = *renderer->CreateSampler(samplerDesc);
 
-        //#ifndef __linux__
-        commands->SetSampler(sampler, 0);
-        //#endif
-
-        //commands->SetViewport(LLGL::Viewport(0, 0, 300, 300));
-
         #ifdef TEST_QUERY
         auto query = renderer->CreateQuery(LLGL::QueryType::SamplesPassed);
         bool hasQueryResult = false;
@@ -391,111 +377,127 @@ int main()
             if (profiler)
                 profiler->ResetCounters();
 
-            commands->SetClearColor(LLGL::ColorRGBAf(0.3f, 0.3f, 1));
-            commands->Clear(LLGL::ClearFlags::Color);
-
-            auto uniformSetter = shaderProgram.LockShaderUniform();
-            if (uniformSetter)
+            commandQueue->Begin(*commands);
             {
-                auto projection = Gs::ProjectionMatrix4f::Planar(
-                    static_cast<Gs::Real>(context->GetVideoMode().resolution.width),
-                    static_cast<Gs::Real>(context->GetVideoMode().resolution.height)
-                );
-                uniformSetter->SetUniform4x4fv("projection", projection.Ptr());
-            }
-            shaderProgram.UnlockShaderUniform();
+                //#ifndef __linux__
+                commands->SetSampler(sampler, 0);
+                //#endif
 
-            commands->SetGraphicsPipeline(pipeline);
-            commands->SetVertexBuffer(*vertexBuffer);
+                commands->SetViewport(LLGL::Viewport{ {}, context->GetResolution() });
 
-            if (renderTarget && renderTargetTex)
-            {
-                commands->SetRenderTarget(*renderTarget);
-                commands->SetClearColor({ 1, 1, 1, 1 });
-                commands->Clear(LLGL::ClearFlags::Color);
-            }
-
-            #ifndef __linux__
-
-            // Switch fullscreen mode
-            if (input->KeyDown(LLGL::Key::Return))
-            {
-                windowDesc.borderless = !windowDesc.borderless;
-
-                /*auto videoMode = contextDesc.videoMode;
-                videoMode.fullscreen = windowDesc.borderless;
-                LLGL::Desktop::SetVideoMode(videoMode);*/
-
-                windowDesc.centered = true;//!windowDesc.borderless;
-                windowDesc.position = { 0, 0 };
-                windowDesc.resizable = true;
-                windowDesc.visible = true;
-                window->SetDesc(windowDesc);
-
-                context->SetVideoMode(contextDesc.videoMode);
-
-                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, contextDesc.videoMode.resolution });
-            }
-
-            #endif
-
-            #ifdef TEST_QUERY
-
-            if (!hasQueryResult)
-                commands->BeginQuery(*query);
-
-            #endif
-
-            commands->SetTexture(texture, 0);
-            commands->Draw(4, 0);
-
-            #ifdef TEST_STORAGE_BUFFER
-
-            if (renderCaps.hasStorageBuffers)
-            {
-                static bool outputShown;
-                if (!outputShown)
+                commands->BeginRenderPass(*context);
                 {
-                    outputShown = true;
-                    auto outputData = renderer->MapBuffer(*storage, LLGL::BufferCPUAccess::ReadOnly);
+                    commands->SetClearColor({ 0.3f, 0.3f, 1 });
+                    commands->Clear(LLGL::ClearFlags::Color);
+
+                    auto uniformSetter = shaderProgram.LockShaderUniform();
+                    if (uniformSetter)
                     {
-                        auto v = reinterpret_cast<Gs::Vector4f*>(outputData);
-                        std::cout << "storage buffer output: " << *v << std::endl;
+                        auto projection = Gs::ProjectionMatrix4f::Planar(
+                            static_cast<Gs::Real>(context->GetVideoMode().resolution.width),
+                            static_cast<Gs::Real>(context->GetVideoMode().resolution.height)
+                        );
+                        uniformSetter->SetUniform4x4fv("projection", projection.Ptr());
                     }
-                    renderer->UnmapBuffer();
+                    shaderProgram.UnlockShaderUniform();
+
+                    commands->SetGraphicsPipeline(pipeline);
+                    commands->SetVertexBuffer(*vertexBuffer);
+
+                    if (renderTarget && renderTargetTex)
+                    {
+                        commands->EndRenderPass();
+                        commands->BeginRenderPass(*renderTarget);
+                        commands->SetClearColor({ 1, 1, 1, 1 });
+                        commands->Clear(LLGL::ClearFlags::Color);
+                    }
+
+                    #ifndef __linux__
+
+                    // Switch fullscreen mode
+                    if (input->KeyDown(LLGL::Key::Return))
+                    {
+                        windowDesc.borderless = !windowDesc.borderless;
+
+                        /*auto videoMode = contextDesc.videoMode;
+                        videoMode.fullscreen = windowDesc.borderless;
+                        LLGL::Desktop::SetVideoMode(videoMode);*/
+
+                        windowDesc.centered = true;//!windowDesc.borderless;
+                        windowDesc.position = { 0, 0 };
+                        windowDesc.resizable = true;
+                        windowDesc.visible = true;
+                        window->SetDesc(windowDesc);
+
+                        context->SetVideoMode(contextDesc.videoMode);
+
+                        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, contextDesc.videoMode.resolution });
+                    }
+
+                    #endif
+
+                    #ifdef TEST_QUERY
+
+                    if (!hasQueryResult)
+                        commands->BeginQuery(*query);
+
+                    #endif
+
+                    commands->SetTexture(texture, 0);
+                    commands->Draw(4, 0);
+
+                    #ifdef TEST_STORAGE_BUFFER
+
+                    if (renderCaps.hasStorageBuffers)
+                    {
+                        static bool outputShown;
+                        if (!outputShown)
+                        {
+                            outputShown = true;
+                            auto outputData = renderer->MapBuffer(*storage, LLGL::BufferCPUAccess::ReadOnly);
+                            {
+                                auto v = reinterpret_cast<Gs::Vector4f*>(outputData);
+                                std::cout << "storage buffer output: " << *v << std::endl;
+                            }
+                            renderer->UnmapBuffer();
+                        }
+                    }
+
+                    #endif
+
+                    #ifdef TEST_QUERY
+
+                    if (!hasQueryResult)
+                    {
+                        commands->EndQuery(*query);
+                        hasQueryResult = true;
+                    }
+
+                    std::uint64_t result = 0;
+                    if (commands->QueryResult(*query, result))
+                    {
+                        static std::uint64_t prevResult;
+                        if (prevResult != result)
+                        {
+                            prevResult = result;
+                            std::cout << "query result = " << result << std::endl;
+                        }
+                        hasQueryResult = false;
+                    }
+
+                    #endif
+
+                    if (renderTarget && renderTargetTex)
+                    {
+                        commands->EndRenderPass();
+                        commands->BeginRenderPass(*context);
+                        commands->SetTexture(*renderTargetTex, 0);
+                        commands->Draw(4, 0);
+                    }
                 }
+                commands->EndRenderPass();
             }
-
-            #endif
-
-            #ifdef TEST_QUERY
-
-            if (!hasQueryResult)
-            {
-                commands->EndQuery(*query);
-                hasQueryResult = true;
-            }
-
-            std::uint64_t result = 0;
-            if (commands->QueryResult(*query, result))
-            {
-                static std::uint64_t prevResult;
-                if (prevResult != result)
-                {
-                    prevResult = result;
-                    std::cout << "query result = " << result << std::endl;
-                }
-                hasQueryResult = false;
-            }
-
-            #endif
-
-            if (renderTarget && renderTargetTex)
-            {
-                commands->SetRenderTarget(*context);
-                commands->SetTexture(*renderTargetTex, 0);
-                commands->Draw(4, 0);
-            }
+            commandQueue->End(*commands);
 
             context->Present();
         }

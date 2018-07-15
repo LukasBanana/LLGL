@@ -33,6 +33,11 @@ Format DbgRenderContext::QueryDepthStencilFormat() const
     return instance.QueryDepthStencilFormat();
 }
 
+const RenderPass* DbgRenderContext::GetRenderPass() const
+{
+    return instance.GetRenderPass();
+}
+
 
 /*
  * ======= Private: =======

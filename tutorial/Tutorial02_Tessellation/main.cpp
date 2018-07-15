@@ -14,6 +14,9 @@
 // Enable multi-sampling anti-aliasing
 #define ENABLE_MULTISAMPLING
 
+// Use render pass to optimize attachment clearing
+#define ENABLE_RENDER_PASS
+
 // Test constant buffer array
 //#define _TEST_BUFFER_ARRAY_
 
@@ -30,6 +33,10 @@ class Tutorial02 : public Tutorial
 
     LLGL::PipelineLayout*   pipelineLayout      = nullptr;
     LLGL::ResourceHeap*     resourceHeap        = nullptr;
+
+    #ifdef ENABLE_RENDER_PASS
+    LLGL::RenderPass*       renderPass          = nullptr;
+    #endif
 
     #ifdef _TEST_BUFFER_ARRAY_
     LLGL::BufferArray*      constantBufferArray = nullptr;
@@ -65,6 +72,9 @@ public:
         // Create graphics object
         auto vertexFormat = CreateBuffers();
         LoadShaders(vertexFormat);
+        #ifdef ENABLE_RENDER_PASS
+        CreateRenderPass();
+        #endif
         CreatePipelines();
 
         // Print some information on the standard output
@@ -144,6 +154,24 @@ public:
         shaderProgram->BindConstantBuffer("Settings", constantBufferIndex);
     }
 
+    #ifdef ENABLE_RENDER_PASS
+    void CreateRenderPass()
+    {
+        LLGL::RenderPassDescriptor renderPassDesc;
+        {
+            renderPassDesc.colorAttachments =
+            {
+                LLGL::AttachmentFormatDescriptor { context->QueryColorFormat(), LLGL::AttachmentLoadOp::Clear },
+            };
+            renderPassDesc.depthAttachment =
+            (
+                LLGL::AttachmentFormatDescriptor { context->QueryDepthStencilFormat(), LLGL::AttachmentLoadOp::Clear }
+            );
+        }
+        renderPass = renderer->CreateRenderPass(renderPassDesc);
+    }
+    #endif
+
     void CreatePipelines()
     {
         // Create pipeline layout
@@ -170,10 +198,11 @@ public:
         // Setup graphics pipeline descriptors
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            // Set shader program
+            // Set references to shader program, render pass, and pipeline layout
             pipelineDesc.shaderProgram              = shaderProgram;
-
-            // Set pipeline layout
+            #ifdef ENABLE_RENDER_PASS
+            pipelineDesc.renderPass                 = renderPass;
+            #endif
             pipelineDesc.pipelineLayout             = pipelineLayout;
 
             // Set input-assembler state (draw pachtes with 4 control points)
@@ -253,43 +282,53 @@ private:
 
     void DrawScene()
     {
-        // Set the render context as the initial render target
-        commands->SetRenderTarget(*context);
-
-        // Set viewport
-        const auto resolution = context->GetVideoMode().resolution;
-        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
-
-        // Clear color- and depth buffers
-        commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-        // Update constant buffer
-        UpdateBuffer(constantBuffer, settings);
-
-        // Set graphics pipeline with the shader
-        commands->SetGraphicsPipeline(*pipeline[showWireframe ? 1 : 0]);
-
-        // Set hardware buffers to draw the model
-        commands->SetVertexBuffer(*vertexBuffer);
-        commands->SetIndexBuffer(*indexBuffer);
-
-        if (resourceHeap)
+        commandQueue->Begin(*commands);
         {
-            // Bind resource view heap to graphics pipeline
-            commands->SetGraphicsResourceHeap(*resourceHeap, 0);
-        }
-        else
-        {
-            // Set constant buffer only to tessellation shader stages
-            #ifdef _TEST_BUFFER_ARRAY_
-            commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::StageFlags::AllTessStages);
+            // Update constant buffer
+            UpdateBuffer(constantBuffer, settings);
+
+            // Set hardware buffers to draw the model
+            commands->SetVertexBuffer(*vertexBuffer);
+            commands->SetIndexBuffer(*indexBuffer);
+
+            // Set the render context as the initial render target
+            #ifdef ENABLE_RENDER_PASS
+            commands->BeginRenderPass(*context, renderPass);
             #else
-            commandsExt->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::StageFlags::AllTessStages);
-            #endif
-        }
+            commands->BeginRenderPass(*context);
 
-        // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
-        commands->DrawIndexed(24, 0);
+            // Clear color- and depth buffers
+            commands->Clear(LLGL::ClearFlags::ColorDepth);
+            #endif
+            {
+                // Set viewport
+                const auto resolution = context->GetVideoMode().resolution;
+                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
+
+                // Set graphics pipeline with the shader
+                commands->SetGraphicsPipeline(*pipeline[showWireframe ? 1 : 0]);
+
+                if (resourceHeap)
+                {
+                    // Bind resource view heap to graphics pipeline
+                    commands->SetGraphicsResourceHeap(*resourceHeap, 0);
+                }
+                else
+                {
+                    // Set constant buffer only to tessellation shader stages
+                    #ifdef _TEST_BUFFER_ARRAY_
+                    commands->SetConstantBufferArray(*constantBufferArray, constantBufferIndex, LLGL::StageFlags::AllTessStages);
+                    #else
+                    commandsExt->SetConstantBuffer(*constantBuffer, constantBufferIndex, LLGL::StageFlags::AllTessStages);
+                    #endif
+                }
+
+                // Draw tessellated quads with 24=4*6 vertices from patches of 4 control points
+                commands->DrawIndexed(24, 0);
+            }
+            commands->EndRenderPass();
+        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

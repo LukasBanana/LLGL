@@ -331,6 +331,27 @@ VkQueryType Map(const QueryType queryType)
     MapFailed("QueryType", "VkQueryType");
 }
 
+VkAttachmentLoadOp Map(const AttachmentLoadOp loadOp)
+{
+    switch (loadOp)
+    {
+        case AttachmentLoadOp::Undefined:   return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        case AttachmentLoadOp::Load:        return VK_ATTACHMENT_LOAD_OP_LOAD;
+        case AttachmentLoadOp::Clear:       return VK_ATTACHMENT_LOAD_OP_CLEAR;
+    }
+    MapFailed("AttachmentLoadOp", "VkAttachmentLoadOp");
+}
+
+VkAttachmentStoreOp Map(const AttachmentStoreOp storeOp)
+{
+    switch (storeOp)
+    {
+        case AttachmentStoreOp::Undefined:  return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        case AttachmentStoreOp::Store:      return VK_ATTACHMENT_STORE_OP_STORE;
+    }
+    MapFailed("AttachmentStoreOp", "VkAttachmentStoreOp");
+}
+
 Format Unmap(const VkFormat format)
 {
     switch (format)

@@ -9,10 +9,10 @@
 #define LLGL_RENDER_CONTEXT_H
 
 
-#include "RenderSystemChild.h"
-#include "Surface.h"
+#include "RenderTarget.h"
 #include "RenderContextFlags.h"
 #include "RenderSystemFlags.h"
+#include "Surface.h"
 
 #include "Buffer.h"
 #include "BufferArray.h"
@@ -41,12 +41,40 @@ class Display;
 \see RenderSystem::CreateRenderContext
 \see CommandBuffer::SetRenderTarget(RenderContext&)
 */
-class LLGL_EXPORT RenderContext : public RenderSystemChild
+class LLGL_EXPORT RenderContext : public RenderTarget
 {
 
     public:
 
-        /* ----- Common ----- */
+        /* ----- Render Target ----- */
+
+        //! Returns true.
+        bool IsRenderContext() const final;
+
+        /**
+        \brief Returns the resolution of the current video mode.
+        \see GetVideoMode
+        */
+        Extent2D GetResolution() const final;
+
+        //! Returns 1, since each render context has always a single color attachment.
+        std::uint32_t GetNumColorAttachments() const final;
+
+        /**
+        \brief Returns true if this render context has a depth format.
+        \see QueryDepthStencilFormat
+        \see IsDepthFormat
+        */
+        bool HasDepthAttachment() const final;
+
+        /**
+        \brief Returns true if this render context has a stencil format.
+        \see QueryDepthStencilFormat
+        \see IsStencilFormat
+        */
+        bool HasStencilAttachment() const final;
+
+        /* ----- Back Buffer ----- */
 
         //! Swaps the back buffer with the front buffer to present it on the screen (or rather on this render context).
         virtual void Present() = 0;

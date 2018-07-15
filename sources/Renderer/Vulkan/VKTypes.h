@@ -14,6 +14,7 @@
 #include <LLGL/PipelineLayoutFlags.h>
 #include <LLGL/ResourceHeapFlags.h>
 #include <LLGL/GraphicsPipelineFlags.h>
+#include <LLGL/RenderPassFlags.h>
 #include <LLGL/Format.h>
 #include <LLGL/SamplerFlags.h>
 #include <LLGL/QueryFlags.h>
@@ -45,6 +46,8 @@ VkBlendOp               Map( const BlendArithmetic      blendArithmetic   );
 VkSamplerAddressMode    Map( const SamplerAddressMode   addressMode       );
 VkDescriptorType        Map( const ResourceType         resourceViewType  );
 VkQueryType             Map( const QueryType            queryType         );
+VkAttachmentLoadOp      Map( const AttachmentLoadOp     loadOp            );
+VkAttachmentStoreOp     Map( const AttachmentStoreOp    storeOp           );
 
 Format                  Unmap( const VkFormat format );
 

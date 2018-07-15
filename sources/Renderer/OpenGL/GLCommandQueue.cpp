@@ -14,7 +14,17 @@ namespace LLGL
 {
 
 
-/* ----- Command queues ----- */
+/* ----- Command Buffers ----- */
+
+void GLCommandQueue::Begin(CommandBuffer& /*commandBuffer*/, long /*flags*/)
+{
+    // dummy
+}
+
+void GLCommandQueue::End(CommandBuffer& /*commandBuffer*/)
+{
+    // dummy
+}
 
 void GLCommandQueue::Submit(CommandBuffer& /*commandBuffer*/)
 {

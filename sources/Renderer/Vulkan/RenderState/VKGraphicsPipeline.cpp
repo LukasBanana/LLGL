@@ -8,7 +8,7 @@
 #include "VKGraphicsPipeline.h"
 #include "VKPipelineLayout.h"
 #include "../Shader/VKShaderProgram.h"
-#include "../Texture/VKRenderTarget.h"
+#include "VKRenderPass.h"
 #include "../VKTypes.h"
 #include "../VKCore.h"
 #include "../../CheckedCast.h"
@@ -21,31 +21,40 @@ namespace LLGL
 
 
 VKGraphicsPipeline::VKGraphicsPipeline(
-    const VKPtr<VkDevice>& device, VkRenderPass renderPass, VkPipelineLayout defaultPipelineLayout,
-    const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent) :
+    const VKPtr<VkDevice>&              device,
+    VkPipelineLayout                    defaultPipelineLayout,
+    const RenderPass*                   defaultRenderPass,
+    const GraphicsPipelineDescriptor&   desc,
+    const VKGraphicsPipelineLimits&     limits) :
         device_            { device                             },
-        renderPass_        { renderPass                         },
-        pipelineLayout_    { defaultPipelineLayout              },
         pipeline_          { device, vkDestroyPipeline          },
         scissorEnabled_    { desc.rasterizer.scissorTestEnabled },
         hasDynamicScissor_ { desc.scissors.empty()              }
 {
-    /* Get pipeline layout object */
-    if (desc.pipelineLayout)
-    {
-        auto pipelineLayoutVK = LLGL_CAST(VKPipelineLayout*, desc.pipelineLayout);
-        pipelineLayout_ = pipelineLayoutVK->GetVkPipelineLayout();
-    }
+    /* Get pipeline layout and render pass objects */
+    VkPipelineLayout nativePipelineLayout = VK_NULL_HANDLE;
 
-    /* Use render pass from render target if it's specified */
-    if (desc.renderTarget)
+    if (auto pipelineLayout = desc.pipelineLayout)
     {
-        auto renderTargetVK = LLGL_CAST(VKRenderTarget*, desc.renderTarget);
-        renderPass_ = renderTargetVK->GetVkRenderPass();
+        auto pipelineLayoutVK = LLGL_CAST(const VKPipelineLayout*, pipelineLayout);
+        nativePipelineLayout = pipelineLayoutVK->GetVkPipelineLayout();
     }
+    else
+        nativePipelineLayout = defaultPipelineLayout;
+
+    /* Get native render pass object */
+    VkRenderPass nativeRenderPass = VK_NULL_HANDLE;
+
+    if (auto renderPass = (desc.renderPass != nullptr ? desc.renderPass : defaultRenderPass))
+    {
+        auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
+        nativeRenderPass = renderPassVK->GetVkRenderPass();
+    }
+    else
+        throw std::invalid_argument("cannot create Vulkan graphics pipeline without render pass");
 
     /* Create Vulkan graphics pipeline object */
-    CreateGraphicsPipeline(desc, limits, extent);
+    CreateVkGraphicsPipeline(desc, limits, nativePipelineLayout, nativeRenderPass);
 }
 
 
@@ -53,7 +62,9 @@ VKGraphicsPipeline::VKGraphicsPipeline(
  * ======= Private: =======
  */
 
-static void CreateInputAssemblyState(const GraphicsPipelineDescriptor& desc, VkPipelineInputAssemblyStateCreateInfo& createInfo)
+static void CreateInputAssemblyState(
+    const GraphicsPipelineDescriptor&       desc,
+    VkPipelineInputAssemblyStateCreateInfo& createInfo)
 {
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
@@ -62,7 +73,9 @@ static void CreateInputAssemblyState(const GraphicsPipelineDescriptor& desc, VkP
     createInfo.primitiveRestartEnable   = VK_FALSE;
 }
 
-static void CreateTessellationState(const GraphicsPipelineDescriptor& desc, VkPipelineTessellationStateCreateInfo& createInfo)
+static void CreateTessellationState(
+    const GraphicsPipelineDescriptor&       desc,
+    VkPipelineTessellationStateCreateInfo&  createInfo)
 {
     createInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
     createInfo.pNext                = nullptr;
@@ -71,8 +84,10 @@ static void CreateTessellationState(const GraphicsPipelineDescriptor& desc, VkPi
 }
 
 static void CreateViewportState(
-    const GraphicsPipelineDescriptor& desc, const VkExtent2D& extent,
-    VkPipelineViewportStateCreateInfo& createInfo, std::vector<VkViewport>& viewportsVK, std::vector<VkRect2D>& scissorsVK)
+    const GraphicsPipelineDescriptor&   desc,
+    VkPipelineViewportStateCreateInfo&  createInfo,
+    std::vector<VkViewport>&            viewportsVK,
+    std::vector<VkRect2D>&              scissorsVK)
 {
     const auto numViewports = desc.viewports.size();
     const auto numScissors = desc.scissors.size();
@@ -96,13 +111,9 @@ static void CreateViewportState(
     }
     else
     {
-        /* Create default viewport */
-        createInfo.viewportCount = 1;
-        viewportsVK.resize(1);
-
-        VKTypes::Convert(viewportsVK[0], Viewport(0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f));
-
-        createInfo.pViewports = viewportsVK.data();
+        /* Set viewport count to 1 (required), but set array to null pointer (will be ignored) */
+        createInfo.viewportCount    = 1;
+        createInfo.pViewports       = nullptr;
     }
 
     /* Convert scissors to Vulkan structure */
@@ -118,21 +129,23 @@ static void CreateViewportState(
             else
                 VKTypes::Convert(scissorsVK[i], desc.viewports[i]);
         }
+
+        createInfo.pScissors = scissorsVK.data();
     }
     else
     {
-        /* Create default scissor */
+        /* Set scissor count to 1 (required), but set array to null pointer (will be ignored) */
         createInfo.scissorCount = 1;
-        scissorsVK.resize(1);
-        VKTypes::Convert(scissorsVK[0], Scissor(0, 0, extent.width, extent.height));
+        createInfo.pScissors    = nullptr;
     }
-
-    createInfo.pScissors = scissorsVK.data();
 }
 
-static void CreateRasterizerState(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, VkPipelineRasterizationStateCreateInfo& createInfo)
+static void CreateRasterizerState(
+    const GraphicsPipelineDescriptor&       desc,
+    const VKGraphicsPipelineLimits&         limits,
+    VkPipelineRasterizationStateCreateInfo& createInfo)
 {
-    auto shaderProgramVK = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
+    auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
 
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
@@ -173,7 +186,10 @@ static VkSampleCountFlagBits GetSampleCountBitmask(const MultiSamplingDescriptor
     return VK_SAMPLE_COUNT_1_BIT;
 }
 
-static void CreateMultisampleState(const MultiSamplingDescriptor& multiSampleDesc, const BlendDescriptor& blendDesc, VkPipelineMultisampleStateCreateInfo& createInfo)
+static void CreateMultisampleState(
+    const MultiSamplingDescriptor&          multiSampleDesc,
+    const BlendDescriptor&                  blendDesc,
+    VkPipelineMultisampleStateCreateInfo&   createInfo)
 {
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
@@ -186,7 +202,9 @@ static void CreateMultisampleState(const MultiSamplingDescriptor& multiSampleDes
     createInfo.alphaToOneEnable         = VK_FALSE;
 }
 
-static void CreateStencilOpState(const StencilFaceDescriptor& desc, VkStencilOpState& createInfo)
+static void CreateStencilOpState(
+    const StencilFaceDescriptor&    desc,
+    VkStencilOpState&               createInfo)
 {
     createInfo.failOp       = VKTypes::Map(desc.stencilFailOp);
     createInfo.passOp       = VKTypes::Map(desc.depthPassOp);
@@ -197,7 +215,9 @@ static void CreateStencilOpState(const StencilFaceDescriptor& desc, VkStencilOpS
     createInfo.reference    = desc.reference;
 }
 
-static void CreateDepthStencilState(const GraphicsPipelineDescriptor& desc, VkPipelineDepthStencilStateCreateInfo& createInfo)
+static void CreateDepthStencilState(
+    const GraphicsPipelineDescriptor&       desc,
+    VkPipelineDepthStencilStateCreateInfo&  createInfo)
 {
     createInfo.sType                    = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     createInfo.pNext                    = nullptr;
@@ -213,7 +233,10 @@ static void CreateDepthStencilState(const GraphicsPipelineDescriptor& desc, VkPi
     createInfo.maxDepthBounds           = 1.0f;
 }
 
-static void CreateColorBlendAttachmentState(VkPipelineColorBlendAttachmentState& createInfo, const BlendTargetDescriptor& desc, VkBool32 blendEnable)
+static void CreateColorBlendAttachmentState(
+    VkPipelineColorBlendAttachmentState&    createInfo,
+    const BlendTargetDescriptor&            desc,
+    VkBool32                                blendEnable)
 {
     createInfo.blendEnable          = blendEnable;
     createInfo.srcColorBlendFactor  = VKTypes::Map(desc.srcColor);
@@ -234,7 +257,10 @@ static void CreateColorBlendAttachmentState(VkPipelineColorBlendAttachmentState&
         createInfo.colorWriteMask |= VK_COLOR_COMPONENT_A_BIT;
 }
 
-static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBlendStateCreateInfo& createInfo, std::vector<VkPipelineColorBlendAttachmentState>& attachmentStatesVK)
+static void CreateColorBlendState(
+    const BlendDescriptor&                              desc,
+    VkPipelineColorBlendStateCreateInfo&                createInfo,
+    std::vector<VkPipelineColorBlendAttachmentState>&   attachmentStatesVK)
 {
     createInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     createInfo.pNext                = nullptr;
@@ -252,7 +278,6 @@ static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBl
     }
 
     auto numAttachments = desc.targets.size();
-
     if (numAttachments > 0)
     {
         /* Convert blend targets to Vulkan structure */
@@ -270,14 +295,16 @@ static void CreateColorBlendState(const BlendDescriptor& desc, VkPipelineColorBl
 
     createInfo.attachmentCount      = static_cast<std::uint32_t>(numAttachments);
     createInfo.pAttachments         = attachmentStatesVK.data();
-
     createInfo.blendConstants[0]    = desc.blendFactor.r;
     createInfo.blendConstants[1]    = desc.blendFactor.g;
     createInfo.blendConstants[2]    = desc.blendFactor.b;
     createInfo.blendConstants[3]    = desc.blendFactor.a;
 }
 
-static void CreateDynamicState(const GraphicsPipelineDescriptor& desc, VkPipelineDynamicStateCreateInfo& createInfo, std::vector<VkDynamicState>& dynamicStatesVK)
+static void CreateDynamicState(
+    const GraphicsPipelineDescriptor&   desc,
+    VkPipelineDynamicStateCreateInfo&   createInfo,
+    std::vector<VkDynamicState>&        dynamicStatesVK)
 {
     if (desc.viewports.empty())
         dynamicStatesVK.push_back(VK_DYNAMIC_STATE_VIEWPORT);
@@ -291,10 +318,14 @@ static void CreateDynamicState(const GraphicsPipelineDescriptor& desc, VkPipelin
     createInfo.pDynamicStates       = (dynamicStatesVK.empty() ? nullptr : dynamicStatesVK.data());
 }
 
-void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent)
+void VKGraphicsPipeline::CreateVkGraphicsPipeline(
+    const GraphicsPipelineDescriptor&   desc,
+    const VKGraphicsPipelineLimits&     limits,
+    VkPipelineLayout                    pipelineLayout,
+    VkRenderPass                        renderPass)
 {
     /* Get shader program object */
-    auto shaderProgramVK = LLGL_CAST(VKShaderProgram*, desc.shaderProgram);
+    auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
     if (!shaderProgramVK)
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
 
@@ -317,7 +348,7 @@ void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor
     std::vector<VkViewport> viewportsVK;
     std::vector<VkRect2D> scissorsVK;
     VkPipelineViewportStateCreateInfo viewportState;
-    CreateViewportState(desc, extent, viewportState, viewportsVK, scissorsVK);
+    CreateViewportState(desc, viewportState, viewportsVK, scissorsVK);
 
     /* Initialize rasterizer state */
     VkPipelineRasterizationStateCreateInfo rasterizerState;
@@ -358,8 +389,8 @@ void VKGraphicsPipeline::CreateGraphicsPipeline(const GraphicsPipelineDescriptor
         createInfo.pDepthStencilState           = (&depthStencilState);
         createInfo.pColorBlendState             = (&colorBlendState);
         createInfo.pDynamicState                = (!dynamicStatesVK.empty() ? &dynamicState : nullptr);
-        createInfo.layout                       = pipelineLayout_;
-        createInfo.renderPass                   = renderPass_;
+        createInfo.layout                       = pipelineLayout;
+        createInfo.renderPass                   = renderPass;
         createInfo.subpass                      = 0;
         createInfo.basePipelineHandle           = VK_NULL_HANDLE;
         createInfo.basePipelineIndex            = 0;

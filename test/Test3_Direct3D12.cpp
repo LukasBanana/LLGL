@@ -47,6 +47,7 @@ int main()
         auto renderCaps = renderer->GetRenderingCaps();
 
         // Create command buffer
+        auto commandQueue = renderer->GetCommandQueue();
         auto commands = renderer->CreateCommandBuffer();
 
         // Setup input controller
@@ -217,16 +218,22 @@ int main()
         // Main loop
         while (window->ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
-            commands->SetRenderTarget(*context);
-            commands->SetViewport(LLGL::Viewport { { 0, 0 }, contextDesc.videoMode.resolution });
+            commandQueue->Begin(*commands);
+            {
+                commands->BeginRenderPass(*context);
+                {
+                    commands->Clear(LLGL::ClearFlags::Color);
+                    commands->SetViewport(LLGL::Viewport { { 0, 0 }, contextDesc.videoMode.resolution });
 
-            commands->Clear(LLGL::ClearFlags::Color);
+                    commands->SetGraphicsPipeline(*pipeline);
+                    commands->SetVertexBuffer(*vertexBuffer);
+                    commands->SetGraphicsResourceHeap(*resourceHeap);
 
-            commands->SetGraphicsPipeline(*pipeline);
-            commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetGraphicsResourceHeap(*resourceHeap);
-
-            commands->Draw(3, 0);
+                    commands->Draw(3, 0);
+                }
+                commands->EndRenderPass();
+            }
+            commandQueue->End(*commands);
 
 			context->Present();
         }

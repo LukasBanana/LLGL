@@ -60,7 +60,7 @@ class D3D11GraphicsPipelineBase : public GraphicsPipeline
 
     private:
 
-        void StoreShaderObjects(D3D11ShaderProgram& shaderProgramD3D);
+        void StoreShaderObjects(const D3D11ShaderProgram& shaderProgramD3D);
 
         ComPtr<ID3D11InputLayout>       inputLayout_;
 

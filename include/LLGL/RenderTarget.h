@@ -22,19 +22,39 @@ class Texture;
 
 /**
 \brief Render target interface.
-\remarks A render target in the broader sense is a composition of Texture objects
-which can be specified as the destination for drawing operations.
-After a texture has been attached to a render target, its image content is undefined
-until something has been rendered into the render target.
+\remarks A render target in the broader sense is a composition of Texture objects which can be specified as the destination for drawing operations.
+After a texture has been attached to a render target, its image content is undefined until something has been rendered into the render target.
+The only interface that inherits from this interface is RenderContext, a special case of render targets used to present the result on the screen.
 \see RenderSystem::CreateRenderTarget
 \see CommandBuffer::SetRenderTarget(RenderTarget&)
+\see RenderContext
 */
 class LLGL_EXPORT RenderTarget : public RenderSystemChild
 {
 
     public:
 
-        //! Returns the number of color attachments of this render target. This can also be zero.
+        /**
+        \brief Returns true if this render target is an instance of RenderContext. By default false.
+        \remarks Do not override this function. Only the sub class RenderContext is supposed to override it.
+        \see RenderContext::IsRenderContext
+        */
+        virtual bool IsRenderContext() const;
+
+        /**
+        \brief Returns the render target resolution.
+        \remarks This is either determined by the resolution specified in the render target descriptor, or by the video mode of the render context.
+        \see RenderContext::GetVideoMode
+        \see RenderTargetDescriptor::resolution
+        \see VideoModeDescriptor::resolution
+        */
+        virtual Extent2D GetResolution() const = 0;
+
+        /**
+        \brief Returns the number of color attachments of this render target. This can also be zero.
+        \remarks For a render context, this will always be 1.
+        \see RenderContext::QueryColorFormat
+        */
         virtual std::uint32_t GetNumColorAttachments() const = 0;
 
         /**
@@ -42,6 +62,7 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \remarks The return value depends on whether the rendering API supports depth-stencil formats where the depth and stencil components can be strictly separated.
         For example, if the render target was created with only a stencil attachment,
         LLGL may still create a depth-stencil buffer that results in both a depth and stencil component in one attachment.
+        \see RenderContext::QueryDepthStencilFormat
         */
         virtual bool HasDepthAttachment() const = 0;
 
@@ -50,21 +71,19 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         \remarks The return value depends on whether the rendering API supports depth-stencil formats where the depth and stencil components can be strictly separated.
         For example, if the render target was created with only a stencil attachment,
         LLGL may still create a depth-stencil buffer that results in both a depth and stencil component in one attachment.
+        \see RenderContext::QueryDepthStencilFormat
         */
         virtual bool HasStencilAttachment() const = 0;
 
         /**
-        \brief Returns the render target resolution.
-        \remarks This will be determined by the first texture attachment. Every further attachment must have the same size.
+        \brief Returns the RenderPass object this render target is associated with, or null if render passes are optional for the the render system.
+        \remarks This is either the RenderPass object that was passed to the descriptor when this render target was created,
+        or it is the default RenderPass object that was created by the render target itself.
+        \see RenderTargetDescriptor::renderPass
         */
-        inline const Extent2D& GetResolution() const
-        {
-            return resolution_;
-        }
+        virtual const RenderPass* GetRenderPass() const = 0;
 
     protected:
-
-        RenderTarget(const Extent2D& resolution);
 
         /**
         \brief Applies the specified resolution.
@@ -75,15 +94,11 @@ class LLGL_EXPORT RenderTarget : public RenderSystemChild
         void ValidateResolution(const Extent2D& resolution);
 
         /**
-        \breif Applies the resolution of the texture MIP level.
+        \brief Applies the resolution of the texture MIP level.
         \see Texture::QueryMipExtent
         \see ValidateResolution
         */
         void ValidateMipResolution(const Texture& texture, std::uint32_t mipLevel);
-
-    private:
-
-        Extent2D resolution_;
 
 };
 

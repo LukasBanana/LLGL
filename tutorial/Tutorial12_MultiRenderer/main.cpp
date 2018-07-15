@@ -15,6 +15,7 @@
 static void RecordCommandBuffer(
     LLGL::RenderSystem*     renderer,
     LLGL::RenderContext*    context,
+    LLGL::CommandQueue*     cmdQueue,
     LLGL::CommandBufferExt* cmdBuffer,
     LLGL::GraphicsPipeline* pipeline,
     LLGL::Buffer*           constantBuffer,
@@ -22,26 +23,39 @@ static void RecordCommandBuffer(
     LLGL::Buffer*           indexBuffer,
     LLGL::Sampler*          sampler,
     LLGL::Texture*          texture,
+    const LLGL::Viewport&   viewport,
     const Gs::Matrix4f&     wvpMatrix)
 {
-    // Clear color buffer
-    cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth);
-
     // Update constant buffer
     renderer->WriteBuffer(*constantBuffer, &wvpMatrix, sizeof(wvpMatrix), 0);
 
-    // Set graphics pipeline and vertex buffer
-    cmdBuffer->SetGraphicsPipeline(*pipeline);
+    cmdQueue->Begin(*cmdBuffer);
+    {
+        cmdBuffer->SetVertexBuffer(*vertexBuffer);
+        cmdBuffer->SetIndexBuffer(*indexBuffer);
 
-    cmdBuffer->SetVertexBuffer(*vertexBuffer);
-    cmdBuffer->SetIndexBuffer(*indexBuffer);
+        cmdBuffer->BeginRenderPass(*context);
+        {
+            // Clear color buffer
+            cmdBuffer->SetClearColor({ 0.1f, 0.1f, 0.4f });
+            cmdBuffer->Clear(LLGL::ClearFlags::ColorDepth);
 
-    cmdBuffer->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
-    cmdBuffer->SetSampler(*sampler, 0, LLGL::StageFlags::FragmentStage);
-    cmdBuffer->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
+            // Set viewport
+            cmdBuffer->SetViewport(viewport);
 
-    // Draw triangulated cube
-    cmdBuffer->DrawIndexed(36, 0);
+            // Set graphics pipeline and vertex buffer
+            cmdBuffer->SetGraphicsPipeline(*pipeline);
+
+            cmdBuffer->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
+            cmdBuffer->SetSampler(*sampler, 0, LLGL::StageFlags::FragmentStage);
+            cmdBuffer->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
+
+            // Draw triangulated cube
+            cmdBuffer->DrawIndexed(36, 0);
+        }
+        cmdBuffer->EndRenderPass();
+    }
+    cmdQueue->End(*cmdBuffer);
 
     // Present the result on the screen
     context->Present();
@@ -210,21 +224,17 @@ int main(int argc, char* argv[])
         }
         auto pipelineD3D = rendererD3D->CreateGraphicsPipeline(pipelineDescD3D);
 
+        // Get command queue
+        auto commandQueueGL = rendererGL->GetCommandQueue();
+        auto commandQueueD3D = rendererD3D->GetCommandQueue();
+
         // Create command buffers
         auto commandsGL = rendererGL->CreateCommandBufferExt();
         auto commandsD3D = rendererD3D->CreateCommandBufferExt();
 
-        // Set the render context as the initial render target
-        commandsGL->SetRenderTarget(*contextGL);
-        commandsD3D->SetRenderTarget(*contextD3D);
-
-        // Set background color
-        commandsGL->SetClearColor({ 0.1f, 0.1f, 0.4f });
-        commandsD3D->SetClearColor({ 0.1f, 0.1f, 0.4f });
-
         // Set viewports (this guaranteed to be a persistent state)
-        commandsGL->SetViewport({ 0, 0, 800, 600 });
-        commandsD3D->SetViewport({ -400, 0, 800, 600 });
+        const LLGL::Viewport viewportGL  {    0, 0, 800, 600 };
+        const LLGL::Viewport viewportD3D { -400, 0, 800, 600 };
 
         // Initialize matrices (OpenGL needs a unit-cube NDC-space)
         Gs::Matrix4f projMatrixGL, projMatrixD3D, viewMatrix, worldMatrix;
@@ -254,6 +264,7 @@ int main(int argc, char* argv[])
                 RecordCommandBuffer(
                     rendererGL.get(),
                     contextGL,
+                    commandQueueGL,
                     commandsGL,
                     pipelineGL,
                     constBufferGL,
@@ -261,6 +272,7 @@ int main(int argc, char* argv[])
                     indexBufferGL,
                     samplerGL,
                     textureGL,
+                    viewportGL,
                     wvpMatrix
                 );
             }
@@ -274,6 +286,7 @@ int main(int argc, char* argv[])
                 RecordCommandBuffer(
                     rendererD3D.get(),
                     contextD3D,
+                    commandQueueD3D,
                     commandsD3D,
                     pipelineD3D,
                     constBufferD3D,
@@ -281,6 +294,7 @@ int main(int argc, char* argv[])
                     indexBufferD3D,
                     samplerD3D,
                     textureD3D,
+                    viewportD3D,
                     wvpMatrix
                 );
             }

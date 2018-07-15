@@ -10,6 +10,7 @@
 #include <LLGL/Platform/Platform.h>
 #include <LLGL/Log.h>
 #include "BuildID.h"
+#include "StaticLimits.h"
 
 #include <LLGL/RenderSystem.h>
 #include <array>
@@ -340,6 +341,37 @@ void RenderSystem::AssertCreateShaderProgram(const ShaderProgramDescriptor& desc
             );
         }
     }
+}
+
+[[noreturn]]
+static void ErrTooManyColorAttachments(const char* contextInfo)
+{
+    throw std::invalid_argument(
+        "too many color attachments for " + std::string(contextInfo) +
+        " (exceeded limits of " + std::to_string(LLGL_MAX_NUM_COLOR_ATTACHMENTS) + ")"
+    );
+}
+
+void RenderSystem::AssertCreateRenderTarget(const RenderTargetDescriptor& desc)
+{
+    if (desc.attachments.size() == LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1)
+    {
+        /* Check if there is one depth-stencil attachment */
+        for (const auto& attachment : desc.attachments)
+        {
+            if (attachment.type != AttachmentType::Color)
+                return;
+        }
+        ErrTooManyColorAttachments("render target");
+    }
+    else if (desc.attachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS + 1)
+        ErrTooManyColorAttachments("render target");
+}
+
+void RenderSystem::AssertCreateRenderPass(const RenderPassDescriptor& desc)
+{
+    if (desc.colorAttachments.size() > LLGL_MAX_NUM_COLOR_ATTACHMENTS)
+        ErrTooManyColorAttachments("render pass");
 }
 
 void RenderSystem::AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info)

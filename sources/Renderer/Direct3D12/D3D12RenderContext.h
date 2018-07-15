@@ -32,8 +32,8 @@ class D3D12RenderContext final : public RenderContext
     public:
 
         D3D12RenderContext(
-            D3D12RenderSystem& renderSystem,
-            RenderContextDescriptor desc,
+            D3D12RenderSystem&              renderSystem,
+            const RenderContextDescriptor&  desc,
             const std::shared_ptr<Surface>& surface
         );
 
@@ -44,21 +44,27 @@ class D3D12RenderContext final : public RenderContext
         Format QueryColorFormat() const override;
         Format QueryDepthStencilFormat() const override;
 
+        const RenderPass* GetRenderPass() const override;
+
         /* --- Extended functions --- */
 
         ID3D12Resource* GetCurrentColorBuffer();
 
+        void ResolveRenderTarget(ID3D12GraphicsCommandList* commandList);
+
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForCurrentRTV() const;
         D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForDSV() const;
-
-        void SetCommandBuffer(D3D12CommandBuffer* commandBuffer);
-
-        void TransitionRenderTarget(D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
 
         bool HasMultiSampling() const;
         bool HasDepthBuffer() const;
 
         void SyncGPU();
+
+        // Returns the native color buffer resource from the swap-chain that is currently being used.
+        inline ID3D12Resource* GetCurrentColorBuffer() const
+        {
+            return colorBuffers_[currentFrame_].Get();
+        }
 
     private:
 
@@ -74,10 +80,7 @@ class D3D12RenderContext final : public RenderContext
 
         void MoveToNextFrame();
 
-        void ResolveRenderTarget(ID3D12GraphicsCommandList* commandList);
-
         D3D12RenderSystem&              renderSystem_;  // reference to its render system
-        D3D12CommandBuffer*             commandBuffer_                      = nullptr;
 
         ComPtr<IDXGISwapChain3>         swapChain_;
         UINT                            swapChainInterval_                  = 0;
@@ -94,7 +97,6 @@ class D3D12RenderContext final : public RenderContext
         ComPtr<ID3D12Resource>          depthStencil_;
         DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;
 
-        ComPtr<ID3D12CommandAllocator>  commandAllocs_[g_maxSwapChainSize];
         UINT64                          fenceValues_[g_maxSwapChainSize]    = {};
 
         UINT                            numFrames_                          = 0;

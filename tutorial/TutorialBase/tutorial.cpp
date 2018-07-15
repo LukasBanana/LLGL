@@ -254,9 +254,11 @@ Tutorial::Tutorial(
 
     // Initialize command buffer
     commands->SetClearColor(defaultClearColor);
+    #if 0
     commands->SetRenderTarget(*context);
     commands->SetViewport({ { 0, 0 }, resolution });
     commands->SetScissor({ { 0, 0 }, resolution });
+    #endif
 
     // Print renderer information
     const auto& info = renderer->GetRendererInfo();

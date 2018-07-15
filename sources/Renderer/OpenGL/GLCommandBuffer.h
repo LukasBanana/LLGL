@@ -19,7 +19,9 @@ namespace LLGL
 
 
 class GLRenderTarget;
+class GLRenderContext;
 class GLStateManager;
+class GLRenderPass;
 
 class GLCommandBuffer final : public CommandBufferExt
 {
@@ -87,10 +89,16 @@ class GLCommandBuffer final : public CommandBufferExt
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t startSlot) override;
 
-        /* ----- Render Targets ----- */
+        /* ----- Render Passes ----- */
 
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void SetRenderTarget(RenderContext& renderContext) override;
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
 
         /* ----- Pipeline States ----- */
 
@@ -135,6 +143,13 @@ class GLCommandBuffer final : public CommandBufferExt
             GLsizeiptr  indexBufferStride   = 4;
         };
 
+        struct GLClearValue
+        {
+            GLfloat color[4]    = { 0.0f, 0.0f, 0.0f, 0.0f };
+            GLfloat depth       = 1.0f;
+            GLint   stencil     = 0;
+        };
+
         void SetGenericBuffer(const GLBufferTarget bufferTarget, Buffer& buffer, std::uint32_t slot);
         void SetGenericBufferArray(const GLBufferTarget bufferTarget, BufferArray& bufferArray, std::uint32_t startSlot);
 
@@ -143,10 +158,28 @@ class GLCommandBuffer final : public CommandBufferExt
         // Blits the currently bound render target
         void BlitBoundRenderTarget();
 
+        void BindRenderTarget(GLRenderTarget& renderTargetGL);
+        void BindRenderContext(GLRenderContext& renderContextGL);
+
+        void ClearAttachmentsWithRenderPass(
+            const GLRenderPass& renderPassGL,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues
+        );
+
+        void ClearColorBuffers(
+            const std::uint8_t* colorBuffers,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            std::uint32_t&      idx
+        );
+
         std::shared_ptr<GLStateManager> stateMngr_;
         RenderState                     renderState_;
 
         GLRenderTarget*                 boundRenderTarget_  = nullptr;
+
+        GLClearValue                    clearValue_;
 
 };
 
