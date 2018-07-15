@@ -23,6 +23,8 @@
 - [`TextureDescriptor` struct](#texturedescriptor-struct)
 - [Removal of `TextureArray` and `SamplerArray` interfaces](#removal-of-texturearray-and-samplerarray-interfaces)
 - [Array layers for cube textures](#array-layers-for-cube-textures)
+- [Introduction of command recording](#introduction-of-command-recording)
+- [Introduction of render passes](#introduction-of-render-passes)
 
 
 ## `Shader` interface
@@ -744,6 +746,64 @@ myTexDesc.type        = LLGL::TextureType::TextureCubeArray;
 myTexDesc.extent      = { 512, 512, 1 };
 myTexDesc.arrayLayers = 2 * 6;
 LLGL::Texture* myTex = myRenderer->CreateTexture(myTexDesc);
+```
+
+
+## Introduction of command recording
+
+From now on, the recording of command buffers must be started and ended explicitly:
+
+Before:
+```cpp
+// Render frame
+/* ... */
+myContext->Present();
+```
+
+After:
+```cpp
+// Render frame
+myCmdQueue->Begin(*myCmdBuffer);
+/* ... */
+myCmdQueue->End(*myCmdBuffer);
+myContext->Present();
+```
+
+
+## Introduction of render passes
+
+With the introduction of the `RenderPass` interface (which is optional to use), the `SetRenderTarget` functions have been replaced by `BeginRenderPass` with a subsequent call to `EndRenderPass`.
+
+Before:
+```cpp
+// Render into texture
+myCmdBuffer->SetRenderTarget(*myRenderTarget);
+/* ... */
+
+// Render onto screen
+myCmdBuffer->SetRenderTarget(*myContext);
+/* ... */
+
+myContext->Present();
+```
+
+After:
+```cpp
+myCmdQueue->Begin(*myCmdBuffer);
+{
+    // Render into texture
+    myCmdBuffer->BeginRenderPass(*myRenderTarget);
+    /* ... */
+    myCmdBuffer->EndRenderPass();
+
+    // Render onto screen
+    myCmdBuffer->BeginRenderPass(*myContext);
+    /* ... */
+    myCmdBuffer->EndRenderPass();
+}
+myCmdQueue->End(*myCmdBuffer);
+
+myContext->Present();
 ```
 
 
