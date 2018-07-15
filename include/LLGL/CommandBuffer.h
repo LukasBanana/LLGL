@@ -270,8 +270,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] clearValues Optional pointer to the array of clear values.
         If <code>numClearValues</code> is not zero, this must be a valid pointer to an array of at least <code>numClearValues</code> entries.
         Each entry in the array is used to clear the attachment whose load operation is set to AttachmentLoadOp::Clear,
-        where the depth attachment (i.e. RenderPassDescriptor::depthAttachment) appears as the penultimate
-        and the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) appears as the last entry.
+        where the depth attachment (i.e. RenderPassDescriptor::depthAttachment) and
+        the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) are combined and appear as the last entry.
         \remarks This function starts a new render pass section and must be ended with the EndRenderPass function.
         A simple frame setup could look like this:
         \code

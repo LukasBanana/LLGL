@@ -725,7 +725,10 @@ void GLCommandBuffer::BindRenderContext(GLRenderContext& renderContextGL)
     //TODO: maybe use 'glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE)' to allow better compatibility to D3D
 }
 
-void GLCommandBuffer::ClearAttachmentsWithRenderPass(const GLRenderPass& renderPassGL, std::uint32_t numClearValues, const ClearValue* clearValues)
+void GLCommandBuffer::ClearAttachmentsWithRenderPass(
+    const GLRenderPass& renderPassGL,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
 {
     auto mask = renderPassGL.GetClearMask();
 

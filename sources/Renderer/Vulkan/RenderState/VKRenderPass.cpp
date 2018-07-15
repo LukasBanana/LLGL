@@ -127,12 +127,12 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
 
     for (std::uint32_t i = numAttachments; i > 0; --i)
     {
+        clearValuesMask_ <<= 1;
         if (attachmentDescs[i - 1].loadOp == VK_ATTACHMENT_LOAD_OP_CLEAR)
         {
             clearValuesMask_ |= 0x1ull;
             numClearValues_ = std::max(numClearValues_, static_cast<std::uint8_t>(i));
         }
-        clearValuesMask_ <<= 1;
     }
 
     /* Initialize attachment reference */

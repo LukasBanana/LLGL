@@ -161,8 +161,18 @@ class GLCommandBuffer final : public CommandBufferExt
         void BindRenderTarget(GLRenderTarget& renderTargetGL);
         void BindRenderContext(GLRenderContext& renderContextGL);
 
-        void ClearAttachmentsWithRenderPass(const GLRenderPass& renderPassGL, std::uint32_t numClearValues, const ClearValue* clearValues);
-        void ClearColorBuffers(const std::uint8_t* colorBuffers, std::uint32_t numClearValues, const ClearValue* clearValues, std::uint32_t& idx);
+        void ClearAttachmentsWithRenderPass(
+            const GLRenderPass& renderPassGL,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues
+        );
+
+        void ClearColorBuffers(
+            const std::uint8_t* colorBuffers,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            std::uint32_t&      idx
+        );
 
         std::shared_ptr<GLStateManager> stateMngr_;
         RenderState                     renderState_;

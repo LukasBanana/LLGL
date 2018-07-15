@@ -91,6 +91,8 @@ class D3D11RenderTarget final : public RenderTarget
         UINT                                        multiSamples_               = 0;
         std::vector<MultiSampledAttachment>         multiSampledAttachments_;
 
+        const RenderPass*                           renderPass_                 = nullptr;
+
 };
 
 

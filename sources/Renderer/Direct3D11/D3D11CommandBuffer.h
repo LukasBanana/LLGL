@@ -25,6 +25,7 @@ namespace LLGL
 class D3D11StateManager;
 class D3D11RenderTarget;
 class D3D11RenderContext;
+class D3D11RenderPass;
 
 class D3D11CommandBuffer final : public CommandBufferExt
 {
@@ -154,6 +155,21 @@ class D3D11CommandBuffer final : public CommandBufferExt
         void BindFramebufferView();
         void BindRenderTarget(D3D11RenderTarget& renderTargetD3D);
         void BindRenderContext(D3D11RenderContext& renderContextD3D);
+
+        void ClearAttachmentsWithRenderPass(
+            const D3D11RenderPass&  renderPassD3D,
+            std::uint32_t           numClearValues,
+            const ClearValue*       clearValues
+        );
+
+        void ClearColorBuffer(std::uint32_t idx, const ColorRGBAf& color);
+
+        void ClearColorBuffers(
+            const std::uint8_t* colorBuffers,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            std::uint32_t&      idx
+        );
 
         D3D11StateManager&          stateMngr_;
 

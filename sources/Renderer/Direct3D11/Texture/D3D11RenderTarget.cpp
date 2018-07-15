@@ -19,7 +19,8 @@ namespace LLGL
 D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc) :
     device_       { device                           },
     resolution_   { desc.resolution                  },
-    multiSamples_ { desc.multiSampling.SampleCount() }
+    multiSamples_ { desc.multiSampling.SampleCount() },
+    renderPass_   { desc.renderPass                  }
 {
     #if 0
     if (desc.attachments.empty())
@@ -57,7 +58,7 @@ bool D3D11RenderTarget::HasStencilAttachment() const
 
 const RenderPass* D3D11RenderTarget::GetRenderPass() const
 {
-    return nullptr; // dummy
+    return renderPass_;
 }
 
 /* ----- Extended Internal Functions ----- */

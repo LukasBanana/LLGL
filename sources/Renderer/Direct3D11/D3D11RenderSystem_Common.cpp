@@ -178,12 +178,12 @@ void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
 
 RenderPass* D3D11RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
 {
-    return nullptr;//return TakeOwnership(renderPasses_, MakeUnique<D3D11RenderPass>(desc));
+    return TakeOwnership(renderPasses_, MakeUnique<D3D11RenderPass>(desc));
 }
 
 void D3D11RenderSystem::Release(RenderPass& renderPass)
 {
-    //RemoveFromUniqueSet(renderPasses_, &renderPass);
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
 /* ----- Render Targets ----- */
