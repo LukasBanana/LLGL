@@ -127,13 +127,11 @@ TextureDescriptor MTTexture::QueryDesc() const
 }
 
 void MTTexture::Write(
-    const SrcImageDescriptor&   imageDesc,
-    const Offset3D&             offset,
-    const Extent3D&             extent,
-    std::uint32_t               mipLevel)
+    SrcImageDescriptor  imageDesc,
+    const Offset3D&     offset,
+    const Extent3D&     extent,
+    std::uint32_t       mipLevel)
 {
-    //TODO: convert data if necessary
-    
     /* Convert region to MTLRegion */
     MTLRegion region;
     MTTypes::Convert(region.origin, offset);
@@ -144,6 +142,22 @@ void MTTexture::Write(
     NSUInteger  bytesPerRow     = ([native_ width] * FormatBitSize(format) / 8);
     NSUInteger  bytesPerSlice   = ([native_ height] * bytesPerRow);
 
+    /* Check if image data must be converted */
+    ImageFormat dstFormat       = ImageFormat::RGBA;
+    DataType    dstDataType     = DataType::Int8;
+    ByteBuffer  tempImageBuffer = nullptr;
+
+    if (FindSuitableImageFormat(format, dstFormat, dstDataType))
+    {
+        /* Convert image format (will be null if no conversion is necessary) */
+        tempImageBuffer = ConvertImageBuffer(imageDesc, dstFormat, dstDataType, /*cfg.threadCount*/0);
+        if (tempImageBuffer)
+        {
+            /* User converted tempoary buffer as image source */
+            imageDesc.data = tempImageBuffer.get();
+        }
+    }
+    
     /* Replace region of native texture with source image data */
     if (GetType() == TextureType::Texture3D)
     {

@@ -155,6 +155,7 @@ class MTCommandBuffer : public CommandBufferExt
     
         // Submits all global lstates to the render encoder (i.e. vertex buffers, graphics pipeline, viewports etc.)
         void SubmitRenderEncoderState();
+        void ResetRenderEncoderState();
 
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
 

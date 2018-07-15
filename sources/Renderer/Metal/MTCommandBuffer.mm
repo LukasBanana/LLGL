@@ -643,6 +643,7 @@ void MTCommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSize
 void MTCommandBuffer::NextCommandBuffer(id<MTLCommandQueue> cmdQueue)
 {
     cmdBuffer_ = [cmdQueue commandBuffer];
+    ResetRenderEncoderState();
 }
 
 
@@ -679,6 +680,14 @@ void MTCommandBuffer::SubmitRenderEncoderState()
         [renderEncoder_ setRenderPipelineState:renderEncoderState_.renderPipelineState];
         [renderEncoder_ setDepthStencilState:renderEncoderState_.depthStencilState];
     }
+}
+
+void MTCommandBuffer::ResetRenderEncoderState()
+{
+    renderEncoderState_.viewportCount               = 0;
+    renderEncoderState_.scissorRectCount            = 0;
+    renderEncoderState_.vertexBufferRange.length    = 0;
+    renderEncoderState_.renderPipelineState         = nil;
 }
 
 
