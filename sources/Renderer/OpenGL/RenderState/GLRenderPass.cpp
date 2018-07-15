@@ -6,6 +6,7 @@
  */
 
 #include "GLRenderPass.h"
+#include "../../DescriptorHelper.h"
 #include <LLGL/CommandBufferFlags.h>
 
 
@@ -16,22 +17,8 @@ namespace LLGL
 GLRenderPass::GLRenderPass(const RenderPassDescriptor& desc)
 {
     /* Check which color attachment must be cleared */
-    std::size_t     i           = 0;
-    std::uint8_t    bufferIndex = 0;
-
-    for (const auto& attachment : desc.colorAttachments)
-    {
-        if (attachment.loadOp == AttachmentLoadOp::Clear)
-        {
-            clearColorAttachments_[i++] = bufferIndex;
-            clearMask_ |= GL_COLOR_BUFFER_BIT;
-        }
-        ++bufferIndex;
-    }
-
-    /* Initialize remaining attachment indices */
-    for (; i < LLGL_MAX_NUM_COLOR_ATTACHMENTS; ++i)
-        clearColorAttachments_[i] = 0xFF;
+    if (FillClearColorAttachmentIndices(clearColorAttachments_, desc) > 0)
+        clearMask_ |= GL_COLOR_BUFFER_BIT;
 
     /* Check if depth attachment must be cleared */
     if (desc.depthAttachment.loadOp == AttachmentLoadOp::Clear)

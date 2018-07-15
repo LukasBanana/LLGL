@@ -345,12 +345,12 @@ void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 
 RenderPass* D3D12RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
 {
-    return nullptr;//return TakeOwnership(renderPasses_, MakeUnique<D3D12RenderPass>(desc));
+    return TakeOwnership(renderPasses_, MakeUnique<D3D12RenderPass>(desc));
 }
 
 void D3D12RenderSystem::Release(RenderPass& renderPass)
 {
-    //RemoveFromUniqueSet(renderPasses_, &renderPass);
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
 /* ----- Render Targets ----- */

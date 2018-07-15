@@ -23,6 +23,7 @@
 #include "Texture/D3D12Texture.h"
 
 #include "RenderState/D3D12ResourceHeap.h"
+#include "RenderState/D3D12RenderPass.h"
 
 
 namespace LLGL
@@ -135,6 +136,18 @@ void D3D12CommandBuffer::SetClearStencil(std::uint32_t stencil)
     clearValue_.stencil = (stencil & 0xff);
 }
 
+static D3D12_CLEAR_FLAGS GetClearFlagsDSV(long flags)
+{
+    UINT clearFlagsDSV = 0;
+
+    if ((flags & ClearFlags::Depth) != 0)
+        clearFlagsDSV |= D3D12_CLEAR_FLAG_DEPTH;
+    if ((flags & ClearFlags::Stencil) != 0)
+        clearFlagsDSV |= D3D12_CLEAR_FLAG_STENCIL;
+
+    return static_cast<D3D12_CLEAR_FLAGS>(clearFlagsDSV);
+}
+
 void D3D12CommandBuffer::Clear(long flags)
 {
     if (rtvDescHandle_.ptr != 0)
@@ -147,18 +160,11 @@ void D3D12CommandBuffer::Clear(long flags)
     if (dsvDescHandle_.ptr != 0)
     {
         /* Clear depth-stencil buffer */
-        INT dsvClearFlags = 0;
-
-        if ((flags & ClearFlags::Depth) != 0)
-            dsvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
-        if ((flags & ClearFlags::Stencil) != 0)
-            dsvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
-
-        if (dsvClearFlags)
+        if (auto clearFlagsDSV = GetClearFlagsDSV(flags))
         {
             commandList_->ClearDepthStencilView(
                 dsvDescHandle_,
-                static_cast<D3D12_CLEAR_FLAGS>(dsvClearFlags),
+                clearFlagsDSV,
                 clearValue_.depth,
                 static_cast<UINT8>(clearValue_.stencil),
                 0,
@@ -255,8 +261,20 @@ void D3D12CommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
+    /* Bind render target/context */
     if (renderTarget.IsRenderContext())
         BindRenderContext(LLGL_CAST(D3D12RenderContext&, renderTarget));
+    #if 0//TODO
+    else
+        ;
+    #endif
+
+    /* Clear attachments */
+    if (renderPass)
+    {
+        auto renderPassD3D = LLGL_CAST(const D3D12RenderPass*, renderPass);
+        ClearAttachmentsWithRenderPass(*renderPassD3D, numClearValues, clearValues);
+    }
 }
 
 void D3D12CommandBuffer::EndRenderPass()
@@ -483,6 +501,85 @@ void D3D12CommandBuffer::TransitionRenderTarget(
     commandList_->ResourceBarrier(
         1, &CD3DX12_RESOURCE_BARRIER::Transition(colorBuffer, stateBefore, stateAfter)
     );
+}
+
+void D3D12CommandBuffer::ClearAttachmentsWithRenderPass(
+    const D3D12RenderPass&  renderPassD3D,
+    std::uint32_t           numClearValues,
+    const ClearValue*       clearValues)
+{
+    /* Clear color attachments */
+    std::uint32_t idx = 0;
+    ClearColorBuffers(renderPassD3D.GetClearColorAttachments(), numClearValues, clearValues, idx);
+
+    /* Clear depth-stencil attachment */
+    if (dsvDescHandle_.ptr != 0)
+    {
+        /* Clear depth-stencil buffer */
+        if (auto clearFlagsDSV = renderPassD3D.GetClearFlagsDSV())
+        {
+            /* Get clear values */
+            FLOAT depth     = clearValue_.depth;
+            UINT8 stencil   = static_cast<UINT8>(clearValue_.stencil);
+
+            if (idx < numClearValues)
+            {
+                depth   = clearValues[idx].depth;
+                stencil = static_cast<UINT8>(clearValues[idx].stencil & 0xff);
+            }
+
+            /* Clear depth-stencil view */
+            commandList_->ClearDepthStencilView(dsvDescHandle_, clearFlagsDSV, depth, stencil, 0, nullptr);
+        }
+    }
+}
+
+void D3D12CommandBuffer::ClearColorBuffers(
+    const std::uint8_t* colorBuffers,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues,
+    std::uint32_t&      idx)
+{
+    //TODO: get correct number for RTVs
+    //                       |
+    //                       v
+    std::uint32_t i = 0, n = 1;
+
+    numClearValues = std::min(numClearValues, n);
+
+    /* Use specified clear values */
+    for (; i < numClearValues; ++i)
+    {
+        /* Check if attachment list has ended */
+        if (colorBuffers[i] != 0xFF)
+        {
+            //TODO: use 'colorBuffers[i]' to select correct <D3D12_CPU_DESCRIPTOR_HANDLE>
+            if (rtvDescHandle_.ptr != 0)
+            {
+                commandList_->ClearRenderTargetView(rtvDescHandle_, clearValues[idx++].color.Ptr(), 0, nullptr);
+            }
+            else
+                ++idx;
+        }
+        else
+            return;
+    }
+
+    /* Use default clear values */
+    for (; i < n; ++i)
+    {
+        /* Check if attachment list has ended */
+        if (colorBuffers[i] != 0xFF)
+        {
+            //TODO: use 'colorBuffers[i]' to select correct <D3D12_CPU_DESCRIPTOR_HANDLE>
+            if (rtvDescHandle_.ptr != 0)
+            {
+                commandList_->ClearRenderTargetView(rtvDescHandle_, clearValue_.color.Ptr(), 0, nullptr);
+            }
+        }
+        else
+            return;
+    }
 }
 
 

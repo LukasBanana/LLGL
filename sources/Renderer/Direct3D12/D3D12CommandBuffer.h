@@ -24,6 +24,7 @@ namespace LLGL
 
 class D3D12RenderSystem;
 class D3D12RenderContext;
+class D3D12RenderPass;
 
 class D3D12CommandBuffer final : public CommandBuffer
 {
@@ -149,6 +150,19 @@ class D3D12CommandBuffer final : public CommandBuffer
             ID3D12Resource*         colorBuffer,
             D3D12_RESOURCE_STATES   stateBefore,
             D3D12_RESOURCE_STATES   stateAfter
+        );
+
+        void ClearAttachmentsWithRenderPass(
+            const D3D12RenderPass&  renderPassD3D,
+            std::uint32_t           numClearValues,
+            const ClearValue*       clearValues
+        );
+
+        void ClearColorBuffers(
+            const std::uint8_t* colorBuffers,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            std::uint32_t&      idx
         );
 
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;

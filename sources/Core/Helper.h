@@ -200,10 +200,10 @@ T GetAlignedSize(T size, T alignment)
 
 /* ----- Functions ----- */
 
-//! Reads the specified text file into a string.
+// Reads the specified text file into a string.
 LLGL_EXPORT std::string ReadFileString(const char* filename);
 
-//! Reads the specified binary file into a buffer.
+// Reads the specified binary file into a buffer.
 LLGL_EXPORT std::vector<char> ReadFileBuffer(const char* filename);
 
 
