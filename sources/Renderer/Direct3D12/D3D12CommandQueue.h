@@ -10,6 +10,7 @@
 
 
 #include <LLGL/CommandQueue.h>
+#include "RenderState/D3D12Fence.h"
 #include "../DXCommon/ComPtr.h"
 #include "../StaticLimits.h"
 #include <d3d12.h>
@@ -66,6 +67,8 @@ class D3D12CommandQueue final : public CommandQueue
         ComPtr<ID3D12CommandQueue>      cmdQueue_;
         ComPtr<ID3D12CommandAllocator>  cmdAllocators_[g_numCmdAllocators];
         std::size_t                     currentCmdAllocator_                = 0;
+
+        D3D12Fence                      intermediateFence_;
 
 };
 

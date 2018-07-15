@@ -17,7 +17,8 @@ namespace LLGL
 {
 
 
-D3D12CommandQueue::D3D12CommandQueue(D3D12RenderSystem& renderSystem)
+D3D12CommandQueue::D3D12CommandQueue(D3D12RenderSystem& renderSystem) :
+    intermediateFence_ { renderSystem.GetDevice(), 0 }
 {
     cmdQueue_ = renderSystem.CreateDXCommandQueue();
     for (auto& cmdAllocator : cmdAllocators_)
@@ -62,8 +63,10 @@ void D3D12CommandQueue::Submit(CommandBuffer& commandBuffer)
 
 void D3D12CommandQueue::Submit(Fence& fence)
 {
+    /* Schedule signal command into the queue */
     auto& fenceD3D = LLGL_CAST(D3D12Fence&, fence);
-    fenceD3D.Submit(cmdQueue_.Get());
+    auto hr = cmdQueue_->Signal(fenceD3D.GetNative(), fenceD3D.NextValue());
+    DXThrowIfFailed(hr, "failed to signal D3D12 fence with command queue");
 }
 
 bool D3D12CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
@@ -74,8 +77,9 @@ bool D3D12CommandQueue::WaitFence(Fence& fence, std::uint64_t timeout)
 
 void D3D12CommandQueue::WaitIdle()
 {
-    //TODO
-    //renderSystem_.SyncGPU(fenceValues_[currentFrame_]);
+    /* Submit intermediate fence and wait for it to be signaled */
+    Submit(intermediateFence_);
+    WaitFence(intermediateFence_, ~0ull);
 }
 
 

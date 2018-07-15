@@ -144,16 +144,20 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Clears the specified group of attachments of the active render target.
         \param[in] flags Specifies the clear buffer flags.
-        This can be a bitwise OR combination of the "ClearFlags" enumeration entries.
-        If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color previously set by SetClearColor.
-        \remarks To specify the clear values for each buffer type, use the respective "SetClear..." function.
-        To clear only a specific render-target color buffer, use the "ClearAttachments" function.
+        This can be a bitwise OR combination of the ClearFlags enumeration entries.
+        If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color previously set by \c SetClearColor.
+        \remarks To specify the clear values for each buffer type, use the respective <code>SetClear...</code> function.
+        To clear only a specific render-target color buffer, use the \c ClearAttachments function.
         Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
+        For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
+        i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
+        For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
         \see ClearFlags
         \see SetClearColor
         \see SetClearDepth
         \see SetClearStencil
         \see ClearAttachments
+        \see BeginRenderPass
         */
         virtual void Clear(long flags) = 0;
 
@@ -161,9 +165,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Clears the specified attachments of the active render target.
         \param[in] numAttachments Specifies the number of attachments to clear.
         \param[in] attachments Pointer to the array of attachment clear commands. This must not be null!
-        \remarks To clear all color buffers with the same value, use the "Clear" function.
+        \remarks To clear all color buffers with the same value, use the \c Clear function.
         Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
+        For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
+        i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
+        For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
         \see Clear
+        \see BeginRenderPass
         */
         virtual void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) = 0;
 
