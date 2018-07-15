@@ -689,7 +689,13 @@ GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineD
 {
     return TakeOwnership(
         graphicsPipelines_,
-        MakeUnique<VKGraphicsPipeline>(device_, defaultPipelineLayout_, desc, gfxPipelineLimits_)
+        MakeUnique<VKGraphicsPipeline>(
+            device_,
+            defaultPipelineLayout_,
+            (!renderContexts_.empty() ? (*renderContexts_.begin())->GetRenderPass() : nullptr),
+            desc,
+            gfxPipelineLimits_
+        )
     );
 }
 

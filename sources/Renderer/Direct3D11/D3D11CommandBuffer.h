@@ -24,6 +24,7 @@ namespace LLGL
 
 class D3D11StateManager;
 class D3D11RenderTarget;
+class D3D11RenderContext;
 
 class D3D11CommandBuffer final : public CommandBufferExt
 {
@@ -91,10 +92,16 @@ class D3D11CommandBuffer final : public CommandBufferExt
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
-        /* ----- Render Targets ----- */
+        /* ----- Render Passes ----- */
 
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void SetRenderTarget(RenderContext& renderContext) override;
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
 
         /* ----- Pipeline States ----- */
 
@@ -138,14 +145,15 @@ class D3D11CommandBuffer final : public CommandBufferExt
             ID3D11DepthStencilView*                 dsv = nullptr;
         };
 
-        void SubmitFramebufferView();
-
         void SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long stageFlags);
         void SetShaderResourcesOnStages(UINT startSlot, UINT count, ID3D11ShaderResourceView* const* views, long stageFlags);
         void SetSamplersOnStages(UINT startSlot, UINT count, ID3D11SamplerState* const* samplers, long stageFlags);
         void SetUnorderedAccessViewsOnStages(UINT startSlot, UINT count, ID3D11UnorderedAccessView* const* views, const UINT* initialCounts, long stageFlags);
 
         void ResolveBoundRenderTarget();
+        void BindFramebufferView();
+        void BindRenderTarget(D3D11RenderTarget& renderTargetD3D);
+        void BindRenderContext(D3D11RenderContext& renderContextD3D);
 
         D3D11StateManager&          stateMngr_;
 

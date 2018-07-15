@@ -32,8 +32,8 @@ class D3D12RenderContext final : public RenderContext
     public:
 
         D3D12RenderContext(
-            D3D12RenderSystem& renderSystem,
-            RenderContextDescriptor desc,
+            D3D12RenderSystem&              renderSystem,
+            const RenderContextDescriptor&  desc,
             const std::shared_ptr<Surface>& surface
         );
 
@@ -96,6 +96,7 @@ class D3D12RenderContext final : public RenderContext
         ComPtr<ID3D12Resource>          depthStencil_;
         DXGI_FORMAT                     depthStencilFormat_                 = DXGI_FORMAT_UNKNOWN;
 
+        //TODO: command allocator belongs to D3D12CommandBuffer
         ComPtr<ID3D12CommandAllocator>  commandAllocs_[g_maxSwapChainSize];
         UINT64                          fenceValues_[g_maxSwapChainSize]    = {};
 

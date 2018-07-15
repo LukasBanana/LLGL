@@ -163,28 +163,33 @@ void GLCommandBuffer::SetClearStencil(std::uint32_t stencil)
 //TODO: maybe glColorMask must be set to (1, 1, 1, 1) to clear color correctly
 void GLCommandBuffer::Clear(long flags)
 {
-    /* Setup GL clear mask and clear respective buffer */
-    GLbitfield mask = 0;
-
-    if ((flags & ClearFlags::Color) != 0)
+    stateMngr_->PushDepthMask();
     {
-        //stateMngr_->SetColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        mask |= GL_COLOR_BUFFER_BIT;
-    }
+        /* Setup GL clear mask and clear respective buffer */
+        GLbitfield mask = 0;
 
-    if ((flags & ClearFlags::Depth) != 0)
-    {
-        stateMngr_->SetDepthMask(GL_TRUE); // <------- TODO: MUST BE TESTED, IF RESET IS REQUIRED!!!
-        mask |= GL_DEPTH_BUFFER_BIT;
-    }
+        if ((flags & ClearFlags::Color) != 0)
+        {
+            //stateMngr_->SetColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            mask |= GL_COLOR_BUFFER_BIT;
+        }
 
-    if ((flags & ClearFlags::Stencil) != 0)
-    {
-        //stateMngr_->SetStencilMask(GL_TRUE);
-        mask |= GL_STENCIL_BUFFER_BIT;
-    }
+        if ((flags & ClearFlags::Depth) != 0)
+        {
+            stateMngr_->SetDepthMask(GL_TRUE);
+            mask |= GL_DEPTH_BUFFER_BIT;
+        }
 
-    glClear(mask);
+        if ((flags & ClearFlags::Stencil) != 0)
+        {
+            //stateMngr_->SetStencilMask(GL_TRUE);
+            mask |= GL_STENCIL_BUFFER_BIT;
+        }
+
+        /* Clear buffers */
+        glClear(mask);
+    }
+    stateMngr_->PopDepthMask();
 }
 
 //TODO: maybe glColorMask must be set to (1, 1, 1, 1) to clear color correctly
@@ -204,17 +209,27 @@ void GLCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
         else if ((attachments->flags & ClearFlags::DepthStencil) == ClearFlags::DepthStencil)
         {
             /* Clear depth and stencil buffer simultaneously */
-            glClearBufferfi(
-                GL_DEPTH_STENCIL,
-                0,
-                attachments->clearValue.depth,
-                static_cast<GLint>(attachments->clearValue.stencil)
-            );
+            stateMngr_->PushDepthMask();
+            stateMngr_->SetDepthMask(GL_TRUE);
+            {
+                glClearBufferfi(
+                    GL_DEPTH_STENCIL,
+                    0,
+                    attachments->clearValue.depth,
+                    static_cast<GLint>(attachments->clearValue.stencil)
+                );
+            }
+            stateMngr_->PopDepthMask();
         }
         else if ((attachments->flags & ClearFlags::Depth) != 0)
         {
             /* Clear only depth buffer */
-            glClearBufferfv(GL_DEPTH, 0, &(attachments->clearValue.depth));
+            stateMngr_->PushDepthMask();
+            stateMngr_->SetDepthMask(GL_TRUE);
+            {
+                glClearBufferfv(GL_DEPTH, 0, &(attachments->clearValue.depth));
+            }
+            stateMngr_->PopDepthMask();
         }
         else if ((attachments->flags & ClearFlags::Stencil) != 0)
         {
@@ -723,19 +738,29 @@ void GLCommandBuffer::ClearAttachmentsWithEnderPass(const GLRenderPass& renderPa
     static const GLbitfield g_maskDepthStencil = (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     if ((mask & g_maskDepthStencil) == g_maskDepthStencil)
     {
-        /* Clear depth and stencil buffer simultaneously */
-        if (idx < numClearValues)
-            glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValues[idx].depth, static_cast<GLint>(clearValues[idx].stencil));
-        else
-            glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValue_.depth, clearValue_.stencil);
+        stateMngr_->PushDepthMask();
+        stateMngr_->SetDepthMask(GL_TRUE);
+        {
+            /* Clear depth and stencil buffer simultaneously */
+            if (idx < numClearValues)
+                glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValues[idx].depth, static_cast<GLint>(clearValues[idx].stencil));
+            else
+                glClearBufferfi(GL_DEPTH_STENCIL, 0, clearValue_.depth, clearValue_.stencil);
+        }
+        stateMngr_->PopDepthMask();
     }
     if ((mask & GL_DEPTH_BUFFER_BIT) != 0)
     {
-        /* Clear only depth buffer */
-        if (idx < numClearValues)
-            glClearBufferfv(GL_DEPTH, 0, &(clearValues[idx].depth));
-        else
-            glClearBufferfv(GL_DEPTH, 0, &(clearValue_.depth));
+        stateMngr_->PushDepthMask();
+        stateMngr_->SetDepthMask(GL_TRUE);
+        {
+            /* Clear only depth buffer */
+            if (idx < numClearValues)
+                glClearBufferfv(GL_DEPTH, 0, &(clearValues[idx].depth));
+            else
+                glClearBufferfv(GL_DEPTH, 0, &(clearValue_.depth));
+        }
+        stateMngr_->PopDepthMask();
     }
     else if ((mask & GL_STENCIL_BUFFER_BIT) != 0)
     {

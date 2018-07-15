@@ -42,7 +42,7 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
         \see End(CommandBuffer&)
         \see RecordingFlags
         */
-        virtual void Begin(CommandBuffer& commandBuffer, long flags = 0) {}//= 0;
+        virtual void Begin(CommandBuffer& commandBuffer, long flags = 0) = 0;
 
         /**
         \brief Ends recording of the specified command buffer.
@@ -50,7 +50,7 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
         \see Begin(CommandBuffer&, long)
         \see Submit(CommandBuffer&)
         */
-        virtual void End(CommandBuffer& commandBuffer) {}//= 0;
+        virtual void End(CommandBuffer& commandBuffer) = 0;
 
         /**
         \brief Submits the specified command buffer (also called command list) to the command queue.

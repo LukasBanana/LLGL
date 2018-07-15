@@ -27,6 +27,7 @@ struct VKGraphicsPipelineLimits
 
 struct GraphicsPipelineDescriptor;
 class VKShaderProgram;
+class RenderPass;
 
 class VKGraphicsPipeline final : public GraphicsPipeline
 {
@@ -36,6 +37,7 @@ class VKGraphicsPipeline final : public GraphicsPipeline
         VKGraphicsPipeline(
             const VKPtr<VkDevice>&              device,
             VkPipelineLayout                    defaultPipelineLayout,
+            const RenderPass*                   defaultRenderPass,
             const GraphicsPipelineDescriptor&   desc,
             const VKGraphicsPipelineLimits&     limits
         );

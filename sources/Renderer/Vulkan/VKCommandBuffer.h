@@ -90,11 +90,6 @@ class VKCommandBuffer final : public CommandBuffer
 
         void EndRenderPass() override;
 
-        /* ----- Render Targets ----- */
-
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void SetRenderTarget(RenderContext& renderContext) override;
-
         /* ----- Pipeline States ----- */
 
         void SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline) override;

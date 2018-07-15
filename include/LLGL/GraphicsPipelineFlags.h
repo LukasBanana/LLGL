@@ -601,7 +601,7 @@ struct GraphicsPipelineDescriptor
 
     /**
     \brief Pointer to a RenderPass object. By default null.
-    \remarks This must never be null when RenderSystem::CreateGraphicsPipeline is called with this structure.
+    \remarks If this is null, the render pass of the RenderContext that was first created is used.
     This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
     \see CommandBuffer::BeginRenderPass
     */

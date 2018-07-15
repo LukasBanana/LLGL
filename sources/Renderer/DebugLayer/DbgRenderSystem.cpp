@@ -194,7 +194,6 @@ void DbgRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t 
 
 void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
-    void* result = nullptr;
     auto& bufferDbg = LLGL_CAST(DbgBuffer&, buffer);
 
     if (debugger_)
@@ -204,11 +203,12 @@ void* DbgRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
         ValidateBufferMapping(bufferDbg, true);
     }
 
-    result = instance_->MapBuffer(bufferDbg.instance, access);
+    auto result = instance_->MapBuffer(bufferDbg.instance, access);
 
     bufferDbg.mapped = true;
 
     LLGL_DBG_PROFILER_DO(mapBuffer.Inc());
+
     return result;
 }
 

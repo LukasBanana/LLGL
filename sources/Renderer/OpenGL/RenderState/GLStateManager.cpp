@@ -476,57 +476,6 @@ void GLStateManager::SetClipControl(GLenum origin, GLenum depth)
     #endif
 }
 
-void GLStateManager::SetDepthFunc(GLenum func)
-{
-    if (commonState_.depthFunc != func)
-    {
-        commonState_.depthFunc = func;
-        glDepthFunc(func);
-    }
-}
-
-void GLStateManager::SetStencilState(GLenum face, const GLStencil& state)
-{
-    switch (face)
-    {
-        case GL_FRONT:
-            SetStencilState(GL_FRONT, commonState_.stencil[0], state);
-            break;
-        case GL_BACK:
-            SetStencilState(GL_BACK, commonState_.stencil[1], state);
-            break;
-        case GL_FRONT_AND_BACK:
-            SetStencilState(GL_FRONT, commonState_.stencil[0], state);
-            SetStencilState(GL_BACK, commonState_.stencil[1], state);
-            break;
-    }
-}
-
-void GLStateManager::SetStencilState(GLenum face, GLStencil& to, const GLStencil& from)
-{
-    if (to.sfail != from.sfail || to.dpfail != from.dpfail || to.dppass != from.dppass)
-    {
-        to.sfail    = from.sfail;
-        to.dpfail   = from.dpfail;
-        to.dppass   = from.dppass;
-        glStencilOpSeparate(face, to.sfail, to.dpfail, to.dppass);
-    }
-
-    if (to.func != from.func || to.ref != from.ref || to.mask != from.mask)
-    {
-        to.func = from.func;
-        to.ref  = from.ref;
-        to.mask = from.mask;
-        glStencilFuncSeparate(face, to.func, to.ref, to.mask);
-    }
-
-    if (to.writeMask != from.writeMask)
-    {
-        to.writeMask = from.writeMask;
-        glStencilMaskSeparate(face, to.writeMask);
-    }
-}
-
 // <face> parameter must always be 'GL_FRONT_AND_BACK' since GL 3.2+
 void GLStateManager::SetPolygonMode(GLenum mode)
 {
@@ -588,15 +537,6 @@ void GLStateManager::SetFrontFace(GLenum mode)
     }
 }
 
-void GLStateManager::SetDepthMask(GLboolean flag)
-{
-    if (commonState_.depthMask != flag)
-    {
-        commonState_.depthMask = flag;
-        glDepthMask(flag);
-    }
-}
-
 void GLStateManager::SetPatchVertices(GLint patchVertices)
 {
     if (commonState_.patchVertices_ != patchVertices)
@@ -633,6 +573,105 @@ void GLStateManager::SetLineWidth(GLfloat width)
         commonState_.lineWidth = width;
         glLineWidth(width);
     }
+}
+
+/* ----- Depth-stencil states ----- */
+
+void GLStateManager::SetDepthFunc(GLenum func)
+{
+    if (depthStencilState_.depthFunc != func)
+    {
+        depthStencilState_.depthFunc = func;
+        glDepthFunc(func);
+    }
+}
+
+void GLStateManager::SetDepthMask(GLboolean flag)
+{
+    if (depthStencilState_.depthMask != flag)
+    {
+        depthStencilState_.depthMask = flag;
+        glDepthMask(flag);
+    }
+}
+
+static void SetStencilFaceState(GLenum face, GLStencil& dst, const GLStencil& src)
+{
+    if (dst.sfail != src.sfail || dst.dpfail != src.dpfail || dst.dppass != src.dppass)
+    {
+        dst.sfail   = src.sfail;
+        dst.dpfail  = src.dpfail;
+        dst.dppass  = src.dppass;
+        glStencilOpSeparate(face, src.sfail, src.dpfail, src.dppass);
+    }
+
+    if (dst.func != src.func || dst.ref != src.ref || dst.mask != src.mask)
+    {
+        dst.func    = src.func;
+        dst.ref     = src.ref;
+        dst.mask    = src.mask;
+        glStencilFuncSeparate(face, src.func, src.ref, src.mask);
+    }
+
+    if (dst.writeMask != src.writeMask)
+    {
+        dst.writeMask = src.writeMask;
+        glStencilMaskSeparate(face, src.writeMask);
+    }
+}
+
+static void SetStencilFrontAndBackState(GLStencil& dst0, GLStencil& dst1, const GLStencil& src)
+{
+    if (dst0.sfail != src.sfail || dst0.dpfail != src.dpfail || dst0.dppass != src.dppass ||
+        dst1.sfail != src.sfail || dst1.dpfail != src.dpfail || dst1.dppass != src.dppass)
+    {
+        dst0.sfail  = dst1.sfail  = src.sfail;
+        dst0.dpfail = dst1.dpfail = src.dpfail;
+        dst0.dppass = dst1.dppass = src.dppass;
+        glStencilOp(src.sfail, src.dpfail, src.dppass);
+    }
+
+    if (dst0.func != src.func || dst0.ref != src.ref || dst0.mask != src.mask ||
+        dst1.func != src.func || dst1.ref != src.ref || dst1.mask != src.mask)
+    {
+        dst0.func = dst1.func = src.func;
+        dst0.ref  = dst1.ref  = src.ref;
+        dst0.mask = dst1.mask = src.mask;
+        glStencilFunc(src.func, src.ref, src.mask);
+    }
+
+    if (dst0.writeMask != src.writeMask ||
+        dst1.writeMask != src.writeMask)
+    {
+        dst0.writeMask = dst1.writeMask = src.writeMask;
+        glStencilMask(src.writeMask);
+    }
+}
+
+void GLStateManager::SetStencilState(GLenum face, const GLStencil& state)
+{
+    switch (face)
+    {
+        case GL_FRONT:
+            SetStencilFaceState(GL_FRONT, depthStencilState_.stencil[0], state);
+            break;
+        case GL_BACK:
+            SetStencilFaceState(GL_BACK, depthStencilState_.stencil[1], state);
+            break;
+        case GL_FRONT_AND_BACK:
+            SetStencilFrontAndBackState(depthStencilState_.stencil[0], depthStencilState_.stencil[1], state);
+            break;
+    }
+}
+
+void GLStateManager::PushDepthMask()
+{
+    depthStencilState_.depthMaskStack = depthStencilState_.depthMask;
+}
+
+void GLStateManager::PopDepthMask()
+{
+    SetDepthMask(depthStencilState_.depthMaskStack);
 }
 
 /* ----- Buffer ----- */

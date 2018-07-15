@@ -428,6 +428,8 @@ void DbgCommandBuffer::BeginRenderPass(
 
         instance.BeginRenderPass(renderTargetDbg.instance, renderPass, numClearValues, clearValues);
     }
+
+    LLGL_DBG_PROFILER_DO(setRenderTarget.Inc());
 }
 
 void DbgCommandBuffer::EndRenderPass()
@@ -442,38 +444,6 @@ void DbgCommandBuffer::EndRenderPass()
     }
 
     instance.EndRenderPass();
-}
-
-/* ----- Render Targets ----- */
-
-void DbgCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
-{
-    auto& renderTargetDbg = LLGL_CAST(DbgRenderTarget&, renderTarget);
-
-    if (debugger_)
-    {
-        bindings_.renderContext = nullptr;
-        bindings_.renderTarget  = &renderTargetDbg;
-    }
-
-    instance.SetRenderTarget(renderTargetDbg.instance);
-
-    LLGL_DBG_PROFILER_DO(setRenderTarget.Inc());
-}
-
-void DbgCommandBuffer::SetRenderTarget(RenderContext& renderContext)
-{
-    auto& renderContextDbg = LLGL_CAST(DbgRenderContext&, renderContext);
-
-    if (debugger_)
-    {
-        bindings_.renderContext = &renderContextDbg;
-        bindings_.renderTarget  = nullptr;
-    }
-
-    instance.SetRenderTarget(renderContextDbg.instance);
-
-    LLGL_DBG_PROFILER_DO(setRenderTarget.Inc());
 }
 
 /* ----- Pipeline States ----- */

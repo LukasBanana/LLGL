@@ -290,49 +290,23 @@ void D3D11CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
     resourceHeapD3D.BindForComputePipeline(context_.Get());
 }
 
-/* ----- Render Targets ----- */
+/* ----- Render Passes ----- */
 
-//private
-void D3D11CommandBuffer::ResolveBoundRenderTarget()
+void D3D11CommandBuffer::BeginRenderPass(
+    RenderTarget&       renderTarget,
+    const RenderPass*   renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
 {
-    if (boundRenderTarget_)
-        boundRenderTarget_->ResolveSubresources(context_.Get());
+    if (renderTarget.IsRenderContext())
+        BindRenderContext(LLGL_CAST(D3D11RenderContext&, renderTarget));
+    else
+        BindRenderTarget(LLGL_CAST(D3D11RenderTarget&, renderTarget));
 }
 
-void D3D11CommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
+void D3D11CommandBuffer::EndRenderPass()
 {
-    auto& renderTargetD3D = LLGL_CAST(D3D11RenderTarget&, renderTarget);
-
-    /* Resolve previously bound render target (in case mutli-sampling is used) */
-    ResolveBoundRenderTarget();
-
-    /* Set RTV list and DSV in framebuffer view */
-    framebufferView_.rtvList    = renderTargetD3D.GetRenderTargetViews();
-    framebufferView_.dsv        = renderTargetD3D.GetDepthStencilView();
-
-    SubmitFramebufferView();
-
-    /* Store current render target */
-    boundRenderTarget_ = &renderTargetD3D;
-}
-
-void D3D11CommandBuffer::SetRenderTarget(RenderContext& renderContext)
-{
-    auto& renderContextD3D = LLGL_CAST(D3D11RenderContext&, renderContext);
-
-    /* Resolve previously bound render target (in case mutli-sampling is used) */
-    ResolveBoundRenderTarget();
-
-    /* Set default RTVs to OM-stage */
-    const auto& backBuffer = renderContextD3D.GetBackBuffer();
-
-    framebufferView_.rtvList    = { backBuffer.rtv.Get() };
-    framebufferView_.dsv        = backBuffer.dsv.Get();
-
-    SubmitFramebufferView();
-
-    /* Reset reference to render target */
-    boundRenderTarget_ = nullptr;
+    // dummy
 }
 
 /* ----- Pipeline States ----- */
@@ -561,15 +535,6 @@ void D3D11CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupS
  * ======= Private: =======
  */
 
-void D3D11CommandBuffer::SubmitFramebufferView()
-{
-    context_->OMSetRenderTargets(
-        static_cast<UINT>(framebufferView_.rtvList.size()),
-        framebufferView_.rtvList.data(),
-        framebufferView_.dsv
-    );
-}
-
 void D3D11CommandBuffer::SetConstantBuffersOnStages(UINT startSlot, UINT count, ID3D11Buffer* const* buffers, long stageFlags)
 {
     if (VS_STAGE(stageFlags)) { context_->VSSetConstantBuffers(startSlot, count, buffers); }
@@ -626,6 +591,53 @@ void D3D11CommandBuffer::SetUnorderedAccessViewsOnStages(
 #undef PS_STAGE
 #undef CS_STAGE
 #undef SRV_STAGE
+
+void D3D11CommandBuffer::ResolveBoundRenderTarget()
+{
+    if (boundRenderTarget_)
+        boundRenderTarget_->ResolveSubresources(context_.Get());
+}
+
+void D3D11CommandBuffer::BindFramebufferView()
+{
+    context_->OMSetRenderTargets(
+        static_cast<UINT>(framebufferView_.rtvList.size()),
+        framebufferView_.rtvList.data(),
+        framebufferView_.dsv
+    );
+}
+
+void D3D11CommandBuffer::BindRenderTarget(D3D11RenderTarget& renderTargetD3D)
+{
+    /* Resolve previously bound render target (in case mutli-sampling is used) */
+    ResolveBoundRenderTarget();
+
+    /* Set RTV list and DSV in framebuffer view */
+    framebufferView_.rtvList    = renderTargetD3D.GetRenderTargetViews();
+    framebufferView_.dsv        = renderTargetD3D.GetDepthStencilView();
+
+    BindFramebufferView();
+
+    /* Store current render target */
+    boundRenderTarget_ = &renderTargetD3D;
+}
+
+void D3D11CommandBuffer::BindRenderContext(D3D11RenderContext& renderContextD3D)
+{
+    /* Resolve previously bound render target (in case mutli-sampling is used) */
+    ResolveBoundRenderTarget();
+
+    /* Set default RTVs to OM-stage */
+    const auto& backBuffer = renderContextD3D.GetBackBuffer();
+
+    framebufferView_.rtvList    = { backBuffer.rtv.Get() };
+    framebufferView_.dsv        = backBuffer.dsv.Get();
+
+    BindFramebufferView();
+
+    /* Reset reference to render target */
+    boundRenderTarget_ = nullptr;
+}
 
 
 } // /namespace LLGL

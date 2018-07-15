@@ -32,8 +32,8 @@ namespace LLGL
 #endif
 
 D3D12RenderContext::D3D12RenderContext(
-    D3D12RenderSystem& renderSystem,
-    RenderContextDescriptor desc,
+    D3D12RenderSystem&              renderSystem,
+    const RenderContextDescriptor&  desc,
     const std::shared_ptr<Surface>& surface) :
         RenderContext     { desc.videoMode, desc.vsync       },
         renderSystem_     { renderSystem                     },
@@ -79,8 +79,10 @@ void D3D12RenderContext::Present()
         TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     }
 
+    #if 0
     /* Execute pending command list */
     renderSystem_.CloseAndExecuteCommandList(commandList);
+    #endif
 
     /* Present swap-chain with vsync interval */
     auto hr = swapChain_->Present(swapChainInterval_, 0);
@@ -89,6 +91,7 @@ void D3D12RenderContext::Present()
     /* Advance frame counter */
     MoveToNextFrame();
 
+    #if 1//TODO: move this to D3D12CommandQueue
     /* Reset command allocator and command list*/
     auto commandAlloc = commandAllocs_[currentFrame_].Get();
 
@@ -96,6 +99,7 @@ void D3D12RenderContext::Present()
     DXThrowIfFailed(hr, "failed to reset D3D12 command allocator");
 
     commandBuffer_->ResetCommandList(commandAlloc, nullptr);
+    #endif
 }
 
 Format D3D12RenderContext::QueryColorFormat() const

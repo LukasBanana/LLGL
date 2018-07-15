@@ -510,6 +510,7 @@ void D3D12RenderSystem::ExecuteCommandList()
     DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 }
 
+//private
 void D3D12RenderSystem::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList)
 {
     /* Close graphics command list */

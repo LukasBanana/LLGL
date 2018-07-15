@@ -116,13 +116,6 @@ private:
 
     void OnDrawFrame() override
     {
-        // Set render target and viewport
-        commands->SetRenderTarget(*context);
-        commands->SetViewport(LLGL::Viewport { {}, context->GetVideoMode().resolution });
-
-        // Clear color and depth buffers
-        commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
-
         // Update constant buffer
         static float rotation;
         rotation += 0.01f;
@@ -132,33 +125,51 @@ private:
         Gs::RotateFree(settings.wvpMatrix, Gs::Vector3f(1).Normalized(), rotation);
         UpdateBuffer(constantBuffer, settings);
 
-        // Set buffers
-        commands->SetVertexBuffer(*vertexBuffer);
-        commands->SetIndexBuffer(*indexBuffer);
-        commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
-        commands->SetStreamOutputBuffer(*streamOutputBuffer);
-
-        // Set graphics pipeline state
-        commands->SetGraphicsPipeline(*pipeline);
-
-        // Draw scene
-        commands->BeginStreamOutput(LLGL::PrimitiveType::Triangles);
+        // Start command recording
+        commandQueue->Begin(*commands);
         {
-            commands->DrawIndexed(36, 0);
+            // Set vertex and index buffers
+            commands->SetVertexBuffer(*vertexBuffer);
+            commands->SetIndexBuffer(*indexBuffer);
+
+            // Begin render pass for context
+            commands->BeginRenderPass(*context);
+            {
+                // Clear color and depth buffers
+                commands->Clear(LLGL::ClearFlags::Color | LLGL::ClearFlags::Depth);
+
+                // Set viewport to context resolution
+                commands->SetViewport(LLGL::Viewport { {}, context->GetResolution() });
+
+                // Set buffers
+                commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
+                commands->SetStreamOutputBuffer(*streamOutputBuffer);
+
+                // Set graphics pipeline state
+                commands->SetGraphicsPipeline(*pipeline);
+
+                // Draw scene
+                commands->BeginStreamOutput(LLGL::PrimitiveType::Triangles);
+                {
+                    commands->DrawIndexed(36, 0);
+                }
+                commands->EndStreamOutput();
+
+                // Read stream-output buffer
+                renderer->GetCommandQueue()->WaitIdle();
+
+                if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::CPUAccess::ReadOnly))
+                {
+                    std::vector<Gs::Vector4f> output(36*3);
+                    ::memcpy(output.data(), outputBuffer, sizeof(Gs::Vector4f)*36*3);
+                    renderer->UnmapBuffer(*streamOutputBuffer);
+
+                    // print or debug data in "output" container ...
+                }
+            }
+            commands->EndRenderPass();
         }
-        commands->EndStreamOutput();
-
-        // Read stream-output buffer
-        renderer->GetCommandQueue()->WaitIdle();
-
-        if (auto outputBuffer = renderer->MapBuffer(*streamOutputBuffer, LLGL::CPUAccess::ReadOnly))
-        {
-            std::vector<Gs::Vector4f> output(36*3);
-            ::memcpy(output.data(), outputBuffer, sizeof(Gs::Vector4f)*36*3);
-            renderer->UnmapBuffer(*streamOutputBuffer);
-
-            // print or debug data in "output" container ...
-        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

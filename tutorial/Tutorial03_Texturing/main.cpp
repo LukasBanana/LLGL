@@ -217,23 +217,31 @@ private:
             samplerIndex = (samplerIndex + 1) % 5;
 
         // Set render target
-        commands->SetRenderTarget(*context);
+        commandQueue->Begin(*commands);
+        {
+            // Set vertex buffer
+            commands->SetVertexBuffer(*vertexBuffer);
 
-        // Set viewports
-        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+            commands->BeginRenderPass(*context);
+            {
+                // Clear color buffer
+                commands->Clear(LLGL::ClearFlags::Color);
 
-        // Clear color buffer
-        commands->Clear(LLGL::ClearFlags::Color);
+                // Set viewports
+                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
 
-        // Set graphics pipeline and vertex buffer
-        commands->SetGraphicsPipeline(*pipeline);
-        commands->SetVertexBuffer(*vertexBuffer);
+                // Set graphics pipeline and vertex buffer
+                commands->SetGraphicsPipeline(*pipeline);
 
-        // Set graphics shader resources
-        commands->SetGraphicsResourceHeap(*resourceHeaps[samplerIndex], 0);
+                // Set graphics shader resources
+                commands->SetGraphicsResourceHeap(*resourceHeaps[samplerIndex], 0);
 
-        // Draw fullscreen quad
-        commands->Draw(4, 0);
+                // Draw fullscreen quad
+                commands->Draw(4, 0);
+            }
+            commands->EndRenderPass();
+        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

@@ -75,10 +75,16 @@ class D3D12CommandBuffer final : public CommandBuffer
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
-        /* ----- Render Targets ----- */
+        /* ----- Render Passes ----- */
 
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void SetRenderTarget(RenderContext& renderContext) override;
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
 
         /* ----- Pipeline States ----- */
 
@@ -116,6 +122,7 @@ class D3D12CommandBuffer final : public CommandBuffer
 
         /* ----- Extended functions ----- */
 
+        // Returns the native command list.
         inline ID3D12GraphicsCommandList* GetCommandList() const
         {
             return commandList_.Get();
@@ -133,6 +140,9 @@ class D3D12CommandBuffer final : public CommandBuffer
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
 
         void SetScissorRectsWithFramebufferExtent(UINT numScissorRects);
+
+        //void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
+        void BindRenderContext(D3D12RenderContext& renderContextD3D);
 
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;

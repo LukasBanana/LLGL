@@ -186,6 +186,7 @@ public:
         LLGL::GraphicsPipelineDescriptor pipelineDescScene;
         {
             pipelineDescScene.shaderProgram             = shaderProgramScene;
+            //pipelineDescScene.renderPass                = renderTargetScene->GetRenderPass();
 
             pipelineDescScene.depth.testEnabled         = true;
             pipelineDescScene.depth.writeEnabled        = true;
@@ -388,81 +389,90 @@ private:
         const LLGL::Viewport viewportFull{ { 0, 0 }, screenSize };
         const LLGL::Viewport viewportQuarter{ { 0, 0 }, { screenSize.width / 4, screenSize.height/ 4 } };
 
-        // Set common buffers and sampler states
-        commandsExt->SetConstantBuffer(*constantBufferScene, 0, shaderStages);
-        commandsExt->SetConstantBuffer(*constantBufferBlur, 1, LLGL::StageFlags::FragmentStage);
-
-        commandsExt->SetSampler(*colorMapSampler, 0, LLGL::StageFlags::FragmentStage);
-        commandsExt->SetSampler(*glossMapSampler, 1, LLGL::StageFlags::FragmentStage);
-
-        // Set graphics pipeline and vertex buffer for scene rendering
-        commands->SetGraphicsPipeline(*pipelineScene);
-        commands->SetVertexBuffer(*vertexBufferScene);
-
-        // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
-        commands->SetRenderTarget(*renderTargetScene);
+        commandQueue->Begin(*commands);
         {
-            // Clear individual buffers in render target (color, glossiness, depth)
-            LLGL::AttachmentClear clearCmds[3] =
+            // Set common buffers and sampler states
+            commandsExt->SetConstantBuffer(*constantBufferScene, 0, shaderStages);
+            commandsExt->SetConstantBuffer(*constantBufferBlur, 1, LLGL::StageFlags::FragmentStage);
+
+            commandsExt->SetSampler(*colorMapSampler, 0, LLGL::StageFlags::FragmentStage);
+            commandsExt->SetSampler(*glossMapSampler, 1, LLGL::StageFlags::FragmentStage);
+
+            // Set graphics pipeline and vertex buffer for scene rendering
+            commands->SetVertexBuffer(*vertexBufferScene);
+
+            // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
+            commands->BeginRenderPass(*renderTargetScene);
             {
-                LLGL::AttachmentClear { defaultClearColor, 0 },
-                LLGL::AttachmentClear { LLGL::ColorRGBAf { 0, 0, 0, 0 }, 1 },
-                LLGL::AttachmentClear { 1.0f }
-            };
-            commands->ClearAttachments(3, clearCmds);
+                // Clear individual buffers in render target (color, glossiness, depth)
+                LLGL::AttachmentClear clearCmds[3] =
+                {
+                    LLGL::AttachmentClear { defaultClearColor, 0 },
+                    LLGL::AttachmentClear { LLGL::ColorRGBAf { 0, 0, 0, 0 }, 1 },
+                    LLGL::AttachmentClear { 1.0f }
+                };
+                commands->ClearAttachments(3, clearCmds);
 
-            // Draw outer scene model
-            SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
-            commands->Draw(numSceneVertices, 0);
+                commands->SetGraphicsPipeline(*pipelineScene);
 
-            // Draw inner scene model
-            SetSceneSettingsInnerModel(innerModelRotation);
-            commands->Draw(numSceneVertices, 0);
+                // Draw outer scene model
+                SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
+                commands->Draw(numSceneVertices, 0);
+
+                // Draw inner scene model
+                SetSceneSettingsInnerModel(innerModelRotation);
+                commands->Draw(numSceneVertices, 0);
+            }
+            commands->EndRenderPass();
+
+            // Set graphics pipeline and vertex buffer for post-processors
+            commands->SetVertexBuffer(*vertexBufferNull);
+
+            // Draw horizontal blur pass
+            commands->BeginRenderPass(*renderTargetBlurX);
+            {
+                // Draw blur passes in quarter resolution
+                commands->SetViewport(viewportQuarter);
+                commands->SetGraphicsPipeline(*pipelineBlur);
+
+                // Set gloss map from scene rendering
+                commandsExt->SetTexture(*glossMap, 1, LLGL::StageFlags::FragmentStage);
+
+                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
+                commands->Draw(3, 0);
+            }
+            commands->EndRenderPass();
+
+            // Draw vertical blur pass
+            commands->BeginRenderPass(*renderTargetBlurY);
+            {
+                // Set gloss map from previous blur pass (Blur X)
+                commandsExt->SetTexture(*glossMapBlurX, 1, LLGL::StageFlags::FragmentStage);
+
+                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
+                commands->Draw(3, 0);
+            }
+            commands->EndRenderPass();
+
+            // Draw final post-processing pass
+            commands->BeginRenderPass(*context);
+            {
+                // Set viewport back to full resolution
+                commands->SetViewport(viewportFull);
+                commands->SetGraphicsPipeline(*pipelineFinal);
+
+                // Set color map and gloss map from previous blur pass (Blur Y)
+                commandsExt->SetTexture(*colorMap, 0, LLGL::StageFlags::FragmentStage);
+                commandsExt->SetTexture(*glossMapBlurY, 1, LLGL::StageFlags::FragmentStage);
+
+                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                commands->Draw(3, 0);
+            }
+            commands->EndRenderPass();
         }
-
-        // Set graphics pipeline and vertex buffer for post-processors
-        commands->SetGraphicsPipeline(*pipelineBlur);
-        commands->SetVertexBuffer(*vertexBufferNull);
-
-        // Draw horizontal blur pass
-        commands->SetRenderTarget(*renderTargetBlurX);
-        {
-            // Draw blur passes in quarter resolution
-            commands->SetViewport(viewportQuarter);
-
-            // Set gloss map from scene rendering
-            commandsExt->SetTexture(*glossMap, 1, LLGL::StageFlags::FragmentStage);
-
-            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
-            commands->Draw(3, 0);
-        }
-
-        // Draw vertical blur pass
-        commands->SetRenderTarget(*renderTargetBlurY);
-        {
-            // Set gloss map from previous blur pass (Blur X)
-            commandsExt->SetTexture(*glossMapBlurX, 1, LLGL::StageFlags::FragmentStage);
-
-            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
-            commands->Draw(3, 0);
-        }
-
-        // Draw final post-processing pass
-        commands->SetGraphicsPipeline(*pipelineFinal);
-        commands->SetRenderTarget(*context);
-        {
-            // Set viewport back to full resolution
-            commands->SetViewport(viewportFull);
-
-            // Set color map and gloss map from previous blur pass (Blur Y)
-            commandsExt->SetTexture(*colorMap, 0, LLGL::StageFlags::FragmentStage);
-            commandsExt->SetTexture(*glossMapBlurY, 1, LLGL::StageFlags::FragmentStage);
-
-            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            commands->Draw(3, 0);
-        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

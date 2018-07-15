@@ -247,29 +247,21 @@ void D3D12CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
     //todo...
 }
 
-/* ----- Render Targets ----- */
+/* ----- Render Passes ----- */
 
-void D3D12CommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
+void D3D12CommandBuffer::BeginRenderPass(
+    RenderTarget&       renderTarget,
+    const RenderPass*   renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
 {
-    //todo
+    if (renderTarget.IsRenderContext())
+        BindRenderContext(LLGL_CAST(D3D12RenderContext&, renderTarget));
 }
 
-void D3D12CommandBuffer::SetRenderTarget(RenderContext& renderContext)
+void D3D12CommandBuffer::EndRenderPass()
 {
-    auto& renderContextD3D = LLGL_CAST(D3D12RenderContext&, renderContext);
-
-    renderContextD3D.SetCommandBuffer(this);
-
-    /* Set back-buffer RTVs */
-    SetBackBufferRTV(renderContextD3D);
-
-    /* Store framebuffer extent */
-    const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
-    framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
-    framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
-
-    /* Reset information about default scissor rectangles */
-    numBoundScissorRects_ = 0;
+    //todo
 }
 
 /* ----- Pipeline States ----- */
@@ -448,6 +440,27 @@ void D3D12CommandBuffer::SetScissorRectsWithFramebufferExtent(UINT numScissorRec
         /* Store new number of bound scissor rectangles */
         numBoundScissorRects_ = numScissorRects;
     }
+}
+
+/*void D3D12CommandBuffer::BindRenderTarget(D3D12RenderTarget& renderTargetD3D)
+{
+    //todo
+}*/
+
+void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
+{
+    renderContextD3D.SetCommandBuffer(this);
+
+    /* Set back-buffer RTVs */
+    SetBackBufferRTV(renderContextD3D);
+
+    /* Store framebuffer extent */
+    const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
+    framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
+    framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
+
+    /* Reset information about default scissor rectangles */
+    numBoundScissorRects_ = 0;
 }
 
 

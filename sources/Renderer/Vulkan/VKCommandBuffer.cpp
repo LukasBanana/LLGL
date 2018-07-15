@@ -466,18 +466,6 @@ void VKCommandBuffer::EndRenderPass()
     framebuffer_    = VK_NULL_HANDLE;
 }
 
-/* ----- Render Targets ----- */
-
-void VKCommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
-{
-    //TODO: remove
-}
-
-void VKCommandBuffer::SetRenderTarget(RenderContext& renderContext)
-{
-    //TODO: remove
-}
-
 
 /* ----- Pipeline States ----- */
 

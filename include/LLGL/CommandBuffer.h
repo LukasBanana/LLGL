@@ -291,38 +291,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
             const RenderPass*   renderPass      = nullptr,
             std::uint32_t       numClearValues  = 0,
             const ClearValue*   clearValues     = nullptr
-        ) {}//= 0;
+        ) = 0;
 
         /**
         \brief Ends the current render pass.
         \see BeginRenderPass
         */
-        virtual void EndRenderPass() {}//= 0;
-
-        #if 1//TODO: remove
-
-        /* ----- Render Targets ----- */
-
-        /**
-        \brief Sets the specified render target as the new target for subsequent rendering commands.
-        \param[in] renderTarget Specifies the render target to set.
-        \remarks Subsequent drawing operations will be rendered into the textures that are attached to the specified render target.
-        \note This function may invalidate the viewports and scissor rectangles.
-        It is hence advisable to always set the viewports (and scissor rectangles, if enabled) after a new render target is bound.
-        \see SetRenderTarget(RenderContext&)
-        \deprecated Will be removed soon, use BeginRenderPass.
-        */
-        virtual void SetRenderTarget(RenderTarget& renderTarget) {};
-
-        /**
-        \brief Sets the back buffer (or rather swap-chain) of the specified render context as the new target for subsequent rendering commands.
-        \remarks Subsequent drawing operations will be rendered into the main framebuffer, which can then be presented onto the screen.
-        \see SetRenderTarget(RenderTarget&)
-        \deprecated Will be removed soon, use BeginRenderPass.
-        */
-        virtual void SetRenderTarget(RenderContext& renderContext) {};
-
-        #endif
+        virtual void EndRenderPass() = 0;
 
         /* ----- Pipeline States ----- */
 

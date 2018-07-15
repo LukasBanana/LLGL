@@ -181,7 +181,7 @@ private:
             // Enable culling of back-facing polygons
             pipelineDesc.rasterizer.cullMode        = LLGL::CullMode::Back;
 
-            #if 1
+            #if 0
             pipelineDesc.rasterizer.frontCCW = true;
             #endif
 

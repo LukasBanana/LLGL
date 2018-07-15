@@ -39,6 +39,7 @@ int main()
         auto context = renderer->CreateRenderContext(contextDesc);
 
         // Create command buffer
+        auto commandQueue = renderer->GetCommandQueue();
         auto commands = renderer->CreateCommandBufferExt();
         if (!commands)
             throw std::runtime_error("failed to create extended command buffer");
@@ -62,7 +63,7 @@ int main()
         {
             storageBufferDesc.type  = LLGL::BufferType::Storage;
             storageBufferDesc.size  = sizeof(Gs::Vector4f)*vecSize;
-            storageBufferDesc.flags = LLGL::BufferFlags::DynamicUsage;
+            storageBufferDesc.flags = LLGL::BufferFlags::DynamicUsage | LLGL::BufferFlags::MapReadAccess;
         }
         auto storageBuffer = renderer->CreateBuffer(storageBufferDesc, vec.data());
 
@@ -93,33 +94,39 @@ int main()
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram });
 
         // Set resources
-        commands->SetStorageBuffer(*storageBuffer, 0);
-        commands->SetComputePipeline(*pipeline);
-
-        // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query
-        commands->BeginQuery(*timerQuery);
+        commandQueue->Begin(*commands);
         {
-            commands->Dispatch(1, 1, 1);
+            commands->SetStorageBuffer(*storageBuffer, 0);
+            commands->SetComputePipeline(*pipeline);
+
+            // Dispatch compute shader (with 1*1*1 work groups only) and measure elapsed time with timer query
+            commands->BeginQuery(*timerQuery);
+            {
+                commands->Dispatch(1, 1, 1);
+            }
+            commands->EndQuery(*timerQuery);
+
+            // Show elapsed time from timer query
+            std::uint64_t result = 0;
+            while (!commands->QueryResult(*timerQuery, result))
+            {
+                /* wait until the result is available */
+            }
+            std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
-        commands->EndQuery(*timerQuery);
+        commandQueue->End(*commands);
 
         // Wait until the GPU has completed all work, to be sure we can evaluate the storage buffer
         renderer->GetCommandQueue()->WaitIdle();
 
         // Evaluate compute shader
-        auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::CPUAccess::ReadOnly);
+        if (auto mappedBuffer = renderer->MapBuffer(*storageBuffer, LLGL::CPUAccess::ReadOnly))
         {
             // Show result
             auto vecBuffer = reinterpret_cast<const Gs::Vector4f*>(mappedBuffer);
             std::cout << "compute shader output: average vector = " << vecBuffer[0] << std::endl;
-
-            // Show elapsed time from timer query
-            std::uint64_t result = 0;
-            while (!commands->QueryResult(*timerQuery, result)) { /* wait until the result is available */ }
-            std::cout << "compute shader duration: " << static_cast<double>(result) / 1000000 << " ms" << std::endl;
         }
         renderer->UnmapBuffer(*storageBuffer);
-
     }
     catch (const std::exception& e)
     {

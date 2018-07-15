@@ -50,7 +50,7 @@ class LLGL_EXPORT Surface : public NonCopyable
 
         /**
         \brief Returns the size of the surface context (or rather the drawing area).
-        \remarks For the Window interface this is equivalent of calling "Window::GetSize(true)" for instance.
+        \remarks For the Window interface this is equivalent of calling <code>Window::GetSize(true)</code> for instance.
         \see Window::GetSize
         */
         virtual Extent2D GetContentSize() const = 0;
@@ -65,7 +65,7 @@ class LLGL_EXPORT Surface : public NonCopyable
 
         /**
         \brief Recreates the internal surface object with the current descriptor settings.
-        This may invalidate the native handle previously returned by "GetNativeHandle".
+        This may invalidate the native handle previously returned by <code>GetNativeHandle</code>.
         \remarks This function is mainly used by the OpenGL renderer on Win32 when a multi-sampled framebuffer is created.
         \see GetNativeHandle
         \todo Rename to "AdaptForPixelFormat" or similar.

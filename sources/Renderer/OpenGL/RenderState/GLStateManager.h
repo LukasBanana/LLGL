@@ -86,17 +86,23 @@ class GLStateManager
         void SetBlendStates(const std::vector<GLBlend>& blendStates, bool blendEnabled);
 
         void SetClipControl(GLenum origin, GLenum depth);
-        void SetDepthFunc(GLenum func);
-        void SetStencilState(GLenum face, const GLStencil& state);
         void SetPolygonMode(GLenum mode);
         void SetPolygonOffset(GLfloat factor, GLfloat units, GLfloat clamp);
         void SetCullFace(GLenum face);
         void SetFrontFace(GLenum mode);
-        void SetDepthMask(GLboolean flag);
         void SetPatchVertices(GLint patchVertices);
         void SetBlendColor(const ColorRGBAf& color);
         void SetLogicOp(GLenum opcode);
         void SetLineWidth(GLfloat width);
+
+        /* ----- Depth-stencil states ----- */
+
+        void SetDepthFunc(GLenum func);
+        void SetDepthMask(GLboolean flag);
+        void SetStencilState(GLenum face, const GLStencil& state);
+
+        void PushDepthMask();
+        void PopDepthMask();
 
         /* ----- Buffer ----- */
 
@@ -175,7 +181,6 @@ class GLStateManager
 
         /* ----- Functions ----- */
 
-        void SetStencilState(GLenum face, GLStencil& to, const GLStencil& from);
         void SetBlendState(GLuint drawBuffer, const GLBlend& state, bool blendEnabled);
         void AdjustViewport(GLViewport& viewport);
         void AdjustScissor(GLScissor& scissor);
@@ -215,8 +220,6 @@ class GLStateManager
         // Common GL states
         struct GLCommonState
         {
-            GLenum      depthFunc       = GL_LESS;
-            GLStencil   stencil[2];
             GLenum      polygonMode     = GL_FILL;
             GLfloat     offsetFactor    = 0.0f;
             GLfloat     offsetUnits     = 0.0f;
@@ -224,11 +227,19 @@ class GLStateManager
             GLenum      cullFace        = GL_BACK;
             GLenum      frontFace       = GL_CCW;
             GLenum      frontFaceAct    = GL_CCW; // actual front face input (without possible inversion)
-            GLboolean   depthMask       = GL_TRUE;
             GLint       patchVertices_  = 0;
             ColorRGBAf  blendColor      = { 0.0f, 0.0f, 0.0f, 0.0f };
             GLenum      logicOpCode     = GL_COPY;
             GLfloat     lineWidth       = 1.0f;
+        };
+
+        struct GLDepthStencilState
+        {
+            GLenum      depthFunc       = GL_LESS;
+            GLboolean   depthMask       = GL_TRUE;
+            GLStencil   stencil[2];
+
+            GLboolean   depthMaskStack  = GL_TRUE;
         };
 
         struct GLRenderState
@@ -330,6 +341,7 @@ class GLStateManager
         OpenGLDependentStateDescriptor  apiDependentState_;
 
         GLCommonState                   commonState_;
+        GLDepthStencilState             depthStencilState_;
         GLRenderState                   renderState_;
         GLBufferState                   bufferState_;
         GLFramebufferState              framebufferState_;

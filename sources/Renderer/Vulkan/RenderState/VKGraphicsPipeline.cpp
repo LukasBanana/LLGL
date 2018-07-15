@@ -23,6 +23,7 @@ namespace LLGL
 VKGraphicsPipeline::VKGraphicsPipeline(
     const VKPtr<VkDevice>&              device,
     VkPipelineLayout                    defaultPipelineLayout,
+    const RenderPass*                   defaultRenderPass,
     const GraphicsPipelineDescriptor&   desc,
     const VKGraphicsPipelineLimits&     limits) :
         device_            { device                             },
@@ -44,7 +45,7 @@ VKGraphicsPipeline::VKGraphicsPipeline(
     /* Get native render pass object */
     VkRenderPass nativeRenderPass = VK_NULL_HANDLE;
 
-    if (auto renderPass = desc.renderPass)
+    if (auto renderPass = (desc.renderPass != nullptr ? desc.renderPass : defaultRenderPass))
     {
         auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
         nativeRenderPass = renderPassVK->GetVkRenderPass();

@@ -25,7 +25,10 @@ class D3D12CommandQueue final : public CommandQueue
 
         D3D12CommandQueue(ComPtr<ID3D12CommandQueue>& queue, ComPtr<ID3D12CommandAllocator>& commandAlloc);
 
-        /* ----- Command queues ----- */
+        /* ----- Command Buffers ----- */
+
+        void Begin(CommandBuffer& commandBuffer, long flags = 0) override;
+        void End(CommandBuffer& commandBuffer) override;
 
         void Submit(CommandBuffer& commandBuffer) override;
 
