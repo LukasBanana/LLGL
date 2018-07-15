@@ -288,6 +288,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         myCmdQueue->End(*myCmdBuffer);
         myRenderContext->Present();
         \endcode
+        \remarks
+        The following commands can only appear inside a render pass section:
+        - Drawing commands (i.e. <code>Draw</code>, <code>DrawInstanced</code>, <code>DrawIndexed</code>, and <code>DrawIndexedInstanced</code>).
+        - Clear attachment commands (i.e. <code>Clear</code>, and <code>ClearAttachments</code>).
+        \remarks
+        The following commands can only appear outside a render pass section:
+        - Dispatch compute commands (i.e. <code>Dispatch</code>).
+        - Resource read/write from the RenderSystem (i.e. <code>WriteBuffer</code>, <code>MapBuffer</code> etc.).
         \see RenderSystem::CreateRenderPass
         \see RenderSystem::CreateRenderTarget
         \see RenderTargetDescriptor::renderPass
