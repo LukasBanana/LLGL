@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-class VKDepthStencilBuffer : private VKImageWrapper
+class VKDepthStencilBuffer final : private VKImageWrapper
 {
 
     public:

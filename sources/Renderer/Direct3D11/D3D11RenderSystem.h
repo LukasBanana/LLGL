@@ -25,6 +25,7 @@
 #include "RenderState/D3D11Query.h"
 #include "RenderState/D3D11Fence.h"
 #include "RenderState/D3D11ResourceHeap.h"
+#include "RenderState/D3D11RenderPass.h"
 #include "RenderState/D3D11PipelineLayout.h"
 
 #include "Shader/D3D11Shader.h"
@@ -45,7 +46,7 @@ namespace LLGL
 {
 
 
-class D3D11RenderSystem : public RenderSystem
+class D3D11RenderSystem final : public RenderSystem
 {
 
     public:
@@ -67,8 +68,8 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer() override;
-        CommandBufferExt* CreateCommandBufferExt() override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 
@@ -108,6 +109,12 @@ class D3D11RenderSystem : public RenderSystem
         ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
         void Release(ResourceHeap& resourceHeap) override;
+
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 
@@ -151,14 +158,16 @@ class D3D11RenderSystem : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
-        inline D3D_FEATURE_LEVEL GetFeatureLevel() const
-        {
-            return featureLevel_;
-        }
-
+        // Returns the ID3D11Device object.
         inline ID3D11Device* GetDevice() const
         {
             return device_.Get();
+        }
+
+        // Returns the selected device feature level.
+        inline D3D_FEATURE_LEVEL GetFeatureLevel() const
+        {
+            return featureLevel_;
         }
 
     private:
@@ -183,7 +192,7 @@ class D3D11RenderSystem : public RenderSystem
         void UpdateGenericTexture(
             Texture&                    texture,
             std::uint32_t               mipLevel,
-            std::uint32_t               layer,
+            std::uint32_t               arrayLayer,
             const Offset3D&             offset,
             const Extent3D&             extent,
             const SrcImageDescriptor&   imageDesc
@@ -193,29 +202,23 @@ class D3D11RenderSystem : public RenderSystem
             D3D11Texture&               textureD3D,
             const Format                format,
             const SrcImageDescriptor*   imageDesc,
-            std::uint32_t               width,
-            std::uint32_t               height,
-            std::uint32_t               depth,
-            std::uint32_t               numLayers
+            const Extent3D&             extent,
+            std::uint32_t               arrayLayers
         );
 
         void InitializeGpuTextureWithImage(
             D3D11Texture&       textureD3D,
             const Format        format,
             SrcImageDescriptor  imageDesc,
-            std::uint32_t       width,
-            std::uint32_t       height,
-            std::uint32_t       depth,
-            std::uint32_t       numLayers
+            const Extent3D&     extent,
+            std::uint32_t       arrayLayers
         );
 
         void InitializeGpuTextureWithDefault(
             D3D11Texture&   textureD3D,
             const Format    format,
-            std::uint32_t   width,
-            std::uint32_t   height,
-            std::uint32_t   depth,
-            std::uint32_t   numLayers
+            const Extent3D& extent,
+            std::uint32_t   arrayLayers
         );
 
         void GenerateMipsWithSubresourceSRV(
@@ -259,6 +262,7 @@ class D3D11RenderSystem : public RenderSystem
         HWObjectContainer<D3D11BufferArray>             bufferArrays_;
         HWObjectContainer<D3D11Texture>                 textures_;
         HWObjectContainer<D3D11Sampler>                 samplers_;
+        HWObjectContainer<D3D11RenderPass>              renderPasses_;
         HWObjectContainer<D3D11RenderTarget>            renderTargets_;
         HWObjectContainer<D3D11Shader>                  shaders_;
         HWObjectContainer<D3D11ShaderProgram>           shaderPrograms_;

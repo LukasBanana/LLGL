@@ -10,6 +10,7 @@
 
 
 #include "TextureFlags.h"
+#include "ForwardDecls.h"
 #include "GraphicsPipelineFlags.h"
 #include <vector>
 #include <cstdint>
@@ -18,8 +19,6 @@
 namespace LLGL
 {
 
-
-class Texture;
 
 /* ----- Enumerations ----- */
 
@@ -48,12 +47,11 @@ struct AttachmentDescriptor
     AttachmentDescriptor(const AttachmentDescriptor&) = default;
 
     //! Constructor for the specified depth-, stencil-, or color attachment.
-    inline AttachmentDescriptor(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t layer = 0, AxisDirection cubeFace = AxisDirection::XPos) :
-        type     { type     },
-        texture  { texture  },
-        mipLevel { mipLevel },
-        layer    { layer    },
-        cubeFace { cubeFace }
+    inline AttachmentDescriptor(AttachmentType type, Texture* texture, std::uint32_t mipLevel = 0, std::uint32_t arrayLayer = 0) :
+        type       { type       },
+        texture    { texture    },
+        mipLevel   { mipLevel   },
+        arrayLayer { arrayLayer }
     {
     }
 
@@ -88,18 +86,13 @@ struct AttachmentDescriptor
 
     /**
     \brief Specifies the array texture layer which is to be used as render target attachment.
-    \remarks This is only used for array textures (i.e. TextureType::Texture1DArray,
-    TextureType::Texture2DArray, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
-    For cube array textures this can be used in combination with the cubeFace attribute.
-    \see cubeFace
+    \remarks This is only used for array textures and cube textures (i.e. TextureType::Texture1DArray,
+    TextureType::Texture2DArray, TextureType::TextureCube, TextureType::TextureCubeArray, and TextureType::Texture2DMSArray).
+    For cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray), each cube has its own 6 array layers.
+    The layer index for the respective cube faces is described at the TextureDescriptor::arrayLayer member.
+    \see TextureDescriptor::arrayLayer
     */
-    std::uint32_t   layer       = 0;
-
-    /**
-    \brief Cube texture face.
-    \remarks This is only used for cube textures (i.e. TextureType::TextureCube and TextureType::TextureCubeArray).
-    */
-    AxisDirection   cubeFace    = AxisDirection::XPos;
+    std::uint32_t   arrayLayer  = 0;
 };
 
 /**
@@ -109,7 +102,7 @@ and an anonymous depth attachment (i.e. without a texture reference, which is on
 \code
 LLGL::RenderTargetDescriptor myRenderTargetDesc;
 
-auto myRenderTargetSize = myColorTexture->QueryMipLevelSize(0);
+auto myRenderTargetSize = myColorTexture->QueryMipExtent(0);
 myRenderTargetDesc.resolution = { myRenderTargetSize.width, myRenderTargetSize.height };
 
 myRenderTargetDesc.attachments = {
@@ -124,10 +117,20 @@ auto myRenderTarget = myRenderer->CreateRenderTarget(myRenderTargetDesc);
 struct RenderTargetDescriptor
 {
     /**
+    \brief Optional render pass object that will be used with the render target. By default null.
+    \remarks If this is null, a default render pass is created for the render target.
+    The default render pass determines the attachment formats by the render target attachments and keeps the load and store operations at its default values.
+    \see RenderSystem::CreateRenderPass
+    \see AttachmentFormatDescriptor::loadOp
+    \see AttachmentFormatDescriptor::storeOp
+    */
+    const RenderPass*                   renderPass          = nullptr;
+
+    /**
     \brief Specifies the resolution of the render targets.
     \remarks All attachments with a reference to a texture must have the same resolution,
     i.e. the specified array layer and MIP-map level must have the same extent.
-    \see Texture::QueryMipLevelSize
+    \see Texture::QueryMipExtent
     */
     Extent2D                            resolution;
 

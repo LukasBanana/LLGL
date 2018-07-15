@@ -23,7 +23,7 @@ namespace LLGL
 
 static GLint GetGlTextureMinFilter(const TextureDescriptor& textureDesc)
 {
-    if ((textureDesc.flags & TextureFlags::GenerateMips) != 0)
+    if (IsMipMappedTexture(textureDesc))
         return GL_LINEAR_MIPMAP_LINEAR;
     else
         return GL_LINEAR;
@@ -205,7 +205,7 @@ void GLRenderSystem::GenerateMips(Texture& texture, std::uint32_t baseMipLevel, 
         {
             /* Generate MIP-maps in custom sub generation process */
             auto& textureGL = LLGL_CAST(GLTexture&, texture);
-            auto extent = textureGL.GLTexture::QueryMipLevelSize(baseMipLevel);
+            auto extent = textureGL.QueryMipExtent(baseMipLevel);
 
             GenerateSubMipsWithFBO(
                 textureGL,

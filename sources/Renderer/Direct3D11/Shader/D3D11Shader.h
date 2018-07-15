@@ -43,7 +43,7 @@ union D3D11NativeShader
 };
 
 
-class D3D11Shader : public Shader
+class D3D11Shader final : public Shader
 {
 
     public:

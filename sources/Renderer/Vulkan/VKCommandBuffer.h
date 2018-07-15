@@ -23,14 +23,19 @@ namespace LLGL
 
 class VKResourceHeap;
 
-class VKCommandBuffer : public CommandBuffer
+class VKCommandBuffer final : public CommandBuffer
 {
 
     public:
 
         /* ----- Common ----- */
 
-        VKCommandBuffer(const VKPtr<VkDevice>& device, VkQueue graphicsQueue, std::size_t bufferCount, const QueueFamilyIndices& queueFamilyIndices);
+        VKCommandBuffer(
+            const VKPtr<VkDevice>&          device,
+            VkQueue                         graphicsQueue,
+            const QueueFamilyIndices&       queueFamilyIndices,
+            const CommandBufferDescriptor&  desc
+        );
         ~VKCommandBuffer();
 
         /* ----- Configuration ----- */
@@ -74,10 +79,16 @@ class VKCommandBuffer : public CommandBuffer
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
-        /* ----- Render Targets ----- */
+        /* ----- Render Passes ----- */
 
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void SetRenderTarget(RenderContext& renderContext) override;
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
 
         /* ----- Pipeline States ----- */
 
@@ -113,17 +124,10 @@ class VKCommandBuffer : public CommandBuffer
 
         void Dispatch(std::uint32_t groupSizeX, std::uint32_t groupSizeY, std::uint32_t groupSizeZ) override;
 
-        /* --- Extended functions --- */
+        /* ----- Extended functions ----- */
 
-        void SetPresentIndex(std::uint32_t idx);
-
-        bool IsCommandBufferActive() const;
-
-        void BeginCommandBuffer();
-        void EndCommandBuffer();
-
-        void SetRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
-        void SetRenderPassNull();
+        // Acquires the next native VkCommandBuffer object.
+        void AcquireNextBuffer();
 
         // Returns the native VkCommandBuffer object.
         inline VkCommandBuffer GetVkCommandBuffer() const
@@ -156,18 +160,15 @@ class VKCommandBuffer : public CommandBuffer
 
         void BindResourceHeap(VKResourceHeap& resourceHeapVK, VkPipelineBindPoint bindingPoint, std::uint32_t firstSet);
 
-        void BeginRenderPass(VkRenderPass renderPass, VkFramebuffer framebuffer, const VkExtent2D& extent);
-        void EndRenderPass();
-
         const VKPtr<VkDevice>&          device_;
         VKPtr<VkCommandPool>            commandPool_;
 
         std::vector<VkCommandBuffer>    commandBufferList_;
         VkCommandBuffer                 commandBuffer_;
+        std::size_t                     commandBufferIndex_         = 0;
+
         std::vector<VKPtr<VkFence>>     recordingFenceList_;
         VkFence                         recordingFence_;
-        std::vector<bool>               commandBufferActiveList_;
-        std::vector<bool>::iterator     commandBufferActiveIt_      = commandBufferActiveList_.end();
 
         VkClearColorValue               clearColor_                 = { 0.0f, 0.0f, 0.0f, 0.0f };
         VkClearDepthStencilValue        clearDepthStencil_          = { 1.0f, 0 };
@@ -187,7 +188,7 @@ class VKCommandBuffer : public CommandBuffer
         std::uint32_t                   queuePresentFamily_         = 0;
 
         bool                            scissorEnabled_             = false;
-        bool                            scissorRectInvalidated_     = false;
+        bool                            scissorRectInvalidated_     = true;
 
 };
 

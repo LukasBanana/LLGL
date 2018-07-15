@@ -22,16 +22,20 @@ namespace LLGL
 {
 
 
-class GLRenderTarget : public RenderTarget
+class GLRenderTarget final : public RenderTarget
 {
 
     public:
 
         GLRenderTarget(const RenderTargetDescriptor& desc);
 
+        Extent2D GetResolution() const override;
         std::uint32_t GetNumColorAttachments() const override;
+
         bool HasDepthAttachment() const override;
         bool HasStencilAttachment() const override;
+
+        const RenderPass* GetRenderPass() const override;
 
         /* ----- Extended Internal Functions ----- */
 
@@ -77,6 +81,8 @@ class GLRenderTarget : public RenderTarget
 
         /* === Members === */
 
+        Extent2D                    resolution_;
+
         GLFramebuffer               framebuffer_;   // primary FBO
         GLFramebuffer               framebufferMS_; // secondary FBO for multi-sampling
 
@@ -93,6 +99,8 @@ class GLRenderTarget : public RenderTarget
 
         GLsizei                     multiSamples_       = 0;
         GLbitfield                  blitMask_           = 0;
+
+        const RenderPass*           renderPass_         = nullptr;
 
 };
 

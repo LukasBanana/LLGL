@@ -10,6 +10,7 @@
 
 
 #include "RenderSystemChild.h"
+#include "CommandQueueFlags.h"
 #include <cstdint>
 
 
@@ -32,12 +33,31 @@ class LLGL_EXPORT CommandQueue : public RenderSystemChild
 
     public:
 
-        /* ----- Command queues ----- */
+        /* ----- Command Buffers ----- */
+
+        /**
+        \brief Begins recording of the specified command buffer.
+        \param[in] flags Optional flags with hints about how is to be recorded. By default 0.
+        This can be a bitwise OR combination of the RecordingFlags enumeration.
+        \see End(CommandBuffer&)
+        \see RecordingFlags
+        */
+        virtual void Begin(CommandBuffer& commandBuffer, long flags = 0) = 0;
+
+        /**
+        \brief Ends recording of the specified command buffer.
+        \remarks If this is not a pre-recorded command buffer, this will automatically submit the recording to the queue.
+        \see Begin(CommandBuffer&, long)
+        \see Submit(CommandBuffer&)
+        */
+        virtual void End(CommandBuffer& commandBuffer) = 0;
 
         /**
         \brief Submits the specified command buffer (also called command list) to the command queue.
-        \remarks For render systems that do not support multiple command buffers (such as the render systems for Direct3D 11 and OpenGL) this function has no effect.
-        \note Only supported with: Direct3D 12, Vulkan
+        \remarks This is only required for pre-recorded command buffers.
+        A standard command buffer is automatically submitted when its recording has completed.
+        \note Only supported with: Vulkan, Direct3D 12.
+        \see End(CommandBuffer&)
         */
         virtual void Submit(CommandBuffer& commandBuffer) = 0;
 

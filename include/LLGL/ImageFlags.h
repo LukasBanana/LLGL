@@ -222,7 +222,7 @@ LLGL_EXPORT bool ConvertImageBuffer(
 If this is less than 2, no multi-threading is used. If this is 'Constants::maxThreadCount',
 the maximal count of threads the system supports will be used (e.g. 4 on a quad-core processor). By default 0.
 \return Byte buffer with the converted image data or null if no conversion is necessary.
-This can be casted to the respective target data type (e.g. "unsigned char", "int", "float" etc.).
+This can be casted to the respective target data type (e.g. <code>unsigned char</code>, <code>int</code>, <code>float</code> etc.).
 \note Compressed images and depth-stencil images cannot be converted.
 \throw std::invalid_argument If a compressed image format is specified either as source or destination.
 \throw std::invalid_argument If a depth-stencil format is specified either as source or destination.

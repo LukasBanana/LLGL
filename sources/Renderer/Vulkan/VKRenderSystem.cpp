@@ -207,16 +207,15 @@ CommandQueue* VKRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* VKRenderSystem::CreateCommandBuffer()
+CommandBuffer* VKRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
-    auto mainContext = renderContexts_.begin()->get();
     return TakeOwnership(
         commandBuffers_,
-        MakeUnique<VKCommandBuffer>(device_, graphicsQueue_, mainContext->GetSwapChainSize(), queueFamilyIndices_)
+        MakeUnique<VKCommandBuffer>(device_, graphicsQueue_, queueFamilyIndices_, desc)
     );
 }
 
-CommandBufferExt* VKRenderSystem::CreateCommandBufferExt()
+CommandBufferExt* VKRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     /* Extended command buffers are not spported */
     return nullptr;
@@ -310,11 +309,57 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 
     if (bufferVK.GetStagingVkBuffer() != VK_NULL_HANDLE)
     {
+        #if 1
+
         /* Copy data to staging buffer memory */
         bufferVK.UpdateStagingBuffer(device_, data, memorySize, memoryOffset);
 
         /* Copy staging buffer into hardware buffer */
         CopyBuffer(bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), memorySize, memoryOffset, memoryOffset);
+
+        #else // TEST
+
+        BeginStagingCommands();
+
+        if (auto mappedData = bufferVK.MapStaging(device_, memorySize, memoryOffset))
+        {
+            ::memcpy(mappedData, data, static_cast<std::size_t>(dataSize));
+            bufferVK.UnmapStaging(device_);
+        }
+
+        VkBufferMemoryBarrier barrier;
+        {
+            barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            barrier.pNext               = nullptr;
+            barrier.srcAccessMask       = 0;//VK_ACCESS_HOST_WRITE_BIT;
+            barrier.dstAccessMask       = 0;//VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.buffer              = bufferVK.GetStagingVkBuffer();
+            barrier.offset              = 0;
+            barrier.size                = VK_WHOLE_SIZE;
+        }
+        vkCmdPipelineBarrier(
+            stagingCommandBuffer_,
+            VK_PIPELINE_STAGE_HOST_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            0, 0, nullptr,
+            1, &barrier,
+            0, nullptr
+        );
+
+        /* Copy staging buffer into hardware buffer */
+        VkBufferCopy region;
+        {
+            region.srcOffset    = memoryOffset;
+            region.dstOffset    = memoryOffset;
+            region.size         = memorySize;
+        }
+        vkCmdCopyBuffer(stagingCommandBuffer_, bufferVK.GetStagingVkBuffer(), bufferVK.GetVkBuffer(), 1, &region);
+
+        EndStagingCommands();
+
+        #endif // /TEST
     }
     else
     {
@@ -373,14 +418,14 @@ static VkExtent3D GetTextureVkExtent(const TextureDescriptor& desc)
     switch (desc.type)
     {
         case TextureType::Texture1D:        /*pass*/
-        case TextureType::Texture1DArray:   return { desc.width, 1u, 1u };
+        case TextureType::Texture1DArray:   return { desc.extent.width, 1u, 1u };
         case TextureType::Texture2D:        /*pass*/
         case TextureType::Texture2DArray:   /*pass*/
         case TextureType::TextureCube:      /*pass*/
         case TextureType::TextureCubeArray: /*pass*/
         case TextureType::Texture2DMS:      /*pass*/
-        case TextureType::Texture2DMSArray: return { desc.width, desc.height, 1u };
-        case TextureType::Texture3D:        return { desc.width, desc.height, desc.depth };
+        case TextureType::Texture2DMSArray: return { desc.extent.width, desc.extent.height, 1u };
+        case TextureType::Texture3D:        return { desc.extent.width, desc.extent.height, desc.extent.depth };
     }
     throw std::invalid_argument("cannot determine texture extent for unknown texture type");
 }
@@ -389,10 +434,10 @@ static std::uint32_t GetTextureLayertCount(const TextureDescriptor& desc)
 {
     switch (desc.type)
     {
-        case TextureType::Texture1DArray:   return desc.layers;
-        case TextureType::Texture2DArray:   return desc.layers;
-        case TextureType::TextureCubeArray: return desc.layers * 6;
-        case TextureType::Texture2DMSArray: return desc.layers;
+        case TextureType::Texture1DArray:   return desc.arrayLayers;
+        case TextureType::Texture2DArray:   return desc.arrayLayers;
+        case TextureType::TextureCubeArray: return desc.arrayLayers * 6;
+        case TextureType::Texture2DMSArray: return desc.arrayLayers;
         default:                            return 1;
     }
 }
@@ -573,10 +618,24 @@ void VKRenderSystem::Release(ResourceHeap& resourceHeap)
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
+/* ----- Render Passes ----- */
+
+RenderPass* VKRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    AssertCreateRenderPass(desc);
+    return TakeOwnership(renderPasses_, MakeUnique<VKRenderPass>(device_, desc));
+}
+
+void VKRenderSystem::Release(RenderPass& renderPass)
+{
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* VKRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
+    AssertCreateRenderTarget(desc);
     return TakeOwnership(renderTargets_, MakeUnique<VKRenderTarget>(device_, *deviceMemoryMngr_, desc));
 }
 
@@ -628,17 +687,14 @@ void VKRenderSystem::Release(PipelineLayout& pipelineLayout)
 
 GraphicsPipeline* VKRenderSystem::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc)
 {
-    if (renderContexts_.empty())
-        throw std::runtime_error("cannot create graphics pipeline without a render context");
-
-    auto renderContext = renderContexts_.begin()->get();
-    auto renderPassVK = renderContext->GetSwapChainRenderPass().Get();
-
     return TakeOwnership(
         graphicsPipelines_,
         MakeUnique<VKGraphicsPipeline>(
-            device_, renderPassVK, defaultPipelineLayout_,
-            desc, gfxPipelineLimits_, renderContext->GetSwapChainExtent()
+            device_,
+            defaultPipelineLayout_,
+            (!renderContexts_.empty() ? (*renderContexts_.begin())->GetRenderPass() : nullptr),
+            desc,
+            gfxPipelineLimits_
         )
     );
 }
@@ -691,7 +747,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 {
     /* Initialize application descriptor */
     VkApplicationInfo appInfo;
-    
+
     appInfo.sType                   = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pNext                   = nullptr;
 
@@ -734,7 +790,7 @@ void VKRenderSystem::CreateInstance(const ApplicationDescriptor* applicationDesc
 
     /* Setup Vulkan instance descriptor */
     VkInstanceCreateInfo instanceInfo;
-    
+
     instanceInfo.sType                          = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceInfo.pNext                          = nullptr;
     instanceInfo.flags                          = 0;
@@ -1255,7 +1311,12 @@ void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
 }
 
 //TODO: add parameters
-void VKRenderSystem::GenerateMipsPrimary(VKTexture& textureVK, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers)
+void VKRenderSystem::GenerateMipsPrimary(
+    VKTexture&      textureVK,
+    std::uint32_t   baseMipLevel,
+    std::uint32_t   numMipLevels,
+    std::uint32_t   baseArrayLayer,
+    std::uint32_t   numArrayLayers)
 {
     /* Get Vulkan image object */
     auto image  = textureVK.GetVkImage();

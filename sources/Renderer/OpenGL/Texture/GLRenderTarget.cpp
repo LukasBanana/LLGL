@@ -68,14 +68,20 @@ static std::size_t CountColorAttachments(const std::vector<AttachmentDescriptor>
  */
 
 GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
-    RenderTarget  { desc.resolution                                        },
-    multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) }
+    resolution_   { desc.resolution                                        },
+    multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) },
+    renderPass_   { desc.renderPass                                        }
 {
     framebuffer_.GenFramebuffer();
     if (desc.attachments.empty())
         CreateFramebufferWithNoAttachments(desc);
     else
         CreateFramebufferWithAttachments(desc);
+}
+
+Extent2D GLRenderTarget::GetResolution() const
+{
+    return resolution_;
 }
 
 std::uint32_t GLRenderTarget::GetNumColorAttachments() const
@@ -91,6 +97,11 @@ bool GLRenderTarget::HasDepthAttachment() const
 bool GLRenderTarget::HasStencilAttachment() const
 {
     return ((blitMask_ & GL_STENCIL_BUFFER_BIT) != 0);
+}
+
+const RenderPass* GLRenderTarget::GetRenderPass() const
+{
+    return renderPass_;
 }
 
 /* ----- Extended Internal Functions ----- */
@@ -329,31 +340,27 @@ void GLRenderTarget::AttachTexture(Texture& texture, const AttachmentDescriptor&
     switch (texture.GetType())
     {
         case TextureType::Texture1D:
-            GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, mipLevel);
+            GLFramebuffer::AttachTexture1D(attachment, GL_TEXTURE_1D, textureID, static_cast<GLint>(mipLevel));
             break;
         case TextureType::Texture2D:
-            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, mipLevel);
+            GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D, textureID, static_cast<GLint>(mipLevel));
             break;
         case TextureType::Texture3D:
-            GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, mipLevel, attachmentDesc.layer);
+            GLFramebuffer::AttachTexture3D(attachment, GL_TEXTURE_3D, textureID, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
             break;
         case TextureType::TextureCube:
-            GLFramebuffer::AttachTexture2D(attachment, GLTypes::Map(attachmentDesc.cubeFace), textureID, mipLevel);
+            GLFramebuffer::AttachTexture2D(attachment, GLTypes::ToTextureCubeMap(attachmentDesc.arrayLayer), textureID, static_cast<GLint>(mipLevel));
             break;
         case TextureType::Texture1DArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer);
-            break;
         case TextureType::Texture2DArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer);
-            break;
         case TextureType::TextureCubeArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, mipLevel, attachmentDesc.layer * 6 + static_cast<int>(attachmentDesc.cubeFace));
+            GLFramebuffer::AttachTextureLayer(attachment, textureID, static_cast<GLint>(mipLevel), static_cast<GLint>(attachmentDesc.arrayLayer));
             break;
         case TextureType::Texture2DMS:
             GLFramebuffer::AttachTexture2D(attachment, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
             break;
         case TextureType::Texture2DMSArray:
-            GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, attachmentDesc.layer);
+            GLFramebuffer::AttachTextureLayer(attachment, textureID, 0, static_cast<GLint>(attachmentDesc.arrayLayer));
             break;
     }
 }

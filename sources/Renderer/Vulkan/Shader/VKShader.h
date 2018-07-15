@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class VKShader : public Shader
+class VKShader final : public Shader
 {
 
     public:

@@ -24,8 +24,9 @@ namespace LLGL
 
 class D3D12RenderSystem;
 class D3D12RenderContext;
+class D3D12RenderPass;
 
-class D3D12CommandBuffer : public CommandBuffer
+class D3D12CommandBuffer final : public CommandBuffer
 {
 
     public:
@@ -75,10 +76,16 @@ class D3D12CommandBuffer : public CommandBuffer
         void SetGraphicsResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
         void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) override;
 
-        /* ----- Render Targets ----- */
+        /* ----- Render Passes ----- */
 
-        void SetRenderTarget(RenderTarget& renderTarget) override;
-        void SetRenderTarget(RenderContext& renderContext) override;
+        void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) override;
+
+        void EndRenderPass() override;
 
         /* ----- Pipeline States ----- */
 
@@ -116,12 +123,14 @@ class D3D12CommandBuffer : public CommandBuffer
 
         /* ----- Extended functions ----- */
 
-        inline ID3D12GraphicsCommandList* GetCommandList() const
+        // Returns the native ID3D12GraphicsCommandList object.
+        inline ID3D12GraphicsCommandList* GetNative() const
         {
             return commandList_.Get();
         }
 
-        void ResetCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState);
+        // Closes the command list and resets internal states.
+        void CloseCommandList();
 
     private:
 
@@ -132,7 +141,29 @@ class D3D12CommandBuffer : public CommandBuffer
         // Sets the current back buffer as render target view.
         void SetBackBufferRTV(D3D12RenderContext& renderContextD3D);
 
-        void SetScissorRectsWithFramebufferExtent(UINT numScissorRects);
+        void SetScissorRectsToDefault(UINT numScissorRects);
+
+        //void BindRenderTarget(D3D12RenderTarget& renderTargetD3D);
+        void BindRenderContext(D3D12RenderContext& renderContextD3D);
+
+        void TransitionRenderTarget(
+            ID3D12Resource*         colorBuffer,
+            D3D12_RESOURCE_STATES   stateBefore,
+            D3D12_RESOURCE_STATES   stateAfter
+        );
+
+        void ClearAttachmentsWithRenderPass(
+            const D3D12RenderPass&  renderPassD3D,
+            std::uint32_t           numClearValues,
+            const ClearValue*       clearValues
+        );
+
+        void ClearColorBuffers(
+            const std::uint8_t* colorBuffers,
+            std::uint32_t       numClearValues,
+            const ClearValue*   clearValues,
+            std::uint32_t&      idx
+        );
 
         ComPtr<ID3D12CommandAllocator>      commandAlloc_;
         ComPtr<ID3D12GraphicsCommandList>   commandList_;
@@ -147,6 +178,8 @@ class D3D12CommandBuffer : public CommandBuffer
 
         LONG                                framebufferWidth_       = 0;
         LONG                                framebufferHeight_      = 0;
+
+        ID3D12Resource*                     boundBackBuffer_        = nullptr;  // Currently bound color buffer from D3D12RenderContext
 
 };
 

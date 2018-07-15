@@ -137,8 +137,7 @@ public:
                 texDesc.format  = LLGL::Format::RGBA8UNorm;
 
                 // Texture size
-                texDesc.width   = texWidth;
-                texDesc.height  = texHeight;
+                texDesc.extent  = { static_cast<std::uint32_t>(texWidth), static_cast<std::uint32_t>(texHeight), 1u };
             }
             #if 0//TEST
             texDesc.type = LLGL::TextureType::TextureCube;
@@ -166,7 +165,7 @@ public:
 
         // Query texture descriptor to see what is really stored on the GPU
         auto textureDesc = colorMap->QueryDesc();
-        auto textureExtent = colorMap->QueryMipLevelSize(0);
+        auto textureExtent = colorMap->QueryMipExtent(0);
     }
 
     void CreateSamplers()
@@ -218,23 +217,31 @@ private:
             samplerIndex = (samplerIndex + 1) % 5;
 
         // Set render target
-        commands->SetRenderTarget(*context);
+        commandQueue->Begin(*commands);
+        {
+            // Set vertex buffer
+            commands->SetVertexBuffer(*vertexBuffer);
 
-        // Set viewports
-        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+            commands->BeginRenderPass(*context);
+            {
+                // Clear color buffer
+                commands->Clear(LLGL::ClearFlags::Color);
 
-        // Clear color buffer
-        commands->Clear(LLGL::ClearFlags::Color);
+                // Set viewports
+                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
 
-        // Set graphics pipeline and vertex buffer
-        commands->SetGraphicsPipeline(*pipeline);
-        commands->SetVertexBuffer(*vertexBuffer);
+                // Set graphics pipeline and vertex buffer
+                commands->SetGraphicsPipeline(*pipeline);
 
-        // Set graphics shader resources
-        commands->SetGraphicsResourceHeap(*resourceHeaps[samplerIndex], 0);
+                // Set graphics shader resources
+                commands->SetGraphicsResourceHeap(*resourceHeaps[samplerIndex], 0);
 
-        // Draw fullscreen quad
-        commands->Draw(4, 0);
+                // Draw fullscreen quad
+                commands->Draw(4, 0);
+            }
+            commands->EndRenderPass();
+        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

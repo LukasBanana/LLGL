@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class D3D12Sampler : public Sampler
+class D3D12Sampler final : public Sampler
 {
 
     public:

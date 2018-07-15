@@ -22,7 +22,7 @@ namespace LLGL
 
 class D3D12RootSignature;
 
-class D3D12PipelineLayout : public PipelineLayout
+class D3D12PipelineLayout final : public PipelineLayout
 {
 
     public:

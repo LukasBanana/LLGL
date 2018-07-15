@@ -22,7 +22,7 @@ namespace LLGL
 {
 
 
-class D3D12Shader : public Shader
+class D3D12Shader final : public Shader
 {
 
     public:

@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class GLShaderUniform : public ShaderUniform
+class GLShaderUniform final : public ShaderUniform
 {
 
     public:

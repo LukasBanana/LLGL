@@ -18,14 +18,17 @@ namespace LLGL
 {
 
 
-class D3D11CommandQueue : public CommandQueue
+class D3D11CommandQueue final : public CommandQueue
 {
 
     public:
 
         D3D11CommandQueue(ComPtr<ID3D11DeviceContext>& context);
 
-        /* ----- Command queues ----- */
+        /* ----- Command Buffers ----- */
+
+        void Begin(CommandBuffer& commandBuffer, long flags = 0) override;
+        void End(CommandBuffer& commandBuffer) override;
 
         void Submit(CommandBuffer& commandBuffer) override;
 

@@ -38,7 +38,9 @@ D3D12_TEXTURE_ADDRESS_MODE  Map( const SamplerAddressMode   addressMode     );
 D3D12_LOGIC_OP              Map( const LogicOp              logicOp         );
 D3D12_SRV_DIMENSION         Map( const TextureType          textureType     );
 
-Format               Unmap( const DXGI_FORMAT format );
+D3D12_RESOURCE_DIMENSION    ToResourceDimension(const TextureType type);
+
+Format                      Unmap( const DXGI_FORMAT format );
 
 
 } // /namespace D3D12Types

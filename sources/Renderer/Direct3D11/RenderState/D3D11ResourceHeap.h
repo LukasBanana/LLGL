@@ -27,7 +27,7 @@ struct D3DResourceBinding;
 This class emulates the behavior of a descriptor heap like in D3D12,
 by binding all shader resources within one bind call in the command buffer.
 */
-class D3D11ResourceHeap : public ResourceHeap
+class D3D11ResourceHeap final : public ResourceHeap
 {
 
     public:

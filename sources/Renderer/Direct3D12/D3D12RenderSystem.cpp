@@ -39,17 +39,15 @@ D3D12RenderSystem::D3D12RenderSystem()
     CreateDevice();
     CreateGPUSynchObjects();
 
-    /* Create command queue, command allocator, and graphics command list */
-    queue_              = CreateDXCommandQueue();
+    /* Create command queue interface */
+    commandQueue_ = MakeUnique<D3D12CommandQueue>(*this);
 
+    /* Create command queue, command allocator, and graphics command list */
     graphicsCmdAlloc_   = CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
     graphicsCmdList_    = CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, graphicsCmdAlloc_.Get());
 
     computeCmdAlloc_    = CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE);
     computeCmdList_     = CreateDXCommandList(D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCmdAlloc_.Get());
-
-    /* Create command queue interface */
-    commandQueue_ = MakeUnique<D3D12CommandQueue>(queue_, graphicsCmdAlloc_);
 
     /* Initialize renderer information */
     QueryRendererInfo();
@@ -90,12 +88,12 @@ CommandQueue* D3D12RenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* D3D12RenderSystem::CreateCommandBuffer()
+CommandBuffer* D3D12RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& desc)
 {
     return TakeOwnership(commandBuffers_, MakeUnique<D3D12CommandBuffer>(*this));
 }
 
-CommandBufferExt* D3D12RenderSystem::CreateCommandBufferExt()
+CommandBufferExt* D3D12RenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     /* Extended command buffers are not spported */
     return nullptr;
@@ -109,7 +107,11 @@ void D3D12RenderSystem::Release(CommandBuffer& commandBuffer)
 /* ----- Buffers ------ */
 
 static std::unique_ptr<D3D12Buffer> MakeD3D12VertexBuffer(
-    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, const BufferDescriptor& desc, const void* initialData)
+    ID3D12Device*               device,
+    ID3D12GraphicsCommandList*  commandList,
+    ComPtr<ID3D12Resource>&     uploadBuffer,
+    const BufferDescriptor&     desc,
+    const void*                 initialData)
 {
     auto bufferD3D = MakeUnique<D3D12VertexBuffer>(device, desc);
 
@@ -120,7 +122,11 @@ static std::unique_ptr<D3D12Buffer> MakeD3D12VertexBuffer(
 }
 
 static std::unique_ptr<D3D12Buffer> MakeD3D12IndexBuffer(
-    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, const BufferDescriptor& desc, const void* initialData)
+    ID3D12Device*               device,
+    ID3D12GraphicsCommandList*  commandList,
+    ComPtr<ID3D12Resource>&     uploadBuffer,
+    const BufferDescriptor&     desc,
+    const void*                 initialData)
 {
     auto bufferD3D = MakeUnique<D3D12IndexBuffer>(device, desc);
 
@@ -131,7 +137,9 @@ static std::unique_ptr<D3D12Buffer> MakeD3D12IndexBuffer(
 }
 
 static std::unique_ptr<D3D12Buffer> MakeD3D12ConstantBuffer(
-    ID3D12Device* device, const BufferDescriptor& desc, const void* initialData)
+    ID3D12Device*           device,
+    const BufferDescriptor& desc,
+    const void*             initialData)
 {
     auto bufferD3D = MakeUnique<D3D12ConstantBuffer>(device, desc);
 
@@ -141,7 +149,10 @@ static std::unique_ptr<D3D12Buffer> MakeD3D12ConstantBuffer(
     return std::move(bufferD3D);
 }
 
-static std::unique_ptr<D3D12Buffer> MakeD3D12StorageBuffer(ID3D12Device* device, const BufferDescriptor& desc, const void* /*initialData*/)
+static std::unique_ptr<D3D12Buffer> MakeD3D12StorageBuffer(
+    ID3D12Device*           device,
+    const BufferDescriptor& desc,
+    const void*             /*initialData*/)
 {
     auto bufferD3D = MakeUnique<D3D12StorageBuffer>(device, desc);
 
@@ -151,7 +162,11 @@ static std::unique_ptr<D3D12Buffer> MakeD3D12StorageBuffer(ID3D12Device* device,
 }
 
 static std::unique_ptr<D3D12Buffer> MakeD3D12Buffer(
-    ID3D12Device* device, ID3D12GraphicsCommandList* commandList, ComPtr<ID3D12Resource>& uploadBuffer, const BufferDescriptor& desc, const void* initialData)
+    ID3D12Device*               device,
+    ID3D12GraphicsCommandList*  commandList,
+    ComPtr<ID3D12Resource>&     uploadBuffer,
+    const BufferDescriptor&     desc,
+    const void*                 initialData)
 {
     switch (desc.type)
     {
@@ -241,8 +256,8 @@ Texture* D3D12RenderSystem::CreateTexture(const TextureDescriptor& textureDesc, 
     if (imageDesc)
     {
         /* Get texture dimensions */
-        auto texWidth   = textureDesc.width;
-        auto texHeight  = textureDesc.height;
+        auto texWidth   = textureDesc.extent.width;
+        auto texHeight  = textureDesc.extent.height;
 
         if (textureDesc.type == TextureType::Texture1D || textureDesc.type == TextureType::Texture1DArray)
             texHeight = 1u;
@@ -324,6 +339,18 @@ ResourceHeap* D3D12RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor
 void D3D12RenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+/* ----- Render Passes ----- */
+
+RenderPass* D3D12RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    return TakeOwnership(renderPasses_, MakeUnique<D3D12RenderPass>(desc));
+}
+
+void D3D12RenderSystem::Release(RenderPass& renderPass)
+{
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
 /* ----- Render Targets ----- */
@@ -426,7 +453,7 @@ ComPtr<IDXGISwapChain1> D3D12RenderSystem::CreateDXSwapChain(const DXGI_SWAP_CHA
 {
     ComPtr<IDXGISwapChain1> swapChain;
 
-    auto hr = factory_->CreateSwapChainForHwnd(queue_.Get(), wnd, &desc, nullptr, nullptr, &swapChain);
+    auto hr = factory_->CreateSwapChainForHwnd(commandQueue_->GetNative(), wnd, &desc, nullptr, nullptr, &swapChain);
     DXThrowIfFailed(hr, "failed to create DXGI swap chain");
 
     return swapChain;
@@ -487,32 +514,10 @@ ComPtr<ID3D12DescriptorHeap> D3D12RenderSystem::CreateDXDescriptorHeap(const D3D
     return descHeap;
 }
 
-//private
-void D3D12RenderSystem::ExecuteCommandList()
-{
-    /* Close and execute command list */
-    CloseAndExecuteCommandList(graphicsCmdList_.Get());
-
-    /* Reset command list */
-    auto hr = graphicsCmdList_->Reset(graphicsCmdAlloc_.Get(), nullptr);
-    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
-}
-
-void D3D12RenderSystem::CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList)
-{
-    /* Close graphics command list */
-    auto hr = commandList->Close();
-    DXThrowIfFailed(hr, "failed to close D3D12 command list");
-
-    /* Execute command list */
-    ID3D12CommandList* cmdLists[] = { commandList };
-    queue_->ExecuteCommandLists(1, cmdLists);
-}
-
 void D3D12RenderSystem::SignalFenceValue(UINT64 fenceValue)
 {
     /* Schedule signal command into the qeue */
-    auto hr = queue_->Signal(fence_.Get(), fenceValue);
+    auto hr = commandQueue_->GetNative()->Signal(fence_.Get(), fenceValue);
     DXThrowIfFailed(hr, "failed to signal D3D12 fence into command queue");
 }
 
@@ -680,6 +685,21 @@ void D3D12RenderSystem::QueryRenderingCaps()
         caps.limits.maxConstantBufferSize           = D3D12_REQ_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
     }
     SetRenderingCaps(caps);
+}
+
+void D3D12RenderSystem::ExecuteCommandList()
+{
+    /* Close graphics command list */
+    auto hr = graphicsCmdList_->Close();
+    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+
+    /* Execute command list */
+    ID3D12CommandList* cmdLists[] = { graphicsCmdList_.Get() };
+    commandQueue_->GetNative()->ExecuteCommandLists(1, cmdLists);
+
+    /* Reset command list */
+    hr = graphicsCmdList_->Reset(graphicsCmdAlloc_.Get(), nullptr);
+    DXThrowIfFailed(hr, "failed to reset D3D12 graphics command list");
 }
 
 

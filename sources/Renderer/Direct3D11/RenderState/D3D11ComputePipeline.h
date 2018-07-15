@@ -20,7 +20,7 @@ namespace LLGL
 
 class D3D11StateManager;
 
-class D3D11ComputePipeline : public ComputePipeline
+class D3D11ComputePipeline final : public ComputePipeline
 {
 
     public:

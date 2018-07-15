@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-class GLIndexBuffer : public GLBuffer
+class GLIndexBuffer final : public GLBuffer
 {
 
     public:

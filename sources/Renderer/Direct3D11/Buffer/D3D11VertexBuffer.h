@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-class D3D11VertexBuffer : public D3D11Buffer
+class D3D11VertexBuffer final : public D3D11Buffer
 {
 
     public:

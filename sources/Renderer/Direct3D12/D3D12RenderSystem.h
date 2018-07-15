@@ -24,6 +24,7 @@
 #include "RenderState/D3D12GraphicsPipeline.h"
 #include "RenderState/D3D12PipelineLayout.h"
 #include "RenderState/D3D12ResourceHeap.h"
+#include "RenderState/D3D12RenderPass.h"
 
 #include "Shader/D3D12Shader.h"
 #include "Shader/D3D12ShaderProgram.h"
@@ -38,7 +39,7 @@ namespace LLGL
 {
 
 
-class D3D12RenderSystem : public RenderSystem
+class D3D12RenderSystem final : public RenderSystem
 {
 
     public:
@@ -60,8 +61,8 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer() override;
-        CommandBufferExt* CreateCommandBufferExt() override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 
@@ -102,6 +103,12 @@ class D3D12RenderSystem : public RenderSystem
         ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
         void Release(ResourceHeap& resourceHeap) override;
+
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 
@@ -145,15 +152,12 @@ class D3D12RenderSystem : public RenderSystem
 
         /* ----- Extended internal functions ----- */
 
-        ComPtr<IDXGISwapChain1> CreateDXSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
-        ComPtr<ID3D12CommandQueue> CreateDXCommandQueue();
-        ComPtr<ID3D12CommandAllocator> CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
-        ComPtr<ID3D12GraphicsCommandList> CreateDXCommandList(D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* cmdAllocator);
-        ComPtr<ID3D12PipelineState> CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
-        ComPtr<ID3D12DescriptorHeap> CreateDXDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc);
-
-        // Close and execute command list.
-        void CloseAndExecuteCommandList(ID3D12GraphicsCommandList* commandList);
+        ComPtr<IDXGISwapChain1>             CreateDXSwapChain       (const DXGI_SWAP_CHAIN_DESC1& desc, HWND wnd);
+        ComPtr<ID3D12CommandQueue>          CreateDXCommandQueue    ();
+        ComPtr<ID3D12CommandAllocator>      CreateDXCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
+        ComPtr<ID3D12GraphicsCommandList>   CreateDXCommandList     (D3D12_COMMAND_LIST_TYPE type, ID3D12CommandAllocator* cmdAllocator);
+        ComPtr<ID3D12PipelineState>         CreateDXGfxPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc);
+        ComPtr<ID3D12DescriptorHeap>        CreateDXDescriptorHeap  (const D3D12_DESCRIPTOR_HEAP_DESC& desc);
 
         // Internal fence
         void SignalFenceValue(UINT64 fenceValue);
@@ -227,12 +231,13 @@ class D3D12RenderSystem : public RenderSystem
         HWObjectContainer<D3D12Buffer>              buffers_;
         HWObjectContainer<BufferArray>              bufferArrays_;
         HWObjectContainer<D3D12Texture>             textures_;
+        HWObjectContainer<D3D12Sampler>             samplers_;
+        HWObjectContainer<D3D12RenderPass>          renderPasses_;
         //HWObjectContainer<D3D12RenderTarget>        renderTargets_;
         HWObjectContainer<D3D12Shader>              shaders_;
         HWObjectContainer<D3D12ShaderProgram>       shaderPrograms_;
         HWObjectContainer<D3D12PipelineLayout>      pipelineLayouts_;
         HWObjectContainer<D3D12GraphicsPipeline>    graphicsPipelines_;
-        HWObjectContainer<D3D12Sampler>             samplers_;
         HWObjectContainer<D3D12ResourceHeap>        resourceHeaps_;
         //HWObjectContainer<D3D12Query>               queries_;
         HWObjectContainer<D3D12Fence>               fences_;

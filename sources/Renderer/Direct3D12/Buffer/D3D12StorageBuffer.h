@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-class D3D12StorageBuffer : public D3D12Buffer
+class D3D12StorageBuffer final : public D3D12Buffer
 {
 
     public:

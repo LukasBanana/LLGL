@@ -117,23 +117,29 @@ private:
 
     void OnDrawFrame() override
     {
-        // Set the render context as the initial render target
-        commands->SetRenderTarget(*context);
+        commandQueue->Begin(*commands);
+        {
+            // Set buffer array
+            commands->SetVertexBufferArray(*vertexBufferArray);
 
-        // Set viewports
-        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+            // Set the render context as the initial render target
+            commands->BeginRenderPass(*context);
+            {
+                // Clear color buffer
+                commands->Clear(LLGL::ClearFlags::Color);
 
-        // Clear color buffer
-        commands->Clear(LLGL::ClearFlags::Color);
+                // Set viewports
+                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
 
-        // Set buffer array
-        commands->SetVertexBufferArray(*vertexBufferArray);
+                // Set graphics pipeline state
+                commands->SetGraphicsPipeline(*pipeline);
 
-        // Set graphics pipeline state
-        commands->SetGraphicsPipeline(*pipeline);
-
-        // Draw 4 instances of the triangle with 3 vertices each
-        commands->DrawInstanced(3, 0, 4);
+                // Draw 4 instances of the triangle with 3 vertices each
+                commands->DrawInstanced(3, 0, 4);
+            }
+            commands->EndRenderPass();
+        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

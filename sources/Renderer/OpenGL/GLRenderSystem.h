@@ -29,6 +29,7 @@
 
 #include "RenderState/GLQuery.h"
 #include "RenderState/GLFence.h"
+#include "RenderState/GLRenderPass.h"
 #include "RenderState/GLPipelineLayout.h"
 #include "RenderState/GLGraphicsPipeline.h"
 #include "RenderState/GLComputePipeline.h"
@@ -47,7 +48,7 @@ namespace LLGL
 //TODO: performance tests show that the manual MIP-map generation is almost always slower than the default MIP-map generation
 //#define LLGL_ENABLE_CUSTOM_SUB_MIPGEN
 
-class GLRenderSystem : public RenderSystem
+class GLRenderSystem final : public RenderSystem
 {
 
     public:
@@ -68,8 +69,8 @@ class GLRenderSystem : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer() override;
-        CommandBufferExt* CreateCommandBufferExt() override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 
@@ -109,6 +110,12 @@ class GLRenderSystem : public RenderSystem
         ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
         void Release(ResourceHeap& resourceHeap) override;
+
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 
@@ -189,6 +196,7 @@ class GLRenderSystem : public RenderSystem
         HWObjectContainer<GLBufferArray>        bufferArrays_;
         HWObjectContainer<GLTexture>            textures_;
         HWObjectContainer<GLSampler>            samplers_;
+        HWObjectContainer<GLRenderPass>         renderPasses_;
         HWObjectContainer<GLRenderTarget>       renderTargets_;
         HWObjectContainer<GLShader>             shaders_;
         HWObjectContainer<GLShaderProgram>      shaderPrograms_;

@@ -20,7 +20,7 @@ namespace LLGL
 {
 
 
-class VKCommandQueue : public CommandQueue
+class VKCommandQueue final : public CommandQueue
 {
 
     public:
@@ -29,7 +29,10 @@ class VKCommandQueue : public CommandQueue
 
         VKCommandQueue(const VKPtr<VkDevice>& device, VkQueue graphicsQueue);
 
-        /* ----- Command queues ----- */
+        /* ----- Command Buffers ----- */
+
+        void Begin(CommandBuffer& commandBuffer, long flags = 0) override;
+        void End(CommandBuffer& commandBuffer) override;
 
         void Submit(CommandBuffer& commandBuffer) override;
 

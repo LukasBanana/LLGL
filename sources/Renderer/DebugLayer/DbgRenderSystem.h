@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include "DbgRenderContext.h"
 #include "DbgCommandBuffer.h"
+#include "DbgCommandQueue.h"
 
 #include "DbgBuffer.h"
 #include "DbgBufferArray.h"
@@ -53,8 +54,8 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer() override;
-        CommandBufferExt* CreateCommandBufferExt() override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 
@@ -94,6 +95,12 @@ class DbgRenderSystem : public RenderSystem
         ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
         void Release(ResourceHeap& resourceViewHeap) override;
+
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 
@@ -146,12 +153,14 @@ class DbgRenderSystem : public RenderSystem
         void ValidateBufferMapping(DbgBuffer& bufferDbg, bool mapMemory);
 
         void ValidateTextureDesc(const TextureDescriptor& desc);
+        void ValidateTextureDescMipLevels(const TextureDescriptor& desc);
         void ValidateTextureSize(std::uint32_t size, std::uint32_t limit, const char* textureTypeName);
+        void ValidateTextureSizeDefault(std::uint32_t size);
         void Validate1DTextureSize(std::uint32_t size);
         void Validate2DTextureSize(std::uint32_t size);
         void Validate3DTextureSize(std::uint32_t size);
         void ValidateCubeTextureSize(std::uint32_t width, std::uint32_t height);
-        void ValidateArrayTextureLayers(std::uint32_t layers);
+        void ValidateArrayTextureLayers(const TextureType type, std::uint32_t layers);
         void ValidateMipLevelLimit(std::uint32_t mipLevel, std::uint32_t mipLevelCount);
         void ValidateTextureImageDataSize(std::size_t dataSize, std::size_t requiredDataSize);
         bool ValidateTextureMips(const DbgTexture& textureDbg);
@@ -167,8 +176,6 @@ class DbgRenderSystem : public RenderSystem
         void AssertArrayTextures();
         void AssertCubeArrayTextures();
         void AssertMultiSampleTextures();
-
-        void WarnTextureLayersGreaterOne();
 
         template <typename T, typename TBase>
         void ReleaseDbg(std::set<std::unique_ptr<T>>& cont, TBase& entry);
@@ -187,10 +194,12 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<DbgRenderContext>     renderContexts_;
+        HWObjectInstance<DbgCommandQueue>       commandQueue_;
         HWObjectContainer<DbgCommandBuffer>     commandBuffers_;
         HWObjectContainer<DbgBuffer>            buffers_;
         HWObjectContainer<DbgBufferArray>       bufferArrays_;
         HWObjectContainer<DbgTexture>           textures_;
+        //HWObjectContainer<DbgRenderPass>        renderPasses_;
         HWObjectContainer<DbgRenderTarget>      renderTargets_;
         HWObjectContainer<DbgShader>            shaders_;
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;

@@ -36,7 +36,7 @@ enum class RenderConditionMode
 };
 
 
-/* ----- Structures ----- */
+/* ----- Flags ----- */
 
 /**
 \brief Command buffer clear flags.
@@ -55,6 +55,9 @@ struct ClearFlags
         All             = (Color | Depth | Stencil),    //!< Clears the color, depth and stencil attachments.
     };
 };
+
+
+/* ----- Structures ----- */
 
 /**
 \brief Clear value structure for color, depth, and stencil clear operations.
@@ -153,6 +156,24 @@ struct OpenGLDependentStateDescriptor
     i.e. CCW becomes CW, and CW becomes CCW.
     */
     bool invertFrontFace = false;
+};
+
+/**
+\brief Command buffer descriptor structure.
+\see RenderSystem::CreateCommandBuffer
+*/
+struct CommandBufferDescriptor
+{
+    /**
+    \brief Specifies the number of internal native command buffers. By default 2.
+    \remarks This is only a hint to the framework, since not all rendering APIs support command buffers.
+    For those that do, however, this member specifies how many native command buffers are to be allocated internally.
+    These native command buffers are then switched everytime recording begins with the CommandQueue::Begin function.
+    The benefit of having multiple native command buffers is that it reduces the time the GPU is idle
+    because it waits for a command buffer to be completed before it can be reused.
+    \see CommandQueue::Begin(CommandBuffer&, long)
+    */
+    std::uint32_t numNativeBuffers = 2;
 };
 
 

@@ -36,17 +36,6 @@ enum class TextureType
     Texture2DMSArray,   //!< 2-Dimensional multi-sample array texture.
 };
 
-//! Axis direction (also used for texture cube face).
-enum class AxisDirection
-{
-    XPos = 0,   //!< X+ direction.
-    XNeg,       //!< X- direction.
-    YPos,       //!< Y+ direction.
-    YNeg,       //!< Y- direction.
-    ZPos,       //!< Z+ direction.
-    ZNeg,       //!< Z- direction.
-};
-
 #if 0//TODO: currently unused
 /**
 \brief Texture component swizzle enumeration.
@@ -100,30 +89,22 @@ struct TextureFlags
         #endif
 
         /**
-        \brief Texture will be used with MIP-mapping. This will create all MIP-map levels at texture creation time.
-        \remarks This is part of the default flags.
-        \see RenderSystem::GenerateMips
-        \see Default
-        */
-        GenerateMips        = (1 << 3),
-
-        /**
         \brief Texture can be used as render target attachment.
         \remarks This is part of the default flags.
         \see AttachmentDescriptor::texture
         \see Default
         */
-        AttachmentUsage     = (1 << 4),
+        AttachmentUsage     = (1 << 3),
 
         /**
         \brief Texture can be used for sampling (e.g. "sampler2D" in GLSL, or "Texture2D" in HLSL).
         \remarks This is part of the default flags.
         \see Default
         */
-        SampleUsage         = (1 << 5),
+        SampleUsage         = (1 << 4),
 
         //! Texture can be used as storage texture (e.g. "image2D" in GLSL, or "RWTexture2D" in HLSL).
-        StorageUsage        = (1 << 6),
+        StorageUsage        = (1 << 5),
 
         /**
         \brief Multi-sampled texture has fixed sample locations.
@@ -131,16 +112,15 @@ struct TextureFlags
         \see TextureType
         \see Default
         */
-        FixedSamples        = (1 << 7),
+        FixedSamples        = (1 << 6),
 
         /**
-        \brief Default texture flags: (GenerateMips | AttachmentUsage | SampleUsage | FixedSamples).
-        \see GenerateMips
+        \brief Default texture flags: (AttachmentUsage | SampleUsage | FixedSamples).
         \see AttachmentUsage
         \see SampleUsage
         \see FixedSamples
         */
-        Default             = (GenerateMips | AttachmentUsage | SampleUsage | FixedSamples),
+        Default             = (AttachmentUsage | SampleUsage | FixedSamples),
     };
 };
 
@@ -180,36 +160,51 @@ struct TextureDescriptor
     */
     long            flags       = TextureFlags::Default;
 
-    //! Texture width. By default 1.
-    std::uint32_t   width       = 1;
-
     /**
-    \brief Texture height. By default 1.
-    \remarks This is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
+    \brief Texture extent. By default (1, 1, 1).
+    \remarks The height component is only used for 2D, 3D, and Cube textures (i.e. TextureType::Texture2D, TextureType::Texture2DArray, TextureType::Texture3D,
     TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMS, TextureType::Texture2DMSArray).
-    \see TextureType
+    The depth component is only used for 3D textures (i.e. TextureType::Texture3D).
+    For cube textures, the width and height component must be equal.
+    \see IsArrayTexture
+    \see IsCubeTexture
     */
-    std::uint32_t   height      = 1;
-
-    /**
-    \brief Texture depth. By default 1.
-    \remarks This is only used for 3D textures (i.e. TextureType::Texture3D).
-    \see TextureType
-    */
-    std::uint32_t   depth       = 1;
+    Extent3D        extent      = { 1, 1, 1 };
 
     /**
     \brief Number of array layers. By default 1.
-    \remarks This is only used for array textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
-    TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
-    \see TextureType
+    \remarks This can be greater than 1 for array textures and cube textures (i.e. TextureType::Texture1DArray, TextureType::Texture2DArray,
+    TextureType::TextureCube, TextureType::TextureCubeArray, TextureType::Texture2DMSArray).
+    For cube textures, this must be a multiple of 6 (one array layer for each cube face).
+    For all other texture types, this must be 1.
+    The index offsets for each cube face are as follows:
+    - <code>X+</code> direction has index offset 0.
+    - <code>X-</code> direction has index offset 1.
+    - <code>Y+</code> direction has index offset 2.
+    - <code>Y-</code> direction has index offset 3.
+    - <code>Z+</code> direction has index offset 4.
+    - <code>Z-</code> direction has index offset 5.
+    \see IsArrayTexture
+    \see IsCubeTexture
+    \see RenderingLimits::maxNumTextureArrayLayers
     */
-    std::uint32_t   layers      = 1;
+    std::uint32_t   arrayLayers = 1;
+
+    /**
+    \brief Number of MIP-map levels. By default 0.
+    \remarks If this is 0, the full MIP-chain will be generated.
+    If this is 1, no MIP-mapping is used for this texture and it has only a MIP level.
+    This field is ignored for multi-sampled textures (i.e. TextureType::Texture2DMS, TextureType::Texture2DMSArray),
+    since these texture types only have a single MIP-map level.
+    \see NumMipLevels
+    \see RenderSystem::GenerateMips
+    */
+    std::uint32_t   mipLevels   = 0;
 
     /**
     \brief Number of samples per texel. By default 1.
     \remarks This is only used for multi-sampled textures (i.e. TextureType::Texture2DMS and TextureType::Texture2DMSArray).
-    \see TextureType
+    \see IsMultiSampleTexture
     */
     std::uint32_t   samples     = 1;
 };
@@ -227,8 +222,9 @@ struct SubTextureDescriptor
     \brief Sub-texture offset. By default (0, 0, 0).
     \remarks For array textures, the Z component specifies the array layer.
     For cube textures, the Z component specifies the array layer and cube face offset (for 1D-array textures it's the Y component).
-    The layer offset for the respective cube face can be determined by the values of the AxisDirection enumeration
-    \see AxisDirection
+    The layer offset for the respective cube faces is described at the TextureDescriptor::arrayLayer member.
+    Negative values of this member are not allowed and result in undefined behavior.
+    \see TextureDescriptor::arrayLayer
     */
     Offset3D        offset      = { 0, 0, 0 };
 
@@ -262,7 +258,8 @@ LLGL_EXPORT std::uint32_t NumMipLevels(std::uint32_t width, std::uint32_t height
 /**
 \brief Returns the number of MIP-map levels for the specified texture descriptor.
 \param[in] textureDesc Specifies the descriptor whose parameters are used to determine the number of MIP-map levels.
-\return Number of MIP-map levels, or 1 if the descriptor has not the 'TextureFlags::GenerateMips' flags bit set.
+\remarks This function will deduce the number MIP-map levels automatically only if the member "mipLevels" is zero.
+Otherwise, the value of this member is returned.
 \see NumMipLevels(std::uint32_t, std::uint32_t, std::uint32_t)
 */
 LLGL_EXPORT std::uint32_t NumMipLevels(const TextureDescriptor& textureDesc);
@@ -283,6 +280,13 @@ LLGL_EXPORT std::uint32_t TextureBufferSize(const Format format, std::uint32_t n
 \see TextureDescriptor::type
 */
 LLGL_EXPORT std::uint32_t TextureSize(const TextureDescriptor& textureDesc);
+
+/**
+\brief Returns true if the specified texture descriptor describes a texture with MIP-mapping enabled.
+\return True if the texture type is not a multi-sampled texture and the number of MIP-map levels in the descriptor is either zero or greater than one.
+\see TextureDescriptor::mipLevels
+*/
+LLGL_EXPORT bool IsMipMappedTexture(const TextureDescriptor& textureDesc);
 
 /**
 \brief Returns true if the specified texture type is an array texture.

@@ -23,7 +23,7 @@ namespace LLGL
 
 struct GraphicsPipelineDescriptor;
 
-class GLGraphicsPipeline : public GraphicsPipeline
+class GLGraphicsPipeline final : public GraphicsPipeline
 {
 
     public:
@@ -42,7 +42,7 @@ class GLGraphicsPipeline : public GraphicsPipeline
     private:
 
         // shader state
-        GLShaderProgram*        shaderProgram_          = nullptr;
+        const GLShaderProgram*  shaderProgram_          = nullptr;
 
         // input-assembler state
         GLenum                  drawMode_               = GL_TRIANGLES;

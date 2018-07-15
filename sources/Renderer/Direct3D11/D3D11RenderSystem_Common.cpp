@@ -17,13 +17,11 @@
 #include <limits>
 
 #include "Buffer/D3D11VertexBuffer.h"
-#include "Buffer/D3D11VertexBufferArray.h"
+#include "Buffer/D3D11BufferArray.h"
 #include "Buffer/D3D11IndexBuffer.h"
 #include "Buffer/D3D11ConstantBuffer.h"
 #include "Buffer/D3D11StorageBuffer.h"
-#include "Buffer/D3D11StorageBufferArray.h"
 #include "Buffer/D3D11StreamOutputBuffer.h"
-#include "Buffer/D3D11StreamOutputBufferArray.h"
 
 #include "RenderState/D3D11GraphicsPipeline.h"
 #include "RenderState/D3D11GraphicsPipeline1.h"
@@ -75,12 +73,12 @@ CommandQueue* D3D11RenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* D3D11RenderSystem::CreateCommandBuffer()
+CommandBuffer* D3D11RenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
 {
     return CreateCommandBufferExt();
 }
 
-CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt()
+CommandBufferExt* D3D11RenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     return TakeOwnership(commandBuffers_, MakeUnique<D3D11CommandBuffer>(*stateMngr_, context_));
 }
@@ -112,24 +110,11 @@ Buffer* D3D11RenderSystem::CreateBuffer(const BufferDescriptor& desc, const void
     return TakeOwnership(buffers_, MakeD3D11Buffer(device_.Get(), desc, initialData));
 }
 
-static std::unique_ptr<D3D11BufferArray> MakeD3D11BufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
-{
-    auto type = (*bufferArray)->GetType();
-    switch (type)
-    {
-        case BufferType::Vertex:        return MakeUnique<D3D11VertexBufferArray>(numBuffers, bufferArray);
-        case BufferType::Constant:      return MakeUnique<D3D11BufferArray>(type, numBuffers, bufferArray);
-        case BufferType::Storage:       return MakeUnique<D3D11StorageBufferArray>(numBuffers, bufferArray);
-        case BufferType::StreamOutput:  return MakeUnique<D3D11StreamOutputBufferArray>(numBuffers, bufferArray);
-        default:                        break;
-    }
-    return nullptr;
-}
-
 BufferArray* D3D11RenderSystem::CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray)
 {
     AssertCreateBufferArray(numBuffers, bufferArray);
-    return TakeOwnership(bufferArrays_, MakeD3D11BufferArray(numBuffers, bufferArray));
+    auto bufferType = (*bufferArray)->GetType();
+    return TakeOwnership(bufferArrays_, MakeUnique<D3D11BufferArray>(bufferType, numBuffers, bufferArray));
 }
 
 void D3D11RenderSystem::Release(Buffer& buffer)
@@ -187,6 +172,18 @@ ResourceHeap* D3D11RenderSystem::CreateResourceHeap(const ResourceHeapDescriptor
 void D3D11RenderSystem::Release(ResourceHeap& resourceHeap)
 {
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
+}
+
+/* ----- Render Passes ----- */
+
+RenderPass* D3D11RenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    return TakeOwnership(renderPasses_, MakeUnique<D3D11RenderPass>(desc));
+}
+
+void D3D11RenderSystem::Release(RenderPass& renderPass)
+{
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
 }
 
 /* ----- Render Targets ----- */

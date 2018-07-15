@@ -8,7 +8,6 @@
 #include "D3D12Texture.h"
 #include "../D3DX12/d3dx12.h"
 #include "../../DXCommon/DXCore.h"
-#include "../../DXCommon/DXTypes.h"
 #include "../D3D12Types.h"
 #include <algorithm>
 
@@ -19,26 +18,9 @@ namespace LLGL
 
 #define _DEB_DISABLE_MIPS
 
-static D3D12_RESOURCE_DIMENSION GetResourceDimension(const TextureType type)
-{
-    switch (type)
-    {
-        case TextureType::Texture1D:        /* pass */
-        case TextureType::Texture1DArray:   return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
-        case TextureType::Texture2D:        /* pass */
-        case TextureType::Texture2DArray:   /* pass */
-        case TextureType::TextureCube:      /* pass */
-        case TextureType::TextureCubeArray: /* pass */
-        case TextureType::Texture2DMS:      /* pass */
-        case TextureType::Texture2DMSArray: return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        case TextureType::Texture3D:        return D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-    }
-    DXTypes::MapFailed("TextureType", "D3D12_RESOURCE_DIMENSION");
-}
-
 static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
 {
-    dst.Dimension           = GetResourceDimension(src.type);
+    dst.Dimension           = D3D12Types::ToResourceDimension(src.type);
     dst.Alignment           = 0;
     #ifndef _DEB_DISABLE_MIPS//TODO: mipmapping is not supported yet
     dst.MipLevels           = NumMipLevels(src);
@@ -55,36 +37,31 @@ static void Convert(D3D12_RESOURCE_DESC& dst, const TextureDescriptor& src)
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            dst.Width               = src.width;
+            dst.Width               = src.extent.width;
             dst.Height              = 1;
-            dst.DepthOrArraySize    = std::max(1u, src.layers);
+            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-            dst.Width               = src.width;
-            dst.Height              = src.height;
-            dst.DepthOrArraySize    = std::max(1u, src.layers);
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+            dst.Width               = src.extent.width;
+            dst.Height              = src.extent.height;
+            dst.DepthOrArraySize    = std::max(1u, src.arrayLayers);
             break;
 
         case TextureType::Texture3D:
-            dst.Width               = src.width;
-            dst.Height              = src.height;
-            dst.DepthOrArraySize    = src.depth;
-            break;
-
-        case TextureType::TextureCube:
-        case TextureType::TextureCubeArray:
-            dst.Width               = src.width;
-            dst.Height              = src.height;
-            dst.DepthOrArraySize    = std::max(1u, src.layers) * 6;
+            dst.Width               = src.extent.width;
+            dst.Height              = src.extent.height;
+            dst.DepthOrArraySize    = src.extent.depth;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            dst.Width               = src.width;
-            dst.Height              = src.height;
-            dst.DepthOrArraySize    = src.layers;
+            dst.Width               = src.extent.width;
+            dst.Height              = src.extent.height;
+            dst.DepthOrArraySize    = src.arrayLayers;
             dst.SampleDesc.Count    = std::max(1u, src.samples);
             break;
     }
@@ -98,7 +75,7 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     #else
     numMipLevels_   { 1                            },
     #endif
-    numArrayLayers_ { desc.layers                  }
+    numArrayLayers_ { desc.arrayLayers             }
 {
     /* Setup resource descriptor by texture descriptor and create hardware resource */
     D3D12_RESOURCE_DESC descD3D;
@@ -106,7 +83,7 @@ D3D12Texture::D3D12Texture(ID3D12Device* device, const TextureDescriptor& desc) 
     CreateResource(device, descD3D);
 }
 
-Extent3D D3D12Texture::QueryMipLevelSize(std::uint32_t mipLevel) const
+Extent3D D3D12Texture::QueryMipExtent(std::uint32_t mipLevel) const
 {
     Extent3D size;
 
@@ -169,37 +146,32 @@ TextureDescriptor D3D12Texture::QueryDesc() const
     {
         case TextureType::Texture1D:
         case TextureType::Texture1DArray:
-            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
-            texDesc.layers  = desc.DepthOrArraySize;
+            texDesc.extent.width    = static_cast<std::uint32_t>(desc.Width);
+            texDesc.arrayLayers     = desc.DepthOrArraySize;
             break;
 
         case TextureType::Texture2D:
         case TextureType::Texture2DArray:
-            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
-            texDesc.height  = desc.Height;
-            texDesc.layers  = desc.DepthOrArraySize;
+        case TextureType::TextureCube:
+        case TextureType::TextureCubeArray:
+            texDesc.extent.width    = static_cast<std::uint32_t>(desc.Width);
+            texDesc.extent.height   = desc.Height;
+            texDesc.arrayLayers     = desc.DepthOrArraySize;
             break;
 
         case TextureType::Texture3D:
-            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
-            texDesc.height  = desc.Height;
-            texDesc.depth   = desc.DepthOrArraySize;
-            break;
-
-        case TextureType::TextureCube:
-        case TextureType::TextureCubeArray:
-            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
-            texDesc.height  = desc.Height;
-            texDesc.layers  = desc.DepthOrArraySize / 6;
+            texDesc.extent.width    = static_cast<std::uint32_t>(desc.Width);
+            texDesc.extent.height   = desc.Height;
+            texDesc.extent.depth    = desc.DepthOrArraySize;
             break;
 
         case TextureType::Texture2DMS:
         case TextureType::Texture2DMSArray:
-            texDesc.width   = static_cast<std::uint32_t>(desc.Width);
-            texDesc.height  = desc.Height;
-            texDesc.layers  = desc.DepthOrArraySize;
-            texDesc.samples = desc.SampleDesc.Count;
-            texDesc.flags   |= TextureFlags::FixedSamples;
+            texDesc.extent.width    = static_cast<std::uint32_t>(desc.Width);
+            texDesc.extent.height   = desc.Height;
+            texDesc.arrayLayers     = desc.DepthOrArraySize;
+            texDesc.samples         = desc.SampleDesc.Count;
+            texDesc.flags           |= TextureFlags::FixedSamples;
             break;
     }
 

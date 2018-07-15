@@ -19,6 +19,18 @@ namespace LLGL
 //! Base class for all interfaces whoes instances are owned by the RenderSystem.
 class LLGL_EXPORT RenderSystemChild : public NonCopyable { };
 
+//TODO: maybe add "QueryInterfaceDesc" function, to determine class hierarchy from this base class
+#if 0
+class LLGL_EXPORT RenderSystemChild : public NonCopyable
+{
+
+    public:
+
+        virtual bool QueryInterfaceDesc(InterfaceDescriptor& desc) const = 0;
+
+};
+#endif
+
 
 } // /namespace LLGL
 

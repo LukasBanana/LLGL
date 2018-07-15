@@ -18,6 +18,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include "TextureFlags.h"
 #include "BufferFlags.h"
 #include "RenderTargetFlags.h"
+#include "RenderPassFlags.h"
 #include "ResourceHeapFlags.h"
 #include "ShaderFlags.h"
 #include "ShaderProgramFlags.h"
@@ -69,19 +70,19 @@ LLGL_EXPORT TextureDescriptor TextureCubeDesc(Format format, std::uint32_t width
 \brief Returns a TextureDescriptor structure with the TextureType::Texture1DArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture1DArrayDesc(Format format, std::uint32_t width, std::uint32_t arrayLayers, long flags = TextureFlags::Default);
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture2DArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long flags = TextureFlags::Default);
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::TextureCubeArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor TextureCubeArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, long flags = TextureFlags::Default);
 
 /**
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DMS type.
@@ -93,7 +94,7 @@ LLGL_EXPORT TextureDescriptor Texture2DMSDesc(Format format, std::uint32_t width
 \brief Returns a TextureDescriptor structure with the TextureType::Texture2DMSArray type.
 \see RenderSystem::CreateTexture
 */
-LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t layers, std::uint32_t samples, long flags = TextureFlags::Default);
+LLGL_EXPORT TextureDescriptor Texture2DMSArrayDesc(Format format, std::uint32_t width, std::uint32_t height, std::uint32_t arrayLayers, std::uint32_t samples, long flags = TextureFlags::Default);
 
 /* ----- BufferDescriptor utility functions ----- */
 
@@ -159,6 +160,14 @@ Some rendering APIs, such as OpenGL 2.0, do not provide sufficient functionality
 Hence, this utility function cannot be used in conjunction with all renderer versions.
 */
 LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDescriptor& reflectionDesc);
+
+/* ----- RenderPassDescriptor utility functions ----- */
+
+/**
+\brief Converts the specified render target descriptor into a render pass descriptor with default settings.
+\remarks This can be used to specify a render pass that is compatible with a render target.
+*/
+LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& renderTargetDesc);
 
 /** @} */
 

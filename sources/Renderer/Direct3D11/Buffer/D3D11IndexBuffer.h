@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class D3D11IndexBuffer : public D3D11Buffer
+class D3D11IndexBuffer final : public D3D11Buffer
 {
 
     public:

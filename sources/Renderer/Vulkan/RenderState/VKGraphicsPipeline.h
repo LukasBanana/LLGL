@@ -27,27 +27,25 @@ struct VKGraphicsPipelineLimits
 
 struct GraphicsPipelineDescriptor;
 class VKShaderProgram;
+class RenderPass;
 
-class VKGraphicsPipeline : public GraphicsPipeline
+class VKGraphicsPipeline final : public GraphicsPipeline
 {
 
     public:
 
         VKGraphicsPipeline(
-            const VKPtr<VkDevice>& device, VkRenderPass renderPass, VkPipelineLayout defaultPipelineLayout,
-            const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent
+            const VKPtr<VkDevice>&              device,
+            VkPipelineLayout                    defaultPipelineLayout,
+            const RenderPass*                   defaultRenderPass,
+            const GraphicsPipelineDescriptor&   desc,
+            const VKGraphicsPipelineLimits&     limits
         );
 
-        // Returns the VkPipeline Vulkan object.
+        // Returns the native VkPipeline Vulkan object.
         inline VkPipeline GetVkPipeline() const
         {
             return pipeline_.Get();
-        }
-
-        // Returns the VkPipelineLayout Vulkan object.
-        inline VkPipelineLayout GetVkPipelineLayout() const
-        {
-            return pipelineLayout_;
         }
 
         // Returns true if scissors are enabled.
@@ -64,11 +62,14 @@ class VKGraphicsPipeline : public GraphicsPipeline
 
     private:
 
-        void CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const VKGraphicsPipelineLimits& limits, const VkExtent2D& extent);
+        void CreateVkGraphicsPipeline(
+            const GraphicsPipelineDescriptor&   desc,
+            const VKGraphicsPipelineLimits&     limits,
+            VkPipelineLayout                    pipelineLayout,
+            VkRenderPass                        renderPass
+        );
 
         VkDevice            device_             = VK_NULL_HANDLE;
-        VkRenderPass        renderPass_         = VK_NULL_HANDLE;
-        VkPipelineLayout    pipelineLayout_     = VK_NULL_HANDLE;
         VKPtr<VkPipeline>   pipeline_;
 
         bool                scissorEnabled_     = false;

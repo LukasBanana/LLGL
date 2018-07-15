@@ -22,6 +22,9 @@
 - [`TextureFormat` and `VectorType` enumerations](#textureformat-and-vectortype-enumerations)
 - [`TextureDescriptor` struct](#texturedescriptor-struct)
 - [Removal of `TextureArray` and `SamplerArray` interfaces](#removal-of-texturearray-and-samplerarray-interfaces)
+- [Array layers for cube textures](#array-layers-for-cube-textures)
+- [Introduction of command recording](#introduction-of-command-recording)
+- [Introduction of render passes](#introduction-of-render-passes)
 
 
 ## `Shader` interface
@@ -644,6 +647,7 @@ Before:
 LLGL::TextureDescriptor my2DTexDesc;
 my2DTexDesc.type             = LLGL::TextureType::Texture2DArray;
 my2DTexDesc.format           = LLGL::TextureFormat::RGBA8;
+my3DTexDesc.flags            = LLGL::TextureFlags::GenerateMips; // full MIP-map chain
 my2DTexDesc.texture2D.width  = 512;
 my2DTexDesc.texture2D.height = 512;
 my2DTexDesc.texture2D.layers = 4;
@@ -652,6 +656,7 @@ LLGL::Texture* my2DTex = myRenderer->CreateTexture(my2DTexDesc);
 LLGL::TextureDescriptor my3DTexDesc;
 my3DTexDesc.type             = LLGL::TextureType::Texture3D;
 my3DTexDesc.format           = LLGL::TextureFormat::R32Float;
+my3DTexDesc.flags            = 0; // no MIP-mapping
 my3DTexDesc.texture3D.width  = 16;
 my3DTexDesc.texture3D.height = 16;
 my3DTexDesc.texture3D.depth  = 16;
@@ -662,19 +667,21 @@ After:
 ```cpp
 // Usage:
 LLGL::TextureDescriptor my2DTexDesc;
-my2DTexDesc.type   = LLGL::TextureType::Texture2DArray;
-my2DTexDesc.format = LLGL::Format::RGBA8UNorm;
-my2DTexDesc.width  = 512;
-my2DTexDesc.height = 512;
-my2DTexDesc.layers = 4;
+my2DTexDesc.type          = LLGL::TextureType::Texture2DArray;
+my2DTexDesc.format        = LLGL::Format::RGBA8UNorm;
+my2DTexDesc.extent.width  = 512;
+my2DTexDesc.extent.height = 512;
+my2DTexDesc.arrayLayers   = 4;
+my2DTexDesc.mipLevels     = 0; // full MIP-map chain
 LLGL::Texture* my2DTex = myRenderer->CreateTexture(my2DTexDesc);
 
 LLGL::TextureDescriptor my3DTexDesc;
-my3DTexDesc.type   = LLGL::TextureType::Texture3D;
-my3DTexDesc.format = LLGL::Format::R32Float;
-my3DTexDesc.width  = 16;
-my3DTexDesc.height = 16;
-my3DTexDesc.depth  = 16;
+my3DTexDesc.type          = LLGL::TextureType::Texture3D;
+my3DTexDesc.format        = LLGL::Format::R32Float;
+my3DTexDesc.extent.width  = 16;
+my3DTexDesc.extent.height = 16;
+my3DTexDesc.extent.depth  = 16;
+my2DTexDesc.mipLevels     = 1; // no MIP-mapping
 LLGL::Texture* my3DTex = myRenderer->CreateTexture(my3DTexDesc);
 ```
 
@@ -715,6 +722,89 @@ LLGL::ResourceHeap* myResourceHeap = myRenderer->CreateResourceHeap(myHeapDesc);
 myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
 ```
 
+
+## Array layers for cube textures
+
+The number of array layers for cube textures is no longer automatically multiplied by 6, but the client programmer must specifiy the correct number of array layers himself.
+
+Before:
+```cpp
+// Usage:
+LLGL::TextureDescriptor myTexDesc;
+myTexDesc.type                = LLGL::TextureType::TextureCubeArray;
+myTexDesc.textureCube.width   = 512;
+myTexDesc.textureCube.height  = 512;
+myTexDesc.textureCuber.layers = 2;
+LLGL::Texture* myTex = myRenderer->CreateTexture(myTexDesc);
+```
+
+After:
+```cpp
+// Usage:
+LLGL::TextureDescriptor myTexDesc;
+myTexDesc.type        = LLGL::TextureType::TextureCubeArray;
+myTexDesc.extent      = { 512, 512, 1 };
+myTexDesc.arrayLayers = 2 * 6;
+LLGL::Texture* myTex = myRenderer->CreateTexture(myTexDesc);
+```
+
+
+## Introduction of command recording
+
+From now on, the recording of command buffers must be started and ended explicitly:
+
+Before:
+```cpp
+// Render frame
+/* ... */
+myContext->Present();
+```
+
+After:
+```cpp
+// Render frame
+myCmdQueue->Begin(*myCmdBuffer);
+/* ... */
+myCmdQueue->End(*myCmdBuffer);
+myContext->Present();
+```
+
+
+## Introduction of render passes
+
+With the introduction of the `RenderPass` interface (which is optional to use), the `SetRenderTarget` functions have been replaced by `BeginRenderPass` with a subsequent call to `EndRenderPass`.
+
+Before:
+```cpp
+// Render into texture
+myCmdBuffer->SetRenderTarget(*myRenderTarget);
+/* ... */
+
+// Render onto screen
+myCmdBuffer->SetRenderTarget(*myContext);
+/* ... */
+
+myContext->Present();
+```
+
+After:
+```cpp
+myCmdQueue->Begin(*myCmdBuffer);
+{
+    // Render into texture
+    myCmdBuffer->BeginRenderPass(*myRenderTarget);
+    /* ... */
+    myCmdBuffer->EndRenderPass();
+
+    // Render onto screen
+    myCmdBuffer->BeginRenderPass(*myContext);
+    /* ... */
+    myCmdBuffer->EndRenderPass();
+}
+myCmdQueue->End(*myCmdBuffer);
+
+myContext->Present();
+```
 
 
 

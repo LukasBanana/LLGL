@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class GLShaderProgram : public ShaderProgram
+class GLShaderProgram final : public ShaderProgram
 {
 
     public:

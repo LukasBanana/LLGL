@@ -13,6 +13,7 @@
 #include <LLGL/RenderContext.h>
 #include "VKCore.h"
 #include "VKPtr.h"
+#include "RenderState/VKRenderPass.h"
 #include "Texture/VKDepthStencilBuffer.h"
 #include <memory>
 #include <vector>
@@ -22,11 +23,10 @@ namespace LLGL
 {
 
 
-class VKCommandBuffer;
 class VKDeviceMemoryManager;
 class VKDeviceMemoryRegion;
 
-class VKRenderContext : public RenderContext
+class VKRenderContext final : public RenderContext
 {
 
     public:
@@ -46,35 +46,27 @@ class VKRenderContext : public RenderContext
 
         void Present() override;
 
+        Format QueryColorFormat() const override;
+        Format QueryDepthStencilFormat() const override;
+
+        const RenderPass* GetRenderPass() const override;
+
         /* --- Extended functions --- */
 
-        void SetPresentCommandBuffer(VKCommandBuffer* commandBuffer);
-
-        inline const VKPtr<VkRenderPass>& GetSwapChainRenderPass() const
+        // Returns the swap-chain render pass object.
+        inline const VKRenderPass& GetSwapChainRenderPass() const
         {
             return swapChainRenderPass_;
         }
 
-        // Returns the number of images the swap chain has.
-        inline size_t GetSwapChainSize() const
-        {
-            return swapChainImages_.size();
-        }
-
-        // Returns the active VkFramebuffer object from the swap chain.
-        inline VkFramebuffer GetSwapChainFramebuffer() const
+        // Returns the native VkFramebuffer object that is currently used from swap-chain.
+        inline VkFramebuffer GetVkFramebuffer() const
         {
             return swapChainFramebuffers_[presentImageIndex_].Get();
         }
 
-        // Returns the active VkImage object from the swap chain.
-        inline VkImage GetSwapChainImage() const
-        {
-            return swapChainImages_[presentImageIndex_];
-        }
-
-        // Returns the 2D extend (i.e. resolution) of the swap chain.
-        inline const VkExtent2D& GetSwapChainExtent() const
+        // Returns the render context resolution as VkExtent2D.
+        inline const VkExtent2D& GetVkExtent() const
         {
             return swapChainExtent_;
         }
@@ -119,7 +111,7 @@ class VKRenderContext : public RenderContext
         SurfaceSupportDetails               surfaceSupportDetails_;
 
         VKPtr<VkSwapchainKHR>               swapChain_;
-        VKPtr<VkRenderPass>                 swapChainRenderPass_;
+        VKRenderPass                        swapChainRenderPass_;
         VkSurfaceFormatKHR                  swapChainFormat_;
         VkExtent2D                          swapChainExtent_            = { 0, 0 };
         std::vector<VkImage>                swapChainImages_;
@@ -134,8 +126,6 @@ class VKRenderContext : public RenderContext
 
         VKPtr<VkSemaphore>                  imageAvailableSemaphore_;
         VKPtr<VkSemaphore>                  renderFinishedSemaphore_;
-
-        VKCommandBuffer*                    commandBuffer_              = nullptr;
 
 };
 

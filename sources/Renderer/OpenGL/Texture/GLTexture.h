@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class GLTexture : public Texture
+class GLTexture final : public Texture
 {
 
     public:
@@ -25,7 +25,7 @@ class GLTexture : public Texture
         GLTexture(const TextureType type);
         ~GLTexture();
 
-        Extent3D QueryMipLevelSize(std::uint32_t mipLevel) const override;
+        Extent3D QueryMipExtent(std::uint32_t mipLevel) const override;
 
         TextureDescriptor QueryDesc() const override;
 

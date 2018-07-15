@@ -16,7 +16,7 @@ namespace LLGL
 {
 
 
-class VKIndexBuffer : public VKBuffer
+class VKIndexBuffer final : public VKBuffer
 {
 
     public:

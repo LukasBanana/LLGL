@@ -17,7 +17,7 @@ namespace LLGL
 {
 
 
-class D3D11Fence : public Fence
+class D3D11Fence final : public Fence
 {
 
     public:

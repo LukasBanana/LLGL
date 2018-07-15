@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class D3D12ResourceHeap : public ResourceHeap
+class D3D12ResourceHeap final : public ResourceHeap
 {
 
     public:

@@ -12,17 +12,13 @@
 #include "Export.h"
 #include "ColorRGBA.h"
 #include "Types.h"
+#include "ForwardDecls.h"
 #include <vector>
 #include <cstdint>
 
 
 namespace LLGL
 {
-
-
-class ShaderProgram;
-class PipelineLayout;
-class RenderTarget;
 
 
 /* ----- Enumerations ----- */
@@ -647,33 +643,27 @@ viewports, depth-/ stencil-/ rasterizer-/ blend states, shader stages etc.
 struct GraphicsPipelineDescriptor
 {
     /**
-    \brief Pointer to the shader program for the graphics pipeline.
-    \remarks This must never be null when "RenderSystem::CreateGraphicsPipeline" is called with this structure.
+    \brief Pointer to the shader program for the graphics pipeline. By default null.
+    \remarks This must never be null when RenderSystem::CreateGraphicsPipeline is called with this structure.
     \see RenderSystem::CreateGraphicsPipeline
     \see RenderSystem::CreateShaderProgram
     */
-    ShaderProgram*          shaderProgram       = nullptr;
+    const ShaderProgram*    shaderProgram       = nullptr;
 
-    #if 1 // TODO: try to parse the SPIR-V modules in the shader program with the SPIRV-Tools library, to deduce the pipeline layout automatically
     /**
-    \brief Pointer to an optional pipeline layout for the graphics pipeline.
+    \brief Pointer to a RenderPass object. By default null.
+    \remarks If this is null, the render pass of the RenderContext that was first created is used.
+    This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
+    \see CommandBuffer::BeginRenderPass
+    */
+    const RenderPass*       renderPass          = nullptr;
+
+    /**
+    \brief Pointer to an optional pipeline layout for the graphics pipeline. By default null.
     \remarks This layout determines at which slots buffer resources can be bound.
     This is ignored by render systems which do not support pipeline layouts.
-    \note Only supported with: Vulkan, Direct3D 12
-    \todo Remove this and deduce the pipeline layout automatically by parsing the SPIR-V module with the SPIRV-Tools library (i.e. the "spvBinaryParse" function).
     */
-    PipelineLayout*         pipelineLayout      = nullptr;
-    #endif // /TODO
-
-    #if 1 // TODO: maybe find a better way to determine compatible vkRenderPass object.
-    /**
-    \brief Pointer to an optional render target that will be used with this graphics pipeline.
-    If this is null, the graphics pipeline will be compatible with a RenderContext only.
-    \remarks This is only used for the Vulkan renderer, to determine which render pass compatibility is required (i.e. VkRenderPass object).
-    \note Only supported with: Vulkan.
-    */
-    RenderTarget*           renderTarget        = nullptr;
-    #endif
+    const PipelineLayout*   pipelineLayout      = nullptr;
 
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.

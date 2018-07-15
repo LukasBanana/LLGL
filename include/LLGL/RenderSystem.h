@@ -23,6 +23,8 @@
 #include "Sampler.h"
 #include "ResourceHeap.h"
 
+#include "RenderPass.h"
+#include "RenderPassFlags.h"
 #include "RenderTarget.h"
 #include "Shader.h"
 #include "ShaderProgram.h"
@@ -181,17 +183,17 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         but especially for the legacy graphics APIs such as OpenGL and Direct3D 11, this doesn't provide any benefit,
         since all graphics and compute commands are submitted sequentially to the GPU.
         */
-        virtual CommandBuffer* CreateCommandBuffer() = 0;
+        virtual CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) = 0;
 
         /**
         \brief Creates a new extended command buffer (if supported) with dynamic state access for shader resources (i.e. Constant Buffers, Storage Buffers, Textures, and Samplers).
         \return Pointer to the new CommandBufferExt object, or null if the render system does not support extended command buffers.
         \remarks For those render systems that do not support dynamic state access for shader resources, use the ResourceHeap interface.
-        \note Only supported with: OpenGL, Direct3D 11.
+        \note Only supported with: OpenGL, Direct3D 11, Metal.
         \see RenderingCapabilities::hasCommandBufferExt
         \see CreateResourceHeap
         */
-        virtual CommandBufferExt* CreateCommandBufferExt() = 0;
+        virtual CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) = 0;
 
         /**
         \brief Releases the specified command buffer. After this call, the specified object must no longer be used.
@@ -292,10 +294,10 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         \param[in] mipLevel Specifies the MIP-level from which to read the texture data.
         \param[out] imageDesc Specifies the destination image descriptor to write the texture data to.
         \remarks The required size for a successful texture read operation depends on the image format, data type, and texture size.
-        The Texture::QueryDesc or Texture::QueryMipLevelSize functions can be used to determine the texture dimensions.
+        The Texture::QueryDesc or Texture::QueryMipExtent functions can be used to determine the texture dimensions.
         \code
         // Query texture size attribute
-        auto myTextureExtent = myTexture->QueryMipLevelSize(0);
+        auto myTextureExtent = myTexture->QueryMipExtent(0);
 
         // Allocate image buffer with elements in all dimensions
         std::vector<LLGL::ColorRGBAub> myImage(myTextureExtent.width * myTextureExtent.height * myTextureExtent.depth);
@@ -316,7 +318,7 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
         or 'imageDesc.dataSize' is less than the required size.
         \throws std::invalid_argument If 'imageDesc.data' is null.
         \see Texture::QueryDesc
-        \see Texture::QueryMipLevelSize
+        \see Texture::QueryMipExtent
         */
         virtual void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc) = 0;
 
@@ -373,6 +375,22 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         //! Releases the specified ResourceHeap object. After this call, the specified object must no longer be used.
         virtual void Release(ResourceHeap& resourceHeap) = 0;
+
+        /* ----- Render Passes ----- */
+
+        /**
+        \brief Creates a new RenderPass object.
+        \return Pointer to the new RenderPass object or null if the render system does not use render passes.
+        In the case of the latter, null pointers are allowed for render passes.
+        \see RenderTargetDescriptor::renderPass
+        \see GraphicsPipelineDescriptor::renderPass
+        \see CommandBuffer::BeginRenderPass
+        \see CommandBuffer::EndRenderPass
+        */
+        virtual RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) = 0;
+
+        //! Releases the specified RenderPass object. After this call, the specified object must no longer be used.
+        virtual void Release(RenderPass& renderPass) = 0;
 
         /* ----- Render Targets ----- */
 
@@ -496,6 +514,12 @@ class LLGL_EXPORT RenderSystem : public NonCopyable
 
         //! Validates the specified shader program descriptor.
         void AssertCreateShaderProgram(const ShaderProgramDescriptor& desc);
+
+        //! Validates the specified render target descriptor.
+        void AssertCreateRenderTarget(const RenderTargetDescriptor& desc);
+
+        //! Validates the specified render pass descriptor.
+        void AssertCreateRenderPass(const RenderPassDescriptor& desc);
 
         //! Validates the specified image data size against the required size (in bytes).
         void AssertImageDataSize(std::size_t dataSize, std::size_t requiredDataSize, const char* info = nullptr);

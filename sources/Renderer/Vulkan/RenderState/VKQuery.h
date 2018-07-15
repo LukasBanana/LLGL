@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class VKQuery : public Query
+class VKQuery final : public Query
 {
 
     public:

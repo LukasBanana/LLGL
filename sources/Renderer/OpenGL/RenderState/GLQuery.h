@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class GLQuery : public Query
+class GLQuery final : public Query
 {
 
     public:

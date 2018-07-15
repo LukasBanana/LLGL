@@ -32,7 +32,7 @@ union D3D11HardwareQuery
     ComPtr<ID3D11Predicate> predicate;
 };
 
-class D3D11Query : public Query
+class D3D11Query final : public Query
 {
 
     public:

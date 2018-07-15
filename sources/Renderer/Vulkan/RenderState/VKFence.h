@@ -18,7 +18,7 @@ namespace LLGL
 {
 
 
-class VKFence : public Fence
+class VKFence final : public Fence
 {
 
     public:

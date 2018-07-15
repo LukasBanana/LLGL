@@ -29,7 +29,7 @@ struct D3D11BackBuffer
 };
 
 
-class D3D11RenderContext : public RenderContext
+class D3D11RenderContext final : public RenderContext
 {
 
     public:
@@ -45,6 +45,11 @@ class D3D11RenderContext : public RenderContext
         );
 
         void Present() override;
+
+        Format QueryColorFormat() const override;
+        Format QueryDepthStencilFormat() const override;
+
+        const RenderPass* GetRenderPass() const override;
 
         /* ----- Extended internal functions ----- */
 
@@ -70,6 +75,9 @@ class D3D11RenderContext : public RenderContext
         UINT                        swapChainSamples_   = 1;
 
         D3D11BackBuffer             backBuffer_;
+
+        DXGI_FORMAT                 colorFormat_        = DXGI_FORMAT_UNKNOWN;
+        DXGI_FORMAT                 depthStencilFormat_ = DXGI_FORMAT_UNKNOWN;
 
 };
 

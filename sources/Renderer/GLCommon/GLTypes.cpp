@@ -109,6 +109,19 @@ GLenum MapOrZero(const Format format)
         case Format::RGBA32SInt:        return GL_RGBA32I;
         case Format::RGBA32Float:       return GL_RGBA32F;
 
+        /* --- Extended color formats --- */
+        case Format::R64Float:          return 0;
+        case Format::RG64Float:         return 0;
+        case Format::RGB64Float:        return 0;
+        case Format::RGBA64Float:       return 0;
+
+        /* --- Reversed color formats --- */
+        case Format::BGRA8UNorm:        return 0;
+        case Format::BGRA8SNorm:        return 0;
+        case Format::BGRA8UInt:         return 0;
+        case Format::BGRA8SInt:         return 0;
+        case Format::BGRA8sRGB:         return 0;
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return GL_DEPTH_COMPONENT16;
         case Format::D32Float:          return GL_DEPTH_COMPONENT32;//GL_DEPTH_COMPONENT;
@@ -393,20 +406,6 @@ GLenum Map(const CullMode cullMode)
         case CullMode::Back:        return GL_BACK;
     }
     MapFailed("CullMode");
-}
-
-GLenum Map(const AxisDirection cubeFace)
-{
-    switch (cubeFace)
-    {
-        case AxisDirection::XPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-        case AxisDirection::XNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
-        case AxisDirection::YPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
-        case AxisDirection::YNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
-        case AxisDirection::ZPos: return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
-        case AxisDirection::ZNeg: return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
-    }
-    MapFailed("AxisDirection");
 }
 
 GLenum Map(const SamplerAddressMode addressMode)
@@ -730,6 +729,20 @@ static UniformType UnmapUniformType(const GLenum uniformType)
     #endif // /LLGL_OPENGLES3
 
     return UniformType::Undefined;
+}
+
+GLenum ToTextureCubeMap(std::uint32_t arrayLayer)
+{
+    static const GLenum g_textureCubeMaps[] =
+    {
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+    };
+    return g_textureCubeMaps[arrayLayer % 6];
 }
 
 void Unmap(UniformType& result, const GLenum uniformType)
