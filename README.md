@@ -32,7 +32,7 @@ Progress
 | Direct3D 11 | ~85% | Depth-textures are incomplete |
 | Direct3D 12 | ~15% | Experimental state; Tutorials working: 01, 02, (03), 06, 07, (10) |
 | Vulkan | ~30% | Experimental state; Tutorials working: 01, 02, 03, 06, 07, 10 |
-| Metal | ~5% | Experimental state |
+| Metal | ~5% | Experimental state; Tutorials working: 01, (03) |
 
 | Platform | Progress | Remarks |
 |----------|:--------:|---------|
