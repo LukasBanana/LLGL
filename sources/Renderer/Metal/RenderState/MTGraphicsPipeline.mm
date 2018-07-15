@@ -93,12 +93,6 @@ MTGraphicsPipeline::MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipel
     depthStencilState_ = [device newDepthStencilStateWithDescriptor:depthStencilDesc];
 }
 
-void MTGraphicsPipeline::Bind(id<MTLRenderCommandEncoder> cmdEncoder)
-{
-    [cmdEncoder setRenderPipelineState:renderPipelineState_];
-    [cmdEncoder setDepthStencilState:depthStencilState_];
-}
-
 
 } // /namespace LLGL
 

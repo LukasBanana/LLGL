@@ -39,6 +39,7 @@ MTLCompareFunction          ToMTLCompareFunction        ( const CompareOp       
 MTLSamplerAddressMode       ToMTLSamplerAddressMode     ( const SamplerAddressMode  addressMode       );
 MTLSamplerMinMagFilter  	ToMTLSamplerMinMagFilter    ( const SamplerFilter       filter            );
 MTLSamplerMipFilter         ToMTLSamplerMipFilter       ( const SamplerFilter       filter            );
+MTLTriangleFillMode         ToMTLTriangleFillMode       ( const PolygonMode         polygonMode       );
 
 Format                      ToFormat                    ( const MTLPixelFormat      pixelFormat       );
 

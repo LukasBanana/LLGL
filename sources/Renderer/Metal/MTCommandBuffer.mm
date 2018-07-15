@@ -22,7 +22,8 @@ namespace LLGL
 {
 
 
-static const std::uint32_t g_maxNumViewportsAndScissors = 32;
+const std::uint32_t MTCommandBuffer::g_maxNumViewportsAndScissors;
+const std::uint32_t MTCommandBuffer::g_maxNumVertexBuffers;
 
 MTCommandBuffer::~MTCommandBuffer()
 {
@@ -50,20 +51,37 @@ static void Convert(MTLViewport& dst, const Viewport& src)
 
 void MTCommandBuffer::SetViewport(const Viewport& viewport)
 {
-    MTLViewport viewportMT;
-    Convert(viewportMT, viewport);
-    [renderEncoder_ setViewport:viewportMT];
+    if (renderEncoder_ != nil)
+    {
+        MTLViewport viewportMT;
+        Convert(viewportMT, viewport);
+        [renderEncoder_ setViewport:viewportMT];
+    }
+    else
+    {
+        Convert(renderEncoderState_.viewports[0], viewport);
+        renderEncoderState_.viewportCount = 1;
+    }
 }
 
 void MTCommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport* viewports)
 {
-    MTLViewport viewportsML[g_maxNumViewportsAndScissors];
-    
-    numViewports = std::min(numViewports, g_maxNumViewportsAndScissors);
-    for (std::uint32_t i = 0; i < numViewports; ++i)
-        Convert(viewportsML[i], viewports[i]);
-    
-    [renderEncoder_ setViewports:viewportsML count:(NSUInteger)numViewports];
+    if (renderEncoder_ != nil)
+    {
+        MTLViewport viewportsML[MTCommandBuffer::g_maxNumViewportsAndScissors];
+        
+        numViewports = std::min(numViewports, MTCommandBuffer::g_maxNumViewportsAndScissors);
+        for (std::uint32_t i = 0; i < numViewports; ++i)
+            Convert(viewportsML[i], viewports[i]);
+        
+        [renderEncoder_ setViewports:viewportsML count:(NSUInteger)numViewports];
+    }
+    else
+    {
+        renderEncoderState_.viewportCount = std::min(numViewports, MTCommandBuffer::g_maxNumViewportsAndScissors);
+        for (std::uint32_t i = 0; i < renderEncoderState_.viewportCount; ++i)
+            Convert(renderEncoderState_.viewports[i], viewports[i]);
+    }
 }
 
 static void Convert(MTLScissorRect& dst, const Scissor& scissor)
@@ -76,20 +94,37 @@ static void Convert(MTLScissorRect& dst, const Scissor& scissor)
 
 void MTCommandBuffer::SetScissor(const Scissor& scissor)
 {
-    MTLScissorRect rect;
-    Convert(rect, scissor);
-    [renderEncoder_ setScissorRect:rect];
+    if (renderEncoder_ != nil)
+    {
+        MTLScissorRect rect;
+        Convert(rect, scissor);
+        [renderEncoder_ setScissorRect:rect];
+    }
+    else
+    {
+        Convert(renderEncoderState_.scissorRects[0], scissor);
+        renderEncoderState_.scissorRectCount = 1;
+    }
 }
 
 void MTCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scissors)
 {
-    MTLScissorRect rects[g_maxNumViewportsAndScissors];
-    
-    numScissors = std::min(numScissors, g_maxNumViewportsAndScissors);
-    for (std::uint32_t i = 0; i < numScissors; ++i)
-        Convert(rects[i], scissors[i]);
-    
-    [renderEncoder_ setScissorRects:rects count:(NSUInteger)numScissors];
+    if (renderEncoder_ != nil)
+    {
+        MTLScissorRect rects[MTCommandBuffer::g_maxNumViewportsAndScissors];
+        
+        numScissors = std::min(numScissors, MTCommandBuffer::g_maxNumViewportsAndScissors);
+        for (std::uint32_t i = 0; i < numScissors; ++i)
+            Convert(rects[i], scissors[i]);
+        
+        [renderEncoder_ setScissorRects:rects count:(NSUInteger)numScissors];
+    }
+    else
+    {
+        renderEncoderState_.scissorRectCount = std::min(numScissors, MTCommandBuffer::g_maxNumViewportsAndScissors);
+        for (std::uint32_t i = 0; i < renderEncoderState_.scissorRectCount; ++i)
+            Convert(renderEncoderState_.scissorRects[i], scissors[i]);
+    }
 }
 
 /* ----- Clear ----- */
@@ -124,22 +159,49 @@ void MTCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const Attac
 void MTCommandBuffer::SetVertexBuffer(Buffer& buffer)
 {
     auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
-    [renderEncoder_ setVertexBuffer:bufferMT.GetNative() offset:0 atIndex:0];
+    if (renderEncoder_ != nil)
+    {
+        [renderEncoder_
+            setVertexBuffer:    bufferMT.GetNative()
+            offset:             0
+            atIndex:            0
+        ];
+    }
+    else
+    {
+        renderEncoderState_.vertexBuffer0               = bufferMT.GetNative();
+        renderEncoderState_.vertexBuffers               = &(renderEncoderState_.vertexBuffer0);
+        renderEncoderState_.vertexBufferOffset0         = 0;
+        renderEncoderState_.vertexBufferOffsets         = &(renderEncoderState_.vertexBufferOffset0);
+        renderEncoderState_.vertexBufferRange.location  = 0;
+        renderEncoderState_.vertexBufferRange.length    = 1;
+    }
 }
 
 void MTCommandBuffer::SetVertexBufferArray(BufferArray& bufferArray)
 {
     auto& bufferArrayMT = LLGL_CAST(MTBufferArray&, bufferArray);
-    [renderEncoder_
-        setVertexBuffers:   bufferArrayMT.GetIDArray().data()
-        offsets:            bufferArrayMT.GetOffsets().data()
-        withRange:          NSMakeRange(0, static_cast<NSUInteger>(bufferArrayMT.GetIDArray().size()))
-    ];
+    if (renderEncoder_ != nil)
+    {
+        [renderEncoder_
+            setVertexBuffers:   bufferArrayMT.GetIDArray().data()
+            offsets:            bufferArrayMT.GetOffsets().data()
+            withRange:          NSMakeRange(0, static_cast<NSUInteger>(bufferArrayMT.GetIDArray().size()))
+        ];
+    }
+    else
+    {
+        renderEncoderState_.vertexBuffers               = bufferArrayMT.GetIDArray().data();
+        renderEncoderState_.vertexBufferOffsets         = bufferArrayMT.GetOffsets().data();
+        renderEncoderState_.vertexBufferRange.location  = 0;
+        renderEncoderState_.vertexBufferRange.length    = static_cast<NSUInteger>(bufferArrayMT.GetIDArray().size());
+    }
 }
 
 void MTCommandBuffer::SetIndexBuffer(Buffer& buffer)
 {
-    //todo
+    auto& bufferMT = LLGL_CAST(MTBuffer&, buffer);
+    indexBuffer_ = bufferMT.GetNative();
 }
 
 /* ----- Stream Output Buffers ------ */
@@ -262,7 +324,10 @@ void MTCommandBuffer::BeginRenderPass(
     
     /* Get next render command encoder */
     if (renderPassDesc != nullptr)
+    {
         renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+        SubmitRenderEncoderState();
+    }
 }
 
 void MTCommandBuffer::EndRenderPass()
@@ -280,7 +345,20 @@ void MTCommandBuffer::EndRenderPass()
 void MTCommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
 {
     auto& graphicsPipelineMT = LLGL_CAST(MTGraphicsPipeline&, graphicsPipeline);
-    graphicsPipelineMT.Bind(renderEncoder_);
+    
+    /* Bind render states of graphics pipeline */
+    if (renderEncoder_ != nil)
+    {
+        [renderEncoder_ setRenderPipelineState:graphicsPipelineMT.GetRenderPipelineState()];
+        [renderEncoder_ setDepthStencilState:graphicsPipelineMT.GetDepthStencilState()];
+    }
+    else
+    {
+        renderEncoderState_.renderPipelineState = graphicsPipelineMT.GetRenderPipelineState();
+        renderEncoderState_.depthStencilState   = graphicsPipelineMT.GetDepthStencilState();
+    }
+    
+    /* Store primitive type to subsequent draw commands */
     primitiveType_ = graphicsPipelineMT.GetMTLPrimitiveType();
 }
 
@@ -572,6 +650,36 @@ void MTCommandBuffer::NextCommandBuffer(id<MTLCommandQueue> cmdQueue)
  * ======= Private: =======
  */
 
+void MTCommandBuffer::SubmitRenderEncoderState()
+{
+    if (renderEncoderState_.viewportCount > 0)
+    {
+        [renderEncoder_
+            setViewports:   renderEncoderState_.viewports
+            count:          renderEncoderState_.viewportCount
+        ];
+    }
+    if (renderEncoderState_.scissorRectCount > 0)
+    {
+        [renderEncoder_
+            setScissorRects:    renderEncoderState_.scissorRects
+            count:              renderEncoderState_.scissorRectCount
+        ];
+    }
+    if (renderEncoderState_.vertexBufferRange.length > 0)
+    {
+        [renderEncoder_
+            setVertexBuffers:   renderEncoderState_.vertexBuffers
+            offsets:            renderEncoderState_.vertexBufferOffsets
+            withRange:          renderEncoderState_.vertexBufferRange
+        ];
+    }
+    if (renderEncoderState_.renderPipelineState != nil)
+    {
+        [renderEncoder_ setRenderPipelineState:renderEncoderState_.renderPipelineState];
+        [renderEncoder_ setDepthStencilState:renderEncoderState_.depthStencilState];
+    }
+}
 
 
 } // /namespace LLGL

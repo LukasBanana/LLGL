@@ -134,6 +134,27 @@ class MTCommandBuffer : public CommandBufferExt
         void NextCommandBuffer(id<MTLCommandQueue> cmdQueue);
 
     private:
+    
+        static const std::uint32_t g_maxNumViewportsAndScissors = 32;
+        static const std::uint32_t g_maxNumVertexBuffers        = 16;
+    
+        struct MTRenderEncoderState
+        {
+            MTLViewport                 viewports[g_maxNumViewportsAndScissors]     = {};
+            NSUInteger                  viewportCount                               = 0;
+            MTLScissorRect              scissorRects[g_maxNumViewportsAndScissors]  = {};
+            NSUInteger                  scissorRectCount                            = 0;
+            id<MTLBuffer>               vertexBuffer0                               = nil;
+            const id<MTLBuffer>*        vertexBuffers                               = nullptr;
+            NSUInteger                  vertexBufferOffset0                         = 0;
+            const NSUInteger*           vertexBufferOffsets                         = nullptr;
+            NSRange                     vertexBufferRange                           = { 0, 0 };
+            id<MTLRenderPipelineState>  renderPipelineState                         = nil;
+            id<MTLDepthStencilState>    depthStencilState                           = nil;
+        };
+    
+        // Submits all global lstates to the render encoder (i.e. vertex buffers, graphics pipeline, viewports etc.)
+        void SubmitRenderEncoderState();
 
         id<MTLCommandBuffer>            cmdBuffer_              = nil;
 
@@ -145,6 +166,8 @@ class MTCommandBuffer : public CommandBufferExt
         MTLIndexType                    indexType_              = MTLIndexTypeUInt32;
         NSUInteger                      indexTypeSize_          = 4;
         NSUInteger                      numPatchControlPoints_  = 0;
+    
+        MTRenderEncoderState            renderEncoderState_;
 
 };
 

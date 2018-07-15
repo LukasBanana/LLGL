@@ -40,6 +40,7 @@ int main()
         std::cout << "Shading Language: " << info.shadingLanguageName << std::endl;
 
         // Create command buffer
+        auto commandQueue = renderer->GetCommandQueue();
         auto commands = renderer->CreateCommandBufferExt();
 
         auto& window = static_cast<LLGL::Window&>(context->GetSurface());
@@ -145,19 +146,26 @@ int main()
         
         while (window.ProcessEvents() && !input->KeyDown(LLGL::Key::Escape))
         {
-            commands->SetRenderTarget(*context);
-            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+            commandQueue->Begin(*commands);
+            {
+                commands->BeginRenderPass(*context);
+                {
+                    commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetVideoMode().resolution });
+                    
+                    commands->Clear(LLGL::ClearFlags::Color);
+
+                    commands->SetGraphicsPipeline(*pipeline);
+                    commands->SetVertexBuffer(*vertexBuffer);
+                    
+                    commands->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
+                    commands->SetSampler(*sampler, 0, LLGL::StageFlags::FragmentStage);
+
+                    commands->Draw(4, 0);
+                }
+                commands->EndRenderPass();
+            }
+            commandQueue->End(*commands);
             
-            commands->Clear(LLGL::ClearFlags::Color);
-
-            commands->SetGraphicsPipeline(*pipeline);
-            commands->SetVertexBuffer(*vertexBuffer);
-            
-            commands->SetTexture(*texture, 0, LLGL::StageFlags::FragmentStage);
-            commands->SetSampler(*sampler, 0, LLGL::StageFlags::FragmentStage);
-
-            commands->Draw(4, 0);
-
             context->Present();
         }
     }

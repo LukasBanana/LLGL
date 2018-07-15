@@ -319,6 +319,17 @@ MTLSamplerMipFilter ToMTLSamplerMipFilter(const SamplerFilter filter)
     MapFailed("SamplerFilter", "MTLSamplerMipFilter");
 }
 
+MTLTriangleFillMode ToMTLTriangleFillMode (const PolygonMode polygonMode)
+{
+    switch (polygonMode)
+    {
+        case PolygonMode::Fill:         return MTLTriangleFillModeFill;
+        case PolygonMode::Wireframe:    return MTLTriangleFillModeLines;
+        case PolygonMode::Points:       break;
+    }
+    MapFailed("PolygonMode", "MTLTriangleFillMode");
+}
+
 Format ToFormat(const MTLPixelFormat pixelFormat)
 {
     switch (pixelFormat)

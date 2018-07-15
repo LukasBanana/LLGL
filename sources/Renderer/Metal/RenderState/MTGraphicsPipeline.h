@@ -26,7 +26,15 @@ class MTGraphicsPipeline : public GraphicsPipeline
 
         MTGraphicsPipeline(id<MTLDevice> device, const GraphicsPipelineDescriptor& desc);
 
-        void Bind(id<MTLRenderCommandEncoder> cmdEncoder);
+        inline id<MTLRenderPipelineState> GetRenderPipelineState() const
+        {
+            return renderPipelineState_;
+        }
+    
+        inline id<MTLDepthStencilState> GetDepthStencilState() const
+        {
+            return depthStencilState_;
+        }
     
         inline MTLPrimitiveType GetMTLPrimitiveType() const
         {
