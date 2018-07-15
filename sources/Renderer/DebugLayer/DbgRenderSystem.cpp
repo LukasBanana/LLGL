@@ -479,12 +479,6 @@ GraphicsPipeline* DbgRenderSystem::CreateGraphicsPipeline(const GraphicsPipeline
         {
             auto shaderProgramDbg = LLGL_CAST(const DbgShaderProgram*, desc.shaderProgram);
             instanceDesc.shaderProgram = &(shaderProgramDbg->instance);
-
-            if (desc.renderTarget)
-            {
-                auto renderTargetDbg = LLGL_CAST(DbgRenderTarget*, desc.renderTarget);
-                instanceDesc.renderTarget = &(renderTargetDbg->instance);
-            }
         }
         return TakeOwnership(graphicsPipelines_, MakeUnique<DbgGraphicsPipeline>(*instance_->CreateGraphicsPipeline(instanceDesc), desc));
     }

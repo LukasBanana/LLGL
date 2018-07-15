@@ -217,6 +217,7 @@ class GLStateManager
             GLfloat     lineWidthRange[2]   = { 1.0f, 1.0f };   // minimal range of both <aliased> and <smooth> line width range
         };
 
+        //TODO: separate this in to "GLRasterizerState"
         // Common GL states
         struct GLCommonState
         {

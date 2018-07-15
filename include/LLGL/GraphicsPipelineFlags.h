@@ -614,11 +614,6 @@ struct GraphicsPipelineDescriptor
     */
     const PipelineLayout*   pipelineLayout      = nullptr;
 
-    #if 1 // TODO: replace this by 'renderPass' member.
-    //! \deprecated Use 'renderPass' instead.
-    RenderTarget*           renderTarget        = nullptr;
-    #endif // /TODO
-
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.
     \see PrimitiveTopology
