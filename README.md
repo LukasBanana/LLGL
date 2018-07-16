@@ -26,15 +26,15 @@ Progress
 
 * **Version**: 0.02 Beta (see [ChangeLog](docu/ChangeLog))
 
-| Renderer | Progress | Remarks |
+| Renderer | Progress | Remarks |
 |----------|:--------:|---------|
 | OpenGL | ~90% | |
 | Direct3D 11 | ~85% | Depth-textures are incomplete |
 | Direct3D 12 | ~15% | Experimental state; Tutorials working: 01, 02, (03), 06, 07, (10) |
 | Vulkan | ~30% | Experimental state; Tutorials working: 01, 02, 03, 06, 07, 10 |
-| Metal | ~5% | Experimental state; Tutorials working: 01, (03) |
+| Metal | ~5% | Experimental state; Tutorials working: 01, (03), (07) |
 
-| Platform | Progress | Remarks |
+| Platform | Progress | Remarks |
 |----------|:--------:|---------|
 | Windows | 100% | Tested on *Windows 10* |
 | GNU/Linux | 70% | Tested on *Kubuntu 16* |

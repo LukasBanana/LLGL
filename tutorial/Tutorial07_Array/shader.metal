@@ -6,18 +6,13 @@ using namespace metal;
 
 typedef struct
 {
-    float2 position [[attribute(0)]];
-    float3 color    [[attribute(1)]];
+    float2 position       [[attribute(0)]];
+    float3 color          [[attribute(1)]];
+    float3 instanceColor  [[attribute(2)]];
+    float2 instanceOffset [[attribute(3)]];
+    float  instanceScale  [[attribute(4)]];
 }
 VertexIn;
-
-typedef struct
-{
-    float3 instanceColor;
-    float2 instanceOffset;
-    float  instanceScale;
-}
-InstanceIn;
 
 typedef struct
 {
@@ -26,15 +21,12 @@ typedef struct
 }
 VertexOut;
 
-vertex VertexOut VS(
-    VertexIn             inp      [[stage_in]],
-    constant InstanceIn* instance [[buffer(2)]],
-    uint                 instID   [[instance_id]])
+vertex VertexOut VS(VertexIn inp [[stage_in]])
 {
     VertexOut outp;
 
-    outp.position = float4(inp.position * instance[instID].instanceScale + instance[instID].instanceOffset, 0.0, 1.0);
-    outp.color    = float4(inp.color * instance[instID].instanceColor, 1.0);
+    outp.position = float4(inp.position * inp.instanceScale + inp.instanceOffset, 0.0, 1.0);
+    outp.color    = float4(inp.color * inp.instanceColor, 1.0);
 
     return outp;
 }
