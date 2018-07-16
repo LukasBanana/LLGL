@@ -69,13 +69,20 @@ class VKRenderPass final : public RenderPass
             return numClearValues_;
         }
 
+        // Returns the number of color attachments that where specified for this render pass.
+        inline std::uint8_t GetNumColorAttachments() const
+        {
+            return numColorAttachments_;
+        }
+
     private:
 
         VKPtr<VkRenderPass> renderPass_;
 
-        std::uint64_t       clearValuesMask_    = 0;
-        std::uint8_t        depthStencilIndex_  = ~0;
-        std::uint8_t        numClearValues_     = 0;
+        std::uint64_t       clearValuesMask_        = 0;
+        std::uint8_t        depthStencilIndex_      = ~0;
+        std::uint8_t        numClearValues_         = 0;
+        std::uint8_t        numColorAttachments_    = 0;
 
 };
 

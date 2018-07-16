@@ -27,6 +27,7 @@ struct VKGraphicsPipelineLimits
 
 struct GraphicsPipelineDescriptor;
 class VKShaderProgram;
+class VKRenderPass;
 class RenderPass;
 
 class VKGraphicsPipeline final : public GraphicsPipeline
@@ -65,8 +66,8 @@ class VKGraphicsPipeline final : public GraphicsPipeline
         void CreateVkGraphicsPipeline(
             const GraphicsPipelineDescriptor&   desc,
             const VKGraphicsPipelineLimits&     limits,
-            VkPipelineLayout                    pipelineLayout,
-            VkRenderPass                        renderPass
+            const VKRenderPass&                 renderPass,
+            VkPipelineLayout                    pipelineLayout
         );
 
         VkDevice            device_             = VK_NULL_HANDLE;

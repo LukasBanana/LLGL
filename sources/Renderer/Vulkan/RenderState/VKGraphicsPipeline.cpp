@@ -47,14 +47,12 @@ VKGraphicsPipeline::VKGraphicsPipeline(
 
     if (auto renderPass = (desc.renderPass != nullptr ? desc.renderPass : defaultRenderPass))
     {
+        /* Create Vulkan graphics pipeline object */
         auto renderPassVK = LLGL_CAST(const VKRenderPass*, renderPass);
-        nativeRenderPass = renderPassVK->GetVkRenderPass();
+        CreateVkGraphicsPipeline(desc, limits, *renderPassVK, nativePipelineLayout);
     }
     else
         throw std::invalid_argument("cannot create Vulkan graphics pipeline without render pass");
-
-    /* Create Vulkan graphics pipeline object */
-    CreateVkGraphicsPipeline(desc, limits, nativePipelineLayout, nativeRenderPass);
 }
 
 
@@ -260,7 +258,8 @@ static void CreateColorBlendAttachmentState(
 static void CreateColorBlendState(
     const BlendDescriptor&                              desc,
     VkPipelineColorBlendStateCreateInfo&                createInfo,
-    std::vector<VkPipelineColorBlendAttachmentState>&   attachmentStatesVK)
+    std::vector<VkPipelineColorBlendAttachmentState>&   attachmentStatesVK,
+    std::uint32_t                                       numAttachments)
 {
     createInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     createInfo.pNext                = nullptr;
@@ -277,23 +276,19 @@ static void CreateColorBlendState(
         createInfo.logicOp          = VK_LOGIC_OP_NO_OP;
     }
 
-    auto numAttachments = desc.targets.size();
-    if (numAttachments > 0)
+    /* Convert blend targets to Vulkan structure */
+    attachmentStatesVK.resize(numAttachments);
     {
-        /* Convert blend targets to Vulkan structure */
-        attachmentStatesVK.resize(numAttachments);
-        for (size_t i = 0; i < numAttachments; ++i)
+        std::size_t i = 0, numBlendTargets = desc.targets.size();
+
+        for (; i < numBlendTargets; ++i)
             CreateColorBlendAttachmentState(attachmentStatesVK[i], desc.targets[i], VKBoolean(desc.blendEnabled));
-    }
-    else
-    {
-        /* Use default values for a single attachment */
-        numAttachments = 1;
-        attachmentStatesVK.resize(1);
-        CreateColorBlendAttachmentState(attachmentStatesVK[0], {}, VKBoolean(desc.blendEnabled));
+
+        for (; i < numAttachments; ++i)
+            CreateColorBlendAttachmentState(attachmentStatesVK[i], {}, VKBoolean(desc.blendEnabled));
     }
 
-    createInfo.attachmentCount      = static_cast<std::uint32_t>(numAttachments);
+    createInfo.attachmentCount      = numAttachments;
     createInfo.pAttachments         = attachmentStatesVK.data();
     createInfo.blendConstants[0]    = desc.blendFactor.r;
     createInfo.blendConstants[1]    = desc.blendFactor.g;
@@ -321,8 +316,8 @@ static void CreateDynamicState(
 void VKGraphicsPipeline::CreateVkGraphicsPipeline(
     const GraphicsPipelineDescriptor&   desc,
     const VKGraphicsPipelineLimits&     limits,
-    VkPipelineLayout                    pipelineLayout,
-    VkRenderPass                        renderPass)
+    const VKRenderPass&                 renderPass,
+    VkPipelineLayout                    pipelineLayout)
 {
     /* Get shader program object */
     auto shaderProgramVK = LLGL_CAST(const VKShaderProgram*, desc.shaderProgram);
@@ -365,7 +360,7 @@ void VKGraphicsPipeline::CreateVkGraphicsPipeline(
     /* Initialize color-blend state */
     std::vector<VkPipelineColorBlendAttachmentState> attachmentStatesVK;
     VkPipelineColorBlendStateCreateInfo colorBlendState;
-    CreateColorBlendState(desc.blend, colorBlendState, attachmentStatesVK);
+    CreateColorBlendState(desc.blend, colorBlendState, attachmentStatesVK, renderPass.GetNumColorAttachments());
 
     /* Initialize dynamic state */
     std::vector<VkDynamicState> dynamicStatesVK;
@@ -390,7 +385,7 @@ void VKGraphicsPipeline::CreateVkGraphicsPipeline(
         createInfo.pColorBlendState             = (&colorBlendState);
         createInfo.pDynamicState                = (!dynamicStatesVK.empty() ? &dynamicState : nullptr);
         createInfo.layout                       = pipelineLayout;
-        createInfo.renderPass                   = renderPass;
+        createInfo.renderPass                   = renderPass.GetVkRenderPass();
         createInfo.subpass                      = 0;
         createInfo.basePipelineHandle           = VK_NULL_HANDLE;
         createInfo.basePipelineIndex            = 0;

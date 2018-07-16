@@ -122,6 +122,9 @@ void VKRenderPass::CreateVkRenderPassWithDescriptors(
     if (hasDepthStencil)
         depthStencilIndex_ = static_cast<std::uint8_t>(numColorAttachments);
 
+    /* Store number of color attachments (required for default blend states in VKGraphicsPipeline) */
+    numColorAttachments_ = static_cast<std::uint8_t>(numColorAttachments);
+
     /* Build bitmask for clear values: least significant bit (LSB) is used for the first attachment */
     clearValuesMask_ = 0;
 
