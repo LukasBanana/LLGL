@@ -26,28 +26,28 @@ class UniquePtrContainer
 
     public:
 
-        static ::LLGL::RenderSystem* AddRenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& instance)
+        static ::LLGL::RenderSystem* AddRenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& native)
         {
-            auto ref = instance.get();
-            g_renderSystemInstance.emplace_back(std::forward<std::unique_ptr<::LLGL::RenderSystem>&&>(instance));
+            auto ref = native.get();
+            g_renderSystemInstance.emplace_back(std::forward<std::unique_ptr<::LLGL::RenderSystem>&&>(native));
             return ref;
         }
 
-        static std::unique_ptr<::LLGL::RenderSystem> RemoveRenderSystem(::LLGL::RenderSystem* instance)
+        static std::unique_ptr<::LLGL::RenderSystem> RemoveRenderSystem(::LLGL::RenderSystem* native)
         {
             auto it = std::find_if(
                 g_renderSystemInstance.begin(),
                 g_renderSystemInstance.end(),
-                [instance](const std::unique_ptr<::LLGL::RenderSystem>& entry)
+                [native](const std::unique_ptr<::LLGL::RenderSystem>& entry)
                 {
-                    return (entry.get() == instance);
+                    return (entry.get() == native);
                 }
             );
             if (it != g_renderSystemInstance.end())
             {
-                auto instance = std::move(*it);
+                auto native = std::move(*it);
                 g_renderSystemInstance.erase(it);
-                return instance;
+                return native;
             }
             else
                 return nullptr;
@@ -82,8 +82,8 @@ RenderSystem^ RenderSystem::Load(String^ moduleName)
 {
     try
     {
-        auto instance = ::LLGL::RenderSystem::Load(ToStdString(moduleName));
-        return gcnew RenderSystem(std::move(instance));
+        auto native = ::LLGL::RenderSystem::Load(ToStdString(moduleName));
+        return gcnew RenderSystem(std::move(native));
     }
     catch (const std::exception& e)
     {
@@ -93,22 +93,22 @@ RenderSystem^ RenderSystem::Load(String^ moduleName)
 
 void RenderSystem::Unload(RenderSystem^ renderSystem)
 {
-    ::LLGL::RenderSystem::Unload(UniquePtrContainer::RemoveRenderSystem(renderSystem->instance_));
+    ::LLGL::RenderSystem::Unload(UniquePtrContainer::RemoveRenderSystem(renderSystem->native_));
 }
 
 int RenderSystem::ID::get()
 {
-    return instance_->GetRendererID();
+    return native_->GetRendererID();
 }
 
 String^ RenderSystem::Name::get()
 {
-    return ToManagedString(instance_->GetName());
+    return ToManagedString(native_->GetName());
 }
 
 RendererInfo^ RenderSystem::Info::get()
 {
-    const auto& info = instance_->GetRendererInfo();
+    const auto& info = native_->GetRendererInfo();
     auto managedInfo = gcnew RendererInfo();
     {
         managedInfo->RendererName           = ToManagedString(info.rendererName);
@@ -151,12 +151,7 @@ RenderContext^ RenderSystem::CreateRenderContext(RenderContextDescriptor^ desc)
         nativeDesc.videoMode.fullscreen         = desc->VideoMode->Fullscreen;
         nativeDesc.videoMode.swapChainSize      = desc->VideoMode->SwapChainSize;
     }
-    auto renderContext = instance_->CreateRenderContext(nativeDesc);
-
-    #if 1//TEST
-    auto& window = static_cast<::LLGL::Window&>(renderContext->GetSurface());
-    window.Show(true);
-    #endif
+    auto renderContext = native_->CreateRenderContext(nativeDesc);
 
     return gcnew RenderContext(renderContext);
 }
@@ -165,115 +160,130 @@ RenderContext^ RenderSystem::CreateRenderContext(RenderContextDescriptor^ desc)
 
 void RenderSystem::Release(RenderContext^ renderContext)
 {
-    instance_->Release(*reinterpret_cast<::LLGL::RenderContext*>(renderContext->Native));
+    native_->Release(*reinterpret_cast<::LLGL::RenderContext*>(renderContext->Native));
+}
+
+/* ----- Command queues ----- */
+
+CommandQueue^ RenderSystem::CommandQueue::get()
+{
+    if (commandQueue_ == nullptr)
+        commandQueue_ = gcnew LHermanns::LLGL::CommandQueue(native_->GetCommandQueue());
+    return commandQueue_;
+}
+
+/* ----- Command buffers ----- */
+
+CommandBuffer^ RenderSystem::CreateCommandBuffer()
+{
+    return gcnew CommandBuffer(native_->CreateCommandBuffer());
+}
+
+#if 0
+CommandBufferExt^ RenderSystem::CreateCommandBufferExt()
+{
+}
+#endif
+
+void RenderSystem::Release(CommandBuffer^ commandBuffer)
+{
+    native_->Release(*commandBuffer->Native::get());
 }
 
 #if 0
 
-/* ----- Command queues ----- */
-
-CommandQueue^ GetCommandQueue()
-
-/* ----- Command buffers ----- */
-
-CommandBuffer^ CreateCommandBuffer();
-
-CommandBufferExt^ CreateCommandBufferExt();
-
-void Release(CommandBuffer& commandBuffer);
-
 /* ----- Buffers ------ */
 
-Buffer^ CreateBuffer(const BufferDescriptor& desc, const void* initialData);
+Buffer^ CreateBuffer(BufferDescriptor^ desc);
+Buffer^ CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData);
 
-BufferArray^ CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+//BufferArray^ CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
 
-void Release(Buffer& buffer);
+void Release(Buffer^ buffer);
 
-void Release(BufferArray& bufferArray);
+//void Release(BufferArray^ bufferArray);
 
-void WriteBuffer(Buffer& buffer, const void* data, std::size_t dataSize, std::size_t offset);
+void WriteBuffer(Buffer^ buffer, array<System::Byte>^ data, System::UIntPtr dataSize, System::UIntPtr offset);
 
-void* MapBuffer(Buffer& buffer, const CPUAccess access);
+//void* MapBuffer(Buffer^ buffer, CPUAccess access);
 
-void UnmapBuffer(Buffer& buffer);
+//void UnmapBuffer(Buffer^ buffer);
 
 /* ----- Textures ----- */
 
-Texture^ CreateTexture(const TextureDescriptor& textureDesc, const SrcImageDescriptor* imageDesc);
+Texture^ CreateTexture(TextureDescriptor^ textureDesc);
+Texture^ CreateTexture(TextureDescriptor^ textureDesc, SrcImageDescriptor^ imageDesc);
 
-void Release(Texture& texture);
+void Release(Texture^ texture);
 
-void WriteTexture(Texture& texture, const SubTextureDescriptor& subTextureDesc, const SrcImageDescriptor& imageDesc);
+void WriteTexture(Texture^ texture, SubTextureDescriptor^ subTextureDesc, SrcImageDescriptor^ imageDesc);
+void ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor^ imageDesc);
 
-void ReadTexture(const Texture& texture, std::uint32_t mipLevel, const DstImageDescriptor& imageDesc);
-
-void GenerateMips(Texture& texture);
-
-void GenerateMips(Texture& texture, std::uint32_t baseMipLevel, std::uint32_t numMipLevels, std::uint32_t baseArrayLayer, std::uint32_t numArrayLayers);
+void GenerateMips(Texture^ texture);
+void GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers);
 
 /* ----- Samplers ---- */
 
-Sampler* CreateSampler(const SamplerDescriptor& desc);
+Sampler^ CreateSampler(SamplerDescriptor^ desc);
 
-void Release(Sampler& sampler);
+void Release(Sampler^ sampler);
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap^ CreateResourceHeap(const ResourceHeapDescriptor& desc);
+ResourceHeap^ CreateResourceHeap(ResourceHeapDescriptor^ desc);
 
-void Release(ResourceHeap& resourceHeap);
+void Release(ResourceHeap^ resourceHeap);
 
 /* ----- Render Targets ----- */
 
-RenderTarget^ CreateRenderTarget(const RenderTargetDescriptor& desc);
+RenderTarget^ CreateRenderTarget(RenderTargetDescriptor^ desc);
 
-void Release(RenderTarget& renderTarget);
+void Release(RenderTarget^ renderTarget);
 
 /* ----- Shader ----- */
 
-Shader^ CreateShader(const ShaderType type);
+Shader^ CreateShader(ShaderDescriptor^ desc);
 
-ShaderProgram^ CreateShaderProgram();
+ShaderProgram^ CreateShaderProgram(ShaderProgramDescriptor^ desc);
 
-void Release(Shader& shader);
+void Release(Shader^ shader);
 
-void Release(ShaderProgram& shaderProgram);
+void Release(ShaderProgram^ shaderProgram);
 
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout^ CreatePipelineLayout(const PipelineLayoutDescriptor& desc);
+PipelineLayout^ CreatePipelineLayout(PipelineLayoutDescriptor^ desc);
 
-void Release(PipelineLayout& pipelineLayout);
+void Release(PipelineLayout^ pipelineLayout);
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline^ CreateGraphicsPipeline(const GraphicsPipelineDescriptor& desc);
+GraphicsPipeline^ CreateGraphicsPipeline(GraphicsPipelineDescriptor^ desc);
 
-ComputePipeline^ CreateComputePipeline(const ComputePipelineDescriptor& desc);
+ComputePipeline^ CreateComputePipeline(ComputePipelineDescriptor^ desc);
 
-void Release(GraphicsPipeline& graphicsPipeline);
+void Release(GraphicsPipeline^ graphicsPipeline);
 
-void Release(ComputePipeline& computePipeline);
-
-/* ----- Queries ----- */
-
-Query* CreateQuery(const QueryDescriptor& desc);
-
-void Release(Query& query);
-
-/* ----- Fences ----- */
-
-Fence^ CreateFence();
-
-void Release(Fence& fence);
+void Release(ComputePipeline^ computePipeline);
 
 #endif
 
-RenderSystem::RenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& instance)
+/* ----- Fences ----- */
+
+Fence^ RenderSystem::CreateFence()
 {
-    instance_ = UniquePtrContainer::AddRenderSystem(
-        std::forward<std::unique_ptr<::LLGL::RenderSystem>&&>(instance)
+    return gcnew Fence(native_->CreateFence());
+}
+
+void RenderSystem::Release(Fence^ fence)
+{
+    native_->Release(*fence->Native::get());
+}
+
+RenderSystem::RenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& native)
+{
+    native_ = UniquePtrContainer::AddRenderSystem(
+        std::forward<std::unique_ptr<::LLGL::RenderSystem>&&>(native)
     );
 }
 

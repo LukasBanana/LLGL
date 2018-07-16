@@ -9,6 +9,7 @@
 
 #include <vcclr.h>
 #include <LLGL/RenderContext.h>
+#include "CsRenderTarget.h"
 #include "CsRenderContextFlags.h"
 #include "CsWindow.h"
 
@@ -28,7 +29,7 @@ namespace LLGL
 {
 
 
-public ref class RenderContext
+public ref class RenderContext : public RenderTarget
 {
 
     public:
@@ -59,15 +60,9 @@ public ref class RenderContext
         VsyncDescriptor^ GetVsync();
         #endif
 
-        property void* Native
-        {
-            void* get();
-        }
-
     private:
 
-        ::LLGL::RenderContext*  instance_   = nullptr;
-        Window^                 surface_    = nullptr;
+        Window^ surface_ = nullptr;
 
 };
 

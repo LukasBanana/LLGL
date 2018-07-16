@@ -17,28 +17,23 @@ namespace LLGL
 
 
 RenderContext::RenderContext(::LLGL::RenderContext* instance) :
-    instance_ { instance }
+    RenderTarget { instance }
 {
 }
 
 void RenderContext::Present()
 {
-    instance_->Present();
+    static_cast<::LLGL::RenderContext*>(Native::get())->Present();
 }
 
 Window^ RenderContext::Surface::get()
 {
     if (!surface_)
     {
-        auto& window = static_cast<::LLGL::Window&>(instance_->GetSurface());
+        auto& window = static_cast<::LLGL::Window&>(static_cast<::LLGL::RenderContext*>(Native::get())->GetSurface());
         surface_ = gcnew Window(&window);
     }
     return surface_;
-}
-
-void* RenderContext::Native::get()
-{
-    return instance_;
 }
 
 

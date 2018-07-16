@@ -13,6 +13,7 @@
 #include "CsRenderSystemFlags.h"
 #include "CsRenderContext.h"
 #include "CsRenderContextFlags.h"
+#include "CsCommandQueue.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -83,8 +84,6 @@ public ref class RenderSystem
 
         void Release(RenderContext^ renderContext);
 
-        #if 0
-
         /* ----- Command queues ----- */
 
         property CommandQueue^ CommandQueue
@@ -96,9 +95,13 @@ public ref class RenderSystem
 
         CommandBuffer^ CreateCommandBuffer();
 
+        #if 0
         CommandBufferExt^ CreateCommandBufferExt();
+        #endif
 
         void Release(CommandBuffer^ commandBuffer);
+
+        #if 0
 
         /* ----- Buffers ------ */
 
@@ -180,21 +183,23 @@ public ref class RenderSystem
 
         void Release(Query^ query);
 
+        #endif
+
         /* ----- Fences ----- */
 
         Fence^ CreateFence();
 
         void Release(Fence^ fence);
 
-        #endif
+    private:
+
+        RenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& native);
 
     private:
 
-        RenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& instance);
+        ::LLGL::RenderSystem* native_ = nullptr;
 
-    private:
-
-        ::LLGL::RenderSystem* instance_ = nullptr;
+        LHermanns::LLGL::CommandQueue^ commandQueue_;
 
 };
 

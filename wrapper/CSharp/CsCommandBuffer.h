@@ -1,0 +1,156 @@
+/*
+ * CsCommandBuffer.h
+ * 
+ * This file is part of the "LLGL" project (Copyright (c) 2015-2018 by Lukas Hermanns)
+ * See "LICENSE.txt" for license information.
+ */
+
+#pragma once
+
+#include <vcclr.h>
+#include <LLGL/CommandBuffer.h>
+#include "CsTypes.h"
+#include "CsRenderSystemChilds.h"
+#include "CsRenderTarget.h"
+
+#using <System.dll>
+#using <System.Core.dll>
+#using <System.Runtime.InteropServices.dll>
+
+
+using namespace System;
+using namespace System::Runtime::InteropServices;
+
+
+namespace LHermanns
+{
+
+namespace LLGL
+{
+
+
+public ref class CommandBuffer
+{
+
+    public:
+
+        /* ----- Common ----- */
+
+        CommandBuffer(::LLGL::CommandBuffer* native);
+
+        property ::LLGL::CommandBuffer* Native
+        {
+            ::LLGL::CommandBuffer* get();
+        }
+
+        /* ----- Configuration ----- */
+
+        #if 0
+        void SetGraphicsAPIDependentState(const void* stateDesc, std::size_t stateDescSize);
+        #endif
+
+        /* ----- Viewport and Scissor ----- */
+
+        void SetViewport(Viewport^ viewport);
+        void SetViewports(array<Viewport^>^ viewports);
+
+        void SetScissor(Scissor^ scissor);
+        void SetScissors(array<Scissor^>^ scissors);
+
+        /* ----- Clear ----- */
+
+        void SetClearColor(float r, float g, float b, float a);
+        void SetClearDepth(float depth);
+        void SetClearStencil(unsigned int stencil);
+
+        void Clear(int flags);
+
+        #if 0
+        void ClearAttachments(array<AttachmentClear^>^ attachments);
+        #endif
+
+        /* ----- Input Assembly ------ */
+
+        void SetVertexBuffer(Buffer^ buffer);
+
+        void SetVertexBufferArray(BufferArray^ bufferArray);
+
+        void SetIndexBuffer(Buffer^ buffer);
+
+        #if 0
+        /* ----- Stream Output Buffers ------ */
+
+        void SetStreamOutputBuffer(Buffer^ buffer);
+
+        void SetStreamOutputBufferArray(BufferArray^ bufferArray);
+
+        void BeginStreamOutput(PrimitiveType primitiveType);
+        void EndStreamOutput();
+        #endif
+
+        /* ----- Resource Heaps ----- */
+
+        void SetGraphicsResourceHeap(ResourceHeap^ resourceHeap);
+        void SetGraphicsResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet);
+
+        void SetComputeResourceHeap(ResourceHeap^ resourceHeap);
+        void SetComputeResourceHeap(ResourceHeap^ resourceHeap, unsigned int firstSet);
+
+        /* ----- Render Passes ----- */
+
+        void BeginRenderPass(RenderTarget^ renderTarget);
+        void BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass);
+        #if 0
+        void BeginRenderPass(RenderTarget^ renderTarget, RenderPass^ renderPass, array<ClearValue^>^ clearValues);
+        #endif
+
+        void EndRenderPass();
+
+        /* ----- Pipeline States ----- */
+
+        void SetGraphicsPipeline(GraphicsPipeline^ graphicsPipeline);
+        void SetComputePipeline(ComputePipeline^ computePipeline);
+
+        /* ----- Queries ----- */
+
+        #if 0
+        void BeginQuery(Query^ query);
+        void EndQuery(Query^ query);
+
+        bool QueryResult(Query^ query, UInt64& result);
+
+        bool QueryPipelineStatisticsResult(Query^ query, QueryPipelineStatistics^ result);
+
+        void BeginRenderCondition(Query^ query, RenderConditionMode mode);
+        void EndRenderCondition();
+        #endif
+
+        /* ----- Drawing ----- */
+
+        void Draw(unsigned int numVertices, unsigned int firstVertex);
+        void DrawIndexed(unsigned int numIndices, unsigned int firstIndex);
+        void DrawIndexed(unsigned int numIndices, unsigned int firstIndex, int vertexOffset);
+        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances);
+        void DrawInstanced(unsigned int numVertices, unsigned int firstVertex, unsigned int numInstances, unsigned int firstInstance);
+        void DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances, unsigned int firstIndex);
+        void DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset);
+        void DrawIndexedInstanced(unsigned int numIndices, unsigned int numInstances, unsigned int firstIndex, int vertexOffset, unsigned int firstInstance);
+
+        /* ----- Compute ----- */
+
+        void Dispatch(unsigned int groupSizeX, unsigned int groupSizeY, unsigned int groupSizeZ);
+
+    private:
+
+        ::LLGL::CommandBuffer* native_ = nullptr;
+
+};
+
+
+} // /namespace LLGL
+
+} // /namespace LHermanns
+
+
+
+// ================================================================================

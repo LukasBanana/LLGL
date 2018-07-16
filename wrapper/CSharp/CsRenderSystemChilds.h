@@ -11,6 +11,12 @@
 #include <LLGL/Buffer.h>
 #include <LLGL/Texture.h>
 #include <LLGL/Sampler.h>
+#include <LLGL/Fence.h>
+#include <LLGL/Query.h>
+#include <LLGL/RenderPass.h>
+#include <LLGL/PipelineLayout.h>
+#include <LLGL/GraphicsPipeline.h>
+#include <LLGL/ComputePipeline.h>
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -40,26 +46,51 @@ public enum class ResourceType
     Sampler,
 };
 
+public enum class TextureType
+{
+    Texture1D,
+    Texture2D,
+    Texture3D,
+    TextureCube,
+    Texture1DArray,
+    Texture2DArray,
+    TextureCubeArray,
+    Texture2DMS,
+    Texture2DMSArray,
+};
+
+public enum class QueryType
+{
+    SamplesPassed,
+    AnySamplesPassed,
+    AnySamplesPassedConservative,
+    TimeElapsed,
+    StreamOutPrimitivesWritten,
+    StreamOutOverflow,
+    PipelineStatistics,
+};
+
 public ref class Resource
 {
 
     public:
 
-        Resource(::LLGL::Resource* instance);
+        Resource(::LLGL::Resource* native);
 
+        property ::LLGL::Resource* Native
+        {
+            ::LLGL::Resource* get();
+        }
+
+        /// <summary>Returns the resource type enumeration entry for this resource object.</summary>
         property ResourceType ResourceType
         {
             LHermanns::LLGL::ResourceType get();
         }
 
-        property void* Native
-        {
-            void* get();
-        }
-
     private:
 
-        ::LLGL::Resource* instance_ = nullptr;
+        ::LLGL::Resource* native_ = nullptr;
 
 };
 
@@ -68,10 +99,7 @@ public ref class Buffer : public Resource
 
     public:
 
-        Buffer(::LLGL::Buffer* instance) :
-            Resource { instance }
-        {
-        }
+        Buffer(::LLGL::Buffer* native);
 
 };
 
@@ -80,10 +108,12 @@ public ref class Texture : public Resource
 
     public:
 
-        Texture(::LLGL::Texture* instance) :
-            Resource { instance }
+        Texture(::LLGL::Texture* native);
+
+        property TextureType Type
         {
-        }
+            TextureType get();
+        };
 
 };
 
@@ -92,13 +122,158 @@ public ref class Sampler : public Resource
 
     public:
 
-        Sampler(::LLGL::Sampler* instance) :
-            Resource { instance }
-        {
-        }
+        Sampler(::LLGL::Sampler* native);
 
 };
 
+public ref class Query
+{
+
+    public:
+
+        Query(::LLGL::Query* native);
+
+        property ::LLGL::Query* Native
+        {
+            ::LLGL::Query* get();
+        };
+
+        property QueryType Type
+        {
+            QueryType get();
+        };
+
+    private:
+
+        ::LLGL::Query* native_ = nullptr;
+
+};
+
+public ref class Fence
+{
+
+    public:
+
+        Fence(::LLGL::Fence* native);
+
+        property ::LLGL::Fence* Native
+        {
+            ::LLGL::Fence* get();
+        };
+
+    private:
+
+        ::LLGL::Fence* native_ = nullptr;
+
+};
+
+public ref class RenderPass
+{
+
+    public:
+
+        RenderPass(::LLGL::RenderPass* native);
+
+        property ::LLGL::RenderPass* Native
+        {
+            ::LLGL::RenderPass* get();
+        };
+
+    private:
+
+        ::LLGL::RenderPass* native_ = nullptr;
+
+};
+
+public ref class PipelineLayout
+{
+
+    public:
+
+        PipelineLayout(::LLGL::PipelineLayout* native);
+
+        property ::LLGL::PipelineLayout* Native
+        {
+            ::LLGL::PipelineLayout* get();
+        };
+
+    private:
+
+        ::LLGL::PipelineLayout* native_ = nullptr;
+
+};
+
+public ref class GraphicsPipeline
+{
+
+    public:
+
+        GraphicsPipeline(::LLGL::GraphicsPipeline* native);
+
+        property ::LLGL::GraphicsPipeline* Native
+        {
+            ::LLGL::GraphicsPipeline* get();
+        };
+
+    private:
+
+        ::LLGL::GraphicsPipeline* native_ = nullptr;
+
+};
+
+public ref class ComputePipeline
+{
+
+    public:
+
+        ComputePipeline(::LLGL::ComputePipeline* native);
+
+        property ::LLGL::ComputePipeline* Native
+        {
+            ::LLGL::ComputePipeline* get();
+        };
+
+    private:
+
+        ::LLGL::ComputePipeline* native_ = nullptr;
+
+};
+
+public ref class ResourceHeap
+{
+
+    public:
+
+        ResourceHeap(::LLGL::ResourceHeap* native);
+
+        property ::LLGL::ResourceHeap* Native
+        {
+            ::LLGL::ResourceHeap* get();
+        };
+
+    private:
+
+        ::LLGL::ResourceHeap* native_ = nullptr;
+
+};
+
+public ref class BufferArray
+{
+
+    public:
+
+        BufferArray(::LLGL::BufferArray* native);
+
+        property ::LLGL::BufferArray* Native
+        {
+            ::LLGL::BufferArray* get();
+        };
+
+    private:
+
+        ::LLGL::BufferArray* native_ = nullptr;
+
+};
 
 
 } // /namespace LLGL
