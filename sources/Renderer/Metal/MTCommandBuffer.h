@@ -153,6 +153,13 @@ class MTCommandBuffer : public CommandBufferExt
             id<MTLDepthStencilState>    depthStencilState                           = nil;
         };
     
+        struct MTClearValue
+        {
+            MTLClearColor   color   = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
+            double          depth   = 1.0;
+            std::uint32_t   stencil = 0;
+        };
+    
         // Submits all global lstates to the render encoder (i.e. vertex buffers, graphics pipeline, viewports etc.)
         void SubmitRenderEncoderState();
         void ResetRenderEncoderState();
@@ -169,6 +176,9 @@ class MTCommandBuffer : public CommandBufferExt
         NSUInteger                      numPatchControlPoints_  = 0;
     
         MTRenderEncoderState            renderEncoderState_;
+    
+        MTClearValue                    clearValue_;
+        MTLRenderPassDescriptor*        renderPassDesc_         = nullptr;
 
 };
 

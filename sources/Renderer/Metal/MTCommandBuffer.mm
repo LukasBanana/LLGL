@@ -131,22 +131,56 @@ void MTCommandBuffer::SetScissors(std::uint32_t numScissors, const Scissor* scis
 
 void MTCommandBuffer::SetClearColor(const ColorRGBAf& color)
 {
-    //todo
+    clearValue_.color = MTLClearColorMake(
+        static_cast<double>(color.r),
+        static_cast<double>(color.g),
+        static_cast<double>(color.b),
+        static_cast<double>(color.a)
+    );
 }
 
 void MTCommandBuffer::SetClearDepth(float depth)
 {
-    //todo
+    clearValue_.depth = static_cast<double>(depth);
 }
 
 void MTCommandBuffer::SetClearStencil(std::uint32_t stencil)
 {
-    //todo
+    clearValue_.stencil = stencil;
 }
 
 void MTCommandBuffer::Clear(long flags)
 {
-    //todo
+    if (renderEncoder_ != nil && renderPassDesc_ != nullptr && flags != 0)
+    {
+        /* End previous render pass */
+        [renderEncoder_ endEncoding];
+        
+        /* Make new render pass descriptor with current clear values */
+        auto renderPassDesc = (MTLRenderPassDescriptor*)[renderPassDesc_ copy];
+        
+        if ((flags & ClearFlags::Color) != 0)
+        {
+            renderPassDesc.colorAttachments[0].loadAction   = MTLLoadActionClear;
+            renderPassDesc.colorAttachments[0].clearColor   = clearValue_.color;
+        }
+        
+        if ((flags & ClearFlags::Depth) != 0)
+        {
+            renderPassDesc.depthAttachment.loadAction       = MTLLoadActionClear;
+            renderPassDesc.depthAttachment.clearDepth       = clearValue_.depth;
+        }
+        
+        if ((flags & ClearFlags::Stencil) != 0)
+        {
+            renderPassDesc.stencilAttachment.loadAction     = MTLLoadActionClear;
+            renderPassDesc.stencilAttachment.clearStencil   = clearValue_.stencil;
+        }
+        
+        /* Begin with new render pass to clear buffers */
+        renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+        SubmitRenderEncoderState();
+    }
 }
 
 void MTCommandBuffer::ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments)
@@ -302,7 +336,7 @@ void MTCommandBuffer::BeginRenderPass(
     std::uint32_t       numClearValues,
     const ClearValue*   clearValues)
 {
-    MTLRenderPassDescriptor* renderPassDesc = nullptr;
+    renderPassDesc_ = nullptr;
     
     if (renderTarget.IsRenderContext())
     {
@@ -312,7 +346,7 @@ void MTCommandBuffer::BeginRenderPass(
         
         /* Get next render pass descriptor from MetalKit view */
         MTKView* view = renderContextMT.GetMTKView();
-        renderPassDesc = view.currentRenderPassDescriptor;
+        renderPassDesc_ = view.currentRenderPassDescriptor;
     }
     else
     {
@@ -323,9 +357,9 @@ void MTCommandBuffer::BeginRenderPass(
     //TODO...
     
     /* Get next render command encoder */
-    if (renderPassDesc != nullptr)
+    if (renderPassDesc_ != nullptr)
     {
-        renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc];
+        renderEncoder_ = [cmdBuffer_ renderCommandEncoderWithDescriptor:renderPassDesc_];
         SubmitRenderEncoderState();
     }
 }
@@ -336,6 +370,7 @@ void MTCommandBuffer::EndRenderPass()
     {
         [renderEncoder_ endEncoding];
         renderEncoder_ = nil;
+        renderPassDesc_ = nullptr;
     }
 }
 
