@@ -444,8 +444,8 @@ void MTCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
     {
         [renderEncoder_
             drawPatches:            numPatchControlPoints_
-            patchStart:             ((NSUInteger)firstVertex) / numPatchControlPoints_
-            patchCount:             ((NSUInteger)numVertices) / numPatchControlPoints_
+            patchStart:             static_cast<NSUInteger>(firstVertex) / numPatchControlPoints_
+            patchCount:             static_cast<NSUInteger>(numVertices) / numPatchControlPoints_
             patchIndexBuffer:       nil
             patchIndexBufferOffset: 0
             instanceCount:          1
@@ -456,8 +456,8 @@ void MTCommandBuffer::Draw(std::uint32_t numVertices, std::uint32_t firstVertex)
     {
         [renderEncoder_
             drawPrimitives: primitiveType_
-            vertexStart:    (NSUInteger)firstVertex
-            vertexCount:    (NSUInteger)numVertices
+            vertexStart:    static_cast<NSUInteger>(firstVertex)
+            vertexCount:    static_cast<NSUInteger>(numVertices)
         ];
     }
 }
@@ -468,12 +468,12 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
     {
         [renderEncoder_
             drawIndexedPatches:             numPatchControlPoints_
-            patchStart:                     ((NSUInteger)firstIndex) / numPatchControlPoints_
-            patchCount:                     ((NSUInteger)numIndices) / numPatchControlPoints_
+            patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
+            patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * ((NSUInteger)firstIndex)
+            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:                  1
             baseInstance:                   0
         ];
@@ -482,10 +482,10 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
     {
         [renderEncoder_
             drawIndexedPrimitives:  primitiveType_
-            indexCount:             (NSUInteger)numIndices
+            indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * ((NSUInteger)firstIndex)
+            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
         ];
     }
 }
@@ -496,12 +496,12 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
     {
         [renderEncoder_
             drawIndexedPatches:             numPatchControlPoints_
-            patchStart:                     ((NSUInteger)firstIndex) / numPatchControlPoints_
-            patchCount:                     ((NSUInteger)numIndices) / numPatchControlPoints_
+            patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
+            patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * ((NSUInteger)firstIndex)
+            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:                  1
             baseInstance:                   0
         ];
@@ -510,12 +510,12 @@ void MTCommandBuffer::DrawIndexed(std::uint32_t numIndices, std::uint32_t firstI
     {
         [renderEncoder_
             drawIndexedPrimitives:  primitiveType_
-            indexCount:             (NSUInteger)numIndices
+            indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * ((NSUInteger)firstIndex)
+            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
             instanceCount:          1
-            baseVertex:             (NSInteger)vertexOffset
+            baseVertex:             static_cast<NSUInteger>(vertexOffset)
             baseInstance:           0
         ];
     }
@@ -527,11 +527,11 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     {
         [renderEncoder_
             drawPatches:            numPatchControlPoints_
-            patchStart:             ((NSUInteger)firstVertex) / numPatchControlPoints_
-            patchCount:             ((NSUInteger)numVertices) / numPatchControlPoints_
+            patchStart:             static_cast<NSUInteger>(firstVertex) / numPatchControlPoints_
+            patchCount:             static_cast<NSUInteger>(numVertices) / numPatchControlPoints_
             patchIndexBuffer:       nil
             patchIndexBufferOffset: 0
-            instanceCount:          (NSUInteger)numInstances
+            instanceCount:          static_cast<NSUInteger>(numInstances)
             baseInstance:           0
         ];
     }
@@ -539,9 +539,9 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     {
         [renderEncoder_
             drawPrimitives: primitiveType_
-            vertexStart:    (NSUInteger)firstVertex
-            vertexCount:    (NSUInteger)numVertices
-            instanceCount:  (NSUInteger)numInstances
+            vertexStart:    static_cast<NSUInteger>(firstVertex)
+            vertexCount:    static_cast<NSUInteger>(numVertices)
+            instanceCount:  static_cast<NSUInteger>(numInstances)
             baseInstance:   0
         ];
     }
@@ -553,22 +553,22 @@ void MTCommandBuffer::DrawInstanced(std::uint32_t numVertices, std::uint32_t fir
     {
         [renderEncoder_
             drawPatches:            numPatchControlPoints_
-            patchStart:             ((NSUInteger)firstVertex) / numPatchControlPoints_
-            patchCount:             ((NSUInteger)numVertices) / numPatchControlPoints_
+            patchStart:             static_cast<NSUInteger>(firstVertex) / numPatchControlPoints_
+            patchCount:             static_cast<NSUInteger>(numVertices) / numPatchControlPoints_
             patchIndexBuffer:       nil
             patchIndexBufferOffset: 0
-            instanceCount:          (NSUInteger)numInstances
-            baseInstance:           (NSUInteger)firstInstance
+            instanceCount:          static_cast<NSUInteger>(numInstances)
+            baseInstance:           static_cast<NSUInteger>(firstInstance)
         ];
     }
     else
     {
         [renderEncoder_
             drawPrimitives: primitiveType_
-            vertexStart:    (NSUInteger)firstVertex
-            vertexCount:    (NSUInteger)numVertices
-            instanceCount:  (NSUInteger)numInstances
-            baseInstance:   (NSUInteger)firstInstance
+            vertexStart:    static_cast<NSUInteger>(firstVertex)
+            vertexCount:    static_cast<NSUInteger>(numVertices)
+            instanceCount:  static_cast<NSUInteger>(numInstances)
+            baseInstance:   static_cast<NSUInteger>(firstInstance)
         ];
     }
 }
@@ -579,13 +579,13 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     {
         [renderEncoder_
             drawIndexedPatches:             numPatchControlPoints_
-            patchStart:                     ((NSUInteger)firstIndex) / numPatchControlPoints_
-            patchCount:                     ((NSUInteger)numIndices) / numPatchControlPoints_
+            patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
+            patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * ((NSUInteger)firstIndex)
-            instanceCount:                  (NSUInteger)numInstances
+            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            instanceCount:                  static_cast<NSUInteger>(numInstances)
             baseInstance:                   0
         ];
     }
@@ -593,11 +593,11 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     {
         [renderEncoder_
             drawIndexedPrimitives:  primitiveType_
-            indexCount:             (NSUInteger)numIndices
+            indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * ((NSUInteger)firstIndex)
-            instanceCount:          (NSUInteger)numInstances
+            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            instanceCount:          static_cast<NSUInteger>(numInstances)
             baseVertex:             0
             baseInstance:           0
         ];
@@ -610,13 +610,13 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     {
         [renderEncoder_
             drawIndexedPatches:             numPatchControlPoints_
-            patchStart:                     ((NSUInteger)firstIndex) / numPatchControlPoints_
-            patchCount:                     ((NSUInteger)numIndices) / numPatchControlPoints_
+            patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
+            patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * ((NSUInteger)firstIndex)
-            instanceCount:                  (NSUInteger)numInstances
+            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            instanceCount:                  static_cast<NSUInteger>(numInstances)
             baseInstance:                   0
         ];
     }
@@ -624,12 +624,12 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     {
         [renderEncoder_
             drawIndexedPrimitives:  primitiveType_
-            indexCount:             (NSUInteger)numIndices
+            indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * ((NSUInteger)firstIndex)
-            instanceCount:          (NSUInteger)numInstances
-            baseVertex:             (NSInteger)vertexOffset
+            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            instanceCount:          static_cast<NSUInteger>(numInstances)
+            baseVertex:             static_cast<NSUInteger>(vertexOffset)
             baseInstance:           0
         ];
     }
@@ -641,27 +641,27 @@ void MTCommandBuffer::DrawIndexedInstanced(std::uint32_t numIndices, std::uint32
     {
         [renderEncoder_
             drawIndexedPatches:             numPatchControlPoints_
-            patchStart:                     ((NSUInteger)firstIndex) / numPatchControlPoints_
-            patchCount:                     ((NSUInteger)numIndices) / numPatchControlPoints_
+            patchStart:                     static_cast<NSUInteger>(firstIndex) / numPatchControlPoints_
+            patchCount:                     static_cast<NSUInteger>(numIndices) / numPatchControlPoints_
             patchIndexBuffer:               nil
             patchIndexBufferOffset:         0
             controlPointIndexBuffer:        indexBuffer_
-            controlPointIndexBufferOffset:  indexTypeSize_ * ((NSUInteger)firstIndex)
-            instanceCount:                  (NSUInteger)numInstances
-            baseInstance:                   (NSUInteger)firstInstance
+            controlPointIndexBufferOffset:  indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            instanceCount:                  static_cast<NSUInteger>(numInstances)
+            baseInstance:                   static_cast<NSUInteger>(firstInstance)
         ];
     }
     else
     {
         [renderEncoder_
             drawIndexedPrimitives:  primitiveType_
-            indexCount:             (NSUInteger)numIndices
+            indexCount:             static_cast<NSUInteger>(numIndices)
             indexType:              indexType_
             indexBuffer:            indexBuffer_
-            indexBufferOffset:      indexTypeSize_ * ((NSUInteger)firstIndex)
-            instanceCount:          (NSUInteger)numInstances
-            baseVertex:             (NSInteger)vertexOffset
-            baseInstance:           (NSUInteger)firstInstance
+            indexBufferOffset:      indexTypeSize_ * static_cast<NSUInteger>(firstIndex)
+            instanceCount:          static_cast<NSUInteger>(numInstances)
+            baseVertex:             static_cast<NSUInteger>(vertexOffset)
+            baseInstance:           static_cast<NSUInteger>(firstInstance)
         ];
     }
 }
