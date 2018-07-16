@@ -109,11 +109,11 @@ OutputVPP VPP(uint id : SV_VertexID)
 	return outp;
 }
 
-Texture2D colorMap : register(t0);
-Texture2D glossMap : register(t1);
+Texture2D colorMap : register(t2);
+Texture2D glossMap : register(t3);
 
-SamplerState colorMapSampler : register(s0);
-SamplerState glossMapSampler : register(s1);
+SamplerState colorMapSampler : register(s4);
+SamplerState glossMapSampler : register(s5);
 
 // Static values for the 1-dimensional gaussian kernel (sigma = 2.2, size = 11)
 // see http://dev.theomader.com/gaussian-kernel-calculator/
