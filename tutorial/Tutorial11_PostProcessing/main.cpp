@@ -287,45 +287,25 @@ public:
         renderTargetBlurY = renderer->CreateRenderTarget(renderTargetBlurYDesc);
     }
 
+    // The utility function <LLGL::PipelineLayoutDesc> is used here, to simplify the description of the pipeline layouts
     void CreatePipelineLayouts()
     {
         bool combinedSampler = IsOpenGL();
 
         // Create pipeline layout for scene rendering
-        LLGL::PipelineLayoutDescriptor layoutDescScene;
-        {
-            layoutDescScene.bindings =
-            {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage, 0 },
-            };
-        }
-        layoutScene = renderer->CreatePipelineLayout(layoutDescScene);
+        layoutScene = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert:frag"));
 
         // Create pipeline layout for blur post-processor
-        LLGL::PipelineLayoutDescriptor layoutDescBlur;
-        {
-            layoutDescBlur.bindings =
-            {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage, 1                           },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage, 3                           },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage, (combinedSampler ? 3u : 5u) },
-            };
-        }
-        layoutBlur = renderer->CreatePipelineLayout(layoutDescBlur);
+        if (combinedSampler)
+            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3):frag, sampler(3):frag"));
+        else
+            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3):frag, sampler(5):frag"));
 
         // Create pipeline layout for final post-processor
-        LLGL::PipelineLayoutDescriptor layoutDescFinal;
-        {
-            layoutDescFinal.bindings =
-            {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage, 0                           },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage, 2                           },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage, 3                           },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage, (combinedSampler ? 2u : 4u) },
-                LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage, (combinedSampler ? 3u : 5u) },
-            };
-        }
-        layoutFinal = renderer->CreatePipelineLayout(layoutDescFinal);
+        if (combinedSampler)
+            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):frag, texture(2,3):frag, sampler(2,3):frag"));
+        else
+            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):frag, texture(2,3):frag, sampler(4,5):frag"));
     }
 
     void CreatePipelines()
