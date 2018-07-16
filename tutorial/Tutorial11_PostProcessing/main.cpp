@@ -17,9 +17,18 @@ class Tutorial11 : public Tutorial
     LLGL::ShaderProgram*    shaderProgramBlur   = nullptr;
     LLGL::ShaderProgram*    shaderProgramFinal  = nullptr;
 
+    LLGL::PipelineLayout*   layoutScene         = nullptr;
+    LLGL::PipelineLayout*   layoutBlur          = nullptr;
+    LLGL::PipelineLayout*   layoutFinal         = nullptr;
+
     LLGL::GraphicsPipeline* pipelineScene       = nullptr;
     LLGL::GraphicsPipeline* pipelineBlur        = nullptr;
     LLGL::GraphicsPipeline* pipelineFinal       = nullptr;
+
+    LLGL::ResourceHeap*     resourceHeapScene   = nullptr;
+    LLGL::ResourceHeap*     resourceHeapBlurX   = nullptr;
+    LLGL::ResourceHeap*     resourceHeapBlurY   = nullptr;
+    LLGL::ResourceHeap*     resourceHeapFinal   = nullptr;
 
     LLGL::VertexFormat      vertexFormatScene;
 
@@ -69,10 +78,12 @@ public:
         // Create all graphics objects
         CreateBuffers();
         LoadShaders();
-        CreatePipelines();
         CreateSamplers();
         CreateTextures();
         CreateRenderTargets();
+        CreatePipelineLayouts();
+        CreatePipelines();
+        CreateResourceHeaps();
 
         // Show some information
         std::cout << "press LEFT MOUSE BUTTON and move the mouse to rotate the outer box" << std::endl;
@@ -107,13 +118,12 @@ public:
 
     void LoadShaders()
     {
-        const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
-        if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+        if (Supported(LLGL::ShadingLanguage::HLSL))
         {
             // Load scene shader program
             shaderProgramScene = LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VScene", "vs_5_0" },
+                    { LLGL::ShaderType::Vertex,   "shader.hlsl", "VScene", "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PScene", "ps_5_0" }
                 },
                 { vertexFormatScene }
@@ -122,7 +132,7 @@ public:
             // Load blur shader program
             shaderProgramBlur = LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VPP", "vs_5_0" },
+                    { LLGL::ShaderType::Vertex,   "shader.hlsl", "VPP",   "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PBlur", "ps_5_0" }
                 }
             );
@@ -130,17 +140,17 @@ public:
             // Load final shader program
             shaderProgramFinal = LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex, "shader.hlsl", "VPP", "vs_5_0" },
+                    { LLGL::ShaderType::Vertex,   "shader.hlsl", "VPP",    "vs_5_0" },
                     { LLGL::ShaderType::Fragment, "shader.hlsl", "PFinal", "ps_5_0" }
                 }
             );
         }
-        else
+        else if (Supported(LLGL::ShadingLanguage::GLSL))
         {
             // Load scene shader program
             shaderProgramScene = LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex, "scene.vertex.glsl" },
+                    { LLGL::ShaderType::Vertex,   "scene.vertex.glsl"   },
                     { LLGL::ShaderType::Fragment, "scene.fragment.glsl" }
                 },
                 { vertexFormatScene }
@@ -149,16 +159,43 @@ public:
             // Load blur shader program
             shaderProgramBlur = LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex, "postprocess.vertex.glsl" },
-                    { LLGL::ShaderType::Fragment, "blur.fragment.glsl" }
+                    { LLGL::ShaderType::Vertex,   "postprocess.vertex.glsl" },
+                    { LLGL::ShaderType::Fragment, "blur.fragment.glsl"      }
                 }
             );
 
             // Load final shader program
             shaderProgramFinal = LoadShaderProgram(
                 {
-                    { LLGL::ShaderType::Vertex, "postprocess.vertex.glsl" },
-                    { LLGL::ShaderType::Fragment, "final.fragment.glsl" }
+                    { LLGL::ShaderType::Vertex,   "postprocess.vertex.glsl" },
+                    { LLGL::ShaderType::Fragment, "final.fragment.glsl"     }
+                }
+            );
+        }
+        else if (Supported(LLGL::ShadingLanguage::SPIRV))
+        {
+            // Load scene shader program
+            shaderProgramScene = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "scene.vertex.spv"   },
+                    { LLGL::ShaderType::Fragment, "scene.fragment.spv" }
+                },
+                { vertexFormatScene }
+            );
+
+            // Load blur shader program
+            shaderProgramBlur = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "postprocess.vertex.spv" },
+                    { LLGL::ShaderType::Fragment, "blur.fragment.spv"      }
+                }
+            );
+
+            // Load final shader program
+            shaderProgramFinal = LoadShaderProgram(
+                {
+                    { LLGL::ShaderType::Vertex,   "postprocess.vertex.spv" },
+                    { LLGL::ShaderType::Fragment, "final.fragment.spv"     }
                 }
             );
         }
@@ -168,46 +205,17 @@ public:
 
         if (auto uniforms = shaderProgramBlur->LockShaderUniform())
         {
-            uniforms->SetUniform1i("glossMap", 1);
+            uniforms->SetUniform1i("colorMap", 2);
+            uniforms->SetUniform1i("glossMap", 3);
             shaderProgramBlur->UnlockShaderUniform();
         }
 
         if (auto uniforms = shaderProgramFinal->LockShaderUniform())
         {
-            uniforms->SetUniform1i("colorMap", 0);
-            uniforms->SetUniform1i("glossMap", 1);
+            uniforms->SetUniform1i("colorMap", 2);
+            uniforms->SetUniform1i("glossMap", 3);
             shaderProgramFinal->UnlockShaderUniform();
         }
-    }
-
-    void CreatePipelines()
-    {
-        // Create graphics pipeline for scene rendering
-        LLGL::GraphicsPipelineDescriptor pipelineDescScene;
-        {
-            pipelineDescScene.shaderProgram             = shaderProgramScene;
-
-            pipelineDescScene.depth.testEnabled         = true;
-            pipelineDescScene.depth.writeEnabled        = true;
-
-            pipelineDescScene.rasterizer.cullMode       = LLGL::CullMode::Back;
-            pipelineDescScene.rasterizer.multiSampling  = LLGL::MultiSamplingDescriptor(8);
-        }
-        pipelineScene = renderer->CreateGraphicsPipeline(pipelineDescScene);
-
-        // Create graphics pipeline for blur post-processor
-        LLGL::GraphicsPipelineDescriptor pipelineDescPP;
-        {
-            pipelineDescPP.shaderProgram = shaderProgramBlur;
-        }
-        pipelineBlur = renderer->CreateGraphicsPipeline(pipelineDescPP);
-
-        // Create graphics pipeline for final post-processor
-        LLGL::GraphicsPipelineDescriptor pipelineDescFinal;
-        {
-            pipelineDescFinal.shaderProgram = shaderProgramFinal;
-        }
-        pipelineFinal = renderer->CreateGraphicsPipeline(pipelineDescFinal);
     }
 
     void CreateSamplers()
@@ -279,20 +287,124 @@ public:
         renderTargetBlurY = renderer->CreateRenderTarget(renderTargetBlurYDesc);
     }
 
+    // The utility function <LLGL::PipelineLayoutDesc> is used here, to simplify the description of the pipeline layouts
+    void CreatePipelineLayouts()
+    {
+        bool combinedSampler = IsOpenGL();
+
+        // Create pipeline layout for scene rendering
+        layoutScene = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):vert:frag"));
+
+        // Create pipeline layout for blur post-processor
+        if (combinedSampler)
+            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3):frag, sampler(3):frag"));
+        else
+            layoutBlur = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(1):frag, texture(3):frag, sampler(5):frag"));
+
+        // Create pipeline layout for final post-processor
+        if (combinedSampler)
+            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):frag, texture(2,3):frag, sampler(2,3):frag"));
+        else
+            layoutFinal = renderer->CreatePipelineLayout(LLGL::PipelineLayoutDesc("cbuffer(0):frag, texture(2,3):frag, sampler(4,5):frag"));
+    }
+
+    void CreatePipelines()
+    {
+        // Create graphics pipeline for scene rendering
+        LLGL::GraphicsPipelineDescriptor pipelineDescScene;
+        {
+            pipelineDescScene.shaderProgram             = shaderProgramScene;
+            pipelineDescScene.renderPass                = renderTargetScene->GetRenderPass();
+            pipelineDescScene.pipelineLayout            = layoutScene;
+
+            pipelineDescScene.depth.testEnabled         = true;
+            pipelineDescScene.depth.writeEnabled        = true;
+
+            pipelineDescScene.rasterizer.cullMode       = LLGL::CullMode::Back;
+            pipelineDescScene.rasterizer.multiSampling  = LLGL::MultiSamplingDescriptor(8);
+        }
+        pipelineScene = renderer->CreateGraphicsPipeline(pipelineDescScene);
+
+        // Create graphics pipeline for blur post-processor
+        LLGL::GraphicsPipelineDescriptor pipelineDescPP;
+        {
+            pipelineDescPP.shaderProgram    = shaderProgramBlur;
+            pipelineDescPP.renderPass       = renderTargetBlurX->GetRenderPass();
+            pipelineDescPP.pipelineLayout   = layoutBlur;
+        }
+        pipelineBlur = renderer->CreateGraphicsPipeline(pipelineDescPP);
+
+        // Create graphics pipeline for final post-processor
+        LLGL::GraphicsPipelineDescriptor pipelineDescFinal;
+        {
+            pipelineDescFinal.shaderProgram     = shaderProgramFinal;
+            pipelineDescFinal.pipelineLayout    = layoutFinal;
+            pipelineDescFinal.renderPass        = context->GetRenderPass();
+        }
+        pipelineFinal = renderer->CreateGraphicsPipeline(pipelineDescFinal);
+    }
+
+    void CreateResourceHeaps()
+    {
+        // Create resource heap for scene rendering
+        LLGL::ResourceHeapDescriptor heapDescScene;
+        {
+            heapDescScene.pipelineLayout    = layoutScene;
+            heapDescScene.resourceViews     = { constantBufferScene };
+        }
+        resourceHeapScene = renderer->CreateResourceHeap(heapDescScene);
+
+        // Create resource heap for blur-X post-processor
+        LLGL::ResourceHeapDescriptor heapDescBlurX;
+        {
+            heapDescBlurX.pipelineLayout    = layoutBlur;
+            heapDescBlurX.resourceViews     = { constantBufferBlur, glossMap, glossMapSampler };
+        }
+        resourceHeapBlurX = renderer->CreateResourceHeap(heapDescBlurX);
+
+        // Create resource heap for blur-Y post-processor
+        LLGL::ResourceHeapDescriptor heapDescBlurY;
+        {
+            heapDescBlurY.pipelineLayout    = layoutBlur;
+            heapDescBlurY.resourceViews     = { constantBufferBlur, glossMapBlurX, glossMapSampler };
+        }
+        resourceHeapBlurY = renderer->CreateResourceHeap(heapDescBlurY);
+
+        // Create resource heap for final post-processor
+        LLGL::ResourceHeapDescriptor heapDescFinal;
+        {
+            heapDescFinal.pipelineLayout    = layoutFinal;
+            heapDescFinal.resourceViews     = { constantBufferScene, colorMap, glossMapBlurY, colorMapSampler, glossMapSampler };
+        }
+        resourceHeapFinal = renderer->CreateResourceHeap(heapDescFinal);
+    }
+
     void UpdateScreenSize()
     {
         // Release previous textures
         renderer->Release(*renderTargetScene);
         renderer->Release(*renderTargetBlurX);
         renderer->Release(*renderTargetBlurY);
+
+        renderer->Release(*resourceHeapScene);
+        renderer->Release(*resourceHeapBlurX);
+        renderer->Release(*resourceHeapBlurY);
+        renderer->Release(*resourceHeapFinal);
+
         renderer->Release(*colorMap);
         renderer->Release(*glossMap);
         renderer->Release(*glossMapBlurX);
         renderer->Release(*glossMapBlurY);
 
+        renderer->Release(*pipelineScene);
+        renderer->Release(*pipelineBlur);
+        renderer->Release(*pipelineFinal);
+
         // Recreate objects
         CreateTextures();
+        CreateResourceHeaps();
         CreateRenderTargets();
+        CreatePipelines();
     }
 
 private:
@@ -349,8 +461,6 @@ private:
 
     void OnDrawFrame() override
     {
-        static const auto shaderStages = LLGL::StageFlags::VertexStage | LLGL::StageFlags::FragmentStage;
-
         // Update rotation of inner model
         static float innerModelRotation;
         innerModelRotation += 0.01f;
@@ -388,81 +498,84 @@ private:
         const LLGL::Viewport viewportFull{ { 0, 0 }, screenSize };
         const LLGL::Viewport viewportQuarter{ { 0, 0 }, { screenSize.width / 4, screenSize.height/ 4 } };
 
-        // Set common buffers and sampler states
-        commandsExt->SetConstantBuffer(*constantBufferScene, 0, shaderStages);
-        commandsExt->SetConstantBuffer(*constantBufferBlur, 1, LLGL::StageFlags::FragmentStage);
-
-        commandsExt->SetSampler(*colorMapSampler, 0, LLGL::StageFlags::FragmentStage);
-        commandsExt->SetSampler(*glossMapSampler, 1, LLGL::StageFlags::FragmentStage);
-
-        // Set graphics pipeline and vertex buffer for scene rendering
-        commands->SetGraphicsPipeline(*pipelineScene);
-        commands->SetVertexBuffer(*vertexBufferScene);
-
-        // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
-        commands->SetRenderTarget(*renderTargetScene);
+        commandQueue->Begin(*commands);
         {
-            // Clear individual buffers in render target (color, glossiness, depth)
-            LLGL::AttachmentClear clearCmds[3] =
+            // Set graphics pipeline and vertex buffer for scene rendering
+            commands->SetVertexBuffer(*vertexBufferScene);
+
+            // Draw scene into multi-render-target (1st target: color, 2nd target: glossiness)
+            commands->BeginRenderPass(*renderTargetScene);
             {
-                LLGL::AttachmentClear { defaultClearColor, 0 },
-                LLGL::AttachmentClear { LLGL::ColorRGBAf { 0, 0, 0, 0 }, 1 },
-                LLGL::AttachmentClear { 1.0f }
-            };
-            commands->ClearAttachments(3, clearCmds);
+                // Set viewport to full size
+                commands->SetViewport(viewportFull);
 
-            // Draw outer scene model
-            SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
-            commands->Draw(numSceneVertices, 0);
+                // Clear individual buffers in render target (color, glossiness, depth)
+                LLGL::AttachmentClear clearCmds[3] =
+                {
+                    LLGL::AttachmentClear { defaultClearColor, 0 },
+                    LLGL::AttachmentClear { LLGL::ColorRGBAf { 0, 0, 0, 0 }, 1 },
+                    LLGL::AttachmentClear { 1.0f }
+                };
+                commands->ClearAttachments(3, clearCmds);
 
-            // Draw inner scene model
-            SetSceneSettingsInnerModel(innerModelRotation);
-            commands->Draw(numSceneVertices, 0);
+                // Bind pipeline and resources
+                commands->SetGraphicsPipeline(*pipelineScene);
+                commands->SetGraphicsResourceHeap(*resourceHeapScene);
+
+                // Draw outer scene model
+                SetSceneSettingsOuterModel(outerModelDeltaRotation.y, outerModelDeltaRotation.x);
+                commands->Draw(numSceneVertices, 0);
+
+                // Draw inner scene model
+                SetSceneSettingsInnerModel(innerModelRotation);
+                commands->Draw(numSceneVertices, 0);
+            }
+            commands->EndRenderPass();
+
+            // Set graphics pipeline and vertex buffer for post-processors
+            commands->SetVertexBuffer(*vertexBufferNull);
+
+            // Draw horizontal blur pass
+            commands->BeginRenderPass(*renderTargetBlurX);
+            {
+                // Draw blur passes in quarter resolution
+                commands->SetViewport(viewportQuarter);
+                commands->SetGraphicsPipeline(*pipelineBlur);
+                commands->SetGraphicsResourceHeap(*resourceHeapBlurX);
+
+                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
+                commands->Draw(3, 0);
+            }
+            commands->EndRenderPass();
+
+            // Draw vertical blur pass
+            commands->BeginRenderPass(*renderTargetBlurY);
+            {
+                //commands->SetViewport(viewportQuarter);
+                //commands->SetGraphicsPipeline(*pipelineBlur); //???
+                commands->SetGraphicsResourceHeap(*resourceHeapBlurY);
+
+                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
+                commands->Draw(3, 0);
+            }
+            commands->EndRenderPass();
+
+            // Draw final post-processing pass
+            commands->BeginRenderPass(*context);
+            {
+                // Set viewport back to full resolution
+                commands->SetViewport(viewportFull);
+                commands->SetGraphicsPipeline(*pipelineFinal);
+                commands->SetGraphicsResourceHeap(*resourceHeapFinal);
+
+                // Draw fullscreen triangle (triangle is spanned in the vertex shader)
+                commands->Draw(3, 0);
+            }
+            commands->EndRenderPass();
         }
-
-        // Set graphics pipeline and vertex buffer for post-processors
-        commands->SetGraphicsPipeline(*pipelineBlur);
-        commands->SetVertexBuffer(*vertexBufferNull);
-
-        // Draw horizontal blur pass
-        commands->SetRenderTarget(*renderTargetBlurX);
-        {
-            // Draw blur passes in quarter resolution
-            commands->SetViewport(viewportQuarter);
-
-            // Set gloss map from scene rendering
-            commandsExt->SetTexture(*glossMap, 1, LLGL::StageFlags::FragmentStage);
-
-            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            SetBlurSettings({ 4.0f / static_cast<float>(screenSize.width), 0.0f });
-            commands->Draw(3, 0);
-        }
-
-        // Draw vertical blur pass
-        commands->SetRenderTarget(*renderTargetBlurY);
-        {
-            // Set gloss map from previous blur pass (Blur X)
-            commandsExt->SetTexture(*glossMapBlurX, 1, LLGL::StageFlags::FragmentStage);
-
-            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            SetBlurSettings({ 0.0f, 4.0f / static_cast<float>(screenSize.height) });
-            commands->Draw(3, 0);
-        }
-
-        // Draw final post-processing pass
-        commands->SetGraphicsPipeline(*pipelineFinal);
-        commands->SetRenderTarget(*context);
-        {
-            // Set viewport back to full resolution
-            commands->SetViewport(viewportFull);
-
-            // Set color map and gloss map from previous blur pass (Blur Y)
-            commandsExt->SetTexture(*colorMap, 0, LLGL::StageFlags::FragmentStage);
-            commandsExt->SetTexture(*glossMapBlurY, 1, LLGL::StageFlags::FragmentStage);
-
-            // Draw fullscreen triangle (triangle is spanned in the vertex shader)
-            commands->Draw(3, 0);
-        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

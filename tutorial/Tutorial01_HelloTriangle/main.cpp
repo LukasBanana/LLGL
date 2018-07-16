@@ -98,8 +98,8 @@ int main(int argc, char* argv[])
         if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
         {
             #ifdef __APPLE__
-            CompileShader(vertShader, ReadTextFile("vertex.140core.glsl"));
-            CompileShader(fragShader, ReadTextFile("fragment.140core.glsl"));
+            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "vertex.140core.glsl"   });
+            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "fragment.140core.glsl" });
             #else
             vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "vertex.glsl"   });
             fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "fragment.glsl" });
@@ -114,6 +114,11 @@ int main(int argc, char* argv[])
         {
             vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "shader.hlsl", "VS", "vs_4_0" });
             fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_4_0" });
+        }
+        else if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::Metal) != languages.end())
+        {
+            vertShader = renderer->CreateShader({ LLGL::ShaderType::Vertex,   "shader.metal", "VS", "1.1" });
+            fragShader = renderer->CreateShader({ LLGL::ShaderType::Fragment, "shader.metal", "PS", "1.1" });
         }
 
         for (auto shader : { vertShader, fragShader })
@@ -143,11 +148,15 @@ int main(int argc, char* argv[])
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.renderPass                 = context->GetRenderPass();
             #ifdef ENABLE_MULTISAMPLING
             pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
             #endif
         }
         LLGL::GraphicsPipeline* pipeline = renderer->CreateGraphicsPipeline(pipelineDesc);
+
+        // Get command queue to record and submit command buffers
+        LLGL::CommandQueue* queue = renderer->GetCommandQueue();
 
         // Create command buffer to submit subsequent graphics commands to the GPU
         LLGL::CommandBuffer* commands = renderer->CreateCommandBuffer();
@@ -173,23 +182,30 @@ int main(int argc, char* argv[])
             }
             #endif
 
-            // Set the render context as the initial render target
-            commands->SetRenderTarget(*context);
+            // Begin recording commands
+            queue->Begin(*commands);
+            {
+                // Set viewport and scissor rectangle
+                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
 
-            // Set viewport and scissor rectangle
-            commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
+                // Set graphics pipeline
+                commands->SetGraphicsPipeline(*pipeline);
 
-            // Clear color buffer
-            commands->Clear(LLGL::ClearFlags::Color);
+                // Set vertex buffer
+                commands->SetVertexBuffer(*vertexBuffer);
 
-            // Set graphics pipeline
-            commands->SetGraphicsPipeline(*pipeline);
+                // Set the render context as the initial render target
+                commands->BeginRenderPass(*context);
+                {
+                    // Clear color buffer
+                    commands->Clear(LLGL::ClearFlags::Color);
 
-            // Set vertex buffer
-            commands->SetVertexBuffer(*vertexBuffer);
-
-            // Draw triangle with 3 vertices
-            commands->Draw(3, 0);
+                    // Draw triangle with 3 vertices
+                    commands->Draw(3, 0);
+                }
+                commands->EndRenderPass();
+            }
+            queue->End(*commands);
 
             // Present the result on the screen
             context->Present();

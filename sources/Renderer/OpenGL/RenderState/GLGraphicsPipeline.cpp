@@ -100,8 +100,7 @@ static bool IsPolygonOffsetEnabled(const DepthBiasDescriptor& desc)
 GLGraphicsPipeline::GLGraphicsPipeline(const GraphicsPipelineDescriptor& desc, const RenderingLimits& limits)
 {
     /* Convert shader state */
-    shaderProgram_ = LLGL_CAST(GLShaderProgram*, desc.shaderProgram);
-
+    shaderProgram_ = LLGL_CAST(const GLShaderProgram*, desc.shaderProgram);
     if (!shaderProgram_)
         throw std::invalid_argument("failed to create graphics pipeline due to missing shader program");
 

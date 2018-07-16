@@ -98,6 +98,20 @@ void VKBuffer::Unmap(VkDevice device)
         memoryRegionStaging_->GetParentChunk()->Unmap(device);
 }
 
+void* VKBuffer::MapStaging(VkDevice device, VkDeviceSize dataSize, VkDeviceSize offset)
+{
+    if (memoryRegionStaging_)
+        return memoryRegionStaging_->GetParentChunk()->Map(device, memoryRegionStaging_->GetOffset() + offset, dataSize);
+    else
+        return nullptr;
+}
+
+void VKBuffer::UnmapStaging(VkDevice device)
+{
+    if (memoryRegionStaging_)
+        memoryRegionStaging_->GetParentChunk()->Unmap(device);
+}
+
 void VKBuffer::UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSize dataSize, VkDeviceSize offset)
 {
     if (memoryRegionStaging_)
@@ -105,7 +119,9 @@ void VKBuffer::UpdateStagingBuffer(VkDevice device, const void* data, VkDeviceSi
         auto deviceMemory = memoryRegionStaging_->GetParentChunk();
         if (auto memory = deviceMemory->Map(device, memoryRegionStaging_->GetOffset() + offset, dataSize))
         {
+            /* Copy data to staging buffer */
             ::memcpy(memory, data, static_cast<std::size_t>(dataSize));
+
             deviceMemory->Unmap(device);
         }
     }

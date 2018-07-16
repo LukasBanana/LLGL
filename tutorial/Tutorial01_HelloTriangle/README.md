@@ -149,8 +149,9 @@ LLGL::GraphicsPipeline* myPipeline = myRenderer->CreateGraphicsPipeline(myPipeli
 ```
 The members `depth`, `stencil`, `rasterizer`, and `blend` from the  `GraphicsPipelineDescriptor` structure can be used to specify a lot more configurations for a graphics pipeline. But for now, we leave them as is.
 
-The command buffer is used to submit draw and compute commands to the command queue:
+The command buffer is used to submit draw and compute commands to the command queue. In LLGL, there is only a single command queue instance:
 ```cpp
+LLGL::CommandQueue* myCmdQueue = myRenderer->GetCommandQueue();
 LLGL::CommandBuffer* myCmdBuffer = myRenderer->CreateCommandBuffer();
 ```
 
@@ -170,31 +171,45 @@ while (myWindow.ProcessEvents()) {
 ```
 The `ProcessEvents` function will return false when the user clicks on the window close button.
 
-The render code inside the loop statement comes next. We first need to set the current render target:
+The render code inside the loop statement comes next. We first start recording graphics commands for our command buffer using our command queue:
 ```cpp
-myCmdBuffer->SetRenderTarget(*myContext);
+myCmdQueue->Begin(*myCmdBuffer);
 ```
-This must be done every frame, otherwise the behavior is undefined, because especially modern rendering APIs (such as D3D12 and Vulkan) no longer behalve like a state machine. Everything gets lost when a command buffer is submitted to the queue if not explicitly declared otherwise. This happens when we present the rendered result on the screen. The viewport must be set everytime we set a new render target for the same reason:
+Now we can bind resources that are independent of a render pass, such as the vertex buffer:
 ```cpp
-myCmdBuffer->SetViewport(LLGL::Viewport{ { 0, 0 }, myContext->GetVideoMode().resolution });
+myCmdBuffer->SetVertexBuffer(*myVertexBuffer);
+```
+Before we can start recording drawing commands and other operations that are dependent on render passes, we need to start such a render pass:
+```cpp
+myCmdBuffer->BeginRenderPass(*myContext);
+```
+We currently only use the default render pass that is created by the render context automatically. More about render passes in another tutorial. The `BeginRenderPass` function not only starts a render pass, but also specifies which render target is to be used. In this case `myContext` to render directly into the window content.
+
+After binding the render target, we specify into which area the scene is rendered. For this simple example, we render into the entire render context:
+```cpp
+myCmdBuffer->SetViewport(LLGL::Viewport{ { 0, 0 }, myContext->GetResolution() });
 ```
 Contrary to Direct3D 12, LLGL manages the scissor rectangle automatically if the scissor test is disabled in the graphics pipeline (which is the default). Hence, we only need to set the viewport, but not the scissor rectangle.
 
-Next we clear the color buffer to start our new frame:
+Next we clear the previous content of the color buffer:
 ```cpp
 myCmdBuffer->Clear(LLGL::ClearFlags::Color);
 ```
 To clear multiple attachments of the active render target, the `ClearAttachments` function can be used instead. The last state we set before rendering is the pipeline state and the vertex buffer we created earlier:
 ```cpp
 myCmdBuffer->SetGraphicsPipeline(*myPipeline);
-myCmdBuffer->SetVertexBuffer(*myVertexBuffer);
 ```
 Now we can finally draw our first triangle:
 ```cpp
-commands->Draw(3, 0);
+myCmdBuffer->Draw(3, 0);
 ```
 This call generates three vertices and starts with the vertex ID zero. This is analogous to the drawing commands of all modern rendering APIs (i.e. Direct3D 12, Vulkan, Metal) as well as the legacy rendering APIs (i.e. Direct3D 11, OpenGL). The same holds true for the other `DrawInstanced`, `DrawIndexed`, and `DrawIndexedInstanced` functions. The nomenclature for these functions is derived from Direct3D.
 
+Before we can present the result, we need to end the render pass as well as recording the command buffer:
+```cpp
+myCmdBuffer->EndRenderPass();
+myCmdQueue->End(*myCmdBuffer);
+```
 The last thing we have to do is to present the result on the screen:
 ```cpp
 myContext->Present();

@@ -17,9 +17,10 @@ namespace LLGL
 
 
 D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDescriptor& desc) :
-    RenderTarget  { desc.resolution                  },
     device_       { device                           },
-    multiSamples_ { desc.multiSampling.SampleCount() }
+    resolution_   { desc.resolution                  },
+    multiSamples_ { desc.multiSampling.SampleCount() },
+    renderPass_   { desc.renderPass                  }
 {
     #if 0
     if (desc.attachments.empty())
@@ -35,6 +36,11 @@ D3D11RenderTarget::D3D11RenderTarget(ID3D11Device* device, const RenderTargetDes
     }
 }
 
+Extent2D D3D11RenderTarget::GetResolution() const
+{
+    return resolution_;
+}
+
 std::uint32_t D3D11RenderTarget::GetNumColorAttachments() const
 {
     return static_cast<std::uint32_t>(renderTargetViews_.size());
@@ -48,6 +54,11 @@ bool D3D11RenderTarget::HasDepthAttachment() const
 bool D3D11RenderTarget::HasStencilAttachment() const
 {
     return (depthStencilView_.Get() != nullptr && depthStencilFormat_ == DXGI_FORMAT_D24_UNORM_S8_UINT);
+}
+
+const RenderPass* D3D11RenderTarget::GetRenderPass() const
+{
+    return renderPass_;
 }
 
 /* ----- Extended Internal Functions ----- */

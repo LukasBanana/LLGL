@@ -12,17 +12,13 @@
 #include "Export.h"
 #include "ColorRGBA.h"
 #include "Types.h"
+#include "ForwardDecls.h"
 #include <vector>
 #include <cstdint>
 
 
 namespace LLGL
 {
-
-
-class ShaderProgram;
-class PipelineLayout;
-class RenderTarget;
 
 
 /* ----- Enumerations ----- */
@@ -64,69 +60,97 @@ enum class PrimitiveType
 */
 enum class PrimitiveTopology
 {
-    PointList,              //!< Point list.
+    //! Point list, where each vertex represents a single point primitive.
+    PointList,
 
-    LineList,               //!< Line list where each line has its own two vertices.
-    LineStrip,              //!< Line strip where each line after the first one begins with the previous vertex.
+    //! Line list, where each pair of two vertices represetns a single line primitive.
+    LineList,
+    
+    //! Line strip, where each vertex generates a new line primitive while the previous vertex is used as line start.
+    LineStrip,
 
     /**
-    \brief Line loop which is similiar to line strip but the last line ends with the first vertex.
+    \brief Line loop, which is similar to LineStrip but the first and last vertices generate yet another line primitive.
     \note Only supported with: OpenGL.
     */
     LineLoop,
 
-    LineListAdjacency,      //!< Adjacency line list.
-    LineStripAdjacency,     //!< Adjacency line strips.
+    /**
+    \brief Adjacency line list, which is similar to LineList but each end point has a corresponding adjacent vertex that is accessible in a geometry shader.
+    \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    */
+    LineListAdjacency,
+    
+    /**
+    \brief Adjacency line strip, which is similar to LineStrip but each end point has a corresponding adjacent vertex that is accessible in a geometry shader.
+    \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    */
+    LineStripAdjacency,
 
-    TriangleList,           //!< Triangle list where each triangle has its own three vertices.
-    TriangleStrip,          //!< Triangle strip where each triangle after the first one begins with the previous vertex.
+    //! Triangle list, where each set of three vertices represent a single triangle primitive.
+    TriangleList,
+    
+    //! Triangle strip, where each vertex generates a new triangle primitive with an alternative triangle winding.
+    TriangleStrip,
 
     /**
-    \brief Triangle fan where each triangle uses the first vertex, the previous vertex, and a new vertex.
+    \brief Triangle fan, where each vertex generates a new triangle primitive while all share the same first vertex.
     \note Only supported with: OpenGL, Vulkan.
     */
     TriangleFan,
 
-    TriangleListAdjacency,  //!< Adjacency triangle list.
-    TriangleStripAdjacency, //!< Adjacency triangle strips.
+    /**
+    \brief Adjacency triangle list, which is similar to TriangleList but each triangle edge has a corresponding adjacent vertex that is accessible in a geometry shader.
+    \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    */
+    TriangleListAdjacency,
+    
+    /**
+    \brief Adjacency triangle strips which is similar to TriangleStrip but each triangle edge has a corresponding adjacent vertex that is accessible in a geometry shader.
+    \note Only supported with: OpenGL, Vulkan, Direct3D 11, Direct3D 12.
+    */
+    TriangleStripAdjacency,
 
-    Patches1,               //!< Patches with 1 control point.
-    Patches2,               //!< Patches with 2 control points.
-    Patches3,               //!< Patches with 3 control points.
-    Patches4,               //!< Patches with 4 control points.
-    Patches5,               //!< Patches with 5 control points.
-    Patches6,               //!< Patches with 6 control points.
-    Patches7,               //!< Patches with 7 control points.
-    Patches8,               //!< Patches with 8 control points.
-    Patches9,               //!< Patches with 9 control points.
-    Patches10,              //!< Patches with 10 control points.
-    Patches11,              //!< Patches with 11 control points.
-    Patches12,              //!< Patches with 12 control points.
-    Patches13,              //!< Patches with 13 control points.
-    Patches14,              //!< Patches with 14 control points.
-    Patches15,              //!< Patches with 15 control points.
-    Patches16,              //!< Patches with 16 control points.
-    Patches17,              //!< Patches with 17 control points.
-    Patches18,              //!< Patches with 18 control points.
-    Patches19,              //!< Patches with 19 control points.
-    Patches20,              //!< Patches with 20 control points.
-    Patches21,              //!< Patches with 21 control points.
-    Patches22,              //!< Patches with 22 control points.
-    Patches23,              //!< Patches with 23 control points.
-    Patches24,              //!< Patches with 24 control points.
-    Patches25,              //!< Patches with 25 control points.
-    Patches26,              //!< Patches with 26 control points.
-    Patches27,              //!< Patches with 27 control points.
-    Patches28,              //!< Patches with 28 control points.
-    Patches29,              //!< Patches with 29 control points.
-    Patches30,              //!< Patches with 30 control points.
-    Patches31,              //!< Patches with 31 control points.
-    Patches32,              //!< Patches with 32 control points.
+    Patches1,               //!< Patches with 1 control point that is accessible in a tessellation shader.
+    Patches2,               //!< Patches with 2 control points that are accessible in a tessellation shader.
+    Patches3,               //!< Patches with 3 control points that are accessible in a tessellation shader.
+    Patches4,               //!< Patches with 4 control points that are accessible in a tessellation shader.
+    Patches5,               //!< Patches with 5 control points that are accessible in a tessellation shader.
+    Patches6,               //!< Patches with 6 control points that are accessible in a tessellation shader.
+    Patches7,               //!< Patches with 7 control points that are accessible in a tessellation shader.
+    Patches8,               //!< Patches with 8 control points that are accessible in a tessellation shader.
+    Patches9,               //!< Patches with 9 control points that are accessible in a tessellation shader.
+    Patches10,              //!< Patches with 10 control points that are accessible in a tessellation shader.
+    Patches11,              //!< Patches with 11 control points that are accessible in a tessellation shader.
+    Patches12,              //!< Patches with 12 control points that are accessible in a tessellation shader.
+    Patches13,              //!< Patches with 13 control points that are accessible in a tessellation shader.
+    Patches14,              //!< Patches with 14 control points that are accessible in a tessellation shader.
+    Patches15,              //!< Patches with 15 control points that are accessible in a tessellation shader.
+    Patches16,              //!< Patches with 16 control points that are accessible in a tessellation shader.
+    Patches17,              //!< Patches with 17 control points that are accessible in a tessellation shader.
+    Patches18,              //!< Patches with 18 control points that are accessible in a tessellation shader.
+    Patches19,              //!< Patches with 19 control points that are accessible in a tessellation shader.
+    Patches20,              //!< Patches with 20 control points that are accessible in a tessellation shader.
+    Patches21,              //!< Patches with 21 control points that are accessible in a tessellation shader.
+    Patches22,              //!< Patches with 22 control points that are accessible in a tessellation shader.
+    Patches23,              //!< Patches with 23 control points that are accessible in a tessellation shader.
+    Patches24,              //!< Patches with 24 control points that are accessible in a tessellation shader.
+    Patches25,              //!< Patches with 25 control points that are accessible in a tessellation shader.
+    Patches26,              //!< Patches with 26 control points that are accessible in a tessellation shader.
+    Patches27,              //!< Patches with 27 control points that are accessible in a tessellation shader.
+    Patches28,              //!< Patches with 28 control points that are accessible in a tessellation shader.
+    Patches29,              //!< Patches with 29 control points that are accessible in a tessellation shader.
+    Patches30,              //!< Patches with 30 control points that are accessible in a tessellation shader.
+    Patches31,              //!< Patches with 31 control points that are accessible in a tessellation shader.
+    Patches32,              //!< Patches with 32 control points that are accessible in a tessellation shader.
 };
 
 /**
 \brief Compare operations enumeration.
-\remarks This operation is used for depth-test and stencil-test.
+\remarks This operation is used for depth tests, stencil tests, and texture sample comparisons.
+\see DepthDescriptor::compareOp
+\see StencilFaceDescriptor::compareOp
+\see SamplerDescriptor::compareOp
 */
 enum class CompareOp
 {
@@ -140,7 +164,10 @@ enum class CompareOp
     Ever,           //!< Comparison always passes. (Cannot be called "Always" due to conflict with X11 lib on Linux).
 };
 
-//! Stencil operations enumeration.
+/**
+\brief Stencil operations enumeration.
+\see StencilFaceDescriptor
+*/
 enum class StencilOp
 {
     Keep,       //!< Keep the existing stencil data.
@@ -153,7 +180,10 @@ enum class StencilOp
     DecWrap,    //!< Decrement the stencil value by 1, and wrap the result if necessary.
 };
 
-//! Blending operations enumeration.
+/**
+\brief Blending operations enumeration.
+\see BlendTargetDescriptor
+*/
 enum class BlendOp
 {
     Zero,               //!< Data source is the color black (0, 0, 0, 0).
@@ -175,7 +205,11 @@ enum class BlendOp
     InvSrc1Alpha        //!< Data sources are both inverted alpha data (1 - A) from a fragment shader with dual-source color blending.
 };
 
-//! Blending arithmetic operations enumeration.
+/**
+\brief Blending arithmetic operations enumeration.
+\see BlendTargetDescriptor::colorArithmetic
+\see BlendTargetDescriptor::alphaArithmetic
+*/
 enum class BlendArithmetic
 {
     Add,            //!< Add source 1 and source 2. This is the default for all renderers.
@@ -185,7 +219,10 @@ enum class BlendArithmetic
     Max,            //!< Find the maximum of source 1 and source 2.
 };
 
-//! Polygon filling modes enumeration.
+/**
+\brief Polygon filling modes enumeration.
+\see RasterizerDescriptor::polygonMode
+*/
 enum class PolygonMode
 {
     Fill,       //!< Draw filled polygon.
@@ -197,7 +234,10 @@ enum class PolygonMode
     Points,
 };
 
-//! Polygon culling modes enumeration.
+/**
+\brief Polygon culling modes enumeration.
+\see RasterizerDescriptor::cullMode
+*/
 enum class CullMode
 {
     Disabled,   //!< No culling.
@@ -210,6 +250,7 @@ enum class CullMode
 \remarks These logical pixel operations are bitwise operations.
 In the following documentation, 'src' denotes the source color and 'dst' denotes the destination color.
 \note Only supported with: OpenGL, Vulkan, Direct3D 11.1+, Direct3D 12.0.
+\see BlendDescriptor::logicOp
 */
 enum class LogicOp
 {
@@ -238,6 +279,9 @@ enum class LogicOp
 /**
 \brief Viewport dimensions.
 \remarks A viewport is in screen coordinates where the origin is in the left-top corner.
+\see CommandBuffer::SetViewport
+\see CommandBuffer::SetViewports
+\see GraphicsPipelineDescriptor::viewports
 */
 struct Viewport
 {
@@ -318,6 +362,9 @@ struct Viewport
 /**
 \brief Scissor dimensions.
 \remarks A scissor is in screen coordinates where the origin is in the left-top corner.
+\see CommandBuffer::SetScissor
+\see CommandBuffer::SetScissors
+\see GraphicsPipelineDescriptor::scissors
 */
 struct Scissor
 {
@@ -596,33 +643,27 @@ viewports, depth-/ stencil-/ rasterizer-/ blend states, shader stages etc.
 struct GraphicsPipelineDescriptor
 {
     /**
-    \brief Pointer to the shader program for the graphics pipeline.
-    \remarks This must never be null when "RenderSystem::CreateGraphicsPipeline" is called with this structure.
+    \brief Pointer to the shader program for the graphics pipeline. By default null.
+    \remarks This must never be null when RenderSystem::CreateGraphicsPipeline is called with this structure.
     \see RenderSystem::CreateGraphicsPipeline
     \see RenderSystem::CreateShaderProgram
     */
-    ShaderProgram*          shaderProgram       = nullptr;
+    const ShaderProgram*    shaderProgram       = nullptr;
 
-    #if 1 // TODO: try to parse the SPIR-V modules in the shader program with the SPIRV-Tools library, to deduce the pipeline layout automatically
     /**
-    \brief Pointer to an optional pipeline layout for the graphics pipeline.
+    \brief Pointer to a RenderPass object. By default null.
+    \remarks If this is null, the render pass of the RenderContext that was first created is used.
+    This render pass must be compatible with the one passed to the CommandBuffer::BeginRenderPass function in which the graphics pipeline will be used.
+    \see CommandBuffer::BeginRenderPass
+    */
+    const RenderPass*       renderPass          = nullptr;
+
+    /**
+    \brief Pointer to an optional pipeline layout for the graphics pipeline. By default null.
     \remarks This layout determines at which slots buffer resources can be bound.
     This is ignored by render systems which do not support pipeline layouts.
-    \note Only supported with: Vulkan, Direct3D 12
-    \todo Remove this and deduce the pipeline layout automatically by parsing the SPIR-V module with the SPIRV-Tools library (i.e. the "spvBinaryParse" function).
     */
-    PipelineLayout*         pipelineLayout      = nullptr;
-    #endif // /TODO
-
-    #if 1 // TODO: maybe find a better way to determine compatible vkRenderPass object.
-    /**
-    \brief Pointer to an optional render target that will be used with this graphics pipeline.
-    If this is null, the graphics pipeline will be compatible with a RenderContext only.
-    \remarks This is only used for the Vulkan renderer, to determine which render pass compatibility is required (i.e. VkRenderPass object).
-    \note Only supported with: Vulkan.
-    */
-    RenderTarget*           renderTarget        = nullptr;
-    #endif
+    const PipelineLayout*   pipelineLayout      = nullptr;
 
     /**
     \brief Specifies the primitive topology and ordering of the primitive data. By default PrimitiveTopology::TriangleList.
@@ -630,7 +671,7 @@ struct GraphicsPipelineDescriptor
     */
     PrimitiveTopology       primitiveTopology   = PrimitiveTopology::TriangleList;
 
-    #if 1 // TODO: maybe remove this, since it makes the remaining renderers more complex
+    #if 1 // TODO: either remove this or implement it in the other renderers
     /**
     \brief Specifies the viewport list. If empty, the viewports must be set dynamically with the command buffer.
     \see CommandBuffer::SetViewport

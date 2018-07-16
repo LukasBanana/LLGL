@@ -23,9 +23,12 @@ namespace LLGL
 \brief Hardware vector and pixel format enumeration.
 \remarks This enumeration is used for hardware texture formats and vertex attribute formats.
 \see TextureDescriptor::format
+\see VertexAttribute::format
 \see RenderingCapabilities::textureFormats
+\see OpenGL counterpart: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexImage1D.xhtml#id-1.6.14.1
 \see Vulkan counterpart <code>VkFormat</code>: https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkFormat.html
 \see Direct3D counterpart <code>DXGI_FORMAT</code>: https://msdn.microsoft.com/en-us/library/windows/desktop/bb173059(v=vs.85).aspx
+\see Metal counterpart <code>MTLPixelFormat</code>: https://developer.apple.com/documentation/metal/mtlpixelformat
 */
 enum class Format
 {
@@ -100,9 +103,9 @@ enum class Format
 
     /* --- Reversed color formats --- */
     BGRA8UNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized unsigned integer components. \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
-    BGRA8SNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized signed integer components. \note Only supported with: Vulkan, Metal.
-    BGRA8UInt,          //!< Color format: blue, green, red, alpha 8-bit unsigned integer components. \note Only supported with: Vulkan, Metal.
-    BGRA8SInt,          //!< Color format: blue, green, red, alpha 8-bit signed integer components. \note Only supported with: Vulkan, Metal.
+    BGRA8SNorm,         //!< Color format: blue, green, red, alpha 8-bit normalized signed integer components. \note Only supported with: Vulkan.
+    BGRA8UInt,          //!< Color format: blue, green, red, alpha 8-bit unsigned integer components. \note Only supported with: Vulkan.
+    BGRA8SInt,          //!< Color format: blue, green, red, alpha 8-bit signed integer components. \note Only supported with: Vulkan.
     BGRA8sRGB,          //!< Color format: blue, green, red, alpha 8-bit normalized unsigned integer components in sRGB non-linear color space. \note Only supported with: Vulkan, Direct3D 11, Direct3D 12, Metal.
 
     /* --- Depth-stencil formats --- */
@@ -171,10 +174,24 @@ LLGL_EXPORT bool IsCompressedFormat(const Format format);
 
 /**
 \brief Returns true if the specified hardware format is a depth or depth-stencil format,
-i.e. either Format::DepthComponent, or Format::DepthStencil.
+i.e. Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, or Format::D32FloatS8X24UInt.
 \see Format
 */
 LLGL_EXPORT bool IsDepthStencilFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is a depth format,
+i.e. Format::D16UNorm, Format::D24UNormS8UInt, Format::D32Float, or Format::D32FloatS8X24UInt.
+\see Format
+*/
+LLGL_EXPORT bool IsDepthFormat(const Format format);
+
+/**
+\brief Returns true if the specified hardware format is a stencil format,
+i.e. Format::D24UNormS8UInt or Format::D32FloatS8X24UInt.
+\see Format
+*/
+LLGL_EXPORT bool IsStencilFormat(const Format format);
 
 /**
 \brief Returns true if the specified hardware format is a normalized format (like Format::RGBA8UNorm, Format::R8SNorm etc.).

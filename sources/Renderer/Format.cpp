@@ -158,6 +158,13 @@ static std::tuple<DataType, std::uint32_t> SplitFormatPrimary(const Format forma
         case Format::RGB64Float:        return T{ DataType::Float64, 3 };
         case Format::RGBA64Float:       return T{ DataType::Float64, 4 };
 
+        /* --- Reversed color formats --- */
+        case Format::BGRA8UNorm:        return T{ DataType::UInt8,   4 };
+        case Format::BGRA8SNorm:        return T{ DataType::Int8,    4 };
+        case Format::BGRA8UInt:         return T{ DataType::UInt8,   4 };
+        case Format::BGRA8SInt:         return T{ DataType::Int8,    4 };
+        case Format::BGRA8sRGB:         return T{ DataType::UInt8,   4 };
+
         /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          break;
         case Format::D32Float:          break;
@@ -201,6 +208,16 @@ LLGL_EXPORT bool IsCompressedFormat(const Format format)
 LLGL_EXPORT bool IsDepthStencilFormat(const Format format)
 {
     return (format >= Format::D16UNorm && format <= Format::D32FloatS8X24UInt);
+}
+
+LLGL_EXPORT bool IsDepthFormat(const Format format)
+{
+    return (format >= Format::D16UNorm && format <= Format::D32FloatS8X24UInt);
+}
+
+LLGL_EXPORT bool IsStencilFormat(const Format format)
+{
+    return (format == Format::D24UNormS8UInt || format == Format::D32FloatS8X24UInt);
 }
 
 LLGL_EXPORT bool IsNormalizedFormat(const Format format)

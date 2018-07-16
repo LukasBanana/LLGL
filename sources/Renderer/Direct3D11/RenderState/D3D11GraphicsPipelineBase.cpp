@@ -43,7 +43,7 @@ D3D11GraphicsPipelineBase::D3D11GraphicsPipelineBase(const GraphicsPipelineDescr
     /* Validate pointers and get D3D shader objects */
     LLGL_ASSERT_PTR(desc.shaderProgram);
 
-    auto shaderProgramD3D = LLGL_CAST(D3D11ShaderProgram*, desc.shaderProgram);
+    auto shaderProgramD3D = LLGL_CAST(const D3D11ShaderProgram*, desc.shaderProgram);
     StoreShaderObjects(*shaderProgramD3D);
 
     //if (!shaderProgramD3D->GetInputLayout())
@@ -69,7 +69,7 @@ D3D11GraphicsPipelineBase::D3D11GraphicsPipelineBase(const GraphicsPipelineDescr
  * ======= Private: =======
  */
 
-void D3D11GraphicsPipelineBase::StoreShaderObjects(D3D11ShaderProgram& shaderProgramD3D)
+void D3D11GraphicsPipelineBase::StoreShaderObjects(const D3D11ShaderProgram& shaderProgramD3D)
 {
     if (shaderProgramD3D.GetVS()) { vs_ = shaderProgramD3D.GetVS()->GetNative().vs; }
     if (shaderProgramD3D.GetHS()) { hs_ = shaderProgramD3D.GetHS()->GetNative().hs; }

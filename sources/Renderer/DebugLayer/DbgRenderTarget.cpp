@@ -16,10 +16,14 @@ namespace LLGL
 
 
 DbgRenderTarget::DbgRenderTarget(RenderTarget& instance, RenderingDebugger* debugger, const RenderTargetDescriptor& desc) :
-    RenderTarget { desc.resolution },
-    instance     { instance        },
-    desc_        { desc            }
+    instance { instance },
+    desc_    { desc     }
 {
+}
+
+Extent2D DbgRenderTarget::GetResolution() const
+{
+    return instance.GetResolution();
 }
 
 std::uint32_t DbgRenderTarget::GetNumColorAttachments() const
@@ -35,6 +39,11 @@ bool DbgRenderTarget::HasDepthAttachment() const
 bool DbgRenderTarget::HasStencilAttachment() const
 {
     return instance.HasStencilAttachment();
+}
+
+const RenderPass* DbgRenderTarget::GetRenderPass() const
+{
+    return instance.GetRenderPass();
 }
 
 

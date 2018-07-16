@@ -29,7 +29,8 @@ int main(int argc, char* argv[])
         auto context1 = renderer->CreateRenderContext(contextDesc);
         auto context2 = renderer->CreateRenderContext(contextDesc);
 
-        // Create command buffer
+        // Get command queue and create command buffer
+        auto commandQueue = renderer->GetCommandQueue();
         auto commands = renderer->CreateCommandBuffer();
 
         // Create input handler
@@ -153,8 +154,9 @@ int main(int argc, char* argv[])
 
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
-            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.shaderProgram              = shaderProgram;
+            pipelineDesc.renderPass                 = context1->GetRenderPass();
+            pipelineDesc.primitiveTopology          = LLGL::PrimitiveTopology::TriangleStrip;
             pipelineDesc.rasterizer.multiSampling   = contextDesc.multiSampling;
         }
         pipeline[0] = renderer->CreateGraphicsPipeline(pipelineDesc);
@@ -196,46 +198,47 @@ int main(int argc, char* argv[])
                     std::cout << "Logic Fragment Operation Not Supported" << std::endl;
             }
 
-            // Draw content in 1st render context
-            commands->SetRenderTarget(*context1);
+            // Start recording commands
+            commandQueue->Begin(*commands);
             {
-                // Set viewport and scissor arrays
-                commands->SetViewports(2, viewports);
-
-                // Set graphics pipeline
-                commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
-
                 // Set vertex buffer
                 commands->SetVertexBuffer(*vertexBuffer);
 
-                // Clear color buffer
-                commands->Clear(LLGL::ClearFlags::Color);
+                // Set viewports
+                commands->SetViewports(2, viewports);
 
-                // Draw triangle with 3 vertices
-                commands->Draw(3, 0);
+                // Draw content in 1st render context
+                commands->BeginRenderPass(*context1);
+                {
+                    // Clear color buffer
+                    commands->Clear(LLGL::ClearFlags::Color);
+
+                    // Set graphics pipeline
+                    commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
+
+                    // Draw triangle with 3 vertices
+                    commands->Draw(3, 0);
+                }
+                commands->EndRenderPass();
+
+                // Draw content in 2nd render context
+                commands->BeginRenderPass(*context2);
+                {
+                    // Clear color buffer
+                    commands->Clear(LLGL::ClearFlags::Color);
+
+                    // Set graphics pipeline
+                    commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
+
+                    // Draw quad with 4 vertices
+                    commands->Draw(4, 3);
+                }
+                commands->EndRenderPass();
             }
-            // Present the result on the screen
+            commandQueue->End(*commands);
+
+            // Present the results on the screen
             context1->Present();
-
-            // Draw content in 2nd render context
-            commands->SetRenderTarget(*context2);
-            {
-                // Set viewport and scissor arrays
-                commands->SetViewports(2, viewports);
-
-                // Set graphics pipeline
-                commands->SetGraphicsPipeline(*pipeline[enableLogicOp ? 1 : 0]);
-
-                // Set vertex buffer
-                commands->SetVertexBuffer(*vertexBuffer);
-
-                // Clear color buffer
-                commands->Clear(LLGL::ClearFlags::Color);
-
-                // Draw quad with 4 vertices
-                commands->Draw(4, 3);
-            }
-            // Present the result on the screen
             context2->Present();
         }
     }

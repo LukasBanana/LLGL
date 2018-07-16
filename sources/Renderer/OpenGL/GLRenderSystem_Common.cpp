@@ -55,12 +55,12 @@ CommandQueue* GLRenderSystem::GetCommandQueue()
 
 /* ----- Command buffers ----- */
 
-CommandBuffer* GLRenderSystem::CreateCommandBuffer()
+CommandBuffer* GLRenderSystem::CreateCommandBuffer(const CommandBufferDescriptor& /*desc*/)
 {
     return CreateCommandBufferExt();
 }
 
-CommandBufferExt* GLRenderSystem::CreateCommandBufferExt()
+CommandBufferExt* GLRenderSystem::CreateCommandBufferExt(const CommandBufferDescriptor& /*desc*/)
 {
     /* Get state manager from shared render context */
     if (auto sharedContext = GetSharedRenderContext())
@@ -94,7 +94,6 @@ Sampler* GLRenderSystem::CreateSampler(const SamplerDescriptor& desc)
 
 void GLRenderSystem::Release(Sampler& sampler)
 {
-    auto& samplerGL = LLGL_CAST(GLSampler&, sampler);
     RemoveFromUniqueSet(samplers_, &sampler);
 }
 
@@ -110,18 +109,30 @@ void GLRenderSystem::Release(ResourceHeap& resourceHeap)
     RemoveFromUniqueSet(resourceHeaps_, &resourceHeap);
 }
 
+/* ----- Render Passes ----- */
+
+RenderPass* GLRenderSystem::CreateRenderPass(const RenderPassDescriptor& desc)
+{
+    AssertCreateRenderPass(desc);
+    return TakeOwnership(renderPasses_, MakeUnique<GLRenderPass>(desc));
+}
+
+void GLRenderSystem::Release(RenderPass& renderPass)
+{
+    RemoveFromUniqueSet(renderPasses_, &renderPass);
+}
+
 /* ----- Render Targets ----- */
 
 RenderTarget* GLRenderSystem::CreateRenderTarget(const RenderTargetDescriptor& desc)
 {
     LLGL_ASSERT_FEATURE_SUPPORT(hasRenderTargets);
+    AssertCreateRenderTarget(desc);
     return TakeOwnership(renderTargets_, MakeUnique<GLRenderTarget>(desc));
 }
 
 void GLRenderSystem::Release(RenderTarget& renderTarget)
 {
-    /* Release render target (GLRenderTarget destructor notifies GL state manager about object releases) */
-    auto& renderTargetGL = LLGL_CAST(GLRenderTarget&, renderTarget);
     RemoveFromUniqueSet(renderTargets_, &renderTarget);
 }
 
@@ -165,7 +176,6 @@ void GLRenderSystem::Release(Shader& shader)
 
 void GLRenderSystem::Release(ShaderProgram& shaderProgram)
 {
-    auto& shaderProgramGL = LLGL_CAST(GLShaderProgram&, shaderProgram);
     RemoveFromUniqueSet(shaderPrograms_, &shaderProgram);
 }
 

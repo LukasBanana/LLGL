@@ -20,6 +20,9 @@
 
 std::string GetSelectedRendererModule(int argc, char* argv[])
 {
+    #ifdef __APPLE__
+    return "Metal";
+    #else
     /* Select renderer module */
     std::string rendererModule;
 
@@ -75,6 +78,7 @@ std::string GetSelectedRendererModule(int argc, char* argv[])
     std::cout << "selected renderer: " << rendererModule << std::endl;
 
     return rendererModule;
+    #endif // /__APPLE__
 }
 
 std::string ReadFileContent(const std::string& filename)
@@ -254,9 +258,11 @@ Tutorial::Tutorial(
 
     // Initialize command buffer
     commands->SetClearColor(defaultClearColor);
+    #if 0
     commands->SetRenderTarget(*context);
     commands->SetViewport({ { 0, 0 }, resolution });
     commands->SetScissor({ { 0, 0 }, resolution });
+    #endif
 
     // Print renderer information
     const auto& info = renderer->GetRendererInfo();
@@ -416,34 +422,42 @@ bool Tutorial::ReloadShaderProgram(LLGL::ShaderProgram*& shaderProgram)
 LLGL::ShaderProgram* Tutorial::LoadStandardShaderProgram(const std::vector<LLGL::VertexFormat>& vertexFormats)
 {
     // Load shader program
-    const auto& languages = renderer->GetRenderingCaps().shadingLanguages;
-
-    if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::GLSL) != languages.end())
+    if (Supported(LLGL::ShadingLanguage::GLSL))
     {
         return LoadShaderProgram(
             {
-                { LLGL::ShaderType::Vertex, "vertex.glsl" },
+                { LLGL::ShaderType::Vertex,   "vertex.glsl"   },
                 { LLGL::ShaderType::Fragment, "fragment.glsl" }
             },
             vertexFormats
         );
     }
-    if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::SPIRV) != languages.end())
+    if (Supported(LLGL::ShadingLanguage::SPIRV))
     {
         return LoadShaderProgram(
             {
-                { LLGL::ShaderType::Vertex, "vertex.450core.spv" },
+                { LLGL::ShaderType::Vertex,   "vertex.450core.spv"   },
                 { LLGL::ShaderType::Fragment, "fragment.450core.spv" }
             },
             vertexFormats
         );
     }
-    if (std::find(languages.begin(), languages.end(), LLGL::ShadingLanguage::HLSL) != languages.end())
+    if (Supported(LLGL::ShadingLanguage::HLSL))
     {
         return LoadShaderProgram(
             {
-                { LLGL::ShaderType::Vertex, "shader.hlsl", "VS", "vs_5_0" },
+                { LLGL::ShaderType::Vertex,   "shader.hlsl", "VS", "vs_5_0" },
                 { LLGL::ShaderType::Fragment, "shader.hlsl", "PS", "ps_5_0" }
+            },
+            vertexFormats
+        );
+    }
+    if (Supported(LLGL::ShadingLanguage::Metal))
+    {
+        return LoadShaderProgram(
+            {
+                { LLGL::ShaderType::Vertex,   "shader.metal", "VS", "1.1" },
+                { LLGL::ShaderType::Fragment, "shader.metal", "PS", "1.1" }
             },
             vertexFormats
         );

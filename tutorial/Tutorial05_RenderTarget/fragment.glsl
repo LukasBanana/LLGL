@@ -2,14 +2,14 @@
 
 #version 450
 
-layout(std140) uniform Settings
+layout(std140, binding = 0) uniform Settings
 {
 	mat4 wvpMatrix;
 	int useTexture2DMS;
 };
 
-layout(binding=0) uniform sampler2D colorMap;
-layout(binding=1) uniform sampler2DMS colorMapMS;
+layout(binding = 1) uniform sampler2D colorMap;
+layout(binding = 2) uniform sampler2DMS colorMapMS;
 
 in vec2 vTexCoord;
 

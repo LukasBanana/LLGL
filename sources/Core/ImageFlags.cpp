@@ -556,6 +556,7 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
     {
         case Format::Undefined:         break;
 
+        /* --- Color formats --- */
         case Format::R8UNorm:           return T{ ImageFormat::R, DataType::UInt8 };
         case Format::R8SNorm:           return T{ ImageFormat::R, DataType::Int8 };
         case Format::R8UInt:            return T{ ImageFormat::R, DataType::UInt8 };
@@ -616,11 +617,26 @@ static std::tuple<ImageFormat, DataType> FindSuitableImageFormatPrimary(const Fo
         case Format::RGBA32SInt:        return T{ ImageFormat::RGBA, DataType::Int32 };
         case Format::RGBA32Float:       return T{ ImageFormat::RGBA, DataType::Float32 };
 
+        /* --- Extended color formats --- */
+        case Format::R64Float:          return T{ ImageFormat::R, DataType::Float64 };
+        case Format::RG64Float:         return T{ ImageFormat::RG, DataType::Float64 };
+        case Format::RGB64Float:        return T{ ImageFormat::RGB, DataType::Float64 };
+        case Format::RGBA64Float:       return T{ ImageFormat::RGBA, DataType::Float64 };
+
+        /* --- Reversed color formats --- */
+        case Format::BGRA8UNorm:        return T{ ImageFormat::BGRA, DataType::UInt8 };
+        case Format::BGRA8SNorm:        return T{ ImageFormat::BGRA, DataType::Int8 };
+        case Format::BGRA8UInt:         return T{ ImageFormat::BGRA, DataType::UInt8 };
+        case Format::BGRA8SInt:         return T{ ImageFormat::BGRA, DataType::Int8 };
+        case Format::BGRA8sRGB:         return T{ ImageFormat::BGRA, DataType::UInt8 };
+    
+        /* --- Depth-stencil formats --- */
         case Format::D16UNorm:          return T{ ImageFormat::Depth, DataType::UInt16 };
         case Format::D32Float:          return T{ ImageFormat::Depth, DataType::Float32 };
         case Format::D24UNormS8UInt:    return T{ ImageFormat::DepthStencil, DataType::Float32 };
         case Format::D32FloatS8X24UInt: break;
 
+        /* --- Compressed color formats --- */
         case Format::BC1RGB:            return T{ ImageFormat::CompressedRGB, DataType::Int8 };
         case Format::BC1RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int8 };
         case Format::BC2RGBA:           return T{ ImageFormat::CompressedRGBA, DataType::Int16 };

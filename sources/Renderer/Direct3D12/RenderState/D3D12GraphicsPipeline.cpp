@@ -32,12 +32,12 @@ D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12RenderSystem& renderSystem, co
     /* Validate pointers and get D3D shader program */
     LLGL_ASSERT_PTR(desc.shaderProgram);
 
-    auto shaderProgramD3D = LLGL_CAST(D3D12ShaderProgram*, desc.shaderProgram);
+    auto shaderProgramD3D = LLGL_CAST(const D3D12ShaderProgram*, desc.shaderProgram);
 
     if (auto pipelineLayout = desc.pipelineLayout)
     {
         /* Create pipeline state with root signature from pipeline layout */
-        auto pipelineLayoutD3D = LLGL_CAST(D3D12PipelineLayout*, pipelineLayout);
+        auto pipelineLayoutD3D = LLGL_CAST(const D3D12PipelineLayout*, pipelineLayout);
         CreatePipelineState(renderSystem, *shaderProgramD3D, pipelineLayoutD3D->GetRootSignature(), desc);
     }
     else
@@ -190,7 +190,7 @@ static D3D12_PRIMITIVE_TOPOLOGY_TYPE GetPrimitiveToplogyType(const PrimitiveTopo
 
 void D3D12GraphicsPipeline::CreatePipelineState(
     D3D12RenderSystem&                  renderSystem,
-    D3D12ShaderProgram&                 shaderProgram,
+    const D3D12ShaderProgram&           shaderProgram,
     ID3D12RootSignature*                rootSignature,
     const GraphicsPipelineDescriptor&   desc)
 {

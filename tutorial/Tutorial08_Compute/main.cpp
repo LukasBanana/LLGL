@@ -23,6 +23,8 @@ int main(int argc, char* argv[])
         /*auto context = */renderer->CreateRenderContext(contextDesc);
 
         // Create command buffer
+        auto commandQueue = renderer->GetCommandQueue();
+
         union
         {
             LLGL::CommandBuffer*    commands    = nullptr;
@@ -110,20 +112,24 @@ int main(int argc, char* argv[])
         // Create compute pipeline
         auto pipeline = renderer->CreateComputePipeline({ shaderProgram, pipelineLayout });
 
-        // Set compute pipeline
-        commands->SetComputePipeline(*pipeline);
+        commandQueue->Begin(*commands);
+        {
+            // Set compute pipeline
+            commands->SetComputePipeline(*pipeline);
 
-        // Set storage buffer
-        if (resourceHeap)
-            commands->SetComputeResourceHeap(*resourceHeap, 0);
-        else if (commandsExt)
-            commandsExt->SetStorageBuffer(*storageBuffer, 0, LLGL::StageFlags::ComputeStage);
+            // Set storage buffer
+            if (resourceHeap)
+                commands->SetComputeResourceHeap(*resourceHeap, 0);
+            else if (commandsExt)
+                commandsExt->SetStorageBuffer(*storageBuffer, 0, LLGL::StageFlags::ComputeStage);
 
-        // Dispatch compute shader
-        commands->Dispatch(static_cast<std::uint32_t>(inputData.size()), 1, 1);
+            // Dispatch compute shader
+            commands->Dispatch(static_cast<std::uint32_t>(inputData.size()), 1, 1);
+        }
+        commandQueue->End(*commands);
 
         // Read result
-        renderer->GetCommandQueue()->WaitIdle();
+        commandQueue->WaitIdle();
 
         if (auto outputBuffer = renderer->MapBuffer(*storageBuffer, LLGL::CPUAccess::ReadOnly))
         {

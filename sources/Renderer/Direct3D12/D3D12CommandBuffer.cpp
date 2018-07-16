@@ -23,6 +23,7 @@
 #include "Texture/D3D12Texture.h"
 
 #include "RenderState/D3D12ResourceHeap.h"
+#include "RenderState/D3D12RenderPass.h"
 
 
 namespace LLGL
@@ -85,9 +86,9 @@ void D3D12CommandBuffer::SetViewports(std::uint32_t numViewports, const Viewport
         commandList_->RSSetViewports(numViewports, viewportsD3D);
     }
 
-    /* If scissor test is disabled, update remaining scissor rectangles to extent of active framebuffer */
+    /* If scissor test is disabled, update remaining scissor rectangles to default value */
     if (!scissorEnabled_)
-        SetScissorRectsWithFramebufferExtent(numViewports);
+        SetScissorRectsToDefault(numViewports);
 }
 
 void D3D12CommandBuffer::SetScissor(const Scissor& scissor)
@@ -135,6 +136,18 @@ void D3D12CommandBuffer::SetClearStencil(std::uint32_t stencil)
     clearValue_.stencil = (stencil & 0xff);
 }
 
+static D3D12_CLEAR_FLAGS GetClearFlagsDSV(long flags)
+{
+    UINT clearFlagsDSV = 0;
+
+    if ((flags & ClearFlags::Depth) != 0)
+        clearFlagsDSV |= D3D12_CLEAR_FLAG_DEPTH;
+    if ((flags & ClearFlags::Stencil) != 0)
+        clearFlagsDSV |= D3D12_CLEAR_FLAG_STENCIL;
+
+    return static_cast<D3D12_CLEAR_FLAGS>(clearFlagsDSV);
+}
+
 void D3D12CommandBuffer::Clear(long flags)
 {
     if (rtvDescHandle_.ptr != 0)
@@ -147,18 +160,11 @@ void D3D12CommandBuffer::Clear(long flags)
     if (dsvDescHandle_.ptr != 0)
     {
         /* Clear depth-stencil buffer */
-        INT dsvClearFlags = 0;
-
-        if ((flags & ClearFlags::Depth) != 0)
-            dsvClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
-        if ((flags & ClearFlags::Stencil) != 0)
-            dsvClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
-
-        if (dsvClearFlags)
+        if (auto clearFlagsDSV = GetClearFlagsDSV(flags))
         {
             commandList_->ClearDepthStencilView(
                 dsvDescHandle_,
-                static_cast<D3D12_CLEAR_FLAGS>(dsvClearFlags),
+                clearFlagsDSV,
                 clearValue_.depth,
                 static_cast<UINT8>(clearValue_.stencil),
                 0,
@@ -247,29 +253,42 @@ void D3D12CommandBuffer::SetComputeResourceHeap(ResourceHeap& resourceHeap, std:
     //todo...
 }
 
-/* ----- Render Targets ----- */
+/* ----- Render Passes ----- */
 
-void D3D12CommandBuffer::SetRenderTarget(RenderTarget& renderTarget)
+void D3D12CommandBuffer::BeginRenderPass(
+    RenderTarget&       renderTarget,
+    const RenderPass*   renderPass,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues)
 {
-    //todo
+    /* Bind render target/context */
+    if (renderTarget.IsRenderContext())
+        BindRenderContext(LLGL_CAST(D3D12RenderContext&, renderTarget));
+    #if 0//TODO
+    else
+        ;
+    #endif
+
+    /* Clear attachments */
+    if (renderPass)
+    {
+        auto renderPassD3D = LLGL_CAST(const D3D12RenderPass*, renderPass);
+        ClearAttachmentsWithRenderPass(*renderPassD3D, numClearValues, clearValues);
+    }
 }
 
-void D3D12CommandBuffer::SetRenderTarget(RenderContext& renderContext)
+void D3D12CommandBuffer::EndRenderPass()
 {
-    auto& renderContextD3D = LLGL_CAST(D3D12RenderContext&, renderContext);
-
-    renderContextD3D.SetCommandBuffer(this);
-
-    /* Set back-buffer RTVs */
-    SetBackBufferRTV(renderContextD3D);
-
-    /* Store framebuffer extent */
-    const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
-    framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
-    framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
-
-    /* Reset information about default scissor rectangles */
-    numBoundScissorRects_ = 0;
+    if (boundBackBuffer_)
+    {
+        /* Indicate that the render target will now be used to present when the command list is done executing */
+        TransitionRenderTarget(
+            boundBackBuffer_,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_PRESENT
+        );
+        boundBackBuffer_ = nullptr;
+    }
 }
 
 /* ----- Pipeline States ----- */
@@ -286,7 +305,7 @@ void D3D12CommandBuffer::SetGraphicsPipeline(GraphicsPipeline& graphicsPipeline)
     /* Scissor rectangle must be updated (if scissor test is disabled) */
     scissorEnabled_ = graphicsPipelineD3D.IsScissorEnabled();
     if (!scissorEnabled_)
-        SetScissorRectsWithFramebufferExtent(1);
+        SetScissorRectsToDefault(1);
 }
 
 void D3D12CommandBuffer::SetComputePipeline(ComputePipeline& computePipeline)
@@ -380,11 +399,14 @@ void D3D12CommandBuffer::Dispatch(std::uint32_t groupSizeX, std::uint32_t groupS
 
 /* ----- Extended functions ----- */
 
-void D3D12CommandBuffer::ResetCommandList(ID3D12CommandAllocator* commandAlloc, ID3D12PipelineState* pipelineState)
+void D3D12CommandBuffer::CloseCommandList()
 {
-    /* Reset commanb list with command allocator and pipeline state */
-    auto hr = commandList_->Reset(commandAlloc, pipelineState);
-    DXThrowIfFailed(hr, "failed to reset D3D12 command list");
+    /* Close native command list */
+    auto hr = commandList_->Close();
+    DXThrowIfFailed(hr, "failed to close D3D12 command list");
+
+    /* Reset intermediate states */
+    numBoundScissorRects_ = 0;
 }
 
 
@@ -401,10 +423,11 @@ void D3D12CommandBuffer::CreateDevices(D3D12RenderSystem& renderSystem)
 
 void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
 {
-    if (!renderContextD3D.HasMultiSampling())
+    if (boundBackBuffer_)
     {
         /* Indicate that the back buffer will be used as render target */
-        renderContextD3D.TransitionRenderTarget(
+        TransitionRenderTarget(
+            boundBackBuffer_,
             D3D12_RESOURCE_STATE_PRESENT,
             D3D12_RESOURCE_STATE_RENDER_TARGET
         );
@@ -426,7 +449,7 @@ void D3D12CommandBuffer::SetBackBufferRTV(D3D12RenderContext& renderContextD3D)
     }
 }
 
-void D3D12CommandBuffer::SetScissorRectsWithFramebufferExtent(UINT numScissorRects)
+void D3D12CommandBuffer::SetScissorRectsToDefault(UINT numScissorRects)
 {
     numScissorRects = std::min(numScissorRects, UINT(D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE));
 
@@ -439,14 +462,123 @@ void D3D12CommandBuffer::SetScissorRectsWithFramebufferExtent(UINT numScissorRec
         {
             scissorRects[i].left    = 0;
             scissorRects[i].top     = 0;
-            scissorRects[i].right   = framebufferWidth_;
-            scissorRects[i].bottom  = framebufferHeight_;
+            scissorRects[i].right   = std::numeric_limits<LONG>::max();
+            scissorRects[i].bottom  = std::numeric_limits<LONG>::max();
         }
 
         commandList_->RSSetScissorRects(numScissorRects, scissorRects);
 
         /* Store new number of bound scissor rectangles */
         numBoundScissorRects_ = numScissorRects;
+    }
+}
+
+/*void D3D12CommandBuffer::BindRenderTarget(D3D12RenderTarget& renderTargetD3D)
+{
+    //todo
+}*/
+
+void D3D12CommandBuffer::BindRenderContext(D3D12RenderContext& renderContextD3D)
+{
+    if (!renderContextD3D.HasMultiSampling())
+        boundBackBuffer_ = renderContextD3D.GetCurrentColorBuffer();
+
+    /* Set back-buffer RTVs */
+    SetBackBufferRTV(renderContextD3D);
+
+    /* Store framebuffer extent */
+    const auto& framebufferExtent = renderContextD3D.GetVideoMode().resolution;
+    framebufferWidth_   = static_cast<LONG>(framebufferExtent.width);
+    framebufferHeight_  = static_cast<LONG>(framebufferExtent.height);
+}
+
+void D3D12CommandBuffer::TransitionRenderTarget(
+    ID3D12Resource*         colorBuffer,
+    D3D12_RESOURCE_STATES   stateBefore,
+    D3D12_RESOURCE_STATES   stateAfter)
+{
+    /* Indicate a transition in the render-target usage and synchronize with the resource barrier */
+    commandList_->ResourceBarrier(
+        1, &CD3DX12_RESOURCE_BARRIER::Transition(colorBuffer, stateBefore, stateAfter)
+    );
+}
+
+void D3D12CommandBuffer::ClearAttachmentsWithRenderPass(
+    const D3D12RenderPass&  renderPassD3D,
+    std::uint32_t           numClearValues,
+    const ClearValue*       clearValues)
+{
+    /* Clear color attachments */
+    std::uint32_t idx = 0;
+    ClearColorBuffers(renderPassD3D.GetClearColorAttachments(), numClearValues, clearValues, idx);
+
+    /* Clear depth-stencil attachment */
+    if (dsvDescHandle_.ptr != 0)
+    {
+        /* Clear depth-stencil buffer */
+        if (auto clearFlagsDSV = renderPassD3D.GetClearFlagsDSV())
+        {
+            /* Get clear values */
+            FLOAT depth     = clearValue_.depth;
+            UINT8 stencil   = static_cast<UINT8>(clearValue_.stencil);
+
+            if (idx < numClearValues)
+            {
+                depth   = clearValues[idx].depth;
+                stencil = static_cast<UINT8>(clearValues[idx].stencil & 0xff);
+            }
+
+            /* Clear depth-stencil view */
+            commandList_->ClearDepthStencilView(dsvDescHandle_, clearFlagsDSV, depth, stencil, 0, nullptr);
+        }
+    }
+}
+
+void D3D12CommandBuffer::ClearColorBuffers(
+    const std::uint8_t* colorBuffers,
+    std::uint32_t       numClearValues,
+    const ClearValue*   clearValues,
+    std::uint32_t&      idx)
+{
+    //TODO: get correct number for RTVs
+    //                       |
+    //                       v
+    std::uint32_t i = 0, n = 1;
+
+    numClearValues = std::min(numClearValues, n);
+
+    /* Use specified clear values */
+    for (; i < numClearValues; ++i)
+    {
+        /* Check if attachment list has ended */
+        if (colorBuffers[i] != 0xFF)
+        {
+            //TODO: use 'colorBuffers[i]' to select correct <D3D12_CPU_DESCRIPTOR_HANDLE>
+            if (rtvDescHandle_.ptr != 0)
+            {
+                commandList_->ClearRenderTargetView(rtvDescHandle_, clearValues[idx++].color.Ptr(), 0, nullptr);
+            }
+            else
+                ++idx;
+        }
+        else
+            return;
+    }
+
+    /* Use default clear values */
+    for (; i < n; ++i)
+    {
+        /* Check if attachment list has ended */
+        if (colorBuffers[i] != 0xFF)
+        {
+            //TODO: use 'colorBuffers[i]' to select correct <D3D12_CPU_DESCRIPTOR_HANDLE>
+            if (rtvDescHandle_.ptr != 0)
+            {
+                commandList_->ClearRenderTargetView(rtvDescHandle_, clearValue_.color.Ptr(), 0, nullptr);
+            }
+        }
+        else
+            return;
     }
 }
 

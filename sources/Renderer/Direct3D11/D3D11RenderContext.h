@@ -49,6 +49,8 @@ class D3D11RenderContext final : public RenderContext
         Format QueryColorFormat() const override;
         Format QueryDepthStencilFormat() const override;
 
+        const RenderPass* GetRenderPass() const override;
+
         /* ----- Extended internal functions ----- */
 
         inline const D3D11BackBuffer& GetBackBuffer() const

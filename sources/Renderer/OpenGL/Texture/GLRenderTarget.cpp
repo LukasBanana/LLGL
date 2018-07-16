@@ -68,14 +68,20 @@ static std::size_t CountColorAttachments(const std::vector<AttachmentDescriptor>
  */
 
 GLRenderTarget::GLRenderTarget(const RenderTargetDescriptor& desc) :
-    RenderTarget  { desc.resolution                                        },
-    multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) }
+    resolution_   { desc.resolution                                        },
+    multiSamples_ { static_cast<GLsizei>(desc.multiSampling.SampleCount()) },
+    renderPass_   { desc.renderPass                                        }
 {
     framebuffer_.GenFramebuffer();
     if (desc.attachments.empty())
         CreateFramebufferWithNoAttachments(desc);
     else
         CreateFramebufferWithAttachments(desc);
+}
+
+Extent2D GLRenderTarget::GetResolution() const
+{
+    return resolution_;
 }
 
 std::uint32_t GLRenderTarget::GetNumColorAttachments() const
@@ -91,6 +97,11 @@ bool GLRenderTarget::HasDepthAttachment() const
 bool GLRenderTarget::HasStencilAttachment() const
 {
     return ((blitMask_ & GL_STENCIL_BUFFER_BIT) != 0);
+}
+
+const RenderPass* GLRenderTarget::GetRenderPass() const
+{
+    return renderPass_;
 }
 
 /* ----- Extended Internal Functions ----- */

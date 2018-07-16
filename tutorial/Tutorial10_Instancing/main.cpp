@@ -49,7 +49,7 @@ class Tutorial10 : public Tutorial
 public:
 
     Tutorial10() :
-        Tutorial { L"LLGL Tutorial 10: Instancing" }
+        Tutorial { L"LLGL Tutorial 10: Instancing", { 800, 600 }, 0 }
     {
         UpdateAnimation();
 
@@ -86,11 +86,11 @@ private:
         LLGL::VertexFormat vertexFormatPerInstance;
         vertexFormatPerInstance.inputSlot = 1;
         vertexFormatPerInstance.AppendAttribute({ "color",      LLGL::Format::RGB32Float,  1 });
+        vertexFormatPerInstance.AppendAttribute({ "arrayLayer", LLGL::Format::R32Float,    1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 0, LLGL::Format::RGBA32Float, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 1, LLGL::Format::RGBA32Float, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 2, LLGL::Format::RGBA32Float, 1 });
         vertexFormatPerInstance.AppendAttribute({ "wMatrix", 3, LLGL::Format::RGBA32Float, 1 });
-        vertexFormatPerInstance.AppendAttribute({ "arrayLayer", LLGL::Format::R32Float,    1 });
 
         // Initialize per-vertex data (4 vertices for the plane of each plant)
         static const float grassSize    = 100.0f;
@@ -120,8 +120,8 @@ private:
         struct Instance
         {
             LLGL::ColorRGBf color;      // Instance color
-            Gs::Matrix4f    wMatrix;    // World matrix
             float           arrayLayer; // Array texture layer
+            Gs::Matrix4f    wMatrix;    // World matrix
         };
 
         std::vector<Instance> instanceData(numPlantInstances + 1);
@@ -135,6 +135,9 @@ private:
             instance.color.g = Random(0.8f, 1.0f);
             instance.color.b = Random(0.6f, 1.0f);
             instance.color *= Random(0.8f, 1.0f);
+
+            // Set array texture layer randomly, too
+            instance.arrayLayer = std::floor( Random(0.0f, static_cast<float>(numPlantImages) - Gs::Epsilon<float>()) );
 
             // Distribute instances randomly over the specified position range
             Gs::Translate(
@@ -151,9 +154,6 @@ private:
 
             // Scale size randomly
             Gs::Scale(instance.wMatrix, Gs::Vector3f(Random(0.7f, 1.5f)));
-
-            // Set array texture layer randomly, too
-            instance.arrayLayer = std::floor( Random(0.0f, static_cast<float>(numPlantImages) - Gs::Epsilon<float>()) );
         }
 
         // Initialize last instance (for grass plane)
@@ -273,7 +273,7 @@ private:
         {
             plDesc.bindings =
             {
-                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage,   0 },
+                LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::VertexStage,   /*0*/3 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage, 1 },
                 LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage, 2 },
             };
@@ -304,7 +304,7 @@ private:
 
         // Create graphics pipeline with multi-sampling and alpha-to-coverage enabled
         {
-            pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
+            //pipelineDesc.rasterizer.multiSampling       = LLGL::MultiSamplingDescriptor(8);
             pipelineDesc.blend.alphaToCoverageEnabled   = true;
         }
         pipeline[1] = renderer->CreateGraphicsPipeline(pipelineDesc);
@@ -368,47 +368,52 @@ private:
                 std::cout << "Alpha-To-Coverage Disabled" << std::endl;
         }
 
-        // Set the render context as the initial render target
-        commands->SetRenderTarget(*context);
-
-        // Set viewport
-        const auto resolution = context->GetVideoMode().resolution;
-        commands->SetViewport(LLGL::Viewport{ { 0, 0 }, resolution });
-
-        // Clear color- and depth buffers
-        commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-        // Set buffer array, texture, and sampler
-        commands->SetVertexBufferArray(*vertexBufferArray);
-
-        // Set graphics pipeline state
-        commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
-
-        if (pipelineLayout)
+        commandQueue->Begin(*commands);
         {
-            // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-            commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
-            commands->DrawInstanced(4, 0, numPlantInstances);
+            // Set buffer array, texture, and sampler
+            commands->SetVertexBufferArray(*vertexBufferArray);
 
-            // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-            commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
-            commands->DrawInstanced(4, 4, 1, numPlantInstances);
+            // Set the render context as the initial render target
+            commands->BeginRenderPass(*context);
+            {
+                // Clear color- and depth buffers
+                commands->Clear(LLGL::ClearFlags::ColorDepth);
+
+                // Set viewport
+                commands->SetViewport(LLGL::Viewport{ { 0, 0 }, context->GetResolution() });
+
+                // Set graphics pipeline state
+                commands->SetGraphicsPipeline(*pipeline[alphaToCoverageEnabled ? 1 : 0]);
+
+                if (0)//pipelineLayout)
+                {
+                    // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+                    commands->SetGraphicsResourceHeap(*resourceHeaps[0], 0);
+                    commands->DrawInstanced(4, 0, numPlantInstances);
+
+                    // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+                    commands->SetGraphicsResourceHeap(*resourceHeaps[1], 0);
+                    commands->DrawInstanced(4, 4, 1, numPlantInstances);
+                }
+                else
+                {
+                    commandsExt->SetTexture(*arrayTexture, 0, LLGL::StageFlags::FragmentStage);
+                    commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
+
+                    // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
+                    commandsExt->SetSampler(*samplers[0], 0, LLGL::StageFlags::FragmentStage);
+                    commands->DrawInstanced(4, 0, numPlantInstances);
+
+                    #if 1//#ifndef __APPLE__
+                    // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
+                    commandsExt->SetSampler(*samplers[1], 0, LLGL::StageFlags::FragmentStage);
+                    commands->DrawInstanced(4, 4, 1, numPlantInstances);
+                    #endif
+                }
+            }
+            commands->EndRenderPass();
         }
-        else
-        {
-            commandsExt->SetTexture(*arrayTexture, 0, LLGL::StageFlags::FragmentStage);
-            commandsExt->SetConstantBuffer(*constantBuffer, 0, LLGL::StageFlags::VertexStage);
-
-            // Draw all plant instances (vertices: 4, first vertex: 0, instances: numPlantInstances)
-            commandsExt->SetSampler(*samplers[0], 0, LLGL::StageFlags::FragmentStage);
-            commands->DrawInstanced(4, 0, numPlantInstances);
-
-            #ifndef __APPLE__
-            // Draw grass plane (vertices: 4, first vertex: 4, instances: 1, instance offset: numPlantInstances)
-            commandsExt->SetSampler(*samplers[1], 0, LLGL::StageFlags::FragmentStage);
-            commands->DrawInstanced(4, 4, 1, numPlantInstances);
-            #endif
-        }
+        commandQueue->End(*commands);
 
         // Present result on the screen
         context->Present();

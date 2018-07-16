@@ -19,6 +19,7 @@
 #include "ResourceHeap.h"
 #include "PipelineLayoutFlags.h"
 
+#include "RenderPass.h"
 #include "RenderTarget.h"
 #include "ShaderProgram.h"
 #include "GraphicsPipeline.h"
@@ -38,12 +39,14 @@ class RenderContext;
 \brief Command buffer interface.
 \remarks This is the main interface to record graphics and compute commands to be submitted to the GPU.
 For older graphics APIs (such as OpenGL and Direct3D 11) it makes not much sense to create multiple command buffers,
-but for recent graphics APIs (such as Vulkan and Direct3D 12) it might be sensible to have more than one command buffer,
+but for recent graphics APIs (such as Vulkan, Direct3D 12, and Metal) it might be sensible to have more than one command buffer,
 to maximize CPU utilization with several worker threads and one command buffer for each thread.
+However, multi-threading for command buffers is currently not supported by LLGL!
 Assume that all states that can be changed with a setter function are not persistent except the opposite is mentioned.
-\note Before any command can be recorded by the command buffer, a valid render target must be set (either a RenderTarget or RenderContext object).
-\see SetRenderTarget(RenderContext&)
-\see SetRenderTarget(RenderTarget&)
+Before any command can be recorded, the command buffer must be set into record mode, which is done by the CommandQueue::Begin function.
+There are only a few exceptions of functions that can be used outside of recording,
+which are CommandBuffer::SetClearColor, CommandBuffer::SetClearDepth, and CommandBuffer::SetClearStencil.
+\see CommandQueue::Begin(CommandBuffer&, long)
 */
 class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 {
@@ -117,14 +120,14 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
 
         /**
         \brief Sets the new value to clear the color buffer. By default black (0, 0, 0, 0).
-        \note This state is guaranteed to be persistent.
+        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
         \see Clear
         */
         virtual void SetClearColor(const ColorRGBAf& color) = 0;
 
         /**
         \brief Sets the new value to clear the depth buffer with. By default 1.0.
-        \note This state is guaranteed to be persistent.
+        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
         \see Clear
         */
         virtual void SetClearDepth(float depth) = 0;
@@ -132,8 +135,8 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Sets the new value to clear the stencil buffer. By default 0.
         \param[in] stencil Specifies the value to clear the stencil buffer.
-        This value is masked with 2^m-1, where m is the number of bits in the stencil buffer (e.g. 'stencil & 0xFF' for an 8-bit stencil buffer).
-        \note This state is guaranteed to be persistent.
+        This value is masked with <code>2^m-1</code>, where \c m is the number of bits in the stencil buffer (e.g. <code>stencil & 0xFF</code> for an 8-bit stencil buffer).
+        \note This state is guaranteed to be persistent and can be used outside of command buffer recording.
         \see Clear
         */
         virtual void SetClearStencil(std::uint32_t stencil) = 0;
@@ -141,16 +144,20 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         /**
         \brief Clears the specified group of attachments of the active render target.
         \param[in] flags Specifies the clear buffer flags.
-        This can be a bitwise OR combination of the "ClearFlags" enumeration entries.
-        If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color previously set by SetClearColor.
-        \remarks To specify the clear values for each buffer type, use the respective "SetClear..." function.
-        To clear only a specific render-target color buffer, use the "ClearAttachments" function.
+        This can be a bitwise OR combination of the ClearFlags enumeration entries.
+        If this contains the ClearFlags::Color bit, all color attachments of the active render target are cleared with the color previously set by \c SetClearColor.
+        \remarks To specify the clear values for each buffer type, use the respective <code>SetClear...</code> function.
+        To clear only a specific render-target color buffer, use the \c ClearAttachments function.
         Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
+        For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
+        i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
+        For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
         \see ClearFlags
         \see SetClearColor
         \see SetClearDepth
         \see SetClearStencil
         \see ClearAttachments
+        \see BeginRenderPass
         */
         virtual void Clear(long flags) = 0;
 
@@ -158,9 +165,13 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \brief Clears the specified attachments of the active render target.
         \param[in] numAttachments Specifies the number of attachments to clear.
         \param[in] attachments Pointer to the array of attachment clear commands. This must not be null!
-        \remarks To clear all color buffers with the same value, use the "Clear" function.
+        \remarks To clear all color buffers with the same value, use the \c Clear function.
         Clearing a depth-stencil attachment while the active render target has no depth-stencil buffer is allowed but has no effect.
+        For efficiency reasons, it is recommended to clear the render target attachments when a new render pass begins,
+        i.e. the clear values of the \c BeginRenderPass function should be prefered over this function.
+        For some render systems (e.g. Metal) this function forces the current render pass to stop and start again in order to clear the attachments.
         \see Clear
+        \see BeginRenderPass
         */
         virtual void ClearAttachments(std::uint32_t numAttachments, const AttachmentClear* attachments) = 0;
 
@@ -246,24 +257,63 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         */
         virtual void SetComputeResourceHeap(ResourceHeap& resourceHeap, std::uint32_t firstSet = 0) = 0;
 
-        /* ----- Render Targets ----- */
+        /* ----- Render Passes ----- */
 
         /**
-        \brief Sets the specified render target as the new target for subsequent rendering commands.
-        \param[in] renderTarget Specifies the render target to set.
-        \remarks Subsequent drawing operations will be rendered into the textures that are attached to the specified render target.
-        \note This function may invalidate the viewports and scissor rectangles.
-        It is hence advisable to always set the viewports (and scissor rectangles, if enabled) after a new render target is bound.
-        \see SetRenderTarget(RenderContext&)
+        \brief Begins with a new render pass.
+        \param[in] renderTarget Specifies the render target in which the subsequent draw operations will be stored.
+        \param[in] renderPass Specifies an optional render pass object. If this is null, the default render pass for the specified render target will be used.
+        This render pass object must be compatible with the render pass object the specified render target was created with.
+        \param[in] numClearValues Specifies the number of clear values that are specified in the <code>clearValues</code> parameter.
+        This should be greater than or equal to the number of render pass attachments whose load operation (i.e. AttachmentFormatDescriptor::loadOp) is set to AttachmentLoadOp::Clear.
+        Otherwise, the default values from \c SetClearColor, \c SetClearDepth, and \c SetClearStencil are used.
+        \param[in] clearValues Optional pointer to the array of clear values.
+        If <code>numClearValues</code> is not zero, this must be a valid pointer to an array of at least <code>numClearValues</code> entries.
+        Each entry in the array is used to clear the attachment whose load operation is set to AttachmentLoadOp::Clear,
+        where the depth attachment (i.e. RenderPassDescriptor::depthAttachment) and
+        the stencil attachment (i.e. RenderPassDescriptor::stencilAttachment) are combined and appear as the last entry.
+        \remarks This function starts a new render pass section and must be ended with the EndRenderPass function.
+        A simple frame setup could look like this:
+        \code
+        myCmdQueue->Begin(*myCmdBuffer);
+        {
+            myCmdBuffer->BeginRenderPass(*myRenderTarget);
+            {
+                myCmdBuffer->SetGraphicsPipeline(*myGfxPipeline);
+                myCmdBuffer->SetGraphicsResourceHeap(*myResourceHeap);
+                myCmdBuffer->Draw(...);
+            }
+            myCmdBuffer->EndRenderPass();
+        }
+        myCmdQueue->End(*myCmdBuffer);
+        myRenderContext->Present();
+        \endcode
+        \remarks
+        The following commands can only appear inside a render pass section:
+        - Drawing commands (i.e. <code>Draw</code>, <code>DrawInstanced</code>, <code>DrawIndexed</code>, and <code>DrawIndexedInstanced</code>).
+        - Clear attachment commands (i.e. <code>Clear</code>, and <code>ClearAttachments</code>).
+        \remarks
+        The following commands can only appear outside a render pass section:
+        - Dispatch compute commands (i.e. <code>Dispatch</code>).
+        - Resource read/write from the RenderSystem (i.e. <code>WriteBuffer</code>, <code>MapBuffer</code> etc.).
+        \see RenderSystem::CreateRenderPass
+        \see RenderSystem::CreateRenderTarget
+        \see RenderTargetDescriptor::renderPass
+        \see AttachmentFormatDescriptor::loadOp
+        \see EndRenderPass
         */
-        virtual void SetRenderTarget(RenderTarget& renderTarget) = 0;
+        virtual void BeginRenderPass(
+            RenderTarget&       renderTarget,
+            const RenderPass*   renderPass      = nullptr,
+            std::uint32_t       numClearValues  = 0,
+            const ClearValue*   clearValues     = nullptr
+        ) = 0;
 
         /**
-        \brief Sets the back buffer (or rather swap-chain) of the specified render context as the new target for subsequent rendering commands.
-        \remarks Subsequent drawing operations will be rendered into the main framebuffer, which can then be presented onto the screen.
-        \see SetRenderTarget(RenderTarget&)
+        \brief Ends the current render pass.
+        \see BeginRenderPass
         */
-        virtual void SetRenderTarget(RenderContext& renderContext) = 0;
+        virtual void EndRenderPass() = 0;
 
         /* ----- Pipeline States ----- */
 
@@ -272,17 +322,19 @@ class LLGL_EXPORT CommandBuffer : public RenderSystemChild
         \param[in] graphicsPipeline Specifies the graphics pipeline state to set.
         \remarks This will set all blending-, rasterizer-, depth-, stencil-, and shader states.
         A valid graphics pipeline must always be set before any drawing operation can be performed,
-        and a valid render target (or render context) must always be set before any graphics pipeline can be set:
+        and a graphics pipeline can only be set inside a render pass.
         \code
         // First set render target
-        myCmdBuffer->SetRenderTarget(...);
+        myCmdBuffer->BeginRenderPass(...);
+        {
+            // Then set graphics pipeline
+            myCmdBuffer->SetGraphicsPipeline(...);
 
-        // Then set graphics pipeline
-        myCmdBuffer->SetGraphicsPipeline(...);
-
-        // Then perform drawing operations
-        myCmdBuffer->SetGraphicsResourceHeap(...);
-        myCmdBuffer->Draw(...);
+            // Then perform drawing operations
+            myCmdBuffer->SetGraphicsResourceHeap(...);
+            myCmdBuffer->Draw(...);
+        }
+        myCmdBuffer->EndRenderPass();
         \endcode
         \see RenderSystem::CreateGraphicsPipeline
         */

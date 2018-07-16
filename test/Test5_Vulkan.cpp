@@ -14,7 +14,7 @@
 
 
 //#define TEST_QUERY
-#define TEST_RENDER_TARGET
+//#define TEST_RENDER_TARGET
 
 
 int main()
@@ -217,6 +217,7 @@ int main()
         LLGL::GraphicsPipelineDescriptor pipelineDesc;
         {
             pipelineDesc.shaderProgram      = shaderProgram;
+            pipelineDesc.renderPass         = context->GetRenderPass();
             pipelineDesc.pipelineLayout     = pipelineLayout;
             pipelineDesc.primitiveTopology  = LLGL::PrimitiveTopology::TriangleStrip;
 
@@ -236,7 +237,8 @@ int main()
         // Create render target
         LLGL::RenderTargetDescriptor rtDesc;
         {
-            rtDesc.attachments =
+            rtDesc.resolution   = { renderTargetSize, renderTargetSize };
+            rtDesc.attachments  =
             {
                 LLGL::AttachmentDescriptor { LLGL::AttachmentType::Color, renderTargetTex }
             };
@@ -293,44 +295,48 @@ int main()
 
             #if 1
 
-            if (auto data = renderer->MapBuffer(*constBufferMatrices, LLGL::CPUAccess::ReadWrite))
-            {
-                auto ptr = reinterpret_cast<Matrices*>(data);
-                Gs::RotateFree(ptr->modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.002f);
-                renderer->UnmapBuffer(*constBufferMatrices);
-            }
-
             // Render scene
-            commands->SetRenderTarget(*context);
-
-            commands->Clear(LLGL::ClearFlags::ColorDepth);
-
-            commands->SetGraphicsPipeline(*pipeline);
-
-            commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetGraphicsResourceHeap(*resourceViewHeap, 0);
-
-            //commands->UpdatePipelineLayout(*pipelineLayout);
-
-            #ifdef TEST_QUERY
-            commands->BeginQuery(*query);
+            queue->Begin(*commands);
+            commands->BeginRenderPass(*context);
             {
-                commands->Draw(4, 0);
-            }
-            commands->EndQuery(*query);
-            #else
-            commands->Draw(4, 0);
-            #endif
+                commands->Clear(LLGL::ClearFlags::ColorDepth);
 
-            #ifdef TEST_RENDER_TARGET
-            // Render scene into render target
-            commands->SetRenderTarget(*renderTarget);
-            commands->Clear(LLGL::ClearFlags::Color);
-            commands->SetGraphicsPipeline(*renderTargetPipeline);
-            commands->SetVertexBuffer(*vertexBuffer);
-            commands->SetGraphicsResourceHeap(*resourceViewHeap, 0);
-            commands->Draw(4, 0);
-            #endif
+                if (auto data = renderer->MapBuffer(*constBufferMatrices, LLGL::CPUAccess::ReadWrite))
+                {
+                    auto ptr = reinterpret_cast<Matrices*>(data);
+                    Gs::RotateFree(ptr->modelView, Gs::Vector3f(0, 0, 1), Gs::pi * -0.002f);
+                    renderer->UnmapBuffer(*constBufferMatrices);
+                }
+
+                commands->SetGraphicsPipeline(*pipeline);
+
+                commands->SetVertexBuffer(*vertexBuffer);
+                commands->SetGraphicsResourceHeap(*resourceViewHeap, 0);
+
+                //commands->UpdatePipelineLayout(*pipelineLayout);
+
+                #ifdef TEST_QUERY
+                commands->BeginQuery(*query);
+                {
+                    commands->Draw(4, 0);
+                }
+                commands->EndQuery(*query);
+                #else
+                commands->Draw(4, 0);
+                #endif
+
+                #ifdef TEST_RENDER_TARGET
+                // Render scene into render target
+                commands->SetRenderTarget(*renderTarget);
+                commands->Clear(LLGL::ClearFlags::Color);
+                commands->SetGraphicsPipeline(*renderTargetPipeline);
+                commands->SetVertexBuffer(*vertexBuffer);
+                commands->SetGraphicsResourceHeap(*resourceViewHeap, 0);
+                commands->Draw(4, 0);
+                #endif
+            }
+            commands->EndRenderPass();
+            queue->End(*commands);
 
             // Present result on screen
             context->Present();

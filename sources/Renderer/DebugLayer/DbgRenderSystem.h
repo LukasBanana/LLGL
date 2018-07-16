@@ -12,6 +12,7 @@
 #include <LLGL/RenderSystem.h>
 #include "DbgRenderContext.h"
 #include "DbgCommandBuffer.h"
+#include "DbgCommandQueue.h"
 
 #include "DbgBuffer.h"
 #include "DbgBufferArray.h"
@@ -53,8 +54,8 @@ class DbgRenderSystem : public RenderSystem
 
         /* ----- Command buffers ----- */
 
-        CommandBuffer* CreateCommandBuffer() override;
-        CommandBufferExt* CreateCommandBufferExt() override;
+        CommandBuffer* CreateCommandBuffer(const CommandBufferDescriptor& desc = {}) override;
+        CommandBufferExt* CreateCommandBufferExt(const CommandBufferDescriptor& desc = {}) override;
 
         void Release(CommandBuffer& commandBuffer) override;
 
@@ -94,6 +95,12 @@ class DbgRenderSystem : public RenderSystem
         ResourceHeap* CreateResourceHeap(const ResourceHeapDescriptor& desc) override;
 
         void Release(ResourceHeap& resourceViewHeap) override;
+
+        /* ----- Render Passes ----- */
+
+        RenderPass* CreateRenderPass(const RenderPassDescriptor& desc) override;
+
+        void Release(RenderPass& renderPass) override;
 
         /* ----- Render Targets ----- */
 
@@ -187,10 +194,12 @@ class DbgRenderSystem : public RenderSystem
         /* ----- Hardware object containers ----- */
 
         HWObjectContainer<DbgRenderContext>     renderContexts_;
+        HWObjectInstance<DbgCommandQueue>       commandQueue_;
         HWObjectContainer<DbgCommandBuffer>     commandBuffers_;
         HWObjectContainer<DbgBuffer>            buffers_;
         HWObjectContainer<DbgBufferArray>       bufferArrays_;
         HWObjectContainer<DbgTexture>           textures_;
+        //HWObjectContainer<DbgRenderPass>        renderPasses_;
         HWObjectContainer<DbgRenderTarget>      renderTargets_;
         HWObjectContainer<DbgShader>            shaders_;
         HWObjectContainer<DbgShaderProgram>     shaderPrograms_;

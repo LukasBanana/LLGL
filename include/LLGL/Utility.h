@@ -18,6 +18,7 @@ THIS HEADER MUST BE EXPLICITLY INCLUDED
 #include "TextureFlags.h"
 #include "BufferFlags.h"
 #include "RenderTargetFlags.h"
+#include "RenderPassFlags.h"
 #include "ResourceHeapFlags.h"
 #include "ShaderFlags.h"
 #include "ShaderProgramFlags.h"
@@ -126,8 +127,9 @@ LLGL_EXPORT BufferDescriptor StorageBufferDesc(uint64_t size, const StorageBuffe
 /**
 \brief Returns a ShaderDescriptor structure.
 \remarks The source type is determined by the filename extension using the following rules:
-- .hlsl, .fx, .glsl, .vert, .tesc, .tese, .geom, .frag, .comp ==> code file (i.e. ShaderSourceType::CodeFile)
-- Otherwise ==> binary file (i.e. ShaderSourceType::BinaryFile).
+- <code>.hlsl</code>, <code>.fx</code>, <code>.glsl</code>, <code>.vert</code>, <code>.tesc</code>,
+<code>.tese</code>, <code>.geom</code>, <code>.frag</code>, <code>.comp</code>, and <code>.metal</code> result into a code file (i.e. ShaderSourceType::CodeFile)
+- All other file extensions result into a binary file (i.e. ShaderSourceType::BinaryFile).
 \see RenderSystem::CreateShader
 */
 LLGL_EXPORT ShaderDescriptor ShaderDescFromFile(const ShaderType type, const char* filename, const char* entryPoint = nullptr, const char* profile = nullptr, long flags = 0);
@@ -159,6 +161,62 @@ Some rendering APIs, such as OpenGL 2.0, do not provide sufficient functionality
 Hence, this utility function cannot be used in conjunction with all renderer versions.
 */
 LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const ShaderReflectionDescriptor& reflectionDesc);
+
+/**
+\brief Generates a pipeline layout descriptor by parsing the specified string.
+\param[in] layoutSignature Specifies the string for the layout signature. This string must not be null. The syntax for this string is as follows:
+- Each type of each binding point (i.e. BindingDescriptor::type) is specified by one of the following identifiers:
+    - <code>cbuffer</code> for constant buffers (i.e. ResourceType::ConstantBuffer).
+    - <code>sbuffer</code> for storage buffers (i.e. ResourceType::StorageBuffer).
+    - <code>texture</code> for textures (i.e. ResourceType::Texture).
+    - <code>sampler</code> for sampler states (i.e. ResourceType::Sampler).
+- The slot of each binding point (i.e. BindingDescriptor::slot) is specified as an integral number within brackets (e.g. <code>"texture(1)"</code>).
+- The array size of each binding point (i.e. BindingDescriptor::arraySize) can be optionally specified right after the slot within squared brackets (e.g. <code>"texture(1[2])"</code>).
+- Optionally, multiple slots can be specified within the brackets if separated by commas (e.g. <code>"texture(1[2],3)"</code>).
+- Each binding point is separated by a comma, the last comma begin optional (e.g. <code>"texture(1),sampler(2),"</code> or <code>"texture(1),sampler(2)"</code>).
+- The stage flags (i.e. BindingDescriptor::stageFlags) can be specified after the each binding point with a preceding colon using the following identifiers:
+    - <code>vert</code> for the vertex shader stage (i.e. StageFlags::VertexStage).
+    - <code>tesc</code> for the tessellation-control shader stage (i.e. StageFlags::TessControlStage).
+    - <code>tese</code> for the tessellation-evaluation shader stage (i.e. StageFlags::TessEvaluationStage).
+    - <code>geom</code> for the geometry shader stage (i.e. StageFlags::GeometryStage).
+    - <code>frag</code> for the fragment shader stage (i.e. StageFlags::FragmentStage).
+    - <code>comp</code> for the compute shader stage (i.e. StageFlags::ComputeStage).
+- If no stage flag is specified, all shader stages will be used.
+- Whitespaces are ignored (e.g. blanks <code>' '</code>, tabulators <code>'\\t'</code>, new-line characters <code>'\\n'</code> and <code>'\\r'</code> etc.), see C++ STL function <code>std::isspace</code>.
+\remarks Here is a usage example:
+\code
+// Standard way of declaring a pipeline layout:
+LLGL::PipelineLayoutDescriptor myLayoutDescStd;
+{
+    myLayoutDescStd.bindings =
+    {
+        LLGL::BindingDescriptor { LLGL::ResourceType::ConstantBuffer, LLGL::StageFlags::FragmentStage | LLGL::StageFlags::VertexStage, 0 },
+        LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 1 },
+        LLGL::BindingDescriptor { LLGL::ResourceType::Texture,        LLGL::StageFlags::FragmentStage,                                 2 },
+        LLGL::BindingDescriptor { LLGL::ResourceType::Sampler,        LLGL::StageFlags::FragmentStage,                                 3 },
+    };
+}
+auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescStd);
+
+// Abbreviated way of declaring a pipeline layout using the utility function:
+auto myLayoutDescUtil = LLGL::PipelineLayoutDesc(
+    "cbuffer(0):frag:vert,"
+    "texture(1,2):frag,"
+    "sampler(3):frag,"
+);
+auto myLayout = myRenderer->CreatePipelineLayout(myLayoutDescUtil);
+\endcode
+\throws std::invalid_argument If the input parameter is null of parsing the layout signature failed.
+*/
+LLGL_EXPORT PipelineLayoutDescriptor PipelineLayoutDesc(const char* layoutSignature);
+
+/* ----- RenderPassDescriptor utility functions ----- */
+
+/**
+\brief Converts the specified render target descriptor into a render pass descriptor with default settings.
+\remarks This can be used to specify a render pass that is compatible with a render target.
+*/
+LLGL_EXPORT RenderPassDescriptor RenderPassDesc(const RenderTargetDescriptor& renderTargetDesc);
 
 /** @} */
 
