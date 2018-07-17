@@ -170,8 +170,6 @@ class VKRenderSystem final : public RenderSystem
         bool IsLayerRequired(const std::string& name) const;
         bool IsExtensionRequired(const std::string& name) const;
 
-        std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
-
         VKBuffer* CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage = 0);
 
         std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> CreateStagingBuffer(
@@ -179,8 +177,6 @@ class VKRenderSystem final : public RenderSystem
             const void*                 initialData = nullptr,
             std::size_t                 initialDataSize = 0
         );
-
-        void AssertBufferCPUAccess(const VKBuffer& bufferVK);
 
         /* ----- Common objects ----- */
 

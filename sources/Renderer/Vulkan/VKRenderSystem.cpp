@@ -320,7 +320,9 @@ void VKRenderSystem::WriteBuffer(Buffer& buffer, const void* data, std::size_t d
 void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    #if 0//TODO: create temporary staging buffer, if buffer was not created with respective flag
     AssertBufferCPUAccess(bufferVK);
+    #endif
 
     /* Copy GPU local buffer into staging buffer for read accces */
     if (access != CPUAccess::WriteOnly)
@@ -333,7 +335,9 @@ void* VKRenderSystem::MapBuffer(Buffer& buffer, const CPUAccess access)
 void VKRenderSystem::UnmapBuffer(Buffer& buffer)
 {
     auto& bufferVK = LLGL_CAST(VKBuffer&, buffer);
+    #if 0//TODO: create temporary staging buffer, if buffer was not created with respective flag
     AssertBufferCPUAccess(bufferVK);
+    #endif
 
     /* Unmap staging buffer */
     bufferVK.Unmap(device_);
@@ -860,11 +864,6 @@ bool VKRenderSystem::IsExtensionRequired(const std::string& name) const
     );
 }
 
-std::uint32_t VKRenderSystem::FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const
-{
-    return VKFindMemoryType(physicalDevice_.GetMemoryProperties(), memoryTypeBits, properties);
-}
-
 VKBuffer* VKRenderSystem::CreateHardwareBuffer(const BufferDescriptor& desc, VkBufferUsageFlags usage)
 {
     /* Create hardware buffer */
@@ -943,12 +942,6 @@ std::tuple<VKBufferWithRequirements, VKDeviceMemoryRegion*> VKRenderSystem::Crea
     }
 
     return std::make_tuple(std::move(stagingBuffer), memoryRegionStaging);
-}
-
-void VKRenderSystem::AssertBufferCPUAccess(const VKBuffer& bufferVK)
-{
-    if (bufferVK.GetStagingVkBuffer() == VK_NULL_HANDLE)
-        throw std::runtime_error("hardware buffer was not created with CPU access (missing staging VkBuffer)");
 }
 
 

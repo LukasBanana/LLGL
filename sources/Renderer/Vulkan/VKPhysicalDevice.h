@@ -37,6 +37,8 @@ class VKPhysicalDevice
 
         VKDevice CreateLogicalDevice();
 
+        std::uint32_t FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const;
+
         /* ----- Handles ----- */
 
         // Returns the native VkPhysicalDevice handle.

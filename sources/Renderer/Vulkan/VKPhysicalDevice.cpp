@@ -147,6 +147,11 @@ VKDevice VKPhysicalDevice::CreateLogicalDevice()
     return device;
 }
 
+std::uint32_t VKPhysicalDevice::FindMemoryType(std::uint32_t memoryTypeBits, VkMemoryPropertyFlags properties) const
+{
+    return VKFindMemoryType(memoryProperties_, memoryTypeBits, properties);
+}
+
 
 /*
  * ======= Private: =======
