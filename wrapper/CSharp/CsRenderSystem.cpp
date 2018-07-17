@@ -139,21 +139,22 @@ const RenderSystemConfiguration& GetConfiguration()
 
 /* ----- Render Context ----- */
 
+static void Convert(::LLGL::RenderContextDescriptor& dst, RenderContextDescriptor^ src)
+{
+    dst.videoMode.resolution.width   = src->VideoMode->Resolution->Width;
+    dst.videoMode.resolution.height  = src->VideoMode->Resolution->Height;
+    dst.videoMode.colorBits          = src->VideoMode->ColorBits;
+    dst.videoMode.depthBits          = src->VideoMode->DepthBits;
+    dst.videoMode.stencilBits        = src->VideoMode->StencilBits;
+    dst.videoMode.fullscreen         = src->VideoMode->Fullscreen;
+    dst.videoMode.swapChainSize      = src->VideoMode->SwapChainSize;
+}
+
 RenderContext^ RenderSystem::CreateRenderContext(RenderContextDescriptor^ desc)
 {
     ::LLGL::RenderContextDescriptor nativeDesc;
-    {
-        nativeDesc.videoMode.resolution.width   = desc->VideoMode->Resolution->Width;
-        nativeDesc.videoMode.resolution.height  = desc->VideoMode->Resolution->Height;
-        nativeDesc.videoMode.colorBits          = desc->VideoMode->ColorBits;
-        nativeDesc.videoMode.depthBits          = desc->VideoMode->DepthBits;
-        nativeDesc.videoMode.stencilBits        = desc->VideoMode->StencilBits;
-        nativeDesc.videoMode.fullscreen         = desc->VideoMode->Fullscreen;
-        nativeDesc.videoMode.swapChainSize      = desc->VideoMode->SwapChainSize;
-    }
-    auto renderContext = native_->CreateRenderContext(nativeDesc);
-
-    return gcnew RenderContext(renderContext);
+    Convert(nativeDesc, desc);
+    return gcnew RenderContext(native_->CreateRenderContext(nativeDesc));
 }
 
 //RenderContext^ RenderSystem::CreateRenderContext(RenderContextDescriptor^ desc, Surface^ surface);
@@ -187,84 +188,157 @@ CommandBufferExt^ RenderSystem::CreateCommandBufferExt()
 
 void RenderSystem::Release(CommandBuffer^ commandBuffer)
 {
-    native_->Release(*commandBuffer->Native::get());
+    native_->Release(*commandBuffer->Native);
 }
 
 #if 0
 
 /* ----- Buffers ------ */
 
-Buffer^ CreateBuffer(BufferDescriptor^ desc);
-Buffer^ CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData);
+Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc);
+Buffer^ RenderSystem::CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData);
 
-//BufferArray^ CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+BufferArray^ RenderSystem::CreateBufferArray(array<Buffer^>^ bufferArray);
 
-void Release(Buffer^ buffer);
+void RenderSystem::Release(Buffer^ buffer);
 
-//void Release(BufferArray^ bufferArray);
+void RenderSystem::Release(BufferArray^ bufferArray);
 
-void WriteBuffer(Buffer^ buffer, array<System::Byte>^ data, System::UIntPtr dataSize, System::UIntPtr offset);
+void RenderSystem::WriteBuffer(Buffer^ buffer, array<System::Byte>^ data, System::UIntPtr dataSize, System::UIntPtr offset);
 
-//void* MapBuffer(Buffer^ buffer, CPUAccess access);
+//void* RenderSystem::MapBuffer(Buffer^ buffer, CPUAccess access);
 
-//void UnmapBuffer(Buffer^ buffer);
+//void RenderSystem::UnmapBuffer(Buffer^ buffer);
 
 /* ----- Textures ----- */
 
-Texture^ CreateTexture(TextureDescriptor^ textureDesc);
-Texture^ CreateTexture(TextureDescriptor^ textureDesc, SrcImageDescriptor^ imageDesc);
+Texture^ RenderSystem::CreateTexture(TextureDescriptor^ textureDesc);
+Texture^ RenderSystem::CreateTexture(TextureDescriptor^ textureDesc, SrcImageDescriptor^ imageDesc);
 
-void Release(Texture^ texture);
+void RenderSystem::Release(Texture^ texture);
 
-void WriteTexture(Texture^ texture, SubTextureDescriptor^ subTextureDesc, SrcImageDescriptor^ imageDesc);
-void ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor^ imageDesc);
+void RenderSystem::WriteTexture(Texture^ texture, SubTextureDescriptor^ subTextureDesc, SrcImageDescriptor^ imageDesc);
+void RenderSystem::ReadTexture(Texture^ texture, unsigned int mipLevel, DstImageDescriptor^ imageDesc);
 
-void GenerateMips(Texture^ texture);
-void GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers);
+void RenderSystem::GenerateMips(Texture^ texture);
+void RenderSystem::GenerateMips(Texture^ texture, unsigned int baseMipLevel, unsigned int numMipLevels, unsigned int baseArrayLayer, unsigned int numArrayLayers);
 
 /* ----- Samplers ---- */
 
-Sampler^ CreateSampler(SamplerDescriptor^ desc);
+Sampler^ RenderSystem::CreateSampler(SamplerDescriptor^ desc);
 
-void Release(Sampler^ sampler);
+void RenderSystem::Release(Sampler^ sampler);
 
 /* ----- Resource Heaps ----- */
 
-ResourceHeap^ CreateResourceHeap(ResourceHeapDescriptor^ desc);
+ResourceHeap^ RenderSystem::CreateResourceHeap(ResourceHeapDescriptor^ desc);
 
-void Release(ResourceHeap^ resourceHeap);
+void RenderSystem::Release(ResourceHeap^ resourceHeap);
 
 /* ----- Render Targets ----- */
 
-RenderTarget^ CreateRenderTarget(RenderTargetDescriptor^ desc);
+RenderTarget^ RenderSystem::CreateRenderTarget(RenderTargetDescriptor^ desc);
 
-void Release(RenderTarget^ renderTarget);
+void RenderSystem::Release(RenderTarget^ renderTarget);
+#endif
 
 /* ----- Shader ----- */
 
-Shader^ CreateShader(ShaderDescriptor^ desc);
+static void Convert(::LLGL::ShaderDescriptor& dst, ShaderDescriptor^ src)
+{
+    auto sourceStr      = ToStdString(src->Source);
+    auto entryPointStr  = ToStdString(src->EntryPoint);
+    auto profileStr     = ToStdString(src->Profile);
 
-ShaderProgram^ CreateShaderProgram(ShaderProgramDescriptor^ desc);
+    dst.type            = static_cast<::LLGL::ShaderType>(src->Type);
+    dst.source          = sourceStr.c_str();
+    dst.sourceSize      = sourceStr.size();
+    dst.sourceType      = static_cast<::LLGL::ShaderSourceType>(src->SourceType);
+    dst.entryPoint      = entryPointStr.c_str();
+    dst.profile         = profileStr.c_str();
+    dst.flags           = src->Flags;
+    #if 0
+    dst.streamOutput    = ;
+    #endif
+}
 
-void Release(Shader^ shader);
+Shader^ RenderSystem::CreateShader(ShaderDescriptor^ desc)
+{
+    ::LLGL::ShaderDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    return gcnew Shader(native_->CreateShader(nativeDesc));
+}
 
-void Release(ShaderProgram^ shaderProgram);
+static void Convert(::LLGL::VertexAttribute& dst, VertexAttribute^ src)
+{
+    dst.name            = ToStdString(src->Name);
+    dst.format          = static_cast<::LLGL::Format>(src->Format);
+    dst.instanceDivisor = src->InstanceDivisor;
+    dst.offset          = src->Offset;
+    dst.semanticIndex   = src->SemanticIndex;
+}
 
+static void Convert(::LLGL::VertexFormat& dst, VertexFormat^ src)
+{
+    dst.attributes.resize(static_cast<std::size_t>(src->Attributes->Count));
+    for (std::size_t i = 0; i < dst.attributes.size(); ++i)
+        Convert(dst.attributes[i], src->Attributes[i]);
+    dst.stride      = src->Stride;
+    dst.inputSlot   = src->InputSlot;
+}
+
+static void Convert(::LLGL::ShaderProgramDescriptor& dst, ShaderProgramDescriptor^ src)
+{
+    dst.vertexFormats.resize(static_cast<std::size_t>(src->VertexFormats->Count));
+    for (std::size_t i = 0; i < dst.vertexFormats.size(); ++i)
+        Convert(dst.vertexFormats[i], src->VertexFormats[i]);
+    if (src->VertexShader)
+        dst.vertexShader = src->VertexShader->Native;
+    if (src->TessControlShader)
+        dst.tessControlShader = src->TessControlShader->Native;
+    if (src->TessEvaluationShader)
+        dst.tessEvaluationShader = src->TessEvaluationShader->Native;
+    if (src->GeometryShader)
+        dst.geometryShader = src->GeometryShader->Native;
+    if (src->FragmentShader)
+        dst.fragmentShader = src->FragmentShader->Native;
+    if (src->ComputeShader)
+        dst.computeShader = src->ComputeShader->Native;
+}
+
+ShaderProgram^ RenderSystem::CreateShaderProgram(ShaderProgramDescriptor^ desc)
+{
+    ::LLGL::ShaderProgramDescriptor nativeDesc;
+    Convert(nativeDesc, desc);
+    return gcnew ShaderProgram(native_->CreateShaderProgram(nativeDesc));
+}
+
+void RenderSystem::Release(Shader^ shader)
+{
+    native_->Release(*shader->Native);
+}
+
+void RenderSystem::Release(ShaderProgram^ shaderProgram)
+{
+    native_->Release(*shaderProgram->Native);
+}
+
+#if 0
 /* ----- Pipeline Layouts ----- */
 
-PipelineLayout^ CreatePipelineLayout(PipelineLayoutDescriptor^ desc);
+PipelineLayout^ RenderSystem::CreatePipelineLayout(PipelineLayoutDescriptor^ desc);
 
-void Release(PipelineLayout^ pipelineLayout);
+void RenderSystem::Release(PipelineLayout^ pipelineLayout);
 
 /* ----- Pipeline States ----- */
 
-GraphicsPipeline^ CreateGraphicsPipeline(GraphicsPipelineDescriptor^ desc);
+GraphicsPipeline^ RenderSystem::CreateGraphicsPipeline(GraphicsPipelineDescriptor^ desc);
 
-ComputePipeline^ CreateComputePipeline(ComputePipelineDescriptor^ desc);
+ComputePipeline^ RenderSystem::CreateComputePipeline(ComputePipelineDescriptor^ desc);
 
-void Release(GraphicsPipeline^ graphicsPipeline);
+void RenderSystem::Release(GraphicsPipeline^ graphicsPipeline);
 
-void Release(ComputePipeline^ computePipeline);
+void RenderSystem::Release(ComputePipeline^ computePipeline);
 
 #endif
 
@@ -277,7 +351,7 @@ Fence^ RenderSystem::CreateFence()
 
 void RenderSystem::Release(Fence^ fence)
 {
-    native_->Release(*fence->Native::get());
+    native_->Release(*fence->Native);
 }
 
 RenderSystem::RenderSystem(std::unique_ptr<::LLGL::RenderSystem>&& native)

@@ -20,7 +20,7 @@ CommandQueue::CommandQueue(::LLGL::CommandQueue* native) :
 {
 }
 
-void* CommandQueue::Native::get()
+::LLGL::CommandQueue* CommandQueue::Native::get()
 {
     return native_;
 }

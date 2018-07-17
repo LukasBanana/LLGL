@@ -14,6 +14,8 @@
 #include "CsRenderContext.h"
 #include "CsRenderContextFlags.h"
 #include "CsCommandQueue.h"
+#include "CsShader.h"
+#include "CsShaderProgram.h"
 
 #using <System.dll>
 #using <System.Core.dll>
@@ -108,11 +110,11 @@ public ref class RenderSystem
         Buffer^ CreateBuffer(BufferDescriptor^ desc);
         Buffer^ CreateBuffer(BufferDescriptor^ desc, array<System::Byte>^ initialData);
 
-        //BufferArray^ CreateBufferArray(std::uint32_t numBuffers, Buffer* const * bufferArray);
+        BufferArray^ CreateBufferArray(array<Buffer^>^ bufferArray);
 
         void Release(Buffer^ buffer);
 
-        //void Release(BufferArray^ bufferArray);
+        void Release(BufferArray^ bufferArray);
 
         void WriteBuffer(Buffer^ buffer, array<System::Byte>^ data, System::UIntPtr dataSize, System::UIntPtr offset);
 
@@ -150,6 +152,7 @@ public ref class RenderSystem
         RenderTarget^ CreateRenderTarget(RenderTargetDescriptor^ desc);
 
         void Release(RenderTarget^ renderTarget);
+        #endif
 
         /* ----- Shader ----- */
 
@@ -161,6 +164,7 @@ public ref class RenderSystem
 
         void Release(ShaderProgram^ shaderProgram);
 
+        #if 0
         /* ----- Pipeline Layouts ----- */
 
         PipelineLayout^ CreatePipelineLayout(PipelineLayoutDescriptor^ desc);

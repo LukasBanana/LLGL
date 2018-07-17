@@ -37,9 +37,9 @@ public ref class CommandQueue
 
         CommandQueue(::LLGL::CommandQueue* native);
 
-        property void* Native
+        property ::LLGL::CommandQueue* Native
         {
-            void* get();
+            ::LLGL::CommandQueue* get();
         }
 
         /* ----- Command Buffers ----- */
